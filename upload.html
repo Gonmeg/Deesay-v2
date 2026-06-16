@@ -372,7 +372,20 @@ function readExcel(file) {
       } catch(err){rej(err)}
     }
     r.onerror=()=>rej(new Error('อ่านไฟล์ไม่ได้'))
-    r.readAsBinaryString(file)
+    function readExcel(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader()
+    r.onload = e => {
+      try {
+        const data = new Uint8Array(e.target.result)
+        const wb = XLSX.read(data, { type: 'array', cellDates: true })
+        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
+        if (!json.length) throw new Error('ไฟล์ว่างเปล่า')
+        res({ headers: Object.keys(json[0]), rows: json })
+      } catch(err) { rej(err) }
+    }
+    r.onerror = () => rej(new Error('อ่านไฟล์ไม่ได้'))
+    r.readAsArrayBuffer(file)
   })
 }
 
