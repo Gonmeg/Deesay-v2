@@ -359,7 +359,7 @@ function readExcel(file) {
     const r=new FileReader()
     r.onload=e=>{
       try {
-        const wb=XLSX.read(e.target.result,{type:'binary',cellDates:true})
+        const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: false })
         const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})
         if(!json.length) throw new Error('ไฟล์ว่างเปล่า')
         res({headers:Object.keys(json[0]),rows:json})
