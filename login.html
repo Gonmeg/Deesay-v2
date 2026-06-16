@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Deesay</title>
+  <script src="config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 32px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: #6366f1; }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #4f46e5; }
+
+    .error {
+      background: #450a0a;
+      border: 1px solid #991b1b;
+      color: #fca5a5;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
+    .back:hover { color: #f1f5f9; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">DEESAY</div>
+    <div class="subtitle">กรอกรหัสผ่านเพื่อเข้าใช้งาน</div>
+
+    <div class="error" id="errorMsg">รหัสผ่านไม่ถูกต้อง</div>
+
+    <label>รหัสผ่าน</label>
+    <input type="password" id="password" placeholder="••••••••">
+
+    <button onclick="handleLogin()">เข้าสู่ระบบ</button>
+
+    <a href="index.html" class="back">← กลับหน้าแรก</a>
+  </div>
+
+  <script>
+    // ถ้า login อยู่แล้วข้ามไปเลย
+    if (sessionStorage.getItem('auth') === 'true') {
+      const redirect = new URLSearchParams(window.location.search).get('redirect')
+      window.location.href = redirect || 'upload.html'
+    }
+
+    function handleLogin() {
+      const password = document.getElementById('password').value
+      const errorMsg = document.getElementById('errorMsg')
+
+      if (password === SYSTEM_PASSWORD) {
+        sessionStorage.setItem('auth', 'true')
+        const redirect = new URLSearchParams(window.location.search).get('redirect')
+        window.location.href = redirect || 'upload.html'
+      } else {
+        errorMsg.style.display = 'block'
+        document.getElementById('password').value = ''
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin()
+    })
+  </script>
+
+</body>
+</html>
