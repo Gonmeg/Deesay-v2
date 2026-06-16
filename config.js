@@ -1,3 +1,5 @@
 const SUPABASE_URL = 'https://plfdizmjdmhyjqraohfv.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmRpem1qZG1oeWpxcmFvaGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1Njc5MzIsImV4cCI6MjA5NDE0MzkzMn0.aU7sIU_9uqOx1eKTSjU_IyPUjddRHK4RkFagqw1Im5c'
 const SYSTEM_PASSWORD = 'deesay1234'
+window.SUPABASE_URL = SUPABASE_URL
+window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY
