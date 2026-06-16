@@ -188,7 +188,7 @@ if (sessionStorage.getItem('auth') !== 'true') {
   window.location.href = 'login.html?redirect=upload.html'
 }
 
-const DB = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
 const FIELDS = [
   { key:'order_id',       label:'Order ID',         required:true,  keywords:['เลขที่คำสั่งซื้อ','order id','orderid','order_id'] },
