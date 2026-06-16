@@ -333,8 +333,7 @@
 if (sessionStorage.getItem('auth') !== 'true') {
   window.location.href = 'login.html?redirect=upload.html'
 }
-const { createClient } = window.supabase
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 function logout() { sessionStorage.removeItem('auth'); window.location.href = 'index.html' }
 
 // FILE INPUT EVENT — ผูกตรงๆ หลัง DOM โหลด
@@ -466,12 +465,12 @@ async function handleConfirm() {
   try {
     const BATCH = 500; let done = 0
     for (let i = 0; i < processed.length; i += BATCH) {
-      const { error } = await supabase.from('orders').upsert(processed.slice(i, i + BATCH), { onConflict: 'order_id' })
+      const { error } = await db.from('orders').upsert(processed.slice(i, i + BATCH), { onConflict: 'order_id' })
       if (error) throw error
       done += Math.min(BATCH, processed.length - i)
       pf.style.width = Math.round(done / processed.length * 100) + '%'
     }
-    await supabase.rpc('refresh_all_views')
+    await db.rpc('refresh_all_views')
     al.className = 'alert alert-success'
     al.textContent = '✓ Upload สำเร็จ — ' + processed.length.toLocaleString() + ' ออเดอร์เข้าระบบแล้ว'
     al.style.display = 'block'
@@ -504,10 +503,10 @@ function readExcel(file) {
 }
 
 async function processRows(rows, mappings, channel) {
-  const { data: prods } = await supabase.from('products').select('child_sku,parent_sku')
+  const { data: prods } = await db.from('products').select('child_sku,parent_sku')
   const skuMap = {}
   if (prods) prods.forEach(p => skuMap[p.child_sku.toUpperCase()] = p.parent_sku.toUpperCase())
-  const { data: chs } = await supabase.from('channels').select('sub_channel,channel')
+  const { data: chs } = await db.from('channels').select('sub_channel,channel')
   const chMap = {}
   if (chs) chs.forEach(c => chMap[c.sub_channel] = c.channel)
   const tfMap = { Facebook: tfFB, TikTok: tfTT, Shopee: tfShopee, Lazada: tfLazada, 'ตัวแทน': tfDealer, 'Modern Trade': tfDealer }
