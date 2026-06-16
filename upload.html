@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upload | Deesay</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -19,7 +20,7 @@
     .nav-link { font-size: 0.8rem; color: var(--muted); text-decoration: none; }
     .nav-link:hover { color: var(--text); }
     .btn-ghost { font-size: 0.8rem; color: var(--muted); background: none; border: 1px solid var(--border2); padding: 5px 14px; border-radius: 6px; cursor: pointer; }
-    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .btn-ghost:hover { color: var(--text); }
     main { display: flex; justify-content: center; padding: 48px 24px; }
     .shell { width: 100%; max-width: 680px; }
     .page-header { margin-bottom: 40px; }
@@ -74,11 +75,10 @@
     .stat-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 14px 16px; text-align: center; }
     .stat-num { font-size: 1.5rem; font-weight: 600; color: var(--accent2); }
     .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-    .preview-wrap { overflow-x: auto; border-radius: var(--radius-sm); }
+    .preview-wrap { overflow-x: auto; }
     .preview-tbl { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
     .preview-tbl th { background: var(--surface2); padding: 8px 12px; text-align: left; color: var(--muted); font-weight: 500; white-space: nowrap; }
     .preview-tbl td { padding: 8px 12px; border-top: 1px solid var(--border); white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
-    .preview-tbl tr:hover td { background: var(--surface2); }
     .progress-track { height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-top: 20px; }
     .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
     .step-panel { display: none; }
@@ -91,7 +91,7 @@
   <div class="nav-logo">DEESAY</div>
   <div class="nav-right">
     <a href="index.html" class="nav-link">← หน้าแรก</a>
-    <button class="btn-ghost" onclick="logout()">ออกจากระบบ</button>
+    <button class="btn-ghost" id="logoutBtn">ออกจากระบบ</button>
   </div>
 </nav>
 
@@ -118,7 +118,6 @@
     </div>
   </div>
 
-  <!-- STEP 1 -->
   <div class="step-panel active" id="panel1">
     <div class="card">
       <div class="section-title">ข้อมูลเบื้องต้น</div>
@@ -145,12 +144,11 @@
       </div>
       <div id="alert1" class="alert alert-error" style="display:none"></div>
       <div class="btn-row">
-        <button class="btn-primary" onclick="handleStep1()">ถัดไป →</button>
+        <button class="btn-primary" id="btnStep1">ถัดไป →</button>
       </div>
     </div>
   </div>
 
-  <!-- STEP 2 -->
   <div class="step-panel" id="panel2">
     <div class="card">
       <div class="section-title">จับคู่คอลัมน์</div>
@@ -158,13 +156,12 @@
       <div id="mappingRows"></div>
       <div id="alert2" class="alert alert-error" style="display:none"></div>
       <div class="btn-row">
-        <button class="btn-back" onclick="goStep(1)">← ย้อนกลับ</button>
-        <button class="btn-primary" onclick="handleStep2()">Preview →</button>
+        <button class="btn-back" id="btnBack2">← ย้อนกลับ</button>
+        <button class="btn-primary" id="btnStep2">Preview →</button>
       </div>
     </div>
   </div>
 
-  <!-- STEP 3 -->
   <div class="step-panel" id="panel3">
     <div class="card">
       <div class="section-title">ตรวจสอบก่อน Upload</div>
@@ -175,64 +172,23 @@
       </div>
       <div id="alert3" class="alert" style="display:none"></div>
       <div class="btn-row">
-        <button class="btn-back" id="btnBack3" onclick="goStep(2)">← ย้อนกลับ</button>
-        <button class="btn-primary" id="btnConfirm" onclick="handleConfirm()">✓ ยืนยัน Upload</button>
+        <button class="btn-back" id="btnBack3">← ย้อนกลับ</button>
+        <button class="btn-primary" id="btnConfirm">✓ ยืนยัน Upload</button>
       </div>
     </div>
   </div>
 </div>
 </main>
 
-<!-- โหลด XLSX ก่อน -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<!-- โหลด Supabase แบบ UMD แต่เก็บใน namespace แยก -->
-<script>
-// โหลด Supabase แบบ dynamic เพื่อหลีกเลี่ยง global conflict
-window._supabaseLoaded = false;
-</script>
-
+<script src="config.js"></script>
 <script type="module">
-// ใช้ ES Module แทน UMD เพื่อไม่ให้ conflict กับ window.supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-// AUTH CHECK
 if (sessionStorage.getItem('auth') !== 'true') {
   window.location.href = 'login.html?redirect=upload.html'
 }
 
-// config จาก config.js (โหลดก่อนแล้ว)
-const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
-
-window.logout = function() {
-  sessionStorage.removeItem('auth')
-  window.location.href = 'index.html'
-}
-
-// FILE INPUT
-const fileInput = document.getElementById('fileInput')
-const dropLabel = document.getElementById('dropLabel')
-
-fileInput.addEventListener('change', function() {
-  const file = this.files[0]
-  if (!file) return
-  dropLabel.classList.add('has-file')
-  document.getElementById('dropIcon').textContent = '✅'
-  document.getElementById('dropMain').innerHTML = '<strong style="color:#10b981">' + file.name + '</strong>'
-  document.getElementById('dropSub').textContent = (file.size / 1024).toFixed(0) + ' KB — คลิกเพื่อเปลี่ยนไฟล์'
-})
-
-dropLabel.addEventListener('dragover', e => { e.preventDefault(); dropLabel.style.borderColor = '#6366f1' })
-dropLabel.addEventListener('dragleave', () => { dropLabel.style.borderColor = '' })
-dropLabel.addEventListener('drop', e => {
-  e.preventDefault()
-  dropLabel.style.borderColor = ''
-  if (e.dataTransfer.files[0]) {
-    const dt = e.dataTransfer
-    Object.defineProperty(fileInput, 'files', { value: dt.files, configurable: true })
-    fileInput.dispatchEvent(new Event('change'))
-  }
-})
+const DB = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 const FIELDS = [
   { key:'order_id',       label:'Order ID',         required:true,  keywords:['เลขที่คำสั่งซื้อ','order id','orderid','order_id'] },
@@ -250,7 +206,45 @@ const FIELDS = [
 
 let rawHeaders=[], rawData=[], mappings={}, channel='', processed=[]
 
-window.handleStep1 = async function() {
+// ผูก events ทั้งหมดผ่าน addEventListener ไม่ใช้ onclick inline
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem('auth')
+  window.location.href = 'index.html'
+})
+
+document.getElementById('btnStep1').addEventListener('click', handleStep1)
+document.getElementById('btnStep2').addEventListener('click', handleStep2)
+document.getElementById('btnBack2').addEventListener('click', () => goStep(1))
+document.getElementById('btnBack3').addEventListener('click', () => goStep(2))
+document.getElementById('btnConfirm').addEventListener('click', handleConfirm)
+
+// File input
+const fileInput = document.getElementById('fileInput')
+const dropLabel = document.getElementById('dropLabel')
+
+fileInput.addEventListener('change', function() {
+  const file = this.files[0]
+  if (!file) return
+  dropLabel.classList.add('has-file')
+  document.getElementById('dropIcon').textContent = '✅'
+  document.getElementById('dropMain').innerHTML = '<strong style="color:#10b981">' + file.name + '</strong>'
+  document.getElementById('dropSub').textContent = (file.size / 1024).toFixed(0) + ' KB — คลิกเพื่อเปลี่ยนไฟล์'
+})
+
+dropLabel.addEventListener('dragover', e => { e.preventDefault(); dropLabel.style.borderColor = '#6366f1' })
+dropLabel.addEventListener('dragleave', () => { dropLabel.style.borderColor = '' })
+dropLabel.addEventListener('drop', e => {
+  e.preventDefault()
+  dropLabel.style.borderColor = ''
+  const f = e.dataTransfer.files[0]
+  if (!f) return
+  const dt = new DataTransfer()
+  dt.items.add(f)
+  fileInput.files = dt.files
+  fileInput.dispatchEvent(new Event('change'))
+})
+
+async function handleStep1() {
   channel = document.getElementById('channelSelect').value
   const file = fileInput.files[0]
   const al = document.getElementById('alert1')
@@ -259,8 +253,7 @@ window.handleStep1 = async function() {
   al.style.display = 'none'
   try {
     const d = await readExcel(file)
-    rawHeaders = d.headers
-    rawData = d.rows
+    rawHeaders = d.headers; rawData = d.rows
     buildMapping()
     goStep(2)
   } catch(e) { showAlert(al, 'อ่านไฟล์ไม่ได้: ' + e.message) }
@@ -296,7 +289,7 @@ function autoMatch(kws, headers) {
   return null
 }
 
-window.handleStep2 = async function() {
+async function handleStep2() {
   const al = document.getElementById('alert2')
   mappings = {}
   FIELDS.forEach(f => { const v = document.getElementById('map_' + f.key).value; if (v) mappings[f.key] = v })
@@ -316,7 +309,7 @@ window.handleStep2 = async function() {
   goStep(3)
 }
 
-window.handleConfirm = async function() {
+async function handleConfirm() {
   const btn = document.getElementById('btnConfirm')
   const back = document.getElementById('btnBack3')
   const al = document.getElementById('alert3')
@@ -431,7 +424,7 @@ function parseDate(v) {
   return null
 }
 
-window.goStep = function(n) {
+function goStep(n) {
   document.querySelectorAll('.step-panel').forEach((el, i) => el.classList.toggle('active', i + 1 === n))
   ;[1, 2, 3].forEach(i => {
     const num = document.getElementById('snum' + i)
@@ -446,12 +439,6 @@ window.goStep = function(n) {
 }
 
 function showAlert(el, msg) { el.textContent = msg; el.style.display = 'block' }
-</script>
-
-<!-- config.js ต้องมี window.SUPABASE_URL และ window.SUPABASE_ANON_KEY -->
-<script>
-// expose config เป็น window variables สำหรับ ES module ข้างบน
-// (config.js โหลดก่อน แต่ใช้ const ธรรมดา ต้อง expose ใหม่)
 </script>
 </body>
 </html>
