@@ -277,6 +277,8 @@ async function handleStep1() {
   try {
     const d = await readExcel(file)
     rawHeaders=d.headers; rawData=d.rows
+    console.log('DATE VALUE:', rawData[0][rawHeaders.find(h => h.includes('วันที่'))])
+    console.log('DATE TYPE:', typeof rawData[0][rawHeaders.find(h => h.includes('วันที่'))])
     buildMapping(); goStep(2)
   } catch(e) { showAlert(al, 'อ่านไฟล์ไม่ได้: '+e.message) }
 }
