@@ -4,212 +4,83 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upload | Deesay</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="config.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --bg: #0a0f1e;
-      --surface: #111827;
-      --surface2: #1a2235;
-      --border: rgba(255,255,255,0.07);
-      --border2: rgba(255,255,255,0.13);
-      --text: #f0f4ff;
-      --muted: #6b7a99;
-      --accent: #6366f1;
-      --accent2: #818cf8;
-      --success: #10b981;
-      --danger: #ef4444;
-      --radius: 12px;
-      --radius-sm: 8px;
+      --bg: #0a0f1e; --surface: #111827; --surface2: #1a2235;
+      --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+      --text: #f0f4ff; --muted: #6b7a99; --accent: #6366f1; --accent2: #818cf8;
+      --success: #10b981; --danger: #ef4444; --radius: 12px; --radius-sm: 8px;
     }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-    nav {
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 32px;
-      height: 56px;
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-      z-index: 10;
-    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; position: sticky; top: 0; background: var(--bg); z-index: 10; }
     .nav-logo { font-size: 0.85rem; font-weight: 700; letter-spacing: 3px; }
     .nav-right { display: flex; align-items: center; gap: 16px; }
     .nav-link { font-size: 0.8rem; color: var(--muted); text-decoration: none; }
     .nav-link:hover { color: var(--text); }
-    .btn-ghost {
-      font-size: 0.8rem; color: var(--muted); background: none;
-      border: 1px solid var(--border2); padding: 5px 14px;
-      border-radius: 6px; cursor: pointer;
-    }
+    .btn-ghost { font-size: 0.8rem; color: var(--muted); background: none; border: 1px solid var(--border2); padding: 5px 14px; border-radius: 6px; cursor: pointer; }
     .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
-    main {
-      display: flex;
-      justify-content: center;
-      padding: 48px 24px;
-    }
+    main { display: flex; justify-content: center; padding: 48px 24px; }
     .shell { width: 100%; max-width: 680px; }
     .page-header { margin-bottom: 40px; }
     .page-header h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 6px; }
     .page-header p { font-size: 0.875rem; color: var(--muted); }
-    .step-track {
-      display: flex;
-      align-items: center;
-      margin-bottom: 36px;
-    }
+    .step-track { display: flex; align-items: center; margin-bottom: 36px; }
     .step-item { display: flex; align-items: center; gap: 10px; }
-    .step-num {
-      width: 28px; height: 28px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; font-weight: 600;
-      border: 1.5px solid var(--border2);
-      color: var(--muted); flex-shrink: 0;
-      transition: all 0.2s;
-    }
+    .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; border: 1.5px solid var(--border2); color: var(--muted); flex-shrink: 0; transition: all 0.2s; }
     .step-num.active { background: var(--accent); border-color: var(--accent); color: white; }
     .step-num.done { background: var(--success); border-color: var(--success); color: white; }
     .step-label { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
     .step-label.active { color: var(--text); }
     .step-line { flex: 1; height: 1px; background: var(--border2); margin: 0 12px; }
     .step-line.done { background: var(--success); }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      margin-bottom: 16px;
-    }
-    .section-title {
-      font-size: 0.75rem; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 20px;
-    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 16px; }
+    .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 20px; }
     .field { margin-bottom: 20px; }
-    .field-label {
-      display: block; font-size: 0.8rem;
-      color: var(--muted); margin-bottom: 8px;
-    }
-    .field-label .req { color: var(--danger); }
-    select {
-      width: 100%; background: var(--surface2);
-      border: 1px solid var(--border2); border-radius: var(--radius-sm);
-      color: var(--text); padding: 11px 14px; font-size: 0.9rem;
-      font-family: inherit; outline: none; cursor: pointer;
-    }
+    .field-label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+    .req { color: var(--danger); }
+    select { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); padding: 11px 14px; font-size: 0.9rem; font-family: inherit; outline: none; cursor: pointer; }
     select:focus { border-color: var(--accent); }
     select option { background: #1a2235; }
-
-    /* DROP ZONE — input hidden, label ครอบทั้งหมด */
-    .drop-label {
-      display: block;
-      border: 1.5px dashed var(--border2);
-      border-radius: var(--radius-sm);
-      padding: 40px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .drop-label:hover { border-color: var(--accent); background: rgba(99,102,241,0.04); }
-    .drop-label.dragover { border-color: var(--accent); background: rgba(99,102,241,0.08); }
-    .drop-label.has-file { border-color: var(--success); background: rgba(16,185,129,0.04); }
     #fileInput { display: none; }
+    .drop-label { display: block; border: 1.5px dashed var(--border2); border-radius: var(--radius-sm); padding: 40px 24px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .drop-label:hover { border-color: var(--accent); background: rgba(99,102,241,0.04); }
+    .drop-label.has-file { border-color: var(--success); background: rgba(16,185,129,0.04); }
     .drop-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
     .drop-main { font-size: 0.875rem; color: var(--muted); }
     .drop-main strong { color: var(--text); }
-    .drop-filename {
-      margin-top: 10px; font-size: 0.85rem;
-      color: var(--success); font-weight: 500;
-    }
-    .drop-filesize { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
-
+    .drop-sub { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
     .btn-row { display: flex; gap: 12px; align-items: center; margin-top: 28px; }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 11px 24px; background: var(--accent); color: white;
-      border: none; border-radius: var(--radius-sm);
-      font-size: 0.9rem; font-weight: 600; font-family: inherit;
-      cursor: pointer;
-    }
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600; font-family: inherit; cursor: pointer; }
     .btn-primary:hover { background: #4f46e5; }
     .btn-primary:disabled { background: var(--border2); color: var(--muted); cursor: not-allowed; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 11px 20px; background: none; color: var(--muted);
-      border: 1px solid var(--border2); border-radius: var(--radius-sm);
-      font-size: 0.9rem; font-family: inherit; cursor: pointer;
-    }
+    .btn-back { display: inline-flex; align-items: center; gap: 6px; padding: 11px 20px; background: none; color: var(--muted); border: 1px solid var(--border2); border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit; cursor: pointer; }
     .btn-back:hover { color: var(--text); border-color: var(--muted); }
-    .alert {
-      border-radius: var(--radius-sm); padding: 12px 16px;
-      font-size: 0.85rem; margin-top: 16px;
-    }
+    .alert { border-radius: var(--radius-sm); padding: 12px 16px; font-size: 0.85rem; margin-top: 16px; }
     .alert-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
     .alert-success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
-
-    /* MAPPING */
-    .map-row {
-      display: grid; grid-template-columns: 45% 55%;
-      border-bottom: 1px solid var(--border);
-      padding: 10px 0; align-items: center;
-    }
+    .map-row { display: grid; grid-template-columns: 45% 55%; border-bottom: 1px solid var(--border); padding: 10px 0; align-items: center; }
     .map-row:last-child { border-bottom: none; }
     .map-field-name { font-size: 0.875rem; font-weight: 500; }
     .map-field-req { color: var(--danger); font-size: 0.75rem; margin-left: 3px; }
-    .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; margin-left: 8px;
-    }
+    .badge { display: inline-flex; align-items: center; font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; margin-left: 8px; }
     .badge-auto { background: rgba(16,185,129,0.12); color: #34d399; }
     .badge-manual { background: rgba(251,146,60,0.12); color: #fb923c; }
-    .map-select {
-      width: 100%; background: var(--surface2);
-      border: 1px solid var(--border2); border-radius: var(--radius-sm);
-      color: var(--text); padding: 9px 12px; font-size: 0.85rem;
-      font-family: inherit; outline: none; margin-left: 16px;
-    }
+    .map-select { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); padding: 9px 12px; font-size: 0.85rem; font-family: inherit; outline: none; margin-left: 16px; }
     .map-select:focus { border-color: var(--accent); }
     .map-select.matched { border-color: rgba(16,185,129,0.4); }
     .map-select option { background: #1a2235; }
-
-    /* PREVIEW */
-    .summary-grid {
-      display: grid; grid-template-columns: repeat(3,1fr);
-      gap: 12px; margin-bottom: 24px;
-    }
-    .stat-box {
-      background: var(--surface2); border-radius: var(--radius-sm);
-      padding: 14px 16px; text-align: center;
-    }
+    .summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 14px 16px; text-align: center; }
     .stat-num { font-size: 1.5rem; font-weight: 600; color: var(--accent2); }
     .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
     .preview-wrap { overflow-x: auto; border-radius: var(--radius-sm); }
     .preview-tbl { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    .preview-tbl th {
-      background: var(--surface2); padding: 8px 12px;
-      text-align: left; color: var(--muted); font-weight: 500; white-space: nowrap;
-    }
-    .preview-tbl td {
-      padding: 8px 12px; border-top: 1px solid var(--border);
-      white-space: nowrap; max-width: 160px;
-      overflow: hidden; text-overflow: ellipsis;
-    }
+    .preview-tbl th { background: var(--surface2); padding: 8px 12px; text-align: left; color: var(--muted); font-weight: 500; white-space: nowrap; }
+    .preview-tbl td { padding: 8px 12px; border-top: 1px solid var(--border); white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
     .preview-tbl tr:hover td { background: var(--surface2); }
-    .progress-track {
-      height: 3px; background: var(--border2);
-      border-radius: 2px; overflow: hidden; margin-top: 20px;
-    }
-    .progress-fill {
-      height: 100%; background: var(--accent);
-      border-radius: 2px; transition: width 0.3s; width: 0%;
-    }
+    .progress-track { height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-top: 20px; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
     .step-panel { display: none; }
     .step-panel.active { display: block; }
   </style>
@@ -226,12 +97,10 @@
 
 <main>
 <div class="shell">
-
   <div class="page-header">
     <h1>Upload ข้อมูลยอดขาย</h1>
     <p>นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
   </div>
-
   <div class="step-track">
     <div class="step-item">
       <div class="step-num active" id="snum1">1</div>
@@ -253,7 +122,6 @@
   <div class="step-panel active" id="panel1">
     <div class="card">
       <div class="section-title">ข้อมูลเบื้องต้น</div>
-
       <div class="field">
         <label class="field-label">Channel <span class="req">*</span></label>
         <select id="channelSelect">
@@ -266,24 +134,16 @@
           <option value="Modern Trade">Modern Trade</option>
         </select>
       </div>
-
       <div class="field">
         <label class="field-label">ไฟล์ Excel หรือ CSV <span class="req">*</span></label>
-
-        <!-- input hidden, label ทำหน้าที่เป็น drop zone -->
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
         <label class="drop-label" id="dropLabel" for="fileInput">
           <span class="drop-icon" id="dropIcon">📂</span>
-          <div class="drop-main" id="dropMain">
-            <strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวางที่นี่
-          </div>
-          <div class="drop-filename" id="dropFilename"></div>
-          <div class="drop-filesize" id="dropFilesize"></div>
+          <div class="drop-main" id="dropMain"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวางที่นี่</div>
+          <div class="drop-sub" id="dropSub">.xlsx, .xls, .csv</div>
         </label>
       </div>
-
       <div id="alert1" class="alert alert-error" style="display:none"></div>
-
       <div class="btn-row">
         <button class="btn-primary" onclick="handleStep1()">ถัดไป →</button>
       </div>
@@ -294,9 +154,7 @@
   <div class="step-panel" id="panel2">
     <div class="card">
       <div class="section-title">จับคู่คอลัมน์</div>
-      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:24px;line-height:1.6">
-        ระบบ auto-match คอลัมน์จากชื่อที่รู้จักแล้ว ตรวจสอบและแก้ไขรายการที่ยังไม่ได้จับคู่
-      </p>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:24px;line-height:1.6">ระบบ auto-match คอลัมน์จากชื่อที่รู้จักแล้ว ตรวจสอบและแก้ไขรายการที่ยังไม่ได้จับคู่</p>
       <div id="mappingRows"></div>
       <div id="alert2" class="alert alert-error" style="display:none"></div>
       <div class="btn-row">
@@ -311,9 +169,7 @@
     <div class="card">
       <div class="section-title">ตรวจสอบก่อน Upload</div>
       <div class="summary-grid" id="summaryGrid"></div>
-      <div class="preview-wrap">
-        <table class="preview-tbl" id="previewTbl"></table>
-      </div>
+      <div class="preview-wrap"><table class="preview-tbl" id="previewTbl"></table></div>
       <div class="progress-track" id="progressTrack" style="display:none">
         <div class="progress-fill" id="progressFill"></div>
       </div>
@@ -324,48 +180,60 @@
       </div>
     </div>
   </div>
-
 </div>
 </main>
 
+<!-- โหลด XLSX ก่อน -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- โหลด Supabase แบบ UMD แต่เก็บใน namespace แยก -->
 <script>
-// AUTH
+// โหลด Supabase แบบ dynamic เพื่อหลีกเลี่ยง global conflict
+window._supabaseLoaded = false;
+</script>
+
+<script type="module">
+// ใช้ ES Module แทน UMD เพื่อไม่ให้ conflict กับ window.supabase
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+// AUTH CHECK
 if (sessionStorage.getItem('auth') !== 'true') {
   window.location.href = 'login.html?redirect=upload.html'
 }
-const { createClient } = window.supabase
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY) }
 
-// FILE INPUT EVENT — ผูกตรงๆ หลัง DOM โหลด
-document.addEventListener('DOMContentLoaded', function() {
-  const input = document.getElementById('fileInput')
-  const label = document.getElementById('dropLabel')
+// config จาก config.js (โหลดก่อนแล้ว)
+const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
-  input.addEventListener('change', function() {
-    if (!this.files || !this.files[0]) return
-    const file = this.files[0]
-    label.classList.add('has-file')
-    document.getElementById('dropIcon').textContent = '✅'
-    document.getElementById('dropMain').innerHTML = '<strong style="color:#10b981">' + file.name + '</strong>'
-    document.getElementById('dropFilename').textContent = ''
-    document.getElementById('dropFilesize').textContent = (file.size / 1024).toFixed(0) + ' KB — คลิกเพื่อเปลี่ยนไฟล์'
-  })
+window.logout = function() {
+  sessionStorage.removeItem('auth')
+  window.location.href = 'index.html'
+}
 
-  // drag & drop
-  label.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover') })
-  label.addEventListener('dragleave', function() { this.classList.remove('dragover') })
-  label.addEventListener('drop', function(e) {
-    e.preventDefault()
-    this.classList.remove('dragover')
-    const dt = e.dataTransfer
-    if (dt.files && dt.files[0]) {
-      input.files = dt.files
-      input.dispatchEvent(new Event('change'))
-    }
-  })
+// FILE INPUT
+const fileInput = document.getElementById('fileInput')
+const dropLabel = document.getElementById('dropLabel')
+
+fileInput.addEventListener('change', function() {
+  const file = this.files[0]
+  if (!file) return
+  dropLabel.classList.add('has-file')
+  document.getElementById('dropIcon').textContent = '✅'
+  document.getElementById('dropMain').innerHTML = '<strong style="color:#10b981">' + file.name + '</strong>'
+  document.getElementById('dropSub').textContent = (file.size / 1024).toFixed(0) + ' KB — คลิกเพื่อเปลี่ยนไฟล์'
 })
 
-// FIELDS
+dropLabel.addEventListener('dragover', e => { e.preventDefault(); dropLabel.style.borderColor = '#6366f1' })
+dropLabel.addEventListener('dragleave', () => { dropLabel.style.borderColor = '' })
+dropLabel.addEventListener('drop', e => {
+  e.preventDefault()
+  dropLabel.style.borderColor = ''
+  if (e.dataTransfer.files[0]) {
+    const dt = e.dataTransfer
+    Object.defineProperty(fileInput, 'files', { value: dt.files, configurable: true })
+    fileInput.dispatchEvent(new Event('change'))
+  }
+})
+
 const FIELDS = [
   { key:'order_id',       label:'Order ID',         required:true,  keywords:['เลขที่คำสั่งซื้อ','order id','orderid','order_id'] },
   { key:'date',           label:'วันที่สั่งซื้อ',    required:true,  keywords:['วันที่สั่งซื้อ','วันที่','date'] },
@@ -382,9 +250,9 @@ const FIELDS = [
 
 let rawHeaders=[], rawData=[], mappings={}, channel='', processed=[]
 
-async function handleStep1() {
+window.handleStep1 = async function() {
   channel = document.getElementById('channelSelect').value
-  const file = document.getElementById('fileInput').files[0]
+  const file = fileInput.files[0]
   const al = document.getElementById('alert1')
   if (!channel) return showAlert(al, 'กรุณาเลือก Channel ก่อน')
   if (!file) return showAlert(al, 'กรุณาเลือกไฟล์')
@@ -408,9 +276,7 @@ function buildMapping() {
     row.innerHTML = `
       <div>
         <span class="map-field-name">${f.label}${f.required ? '<span class="map-field-req">*</span>' : ''}</span>
-        ${matched
-          ? '<span class="badge badge-auto">✓ auto</span>'
-          : '<span class="badge badge-manual">เลือกเอง</span>'}
+        ${matched ? '<span class="badge badge-auto">✓ auto</span>' : '<span class="badge badge-manual">เลือกเอง</span>'}
       </div>
       <select id="map_${f.key}" class="map-select ${matched ? 'matched' : ''}">
         <option value="">— ไม่ใช้ —</option>
@@ -430,13 +296,10 @@ function autoMatch(kws, headers) {
   return null
 }
 
-async function handleStep2() {
+window.handleStep2 = async function() {
   const al = document.getElementById('alert2')
   mappings = {}
-  FIELDS.forEach(f => {
-    const v = document.getElementById('map_' + f.key).value
-    if (v) mappings[f.key] = v
-  })
+  FIELDS.forEach(f => { const v = document.getElementById('map_' + f.key).value; if (v) mappings[f.key] = v })
   const miss = FIELDS.filter(f => f.required && !mappings[f.key])
   if (miss.length) return showAlert(al, 'กรุณาเลือกคอลัมน์: ' + miss.map(f => f.label).join(', '))
   al.style.display = 'none'
@@ -453,7 +316,7 @@ async function handleStep2() {
   goStep(3)
 }
 
-async function handleConfirm() {
+window.handleConfirm = async function() {
   const btn = document.getElementById('btnConfirm')
   const back = document.getElementById('btnBack3')
   const al = document.getElementById('alert3')
@@ -465,12 +328,12 @@ async function handleConfirm() {
   try {
     const BATCH = 500; let done = 0
     for (let i = 0; i < processed.length; i += BATCH) {
-      const { error } = await db.from('orders').upsert(processed.slice(i, i + BATCH), { onConflict: 'order_id' })
+      const { error } = await DB.from('orders').upsert(processed.slice(i, i + BATCH), { onConflict: 'order_id' })
       if (error) throw error
       done += Math.min(BATCH, processed.length - i)
       pf.style.width = Math.round(done / processed.length * 100) + '%'
     }
-    await db.rpc('refresh_all_views')
+    await DB.rpc('refresh_all_views')
     al.className = 'alert alert-success'
     al.textContent = '✓ Upload สำเร็จ — ' + processed.length.toLocaleString() + ' ออเดอร์เข้าระบบแล้ว'
     al.style.display = 'block'
@@ -503,10 +366,10 @@ function readExcel(file) {
 }
 
 async function processRows(rows, mappings, channel) {
-  const { data: prods } = await db.from('products').select('child_sku,parent_sku')
+  const { data: prods } = await DB.from('products').select('child_sku,parent_sku')
   const skuMap = {}
   if (prods) prods.forEach(p => skuMap[p.child_sku.toUpperCase()] = p.parent_sku.toUpperCase())
-  const { data: chs } = await db.from('channels').select('sub_channel,channel')
+  const { data: chs } = await DB.from('channels').select('sub_channel,channel')
   const chMap = {}
   if (chs) chs.forEach(c => chMap[c.sub_channel] = c.channel)
   const tfMap = { Facebook: tfFB, TikTok: tfTT, Shopee: tfShopee, Lazada: tfLazada, 'ตัวแทน': tfDealer, 'Modern Trade': tfDealer }
@@ -517,30 +380,25 @@ async function processRows(rows, mappings, channel) {
     const date = parseDate(rawDate)
     return {
       order_id: g('order_id'), date,
-      channel: chMap[sub] || channel,
-      sub_channel: sub || channel,
+      channel: chMap[sub] || channel, sub_channel: sub || channel,
       sku_promotion: tfn(rawSku, skuMap),
       revenue: parseFloat(g('revenue').replace(/,/g, '')) || 0,
       province: g('province'), district: g('district'), postcode: g('postcode'),
       customer_name: g('customer_name'), phone: g('phone'), payment_method: g('payment_method'),
-      settled: channel === 'Facebook',
-      settled_date: channel === 'Facebook' ? date : null,
+      settled: channel === 'Facebook', settled_date: channel === 'Facebook' ? date : null,
     }
   }).filter(r => r.order_id)
 }
 
 function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g, '').trim(); return m[c] || c }
-
 function tfFB(raw, m) {
   if (!raw) return ''
   return raw.split(',').map(s => s.trim()).map(p => {
-    const x = p.match(/^(.+?)\s*\((\d+)\)$/)
-    return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
+    const x = p.match(/^(.+?)\s*\((\d+)\)$/); return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
   }).filter(Boolean).sort((a, b) => a.sku.localeCompare(b.sku)).map(s => `${s.sku}x${s.qty}`).join('+')
 }
 function tfTT(raw, m) {
-  if (!raw) return ''
-  const res = []
+  if (!raw) return ''; const res = []
   raw.split(',').map(s => s.trim()).forEach(g => {
     const mg = g.match(/^(.+?)\s*\((\d+)\)$/); if (!mg) return
     const mul = parseInt(mg[2])
@@ -554,13 +412,11 @@ function tfTT(raw, m) {
 function tfShopee(raw, m) {
   if (!raw) return ''
   return raw.split('+').map(s => s.trim()).map(p => {
-    const x = p.match(/^(.+?)x(\d+)$/i)
-    return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
+    const x = p.match(/^(.+?)x(\d+)$/i); return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
   }).filter(Boolean).sort((a, b) => a.sku.localeCompare(b.sku)).map(s => `${s.sku}x${s.qty}`).join('+')
 }
 function tfLazada(raw, m) {
-  if (!raw) return ''
-  const x = raw.trim().match(/^(.+?)x(\d+)$/i)
+  if (!raw) return ''; const x = raw.trim().match(/^(.+?)x(\d+)$/i)
   return x ? norm(x[1], m) + 'x' + x[2] : norm(raw, m)
 }
 function tfDealer(raw, m) { return raw ? norm(raw, m) : '' }
@@ -570,21 +426,17 @@ function parseDate(v) {
   if (!v) return null
   if (v instanceof Date) return v.toISOString().split('T')[0]
   const s = String(v).trim()
-  const dm = s.match(/^(\d{4}-\d{2}-\d{2})/)
-  if (dm) return dm[1]
-  if (/^\d+$/.test(s)) {
-    return new Date((parseInt(s) - 25569) * 86400 * 1000).toISOString().split('T')[0]
-  }
+  const dm = s.match(/^(\d{4}-\d{2}-\d{2})/); if (dm) return dm[1]
+  if (/^\d+$/.test(s)) return new Date((parseInt(s) - 25569) * 86400 * 1000).toISOString().split('T')[0]
   return null
 }
 
-function goStep(n) {
+window.goStep = function(n) {
   document.querySelectorAll('.step-panel').forEach((el, i) => el.classList.toggle('active', i + 1 === n))
   ;[1, 2, 3].forEach(i => {
     const num = document.getElementById('snum' + i)
     const lbl = document.getElementById('slabel' + i)
-    num.classList.remove('active', 'done')
-    lbl.classList.remove('active')
+    num.classList.remove('active', 'done'); lbl.classList.remove('active')
     if (i < n) { num.classList.add('done'); num.textContent = '✓' }
     else if (i === n) { num.classList.add('active'); num.textContent = i; lbl.classList.add('active') }
     else num.textContent = i
@@ -594,6 +446,12 @@ function goStep(n) {
 }
 
 function showAlert(el, msg) { el.textContent = msg; el.style.display = 'block' }
+</script>
+
+<!-- config.js ต้องมี window.SUPABASE_URL และ window.SUPABASE_ANON_KEY -->
+<script>
+// expose config เป็น window variables สำหรับ ES module ข้างบน
+// (config.js โหลดก่อน แต่ใช้ const ธรรมดา ต้อง expose ใหม่)
 </script>
 </body>
 </html>
