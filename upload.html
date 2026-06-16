@@ -448,8 +448,8 @@
           <div class="drop-zone" id="dropZone">
             <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"
               onchange="onFileChange(this)">
-            <div class="drop-icon">📂</div>
-            <div class="drop-text"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวางที่นี่</div>
+            <div class="drop-icon" id="dropIcon">📂</div>
+            <div class="drop-text" id="dropText"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวางที่นี่</div>
             <div class="drop-file-name" id="fileName"></div>
           </div>
         </div>
@@ -537,10 +537,15 @@ dz.addEventListener('drop', e => {
 })
 function onFileChange(input) {
   if (input.files[0]) {
-    document.getElementById('fileName').textContent = '✓ ' + input.files[0].name
+    const name = input.files[0].name
+    const size = (input.files[0].size / 1024).toFixed(0)
+    document.getElementById('dropIcon').textContent = '✅'
+    document.getElementById('dropText').innerHTML = 
+      `<strong style="color:var(--success)">${name}</strong>`
+    document.getElementById('fileName').textContent = 
+      `ขนาด ${size} KB — คลิกเพื่อเปลี่ยนไฟล์`
   }
 }
-
 const FIELDS = [
   { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','order id','orderid','order_id'] },
   { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['วันที่สั่งซื้อ','วันที่','date'] },
