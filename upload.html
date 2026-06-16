@@ -445,13 +445,15 @@
 
         <div class="field">
           <label class="field-label">ไฟล์ Excel หรือ CSV <span>*</span></label>
-          <div class="drop-zone" id="dropZone">
-            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"
-              onchange="onFileChange(this)">
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
             <div class="drop-icon" id="dropIcon">📂</div>
-            <div class="drop-text" id="dropText"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวางที่นี่</div>
+            <div class="drop-text" id="dropText">
+              <strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวางที่นี่
+            </div>
             <div class="drop-file-name" id="fileName"></div>
           </div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"
+            style="display:none" onchange="onFileChange(this)">
         </div>
 
         <div id="alert1" class="alert alert-error" style="display:none"></div>
