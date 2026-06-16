@@ -333,7 +333,8 @@
 if (sessionStorage.getItem('auth') !== 'true') {
   window.location.href = 'login.html?redirect=upload.html'
 }
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const { createClient } = window.supabase
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 function logout() { sessionStorage.removeItem('auth'); window.location.href = 'index.html' }
 
 // FILE INPUT EVENT — ผูกตรงๆ หลัง DOM โหลด
