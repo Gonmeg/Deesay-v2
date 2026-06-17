@@ -400,17 +400,21 @@ async function processRows(rows, mappings, channel) {
   const tfMap = { Facebook: tfFB, TikTok: tfTT, Shopee: tfShopee, Lazada: tfLazada, 'ตัวแทน': tfDealer, 'Modern Trade': tfDealer }
   const tfn = tfMap[channel] || tfGeneric
 
-  return rows.map(row => {
+  // เก็บ sub_channel ใหม่ที่ไม่มีใน DB
+  const newSubChannels = new Set()
+
+  const processed = rows.map(row => {
     const g = k => mappings[k] ? row[mappings[k]] : null
     const gs = k => { const v = g(k); return v !== null && v !== undefined ? String(v).trim() : '' }
 
-    // date — handle all types
     const dateRaw = g('date')
     const date = parseDate(dateRaw)
-
     const sub = gs('sub_channel')
     const rawSku = gs('sku_promotion')
     const revenueStr = gs('revenue').replace(/,/g, '')
+
+    // ถ้า sub_channel ไม่มีใน chMap ให้เก็บไว้ auto-insert ทีหลัง
+    if (sub && !chMap[sub]) newSubChannels.add(sub)
 
     return {
       order_id: gs('order_id'),
@@ -418,6 +422,7 @@ async function processRows(rows, mappings, channel) {
       channel: chMap[sub] || channel,
       sub_channel: sub || channel,
       sku_promotion: tfn(rawSku, skuMap),
+      sku_promotion_raw: rawSku,
       revenue: parseFloat(revenueStr) || 0,
       province: gs('province'),
       district: gs('district'),
@@ -429,6 +434,15 @@ async function processRows(rows, mappings, channel) {
       settled_date: channel === 'Facebook' ? date : null,
     }
   }).filter(r => r.order_id)
+
+  // Auto-insert sub_channel ใหม่เข้า channels table
+  if (newSubChannels.size > 0) {
+    const newRows = [...newSubChannels].map(sub => ({ sub_channel: sub, channel: channel }))
+    await DB.from('channels').upsert(newRows, { onConflict: 'sub_channel' })
+    console.log('Auto-inserted sub_channels:', [...newSubChannels])
+  }
+
+  return processed
 }
 
 function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g, '').trim(); return m[c] || c }
