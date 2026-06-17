@@ -447,17 +447,30 @@ async function processRows(rows, mappings, channel) {
 
 function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g, '').trim(); return m[c] || c }
 
+// รวม qty ของ parent SKU เดียวกัน แล้ว sort A→Z
+function mergeSkus(skuList) {
+  const merged = {}
+  skuList.forEach(({ sku, qty }) => {
+    merged[sku] = (merged[sku] || 0) + qty
+  })
+  return Object.entries(merged)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([sku, qty]) => sku + 'x' + qty)
+    .join('+')
+}
+
 function tfFB(raw, m) {
   if (!raw) return ''
-  return raw.split(',').map(s => s.trim()).map(p => {
+  const skus = raw.split(',').map(s => s.trim()).map(p => {
     const x = p.match(/^(.+?)\s*\((\d+)\)$/)
     return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
-  }).filter(Boolean).sort((a, b) => a.sku.localeCompare(b.sku)).map(s => s.sku + 'x' + s.qty).join('+')
+  }).filter(Boolean)
+  return mergeSkus(skus)
 }
 
 function tfTT(raw, m) {
   if (!raw) return ''
-  const res = []
+  const skus = []
   raw.split(',').map(s => s.trim()).forEach(g => {
     const mg = g.match(/^(.+?)\s*\((\d+)\)$/)
     if (!mg) return
@@ -465,24 +478,26 @@ function tfTT(raw, m) {
     mg[1].split('+').map(s => s.trim()).forEach(it => {
       const mi = it.match(/^(.+?)x(\d+)$/i)
       if (!mi) return
-      res.push({ sku: norm(mi[1], m), qty: parseInt(mi[2]) * mul })
+      skus.push({ sku: norm(mi[1], m), qty: parseInt(mi[2]) * mul })
     })
   })
-  return res.sort((a, b) => a.sku.localeCompare(b.sku)).map(s => s.sku + 'x' + s.qty).join('+')
+  return mergeSkus(skus)
 }
 
 function tfShopee(raw, m) {
   if (!raw) return ''
-  return raw.split('+').map(s => s.trim()).map(p => {
+  const skus = raw.split('+').map(s => s.trim()).map(p => {
     const x = p.match(/^(.+?)x(\d+)$/i)
     return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
-  }).filter(Boolean).sort((a, b) => a.sku.localeCompare(b.sku)).map(s => s.sku + 'x' + s.qty).join('+')
+  }).filter(Boolean)
+  return mergeSkus(skus)
 }
 
 function tfLazada(raw, m) {
   if (!raw) return ''
   const x = raw.trim().match(/^(.+?)x(\d+)$/i)
-  return x ? norm(x[1], m) + 'x' + x[2] : norm(raw, m)
+  const skus = x ? [{ sku: norm(x[1], m), qty: parseInt(x[2]) }] : [{ sku: norm(raw, m), qty: 1 }]
+  return mergeSkus(skus)
 }
 
 function tfDealer(raw, m) { return raw ? norm(raw, m) : '' }
