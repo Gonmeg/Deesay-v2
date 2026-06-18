@@ -552,7 +552,7 @@ async function processRows(rows, mappings, channel) {
       sku_promotion_raw: rawSku,
       revenue: revenue,
       revenue_raw: revenueRaw,
-      province: gs('province'),
+      province: normalizeProvince(gs('province')),
       district: gs('district'),
       postcode: gs('postcode'),
       customer_name: gs('customer_name'),
@@ -572,6 +572,46 @@ async function processRows(rows, mappings, channel) {
 }
 
 function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g, '').trim(); return m[c] || c }
+
+const PROVINCE_MAP = {
+  'Bangkok':'กรุงเทพมหานคร','กรุงเทพฯ':'กรุงเทพมหานคร','กทม':'กรุงเทพมหานคร','กทม.':'กรุงเทพมหานคร',
+  'Nonthaburi':'นนทบุรี','Pathum Thani':'ปทุมธานี','Pathumthani':'ปทุมธานี',
+  'Samut Prakan':'สมุทรปราการ','Samutprakarn':'สมุทรปราการ','Samut Sakhon':'สมุทรสาคร',
+  'Samut Songkhram':'สมุทรสงคราม','Nakhon Pathom':'นครปฐม',
+  'Suphan Buri':'สุพรรณบุรี','Suphanburi':'สุพรรณบุรี','Kanchanaburi':'กาญจนบุรี',
+  'Ratchaburi':'ราชบุรี','Phetchaburi':'เพชรบุรี',
+  'Prachuap Khiri Khan':'ประจวบคีรีขันธ์','Ang Thong':'อ่างทอง','Sing Buri':'สิงห์บุรี',
+  'Lopburi':'ลพบุรี','Lop Buri':'ลพบุรี','Saraburi':'สระบุรี',
+  'Ayutthaya':'พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya':'พระนครศรีอยุธยา',
+  'Nakhon Nayok':'นครนายก','Chachoengsao':'ฉะเชิงเทรา',
+  'Prachin Buri':'ปราจีนบุรี','Sa Kaeo':'สระแก้ว',
+  'Chon Buri':'ชลบุรี','Chonburi':'ชลบุรี','Rayong':'ระยอง',
+  'Chanthaburi':'จันทบุรี','Trat':'ตราด',
+  'Chiang Mai':'เชียงใหม่','Chiangmai':'เชียงใหม่',
+  'Chiang Rai':'เชียงราย','Chiangrai':'เชียงราย',
+  'Lamphun':'ลำพูน','Lampang':'ลำปาง','Phrae':'แพร่','Nan':'น่าน','Phayao':'พะเยา',
+  'Mae Hong Son':'แม่ฮ่องสอน','Uttaradit':'อุตรดิตถ์','Sukhothai':'สุโขทัย',
+  'Phitsanulok':'พิษณุโลก','Phichit':'พิจิตร','Kamphaeng Phet':'กำแพงเพชร',
+  'Nakhon Sawan':'นครสวรรค์','Uthai Thani':'อุทัยธานี','Chainat':'ชัยนาท','Tak':'ตาก',
+  'Nakhon Ratchasima':'นครราชสีมา',
+  'Buriram':'บุรีรัมย์','Buri Ram':'บุรีรัมย์','Surin':'สุรินทร์',
+  'Si Sa Ket':'ศรีสะเกษ','Sisaket':'ศรีสะเกษ',
+  'Ubon Ratchathani':'อุบลราชธานี','Yasothon':'ยโสธร','Chaiyaphum':'ชัยภูมิ',
+  'Amnat Charoen':'อำนาจเจริญ','Mukdahan':'มุกดาหาร','Nakhon Phanom':'นครพนม',
+  'Sakon Nakhon':'สกลนคร','Kalasin':'กาฬสินธุ์','Maha Sarakham':'มหาสารคาม',
+  'Roi Et':'ร้อยเอ็ด','Khon Kaen':'ขอนแก่น','Udon Thani':'อุดรธานี',
+  'Loei':'เลย','Nong Khai':'หนองคาย','Nong Bua Lam Phu':'หนองบัวลำภู','Bueng Kan':'บึงกาฬ',
+  'Chumphon':'ชุมพร','Surat Thani':'สุราษฎร์ธานี',
+  'Nakhon Si Thammarat':'นครศรีธรรมราช','Phatthalung':'พัทลุง','Songkhla':'สงขลา',
+  'Satun':'สตูล','Trang':'ตรัง','Krabi':'กระบี่','Phang Nga':'พังงา',
+  'Phuket':'ภูเก็ต','Ranong':'ระนอง','Pattani':'ปัตตานี','Yala':'ยะลา',
+  'Narathiwat':'นราธิวาส',
+}
+function normalizeProvince(v) {
+  if (!v) return ''
+  const s = String(v).trim()
+  return PROVINCE_MAP[s] || s
+}
 
 async function calcSkuRevenue(orders) {
   const { data: prods } = await DB.from('products').select('parent_sku, product_name, rsp')
