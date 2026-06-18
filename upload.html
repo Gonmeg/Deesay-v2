@@ -84,6 +84,24 @@
     .alert-success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
     .step-panel { display: none; }
     .step-panel.active { display: block; }
+
+    /* Success state */
+    .success-banner { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .success-banner-icon { font-size: 20px; }
+    .success-banner-title { font-size: 14px; font-weight: 600; color: #6ee7b7; }
+    .success-banner-sub { font-size: 12px; color: #6ee7b7; opacity: 0.8; margin-top: 1px; }
+    .success-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+    .success-stat { background: var(--surface2); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+    .success-stat-num { font-size: 1.35rem; font-weight: 600; color: var(--accent2); }
+    .success-stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .success-divider { border-top: 1px solid var(--border); padding-top: 16px; }
+    .success-action-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 12px; }
+    .success-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .action-card { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 14px 12px; cursor: pointer; text-align: left; color: var(--text); font-family: inherit; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.15s, background 0.15s; }
+    .action-card:hover { border-color: var(--accent); background: rgba(99,102,241,0.06); }
+    .action-card-icon { font-size: 1.2rem; }
+    .action-card-title { font-size: 0.82rem; font-weight: 600; }
+    .action-card-sub { font-size: 0.7rem; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -172,7 +190,7 @@
         <div class="progress-fill" id="progressFill"></div>
       </div>
       <div id="alert3" class="alert" style="display:none"></div>
-      <div class="btn-row">
+      <div class="btn-row" id="btnRow3">
         <button class="btn-back" id="btnBack3">← ย้อนกลับ</button>
         <button class="btn-primary" id="btnConfirm">✓ ยืนยัน Upload</button>
       </div>
@@ -191,7 +209,6 @@ if (sessionStorage.getItem('auth') !== 'true') {
 
 const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
-// Base fields สำหรับทุก channel
 const BASE_FIELDS = [
   { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','order id','orderid','order_id'] },
   { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['วันที่สั่งซื้อ','วันที่','date'] },
@@ -205,7 +222,6 @@ const BASE_FIELDS = [
   { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['รหัสสินค้า (sku) (จำนวน)','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
 ]
 
-// Revenue fields แต่ละ channel
 const REVENUE_FIELDS = {
   Facebook: [
     { key:'rev_subtotal',  label:'ยอดรวมสินค้า',      required:true,  keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ'] },
@@ -234,7 +250,6 @@ const REVENUE_FIELDS = {
   ],
 }
 
-// สูตรคำนวณ revenue แต่ละ channel
 function calcRevenue(channel, m, row) {
   const getNum = key => {
     if (!m[key]) return 0
@@ -243,20 +258,14 @@ function calcRevenue(channel, m, row) {
     return parseFloat(String(v).replace(/,/g, '')) || 0
   }
   switch(channel) {
-    case 'Facebook':
-      return getNum('rev_subtotal') - getNum('rev_discount') + getNum('rev_shipping')
-    case 'TikTok':
-      return getNum('rev_subtotal') - getNum('rev_discount')
-    case 'Shopee':
-      return getNum('rev_subtotal') + getNum('rev_platform') - getNum('rev_seller_discount') + getNum('rev_shipping')
-    case 'Lazada':
-      return getNum('rev_subtotal') - getNum('rev_discount')
-    default:
-      return getNum('rev_subtotal')
+    case 'Facebook': return getNum('rev_subtotal') - getNum('rev_discount') + getNum('rev_shipping')
+    case 'TikTok':   return getNum('rev_subtotal') - getNum('rev_discount')
+    case 'Shopee':   return getNum('rev_subtotal') + getNum('rev_platform') - getNum('rev_seller_discount') + getNum('rev_shipping')
+    case 'Lazada':   return getNum('rev_subtotal') - getNum('rev_discount')
+    default:         return getNum('rev_subtotal')
   }
 }
 
-// รวม fields สำหรับ mapping UI
 function getFields(channel) {
   const revFields = REVENUE_FIELDS[channel] || [
     { key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }
@@ -264,9 +273,7 @@ function getFields(channel) {
   return [...BASE_FIELDS, ...revFields]
 }
 
-let FIELDS = BASE_FIELDS // default
-
-
+let FIELDS = BASE_FIELDS
 let rawHeaders=[], rawData=[], mappings={}, channel='', processed=[]
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -307,7 +314,6 @@ async function handleStep1() {
   if (!channel) return showAlert(al, 'กรุณาเลือก Channel ก่อน')
   if (!file) return showAlert(al, 'กรุณาเลือกไฟล์')
   al.style.display = 'none'
-  // set FIELDS ตาม channel ที่เลือก
   FIELDS = getFields(channel)
   try {
     const d = await readExcel(file)
@@ -380,6 +386,7 @@ async function handleConfirm() {
   btn.disabled = true; back.disabled = true
   btn.textContent = 'กำลัง Upload...'
   pt.style.display = 'block'; al.style.display = 'none'
+
   try {
     const BATCH = 500; let done = 0
     for (let i = 0; i < processed.length; i += BATCH) {
@@ -388,16 +395,74 @@ async function handleConfirm() {
       done += Math.min(BATCH, processed.length - i)
       pf.style.width = Math.round(done / processed.length * 100) + '%'
     }
-    // คำนวณ sku_revenue allocation
+
     btn.textContent = 'กำลังคำนวณ SKU Revenue...'
-    await calcSkuRevenue(processed)
+    const skuRowCount = await calcSkuRevenue(processed)
 
     await DB.rpc('refresh_all_views')
-    al.className = 'alert alert-success'
-    al.textContent = '✓ Upload สำเร็จ — ' + processed.length.toLocaleString() + ' ออเดอร์เข้าระบบแล้ว'
-    al.style.display = 'block'
-    btn.textContent = '✓ เสร็จแล้ว'
-    back.disabled = false
+
+    // คำนวณ revenue รวม
+    const totalRevenue = processed.reduce((s, r) => s + (r.revenue || 0), 0)
+
+    // ซ่อน progress bar และ alert เดิม
+    pt.style.display = 'none'
+    al.style.display = 'none'
+
+    // Replace btn-row ด้วย success state
+    const btnRow = document.getElementById('btnRow3')
+    btnRow.innerHTML = `
+      <div style="width:100%">
+        <div class="success-banner">
+          <span class="success-banner-icon">✓</span>
+          <div>
+            <div class="success-banner-title">Upload สำเร็จ</div>
+            <div class="success-banner-sub">${processed.length.toLocaleString()} ออเดอร์เข้าระบบแล้ว · ${channel}</div>
+          </div>
+        </div>
+
+        <div class="success-stats">
+          <div class="success-stat">
+            <div class="success-stat-num">${processed.length.toLocaleString()}</div>
+            <div class="success-stat-label">ออเดอร์</div>
+          </div>
+          <div class="success-stat">
+            <div class="success-stat-num">${skuRowCount.toLocaleString()}</div>
+            <div class="success-stat-label">SKU rows</div>
+          </div>
+          <div class="success-stat">
+            <div class="success-stat-num">฿${Math.round(totalRevenue).toLocaleString()}</div>
+            <div class="success-stat-label">Revenue รวม</div>
+          </div>
+        </div>
+
+        <div class="success-divider">
+          <div class="success-action-label">ต้องการทำอะไรต่อ?</div>
+          <div class="success-actions">
+            <button class="action-card" onclick="location.reload()">
+              <span class="action-card-icon">📤</span>
+              <div>
+                <div class="action-card-title">อัพโหลดต่อ</div>
+                <div class="action-card-sub">ช่องทางถัดไป</div>
+              </div>
+            </button>
+            <button class="action-card" onclick="window.open('dashboard.html','_blank')">
+              <span class="action-card-icon">📊</span>
+              <div>
+                <div class="action-card-title">ดู Dashboard</div>
+                <div class="action-card-sub">ยอดขายล่าสุด</div>
+              </div>
+            </button>
+            <button class="action-card" onclick="location.href='index.html'">
+              <span class="action-card-icon">🏠</span>
+              <div>
+                <div class="action-card-title">หน้าแรก</div>
+                <div class="action-card-sub">กลับเมนูหลัก</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>`
+
   } catch(e) {
     al.className = 'alert alert-error'
     al.textContent = 'เกิดข้อผิดพลาด: ' + e.message
@@ -426,14 +491,12 @@ function readExcel(file) {
 
 function parseDate(v) {
   if (v === null || v === undefined || v === '') return null
-  // Date object จาก SheetJS (cellDates: true)
   if (v instanceof Date) {
     const y = v.getUTCFullYear()
     const m = String(v.getUTCMonth() + 1).padStart(2, '0')
     const d = String(v.getUTCDate()).padStart(2, '0')
     return y + '-' + m + '-' + d
   }
-  // Excel serial number (number type)
   if (typeof v === 'number') {
     const d = new Date(Math.round((v - 25569) * 86400 * 1000))
     const y = d.getUTCFullYear()
@@ -441,12 +504,10 @@ function parseDate(v) {
     const da = String(d.getUTCDate()).padStart(2, '0')
     return y + '-' + mo + '-' + da
   }
-  // String
   const s = String(v).trim()
   if (!s || s === '-') return null
   const m = s.match(/^(\d{4}-\d{2}-\d{2})/)
   if (m) return m[1]
-  // Serial number as string
   if (/^\d+(\.\d+)?$/.test(s)) {
     const n = parseFloat(s)
     const d = new Date(Math.round((n - 25569) * 86400 * 1000))
@@ -467,29 +528,21 @@ async function processRows(rows, mappings, channel) {
   if (chs) chs.forEach(c => chMap[c.sub_channel] = c.channel)
   const tfMap = { Facebook: tfFB, TikTok: tfTT, Shopee: tfShopee, Lazada: tfLazada, 'ตัวแทน': tfDealer, 'Modern Trade': tfDealer }
   const tfn = tfMap[channel] || tfGeneric
-
-  // เก็บ sub_channel ใหม่ที่ไม่มีใน DB
   const newSubChannels = new Set()
 
   const processed = rows.map(row => {
     const g = k => mappings[k] ? row[mappings[k]] : null
     const gs = k => { const v = g(k); return v !== null && v !== undefined ? String(v).trim() : '' }
-
-    const dateRaw = g('date')
-    const date = parseDate(dateRaw)
+    const date = parseDate(g('date'))
     const sub = gs('sub_channel')
     const rawSku = gs('sku_promotion')
-    // ถ้า sub_channel ไม่มีใน chMap ให้เก็บไว้ auto-insert ทีหลัง
     if (sub && !chMap[sub]) newSubChannels.add(sub)
-
-    // คำนวณ revenue ตามสูตรของแต่ละ channel
     const revenue = calcRevenue(channel, mappings, row)
     const revenueRaw = (() => {
       const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null
       if (!v) return 0
       return parseFloat(String(v).replace(/,/g, '')) || 0
     })()
-
     return {
       order_id: gs('order_id'),
       date: date,
@@ -510,11 +563,9 @@ async function processRows(rows, mappings, channel) {
     }
   }).filter(r => r.order_id)
 
-  // Auto-insert sub_channel ใหม่เข้า channels table
   if (newSubChannels.size > 0) {
     const newRows = [...newSubChannels].map(sub => ({ sub_channel: sub, channel: channel }))
     await DB.from('channels').upsert(newRows, { onConflict: 'sub_channel' })
-    console.log('Auto-inserted sub_channels:', [...newSubChannels])
   }
 
   return processed
@@ -522,12 +573,7 @@ async function processRows(rows, mappings, channel) {
 
 function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g, '').trim(); return m[c] || c }
 
-// รวม qty ของ parent SKU เดียวกัน แล้ว sort A→Z
-// =============================================
-// SKU Revenue Allocation
-// =============================================
 async function calcSkuRevenue(orders) {
-  // โหลด RSP จาก products table
   const { data: prods } = await DB.from('products').select('parent_sku, product_name, rsp')
   const rspMap = {}
   const nameMap = {}
@@ -540,24 +586,18 @@ async function calcSkuRevenue(orders) {
 
   for (const order of orders) {
     if (!order.sku_promotion || !order.revenue) continue
-
-    // parse sku_promotion เช่น "DSPx2+LIPRx1"
     const skus = order.sku_promotion.split('+').map(s => {
       const m = s.trim().match(/^(.+?)x(\d+)$/i)
       return m ? { sku: m[1], qty: parseInt(m[2]) } : null
     }).filter(Boolean)
-
     if (!skus.length) continue
 
-    // คำนวณ RSP weighted total เฉพาะ SKU ที่มี RSP > 0
     let totalRsp = 0
     skus.forEach(({ sku, qty }) => {
       const rsp = rspMap[sku] || 0
       if (rsp > 0) totalRsp += rsp * qty
     })
 
-    // แบ่ง revenue ตามสัดส่วน RSP
-    // SKU ที่ RSP=0 → revenue_share=0 แต่ยังเก็บ qty ไว้นับชิ้น
     skus.forEach(({ sku, qty }) => {
       const rsp = rspMap[sku] || 0
       let allocated = 0
@@ -579,31 +619,24 @@ async function calcSkuRevenue(orders) {
     })
   }
 
-  if (!skuRows.length) return
+  if (!skuRows.length) return 0
 
-  // ลบข้อมูลเดิมของ order_id เหล่านี้ก่อน แล้ว insert ใหม่
   const orderIds = [...new Set(orders.map(o => o.order_id))]
   await DB.from('sku_revenue').delete().in('order_id', orderIds)
 
-  // Insert ทีละ batch
   const BATCH = 500
   for (let i = 0; i < skuRows.length; i += BATCH) {
     const { error } = await DB.from('sku_revenue').insert(skuRows.slice(i, i + BATCH))
     if (error) throw error
   }
 
-  console.log('SKU Revenue allocated:', skuRows.length, 'rows')
+  return skuRows.length  // ← return จำนวน rows สำหรับแสดงใน success state
 }
 
 function mergeSkus(skuList) {
   const merged = {}
-  skuList.forEach(({ sku, qty }) => {
-    merged[sku] = (merged[sku] || 0) + qty
-  })
-  return Object.entries(merged)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([sku, qty]) => sku + 'x' + qty)
-    .join('+')
+  skuList.forEach(({ sku, qty }) => { merged[sku] = (merged[sku] || 0) + qty })
+  return Object.entries(merged).sort(([a], [b]) => a.localeCompare(b)).map(([sku, qty]) => sku + 'x' + qty).join('+')
 }
 
 function tfFB(raw, m) {
