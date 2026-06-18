@@ -287,8 +287,6 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
   sessionStorage.removeItem('auth'); window.location.href = 'index.html'
 })
 document.getElementById('channelSelect').addEventListener('change', e => handleChannelChange(e.target.value))
-// trigger ทันทีเผื่อ browser cache ค่าเดิมไว้
-handleChannelChange(document.getElementById('channelSelect').value)
 document.getElementById('btnStep1').addEventListener('click', handleStep1)
 document.getElementById('btnStep2').addEventListener('click', handleStep2)
 document.getElementById('btnBack2').addEventListener('click', () => goStep(1))
@@ -337,6 +335,8 @@ window.handleChannelChange = function handleChannelChange(val) {
     storeSelect.value = ''
   }
 }
+// trigger ทันทีหลัง function define เสร็จ เผื่อ browser cache ค่าเดิมไว้
+handleChannelChange(document.getElementById('channelSelect').value)
 
 async function handleStep1() {
   channel = document.getElementById('channelSelect').value
