@@ -388,6 +388,10 @@ async function handleConfirm() {
       done += Math.min(BATCH, processed.length - i)
       pf.style.width = Math.round(done / processed.length * 100) + '%'
     }
+    // คำนวณ sku_revenue allocation
+    btn.textContent = 'กำลังคำนวณ SKU Revenue...'
+    await calcSkuRevenue(processed)
+
     await DB.rpc('refresh_all_views')
     al.className = 'alert alert-success'
     al.textContent = '✓ Upload สำเร็จ — ' + processed.length.toLocaleString() + ' ออเดอร์เข้าระบบแล้ว'
@@ -519,6 +523,93 @@ async function processRows(rows, mappings, channel) {
 function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g, '').trim(); return m[c] || c }
 
 // รวม qty ของ parent SKU เดียวกัน แล้ว sort A→Z
+// =============================================
+// SKU Revenue Allocation
+// =============================================
+async function calcSkuRevenue(orders) {
+  // โหลด RSP จาก products table
+  const { data: prods } = await DB.from('products').select('parent_sku, product_name, rsp')
+  const rspMap = {}
+  const nameMap = {}
+  if (prods) prods.forEach(p => {
+    if (!rspMap[p.parent_sku]) rspMap[p.parent_sku] = p.rsp || 0
+    if (!nameMap[p.parent_sku]) nameMap[p.parent_sku] = p.product_name || p.parent_sku
+  })
+
+  const skuRows = []
+
+  for (const order of orders) {
+    if (!order.sku_promotion || !order.revenue) continue
+
+    // parse sku_promotion เช่น "DSPx2+LIPRx1"
+    const skus = order.sku_promotion.split('+').map(s => {
+      const m = s.trim().match(/^(.+?)x(\d+)$/i)
+      return m ? { sku: m[1], qty: parseInt(m[2]) } : null
+    }).filter(Boolean)
+
+    if (!skus.length) continue
+
+    // คำนวณ RSP weighted total
+    let totalRsp = 0
+    skus.forEach(({ sku, qty }) => {
+      totalRsp += (rspMap[sku] || 0) * qty
+    })
+
+    if (totalRsp === 0) {
+      // ถ้าไม่มี RSP แบ่งเท่ากัน
+      const perSku = order.revenue / skus.length
+      skus.forEach(({ sku, qty }) => {
+        skuRows.push({
+          date: order.date,
+          channel: order.channel,
+          sub_channel: order.sub_channel,
+          order_id: order.order_id,
+          parent_sku: sku,
+          product_name: nameMap[sku] || sku,
+          qty: qty,
+          revenue_share: Math.round(perSku * 100) / 100,
+          settled_date: order.settled_date,
+          settled: order.settled ? 'True' : 'False',
+        })
+      })
+      continue
+    }
+
+    // แบ่ง revenue ตามสัดส่วน RSP
+    skus.forEach(({ sku, qty }) => {
+      const skuRsp = (rspMap[sku] || 0) * qty
+      const allocated = order.revenue * (skuRsp / totalRsp)
+      skuRows.push({
+        date: order.date,
+        channel: order.channel,
+        sub_channel: order.sub_channel,
+        order_id: order.order_id,
+        parent_sku: sku,
+        product_name: nameMap[sku] || sku,
+        qty: qty,
+        revenue_share: Math.round(allocated * 100) / 100,
+        settled_date: order.settled_date,
+        settled: order.settled ? 'True' : 'False',
+      })
+    })
+  }
+
+  if (!skuRows.length) return
+
+  // ลบข้อมูลเดิมของ order_id เหล่านี้ก่อน แล้ว insert ใหม่
+  const orderIds = [...new Set(orders.map(o => o.order_id))]
+  await DB.from('sku_revenue').delete().in('order_id', orderIds)
+
+  // Insert ทีละ batch
+  const BATCH = 500
+  for (let i = 0; i < skuRows.length; i += BATCH) {
+    const { error } = await DB.from('sku_revenue').insert(skuRows.slice(i, i + BATCH))
+    if (error) throw error
+  }
+
+  console.log('SKU Revenue allocated:', skuRows.length, 'rows')
+}
+
 function mergeSkus(skuList) {
   const merged = {}
   skuList.forEach(({ sku, qty }) => {
