@@ -286,6 +286,8 @@ let rawHeaders=[], rawData=[], mappings={}, channel='', processed=[]
 document.getElementById('logoutBtn').addEventListener('click', () => {
   sessionStorage.removeItem('auth'); window.location.href = 'index.html'
 })
+// init store dropdown ถ้า channel ถูก set ไว้แล้ว
+window.handleChannelChange(document.getElementById('channelSelect').value)
 document.getElementById('btnStep1').addEventListener('click', handleStep1)
 document.getElementById('btnStep2').addEventListener('click', handleStep2)
 document.getElementById('btnBack2').addEventListener('click', () => goStep(1))
@@ -319,7 +321,7 @@ const STORE_OPTIONS = {
   Lazada: ['Lazada Mall', 'Lazada 24hr'],
 }
 
-function handleChannelChange(val) {
+window.handleChannelChange = function(val) {
   const storeWrap = document.getElementById('storeWrap')
   const storeSelect = document.getElementById('storeSelect')
   const fileWrap = document.getElementById('fileWrap')
