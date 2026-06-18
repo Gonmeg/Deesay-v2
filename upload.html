@@ -36,7 +36,8 @@
     .step-line.done { background: var(--success); }
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
     .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; }
-    .step1-grid { display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: start; margin-bottom: 20px; }
+    .step1-grid { display: grid; grid-template-columns: 180px 180px 1fr; gap: 16px; align-items: start; margin-bottom: 20px; }
+    .step1-grid .col-span2 { grid-column: 2 / 4; }
     .field-label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
     .req { color: var(--danger); }
     select { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); padding: 9px 12px; font-size: 0.85rem; font-family: inherit; outline: none; cursor: pointer; }
@@ -141,7 +142,7 @@
       <div class="step1-grid">
         <div>
           <label class="field-label">Channel <span class="req">*</span></label>
-          <select id="channelSelect">
+          <select id="channelSelect" onchange="handleChannelChange(this.value)">
             <option value="">— เลือก —</option>
             <option value="Facebook">Facebook</option>
             <option value="TikTok">TikTok</option>
@@ -151,7 +152,13 @@
             <option value="Modern Trade">Modern Trade</option>
           </select>
         </div>
-        <div>
+        <div id="storeWrap" style="display:none">
+          <label class="field-label">ร้านค้า <span class="req">*</span></label>
+          <select id="storeSelect">
+            <option value="">— เลือกร้าน —</option>
+          </select>
+        </div>
+        <div id="fileWrap" class="col-span2">
           <label class="field-label">ไฟล์ Excel หรือ CSV <span class="req">*</span></label>
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
           <label class="drop-label" id="dropLabel" for="fileInput">
@@ -307,11 +314,34 @@ dropLabel.addEventListener('drop', e => {
   fileInput.dispatchEvent(new Event('change'))
 })
 
+const STORE_OPTIONS = {
+  Shopee: ['Shopee Mall', 'Shopee 24hr'],
+  Lazada: ['Lazada Mall', 'Lazada 24hr'],
+}
+
+function handleChannelChange(val) {
+  const storeWrap = document.getElementById('storeWrap')
+  const storeSelect = document.getElementById('storeSelect')
+  const fileWrap = document.getElementById('fileWrap')
+  if (STORE_OPTIONS[val]) {
+    storeWrap.style.display = 'block'
+    fileWrap.classList.remove('col-span2')
+    storeSelect.innerHTML = '<option value="">— เลือกร้าน —</option>' +
+      STORE_OPTIONS[val].map(s => `<option value="${s}">${s}</option>`).join('')
+  } else {
+    storeWrap.style.display = 'none'
+    fileWrap.classList.add('col-span2')
+    storeSelect.value = ''
+  }
+}
+
 async function handleStep1() {
   channel = document.getElementById('channelSelect').value
+  const storeVal = document.getElementById('storeSelect').value
   const file = fileInput.files[0]
   const al = document.getElementById('alert1')
   if (!channel) return showAlert(al, 'กรุณาเลือก Channel ก่อน')
+  if (STORE_OPTIONS[channel] && !storeVal) return showAlert(al, 'กรุณาเลือกร้านค้า')
   if (!file) return showAlert(al, 'กรุณาเลือกไฟล์')
   al.style.display = 'none'
   FIELDS = getFields(channel)
@@ -364,7 +394,8 @@ async function handleStep2() {
   const miss = FIELDS.filter(f => f.required && !mappings[f.key])
   if (miss.length) return showAlert(al, 'กรุณาเลือกคอลัมน์: ' + miss.map(f => f.label).join(', '))
   al.style.display = 'none'
-  processed = await processRows(rawData, mappings, channel)
+  const storeVal = document.getElementById('storeSelect').value || null
+  processed = await processRows(rawData, mappings, channel, storeVal)
   const uniq = new Set(processed.map(r => r.order_id)).size
   document.getElementById('summaryGrid').innerHTML = `
     <div class="stat-box"><div class="stat-num">${rawData.length.toLocaleString()}</div><div class="stat-label">แถวในไฟล์</div></div>
@@ -519,7 +550,7 @@ function parseDate(v) {
   return null
 }
 
-async function processRows(rows, mappings, channel) {
+async function processRows(rows, mappings, channel, forcedSubChannel = null) {
   const { data: prods } = await DB.from('products').select('child_sku,parent_sku')
   const skuMap = {}
   if (prods) prods.forEach(p => skuMap[p.child_sku.toUpperCase()] = p.parent_sku.toUpperCase())
@@ -534,7 +565,7 @@ async function processRows(rows, mappings, channel) {
     const g = k => mappings[k] ? row[mappings[k]] : null
     const gs = k => { const v = g(k); return v !== null && v !== undefined ? String(v).trim() : '' }
     const date = parseDate(g('date'))
-    const sub = gs('sub_channel')
+    const sub = forcedSubChannel || gs('sub_channel')
     const rawSku = gs('sku_promotion')
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
