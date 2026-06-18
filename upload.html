@@ -36,8 +36,8 @@
     .step-line.done { background: var(--success); }
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
     .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; }
-    .step1-grid { display: grid; grid-template-columns: 180px 180px 1fr; gap: 16px; align-items: start; margin-bottom: 20px; }
-    .step1-grid .col-span2 { grid-column: 2 / 4; }
+    .step1-grid { display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: start; margin-bottom: 20px; }
+    .step1-left { display: flex; flex-direction: column; gap: 12px; }
     .field-label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
     .req { color: var(--danger); }
     select { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); padding: 9px 12px; font-size: 0.85rem; font-family: inherit; outline: none; cursor: pointer; }
@@ -140,25 +140,27 @@
     <div class="card">
       <div class="section-title">เลือก Channel และไฟล์</div>
       <div class="step1-grid">
-        <div>
-          <label class="field-label">Channel <span class="req">*</span></label>
-          <select id="channelSelect">
-            <option value="">— เลือก —</option>
-            <option value="Facebook">Facebook</option>
-            <option value="TikTok">TikTok</option>
-            <option value="Shopee">Shopee</option>
-            <option value="Lazada">Lazada</option>
-            <option value="ตัวแทน">ตัวแทน</option>
-            <option value="Modern Trade">Modern Trade</option>
-          </select>
+        <div class="step1-left">
+          <div>
+            <label class="field-label">Channel <span class="req">*</span></label>
+            <select id="channelSelect">
+              <option value="">— เลือก —</option>
+              <option value="Facebook">Facebook</option>
+              <option value="TikTok">TikTok</option>
+              <option value="Shopee">Shopee</option>
+              <option value="Lazada">Lazada</option>
+              <option value="ตัวแทน">ตัวแทน</option>
+              <option value="Modern Trade">Modern Trade</option>
+            </select>
+          </div>
+          <div id="storeWrap" style="display:none">
+            <label class="field-label">ร้านค้า <span class="req">*</span></label>
+            <select id="storeSelect">
+              <option value="">— เลือกร้าน —</option>
+            </select>
+          </div>
         </div>
-        <div id="storeWrap" style="display:none">
-          <label class="field-label">ร้านค้า <span class="req">*</span></label>
-          <select id="storeSelect">
-            <option value="">— เลือกร้าน —</option>
-          </select>
-        </div>
-        <div id="fileWrap" class="col-span2">
+        <div id="fileWrap">
           <label class="field-label">ไฟล์ Excel หรือ CSV <span class="req">*</span></label>
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
           <label class="drop-label" id="dropLabel" for="fileInput">
@@ -217,11 +219,11 @@ if (sessionStorage.getItem('auth') !== 'true') {
 const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
 const BASE_FIELDS = [
-  { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','order id','orderid','order_id'] },
+  { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id'] },
   { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['วันที่สั่งซื้อ','วันที่','date'] },
   { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
   { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ'] },
-  { key:'phone',          label:'เบอร์โทร',         required:false, keywords:['เบอร์โทร1','เบอร์โทร','phone'] },
+  { key:'phone',          label:'เบอร์โทร',         required:false, keywords:['หมายเลขโทรศัพท์','เบอร์โทร1','เบอร์โทร','phone'] },
   { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province'] },
   { key:'district',       label:'อำเภอ/เขต',        required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district'] },
   { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode'] },
@@ -241,7 +243,7 @@ const REVENUE_FIELDS = {
   ],
   Shopee: [
     { key:'rev_subtotal',  label:'ราคาขาย',            required:true,  keywords:['ราคาขาย','subtotal'] },
-    { key:'rev_platform',  label:'ส่วนลดจาก Shopee',   required:false, keywords:['ส่วนลดแพลตฟอร์ม','shopee discount'] },
+    { key:'rev_platform',  label:'ส่วนลดจาก Shopee',   required:false, keywords:['ส่วนลดจาก shopee','ส่วนลดแพลตฟอร์ม','shopee discount'] },
     { key:'rev_seller_discount', label:'โค้ดส่วนลดชำระโดยผู้ขาย', required:false, keywords:['โค้ดส่วนลดชำระโดยผู้ขาย','seller voucher'] },
     { key:'rev_shipping',  label:'ค่าจัดส่งที่ชำระโดยผู้ซื้อ', required:false, keywords:['ค่าจัดส่งที่ชำระโดยผู้ซื้อ','buyer shipping'] },
   ],
@@ -323,19 +325,15 @@ const STORE_OPTIONS = {
 window.handleChannelChange = function handleChannelChange(val) {
   const storeWrap = document.getElementById('storeWrap')
   const storeSelect = document.getElementById('storeSelect')
-  const fileWrap = document.getElementById('fileWrap')
   if (STORE_OPTIONS[val]) {
     storeWrap.style.display = 'block'
-    fileWrap.classList.remove('col-span2')
     storeSelect.innerHTML = '<option value="">— เลือกร้าน —</option>' +
       STORE_OPTIONS[val].map(s => `<option value="${s}">${s}</option>`).join('')
   } else {
     storeWrap.style.display = 'none'
-    fileWrap.classList.add('col-span2')
     storeSelect.value = ''
   }
 }
-// trigger ทันทีหลัง function define เสร็จ เผื่อ browser cache ค่าเดิมไว้
 handleChannelChange(document.getElementById('channelSelect').value)
 
 async function handleStep1() {
@@ -360,7 +358,21 @@ async function handleStep1() {
 function buildMapping() {
   const wrap = document.getElementById('mappingRows')
   wrap.innerHTML = ''
+  const storeVal = document.getElementById('storeSelect').value
   FIELDS.forEach(f => {
+    // ถ้า sub_channel และมีร้านค้าเลือกไว้แล้ว → แสดง readonly ไม่ต้องให้เลือก
+    if (f.key === 'sub_channel' && storeVal) {
+      const item = document.createElement('div')
+      item.className = 'map-item'
+      item.innerHTML = `
+        <div>
+          <span class="map-field-name">${f.label}</span>
+          <span class="badge badge-auto">✓ auto</span>
+        </div>
+        <div style="font-size:0.8rem;color:#10b981;padding:6px 8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px">${storeVal}</div>`
+      wrap.appendChild(item)
+      return
+    }
     const matched = autoMatch(f.keywords, rawHeaders)
     const item = document.createElement('div')
     item.className = 'map-item'
