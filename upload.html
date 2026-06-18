@@ -549,36 +549,21 @@ async function calcSkuRevenue(orders) {
 
     if (!skus.length) continue
 
-    // คำนวณ RSP weighted total
+    // คำนวณ RSP weighted total เฉพาะ SKU ที่มี RSP > 0
     let totalRsp = 0
     skus.forEach(({ sku, qty }) => {
-      totalRsp += (rspMap[sku] || 0) * qty
+      const rsp = rspMap[sku] || 0
+      if (rsp > 0) totalRsp += rsp * qty
     })
 
-    if (totalRsp === 0) {
-      // ถ้าไม่มี RSP แบ่งเท่ากัน
-      const perSku = order.revenue / skus.length
-      skus.forEach(({ sku, qty }) => {
-        skuRows.push({
-          date: order.date,
-          channel: order.channel,
-          sub_channel: order.sub_channel,
-          order_id: order.order_id,
-          parent_sku: sku,
-          product_name: nameMap[sku] || sku,
-          qty: qty,
-          revenue_share: Math.round(perSku * 100) / 100,
-          settled_date: order.settled_date,
-          settled: order.settled ? 'True' : 'False',
-        })
-      })
-      continue
-    }
-
     // แบ่ง revenue ตามสัดส่วน RSP
+    // SKU ที่ RSP=0 → revenue_share=0 แต่ยังเก็บ qty ไว้นับชิ้น
     skus.forEach(({ sku, qty }) => {
-      const skuRsp = (rspMap[sku] || 0) * qty
-      const allocated = order.revenue * (skuRsp / totalRsp)
+      const rsp = rspMap[sku] || 0
+      let allocated = 0
+      if (totalRsp > 0 && rsp > 0) {
+        allocated = order.revenue * ((rsp * qty) / totalRsp)
+      }
       skuRows.push({
         date: order.date,
         channel: order.channel,
