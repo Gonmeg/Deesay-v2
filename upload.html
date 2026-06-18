@@ -191,7 +191,8 @@ if (sessionStorage.getItem('auth') !== 'true') {
 
 const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
-const FIELDS = [
+// Base fields สำหรับทุก channel
+const BASE_FIELDS = [
   { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','order id','orderid','order_id'] },
   { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['วันที่สั่งซื้อ','วันที่','date'] },
   { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
@@ -202,8 +203,69 @@ const FIELDS = [
   { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode'] },
   { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment'] },
   { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['รหัสสินค้า (sku) (จำนวน)','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
-  { key:'revenue',        label:'ยอดรวม',           required:true,  keywords:['รวมทั้งสิ้น','ยอดรวม','revenue','total'] },
 ]
+
+// Revenue fields แต่ละ channel
+const REVENUE_FIELDS = {
+  Facebook: [
+    { key:'rev_subtotal',  label:'ยอดรวมสินค้า',      required:true,  keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ'] },
+    { key:'rev_discount',  label:'ส่วนลดท้ายบิล',     required:false, keywords:['ส่วนลดท้ายบิล','ส่วนลดบิล'] },
+    { key:'rev_shipping',  label:'ค่าขนส่ง',           required:false, keywords:['ค่าส่ง','ค่าขนส่ง','shipping'] },
+  ],
+  TikTok: [
+    { key:'rev_subtotal',  label:'ยอดรวมสินค้า',      required:true,  keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ'] },
+    { key:'rev_discount',  label:'ส่วนลดร้านค้าต่อรายการ', required:false, keywords:['ส่วนลดร้านค้าต่อรายการ','seller discount'] },
+  ],
+  Shopee: [
+    { key:'rev_subtotal',  label:'ราคาขาย',            required:true,  keywords:['ราคาขาย','subtotal'] },
+    { key:'rev_platform',  label:'ส่วนลดจาก Shopee',   required:false, keywords:['ส่วนลดแพลตฟอร์ม','shopee discount'] },
+    { key:'rev_seller_discount', label:'โค้ดส่วนลดชำระโดยผู้ขาย', required:false, keywords:['โค้ดส่วนลดชำระโดยผู้ขาย','seller voucher'] },
+    { key:'rev_shipping',  label:'ค่าจัดส่งที่ชำระโดยผู้ซื้อ', required:false, keywords:['ค่าจัดส่งที่ชำระโดยผู้ซื้อ','buyer shipping'] },
+  ],
+  Lazada: [
+    { key:'rev_subtotal',  label:'unitPrice',          required:true,  keywords:['unitPrice','unit price','ราคาต่อหน่วย'] },
+    { key:'rev_discount',  label:'sellerDiscountTotal', required:false, keywords:['sellerDiscountTotal','seller discount total'] },
+  ],
+  'ตัวแทน': [
+    { key:'rev_subtotal',  label:'ยอดรวม',             required:true,  keywords:['รวมทั้งสิ้น','ยอดรวม','total'] },
+  ],
+  'Modern Trade': [
+    { key:'rev_subtotal',  label:'ยอดรวม',             required:true,  keywords:['รวมทั้งสิ้น','ยอดรวม','total'] },
+  ],
+}
+
+// สูตรคำนวณ revenue แต่ละ channel
+function calcRevenue(channel, m, row) {
+  const getNum = key => {
+    if (!m[key]) return 0
+    const v = row[m[key]]
+    if (v === null || v === undefined || v === '') return 0
+    return parseFloat(String(v).replace(/,/g, '')) || 0
+  }
+  switch(channel) {
+    case 'Facebook':
+      return getNum('rev_subtotal') - getNum('rev_discount') + getNum('rev_shipping')
+    case 'TikTok':
+      return getNum('rev_subtotal') - getNum('rev_discount')
+    case 'Shopee':
+      return getNum('rev_subtotal') + getNum('rev_platform') - getNum('rev_seller_discount') + getNum('rev_shipping')
+    case 'Lazada':
+      return getNum('rev_subtotal') - getNum('rev_discount')
+    default:
+      return getNum('rev_subtotal')
+  }
+}
+
+// รวม fields สำหรับ mapping UI
+function getFields(channel) {
+  const revFields = REVENUE_FIELDS[channel] || [
+    { key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }
+  ]
+  return [...BASE_FIELDS, ...revFields]
+}
+
+let FIELDS = BASE_FIELDS // default
+
 
 let rawHeaders=[], rawData=[], mappings={}, channel='', processed=[]
 
@@ -245,6 +307,8 @@ async function handleStep1() {
   if (!channel) return showAlert(al, 'กรุณาเลือก Channel ก่อน')
   if (!file) return showAlert(al, 'กรุณาเลือกไฟล์')
   al.style.display = 'none'
+  // set FIELDS ตาม channel ที่เลือก
+  FIELDS = getFields(channel)
   try {
     const d = await readExcel(file)
     rawHeaders = d.headers
@@ -411,10 +475,16 @@ async function processRows(rows, mappings, channel) {
     const date = parseDate(dateRaw)
     const sub = gs('sub_channel')
     const rawSku = gs('sku_promotion')
-    const revenueStr = gs('revenue').replace(/,/g, '')
-
     // ถ้า sub_channel ไม่มีใน chMap ให้เก็บไว้ auto-insert ทีหลัง
     if (sub && !chMap[sub]) newSubChannels.add(sub)
+
+    // คำนวณ revenue ตามสูตรของแต่ละ channel
+    const revenue = calcRevenue(channel, mappings, row)
+    const revenueRaw = (() => {
+      const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null
+      if (!v) return 0
+      return parseFloat(String(v).replace(/,/g, '')) || 0
+    })()
 
     return {
       order_id: gs('order_id'),
@@ -423,7 +493,8 @@ async function processRows(rows, mappings, channel) {
       sub_channel: sub || channel,
       sku_promotion: tfn(rawSku, skuMap),
       sku_promotion_raw: rawSku,
-      revenue: parseFloat(revenueStr) || 0,
+      revenue: revenue,
+      revenue_raw: revenueRaw,
       province: gs('province'),
       district: gs('district'),
       postcode: gs('postcode'),
