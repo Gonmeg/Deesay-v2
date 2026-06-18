@@ -763,7 +763,10 @@ function tfShopee(raw, m) {
   if (!raw) return ''
   const skus = raw.split('+').map(s => s.trim()).map(p => {
     const x = p.match(/^(.+?)x(\d+)$/i)
-    return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
+    if (x) return { sku: norm(x[1], m), qty: parseInt(x[2]) }
+    // ไม่มี x → qty = 1 (Shopee บางออเดอร์ส่ง child SKU ตรงๆ)
+    if (p) return { sku: norm(p, m), qty: 1 }
+    return null
   }).filter(Boolean)
   return mergeSkus(skus)
 }
