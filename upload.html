@@ -436,12 +436,19 @@ async function handleConfirm() {
   pt.style.display = 'block'; al.style.display = 'none'
 
   try {
+    // deduplicate by order_id — Shopee/Lazada export หลาย row ต่อ order
+    const dedupMap = new Map()
+    processed.forEach(r => {
+      if (!dedupMap.has(r.order_id)) dedupMap.set(r.order_id, r)
+    })
+    const deduped = [...dedupMap.values()]
+
     const BATCH = 500; let done = 0
-    for (let i = 0; i < processed.length; i += BATCH) {
-      const { error } = await DB.from('orders').upsert(processed.slice(i, i + BATCH), { onConflict: 'order_id' })
+    for (let i = 0; i < deduped.length; i += BATCH) {
+      const { error } = await DB.from('orders').upsert(deduped.slice(i, i + BATCH), { onConflict: 'order_id' })
       if (error) throw error
-      done += Math.min(BATCH, processed.length - i)
-      pf.style.width = Math.round(done / processed.length * 100) + '%'
+      done += Math.min(BATCH, deduped.length - i)
+      pf.style.width = Math.round(done / deduped.length * 100) + '%'
     }
 
     btn.textContent = 'กำลังคำนวณ SKU Revenue...'
