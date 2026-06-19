@@ -219,7 +219,7 @@ if (sessionStorage.getItem('auth') !== 'true') {
 const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
 const BASE_FIELDS = [
-  { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id'] },
+  { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id','ordernumber'] },
   { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['วันที่สั่งซื้อ','วันที่','date'] },
   { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
   { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ'] },
@@ -227,7 +227,7 @@ const BASE_FIELDS = [
   { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province','shippingaddress3'] },
   { key:'district',       label:'อำเภอ/เขต',        required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district','billingaddr4'] },
   { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode'] },
-  { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment'] },
+  { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment','paymethod'] },
   { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
 ]
 
