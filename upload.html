@@ -21,7 +21,30 @@
     .nav-link:hover { color: var(--text); }
     .btn-ghost { font-size: 0.8rem; color: var(--muted); background: none; border: 1px solid var(--border2); padding: 4px 12px; border-radius: 6px; cursor: pointer; }
     main { display: flex; justify-content: center; padding: 36px 24px; }
-    .shell { width: 100%; max-width: 720px; }
+    .shell { width: 100%; max-width: 1040px; display: flex; gap: 24px; align-items: flex-start; }
+    .shell-main { flex: 1; min-width: 0; max-width: 720px; }
+    .shell-sidebar { width: 300px; flex-shrink: 0; position: sticky; top: 68px; }
+    .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .history-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+    .history-sub { font-size: 0.7rem; color: var(--muted); margin-bottom: 14px; }
+    .history-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .history-item:last-child { border-bottom: none; }
+    .history-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .history-item-channel { font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .history-item-time { font-size: 0.65rem; color: var(--muted); }
+    .history-item-detail { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+    .history-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 0.62rem; padding: 1px 6px; border-radius: 99px; font-weight: 600; }
+    .history-badge-order { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .history-badge-settlement { background: rgba(251,146,60,0.15); color: #fb923c; }
+    .history-badge-error { background: rgba(239,68,68,0.15); color: #fca5a5; }
+    .history-empty { font-size: 0.78rem; color: var(--muted); text-align: center; padding: 24px 0; }
+    .history-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .history-loading { font-size: 0.75rem; color: var(--muted); text-align: center; padding: 16px 0; }
+    @media (max-width: 900px) {
+      .shell { flex-direction: column; }
+      .shell-sidebar { width: 100%; position: static; }
+      .history-card { max-height: 400px; }
+    }
     .page-header { margin-bottom: 28px; }
     .page-header h1 { font-size: 1.3rem; font-weight: 600; margin-bottom: 4px; }
     .page-header p { font-size: 0.82rem; color: var(--muted); }
@@ -119,6 +142,7 @@
 </nav>
 <main>
 <div class="shell">
+<div class="shell-main">
   <div class="page-header">
     <h1 id="pageTitle">Upload ข้อมูลยอดขาย</h1>
     <p id="pageDesc">นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
@@ -214,6 +238,16 @@
     </div>
   </div>
 </div>
+
+<div class="shell-sidebar">
+  <div class="history-card">
+    <div class="history-title">ประวัติการอัพโหลด</div>
+    <div class="history-sub">30 วันล่าสุด</div>
+    <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
+  </div>
+</div>
+
+</div>
 </main>
 
 <script src="config.js"></script>
@@ -225,6 +259,75 @@ if (sessionStorage.getItem('auth') !== 'true') {
 }
 
 const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
+
+// ===== Upload History Sidebar =====
+function timeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (diff < 60) return 'เมื่อสักครู่'
+  if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว'
+  if (diff < 86400) return Math.floor(diff/3600) + ' ชม.ที่แล้ว'
+  if (diff < 172800) return 'เมื่อวาน'
+  return Math.floor(diff/86400) + ' วันที่แล้ว'
+}
+
+const CHANNEL_ICON = { Facebook:'📘', TikTok:'🎵', Shopee:'🛒', Lazada:'🛍️', 'ตัวแทน':'🏪', 'Modern Trade':'🏬' }
+
+async function loadUploadHistory() {
+  const el = document.getElementById('historyList')
+  try {
+    const since = new Date(Date.now() - 30*86400*1000).toISOString()
+    const { data, error } = await DB.from('upload_logs')
+      .select('*')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    if (error) throw error
+    if (!data || !data.length) {
+      el.innerHTML = '<div class="history-empty">ยังไม่มีประวัติการอัพโหลด</div>'
+      return
+    }
+    el.innerHTML = data.map(log => {
+      const isError = log.status === 'error'
+      const isSettlement = log.upload_type === 'settlement'
+      const badgeClass = isError ? 'history-badge-error' : (isSettlement ? 'history-badge-settlement' : 'history-badge-order')
+      const badgeText = isError ? '✕ ผิดพลาด' : (isSettlement ? '💰 รับเงิน' : '📦 ออเดอร์')
+      const icon = CHANNEL_ICON[log.channel] || '📄'
+      let detail = ''
+      if (isError) {
+        detail = `<span style="color:#fca5a5">${log.error_message || 'เกิดข้อผิดพลาด'}</span>`
+      } else if (isSettlement) {
+        detail = `Match สำเร็จ ${(log.success_count||0).toLocaleString()} · ไม่เจอ ${(log.not_matched_count||0).toLocaleString()}`
+      } else {
+        detail = `${(log.success_count||0).toLocaleString()} ออเดอร์ · ฿${Math.round(log.total_revenue||0).toLocaleString()}`
+      }
+      return `
+        <div class="history-item">
+          <div class="history-item-top">
+            <div class="history-item-channel">${icon} ${log.channel}${log.sub_channel ? ' · '+log.sub_channel : ''}</div>
+            <div class="history-item-time">${timeAgo(log.created_at)}</div>
+          </div>
+          <div class="history-item-detail">
+            <span class="history-badge ${badgeClass}">${badgeText}</span>
+            &nbsp;${detail}
+          </div>
+        </div>`
+    }).join('')
+  } catch(e) {
+    el.innerHTML = '<div class="history-empty">โหลดประวัติไม่ได้</div>'
+  }
+}
+
+async function logUpload(entry) {
+  try {
+    await DB.from('upload_logs').insert(entry)
+    loadUploadHistory()
+  } catch(e) {
+    console.error('logUpload failed:', e)
+  }
+}
+
+loadUploadHistory()
+
 
 // Settlement fields แต่ละ platform — สำหรับ mode "อัพรายรับเงิน"
 const SETTLEMENT_FIELDS = {
@@ -550,10 +653,22 @@ async function handleConfirm() {
 
       await DB.rpc('refresh_all_views')
 
+      const notMatched = deduped.length - matchedCount
+      logUpload({
+        upload_type: 'settlement',
+        channel: channel,
+        sub_channel: null,
+        file_name: fileInput.files[0]?.name || null,
+        total_rows: deduped.length,
+        success_count: matchedCount,
+        not_matched_count: notMatched,
+        total_revenue: null,
+        status: 'success'
+      })
+
       pt.style.display = 'none'
       al.style.display = 'none'
 
-      const notMatched = deduped.length - matchedCount
       const btnRow = document.getElementById('btnRow3')
       btnRow.innerHTML = `
         <div style="width:100%">
@@ -613,6 +728,18 @@ async function handleConfirm() {
       al.style.display = 'block'
       btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload'
       back.disabled = false
+      logUpload({
+        upload_type: 'settlement',
+        channel: channel,
+        sub_channel: null,
+        file_name: fileInput.files[0]?.name || null,
+        total_rows: processed.length,
+        success_count: 0,
+        not_matched_count: null,
+        total_revenue: null,
+        status: 'error',
+        error_message: e.message
+      })
     }
     return
   }
@@ -640,6 +767,18 @@ async function handleConfirm() {
 
     // คำนวณ revenue รวม
     const totalRevenue = processed.reduce((s, r) => s + (r.revenue || 0), 0)
+
+    logUpload({
+      upload_type: 'order',
+      channel: channel,
+      sub_channel: deduped[0]?.sub_channel || null,
+      file_name: fileInput.files[0]?.name || null,
+      total_rows: deduped.length,
+      success_count: deduped.length,
+      not_matched_count: null,
+      total_revenue: totalRevenue,
+      status: 'success'
+    })
 
     // ซ่อน progress bar และ alert เดิม
     pt.style.display = 'none'
@@ -706,6 +845,18 @@ async function handleConfirm() {
     al.style.display = 'block'
     btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload'
     back.disabled = false
+    logUpload({
+      upload_type: 'order',
+      channel: channel,
+      sub_channel: processed[0]?.sub_channel || null,
+      file_name: fileInput.files[0]?.name || null,
+      total_rows: processed.length,
+      success_count: 0,
+      not_matched_count: null,
+      total_revenue: null,
+      status: 'error',
+      error_message: e.message
+    })
   }
 }
 
@@ -752,8 +903,15 @@ function parseDate(v) {
   }
   const s = String(v).trim()
   if (!s || s === '-') return null
-  const m = s.match(/^(\d{4}-\d{2}-\d{2})/)
-  if (m) return m[1]
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (m) return m[1] + '-' + m[2] + '-' + m[3]
+  // รูปแบบ "2026/01/31" (YYYY/MM/DD) — TikTok settlement file บางไฟล์ส่งมาแบบนี้
+  const mYSlash = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/)
+  if (mYSlash) {
+    const mo = mYSlash[2].padStart(2, '0')
+    const da = mYSlash[3].padStart(2, '0')
+    return mYSlash[1] + '-' + mo + '-' + da
+  }
   // รูปแบบ "31 Jan 2026 23:58" (DD Mon YYYY HH:mm) — Lazada บางไฟล์ส่งมาแบบนี้
   const mEng = s.match(/^(\d{1,2})[\s\-]+([A-Za-z]{3,})[\s\-]+(\d{4})/)
   if (mEng) {
