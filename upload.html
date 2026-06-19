@@ -25,6 +25,10 @@
     .page-header { margin-bottom: 28px; }
     .page-header h1 { font-size: 1.3rem; font-weight: 600; margin-bottom: 4px; }
     .page-header p { font-size: 0.82rem; color: var(--muted); }
+    .mode-toggle { display: flex; gap: 8px; margin-bottom: 24px; background: var(--surface2); border-radius: var(--radius-sm); padding: 4px; width: fit-content; }
+    .mode-btn { background: none; border: none; color: var(--muted); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+    .mode-btn.active { background: var(--accent); color: white; }
+    .mode-btn:not(.active):hover { color: var(--text); }
     .step-track { display: flex; align-items: center; margin-bottom: 24px; }
     .step-item { display: flex; align-items: center; gap: 8px; }
     .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; border: 1.5px solid var(--border2); color: var(--muted); flex-shrink: 0; transition: all 0.2s; }
@@ -116,8 +120,12 @@
 <main>
 <div class="shell">
   <div class="page-header">
-    <h1>Upload ข้อมูลยอดขาย</h1>
-    <p>นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
+    <h1 id="pageTitle">Upload ข้อมูลยอดขาย</h1>
+    <p id="pageDesc">นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
+  </div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="modeBtnOrder">📦 อัพคำสั่งซื้อ</button>
+    <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
   </div>
   <div class="step-track">
     <div class="step-item">
@@ -218,6 +226,22 @@ if (sessionStorage.getItem('auth') !== 'true') {
 
 const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
+// Settlement fields แต่ละ platform — สำหรับ mode "อัพรายรับเงิน"
+const SETTLEMENT_FIELDS = {
+  Lazada: [
+    { key:'settle_order_id', label:'Order No.',        required:true, keywords:['order no.','order no','orderno'] },
+    { key:'settle_date',     label:'วันที่รับเงิน',     required:true, keywords:['transaction date'] },
+  ],
+  Shopee: [
+    { key:'settle_order_id', label:'หมายเลขคำสั่งซื้อ', required:true, keywords:['หมายเลขคำสั่งซื้อ'] },
+    { key:'settle_date',     label:'วันที่รับเงิน',     required:true, keywords:['วันที่โอนชำระเงินสำเร็จ'] },
+  ],
+  TikTok: [
+    { key:'settle_order_id', label:'Related order ID', required:true, keywords:['related order id'] },
+    { key:'settle_date',     label:'วันที่รับเงิน',     required:true, keywords:['order settled time'] },
+  ],
+}
+
 const BASE_FIELDS = [
   { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id','ordernumber'] },
   { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['createtime','created time','วันที่สั่งซื้อ','วันที่','date'] },
@@ -290,10 +314,51 @@ function getFields(channel) {
 
 let FIELDS = BASE_FIELDS
 let rawHeaders=[], rawData=[], mappings={}, channel='', processed=[]
+let uploadMode = 'order' // 'order' | 'settlement'
+
+const SETTLEMENT_CHANNELS = ['Lazada', 'Shopee', 'TikTok']
+const CHANNEL_OPTIONS_ORDER = [
+  { value:'Facebook', label:'Facebook' },
+  { value:'TikTok', label:'TikTok' },
+  { value:'Shopee', label:'Shopee' },
+  { value:'Lazada', label:'Lazada' },
+  { value:'ตัวแทน', label:'ตัวแทน' },
+  { value:'Modern Trade', label:'Modern Trade' },
+]
+const CHANNEL_OPTIONS_SETTLEMENT = [
+  { value:'TikTok', label:'TikTok' },
+  { value:'Shopee', label:'Shopee' },
+  { value:'Lazada', label:'Lazada' },
+]
+
+function setUploadMode(mode) {
+  uploadMode = mode
+  document.getElementById('modeBtnOrder').classList.toggle('active', mode === 'order')
+  document.getElementById('modeBtnSettlement').classList.toggle('active', mode === 'settlement')
+  document.getElementById('pageTitle').textContent = mode === 'order' ? 'Upload ข้อมูลยอดขาย' : 'Upload รายรับเงิน (Settlement)'
+  document.getElementById('pageDesc').textContent = mode === 'order'
+    ? 'นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ'
+    : 'นำเข้าไฟล์รายรับเงินจากแต่ละ platform ระบบจะจับคู่กับออเดอร์และอัพเดทสถานะ settled อัตโนมัติ'
+  const opts = mode === 'order' ? CHANNEL_OPTIONS_ORDER : CHANNEL_OPTIONS_SETTLEMENT
+  const sel = document.getElementById('channelSelect')
+  sel.innerHTML = '<option value="">— เลือก —</option>' + opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('')
+  channel = ''
+  handleChannelChange('')
+  // reset กลับไป step 1
+  rawHeaders = []; rawData = []; mappings = {}; processed = []
+  fileInput.value = ''
+  dropLabel.classList.remove('has-file')
+  document.getElementById('dropIcon').textContent = '📂'
+  document.getElementById('dropMain').innerHTML = '<strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวาง'
+  document.getElementById('dropSub').textContent = '.xlsx .xls .csv'
+  goStep(1)
+}
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
   sessionStorage.removeItem('auth'); window.location.href = 'index.html'
 })
+document.getElementById('modeBtnOrder').addEventListener('click', () => setUploadMode('order'))
+document.getElementById('modeBtnSettlement').addEventListener('click', () => setUploadMode('settlement'))
 document.getElementById('channelSelect').addEventListener('change', e => handleChannelChange(e.target.value))
 document.getElementById('btnStep1').addEventListener('click', handleStep1)
 document.getElementById('btnStep2').addEventListener('click', handleStep2)
@@ -331,7 +396,7 @@ const STORE_OPTIONS = {
 window.handleChannelChange = function handleChannelChange(val) {
   const storeWrap = document.getElementById('storeWrap')
   const storeSelect = document.getElementById('storeSelect')
-  if (STORE_OPTIONS[val]) {
+  if (uploadMode === 'order' && STORE_OPTIONS[val]) {
     storeWrap.style.display = 'block'
     storeSelect.innerHTML = '<option value="">— เลือกร้าน —</option>' +
       STORE_OPTIONS[val].map(s => `<option value="${s}">${s}</option>`).join('')
@@ -348,10 +413,10 @@ async function handleStep1() {
   const file = fileInput.files[0]
   const al = document.getElementById('alert1')
   if (!channel) return showAlert(al, 'กรุณาเลือก Channel ก่อน')
-  if (STORE_OPTIONS[channel] && !storeVal) return showAlert(al, 'กรุณาเลือกร้านค้า')
+  if (uploadMode === 'order' && STORE_OPTIONS[channel] && !storeVal) return showAlert(al, 'กรุณาเลือกร้านค้า')
   if (!file) return showAlert(al, 'กรุณาเลือกไฟล์')
   al.style.display = 'none'
-  FIELDS = getFields(channel)
+  FIELDS = uploadMode === 'settlement' ? (SETTLEMENT_FIELDS[channel] || []) : getFields(channel)
   try {
     const d = await readExcel(file)
     rawHeaders = d.headers
@@ -418,6 +483,22 @@ async function handleStep2() {
   const miss = FIELDS.filter(f => f.required && !mappings[f.key])
   if (miss.length) return showAlert(al, 'กรุณาเลือกคอลัมน์: ' + miss.map(f => f.label).join(', '))
   al.style.display = 'none'
+
+  if (uploadMode === 'settlement') {
+    processed = processSettlementRows(rawData, mappings)
+    const uniq = new Set(processed.map(r => r.order_id)).size
+    document.getElementById('summaryGrid').innerHTML = `
+      <div class="stat-box"><div class="stat-num">${rawData.length.toLocaleString()}</div><div class="stat-label">แถวในไฟล์</div></div>
+      <div class="stat-box"><div class="stat-num">${uniq.toLocaleString()}</div><div class="stat-label">Order ที่รับเงินแล้ว</div></div>
+      <div class="stat-box"><div class="stat-num">${channel}</div><div class="stat-label">Platform</div></div>`
+    const cols = ['order_id', 'settled_date']
+    document.getElementById('previewTbl').innerHTML =
+      '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' +
+      processed.slice(0, 5).map(r => '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>').join('')
+    goStep(3)
+    return
+  }
+
   const storeVal = document.getElementById('storeSelect').value || null
   // TikTok ไม่มี store dropdown และบางไฟล์ไม่มีคอลัมน์ sub_channel เลย → ล็อกเป็น Deesay Thailand เสมอ
   const forcedSub = channel === 'TikTok' ? 'Deesay Thailand' : storeVal
@@ -443,6 +524,98 @@ async function handleConfirm() {
   btn.disabled = true; back.disabled = true
   btn.textContent = 'กำลัง Upload...'
   pt.style.display = 'block'; al.style.display = 'none'
+
+  if (uploadMode === 'settlement') {
+    try {
+      // dedup order_id (เผื่อไฟล์มีซ้ำ) เก็บ settled_date ล่าสุด
+      const dedupMap = new Map()
+      processed.forEach(r => dedupMap.set(r.order_id, r))
+      const deduped = [...dedupMap.values()]
+
+      const BATCH = 300; let done = 0; let matchedCount = 0
+      for (let i = 0; i < deduped.length; i += BATCH) {
+        const batch = deduped.slice(i, i + BATCH)
+        // update เฉพาะ order_id ที่มีอยู่จริงใน orders table — ทีละ record เพราะ Supabase ไม่รองรับ bulk update ค่าต่างกันในคำสั่งเดียว
+        for (const r of batch) {
+          const { data, error } = await DB.from('orders')
+            .update({ settled: true, settled_date: r.settled_date })
+            .eq('order_id', r.order_id)
+            .select('order_id')
+          if (error) throw error
+          if (data && data.length) matchedCount++
+        }
+        done += batch.length
+        pf.style.width = Math.round(done / deduped.length * 100) + '%'
+      }
+
+      await DB.rpc('refresh_all_views')
+
+      pt.style.display = 'none'
+      al.style.display = 'none'
+
+      const notMatched = deduped.length - matchedCount
+      const btnRow = document.getElementById('btnRow3')
+      btnRow.innerHTML = `
+        <div style="width:100%">
+          <div class="success-banner">
+            <span class="success-banner-icon">✓</span>
+            <div>
+              <div class="success-banner-title">Map Settlement สำเร็จ</div>
+              <div class="success-banner-sub">${matchedCount.toLocaleString()} ออเดอร์ถูกอัพเดทเป็น settled · ${channel}</div>
+            </div>
+          </div>
+
+          <div class="success-stats">
+            <div class="success-stat">
+              <div class="success-stat-num">${deduped.length.toLocaleString()}</div>
+              <div class="success-stat-label">รายการในไฟล์</div>
+            </div>
+            <div class="success-stat">
+              <div class="success-stat-num">${matchedCount.toLocaleString()}</div>
+              <div class="success-stat-label">Match สำเร็จ</div>
+            </div>
+            <div class="success-stat">
+              <div class="success-stat-num" style="color:${notMatched > 0 ? '#fb923c' : '#818cf8'}">${notMatched.toLocaleString()}</div>
+              <div class="success-stat-label">ไม่เจอออเดอร์</div>
+            </div>
+          </div>
+
+          <div class="success-divider">
+            <div class="success-action-label">ต้องการทำอะไรต่อ?</div>
+            <div class="success-actions">
+              <button class="action-card" onclick="location.reload()">
+                <span class="action-card-icon">💰</span>
+                <div>
+                  <div class="action-card-title">อัพรับเงินต่อ</div>
+                  <div class="action-card-sub">platform ถัดไป</div>
+                </div>
+              </button>
+              <button class="action-card" onclick="window.open('dashboard.html','_blank')">
+                <span class="action-card-icon">📊</span>
+                <div>
+                  <div class="action-card-title">ดู Dashboard</div>
+                  <div class="action-card-sub">ยอดขายล่าสุด</div>
+                </div>
+              </button>
+              <button class="action-card" onclick="location.href='index.html'">
+                <span class="action-card-icon">🏠</span>
+                <div>
+                  <div class="action-card-title">หน้าแรก</div>
+                  <div class="action-card-sub">กลับเมนูหลัก</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>`
+    } catch(e) {
+      al.className = 'alert alert-error'
+      al.textContent = 'เกิดข้อผิดพลาด: ' + e.message
+      al.style.display = 'block'
+      btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload'
+      back.disabled = false
+    }
+    return
+  }
 
   try {
     // deduplicate by order_id — Shopee/Lazada export หลาย row ต่อ order
@@ -607,6 +780,16 @@ function parseDate(v) {
     return y + '-' + mo + '-' + da
   }
   return null
+}
+
+function processSettlementRows(rows, mappings) {
+  return rows.map(row => {
+    const orderIdRaw = mappings['settle_order_id'] ? row[mappings['settle_order_id']] : null
+    const dateRaw = mappings['settle_date'] ? row[mappings['settle_date']] : null
+    const orderId = orderIdRaw !== null && orderIdRaw !== undefined ? String(orderIdRaw).trim() : ''
+    const settledDate = parseDate(dateRaw)
+    return { order_id: orderId, settled_date: settledDate }
+  }).filter(r => r.order_id)
 }
 
 async function processRows(rows, mappings, channel, forcedSubChannel = null) {
