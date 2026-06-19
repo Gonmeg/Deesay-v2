@@ -365,9 +365,10 @@ function buildMapping() {
   const wrap = document.getElementById('mappingRows')
   wrap.innerHTML = ''
   const storeVal = document.getElementById('storeSelect').value
+  const forcedSubDisplay = channel === 'TikTok' ? 'Deesay Thailand' : storeVal
   FIELDS.forEach(f => {
-    // ถ้า sub_channel และมีร้านค้าเลือกไว้แล้ว → แสดง readonly ไม่ต้องให้เลือก
-    if (f.key === 'sub_channel' && storeVal) {
+    // ถ้า sub_channel ถูกล็อกไว้ (ร้านค้าเลือกแล้ว หรือ TikTok) → แสดง readonly ไม่ต้องให้เลือก
+    if (f.key === 'sub_channel' && forcedSubDisplay) {
       const item = document.createElement('div')
       item.className = 'map-item'
       item.innerHTML = `
@@ -375,7 +376,7 @@ function buildMapping() {
           <span class="map-field-name">${f.label}</span>
           <span class="badge badge-auto">✓ auto</span>
         </div>
-        <div style="font-size:0.8rem;color:#10b981;padding:6px 8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px">${storeVal}</div>`
+        <div style="font-size:0.8rem;color:#10b981;padding:6px 8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px">${forcedSubDisplay}</div>`
       wrap.appendChild(item)
       return
     }
@@ -418,7 +419,9 @@ async function handleStep2() {
   if (miss.length) return showAlert(al, 'กรุณาเลือกคอลัมน์: ' + miss.map(f => f.label).join(', '))
   al.style.display = 'none'
   const storeVal = document.getElementById('storeSelect').value || null
-  processed = await processRows(rawData, mappings, channel, storeVal)
+  // TikTok ไม่มี store dropdown และบางไฟล์ไม่มีคอลัมน์ sub_channel เลย → ล็อกเป็น Deesay Thailand เสมอ
+  const forcedSub = channel === 'TikTok' ? 'Deesay Thailand' : storeVal
+  processed = await processRows(rawData, mappings, channel, forcedSub)
   const uniq = new Set(processed.map(r => r.order_id)).size
   document.getElementById('summaryGrid').innerHTML = `
     <div class="stat-box"><div class="stat-num">${rawData.length.toLocaleString()}</div><div class="stat-label">แถวในไฟล์</div></div>
