@@ -220,7 +220,7 @@ const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
 const BASE_FIELDS = [
   { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id','ordernumber'] },
-  { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['วันที่สั่งซื้อ','วันที่','date'] },
+  { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['createtime','วันที่สั่งซื้อ','วันที่','date'] },
   { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
   { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ'] },
   { key:'phone',          label:'เบอร์โทร',         required:false, keywords:['หมายเลขโทรศัพท์','เบอร์โทร1','เบอร์โทร','phone'] },
@@ -568,6 +568,16 @@ function parseDate(v) {
   if (!s || s === '-') return null
   const m = s.match(/^(\d{4}-\d{2}-\d{2})/)
   if (m) return m[1]
+  // รูปแบบ "31 Jan 2026 23:58" (DD Mon YYYY HH:mm) — Lazada บางไฟล์ส่งมาแบบนี้
+  const mEng = s.match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})/)
+  if (mEng) {
+    const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'}
+    const mo = months[mEng[2].toLowerCase().slice(0,3)]
+    if (mo) {
+      const da = mEng[1].padStart(2, '0')
+      return mEng[3] + '-' + mo + '-' + da
+    }
+  }
   if (/^\d+(\.\d+)?$/.test(s)) {
     const n = parseFloat(s)
     const d = new Date(Math.round((n - 25569) * 86400 * 1000))
