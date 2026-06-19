@@ -224,7 +224,7 @@ const BASE_FIELDS = [
   { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
   { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ'] },
   { key:'phone',          label:'เบอร์โทร',         required:false, keywords:['หมายเลขโทรศัพท์','เบอร์โทร1','เบอร์โทร','phone'] },
-  { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province','shippingaddress3'] },
+  { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province','billingaddr3'] },
   { key:'district',       label:'อำเภอ/เขต',        required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district','billingaddr4'] },
   { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode'] },
   { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment','paymethod'] },
@@ -279,7 +279,12 @@ function getFields(channel) {
   const revFields = REVENUE_FIELDS[channel] || [
     { key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }
   ]
-  return [...BASE_FIELDS, ...revFields]
+  let base = BASE_FIELDS
+  // Lazada ไม่มีจังหวัด/อำเภอที่เชื่อถือได้ (บางร้านมี บางร้านไม่มี) → ตัดออกเสมอ ให้ blank
+  if (channel === 'Lazada') {
+    base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
+  }
+  return [...base, ...revFields]
 }
 
 let FIELDS = BASE_FIELDS
