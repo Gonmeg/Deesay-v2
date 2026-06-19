@@ -755,7 +755,7 @@ function parseDate(v) {
   const m = s.match(/^(\d{4}-\d{2}-\d{2})/)
   if (m) return m[1]
   // รูปแบบ "31 Jan 2026 23:58" (DD Mon YYYY HH:mm) — Lazada บางไฟล์ส่งมาแบบนี้
-  const mEng = s.match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})/)
+  const mEng = s.match(/^(\d{1,2})[\s\-]+([A-Za-z]{3,})[\s\-]+(\d{4})/)
   if (mEng) {
     const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'}
     const mo = months[mEng[2].toLowerCase().slice(0,3)]
