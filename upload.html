@@ -224,8 +224,8 @@ const BASE_FIELDS = [
   { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
   { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ'] },
   { key:'phone',          label:'เบอร์โทร',         required:false, keywords:['หมายเลขโทรศัพท์','เบอร์โทร1','เบอร์โทร','phone'] },
-  { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province'] },
-  { key:'district',       label:'อำเภอ/เขต',        required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district'] },
+  { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province','shippingaddress3'] },
+  { key:'district',       label:'อำเภอ/เขต',        required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district','billingaddr4'] },
   { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode'] },
   { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment'] },
   { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
@@ -608,7 +608,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       revenue: revenue,
       revenue_raw: revenueRaw,
       province: normalizeProvince(gs('province')),
-      district: gs('district'),
+      district: normalizeDistrict(gs('district')),
       postcode: gs('postcode'),
       customer_name: gs('customer_name'),
       phone: gs('phone'),
@@ -664,8 +664,20 @@ const PROVINCE_MAP = {
 }
 function normalizeProvince(v) {
   if (!v) return ''
-  const s = String(v).trim()
+  let s = String(v).trim()
+  // Lazada ส่งมาแบบ "ปทุมธานี/ Pathum Thani" — ตัดเอาส่วนก่อน / ก่อน
+  if (s.includes('/')) s = s.split('/')[0].trim()
+  // เผื่อมีคำว่า "จังหวัด" นำหน้า เช่น "จังหวัดนครราชสีมา"
+  s = s.replace(/^จังหวัด/, '').trim()
   return PROVINCE_MAP[s] || s
+}
+
+function normalizeDistrict(v) {
+  if (!v) return ''
+  let s = String(v).trim()
+  // Lazada ส่งมาแบบ "เมืองปทุมธานี/ Mueang Pathum Thani" — ตัดเอาส่วนก่อน / ก่อน (ภาษาไทย)
+  if (s.includes('/')) s = s.split('/')[0].trim()
+  return s
 }
 
 async function calcSkuRevenue(orders) {
