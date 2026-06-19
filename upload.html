@@ -421,8 +421,8 @@ async function handleStep2() {
   const uniq = new Set(processed.map(r => r.order_id)).size
   document.getElementById('summaryGrid').innerHTML = `
     <div class="stat-box"><div class="stat-num">${rawData.length.toLocaleString()}</div><div class="stat-label">แถวในไฟล์</div></div>
-    <div class="stat-box"><div class="stat-num">${processed.length.toLocaleString()}</div><div class="stat-label">จะ Upsert</div></div>
-    <div class="stat-box"><div class="stat-num">${uniq.toLocaleString()}</div><div class="stat-label">Order ไม่ซ้ำ</div></div>`
+    <div class="stat-box"><div class="stat-num">${uniq.toLocaleString()}</div><div class="stat-label">จะ Upsert (Order ไม่ซ้ำ)</div></div>
+    <div class="stat-box"><div class="stat-num">${processed.length.toLocaleString()}</div><div class="stat-label">SKU rows ที่จะคำนวณ</div></div>`
   const cols = ['date', 'order_id', 'sku_promotion', 'revenue', 'province', 'payment_method']
   document.getElementById('previewTbl').innerHTML =
     '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' +
@@ -476,13 +476,13 @@ async function handleConfirm() {
           <span class="success-banner-icon">✓</span>
           <div>
             <div class="success-banner-title">Upload สำเร็จ</div>
-            <div class="success-banner-sub">${processed.length.toLocaleString()} ออเดอร์เข้าระบบแล้ว · ${channel}</div>
+            <div class="success-banner-sub">${deduped.length.toLocaleString()} ออเดอร์เข้าระบบแล้ว · ${channel}</div>
           </div>
         </div>
 
         <div class="success-stats">
           <div class="success-stat">
-            <div class="success-stat-num">${processed.length.toLocaleString()}</div>
+            <div class="success-stat-num">${deduped.length.toLocaleString()}</div>
             <div class="success-stat-label">ออเดอร์</div>
           </div>
           <div class="success-stat">
