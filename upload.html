@@ -545,7 +545,16 @@ function readExcel(file) {
         const wb = XLSX.read(data, { type: 'array', cellDates: true })
         const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
         if (!json.length) throw new Error('ไฟล์ว่างเปล่า')
-        res({ headers: Object.keys(json[0]), rows: json })
+        const headers = Object.keys(json[0])
+        // บางไฟล์ (เช่น TikTok format ใหม่) มีแถวคำอธิบายคอลัมน์ ต่อจาก header ทันที (ไม่ใช่ข้อมูลจริง)
+        // ตรวจจับโดยเช็คว่าแถวแรกมีค่าที่ดูเหมือนประโยคบรรยาย (ยาว, ลงท้ายด้วย . หรือมีหลายคำ) ในหลายคอลัมน์พร้อมกัน
+        const rows = json.filter((row, idx) => {
+          if (idx !== 0) return true
+          const sampleVals = headers.slice(0, 5).map(h => String(row[h] ?? '').trim())
+          const looksLikeDescription = sampleVals.filter(v => v.length > 20 && /[.?!]$/.test(v)).length >= 2
+          return !looksLikeDescription
+        })
+        res({ headers, rows })
       } catch(err) { rej(err) }
     }
     reader.onerror = () => rej(new Error('อ่านไฟล์ไม่ได้'))
