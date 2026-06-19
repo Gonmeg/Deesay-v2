@@ -220,15 +220,16 @@ const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
 const BASE_FIELDS = [
   { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id','ordernumber'] },
-  { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['createtime','วันที่สั่งซื้อ','วันที่','date'] },
+  { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['createtime','created time','วันที่สั่งซื้อ','วันที่','date'] },
   { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
-  { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ'] },
+  { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ','recipient'] },
   { key:'phone',          label:'เบอร์โทร',         required:false, keywords:['หมายเลขโทรศัพท์','เบอร์โทร1','เบอร์โทร','phone'] },
   { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province','billingaddr3'] },
   { key:'district',       label:'อำเภอ/เขต',        required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district','billingaddr4'] },
-  { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode'] },
-  { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment','paymethod'] },
-  { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
+  { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode','zipcode'] },
+  { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment','paymethod','payment method'] },
+  { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','seller sku','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
+  { key:'qty_multiplier', label:'จำนวน (Quantity)', required:false, keywords:['quantity','จำนวน'] },
 ]
 
 const REVENUE_FIELDS = {
@@ -238,8 +239,8 @@ const REVENUE_FIELDS = {
     { key:'rev_shipping',  label:'ค่าขนส่ง',           required:false, keywords:['ค่าส่ง','ค่าขนส่ง','shipping'] },
   ],
   TikTok: [
-    { key:'rev_subtotal',  label:'ยอดรวมสินค้า',      required:true,  keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ'] },
-    { key:'rev_discount',  label:'ส่วนลดร้านค้าต่อรายการ', required:false, keywords:['ส่วนลดร้านค้าต่อรายการ','seller discount'] },
+    { key:'rev_subtotal',  label:'ยอดรวมสินค้า',      required:true,  keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ','sku subtotal before discount'] },
+    { key:'rev_discount',  label:'ส่วนลดร้านค้าต่อรายการ', required:false, keywords:['ส่วนลดร้านค้าต่อรายการ','sku seller discount','seller discount'] },
   ],
   Shopee: [
     { key:'rev_subtotal',  label:'ราคาขาย',            required:true,  keywords:['ราคาขาย','subtotal'] },
@@ -578,6 +579,13 @@ function parseDate(v) {
       return mEng[3] + '-' + mo + '-' + da
     }
   }
+  // รูปแบบ "31/01/2026 23:56:17" (DD/MM/YYYY HH:mm:ss) — TikTok format ใหม่
+  const mSlash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+  if (mSlash) {
+    const da = mSlash[1].padStart(2, '0')
+    const mo = mSlash[2].padStart(2, '0')
+    return mSlash[3] + '-' + mo + '-' + da
+  }
   if (/^\d+(\.\d+)?$/.test(s)) {
     const n = parseFloat(s)
     const d = new Date(Math.round((n - 25569) * 86400 * 1000))
@@ -600,12 +608,13 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
   const tfn = tfMap[channel] || tfGeneric
   const newSubChannels = new Set()
 
-  const processed = rows.map(row => {
+  const rawProcessed = rows.map(row => {
     const g = k => mappings[k] ? row[mappings[k]] : null
     const gs = k => { const v = g(k); return v !== null && v !== undefined ? String(v).trim() : '' }
     const date = parseDate(g('date'))
     const sub = forcedSubChannel || gs('sub_channel')
     const rawSku = gs('sku_promotion')
+    const qtyMul = gs('qty_multiplier')
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
     const revenueRaw = (() => {
@@ -618,9 +627,9 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       date: date,
       channel: chMap[sub] || channel,
       sub_channel: sub || channel,
-      sku_promotion: tfn(rawSku, skuMap),
+      sku_promotion_part: tfn(rawSku, skuMap, qtyMul),  // SKU เฉพาะ row นี้ ยังไม่ merge
       sku_promotion_raw: rawSku,
-      revenue: revenue,
+      revenue: revenue,        // ยอดรวมทั้ง order (อาจซ้ำกันทุก row ถ้าไฟล์แบบ TikTok/Shopee/Lazada)
       revenue_raw: revenueRaw,
       province: normalizeProvince(gs('province')),
       district: normalizeDistrict(gs('district')),
@@ -632,6 +641,50 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       settled_date: channel === 'Facebook' ? date : null,
     }
   }).filter(r => r.order_id)
+
+  // Group by order_id — merge SKU จากหลาย row, revenue รวมกันทุก row (เพราะทุก channel คำนวณ revenue ต่อ SKU ไม่ใช่ต่อ order)
+  const orderGroups = new Map()
+  rawProcessed.forEach(r => {
+    if (!orderGroups.has(r.order_id)) {
+      orderGroups.set(r.order_id, { ...r, _skuParts: [r.sku_promotion_part], _rawParts: [r.sku_promotion_raw], _revenueSum: r.revenue, _revenueRawSum: r.revenue_raw })
+    } else {
+      const g = orderGroups.get(r.order_id)
+      if (r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part)
+      if (r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw)
+      g._revenueSum += r.revenue
+      g._revenueRawSum += r.revenue_raw
+    }
+  })
+
+  const processed = [...orderGroups.values()].map(g => {
+    // merge sku parts เช่น ["DSTWB03x1","DSCH03x1"] → "DSCH03x1+DSTWB03x1" (merge + sort)
+    const allSkus = []
+    g._skuParts.filter(Boolean).forEach(part => {
+      part.split('+').forEach(p => {
+        const m = p.match(/^(.+?)x(\d+)$/i)
+        if (m) allSkus.push({ sku: m[1], qty: parseInt(m[2]) })
+      })
+    })
+    const merged = mergeSkus(allSkus)
+    return {
+      order_id: g.order_id,
+      date: g.date,
+      channel: g.channel,
+      sub_channel: g.sub_channel,
+      sku_promotion: merged,
+      sku_promotion_raw: g._rawParts.join(' | '),
+      revenue: Math.round(g._revenueSum * 100) / 100,
+      revenue_raw: Math.round(g._revenueRawSum * 100) / 100,
+      province: g.province,
+      district: g.district,
+      postcode: g.postcode,
+      customer_name: g.customer_name,
+      phone: g.phone,
+      payment_method: g.payment_method,
+      settled: g.settled,
+      settled_date: g.settled_date,
+    }
+  })
 
   if (newSubChannels.size > 0) {
     const newRows = [...newSubChannels].map(sub => ({ sub_channel: sub, channel: channel }))
@@ -770,8 +823,21 @@ function tfFB(raw, m) {
   return mergeSkus(skus)
 }
 
-function tfTT(raw, m) {
+function tfTT(raw, m, qtyMultiplier) {
   if (!raw) return ''
+  // รูปแบบใหม่: ไม่มี "(จำนวน)" ต่อท้าย แต่มี qtyMultiplier จากคอลัมน์ Quantity แยก
+  // เช่น raw = "DSTWB03x1+DSCH03x1", qtyMultiplier = 2
+  if (!raw.includes('(') && qtyMultiplier) {
+    const mul = parseInt(qtyMultiplier) || 1
+    const skus = raw.split('+').map(s => s.trim()).map(it => {
+      const mi = it.match(/^(.+?)x(\d+)$/i)
+      if (mi) return { sku: norm(mi[1], m), qty: parseInt(mi[2]) * mul }
+      if (it) return { sku: norm(it, m), qty: mul }
+      return null
+    }).filter(Boolean)
+    return mergeSkus(skus)
+  }
+  // รูปแบบเดิม: "LIPRPI01x2 (1), NIANSC02x1 (3)"
   const skus = []
   raw.split(',').map(s => s.trim()).forEach(g => {
     const mg = g.match(/^(.+?)\s*\((\d+)\)$/)
