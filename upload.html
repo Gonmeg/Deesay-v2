@@ -356,8 +356,9 @@ const BASE_FIELDS = [
   { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode','zipcode'] },
   { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['การชำระเงิน','payment','paymethod','payment method'] },
   { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','seller sku','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
-  { key:'qty_multiplier', label:'จำนวน (Quantity)', required:false, keywords:['quantity','จำนวน'] },
 ]
+// field เฉพาะ TikTok format ใหม่ (Seller SKU + Quantity แยกคอลัมน์) — channel อื่นไม่ต้องใช้
+const QTY_MULTIPLIER_FIELD = { key:'qty_multiplier', label:'จำนวน (Quantity)', required:false, keywords:['quantity','จำนวน'] }
 
 const REVENUE_FIELDS = {
   Facebook: [
@@ -411,6 +412,10 @@ function getFields(channel) {
   // Lazada ไม่มีจังหวัด/อำเภอที่เชื่อถือได้ (บางร้านมี บางร้านไม่มี) → ตัดออกเสมอ ให้ blank
   if (channel === 'Lazada') {
     base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
+  }
+  // TikTok เท่านั้นที่มี format ใหม่ Seller SKU + Quantity แยกคอลัมน์
+  if (channel === 'TikTok') {
+    base = [...base, QTY_MULTIPLIER_FIELD]
   }
   return [...base, ...revFields]
 }
