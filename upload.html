@@ -252,6 +252,9 @@
     <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
     <button class="btn-sync" id="btnSyncPromotions">🔄 Sync Promotions</button>
     <div class="promo-sync-result" id="promoSyncResult"></div>
+    <div style="border-top:1px solid var(--border); margin:14px 0 12px;"></div>
+    <button class="btn-sync" id="btnBackfillMatching" style="background:var(--surface2); color:var(--text); border:1px solid var(--border2);">🔁 Backfill Matching (ออเดอร์เก่า)</button>
+    <div class="promo-sync-result" id="backfillResult"></div>
   </div>
   <div class="history-card">
     <div class="history-title">ประวัติการอัพโหลด</div>
@@ -396,6 +399,133 @@ async function syncPromotions() {
 }
 
 document.getElementById('btnSyncPromotions').addEventListener('click', syncPromotions)
+
+// ===== Promotion Matching (base_promotion / upsell_items) =====
+// แปลง "DSPx2+ZOLx1" → { DSP: 2, ZOL: 1 }
+function parseSkuMap(str) {
+  const map = {}
+  if (!str) return map
+  String(str).split('+').forEach(part => {
+    const m = part.trim().match(/^(.+?)x(\d+)$/i)
+    if (m) map[m[1]] = (map[m[1]] || 0) + parseInt(m[2])
+  })
+  return map
+}
+
+function mapComplexity(map) { return Object.values(map).reduce((a, b) => a + b, 0) }
+
+// เช็คว่า promoMap (ทุก sku+qty) อยู่ครบใน orderMap หรือไม่
+function isSubsetMap(promoMap, orderMap) {
+  for (const [sku, qty] of Object.entries(promoMap)) {
+    if (!orderMap[sku] || orderMap[sku] < qty) return false
+  }
+  return true
+}
+
+function subtractMap(orderMap, promoMap) {
+  const result = { ...orderMap }
+  for (const [sku, qty] of Object.entries(promoMap)) {
+    result[sku] = (result[sku] || 0) - qty
+    if (result[sku] <= 0) delete result[sku]
+  }
+  return result
+}
+
+function mapToSkuString(map) {
+  return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([sku, qty]) => sku + 'x' + qty).join('+')
+}
+
+let _promoListCache = null
+async function getActivePromotions() {
+  if (_promoListCache) return _promoListCache
+  const { data } = await DB.from('promotions').select('promo_id, sku_promotion').eq('status', 'active')
+  _promoListCache = (data || [])
+    .map(p => ({ promo_id: p.promo_id, sku_promotion: p.sku_promotion, map: parseSkuMap(p.sku_promotion) }))
+    .filter(p => Object.keys(p.map).length > 0)
+  return _promoListCache
+}
+
+// รับ array ของ { order_id, sku_promotion } แล้ว update orders table ด้วย base_promotion/upsell_items
+async function matchPromotionsForOrders(orders) {
+  const promoList = await getActivePromotions()
+  let matchedCount = 0, behaviorCount = 0
+
+  for (const order of orders) {
+    const orderMap = parseSkuMap(order.sku_promotion)
+    if (!Object.keys(orderMap).length) continue
+
+    let best = null, bestComplexity = -1
+    for (const promo of promoList) {
+      if (isSubsetMap(promo.map, orderMap)) {
+        const c = mapComplexity(promo.map)
+        if (c > bestComplexity) { bestComplexity = c; best = promo }
+      }
+    }
+
+    let base_promotion, upsell_items
+    if (best) {
+      const remaining = subtractMap(orderMap, best.map)
+      upsell_items = Object.keys(remaining).length ? mapToSkuString(remaining) : null
+      base_promotion = best.sku_promotion
+      matchedCount++
+    } else {
+      base_promotion = 'พฤติกรรมการซื้อจริง'
+      upsell_items = null
+      behaviorCount++
+    }
+
+    const { error } = await DB.from('orders')
+      .update({ base_promotion, upsell_items })
+      .eq('order_id', order.order_id)
+    if (error) console.error('match update failed for', order.order_id, error)
+  }
+
+  return { matchedCount, behaviorCount, total: orders.length }
+}
+
+async function backfillMatching() {
+  const btn = document.getElementById('btnBackfillMatching')
+  const resultEl = document.getElementById('backfillResult')
+  btn.disabled = true
+  btn.textContent = '⏳ กำลัง backfill...'
+  resultEl.textContent = ''
+  _promoListCache = null // โหลดโปรล่าสุดใหม่เสมอตอน backfill
+
+  try {
+    let totalMatched = 0, totalBehavior = 0, totalRows = 0
+    const BATCH = 300
+    while (true) {
+      const { data: batch, error } = await DB.from('orders')
+        .select('order_id, sku_promotion')
+        .is('base_promotion', null)
+        .not('sku_promotion', 'is', null)
+        .limit(BATCH)
+      if (error) throw error
+      if (!batch || !batch.length) break
+
+      const result = await matchPromotionsForOrders(batch)
+      totalMatched += result.matchedCount
+      totalBehavior += result.behaviorCount
+      totalRows += result.total
+      resultEl.textContent = `กำลังประมวลผล... ${totalRows.toLocaleString()} ออเดอร์ (match โปร ${totalMatched.toLocaleString()} · พฤติกรรมซื้อจริง ${totalBehavior.toLocaleString()})`
+
+      if (batch.length < BATCH) break // แถวสุดท้ายของรอบนี้ไม่ครบ batch = หมดแล้ว
+    }
+
+    resultEl.textContent = totalRows > 0
+      ? `✅ Backfill เสร็จ ${totalRows.toLocaleString()} ออเดอร์ — match โปร ${totalMatched.toLocaleString()} · พฤติกรรมซื้อจริง ${totalBehavior.toLocaleString()}`
+      : 'ไม่พบออเดอร์ที่ต้อง backfill (ทำครบแล้ว)'
+
+  } catch (err) {
+    console.error(err)
+    resultEl.textContent = `❌ Backfill ไม่สำเร็จ: ${err.message}`
+  } finally {
+    btn.disabled = false
+    btn.textContent = '🔁 Backfill Matching (ออเดอร์เก่า)'
+  }
+}
+
+document.getElementById('btnBackfillMatching').addEventListener('click', backfillMatching)
 
 // ===== Upload History Sidebar =====
 function timeAgo(dateStr) {
@@ -904,6 +1034,10 @@ async function handleConfirm() {
 
     btn.textContent = 'กำลังคำนวณ SKU Revenue...'
     const skuRowCount = await calcSkuRevenue(processed)
+
+    btn.textContent = 'กำลัง Match โปรโมชั่น...'
+    _promoListCache = null // โหลดโปรล่าสุดเสมอตอนอัพโหลดใหม่ เผื่อมี sync เพิ่มมาหลัง cache เดิม
+    const matchResult = await matchPromotionsForOrders(deduped.map(o => ({ order_id: o.order_id, sku_promotion: o.sku_promotion })))
 
     await DB.rpc('refresh_all_views')
 
