@@ -497,6 +497,7 @@ async function backfillMatching() {
     while (true) {
       const { data: batch, error } = await DB.from('orders')
         .select('order_id, sku_promotion')
+        .eq('channel', 'Facebook')
         .is('base_promotion', null)
         .not('sku_promotion', 'is', null)
         .limit(BATCH)
@@ -1035,9 +1036,12 @@ async function handleConfirm() {
     btn.textContent = 'กำลังคำนวณ SKU Revenue...'
     const skuRowCount = await calcSkuRevenue(processed)
 
-    btn.textContent = 'กำลัง Match โปรโมชั่น...'
-    _promoListCache = null // โหลดโปรล่าสุดเสมอตอนอัพโหลดใหม่ เผื่อมี sync เพิ่มมาหลัง cache เดิม
-    const matchResult = await matchPromotionsForOrders(deduped.map(o => ({ order_id: o.order_id, sku_promotion: o.sku_promotion })))
+    let matchResult = null
+    if (channel === 'Facebook') {
+      btn.textContent = 'กำลัง Match โปรโมชั่น...'
+      _promoListCache = null // โหลดโปรล่าสุดเสมอตอนอัพโหลดใหม่ เผื่อมี sync เพิ่มมาหลัง cache เดิม
+      matchResult = await matchPromotionsForOrders(deduped.map(o => ({ order_id: o.order_id, sku_promotion: o.sku_promotion })))
+    }
 
     await DB.rpc('refresh_all_views')
 
