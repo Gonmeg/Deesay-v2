@@ -918,7 +918,14 @@ async function handleConfirm() {
             .eq('order_id', r.order_id)
             .select('order_id')
           if (error) throw error
-          if (data && data.length) matchedCount++
+          if (data && data.length) {
+            matchedCount++
+            // sync settled เข้า sku_revenue ด้วย ป้องกันปัญหา 2 ตารางไม่ตรงกัน (เคยเจอปัญหานี้ตอน Lazada/Shopee/TikTok)
+            const { error: srError } = await DB.from('sku_revenue')
+              .update({ settled: 'True', settled_date: r.settled_date })
+              .eq('order_id', r.order_id)
+            if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
+          }
         }
         done += batch.length
         pf.style.width = Math.round(done / deduped.length * 100) + '%'
