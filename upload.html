@@ -1499,8 +1499,13 @@ function tfShopee(raw, m) {
 
 function tfLazada(raw, m) {
   if (!raw) return ''
-  const x = raw.trim().match(/^(.+?)x(\d+)$/i)
-  const skus = x ? [{ sku: norm(x[1], m), qty: parseInt(x[2]) }] : [{ sku: norm(raw, m), qty: 1 }]
+  const skus = raw.split('+').map(s => s.trim()).map(p => {
+    const x = p.match(/^(.+?)x(\d+)$/i)
+    if (x) return { sku: norm(x[1], m), qty: parseInt(x[2]) }
+    // ไม่มี x → qty = 1
+    if (p) return { sku: norm(p, m), qty: 1 }
+    return null
+  }).filter(Boolean)
   return mergeSkus(skus)
 }
 
