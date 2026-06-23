@@ -1314,8 +1314,8 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       customer_name: g.customer_name,
       phone: g.phone,
       payment_method: g.payment_method,
-      settled: g.settled,
-      settled_date: g.settled_date,
+      settled: channel === 'Facebook' ? true : undefined,
+      settled_date: channel === 'Facebook' ? date : undefined,
     }
   })
 
