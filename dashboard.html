@@ -1233,8 +1233,9 @@ function renderCRM() {
   window._crmAvgGap = null;
   if (crmSelectedSKU) {
     avgRow.style.display = 'grid';
+    // ค่าเฉลี่ยต้องคำนวณจากลูกค้าทุกคนที่เคยซื้อสินค้านี้ (byPhoneAll) เสมอ — ไม่ขึ้นกับตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน"
     let gaps = [];
-    Object.values(byPhone).forEach(c => {
+    Object.values(byPhoneAll).forEach(c => {
       const dates = c.orders.map(o => o.date).filter(Boolean).sort();
       for (let i = 1; i < dates.length; i++) {
         gaps.push((new Date(dates[i]) - new Date(dates[i-1])) / 86400000);
