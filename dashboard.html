@@ -668,7 +668,7 @@ async function fetchAll() {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   while (true) {
     const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled&order=date.asc&limit=${PAGE}&offset=${offset}`,
+      `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled&order=date.asc,order_id.asc&limit=${PAGE}&offset=${offset}`,
       { headers }
     );
     if (!res.ok) throw new Error('API error: ' + res.status);
@@ -717,7 +717,7 @@ async function fetchSkuAll(fromDate, toDate) {
   const dateFilter = fromDate && toDate ? `&date=gte.${fromDate}&date=lte.${toDate}` : '';
   while (true) {
     const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc${dateFilter}&limit=${PAGE}&offset=${offset}`,
+      `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc${dateFilter}&limit=${PAGE}&offset=${offset}`,
       { headers }
     );
     if (!res.ok) throw new Error('sku_revenue API error: ' + res.status);
@@ -761,12 +761,13 @@ function getRegion(prov) {
 }
 
 // ===== SUPABASE FETCH: new Materialized Views (monthly granularity) =====
-async function fetchMV(viewName, selectCols) {
+async function fetchMV(viewName, selectCols, orderCols) {
   const PAGE = 1000;
   let all = [], offset = 0;
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const orderParam = orderCols ? `&order=${orderCols}` : '';
   while (true) {
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/${viewName}?select=${selectCols}&limit=${PAGE}&offset=${offset}`, { headers });
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/${viewName}?select=${selectCols}${orderParam}&limit=${PAGE}&offset=${offset}`, { headers });
     if (!res.ok) throw new Error(viewName + ' API error: ' + res.status);
     const rows = await res.json();
     all = all.concat(rows);
@@ -775,9 +776,9 @@ async function fetchMV(viewName, selectCols) {
   }
   return all;
 }
-const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'month,channel,sku_promotion,total_orders,total_revenue,aov');
-const fetchSkuParentMonthly = () => fetchMV('mv_sku_parent_monthly', 'month,channel,sub_channel,parent_sku,total_qty,total_revenue,total_orders');
-const fetchProvinceMonthly = () => fetchMV('mv_province_monthly', 'month,channel,province,total_orders,total_revenue,aov');
+const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'month,channel,sku_promotion,total_orders,total_revenue,aov', 'month.asc,channel.asc,sku_promotion.asc');
+const fetchSkuParentMonthly = () => fetchMV('mv_sku_parent_monthly', 'month,channel,sub_channel,parent_sku,total_qty,total_revenue,total_orders', 'month.asc,channel.asc,sub_channel.asc,parent_sku.asc');
+const fetchProvinceMonthly = () => fetchMV('mv_province_monthly', 'month,channel,province,total_orders,total_revenue,aov', 'month.asc,channel.asc,province.asc');
 
 // คืนรายการเดือน "YYYY-MM" ที่อยู่ในช่วง from-to (inclusive)
 function getMonthsInRange(from, to) {
@@ -1187,7 +1188,11 @@ function renderCRM() {
   d.forEach(r => {
     const phone = r.phone || '';
     if (!phone || phone.length < 5) return;
-    if (!byPhone[phone]) byPhone[phone] = { orders: [], name: r.customer_name || '' };
+    if (!byPhone[phone]) byPhone[phone] = { orders: [], name: r.customer_name || '', seenOrderIds: new Set() };
+    // กัน order_id ซ้ำ (ข้อมูลบางส่วนมีแถวซ้ำในตาราง orders) ไม่ให้นับ/แสดงซ้ำ
+    const oid = r.order_id || `${r.date}-${r.sku_promotion}-${r.revenue}`; // fallback เผื่อไม่มี order_id
+    if (byPhone[phone].seenOrderIds.has(oid)) return;
+    byPhone[phone].seenOrderIds.add(oid);
     byPhone[phone].orders.push(r);
     if (!byPhone[phone].name && r.customer_name) byPhone[phone].name = r.customer_name;
   });
