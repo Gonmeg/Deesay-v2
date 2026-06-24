@@ -569,6 +569,15 @@
 <script>
 // ===== STATE =====
 let allData = [];
+
+// sub_channel ของ Facebook ที่ไม่ใช่ยอดขายจริง — ตัดออกจากทุกหน้าของ dashboard
+const EXCLUDED_FB_SUBCHANNELS = [
+  '00. เคลมสินค้า ฟีมิคส์','00.เคลมสินค้า แอดไวซ์','FM-ตัวแทน','Line OA : Chafasai',
+  'Moderntrade','ชาฟ้าใส - เพจหลักบริษัท','พนักงานสั่งซื้อ','รีวิว ฟีมิคส์','รีวิว แอดไวซ์','สินค้าเสียหาย'
+];
+function isExcludedRow(r) {
+  return r.channel === 'Facebook' && EXCLUDED_FB_SUBCHANNELS.includes(r.sub_channel);
+}
 let filteredData = [];
 let charts = {};
 let skuData = [];
@@ -1827,7 +1836,7 @@ async function init() {
       fetchAll(), fetchProducts(), fetchProvinceRegion(),
       fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly()
     ]);
-    allData = orders;
+    allData = orders.filter(r => !isExcludedRow(r));
     productsMap = prods;
     provinceRegionMap = regions;
     window._promoMonthlyCache = promoMonthly;
