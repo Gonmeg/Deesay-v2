@@ -355,20 +355,43 @@
       <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;">
         📌 CRM วิเคราะห์เฉพาะช่องทาง <strong>Facebook</strong> โดยใช้ <strong>เบอร์โทร</strong> เป็นตัวระบุลูกค้า
       </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ค้นหาสินค้า (ดูเฉพาะลูกค้าที่ซื้อสินค้านี้ ไม่ว่าเดี่ยวหรือคู่โปร):</div>
+          <div style="position:relative;flex:1;min-width:200px;">
+            <input type="text" id="crmProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="filterCrmProductDropdown()" onfocus="showCrmProductDropdown()" onblur="setTimeout(hideCrmProductDropdown,200)" style="width:100%;padding:7px 12px;">
+            <div id="crmProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+          </div>
+          <span id="crmProductChip" style="display:none;"></span>
+          <button class="btn btn-ghost" onclick="clearCrmProduct()" id="crmProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
+        </div>
+      </div>
       <div class="grid-3">
-        <div class="card"><div class="card-title">ลูกค้า Facebook ทั้งหมด</div><div class="kpi-value" id="crm-total">—</div><div class="kpi-sub">unique เบอร์โทร</div></div>
+        <div class="card"><div class="card-title" id="crm-total-label">ลูกค้า Facebook ทั้งหมด</div><div class="kpi-value" id="crm-total">—</div><div class="kpi-sub">unique เบอร์โทร</div></div>
         <div class="card"><div class="card-title">ลูกค้าซื้อซ้ำ (2+ ครั้ง)</div><div class="kpi-value" id="crm-repeat">—</div><div class="kpi-sub" id="crm-repeat-pct">—% ของทั้งหมด</div></div>
-        <div class="card"><div class="card-title">ซื้อสูงสุด</div><div class="kpi-value" id="crm-max">—</div><div class="kpi-sub">ครั้ง (รายที่ซื้อบ่อยสุด)</div></div>
+        <div class="card" id="crm-max-card"><div class="card-title">ซื้อสูงสุด</div><div class="kpi-value" id="crm-max">—</div><div class="kpi-sub">ครั้ง (รายที่ซื้อบ่อยสุด)</div></div>
+      </div>
+      <div class="grid-2" id="crmAvgRepurchaseRow" style="display:none;">
+        <div class="card" style="border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.04);">
+          <div class="card-title" style="color:var(--green);">อัตราการซื้อซ้ำเฉลี่ย (สินค้านี้)</div>
+          <div class="kpi-value" id="crm-avg-repurchase" style="color:var(--green);">—</div>
+          <div class="kpi-sub">เฉลี่ยจากทุกช่วงที่ลูกค้ากลับมาซื้อซ้ำจริง — ใช้กำหนดรอบโทรตาม</div>
+        </div>
+        <div class="card">
+          <div class="card-title">ลูกค้าที่ซื้อสินค้านี้</div>
+          <div class="kpi-value" id="crm-product-customers">—</div>
+          <div class="kpi-sub" id="crm-product-repeat-pct">— ซื้อซ้ำ 2+ ครั้ง</div>
+        </div>
       </div>
       <div class="grid-2">
         <div class="card"><div class="section-header"><div class="section-title">แบ่งกลุ่มตามจำนวนซื้อ</div></div><div id="crmGroups"></div></div>
         <div class="card"><div class="card-title">สัดส่วนกลุ่มลูกค้า</div><div class="chart-wrap"><canvas id="chartCRM"></canvas></div></div>
       </div>
       <div class="card" id="crmDetailCard" style="display:none;">
-        <div class="section-header"><div class="section-title" id="crmDetailTitle">รายชื่อลูกค้า</div><button class="btn btn-primary" onclick="exportCRMDetail()">⬇ Export CSV</button></div>
-        <div class="table-wrap" style="max-height:400px;overflow-y:auto;">
+        <div class="section-header"><div class="section-title" id="crmDetailTitle">รายชื่อลูกค้า</div><button class="btn btn-primary" onclick="exportCRMDetail()">⬇ Export CSV (ทั้งหมด)</button></div>
+        <div class="table-wrap" style="max-height:480px;overflow-y:auto;">
           <table id="tblCRMDetail">
-            <thead><tr><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนซื้อ</th><th>ยอดรวม</th><th>ซื้อล่าสุด</th></tr></thead>
+            <thead><tr><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนซื้อ</th><th>ประวัติการซื้อ (วันที่ / โปรที่ซื้อ / ยอด)</th><th>ยอดรวมทั้งหมด</th><th>ซื้อล่าสุด</th><th>ห่างมาแล้ว (วัน)</th></tr></thead>
             <tbody id="tbodyCRMDetail"></tbody>
           </table>
         </div>
@@ -1154,8 +1177,12 @@ function renderGeo() {
 }
 
 // ===== CRM (Facebook only) =====
+let crmSelectedSKU = null;
+
 function renderCRM() {
-  const d = filteredData.filter(r => r.channel === 'Facebook');
+  let d = filteredData.filter(r => r.channel === 'Facebook');
+  if (crmSelectedSKU) d = d.filter(r => rowHasSKU(r, crmSelectedSKU));
+
   const byPhone = {};
   d.forEach(r => {
     const phone = r.phone || '';
@@ -1169,10 +1196,30 @@ function renderCRM() {
   const repeatCustomers = Object.values(byPhone).filter(v => v.orders.length >= 2).length;
   const maxPurchases = Math.max(...Object.values(byPhone).map(v => v.orders.length), 0);
 
+  document.getElementById('crm-total-label').textContent = crmSelectedSKU ? `ลูกค้าที่ซื้อ "${skuToName(crmSelectedSKU)}"` : 'ลูกค้า Facebook ทั้งหมด';
   document.getElementById('crm-total').textContent = fmt(totalCustomers);
   document.getElementById('crm-repeat').textContent = fmt(repeatCustomers);
   document.getElementById('crm-repeat-pct').textContent = fmtPct(repeatCustomers, totalCustomers) + ' ของทั้งหมด';
   document.getElementById('crm-max').textContent = fmt(maxPurchases);
+
+  // อัตราการซื้อซ้ำเฉลี่ย — เฉพาะตอนเลือกสินค้า: เอาทุกช่วงวันที่เกิดจริงระหว่างคำสั่งซื้อของลูกค้าคนเดียวกันมาเฉลี่ยรวม
+  const avgRow = document.getElementById('crmAvgRepurchaseRow');
+  if (crmSelectedSKU) {
+    avgRow.style.display = 'grid';
+    let gaps = [];
+    Object.values(byPhone).forEach(c => {
+      const dates = c.orders.map(o => o.date).filter(Boolean).sort();
+      for (let i = 1; i < dates.length; i++) {
+        gaps.push((new Date(dates[i]) - new Date(dates[i-1])) / 86400000);
+      }
+    });
+    const avgGap = gaps.length ? (gaps.reduce((s,v)=>s+v,0) / gaps.length) : null;
+    document.getElementById('crm-avg-repurchase').textContent = avgGap !== null ? avgGap.toFixed(1) + ' วัน' : 'ยังไม่มีลูกค้าซื้อซ้ำ';
+    document.getElementById('crm-product-customers').textContent = fmt(totalCustomers);
+    document.getElementById('crm-product-repeat-pct').textContent = `${fmt(repeatCustomers)} คน ซื้อซ้ำ 2+ ครั้ง (${fmtPct(repeatCustomers, totalCustomers)})`;
+  } else {
+    avgRow.style.display = 'none';
+  }
 
   const groups = {};
   Object.entries(byPhone).forEach(([phone, v]) => {
@@ -1192,7 +1239,7 @@ function renderCRM() {
       <div class="crm-count" style="color:${COLORS[i%COLORS.length]}">${fmt(groups[k].length)}</div>
       <div class="crm-label"><div class="crm-label-main">${groupLabels[k] || 'ซื้อ '+k+' ครั้ง'}</div><div class="crm-label-sub">คน — กดเพื่อดูรายชื่อ</div></div>
       <div class="crm-pct">${fmtPct(groups[k].length, totalCustomers)}</div>
-    </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า Facebook</div>';
+    </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKU ? 'ที่ซื้อสินค้านี้' : ' Facebook') + '</div>';
 
   makeChart('chartCRM', 'doughnut', sortedKeys.map(k => groupLabels[k] || k), [{ data: sortedKeys.map(k => groups[k].length), backgroundColor: COLORS, borderWidth: 0 }]);
   window._crmGroups = groups;
@@ -1205,23 +1252,79 @@ function showCRMDetail(key) {
   document.querySelectorAll('.crm-group-row').forEach(el => el.classList.remove('selected'));
   if (event?.currentTarget) event.currentTarget.classList.add('selected');
   const customers = groups[key];
-  document.getElementById('crmDetailTitle').textContent = `รายชื่อลูกค้า — ${labels[key] || key} (${fmt(customers.length)} คน)`;
+  document.getElementById('crmDetailTitle').textContent = `รายชื่อลูกค้า — ${labels[key] || key} (${fmt(customers.length)} คน)${crmSelectedSKU ? ' · สินค้า: ' + skuToName(crmSelectedSKU) : ''}`;
   document.getElementById('crmDetailCard').style.display = 'block';
-  crmDetailData = customers.map(c => ({
-    phone: c.phone, name: c.name, count: c.orders.length,
-    revenue: c.orders.reduce((s, r) => s + (parseFloat(r.revenue) || 0), 0),
-    lastDate: c.orders.map(r => r.date).filter(Boolean).sort().reverse()[0] || '—'
-  })).sort((a, b) => b.count - a.count);
+
+  const today = new Date();
+  crmDetailData = customers.map(c => {
+    const sortedOrders = [...c.orders].sort((a,b) => (a.date||'').localeCompare(b.date||''));
+    const history = sortedOrders.map(o => `${o.date||'-'} (${o.sku_promotion||'-'}, ฿${fmt(Math.round(parseFloat(o.revenue)||0))})`).join(' | ');
+    const revenue = sortedOrders.reduce((s, r) => s + (parseFloat(r.revenue) || 0), 0);
+    const lastDate = sortedOrders.map(r => r.date).filter(Boolean).sort().reverse()[0] || '';
+    const daysSince = lastDate ? Math.floor((today - new Date(lastDate)) / 86400000) : null;
+    return { phone: c.phone, name: c.name, count: c.orders.length, history, revenue, lastDate: lastDate || '—', daysSince };
+  }).sort((a, b) => b.count - a.count);
+
   document.getElementById('tbodyCRMDetail').innerHTML = crmDetailData.map((c, i) => `
-    <tr><td>${i+1}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${c.phone}</td><td>${c.name || '—'}</td><td>${fmt(c.count)} ครั้ง</td><td>฿${fmt(c.revenue)}</td><td>${c.lastDate}</td></tr>`).join('');
+    <tr>
+      <td>${i+1}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${c.phone}</td>
+      <td>${c.name || '—'}</td>
+      <td>${fmt(c.count)} ครั้ง</td>
+      <td style="font-size:11px;white-space:normal;max-width:420px;">${c.history}</td>
+      <td>฿${fmt(c.revenue)}</td>
+      <td>${c.lastDate}</td>
+      <td>${c.daysSince !== null ? fmt(c.daysSince) + ' วัน' : '—'}</td>
+    </tr>`).join('');
   document.getElementById('crmDetailCard').scrollIntoView({ behavior: 'smooth' });
 }
 
 function exportCRMDetail() {
   if (!crmDetailData.length) return;
-  const rows = [['เบอร์โทร','ชื่อลูกค้า','จำนวนซื้อ','ยอดรวม','ซื้อล่าสุด']];
-  crmDetailData.forEach(c => rows.push([c.phone, c.name, c.count, c.revenue, c.lastDate]));
-  downloadCSV(rows, 'crm_export.csv');
+  const rows = [['เบอร์โทร','ชื่อลูกค้า','จำนวนซื้อ','ประวัติการซื้อ','ยอดรวมทั้งหมด','ซื้อล่าสุด','ห่างมาแล้ว(วัน)']];
+  crmDetailData.forEach(c => rows.push([c.phone, c.name, c.count, c.history, c.revenue, c.lastDate, c.daysSince ?? '']));
+  downloadCSV(rows, 'crm_export' + (crmSelectedSKU ? '_' + crmSelectedSKU : '') + '.csv');
+}
+
+// ===== CRM Product Search =====
+function filterCrmProductDropdown() {
+  const q = (document.getElementById('crmProductSearch')?.value || '').toLowerCase();
+  showCrmProductDropdown();
+  const list = document.getElementById('crmProductDropdown');
+  if (!list) return;
+  const allSKUs = Object.keys(productsMap).length ? Object.keys(productsMap) :
+    [...new Set(allData.flatMap(r => (r.sku_promotion||'').split('+').map(s=>s.trim().replace(/x\d+$/i,'').trim()).filter(Boolean)))].sort();
+  const filtered = allSKUs.filter(sku => {
+    const thaiName = skuToName(sku).toLowerCase();
+    return thaiName.includes(q) || sku.toLowerCase().includes(q);
+  });
+  list.innerHTML = filtered.slice(0,25).map(sku => `
+    <div onclick="selectCrmProduct('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <div style="font-size:13px;color:var(--text);">${skuToName(sku)}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px;">${sku}</div>
+    </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
+}
+function showCrmProductDropdown() { const l=document.getElementById('crmProductDropdown'); if(l) l.style.display='block'; }
+function hideCrmProductDropdown() { const l=document.getElementById('crmProductDropdown'); if(l) l.style.display='none'; }
+
+function selectCrmProduct(sku) {
+  crmSelectedSKU = sku;
+  const inp = document.getElementById('crmProductSearch'); if (inp) inp.value = '';
+  hideCrmProductDropdown();
+  const chip = document.getElementById('crmProductChip');
+  chip.style.display = 'inline-flex';
+  chip.innerHTML = `<span class="sku-chip selected" style="background:${COLORS[0]};">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span></span>`;
+  document.getElementById('crmProductClearBtn').style.display = 'inline-flex';
+  document.getElementById('crmDetailCard').style.display = 'none';
+  renderCRM();
+}
+
+function clearCrmProduct() {
+  crmSelectedSKU = null;
+  document.getElementById('crmProductChip').style.display = 'none';
+  document.getElementById('crmProductClearBtn').style.display = 'none';
+  document.getElementById('crmDetailCard').style.display = 'none';
+  renderCRM();
 }
 
 // ===== EXPORT HELPERS =====
