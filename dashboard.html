@@ -365,6 +365,12 @@
           <span id="crmProductChip" style="display:none;"></span>
           <button class="btn btn-ghost" onclick="clearCrmProduct()" id="crmProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
         </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เฉพาะลูกค้าที่ซื้อล่าสุดไม่เกิน:</div>
+          <input type="number" id="crmRecencyFilter" placeholder="เช่น 60" min="1" oninput="onCrmRecencyChange()" style="width:90px;text-align:center;">
+          <div style="font-size:13px;color:var(--text2);">วัน (เว้นว่าง = ดูทั้งหมด)</div>
+          <button class="btn btn-ghost" onclick="clearCrmRecency()" id="crmRecencyClearBtn" style="display:none;">✕ ล้าง</button>
+        </div>
       </div>
       <div class="grid-3">
         <div class="card"><div class="card-title" id="crm-total-label">ลูกค้า Facebook ทั้งหมด</div><div class="kpi-value" id="crm-total">—</div><div class="kpi-sub">unique เบอร์โทร</div></div>
@@ -391,7 +397,7 @@
         <div class="section-header"><div class="section-title" id="crmDetailTitle">รายชื่อลูกค้า</div><button class="btn btn-primary" onclick="exportCRMDetail()">⬇ Export CSV (ทั้งหมด)</button></div>
         <div class="table-wrap" style="max-height:480px;overflow-y:auto;">
           <table id="tblCRMDetail">
-            <thead><tr><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนซื้อ</th><th>ประวัติการซื้อ (วันที่ / โปรที่ซื้อ / ยอด)</th><th>ยอดรวมทั้งหมด</th><th>ซื้อล่าสุด</th><th>ห่างมาแล้ว (วัน)</th></tr></thead>
+            <thead><tr id="crmDetailHead"><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนซื้อ</th><th>ประวัติการซื้อ (วันที่ / โปรที่ซื้อ / ยอด)</th><th>ยอดรวมทั้งหมด</th><th>ซื้อล่าสุด</th><th>ห่างมาแล้ว (วัน)</th><th>สถานะรอบซื้อซ้ำ</th></tr></thead>
             <tbody id="tbodyCRMDetail"></tbody>
           </table>
         </div>
@@ -1179,23 +1185,38 @@ function renderGeo() {
 
 // ===== CRM (Facebook only) =====
 let crmSelectedSKU = null;
+let crmMaxDaysSince = null; // ตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน"
 
 function renderCRM() {
   let d = filteredData.filter(r => r.channel === 'Facebook');
   if (crmSelectedSKU) d = d.filter(r => rowHasSKU(r, crmSelectedSKU));
 
-  const byPhone = {};
+  const byPhoneAll = {};
   d.forEach(r => {
     const phone = r.phone || '';
     if (!phone || phone.length < 5) return;
-    if (!byPhone[phone]) byPhone[phone] = { orders: [], name: r.customer_name || '', seenOrderIds: new Set() };
+    if (!byPhoneAll[phone]) byPhoneAll[phone] = { orders: [], name: r.customer_name || '', seenOrderIds: new Set() };
     // กัน order_id ซ้ำ (ข้อมูลบางส่วนมีแถวซ้ำในตาราง orders) ไม่ให้นับ/แสดงซ้ำ
     const oid = r.order_id || `${r.date}-${r.sku_promotion}-${r.revenue}`; // fallback เผื่อไม่มี order_id
-    if (byPhone[phone].seenOrderIds.has(oid)) return;
-    byPhone[phone].seenOrderIds.add(oid);
-    byPhone[phone].orders.push(r);
-    if (!byPhone[phone].name && r.customer_name) byPhone[phone].name = r.customer_name;
+    if (byPhoneAll[phone].seenOrderIds.has(oid)) return;
+    byPhoneAll[phone].seenOrderIds.add(oid);
+    byPhoneAll[phone].orders.push(r);
+    if (!byPhoneAll[phone].name && r.customer_name) byPhoneAll[phone].name = r.customer_name;
   });
+
+  // ตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน" — ตัดลูกค้าที่ไม่ active ออกตั้งแต่ขั้นนี้
+  const today = new Date();
+  let byPhone = byPhoneAll;
+  if (crmMaxDaysSince !== null) {
+    byPhone = {};
+    Object.entries(byPhoneAll).forEach(([phone, v]) => {
+      const lastDate = v.orders.map(o => o.date).filter(Boolean).sort().reverse()[0];
+      if (!lastDate) return;
+      const daysSince = Math.floor((today - new Date(lastDate)) / 86400000);
+      if (daysSince <= crmMaxDaysSince) byPhone[phone] = v;
+    });
+  }
+
   crmRawData = byPhone;
   const totalCustomers = Object.keys(byPhone).length;
   const repeatCustomers = Object.values(byPhone).filter(v => v.orders.length >= 2).length;
@@ -1209,6 +1230,7 @@ function renderCRM() {
 
   // อัตราการซื้อซ้ำเฉลี่ย — เฉพาะตอนเลือกสินค้า: เอาทุกช่วงวันที่เกิดจริงระหว่างคำสั่งซื้อของลูกค้าคนเดียวกันมาเฉลี่ยรวม
   const avgRow = document.getElementById('crmAvgRepurchaseRow');
+  window._crmAvgGap = null;
   if (crmSelectedSKU) {
     avgRow.style.display = 'grid';
     let gaps = [];
@@ -1219,11 +1241,19 @@ function renderCRM() {
       }
     });
     const avgGap = gaps.length ? (gaps.reduce((s,v)=>s+v,0) / gaps.length) : null;
+    window._crmAvgGap = avgGap;
     document.getElementById('crm-avg-repurchase').textContent = avgGap !== null ? avgGap.toFixed(1) + ' วัน' : 'ยังไม่มีลูกค้าซื้อซ้ำ';
     document.getElementById('crm-product-customers').textContent = fmt(totalCustomers);
     document.getElementById('crm-product-repeat-pct').textContent = `${fmt(repeatCustomers)} คน ซื้อซ้ำ 2+ ครั้ง (${fmtPct(repeatCustomers, totalCustomers)})`;
   } else {
     avgRow.style.display = 'none';
+  }
+
+  // ปรับหัวตารางเพิ่ม/ลดคอลัมน์ "สถานะรอบซื้อซ้ำ" ตามว่ามีค่าเฉลี่ยให้เทียบไหม
+  const headRow = document.getElementById('crmDetailHead');
+  if (headRow) {
+    const base = '<th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนซื้อ</th><th>ประวัติการซื้อ (วันที่ / โปรที่ซื้อ / ยอด)</th><th>ยอดรวมทั้งหมด</th><th>ซื้อล่าสุด</th><th>ห่างมาแล้ว (วัน)</th>';
+    headRow.innerHTML = base + (window._crmAvgGap !== null ? '<th>สถานะรอบซื้อซ้ำ</th>' : '');
   }
 
   const groups = {};
@@ -1244,11 +1274,26 @@ function renderCRM() {
       <div class="crm-count" style="color:${COLORS[i%COLORS.length]}">${fmt(groups[k].length)}</div>
       <div class="crm-label"><div class="crm-label-main">${groupLabels[k] || 'ซื้อ '+k+' ครั้ง'}</div><div class="crm-label-sub">คน — กดเพื่อดูรายชื่อ</div></div>
       <div class="crm-pct">${fmtPct(groups[k].length, totalCustomers)}</div>
-    </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKU ? 'ที่ซื้อสินค้านี้' : ' Facebook') + '</div>';
+    </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKU ? 'ที่ซื้อสินค้านี้' : ' Facebook') + (crmMaxDaysSince !== null ? ` (ในช่วง ${crmMaxDaysSince} วัน)` : '') + '</div>';
 
   makeChart('chartCRM', 'doughnut', sortedKeys.map(k => groupLabels[k] || k), [{ data: sortedKeys.map(k => groups[k].length), backgroundColor: COLORS, borderWidth: 0 }]);
   window._crmGroups = groups;
   window._crmGroupLabels = groupLabels;
+}
+
+function onCrmRecencyChange() {
+  const v = document.getElementById('crmRecencyFilter')?.value;
+  crmMaxDaysSince = v ? parseInt(v) : null;
+  document.getElementById('crmRecencyClearBtn').style.display = crmMaxDaysSince !== null ? 'inline-flex' : 'none';
+  document.getElementById('crmDetailCard').style.display = 'none';
+  renderCRM();
+}
+function clearCrmRecency() {
+  crmMaxDaysSince = null;
+  document.getElementById('crmRecencyFilter').value = '';
+  document.getElementById('crmRecencyClearBtn').style.display = 'none';
+  document.getElementById('crmDetailCard').style.display = 'none';
+  renderCRM();
 }
 
 function showCRMDetail(key) {
@@ -1257,17 +1302,24 @@ function showCRMDetail(key) {
   document.querySelectorAll('.crm-group-row').forEach(el => el.classList.remove('selected'));
   if (event?.currentTarget) event.currentTarget.classList.add('selected');
   const customers = groups[key];
-  document.getElementById('crmDetailTitle').textContent = `รายชื่อลูกค้า — ${labels[key] || key} (${fmt(customers.length)} คน)${crmSelectedSKU ? ' · สินค้า: ' + skuToName(crmSelectedSKU) : ''}`;
+  document.getElementById('crmDetailTitle').textContent = `รายชื่อลูกค้า — ${labels[key] || key} (${fmt(customers.length)} คน)${crmSelectedSKU ? ' · สินค้า: ' + skuToName(crmSelectedSKU) : ''}${crmMaxDaysSince !== null ? ' · ซื้อล่าสุดไม่เกิน ' + crmMaxDaysSince + ' วัน' : ''}`;
   document.getElementById('crmDetailCard').style.display = 'block';
 
   const today = new Date();
+  const avgGap = window._crmAvgGap;
   crmDetailData = customers.map(c => {
     const sortedOrders = [...c.orders].sort((a,b) => (a.date||'').localeCompare(b.date||''));
     const history = sortedOrders.map(o => `${o.date||'-'} (${o.sku_promotion||'-'}, ฿${fmt(Math.round(parseFloat(o.revenue)||0))})`).join(' | ');
     const revenue = sortedOrders.reduce((s, r) => s + (parseFloat(r.revenue) || 0), 0);
     const lastDate = sortedOrders.map(r => r.date).filter(Boolean).sort().reverse()[0] || '';
     const daysSince = lastDate ? Math.floor((today - new Date(lastDate)) / 86400000) : null;
-    return { phone: c.phone, name: c.name, count: c.orders.length, history, revenue, lastDate: lastDate || '—', daysSince };
+    let statusText = '—', statusColor = 'var(--text3)';
+    if (avgGap !== null && daysSince !== null) {
+      const diff = daysSince - avgGap;
+      if (diff >= 0) { statusText = `เกินรอบไปแล้ว ${Math.round(diff)} วัน`; statusColor = 'var(--red)'; }
+      else { statusText = `ยังไม่ถึงรอบ (อีก ${Math.round(-diff)} วัน)`; statusColor = 'var(--green)'; }
+    }
+    return { phone: c.phone, name: c.name, count: c.orders.length, history, revenue, lastDate: lastDate || '—', daysSince, statusText, statusColor };
   }).sort((a, b) => b.count - a.count);
 
   document.getElementById('tbodyCRMDetail').innerHTML = crmDetailData.map((c, i) => `
@@ -1280,14 +1332,22 @@ function showCRMDetail(key) {
       <td>฿${fmt(c.revenue)}</td>
       <td>${c.lastDate}</td>
       <td>${c.daysSince !== null ? fmt(c.daysSince) + ' วัน' : '—'}</td>
+      ${avgGap !== null ? `<td style="color:${c.statusColor};font-weight:600;">${c.statusText}</td>` : ''}
     </tr>`).join('');
   document.getElementById('crmDetailCard').scrollIntoView({ behavior: 'smooth' });
 }
 
 function exportCRMDetail() {
   if (!crmDetailData.length) return;
-  const rows = [['เบอร์โทร','ชื่อลูกค้า','จำนวนซื้อ','ประวัติการซื้อ','ยอดรวมทั้งหมด','ซื้อล่าสุด','ห่างมาแล้ว(วัน)']];
-  crmDetailData.forEach(c => rows.push([c.phone, c.name, c.count, c.history, c.revenue, c.lastDate, c.daysSince ?? '']));
+  const avgGap = window._crmAvgGap;
+  const headers = ['เบอร์โทร','ชื่อลูกค้า','จำนวนซื้อ','ประวัติการซื้อ','ยอดรวมทั้งหมด','ซื้อล่าสุด','ห่างมาแล้ว(วัน)'];
+  if (avgGap !== null) headers.push('สถานะรอบซื้อซ้ำ');
+  const rows = [headers];
+  crmDetailData.forEach(c => {
+    const row = [c.phone, c.name, c.count, c.history, c.revenue, c.lastDate, c.daysSince ?? ''];
+    if (avgGap !== null) row.push(c.statusText);
+    rows.push(row);
+  });
   downloadCSV(rows, 'crm_export' + (crmSelectedSKU ? '_' + crmSelectedSKU : '') + '.csv');
 }
 
