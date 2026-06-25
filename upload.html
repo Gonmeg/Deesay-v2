@@ -200,11 +200,11 @@
           </div>
         </div>
         <div id="fileWrap">
-          <label class="field-label">ไฟล์ Excel หรือ CSV <span class="req">*</span></label>
-          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+          <label class="field-label">ไฟล์ Excel หรือ CSV <span class="req">*</span> <span style="color:var(--muted);font-weight:400;">(เลือกได้หลายไฟล์ ถ้าโครงคอลัมน์เหมือนกัน)</span></label>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple>
           <label class="drop-label" id="dropLabel" for="fileInput">
             <span class="drop-icon" id="dropIcon">📂</span>
-            <div class="drop-main" id="dropMain"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวาง</div>
+            <div class="drop-main" id="dropMain"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวาง (เลือกหลายไฟล์ได้)</div>
             <div class="drop-sub" id="dropSub">.xlsx .xls .csv</div>
           </label>
         </div>
@@ -746,20 +746,26 @@ const fileInput = document.getElementById('fileInput')
 const dropLabel = document.getElementById('dropLabel')
 
 fileInput.addEventListener('change', function() {
-  const file = this.files[0]
-  if (!file) return
+  const files = [...this.files]
+  if (!files.length) return
   dropLabel.classList.add('has-file')
   document.getElementById('dropIcon').textContent = '✅'
-  document.getElementById('dropMain').innerHTML = '<strong style="color:#10b981">' + file.name + '</strong>'
-  document.getElementById('dropSub').textContent = (file.size/1024).toFixed(0) + ' KB'
+  if (files.length === 1) {
+    document.getElementById('dropMain').innerHTML = '<strong style="color:#10b981">' + files[0].name + '</strong>'
+    document.getElementById('dropSub').textContent = (files[0].size/1024).toFixed(0) + ' KB'
+  } else {
+    const totalKB = files.reduce((s, f) => s + f.size, 0) / 1024
+    document.getElementById('dropMain').innerHTML = '<strong style="color:#10b981">เลือกแล้ว ' + files.length + ' ไฟล์</strong>'
+    document.getElementById('dropSub').textContent = files.map(f => f.name).join(', ') + ' · รวม ' + totalKB.toFixed(0) + ' KB'
+  }
 })
 
 dropLabel.addEventListener('dragover', e => { e.preventDefault(); dropLabel.style.borderColor='#6366f1' })
 dropLabel.addEventListener('dragleave', () => { dropLabel.style.borderColor='' })
 dropLabel.addEventListener('drop', e => {
   e.preventDefault(); dropLabel.style.borderColor=''
-  const f = e.dataTransfer.files[0]; if (!f) return
-  const dt = new DataTransfer(); dt.items.add(f)
+  const files = [...e.dataTransfer.files]; if (!files.length) return
+  const dt = new DataTransfer(); files.forEach(f => dt.items.add(f))
   fileInput.files = dt.files
   fileInput.dispatchEvent(new Event('change'))
 })
@@ -786,17 +792,22 @@ handleChannelChange(document.getElementById('channelSelect').value)
 async function handleStep1() {
   channel = document.getElementById('channelSelect').value
   const storeVal = document.getElementById('storeSelect').value
-  const file = fileInput.files[0]
+  const files = [...fileInput.files]
   const al = document.getElementById('alert1')
   if (!channel) return showAlert(al, 'กรุณาเลือก Channel ก่อน')
   if (uploadMode === 'order' && STORE_OPTIONS[channel] && !storeVal) return showAlert(al, 'กรุณาเลือกร้านค้า')
-  if (!file) return showAlert(al, 'กรุณาเลือกไฟล์')
+  if (!files.length) return showAlert(al, 'กรุณาเลือกไฟล์')
   al.style.display = 'none'
   FIELDS = uploadMode === 'settlement' ? (SETTLEMENT_FIELDS[channel] || []) : getFields(channel)
   try {
-    const d = await readExcel(file)
-    rawHeaders = d.headers
-    rawData = d.rows
+    const results = await Promise.all(files.map(f => readExcel(f)))
+    // ใช้ header ของไฟล์แรกเป็นตัวตั้ง mapping — ไฟล์อื่นต้องมีคอลัมน์ชื่อเดียวกัน (โครงเหมือนกัน)
+    rawHeaders = results[0].headers
+    rawData = results.flatMap(r => r.rows)
+    if (files.length > 1) {
+      const fileSummary = results.map((r, i) => `${files[i].name}: ${r.rows.length.toLocaleString()} แถว`).join(' · ')
+      console.log(`รวม ${files.length} ไฟล์ — ${fileSummary}`)
+    }
     buildMapping()
     goStep(2)
   } catch(e) { showAlert(al, 'อ่านไฟล์ไม่ได้: ' + e.message) }
@@ -938,7 +949,7 @@ async function handleConfirm() {
         upload_type: 'settlement',
         channel: channel,
         sub_channel: null,
-        file_name: fileInput.files[0]?.name || null,
+        file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
         total_rows: deduped.length,
         success_count: matchedCount,
         not_matched_count: notMatched,
@@ -1012,7 +1023,7 @@ async function handleConfirm() {
         upload_type: 'settlement',
         channel: channel,
         sub_channel: null,
-        file_name: fileInput.files[0]?.name || null,
+        file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
         total_rows: processed.length,
         success_count: 0,
         not_matched_count: null,
@@ -1059,7 +1070,7 @@ async function handleConfirm() {
       upload_type: 'order',
       channel: channel,
       sub_channel: deduped[0]?.sub_channel || null,
-      file_name: fileInput.files[0]?.name || null,
+      file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
       total_rows: deduped.length,
       success_count: deduped.length,
       not_matched_count: null,
@@ -1136,7 +1147,7 @@ async function handleConfirm() {
       upload_type: 'order',
       channel: channel,
       sub_channel: processed[0]?.sub_channel || null,
-      file_name: fileInput.files[0]?.name || null,
+      file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
       total_rows: processed.length,
       success_count: 0,
       not_matched_count: null,
