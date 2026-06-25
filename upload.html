@@ -1322,7 +1322,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       phone: g.phone,
       payment_method: g.payment_method,
       settled: channel === 'Facebook' ? true : undefined,
-      settled_date: channel === 'Facebook' ? date : undefined,
+      settled_date: channel === 'Facebook' ? g.date : undefined,
     }
   })
 
