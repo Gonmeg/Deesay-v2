@@ -1075,7 +1075,7 @@ async function handleConfirm() {
     let refreshWarning = ''
     if (refreshErr) {
       console.error('⚠️ refresh_all_views ล้มเหลว:', refreshErr)
-      refreshWarning = `<div class="alert alert-error" style="margin-top:10px;">⚠️ Dashboard อาจยังไม่อัพเดทล่าสุด — refresh_all_views ล้มเหลว: ${refreshErr.message || refreshErr}. รบกวนแจ้งทีมพัฒนาหรือลองรัน <code>SELECT refresh_all_views();</code> ใน Supabase SQL Editor</div>`
+      refreshWarning = `<div class="alert alert-error" style="margin-top:10px;">⚠️ Dashboard อาจยังไม่อัพเดทล่าสุด — refresh_all_views ล้มเหลว: ${refreshErr.message || refreshErr}. ไปที่หน้า Dashboard แล้วกดปุ่ม "🔄 รีเฟรชข้อมูล Dashboard" ที่มุมซ้ายล่างได้เลย (ไม่ต้องเปิด Supabase)</div>`
     }
 
     // คำนวณ revenue รวม
