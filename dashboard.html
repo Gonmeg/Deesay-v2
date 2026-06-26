@@ -151,8 +151,12 @@
   <div class="topbar">
     <div class="page-title" id="pageTitle">ภาพรวมยอดขาย</div>
     <div class="filters">
-      <div class="filter-group"><span class="filter-label">ตั้งแต่</span><input type="date" id="dateFrom"></div>
-      <div class="filter-group"><span class="filter-label">ถึง</span><input type="date" id="dateTo"></div>
+      <div class="filter-group" id="dateFromGroup"><span class="filter-label">ตั้งแต่</span><input type="date" id="dateFrom"></div>
+      <div class="filter-group" id="dateToGroup"><span class="filter-label">ถึง</span><input type="date" id="dateTo"></div>
+      <div class="filter-group" id="monthFilterGroup" style="display:none;">
+        <span class="filter-label">เดือน</span>
+        <select id="filterMonth" onchange="onMonthFilterChange()"></select>
+      </div>
       <div class="filter-group">
         <span class="filter-label">Channel</span>
         <select id="filterChannel" onchange="onChannelChange()">
@@ -809,6 +813,17 @@ function getPrevMonthsInRange() {
   return getMonthsInRange(prevFrom.toISOString().substring(0,10), prevTo.toISOString().substring(0,10));
 }
 
+// สำหรับหน้า MONTH_ONLY_PAGES — ใช้เดือนที่เลือกจาก dropdown ตรงๆ ไม่ผ่านช่วงวันที่
+function getSelectedMVMonths() {
+  return selectedMonth ? [selectedMonth] : [];
+}
+function getSelectedMVPrevMonth() {
+  if (!selectedMonth) return [];
+  const [y, m] = selectedMonth.split('-').map(Number);
+  const d = new Date(y, m - 2, 1); // เดือนก่อนหน้า
+  return [d.toISOString().substring(0,7)];
+}
+
 function onChannelChange() {
   const ch = document.getElementById('filterChannel').value;
   const subSel = document.getElementById('filterSubChannel');
@@ -858,7 +873,30 @@ const pageTitles = {
   skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance'
 };
 const pageOrder = ['overview','channel','promotion','geo','crm','skurev','skuanalysis','adperf'];
+const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
+let selectedMonth = null; // 'YYYY-MM' ที่เลือกไว้สำหรับหน้า MONTH_ONLY_PAGES
+
+function populateMonthFilter() {
+  const sel = document.getElementById('filterMonth');
+  if (!sel || sel.options.length) return; // populate ครั้งเดียวพอ
+  const months = new Set();
+  (window._promoMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
+  (window._skuParentMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
+  (window._provinceMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
+  const sorted = [...months].sort().reverse(); // ล่าสุดก่อน
+  sel.innerHTML = sorted.map(m => {
+    const [y, mo] = m.split('-');
+    return `<option value="${m}">${MONTHS_TH[parseInt(mo)-1]} ${y}</option>`;
+  }).join('');
+  selectedMonth = sorted[0] || null;
+  if (selectedMonth) sel.value = selectedMonth;
+}
+
+function onMonthFilterChange() {
+  selectedMonth = document.getElementById('filterMonth').value;
+  renderCurrentPage();
+}
 
 function showPage(page) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -877,6 +915,13 @@ function showPage(page) {
     if (chFilter) { chFilter.disabled = false; chFilter.style.opacity = '1'; }
     if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
   }
+
+  // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้าอื่นใช้ช่วงวันที่ตามปกติ
+  const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
+  document.getElementById('dateFromGroup').style.display = isMonthOnly ? 'none' : 'flex';
+  document.getElementById('dateToGroup').style.display = isMonthOnly ? 'none' : 'flex';
+  document.getElementById('monthFilterGroup').style.display = isMonthOnly ? 'flex' : 'none';
+  if (isMonthOnly) populateMonthFilter();
 
   if (page === 'adperf') {
     renderAdpAll();
@@ -1030,8 +1075,8 @@ function renderChannel() {
 // ===== PROMOTION =====
 function renderPromotion() {
   const ch = document.getElementById('filterChannel').value;
-  const monthsCurr = getMonthsInRange(getDateValue('From'), getDateValue('To'));
-  const monthsPrev = getPrevMonthsInRange();
+  const monthsCurr = getSelectedMVMonths();
+  const monthsPrev = getSelectedMVPrevMonth();
   const promoData = window._promoMonthlyCache || [];
 
   if (!promoData.length) {
@@ -1120,7 +1165,7 @@ function renderPromotion() {
 // ===== GEO =====
 function renderGeo() {
   const ch = document.getElementById('filterChannel').value;
-  const monthsCurr = getMonthsInRange(getDateValue('From'), getDateValue('To'));
+  const monthsCurr = getSelectedMVMonths();
   const provData = window._provinceMonthlyCache || [];
 
   if (!provData.length) {
@@ -1413,8 +1458,8 @@ function downloadCSV(rows, filename) {
 // ===== SKU REVENUE PAGE =====
 function renderSkuRev() {
   const ch = document.getElementById('filterChannel').value, sub = document.getElementById('filterSubChannel').value;
-  const monthsCurr = getMonthsInRange(getDateValue('From'), getDateValue('To'));
-  const monthsPrev = getPrevMonthsInRange();
+  const monthsCurr = getSelectedMVMonths();
+  const monthsPrev = getSelectedMVPrevMonth();
   const allRows = window._skuParentMonthlyCache || [];
 
   if (!allRows.length) {
