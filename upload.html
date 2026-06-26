@@ -942,7 +942,8 @@ async function handleConfirm() {
         pf.style.width = Math.round(done / deduped.length * 100) + '%'
       }
 
-      await DB.rpc('refresh_all_views')
+      const { error: refreshErr } = await DB.rpc('refresh_all_views')
+      if (refreshErr) console.error('⚠️ refresh_all_views ล้มเหลว (settlement):', refreshErr)
 
       const notMatched = deduped.length - matchedCount
       logUpload({
@@ -1061,7 +1062,12 @@ async function handleConfirm() {
       matchResult = await matchPromotionsForOrders(deduped.map(o => ({ order_id: o.order_id, sku_promotion: o.sku_promotion })))
     }
 
-    await DB.rpc('refresh_all_views')
+    const { error: refreshErr } = await DB.rpc('refresh_all_views')
+    let refreshWarning = ''
+    if (refreshErr) {
+      console.error('⚠️ refresh_all_views ล้มเหลว:', refreshErr)
+      refreshWarning = `<div class="alert alert-error" style="margin-top:10px;">⚠️ Dashboard อาจยังไม่อัพเดทล่าสุด — refresh_all_views ล้มเหลว: ${refreshErr.message || refreshErr}. รบกวนแจ้งทีมพัฒนาหรือลองรัน <code>SELECT refresh_all_views();</code> ใน Supabase SQL Editor</div>`
+    }
 
     // คำนวณ revenue รวม
     const totalRevenue = processed.reduce((s, r) => s + (r.revenue || 0), 0)
@@ -1093,6 +1099,7 @@ async function handleConfirm() {
             <div class="success-banner-sub">${deduped.length.toLocaleString()} ออเดอร์เข้าระบบแล้ว · ${channel}</div>
           </div>
         </div>
+        ${refreshWarning}
 
         <div class="success-stats">
           <div class="success-stat">
