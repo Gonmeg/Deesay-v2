@@ -449,6 +449,7 @@ async function getActivePromotions() {
 async function matchPromotionsForOrders(orders) {
   const promoList = await getActivePromotions()
   let matchedCount = 0, behaviorCount = 0
+  const updates = []
 
   for (const order of orders) {
     const orderMap = parseSkuMap(order.sku_promotion)
@@ -474,10 +475,18 @@ async function matchPromotionsForOrders(orders) {
       behaviorCount++
     }
 
-    const { error } = await DB.from('orders')
-      .update({ base_promotion, upsell_items })
-      .eq('order_id', order.order_id)
-    if (error) console.error('match update failed for', order.order_id, error)
+    updates.push({ order_id: order.order_id, base_promotion, upsell_items })
+  }
+
+  // ยิง UPDATE พร้อมกันทีละ CONCURRENCY คำสั่ง (ไม่ใช่ upsert เพราะตาราง orders มีคอลัมน์ NOT NULL อื่นที่จะพังถ้า insert path ถูกเช็ค)
+  // เร็วกว่าทำทีละแถวเรียงต่อกันมาก โดยยังเป็น UPDATE จริงๆ ไม่กระทบคอลัมน์อื่น
+  const CONCURRENCY = 20
+  for (let i = 0; i < updates.length; i += CONCURRENCY) {
+    const batch = updates.slice(i, i + CONCURRENCY)
+    await Promise.all(batch.map(u =>
+      DB.from('orders').update({ base_promotion: u.base_promotion, upsell_items: u.upsell_items }).eq('order_id', u.order_id)
+        .then(({ error }) => { if (error) console.error('match update failed for', u.order_id, error) })
+    ))
   }
 
   return { matchedCount, behaviorCount, total: orders.length }
@@ -919,11 +928,11 @@ async function handleConfirm() {
       processed.forEach(r => dedupMap.set(r.order_id, r))
       const deduped = [...dedupMap.values()]
 
-      const BATCH = 300; let done = 0; let matchedCount = 0
-      for (let i = 0; i < deduped.length; i += BATCH) {
-        const batch = deduped.slice(i, i + BATCH)
-        // update เฉพาะ order_id ที่มีอยู่จริงใน orders table — ทีละ record เพราะ Supabase ไม่รองรับ bulk update ค่าต่างกันในคำสั่งเดียว
-        for (const r of batch) {
+      const CONCURRENCY = 20; let done = 0; let matchedCount = 0
+      for (let i = 0; i < deduped.length; i += CONCURRENCY) {
+        const batch = deduped.slice(i, i + CONCURRENCY)
+        // ยิงพร้อมกันทีละ CONCURRENCY แถว แทนเรียงทีละแถว — เร็วขึ้นมากสำหรับไฟล์ settlement ขนาดใหญ่
+        await Promise.all(batch.map(async (r) => {
           const { data, error } = await DB.from('orders')
             .update({ settled: true, settled_date: r.settled_date })
             .eq('order_id', r.order_id)
@@ -937,7 +946,7 @@ async function handleConfirm() {
               .eq('order_id', r.order_id)
             if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
           }
-        }
+        }))
         done += batch.length
         pf.style.width = Math.round(done / deduped.length * 100) + '%'
       }
