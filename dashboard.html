@@ -144,6 +144,8 @@
   <div class="sidebar-footer">
     <span class="status-dot"></span>Supabase Connected<br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
+    <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
+    <div id="refreshMVStatus" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
   </div>
 </aside>
 
@@ -2040,6 +2042,42 @@ function generateSummaryExtra(page) {
 }
 
 // ===== INIT =====
+// ===== Manual Refresh (ปุ่มในsidebar — ทางสำรองถ้า auto-refresh ตอนอัพโหลดล้มเหลว) =====
+async function refreshDashboardData() {
+  const btn = document.getElementById('btnRefreshMV')
+  const statusEl = document.getElementById('refreshMVStatus')
+  btn.disabled = true
+  btn.textContent = '⏳ กำลังรีเฟรช...'
+  statusEl.textContent = ''
+  try {
+    const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_all_views`, { method: 'POST', headers, body: '{}' })
+    if (!res.ok) {
+      const errText = await res.text()
+      throw new Error(errText || ('HTTP ' + res.status))
+    }
+    // ดึง MV ทั้ง 3 ตัวใหม่ให้ตรงกับข้อมูลล่าสุด
+    const [promoMonthly, skuParentMonthly, provinceMonthly] = await Promise.all([
+      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly()
+    ])
+    window._promoMonthlyCache = promoMonthly
+    window._skuParentMonthlyCache = skuParentMonthly
+    window._provinceMonthlyCache = provinceMonthly
+    // populate เดือนใหม่เผื่อมีเดือนใหม่เข้ามา
+    const monthSel = document.getElementById('filterMonth')
+    if (monthSel) { monthSel.innerHTML = ''; populateMonthFilter() }
+
+    statusEl.innerHTML = '<span style="color:var(--green);">✅ รีเฟรชสำเร็จ ' + new Date().toLocaleTimeString('th-TH') + '</span>'
+    if (currentPage === 'adperf') renderAdpAll(); else renderCurrentPage()
+  } catch (e) {
+    console.error('refreshDashboardData failed:', e)
+    statusEl.innerHTML = '<span style="color:var(--red);">❌ รีเฟรชไม่สำเร็จ: ' + (e.message || e) + '</span>'
+  } finally {
+    btn.disabled = false
+    btn.textContent = '🔄 รีเฟรชข้อมูล Dashboard'
+  }
+}
+
 async function init() {
   try {
     setDefaultDateFilter();
