@@ -1191,7 +1191,7 @@ function readExcel(file) {
   })
 }
 
-function parseDate(v) {
+function parseDateRaw(v) {
   if (v === null || v === undefined || v === '') return null
   if (v instanceof Date) {
     const y = v.getUTCFullYear()
@@ -1243,6 +1243,20 @@ function parseDate(v) {
     return y + '-' + mo + '-' + da
   }
   return null
+}
+
+// กันค่าวันที่ผิดปกติหลุดเข้าระบบ (เช่น เซลล์ว่าง/format แปลกที่ parse ออกมาเป็นปี 1969-1970 หรือใกล้ epoch)
+// ถ้า parse ได้ปีที่ไม่สมเหตุสมผล (ก่อนปี 2020 หรือเกินปีหน้า) ให้คืน null แทน เพื่อไม่ให้ข้อมูลเพี้ยนหลุดเข้า DB
+function parseDate(v) {
+  const result = parseDateRaw(v)
+  if (!result) return null
+  const year = parseInt(result.substring(0, 4))
+  const currentYear = new Date().getFullYear()
+  if (isNaN(year) || year < 2020 || year > currentYear + 1) {
+    console.warn('⚠️ วันที่ผิดปกติถูกตัดออก (ไม่ใส่ลง DB):', v, '→ parse ได้', result)
+    return null
+  }
+  return result
 }
 
 function processSettlementRows(rows, mappings) {
@@ -1298,7 +1312,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       settled: channel === 'Facebook',
       settled_date: channel === 'Facebook' ? date : null,
     }
-  }).filter(r => r.order_id)
+  }).filter(r => r.order_id && r.date)
 
   // Group by order_id — merge SKU จากหลาย row, revenue รวมกันทุก row (เพราะทุก channel คำนวณ revenue ต่อ SKU ไม่ใช่ต่อ order)
   const orderGroups = new Map()
@@ -1455,7 +1469,12 @@ async function calcSkuRevenue(orders) {
   if (!skuRows.length) return 0
 
   const orderIds = [...new Set(orders.map(o => o.order_id))]
-  await DB.from('sku_revenue').delete().in('order_id', orderIds)
+  // ลบทีละ batch เล็กๆ — ถ้าลบทีเดียวทั้งหมด (order_id=in.(...)) URL จะยาวเกินไปตอนมีออเดอร์เป็นพันรายการ ทำให้ fetch fail
+  const DELETE_BATCH = 200
+  for (let i = 0; i < orderIds.length; i += DELETE_BATCH) {
+    const { error: delError } = await DB.from('sku_revenue').delete().in('order_id', orderIds.slice(i, i + DELETE_BATCH))
+    if (delError) throw delError
+  }
 
   const BATCH = 500
   for (let i = 0; i < skuRows.length; i += BATCH) {
