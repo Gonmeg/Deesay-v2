@@ -20,10 +20,10 @@
     .nav-link { font-size: 0.8rem; color: var(--muted); text-decoration: none; }
     .nav-link:hover { color: var(--text); }
     .btn-ghost { font-size: 0.8rem; color: var(--muted); background: none; border: 1px solid var(--border2); padding: 4px 12px; border-radius: 6px; cursor: pointer; }
-    main { display: flex; justify-content: center; padding: 36px 24px; }
-    .shell { width: 100%; max-width: 1040px; display: flex; gap: 24px; align-items: flex-start; }
-    .shell-main { flex: 1; min-width: 0; max-width: 720px; }
-    .shell-sidebar { width: 300px; flex-shrink: 0; position: sticky; top: 68px; }
+    main { display: flex; justify-content: center; padding: 36px 40px; }
+    .shell { width: 100%; max-width: 1400px; display: flex; gap: 32px; align-items: flex-start; }
+    .shell-main { flex: 1; min-width: 0; max-width: 960px; }
+    .shell-sidebar { width: 340px; flex-shrink: 0; position: sticky; top: 68px; }
     .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; max-height: calc(100vh - 90px); overflow-y: auto; }
     .history-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
     .history-sub { font-size: 0.7rem; color: var(--muted); margin-bottom: 14px; }
@@ -951,8 +951,8 @@ async function handleConfirm() {
         pf.style.width = Math.round(done / deduped.length * 100) + '%'
       }
 
-      const { error: refreshErr } = await DB.rpc('refresh_all_views')
-      if (refreshErr) console.error('⚠️ refresh_all_views ล้มเหลว (settlement):', refreshErr)
+      // ไม่ต้องเรียก refresh_all_views() ตรงนี้แล้ว — มี pg_cron รีเฟรชให้อัตโนมัติทุก 5 นาที
+      // (เลี่ยง timeout ที่เคยเกิดตอนอัพโหลด เพราะ REFRESH ต้องอ่านข้อมูลทั้งตารางทุกครั้ง)
 
       const notMatched = deduped.length - matchedCount
       logUpload({
@@ -980,6 +980,7 @@ async function handleConfirm() {
               <div class="success-banner-sub">${matchedCount.toLocaleString()} ออเดอร์ถูกอัพเดทเป็น settled · ${channel}</div>
             </div>
           </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที — ถ้าอยากเห็นทันที ไปที่หน้า Dashboard แล้วกดปุ่ม "🔄 รีเฟรชข้อมูล Dashboard"</div>
 
           <div class="success-stats">
             <div class="success-stat">
@@ -1071,12 +1072,9 @@ async function handleConfirm() {
       matchResult = await matchPromotionsForOrders(deduped.map(o => ({ order_id: o.order_id, sku_promotion: o.sku_promotion })))
     }
 
-    const { error: refreshErr } = await DB.rpc('refresh_all_views')
+    // ไม่ต้องเรียก refresh_all_views() ตรงนี้แล้ว — มี pg_cron รีเฟรชให้อัตโนมัติทุก 5 นาที
+    // (เลี่ยง timeout ที่เคยเกิดตอนอัพโหลด เพราะ REFRESH ต้องอ่านข้อมูลทั้งตารางทุกครั้ง)
     let refreshWarning = ''
-    if (refreshErr) {
-      console.error('⚠️ refresh_all_views ล้มเหลว:', refreshErr)
-      refreshWarning = `<div class="alert alert-error" style="margin-top:10px;">⚠️ Dashboard อาจยังไม่อัพเดทล่าสุด — refresh_all_views ล้มเหลว: ${refreshErr.message || refreshErr}. ไปที่หน้า Dashboard แล้วกดปุ่ม "🔄 รีเฟรชข้อมูล Dashboard" ที่มุมซ้ายล่างได้เลย (ไม่ต้องเปิด Supabase)</div>`
-    }
 
     // คำนวณ revenue รวม
     const totalRevenue = processed.reduce((s, r) => s + (r.revenue || 0), 0)
@@ -1108,6 +1106,7 @@ async function handleConfirm() {
             <div class="success-banner-sub">${deduped.length.toLocaleString()} ออเดอร์เข้าระบบแล้ว · ${channel}</div>
           </div>
         </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที (รีเฟรชเป็นรอบ) — ถ้าอยากเห็นทันที ไปที่หน้า Dashboard แล้วกดปุ่ม "🔄 รีเฟรชข้อมูล Dashboard"</div>
         ${refreshWarning}
 
         <div class="success-stats">
