@@ -13,6 +13,13 @@
       --text: #f0f4ff; --muted: #6b7a99; --accent: #6366f1; --accent2: #818cf8;
       --success: #10b981; --danger: #ef4444; --radius: 12px; --radius-sm: 8px;
     }
+    body.light-theme {
+      --bg: #f5f5f7; --surface: #ffffff; --surface2: #ebebef;
+      --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.15);
+      --text: #1a1a2e; --muted: #5a5a72; --accent: #6366f1; --accent2: #4f46e5;
+      --success: #16a34a; --danger: #dc2626;
+    }
+    body.light-theme tr:hover td, body.light-theme .history-item:hover { background: var(--surface2); }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     nav { border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 52px; position: sticky; top: 0; background: var(--bg); z-index: 10; }
     .nav-logo { font-size: 0.8rem; font-weight: 700; letter-spacing: 3px; }
@@ -150,6 +157,7 @@
   <div class="nav-logo">DEESAY</div>
   <div class="nav-right">
     <a href="index.html" class="nav-link">← หน้าแรก</a>
+    <button class="btn-ghost" id="themeToggleBtn">🌙 มืด</button>
     <button class="btn-ghost" id="logoutBtn">ออกจากระบบ</button>
   </div>
 </nav>
@@ -750,6 +758,24 @@ function setUploadMode(mode) {
 document.getElementById('logoutBtn').addEventListener('click', () => {
   sessionStorage.removeItem('auth'); window.location.href = 'index.html'
 })
+
+// ===== Theme Toggle =====
+function applyThemeFromStorage() {
+  const themeBtn = document.getElementById('themeToggleBtn')
+  if (localStorage.getItem('deesay_theme') === 'light') {
+    document.body.classList.add('light-theme')
+    if (themeBtn) themeBtn.textContent = '☀️ สว่าง'
+  } else {
+    if (themeBtn) themeBtn.textContent = '🌙 มืด'
+  }
+}
+applyThemeFromStorage()
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  const isLight = document.body.classList.toggle('light-theme')
+  document.getElementById('themeToggleBtn').textContent = isLight ? '☀️ สว่าง' : '🌙 มืด'
+  localStorage.setItem('deesay_theme', isLight ? 'light' : 'dark')
+})
+
 document.getElementById('modeBtnOrder').addEventListener('click', () => setUploadMode('order'))
 document.getElementById('modeBtnSettlement').addEventListener('click', () => setUploadMode('settlement'))
 document.getElementById('channelSelect').addEventListener('change', e => handleChannelChange(e.target.value))
