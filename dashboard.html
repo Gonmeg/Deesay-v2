@@ -302,6 +302,37 @@
           </table>
         </div>
       </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Top Promotion ของจริง (เฉพาะ Facebook — match กับโปรที่สร้างไว้ใน Google Sheet)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopRealPromo')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopRealPromo">
+            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อโปรที่สร้างจริง</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
+            <tbody id="tbodyTopRealPromo"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Upsell ที่ขายดีที่สุด (เฉพาะ Facebook)</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="font-size:11px;color:var(--text3);">เรียงตาม:</span>
+            <select id="upsellSortMode" onchange="renderRealPromoAndUpsell()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;">
+              <option value="revenue">ยอดขาย (฿)</option>
+              <option value="qty">จำนวนชิ้น</option>
+            </select>
+            <button class="btn btn-ghost" onclick="exportTable('tblTopUpsell')">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopUpsell">
+            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย (฿)</th><th>จำนวนชิ้น</th><th>จำนวนครั้งที่ถูก upsell</th></tr></thead>
+            <tbody id="tbodyTopUpsell"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
       <div class="card ai-summary-card">
         <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">สรุป Promotion & สินค้า</span>
           <button class="btn btn-ghost btn-sm" onclick="generateSummary('promotion')">🔄 วิเคราะห์ใหม่</button></div>
@@ -681,7 +712,7 @@ async function fetchAll() {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   while (true) {
     const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled&order=date.asc,order_id.asc&limit=${PAGE}&offset=${offset}`,
+      `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items&order=date.asc,order_id.asc&limit=${PAGE}&offset=${offset}`,
       { headers }
     );
     if (!res.ok) throw new Error('API error: ' + res.status);
@@ -755,6 +786,18 @@ async function fetchProducts() {
 
 function skuToName(sku) {
   return productsMap[sku] || sku;
+}
+
+// ===== SUPABASE FETCH: promotions table (sku_promotion -> ชื่อโปรจริงที่สร้างใน Google Sheet) =====
+let promotionsMap = {}; // sku_promotion -> promo_name
+async function fetchPromotionsMap() {
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/promotions?select=sku_promotion,promo_name&status=eq.active`, { headers });
+  if (!res.ok) return {};
+  const rows = await res.json();
+  const map = {};
+  rows.forEach(r => { if (r.sku_promotion && !map[r.sku_promotion]) map[r.sku_promotion] = r.promo_name || r.sku_promotion; });
+  return map;
 }
 
 // ===== SUPABASE FETCH: province_region table =====
@@ -1142,6 +1185,7 @@ function renderPromotion() {
   const sub = document.getElementById('filterSubChannel').value;
   const skuParentData = window._skuParentMonthlyCache || [];
   const inRangeProd = r => monthsCurr.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
+  const inPrevRangeProd = r => monthsPrev.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
 
   const byProduct = {};
   skuParentData.filter(inRangeProd).forEach(r => {
@@ -1149,20 +1193,107 @@ function renderPromotion() {
     if (!byProduct[k]) byProduct[k] = 0;
     byProduct[k] += parseFloat(r.total_qty) || 0;
   });
+  const prevByProduct = {};
+  skuParentData.filter(inPrevRangeProd).forEach(r => {
+    const k = r.parent_sku || '—';
+    if (!prevByProduct[k]) prevByProduct[k] = 0;
+    prevByProduct[k] += parseFloat(r.total_qty) || 0;
+  });
+  const prevProdRankMap = {};
+  Object.entries(prevByProduct).sort((a,b) => b[1]-a[1]).forEach(([k], i) => { prevProdRankMap[k] = i + 1; });
   const totalQty = Object.values(byProduct).reduce((s,v) => s+v, 0);
   const sortedProd = Object.entries(byProduct).sort((a,b) => b[1]-a[1]).slice(0, 20);
 
   document.getElementById('tbodyTopProduct').innerHTML = sortedProd.map(([sku, qty], i) => {
+    const currRank = i + 1;
     const sharePct = totalQty ? ((qty/totalQty)*100).toFixed(1) : '0.0';
+    const prevQty = prevByProduct[sku] || 0;
+    let cmpHtml = prevQty > 0
+      ? (() => { const p = ((qty-prevQty)/prevQty*100).toFixed(1); const up = parseFloat(p)>=0; return `<span style="color:${up?'var(--green)':'var(--red)'};font-weight:600;">${up?'▲':'▼'}${Math.abs(p)}%</span>`; })()
+      : `<span style="color:var(--accent);font-weight:600;">★ NEW</span>`;
+    const prevRank = prevProdRankMap[sku];
+    const diff = prevRank ? prevRank - currRank : null;
+    const rankHtml = !prevRank ? `<span style="color:var(--accent);font-size:11px;">NEW</span>`
+      : diff > 0 ? `<span style="color:var(--green);font-size:11px;">▲${diff}</span>`
+      : diff < 0 ? `<span style="color:var(--red);font-size:11px;">▼${Math.abs(diff)}</span>`
+      : `<span style="color:var(--text3);font-size:11px;">—</span>`;
     return `<tr>
-      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${currRank}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
       <td style="color:var(--text);">${skuToName(sku)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(qty)} ชิ้น</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${sharePct}%</td>
-      <td style="color:var(--text3);">—</td><td style="color:var(--text3);">—</td>
+      <td>${cmpHtml}</td><td>${rankHtml}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
+
+  renderRealPromoAndUpsell();
+}
+
+// ===== SECTION 3: Top Promotion ของจริง (Facebook) + Best Upsell =====
+function getFacebookOrdersForSelectedMonth() {
+  if (!selectedMonth) return [];
+  const [y, m] = selectedMonth.split('-').map(Number);
+  const from = `${selectedMonth}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const to = `${selectedMonth}-${String(lastDay).padStart(2,'0')}`;
+  return allData.filter(r => r.date >= from && r.date <= to && r.channel === 'Facebook' && shouldIncludeRow(r));
+}
+
+function renderRealPromoAndUpsell() {
+  const orders = getFacebookOrdersForSelectedMonth();
+
+  // ตาราง 1: Top Promotion ของจริง — group by base_promotion (ตัด "พฤติกรรมการซื้อจริง" ออก)
+  const byPromo = {};
+  orders.forEach(r => {
+    const bp = r.base_promotion;
+    if (!bp || bp === 'พฤติกรรมการซื้อจริง') return;
+    if (!byPromo[bp]) byPromo[bp] = { rev: 0, ord: 0 };
+    byPromo[bp].rev += parseFloat(r.revenue) || 0;
+    byPromo[bp].ord++;
+  });
+  const totalPromoRev = Object.values(byPromo).reduce((s,v) => s+v.rev, 0);
+  const sortedPromo = Object.entries(byPromo).sort((a,b) => b[1].rev - a[1].rev).slice(0, 20);
+
+  document.getElementById('tbodyTopRealPromo').innerHTML = sortedPromo.map(([sku, v], i) => {
+    const sharePct = totalPromoRev ? ((v.rev/totalPromoRev)*100).toFixed(1) : '0.0';
+    const promoName = promotionsMap[sku] || '(ไม่พบชื่อโปรใน Google Sheet)';
+    return `<tr>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
+      <td style="color:var(--text);">${promoName}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(v.rev))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.ord)}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${sharePct}%</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">ไม่มีออเดอร์ที่ match โปรในเดือนนี้</td></tr>';
+
+  // ตาราง 2: Upsell ที่ขายดีที่สุด — แตก upsell_items เป็น SKU เดี่ยว นับทุกออเดอร์ที่มี upsell
+  const byUpsell = {};
+  orders.forEach(r => {
+    if (!r.upsell_items) return;
+    r.upsell_items.split('+').forEach(p => {
+      const m = p.trim().match(/^(.+?)x(\d+)$/i);
+      if (!m) return;
+      const sku = m[1].trim(), qty = parseInt(m[2]);
+      if (!byUpsell[sku]) byUpsell[sku] = { qty: 0, count: 0 };
+      byUpsell[sku].qty += qty;
+      byUpsell[sku].count++;
+    });
+  });
+  const sortMode = document.getElementById('upsellSortMode')?.value || 'revenue';
+  // หมายเหตุ: revenue เก็บไว้ระดับทั้งออเดอร์ ไม่ได้แยกราคาต่อ SKU จึงใช้ "จำนวนครั้งที่ถูก upsell" แทนยอดขายเป็นตัวจัดอันดับหลัก เมื่อเลือกโหมดยอดขาย (เพื่อไม่ให้ตัวเลขเข้าใจผิด)
+  const sortedUpsell = Object.entries(byUpsell).sort((a,b) => sortMode === 'qty' ? b[1].qty - a[1].qty : b[1].count - a[1].count).slice(0, 20);
+
+  document.getElementById('tbodyTopUpsell').innerHTML = sortedUpsell.map(([sku, v], i) => `
+    <tr>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
+      <td style="color:var(--text);">${skuToName(sku)}</td>
+      <td style="color:var(--text3);">— (ไม่แยกราคาต่อ SKU)</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.qty)} ชิ้น</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${fmt(v.count)} ครั้ง</td>
+    </tr>`).join('') || '<tr><td colspan="6" class="empty">ไม่มีข้อมูล upsell ในเดือนนี้</td></tr>';
 }
 
 // ===== GEO =====
@@ -2085,13 +2216,14 @@ async function init() {
     const from = getDateValue('From');
     const to = getDateValue('To');
 
-    const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly] = await Promise.all([
+    const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap] = await Promise.all([
       fetchAll(), fetchProducts(), fetchProvinceRegion(),
-      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly()
+      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchPromotionsMap()
     ]);
     allData = orders.filter(r => !isExcludedRow(r));
     productsMap = prods;
     provinceRegionMap = regions;
+    promotionsMap = promosMap;
     window._promoMonthlyCache = promoMonthly;
     window._skuParentMonthlyCache = skuParentMonthly;
     window._provinceMonthlyCache = provinceMonthly;
