@@ -113,10 +113,12 @@
   .prog-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
   .prog-bar { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
   .prog-val { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; width: 80px; text-align: right; flex-shrink: 0; }
-  .crm-group-row { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+  .crm-groups-compact { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .crm-groups-compact { grid-template-columns: 1fr; } }
+  .crm-group-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0; cursor: pointer; transition: all 0.15s; }
   .crm-group-row:hover { border-color: var(--accent); background: rgba(200,169,110,0.05); }
   .crm-group-row.selected { border-color: var(--accent); background: rgba(200,169,110,0.08); }
-  .crm-count { font-size: 22px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: var(--accent); width: 60px; text-align: center; }
+  .crm-count { font-size: 22px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: var(--accent); min-width: 60px; flex-shrink: 0; text-align: right; padding-right: 4px; }
   .crm-label { flex: 1; } .crm-label-main { font-size: 13px; font-weight: 600; } .crm-label-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
   .crm-pct { font-size: 12px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; width: 50px; text-align: right; }
   .sku-chip { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); transition: all 0.15s; font-family: 'IBM Plex Mono', monospace; }
@@ -441,10 +443,14 @@
         </div>
       </div>
       <div class="grid-2">
-        <div class="card"><div class="section-header"><div class="section-title">แบ่งกลุ่มตามจำนวนซื้อ</div></div><div id="crmGroups"></div></div>
-        <div class="card"><div class="card-title">สัดส่วนกลุ่มลูกค้า</div><div class="chart-wrap"><canvas id="chartCRM"></canvas></div></div>
+        <div class="card"><div class="card-title">เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ (รายเดือน)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRMTrend"></canvas></div></div>
+        <div class="card"><div class="card-title">สัดส่วนกลุ่มลูกค้า (ตามจำนวนซื้อ)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRM"></canvas></div></div>
       </div>
-      <div class="card" id="crmDetailCard" style="display:none;">
+      <div class="card">
+        <div class="section-header"><div class="section-title">แบ่งกลุ่มตามจำนวนซื้อ</div></div>
+        <div id="crmGroups" class="crm-groups-compact"></div>
+      </div>
+      <div class="card" id="crmDetailCard" style="display:none;margin-top:20px;">
         <div class="section-header"><div class="section-title" id="crmDetailTitle">รายชื่อลูกค้า</div><button class="btn btn-primary" onclick="exportCRMDetail()">⬇ Export CSV (ทั้งหมด)</button></div>
         <div class="table-wrap" style="max-height:480px;overflow-y:auto;">
           <table id="tblCRMDetail">
@@ -1405,9 +1411,76 @@ function renderGeo() {
 let crmSelectedSKU = null;
 let crmMaxDaysSince = null; // ตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน"
 
+// เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ รายเดือน — ใช้ "ประวัติการซื้อทั้งหมด" (ไม่จำกัดแค่ช่วง filter) เพื่อรู้ว่าใครเคยซื้อมาก่อนจริงไหม
+function renderCRMTrendChart() {
+  let base = allData.filter(r => r.channel === 'Facebook' && shouldIncludeRow(r));
+  if (crmSelectedSKU) base = base.filter(r => rowHasSKU(r, crmSelectedSKU));
+
+  // หา "วันที่ซื้อครั้งแรกสุดในชีวิต" ของลูกค้าแต่ละคน จากประวัติทั้งหมด
+  const firstPurchaseByPhone = {};
+  base.forEach(r => {
+    const phone = r.phone || '';
+    if (!phone || phone.length < 5 || !r.date) return;
+    if (!firstPurchaseByPhone[phone] || r.date < firstPurchaseByPhone[phone]) firstPurchaseByPhone[phone] = r.date;
+  });
+
+  // จำกัดช่วงเดือนที่แสดงตาม filter วันที่ด้านบน (ไม่งั้นจะยาวเกินไปทั้งประวัติ)
+  const from = getDateValue('From'), to = getDateValue('To');
+  const monthsToShow = getMonthsInRange(from, to);
+
+  const newByMonth = {}, returningByMonth = {};
+  monthsToShow.forEach(m => { newByMonth[m] = new Set(); returningByMonth[m] = new Set(); });
+
+  base.forEach(r => {
+    const phone = r.phone || '';
+    if (!phone || phone.length < 5 || !r.date) return;
+    const month = r.date.substring(0, 7);
+    if (!(month in newByMonth)) return; // อยู่นอกช่วงที่เลือกดู
+    if (firstPurchaseByPhone[phone] === undefined) return;
+    if (firstPurchaseByPhone[phone].substring(0, 7) === month) newByMonth[month].add(phone);
+    else if (firstPurchaseByPhone[phone].substring(0, 7) < month) returningByMonth[month].add(phone);
+  });
+
+  const monthLabels = monthsToShow.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  const newCounts = monthsToShow.map(m => newByMonth[m].size);
+  const returningCounts = monthsToShow.map(m => returningByMonth[m].size);
+  const returningPct = monthsToShow.map((m, i) => {
+    const total = newCounts[i] + returningCounts[i];
+    return total ? Math.round((returningCounts[i] / total) * 100) : 0;
+  });
+
+  if (charts['chartCRMTrend']) charts['chartCRMTrend'].destroy();
+  const ctx = document.getElementById('chartCRMTrend');
+  if (!ctx) return;
+  charts['chartCRMTrend'] = new Chart(ctx, {
+    data: {
+      labels: monthLabels,
+      datasets: [
+        { type: 'bar', label: 'ลูกค้าใหม่', data: newCounts, backgroundColor: 'rgba(96,165,250,0.65)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+        { type: 'bar', label: 'ลูกค้าเก่าที่กลับมาซื้อ', data: returningCounts, backgroundColor: 'rgba(74,222,128,0.65)', borderColor: '#4ade80', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+        { type: 'line', label: '% ลูกค้าเก่าที่กลับมา', data: returningPct, borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,0.08)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#c8a96e', tension: 0.3, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ctx.datasetIndex === 2 ? ` % ลูกค้าเก่าที่กลับมา: ${ctx.raw}%` : ` ${ctx.dataset.label}: ${fmt(ctx.raw)} คน` } }
+      },
+      scales: {
+        x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
+        y: { position: 'left', ticks: { color: chartTickColor(), font: { size: 10 } }, grid: { color: chartGridColor() } },
+        y2: { position: 'right', ticks: { color: '#c8a96e', font: { size: 10, weight: '600' }, callback: v => v + '%' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
 function renderCRM() {
   let d = filteredData.filter(r => r.channel === 'Facebook');
   if (crmSelectedSKU) d = d.filter(r => rowHasSKU(r, crmSelectedSKU));
+
+  renderCRMTrendChart();
 
   const byPhoneAll = {};
   d.forEach(r => {
