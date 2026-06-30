@@ -128,6 +128,8 @@
   .toggle-btn.active { background:var(--accent); color:#0a0a0f; }
   input[type="text"] { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-family: 'Sarabun', sans-serif; outline: none; }
 
+  .fb-badge { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:5px; background:#1877F2; color:#fff; font-size:13px; font-weight:700; font-family:'Sarabun',sans-serif; flex-shrink:0; }
+
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -317,9 +319,9 @@
           </table>
         </div>
       </div>
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card" style="margin-top:24px;margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">Top Promotion ของจริง (เฉพาะ Facebook — match กับโปรที่สร้างไว้ใน Google Sheet)</div>
+          <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Top Promotion ของจริง (เฉพาะ Facebook — match กับโปรที่สร้างไว้ใน Google Sheet)</div>
           <button class="btn btn-ghost" onclick="exportTable('tblTopRealPromo')">⬇ Export CSV</button>
         </div>
         <div class="table-wrap">
@@ -331,7 +333,7 @@
       </div>
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">Upsell ที่ขายดีที่สุด (เฉพาะ Facebook)</div>
+          <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Upsell ที่ขายดีที่สุด (เฉพาะ Facebook)</div>
           <div style="display:flex;gap:8px;align-items:center;">
             <span style="font-size:11px;color:var(--text3);">เรียงตาม:</span>
             <select id="upsellSortMode" onchange="renderRealPromoAndUpsell()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;">
@@ -444,11 +446,10 @@
       </div>
       <div class="grid-2">
         <div class="card"><div class="card-title">เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ (รายเดือน)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRMTrend"></canvas></div></div>
-        <div class="card"><div class="card-title">สัดส่วนกลุ่มลูกค้า (ตามจำนวนซื้อ)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRM"></canvas></div></div>
-      </div>
-      <div class="card">
-        <div class="section-header"><div class="section-title">แบ่งกลุ่มตามจำนวนซื้อ</div></div>
-        <div id="crmGroups" class="crm-groups-compact"></div>
+        <div class="card">
+          <div class="card-title">แบ่งกลุ่มตามจำนวนซื้อ</div>
+          <div id="crmGroups" class="crm-groups-compact" style="max-height:300px;overflow-y:auto;padding-right:4px;"></div>
+        </div>
       </div>
       <div class="card" id="crmDetailCard" style="display:none;margin-top:20px;">
         <div class="section-header"><div class="section-title" id="crmDetailTitle">รายชื่อลูกค้า</div><button class="btn btn-primary" onclick="exportCRMDetail()">⬇ Export CSV (ทั้งหมด)</button></div>
@@ -1568,7 +1569,6 @@ function renderCRM() {
       <div class="crm-pct">${fmtPct(groups[k].length, totalCustomers)}</div>
     </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKU ? 'ที่ซื้อสินค้านี้' : ' Facebook') + (crmMaxDaysSince !== null ? ` (ในช่วง ${crmMaxDaysSince} วัน)` : '') + '</div>';
 
-  makeChart('chartCRM', 'doughnut', sortedKeys.map(k => groupLabels[k] || k), [{ data: sortedKeys.map(k => groups[k].length), backgroundColor: COLORS, borderWidth: 0 }]);
   window._crmGroups = groups;
   window._crmGroupLabels = groupLabels;
 }
