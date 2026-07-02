@@ -173,9 +173,11 @@
     <div class="filters">
       <div class="filter-group" id="dateFromGroup"><span class="filter-label">ตั้งแต่</span><input type="date" id="dateFrom"></div>
       <div class="filter-group" id="dateToGroup"><span class="filter-label">ถึง</span><input type="date" id="dateTo"></div>
-      <div class="filter-group" id="monthFilterGroup" style="display:none;">
-        <span class="filter-label">เดือน</span>
-        <select id="filterMonth" onchange="onMonthFilterChange()"></select>
+      <div class="filter-group" id="monthFilterGroup" style="display:none;gap:4px;">
+        <span class="filter-label">ตั้งแต่</span>
+        <select id="filterMonthFrom" onchange="onMonthFilterChange()" style="max-width:120px;"></select>
+        <span class="filter-label" style="margin:0 2px;">ถึง</span>
+        <select id="filterMonthTo" onchange="onMonthFilterChange()" style="max-width:120px;"></select>
       </div>
       <div class="filter-group">
         <span class="filter-label">Channel</span>
@@ -357,6 +359,18 @@
       </div>
     </div>
     <div class="page" id="page-geo">
+      <div class="card" style="margin-bottom:16px;padding:12px 18px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">🔍 ดูรายละเอียดจังหวัด:</div>
+          <select id="geoProvinceFilter" onchange="renderGeoProvinceDetail()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;min-width:180px;">
+            <option value="">— เลือกจังหวัด —</option>
+          </select>
+          <button class="btn btn-ghost" onclick="clearGeoProvinceFilter()" id="clearGeoProvince" style="display:none;">✕ ล้าง</button>
+        </div>
+        <div id="geoProvinceDetail" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="grid-4" id="geoProvinceKPIs"></div>
+        </div>
+      </div>
       <div class="grid-2">
         <div class="card">
           <div class="section-header"><div class="section-title">Top 10 จังหวัด (ยอดขาย)</div><button class="btn btn-ghost" onclick="exportTable('tblTopProvince')">⬇ Export</button></div>
@@ -625,7 +639,7 @@
           <div class="section-header">
             <div class="section-title">Shopee</div>
             <select id="adp-sel-sh" onchange="renderAdpChannel('adpChartSH','adp-sub-sh','sh')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee mall">Shopee mall</option>
+              <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee Mall">Shopee Mall</option>
             </select>
           </div>
           <div class="kpi-sub" id="adp-sub-sh" style="margin-bottom:10px;">—</div>
@@ -635,7 +649,7 @@
           <div class="section-header">
             <div class="section-title">Lazada</div>
             <select id="adp-sel-lz" onchange="renderAdpChannel('adpChartLZ','adp-sub-lz','lz')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada mall">Lazada mall</option>
+              <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada Mall">Lazada Mall</option>
             </select>
           </div>
           <div class="kpi-sub" id="adp-sub-lz" style="margin-bottom:10px;">—</div>
@@ -879,15 +893,23 @@ function getPrevMonthsInRange() {
   return getMonthsInRange(prevFrom.toISOString().substring(0,10), prevTo.toISOString().substring(0,10));
 }
 
-// สำหรับหน้า MONTH_ONLY_PAGES — ใช้เดือนที่เลือกจาก dropdown ตรงๆ ไม่ผ่านช่วงวันที่
 function getSelectedMVMonths() {
-  return selectedMonth ? [selectedMonth] : [];
+  if (!selectedMonthFrom) return [];
+  const to = selectedMonthTo || selectedMonthFrom;
+  return getMonthsInRange(selectedMonthFrom + '-01', to + '-28');
 }
+
 function getSelectedMVPrevMonth() {
-  if (!selectedMonth) return [];
-  const [y, m] = selectedMonth.split('-').map(Number);
-  const d = new Date(y, m - 2, 1); // เดือนก่อนหน้า
-  return [d.toISOString().substring(0,7)];
+  if (!selectedMonthFrom) return [];
+  const months = getSelectedMVMonths();
+  const count = months.length;
+  const [y, m] = selectedMonthFrom.split('-').map(Number);
+  const result = [];
+  for (let i = count; i >= 1; i--) {
+    const d = new Date(y, m - 1 - i, 1);
+    result.push(d.toISOString().substring(0,7));
+  }
+  return result.sort();
 }
 
 function onChannelChange() {
@@ -941,26 +963,45 @@ const pageTitles = {
 const pageOrder = ['overview','channel','promotion','geo','crm','skurev','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
-let selectedMonth = null; // 'YYYY-MM' ที่เลือกไว้สำหรับหน้า MONTH_ONLY_PAGES
+let selectedMonthFrom = null; // 'YYYY-MM'
+let selectedMonthTo = null;   // 'YYYY-MM'
+// backward compat alias
+let selectedMonth = null;
 
 function populateMonthFilter() {
-  const sel = document.getElementById('filterMonth');
-  if (!sel || sel.options.length) return; // populate ครั้งเดียวพอ
+  const selFrom = document.getElementById('filterMonthFrom');
+  const selTo = document.getElementById('filterMonthTo');
+  if (!selFrom || selFrom.options.length > 1) return;
   const months = new Set();
   (window._promoMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
   (window._skuParentMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
   (window._provinceMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
-  const sorted = [...months].sort().reverse(); // ล่าสุดก่อน
-  sel.innerHTML = sorted.map(m => {
+  const sorted = [...months].sort().reverse();
+  const options = sorted.map(m => {
     const [y, mo] = m.split('-');
     return `<option value="${m}">${MONTHS_TH[parseInt(mo)-1]} ${y}</option>`;
   }).join('');
-  selectedMonth = sorted[0] || null;
-  if (selectedMonth) sel.value = selectedMonth;
+  selFrom.innerHTML = '<option value="">— เดือน —</option>' + options;
+  selTo.innerHTML = '<option value="">— เดือน —</option>' + options;
+  // default: latest month only
+  selectedMonthFrom = sorted[0] || null;
+  selectedMonthTo = sorted[0] || null;
+  selectedMonth = selectedMonthFrom;
+  if (selectedMonthFrom) { selFrom.value = selectedMonthFrom; selTo.value = selectedMonthTo; }
 }
 
 function onMonthFilterChange() {
-  selectedMonth = document.getElementById('filterMonth').value;
+  const from = document.getElementById('filterMonthFrom').value;
+  const to = document.getElementById('filterMonthTo').value;
+  // ถ้า to < from → set to = from อัตโนมัติ
+  if (from && to && to < from) {
+    document.getElementById('filterMonthTo').value = from;
+    selectedMonthFrom = from; selectedMonthTo = from;
+  } else {
+    selectedMonthFrom = from || null;
+    selectedMonthTo = to || from || null;
+  }
+  selectedMonth = selectedMonthFrom;
   renderCurrentPage();
 }
 
@@ -987,7 +1028,11 @@ function showPage(page) {
   document.getElementById('dateFromGroup').style.display = isMonthOnly ? 'none' : 'flex';
   document.getElementById('dateToGroup').style.display = isMonthOnly ? 'none' : 'flex';
   document.getElementById('monthFilterGroup').style.display = isMonthOnly ? 'flex' : 'none';
-  if (isMonthOnly) populateMonthFilter();
+  if (isMonthOnly) {
+    const selFrom = document.getElementById('filterMonthFrom');
+    const selTo = document.getElementById('filterMonthTo');
+    if (selFrom && selFrom.options.length <= 1) populateMonthFilter();
+  }
 
   if (page === 'adperf') {
     renderAdpAll();
@@ -1343,6 +1388,32 @@ function renderRealPromoAndUpsell() {
 }
 
 // ===== GEO =====
+let _geoByProv = {}; // cache สำหรับ province detail
+
+function clearGeoProvinceFilter() {
+  document.getElementById('geoProvinceFilter').value = '';
+  document.getElementById('clearGeoProvince').style.display = 'none';
+  document.getElementById('geoProvinceDetail').style.display = 'none';
+}
+
+function renderGeoProvinceDetail() {
+  const prov = document.getElementById('geoProvinceFilter').value;
+  const clearBtn = document.getElementById('clearGeoProvince');
+  const detailEl = document.getElementById('geoProvinceDetail');
+  const kpisEl = document.getElementById('geoProvinceKPIs');
+  if (!prov) { clearBtn.style.display = 'none'; detailEl.style.display = 'none'; return; }
+  clearBtn.style.display = 'inline-flex';
+  const v = _geoByProv[prov];
+  if (!v) { detailEl.style.display = 'none'; return; }
+  const aov = v.ord ? Math.round(v.rev / v.ord) : 0;
+  kpisEl.innerHTML = `
+    <div class="card"><div class="card-title">${prov}</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(v.rev)}</div><div class="kpi-sub">ยอดขายรวม</div></div>
+    <div class="card"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(v.ord)}</div><div class="kpi-sub">จำนวนออเดอร์ทั้งหมด</div></div>
+    <div class="card"><div class="card-title">ลูกค้าไม่ซ้ำ</div><div class="kpi-value" style="color:var(--blue);">${fmt(v.cust)}</div><div class="kpi-sub">unique เบอร์โทร (Facebook)</div></div>
+    <div class="card"><div class="card-title">AOV</div><div class="kpi-value">฿${fmt(aov)}</div><div class="kpi-sub">เฉลี่ยต่อออเดอร์</div></div>`;
+  detailEl.style.display = 'block';
+}
+
 function renderGeo() {
   const ch = document.getElementById('filterChannel').value;
   const monthsCurr = getSelectedMVMonths();
@@ -1361,25 +1432,50 @@ function renderGeo() {
     byProv[k].rev += parseFloat(r.total_revenue) || 0;
     byProv[k].ord += parseInt(r.total_orders) || 0;
   });
+
+  // นับลูกค้าไม่ซ้ำ (เบอร์โทร) จากข้อมูล orders (Facebook) ในช่วง filter
+  const from = getDateValue('From'), to = getDateValue('To');
+  const custByProv = {};
+  allData.filter(r => r.channel === 'Facebook' && r.province && r.phone && r.phone.length >= 5 && shouldIncludeRow(r)).forEach(r => {
+    if (!custByProv[r.province]) custByProv[r.province] = new Set();
+    custByProv[r.province].add(r.phone);
+  });
+  Object.keys(byProv).forEach(p => { byProv[p].cust = custByProv[p] ? custByProv[p].size : 0; });
+  _geoByProv = byProv;
+
+  // Populate province dropdown
+  const provSel = document.getElementById('geoProvinceFilter');
+  const currentVal = provSel.value;
+  const allProvs = Object.keys(byProv).sort((a, b) => byProv[b].rev - byProv[a].rev);
+  provSel.innerHTML = '<option value="">— เลือกจังหวัด —</option>' + allProvs.map(p => `<option value="${p}">${p} (฿${fmtB(byProv[p].rev)}, ${fmt(byProv[p].ord)} ออเดอร์)</option>`).join('');
+  if (currentVal && byProv[currentVal]) { provSel.value = currentVal; renderGeoProvinceDetail(); }
+  else { document.getElementById('geoProvinceDetail').style.display = 'none'; }
+
   const sortedByRev = Object.entries(byProv).sort((a,b) => b[1].rev - a[1].rev);
   const sortedByOrd = Object.entries(byProv).sort((a,b) => b[1].ord - a[1].ord);
 
   document.getElementById('tbodyTopProvince').innerHTML = sortedByRev.slice(0, 10).map(([k, v], i) => `
-    <tr><td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td></tr>`
+    <tr style="cursor:pointer;" onclick="document.getElementById('geoProvinceFilter').value='${k}';renderGeoProvinceDetail();document.getElementById('geoProvinceFilter').scrollIntoView({behavior:'smooth'})">
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td></tr>`
   ).join('') || '<tr><td colspan="5" class="empty">ไม่มีข้อมูลจังหวัด</td></tr>';
 
   document.getElementById('tbodyTopProvinceOrd').innerHTML = sortedByOrd.slice(0, 10).map(([k, v], i) => `
-    <tr><td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td><td>${k}</td><td>${fmt(v.ord)}</td><td>฿${fmt(v.rev)}</td></tr>`
+    <tr style="cursor:pointer;" onclick="document.getElementById('geoProvinceFilter').value='${k}';renderGeoProvinceDetail();document.getElementById('geoProvinceFilter').scrollIntoView({behavior:'smooth'})">
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td>${k}</td><td>${fmt(v.ord)}</td><td>฿${fmt(v.rev)}</td></tr>`
   ).join('') || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 
   // จังหวัดที่มีโอกาสเติบโต: ออเดอร์น้อย (5-49) แต่ AOV สูง
   const growth = Object.entries(byProv).filter(([,v]) => v.ord >= 5 && v.ord < 50)
     .map(([k,v]) => [k, v, v.rev/v.ord]).sort((a,b) => b[2]-a[2]).slice(0,10);
   document.getElementById('tbodyGrowthProvince').innerHTML = growth.map(([k,v,aov], i) => `
-    <tr><td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td><td>${k}</td><td>${fmt(v.ord)}</td><td>฿${fmt(aov)}</td></tr>`
+    <tr style="cursor:pointer;" onclick="document.getElementById('geoProvinceFilter').value='${k}';renderGeoProvinceDetail();document.getElementById('geoProvinceFilter').scrollIntoView({behavior:'smooth'})">
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td>${k}</td><td>${fmt(v.ord)}</td><td>฿${fmt(aov)}</td></tr>`
   ).join('') || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  // ภูมิภาค (ใช้ province_region table)
+  // ภูมิภาค
   const byRegion = {};
   Object.entries(byProv).forEach(([prov, v]) => {
     const reg = getRegion(prov);
@@ -1398,7 +1494,6 @@ function renderGeo() {
       <div class="prog-val">${fmtPct(v.rev, totalRegionRev)}</div>
     </div>`).join('');
 
-  // กรุงเทพฯ&ปริมณฑล vs ต่างจังหวัด
   const bkkData = byRegion['กรุงเทพฯ&ปริมณฑล'] || { rev: 0, ord: 0 };
   const upRev = totalRegionRev - bkkData.rev;
   const upOrd = regions.reduce((s,[,v]) => s+v.ord, 0) - bkkData.ord;
@@ -1408,7 +1503,7 @@ function renderGeo() {
   document.getElementById('upcountry-orders').textContent = fmt(upOrd) + ' ออเดอร์';
 }
 
-// ===== CRM (Facebook only) =====
+// ===== CRM
 let crmSelectedSKU = null;
 let crmMaxDaysSince = null; // ตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน"
 
@@ -2102,10 +2197,10 @@ function renderAdpChannel(chartId, subId, ch) {
   else if(ch==='tt') filtered=d.filter(r=>r.channel==='Tiktok'||r.channel==='TikTok');
   else if(ch==='sh'){
     const sel=document.getElementById('adp-sel-sh')?.value||'all';
-    filtered = sel==='all' ? d.filter(r=>r.channel==='Shopee mall'||r.channel==='Shopee 24hr') : d.filter(r=>r.channel===sel);
+    filtered = sel==='all' ? d.filter(r=>r.channel==='Shopee Mall'||r.channel==='Shopee 24hr') : d.filter(r=>r.channel===sel);
   } else if(ch==='lz'){
     const sel=document.getElementById('adp-sel-lz')?.value||'all';
-    filtered = sel==='all' ? d.filter(r=>r.channel==='Lazada mall'||r.channel==='Lazada 24hr') : d.filter(r=>r.channel===sel);
+    filtered = sel==='all' ? d.filter(r=>r.channel==='Lazada Mall'||r.channel==='Lazada 24hr') : d.filter(r=>r.channel===sel);
   } else filtered=d;
   const a=aggAd(filtered,adView);
   const labels=a.map(([k])=>adLabel(k));
@@ -2308,8 +2403,11 @@ async function refreshDashboardData() {
     window._skuParentMonthlyCache = skuParentMonthly
     window._provinceMonthlyCache = provinceMonthly
     // populate เดือนใหม่เผื่อมีเดือนใหม่เข้ามา
-    const monthSel = document.getElementById('filterMonth')
-    if (monthSel) { monthSel.innerHTML = ''; populateMonthFilter() }
+    const monthSelFrom = document.getElementById('filterMonthFrom')
+    const monthSelTo = document.getElementById('filterMonthTo')
+    if (monthSelFrom) { monthSelFrom.innerHTML = '<option value="">— เดือน —</option>'; }
+    if (monthSelTo) { monthSelTo.innerHTML = '<option value="">— เดือน —</option>'; }
+    populateMonthFilter()
 
     statusEl.innerHTML = '<span style="color:var(--green);">✅ รีเฟรชสำเร็จ ' + new Date().toLocaleTimeString('th-TH') + '</span>'
     if (currentPage === 'adperf') renderAdpAll(); else renderCurrentPage()
