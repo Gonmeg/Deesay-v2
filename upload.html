@@ -34,7 +34,7 @@
     .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; max-height: calc(100vh - 90px); overflow-y: auto; }
     .history-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
     .history-sub { font-size: 0.7rem; color: var(--muted); margin-bottom: 14px; }
-    .history-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .history-item { padding: 10px 0; border-bottom: 1px solid var(--border); transition: opacity 0.3s; }
     .history-item:last-child { border-bottom: none; }
     .history-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
     .history-item-channel { font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
@@ -47,6 +47,9 @@
     .history-empty { font-size: 0.78rem; color: var(--muted); text-align: center; padding: 24px 0; }
     .history-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .history-loading { font-size: 0.75rem; color: var(--muted); text-align: center; padding: 16px 0; }
+    .btn-delete-log { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; transition: all 0.15s; font-family: inherit; }
+    .btn-delete-log:hover { color: var(--danger); background: rgba(239,68,68,0.08); }
+    .delete-confirm { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 10px 12px; margin-top: 8px; font-size: 0.72rem; }
     @media (max-width: 900px) {
       .shell { flex-direction: column; }
       .shell-sidebar { width: 100%; position: static; }
@@ -125,8 +128,6 @@
     .alert-success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
     .step-panel { display: none; }
     .step-panel.active { display: block; }
-
-    /* Success state */
     .success-banner { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
     .success-banner-icon { font-size: 20px; }
     .success-banner-title { font-size: 14px; font-weight: 600; color: #6ee7b7; }
@@ -143,8 +144,6 @@
     .action-card-icon { font-size: 1.2rem; }
     .action-card-title { font-size: 0.82rem; font-weight: 600; }
     .action-card-sub { font-size: 0.7rem; color: var(--muted); }
-
-    /* Sync Promotions card */
     .promo-sync-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 16px; }
     .btn-sync { display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 9px 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; font-family: inherit; cursor: pointer; margin-top: 10px; }
     .btn-sync:hover { background: #4f46e5; }
@@ -173,20 +172,11 @@
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
   </div>
   <div class="step-track">
-    <div class="step-item">
-      <div class="step-num active" id="snum1">1</div>
-      <div class="step-label active" id="slabel1">เลือกไฟล์</div>
-    </div>
+    <div class="step-item"><div class="step-num active" id="snum1">1</div><div class="step-label active" id="slabel1">เลือกไฟล์</div></div>
     <div class="step-line" id="sline1"></div>
-    <div class="step-item">
-      <div class="step-num" id="snum2">2</div>
-      <div class="step-label" id="slabel2">จับคู่คอลัมน์</div>
-    </div>
+    <div class="step-item"><div class="step-num" id="snum2">2</div><div class="step-label" id="slabel2">จับคู่คอลัมน์</div></div>
     <div class="step-line" id="sline2"></div>
-    <div class="step-item">
-      <div class="step-num" id="snum3">3</div>
-      <div class="step-label" id="slabel3">ยืนยัน</div>
-    </div>
+    <div class="step-item"><div class="step-num" id="snum3">3</div><div class="step-label" id="slabel3">ยืนยัน</div></div>
   </div>
 
   <div class="step-panel active" id="panel1">
@@ -208,9 +198,7 @@
           </div>
           <div id="storeWrap" style="display:none">
             <label class="field-label">ร้านค้า <span class="req">*</span></label>
-            <select id="storeSelect">
-              <option value="">— เลือกร้าน —</option>
-            </select>
+            <select id="storeSelect"><option value="">— เลือกร้าน —</option></select>
           </div>
         </div>
         <div id="fileWrap">
@@ -221,13 +209,11 @@
             <div class="drop-main" id="dropMain"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวาง (เลือกหลายไฟล์ได้)</div>
             <div class="drop-sub" id="dropSub">.xlsx .xls .csv</div>
           </label>
-          <div id="fileListRows" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+          <div id="fileListRows" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
         </div>
       </div>
       <div id="alert1" class="alert alert-error" style="display:none"></div>
-      <div class="btn-row">
-        <button class="btn-primary" id="btnStep1">ถัดไป →</button>
-      </div>
+      <div class="btn-row"><button class="btn-primary" id="btnStep1">ถัดไป →</button></div>
     </div>
   </div>
 
@@ -249,9 +235,7 @@
       <div class="section-title">ตรวจสอบก่อน Upload</div>
       <div class="summary-grid" id="summaryGrid"></div>
       <div class="preview-wrap"><table class="preview-tbl" id="previewTbl"></table></div>
-      <div class="progress-track" id="progressTrack" style="display:none">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+      <div class="progress-track" id="progressTrack" style="display:none"><div class="progress-fill" id="progressFill"></div></div>
       <div id="alert3" class="alert" style="display:none"></div>
       <div class="btn-row" id="btnRow3">
         <button class="btn-back" id="btnBack3">← ย้อนกลับ</button>
@@ -265,18 +249,25 @@
   <div class="promo-sync-card">
     <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
     <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
-    <div style="display:flex; gap:10px; margin-top:10px;">
-      <button class="btn-sync" id="btnSyncPromotions" style="margin-top:0; flex:1;">🔄 Sync Promotions</button>
-      <button class="btn-sync" id="btnBackfillMatching" style="margin-top:0; flex:1; background:var(--surface2); color:var(--text); border:1px solid var(--border2);">🔁 Backfill (ออเดอร์เก่า)</button>
+    <button class="btn-sync" id="btnSyncPromotions" style="margin-top:10px;">🔄 Sync Promotions</button>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">🔁 Re-Match โปรโมชั่น (แก้ไขย้อนหลัง)</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">ตั้งแต่</span>
+        <input type="date" id="backfillFrom" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
+        <span style="font-size:0.72rem;color:var(--muted);">ถึง</span>
+        <input type="date" id="backfillTo" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
+      </div>
+      <button class="btn-sync" id="btnBackfillMatching" style="margin-top:0;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔁 Re-Match ออเดอร์ในช่วงนี้</button>
     </div>
-    <div style="display:flex; gap:10px; margin-top:8px;">
-      <div class="promo-sync-result" id="promoSyncResult" style="flex:1;"></div>
-      <div class="promo-sync-result" id="backfillResult" style="flex:1;"></div>
+    <div style="margin-top:8px;">
+      <div class="promo-sync-result" id="promoSyncResult"></div>
+      <div class="promo-sync-result" id="backfillResult"></div>
     </div>
   </div>
   <div class="history-card">
     <div class="history-title">ประวัติการอัพโหลด</div>
-    <div class="history-sub">30 วันล่าสุด</div>
+    <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
     <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
   </div>
 </div>
@@ -294,35 +285,25 @@ if (sessionStorage.getItem('auth') !== 'true') {
 
 const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
 
-// ===== Sync Promotions (Google Sheet → promotions table) =====
+// ===== Sync Promotions =====
 const PROMO_SHEET_ID = '1pDkvPNFUTZpj9EkOsL7FdaB3g0tSgWQIRkS0qE52_zU'
 const PROMO_SHEET_TAB = 'Facebook'
 
-// แปลงวันที่จาก Google Sheet → "2026-01-26"
-// รองรับทั้ง gviz Date(yyyy,m,d) (เดือนเริ่มที่ 0) และ "26-Jan26" (DD-MMMYY)
 function parseThaiMonthDate(str) {
   if (str === null || str === undefined || str === '') return null
   const s = String(str).trim()
-
-  // รูปแบบที่ 1: gviz ส่งมาเป็น "Date(2026,0,26)"
   let m = s.match(/^Date\((\d+),\s*(\d+),\s*(\d+)\)$/)
   if (m) {
-    const y = m[1]
-    const mo = String(parseInt(m[2]) + 1).padStart(2, '0')
-    const d = String(m[3]).padStart(2, '0')
+    const y = m[1], mo = String(parseInt(m[2]) + 1).padStart(2, '0'), d = String(m[3]).padStart(2, '0')
     return `${y}-${mo}-${d}`
   }
-
-  // รูปแบบที่ 2: "26-Jan26" (DD-MMMYY)
-  const months = { Jan:'01', Feb:'02', Mar:'03', Apr:'04', May:'05', Jun:'06',
-                    Jul:'07', Aug:'08', Sep:'09', Oct:'10', Nov:'11', Dec:'12' }
+  const months = { Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12' }
   m = s.match(/^(\d{1,2})-([A-Za-z]{3})(\d{2})$/)
   if (m) {
     const [, day, mon, yy] = m
     const mm = months[mon.charAt(0).toUpperCase() + mon.slice(1,3).toLowerCase()]
     if (mm) return `20${yy}-${mm}-${day.padStart(2,'0')}`
   }
-
   return null
 }
 
@@ -330,96 +311,54 @@ async function syncPromotions() {
   const btn = document.getElementById('btnSyncPromotions')
   const resultEl = document.getElementById('promoSyncResult')
   const lastEl = document.getElementById('promoSyncLast')
-
-  btn.disabled = true
-  btn.textContent = '⏳ กำลัง sync...'
-  resultEl.textContent = ''
-
+  btn.disabled = true; btn.textContent = '⏳ กำลัง sync...'; resultEl.textContent = ''
   try {
     const url = `https://docs.google.com/spreadsheets/d/${PROMO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(PROMO_SHEET_TAB)}`
     const res = await fetch(url)
     const text = await res.text()
-    const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1)
-    const data = JSON.parse(jsonStr)
-
+    const data = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1))
     const cols = data.table.cols.map(c => (c.label || '').trim())
     const idx = {
-      promoId: cols.indexOf('Promotion ID'),
-      sku: cols.indexOf('SKU'),
-      promoDetail: cols.indexOf('Promotion Detail'),
-      productsDetail: cols.indexOf('Products Detail'),
-      startDate: cols.indexOf('Start Date'),
-      endDate: cols.indexOf('Expiry Date'),
-      price: cols.indexOf('ราคา Approved'),
-      approved: cols.indexOf('Approved'),
+      promoId: cols.indexOf('Promotion ID'), sku: cols.indexOf('SKU'),
+      promoDetail: cols.indexOf('Promotion Detail'), productsDetail: cols.indexOf('Products Detail'),
+      startDate: cols.indexOf('Start Date'), endDate: cols.indexOf('Expiry Date'),
+      price: cols.indexOf('ราคา Approved'), approved: cols.indexOf('Approved'),
     }
-
     for (const [key, val] of Object.entries(idx)) {
-      if (val === -1) throw new Error(`ไม่พบคอลัมน์สำหรับ "${key}" ในชีต — เช็คชื่อหัวคอลัมน์`)
+      if (val === -1) throw new Error(`ไม่พบคอลัมน์ "${key}" ในชีต`)
     }
-
-    const rows = data.table.rows
-    const promotions = []
-    let skipped = 0
-
-    rows.forEach((row, i) => {
+    const promotions = []; let skipped = 0
+    data.table.rows.forEach((row, i) => {
       const cells = row.c
       const get = (i2) => cells[i2] ? (cells[i2].v ?? cells[i2].f ?? '') : ''
-      // คอลัมน์วันที่ในชีตเป็น Date type ที่ตั้ง custom format (เช่น dd-mmmyy)
-      // ต้องอ่านจาก .f (ค่าที่แสดงผลจริง) ก่อน เพราะ .v จะเป็น "Date(yyyy,m,d)" ดิบๆ
       const getDateStr = (i2) => cells[i2] ? (cells[i2].f ?? cells[i2].v ?? '') : ''
-
       const approvedVal = get(idx.approved)
       const isApproved = approvedVal === true || String(approvedVal).toUpperCase() === 'TRUE'
       const sku = String(get(idx.sku)).trim()
-
       if (!isApproved || !sku) { skipped++; return }
-
-      let priceRaw = String(get(idx.price)).trim()
-      priceRaw = priceRaw.replace(/-EXP/i, '').replace(/[^0-9.]/g, '')
+      let priceRaw = String(get(idx.price)).trim().replace(/-EXP/i, '').replace(/[^0-9.]/g, '')
       const price = priceRaw ? parseFloat(priceRaw) : null
-
       promotions.push({
-        promo_id: String(get(idx.promoId)).trim(),
-        sku_promotion: sku,
-        promo_name: String(get(idx.productsDetail)).trim(),
-        promo_type: String(get(idx.promoDetail)).trim(),
-        approved_price: price,
-        start_date: parseThaiMonthDate(getDateStr(idx.startDate)),
-        end_date: parseThaiMonthDate(getDateStr(idx.endDate)),
-        status: 'active',
-        sheet_row_id: `row_${i + 2}`,
+        promo_id: String(get(idx.promoId)).trim(), sku_promotion: sku,
+        promo_name: String(get(idx.productsDetail)).trim(), promo_type: String(get(idx.promoDetail)).trim(),
+        approved_price: price, start_date: parseThaiMonthDate(getDateStr(idx.startDate)),
+        end_date: parseThaiMonthDate(getDateStr(idx.endDate)), status: 'active', sheet_row_id: `row_${i + 2}`,
       })
     })
-
-    if (promotions.length === 0) {
-      resultEl.textContent = 'ไม่พบโปรที่ Approved = TRUE และมี SKU'
-      return
-    }
-
-    const { data: upserted, error } = await DB
-      .from('promotions')
-      .upsert(promotions, { onConflict: 'promo_id' })
-      .select()
-
+    if (!promotions.length) { resultEl.textContent = 'ไม่พบโปรที่ Approved = TRUE และมี SKU'; return }
+    const { error } = await DB.from('promotions').upsert(promotions, { onConflict: 'promo_id' })
     if (error) throw error
-
-    resultEl.textContent = `✅ Sync สำเร็จ ${promotions.length} โปร (ข้าม ${skipped} แถวที่ไม่ Approved/ไม่มี SKU)`
+    resultEl.textContent = `✅ Sync สำเร็จ ${promotions.length} โปร (ข้าม ${skipped} แถว)`
     lastEl.textContent = `Sync ล่าสุด: ${new Date().toLocaleString('th-TH')}`
-
   } catch (err) {
-    console.error(err)
-    resultEl.textContent = `❌ Sync ไม่สำเร็จ: ${err.message}`
+    console.error(err); resultEl.textContent = `❌ Sync ไม่สำเร็จ: ${err.message}`
   } finally {
-    btn.disabled = false
-    btn.textContent = '🔄 Sync Promotions'
+    btn.disabled = false; btn.textContent = '🔄 Sync Promotions'
   }
 }
-
 document.getElementById('btnSyncPromotions').addEventListener('click', syncPromotions)
 
-// ===== Promotion Matching (base_promotion / upsell_items) =====
-// แปลง "DSPx2+ZOLx1" → { DSP: 2, ZOL: 1 }
+// ===== Promotion Matching =====
 function parseSkuMap(str) {
   const map = {}
   if (!str) return map
@@ -429,17 +368,13 @@ function parseSkuMap(str) {
   })
   return map
 }
-
 function mapComplexity(map) { return Object.values(map).reduce((a, b) => a + b, 0) }
-
-// เช็คว่า promoMap (ทุก sku+qty) อยู่ครบใน orderMap หรือไม่
 function isSubsetMap(promoMap, orderMap) {
   for (const [sku, qty] of Object.entries(promoMap)) {
     if (!orderMap[sku] || orderMap[sku] < qty) return false
   }
   return true
 }
-
 function subtractMap(orderMap, promoMap) {
   const result = { ...orderMap }
   for (const [sku, qty] of Object.entries(promoMap)) {
@@ -448,7 +383,6 @@ function subtractMap(orderMap, promoMap) {
   }
   return result
 }
-
 function mapToSkuString(map) {
   return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([sku, qty]) => sku + 'x' + qty).join('+')
 }
@@ -457,22 +391,17 @@ let _promoListCache = null
 async function getActivePromotions() {
   if (_promoListCache) return _promoListCache
   const { data } = await DB.from('promotions').select('promo_id, sku_promotion').eq('status', 'active')
-  _promoListCache = (data || [])
-    .map(p => ({ promo_id: p.promo_id, sku_promotion: p.sku_promotion, map: parseSkuMap(p.sku_promotion) }))
-    .filter(p => Object.keys(p.map).length > 0)
+  _promoListCache = (data || []).map(p => ({ promo_id: p.promo_id, sku_promotion: p.sku_promotion, map: parseSkuMap(p.sku_promotion) })).filter(p => Object.keys(p.map).length > 0)
   return _promoListCache
 }
 
-// รับ array ของ { order_id, sku_promotion } แล้ว update orders table ด้วย base_promotion/upsell_items
 async function matchPromotionsForOrders(orders) {
   const promoList = await getActivePromotions()
   let matchedCount = 0, behaviorCount = 0
   const updates = []
-
   for (const order of orders) {
     const orderMap = parseSkuMap(order.sku_promotion)
     if (!Object.keys(orderMap).length) continue
-
     let best = null, bestComplexity = -1
     for (const promo of promoList) {
       if (isSubsetMap(promo.map, orderMap)) {
@@ -480,24 +409,16 @@ async function matchPromotionsForOrders(orders) {
         if (c > bestComplexity) { bestComplexity = c; best = promo }
       }
     }
-
     let base_promotion, upsell_items
     if (best) {
       const remaining = subtractMap(orderMap, best.map)
       upsell_items = Object.keys(remaining).length ? mapToSkuString(remaining) : null
-      base_promotion = best.sku_promotion
-      matchedCount++
+      base_promotion = best.sku_promotion; matchedCount++
     } else {
-      base_promotion = 'พฤติกรรมการซื้อจริง'
-      upsell_items = null
-      behaviorCount++
+      base_promotion = 'พฤติกรรมการซื้อจริง'; upsell_items = null; behaviorCount++
     }
-
     updates.push({ order_id: order.order_id, base_promotion, upsell_items })
   }
-
-  // ยิง UPDATE พร้อมกันทีละ CONCURRENCY คำสั่ง (ไม่ใช่ upsert เพราะตาราง orders มีคอลัมน์ NOT NULL อื่นที่จะพังถ้า insert path ถูกเช็ค)
-  // เร็วกว่าทำทีละแถวเรียงต่อกันมาก โดยยังเป็น UPDATE จริงๆ ไม่กระทบคอลัมน์อื่น
   const CONCURRENCY = 20
   for (let i = 0; i < updates.length; i += CONCURRENCY) {
     const batch = updates.slice(i, i + CONCURRENCY)
@@ -506,56 +427,47 @@ async function matchPromotionsForOrders(orders) {
         .then(({ error }) => { if (error) console.error('match update failed for', u.order_id, error) })
     ))
   }
-
   return { matchedCount, behaviorCount, total: orders.length }
 }
 
+// ===== Backfill (Re-Match with date range) =====
 async function backfillMatching() {
   const btn = document.getElementById('btnBackfillMatching')
   const resultEl = document.getElementById('backfillResult')
-  btn.disabled = true
-  btn.textContent = '⏳ กำลัง backfill...'
-  resultEl.textContent = ''
-  _promoListCache = null // โหลดโปรล่าสุดใหม่เสมอตอน backfill
-
+  const fromDate = document.getElementById('backfillFrom').value
+  const toDate = document.getElementById('backfillTo').value
+  if (!fromDate || !toDate) { resultEl.textContent = '⚠️ กรุณาเลือกช่วงวันที่ก่อน'; return }
+  btn.disabled = true; btn.textContent = '⏳ กำลัง re-match...'; resultEl.textContent = ''
+  _promoListCache = null
   try {
     let totalMatched = 0, totalBehavior = 0, totalRows = 0
-    const BATCH = 300
+    const BATCH = 300; let lastId = null
     while (true) {
-      const { data: batch, error } = await DB.from('orders')
-        .select('order_id, sku_promotion')
-        .eq('channel', 'Facebook')
-        .is('base_promotion', null)
-        .not('sku_promotion', 'is', null)
-        .limit(BATCH)
+      let query = DB.from('orders').select('order_id, sku_promotion')
+        .eq('channel', 'Facebook').gte('date', fromDate).lte('date', toDate)
+        .not('sku_promotion', 'is', null).order('order_id', { ascending: true }).limit(BATCH)
+      if (lastId) query = query.gt('order_id', lastId)
+      const { data: batch, error } = await query
       if (error) throw error
       if (!batch || !batch.length) break
-
       const result = await matchPromotionsForOrders(batch)
-      totalMatched += result.matchedCount
-      totalBehavior += result.behaviorCount
-      totalRows += result.total
-      resultEl.textContent = `กำลังประมวลผล... ${totalRows.toLocaleString()} ออเดอร์ (match โปร ${totalMatched.toLocaleString()} · พฤติกรรมซื้อจริง ${totalBehavior.toLocaleString()})`
-
-      if (batch.length < BATCH) break // แถวสุดท้ายของรอบนี้ไม่ครบ batch = หมดแล้ว
+      totalMatched += result.matchedCount; totalBehavior += result.behaviorCount; totalRows += result.total
+      lastId = batch[batch.length - 1].order_id
+      resultEl.textContent = `กำลังประมวลผล... ${totalRows.toLocaleString()} ออเดอร์`
+      if (batch.length < BATCH) break
     }
-
     resultEl.textContent = totalRows > 0
-      ? `✅ Backfill เสร็จ ${totalRows.toLocaleString()} ออเดอร์ — match โปร ${totalMatched.toLocaleString()} · พฤติกรรมซื้อจริง ${totalBehavior.toLocaleString()}`
-      : 'ไม่พบออเดอร์ที่ต้อง backfill (ทำครบแล้ว)'
-
+      ? `✅ Re-Match เสร็จ ${totalRows.toLocaleString()} ออเดอร์ (${fromDate} – ${toDate}) — match ${totalMatched.toLocaleString()} · พฤติกรรม ${totalBehavior.toLocaleString()}`
+      : `ไม่พบออเดอร์ Facebook ในช่วง ${fromDate} – ${toDate}`
   } catch (err) {
-    console.error(err)
-    resultEl.textContent = `❌ Backfill ไม่สำเร็จ: ${err.message}`
+    console.error(err); resultEl.textContent = `❌ Re-Match ไม่สำเร็จ: ${err.message}`
   } finally {
-    btn.disabled = false
-    btn.textContent = '🔁 Backfill Matching (ออเดอร์เก่า)'
+    btn.disabled = false; btn.textContent = '🔁 Re-Match ออเดอร์ในช่วงนี้'
   }
 }
-
 document.getElementById('btnBackfillMatching').addEventListener('click', backfillMatching)
 
-// ===== Upload History Sidebar =====
+// ===== Upload History + Delete =====
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
   if (diff < 60) return 'เมื่อสักครู่'
@@ -571,16 +483,9 @@ async function loadUploadHistory() {
   const el = document.getElementById('historyList')
   try {
     const since = new Date(Date.now() - 30*86400*1000).toISOString()
-    const { data, error } = await DB.from('upload_logs')
-      .select('*')
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(50)
+    const { data, error } = await DB.from('upload_logs').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(50)
     if (error) throw error
-    if (!data || !data.length) {
-      el.innerHTML = '<div class="history-empty">ยังไม่มีประวัติการอัพโหลด</div>'
-      return
-    }
+    if (!data || !data.length) { el.innerHTML = '<div class="history-empty">ยังไม่มีประวัติการอัพโหลด</div>'; return }
     el.innerHTML = data.map(log => {
       const isError = log.status === 'error'
       const isSettlement = log.upload_type === 'settlement'
@@ -588,99 +493,156 @@ async function loadUploadHistory() {
       const badgeText = isError ? '✕ ผิดพลาด' : (isSettlement ? '💰 รับเงิน' : '📦 ออเดอร์')
       const icon = CHANNEL_ICON[log.channel] || '📄'
       let detail = ''
-      if (isError) {
-        detail = `<span style="color:#fca5a5">${log.error_message || 'เกิดข้อผิดพลาด'}</span>`
-      } else if (isSettlement) {
-        detail = `Match สำเร็จ ${(log.success_count||0).toLocaleString()} · ไม่เจอ ${(log.not_matched_count||0).toLocaleString()}`
-      } else {
-        detail = `${(log.success_count||0).toLocaleString()} ออเดอร์ · ฿${Math.round(log.total_revenue||0).toLocaleString()}`
-      }
+      if (isError) detail = `<span style="color:#fca5a5">${log.error_message || 'เกิดข้อผิดพลาด'}</span>`
+      else if (isSettlement) detail = `Match สำเร็จ ${(log.success_count||0).toLocaleString()} · ไม่เจอ ${(log.not_matched_count||0).toLocaleString()}`
+      else detail = `${(log.success_count||0).toLocaleString()} ออเดอร์ · ฿${Math.round(log.total_revenue||0).toLocaleString()}`
+      // ปุ่มลบ เฉพาะ order ที่ success และมี sub_channel
+      const canDelete = !isError && !isSettlement && log.sub_channel
+      const safeSubCh = (log.sub_channel||'').replace(/'/g, "\\'")
+      const deleteBtn = canDelete
+        ? `<button class="btn-delete-log" onclick="confirmDeleteLog(event,'${log.id}','${safeSubCh}','${log.created_at}','${log.channel}')">🗑 ลบ</button>`
+        : ''
       return `
-        <div class="history-item">
+        <div class="history-item" id="log-item-${log.id}">
           <div class="history-item-top">
             <div class="history-item-channel">${icon} ${log.channel}${log.sub_channel ? ' · '+log.sub_channel : ''}</div>
-            <div class="history-item-time">${timeAgo(log.created_at)}</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="history-item-time">${timeAgo(log.created_at)}</div>
+              ${deleteBtn}
+            </div>
           </div>
           <div class="history-item-detail">
-            <span class="history-badge ${badgeClass}">${badgeText}</span>
-            &nbsp;${detail}
+            <span class="history-badge ${badgeClass}">${badgeText}</span>&nbsp;${detail}
           </div>
+          <div id="log-confirm-${log.id}" style="display:none;"></div>
         </div>`
     }).join('')
-  } catch(e) {
-    el.innerHTML = '<div class="history-empty">โหลดประวัติไม่ได้</div>'
+  } catch(e) { el.innerHTML = '<div class="history-empty">โหลดประวัติไม่ได้</div>' }
+}
+
+window.confirmDeleteLog = function(e, logId, subChannel, createdAt, channel) {
+  e.stopPropagation()
+  const confirmEl = document.getElementById('log-confirm-' + logId)
+  if (!confirmEl) return
+  confirmEl.style.display = 'block'
+  const dateDisplay = new Date(createdAt).toLocaleDateString('th-TH')
+  confirmEl.innerHTML = `
+    <div class="delete-confirm">
+      <div style="margin-bottom:8px;color:var(--text);">⚠️ ลบออเดอร์ทั้งหมดของ <strong style="color:#f87171;">${subChannel}</strong> ที่อัพโหลดในครั้งนี้?</div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:10px;">จะลบออเดอร์ที่มี sub_channel = "${subChannel}" ในช่วง 60 วันก่อน ${dateDisplay} — แล้วอัพโหลดใหม่ได้เลย</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="executeDeleteLog('${logId}','${subChannel.replace(/'/g,"\\'")}','${createdAt}')" style="background:var(--danger);color:white;border:none;padding:6px 16px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:600;">✓ ยืนยันลบ</button>
+        <button onclick="document.getElementById('log-confirm-${logId}').style.display='none'" style="background:none;border:1px solid var(--border2);color:var(--muted);padding:6px 14px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;">ยกเลิก</button>
+      </div>
+    </div>`
+}
+
+window.executeDeleteLog = async function(logId, subChannel, createdAt) {
+  const confirmEl = document.getElementById('log-confirm-' + logId)
+  if (confirmEl) confirmEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);padding:6px 0;">⏳ กำลังลบ...</div>'
+  try {
+    const toDate = new Date(createdAt).toISOString().substring(0, 10)
+    const fromDate = new Date(new Date(createdAt) - 60*86400*1000).toISOString().substring(0, 10)
+    // ดึง order_ids ก่อน
+    const { data: orderRows, error: fetchErr } = await DB.from('orders').select('order_id').eq('sub_channel', subChannel).gte('date', fromDate).lte('date', toDate)
+    if (fetchErr) throw fetchErr
+    const ids = (orderRows || []).map(r => r.order_id)
+    if (ids.length) {
+      const BATCH = 200
+      // ลบ sku_revenue ก่อน
+      for (let i = 0; i < ids.length; i += BATCH) {
+        const { error } = await DB.from('sku_revenue').delete().in('order_id', ids.slice(i, i + BATCH))
+        if (error) throw error
+      }
+      // ลบ orders
+      for (let i = 0; i < ids.length; i += BATCH) {
+        const { error } = await DB.from('orders').delete().in('order_id', ids.slice(i, i + BATCH))
+        if (error) throw error
+      }
+    }
+    // ลบ upload_log
+    await DB.from('upload_logs').delete().eq('id', logId)
+    // ลบออกจาก UI
+    const item = document.getElementById('log-item-' + logId)
+    if (item) { item.style.opacity = '0'; setTimeout(() => item.remove(), 300) }
+    showDeleteToast(`✅ ลบสำเร็จ ${ids.length} ออเดอร์ (${subChannel}) — อัพโหลดใหม่ได้เลย`)
+  } catch(err) {
+    console.error('deleteLog failed:', err)
+    if (confirmEl) confirmEl.innerHTML = `<div style="font-size:0.72rem;color:#fca5a5;padding:6px 0;">❌ ลบไม่สำเร็จ: ${err.message}</div>`
   }
 }
 
-async function logUpload(entry) {
-  try {
-    await DB.from('upload_logs').insert(entry)
-    loadUploadHistory()
-  } catch(e) {
-    console.error('logUpload failed:', e)
+function showDeleteToast(msg) {
+  let toast = document.getElementById('deleteToast')
+  if (!toast) {
+    toast = document.createElement('div')
+    toast.id = 'deleteToast'
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#10b981;color:white;padding:10px 18px;border-radius:8px;font-size:0.82rem;font-family:inherit;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:opacity 0.3s;'
+    document.body.appendChild(toast)
   }
+  toast.textContent = msg; toast.style.opacity = '1'
+  clearTimeout(toast._timer)
+  toast._timer = setTimeout(() => { toast.style.opacity = '0' }, 4000)
+}
+
+async function logUpload(entry) {
+  try { await DB.from('upload_logs').insert(entry); loadUploadHistory() } catch(e) { console.error('logUpload failed:', e) }
 }
 
 loadUploadHistory()
 
-
-// Settlement fields แต่ละ platform — สำหรับ mode "อัพรายรับเงิน"
+// ===== Settlement Fields =====
 const SETTLEMENT_FIELDS = {
   Lazada: [
-    { key:'settle_order_id', label:'Order No.',        required:true, keywords:['order no.','order no','orderno'] },
-    { key:'settle_date',     label:'วันที่รับเงิน',     required:true, keywords:['transaction date'] },
+    { key:'settle_order_id', label:'Order No.', required:true, keywords:['order no.','order no','orderno'] },
+    { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['transaction date'] },
   ],
   Shopee: [
     { key:'settle_order_id', label:'หมายเลขคำสั่งซื้อ', required:true, keywords:['หมายเลขคำสั่งซื้อ'] },
-    { key:'settle_date',     label:'วันที่รับเงิน',     required:true, keywords:['วันที่โอนชำระเงินสำเร็จ'] },
+    { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['วันที่โอนชำระเงินสำเร็จ'] },
   ],
   TikTok: [
     { key:'settle_order_id', label:'Related order ID', required:true, keywords:['related order id'] },
-    { key:'settle_date',     label:'วันที่รับเงิน',     required:true, keywords:['order settled time'] },
+    { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['order settled time'] },
   ],
 }
 
 const BASE_FIELDS = [
-  { key:'order_id',       label:'Order ID',        required:true,  keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id','ordernumber'] },
-  { key:'date',           label:'วันที่สั่งซื้อ',   required:true,  keywords:['createtime','created time','วันที่สั่งซื้อ','วันที่','date'] },
-  { key:'sub_channel',    label:'Sub Channel',      required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
-  { key:'customer_name',  label:'ชื่อลูกค้า',       required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ','recipient'] },
-  { key:'phone',          label:'เบอร์โทร',         required:false, keywords:['หมายเลขโทรศัพท์','เบอร์โทร1','เบอร์โทร','phone'] },
-  { key:'province',       label:'จังหวัด',          required:false, keywords:['จังหวัด','province','billingaddr3'] },
-  { key:'district',       label:'อำเภอ/เขต',        required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district','billingaddr4'] },
-  { key:'postcode',       label:'ไปรษณีย์',         required:false, keywords:['รหัสไปรษณีย์','postcode','zipcode'] },
-  { key:'payment_method', label:'ชำระเงิน',         required:false, keywords:['payment method','การชำระเงิน','paymethod','payment'] },
-  { key:'sku_promotion',  label:'SKU',              required:true,  keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','seller sku','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
+  { key:'order_id', label:'Order ID', required:true, keywords:['เลขที่คำสั่งซื้อ','หมายเลขคำสั่งซื้อ','order id','orderid','order_id','ordernumber'] },
+  { key:'date', label:'วันที่สั่งซื้อ', required:true, keywords:['createtime','created time','วันที่สั่งซื้อ','วันที่','date'] },
+  { key:'sub_channel', label:'Sub Channel', required:false, keywords:['ชื่อช่องทางการขาย','sub_channel','channel'] },
+  { key:'customer_name', label:'ชื่อลูกค้า', required:false, keywords:['ลูกค้า','ชื่อ','customer','ชื่อผู้รับ','recipient'] },
+  { key:'phone', label:'เบอร์โทร', required:false, keywords:['หมายเลขโทรศัพท์','เบอร์โทร1','เบอร์โทร','phone'] },
+  { key:'province', label:'จังหวัด', required:false, keywords:['จังหวัด','province','billingaddr3'] },
+  { key:'district', label:'อำเภอ/เขต', required:false, keywords:['เขต/ อำเภอ','อำเภอ','เขต','district','billingaddr4'] },
+  { key:'postcode', label:'ไปรษณีย์', required:false, keywords:['รหัสไปรษณีย์','postcode','zipcode'] },
+  { key:'payment_method', label:'ชำระเงิน', required:false, keywords:['payment method','การชำระเงิน','paymethod','payment'] },
+  { key:'sku_promotion', label:'SKU', required:true, keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','seller sku','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
 ]
-// field เฉพาะ TikTok format ใหม่ (Seller SKU + Quantity แยกคอลัมน์) — channel อื่นไม่ต้องใช้
 const QTY_MULTIPLIER_FIELD = { key:'qty_multiplier', label:'จำนวน (Quantity)', required:false, keywords:['quantity','จำนวน'] }
 
 const REVENUE_FIELDS = {
   Facebook: [
-    { key:'rev_subtotal',  label:'ยอดรวมสินค้า',      required:true,  keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ'] },
-    { key:'rev_discount',  label:'ส่วนลดท้ายบิล',     required:false, keywords:['ส่วนลดท้ายบิล','ส่วนลดบิล'] },
-    { key:'rev_shipping',  label:'ค่าขนส่ง',           required:false, keywords:['ค่าส่ง','ค่าขนส่ง','shipping'] },
+    { key:'rev_subtotal', label:'ยอดรวมสินค้า', required:true, keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ'] },
+    { key:'rev_discount', label:'ส่วนลดท้ายบิล', required:false, keywords:['ส่วนลดท้ายบิล','ส่วนลดบิล'] },
+    { key:'rev_shipping', label:'ค่าขนส่ง', required:false, keywords:['ค่าส่ง','ค่าขนส่ง','shipping'] },
   ],
   TikTok: [
-    { key:'rev_subtotal',  label:'ยอดรวมสินค้า',      required:true,  keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ','sku subtotal before discount'] },
-    { key:'rev_discount',  label:'ส่วนลดร้านค้าต่อรายการ', required:false, keywords:['ส่วนลดร้านค้าต่อรายการ','sku seller discount','seller discount'] },
+    { key:'rev_subtotal', label:'ยอดรวมสินค้า', required:true, keywords:['ยอดรวมสินค้า','ยอดรวมคำสั่งซื้อ','sku subtotal before discount'] },
+    { key:'rev_discount', label:'ส่วนลดร้านค้าต่อรายการ', required:false, keywords:['ส่วนลดร้านค้าต่อรายการ','sku seller discount','seller discount'] },
   ],
   Shopee: [
-    { key:'rev_subtotal',  label:'ราคาขาย',            required:true,  keywords:['ราคาขาย','subtotal'] },
-    { key:'rev_platform',  label:'ส่วนลดจาก Shopee',   required:false, keywords:['ส่วนลดจาก shopee','ส่วนลดแพลตฟอร์ม','shopee discount'] },
+    { key:'rev_subtotal', label:'ราคาขาย', required:true, keywords:['ราคาขาย','subtotal'] },
+    { key:'rev_platform', label:'ส่วนลดจาก Shopee', required:false, keywords:['ส่วนลดจาก shopee','ส่วนลดแพลตฟอร์ม','shopee discount'] },
     { key:'rev_seller_discount', label:'โค้ดส่วนลดชำระโดยผู้ขาย', required:false, keywords:['โค้ดส่วนลดชำระโดยผู้ขาย','seller voucher'] },
-    { key:'rev_shipping',  label:'ค่าจัดส่งที่ชำระโดยผู้ซื้อ', required:false, keywords:['ค่าจัดส่งที่ชำระโดยผู้ซื้อ','buyer shipping'] },
+    { key:'rev_shipping', label:'ค่าจัดส่งที่ชำระโดยผู้ซื้อ', required:false, keywords:['ค่าจัดส่งที่ชำระโดยผู้ซื้อ','buyer shipping'] },
   ],
   Lazada: [
-    { key:'rev_subtotal',  label:'unitPrice',          required:true,  keywords:['unitPrice','unit price','ราคาต่อหน่วย'] },
-    { key:'rev_discount',  label:'sellerDiscountTotal', required:false, keywords:['sellerDiscountTotal','seller discount total'] },
+    { key:'rev_subtotal', label:'unitPrice', required:true, keywords:['unitPrice','unit price','ราคาต่อหน่วย'] },
+    { key:'rev_discount', label:'sellerDiscountTotal', required:false, keywords:['sellerDiscountTotal','seller discount total'] },
   ],
-  'ตัวแทน': [
-    { key:'rev_subtotal',  label:'ยอดรวม',             required:true,  keywords:['รวมทั้งสิ้น','ยอดรวม','total'] },
-  ],
-  'Modern Trade': [
-    { key:'rev_subtotal',  label:'ยอดรวม',             required:true,  keywords:['รวมทั้งสิ้น','ยอดรวม','total'] },
-  ],
+  'ตัวแทน': [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }],
+  'Modern Trade': [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }],
 }
 
 function calcRevenue(channel, m, row) {
@@ -692,46 +654,31 @@ function calcRevenue(channel, m, row) {
   }
   switch(channel) {
     case 'Facebook': return getNum('rev_subtotal') - getNum('rev_discount') + getNum('rev_shipping')
-    case 'TikTok':   return getNum('rev_subtotal') - getNum('rev_discount')
-    case 'Shopee':   return getNum('rev_subtotal') + getNum('rev_platform') - getNum('rev_seller_discount') + getNum('rev_shipping')
-    case 'Lazada':   return getNum('rev_subtotal') - getNum('rev_discount')
-    default:         return getNum('rev_subtotal')
+    case 'TikTok': return getNum('rev_subtotal') - getNum('rev_discount')
+    case 'Shopee': return getNum('rev_subtotal') + getNum('rev_platform') - getNum('rev_seller_discount') + getNum('rev_shipping')
+    case 'Lazada': return getNum('rev_subtotal') - getNum('rev_discount')
+    default: return getNum('rev_subtotal')
   }
 }
 
 function getFields(channel) {
-  const revFields = REVENUE_FIELDS[channel] || [
-    { key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }
-  ]
+  const revFields = REVENUE_FIELDS[channel] || [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }]
   let base = BASE_FIELDS
-  // Lazada ไม่มีจังหวัด/อำเภอที่เชื่อถือได้ (บางร้านมี บางร้านไม่มี) → ตัดออกเสมอ ให้ blank
-  if (channel === 'Lazada') {
-    base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
-  }
-  // TikTok เท่านั้นที่มี format ใหม่ Seller SKU + Quantity แยกคอลัมน์
-  if (channel === 'TikTok') {
-    base = [...base, QTY_MULTIPLIER_FIELD]
-  }
+  if (channel === 'Lazada') base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
+  if (channel === 'TikTok') base = [...base, QTY_MULTIPLIER_FIELD]
   return [...base, ...revFields]
 }
 
-let FIELDS = BASE_FIELDS
-let rawHeaders=[], rawData=[], mappings={}, channel='', processed=[]
-let uploadMode = 'order' // 'order' | 'settlement'
+let FIELDS = BASE_FIELDS, rawHeaders = [], rawData = [], mappings = {}, channel = '', processed = []
+let uploadMode = 'order'
 
-const SETTLEMENT_CHANNELS = ['Lazada', 'Shopee', 'TikTok']
 const CHANNEL_OPTIONS_ORDER = [
-  { value:'Facebook', label:'Facebook' },
-  { value:'TikTok', label:'TikTok' },
-  { value:'Shopee', label:'Shopee' },
-  { value:'Lazada', label:'Lazada' },
-  { value:'ตัวแทน', label:'ตัวแทน' },
-  { value:'Modern Trade', label:'Modern Trade' },
+  { value:'Facebook', label:'Facebook' }, { value:'TikTok', label:'TikTok' },
+  { value:'Shopee', label:'Shopee' }, { value:'Lazada', label:'Lazada' },
+  { value:'ตัวแทน', label:'ตัวแทน' }, { value:'Modern Trade', label:'Modern Trade' },
 ]
 const CHANNEL_OPTIONS_SETTLEMENT = [
-  { value:'TikTok', label:'TikTok' },
-  { value:'Shopee', label:'Shopee' },
-  { value:'Lazada', label:'Lazada' },
+  { value:'TikTok', label:'TikTok' }, { value:'Shopee', label:'Shopee' }, { value:'Lazada', label:'Lazada' },
 ]
 
 function setUploadMode(mode) {
@@ -745,29 +692,19 @@ function setUploadMode(mode) {
   const opts = mode === 'order' ? CHANNEL_OPTIONS_ORDER : CHANNEL_OPTIONS_SETTLEMENT
   const sel = document.getElementById('channelSelect')
   sel.innerHTML = '<option value="">— เลือก —</option>' + opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('')
-  channel = ''
-  handleChannelChange('')
-  // reset กลับไป step 1
+  channel = ''; handleChannelChange('')
   rawHeaders = []; rawData = []; mappings = {}; processed = []
-  fileInput.value = ''
-  selectedFiles = []
-  renderFileRows()
-  goStep(1)
+  fileInput.value = ''; selectedFiles = []; renderFileRows(); goStep(1)
 }
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  sessionStorage.removeItem('auth'); window.location.href = 'index.html'
-})
+document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem('auth'); window.location.href = 'index.html' })
 
-// ===== Theme Toggle =====
 function applyThemeFromStorage() {
   const themeBtn = document.getElementById('themeToggleBtn')
   if (localStorage.getItem('deesay_theme') === 'light') {
     document.body.classList.add('light-theme')
     if (themeBtn) themeBtn.textContent = '☀️ สว่าง'
-  } else {
-    if (themeBtn) themeBtn.textContent = '🌙 มืด'
-  }
+  } else { if (themeBtn) themeBtn.textContent = '🌙 มืด' }
 }
 applyThemeFromStorage()
 document.getElementById('themeToggleBtn').addEventListener('click', () => {
@@ -797,8 +734,7 @@ function renderFileRows() {
     document.getElementById('dropIcon').textContent = '📂'
     document.getElementById('dropMain').innerHTML = '<strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวาง (เลือกหลายไฟล์ได้)'
     document.getElementById('dropSub').textContent = '.xlsx .xls .csv'
-    fileListEl.innerHTML = ''
-    return
+    fileListEl.innerHTML = ''; return
   }
   dropLabel.classList.add('has-file')
   document.getElementById('dropIcon').textContent = '✅'
@@ -815,48 +751,28 @@ function renderFileRows() {
 }
 
 function syncFileInputFromSelected() {
-  const dt = new DataTransfer()
-  selectedFiles.forEach(f => dt.items.add(f))
-  fileInput.files = dt.files
+  const dt = new DataTransfer(); selectedFiles.forEach(f => dt.items.add(f)); fileInput.files = dt.files
 }
+window.removeSelectedFile = function(idx) { selectedFiles.splice(idx, 1); syncFileInputFromSelected(); renderFileRows() }
 
-function removeSelectedFile(idx) {
-  selectedFiles.splice(idx, 1)
-  syncFileInputFromSelected()
-  renderFileRows()
-}
-
-fileInput.addEventListener('change', function() {
-  selectedFiles = [...this.files]
-  renderFileRows()
-})
-
+fileInput.addEventListener('change', function() { selectedFiles = [...this.files]; renderFileRows() })
 dropLabel.addEventListener('dragover', e => { e.preventDefault(); dropLabel.style.borderColor='#6366f1' })
 dropLabel.addEventListener('dragleave', () => { dropLabel.style.borderColor='' })
 dropLabel.addEventListener('drop', e => {
   e.preventDefault(); dropLabel.style.borderColor=''
   const files = [...e.dataTransfer.files]; if (!files.length) return
   const dt = new DataTransfer(); files.forEach(f => dt.items.add(f))
-  fileInput.files = dt.files
-  fileInput.dispatchEvent(new Event('change'))
+  fileInput.files = dt.files; fileInput.dispatchEvent(new Event('change'))
 })
 
-const STORE_OPTIONS = {
-  Shopee: ['Shopee Mall', 'Shopee 24hr'],
-  Lazada: ['Lazada Mall', 'Lazada 24hr'],
-}
+const STORE_OPTIONS = { Shopee: ['Shopee Mall', 'Shopee 24hr'], Lazada: ['Lazada Mall', 'Lazada 24hr'] }
 
-window.handleChannelChange = function handleChannelChange(val) {
-  const storeWrap = document.getElementById('storeWrap')
-  const storeSelect = document.getElementById('storeSelect')
+window.handleChannelChange = function(val) {
+  const storeWrap = document.getElementById('storeWrap'), storeSelect = document.getElementById('storeSelect')
   if (uploadMode === 'order' && STORE_OPTIONS[val]) {
     storeWrap.style.display = 'block'
-    storeSelect.innerHTML = '<option value="">— เลือกร้าน —</option>' +
-      STORE_OPTIONS[val].map(s => `<option value="${s}">${s}</option>`).join('')
-  } else {
-    storeWrap.style.display = 'none'
-    storeSelect.value = ''
-  }
+    storeSelect.innerHTML = '<option value="">— เลือกร้าน —</option>' + STORE_OPTIONS[val].map(s => `<option value="${s}">${s}</option>`).join('')
+  } else { storeWrap.style.display = 'none'; storeSelect.value = '' }
 }
 handleChannelChange(document.getElementById('channelSelect').value)
 
@@ -872,40 +788,24 @@ async function handleStep1() {
   FIELDS = uploadMode === 'settlement' ? (SETTLEMENT_FIELDS[channel] || []) : getFields(channel)
   try {
     const results = await Promise.all(files.map(f => readExcel(f)))
-    // ใช้ header ของไฟล์แรกเป็นตัวตั้ง mapping — ไฟล์อื่นต้องมีคอลัมน์ชื่อเดียวกัน (โครงเหมือนกัน)
     rawHeaders = results[0].headers
     rawData = results.flatMap(r => r.rows)
-    if (files.length > 1) {
-      const fileSummary = results.map((r, i) => `${files[i].name}: ${r.rows.length.toLocaleString()} แถว`).join(' · ')
-      console.log(`รวม ${files.length} ไฟล์ — ${fileSummary}`)
-    }
-    buildMapping()
-    goStep(2)
+    buildMapping(); goStep(2)
   } catch(e) { showAlert(al, 'อ่านไฟล์ไม่ได้: ' + e.message) }
 }
 
 function buildMapping() {
-  const wrap = document.getElementById('mappingRows')
-  wrap.innerHTML = ''
+  const wrap = document.getElementById('mappingRows'); wrap.innerHTML = ''
   const storeVal = document.getElementById('storeSelect').value
   const forcedSubDisplay = channel === 'TikTok' ? 'Deesay Thailand' : storeVal
   FIELDS.forEach(f => {
-    // ถ้า sub_channel ถูกล็อกไว้ (ร้านค้าเลือกแล้ว หรือ TikTok) → แสดง readonly ไม่ต้องให้เลือก
     if (f.key === 'sub_channel' && forcedSubDisplay) {
-      const item = document.createElement('div')
-      item.className = 'map-item'
-      item.innerHTML = `
-        <div>
-          <span class="map-field-name">${f.label}</span>
-          <span class="badge badge-auto">✓ auto</span>
-        </div>
-        <div style="font-size:0.8rem;color:#10b981;padding:6px 8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px">${forcedSubDisplay}</div>`
-      wrap.appendChild(item)
-      return
+      const item = document.createElement('div'); item.className = 'map-item'
+      item.innerHTML = `<div><span class="map-field-name">${f.label}</span><span class="badge badge-auto">✓ auto</span></div><div style="font-size:0.8rem;color:#10b981;padding:6px 8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px">${forcedSubDisplay}</div>`
+      wrap.appendChild(item); return
     }
     const matched = autoMatch(f.keywords, rawHeaders)
-    const item = document.createElement('div')
-    item.className = 'map-item'
+    const item = document.createElement('div'); item.className = 'map-item'
     item.innerHTML = `
       <div>
         <span class="map-field-name">${f.label}${f.required ? '<span class="map-field-req">*</span>' : ''}</span>
@@ -932,16 +832,10 @@ function autoMatch(kws, headers) {
 async function handleStep2() {
   const al = document.getElementById('alert2')
   mappings = {}
-  FIELDS.forEach(f => {
-    const el = document.getElementById('map_' + f.key)
-    if (!el) return  // sub_channel แสดง readonly badge ไม่มี select element
-    const v = el.value
-    if (v) mappings[f.key] = v
-  })
+  FIELDS.forEach(f => { const el = document.getElementById('map_' + f.key); if (!el) return; const v = el.value; if (v) mappings[f.key] = v })
   const miss = FIELDS.filter(f => f.required && !mappings[f.key])
   if (miss.length) return showAlert(al, 'กรุณาเลือกคอลัมน์: ' + miss.map(f => f.label).join(', '))
   al.style.display = 'none'
-
   if (uploadMode === 'settlement') {
     processed = processSettlementRows(rawData, mappings)
     const uniq = new Set(processed.map(r => r.order_id)).size
@@ -950,15 +844,10 @@ async function handleStep2() {
       <div class="stat-box"><div class="stat-num">${uniq.toLocaleString()}</div><div class="stat-label">Order ที่รับเงินแล้ว</div></div>
       <div class="stat-box"><div class="stat-num">${channel}</div><div class="stat-label">Platform</div></div>`
     const cols = ['order_id', 'settled_date']
-    document.getElementById('previewTbl').innerHTML =
-      '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' +
-      processed.slice(0, 5).map(r => '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>').join('')
-    goStep(3)
-    return
+    document.getElementById('previewTbl').innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' + processed.slice(0, 5).map(r => '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>').join('')
+    goStep(3); return
   }
-
   const storeVal = document.getElementById('storeSelect').value || null
-  // TikTok ไม่มี store dropdown และบางไฟล์ไม่มีคอลัมน์ sub_channel เลย → ล็อกเป็น Deesay Thailand เสมอ
   const forcedSub = channel === 'TikTok' ? 'Deesay Thailand' : storeVal
   processed = await processRows(rawData, mappings, channel, forcedSub)
   const uniq = new Set(processed.map(r => r.order_id)).size
@@ -967,271 +856,98 @@ async function handleStep2() {
     <div class="stat-box"><div class="stat-num">${uniq.toLocaleString()}</div><div class="stat-label">จะ Upsert (Order ไม่ซ้ำ)</div></div>
     <div class="stat-box"><div class="stat-num">${processed.length.toLocaleString()}</div><div class="stat-label">SKU rows ที่จะคำนวณ</div></div>`
   const cols = ['date', 'order_id', 'sku_promotion', 'revenue', 'province', 'payment_method']
-  document.getElementById('previewTbl').innerHTML =
-    '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' +
-    processed.slice(0, 5).map(r => '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>').join('')
+  document.getElementById('previewTbl').innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' + processed.slice(0, 5).map(r => '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>').join('')
   goStep(3)
 }
 
 async function handleConfirm() {
-  const btn = document.getElementById('btnConfirm')
-  const back = document.getElementById('btnBack3')
-  const al = document.getElementById('alert3')
-  const pt = document.getElementById('progressTrack')
-  const pf = document.getElementById('progressFill')
-  btn.disabled = true; back.disabled = true
-  btn.textContent = 'กำลัง Upload...'
+  const btn = document.getElementById('btnConfirm'), back = document.getElementById('btnBack3')
+  const al = document.getElementById('alert3'), pt = document.getElementById('progressTrack'), pf = document.getElementById('progressFill')
+  btn.disabled = true; back.disabled = true; btn.textContent = 'กำลัง Upload...'
   pt.style.display = 'block'; al.style.display = 'none'
 
   if (uploadMode === 'settlement') {
     try {
-      // dedup order_id (เผื่อไฟล์มีซ้ำ) เก็บ settled_date ล่าสุด
-      const dedupMap = new Map()
-      processed.forEach(r => dedupMap.set(r.order_id, r))
+      const dedupMap = new Map(); processed.forEach(r => dedupMap.set(r.order_id, r))
       const deduped = [...dedupMap.values()]
-
       const CONCURRENCY = 20; let done = 0; let matchedCount = 0
       for (let i = 0; i < deduped.length; i += CONCURRENCY) {
         const batch = deduped.slice(i, i + CONCURRENCY)
-        // ยิงพร้อมกันทีละ CONCURRENCY แถว แทนเรียงทีละแถว — เร็วขึ้นมากสำหรับไฟล์ settlement ขนาดใหญ่
         await Promise.all(batch.map(async (r) => {
-          const { data, error } = await DB.from('orders')
-            .update({ settled: true, settled_date: r.settled_date })
-            .eq('order_id', r.order_id)
-            .select('order_id')
+          const { data, error } = await DB.from('orders').update({ settled: true, settled_date: r.settled_date }).eq('order_id', r.order_id).select('order_id')
           if (error) throw error
           if (data && data.length) {
             matchedCount++
-            // sync settled เข้า sku_revenue ด้วย ป้องกันปัญหา 2 ตารางไม่ตรงกัน (เคยเจอปัญหานี้ตอน Lazada/Shopee/TikTok)
-            const { error: srError } = await DB.from('sku_revenue')
-              .update({ settled: 'True', settled_date: r.settled_date })
-              .eq('order_id', r.order_id)
+            const { error: srError } = await DB.from('sku_revenue').update({ settled: 'True', settled_date: r.settled_date }).eq('order_id', r.order_id)
             if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
           }
         }))
-        done += batch.length
-        pf.style.width = Math.round(done / deduped.length * 100) + '%'
+        done += batch.length; pf.style.width = Math.round(done / deduped.length * 100) + '%'
       }
-
-      // ไม่ต้องเรียก refresh_all_views() ตรงนี้แล้ว — มี pg_cron รีเฟรชให้อัตโนมัติทุก 5 นาที
-      // (เลี่ยง timeout ที่เคยเกิดตอนอัพโหลด เพราะ REFRESH ต้องอ่านข้อมูลทั้งตารางทุกครั้ง)
-
       const notMatched = deduped.length - matchedCount
-      logUpload({
-        upload_type: 'settlement',
-        channel: channel,
-        sub_channel: null,
-        file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
-        total_rows: deduped.length,
-        success_count: matchedCount,
-        not_matched_count: notMatched,
-        total_revenue: null,
-        status: 'success'
-      })
-
-      pt.style.display = 'none'
-      al.style.display = 'none'
-
-      const btnRow = document.getElementById('btnRow3')
-      btnRow.innerHTML = `
+      logUpload({ upload_type:'settlement', channel, sub_channel:null, file_name:(fileInput.files.length>1?`${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}`:(fileInput.files[0]?.name||null)), total_rows:deduped.length, success_count:matchedCount, not_matched_count:notMatched, total_revenue:null, status:'success' })
+      pt.style.display = 'none'; al.style.display = 'none'
+      document.getElementById('btnRow3').innerHTML = `
         <div style="width:100%">
-          <div class="success-banner">
-            <span class="success-banner-icon">✓</span>
-            <div>
-              <div class="success-banner-title">Map Settlement สำเร็จ</div>
-              <div class="success-banner-sub">${matchedCount.toLocaleString()} ออเดอร์ถูกอัพเดทเป็น settled · ${channel}</div>
-            </div>
-          </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที — ถ้าอยากเห็นทันที ไปที่หน้า Dashboard แล้วกดปุ่ม "🔄 รีเฟรชข้อมูล Dashboard"</div>
-
+          <div class="success-banner"><span class="success-banner-icon">✓</span><div><div class="success-banner-title">Map Settlement สำเร็จ</div><div class="success-banner-sub">${matchedCount.toLocaleString()} ออเดอร์ถูกอัพเดทเป็น settled · ${channel}</div></div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที</div>
           <div class="success-stats">
-            <div class="success-stat">
-              <div class="success-stat-num">${deduped.length.toLocaleString()}</div>
-              <div class="success-stat-label">รายการในไฟล์</div>
-            </div>
-            <div class="success-stat">
-              <div class="success-stat-num">${matchedCount.toLocaleString()}</div>
-              <div class="success-stat-label">Match สำเร็จ</div>
-            </div>
-            <div class="success-stat">
-              <div class="success-stat-num" style="color:${notMatched > 0 ? '#fb923c' : '#818cf8'}">${notMatched.toLocaleString()}</div>
-              <div class="success-stat-label">ไม่เจอออเดอร์</div>
-            </div>
+            <div class="success-stat"><div class="success-stat-num">${deduped.length.toLocaleString()}</div><div class="success-stat-label">รายการในไฟล์</div></div>
+            <div class="success-stat"><div class="success-stat-num">${matchedCount.toLocaleString()}</div><div class="success-stat-label">Match สำเร็จ</div></div>
+            <div class="success-stat"><div class="success-stat-num" style="color:${notMatched>0?'#fb923c':'#818cf8'}">${notMatched.toLocaleString()}</div><div class="success-stat-label">ไม่เจอออเดอร์</div></div>
           </div>
-
-          <div class="success-divider">
-            <div class="success-action-label">ต้องการทำอะไรต่อ?</div>
-            <div class="success-actions">
-              <button class="action-card" onclick="location.reload()">
-                <span class="action-card-icon">💰</span>
-                <div>
-                  <div class="action-card-title">อัพรับเงินต่อ</div>
-                  <div class="action-card-sub">platform ถัดไป</div>
-                </div>
-              </button>
-              <button class="action-card" onclick="window.open('dashboard.html','_blank')">
-                <span class="action-card-icon">📊</span>
-                <div>
-                  <div class="action-card-title">ดู Dashboard</div>
-                  <div class="action-card-sub">ยอดขายล่าสุด</div>
-                </div>
-              </button>
-              <button class="action-card" onclick="location.href='index.html'">
-                <span class="action-card-icon">🏠</span>
-                <div>
-                  <div class="action-card-title">หน้าแรก</div>
-                  <div class="action-card-sub">กลับเมนูหลัก</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>`
+          <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
+          <div class="success-actions">
+            <button class="action-card" onclick="location.reload()"><span class="action-card-icon">💰</span><div><div class="action-card-title">อัพรับเงินต่อ</div><div class="action-card-sub">platform ถัดไป</div></div></button>
+            <button class="action-card" onclick="window.open('dashboard.html','_blank')"><span class="action-card-icon">📊</span><div><div class="action-card-title">ดู Dashboard</div><div class="action-card-sub">ยอดขายล่าสุด</div></div></button>
+            <button class="action-card" onclick="location.href='index.html'"><span class="action-card-icon">🏠</span><div><div class="action-card-title">หน้าแรก</div><div class="action-card-sub">กลับเมนูหลัก</div></div></button>
+          </div></div></div>`
     } catch(e) {
-      al.className = 'alert alert-error'
-      al.textContent = 'เกิดข้อผิดพลาด: ' + e.message
-      al.style.display = 'block'
-      btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload'
-      back.disabled = false
-      logUpload({
-        upload_type: 'settlement',
-        channel: channel,
-        sub_channel: null,
-        file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
-        total_rows: processed.length,
-        success_count: 0,
-        not_matched_count: null,
-        total_revenue: null,
-        status: 'error',
-        error_message: e.message
-      })
+      al.className = 'alert alert-error'; al.textContent = 'เกิดข้อผิดพลาด: ' + e.message; al.style.display = 'block'
+      btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload'; back.disabled = false
+      logUpload({ upload_type:'settlement', channel, sub_channel:null, file_name:(fileInput.files[0]?.name||null), total_rows:processed.length, success_count:0, not_matched_count:null, total_revenue:null, status:'error', error_message:e.message })
     }
     return
   }
 
   try {
-    // deduplicate by order_id — Shopee/Lazada export หลาย row ต่อ order
-    const dedupMap = new Map()
-    processed.forEach(r => {
-      if (!dedupMap.has(r.order_id)) dedupMap.set(r.order_id, r)
-    })
+    const dedupMap = new Map(); processed.forEach(r => { if (!dedupMap.has(r.order_id)) dedupMap.set(r.order_id, r) })
     const deduped = [...dedupMap.values()]
-
     const BATCH = 500; let done = 0
     for (let i = 0; i < deduped.length; i += BATCH) {
       const { error } = await DB.from('orders').upsert(deduped.slice(i, i + BATCH), { onConflict: 'order_id' })
       if (error) throw error
-      done += Math.min(BATCH, deduped.length - i)
-      pf.style.width = Math.round(done / deduped.length * 100) + '%'
+      done += Math.min(BATCH, deduped.length - i); pf.style.width = Math.round(done / deduped.length * 100) + '%'
     }
-
     btn.textContent = 'กำลังคำนวณ SKU Revenue...'
     const skuRowCount = await calcSkuRevenue(processed)
-
-    let matchResult = null
     if (channel === 'Facebook') {
       btn.textContent = 'กำลัง Match โปรโมชั่น...'
-      _promoListCache = null // โหลดโปรล่าสุดเสมอตอนอัพโหลดใหม่ เผื่อมี sync เพิ่มมาหลัง cache เดิม
-      matchResult = await matchPromotionsForOrders(deduped.map(o => ({ order_id: o.order_id, sku_promotion: o.sku_promotion })))
+      _promoListCache = null
+      await matchPromotionsForOrders(deduped.map(o => ({ order_id: o.order_id, sku_promotion: o.sku_promotion })))
     }
-
-    // ไม่ต้องเรียก refresh_all_views() ตรงนี้แล้ว — มี pg_cron รีเฟรชให้อัตโนมัติทุก 5 นาที
-    // (เลี่ยง timeout ที่เคยเกิดตอนอัพโหลด เพราะ REFRESH ต้องอ่านข้อมูลทั้งตารางทุกครั้ง)
-    let refreshWarning = ''
-
-    // คำนวณ revenue รวม
     const totalRevenue = processed.reduce((s, r) => s + (r.revenue || 0), 0)
-
-    logUpload({
-      upload_type: 'order',
-      channel: channel,
-      sub_channel: deduped[0]?.sub_channel || null,
-      file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
-      total_rows: deduped.length,
-      success_count: deduped.length,
-      not_matched_count: null,
-      total_revenue: totalRevenue,
-      status: 'success'
-    })
-
-    // ซ่อน progress bar และ alert เดิม
-    pt.style.display = 'none'
-    al.style.display = 'none'
-
-    // Replace btn-row ด้วย success state
-    const btnRow = document.getElementById('btnRow3')
-    btnRow.innerHTML = `
+    logUpload({ upload_type:'order', channel, sub_channel:deduped[0]?.sub_channel||null, file_name:(fileInput.files.length>1?`${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}`:(fileInput.files[0]?.name||null)), total_rows:deduped.length, success_count:deduped.length, not_matched_count:null, total_revenue:totalRevenue, status:'success' })
+    pt.style.display = 'none'; al.style.display = 'none'
+    document.getElementById('btnRow3').innerHTML = `
       <div style="width:100%">
-        <div class="success-banner">
-          <span class="success-banner-icon">✓</span>
-          <div>
-            <div class="success-banner-title">Upload สำเร็จ</div>
-            <div class="success-banner-sub">${deduped.length.toLocaleString()} ออเดอร์เข้าระบบแล้ว · ${channel}</div>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที (รีเฟรชเป็นรอบ) — ถ้าอยากเห็นทันที ไปที่หน้า Dashboard แล้วกดปุ่ม "🔄 รีเฟรชข้อมูล Dashboard"</div>
-        ${refreshWarning}
-
+        <div class="success-banner"><span class="success-banner-icon">✓</span><div><div class="success-banner-title">Upload สำเร็จ</div><div class="success-banner-sub">${deduped.length.toLocaleString()} ออเดอร์เข้าระบบแล้ว · ${channel}</div></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที</div>
         <div class="success-stats">
-          <div class="success-stat">
-            <div class="success-stat-num">${deduped.length.toLocaleString()}</div>
-            <div class="success-stat-label">ออเดอร์</div>
-          </div>
-          <div class="success-stat">
-            <div class="success-stat-num">${skuRowCount.toLocaleString()}</div>
-            <div class="success-stat-label">SKU rows</div>
-          </div>
-          <div class="success-stat">
-            <div class="success-stat-num">฿${Math.round(totalRevenue).toLocaleString()}</div>
-            <div class="success-stat-label">Revenue รวม</div>
-          </div>
+          <div class="success-stat"><div class="success-stat-num">${deduped.length.toLocaleString()}</div><div class="success-stat-label">ออเดอร์</div></div>
+          <div class="success-stat"><div class="success-stat-num">${skuRowCount.toLocaleString()}</div><div class="success-stat-label">SKU rows</div></div>
+          <div class="success-stat"><div class="success-stat-num">฿${Math.round(totalRevenue).toLocaleString()}</div><div class="success-stat-label">Revenue รวม</div></div>
         </div>
-
-        <div class="success-divider">
-          <div class="success-action-label">ต้องการทำอะไรต่อ?</div>
-          <div class="success-actions">
-            <button class="action-card" onclick="location.reload()">
-              <span class="action-card-icon">📤</span>
-              <div>
-                <div class="action-card-title">อัพโหลดต่อ</div>
-                <div class="action-card-sub">ช่องทางถัดไป</div>
-              </div>
-            </button>
-            <button class="action-card" onclick="window.open('dashboard.html','_blank')">
-              <span class="action-card-icon">📊</span>
-              <div>
-                <div class="action-card-title">ดู Dashboard</div>
-                <div class="action-card-sub">ยอดขายล่าสุด</div>
-              </div>
-            </button>
-            <button class="action-card" onclick="location.href='index.html'">
-              <span class="action-card-icon">🏠</span>
-              <div>
-                <div class="action-card-title">หน้าแรก</div>
-                <div class="action-card-sub">กลับเมนูหลัก</div>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>`
-
+        <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
+        <div class="success-actions">
+          <button class="action-card" onclick="location.reload()"><span class="action-card-icon">📤</span><div><div class="action-card-title">อัพโหลดต่อ</div><div class="action-card-sub">ช่องทางถัดไป</div></div></button>
+          <button class="action-card" onclick="window.open('dashboard.html','_blank')"><span class="action-card-icon">📊</span><div><div class="action-card-title">ดู Dashboard</div><div class="action-card-sub">ยอดขายล่าสุด</div></div></button>
+          <button class="action-card" onclick="location.href='index.html'"><span class="action-card-icon">🏠</span><div><div class="action-card-title">หน้าแรก</div><div class="action-card-sub">กลับเมนูหลัก</div></div></button>
+        </div></div></div>`
   } catch(e) {
-    al.className = 'alert alert-error'
-    al.textContent = 'เกิดข้อผิดพลาด: ' + e.message
-    al.style.display = 'block'
-    btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload'
-    back.disabled = false
-    logUpload({
-      upload_type: 'order',
-      channel: channel,
-      sub_channel: processed[0]?.sub_channel || null,
-      file_name: (fileInput.files.length > 1 ? `${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}` : (fileInput.files[0]?.name || null)),
-      total_rows: processed.length,
-      success_count: 0,
-      not_matched_count: null,
-      total_revenue: null,
-      status: 'error',
-      error_message: e.message
-    })
+    al.className = 'alert alert-error'; al.textContent = 'เกิดข้อผิดพลาด: ' + e.message; al.style.display = 'block'
+    btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload'; back.disabled = false
+    logUpload({ upload_type:'order', channel, sub_channel:processed[0]?.sub_channel||null, file_name:(fileInput.files[0]?.name||null), total_rows:processed.length, success_count:0, not_matched_count:null, total_revenue:null, status:'error', error_message:e.message })
   }
 }
 
@@ -1245,13 +961,10 @@ function readExcel(file) {
         const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
         if (!json.length) throw new Error('ไฟล์ว่างเปล่า')
         const headers = Object.keys(json[0])
-        // บางไฟล์ (เช่น TikTok format ใหม่) มีแถวคำอธิบายคอลัมน์ ต่อจาก header ทันที (ไม่ใช่ข้อมูลจริง)
-        // ตรวจจับโดยเช็คว่าแถวแรกมีค่าที่ดูเหมือนประโยคบรรยาย (ยาว, ลงท้ายด้วย . หรือมีหลายคำ) ในหลายคอลัมน์พร้อมกัน
         const rows = json.filter((row, idx) => {
           if (idx !== 0) return true
           const sampleVals = headers.slice(0, 5).map(h => String(row[h] ?? '').trim())
-          const looksLikeDescription = sampleVals.filter(v => v.length > 20 && /[.?!]$/.test(v)).length >= 2
-          return !looksLikeDescription
+          return !(sampleVals.filter(v => v.length > 20 && /[.?!]$/.test(v)).length >= 2)
         })
         res({ headers, rows })
       } catch(err) { rej(err) }
@@ -1263,69 +976,23 @@ function readExcel(file) {
 
 function parseDateRaw(v) {
   if (v === null || v === undefined || v === '') return null
-  if (v instanceof Date) {
-    const y = v.getUTCFullYear()
-    const m = String(v.getUTCMonth() + 1).padStart(2, '0')
-    const d = String(v.getUTCDate()).padStart(2, '0')
-    return y + '-' + m + '-' + d
-  }
-  if (typeof v === 'number') {
-    const d = new Date(Math.round((v - 25569) * 86400 * 1000))
-    const y = d.getUTCFullYear()
-    const mo = String(d.getUTCMonth() + 1).padStart(2, '0')
-    const da = String(d.getUTCDate()).padStart(2, '0')
-    return y + '-' + mo + '-' + da
-  }
+  if (v instanceof Date) { return v.getUTCFullYear() + '-' + String(v.getUTCMonth()+1).padStart(2,'0') + '-' + String(v.getUTCDate()).padStart(2,'0') }
+  if (typeof v === 'number') { const d = new Date(Math.round((v-25569)*86400*1000)); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0') }
   const s = String(v).trim()
   if (!s || s === '-') return null
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (m) return m[1] + '-' + m[2] + '-' + m[3]
-  // รูปแบบ "2026/01/31" (YYYY/MM/DD) — TikTok settlement file บางไฟล์ส่งมาแบบนี้
-  const mYSlash = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/)
-  if (mYSlash) {
-    const mo = mYSlash[2].padStart(2, '0')
-    const da = mYSlash[3].padStart(2, '0')
-    return mYSlash[1] + '-' + mo + '-' + da
-  }
-  // รูปแบบ "31 Jan 2026 23:58" (DD Mon YYYY HH:mm) — Lazada บางไฟล์ส่งมาแบบนี้
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return m[1]+'-'+m[2]+'-'+m[3]
+  const mYSlash = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/); if (mYSlash) return mYSlash[1]+'-'+mYSlash[2].padStart(2,'0')+'-'+mYSlash[3].padStart(2,'0')
   const mEng = s.match(/^(\d{1,2})[\s\-]+([A-Za-z]{3,})[\s\-]+(\d{4})/)
-  if (mEng) {
-    const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'}
-    const mo = months[mEng[2].toLowerCase().slice(0,3)]
-    if (mo) {
-      const da = mEng[1].padStart(2, '0')
-      return mEng[3] + '-' + mo + '-' + da
-    }
-  }
-  // รูปแบบ "31/01/2026 23:56:17" (DD/MM/YYYY HH:mm:ss) — TikTok format ใหม่
-  const mSlash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
-  if (mSlash) {
-    const da = mSlash[1].padStart(2, '0')
-    const mo = mSlash[2].padStart(2, '0')
-    return mSlash[3] + '-' + mo + '-' + da
-  }
-  if (/^\d+(\.\d+)?$/.test(s)) {
-    const n = parseFloat(s)
-    const d = new Date(Math.round((n - 25569) * 86400 * 1000))
-    const y = d.getUTCFullYear()
-    const mo = String(d.getUTCMonth() + 1).padStart(2, '0')
-    const da = String(d.getUTCDate()).padStart(2, '0')
-    return y + '-' + mo + '-' + da
-  }
+  if (mEng) { const months={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'}; const mo=months[mEng[2].toLowerCase().slice(0,3)]; if(mo) return mEng[3]+'-'+mo+'-'+mEng[1].padStart(2,'0') }
+  const mSlash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (mSlash) return mSlash[3]+'-'+mSlash[2].padStart(2,'0')+'-'+mSlash[1].padStart(2,'0')
+  if (/^\d+(\.\d+)?$/.test(s)) { const d = new Date(Math.round((parseFloat(s)-25569)*86400*1000)); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0') }
   return null
 }
 
-// กันค่าวันที่ผิดปกติหลุดเข้าระบบ (เช่น เซลล์ว่าง/format แปลกที่ parse ออกมาเป็นปี 1969-1970 หรือใกล้ epoch)
-// ถ้า parse ได้ปีที่ไม่สมเหตุสมผล (ก่อนปี 2020 หรือเกินปีหน้า) ให้คืน null แทน เพื่อไม่ให้ข้อมูลเพี้ยนหลุดเข้า DB
 function parseDate(v) {
-  const result = parseDateRaw(v)
-  if (!result) return null
-  const year = parseInt(result.substring(0, 4))
-  const currentYear = new Date().getFullYear()
-  if (isNaN(year) || year < 2020 || year > currentYear + 1) {
-    console.warn('⚠️ วันที่ผิดปกติถูกตัดออก (ไม่ใส่ลง DB):', v, '→ parse ได้', result)
-    return null
-  }
+  const result = parseDateRaw(v); if (!result) return null
+  const year = parseInt(result.substring(0, 4)), currentYear = new Date().getFullYear()
+  if (isNaN(year) || year < 2020 || year > currentYear + 1) { console.warn('⚠️ วันที่ผิดปกติ:', v, '→', result); return null }
   return result
 }
 
@@ -1334,314 +1001,108 @@ function processSettlementRows(rows, mappings) {
     const orderIdRaw = mappings['settle_order_id'] ? row[mappings['settle_order_id']] : null
     const dateRaw = mappings['settle_date'] ? row[mappings['settle_date']] : null
     const orderId = orderIdRaw !== null && orderIdRaw !== undefined ? String(orderIdRaw).trim() : ''
-    const settledDate = parseDate(dateRaw)
-    return { order_id: orderId, settled_date: settledDate }
+    return { order_id: orderId, settled_date: parseDate(dateRaw) }
   }).filter(r => r.order_id)
 }
 
 async function processRows(rows, mappings, channel, forcedSubChannel = null) {
   const { data: prods } = await DB.from('products').select('child_sku,parent_sku')
-  const skuMap = {}
-  if (prods) prods.forEach(p => skuMap[p.child_sku.toUpperCase()] = p.parent_sku.toUpperCase())
+  const skuMap = {}; if (prods) prods.forEach(p => skuMap[p.child_sku.toUpperCase()] = p.parent_sku.toUpperCase())
   const { data: chs } = await DB.from('channels').select('sub_channel,channel')
-  const chMap = {}
-  if (chs) chs.forEach(c => chMap[c.sub_channel] = c.channel)
+  const chMap = {}; if (chs) chs.forEach(c => chMap[c.sub_channel] = c.channel)
   const tfMap = { Facebook: tfFB, TikTok: tfTT, Shopee: tfShopee, Lazada: tfLazada, 'ตัวแทน': tfDealer, 'Modern Trade': tfDealer }
   const tfn = tfMap[channel] || tfGeneric
   const newSubChannels = new Set()
-
   const rawProcessed = rows.map(row => {
     const g = k => mappings[k] ? row[mappings[k]] : null
     const gs = k => { const v = g(k); return v !== null && v !== undefined ? String(v).trim() : '' }
-    const date = parseDate(g('date'))
-    const sub = forcedSubChannel || gs('sub_channel')
-    const rawSku = gs('sku_promotion')
-    const qtyMul = gs('qty_multiplier')
+    const date = parseDate(g('date')), sub = forcedSubChannel || gs('sub_channel')
+    const rawSku = gs('sku_promotion'), qtyMul = gs('qty_multiplier')
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
-    const revenueRaw = (() => {
-      const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null
-      if (!v) return 0
-      return parseFloat(String(v).replace(/,/g, '')) || 0
-    })()
-    return {
-      order_id: gs('order_id'),
-      date: date,
-      channel: chMap[sub] || channel,
-      sub_channel: sub || channel,
-      sku_promotion_part: tfn(rawSku, skuMap, qtyMul),  // SKU เฉพาะ row นี้ ยังไม่ merge
-      sku_promotion_raw: rawSku,
-      revenue: revenue,        // ยอดรวมทั้ง order (อาจซ้ำกันทุก row ถ้าไฟล์แบบ TikTok/Shopee/Lazada)
-      revenue_raw: revenueRaw,
-      province: normalizeProvince(gs('province')),
-      district: normalizeDistrict(gs('district')),
-      postcode: gs('postcode'),
-      customer_name: gs('customer_name'),
-      phone: gs('phone'),
-      payment_method: gs('payment_method'),
-      settled: channel === 'Facebook',
-      settled_date: channel === 'Facebook' ? date : null,
-    }
+    const revenueRaw = (() => { const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null; if (!v) return 0; return parseFloat(String(v).replace(/,/g,''))||0 })()
+    return { order_id: gs('order_id'), date, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
   }).filter(r => r.order_id && r.date)
 
-  // Group by order_id — merge SKU จากหลาย row, revenue รวมกันทุก row (เพราะทุก channel คำนวณ revenue ต่อ SKU ไม่ใช่ต่อ order)
   const orderGroups = new Map()
   rawProcessed.forEach(r => {
-    if (!orderGroups.has(r.order_id)) {
-      orderGroups.set(r.order_id, { ...r, _skuParts: [r.sku_promotion_part], _rawParts: [r.sku_promotion_raw], _revenueSum: r.revenue, _revenueRawSum: r.revenue_raw })
-    } else {
-      const g = orderGroups.get(r.order_id)
-      if (r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part)
-      if (r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw)
-      g._revenueSum += r.revenue
-      g._revenueRawSum += r.revenue_raw
-    }
+    if (!orderGroups.has(r.order_id)) orderGroups.set(r.order_id, { ...r, _skuParts:[r.sku_promotion_part], _rawParts:[r.sku_promotion_raw], _revenueSum:r.revenue, _revenueRawSum:r.revenue_raw })
+    else { const g = orderGroups.get(r.order_id); if(r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part); if(r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw); g._revenueSum+=r.revenue; g._revenueRawSum+=r.revenue_raw }
   })
 
   const processed = [...orderGroups.values()].map(g => {
-    // merge sku parts เช่น ["DSTWB03x1","DSCH03x1"] → "DSCH03x1+DSTWB03x1" (merge + sort)
-    const allSkus = []
-    g._skuParts.filter(Boolean).forEach(part => {
-      part.split('+').forEach(p => {
-        const m = p.match(/^(.+?)x(\d+)$/i)
-        if (m) allSkus.push({ sku: m[1], qty: parseInt(m[2]) })
-      })
-    })
-    const merged = mergeSkus(allSkus)
-    return {
-      order_id: g.order_id,
-      date: g.date,
-      channel: g.channel,
-      sub_channel: g.sub_channel,
-      sku_promotion: merged,
-      sku_promotion_raw: g._rawParts.join(' | '),
-      revenue: Math.round(g._revenueSum * 100) / 100,
-      revenue_raw: Math.round(g._revenueRawSum * 100) / 100,
-      province: g.province,
-      district: g.district,
-      postcode: g.postcode,
-      customer_name: g.customer_name,
-      phone: g.phone,
-      payment_method: g.payment_method,
-      settled: channel === 'Facebook' ? true : undefined,
-      settled_date: channel === 'Facebook' ? g.date : undefined,
-    }
+    const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
+    return { order_id:g.order_id, date:g.date, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
   })
 
-  if (newSubChannels.size > 0) {
-    const newRows = [...newSubChannels].map(sub => ({ sub_channel: sub, channel: channel }))
-    await DB.from('channels').upsert(newRows, { onConflict: 'sub_channel' })
-  }
-
+  if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
   return processed
 }
 
-function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g, '').trim(); return m[c] || c }
+function norm(s, m) { const c = s.toUpperCase().replace(/[-\.]/g,'').trim(); return m[c]||c }
 
-const PROVINCE_MAP = {
-  'Bangkok':'กรุงเทพมหานคร','กรุงเทพฯ':'กรุงเทพมหานคร','กทม':'กรุงเทพมหานคร','กทม.':'กรุงเทพมหานคร',
-  'Nonthaburi':'นนทบุรี','Pathum Thani':'ปทุมธานี','Pathumthani':'ปทุมธานี',
-  'Samut Prakan':'สมุทรปราการ','Samutprakarn':'สมุทรปราการ','Samut Sakhon':'สมุทรสาคร',
-  'Samut Songkhram':'สมุทรสงคราม','Nakhon Pathom':'นครปฐม',
-  'Suphan Buri':'สุพรรณบุรี','Suphanburi':'สุพรรณบุรี','Kanchanaburi':'กาญจนบุรี',
-  'Ratchaburi':'ราชบุรี','Phetchaburi':'เพชรบุรี',
-  'Prachuap Khiri Khan':'ประจวบคีรีขันธ์','Ang Thong':'อ่างทอง','Sing Buri':'สิงห์บุรี',
-  'Lopburi':'ลพบุรี','Lop Buri':'ลพบุรี','Saraburi':'สระบุรี',
-  'Ayutthaya':'พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya':'พระนครศรีอยุธยา',
-  'Nakhon Nayok':'นครนายก','Chachoengsao':'ฉะเชิงเทรา',
-  'Prachin Buri':'ปราจีนบุรี','Sa Kaeo':'สระแก้ว',
-  'Chon Buri':'ชลบุรี','Chonburi':'ชลบุรี','Rayong':'ระยอง',
-  'Chanthaburi':'จันทบุรี','Trat':'ตราด',
-  'Chiang Mai':'เชียงใหม่','Chiangmai':'เชียงใหม่',
-  'Chiang Rai':'เชียงราย','Chiangrai':'เชียงราย',
-  'Lamphun':'ลำพูน','Lampang':'ลำปาง','Phrae':'แพร่','Nan':'น่าน','Phayao':'พะเยา',
-  'Mae Hong Son':'แม่ฮ่องสอน','Uttaradit':'อุตรดิตถ์','Sukhothai':'สุโขทัย',
-  'Phitsanulok':'พิษณุโลก','Phichit':'พิจิตร','Kamphaeng Phet':'กำแพงเพชร',
-  'Nakhon Sawan':'นครสวรรค์','Uthai Thani':'อุทัยธานี','Chainat':'ชัยนาท','Tak':'ตาก',
-  'Nakhon Ratchasima':'นครราชสีมา',
-  'Buriram':'บุรีรัมย์','Buri Ram':'บุรีรัมย์','Surin':'สุรินทร์',
-  'Si Sa Ket':'ศรีสะเกษ','Sisaket':'ศรีสะเกษ',
-  'Ubon Ratchathani':'อุบลราชธานี','Yasothon':'ยโสธร','Chaiyaphum':'ชัยภูมิ',
-  'Amnat Charoen':'อำนาจเจริญ','Mukdahan':'มุกดาหาร','Nakhon Phanom':'นครพนม',
-  'Sakon Nakhon':'สกลนคร','Kalasin':'กาฬสินธุ์','Maha Sarakham':'มหาสารคาม',
-  'Roi Et':'ร้อยเอ็ด','Khon Kaen':'ขอนแก่น','Udon Thani':'อุดรธานี',
-  'Loei':'เลย','Nong Khai':'หนองคาย','Nong Bua Lam Phu':'หนองบัวลำภู','Bueng Kan':'บึงกาฬ',
-  'Chumphon':'ชุมพร','Surat Thani':'สุราษฎร์ธานี',
-  'Nakhon Si Thammarat':'นครศรีธรรมราช','Phatthalung':'พัทลุง','Songkhla':'สงขลา',
-  'Satun':'สตูล','Trang':'ตรัง','Krabi':'กระบี่','Phang Nga':'พังงา',
-  'Phuket':'ภูเก็ต','Ranong':'ระนอง','Pattani':'ปัตตานี','Yala':'ยะลา',
-  'Narathiwat':'นราธิวาส',
-}
-function normalizeProvince(v) {
-  if (!v) return ''
-  let s = String(v).trim()
-  // Lazada ส่งมาแบบ "ปทุมธานี/ Pathum Thani" — ตัดเอาส่วนก่อน / ก่อน
-  if (s.includes('/')) s = s.split('/')[0].trim()
-  // เผื่อมีคำว่า "จังหวัด" นำหน้า เช่น "จังหวัดนครราชสีมา"
-  s = s.replace(/^จังหวัด/, '').trim()
-  return PROVINCE_MAP[s] || s
-}
-
-function normalizeDistrict(v) {
-  if (!v) return ''
-  let s = String(v).trim()
-  // Lazada ส่งมาแบบ "เมืองปทุมธานี/ Mueang Pathum Thani" — ตัดเอาส่วนก่อน / ก่อน (ภาษาไทย)
-  if (s.includes('/')) s = s.split('/')[0].trim()
-  return s
-}
+const PROVINCE_MAP = { 'Bangkok':'กรุงเทพมหานคร','กรุงเทพฯ':'กรุงเทพมหานคร','กทม':'กรุงเทพมหานคร','กทม.':'กรุงเทพมหานคร','Nonthaburi':'นนทบุรี','Pathum Thani':'ปทุมธานี','Pathumthani':'ปทุมธานี','Samut Prakan':'สมุทรปราการ','Samutprakarn':'สมุทรปราการ','Samut Sakhon':'สมุทรสาคร','Samut Songkhram':'สมุทรสงคราม','Nakhon Pathom':'นครปฐม','Suphan Buri':'สุพรรณบุรี','Suphanburi':'สุพรรณบุรี','Kanchanaburi':'กาญจนบุรี','Ratchaburi':'ราชบุรี','Phetchaburi':'เพชรบุรี','Prachuap Khiri Khan':'ประจวบคีรีขันธ์','Ang Thong':'อ่างทอง','Sing Buri':'สิงห์บุรี','Lopburi':'ลพบุรี','Lop Buri':'ลพบุรี','Saraburi':'สระบุรี','Ayutthaya':'พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya':'พระนครศรีอยุธยา','Nakhon Nayok':'นครนายก','Chachoengsao':'ฉะเชิงเทรา','Prachin Buri':'ปราจีนบุรี','Sa Kaeo':'สระแก้ว','Chon Buri':'ชลบุรี','Chonburi':'ชลบุรี','Rayong':'ระยอง','Chanthaburi':'จันทบุรี','Trat':'ตราด','Chiang Mai':'เชียงใหม่','Chiangmai':'เชียงใหม่','Chiang Rai':'เชียงราย','Chiangrai':'เชียงราย','Lamphun':'ลำพูน','Lampang':'ลำปาง','Phrae':'แพร่','Nan':'น่าน','Phayao':'พะเยา','Mae Hong Son':'แม่ฮ่องสอน','Uttaradit':'อุตรดิตถ์','Sukhothai':'สุโขทัย','Phitsanulok':'พิษณุโลก','Phichit':'พิจิตร','Kamphaeng Phet':'กำแพงเพชร','Nakhon Sawan':'นครสวรรค์','Uthai Thani':'อุทัยธานี','Chainat':'ชัยนาท','Tak':'ตาก','Nakhon Ratchasima':'นครราชสีมา','Buriram':'บุรีรัมย์','Buri Ram':'บุรีรัมย์','Surin':'สุรินทร์','Si Sa Ket':'ศรีสะเกษ','Sisaket':'ศรีสะเกษ','Ubon Ratchathani':'อุบลราชธานี','Yasothon':'ยโสธร','Chaiyaphum':'ชัยภูมิ','Amnat Charoen':'อำนาจเจริญ','Mukdahan':'มุกดาหาร','Nakhon Phanom':'นครพนม','Sakon Nakhon':'สกลนคร','Kalasin':'กาฬสินธุ์','Maha Sarakham':'มหาสารคาม','Roi Et':'ร้อยเอ็ด','Khon Kaen':'ขอนแก่น','Udon Thani':'อุดรธานี','Loei':'เลย','Nong Khai':'หนองคาย','Nong Bua Lam Phu':'หนองบัวลำภู','Bueng Kan':'บึงกาฬ','Chumphon':'ชุมพร','Surat Thani':'สุราษฎร์ธานี','Nakhon Si Thammarat':'นครศรีธรรมราช','Phatthalung':'พัทลุง','Songkhla':'สงขลา','Satun':'สตูล','Trang':'ตรัง','Krabi':'กระบี่','Phang Nga':'พังงา','Phuket':'ภูเก็ต','Ranong':'ระนอง','Pattani':'ปัตตานี','Yala':'ยะลา','Narathiwat':'นราธิวาส' }
+function normalizeProvince(v) { if (!v) return ''; let s = String(v).trim(); if (s.includes('/')) s = s.split('/')[0].trim(); s = s.replace(/^จังหวัด/,'').trim(); return PROVINCE_MAP[s]||s }
+function normalizeDistrict(v) { if (!v) return ''; let s = String(v).trim(); if (s.includes('/')) s = s.split('/')[0].trim(); return s }
 
 async function calcSkuRevenue(orders) {
   const { data: prods } = await DB.from('products').select('parent_sku, product_name, rsp')
-  const rspMap = {}
-  const nameMap = {}
-  if (prods) prods.forEach(p => {
-    if (!rspMap[p.parent_sku]) rspMap[p.parent_sku] = p.rsp || 0
-    if (!nameMap[p.parent_sku]) nameMap[p.parent_sku] = p.product_name || p.parent_sku
-  })
-
+  const rspMap = {}, nameMap = {}
+  if (prods) prods.forEach(p => { if (!rspMap[p.parent_sku]) rspMap[p.parent_sku]=p.rsp||0; if (!nameMap[p.parent_sku]) nameMap[p.parent_sku]=p.product_name||p.parent_sku })
   const skuRows = []
-
   for (const order of orders) {
     if (!order.sku_promotion || !order.revenue) continue
-    const skus = order.sku_promotion.split('+').map(s => {
-      const m = s.trim().match(/^(.+?)x(\d+)$/i)
-      return m ? { sku: m[1], qty: parseInt(m[2]) } : null
-    }).filter(Boolean)
+    const skus = order.sku_promotion.split('+').map(s => { const m=s.trim().match(/^(.+?)x(\d+)$/i); return m?{sku:m[1],qty:parseInt(m[2])}:null }).filter(Boolean)
     if (!skus.length) continue
-
-    let totalRsp = 0
-    skus.forEach(({ sku, qty }) => {
-      const rsp = rspMap[sku] || 0
-      if (rsp > 0) totalRsp += rsp * qty
-    })
-
-    skus.forEach(({ sku, qty }) => {
-      const rsp = rspMap[sku] || 0
-      let allocated = 0
-      if (totalRsp > 0 && rsp > 0) {
-        allocated = order.revenue * ((rsp * qty) / totalRsp)
-      }
-      skuRows.push({
-        date: order.date,
-        channel: order.channel,
-        sub_channel: order.sub_channel,
-        order_id: order.order_id,
-        parent_sku: sku,
-        product_name: nameMap[sku] || sku,
-        qty: qty,
-        revenue_share: Math.round(allocated * 100) / 100,
-        settled_date: order.settled_date,
-        settled: order.settled ? 'True' : 'False',
-      })
-    })
+    let totalRsp = 0; skus.forEach(({sku,qty}) => { const rsp=rspMap[sku]||0; if(rsp>0) totalRsp+=rsp*qty })
+    skus.forEach(({sku,qty}) => { const rsp=rspMap[sku]||0; let allocated=0; if(totalRsp>0&&rsp>0) allocated=order.revenue*((rsp*qty)/totalRsp); skuRows.push({date:order.date,channel:order.channel,sub_channel:order.sub_channel,order_id:order.order_id,parent_sku:sku,product_name:nameMap[sku]||sku,qty,revenue_share:Math.round(allocated*100)/100,settled_date:order.settled_date,settled:order.settled?'True':'False'}) })
   }
-
   if (!skuRows.length) return 0
-
   const orderIds = [...new Set(orders.map(o => o.order_id))]
-  // ลบทีละ batch เล็กๆ — ถ้าลบทีเดียวทั้งหมด (order_id=in.(...)) URL จะยาวเกินไปตอนมีออเดอร์เป็นพันรายการ ทำให้ fetch fail
   const DELETE_BATCH = 200
-  for (let i = 0; i < orderIds.length; i += DELETE_BATCH) {
-    const { error: delError } = await DB.from('sku_revenue').delete().in('order_id', orderIds.slice(i, i + DELETE_BATCH))
-    if (delError) throw delError
-  }
-
+  for (let i = 0; i < orderIds.length; i += DELETE_BATCH) { const {error:delError} = await DB.from('sku_revenue').delete().in('order_id', orderIds.slice(i,i+DELETE_BATCH)); if (delError) throw delError }
   const BATCH = 500
-  for (let i = 0; i < skuRows.length; i += BATCH) {
-    const { error } = await DB.from('sku_revenue').insert(skuRows.slice(i, i + BATCH))
-    if (error) throw error
-  }
-
-  return skuRows.length  // ← return จำนวน rows สำหรับแสดงใน success state
+  for (let i = 0; i < skuRows.length; i += BATCH) { const {error} = await DB.from('sku_revenue').insert(skuRows.slice(i,i+BATCH)); if (error) throw error }
+  return skuRows.length
 }
 
 function mergeSkus(skuList) {
-  const merged = {}
-  skuList.forEach(({ sku, qty }) => { merged[sku] = (merged[sku] || 0) + qty })
-  return Object.entries(merged).sort(([a], [b]) => a.localeCompare(b)).map(([sku, qty]) => sku + 'x' + qty).join('+')
+  const merged = {}; skuList.forEach(({sku,qty}) => { merged[sku]=(merged[sku]||0)+qty })
+  return Object.entries(merged).sort(([a],[b])=>a.localeCompare(b)).map(([sku,qty])=>sku+'x'+qty).join('+')
 }
 
 function tfFB(raw, m) {
   if (!raw) return ''
-  const skus = raw.split(',').map(s => s.trim()).map(p => {
-    const x = p.match(/^(.+?)\s*\((\d+)\)$/)
-    return x ? { sku: norm(x[1], m), qty: parseInt(x[2]) } : null
-  }).filter(Boolean)
+  const skus = raw.split(',').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)\s*\((\d+)\)$/); return x?{sku:norm(x[1],m),qty:parseInt(x[2])}:null }).filter(Boolean)
   return mergeSkus(skus)
 }
-
 function tfTT(raw, m, qtyMultiplier) {
   if (!raw) return ''
-  // รูปแบบใหม่: ไม่มี "(จำนวน)" ต่อท้าย แต่มี qtyMultiplier จากคอลัมน์ Quantity แยก
-  // เช่น raw = "DSTWB03x1+DSCH03x1", qtyMultiplier = 2
   if (!raw.includes('(') && qtyMultiplier) {
-    const mul = parseInt(qtyMultiplier) || 1
-    const skus = raw.split('+').map(s => s.trim()).map(it => {
-      const mi = it.match(/^(.+?)x(\d+)$/i)
-      if (mi) return { sku: norm(mi[1], m), qty: parseInt(mi[2]) * mul }
-      if (it) return { sku: norm(it, m), qty: mul }
-      return null
-    }).filter(Boolean)
-    return mergeSkus(skus)
+    const mul = parseInt(qtyMultiplier)||1
+    return mergeSkus(raw.split('+').map(s=>s.trim()).map(it => { const mi=it.match(/^(.+?)x(\d+)$/i); if(mi) return {sku:norm(mi[1],m),qty:parseInt(mi[2])*mul}; if(it) return {sku:norm(it,m),qty:mul}; return null }).filter(Boolean))
   }
-  // รูปแบบเดิม: "LIPRPI01x2 (1), NIANSC02x1 (3)"
-  const skus = []
-  raw.split(',').map(s => s.trim()).forEach(g => {
-    const mg = g.match(/^(.+?)\s*\((\d+)\)$/)
-    if (!mg) return
-    const mul = parseInt(mg[2])
-    mg[1].split('+').map(s => s.trim()).forEach(it => {
-      const mi = it.match(/^(.+?)x(\d+)$/i)
-      if (!mi) return
-      skus.push({ sku: norm(mi[1], m), qty: parseInt(mi[2]) * mul })
-    })
-  })
+  const skus = []; raw.split(',').map(s=>s.trim()).forEach(g => { const mg=g.match(/^(.+?)\s*\((\d+)\)$/); if(!mg) return; const mul=parseInt(mg[2]); mg[1].split('+').map(s=>s.trim()).forEach(it => { const mi=it.match(/^(.+?)x(\d+)$/i); if(!mi) return; skus.push({sku:norm(mi[1],m),qty:parseInt(mi[2])*mul}) }) })
   return mergeSkus(skus)
 }
-
-function tfShopee(raw, m) {
-  if (!raw) return ''
-  const skus = raw.split('+').map(s => s.trim()).map(p => {
-    const x = p.match(/^(.+?)x(\d+)$/i)
-    if (x) return { sku: norm(x[1], m), qty: parseInt(x[2]) }
-    // ไม่มี x → qty = 1 (Shopee บางออเดอร์ส่ง child SKU ตรงๆ)
-    if (p) return { sku: norm(p, m), qty: 1 }
-    return null
-  }).filter(Boolean)
-  return mergeSkus(skus)
-}
-
-function tfLazada(raw, m) {
-  if (!raw) return ''
-  const skus = raw.split('+').map(s => s.trim()).map(p => {
-    const x = p.match(/^(.+?)x(\d+)$/i)
-    if (x) return { sku: norm(x[1], m), qty: parseInt(x[2]) }
-    // ไม่มี x → qty = 1
-    if (p) return { sku: norm(p, m), qty: 1 }
-    return null
-  }).filter(Boolean)
-  return mergeSkus(skus)
-}
-
+function tfShopee(raw, m) { if (!raw) return ''; return mergeSkus(raw.split('+').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)x(\d+)$/i); if(x) return {sku:norm(x[1],m),qty:parseInt(x[2])}; if(p) return {sku:norm(p,m),qty:1}; return null }).filter(Boolean)) }
+function tfLazada(raw, m) { if (!raw) return ''; return mergeSkus(raw.split('+').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)x(\d+)$/i); if(x) return {sku:norm(x[1],m),qty:parseInt(x[2])}; if(p) return {sku:norm(p,m),qty:1}; return null }).filter(Boolean)) }
 function tfDealer(raw, m) { return raw ? norm(raw, m) : '' }
 function tfGeneric(raw, m) { return raw ? norm(raw, m) : '' }
 
 function goStep(n) {
-  document.querySelectorAll('.step-panel').forEach((el, i) => el.classList.toggle('active', i + 1 === n))
-  ;[1, 2, 3].forEach(i => {
-    const num = document.getElementById('snum' + i)
-    const lbl = document.getElementById('slabel' + i)
-    num.classList.remove('active', 'done')
-    lbl.classList.remove('active')
-    if (i < n) { num.classList.add('done'); num.textContent = '✓' }
-    else if (i === n) { num.classList.add('active'); num.textContent = i; lbl.classList.add('active') }
-    else num.textContent = i
+  document.querySelectorAll('.step-panel').forEach((el, i) => el.classList.toggle('active', i+1===n))
+  ;[1,2,3].forEach(i => {
+    const num=document.getElementById('snum'+i), lbl=document.getElementById('slabel'+i)
+    num.classList.remove('active','done'); lbl.classList.remove('active')
+    if (i<n) { num.classList.add('done'); num.textContent='✓' }
+    else if (i===n) { num.classList.add('active'); num.textContent=i; lbl.classList.add('active') }
+    else num.textContent=i
   })
-  ;[1, 2].forEach(i => document.getElementById('sline' + i).classList.toggle('done', i < n))
+  ;[1,2].forEach(i => document.getElementById('sline'+i).classList.toggle('done', i<n))
   window.scrollTo(0, 0)
 }
-
-function showAlert(el, msg) { el.textContent = msg; el.style.display = 'block' }
+function showAlert(el, msg) { el.textContent=msg; el.style.display='block' }
 </script>
 </body>
 </html>
