@@ -639,7 +639,7 @@
           <div class="section-header">
             <div class="section-title">Shopee</div>
             <select id="adp-sel-sh" onchange="renderAdpChannel('adpChartSH','adp-sub-sh','sh')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee Mall">Shopee Mall</option>
+              <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee mall">Shopee mall</option>
             </select>
           </div>
           <div class="kpi-sub" id="adp-sub-sh" style="margin-bottom:10px;">—</div>
@@ -649,7 +649,7 @@
           <div class="section-header">
             <div class="section-title">Lazada</div>
             <select id="adp-sel-lz" onchange="renderAdpChannel('adpChartLZ','adp-sub-lz','lz')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada Mall">Lazada Mall</option>
+              <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada mall">Lazada mall</option>
             </select>
           </div>
           <div class="kpi-sub" id="adp-sub-lz" style="margin-bottom:10px;">—</div>
@@ -2197,10 +2197,10 @@ function renderAdpChannel(chartId, subId, ch) {
   else if(ch==='tt') filtered=d.filter(r=>r.channel==='Tiktok'||r.channel==='TikTok');
   else if(ch==='sh'){
     const sel=document.getElementById('adp-sel-sh')?.value||'all';
-    filtered = sel==='all' ? d.filter(r=>r.channel==='Shopee Mall'||r.channel==='Shopee 24hr') : d.filter(r=>r.channel===sel);
+    filtered = sel==='all' ? d.filter(r=>r.channel==='Shopee mall'||r.channel==='Shopee 24hr') : d.filter(r=>r.channel===sel);
   } else if(ch==='lz'){
     const sel=document.getElementById('adp-sel-lz')?.value||'all';
-    filtered = sel==='all' ? d.filter(r=>r.channel==='Lazada Mall'||r.channel==='Lazada 24hr') : d.filter(r=>r.channel===sel);
+    filtered = sel==='all' ? d.filter(r=>r.channel==='Lazada mall'||r.channel==='Lazada 24hr') : d.filter(r=>r.channel===sel);
   } else filtered=d;
   const a=aggAd(filtered,adView);
   const labels=a.map(([k])=>adLabel(k));
