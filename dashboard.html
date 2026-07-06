@@ -154,6 +154,7 @@
     <div class="nav-item" onclick="showPage('promotion')"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
     <div class="nav-item" onclick="showPage('geo')"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
     <div class="nav-item" onclick="showPage('crm')"><span class="nav-icon">👥</span> CRM (Facebook)</div>
+    <div class="nav-item" onclick="showPage('flow')"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
     <div class="nav-item" onclick="showPage('skurev')"><span class="nav-icon">💰</span> ยอดขายแยก SKU</div>
     <div class="nav-item" onclick="showPage('skuanalysis')"><span class="nav-icon">🔬</span> วิเคราะห์ SKU</div>
     <div class="nav-item" onclick="showPage('adperf')"><span class="nav-icon">📈</span> Ad Performance</div>
@@ -663,6 +664,43 @@
       </div>
     </div>
 
+    <div class="page" id="page-flow">
+      <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;">
+        📌 วิเคราะห์เฉพาะช่องทาง <strong>Facebook</strong> — ดูว่าลูกค้าซื้อสินค้าอะไร แล้วซื้ออะไรต่อในครั้งถัดไป
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ช่วงวันที่ (ครั้งที่ซื้อต่อไป):</span>
+          <div class="filter-group" style="border:none;padding:0;gap:6px;">
+            <span class="filter-label">ตั้งแต่</span><input type="date" id="flowFrom">
+            <span class="filter-label" style="margin:0 4px;">ถึง</span><input type="date" id="flowTo">
+          </div>
+          <button class="btn btn-primary" onclick="renderFlowPage()">🔍 วิเคราะห์</button>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">เลือกสินค้าที่ต้องการดู <span style="color:var(--text3);font-size:11px;">(Top 10 อัตโนมัติ — คลิกเพื่อเลือก/ยกเลิก ต้องเลือกอย่างน้อย 2 ตัว)</span></div>
+          <div id="flowSkuChips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+      <div class="grid-3" id="flowKPIs" style="margin-bottom:20px;"></div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-header"><div class="section-title">Sankey — เส้นทางการซื้อต่อเนื่อง</div></div>
+        <div id="flowSankeyWrap"><div class="empty">กด "วิเคราะห์" เพื่อโหลดข้อมูล</div></div>
+      </div>
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">รายละเอียด Transition ทั้งหมด</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblFlowDetail')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap" style="max-height:400px;overflow-y:auto;">
+          <table id="tblFlowDetail">
+            <thead><tr><th>#</th><th>สินค้าที่ซื้อก่อน</th><th></th><th>สินค้าที่ซื้อต่อ</th><th>จำนวนครั้ง</th><th>% ของ SKU ต้นทาง</th><th>หมายเหตุ</th></tr></thead>
+            <tbody id="tbodyFlowDetail"><tr><td colspan="7" class="empty">—</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -957,10 +995,10 @@ function applyFilters() {
 // ===== NAVIGATION =====
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotion: 'Promotion / SKU',
-  geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', skurev: 'ยอดขายแยก SKU',
-  skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance'
+  geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
+  skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance'
 };
-const pageOrder = ['overview','channel','promotion','geo','crm','skurev','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','promotion','geo','crm','flow','skurev','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1047,6 +1085,7 @@ function renderCurrentPage() {
   else if (currentPage === 'promotion') renderPromotion();
   else if (currentPage === 'geo') renderGeo();
   else if (currentPage === 'crm') renderCRM();
+  else if (currentPage === 'flow') renderFlowPage();
   else if (currentPage === 'skurev') renderSkuRev();
   // skuanalysis และ adperf render on-demand ผ่านปุ่ม
 }
@@ -2380,6 +2419,210 @@ function generateSummaryExtra(page) {
   setTimeout(() => { el.textContent = lines.join('\n') || 'ไม่มีข้อมูลเพียงพอสำหรับสรุป'; }, 300);
 }
 
+// ===== FLOW PAGE (Product Repurchase Path — Facebook only) =====
+let flowSelectedSKUs = [];
+let _flowTransitions = null;
+let _flowTopSKUs = [];
+
+function initFlowDateDefaults() {
+  const now = new Date();
+  const to = now.toISOString().substring(0,10);
+  const from = new Date(now.getFullYear(), now.getMonth()-2, 1).toISOString().substring(0,10);
+  const fe = document.getElementById('flowFrom'), te = document.getElementById('flowTo');
+  if (fe && !fe.value) fe.value = from;
+  if (te && !te.value) te.value = to;
+}
+
+function computeFlowTransitions(fromDate, toDate) {
+  const fbOrders = allData.filter(r =>
+    r.channel === 'Facebook' && r.phone && r.phone.length >= 5 && shouldIncludeRow(r)
+  );
+  const byPhone = {};
+  fbOrders.forEach(r => {
+    if (!byPhone[r.phone]) byPhone[r.phone] = [];
+    byPhone[r.phone].push(r);
+  });
+  Object.values(byPhone).forEach(arr => arr.sort((a,b) => (a.date||'').localeCompare(b.date||'')));
+
+  function getSkus(str) {
+    if (!str) return [];
+    return [...new Set(str.split('+').map(p => { const m = p.trim().match(/^(.+?)x\d+$/i); return (m?m[1]:p).trim(); }).filter(Boolean))];
+  }
+
+  const skuFreq = {}, transitions = {};
+  Object.values(byPhone).forEach(orders => {
+    for (let i = 0; i < orders.length - 1; i++) {
+      const curr = orders[i], next = orders[i+1];
+      if (fromDate && next.date < fromDate) continue;
+      if (toDate && next.date > toDate) continue;
+      const srcSkus = getSkus(curr.sku_promotion);
+      const tgtSkus = getSkus(next.sku_promotion);
+      srcSkus.forEach(src => {
+        skuFreq[src] = (skuFreq[src]||0) + 1;
+        tgtSkus.forEach(tgt => {
+          if (!transitions[src]) transitions[src] = {};
+          transitions[src][tgt] = (transitions[src][tgt]||0) + 1;
+        });
+      });
+    }
+  });
+  const topSKUs = Object.entries(skuFreq).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s])=>s);
+  return { transitions, topSKUs };
+}
+
+function renderFlowSkuChips() {
+  const el = document.getElementById('flowSkuChips'); if (!el) return;
+  el.innerHTML = _flowTopSKUs.map((sku, i) => {
+    const sel = flowSelectedSKUs.includes(sku);
+    const c = COLORS[i % COLORS.length];
+    return `<span class="sku-chip ${sel?'selected':''}" style="${sel?`background:${c};color:#0a0a0f;border-color:transparent`:''}"
+      onclick="toggleFlowSKU('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.65;">${sku}</span></span>`;
+  }).join('');
+}
+
+function toggleFlowSKU(sku) {
+  if (flowSelectedSKUs.includes(sku)) {
+    if (flowSelectedSKUs.length <= 2) return;
+    flowSelectedSKUs = flowSelectedSKUs.filter(s => s !== sku);
+  } else {
+    flowSelectedSKUs.push(sku);
+  }
+  renderFlowSkuChips();
+  renderFlowSankey();
+  renderFlowTable();
+}
+
+function renderFlowPage() {
+  initFlowDateDefaults();
+  const from = document.getElementById('flowFrom')?.value||'';
+  const to = document.getElementById('flowTo')?.value||'';
+  const { transitions, topSKUs } = computeFlowTransitions(from, to);
+  _flowTransitions = transitions;
+  _flowTopSKUs = topSKUs;
+  flowSelectedSKUs = [...topSKUs];
+  renderFlowSkuChips();
+
+  // KPIs
+  let total = 0, selfCnt = 0;
+  topSKUs.forEach(src => { if (!transitions[src]) return;
+    Object.entries(transitions[src]).forEach(([tgt,cnt]) => { total+=cnt; if(src===tgt) selfCnt+=cnt; }); });
+  const retRate = total ? Math.round(selfCnt/total*100) : 0;
+  let bestSku='', bestRate=0;
+  topSKUs.forEach(sku => {
+    const self = transitions[sku]?.[sku]||0;
+    const tot = Object.values(transitions[sku]||{}).reduce((a,b)=>a+b,0);
+    const r = tot ? self/tot : 0;
+    if (r > bestRate) { bestRate=r; bestSku=sku; }
+  });
+  document.getElementById('flowKPIs').innerHTML = `
+    <div class="card"><div class="card-title">Transitions ทั้งหมด</div><div class="kpi-value">${fmt(total)}</div><div class="kpi-sub">คู่การซื้อต่อเนื่อง (Facebook)</div></div>
+    <div class="card"><div class="card-title">อัตราซื้อซ้ำเฉลี่ย</div><div class="kpi-value" style="color:var(--green);">${retRate}%</div><div class="kpi-sub">กลับมาซื้อสินค้าเดิม</div></div>
+    <div class="card"><div class="card-title">Retention สูงสุด</div><div class="kpi-value" style="color:var(--accent);font-size:18px;">${bestSku?skuToName(bestSku):'—'}</div><div class="kpi-sub">${bestSku?Math.round(bestRate*100)+'% ซื้อซ้ำ':''}</div></div>`;
+
+  renderFlowSankey();
+  renderFlowTable();
+}
+
+function renderFlowSankey() {
+  const wrap = document.getElementById('flowSankeyWrap'); if (!wrap||!_flowTransitions) return;
+  const skus = flowSelectedSKUs;
+  if (skus.length < 2) { wrap.innerHTML='<div class="empty">เลือกอย่างน้อย 2 สินค้า</div>'; return; }
+
+  const NODE_W=130, GAP=8, PAD_Y=20, W=800;
+  const H = Math.max(340, skus.length*58+PAD_Y*2);
+  const RX = W - NODE_W;
+
+  const srcTotals={}, tgtTotals={};
+  skus.forEach(src => { skus.forEach(tgt => {
+    const cnt = _flowTransitions[src]?.[tgt]||0;
+    if (cnt) { srcTotals[src]=(srcTotals[src]||0)+cnt; tgtTotals[tgt]=(tgtTotals[tgt]||0)+cnt; }
+  }); });
+
+  const total = Object.values(srcTotals).reduce((a,b)=>a+b,0);
+  if (!total) { wrap.innerHTML='<div class="empty">ไม่พบ transition ในช่วงที่เลือก — ลองขยายช่วงวันที่</div>'; return; }
+
+  const hAvail = H - PAD_Y*2 - GAP*(skus.length-1);
+  const srcSorted = [...skus].filter(id=>srcTotals[id]).sort((a,b)=>(srcTotals[b]||0)-(srcTotals[a]||0));
+  const tgtSorted = [...skus].filter(id=>tgtTotals[id]).sort((a,b)=>(tgtTotals[b]||0)-(tgtTotals[a]||0));
+
+  const lNodes=[], rNodes=[];
+  let lY=PAD_Y, rY=PAD_Y;
+  srcSorted.forEach(id => {
+    const h=Math.max(24,(srcTotals[id]/total)*hAvail);
+    lNodes.push({id,y:lY,h,total:srcTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
+    lY+=h+GAP;
+  });
+  tgtSorted.forEach(id => {
+    const h=Math.max(24,(tgtTotals[id]/total)*hAvail);
+    rNodes.push({id,y:rY,h,total:tgtTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
+    rY+=h+GAP;
+  });
+
+  const lo={}, ro={};
+  lNodes.forEach(n=>lo[n.id]=0); rNodes.forEach(n=>ro[n.id]=0);
+
+  let flowSvg='', nodeSvg='';
+  srcSorted.forEach(src => {
+    tgtSorted.forEach(tgt => {
+      const cnt=_flowTransitions[src]?.[tgt]||0; if(!cnt) return;
+      const ln=lNodes.find(n=>n.id===src), rn=rNodes.find(n=>n.id===tgt); if(!ln||!rn) return;
+      const fh=(cnt/total)*hAvail;
+      const ly1=ln.y+lo[src],ly2=ly1+fh, ry1=rn.y+ro[tgt],ry2=ry1+fh;
+      lo[src]+=fh; ro[tgt]+=fh;
+      const cx=(NODE_W+RX)/2, op=src===tgt?.55:.26;
+      const srcName=skuToName(src), tgtName=skuToName(tgt);
+      const pctSrc=srcTotals[src]?Math.round(cnt/srcTotals[src]*100):0;
+      const selfLabel=src===tgt?' 🔄 ซื้อซ้ำ':'';
+      flowSvg+=`<path d="M${NODE_W} ${ly1} C${cx} ${ly1},${cx} ${ry1},${RX} ${ry1} L${RX} ${ry2} C${cx} ${ry2},${cx} ${ly2},${NODE_W} ${ly2}Z"
+        fill="${ln.color}" opacity="${op}" style="cursor:pointer;transition:opacity .15s;"
+        onmouseenter="this.style.opacity='.72';document.getElementById('flowTip').textContent='${srcName} → ${tgtName}: ${cnt.toLocaleString()} ครั้ง (${pctSrc}%)${selfLabel}';"
+        onmouseleave="this.style.opacity='${op}';document.getElementById('flowTip').textContent='';" />`;
+    });
+  });
+
+  [lNodes, rNodes].forEach((nodes, side) => {
+    nodes.forEach(n => {
+      const x = side===0 ? 0 : RX;
+      nodeSvg+=`<rect x="${x}" y="${n.y}" width="${NODE_W}" height="${n.h}" rx="5" fill="${n.color}" opacity="${side===0?.9:.85}"/>`;
+      if (n.h>16) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2-(n.h>40?7:0)}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="${n.h>30?12:9}" font-weight="600" font-family="Sarabun,sans-serif">${skuToName(n.id)}</text>`;
+      if (n.h>38) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2+9}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="9" font-family="IBM Plex Mono,monospace">${n.total.toLocaleString()}</text>`;
+    });
+  });
+
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding:0 ${NODE_W+10}px;">
+      <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อก่อนหน้า</span>
+      <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อครั้งต่อไป</span>
+    </div>
+    <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;">${flowSvg}${nodeSvg}</svg>
+    <div id="flowTip" style="min-height:22px;text-align:center;font-size:12px;color:var(--text2);margin-top:6px;font-family:'IBM Plex Mono',monospace;"></div>`;
+}
+
+function renderFlowTable() {
+  const rows=[];
+  flowSelectedSKUs.forEach(src => {
+    if (!_flowTransitions[src]) return;
+    const srcTotal=Object.values(_flowTransitions[src]).reduce((a,b)=>a+b,0);
+    Object.entries(_flowTransitions[src])
+      .filter(([tgt])=>flowSelectedSKUs.includes(tgt))
+      .sort((a,b)=>b[1]-a[1])
+      .forEach(([tgt,cnt])=>{
+        rows.push({src,tgt,cnt,pct:srcTotal?((cnt/srcTotal)*100).toFixed(1):'0',isSelf:src===tgt});
+      });
+  });
+  rows.sort((a,b)=>b.cnt-a.cnt);
+  document.getElementById('tbodyFlowDetail').innerHTML = rows.slice(0,30).map((r,i)=>`
+    <tr>
+      <td class="rank">${i+1}</td>
+      <td><span style="color:var(--text);">${skuToName(r.src)}</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${r.src}</span></td>
+      <td style="color:var(--text3);">→</td>
+      <td><span style="color:var(--text);">${skuToName(r.tgt)}</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${r.tgt}</span></td>
+      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(r.cnt)}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${r.pct}%</td>
+      <td>${r.isSelf?'<span style="color:var(--green);font-size:12px;">🔄 ซื้อซ้ำ</span>':''}</td>
+    </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
+}
+
 // ===== INIT =====
 // ===== Manual Refresh (ปุ่มในsidebar — ทางสำรองถ้า auto-refresh ตอนอัพโหลดล้มเหลว) =====
 async function refreshDashboardData() {
@@ -2390,30 +2633,33 @@ async function refreshDashboardData() {
   statusEl.textContent = ''
   try {
     const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_all_views`, { method: 'POST', headers, body: '{}' })
-    if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(errText || ('HTTP ' + res.status))
-    }
-    // ดึง MV ทั้ง 3 ตัวใหม่ให้ตรงกับข้อมูลล่าสุด
+
+    // Fire-and-forget — ไม่รอ response เพราะ refresh_all_views() ใช้เวลานาน
+    // มักจะ timeout ที่ REST API แต่ตัว function ใน DB ยังทำงานต่อจนเสร็จเองได้
+    fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_all_views`, { method: 'POST', headers, body: '{}' })
+      .catch(() => {}) // ไม่สน error จาก RPC (เช่น timeout) เพราะ pg_cron จัดการให้อยู่แล้ว
+
+    // รอ 2 วินาทีให้ DB มีเวลา refresh บางส่วนก่อน แล้วค่อยดึง MV ใหม่
+    await new Promise(r => setTimeout(r, 2000))
+
     const [promoMonthly, skuParentMonthly, provinceMonthly] = await Promise.all([
       fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly()
     ])
     window._promoMonthlyCache = promoMonthly
     window._skuParentMonthlyCache = skuParentMonthly
     window._provinceMonthlyCache = provinceMonthly
-    // populate เดือนใหม่เผื่อมีเดือนใหม่เข้ามา
+
     const monthSelFrom = document.getElementById('filterMonthFrom')
     const monthSelTo = document.getElementById('filterMonthTo')
     if (monthSelFrom) { monthSelFrom.innerHTML = '<option value="">— เดือน —</option>'; }
     if (monthSelTo) { monthSelTo.innerHTML = '<option value="">— เดือน —</option>'; }
     populateMonthFilter()
 
-    statusEl.innerHTML = '<span style="color:var(--green);">✅ รีเฟรชสำเร็จ ' + new Date().toLocaleTimeString('th-TH') + '</span>'
+    statusEl.innerHTML = '<span style="color:var(--green);">✅ โหลดข้อมูลใหม่แล้ว ' + new Date().toLocaleTimeString('th-TH') + '</span><br><span style="font-size:9px;color:var(--text3);">MV refresh ทำงานใน background — ข้อมูลอัพเดทเต็มภายใน 5 นาที</span>'
     if (currentPage === 'adperf') renderAdpAll(); else renderCurrentPage()
   } catch (e) {
     console.error('refreshDashboardData failed:', e)
-    statusEl.innerHTML = '<span style="color:var(--red);">❌ รีเฟรชไม่สำเร็จ: ' + (e.message || e) + '</span>'
+    statusEl.innerHTML = '<span style="color:var(--red);">❌ ' + (e.message || e) + '</span>'
   } finally {
     btn.disabled = false
     btn.textContent = '🔄 รีเฟรชข้อมูล Dashboard'
