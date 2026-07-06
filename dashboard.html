@@ -2583,8 +2583,7 @@ function renderFlowSankey() {
   if (skus.length < 2) { wrap.innerHTML='<div class="empty">เลือกอย่างน้อย 2 สินค้า</div>'; return; }
 
   const NODE_W=130, GAP=6, PAD_Y=16, W=800;
-  const MAX_NODE_H = 70; // cap ความสูงสูงสุดต่อ node
-  const H = Math.max(300, skus.length*52+PAD_Y*2);
+  const MAX_NODE_H = 38;
   const RX = W - NODE_W;
 
   const srcTotals={}, tgtTotals={};
@@ -2596,22 +2595,24 @@ function renderFlowSankey() {
   const total = Object.values(srcTotals).reduce((a,b)=>a+b,0);
   if (!total) { wrap.innerHTML='<div class="empty">ไม่พบ transition ในช่วงที่เลือก — ลองขยายช่วงวันที่</div>'; return; }
 
-  const hAvail = H - PAD_Y*2 - GAP*(skus.length-1);
   const srcSorted = [...skus].filter(id=>srcTotals[id]).sort((a,b)=>(srcTotals[b]||0)-(srcTotals[a]||0));
   const tgtSorted = [...skus].filter(id=>tgtTotals[id]).sort((a,b)=>(tgtTotals[b]||0)-(tgtTotals[a]||0));
 
   const lNodes=[], rNodes=[];
   let lY=PAD_Y, rY=PAD_Y;
   srcSorted.forEach(id => {
-    const h=Math.min(MAX_NODE_H, Math.max(24,(srcTotals[id]/total)*hAvail));
+    const h=Math.min(MAX_NODE_H, Math.max(24,(srcTotals[id]/total)*400));
     lNodes.push({id,y:lY,h,total:srcTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
     lY+=h+GAP;
   });
   tgtSorted.forEach(id => {
-    const h=Math.min(MAX_NODE_H, Math.max(24,(tgtTotals[id]/total)*hAvail));
+    const h=Math.min(MAX_NODE_H, Math.max(24,(tgtTotals[id]/total)*400));
     rNodes.push({id,y:rY,h,total:tgtTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
     rY+=h+GAP;
   });
+
+  const H = Math.max(lY, rY) + PAD_Y;
+  const hAvail = H - PAD_Y*2;
 
   const lo={}, ro={};
   lNodes.forEach(n=>lo[n.id]=0); rNodes.forEach(n=>ro[n.id]=0);
@@ -2624,35 +2625,26 @@ function renderFlowSankey() {
       const cnt=_flowTransitions[src]?.[tgt]||0; if(!cnt) return;
       const ln=lNodes.find(n=>n.id===src), rn=rNodes.find(n=>n.id===tgt); if(!ln||!rn) return;
       const fh=(cnt/total)*hAvail;
-      const ly1=ln.y+lo[src],ly2=Math.min(ly1+fh,ln.y+ln.h);
-      const ry1=rn.y+ro[tgt],ry2=Math.min(ry1+fh,rn.y+rn.h);
+      const ly1=ln.y+lo[src], ly2=Math.min(ly1+fh, ln.y+ln.h);
+      const ry1=rn.y+ro[tgt], ry2=Math.min(ry1+fh, rn.y+rn.h);
       lo[src]+=fh; ro[tgt]+=fh;
       const cx=(NODE_W+RX)/2, op=src===tgt?.52:.22;
       const key=`fp${idx++}`;
       const pctSrc=srcTotals[src]?Math.round(cnt/srcTotals[src]*100):0;
       window._flowPathData[key] = { srcName:skuToName(src), tgtName:skuToName(tgt), cnt, pct:pctSrc, isSelf:src===tgt, srcColor:ln.color, tgtColor:rn.color };
       flowSvg+=`<path d="M${NODE_W} ${ly1} C${cx} ${ly1},${cx} ${ry1},${RX} ${ry1} L${RX} ${ry2} C${cx} ${ry2},${cx} ${ly2},${NODE_W} ${ly2}Z"
-        fill="${ln.color}" opacity="${op}" data-key="${key}"
-        style="cursor:pointer;transition:opacity .15s;"
+        fill="${ln.color}" opacity="${op}" style="cursor:pointer;transition:opacity .15s;"
         onmouseenter="this.style.opacity='.72';_showFlowTip(event,'${key}')"
         onmousemove="_moveFlowTip(event)"
         onmouseleave="this.style.opacity='${op}';_hideFlowTip()" />`;
     });
   });
 
-  // Nodes — แสดงชื่อเต็ม แบ่ง 2 บรรทัดถ้าชื่อยาว
+  // Nodes — ชื่อเต็ม แบ่ง 2 บรรทัดเฉพาะตอนมีช่องว่าง (ป้องกัน Thai character cluster แตก)
   function splitNodeName(name) {
-    if (name.length <= 6) return [name, ''];
-    // หาช่องว่างที่ใกล้กลางสุด
-    const mid = Math.floor(name.length / 2);
-    let splitAt = -1;
-    for (let r = 0; r <= mid; r++) {
-      if (name[mid+r] === ' ') { splitAt = mid+r; break; }
-      if (name[mid-r] === ' ' && mid-r > 0) { splitAt = mid-r; break; }
-    }
-    if (splitAt > 0) return [name.substring(0, splitAt), name.substring(splitAt+1)];
-    // ไม่มีช่องว่าง — ตัดที่กลาง
-    return [name.substring(0, mid), name.substring(mid)];
+    const spaceIdx = name.indexOf(' ');
+    if (spaceIdx > 0 && spaceIdx < name.length - 1) return [name.substring(0, spaceIdx), name.substring(spaceIdx+1)];
+    return [name, ''];
   }
 
   [lNodes, rNodes].forEach((nodes, side) => {
@@ -2661,13 +2653,9 @@ function renderFlowSankey() {
       const [l1, l2] = splitNodeName(skuToName(n.id));
       const twoLine = l2.length > 0;
       nodeSvg+=`<rect x="${x}" y="${n.y}" width="${NODE_W}" height="${n.h}" rx="4" fill="${n.color}" opacity="${side===0?.88:.82}"/>`;
-      if (n.h >= 20) {
-        const centerY = n.y + n.h/2;
-        const offset = twoLine ? -6 : 0;
-        nodeSvg+=`<text x="${x+NODE_W/2}" y="${centerY+offset}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="9" font-weight="600" font-family="Sarabun,sans-serif">${l1}</text>`;
-        if (twoLine) nodeSvg+=`<text x="${x+NODE_W/2}" y="${centerY+6}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="9" font-weight="600" font-family="Sarabun,sans-serif">${l2}</text>`;
-      }
-      if (n.h >= 38) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h-7}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="7" font-family="IBM Plex Mono,monospace">${n.total.toLocaleString()}</text>`;
+      const cy = n.y + n.h/2;
+      nodeSvg+=`<text x="${x+NODE_W/2}" y="${twoLine ? cy-6 : cy}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="9" font-weight="600" font-family="Sarabun,sans-serif">${l1}</text>`;
+      if (twoLine) nodeSvg+=`<text x="${x+NODE_W/2}" y="${cy+7}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="9" font-weight="600" font-family="Sarabun,sans-serif">${l2}</text>`;
     });
   });
 
@@ -2676,8 +2664,8 @@ function renderFlowSankey() {
       <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อก่อนหน้า</span>
       <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อครั้งต่อไป</span>
     </div>
-    <div style="overflow-x:auto;">
-      <svg width="100%" viewBox="0 0 ${W} ${lY+20}" style="display:block;min-height:200px;max-height:700px;">${flowSvg}${nodeSvg}</svg>
+    <div style="max-width:800px;margin:0 auto;">
+      <svg width="800" viewBox="0 0 ${W} ${H}" style="display:block;width:100%;">${flowSvg}${nodeSvg}</svg>
     </div>`;
 }
 
