@@ -666,21 +666,20 @@
 
     <div class="page" id="page-flow">
       <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;">
-        📌 วิเคราะห์เฉพาะช่องทาง <strong>Facebook</strong> — ดูว่าลูกค้าซื้อสินค้าอะไร แล้วซื้ออะไรต่อในครั้งถัดไป
+        📌 วิเคราะห์เฉพาะช่องทาง <strong>Facebook</strong> — ดูว่าลูกค้าซื้อสินค้าอะไร แล้วซื้ออะไรต่อในครั้งถัดไป · ใช้ช่วงวันที่จาก filter ด้านบน
       </div>
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ช่วงวันที่ (ครั้งที่ซื้อต่อไป):</span>
-          <div class="filter-group" style="border:none;padding:0;gap:6px;">
-            <span class="filter-label">ตั้งแต่</span><input type="date" id="flowFrom">
-            <span class="filter-label" style="margin:0 4px;">ถึง</span><input type="date" id="flowTo">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เลือกสินค้าที่ต้องการดู:</div>
+          <div style="position:relative;flex:1;min-width:180px;">
+            <input type="text" id="flowSkuSearch" placeholder="ค้นหาสินค้าเพิ่มเติม..." oninput="filterFlowSkuDropdown()" onfocus="showFlowSkuDropdown()" onblur="setTimeout(hideFlowSkuDropdown,200)" style="width:100%;padding:7px 12px;">
+            <div id="flowSkuDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
+          <button class="btn btn-ghost btn-sm" onclick="resetFlowTopSKUs()" style="white-space:nowrap;">↺ Top 10 อัตโนมัติ</button>
           <button class="btn btn-primary" onclick="renderFlowPage()">🔍 วิเคราะห์</button>
         </div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">เลือกสินค้าที่ต้องการดู <span style="color:var(--text3);font-size:11px;">(Top 10 อัตโนมัติ — คลิกเพื่อเลือก/ยกเลิก ต้องเลือกอย่างน้อย 2 ตัว)</span></div>
-          <div id="flowSkuChips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-        </div>
+        <div id="flowSkuChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);min-height:32px;"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">เลือกได้หลายตัว (ต้องมีอย่างน้อย 2) — คลิก chip เพื่อยกเลิก</div>
       </div>
       <div class="grid-3" id="flowKPIs" style="margin-bottom:20px;"></div>
       <div class="card" style="margin-bottom:16px;">
@@ -1053,7 +1052,7 @@ function showPage(page) {
 
   const chFilter = document.getElementById('filterChannel');
   const subGroup = document.getElementById('subChannelGroup');
-  if (page === 'skuanalysis' || page === 'adperf') {
+  if (page === 'skuanalysis' || page === 'adperf' || page === 'flow') {
     if (chFilter) { chFilter.value = ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
     if (subGroup) { subGroup.style.opacity = '0.35'; subGroup.style.pointerEvents = 'none'; }
   } else {
@@ -2423,15 +2422,7 @@ function generateSummaryExtra(page) {
 let flowSelectedSKUs = [];
 let _flowTransitions = null;
 let _flowTopSKUs = [];
-
-function initFlowDateDefaults() {
-  const now = new Date();
-  const to = now.toISOString().substring(0,10);
-  const from = new Date(now.getFullYear(), now.getMonth()-2, 1).toISOString().substring(0,10);
-  const fe = document.getElementById('flowFrom'), te = document.getElementById('flowTo');
-  if (fe && !fe.value) fe.value = from;
-  if (te && !te.value) te.value = to;
-}
+let _flowAllSKUs = []; // SKUs ทั้งหมดที่มีข้อมูล transition
 
 function computeFlowTransitions(fromDate, toDate) {
   const fbOrders = allData.filter(r =>
@@ -2466,40 +2457,78 @@ function computeFlowTransitions(fromDate, toDate) {
       });
     }
   });
-  const topSKUs = Object.entries(skuFreq).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s])=>s);
-  return { transitions, topSKUs };
+  const allSkus = Object.entries(skuFreq).sort((a,b)=>b[1]-a[1]).map(([s])=>s);
+  const topSKUs = allSkus.slice(0,10);
+  return { transitions, topSKUs, allSkus };
+}
+
+// ===== Flow SKU Dropdown =====
+function filterFlowSkuDropdown() {
+  showFlowSkuDropdown();
+  const q = (document.getElementById('flowSkuSearch')?.value||'').toLowerCase();
+  const list = document.getElementById('flowSkuDropdown');
+  if (!list) return;
+  const filtered = _flowAllSKUs.filter(sku =>
+    !flowSelectedSKUs.includes(sku) &&
+    (sku.toLowerCase().includes(q) || skuToName(sku).toLowerCase().includes(q))
+  );
+  list.innerHTML = filtered.slice(0,25).map(sku => `
+    <div onclick="addFlowSKU('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <div style="font-size:12px;color:var(--text);">${skuToName(sku)}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${sku}</div>
+    </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
+}
+function showFlowSkuDropdown() { const l=document.getElementById('flowSkuDropdown'); if(l) l.style.display='block'; }
+function hideFlowSkuDropdown() { const l=document.getElementById('flowSkuDropdown'); if(l) l.style.display='none'; }
+
+function addFlowSKU(sku) {
+  if (flowSelectedSKUs.includes(sku)) return;
+  flowSelectedSKUs.push(sku);
+  const inp = document.getElementById('flowSkuSearch'); if (inp) inp.value = '';
+  hideFlowSkuDropdown();
+  renderFlowSkuChips();
+  if (_flowTransitions) { renderFlowSankey(); renderFlowTable(); }
+}
+
+function resetFlowTopSKUs() {
+  flowSelectedSKUs = [..._flowTopSKUs];
+  renderFlowSkuChips();
+  if (_flowTransitions) { renderFlowSankey(); renderFlowTable(); }
 }
 
 function renderFlowSkuChips() {
   const el = document.getElementById('flowSkuChips'); if (!el) return;
-  el.innerHTML = _flowTopSKUs.map((sku, i) => {
-    const sel = flowSelectedSKUs.includes(sku);
+  if (!flowSelectedSKUs.length) { el.innerHTML = '<span style="font-size:11px;color:var(--text3);">ยังไม่ได้เลือกสินค้า</span>'; return; }
+  el.innerHTML = flowSelectedSKUs.map((sku, i) => {
     const c = COLORS[i % COLORS.length];
-    return `<span class="sku-chip ${sel?'selected':''}" style="${sel?`background:${c};color:#0a0a0f;border-color:transparent`:''}"
-      onclick="toggleFlowSKU('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.65;">${sku}</span></span>`;
+    return `<span class="sku-chip selected" style="background:${c};color:#0a0a0f;border-color:transparent;cursor:pointer;" onclick="removeFlowSKU('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.7;">${sku}</span> ✕</span>`;
   }).join('');
 }
 
-function toggleFlowSKU(sku) {
-  if (flowSelectedSKUs.includes(sku)) {
-    if (flowSelectedSKUs.length <= 2) return;
-    flowSelectedSKUs = flowSelectedSKUs.filter(s => s !== sku);
-  } else {
-    flowSelectedSKUs.push(sku);
-  }
+function removeFlowSKU(sku) {
+  if (flowSelectedSKUs.length <= 2) return;
+  flowSelectedSKUs = flowSelectedSKUs.filter(s => s !== sku);
   renderFlowSkuChips();
-  renderFlowSankey();
-  renderFlowTable();
+  if (_flowTransitions) { renderFlowSankey(); renderFlowTable(); }
+}
+
+function toggleFlowSKU(sku) {
+  if (flowSelectedSKUs.includes(sku)) removeFlowSKU(sku);
+  else addFlowSKU(sku);
 }
 
 function renderFlowPage() {
-  initFlowDateDefaults();
-  const from = document.getElementById('flowFrom')?.value||'';
-  const to = document.getElementById('flowTo')?.value||'';
-  const { transitions, topSKUs } = computeFlowTransitions(from, to);
+  // ใช้ global date filter จาก topbar
+  const from = getDateValue('From');
+  const to = getDateValue('To');
+  const { transitions, topSKUs, allSkus } = computeFlowTransitions(from, to);
   _flowTransitions = transitions;
   _flowTopSKUs = topSKUs;
-  flowSelectedSKUs = [...topSKUs];
+  _flowAllSKUs = allSkus;
+
+  // ถ้ายังไม่เคยเลือก หรือ SKU ที่เลือกไม่มีในข้อมูลใหม่ → reset เป็น top 10
+  const validSelected = flowSelectedSKUs.filter(s => allSkus.includes(s));
+  flowSelectedSKUs = validSelected.length >= 2 ? validSelected : [...topSKUs];
   renderFlowSkuChips();
 
   // KPIs
@@ -2523,13 +2552,38 @@ function renderFlowPage() {
   renderFlowTable();
 }
 
+// ===== Tooltip element =====
+function getFlowTooltip() {
+  let tip = document.getElementById('flowTooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'flowTooltip';
+    tip.style.cssText = 'position:fixed;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--text);font-family:Sarabun,sans-serif;pointer-events:none;display:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4);white-space:nowrap;';
+    document.body.appendChild(tip);
+  }
+  return tip;
+}
+window._showFlowTip = function(e, key) {
+  const f = window._flowPathData?.[key]; if (!f) return;
+  const tip = getFlowTooltip();
+  tip.innerHTML = `<span style="color:${f.srcColor};font-weight:600;">${f.srcName}</span><span style="color:var(--text3);margin:0 8px;">→</span><span style="color:${f.tgtColor};font-weight:600;">${f.tgtName}</span><span style="color:var(--text3);margin-left:12px;">${f.cnt.toLocaleString()} ครั้ง (${f.pct}%)</span>${f.isSelf?'<span style="margin-left:8px;color:var(--green);">🔄 ซื้อซ้ำ</span>':''}`;
+  tip.style.display = 'block';
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top = (e.clientY - 10) + 'px';
+};
+window._moveFlowTip = function(e) {
+  const tip = document.getElementById('flowTooltip'); if (!tip || tip.style.display==='none') return;
+  tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY - 10) + 'px';
+};
+window._hideFlowTip = function() { const tip = document.getElementById('flowTooltip'); if (tip) tip.style.display = 'none'; };
+
 function renderFlowSankey() {
   const wrap = document.getElementById('flowSankeyWrap'); if (!wrap||!_flowTransitions) return;
   const skus = flowSelectedSKUs;
   if (skus.length < 2) { wrap.innerHTML='<div class="empty">เลือกอย่างน้อย 2 สินค้า</div>'; return; }
 
-  const NODE_W=130, GAP=8, PAD_Y=20, W=800;
-  const H = Math.max(340, skus.length*58+PAD_Y*2);
+  const NODE_W=120, GAP=8, PAD_Y=20, W=800;
+  const H = Math.max(320, skus.length*52+PAD_Y*2);
   const RX = W - NODE_W;
 
   const srcTotals={}, tgtTotals={};
@@ -2548,12 +2602,12 @@ function renderFlowSankey() {
   const lNodes=[], rNodes=[];
   let lY=PAD_Y, rY=PAD_Y;
   srcSorted.forEach(id => {
-    const h=Math.max(24,(srcTotals[id]/total)*hAvail);
+    const h=Math.max(22,(srcTotals[id]/total)*hAvail);
     lNodes.push({id,y:lY,h,total:srcTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
     lY+=h+GAP;
   });
   tgtSorted.forEach(id => {
-    const h=Math.max(24,(tgtTotals[id]/total)*hAvail);
+    const h=Math.max(22,(tgtTotals[id]/total)*hAvail);
     rNodes.push({id,y:rY,h,total:tgtTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
     rY+=h+GAP;
   });
@@ -2561,7 +2615,9 @@ function renderFlowSankey() {
   const lo={}, ro={};
   lNodes.forEach(n=>lo[n.id]=0); rNodes.forEach(n=>ro[n.id]=0);
 
-  let flowSvg='', nodeSvg='';
+  window._flowPathData = {};
+  let flowSvg='', nodeSvg='', idx=0;
+
   srcSorted.forEach(src => {
     tgtSorted.forEach(tgt => {
       const cnt=_flowTransitions[src]?.[tgt]||0; if(!cnt) return;
@@ -2570,22 +2626,28 @@ function renderFlowSankey() {
       const ly1=ln.y+lo[src],ly2=ly1+fh, ry1=rn.y+ro[tgt],ry2=ry1+fh;
       lo[src]+=fh; ro[tgt]+=fh;
       const cx=(NODE_W+RX)/2, op=src===tgt?.55:.26;
-      const srcName=skuToName(src), tgtName=skuToName(tgt);
+      const key=`fp${idx++}`;
       const pctSrc=srcTotals[src]?Math.round(cnt/srcTotals[src]*100):0;
-      const selfLabel=src===tgt?' 🔄 ซื้อซ้ำ':'';
+      window._flowPathData[key] = { srcName:skuToName(src), tgtName:skuToName(tgt), cnt, pct:pctSrc, isSelf:src===tgt, srcColor:ln.color, tgtColor:rn.color };
       flowSvg+=`<path d="M${NODE_W} ${ly1} C${cx} ${ly1},${cx} ${ry1},${RX} ${ry1} L${RX} ${ry2} C${cx} ${ry2},${cx} ${ly2},${NODE_W} ${ly2}Z"
-        fill="${ln.color}" opacity="${op}" style="cursor:pointer;transition:opacity .15s;"
-        onmouseenter="this.style.opacity='.72';document.getElementById('flowTip').textContent='${srcName} → ${tgtName}: ${cnt.toLocaleString()} ครั้ง (${pctSrc}%)${selfLabel}';"
-        onmouseleave="this.style.opacity='${op}';document.getElementById('flowTip').textContent='';" />`;
+        fill="${ln.color}" opacity="${op}" data-key="${key}"
+        style="cursor:pointer;transition:opacity .15s;"
+        onmouseenter="this.style.opacity='.72';_showFlowTip(event,'${key}')"
+        onmousemove="_moveFlowTip(event)"
+        onmouseleave="this.style.opacity='${op}';_hideFlowTip()" />`;
     });
   });
 
+  // Nodes — ชื่อสินค้าขนาดเล็กลง กระชับขึ้น
   [lNodes, rNodes].forEach((nodes, side) => {
     nodes.forEach(n => {
       const x = side===0 ? 0 : RX;
-      nodeSvg+=`<rect x="${x}" y="${n.y}" width="${NODE_W}" height="${n.h}" rx="5" fill="${n.color}" opacity="${side===0?.9:.85}"/>`;
-      if (n.h>16) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2-(n.h>40?7:0)}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="${n.h>30?12:9}" font-weight="600" font-family="Sarabun,sans-serif">${skuToName(n.id)}</text>`;
-      if (n.h>38) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2+9}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="9" font-family="IBM Plex Mono,monospace">${n.total.toLocaleString()}</text>`;
+      const name = skuToName(n.id);
+      // ตัดชื่อให้สั้นถ้ายาวเกิน
+      const shortName = name.length > 12 ? name.substring(0,11)+'…' : name;
+      nodeSvg+=`<rect x="${x}" y="${n.y}" width="${NODE_W}" height="${n.h}" rx="5" fill="${n.color}" opacity="${side===0?.88:.82}"/>`;
+      if (n.h > 14) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2-(n.h>34?5:0)}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="${n.h>30?11:9}" font-weight="600" font-family="Sarabun,sans-serif">${shortName}</text>`;
+      if (n.h > 34) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2+9}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="8" font-family="IBM Plex Mono,monospace">${n.total.toLocaleString()}</text>`;
     });
   });
 
@@ -2594,8 +2656,7 @@ function renderFlowSankey() {
       <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อก่อนหน้า</span>
       <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อครั้งต่อไป</span>
     </div>
-    <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;">${flowSvg}${nodeSvg}</svg>
-    <div id="flowTip" style="min-height:22px;text-align:center;font-size:12px;color:var(--text2);margin-top:6px;font-family:'IBM Plex Mono',monospace;"></div>`;
+    <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;">${flowSvg}${nodeSvg}</svg>`;
 }
 
 function renderFlowTable() {
