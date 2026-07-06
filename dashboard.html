@@ -2638,16 +2638,26 @@ function renderFlowSankey() {
     });
   });
 
-  // Nodes — ชื่อสินค้าขนาดเล็กลง กระชับขึ้น
+  // Nodes — ชื่อเต็ม 2 บรรทัดถ้าจำเป็น
   [lNodes, rNodes].forEach((nodes, side) => {
     nodes.forEach(n => {
       const x = side===0 ? 0 : RX;
       const name = skuToName(n.id);
-      // ตัดชื่อให้สั้นถ้ายาวเกิน
-      const shortName = name.length > 12 ? name.substring(0,11)+'…' : name;
+      // แบ่ง 2 บรรทัดถ้าชื่อยาว (ตัดที่ช่องว่าง หรือกลางคำถ้าไม่มี)
+      let line1 = name, line2 = '';
+      if (name.length > 7) {
+        const mid = name.indexOf(' ', 4);
+        if (mid > 0 && mid < name.length - 1) { line1 = name.substring(0, mid); line2 = name.substring(mid+1); }
+        else { line1 = name.substring(0, 6); line2 = name.substring(6); }
+      }
+      const twoLine = line2.length > 0;
       nodeSvg+=`<rect x="${x}" y="${n.y}" width="${NODE_W}" height="${n.h}" rx="5" fill="${n.color}" opacity="${side===0?.88:.82}"/>`;
-      if (n.h > 14) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2-(n.h>34?5:0)}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="${n.h>30?11:9}" font-weight="600" font-family="Sarabun,sans-serif">${shortName}</text>`;
-      if (n.h > 34) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2+9}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="8" font-family="IBM Plex Mono,monospace">${n.total.toLocaleString()}</text>`;
+      if (n.h > 14) {
+        const baseY = n.y + n.h/2 - (n.h>32 ? 6 : 0) - (twoLine ? 6 : 0);
+        nodeSvg+=`<text x="${x+NODE_W/2}" y="${baseY}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="8" font-weight="600" font-family="Sarabun,sans-serif">${line1}</text>`;
+        if (twoLine && n.h > 18) nodeSvg+=`<text x="${x+NODE_W/2}" y="${baseY+11}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="8" font-weight="600" font-family="Sarabun,sans-serif">${line2}</text>`;
+      }
+      if (n.h > 36) nodeSvg+=`<text x="${x+NODE_W/2}" y="${n.y+n.h/2+(twoLine?14:8)}" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="7" font-family="IBM Plex Mono,monospace">${n.total.toLocaleString()}</text>`;
     });
   });
 
