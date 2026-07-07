@@ -640,6 +640,7 @@ const REVENUE_FIELDS = {
   Lazada: [
     { key:'rev_subtotal', label:'unitPrice', required:true, keywords:['unitPrice','unit price','ราคาต่อหน่วย'] },
     { key:'rev_discount', label:'sellerDiscountTotal', required:false, keywords:['sellerDiscountTotal','seller discount total'] },
+    { key:'rev_paid', label:'paidPrice (เช็คของแถม)', required:false, keywords:['paidPrice','paid price'] },
   ],
   'ตัวแทน': [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }],
   'Modern Trade': [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }],
@@ -656,7 +657,12 @@ function calcRevenue(channel, m, row) {
     case 'Facebook': return getNum('rev_subtotal') - getNum('rev_discount') + getNum('rev_shipping')
     case 'TikTok': return getNum('rev_subtotal') - getNum('rev_discount')
     case 'Shopee': return getNum('rev_subtotal') + getNum('rev_platform') - getNum('rev_seller_discount') + getNum('rev_shipping')
-    case 'Lazada': return getNum('rev_subtotal') - getNum('rev_discount')
+    case 'Lazada': {
+      const paidRaw = mappings['rev_paid'] ? row[mappings['rev_paid']] : null;
+      const paid = parseFloat(paidRaw || 0);
+      if (paid === 0) return 0; // ของแถม (paidPrice=0) → revenue = 0
+      return getNum('rev_subtotal') - getNum('rev_discount');
+    }
     default: return getNum('rev_subtotal')
   }
 }
