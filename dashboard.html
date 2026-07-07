@@ -2664,8 +2664,8 @@ function renderFlowSankey() {
       <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อก่อนหน้า</span>
       <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อครั้งต่อไป</span>
     </div>
-    <div style="max-width:800px;margin:0 auto;">
-      <svg width="800" viewBox="0 0 ${W} ${H}" style="display:block;width:100%;">${flowSvg}${nodeSvg}</svg>
+    <div style="overflow-x:auto;">
+      <svg width="800" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;">${flowSvg}${nodeSvg}</svg>
     </div>`;
 }
 
