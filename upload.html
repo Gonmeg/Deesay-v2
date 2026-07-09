@@ -877,6 +877,7 @@ async function handleConfirm() {
       const dedupMap = new Map(); processed.forEach(r => dedupMap.set(r.order_id, r))
       const deduped = [...dedupMap.values()]
       const CONCURRENCY = 20; let done = 0; let matchedCount = 0
+      const unmatchedOrders = [] // เก็บ order ที่หาไม่เจอ
       for (let i = 0; i < deduped.length; i += CONCURRENCY) {
         const batch = deduped.slice(i, i + CONCURRENCY)
         await Promise.all(batch.map(async (r) => {
@@ -886,11 +887,43 @@ async function handleConfirm() {
             matchedCount++
             const { error: srError } = await DB.from('sku_revenue').update({ settled: 'True', settled_date: r.settled_date }).eq('order_id', r.order_id)
             if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
+          } else {
+            unmatchedOrders.push({ order_id: r.order_id, settled_date: r.settled_date })
           }
         }))
         done += batch.length; pf.style.width = Math.round(done / deduped.length * 100) + '%'
       }
       const notMatched = deduped.length - matchedCount
+
+      // จัดกลุ่ม unmatched ตามวันที่ settled
+      const unmatchedByDate = {}
+      unmatchedOrders.forEach(r => {
+        const d = r.settled_date || 'ไม่ระบุ'
+        if (!unmatchedByDate[d]) unmatchedByDate[d] = []
+        unmatchedByDate[d].push(r.order_id)
+      })
+      const unmatchedTableHTML = notMatched > 0 ? `
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="font-size:0.78rem;font-weight:600;color:#fb923c;margin-bottom:10px;">⚠️ ออเดอร์ที่หาไม่เจอใน DB (${notMatched} รายการ) — น่าจะเป็นออเดอร์ที่ยังไม่ได้อัพโหลดเข้าระบบ</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">ตรวจสอบว่าได้อัพไฟล์คำสั่งซื้อของวันดังกล่าวเข้าระบบแล้วหรือยัง แล้วค่อย map settlement ใหม่อีกครั้ง</div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+            <thead><tr style="background:rgba(251,146,60,0.1);">
+              <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">วันที่รับเงิน</th>
+              <th style="padding:6px 10px;text-align:center;color:var(--muted);border-bottom:1px solid var(--border);">จำนวน</th>
+              <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">ตัวอย่าง Order ID</th>
+            </tr></thead>
+            <tbody>
+              ${Object.entries(unmatchedByDate).sort((a,b)=>a[0].localeCompare(b[0])).map(([date, ids]) => `
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:6px 10px;color:var(--text);font-weight:600;">${date}</td>
+                  <td style="padding:6px 10px;text-align:center;color:#fb923c;font-weight:600;">${ids.length}</td>
+                  <td style="padding:6px 10px;color:var(--muted);font-family:monospace;font-size:0.7rem;">${ids.slice(0,3).join(', ')}${ids.length>3?' ...':''}
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : ''
+
       logUpload({ upload_type:'settlement', channel, sub_channel:null, file_name:(fileInput.files.length>1?`${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}`:(fileInput.files[0]?.name||null)), total_rows:deduped.length, success_count:matchedCount, not_matched_count:notMatched, total_revenue:null, status:'success' })
       pt.style.display = 'none'; al.style.display = 'none'
       document.getElementById('btnRow3').innerHTML = `
@@ -902,6 +935,7 @@ async function handleConfirm() {
             <div class="success-stat"><div class="success-stat-num">${matchedCount.toLocaleString()}</div><div class="success-stat-label">Match สำเร็จ</div></div>
             <div class="success-stat"><div class="success-stat-num" style="color:${notMatched>0?'#fb923c':'#818cf8'}">${notMatched.toLocaleString()}</div><div class="success-stat-label">ไม่เจอออเดอร์</div></div>
           </div>
+          ${unmatchedTableHTML}
           <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
           <div class="success-actions">
             <button class="action-card" onclick="location.reload()"><span class="action-card-icon">💰</span><div><div class="action-card-title">อัพรับเงินต่อ</div><div class="action-card-sub">platform ถัดไป</div></div></button>
