@@ -604,6 +604,7 @@ const SETTLEMENT_FIELDS = {
   TikTok: [
     { key:'settle_order_id', label:'Related order ID', required:true, keywords:['related order id'] },
     { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['order settled time'] },
+    { key:'order_created_date', label:'วันที่สร้างออเดอร์', required:false, keywords:['เวลาที่สร้างคำสั่งซื้อ','order creation time','created time'] },
   ],
 }
 
@@ -888,7 +889,7 @@ async function handleConfirm() {
             const { error: srError } = await DB.from('sku_revenue').update({ settled: 'True', settled_date: r.settled_date }).eq('order_id', r.order_id)
             if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
           } else {
-            unmatchedOrders.push({ order_id: r.order_id, settled_date: r.settled_date })
+            unmatchedOrders.push({ order_id: r.order_id, settled_date: r.settled_date, order_created_date: r.order_created_date })
           }
         }))
         done += batch.length; pf.style.width = Math.round(done / deduped.length * 100) + '%'
@@ -898,7 +899,7 @@ async function handleConfirm() {
       // จัดกลุ่ม unmatched ตามวันที่ settled
       const unmatchedByDate = {}
       unmatchedOrders.forEach(r => {
-        const d = r.settled_date || 'ไม่ระบุ'
+        const d = r.order_created_date || r.settled_date || 'ไม่ระบุ'
         if (!unmatchedByDate[d]) unmatchedByDate[d] = []
         unmatchedByDate[d].push(r.order_id)
       })
@@ -908,7 +909,7 @@ async function handleConfirm() {
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">ตรวจสอบว่าได้อัพไฟล์คำสั่งซื้อของวันดังกล่าวเข้าระบบแล้วหรือยัง แล้วค่อย map settlement ใหม่อีกครั้ง</div>
           <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
             <thead><tr style="background:rgba(251,146,60,0.1);">
-              <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">วันที่รับเงิน</th>
+              <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">วันที่สร้างออเดอร์</th>
               <th style="padding:6px 10px;text-align:center;color:var(--muted);border-bottom:1px solid var(--border);">จำนวน</th>
               <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">ตัวอย่าง Order ID</th>
             </tr></thead>
@@ -1041,7 +1042,8 @@ function processSettlementRows(rows, mappings) {
     const orderIdRaw = mappings['settle_order_id'] ? row[mappings['settle_order_id']] : null
     const dateRaw = mappings['settle_date'] ? row[mappings['settle_date']] : null
     const orderId = orderIdRaw !== null && orderIdRaw !== undefined ? String(orderIdRaw).trim() : ''
-    return { order_id: orderId, settled_date: parseDate(dateRaw) }
+    const createdRaw = mappings['order_created_date'] ? row[mappings['order_created_date']] : null
+    return { order_id: orderId, settled_date: parseDate(dateRaw), order_created_date: parseDate(createdRaw) }
   }).filter(r => r.order_id)
 }
 
