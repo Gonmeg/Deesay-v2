@@ -265,7 +265,12 @@
       <div class="promo-sync-result" id="backfillResult"></div>
     </div>
   </div>
-  <div class="history-card">
+  <div class="promo-sync-card" style="margin-top:12px;">
+    <div class="history-title">ซิงค์ยอดขาย ตัวแทน / MT</div>
+    <div class="history-sub" id="dealerSyncLast">ยังไม่เคย sync</div>
+    <button class="btn-sync" id="btnSyncDealer" style="margin-top:10px;">🔄 Sync ตัวแทน / MT</button>
+    <div class="promo-sync-result" id="dealerSyncResult" style="margin-top:8px;"></div>
+  </div>
     <div class="history-title">ประวัติการอัพโหลด</div>
     <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
     <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
@@ -430,7 +435,147 @@ async function matchPromotionsForOrders(orders) {
   return { matchedCount, behaviorCount, total: orders.length }
 }
 
-// ===== Backfill (Re-Match with date range) =====
+// ===== Sync ตัวแทน / MT =====
+const DEALER_SHEET_ID = '1aIT3bxzZJioVQ_NCzKKV0qr8ZJ9rDGIrE_1ePDQUX8A'
+const DEALER_SHEET_TAB = 'ยอด'
+
+async function syncDealerOrders() {
+  const btn = document.getElementById('btnSyncDealer')
+  const resultEl = document.getElementById('dealerSyncResult')
+  const lastEl = document.getElementById('dealerSyncLast')
+  btn.disabled = true; btn.textContent = '⏳ กำลัง sync...'; resultEl.textContent = ''
+
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${DEALER_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(DEALER_SHEET_TAB)}`
+    const res = await fetch(url)
+    const text = await res.text()
+    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1))
+
+    const cols = json.table.cols.map(c => (c.label || '').trim())
+    const idx = {
+      date: cols.indexOf('วันที่'),
+      group: cols.indexOf('กลุ่มลูกค้า'),
+      customer: cols.indexOf('ชื่อลูกค้า'),
+      sku: cols.indexOf('รหัสสินค้า'),
+      qty: cols.indexOf('จำนวน'),
+      revenue: cols.indexOf('ราคารวม vat'),
+    }
+
+    for (const [key, val] of Object.entries(idx)) {
+      if (val === -1) throw new Error(`ไม่พบคอลัมน์ "${key}" ในชีต`)
+    }
+
+    // รวบรวมแถวจาก Sheet
+    const rawRows = []
+    json.table.rows.forEach(row => {
+      const cells = row.c
+      const get = i => cells[i] ? (cells[i].v ?? '') : ''
+      const dateRaw = cells[idx.date]
+      let dateStr = ''
+      if (dateRaw && dateRaw.v) {
+        if (typeof dateRaw.v === 'string' && dateRaw.v.startsWith('Date(')) {
+          const p = dateRaw.v.replace('Date(','').replace(')','').split(',')
+          dateStr = `${p[0]}-${String(parseInt(p[1])+1).padStart(2,'0')}-${String(p[2]).padStart(2,'0')}`
+        } else if (dateRaw.f) {
+          dateStr = dateRaw.f
+        }
+      }
+      const group = String(get(idx.group)).trim()
+      const customer = String(get(idx.customer)).trim()
+      const sku = String(get(idx.sku)).trim()
+      const qty = parseInt(get(idx.qty)) || 0
+      const rev = parseFloat(get(idx.revenue)) || 0
+      if (!dateStr || !sku || !qty) return
+      rawRows.push({ dateStr, group, customer, sku, qty, rev })
+    })
+
+    if (!rawRows.length) throw new Error('ไม่พบข้อมูลใน Sheet')
+
+    // Group by วันที่ + กลุ่มลูกค้า + ชื่อลูกค้า → 1 ออเดอร์
+    const orderMap = {}
+    rawRows.forEach(r => {
+      const key = `${r.dateStr}||${r.group}||${r.customer}`
+      if (!orderMap[key]) orderMap[key] = { dateStr: r.dateStr, group: r.group, customer: r.customer, skus: {}, revenue: 0 }
+      orderMap[key].skus[r.sku] = (orderMap[key].skus[r.sku] || 0) + r.qty
+      orderMap[key].revenue += r.rev
+    })
+
+    // สร้าง order records
+    const orders = []
+    const dateCounters = {} // นับ order_id แยกตามวันที่ + ประเภท
+    Object.values(orderMap).forEach(o => {
+      const isMT = o.group.startsWith('MT')
+      const prefix = isMT ? 'MT' : 'DL'
+      const dateKey = `${prefix}-${o.dateStr}`
+      if (!dateCounters[dateKey]) dateCounters[dateKey] = 0
+      dateCounters[dateKey]++
+      const order_id = `${prefix}-${o.dateStr}-${String(dateCounters[dateKey]).padStart(3,'0')}`
+      const sku_promotion = Object.entries(o.skus)
+        .sort(([a],[b]) => a.localeCompare(b))
+        .map(([sku, qty]) => `${sku}x${qty}`).join('+')
+      orders.push({
+        order_id,
+        date: o.dateStr,
+        channel: isMT ? 'Modern Trade' : 'ตัวแทน',
+        sub_channel: isMT ? o.group : null,
+        customer_name: o.customer,
+        sku_promotion,
+        revenue: Math.round(o.revenue * 100) / 100,
+        settled: true,
+        settled_date: o.dateStr,
+        base_promotion: null,
+      })
+    })
+
+    // Upsert เข้า orders (แต่ต้อง clear ของเดิมก่อนเพราะ order_id อาจเปลี่ยนถ้าข้อมูล Sheet เปลี่ยน)
+    // ลบ orders เก่าที่เป็น ตัวแทน/MT ทั้งหมดก่อน แล้ว insert ใหม่
+    const { error: delErr } = await DB.from('orders').delete().in('channel', ['ตัวแทน','Modern Trade'])
+    if (delErr) throw delErr
+
+    const BATCH = 500
+    for (let i = 0; i < orders.length; i += BATCH) {
+      const { error } = await DB.from('orders').insert(orders.slice(i, i + BATCH))
+      if (error) throw error
+    }
+
+    // upsert sku_revenue
+    const skuRows = []
+    orders.forEach(o => {
+      o.sku_promotion.split('+').forEach(part => {
+        const m = part.match(/^(.+?)x(\d+)$/i)
+        if (!m) return
+        skuRows.push({
+          order_id: o.order_id,
+          date: o.date,
+          channel: o.channel,
+          sub_channel: o.sub_channel,
+          parent_sku: m[1],
+          qty: parseInt(m[2]),
+          revenue_share: 0, // ยังไม่มี RSP mapping แยกต่อ order
+          settled: 'True',
+          settled_date: o.date,
+        })
+      })
+    })
+
+    const { error: delSKU } = await DB.from('sku_revenue').delete().in('channel', ['ตัวแทน','Modern Trade'])
+    if (delSKU) throw delSKU
+    for (let i = 0; i < skuRows.length; i += BATCH) {
+      const { error } = await DB.from('sku_revenue').insert(skuRows.slice(i, i + BATCH))
+      if (error) throw error
+    }
+
+    resultEl.textContent = `✅ Sync สำเร็จ ${orders.length} ออเดอร์ (ตัวแทน + MT)`
+    lastEl.textContent = `Sync ล่าสุด: ${new Date().toLocaleString('th-TH')}`
+
+  } catch(err) {
+    console.error(err)
+    resultEl.textContent = `❌ Sync ไม่สำเร็จ: ${err.message}`
+  } finally {
+    btn.disabled = false; btn.textContent = '🔄 Sync ตัวแทน / MT'
+  }
+}
+document.getElementById('btnSyncDealer').addEventListener('click', syncDealerOrders)
 async function backfillMatching() {
   const btn = document.getElementById('btnBackfillMatching')
   const resultEl = document.getElementById('backfillResult')
@@ -673,7 +818,18 @@ function calcRevenue(channel, m, row) {
   }
 }
 
+// ===== Dealer/MT Google Sheet Format Fields =====
+const DEALER_FIELDS = [
+  { key:'date', label:'วันที่', required:true, keywords:['วันที่'] },
+  { key:'group', label:'กลุ่มลูกค้า', required:true, keywords:['กลุ่มลูกค้า'] },
+  { key:'customer_name', label:'ชื่อลูกค้า', required:true, keywords:['ชื่อลูกค้า'] },
+  { key:'sku', label:'รหัสสินค้า', required:true, keywords:['รหัสสินค้า'] },
+  { key:'qty', label:'จำนวน', required:true, keywords:['จำนวน'] },
+  { key:'revenue', label:'ราคารวม vat', required:true, keywords:['ราคารวม vat','ราคารวม','vat'] },
+]
+
 function getFields(channel) {
+  if (channel === 'ตัวแทน/MT') return DEALER_FIELDS
   const revFields = REVENUE_FIELDS[channel] || [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }]
   let base = BASE_FIELDS
   if (channel === 'Lazada') base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
@@ -688,6 +844,7 @@ const CHANNEL_OPTIONS_ORDER = [
   { value:'Facebook', label:'Facebook' }, { value:'TikTok', label:'TikTok' },
   { value:'Shopee', label:'Shopee' }, { value:'Lazada', label:'Lazada' },
   { value:'ตัวแทน', label:'ตัวแทน' }, { value:'Modern Trade', label:'Modern Trade' },
+  { value:'ตัวแทน/MT', label:'🏪 ตัวแทน / MT (Google Sheet format)' },
 ]
 const CHANNEL_OPTIONS_SETTLEMENT = [
   { value:'TikTok', label:'TikTok' }, { value:'Shopee', label:'Shopee' }, { value:'Lazada', label:'Lazada' },
@@ -848,6 +1005,21 @@ async function handleStep2() {
   const miss = FIELDS.filter(f => f.required && !mappings[f.key])
   if (miss.length) return showAlert(al, 'กรุณาเลือกคอลัมน์: ' + miss.map(f => f.label).join(', '))
   al.style.display = 'none'
+
+  if (channel === 'ตัวแทน/MT') {
+    processed = processDealerRows(rawData, mappings)
+    const totalOrders = new Set(processed.map(r => r.order_id)).size
+    const totalRev = processed.reduce((s,r) => s + (r.revenue||0), 0)
+    document.getElementById('summaryGrid').innerHTML = `
+      <div class="stat-box"><div class="stat-num">${rawData.length.toLocaleString()}</div><div class="stat-label">แถวในไฟล์</div></div>
+      <div class="stat-box"><div class="stat-num">${totalOrders.toLocaleString()}</div><div class="stat-label">ออเดอร์ (หลัง group)</div></div>
+      <div class="stat-box"><div class="stat-num">฿${Math.round(totalRev).toLocaleString()}</div><div class="stat-label">Revenue รวม</div></div>`
+    const cols = ['order_id','date','channel','sub_channel','customer_name','sku_promotion','revenue']
+    document.getElementById('previewTbl').innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' +
+      processed.slice(0,5).map(r => '<tr>' + cols.map(c => `<td>${r[c]??''}</td>`).join('') + '</tr>').join('')
+    goStep(3); return
+  }
+
   if (uploadMode === 'settlement') {
     processed = processSettlementRows(rawData, mappings)
     const uniq = new Set(processed.map(r => r.order_id)).size
@@ -877,6 +1049,59 @@ async function handleConfirm() {
   const al = document.getElementById('alert3'), pt = document.getElementById('progressTrack'), pf = document.getElementById('progressFill')
   btn.disabled = true; back.disabled = true; btn.textContent = 'กำลัง Upload...'
   pt.style.display = 'block'; al.style.display = 'none'
+
+  if (channel === 'ตัวแทน/MT') {
+    try {
+      await DB.from('sku_revenue').delete().in('channel', ['ตัวแทน','Modern Trade'])
+      await DB.from('orders').delete().in('channel', ['ตัวแทน','Modern Trade'])
+      const BATCH = 500
+      for (let i = 0; i < processed.length; i += BATCH) {
+        const { error } = await DB.from('orders').insert(processed.slice(i, i+BATCH))
+        if (error) throw error
+        pf.style.width = Math.round((i+BATCH)/processed.length*60) + '%'
+      }
+      const skuRows = []
+      processed.forEach(o => {
+        o.sku_promotion.split('+').forEach(part => {
+          const m = part.match(/^(.+?)x(\d+)$/i); if (!m) return
+          skuRows.push({ order_id:o.order_id, date:o.date, channel:o.channel, sub_channel:o.sub_channel,
+            parent_sku:m[1], qty:parseInt(m[2]), revenue_share:0, settled:'True', settled_date:o.date })
+        })
+      })
+      for (let i = 0; i < skuRows.length; i += BATCH) {
+        const { error } = await DB.from('sku_revenue').insert(skuRows.slice(i, i+BATCH))
+        if (error) throw error
+      }
+      pf.style.width = '100%'
+      const totalRev = processed.reduce((s,r) => s+(r.revenue||0), 0)
+      logUpload({ upload_type:'order', channel:'ตัวแทน/MT', sub_channel:null,
+        file_name: fileInput.files[0]?.name||null, total_rows:rawData.length,
+        success_count:processed.length, not_matched_count:null, total_revenue:totalRev, status:'success' })
+      pt.style.display='none'
+      document.getElementById('btnRow3').innerHTML = `
+        <div style="width:100%">
+          <div class="success-banner"><span class="success-banner-icon">✓</span><div>
+            <div class="success-banner-title">Upload ตัวแทน / MT สำเร็จ</div>
+            <div class="success-banner-sub">${processed.length.toLocaleString()} ออเดอร์ · ฿${Math.round(totalRev).toLocaleString()}</div>
+          </div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที</div>
+          <div class="success-stats">
+            <div class="success-stat"><div class="success-stat-num">${rawData.length.toLocaleString()}</div><div class="success-stat-label">แถวในไฟล์</div></div>
+            <div class="success-stat"><div class="success-stat-num">${processed.length.toLocaleString()}</div><div class="success-stat-label">ออเดอร์</div></div>
+            <div class="success-stat"><div class="success-stat-num">฿${Math.round(totalRev).toLocaleString()}</div><div class="success-stat-label">Revenue รวม</div></div>
+          </div>
+          <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
+          <div class="success-actions">
+            <button class="action-card" onclick="location.reload()"><span class="action-card-icon">📤</span><div><div class="action-card-title">อัพโหลดต่อ</div><div class="action-card-sub">ช่องทางถัดไป</div></div></button>
+            <button class="action-card" onclick="window.open('dashboard.html','_blank')"><span class="action-card-icon">📊</span><div><div class="action-card-title">ดู Dashboard</div><div class="action-card-sub">ยอดขายล่าสุด</div></div></button>
+            <button class="action-card" onclick="location.href='index.html'"><span class="action-card-icon">🏠</span><div><div class="action-card-title">หน้าแรก</div><div class="action-card-sub">กลับเมนูหลัก</div></div></button>
+          </div></div></div>`
+    } catch(e) {
+      al.className='alert alert-error'; al.textContent='เกิดข้อผิดพลาด: '+e.message; al.style.display='block'
+      btn.disabled=false; btn.textContent='✓ ยืนยัน Upload'; back.disabled=false
+    }
+    return
+  }
 
   if (uploadMode === 'settlement') {
     try {
@@ -1123,6 +1348,57 @@ async function calcSkuRevenue(orders) {
   const BATCH = 500
   for (let i = 0; i < skuRows.length; i += BATCH) { const {error} = await DB.from('sku_revenue').insert(skuRows.slice(i,i+BATCH)); if (error) throw error }
   return skuRows.length
+}
+
+function processDealerRows(rows, mappings) {
+  const gs = (row, key) => {
+    const col = mappings[key]; if (!col) return ''
+    const v = row[col]; return v !== null && v !== undefined ? String(v).trim() : ''
+  }
+  const gn = (row, key) => {
+    const col = mappings[key]; if (!col) return 0
+    return parseFloat(String(row[col]||'').replace(/,/g,'')) || 0
+  }
+
+  // Group by วันที่ + กลุ่มลูกค้า + ชื่อลูกค้า
+  const orderMap = {}
+  rows.forEach(row => {
+    const dateStr = parseDate(row[mappings['date']])
+    const group = gs(row, 'group')
+    const customer = gs(row, 'customer_name')
+    const sku = gs(row, 'sku')
+    const qty = parseInt(gn(row, 'qty')) || 0
+    const rev = gn(row, 'revenue')
+    if (!dateStr || !sku || !qty) return
+    const key = `${dateStr}||${group}||${customer}`
+    if (!orderMap[key]) orderMap[key] = { dateStr, group, customer, skus: {}, revenue: 0 }
+    orderMap[key].skus[sku] = (orderMap[key].skus[sku] || 0) + qty
+    orderMap[key].revenue += rev
+  })
+
+  const result = []
+  const dateCounters = {}
+  Object.values(orderMap).forEach((o) => {
+    const isMT = o.group.startsWith('MT')
+    const prefix = isMT ? 'MT' : 'DL'
+    const dateKey = `${prefix}-${o.dateStr}`
+    if (!dateCounters[dateKey]) dateCounters[dateKey] = 0
+    dateCounters[dateKey]++
+    const order_id = `${prefix}-${o.dateStr}-${String(dateCounters[dateKey]).padStart(3,'0')}`
+    const sku_promotion = Object.entries(o.skus)
+      .sort(([a],[b]) => a.localeCompare(b))
+      .map(([sku,qty]) => `${sku}x${qty}`).join('+')
+    result.push({
+      order_id, date: o.dateStr,
+      channel: isMT ? 'Modern Trade' : 'ตัวแทน',
+      sub_channel: isMT ? o.group : null,
+      customer_name: o.customer,
+      sku_promotion,
+      revenue: Math.round(o.revenue * 100) / 100,
+      settled: true, settled_date: o.dateStr, base_promotion: null,
+    })
+  })
+  return result
 }
 
 function mergeSkus(skuList) {
