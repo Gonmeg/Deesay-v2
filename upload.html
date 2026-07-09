@@ -595,11 +595,15 @@ loadUploadHistory()
 const SETTLEMENT_FIELDS = {
   Lazada: [
     { key:'settle_order_id', label:'Order No.', required:true, keywords:['order no.','order no','orderno'] },
-    { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['transaction date'] },
+    { key:'settle_date', label:'Transaction Date', required:true, keywords:['transaction date','วันที่โอนชำระเงินสำเร็จ'] },
+    { key:'order_created_date', label:'วันที่สร้างออเดอร์', required:false, keywords:['order creation time','created time'] },
+    { key:'settle_amount', label:'Amount', required:false, keywords:['amount'] },
   ],
   Shopee: [
     { key:'settle_order_id', label:'หมายเลขคำสั่งซื้อ', required:true, keywords:['หมายเลขคำสั่งซื้อ'] },
     { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['วันที่โอนชำระเงินสำเร็จ'] },
+    { key:'order_created_date', label:'วันที่สั่งซื้อ', required:false, keywords:['วันที่ทำการสั่งซื้อ'] },
+    { key:'settle_amount', label:'จำนวนเงินทั้งหมดที่โอนแล้ว', required:false, keywords:['จำนวนเงินทั้งหมดที่โอนแล้ว'] },
   ],
   TikTok: [
     { key:'settle_order_id', label:'Related order ID', required:true, keywords:['related order id'] },
