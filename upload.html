@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upload | Deesay</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="config.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -329,7 +330,10 @@ if (sessionStorage.getItem('auth') !== 'true') {
   window.location.href = 'login.html?redirect=upload.html'
 }
 
-const DB = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
+const DB = createClient(
+  window.SUPABASE_URL || 'https://plfdizmjdmhyjqraohfv.supabase.co',
+  window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmRpem1qZG1oeWpxcmFvaGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NjAyNTMsImV4cCI6MjA1OTIzNjI1M30.j1IqHbPJPADLCMHl4Z78BSYX-g8cCECGHJmtBIi6hBA'
+)
 
 // ===== Sync Promotions =====
 const PROMO_SHEET_ID = '1pDkvPNFUTZpj9EkOsL7FdaB3g0tSgWQIRkS0qE52_zU'
