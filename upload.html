@@ -265,7 +265,7 @@
             <div class="drop-main" id="costDropMain"><strong>คลิกเพื่อเลือกไฟล์</strong></div>
           </label>
         </div>
-        <button class="btn-primary" onclick="parseCostFile()" style="padding:9px 20px;white-space:nowrap;">🔍 Preview</button>
+        <button class="btn-primary" id="btnParseCost" style="padding:9px 20px;white-space:nowrap;">🔍 Preview</button>
       </div>
       <div id="costAlert" class="alert alert-error" style="display:none;"></div>
       <div id="costPreview" style="display:none;">
@@ -278,7 +278,7 @@
           </table>
         </div>
         <div class="btn-row" style="margin-top:16px;">
-          <button class="btn-primary" id="btnConfirmCost" onclick="uploadCostData()">✓ ยืนยัน Upload ต้นทุน</button>
+          <button class="btn-primary" id="btnConfirmCost">✓ ยืนยัน Upload ต้นทุน</button>
           <button class="btn-back" onclick="document.getElementById('costPreview').style.display='none'">← ยกเลิก</button>
         </div>
       </div>
@@ -625,6 +625,8 @@ document.getElementById('btnSyncDealer').addEventListener('click', syncDealerOrd
 // ===== COST UPLOAD =====
 let _costParsed = []
 
+document.getElementById('btnParseCost').addEventListener('click', parseCostFile)
+document.getElementById('btnConfirmCost').addEventListener('click', uploadCostData)
 document.getElementById('costFileInput').addEventListener('change', function() {
   const f = this.files[0]; if (!f) return
   document.getElementById('costDropMain').innerHTML = `<strong style="color:#10b981">${f.name}</strong>`
