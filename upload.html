@@ -247,38 +247,6 @@
   </div><!-- end stepWizard -->
 
   <!-- COST UPLOAD PANEL -->
-  <div class="promo-sync-card">
-    <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
-    <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
-    <button class="btn-sync" id="btnSyncPromotions" style="margin-top:10px;">🔄 Sync Promotions</button>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">🔁 Re-Match โปรโมชั่น (แก้ไขย้อนหลัง)</div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-        <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">ตั้งแต่</span>
-        <input type="date" id="backfillFrom" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
-        <span style="font-size:0.72rem;color:var(--muted);">ถึง</span>
-        <input type="date" id="backfillTo" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
-      </div>
-      <button class="btn-sync" id="btnBackfillMatching" style="margin-top:0;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔁 Re-Match ออเดอร์ในช่วงนี้</button>
-    </div>
-    <div style="margin-top:8px;">
-      <div class="promo-sync-result" id="promoSyncResult"></div>
-      <div class="promo-sync-result" id="backfillResult"></div>
-    </div>
-  </div>
-  <div class="promo-sync-card" style="margin-top:12px;">
-    <div class="history-title">ซิงค์ยอดขาย ตัวแทน / MT</div>
-    <div class="history-sub" id="dealerSyncLast">ยังไม่เคย sync</div>
-    <button class="btn-sync" id="btnSyncDealer" style="margin-top:10px;">🔄 Sync ตัวแทน / MT</button>
-    <div class="promo-sync-result" id="dealerSyncResult" style="margin-top:8px;"></div>
-  </div>
-    <div class="history-title">ประวัติการอัพโหลด</div>
-    <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
-    <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
-  </div>
-</div>
-
-  <!-- COST UPLOAD PANEL -->
   <div id="costPanel" style="display:none;">
     <div class="card">
       <div class="section-title">อัพโหลดต้นทุนสินค้า</div>
@@ -317,7 +285,43 @@
     </div>
   </div>
 
-<script src="config.js"></script>
+</div><!-- end shell-main -->
+
+<div class="shell-sidebar">
+  <div class="promo-sync-card">
+    <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
+    <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
+    <button class="btn-sync" id="btnSyncPromotions" style="margin-top:10px;">🔄 Sync Promotions</button>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">🔁 Re-Match โปรโมชั่น (แก้ไขย้อนหลัง)</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">ตั้งแต่</span>
+        <input type="date" id="backfillFrom" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
+        <span style="font-size:0.72rem;color:var(--muted);">ถึง</span>
+        <input type="date" id="backfillTo" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
+      </div>
+      <button class="btn-sync" id="btnBackfillMatching" style="margin-top:0;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔁 Re-Match ออเดอร์ในช่วงนี้</button>
+    </div>
+    <div style="margin-top:8px;">
+      <div class="promo-sync-result" id="promoSyncResult"></div>
+      <div class="promo-sync-result" id="backfillResult"></div>
+    </div>
+  </div>
+  <div class="promo-sync-card" style="margin-top:12px;">
+    <div class="history-title">ซิงค์ยอดขาย ตัวแทน / MT</div>
+    <div class="history-sub" id="dealerSyncLast">ยังไม่เคย sync</div>
+    <button class="btn-sync" id="btnSyncDealer" style="margin-top:10px;">🔄 Sync ตัวแทน / MT</button>
+    <div class="promo-sync-result" id="dealerSyncResult" style="margin-top:8px;"></div>
+  </div>
+  <div class="history-card">
+    <div class="history-title">ประวัติการอัพโหลด</div>
+    <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
+    <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
+  </div>
+</div>
+
+</div><!-- end shell -->
+</main>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
