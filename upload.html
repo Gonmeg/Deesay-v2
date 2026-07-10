@@ -170,6 +170,7 @@
   <div class="mode-toggle">
     <button class="mode-btn active" id="modeBtnOrder">📦 อัพคำสั่งซื้อ</button>
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
+    <button class="mode-btn" id="modeBtnCost">📊 อัพต้นทุนสินค้า</button>
   </div>
   <div class="step-track">
     <div class="step-item"><div class="step-num active" id="snum1">1</div><div class="step-label active" id="slabel1">เลือกไฟล์</div></div>
@@ -276,8 +277,44 @@
   </div>
 </div>
 
-</div>
-</main>
+  <!-- COST UPLOAD PANEL -->
+  <div id="costPanel" style="display:none;">
+    <div class="card">
+      <div class="section-title">อัพโหลดต้นทุนสินค้า</div>
+      <p class="map-info">รองรับทั้ง format เก่า (มค-เมย) และ format ใหม่ (พค เป็นต้นไป) — ระบบ auto-detect ให้อัตโนมัติ</p>
+      <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;">
+        <div>
+          <label class="field-label">เดือน <span class="req">*</span></label>
+          <input type="month" id="costMonth" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:8px 12px;font-size:0.85rem;font-family:inherit;outline:none;">
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <label class="field-label">ไฟล์ต้นทุน <span class="req">*</span></label>
+          <input type="file" id="costFileInput" accept=".xlsx,.xls" style="display:none;">
+          <label for="costFileInput" class="drop-label" id="costDropLabel" style="min-height:60px;padding:12px;">
+            <span class="drop-icon" style="font-size:1.2rem;">📂</span>
+            <div class="drop-main" id="costDropMain"><strong>คลิกเพื่อเลือกไฟล์</strong></div>
+          </label>
+        </div>
+        <button class="btn-primary" onclick="parseCostFile()" style="padding:9px 20px;white-space:nowrap;">🔍 Preview</button>
+      </div>
+      <div id="costAlert" class="alert alert-error" style="display:none;"></div>
+      <div id="costPreview" style="display:none;">
+        <div class="section-title" style="margin-bottom:12px;">Preview ข้อมูลที่จะนำเข้า</div>
+        <div id="costSummary" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;"></div>
+        <div style="overflow-x:auto;max-height:400px;overflow-y:auto;">
+          <table id="tblCostPreview" style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+            <thead id="costPreviewHead"></thead>
+            <tbody id="costPreviewBody"></tbody>
+          </table>
+        </div>
+        <div class="btn-row" style="margin-top:16px;">
+          <button class="btn-primary" id="btnConfirmCost" onclick="uploadCostData()">✓ ยืนยัน Upload ต้นทุน</button>
+          <button class="btn-back" onclick="document.getElementById('costPreview').style.display='none'">← ยกเลิก</button>
+        </div>
+      </div>
+      <div id="costResult" style="margin-top:16px;"></div>
+    </div>
+  </div>
 
 <script src="config.js"></script>
 <script type="module">
@@ -575,6 +612,150 @@ async function syncDealerOrders() {
   }
 }
 document.getElementById('btnSyncDealer').addEventListener('click', syncDealerOrders)
+
+// ===== COST UPLOAD =====
+let _costParsed = []
+
+document.getElementById('costFileInput').addEventListener('change', function() {
+  const f = this.files[0]; if (!f) return
+  document.getElementById('costDropMain').innerHTML = `<strong style="color:#10b981">${f.name}</strong>`
+})
+
+async function parseCostFile() {
+  const monthVal = document.getElementById('costMonth').value
+  const file = document.getElementById('costFileInput').files[0]
+  const alertEl = document.getElementById('costAlert')
+  alertEl.style.display = 'none'
+  if (!monthVal) { alertEl.textContent = 'กรุณาเลือกเดือน'; alertEl.style.display = 'block'; return }
+  if (!file) { alertEl.textContent = 'กรุณาเลือกไฟล์'; alertEl.style.display = 'block'; return }
+  const monthDate = monthVal + '-01'
+  try {
+    // อ่านเป็น raw rows ก่อน
+    const raw = await new Promise((res, rej) => {
+      const reader = new FileReader()
+      reader.onload = e => {
+        try {
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type:'array', cellDates:true })
+          const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'', header:1 })
+          res(json)
+        } catch(err) { rej(err) }
+      }
+      reader.onerror = () => rej(new Error('อ่านไฟล์ไม่ได้'))
+      reader.readAsArrayBuffer(file)
+    })
+    if (!raw.length) throw new Error('ไฟล์ว่างเปล่า')
+
+    _costParsed = []
+    const row0 = raw[0].map(v => String(v||'').trim())
+
+    // Auto-detect: format เก่า = row0 มีคอลัมน์ "Parent sku" และ "ชื่อบัญชี"
+    const isOldFormat = row0.some(h => h.toLowerCase().replace(/\s/g,'') === 'parentsku') && row0.some(h => h.includes('ชื่อบัญชี'))
+
+    if (isOldFormat) {
+      const skuIdx = row0.findIndex(h => h.toLowerCase().replace(/\s/g,'') === 'parentsku')
+      const catIdx = row0.findIndex(h => h.includes('ชื่อบัญชี'))
+      const [, selMonth] = monthVal.split('-').map(Number)
+      const MONTH_TH = ['','มค','กพ','มีค','เมย','พค','มิย','กค','สค','กย','ตค','พย','ธค']
+      const targetTh = MONTH_TH[selMonth]
+      const mColIdx = row0.findIndex(h => h.startsWith(targetTh))
+      if (mColIdx === -1) throw new Error(`ไม่พบคอลัมน์เดือน "${targetTh}" ในไฟล์`)
+      raw.slice(1).forEach(row => {
+        const sku = String(row[skuIdx]||'').trim().toUpperCase()
+        const cat = String(row[catIdx]||'').trim()
+        const amt = parseFloat(String(row[mColIdx]||'0').replace(/,/g,'')) || 0
+        if (!sku || !cat || amt === 0) return
+        _costParsed.push({ month: monthDate, parent_sku: sku, cost_category: cat, amount: Math.abs(amt) })
+      })
+    } else {
+      // Format ใหม่: row0=[null,null,Parent SKU,SKU1,...], row1=[เลขบัญชี,ชื่อบัญชี,รวม,ชื่อ1,...]
+      // data เริ่ม row2
+      const skuRow = raw[0] // Parent SKU อยู่ตั้งแต่ index 3 เป็นต้นไป
+      const skuCols = [] // { colIdx, sku }
+      skuRow.forEach((v, i) => {
+        if (i < 3) return
+        const sku = String(v||'').trim().toUpperCase()
+        if (sku && sku !== 'PARENT SKU') skuCols.push({ colIdx:i, sku })
+      })
+      raw.slice(2).forEach(row => {
+        const cat = String(row[1]||'').trim()
+        if (!cat || cat === 'ชื่อบัญชี') return
+        skuCols.forEach(({ colIdx, sku }) => {
+          const rawVal = String(row[colIdx]||'').replace(/,/g,'')
+          if (rawVal.startsWith('=')) return
+          const amt = parseFloat(rawVal) || 0
+          if (amt === 0) return
+          _costParsed.push({ month: monthDate, parent_sku: sku, cost_category: cat, amount: Math.abs(amt) })
+        })
+      })
+    }
+
+    if (!_costParsed.length) throw new Error('ไม่พบข้อมูล หรือทุกช่องเป็น 0')
+
+    const totalAmt = _costParsed.reduce((s,r)=>s+r.amount, 0)
+    const skuSet = new Set(_costParsed.map(r=>r.parent_sku))
+    const catSet = new Set(_costParsed.map(r=>r.cost_category))
+    document.getElementById('costSummary').innerHTML = `
+      <div class="stat-box"><div class="stat-num">${_costParsed.length.toLocaleString()}</div><div class="stat-label">แถวข้อมูล</div></div>
+      <div class="stat-box"><div class="stat-num">${skuSet.size}</div><div class="stat-label">SKU</div></div>
+      <div class="stat-box"><div class="stat-num">${catSet.size}</div><div class="stat-label">หัวข้อต้นทุน</div></div>
+      <div class="stat-box"><div class="stat-num">฿${Math.round(totalAmt).toLocaleString()}</div><div class="stat-label">ต้นทุนรวม</div></div>`
+
+    // Preview table
+    const bycat = {}
+    _costParsed.forEach(r => { if(!bycat[r.cost_category])bycat[r.cost_category]={}; bycat[r.cost_category][r.parent_sku]=(bycat[r.cost_category][r.parent_sku]||0)+r.amount })
+    const skus = [...skuSet].sort()
+    document.getElementById('costPreviewHead').innerHTML = `<tr>
+      <th style="padding:7px 10px;text-align:left;background:var(--surface2);color:var(--muted);font-size:0.72rem;white-space:nowrap;">หัวข้อค่าใช้จ่าย</th>
+      ${skus.map(s=>`<th style="padding:7px 10px;text-align:right;background:var(--surface2);color:var(--muted);font-size:0.72rem;">${s}</th>`).join('')}
+      <th style="padding:7px 10px;text-align:right;background:var(--surface2);color:var(--accent);font-size:0.72rem;">รวม</th></tr>`
+    document.getElementById('costPreviewBody').innerHTML = Object.entries(bycat).map(([cat, skuAmts]) => {
+      const tot = Object.values(skuAmts).reduce((s,v)=>s+v,0)
+      return `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:6px 10px;color:var(--text);font-size:0.72rem;white-space:nowrap;">${cat}</td>
+        ${skus.map(s=>`<td style="padding:6px 10px;text-align:right;color:var(--text2);font-size:0.72rem;">${skuAmts[s]?'฿'+Math.round(skuAmts[s]).toLocaleString():'-'}</td>`).join('')}
+        <td style="padding:6px 10px;text-align:right;color:var(--accent);font-size:0.72rem;font-weight:600;">฿${Math.round(tot).toLocaleString()}</td>
+      </tr>`
+    }).join('')
+    document.getElementById('costPreview').style.display = 'block'
+  } catch(e) {
+    alertEl.textContent = 'อ่านไฟล์ไม่ได้: ' + e.message; alertEl.style.display = 'block'
+  }
+}
+
+async function uploadCostData() {
+  const btn = document.getElementById('btnConfirmCost')
+  const resultEl = document.getElementById('costResult')
+  btn.disabled = true; btn.textContent = '⏳ กำลัง Upload...'
+  try {
+    const monthDate = document.getElementById('costMonth').value + '-01'
+    await DB.from('product_costs').delete().eq('month', monthDate)
+    const BATCH = 500
+    for (let i = 0; i < _costParsed.length; i += BATCH) {
+      const { error } = await DB.from('product_costs').insert(_costParsed.slice(i, i+BATCH))
+      if (error) throw error
+    }
+    const totalAmt = _costParsed.reduce((s,r)=>s+r.amount, 0)
+    document.getElementById('costPreview').style.display = 'none'
+    resultEl.innerHTML = `
+      <div class="success-banner"><span class="success-banner-icon">✓</span><div>
+        <div class="success-banner-title">Upload ต้นทุนสำเร็จ</div>
+        <div class="success-banner-sub">${_costParsed.length} แถว · ฿${Math.round(totalAmt).toLocaleString()} · เดือน ${monthDate.substring(0,7)}</div>
+      </div></div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn-primary" onclick="location.reload()">อัพโหลดต่อ</button>
+        <button class="btn-back" onclick="window.open('dashboard.html','_blank')">ดู Dashboard</button>
+      </div>`
+    logUpload({ upload_type:'cost', channel:null, sub_channel:null,
+      file_name: document.getElementById('costFileInput').files[0]?.name||null,
+      total_rows:_costParsed.length, success_count:_costParsed.length,
+      not_matched_count:null, total_revenue:totalAmt, status:'success' })
+  } catch(e) {
+    resultEl.innerHTML = `<div class="alert alert-error">❌ Upload ไม่สำเร็จ: ${e.message}</div>`
+  } finally {
+    btn.disabled = false; btn.textContent = '✓ ยืนยัน Upload ต้นทุน'
+  }
+}
+
 async function backfillMatching() {
   const btn = document.getElementById('btnBackfillMatching')
   const resultEl = document.getElementById('backfillResult')
@@ -852,6 +1033,29 @@ function setUploadMode(mode) {
   uploadMode = mode
   document.getElementById('modeBtnOrder').classList.toggle('active', mode === 'order')
   document.getElementById('modeBtnSettlement').classList.toggle('active', mode === 'settlement')
+  document.getElementById('modeBtnCost').classList.toggle('active', mode === 'cost')
+
+  // show/hide panels
+  const stepTrack = document.querySelector('.step-track')
+  const panel1 = document.getElementById('panel1')
+  const panel2 = document.getElementById('panel2')
+  const panel3 = document.getElementById('panel3')
+  const costPanel = document.getElementById('costPanel')
+
+  if (mode === 'cost') {
+    if (stepTrack) stepTrack.style.display = 'none'
+    if (panel1) panel1.style.display = 'none'
+    if (panel2) panel2.style.display = 'none'
+    if (panel3) panel3.style.display = 'none'
+    if (costPanel) costPanel.style.display = 'block'
+    document.getElementById('pageTitle').textContent = 'อัพต้นทุนสินค้า'
+    document.getElementById('pageDesc').textContent = 'นำเข้าข้อมูลต้นทุนแต่ละหัวข้อแยกตาม SKU รายเดือน'
+    return
+  }
+
+  if (stepTrack) stepTrack.style.display = 'flex'
+  if (costPanel) costPanel.style.display = 'none'
+
   document.getElementById('pageTitle').textContent = mode === 'order' ? 'Upload ข้อมูลยอดขาย' : 'Upload รายรับเงิน (Settlement)'
   document.getElementById('pageDesc').textContent = mode === 'order'
     ? 'นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ'
@@ -882,6 +1086,7 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
 
 document.getElementById('modeBtnOrder').addEventListener('click', () => setUploadMode('order'))
 document.getElementById('modeBtnSettlement').addEventListener('click', () => setUploadMode('settlement'))
+document.getElementById('modeBtnCost').addEventListener('click', () => setUploadMode('cost'))
 document.getElementById('channelSelect').addEventListener('change', e => handleChannelChange(e.target.value))
 document.getElementById('btnStep1').addEventListener('click', handleStep1)
 document.getElementById('btnStep2').addEventListener('click', handleStep2)
