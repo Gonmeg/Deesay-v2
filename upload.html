@@ -172,6 +172,7 @@
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
     <button class="mode-btn" id="modeBtnCost">📊 อัพต้นทุนสินค้า</button>
   </div>
+  <div id="stepWizard">
   <div class="step-track">
     <div class="step-item"><div class="step-num active" id="snum1">1</div><div class="step-label active" id="slabel1">เลือกไฟล์</div></div>
     <div class="step-line" id="sline1"></div>
@@ -242,10 +243,10 @@
         <button class="btn-primary" id="btnConfirm">✓ ยืนยัน Upload</button>
       </div>
     </div>
-  </div>
-</div>
+  </div><!-- end panel3 -->
+  </div><!-- end stepWizard -->
 
-<div class="shell-sidebar">
+  <!-- COST UPLOAD PANEL -->
   <div class="promo-sync-card">
     <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
     <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
@@ -1035,25 +1036,18 @@ function setUploadMode(mode) {
   document.getElementById('modeBtnSettlement').classList.toggle('active', mode === 'settlement')
   document.getElementById('modeBtnCost').classList.toggle('active', mode === 'cost')
 
-  // show/hide panels
-  const stepTrack = document.querySelector('.step-track')
-  const panel1 = document.getElementById('panel1')
-  const panel2 = document.getElementById('panel2')
-  const panel3 = document.getElementById('panel3')
+  const stepWizard = document.getElementById('stepWizard')
   const costPanel = document.getElementById('costPanel')
 
   if (mode === 'cost') {
-    if (stepTrack) stepTrack.style.display = 'none'
-    if (panel1) panel1.style.display = 'none'
-    if (panel2) panel2.style.display = 'none'
-    if (panel3) panel3.style.display = 'none'
+    if (stepWizard) stepWizard.style.display = 'none'
     if (costPanel) costPanel.style.display = 'block'
     document.getElementById('pageTitle').textContent = 'อัพต้นทุนสินค้า'
     document.getElementById('pageDesc').textContent = 'นำเข้าข้อมูลต้นทุนแต่ละหัวข้อแยกตาม SKU รายเดือน'
     return
   }
 
-  if (stepTrack) stepTrack.style.display = 'flex'
+  if (stepWizard) stepWizard.style.display = 'block'
   if (costPanel) costPanel.style.display = 'none'
 
   document.getElementById('pageTitle').textContent = mode === 'order' ? 'Upload ข้อมูลยอดขาย' : 'Upload รายรับเงิน (Settlement)'
