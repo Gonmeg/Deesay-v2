@@ -269,15 +269,10 @@
 
     <!-- PLACEHOLDER PAGES (รอเคลียร์ + สร้างทีหลัง) -->
     <div class="page" id="page-channel">
-      <div class="grid-4" id="ch-kpis">
-        <div class="card" id="ch-kpi-0"><div class="card-title">—</div><div class="kpi-value">—</div></div>
-        <div class="card" id="ch-kpi-1"><div class="card-title">—</div><div class="kpi-value">—</div></div>
-        <div class="card" id="ch-kpi-2"><div class="card-title">—</div><div class="kpi-value">—</div></div>
-        <div class="card" id="ch-kpi-3"><div class="card-title">—</div><div class="kpi-value">—</div></div>
-      </div>
+      <div id="ch-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2">
-        <div class="card"><div class="card-title">ยอดขายแยก Channel</div><div class="chart-wrap"><canvas id="chartChannelRevenue"></canvas></div></div>
-        <div class="card"><div class="card-title">ออเดอร์แยก Channel</div><div class="chart-wrap"><canvas id="chartChannelOrders"></canvas></div></div>
+        <div class="card"><div class="card-title">ยอดขายรายเดือนแยก Channel</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartChannelRevenue"></canvas></div></div>
+        <div class="card"><div class="card-title">สัดส่วนยอดขายแยก Channel</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartChannelPie"></canvas></div></div>
       </div>
       <div class="card">
         <div class="section-header">
@@ -1205,14 +1200,7 @@ function renderOverview() {
 // ===== CHANNEL =====
 function renderChannel() {
   const d = filteredData;
-  const bySubCh = {};
-  d.forEach(r => {
-    const k = r.sub_channel || 'ไม่ระบุ';
-    const ch = r.channel || 'ไม่ระบุ';
-    if (!bySubCh[k]) bySubCh[k] = { rev: 0, ord: 0, ch };
-    bySubCh[k].rev += parseFloat(r.revenue) || 0;
-    bySubCh[k].ord++;
-  });
+
   const byMainCh = {};
   d.forEach(r => {
     const k = r.channel || 'ไม่ระบุ';
@@ -1221,23 +1209,55 @@ function renderChannel() {
     byMainCh[k].ord++;
   });
   const channels = Object.entries(byMainCh).sort((a,b) => b[1].rev - a[1].rev);
+  const totalRev = channels.reduce((s,[,v]) => s+v.rev, 0);
 
-  for (let i = 0; i < 4; i++) {
-    const card = document.getElementById('ch-kpi-' + i);
-    if (!card) continue;
-    if (channels[i]) {
-      card.querySelector('.card-title').textContent = channels[i][0];
-      card.querySelector('.kpi-value').textContent = fmtB(channels[i][1].rev);
-    } else {
-      card.querySelector('.card-title').textContent = '—';
-      card.querySelector('.kpi-value').textContent = '—';
-    }
+  // Dynamic KPI cards — แสดงทุก channel
+  document.getElementById('ch-kpis').innerHTML = channels.map(([ch, v], i) => `
+    <div class="card" style="flex:1;min-width:140px;border-top:3px solid ${COLORS[i%COLORS.length]};">
+      <div class="card-title" style="color:${COLORS[i%COLORS.length]};">${ch}</div>
+      <div class="kpi-value" style="font-size:20px;">฿${fmtB(v.rev)}</div>
+      <div class="kpi-sub">${fmt(v.ord)} ออเดอร์ · ${((v.rev/totalRev)*100).toFixed(1)}%</div>
+    </div>`).join('');
+
+  // Bar chart รายเดือนแยก channel
+  const monthly = {};
+  d.forEach(r => {
+    const m = r.date ? r.date.substring(0,7) : 'unknown';
+    const ch = r.channel || 'ไม่ระบุ';
+    if (!monthly[m]) monthly[m] = {};
+    if (!monthly[m][ch]) monthly[m][ch] = 0;
+    monthly[m][ch] += parseFloat(r.revenue) || 0;
+  });
+  const months = Object.keys(monthly).sort();
+  const monthLabels = months.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  const barDatasets = channels.map(([ch], i) => ({
+    label: ch,
+    data: months.map(m => monthly[m]?.[ch] || 0),
+    backgroundColor: COLORS[i%COLORS.length] + 'cc',
+    borderColor: COLORS[i%COLORS.length],
+    borderWidth: 1, borderRadius: 3,
+  }));
+  makeChart('chartChannelRevenue', 'bar', monthLabels, barDatasets);
+  if (charts['chartChannelRevenue']) {
+    charts['chartChannelRevenue'].options.plugins.legend = { labels: { color: chartLegendColor(), font: { family:'Sarabun', size:11 }, boxWidth:12 } };
+    charts['chartChannelRevenue'].options.scales.x.stacked = false;
+    charts['chartChannelRevenue'].update();
   }
 
+  // Pie chart สัดส่วน
   const chLabels = channels.map(([k]) => k);
-  makeChart('chartChannelRevenue', 'doughnut', chLabels, [{ data: channels.map(([,v]) => v.rev), backgroundColor: COLORS, borderWidth: 0 }]);
-  makeChart('chartChannelOrders', 'doughnut', chLabels, [{ data: channels.map(([,v]) => v.ord), backgroundColor: COLORS, borderWidth: 0 }]);
+  makeChart('chartChannelPie', 'doughnut', chLabels, [{ data: channels.map(([,v]) => v.rev), backgroundColor: COLORS, borderWidth: 0 }]);
 
+  // Sub-channel table — ถ้า channel = ตัวแทน และ sub_channel = null → แสดงเป็น "ตัวแทน"
+  const bySubCh = {};
+  d.forEach(r => {
+    const ch = r.channel || 'ไม่ระบุ';
+    const rawSub = r.sub_channel;
+    const k = rawSub || (ch === 'ตัวแทน' ? 'ตัวแทน' : 'ไม่ระบุ');
+    if (!bySubCh[k]) bySubCh[k] = { rev: 0, ord: 0, ch };
+    bySubCh[k].rev += parseFloat(r.revenue) || 0;
+    bySubCh[k].ord++;
+  });
   const sorted = Object.entries(bySubCh).sort((a,b) => b[1].rev - a[1].rev);
   document.getElementById('tbodySubChannel').innerHTML = sorted.length ? sorted.map(([k, v], i) => `
     <tr>
