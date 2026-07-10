@@ -159,7 +159,6 @@
     <div class="nav-item" onclick="showPage('cost')"><span class="nav-icon">📊</span> ต้นทุนสินค้า</div>
     <div class="nav-item" onclick="showPage('skuanalysis')"><span class="nav-icon">🔬</span> วิเคราะห์ SKU</div>
     <div class="nav-item" onclick="showPage('adperf')"><span class="nav-icon">📈</span> Ad Performance</div>
-    <div class="nav-item" onclick="showPage('cost')"><span class="nav-icon">💸</span> ต้นทุนสินค้า</div>
   </nav>
   <div class="sidebar-footer">
     <span class="status-dot"></span>Supabase Connected<br>
@@ -522,44 +521,6 @@
         <div class="ai-summary-body" id="ai-summary-skurev">กด "วิเคราะห์ใหม่" เพื่อสรุปข้อมูล</div>
       </div>
     </div>
-    <div class="page" id="page-cost">
-      <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title">ต้นทุนแยกหัวข้อ × SKU</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <span style="font-size:11px;color:var(--text3);">เรียงตาม:</span>
-            <select id="costSortMode" onchange="renderCostTable()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;">
-              <option value="revenue">ยอดขาย (สูง→ต่ำ)</option>
-              <option value="cost">ต้นทุน (สูง→ต่ำ)</option>
-              <option value="pct">% ต้นทุน (สูง→ต่ำ)</option>
-            </select>
-            <button class="btn btn-ghost" onclick="exportTable('tblCost')">⬇ Export CSV</button>
-          </div>
-        </div>
-        <div class="table-wrap" style="overflow-x:auto;">
-          <table id="tblCost">
-            <thead id="costTableHead"></thead>
-            <tbody id="costTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card" id="costDeepDiveCard" style="display:none;margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title" id="costDeepDiveTitle">Deep Dive</div>
-          <button class="btn btn-ghost" onclick="document.getElementById('costDeepDiveCard').style.display='none'">✕ ปิด</button>
-        </div>
-        <div class="grid-2" style="margin-bottom:16px;">
-          <div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCostDeepDive"></canvas></div></div>
-          <div class="table-wrap" style="max-height:320px;overflow-y:auto;">
-            <table id="tblCostDeepDive">
-              <thead><tr><th>เดือน</th><th>ต้นทุน</th><th>ยอดขาย</th><th>% ต้นทุน</th><th>ชิ้น</th><th>ต้นทุน/ชิ้น</th></tr></thead>
-              <tbody id="costDeepDiveBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <div class="page" id="page-skuanalysis">
       <div class="card" style="margin-bottom:20px;">
@@ -737,41 +698,35 @@
     </div>
 
     <div class="page" id="page-cost">
-      <div class="card" style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);">ช่วงเดือน:</div>
-          <div class="filter-group" style="border:none;padding:0;gap:6px;">
-            <span class="filter-label">ตั้งแต่</span>
-            <select id="costFromMonth" onchange="renderCostPage()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:12px;"></select>
-            <span class="filter-label">ถึง</span>
-            <select id="costToMonth" onchange="renderCostPage()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:12px;"></select>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="renderCostPage()">🔍 โหลด</button>
-        </div>
-      </div>
-
       <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
-
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">ต้นทุนแยกหัวข้อ × SKU</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblCostMatrix')">⬇ Export CSV</button>
+          <div class="section-title">ต้นทุนรายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
+          <button class="btn btn-ghost" onclick="exportTable('tblCostOverview')">⬇ Export CSV</button>
         </div>
-        <div class="table-wrap" style="overflow-x:auto;">
-          <table id="tblCostMatrix">
-            <thead id="costMatrixHead"></thead>
-            <tbody id="costMatrixBody"></tbody>
+        <div style="overflow-x:auto;">
+          <table id="tblCostOverview">
+            <thead id="costOverviewHead"></thead>
+            <tbody id="costOverviewBody"></tbody>
           </table>
         </div>
       </div>
-
-      <div class="card">
+      <div class="card" id="costDeepCard" style="display:none;">
         <div class="section-header">
-          <div class="section-title" id="costDeepTitle">Deep Dive — คลิกที่ชื่อ SKU ด้านบนเพื่อดูรายละเอียด</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblCostDeep')" id="costDeepExport" style="display:none;">⬇ Export</button>
+          <div class="section-title" id="costDeepTitle">รายละเอียดต้นทุน</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" onclick="exportTable('tblCostDeep')">⬇ Export</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('costDeepCard').style.display='none'">✕ ปิด</button>
+          </div>
         </div>
-        <div id="costDeepContent">
-          <div class="empty" style="padding:40px;">คลิกที่ชื่อ SKU ในตารางด้านบนเพื่อดู breakdown รายเดือน</div>
+        <div class="grid-2" style="margin-bottom:16px;">
+          <div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCostDeep"></canvas></div></div>
+          <div style="overflow-x:auto;max-height:320px;overflow-y:auto;">
+            <table id="tblCostDeep">
+              <thead id="costDeepHead"></thead>
+              <tbody id="costDeepBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -2862,7 +2817,7 @@ async function renderCostPage() {
       return (!from || m >= from) && (!to || m <= to);
     });
 
-    const skuMV = (window._skuParentMonthlyCache || []).filter(r => {
+    const skuMV = (window._skuParentMonthlyCache||[]).filter(r => {
       const m = String(r.month).substring(0,7);
       return (!from || m >= from) && (!to || m <= to);
     });
@@ -2872,94 +2827,106 @@ async function renderCostPage() {
       qtyBySKU[r.parent_sku] = (qtyBySKU[r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
     });
 
-    const costBySKU = {}, costByCat = {};
+    const costBySKU = {}, costByCatSku = {}, costByMonthSku = {};
     filtered.forEach(r => {
-      costBySKU[r.parent_sku] = (costBySKU[r.parent_sku]||0) + (parseFloat(r.amount)||0);
-      if (!costByCat[r.cost_category]) costByCat[r.cost_category] = {};
-      costByCat[r.cost_category][r.parent_sku] = (costByCat[r.cost_category][r.parent_sku]||0) + (parseFloat(r.amount)||0);
+      const m = String(r.month).substring(0,7), amt = parseFloat(r.amount)||0;
+      costBySKU[r.parent_sku] = (costBySKU[r.parent_sku]||0) + amt;
+      if (!costByCatSku[r.parent_sku]) costByCatSku[r.parent_sku] = {};
+      costByCatSku[r.parent_sku][r.cost_category] = (costByCatSku[r.parent_sku][r.cost_category]||0) + amt;
+      if (!costByMonthSku[r.parent_sku]) costByMonthSku[r.parent_sku] = {};
+      costByMonthSku[r.parent_sku][m] = (costByMonthSku[r.parent_sku][m]||0) + amt;
     });
 
     const totalCost = Object.values(costBySKU).reduce((a,b)=>a+b,0);
     const totalRev = Object.values(revBySKU).reduce((a,b)=>a+b,0);
     const totalQty = Object.values(qtyBySKU).reduce((a,b)=>a+b,0);
-    const costPct = totalRev > 0 ? (totalCost/totalRev*100).toFixed(1) : '—';
-    const costPerUnit = totalQty > 0 ? Math.round(totalCost/totalQty) : 0;
+    const costPct = totalRev>0?(totalCost/totalRev*100).toFixed(1):'—';
 
     document.getElementById('costKPIs').innerHTML = `
       <div class="card"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(totalCost)}</div><div class="kpi-sub">ทุกหัวข้อรวมกัน</div></div>
-      <div class="card"><div class="card-title">ยอดขาย (Settled)</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub">จากออเดอร์ที่รับเงินแล้ว</div></div>
+      <div class="card"><div class="card-title">ยอดขาย (Settled)</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub">จากออเดอร์รับเงินแล้ว</div></div>
       <div class="card"><div class="card-title">% ต้นทุน / ยอดขาย</div><div class="kpi-value" style="color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};">${costPct}%</div><div class="kpi-sub">ต้นทุน ÷ ยอดขาย</div></div>
-      <div class="card"><div class="card-title">ต้นทุน / ชิ้น</div><div class="kpi-value">฿${fmt(costPerUnit)}</div><div class="kpi-sub">เฉลี่ยทุก SKU</div></div>`;
+      <div class="card"><div class="card-title">ต้นทุน / ชิ้น</div><div class="kpi-value">฿${totalQty>0?fmt(Math.round(totalCost/totalQty)):'—'}</div><div class="kpi-sub">เฉลี่ยทุก SKU</div></div>`;
 
-    window._costByCat = costByCat;
-    window._costBySKU = costBySKU;
+    const months = [...new Set(filtered.map(r=>String(r.month).substring(0,7)))].sort();
+    const mLabels = months.map(m=>{const[,mo]=m.split('-');return MONTHS_TH[parseInt(mo)-1];});
+    const skus = Object.keys(costBySKU).sort((a,b)=>costBySKU[b]-costBySKU[a]);
+
+    document.getElementById('costOverviewHead').innerHTML = `<tr>
+      <th style="min-width:80px;">SKU</th>
+      <th style="min-width:130px;">ชื่อสินค้า</th>
+      ${months.map((m,i)=>`<th style="text-align:right;min-width:85px;">${mLabels[i]}</th>`).join('')}
+      <th style="text-align:right;min-width:90px;color:var(--red);">รวมต้นทุน</th>
+      <th style="text-align:right;min-width:90px;color:var(--green);">ยอดขาย</th>
+      <th style="text-align:right;min-width:70px;">% ต้นทุน</th>
+    </tr>`;
+
+    document.getElementById('costOverviewBody').innerHTML = skus.map(sku => {
+      const cost = costBySKU[sku]||0, rev = revBySKU[sku]||0;
+      const pct = rev>0?(cost/rev*100).toFixed(1):'—';
+      const col = parseFloat(pct)>50?'var(--red)':parseFloat(pct)>30?'var(--orange)':'var(--green)';
+      return `<tr style="cursor:pointer;" onclick="renderCostDeep('${sku}')">
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;">${sku}</td>
+        <td style="color:var(--text);font-weight:600;">${skuToName(sku)} <span style="font-size:10px;color:var(--text3);">🔍</span></td>
+        ${months.map(m=>{const a=costByMonthSku[sku]?.[m]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(cost))}</td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(rev))}</td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};">${pct}%</td>
+      </tr>`;
+    }).join('') + `<tr style="border-top:2px solid var(--border);">
+      <td colspan="2" style="font-weight:700;">รวมทั้งหมด</td>
+      ${months.map(m=>{const t=skus.reduce((s,sku)=>s+(costByMonthSku[sku]?.[m]||0),0);return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(t))}</td>`;}).join('')}
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(totalCost))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);">฿${fmt(Math.round(totalRev))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};">${costPct}%</td>
+    </tr>`;
+
+    window._costByMonthSku = costByMonthSku;
+    window._costByCatSku = costByCatSku;
     window._costRevBySKU = revBySKU;
     window._costQtyBySKU = qtyBySKU;
-    window._costFiltered = filtered;
-    renderCostTable();
+    window._costMonths = months;
+    window._costMLabels = mLabels;
   } catch(e) {
     console.error(e);
-    document.getElementById('costKPIs').innerHTML = `<div style="color:var(--red);padding:12px;">❌ โหลดข้อมูลต้นทุนไม่ได้: ${e.message}</div>`;
+    document.getElementById('costKPIs').innerHTML = `<div style="color:var(--red);padding:12px;">❌ ${e.message}</div>`;
   }
 }
 
-function renderCostTable() {
-  const costByCat = window._costByCat||{}, costBySKU = window._costBySKU||{};
-  const revBySKU = window._costRevBySKU||{}, qtyBySKU = window._costQtyBySKU||{};
-  const sortMode = document.getElementById('costSortMode')?.value||'revenue';
-  const allSKUs = [...new Set(Object.values(costByCat).flatMap(c=>Object.keys(c)))];
-  const skus = allSKUs.sort((a,b) => {
-    if (sortMode==='revenue') return (revBySKU[b]||0)-(revBySKU[a]||0);
-    if (sortMode==='cost') return (costBySKU[b]||0)-(costBySKU[a]||0);
-    const pa=revBySKU[a]>0?costBySKU[a]/revBySKU[a]:0, pb=revBySKU[b]>0?costBySKU[b]/revBySKU[b]:0;
-    return pb-pa;
+function renderCostDeep(sku) {
+  const catData = window._costByCatSku?.[sku]||{};
+  const months = window._costMonths||[];
+  const mLabels = window._costMLabels||[];
+  const filtered = _costData.filter(r=>r.parent_sku===sku);
+  const costByCatMonth = {};
+  filtered.forEach(r=>{
+    const m=String(r.month).substring(0,7);
+    if(!costByCatMonth[r.cost_category])costByCatMonth[r.cost_category]={};
+    costByCatMonth[r.cost_category][m]=(costByCatMonth[r.cost_category][m]||0)+(parseFloat(r.amount)||0);
   });
-  const cats = Object.keys(costByCat).sort();
-
-  document.getElementById('costTableHead').innerHTML = `<tr>
-    <th style="min-width:160px;">หัวข้อต้นทุน</th>
-    ${skus.map(s=>`<th style="text-align:right;min-width:100px;cursor:pointer;white-space:nowrap;" onclick="renderCostDeepDive('${s}')" title="คลิกเพื่อ Deep Dive">${skuToName(s)}<br><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);">${s} 🔍</span></th>`).join('')}
-    <th style="text-align:right;min-width:90px;color:var(--accent);">รวม</th></tr>`;
-
-  let body = cats.map(cat => {
-    const tot = skus.reduce((s,sku)=>s+(costByCat[cat]?.[sku]||0),0);
-    return `<tr><td style="color:var(--text2);font-size:12px;">${cat}</td>
-      ${skus.map(sku=>{const a=costByCat[cat]?.[sku]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;">฿${fmt(Math.round(tot))}</td></tr>`;
-  }).join('');
-
-  const totCost = Object.values(costBySKU).reduce((a,b)=>a+b,0);
-  const totRev = Object.values(revBySKU).reduce((a,b)=>a+b,0);
-  body += `<tr style="border-top:2px solid var(--border);"><td style="font-weight:700;font-size:12px;">รวมต้นทุน</td>${skus.map(s=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(costBySKU[s]||0))}</td>`).join('')}<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(totCost))}</td></tr>`;
-  body += `<tr><td style="font-weight:700;font-size:12px;">ยอดขาย (Settled)</td>${skus.map(s=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(revBySKU[s]||0))}</td>`).join('')}<td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);">฿${fmt(Math.round(totRev))}</td></tr>`;
-  body += `<tr><td style="font-weight:700;font-size:12px;">% ต้นทุน</td>${skus.map(s=>{const r=revBySKU[s]||0,c=costBySKU[s]||0,p=r>0?(c/r*100).toFixed(1):'—',col=parseFloat(p)>50?'var(--red)':parseFloat(p)>30?'var(--orange)':'var(--green)';return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};">${p}%</td>`;}).join('')}<td></td></tr>`;
-  body += `<tr><td style="font-weight:700;font-size:12px;">จำนวน (ชิ้น)</td>${skus.map(s=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${fmt(qtyBySKU[s]||0)}</td>`).join('')}<td></td></tr>`;
-  body += `<tr><td style="font-weight:700;font-size:12px;">ต้นทุน / ชิ้น</td>${skus.map(s=>{const q=qtyBySKU[s]||0,c=costBySKU[s]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">฿${q>0?fmt(Math.round(c/q)):'—'}</td>`;}).join('')}<td></td></tr>`;
-  document.getElementById('costTableBody').innerHTML = body;
-}
-
-function renderCostDeepDive(sku) {
-  const filtered = window._costFiltered||[];
-  const from = selectedMonthFrom, to = selectedMonthTo||selectedMonthFrom;
-  const skuMV = (window._skuParentMonthlyCache||[]).filter(r=>{const m=String(r.month).substring(0,7);return r.parent_sku===sku&&(!from||m>=from)&&(!to||m<=to);});
-  const costByMonth={}, revByMonth={}, qtyByMonth={};
-  filtered.filter(r=>r.parent_sku===sku).forEach(r=>{const m=String(r.month).substring(0,7);costByMonth[m]=(costByMonth[m]||0)+(parseFloat(r.amount)||0);});
-  skuMV.forEach(r=>{const m=String(r.month).substring(0,7);revByMonth[m]=(revByMonth[m]||0)+(parseFloat(r.total_revenue)||0);qtyByMonth[m]=(qtyByMonth[m]||0)+(parseFloat(r.total_qty)||0);});
-  const months=[...new Set([...Object.keys(costByMonth),...Object.keys(revByMonth)])].sort();
-  const labels=months.map(m=>{const[,mo]=m.split('-');return MONTHS_TH[parseInt(mo)-1];});
-  document.getElementById('costDeepDiveCard').style.display='block';
-  document.getElementById('costDeepDiveTitle').textContent=`Deep Dive — ${skuToName(sku)} (${sku})`;
-  makeChart('chartCostDeepDive','bar',labels,[
-    {label:'ต้นทุน',data:months.map(m=>costByMonth[m]||0),backgroundColor:'rgba(248,113,113,0.65)',borderColor:'#f87171',borderWidth:1,borderRadius:3},
-    {label:'ยอดขาย',data:months.map(m=>revByMonth[m]||0),backgroundColor:'rgba(74,222,128,0.65)',borderColor:'#4ade80',borderWidth:1,borderRadius:3},
-  ]);
-  document.getElementById('costDeepDiveBody').innerHTML=months.map(m=>{
-    const cost=costByMonth[m]||0,rev=revByMonth[m]||0,qty=qtyByMonth[m]||0;
-    const pct=rev>0?(cost/rev*100).toFixed(1):'—',col=parseFloat(pct)>50?'var(--red)':parseFloat(pct)>30?'var(--orange)':'var(--green)';
-    const[y,mo]=m.split('-');
-    return `<tr><td>${MONTHS_TH[parseInt(mo)-1]} ${y}</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--red);">฿${fmt(Math.round(cost))}</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--green);">฿${fmt(Math.round(rev))}</td><td style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${col};">${pct}%</td><td style="font-family:'IBM Plex Mono',monospace;">${fmt(qty)}</td><td style="font-family:'IBM Plex Mono',monospace;">฿${qty>0?fmt(Math.round(cost/qty)):'—'}</td></tr>`;
-  }).join('')||'<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
-  document.getElementById('costDeepDiveCard').scrollIntoView({behavior:'smooth'});
+  const cats = Object.keys(catData).sort((a,b)=>catData[b]-catData[a]);
+  document.getElementById('costDeepCard').style.display='block';
+  document.getElementById('costDeepTitle').textContent=`รายละเอียดต้นทุน — ${skuToName(sku)} (${sku})`;
+  const datasets = cats.slice(0,8).map((cat,i)=>({
+    label: cat.length>18?cat.substring(0,17)+'…':cat,
+    data: months.map(m=>costByCatMonth[cat]?.[m]||0),
+    backgroundColor: COLORS[i%COLORS.length]+'aa', borderColor: COLORS[i%COLORS.length], borderWidth:1, borderRadius:3
+  }));
+  makeChart('chartCostDeep','bar',mLabels,datasets);
+  document.getElementById('costDeepHead').innerHTML=`<tr>
+    <th style="min-width:150px;">หัวข้อต้นทุน</th>
+    ${months.map((m,i)=>`<th style="text-align:right;min-width:80px;">${mLabels[i]}</th>`).join('')}
+    <th style="text-align:right;color:var(--accent);">รวม</th>
+  </tr>`;
+  document.getElementById('costDeepBody').innerHTML=cats.map(cat=>{
+    const tot=Object.values(costByCatMonth[cat]||{}).reduce((a,b)=>a+b,0);
+    return `<tr>
+      <td style="font-size:12px;color:var(--text2);">${cat}</td>
+      ${months.map(m=>{const a=costByCatMonth[cat]?.[m]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);">฿${fmt(Math.round(tot))}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="20" class="empty">ไม่มีข้อมูล</td></tr>';
+  document.getElementById('costDeepCard').scrollIntoView({behavior:'smooth'});
 }
 
 async function init() {
