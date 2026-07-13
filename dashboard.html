@@ -704,8 +704,8 @@
           <div class="section-title">ต้นทุนรายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
           <button class="btn btn-ghost" onclick="exportTable('tblCostOverview')">⬇ Export CSV</button>
         </div>
-        <div style="overflow-x:auto;overflow-y:visible;max-width:100%;">
-          <table id="tblCostOverview" style="min-width:600px;">
+        <div style="overflow-x:auto;width:0;min-width:100%;">
+          <table id="tblCostOverview" style="width:max-content;min-width:100%;">
             <thead id="costOverviewHead"></thead>
             <tbody id="costOverviewBody"></tbody>
           </table>
@@ -719,8 +719,8 @@
             <button class="btn btn-ghost" onclick="document.getElementById('costDeepCard').style.display='none'">✕ ปิด</button>
           </div>
         </div>
-        <div style="overflow-x:auto;max-height:480px;overflow-y:auto;max-width:100%;">
-          <table id="tblCostDeep" style="min-width:400px;">
+        <div style="overflow-x:auto;width:0;min-width:100%;max-height:480px;overflow-y:auto;">
+          <table id="tblCostDeep" style="width:max-content;min-width:100%;">
             <thead id="costDeepHead"></thead>
             <tbody id="costDeepBody"></tbody>
           </table>
@@ -2862,7 +2862,7 @@ async function renderCostPage() {
       <th style="text-align:right;min-width:90px;color:var(--green);white-space:nowrap;">ยอดขาย</th>
       <th style="text-align:right;min-width:70px;white-space:nowrap;">% ต้นทุน</th>
       <th style="border-left:1px solid var(--border);"></th>
-      ${cats.map(c=>`<th style="text-align:right;min-width:100px;white-space:nowrap;font-size:10px;">${c.length>16?c.substring(0,15)+'…':c}</th>`).join('')}
+      ${cats.map(c=>`<th style="text-align:right;min-width:100px;white-space:nowrap;font-size:10px;">${c}</th>`).join('')}
     </tr>`;
 
     document.getElementById('costOverviewBody').innerHTML = skus.map(sku => {
@@ -2926,7 +2926,7 @@ function renderCostDeep(sku) {
     <th style="text-align:right;min-width:90px;color:var(--green);white-space:nowrap;">ยอดขาย</th>
     <th style="text-align:right;min-width:70px;white-space:nowrap;">%ต้นทุน</th>
     <th style="border-left:1px solid var(--border);"></th>
-    ${cats.map(cat=>`<th style="text-align:right;min-width:90px;font-size:10px;white-space:nowrap;">${cat.length>16?cat.substring(0,15)+'…':cat}</th>`).join('')}
+    ${cats.map(cat=>`<th style="text-align:right;min-width:90px;font-size:10px;white-space:nowrap;">${cat}</th>`).join('')}
     <th style="text-align:right;min-width:90px;color:var(--accent);">รวม</th>
   </tr>`;
 
