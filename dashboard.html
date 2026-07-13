@@ -2858,10 +2858,9 @@ async function renderCostPage() {
     document.getElementById('costOverviewHead').innerHTML = `<tr>
       <th style="min-width:80px;position:sticky;left:0;z-index:2;background:var(--surface);">SKU</th>
       <th style="min-width:130px;position:sticky;left:80px;z-index:2;background:var(--surface);">ชื่อสินค้า</th>
-      <th style="text-align:right;min-width:90px;color:var(--red);white-space:nowrap;">รวมต้นทุน</th>
-      <th style="text-align:right;min-width:90px;color:var(--green);white-space:nowrap;">ยอดขาย</th>
-      <th style="text-align:right;min-width:70px;white-space:nowrap;">% ต้นทุน</th>
-      <th style="border-left:1px solid var(--border);"></th>
+      <th style="text-align:right;min-width:100px;color:var(--red);white-space:nowrap;position:sticky;left:210px;z-index:2;background:var(--surface);">รวมต้นทุน</th>
+      <th style="text-align:right;min-width:100px;color:var(--green);white-space:nowrap;position:sticky;left:310px;z-index:2;background:var(--surface);">ยอดขาย</th>
+      <th style="text-align:right;min-width:80px;white-space:nowrap;position:sticky;left:410px;z-index:2;background:var(--surface);border-right:2px solid var(--border);">% ต้นทุน</th>
       ${cats.map(c=>`<th style="text-align:right;min-width:100px;white-space:nowrap;font-size:10px;">${c}</th>`).join('')}
     </tr>`;
 
@@ -2872,18 +2871,16 @@ async function renderCostPage() {
       return `<tr style="cursor:pointer;" onclick="renderCostDeep('${sku}')">
         <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;position:sticky;left:0;background:var(--surface);z-index:1;">${sku}</td>
         <td style="color:var(--text);font-weight:600;position:sticky;left:80px;background:var(--surface);z-index:1;">${skuToName(sku)} <span style="font-size:10px;color:var(--text3);">🔍</span></td>
-        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(cost))}</td>
-        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(rev))}</td>
-        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};">${pct}%</td>
-        <td style="border-left:1px solid var(--border);"></td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);position:sticky;left:210px;background:var(--surface);z-index:1;">฿${fmt(Math.round(cost))}</td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);position:sticky;left:310px;background:var(--surface);z-index:1;">฿${fmt(Math.round(rev))}</td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};position:sticky;left:410px;background:var(--surface);z-index:1;border-right:2px solid var(--border);">${pct}%</td>
         ${cats.map(cat=>{const a=costByCatSku[sku]?.[cat]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
       </tr>`;
     }).join('') + `<tr style="border-top:2px solid var(--border);">
-      <td colspan="2" style="font-weight:700;position:sticky;left:0;background:var(--surface);">รวมทั้งหมด</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(totalCost))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);">฿${fmt(Math.round(totalRev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};">${costPct}%</td>
-      <td style="border-left:1px solid var(--border);"></td>
+      <td colspan="2" style="font-weight:700;position:sticky;left:0;background:var(--surface);z-index:1;">รวมทั้งหมด</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);position:sticky;left:210px;background:var(--surface);z-index:1;">฿${fmt(Math.round(totalCost))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);position:sticky;left:310px;background:var(--surface);z-index:1;">฿${fmt(Math.round(totalRev))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};position:sticky;left:410px;background:var(--surface);z-index:1;border-right:2px solid var(--border);">${costPct}%</td>
       ${cats.map(cat=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(catTotals[cat]||0))}</td>`).join('')}
     </tr>`;
 
@@ -2922,12 +2919,10 @@ function renderCostDeep(sku) {
   // ตาราง: แถว=เดือน, คอลัมน์=หัวข้อต้นทุน
   document.getElementById('costDeepHead').innerHTML=`<tr>
     <th style="min-width:70px;position:sticky;left:0;background:var(--surface);z-index:2;">เดือน</th>
-    <th style="text-align:right;min-width:90px;color:var(--red);white-space:nowrap;">รวมต้นทุน</th>
-    <th style="text-align:right;min-width:90px;color:var(--green);white-space:nowrap;">ยอดขาย</th>
-    <th style="text-align:right;min-width:70px;white-space:nowrap;">%ต้นทุน</th>
-    <th style="border-left:1px solid var(--border);"></th>
+    <th style="text-align:right;min-width:100px;color:var(--red);white-space:nowrap;position:sticky;left:70px;z-index:2;background:var(--surface);">รวมต้นทุน</th>
+    <th style="text-align:right;min-width:100px;color:var(--green);white-space:nowrap;position:sticky;left:170px;z-index:2;background:var(--surface);">ยอดขาย</th>
+    <th style="text-align:right;min-width:80px;white-space:nowrap;position:sticky;left:270px;z-index:2;background:var(--surface);border-right:2px solid var(--border);">%ต้นทุน</th>
     ${cats.map(cat=>`<th style="text-align:right;min-width:90px;font-size:10px;white-space:nowrap;">${cat}</th>`).join('')}
-    <th style="text-align:right;min-width:90px;color:var(--accent);">รวม</th>
   </tr>`;
 
   const revByMonth = {};
@@ -2942,20 +2937,18 @@ function renderCostDeep(sku) {
     const pct=rev>0?(tot/rev*100).toFixed(1):'—';
     const col=parseFloat(pct)>50?'var(--red)':parseFloat(pct)>30?'var(--orange)':'var(--green)';
     return `<tr>
-      <td style="font-weight:600;position:sticky;left:0;background:var(--surface);">${mLabels[i]}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(tot))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(rev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};">${pct}%</td>
-      <td style="border-left:1px solid var(--border);"></td>
+      <td style="font-weight:600;position:sticky;left:0;background:var(--surface);z-index:1;">${mLabels[i]}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);position:sticky;left:70px;background:var(--surface);z-index:1;">฿${fmt(Math.round(tot))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);position:sticky;left:170px;background:var(--surface);z-index:1;">฿${fmt(Math.round(rev))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};position:sticky;left:270px;background:var(--surface);z-index:1;border-right:2px solid var(--border);">${pct}%</td>
       ${rowCosts.map(a=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`).join('')}
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--accent);">฿${fmt(Math.round(tot))}</td>
     </tr>`;
   }).join('') + `<tr style="border-top:2px solid var(--border);">
-    <td style="font-weight:700;position:sticky;left:0;background:var(--surface);">รวม</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(Object.values(catData).reduce((a,b)=>a+b,0)))}</td>
-    <td></td><td></td><td style="border-left:1px solid var(--border);"></td>
+    <td style="font-weight:700;position:sticky;left:0;background:var(--surface);z-index:1;">รวม</td>
+    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);position:sticky;left:70px;background:var(--surface);z-index:1;">฿${fmt(Math.round(Object.values(catData).reduce((a,b)=>a+b,0)))}</td>
+    <td style="position:sticky;left:170px;background:var(--surface);z-index:1;"></td>
+    <td style="position:sticky;left:270px;background:var(--surface);z-index:1;border-right:2px solid var(--border);"></td>
     ${cats.map(cat=>{const t=months.reduce((s,m)=>s+(costByMonthCat[m]?.[cat]||0),0);return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(t))}</td>`;}).join('')}
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);">฿${fmt(Math.round(Object.values(catData).reduce((a,b)=>a+b,0)))}</td>
   </tr>`||'<tr><td colspan="20" class="empty">ไม่มีข้อมูล</td></tr>';
   document.getElementById('costDeepCard').scrollIntoView({behavior:'smooth'});
 }
