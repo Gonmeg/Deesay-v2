@@ -24,12 +24,12 @@
   body.light-theme .loading-overlay { background: var(--bg); }
   body.light-theme .crm-group-row:hover,
   body.light-theme tr:hover td { background: var(--bg3); }
-  /* sticky columns ต้องทึบสนิทเสมอ override hover */
+  /* sticky columns พื้นหลังทึบสนิท ทั้ง dark และ light theme */
   td.sticky-col, th.sticky-col {
-    background-color: var(--surface) !important;
+    background-color: #111827 !important;
   }
   body.light-theme td.sticky-col, body.light-theme th.sticky-col {
-    background-color: var(--surface) !important;
+    background-color: #ffffff !important;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
