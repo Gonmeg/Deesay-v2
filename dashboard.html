@@ -47,7 +47,7 @@
   .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 2s infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-  .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
   .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 10px; }
   .page-title { font-size: 15px; font-weight: 600; color: var(--text); }
   .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -61,7 +61,7 @@
   .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
   .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
 
-  .content { padding: 24px 28px; flex: 1; }
+  .content { padding: 24px 28px; flex: 1; min-width: 0; }
   .page { display: none; }
   .page.active { display: block; }
 
@@ -1112,7 +1112,7 @@ function showPage(page) {
   if (page === 'adperf') {
     renderAdpAll();
   } else if (page === 'cost') {
-    populateCostMonthFilters().then(() => renderCostPage());
+    renderCostPage();
   } else {
     renderCurrentPage();
   }
@@ -1478,7 +1478,6 @@ function renderRealPromoAndUpsell() {
     });
   });
   const sortMode = document.getElementById('upsellSortMode')?.value || 'revenue';
-  // หมายเหตุ: revenue เก็บไว้ระดับทั้งออเดอร์ ไม่ได้แยกราคาต่อ SKU จึงใช้ "จำนวนครั้งที่ถูก upsell" แทนยอดขายเป็นตัวจัดอันดับหลัก เมื่อเลือกโหมดยอดขาย (เพื่อไม่ให้ตัวเลขเข้าใจผิด)
   const sortedUpsell = Object.entries(byUpsell).sort((a,b) => sortMode === 'qty' ? b[1].qty - a[1].qty : b[1].count - a[1].count).slice(0, 20);
 
   document.getElementById('tbodyTopUpsell').innerHTML = sortedUpsell.map(([sku, v], i) => `
@@ -1538,7 +1537,6 @@ function renderGeo() {
     byProv[k].ord += parseInt(r.total_orders) || 0;
   });
 
-  // นับลูกค้าไม่ซ้ำ (เบอร์โทร) จากข้อมูล orders (Facebook) ในช่วง filter
   const from = getDateValue('From'), to = getDateValue('To');
   const custByProv = {};
   allData.filter(r => r.channel === 'Facebook' && r.province && r.phone && r.phone.length >= 5 && shouldIncludeRow(r)).forEach(r => {
@@ -1548,7 +1546,6 @@ function renderGeo() {
   Object.keys(byProv).forEach(p => { byProv[p].cust = custByProv[p] ? custByProv[p].size : 0; });
   _geoByProv = byProv;
 
-  // Populate province dropdown
   const provSel = document.getElementById('geoProvinceFilter');
   const currentVal = provSel.value;
   const allProvs = Object.keys(byProv).sort((a, b) => byProv[b].rev - byProv[a].rev);
@@ -1571,7 +1568,6 @@ function renderGeo() {
       <td>${k}</td><td>${fmt(v.ord)}</td><td>฿${fmt(v.rev)}</td></tr>`
   ).join('') || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  // จังหวัดที่มีโอกาสเติบโต: ออเดอร์น้อย (5-49) แต่ AOV สูง
   const growth = Object.entries(byProv).filter(([,v]) => v.ord >= 5 && v.ord < 50)
     .map(([k,v]) => [k, v, v.rev/v.ord]).sort((a,b) => b[2]-a[2]).slice(0,10);
   document.getElementById('tbodyGrowthProvince').innerHTML = growth.map(([k,v,aov], i) => `
@@ -1580,7 +1576,6 @@ function renderGeo() {
       <td>${k}</td><td>${fmt(v.ord)}</td><td>฿${fmt(aov)}</td></tr>`
   ).join('') || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  // ภูมิภาค
   const byRegion = {};
   Object.entries(byProv).forEach(([prov, v]) => {
     const reg = getRegion(prov);
@@ -1610,14 +1605,12 @@ function renderGeo() {
 
 // ===== CRM
 let crmSelectedSKU = null;
-let crmMaxDaysSince = null; // ตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน"
+let crmMaxDaysSince = null;
 
-// เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ รายเดือน — ใช้ "ประวัติการซื้อทั้งหมด" (ไม่จำกัดแค่ช่วง filter) เพื่อรู้ว่าใครเคยซื้อมาก่อนจริงไหม
 function renderCRMTrendChart() {
   let base = allData.filter(r => r.channel === 'Facebook' && shouldIncludeRow(r));
   if (crmSelectedSKU) base = base.filter(r => rowHasSKU(r, crmSelectedSKU));
 
-  // หา "วันที่ซื้อครั้งแรกสุดในชีวิต" ของลูกค้าแต่ละคน จากประวัติทั้งหมด
   const firstPurchaseByPhone = {};
   base.forEach(r => {
     const phone = r.phone || '';
@@ -1625,7 +1618,6 @@ function renderCRMTrendChart() {
     if (!firstPurchaseByPhone[phone] || r.date < firstPurchaseByPhone[phone]) firstPurchaseByPhone[phone] = r.date;
   });
 
-  // จำกัดช่วงเดือนที่แสดงตาม filter วันที่ด้านบน (ไม่งั้นจะยาวเกินไปทั้งประวัติ)
   const from = getDateValue('From'), to = getDateValue('To');
   const monthsToShow = getMonthsInRange(from, to);
 
@@ -1636,7 +1628,7 @@ function renderCRMTrendChart() {
     const phone = r.phone || '';
     if (!phone || phone.length < 5 || !r.date) return;
     const month = r.date.substring(0, 7);
-    if (!(month in newByMonth)) return; // อยู่นอกช่วงที่เลือกดู
+    if (!(month in newByMonth)) return;
     if (firstPurchaseByPhone[phone] === undefined) return;
     if (firstPurchaseByPhone[phone].substring(0, 7) === month) newByMonth[month].add(phone);
     else if (firstPurchaseByPhone[phone].substring(0, 7) < month) returningByMonth[month].add(phone);
@@ -1688,15 +1680,13 @@ function renderCRM() {
     const phone = r.phone || '';
     if (!phone || phone.length < 5) return;
     if (!byPhoneAll[phone]) byPhoneAll[phone] = { orders: [], name: r.customer_name || '', seenOrderIds: new Set() };
-    // กัน order_id ซ้ำ (ข้อมูลบางส่วนมีแถวซ้ำในตาราง orders) ไม่ให้นับ/แสดงซ้ำ
-    const oid = r.order_id || `${r.date}-${r.sku_promotion}-${r.revenue}`; // fallback เผื่อไม่มี order_id
+    const oid = r.order_id || `${r.date}-${r.sku_promotion}-${r.revenue}`;
     if (byPhoneAll[phone].seenOrderIds.has(oid)) return;
     byPhoneAll[phone].seenOrderIds.add(oid);
     byPhoneAll[phone].orders.push(r);
     if (!byPhoneAll[phone].name && r.customer_name) byPhoneAll[phone].name = r.customer_name;
   });
 
-  // ตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน" — ตัดลูกค้าที่ไม่ active ออกตั้งแต่ขั้นนี้
   const today = new Date();
   let byPhone = byPhoneAll;
   if (crmMaxDaysSince !== null) {
@@ -1720,12 +1710,10 @@ function renderCRM() {
   document.getElementById('crm-repeat-pct').textContent = fmtPct(repeatCustomers, totalCustomers) + ' ของทั้งหมด';
   document.getElementById('crm-max').textContent = fmt(maxPurchases);
 
-  // อัตราการซื้อซ้ำเฉลี่ย — เฉพาะตอนเลือกสินค้า: เอาทุกช่วงวันที่เกิดจริงระหว่างคำสั่งซื้อของลูกค้าคนเดียวกันมาเฉลี่ยรวม
   const avgRow = document.getElementById('crmAvgRepurchaseRow');
   window._crmAvgGap = null;
   if (crmSelectedSKU) {
     avgRow.style.display = 'grid';
-    // ค่าเฉลี่ยต้องคำนวณจากลูกค้าทุกคนที่เคยซื้อสินค้านี้ (byPhoneAll) เสมอ — ไม่ขึ้นกับตัวกรอง "ซื้อล่าสุดไม่เกิน X วัน"
     let gaps = [];
     Object.values(byPhoneAll).forEach(c => {
       const dates = c.orders.map(o => o.date).filter(Boolean).sort();
@@ -1742,7 +1730,6 @@ function renderCRM() {
     avgRow.style.display = 'none';
   }
 
-  // ปรับหัวตารางเพิ่ม/ลดคอลัมน์ "สถานะรอบซื้อซ้ำ" ตามว่ามีค่าเฉลี่ยให้เทียบไหม
   const headRow = document.getElementById('crmDetailHead');
   if (headRow) {
     const base = '<th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนซื้อ</th><th>ประวัติการซื้อ (วันที่ / โปรที่ซื้อ / ยอด)</th><th>ยอดรวมทั้งหมด</th><th>ซื้อล่าสุด</th><th>ห่างมาแล้ว (วัน)</th>';
@@ -1961,7 +1948,7 @@ function renderSkuRev() {
 
   const allSKUs = sorted.map(([k])=>k);
   window._skuAllSKUs = allSKUs;
-  window._skuTrendAllData = d; // ระดับเดือน (ไม่ใช่รายวัน เพราะ MV เก็บแค่ระดับเดือน)
+  window._skuTrendAllData = d;
   window._selectedSKUs = allSKUs.slice(0, 5);
   renderSkuChips(); renderSkuDropdown(''); renderSkuTrend();
 
@@ -2005,7 +1992,6 @@ function removeSkuChip(sku) {
   renderSkuChips(); renderSkuTrend();
 }
 
-// หมายเหตุ: Trend นี้เป็นระดับ "เดือน" เพราะ mv_sku_parent_monthly เก็บข้อมูลระดับเดือนเท่านั้น (ไม่มีระดับวัน)
 function renderSkuTrend() {
   const d = window._skuTrendAllData || [];
   const selectedSKUs = window._selectedSKUs || [];
@@ -2489,7 +2475,7 @@ function generateSummaryExtra(page) {
 let flowSelectedSKUs = [];
 let _flowTransitions = null;
 let _flowTopSKUs = [];
-let _flowAllSKUs = []; // SKUs ทั้งหมดที่มีข้อมูล transition
+let _flowAllSKUs = [];
 
 function computeFlowTransitions(fromDate, toDate) {
   const fbOrders = allData.filter(r =>
@@ -2529,7 +2515,6 @@ function computeFlowTransitions(fromDate, toDate) {
   return { transitions, topSKUs, allSkus };
 }
 
-// ===== Flow SKU Dropdown =====
 function filterFlowSkuDropdown() {
   showFlowSkuDropdown();
   const q = (document.getElementById('flowSkuSearch')?.value||'').toLowerCase();
@@ -2585,7 +2570,6 @@ function toggleFlowSKU(sku) {
 }
 
 function renderFlowPage() {
-  // ใช้ global date filter จาก topbar
   const from = getDateValue('From');
   const to = getDateValue('To');
   const { transitions, topSKUs, allSkus } = computeFlowTransitions(from, to);
@@ -2593,12 +2577,10 @@ function renderFlowPage() {
   _flowTopSKUs = topSKUs;
   _flowAllSKUs = allSkus;
 
-  // ถ้ายังไม่เคยเลือก หรือ SKU ที่เลือกไม่มีในข้อมูลใหม่ → reset เป็น top 10
   const validSelected = flowSelectedSKUs.filter(s => allSkus.includes(s));
   flowSelectedSKUs = validSelected.length >= 2 ? validSelected : [...topSKUs];
   renderFlowSkuChips();
 
-  // KPIs
   let total = 0, selfCnt = 0;
   topSKUs.forEach(src => { if (!transitions[src]) return;
     Object.entries(transitions[src]).forEach(([tgt,cnt]) => { total+=cnt; if(src===tgt) selfCnt+=cnt; }); });
@@ -2619,7 +2601,6 @@ function renderFlowPage() {
   renderFlowTable();
 }
 
-// ===== Tooltip element =====
 function getFlowTooltip() {
   let tip = document.getElementById('flowTooltip');
   if (!tip) {
@@ -2707,7 +2688,6 @@ function renderFlowSankey() {
     });
   });
 
-  // Nodes — ชื่อเต็ม แบ่ง 2 บรรทัดเฉพาะตอนมีช่องว่าง (ป้องกัน Thai character cluster แตก)
   function splitNodeName(name) {
     const spaceIdx = name.indexOf(' ');
     if (spaceIdx > 0 && spaceIdx < name.length - 1) return [name.substring(0, spaceIdx), name.substring(spaceIdx+1)];
@@ -2770,12 +2750,9 @@ async function refreshDashboardData() {
   try {
     const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }
 
-    // Fire-and-forget — ไม่รอ response เพราะ refresh_all_views() ใช้เวลานาน
-    // มักจะ timeout ที่ REST API แต่ตัว function ใน DB ยังทำงานต่อจนเสร็จเองได้
     fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_all_views`, { method: 'POST', headers, body: '{}' })
-      .catch(() => {}) // ไม่สน error จาก RPC (เช่น timeout) เพราะ pg_cron จัดการให้อยู่แล้ว
+      .catch(() => {})
 
-    // รอ 2 วินาทีให้ DB มีเวลา refresh บางส่วนก่อน แล้วค่อยดึง MV ใหม่
     await new Promise(r => setTimeout(r, 2000))
 
     const [promoMonthly, skuParentMonthly, provinceMonthly] = await Promise.all([
@@ -2859,12 +2836,10 @@ async function renderCostPage() {
     const mLabels = months.map(m=>{const[,mo]=m.split('-');return MONTHS_TH[parseInt(mo)-1];});
     const skus = Object.keys(costBySKU).sort((a,b)=>costBySKU[b]-costBySKU[a]);
 
-    // หัวข้อต้นทุนทั้งหมด เรียงตามยอดรวมสูงสุด
     const catTotals = {};
     filtered.forEach(r=>{catTotals[r.cost_category]=(catTotals[r.cost_category]||0)+(parseFloat(r.amount)||0);});
     const cats = Object.keys(catTotals).sort((a,b)=>catTotals[b]-catTotals[a]);
 
-    // ตารางหลัก: แถว=SKU, คอลัมน์=หัวข้อต้นทุน
     document.getElementById('costOverviewHead').innerHTML = `<tr>
       <th style="width:70px;min-width:70px;max-width:70px;position:sticky;left:0;z-index:2;background-color:${bg};">SKU</th>
       <th style="width:170px;min-width:170px;max-width:170px;position:sticky;left:70px;z-index:2;background-color:${bg};">ชื่อสินค้า</th>
@@ -2890,7 +2865,7 @@ async function renderCostPage() {
       <td colspan="2" style="font-weight:700;position:sticky;left:0;z-index:1;background-color:${bg};">รวมทั้งหมด</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);position:sticky;left:240px;z-index:1;background-color:${bg};">฿${fmt(Math.round(totalCost))}</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);position:sticky;left:345px;z-index:1;background-color:${bg};">฿${fmt(Math.round(totalRev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};position:sticky;left:450px;z-index:1;border-right:2px solid var(--border);background-color:${bg};}">${costPct}%</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};position:sticky;left:450px;z-index:1;border-right:2px solid var(--border);background-color:${bg};">${costPct}%</td>
       ${cats.map(cat=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(catTotals[cat]||0))}</td>`).join('')}
     </tr>`;
 
@@ -2900,7 +2875,6 @@ async function renderCostPage() {
     window._costQtyBySKU = qtyBySKU;
     window._costMonths = months;
     window._costMLabels = mLabels;
-    // fix sticky positions ตาม column width จริงหลัง render
     requestAnimationFrame(() => fixCostStickyPositions('tblCostOverview', 5));
     window._costCats = cats;
   } catch(e) {
@@ -2915,7 +2889,6 @@ function renderCostDeep(sku) {
   const months = window._costMonths||[];
   const mLabels = window._costMLabels||[];
   const filtered = _costData.filter(r=>r.parent_sku===sku);
-  // costByMonth: month -> cat -> amount (แถว=เดือน, คอลัมน์=หัวข้อ)
   const costByMonthCat = {};
   const cats = Object.keys(catData).sort((a,b)=>catData[b]-catData[a]);
   filtered.forEach(r=>{
@@ -2925,11 +2898,9 @@ function renderCostDeep(sku) {
   });
   document.getElementById('costDeepCard').style.display='block';
   document.getElementById('costDeepTitle').textContent=`รายละเอียดต้นทุน — ${skuToName(sku)} (${sku})`;
-  // ซ่อน canvas ไม่ใช้ chart ในหน้านี้
   const chartEl = document.getElementById('chartCostDeep');
   if(chartEl) chartEl.parentElement.style.display='none';
 
-  // ตาราง: แถว=เดือน, คอลัมน์=หัวข้อต้นทุน
   document.getElementById('costDeepHead').innerHTML=`<tr>
     <th style="width:80px;min-width:80px;max-width:80px;position:sticky;left:0;z-index:2;background-color:${bg};">เดือน</th>
     <th style="width:105px;min-width:105px;max-width:105px;text-align:right;color:var(--red);white-space:nowrap;position:sticky;left:80px;z-index:2;background-color:${bg};">รวมต้นทุน</th>
@@ -2962,35 +2933,30 @@ function renderCostDeep(sku) {
     <td style="width:105px;position:sticky;left:185px;z-index:1;background-color:${bg};"></td>
     <td style="width:75px;position:sticky;left:290px;z-index:1;border-right:2px solid var(--border);background-color:${bg};"></td>
     ${cats.map(cat=>{const t=months.reduce((s,m)=>s+(costByMonthCat[m]?.[cat]||0),0);return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(t))}</td>`;}).join('')}
-  </tr>`||'<tr><td colspan="20" class="empty">ไม่มีข้อมูล</td></tr>';
+  </tr>`;
   document.getElementById('costDeepCard').scrollIntoView({behavior:'smooth'});
   requestAnimationFrame(() => fixCostStickyPositions('tblCostDeep', 4));
 }
 
-// Fix sticky left positions based on actual rendered column widths
 function fixCostStickyPositions(tableId, frozenCols) {
   const table = document.getElementById(tableId);
   if (!table) return;
   const rows = table.querySelectorAll('tr');
   if (!rows.length) return;
-  // Get actual widths from first row
   const firstRow = rows[0];
   const cells = firstRow.querySelectorAll('th, td');
   const widths = [];
   for (let i = 0; i < frozenCols && i < cells.length; i++) {
     widths.push(cells[i].getBoundingClientRect().width);
   }
-  // Calculate cumulative left positions
   const lefts = [0];
   for (let i = 1; i < frozenCols; i++) {
     lefts.push(lefts[i-1] + widths[i-1]);
   }
-  // Apply to all rows
   rows.forEach(row => {
     const cs = row.querySelectorAll('th, td');
     for (let i = 0; i < frozenCols && i < cs.length; i++) {
       cs[i].style.left = lefts[i] + 'px';
-      // Last frozen col gets the right border
       if (i === frozenCols - 1) {
         cs[i].style.borderRight = '2px solid var(--border)';
       }
