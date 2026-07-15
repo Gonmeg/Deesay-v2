@@ -852,14 +852,16 @@ function shouldIncludeRow(r) {
   const now = new Date();
   const cutoff = getSettledCutoff();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // settled เก็บเป็น boolean ในตาราง orders แต่เก็บเป็น string 'True'/'False' ในตาราง sku_revenue — เช็คทั้งสองแบบ
+  const isSettled = r.settled === true || r.settled === 'True';
 
   if (rowDate >= currentMonthStart) return true;
   if (now <= cutoff) {
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     if (rowDate >= prevMonthStart) return true;
-    return r.settled === true;
+    return isSettled;
   } else {
-    return r.settled === true;
+    return isSettled;
   }
 }
 
