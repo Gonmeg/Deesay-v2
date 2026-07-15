@@ -762,6 +762,8 @@ let provinceRegionMap = {}; // province -> region
 let crmRawData = {};
 let crmDetailData = [];
 let selectedAnalysisSKUs = [];
+let skuRevenueAll = [];   // จาก sku_revenue table — ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" (revenue_share ต่อ SKU จริง) แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
+let orderIdToPromo = {};  // order_id -> sku_promotion (มาจาก orders) ใช้ label ชื่อโปรในตาราง promotion ของหน้าวิเคราะห์ SKU
 
 // ===== UTILS =====
 const fmt = n => isNaN(n) ? '—' : Number(n).toLocaleString('th-TH', {maximumFractionDigits:0});
@@ -2081,6 +2083,18 @@ function renderAnalysisChips() {
   el.innerHTML = selectedAnalysisSKUs.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i]};" onclick="removeAnalysisSKU('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span> ✕</span>`).join('');
 }
 
+// ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" ในช่วงวันที่ปัจจุบัน — ให้หน้าวิเคราะห์ SKU ใช้แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
+function getFilteredSkuRevenue() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  return skuRevenueAll.filter(r => {
+    if (!r.date) return false;
+    if (from && r.date < from) return false;
+    if (to && r.date > to) return false;
+    if (!shouldIncludeRow(r)) return false;
+    return true;
+  });
+}
+
 function rowHasSKU(r, sku) {
   const promo = r.sku_promotion || '';
   return promo.split('+').some(p => p.trim().replace(/x\d+$/i,'').trim().toUpperCase() === sku.toUpperCase());
@@ -2096,11 +2110,14 @@ function runSkuAnalysis() {
   document.getElementById('skuAnalysisEmpty').style.display = 'none';
   document.getElementById('skuAnalysisContent').style.display = 'block';
   const skus = selectedAnalysisSKUs, d = filteredData, isCompare = skus.length > 1;
+  // ยอดขาย/จำนวนชิ้น "แกะจากโปรแล้ว" — แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU (ไม่ใช่ยอดขายเต็มออเดอร์แบบเดิม)
+  const skuRev = getFilteredSkuRevenue();
 
   document.getElementById('skuAnalysisKPIs').innerHTML = skus.map((sku, i) => {
-    const rows = d.filter(r => rowHasSKU(r, sku));
-    const rev = rows.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
-    const ord = rows.length, qty = rows.reduce((s,r) => s+getSKUQty(r,sku), 0);
+    const rows = skuRev.filter(r => r.parent_sku === sku);
+    const rev = rows.reduce((s,r) => s+(parseFloat(r.revenue_share)||0), 0);
+    const qty = rows.reduce((s,r) => s+(parseFloat(r.qty)||0), 0);
+    const ord = new Set(rows.map(r=>r.order_id)).size;
     return `<div class="card" style="border-color:${COLORS[i]}40;">
       <div class="card-title" style="color:${COLORS[i]};">${skuToName(sku)}</div>
       <div class="kpi-value">฿${fmtB(rev)}</div>
@@ -2108,22 +2125,24 @@ function runSkuAnalysis() {
     </div>`;
   }).join('');
 
-  window._skuAnalysisData = { skus, d, isCompare };
+  window._skuAnalysisData = { skus, d, skuRev, isCompare };
   renderSkuAnalysisTrend();
 
-  const channelList = [...new Set(d.map(r=>r.channel).filter(Boolean))];
+  const channelList = [...new Set(skuRev.map(r=>r.channel).filter(Boolean))];
   makeChart('chartSkuAnalysisChannel', 'bar', channelList, skus.map((sku,i) => ({
-    label: skuToName(sku), data: channelList.map(ch => d.filter(r=>rowHasSKU(r,sku)&&r.channel===ch).reduce((s,r)=>s+(parseFloat(r.revenue)||0),0)),
+    label: skuToName(sku), data: channelList.map(ch => skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0)),
     backgroundColor: COLORS[i]+'cc', borderColor: COLORS[i], borderWidth:1, borderRadius:4
   })));
 
-  const totalRevAll = d.filter(r=>skus.some(sku=>rowHasSKU(r,sku))).reduce((s,r)=>s+(parseFloat(r.revenue)||0),0)||1;
+  const totalRevAll = skuRev.filter(r=>skus.includes(r.parent_sku)).reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0)||1;
   let chRows = [];
   channelList.forEach(ch => {
     skus.forEach((sku,i) => {
-      const rows = d.filter(r=>rowHasSKU(r,sku)&&r.channel===ch);
+      const rows = skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch);
       if (!rows.length) return;
-      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0), ord = rows.length, qty = rows.reduce((s,r)=>s+getSKUQty(r,sku),0);
+      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0);
+      const qty = rows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
+      const ord = new Set(rows.map(r=>r.order_id)).size;
       chRows.push({ch,sku,rev,ord,qty,i});
     });
   });
@@ -2139,19 +2158,24 @@ function runSkuAnalysis() {
       <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(qty?Math.round(rev/qty):0)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${((rev/totalRevAll)*100).toFixed(1)}%</td></tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  const promoRows = [];
+  // ตาราง Promotion ที่มี SKU นี้ — ใช้ส่วนแบ่งยอดขายของ SKU นี้เท่านั้น (revenue_share) ไม่ใช่ยอดขายเต็มออเดอร์ของทั้งโปร
+  // label ชื่อโปรผ่าน order_id -> sku_promotion (มาจาก orders) เพราะ sku_revenue ไม่มีคอลัมน์นี้เก็บตรงๆ
+  const promoAgg = {};
   channelList.forEach(ch => {
-    const byPromo = {};
     skus.forEach(sku => {
-      d.filter(r=>rowHasSKU(r,sku)&&r.channel===ch).forEach(r => {
-        const k = r.sku_promotion||'—';
-        if (!byPromo[k]) byPromo[k]={rev:0,ord:0,qty:0};
-        byPromo[k].rev+=parseFloat(r.revenue)||0; byPromo[k].ord++;
-        byPromo[k].qty+=skus.reduce((s,sku)=>s+getSKUQty(r,sku),0);
+      skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).forEach(r => {
+        const promo = orderIdToPromo[r.order_id] || '—';
+        const key = ch+'||'+promo;
+        if (!promoAgg[key]) promoAgg[key]={ch,promo,rev:0,qty:0,orderIds:new Set()};
+        promoAgg[key].rev += parseFloat(r.revenue_share)||0;
+        promoAgg[key].qty += parseFloat(r.qty)||0;
+        promoAgg[key].orderIds.add(r.order_id);
       });
     });
-    Object.entries(byPromo).slice(0,5).forEach(([promo,v])=> promoRows.push({ch,promo,...v}));
   });
+  const allPromoRows = Object.values(promoAgg).map(v => ({ch:v.ch, promo:v.promo, rev:v.rev, qty:v.qty, ord:v.orderIds.size}));
+  const promoRows = [];
+  channelList.forEach(ch => { allPromoRows.filter(r=>r.ch===ch).sort((a,b)=>b.rev-a.rev).slice(0,5).forEach(r=>promoRows.push(r)); });
   window._skuPromoRows = promoRows;
   renderSkuAnalysisPromo();
 
@@ -2195,12 +2219,12 @@ function renderSkuAnalysisPromo() {
 
 function renderSkuAnalysisTrend() {
   const state = window._skuAnalysisData; if (!state) return;
-  const {skus,d} = state;
+  const {skus, skuRev} = state;
   const mode = document.getElementById('skuAnalysisTrendMode')?.value||'revenue';
-  const days = [...new Set(d.map(r=>r.date).filter(Boolean))].sort();
+  const days = [...new Set(skuRev.map(r=>r.date).filter(Boolean))].sort();
   const datasets = skus.map((sku,i)=>{
     const daily={};
-    d.filter(r=>rowHasSKU(r,sku)).forEach(r=>{ if(!r.date)return; if(!daily[r.date])daily[r.date]={rev:0,qty:0}; daily[r.date].rev+=parseFloat(r.revenue)||0; daily[r.date].qty+=getSKUQty(r,sku); });
+    skuRev.filter(r=>r.parent_sku===sku).forEach(r=>{ if(!r.date)return; if(!daily[r.date])daily[r.date]={rev:0,qty:0}; daily[r.date].rev+=parseFloat(r.revenue_share)||0; daily[r.date].qty+=parseFloat(r.qty)||0; });
     return { label:skuToName(sku), data:days.map(day=>daily[day]?.[mode==='revenue'?'rev':'qty']||0), borderColor:COLORS[i], backgroundColor:COLORS[i]+'20', borderWidth:2, pointRadius:days.length>60?0:2, tension:0.3, fill:false };
   });
   makeChart('chartSkuAnalysisTrend','line',days,datasets);
@@ -2455,16 +2479,18 @@ function generateSummaryExtra(page) {
   else if (page === 'skuanalysis') {
     const skus = selectedAnalysisSKUs;
     if (!skus.length) { el.textContent = 'กรุณาเลือก SKU ก่อน'; return; }
+    const skuRev = getFilteredSkuRevenue(); // ยอดขาย "แกะจากโปรแล้ว" — ให้ตรงกับ KPI การ์ดด้านบน
     skus.forEach(sku => {
-      const rows = d.filter(r => rowHasSKU(r,sku));
-      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-      const ord = rows.length, qty = rows.reduce((s,r)=>s+getSKUQty(r,sku),0);
+      const rows = skuRev.filter(r => r.parent_sku === sku);
+      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0);
+      const qty = rows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
+      const ord = new Set(rows.map(r=>r.order_id)).size;
       const byCh = {};
-      rows.forEach(r=>{ const k=r.channel||'ไม่ระบุ'; if(!byCh[k])byCh[k]={rev:0,ord:0}; byCh[k].rev+=parseFloat(r.revenue)||0; byCh[k].ord++; });
+      rows.forEach(r=>{ const k=r.channel||'ไม่ระบุ'; if(!byCh[k])byCh[k]={rev:0}; byCh[k].rev+=parseFloat(r.revenue_share)||0; });
       const topCh = Object.entries(byCh).sort((a,b)=>b[1].rev-a[1].rev)[0];
       lines.push(`▶ ${skuToName(sku)}`);
       lines.push(`• ยอดขาย ฿${fmtB(rev)} | ${fmt(ord)} ออเดอร์ | ${fmt(qty)} ชิ้น`);
-      if (topCh) lines.push(`• ช่องทางที่ขายดีสุด: ${topCh[0]} (฿${fmtB(topCh[1].rev)}, ${((topCh[1].rev/rev)*100).toFixed(1)}%)`);
+      if (topCh) lines.push(`• ช่องทางที่ขายดีสุด: ${topCh[0]} (฿${fmtB(topCh[1].rev)}, ${rev?((topCh[1].rev/rev)*100).toFixed(1):'0.0'}%)`);
     });
   }
 
@@ -2755,12 +2781,13 @@ async function refreshDashboardData() {
 
     await new Promise(r => setTimeout(r, 2000))
 
-    const [promoMonthly, skuParentMonthly, provinceMonthly] = await Promise.all([
-      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly()
+    const [promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows] = await Promise.all([
+      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchSkuAll()
     ])
     window._promoMonthlyCache = promoMonthly
     window._skuParentMonthlyCache = skuParentMonthly
     window._provinceMonthlyCache = provinceMonthly
+    skuRevenueAll = skuRevRows.filter(r => !isExcludedRow(r))
 
     const monthSelFrom = document.getElementById('filterMonthFrom')
     const monthSelTo = document.getElementById('filterMonthTo')
@@ -2973,9 +3000,10 @@ async function init() {
     const from = getDateValue('From');
     const to = getDateValue('To');
 
-    const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap] = await Promise.all([
+    const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows] = await Promise.all([
       fetchAll(), fetchProducts(), fetchProvinceRegion(),
-      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchPromotionsMap()
+      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchPromotionsMap(),
+      fetchSkuAll()
     ]);
     allData = orders.filter(r => !isExcludedRow(r));
     productsMap = prods;
@@ -2984,6 +3012,11 @@ async function init() {
     window._promoMonthlyCache = promoMonthly;
     window._skuParentMonthlyCache = skuParentMonthly;
     window._provinceMonthlyCache = provinceMonthly;
+
+    // sku_revenue: ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" ระดับรายวัน — ให้หน้าวิเคราะห์ SKU ใช้แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
+    skuRevenueAll = skuRevRows.filter(r => !isExcludedRow(r));
+    orderIdToPromo = {};
+    allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || ''; });
 
     filteredData = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r));
 
