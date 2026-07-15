@@ -2955,9 +2955,12 @@ function fixCostStickyPositions(tableId, frozenCols) {
   }
   rows.forEach(row => {
     const cs = row.querySelectorAll('th, td');
-    for (let i = 0; i < frozenCols && i < cs.length; i++) {
-      cs[i].style.left = lefts[i] + 'px';
-      if (i === frozenCols - 1) {
+    let colIdx = 0; // logical column index — accounts for colSpan (e.g. the "รวมทั้งหมด" total row merges 2 columns into 1 cell)
+    for (let i = 0; i < cs.length && colIdx < frozenCols; i++) {
+      const span = cs[i].colSpan || 1;
+      cs[i].style.left = lefts[colIdx] + 'px';
+      colIdx += span;
+      if (colIdx >= frozenCols) {
         cs[i].style.borderRight = '2px solid var(--border)';
       }
     }
