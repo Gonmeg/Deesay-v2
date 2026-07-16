@@ -873,7 +873,7 @@ async function fetchSkuAll(fromDate, toDate) {
   const dateFilter = fromDate && toDate ? `&date=gte.${fromDate}&date=lte.${toDate}` : '';
   while (true) {
     const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc${dateFilter}&limit=${PAGE}&offset=${offset}`,
+      `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc,parent_sku.asc${dateFilter}&limit=${PAGE}&offset=${offset}`,
       { headers }
     );
     if (!res.ok) throw new Error('sku_revenue API error: ' + res.status);
@@ -882,7 +882,15 @@ async function fetchSkuAll(fromDate, toDate) {
     if (rows.length < PAGE) break;
     offset += PAGE;
   }
-  return all;
+  // กันเหนียว: ตัด row ซ้ำ (date+order_id+parent_sku ซ้ำ) ที่อาจเกิดจาก pagination หรือข้อมูลซ้ำจริง
+  const seen = new Set(), deduped = [];
+  all.forEach(r => {
+    const key = `${r.date}|${r.order_id}|${r.parent_sku}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    deduped.push(r);
+  });
+  return deduped;
 }
 
 // ===== SUPABASE FETCH: products table (parent_sku -> ชื่อไทย) =====
