@@ -839,11 +839,8 @@ async function fetchAll() {
 // เกินนั้น → เอาเฉพาะ settled = true
 function getSettledCutoff() {
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
-  const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
-  return new Date(nextMonthYear, nextMonth, 7);
+  // cutoff = วันที่ 7 ของเดือนปัจจุบัน (เดือนนี้เอง) — ใช้ตัดสินว่าเดือนก่อนหน้ายังนับทุกออเดอร์ได้ไหม
+  return new Date(now.getFullYear(), now.getMonth(), 7);
 }
 
 function shouldIncludeRow(r) {
