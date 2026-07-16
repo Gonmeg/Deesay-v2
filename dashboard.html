@@ -879,15 +879,7 @@ async function fetchSkuAll(fromDate, toDate) {
     if (rows.length < PAGE) break;
     offset += PAGE;
   }
-  // กันเหนียว: ตัด row ซ้ำ (date+order_id+parent_sku ซ้ำ) ที่อาจเกิดจาก pagination หรือข้อมูลซ้ำจริง
-  const seen = new Set(), deduped = [];
-  all.forEach(r => {
-    const key = `${r.date}|${r.order_id}|${r.parent_sku}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    deduped.push(r);
-  });
-  return deduped;
+  return all;
 }
 
 // ===== SUPABASE FETCH: products table (parent_sku -> ชื่อไทย) =====
