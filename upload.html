@@ -314,6 +314,23 @@
     <button class="btn-sync" id="btnSyncDealer" style="margin-top:10px;">🔄 Sync ตัวแทน / MT</button>
     <div class="promo-sync-result" id="dealerSyncResult" style="margin-top:8px;"></div>
   </div>
+  <div class="promo-sync-card" style="margin-top:12px;border:1px solid rgba(239,68,68,0.25);">
+    <div class="history-title" style="color:#f87171;">⚠️ ลบข้อมูลตามช่องทาง/เดือน</div>
+    <div class="history-sub">ใช้ก่อนอัพโหลดไฟล์ใหม่ทดแทนของเดิม</div>
+    <div style="display:flex;gap:6px;margin-top:10px;">
+      <select id="bulkDeleteChannel" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;">
+        <option value="Facebook">Facebook</option>
+        <option value="TikTok" selected>TikTok</option>
+        <option value="Shopee">Shopee</option>
+        <option value="Lazada">Lazada</option>
+        <option value="ตัวแทน">ตัวแทน</option>
+        <option value="Modern Trade">Modern Trade</option>
+      </select>
+      <input type="month" id="bulkDeleteMonth" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;">
+    </div>
+    <button class="btn-sync" id="btnBulkDeleteCheck" style="margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔍 เช็คจำนวนข้อมูล</button>
+    <div id="bulkDeleteResult" style="margin-top:8px;"></div>
+  </div>
   <div class="history-card">
     <div class="history-title">ประวัติการอัพโหลด</div>
     <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
@@ -802,6 +819,59 @@ async function backfillMatching() {
   }
 }
 document.getElementById('btnBackfillMatching').addEventListener('click', backfillMatching)
+
+// ===== ลบข้อมูลตามช่องทาง/เดือน =====
+function monthToRange(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number)
+  const from = `${monthStr}-01`
+  const lastDay = new Date(y, m, 0).getDate()
+  const to = `${monthStr}-${String(lastDay).padStart(2, '0')}`
+  return { from, to }
+}
+
+const bulkDeleteResultEl = document.getElementById('bulkDeleteResult')
+
+document.getElementById('btnBulkDeleteCheck').addEventListener('click', async () => {
+  const channel = document.getElementById('bulkDeleteChannel').value
+  const monthStr = document.getElementById('bulkDeleteMonth').value
+  if (!monthStr) { bulkDeleteResultEl.innerHTML = '<div style="color:#fca5a5;font-size:0.72rem;">เลือกเดือนก่อน</div>'; return }
+  const { from, to } = monthToRange(monthStr)
+  bulkDeleteResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">กำลังเช็ค...</div>'
+  try {
+    const { count: ordersCount, error: e1 } = await DB.from('orders').select('*', { count: 'exact', head: true }).eq('channel', channel).gte('date', from).lte('date', to)
+    if (e1) throw e1
+    const { count: skuCount, error: e2 } = await DB.from('sku_revenue').select('*', { count: 'exact', head: true }).eq('channel', channel).gte('date', from).lte('date', to)
+    if (e2) throw e2
+    bulkDeleteResultEl.innerHTML = `
+      <div style="font-size:0.74rem;color:var(--text);margin-bottom:8px;">
+        พบ <strong style="color:#f87171;">${(ordersCount||0).toLocaleString()}</strong> orders และ
+        <strong style="color:#f87171;">${(skuCount||0).toLocaleString()}</strong> sku_revenue rows
+        ของ <strong>${channel}</strong> เดือน ${monthStr} (${from} – ${to})
+      </div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:8px;">⚠️ ลบแล้วกู้คืนไม่ได้ — เตรียมไฟล์ใหม่ให้พร้อมอัพโหลดทันทีหลังลบ</div>
+      <button id="btnBulkDeleteConfirm" style="background:var(--danger);color:white;border:none;padding:6px 16px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:600;">🗑 ยืนยันลบทั้งหมด</button>
+      <button id="btnBulkDeleteCancel" style="background:none;border:1px solid var(--border2);color:var(--muted);padding:6px 14px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;margin-left:6px;">ยกเลิก</button>
+    `
+    document.getElementById('btnBulkDeleteConfirm').addEventListener('click', () => executeBulkDelete(channel, from, to, ordersCount, skuCount))
+    document.getElementById('btnBulkDeleteCancel').addEventListener('click', () => { bulkDeleteResultEl.innerHTML = '' })
+  } catch (err) {
+    bulkDeleteResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ เช็คไม่สำเร็จ: ${err.message}</div>`
+  }
+})
+
+async function executeBulkDelete(channel, from, to, ordersCount, skuCount) {
+  bulkDeleteResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังลบ...</div>'
+  try {
+    // ลบ sku_revenue ก่อนเสมอ (กัน FK/ข้อมูลกำพร้า)
+    const { error: e1 } = await DB.from('sku_revenue').delete().eq('channel', channel).gte('date', from).lte('date', to)
+    if (e1) throw e1
+    const { error: e2 } = await DB.from('orders').delete().eq('channel', channel).gte('date', from).lte('date', to)
+    if (e2) throw e2
+    bulkDeleteResultEl.innerHTML = `<div style="font-size:0.74rem;color:#34d399;">✅ ลบสำเร็จ ${(ordersCount||0).toLocaleString()} orders / ${(skuCount||0).toLocaleString()} sku_revenue (${channel}, ${from} – ${to}) — อัพโหลดไฟล์ใหม่ได้เลย</div>`
+  } catch (err) {
+    bulkDeleteResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ ลบไม่สำเร็จ: ${err.message}</div>`
+  }
+}
 
 // ===== Upload History + Delete =====
 function timeAgo(dateStr) {
