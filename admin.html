@@ -33,7 +33,7 @@
   .page-header p { font-size: 0.82rem; color: var(--muted); }
   .btn-primary { background: var(--accent); color: white; border: none; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; }
   .btn-primary:hover { background: var(--accent2); }
-  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 24px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
   .kpi-card .kpi-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 6px; }
   .kpi-card .kpi-val { font-size: 1.3rem; font-weight: 700; }
@@ -111,6 +111,7 @@
     <div class="kpi-card"><div class="kpi-label">NPD (สินค้าใหม่)</div><div class="kpi-val" id="kpiNpd">—</div></div>
     <div class="kpi-card"><div class="kpi-label">Existing (ขายอยู่)</div><div class="kpi-val" id="kpiExisting">—</div></div>
     <div class="kpi-card"><div class="kpi-label">Discontinued (เลิกขาย)</div><div class="kpi-val" id="kpiDiscontinued">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">GWP (ของแถม)</div><div class="kpi-val" id="kpiGwp">—</div></div>
   </div>
 
   <div class="toolbar">
@@ -120,6 +121,7 @@
       <option value="NPD">NPD (สินค้าใหม่)</option>
       <option value="Existing">Existing (ขายอยู่)</option>
       <option value="Discontinued">Discontinued (เลิกขาย)</option>
+      <option value="GWP">GWP (ของแถม)</option>
     </select>
     <label class="chip-toggle" id="rspToggleLabel">
       <input type="checkbox" id="rspToggle"> แสดงเฉพาะที่ยังไม่มี RSP
@@ -139,6 +141,7 @@
         <option value="NPD">NPD</option>
         <option value="Existing" selected>Existing</option>
         <option value="Discontinued">Discontinued</option>
+        <option value="GWP">GWP (ของแถม)</option>
       </select>
       <button class="btn-primary" id="btnAddNew">บันทึกสินค้าใหม่</button>
       <button class="btn-ghost" id="btnCancelNew">ยกเลิก</button>
@@ -220,17 +223,22 @@ async function fetchAllProducts() {
 
 function renderKPIs(list) {
   const total = list.length
-  const noRsp = list.filter(p => !p.rsp || parseFloat(p.rsp) <= 0).length
-  const noMock = list.filter(p => !p.mock_price || parseFloat(p.mock_price) <= 0).length
+  // RSP/Mock = 0 ถือเป็นปกติสำหรับ NPD (ยังไม่ขายจริง) และ GWP (ของแถม ไม่เก็บเงิน)
+  // ถ้าเป็น Existing/Discontinued แล้ว RSP/Mock = 0 ถือเป็นข้อมูลตกหล่นจริง ต้องกรอก
+  const needsRsp = list.filter(p => p.status !== 'GWP' && p.status !== 'NPD')
+  const noRsp = needsRsp.filter(p => !p.rsp || parseFloat(p.rsp) <= 0).length
+  const noMock = needsRsp.filter(p => !p.mock_price || parseFloat(p.mock_price) <= 0).length
   const npd = list.filter(p => p.status === 'NPD').length
   const existing = list.filter(p => (p.status || 'Existing') === 'Existing').length
   const discontinued = list.filter(p => p.status === 'Discontinued').length
+  const gwp = list.filter(p => p.status === 'GWP').length
   document.getElementById('kpiTotal').textContent = total.toLocaleString()
   document.getElementById('kpiNoRsp').textContent = noRsp.toLocaleString()
   document.getElementById('kpiNoMock').textContent = noMock.toLocaleString()
   document.getElementById('kpiNpd').textContent = npd.toLocaleString()
   document.getElementById('kpiExisting').textContent = existing.toLocaleString()
   document.getElementById('kpiDiscontinued').textContent = discontinued.toLocaleString()
+  document.getElementById('kpiGwp').textContent = gwp.toLocaleString()
 }
 
 function renderTable() {
@@ -254,8 +262,9 @@ function renderTable() {
   }
 
   tbody.innerHTML = list.map(p => {
-    const noRsp = !p.rsp || parseFloat(p.rsp) <= 0
-    const noMock = !p.mock_price || parseFloat(p.mock_price) <= 0
+    const needsRsp = p.status !== 'GWP' && p.status !== 'NPD'
+    const noRsp = needsRsp && (!p.rsp || parseFloat(p.rsp) <= 0)
+    const noMock = needsRsp && (!p.mock_price || parseFloat(p.mock_price) <= 0)
     return `
     <tr data-sku="${p.parent_sku}" class="${noRsp || noMock ? 'no-rsp' : ''}">
       <td><span class="sku-cell">${p.parent_sku}</span>${noRsp ? '<span class="badge-norsp">ไม่มี RSP</span>' : ''}${noMock ? '<span class="badge-norsp">ไม่มี Mock</span>' : ''}</td>
@@ -267,6 +276,7 @@ function renderTable() {
           <option value="NPD" ${p.status==='NPD'?'selected':''}>NPD</option>
           <option value="Existing" ${(p.status||'Existing')==='Existing'?'selected':''}>Existing</option>
           <option value="Discontinued" ${p.status==='Discontinued'?'selected':''}>Discontinued</option>
+          <option value="GWP" ${p.status==='GWP'?'selected':''}>GWP (ของแถม)</option>
         </select>
       </td>
       <td><button class="btn-row-save">บันทึก</button><span class="row-saved-flash" style="display:none;">✓ บันทึกแล้ว</span></td>
@@ -302,7 +312,8 @@ document.getElementById('tblBody').addEventListener('click', async e => {
     const idx = allProducts.findIndex(p => p.parent_sku === sku)
     if (idx >= 0) allProducts[idx] = { ...allProducts[idx], product_name: name, mock_price, rsp, status }
     tr.classList.remove('dirty', 'no-rsp')
-    if (rsp <= 0 || mock_price <= 0) tr.classList.add('no-rsp')
+    const needsRsp = status !== 'GWP' && status !== 'NPD'
+    if (needsRsp && (rsp <= 0 || mock_price <= 0)) tr.classList.add('no-rsp')
     const flash = tr.querySelector('.row-saved-flash')
     flash.style.display = 'inline'
     setTimeout(() => { flash.style.display = 'none' }, 2000)
