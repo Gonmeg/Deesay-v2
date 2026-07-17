@@ -554,16 +554,20 @@ async function syncDealerOrders() {
     if (!rawRows.length) throw new Error('ไม่พบข้อมูลใน Sheet')
 
     // Group by วันที่ + กลุ่มลูกค้า + ชื่อลูกค้า → 1 ออเดอร์
+    // เก็บ revenue แยกรายSKU ด้วย (จากคอลัมน์ "ราคารวม vat" ที่ Sheet มีให้อยู่แล้วรายบรรทัด)
+    // เพื่อไม่ให้ revenue_share ใน sku_revenue กลายเป็น 0 เหมือนเดิม
     const orderMap = {}
     rawRows.forEach(r => {
       const key = `${r.dateStr}||${r.group}||${r.customer}`
-      if (!orderMap[key]) orderMap[key] = { dateStr: r.dateStr, group: r.group, customer: r.customer, skus: {}, revenue: 0 }
+      if (!orderMap[key]) orderMap[key] = { dateStr: r.dateStr, group: r.group, customer: r.customer, skus: {}, skuRev: {}, revenue: 0 }
       orderMap[key].skus[r.sku] = (orderMap[key].skus[r.sku] || 0) + r.qty
+      orderMap[key].skuRev[r.sku] = (orderMap[key].skuRev[r.sku] || 0) + r.rev
       orderMap[key].revenue += r.rev
     })
 
     // สร้าง order records
     const orders = []
+    const orderSkuRevMap = {} // order_id -> { sku: revenue } ใช้ตอนสร้าง sku_revenue rows
     const dateCounters = {} // นับ order_id แยกตามวันที่ + ประเภท
     Object.values(orderMap).forEach(o => {
       const isMT = o.group.startsWith('MT')
@@ -587,6 +591,7 @@ async function syncDealerOrders() {
         settled_date: o.dateStr,
         base_promotion: null,
       })
+      orderSkuRevMap[order_id] = o.skuRev
     })
 
     // Upsert เข้า orders (แต่ต้อง clear ของเดิมก่อนเพราะ order_id อาจเปลี่ยนถ้าข้อมูล Sheet เปลี่ยน)
@@ -603,17 +608,19 @@ async function syncDealerOrders() {
     // upsert sku_revenue
     const skuRows = []
     orders.forEach(o => {
+      const revMap = orderSkuRevMap[o.order_id] || {}
       o.sku_promotion.split('+').forEach(part => {
         const m = part.match(/^(.+?)x(\d+)$/i)
         if (!m) return
+        const sku = m[1]
         skuRows.push({
           order_id: o.order_id,
           date: o.date,
           channel: o.channel,
           sub_channel: o.sub_channel,
-          parent_sku: m[1],
+          parent_sku: sku,
           qty: parseInt(m[2]),
-          revenue_share: 0, // ยังไม่มี RSP mapping แยกต่อ order
+          revenue_share: Math.round((revMap[sku] || 0) * 100) / 100, // revenue จริงต่อ SKU จาก Sheet ไม่ใช่ 0 อีกต่อไป
           settled: 'True',
           settled_date: o.date,
         })
@@ -849,15 +856,92 @@ document.getElementById('btnBulkDeleteCheck').addEventListener('click', async ()
         ของ <strong>${channel}</strong> เดือน ${monthStr} (${from} – ${to})
       </div>
       <div style="font-size:0.68rem;color:var(--muted);margin-bottom:8px;">⚠️ ลบแล้วกู้คืนไม่ได้ — เตรียมไฟล์ใหม่ให้พร้อมอัพโหลดทันทีหลังลบ</div>
+      <button id="btnBulkDeleteDiag" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);padding:6px 14px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;margin-bottom:8px;">📊 เช็คก่อนลบ (รายวัน + เทียบเดือนก่อน + order ซ้ำ)</button>
+      <div id="bulkDeleteDiag"></div>
       <button id="btnBulkDeleteConfirm" style="background:var(--danger);color:white;border:none;padding:6px 16px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:600;">🗑 ยืนยันลบทั้งหมด</button>
       <button id="btnBulkDeleteCancel" style="background:none;border:1px solid var(--border2);color:var(--muted);padding:6px 14px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;margin-left:6px;">ยกเลิก</button>
     `
     document.getElementById('btnBulkDeleteConfirm').addEventListener('click', () => executeBulkDelete(channel, from, to, ordersCount, skuCount))
     document.getElementById('btnBulkDeleteCancel').addEventListener('click', () => { bulkDeleteResultEl.innerHTML = '' })
+    document.getElementById('btnBulkDeleteDiag').addEventListener('click', () => diagnoseBulkDelete(channel, from, to, monthStr))
   } catch (err) {
     bulkDeleteResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ เช็คไม่สำเร็จ: ${err.message}</div>`
   }
 })
+
+async function fetchAllColumn(table, column, channel, from, to) {
+  let result = []
+  let offset = 0
+  const PAGE = 1000
+  while (true) {
+    const { data, error } = await DB.from(table).select(column).eq('channel', channel).gte('date', from).lte('date', to).order('order_id', { ascending: true }).range(offset, offset + PAGE - 1)
+    if (error) throw error
+    if (!data || !data.length) break
+    result = result.concat(data.map(r => r[column]))
+    if (data.length < PAGE) break
+    offset += PAGE
+  }
+  return result
+}
+
+async function diagnoseBulkDelete(channel, from, to, monthStr) {
+  const diagEl = document.getElementById('bulkDeleteDiag')
+  diagEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);padding:6px 0;">⏳ กำลังวิเคราะห์ (อาจใช้เวลาสักครู่)...</div>'
+  try {
+    const [y, m] = monthStr.split('-').map(Number)
+    const monthsBack = []
+    for (let i = 2; i >= 1; i--) {
+      let py = y, pm = m - i
+      while (pm <= 0) { pm += 12; py -= 1 }
+      monthsBack.push(`${py}-${String(pm).padStart(2, '0')}`)
+    }
+    const trendCounts = []
+    for (const ms of [...monthsBack, monthStr]) {
+      const { from: f2, to: t2 } = monthToRange(ms)
+      const { count, error } = await DB.from('orders').select('*', { count: 'exact', head: true }).eq('channel', channel).gte('date', f2).lte('date', t2)
+      if (error) throw error
+      trendCounts.push({ month: ms, count: count || 0 })
+    }
+
+    const dates = await fetchAllColumn('orders', 'date', channel, from, to)
+    const dayCounts = {}
+    dates.forEach(d => { const day = String(d).substring(0, 10); dayCounts[day] = (dayCounts[day] || 0) + 1 })
+    const numDays = new Date(y, m, 0).getDate()
+    const allDays = []
+    for (let d = 1; d <= numDays; d++) {
+      const dayStr = `${monthStr}-${String(d).padStart(2, '0')}`
+      allDays.push({ day: dayStr, count: dayCounts[dayStr] || 0 })
+    }
+    const avg = dates.length / numDays
+    const zeroDays = allDays.filter(d => d.count === 0)
+    const lowDays = allDays.filter(d => d.count > 0 && d.count < avg * 0.3)
+    const highDays = allDays.filter(d => d.count > avg * 2.5)
+
+    const orderIds = await fetchAllColumn('orders', 'order_id', channel, from, to)
+    const idCounts = {}
+    orderIds.forEach(id => { idCounts[id] = (idCounts[id] || 0) + 1 })
+    const dupIds = Object.entries(idCounts).filter(([id, c]) => c > 1)
+
+    let html = '<div style="font-size:0.72rem;color:var(--text);padding:8px 0;border-top:1px solid var(--border2);margin-top:4px;">'
+    html += '<div style="margin-bottom:4px;font-weight:600;">📈 เทียบย้อนหลัง 3 เดือน (orders)</div>'
+    trendCounts.forEach(t => { html += `<div style="color:var(--muted);">${t.month}: ${t.count.toLocaleString()} orders</div>` })
+    html += '<div style="margin:8px 0 4px;font-weight:600;">📅 เช็ครายวัน</div>'
+    html += `<div style="color:var(--muted);">เฉลี่ย ~${avg.toFixed(1)} orders/วัน</div>`
+    html += zeroDays.length
+      ? `<div style="color:#fca5a5;">⚠️ วันที่ไม่มีออเดอร์เลย: ${zeroDays.map(d => d.day).join(', ')}</div>`
+      : '<div style="color:#34d399;">✓ ทุกวันมีออเดอร์ ไม่มีวันไหนเป็น 0</div>'
+    if (lowDays.length) html += `<div style="color:#fbbf24;">⚠ ออเดอร์ต่ำผิดปกติ: ${lowDays.map(d => d.day + ' (' + d.count + ')').join(', ')}</div>`
+    if (highDays.length) html += `<div style="color:#fbbf24;">⚠ ออเดอร์สูงผิดปกติ: ${highDays.map(d => d.day + ' (' + d.count + ')').join(', ')}</div>`
+    html += '<div style="margin:8px 0 4px;font-weight:600;">🔁 เช็ค order_id ซ้ำ</div>'
+    html += dupIds.length
+      ? `<div style="color:#fca5a5;">⚠️ พบ order_id ซ้ำ ${dupIds.length} รายการ เช่น ${dupIds.slice(0, 5).map(([id, c]) => id + ' x' + c).join(', ')}</div>`
+      : '<div style="color:#34d399;">✓ ไม่มี order_id ซ้ำภายในเดือนนี้</div>'
+    html += '</div>'
+    diagEl.innerHTML = html
+  } catch (err) {
+    diagEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ วิเคราะห์ไม่สำเร็จ: ${err.message}</div>`
+  }
+}
 
 async function executeBulkDelete(channel, from, to, ordersCount, skuCount) {
   bulkDeleteResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังลบ...</div>'
@@ -1339,10 +1423,12 @@ async function handleConfirm() {
       }
       const skuRows = []
       processed.forEach(o => {
+        const revMap = _dealerSkuRevMap[o.order_id] || {}
         o.sku_promotion.split('+').forEach(part => {
           const m = part.match(/^(.+?)x(\d+)$/i); if (!m) return
+          const sku = m[1]
           skuRows.push({ order_id:o.order_id, date:o.date, channel:o.channel, sub_channel:o.sub_channel,
-            parent_sku:m[1], qty:parseInt(m[2]), revenue_share:0, settled:'True', settled_date:o.date })
+            parent_sku:sku, qty:parseInt(m[2]), revenue_share: Math.round((revMap[sku]||0)*100)/100, settled:'True', settled_date:o.date })
         })
       })
       for (let i = 0; i < skuRows.length; i += BATCH) {
@@ -1627,6 +1713,8 @@ async function calcSkuRevenue(orders) {
   return skuRows.length
 }
 
+let _dealerSkuRevMap = {} // order_id -> { sku: revenue } — ใช้ตอนสร้าง sku_revenue rows ใน handleConfirm
+
 function processDealerRows(rows, mappings) {
   const gs = (row, key) => {
     const col = mappings[key]; if (!col) return ''
@@ -1638,6 +1726,7 @@ function processDealerRows(rows, mappings) {
   }
 
   // Group by วันที่ + กลุ่มลูกค้า + ชื่อลูกค้า
+  // เก็บ revenue แยกรายSKU ด้วย เพื่อไม่ให้ sku_revenue.revenue_share กลายเป็น 0
   const orderMap = {}
   rows.forEach(row => {
     const dateStr = parseDate(row[mappings['date']])
@@ -1648,12 +1737,14 @@ function processDealerRows(rows, mappings) {
     const rev = gn(row, 'revenue')
     if (!dateStr || !sku || !qty) return
     const key = `${dateStr}||${group}||${customer}`
-    if (!orderMap[key]) orderMap[key] = { dateStr, group, customer, skus: {}, revenue: 0 }
+    if (!orderMap[key]) orderMap[key] = { dateStr, group, customer, skus: {}, skuRev: {}, revenue: 0 }
     orderMap[key].skus[sku] = (orderMap[key].skus[sku] || 0) + qty
+    orderMap[key].skuRev[sku] = (orderMap[key].skuRev[sku] || 0) + rev
     orderMap[key].revenue += rev
   })
 
   const result = []
+  _dealerSkuRevMap = {}
   const dateCounters = {}
   Object.values(orderMap).forEach((o) => {
     const isMT = o.group.startsWith('MT')
@@ -1674,6 +1765,7 @@ function processDealerRows(rows, mappings) {
       revenue: Math.round(o.revenue * 100) / 100,
       settled: true, settled_date: o.dateStr, base_promotion: null,
     })
+    _dealerSkuRevMap[order_id] = o.skuRev
   })
   return result
 }
