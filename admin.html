@@ -33,7 +33,7 @@
   .page-header p { font-size: 0.82rem; color: var(--muted); }
   .btn-primary { background: var(--accent); color: white; border: none; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; }
   .btn-primary:hover { background: var(--accent2); }
-  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
   .kpi-card .kpi-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 6px; }
   .kpi-card .kpi-val { font-size: 1.3rem; font-weight: 700; }
@@ -77,7 +77,7 @@
   .toast.error { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
   .loading-row { text-align: center; color: var(--muted); padding: 40px; font-size: 0.85rem; }
   @media (max-width: 900px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
   }
 </style>
 </head>
@@ -107,6 +107,7 @@
   <div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card"><div class="kpi-label">สินค้าทั้งหมด</div><div class="kpi-val" id="kpiTotal">—</div></div>
     <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่มี RSP</div><div class="kpi-val" id="kpiNoRsp">—</div></div>
+    <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่มี Mock</div><div class="kpi-val" id="kpiNoMock">—</div></div>
     <div class="kpi-card"><div class="kpi-label">NPD (สินค้าใหม่)</div><div class="kpi-val" id="kpiNpd">—</div></div>
     <div class="kpi-card"><div class="kpi-label">Existing (ขายอยู่)</div><div class="kpi-val" id="kpiExisting">—</div></div>
     <div class="kpi-card"><div class="kpi-label">Discontinued (เลิกขาย)</div><div class="kpi-val" id="kpiDiscontinued">—</div></div>
@@ -123,13 +124,17 @@
     <label class="chip-toggle" id="rspToggleLabel">
       <input type="checkbox" id="rspToggle"> แสดงเฉพาะที่ยังไม่มี RSP
     </label>
+    <label class="chip-toggle" id="mockToggleLabel">
+      <input type="checkbox" id="mockToggle"> แสดงเฉพาะที่ยังไม่มี Mock
+    </label>
   </div>
 
   <div class="card">
     <div class="new-row-form" id="newRowForm">
       <input type="text" id="newSku" placeholder="Parent SKU (เช่น DSP01)" style="width:160px;">
       <input type="text" id="newName" placeholder="ชื่อสินค้า" style="flex:1;min-width:160px;">
-      <input type="number" id="newRsp" placeholder="RSP" style="width:110px;">
+      <input type="number" id="newMock" placeholder="Mock (ราคาหน้ากล่อง)" style="width:150px;">
+      <input type="number" id="newRsp" placeholder="RSP (ราคาที่คาดว่าจะขาย)" style="width:150px;">
       <select id="newStatus">
         <option value="NPD">NPD</option>
         <option value="Existing" selected>Existing</option>
@@ -144,13 +149,14 @@
           <tr>
             <th style="width:110px;">SKU</th>
             <th>ชื่อสินค้า</th>
-            <th style="width:130px;">RSP</th>
+            <th style="width:130px;">Mock (หน้ากล่อง)</th>
+            <th style="width:130px;">RSP (คาดขาย)</th>
             <th style="width:150px;">สถานะ</th>
             <th style="width:100px;"></th>
           </tr>
         </thead>
         <tbody id="tblBody">
-          <tr><td colspan="5" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
+          <tr><td colspan="6" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
         </tbody>
       </table>
     </div>
@@ -191,7 +197,7 @@ async function fetchAllProducts() {
   let offset = 0
   const PAGE = 1000
   while (true) {
-    const { data, error } = await DB.from('products').select('parent_sku, product_name, rsp, status')
+    const { data, error } = await DB.from('products').select('parent_sku, product_name, mock_price, rsp, status')
       .order('parent_sku', { ascending: true }).range(offset, offset + PAGE - 1)
     if (error) throw error
     if (!data || !data.length) break
@@ -199,17 +205,29 @@ async function fetchAllProducts() {
     if (data.length < PAGE) break
     offset += PAGE
   }
-  return result
+  // ตาราง products จริงคีย์หลักคือ child_sku (มีหลายแถวต่อ parent_sku เดียวกัน)
+  // แต่ Mock/RSP/ชื่อ/สถานะ ควรเหมือนกันทุกช่องทางในระดับ parent_sku เดียว
+  // จึงยุบเหลือ 1 แถวต่อ parent_sku สำหรับหน้านี้ (แก้ทีเดียวมีผลกับทุก child SKU ใต้ parent นั้น)
+  const seen = new Set()
+  const deduped = []
+  result.forEach(p => {
+    if (seen.has(p.parent_sku)) return
+    seen.add(p.parent_sku)
+    deduped.push(p)
+  })
+  return deduped
 }
 
 function renderKPIs(list) {
   const total = list.length
   const noRsp = list.filter(p => !p.rsp || parseFloat(p.rsp) <= 0).length
+  const noMock = list.filter(p => !p.mock_price || parseFloat(p.mock_price) <= 0).length
   const npd = list.filter(p => p.status === 'NPD').length
   const existing = list.filter(p => (p.status || 'Existing') === 'Existing').length
   const discontinued = list.filter(p => p.status === 'Discontinued').length
   document.getElementById('kpiTotal').textContent = total.toLocaleString()
   document.getElementById('kpiNoRsp').textContent = noRsp.toLocaleString()
+  document.getElementById('kpiNoMock').textContent = noMock.toLocaleString()
   document.getElementById('kpiNpd').textContent = npd.toLocaleString()
   document.getElementById('kpiExisting').textContent = existing.toLocaleString()
   document.getElementById('kpiDiscontinued').textContent = discontinued.toLocaleString()
@@ -219,26 +237,30 @@ function renderTable() {
   const search = (document.getElementById('searchInput').value || '').trim().toLowerCase()
   const statusFilterVal = document.getElementById('statusFilter').value
   const rspOnly = document.getElementById('rspToggle').checked
+  const mockOnly = document.getElementById('mockToggle').checked
 
   let list = allProducts.filter(p => {
     if (search && !(String(p.parent_sku||'').toLowerCase().includes(search) || String(p.product_name||'').toLowerCase().includes(search))) return false
     if (statusFilterVal && (p.status || 'Existing') !== statusFilterVal) return false
     if (rspOnly && p.rsp && parseFloat(p.rsp) > 0) return false
+    if (mockOnly && p.mock_price && parseFloat(p.mock_price) > 0) return false
     return true
   })
 
   const tbody = document.getElementById('tblBody')
   if (!list.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'
     return
   }
 
   tbody.innerHTML = list.map(p => {
     const noRsp = !p.rsp || parseFloat(p.rsp) <= 0
+    const noMock = !p.mock_price || parseFloat(p.mock_price) <= 0
     return `
-    <tr data-sku="${p.parent_sku}" class="${noRsp ? 'no-rsp' : ''}">
-      <td><span class="sku-cell">${p.parent_sku}</span>${noRsp ? '<span class="badge-norsp">ไม่มี RSP</span>' : ''}</td>
+    <tr data-sku="${p.parent_sku}" class="${noRsp || noMock ? 'no-rsp' : ''}">
+      <td><span class="sku-cell">${p.parent_sku}</span>${noRsp ? '<span class="badge-norsp">ไม่มี RSP</span>' : ''}${noMock ? '<span class="badge-norsp">ไม่มี Mock</span>' : ''}</td>
       <td><input class="row-input field-name" type="text" value="${(p.product_name||'').replace(/"/g,'&quot;')}" placeholder="ชื่อสินค้า"></td>
+      <td><input class="row-input field-mock" type="number" value="${p.mock_price || ''}" placeholder="0"></td>
       <td><input class="row-input field-rsp" type="number" value="${p.rsp || ''}" placeholder="0"></td>
       <td>
         <select class="row-input field-status">
@@ -254,7 +276,7 @@ function renderTable() {
 
 document.getElementById('tblBody').addEventListener('input', e => {
   const tr = e.target.closest('tr')
-  if (tr && (e.target.classList.contains('field-name') || e.target.classList.contains('field-rsp'))) {
+  if (tr && (e.target.classList.contains('field-name') || e.target.classList.contains('field-mock') || e.target.classList.contains('field-rsp'))) {
     tr.classList.add('dirty')
   }
 })
@@ -268,16 +290,19 @@ document.getElementById('tblBody').addEventListener('click', async e => {
   const tr = e.target.closest('tr')
   const sku = tr.dataset.sku
   const name = tr.querySelector('.field-name').value.trim()
+  const mock_price = parseFloat(tr.querySelector('.field-mock').value) || 0
   const rsp = parseFloat(tr.querySelector('.field-rsp').value) || 0
   const status = tr.querySelector('.field-status').value
   e.target.disabled = true
   try {
-    const { error } = await DB.from('products').update({ product_name: name, rsp, status }).eq('parent_sku', sku)
+    // parent_sku ไม่ใช่ primary key จริง (child_sku คือ PK) — อัพเดตทุกแถวที่แชร์ parent_sku เดียวกัน
+    // เพราะ Mock/RSP/ชื่อ/สถานะ ต้องเหมือนกันทุก child SKU ภายใต้ parent เดียวกัน
+    const { error } = await DB.from('products').update({ product_name: name, mock_price, rsp, status }).eq('parent_sku', sku)
     if (error) throw error
     const idx = allProducts.findIndex(p => p.parent_sku === sku)
-    if (idx >= 0) allProducts[idx] = { ...allProducts[idx], product_name: name, rsp, status }
+    if (idx >= 0) allProducts[idx] = { ...allProducts[idx], product_name: name, mock_price, rsp, status }
     tr.classList.remove('dirty', 'no-rsp')
-    if (rsp <= 0) tr.classList.add('no-rsp')
+    if (rsp <= 0 || mock_price <= 0) tr.classList.add('no-rsp')
     const flash = tr.querySelector('.row-saved-flash')
     flash.style.display = 'inline'
     setTimeout(() => { flash.style.display = 'none' }, 2000)
@@ -296,6 +321,10 @@ document.getElementById('rspToggle').addEventListener('change', e => {
   document.getElementById('rspToggleLabel').classList.toggle('on', e.target.checked)
   renderTable()
 })
+document.getElementById('mockToggle').addEventListener('change', e => {
+  document.getElementById('mockToggleLabel').classList.toggle('on', e.target.checked)
+  renderTable()
+})
 
 document.getElementById('btnShowNewRow').addEventListener('click', () => {
   document.getElementById('newRowForm').classList.add('show')
@@ -303,11 +332,12 @@ document.getElementById('btnShowNewRow').addEventListener('click', () => {
 })
 document.getElementById('btnCancelNew').addEventListener('click', () => {
   document.getElementById('newRowForm').classList.remove('show')
-  ;['newSku','newName','newRsp'].forEach(id => document.getElementById(id).value = '')
+  ;['newSku','newName','newMock','newRsp'].forEach(id => document.getElementById(id).value = '')
 })
 document.getElementById('btnAddNew').addEventListener('click', async () => {
   const sku = document.getElementById('newSku').value.trim().toUpperCase()
   const name = document.getElementById('newName').value.trim()
+  const mock_price = parseFloat(document.getElementById('newMock').value) || 0
   const rsp = parseFloat(document.getElementById('newRsp').value) || 0
   const status = document.getElementById('newStatus').value
   if (!sku) { showToast('กรุณากรอก SKU', true); return }
@@ -315,12 +345,13 @@ document.getElementById('btnAddNew').addEventListener('click', async () => {
   const btn = document.getElementById('btnAddNew')
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...'
   try {
-    const { error } = await DB.from('products').insert({ parent_sku: sku, product_name: name, rsp, status })
+    // child_sku เป็น primary key จริงของตาราง — สินค้าที่ไม่มี variant ย่อย ใช้ค่าเดียวกับ parent_sku
+    const { error } = await DB.from('products').insert({ child_sku: sku, parent_sku: sku, product_name: name, product_name_child: name, mock_price, rsp, status })
     if (error) throw error
-    allProducts.push({ parent_sku: sku, product_name: name, rsp, status })
+    allProducts.push({ parent_sku: sku, product_name: name, mock_price, rsp, status })
     allProducts.sort((a,b) => a.parent_sku.localeCompare(b.parent_sku))
     document.getElementById('newRowForm').classList.remove('show')
-    ;['newSku','newName','newRsp'].forEach(id => document.getElementById(id).value = '')
+    ;['newSku','newName','newMock','newRsp'].forEach(id => document.getElementById(id).value = '')
     renderKPIs(allProducts); renderTable()
     showToast(`เพิ่ม ${sku} เรียบร้อย`)
   } catch (err) {
