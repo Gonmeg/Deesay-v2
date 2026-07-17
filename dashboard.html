@@ -941,7 +941,7 @@ async function fetchMV(viewName, selectCols, orderCols) {
   }
   return all;
 }
-const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'month,channel,sku_promotion,total_orders,total_revenue,aov', 'month.asc,channel.asc,sku_promotion.asc');
+const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'month,channel,sub_channel,sku_promotion,total_orders,total_revenue,aov', 'month.asc,channel.asc,sku_promotion.asc');
 const fetchSkuParentMonthly = () => fetchMV('mv_sku_parent_monthly', 'month,channel,sub_channel,parent_sku,total_qty,total_revenue,total_orders', 'month.asc,channel.asc,sub_channel.asc,parent_sku.asc');
 const fetchProvinceMonthly = () => fetchMV('mv_province_monthly', 'month,channel,province,total_orders,total_revenue,aov', 'month.asc,channel.asc,province.asc');
 
@@ -1318,6 +1318,7 @@ function renderChannel() {
 // ===== PROMOTION =====
 function renderPromotion() {
   const ch = document.getElementById('filterChannel').value;
+  const sub = document.getElementById('filterSubChannel').value;
   const monthsCurr = getSelectedMVMonths();
   const monthsPrev = getSelectedMVPrevMonth();
   const promoData = window._promoMonthlyCache || [];
@@ -1327,9 +1328,9 @@ function renderPromotion() {
     return;
   }
 
-  // TABLE 1: Top 20 Promotion (จาก mv_promo_monthly — ระดับเดือน, sub_channel ใช้กรองไม่ได้เพราะ MV ไม่มีคอลัมน์นี้)
-  const inRange = r => monthsCurr.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch);
-  const inPrevRange = r => monthsPrev.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch);
+  // TABLE 1: Top 20 Promotion (จาก mv_promo_monthly — ระดับเดือน, ตอนนี้กรอง sub_channel ได้แล้ว)
+  const inRange = r => monthsCurr.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
+  const inPrevRange = r => monthsPrev.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
 
   const bySKU = {};
   promoData.filter(inRange).forEach(r => {
@@ -1379,7 +1380,6 @@ function renderPromotion() {
   }).join('') || '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>';
 
   // TABLE 2: Top 20 สินค้าเดี่ยว — จาก mv_sku_parent_monthly
-  const sub = document.getElementById('filterSubChannel').value;
   const skuParentData = window._skuParentMonthlyCache || [];
   const inRangeProd = r => monthsCurr.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
   const inPrevRangeProd = r => monthsPrev.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
