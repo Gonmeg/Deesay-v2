@@ -331,6 +331,26 @@
     <button class="btn-sync" id="btnBulkDeleteCheck" style="margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔍 เช็คจำนวนข้อมูล</button>
     <div id="bulkDeleteResult" style="margin-top:8px;"></div>
   </div>
+  <div class="promo-sync-card" style="margin-top:12px;border:1px solid rgba(99,102,241,0.25);">
+    <div class="history-title" style="color:#818cf8;">📎 อัพเดต Order Channel / Creator (TikTok)</div>
+    <div class="history-sub">อัพเดตแค่ 2 คอลัมน์นี้ ไม่กระทบยอดขาย/SKU ที่มีอยู่แล้ว — ใช้ไฟล์คำสั่งซื้อ TikTok ปกติได้เลย</div>
+    <input type="file" id="attrFileInput" accept=".xlsx,.xls,.csv" style="margin-top:10px;width:100%;font-size:0.72rem;color:var(--muted);">
+    <div id="attrMapArea" style="display:none;margin-top:10px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Order ID
+          <select id="attrColOrderId" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
+        </label>
+        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Order Channel
+          <select id="attrColChannel" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
+        </label>
+        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Creator Handle
+          <select id="attrColCreator" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
+        </label>
+      </div>
+      <button class="btn-sync" id="btnAttrUpdate" style="margin-top:10px;background:var(--accent);color:white;">📎 อัพเดตข้อมูล</button>
+    </div>
+    <div id="attrResult" style="margin-top:8px;"></div>
+  </div>
   <div class="history-card">
     <div class="history-title">ประวัติการอัพโหลด</div>
     <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
@@ -942,6 +962,99 @@ async function diagnoseBulkDelete(channel, from, to, monthStr) {
     diagEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ วิเคราะห์ไม่สำเร็จ: ${err.message}</div>`
   }
 }
+
+// ===== อัพเดต Order Channel / Creator Handle (TikTok) — ไม่กระทบยอดขาย =====
+let attrRows = []
+let attrHeaders = []
+
+function guessColumn(headers, keywords) {
+  const lower = headers.map(h => String(h).toLowerCase())
+  for (const kw of keywords) {
+    const idx = lower.findIndex(h => h.includes(kw))
+    if (idx >= 0) return headers[idx]
+  }
+  return headers[0] || ''
+}
+
+document.getElementById('attrFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  const attrResultEl = document.getElementById('attrResult')
+  attrResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">กำลังอ่านไฟล์...</div>'
+  try {
+    const data = await file.arrayBuffer()
+    const wb = XLSX.read(data, { type: 'array' })
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    attrRows = XLSX.utils.sheet_to_json(ws, { defval: '' })
+    if (!attrRows.length) { attrResultEl.innerHTML = '<div style="color:#fca5a5;font-size:0.72rem;">ไฟล์ไม่มีข้อมูล</div>'; return }
+    attrHeaders = Object.keys(attrRows[0])
+
+    const fillSelect = (id, guessKeywords) => {
+      const sel = document.getElementById(id)
+      sel.innerHTML = attrHeaders.map(h => `<option value="${h}">${h}</option>`).join('')
+      sel.value = guessColumn(attrHeaders, guessKeywords)
+    }
+    fillSelect('attrColOrderId', ['order id', 'order_id', 'orderid', 'เลขที่คำสั่งซื้อ', 'หมายเลขคำสั่งซื้อ'])
+    fillSelect('attrColChannel', ['order channel', 'channel'])
+    fillSelect('attrColCreator', ['creator handle', 'creator', 'handle'])
+
+    document.getElementById('attrMapArea').style.display = 'block'
+    attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">พบ ${attrRows.length.toLocaleString()} แถวในไฟล์ — เช็คคอลัมน์ด้านบนให้ตรงแล้วกด "อัพเดตข้อมูล"</div>`
+  } catch (err) {
+    attrResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ อ่านไฟล์ไม่สำเร็จ: ${err.message}</div>`
+  }
+})
+
+document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
+  const attrResultEl = document.getElementById('attrResult')
+  const colOrderId = document.getElementById('attrColOrderId').value
+  const colChannel = document.getElementById('attrColChannel').value
+  const colCreator = document.getElementById('attrColCreator').value
+  const btn = document.getElementById('btnAttrUpdate')
+
+  const rows = attrRows
+    .map(r => ({
+      order_id: String(r[colOrderId] || '').trim(),
+      order_channel: String(r[colChannel] || '').trim() || null,
+      creator_handle: String(r[colCreator] || '').trim() || null,
+    }))
+    .filter(r => r.order_id)
+
+  const dedupMap = new Map(); rows.forEach(r => dedupMap.set(r.order_id, r))
+  const deduped = [...dedupMap.values()]
+
+  if (!deduped.length) { attrResultEl.innerHTML = '<div style="color:#fca5a5;font-size:0.72rem;">ไม่พบ Order ID ในไฟล์ เช็ค mapping คอลัมน์อีกครั้ง</div>'; return }
+
+  btn.disabled = true; btn.textContent = 'กำลังอัพเดต...'
+  attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังอัพเดต 0 / ${deduped.length.toLocaleString()}...</div>`
+
+  let matched = 0, done = 0
+  const CONCURRENCY = 20
+  try {
+    for (let i = 0; i < deduped.length; i += CONCURRENCY) {
+      const batch = deduped.slice(i, i + CONCURRENCY)
+      await Promise.all(batch.map(async (r) => {
+        const { data, error } = await DB.from('orders')
+          .update({ order_channel: r.order_channel, creator_handle: r.creator_handle })
+          .eq('order_id', r.order_id)
+          .select('order_id')
+        if (error) throw error
+        if (data && data.length) matched++
+      }))
+      done += batch.length
+      attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังอัพเดต ${done.toLocaleString()} / ${deduped.length.toLocaleString()}...</div>`
+    }
+    const notMatched = deduped.length - matched
+    attrResultEl.innerHTML = `
+      <div style="font-size:0.74rem;color:#34d399;">✅ อัพเดตสำเร็จ ${matched.toLocaleString()} ออเดอร์</div>
+      ${notMatched > 0 ? `<div style="font-size:0.72rem;color:#fbbf24;margin-top:4px;">⚠️ ไม่พบ order_id ในระบบ ${notMatched.toLocaleString()} รายการ (อาจเป็นออเดอร์ที่ยังไม่เคยอัพโหลด)</div>` : ''}
+    `
+  } catch (err) {
+    attrResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ อัพเดตไม่สำเร็จ: ${err.message}</div>`
+  } finally {
+    btn.disabled = false; btn.textContent = '📎 อัพเดตข้อมูล'
+  }
+})
 
 async function executeBulkDelete(channel, from, to, ordersCount, skuCount) {
   bulkDeleteResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังลบ...</div>'
