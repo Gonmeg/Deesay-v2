@@ -1594,16 +1594,21 @@ async function handleConfirm() {
     try {
       const dedupMap = new Map(); processed.forEach(r => dedupMap.set(r.order_id, r))
       const deduped = [...dedupMap.values()]
-      const CONCURRENCY = 20; let done = 0; let matchedCount = 0
+      const CONCURRENCY = 20; let done = 0; let matchedCount = 0; let zeroOrNegativeCount = 0
       const unmatchedOrders = [] // เก็บ order ที่หาไม่เจอ
       for (let i = 0; i < deduped.length; i += CONCURRENCY) {
         const batch = deduped.slice(i, i + CONCURRENCY)
         await Promise.all(batch.map(async (r) => {
-          const { data, error } = await DB.from('orders').update({ settled: true, settled_date: r.settled_date }).eq('order_id', r.order_id).select('order_id')
+          // ยอดเงินที่ได้รับจริงต้องมากกว่า 0 ถึงจะถือว่า "ขายได้" — ถ้า match เจอแต่ยอด 0 หรือติดลบ
+          // (ตีกลับ/คืนเงินเต็มจำนวน) ให้ถือว่ายังไม่ได้เงินเหมือนกัน (settled = false ไม่ใช่ true)
+          const amt = r.settle_amount || 0
+          const isPaid = amt > 0
+          const { data, error } = await DB.from('orders').update({ settled: isPaid, settled_date: r.settled_date }).eq('order_id', r.order_id).select('order_id')
           if (error) throw error
           if (data && data.length) {
             matchedCount++
-            const { error: srError } = await DB.from('sku_revenue').update({ settled: 'True', settled_date: r.settled_date }).eq('order_id', r.order_id)
+            if (!isPaid) zeroOrNegativeCount++
+            const { error: srError } = await DB.from('sku_revenue').update({ settled: isPaid ? 'True' : 'False', settled_date: r.settled_date }).eq('order_id', r.order_id)
             if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
           } else {
             unmatchedOrders.push({ order_id: r.order_id, settled_date: r.settled_date, order_created_date: r.order_created_date, settle_amount: r.settle_amount || 0 })
@@ -1657,11 +1662,12 @@ async function handleConfirm() {
       pt.style.display = 'none'; al.style.display = 'none'
       document.getElementById('btnRow3').innerHTML = `
         <div style="width:100%">
-          <div class="success-banner"><span class="success-banner-icon">✓</span><div><div class="success-banner-title">Map Settlement สำเร็จ</div><div class="success-banner-sub">${matchedCount.toLocaleString()} ออเดอร์ถูกอัพเดทเป็น settled · ${channel}</div></div></div>
+          <div class="success-banner"><span class="success-banner-icon">✓</span><div><div class="success-banner-title">Map Settlement สำเร็จ</div><div class="success-banner-sub">${(matchedCount-zeroOrNegativeCount).toLocaleString()} ออเดอร์ได้เงินจริง (>0) · ${channel}</div></div></div>
           <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที</div>
           <div class="success-stats">
             <div class="success-stat"><div class="success-stat-num">${deduped.length.toLocaleString()}</div><div class="success-stat-label">รายการในไฟล์</div></div>
-            <div class="success-stat"><div class="success-stat-num">${matchedCount.toLocaleString()}</div><div class="success-stat-label">Match สำเร็จ</div></div>
+            <div class="success-stat"><div class="success-stat-num">${(matchedCount-zeroOrNegativeCount).toLocaleString()}</div><div class="success-stat-label">Match + ได้เงิน >0</div></div>
+            <div class="success-stat"><div class="success-stat-num" style="color:${zeroOrNegativeCount>0?'#fb923c':'#818cf8'}">${zeroOrNegativeCount.toLocaleString()}</div><div class="success-stat-label">Match แต่ยอด ≤0 (ตั้ง settled=false)</div></div>
             <div class="success-stat"><div class="success-stat-num" style="color:${notMatched>0?'#fb923c':'#818cf8'}">${notMatched.toLocaleString()}</div><div class="success-stat-label">ไม่เจอออเดอร์</div></div>
           </div>
           ${unmatchedTableHTML}
