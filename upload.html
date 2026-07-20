@@ -1229,6 +1229,10 @@ const BASE_FIELDS = [
   { key:'sku_promotion', label:'SKU', required:true, keywords:['เลขอ้างอิง sku (sku reference no.)','รหัสสินค้า (sku) (จำนวน)','seller sku','รหัสสินค้า','sku','sellersku','เลขอ้างอิง sku'] },
 ]
 const QTY_MULTIPLIER_FIELD = { key:'qty_multiplier', label:'จำนวน (Quantity)', required:false, keywords:['quantity','จำนวน'] }
+const TIKTOK_ATTR_FIELDS = [
+  { key:'order_channel', label:'Order Channel', required:false, keywords:['order channel'] },
+  { key:'creator_handle', label:'Creator Handle', required:false, keywords:['creator handle'] },
+]
 
 const REVENUE_FIELDS = {
   Facebook: [
@@ -1291,7 +1295,7 @@ function getFields(channel) {
   const revFields = REVENUE_FIELDS[channel] || [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }]
   let base = BASE_FIELDS
   if (channel === 'Lazada') base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
-  if (channel === 'TikTok') base = [...base, QTY_MULTIPLIER_FIELD]
+  if (channel === 'TikTok') base = [...base, QTY_MULTIPLIER_FIELD, ...TIKTOK_ATTR_FIELDS]
   return [...base, ...revFields]
 }
 
@@ -1781,7 +1785,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
     const revenueRaw = (() => { const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null; if (!v) return 0; return parseFloat(String(v).replace(/,/g,''))||0 })()
-    return { order_id: gs('order_id'), date, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
+    return { order_id: gs('order_id'), date, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
   }).filter(r => r.order_id && r.date)
 
   const orderGroups = new Map()
@@ -1792,7 +1796,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
 
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
-    return { order_id:g.order_id, date:g.date, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
+    return { order_id:g.order_id, date:g.date, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
