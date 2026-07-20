@@ -346,6 +346,9 @@
         <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Creator Handle
           <select id="attrColCreator" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
         </label>
+        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Order Status
+          <select id="attrColStatus" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
+        </label>
       </div>
       <button class="btn-sync" id="btnAttrUpdate" style="margin-top:10px;background:var(--accent);color:white;">📎 อัพเดตข้อมูล</button>
     </div>
@@ -997,6 +1000,7 @@ document.getElementById('attrFileInput').addEventListener('change', async (e) =>
     fillSelect('attrColOrderId', ['order id', 'order_id', 'orderid', 'เลขที่คำสั่งซื้อ', 'หมายเลขคำสั่งซื้อ'])
     fillSelect('attrColChannel', ['order channel', 'channel'])
     fillSelect('attrColCreator', ['creator handle', 'creator', 'handle'])
+    fillSelect('attrColStatus', ['order status', 'status'])
 
     document.getElementById('attrMapArea').style.display = 'block'
     attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">พบ ${attrRows.length.toLocaleString()} แถวในไฟล์ — เช็คคอลัมน์ด้านบนให้ตรงแล้วกด "อัพเดตข้อมูล"</div>`
@@ -1010,6 +1014,7 @@ document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
   const colOrderId = document.getElementById('attrColOrderId').value
   const colChannel = document.getElementById('attrColChannel').value
   const colCreator = document.getElementById('attrColCreator').value
+  const colStatus = document.getElementById('attrColStatus').value
   const btn = document.getElementById('btnAttrUpdate')
 
   const rows = attrRows
@@ -1017,6 +1022,7 @@ document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
       order_id: String(r[colOrderId] || '').trim(),
       order_channel: String(r[colChannel] || '').trim() || null,
       creator_handle: String(r[colCreator] || '').trim() || null,
+      order_status: String(r[colStatus] || '').trim() || null,
     }))
     .filter(r => r.order_id)
 
@@ -1035,7 +1041,7 @@ document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
       const batch = deduped.slice(i, i + CONCURRENCY)
       await Promise.all(batch.map(async (r) => {
         const { data, error } = await DB.from('orders')
-          .update({ order_channel: r.order_channel, creator_handle: r.creator_handle })
+          .update({ order_channel: r.order_channel, creator_handle: r.creator_handle, order_status: r.order_status })
           .eq('order_id', r.order_id)
           .select('order_id')
         if (error) throw error
@@ -1232,6 +1238,7 @@ const QTY_MULTIPLIER_FIELD = { key:'qty_multiplier', label:'จำนวน (Qua
 const TIKTOK_ATTR_FIELDS = [
   { key:'order_channel', label:'Order Channel', required:false, keywords:['order channel'] },
   { key:'creator_handle', label:'Creator Handle', required:false, keywords:['creator handle'] },
+  { key:'order_status', label:'Order Status', required:false, keywords:['order status'] },
 ]
 
 const REVENUE_FIELDS = {
@@ -1785,7 +1792,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
     const revenueRaw = (() => { const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null; if (!v) return 0; return parseFloat(String(v).replace(/,/g,''))||0 })()
-    return { order_id: gs('order_id'), date, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
+    return { order_id: gs('order_id'), date, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
   }).filter(r => r.order_id && r.date)
 
   const orderGroups = new Map()
@@ -1796,7 +1803,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
 
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
-    return { order_id:g.order_id, date:g.date, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
+    return { order_id:g.order_id, date:g.date, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
