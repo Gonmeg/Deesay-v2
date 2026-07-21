@@ -40,6 +40,12 @@
   .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
   .nav { padding: 16px 0; flex: 1; }
   .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: all 0.15s; border-left: 2px solid transparent; }
+  .nav-group-label { padding: 14px 20px 4px; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .nav-group-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 20px; }
+  .nav-group-toggle:hover { color: var(--text2); }
+  .nav-group-chevron { font-size: 10px; transition: transform 0.15s; }
+  .nav-group-chevron.open { transform: rotate(90deg); }
+  .nav-item.nav-sub { padding-left: 34px; font-size: 12.5px; }
   .nav-item:hover { color: var(--text); background: var(--bg3); }
   .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(200,169,110,0.08); }
   .nav-icon { font-size: 16px; width: 20px; text-align: center; }
@@ -158,10 +164,16 @@
   <nav class="nav">
     <div class="nav-item active" onclick="showPage('overview')"><span class="nav-icon">📊</span> ภาพรวมยอดขาย</div>
     <div class="nav-item" onclick="showPage('channel')"><span class="nav-icon">📡</span> แยกตาม Channel</div>
-    <div class="nav-item" onclick="showPage('promotion')"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
-    <div class="nav-item" onclick="showPage('geo')"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
-    <div class="nav-item" onclick="showPage('crm')"><span class="nav-icon">👥</span> CRM (Facebook)</div>
-    <div class="nav-item" onclick="showPage('flow')"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
+    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('fb')" id="navGroupLabel-fb">
+      <span>Facebook</span><span class="nav-group-chevron" id="navGroupChevron-fb">▸</span>
+    </div>
+    <div id="navGroup-fb" style="display:none;">
+      <div class="nav-item nav-sub" onclick="showPage('fbhub')"><span class="nav-icon">🅕</span> ภาพรวม Facebook</div>
+      <div class="nav-item nav-sub" onclick="showPage('promotion','Facebook')"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
+      <div class="nav-item nav-sub" onclick="showPage('geo','Facebook')"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
+      <div class="nav-item nav-sub" onclick="showPage('crm')"><span class="nav-icon">👥</span> CRM</div>
+      <div class="nav-item nav-sub" onclick="showPage('flow')"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
+    </div>
     <div class="nav-item" onclick="showPage('skurev')"><span class="nav-icon">💰</span> ยอดขายแยก SKU</div>
     <div class="nav-item" onclick="showPage('cost')"><span class="nav-icon">📊</span> ต้นทุนสินค้า</div>
     <div class="nav-item" onclick="showPage('skuanalysis')"><span class="nav-icon">🔬</span> วิเคราะห์ SKU</div>
@@ -298,6 +310,29 @@
         <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">สรุปประสิทธิภาพช่องทาง</span>
           <button class="btn btn-ghost btn-sm" onclick="generateSummary('channel')">🔄 วิเคราะห์ใหม่</button></div>
         <div class="ai-summary-body" id="ai-summary-channel">กด "วิเคราะห์ใหม่" เพื่อสรุปข้อมูลในช่วงที่เลือก</div>
+      </div>
+    </div>
+    <div class="page" id="page-fbhub">
+      <div id="fbhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblFbSubChannel')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblFbSubChannel">
+            <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
+            <tbody id="tbodyFbSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartFbAds"></canvas></div></div>
+        <div class="card"><div class="card-title">สัดส่วนยอดขายตาม Sub-Channel</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartFbSubPie"></canvas></div></div>
+      </div>
+      <div class="card ai-summary-card">
+        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
+        <div class="ai-summary-body" id="fbhub-insight">กำลังวิเคราะห์...</div>
       </div>
     </div>
     <div class="page" id="page-promotion">
@@ -1031,12 +1066,12 @@ function applyFilters() {
 
 // ===== NAVIGATION =====
 const pageTitles = {
-  overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotion: 'Promotion / SKU',
+  overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'ต้นทุนสินค้า'
 };
-const pageOrder = ['overview','channel','promotion','geo','crm','flow','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1081,7 +1116,15 @@ function onMonthFilterChange() {
   renderCurrentPage();
 }
 
-function showPage(page) {
+function toggleNavGroup(key) {
+  const group = document.getElementById('navGroup-' + key);
+  const chevron = document.getElementById('navGroupChevron-' + key);
+  const isOpen = group.style.display !== 'none';
+  group.style.display = isOpen ? 'none' : 'block';
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function showPage(page, lockCh) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
@@ -1091,8 +1134,13 @@ function showPage(page) {
 
   const chFilter = document.getElementById('filterChannel');
   const subGroup = document.getElementById('subChannelGroup');
-  if (page === 'skuanalysis' || page === 'adperf' || page === 'flow') {
-    if (chFilter) { chFilter.value = ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
+  if (lockCh) {
+    // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
+    // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
+    if (chFilter) { chFilter.value = lockCh; chFilter.disabled = true; chFilter.style.opacity = '0.5'; }
+    if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
+  } else if (page === 'fbhub' || page === 'skuanalysis' || page === 'adperf' || page === 'flow' || page === 'crm') {
+    if (chFilter) { chFilter.value = page==='fbhub'||page==='crm'||page==='flow' ? 'Facebook' : ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
     if (subGroup) { subGroup.style.opacity = '0.35'; subGroup.style.pointerEvents = 'none'; }
   } else {
     if (chFilter) { chFilter.disabled = false; chFilter.style.opacity = '1'; }
@@ -1115,13 +1163,14 @@ function showPage(page) {
   } else if (page === 'cost') {
     renderCostPage();
   } else {
-    renderCurrentPage();
+    applyFilters();
   }
 }
 
 function renderCurrentPage() {
   if (currentPage === 'overview') renderOverview();
   else if (currentPage === 'channel') renderChannel();
+  else if (currentPage === 'fbhub') renderFbHub();
   else if (currentPage === 'promotion') renderPromotion();
   else if (currentPage === 'geo') renderGeo();
   else if (currentPage === 'crm') renderCRM();
@@ -1315,7 +1364,59 @@ function renderChannel() {
     </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
-// ===== PROMOTION =====
+// ===== FACEBOOK HUB =====
+// หมายเหตุ: ค่าโฆษณามีระดับความละเอียดแค่ channel รวม (Facebook/TikTok/Shopee/Lazada)
+// Google Sheet ต้นทางไม่มีคอลัมน์ sub_channel เลยแสดงค่าโฆษณา/ROAS ได้แค่ระดับ Facebook รวม ไม่ใช่รายsub-channel
+function renderFbHub() {
+  const d = filteredData.filter(r => r.channel === 'Facebook');
+
+  const finish = () => {
+    const adData = getAdFiltered().filter(r => r.channel==='Facebook'||r.channel==='Facebook AWA'||r.channel==='Online');
+    const tAds = adData.reduce((s,r) => s + r.ads, 0);
+    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+    const totalOrd = d.length;
+    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
+
+    document.getElementById('fbhub-kpis').innerHTML = `
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
+    `;
+
+    // Sub-channel breakdown (ยอดขาย/ออเดอร์เท่านั้น — ไม่มีข้อมูลค่าโฆษณาระดับ sub-channel)
+    const bySub = {};
+    d.forEach(r => {
+      const k = r.sub_channel || 'ไม่ระบุ';
+      if (!bySub[k]) bySub[k] = { rev: 0, ord: 0 };
+      bySub[k].rev += parseFloat(r.revenue) || 0;
+      bySub[k].ord++;
+    });
+    const sorted = Object.entries(bySub).sort((a,b) => b[1].rev - a[1].rev);
+    document.getElementById('tbodyFbSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
+      <tr>
+        <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+        <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+        <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+
+    makeChart('chartFbSubPie', 'doughnut', sorted.map(([k])=>k), [{ data: sorted.map(([,v])=>v.rev), backgroundColor: COLORS, borderWidth: 0 }]);
+    renderAdpChannel('chartFbAds', null, 'fb');
+
+    // คำแนะนำอย่างง่าย: sub-channel ที่ ROAS/AOV เด่นสุด (เทียบจาก AOV เพราะไม่มี ad ต่อ sub-channel)
+    let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
+    if (sorted.length >= 2) {
+      const top = sorted[0];
+      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
+      insight = `Sub-channel "${top[0]}" ทำยอดขายสูงสุด ${share}% ของ Facebook ทั้งหมด (฿${fmt(top[1].rev)}) — ลองเช็คว่างบโฆษณาที่จัดสรรให้ sub-channel นี้เหมาะสมกับสัดส่วนยอดขายหรือยัง`;
+    }
+    document.getElementById('fbhub-insight').textContent = insight;
+  };
+
+  if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+}
+
+
 function renderPromotion() {
   const ch = document.getElementById('filterChannel').value;
   const sub = document.getElementById('filterSubChannel').value;
