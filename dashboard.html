@@ -1697,9 +1697,18 @@ function renderLsCreatorChips() {
     </span>`).join('');
 }
 
+function toComparableDT(v) {
+  // v = 'YYYY-MM-DDTHH:MM' หรือ 'YYYY-MM-DDTHH:MM:SS' (ขึ้นกับว่า browser ใส่วินาทีมาให้ด้วยไหม)
+  if (!v) return null;
+  const [datePart, timePartRaw] = v.split('T');
+  let timePart = timePartRaw || '00:00';
+  if (timePart.length === 5) timePart += ':00'; // HH:MM -> HH:MM:SS เติมแค่ตอนที่ยังไม่มีวินาทีมาให้เท่านั้น
+  return datePart + ' ' + timePart;
+}
+
 function runLiveSearch() {
   const creators = lsSelectedCreators;
-  const fromV = document.getElementById('lsFrom').value; // YYYY-MM-DDTHH:MM
+  const fromV = document.getElementById('lsFrom').value;
   const toV = document.getElementById('lsTo').value;
   const ocFilter = document.getElementById('lsOrderChannel').value;
 
@@ -1708,8 +1717,8 @@ function runLiveSearch() {
     return;
   }
 
-  const fromISO = fromV.replace('T', ' ') + ':00';
-  const toISO = toV.replace('T', ' ') + ':00';
+  const fromISO = toComparableDT(fromV);
+  const toISO = toComparableDT(toV);
 
   const matched = allData.filter(r =>
     r.channel === 'TikTok' &&
