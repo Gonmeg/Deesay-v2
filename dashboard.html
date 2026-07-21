@@ -59,7 +59,7 @@
   .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .filter-group { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
   .filter-label { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
-  select, input[type="date"] { background: transparent; border: none; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 12px; outline: none; cursor: pointer; }
+  select, input[type="date"], input[type="datetime-local"] { background: transparent; border: none; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 12px; outline: none; cursor: pointer; color-scheme: dark; }
   select option { background: var(--bg3); color: var(--text); }
   .btn { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: 'Sarabun', sans-serif; display: flex; align-items: center; gap: 6px; }
   .btn-primary { background: var(--accent); color: #0a0a0f; }
@@ -162,22 +162,37 @@
     <a href="index.html" style="display:block;margin-top:10px;font-size:11px;color:var(--text2);text-decoration:none;">← หน้าแรก (Upload / Admin)</a>
   </div>
   <nav class="nav">
-    <div class="nav-item active" onclick="showPage('overview')"><span class="nav-icon">📊</span> ภาพรวมยอดขาย</div>
-    <div class="nav-item" onclick="showPage('channel')"><span class="nav-icon">📡</span> แยกตาม Channel</div>
+    <div class="nav-item active" onclick="showPage('overview',null,this)"><span class="nav-icon">📊</span> ภาพรวมยอดขาย</div>
+    <div class="nav-item" onclick="showPage('channel',null,this)"><span class="nav-icon">📡</span> แยกตาม Channel</div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('fb')" id="navGroupLabel-fb">
       <span>Facebook</span><span class="nav-group-chevron" id="navGroupChevron-fb">▸</span>
     </div>
     <div id="navGroup-fb" style="display:none;">
-      <div class="nav-item nav-sub" onclick="showPage('fbhub')"><span class="nav-icon">🅕</span> ภาพรวม Facebook</div>
-      <div class="nav-item nav-sub" onclick="showPage('promotion','Facebook')"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
-      <div class="nav-item nav-sub" onclick="showPage('geo','Facebook')"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
-      <div class="nav-item nav-sub" onclick="showPage('crm')"><span class="nav-icon">👥</span> CRM</div>
-      <div class="nav-item nav-sub" onclick="showPage('flow')"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
+      <div class="nav-item nav-sub" onclick="showPage('fbhub',null,this)"><span class="nav-icon">🅕</span> ภาพรวม Facebook</div>
+      <div class="nav-item nav-sub" onclick="showPage('promotion','Facebook',this)"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
+      <div class="nav-item nav-sub" onclick="showPage('geo','Facebook',this)"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
+      <div class="nav-item nav-sub" onclick="showPage('crm',null,this)"><span class="nav-icon">👥</span> CRM</div>
+      <div class="nav-item nav-sub" onclick="showPage('flow',null,this)"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
     </div>
-    <div class="nav-item" onclick="showPage('skurev')"><span class="nav-icon">💰</span> ยอดขายแยก SKU</div>
-    <div class="nav-item" onclick="showPage('cost')"><span class="nav-icon">📊</span> ต้นทุนสินค้า</div>
-    <div class="nav-item" onclick="showPage('skuanalysis')"><span class="nav-icon">🔬</span> วิเคราะห์ SKU</div>
-    <div class="nav-item" onclick="showPage('adperf')"><span class="nav-icon">📈</span> Ad Performance</div>
+    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('tt')" id="navGroupLabel-tt">
+      <span>TikTok</span><span class="nav-group-chevron" id="navGroupChevron-tt">▸</span>
+    </div>
+    <div id="navGroup-tt" style="display:none;">
+      <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
+      <div class="nav-item nav-sub" onclick="showPage('promotion','TikTok',this)"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
+      <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
+    </div>
+    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('sh')" id="navGroupLabel-sh">
+      <span>Shopee / Lazada</span><span class="nav-group-chevron" id="navGroupChevron-sh">▸</span>
+    </div>
+    <div id="navGroup-sh" style="display:none;">
+      <div class="nav-item nav-sub" onclick="showPage('shhub',null,this)"><span class="nav-icon">🛍️</span> ภาพรวม Shopee</div>
+      <div class="nav-item nav-sub" onclick="showPage('promotion','Shopee',this)"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
+    </div>
+    <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">💰</span> ยอดขายแยก SKU</div>
+    <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">📊</span> ต้นทุนสินค้า</div>
+    <div class="nav-item" onclick="showPage('skuanalysis',null,this)"><span class="nav-icon">🔬</span> วิเคราะห์ SKU</div>
+    <div class="nav-item" onclick="showPage('adperf',null,this)"><span class="nav-icon">📈</span> Ad Performance</div>
   </nav>
   <div class="sidebar-footer">
     <span class="status-dot"></span>Supabase Connected<br>
@@ -739,6 +754,109 @@
       </div>
     </div>
 
+    <div class="page" id="page-tthub">
+      <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
+          <div class="table-wrap">
+            <table id="tblTtOrderChannel">
+              <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
+              <tbody id="tbodyTtOrderChannel"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header"><div class="section-title">Top Creator (ตาม Live/Video)</div></div>
+          <div class="table-wrap">
+            <table id="tblTtCreator">
+              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+              <tbody id="tbodyTtCreator"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div></div>
+      <div class="card ai-summary-card">
+        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
+        <div class="ai-summary-body" id="tthub-insight">กำลังวิเคราะห์...</div>
+      </div>
+    </div>
+
+    <div class="page" id="page-livesearch">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-title" style="margin-bottom:12px;">ค้นหายอดขาย Live ตาม Creator + ช่วงเวลา</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="filter-group" style="position:relative;min-width:240px;">
+            <label>Creator Handle</label>
+            <input type="text" id="lsCreatorSearch" placeholder="ค้นหา creator..." oninput="filterLsCreatorDropdown()" onfocus="showLsCreatorDropdown()" onblur="setTimeout(hideLsCreatorDropdown,200)" style="width:100%;">
+            <div id="lsCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+          </div>
+          <div class="filter-group">
+            <label>ตั้งแต่ (วันที่ เวลา)</label>
+            <input type="datetime-local" id="lsFrom" step="1">
+          </div>
+          <div class="filter-group">
+            <label>ถึง (วันที่ เวลา)</label>
+            <input type="datetime-local" id="lsTo" step="1">
+          </div>
+          <div class="filter-group">
+            <label>Order Channel</label>
+            <select id="lsOrderChannel"><option value="">ทั้งหมด</option></select>
+          </div>
+          <button class="btn btn-primary" onclick="runLiveSearch()">🔍 ค้นหา</button>
+        </div>
+        <div id="lsCreatorChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);min-height:28px;"><span style="font-size:11px;color:var(--text3);">ยังไม่ได้เลือก creator</span></div>
+      </div>
+      <div id="ls-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">สินค้าขายดี (ขายได้จริง)</div>
+            <button class="btn btn-ghost" onclick="exportTable('tblLsSold')">⬇ Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tblLsSold">
+              <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวน</th><th>ยอดขาย</th></tr></thead>
+              <tbody id="tbodyLsSold"><tr><td colspan="5" class="empty">ยังไม่ได้ค้นหา</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">สินค้ายกเลิก/ตีกลับ</div>
+            <button class="btn btn-ghost" onclick="exportTable('tblLsCancelled')">⬇ Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tblLsCancelled">
+              <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวน</th><th>มูลค่าที่หลุด</th></tr></thead>
+              <tbody id="tbodyLsCancelled"><tr><td colspan="5" class="empty">ยังไม่ได้ค้นหา</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-shhub">
+      <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblShSubChannel')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblShSubChannel">
+            <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
+            <tbody id="tbodyShSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartShAds"></canvas></div></div>
+      <div class="card" style="background:var(--bg2);border-style:dashed;">
+        <div style="font-size:12.5px;color:var(--text2);">🚧 ฟีเจอร์ Live สำหรับ Shopee จะเพิ่มในอนาคต — ตอนนี้แสดงได้แค่ยอดขายกับค่าโฆษณาภาพรวมก่อน</div>
+      </div>
+    </div>
+
     <div class="page" id="page-cost">
       <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
@@ -857,7 +975,7 @@ async function fetchAll() {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   while (true) {
     const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items&order=date.asc,order_id.asc&limit=${PAGE}&offset=${offset}`,
+      `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items,order_channel,creator_handle,order_status,created_at_precise&order=date.asc,order_id.asc&limit=${PAGE}&offset=${offset}`,
       { headers }
     );
     if (!res.ok) throw new Error('API error: ' + res.status);
@@ -1068,10 +1186,11 @@ function applyFilters() {
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
+  tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', shhub: 'ภาพรวม Shopee',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'ต้นทุนสินค้า'
 };
-const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','promotion','livesearch','shhub','promotion','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1124,23 +1243,25 @@ function toggleNavGroup(key) {
   chevron.classList.toggle('open', !isOpen);
 }
 
-function showPage(page, lockCh) {
+function showPage(page, lockCh, el) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  document.querySelectorAll('.nav-item')[pageOrder.indexOf(page)].classList.add('active');
+  if (el) el.classList.add('active');
+  else { const idx = pageOrder.indexOf(page); if (idx >= 0) document.querySelectorAll('.nav-item')[idx]?.classList.add('active'); }
   document.getElementById('pageTitle').textContent = pageTitles[page];
   currentPage = page;
 
   const chFilter = document.getElementById('filterChannel');
   const subGroup = document.getElementById('subChannelGroup');
+  const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee' };
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
     if (chFilter) { chFilter.value = lockCh; chFilter.disabled = true; chFilter.style.opacity = '0.5'; }
     if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
-  } else if (page === 'fbhub' || page === 'skuanalysis' || page === 'adperf' || page === 'flow' || page === 'crm') {
-    if (chFilter) { chFilter.value = page==='fbhub'||page==='crm'||page==='flow' ? 'Facebook' : ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
+  } else if (HUB_CHANNEL[page] || page === 'skuanalysis' || page === 'adperf' || page === 'livesearch') {
+    if (chFilter) { chFilter.value = HUB_CHANNEL[page] || ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
     if (subGroup) { subGroup.style.opacity = '0.35'; subGroup.style.pointerEvents = 'none'; }
   } else {
     if (chFilter) { chFilter.disabled = false; chFilter.style.opacity = '1'; }
@@ -1162,6 +1283,8 @@ function showPage(page, lockCh) {
     renderAdpAll();
   } else if (page === 'cost') {
     renderCostPage();
+  } else if (page === 'livesearch') {
+    populateLiveSearchFilters();
   } else {
     applyFilters();
   }
@@ -1171,6 +1294,8 @@ function renderCurrentPage() {
   if (currentPage === 'overview') renderOverview();
   else if (currentPage === 'channel') renderChannel();
   else if (currentPage === 'fbhub') renderFbHub();
+  else if (currentPage === 'tthub') renderTtHub();
+  else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'promotion') renderPromotion();
   else if (currentPage === 'geo') renderGeo();
   else if (currentPage === 'crm') renderCRM();
@@ -1178,7 +1303,7 @@ function renderCurrentPage() {
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'skurev') renderSkuRev();
-  // skuanalysis และ adperf render on-demand ผ่านปุ่ม
+  // skuanalysis, adperf, livesearch render on-demand ผ่านปุ่ม
 }
 
 // ===== CHART HELPER =====
@@ -1414,6 +1539,205 @@ function renderFbHub() {
   };
 
   if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+}
+
+// ===== TIKTOK HUB =====
+function renderTtHub() {
+  const d = filteredData.filter(r => r.channel === 'TikTok');
+
+  const finish = () => {
+    const adData = getAdFiltered().filter(r => r.channel==='Tiktok'||r.channel==='TikTok');
+    const tAds = adData.reduce((s,r) => s + r.ads, 0);
+    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+    const totalOrd = d.length;
+    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
+
+    document.getElementById('tthub-kpis').innerHTML = `
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
+    `;
+
+    const byOC = {};
+    d.forEach(r => {
+      const k = r.order_channel || 'ไม่ระบุ';
+      if (!byOC[k]) byOC[k] = { rev: 0, ord: 0 };
+      byOC[k].rev += parseFloat(r.revenue) || 0;
+      byOC[k].ord++;
+    });
+    const ocSorted = Object.entries(byOC).sort((a,b) => b[1].rev - a[1].rev);
+    document.getElementById('tbodyTtOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
+      <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
+    `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
+
+    const byCreator = {};
+    d.forEach(r => {
+      const k = r.creator_handle || 'ไม่ระบุ';
+      if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
+      byCreator[k].rev += parseFloat(r.revenue) || 0;
+      byCreator[k].ord++;
+    });
+    const crSorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 15);
+    document.getElementById('tbodyTtCreator').innerHTML = crSorted.length ? crSorted.map(([k,v]) => `
+      <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
+    `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
+
+    renderAdpChannel('chartTtAds', null, 'tt');
+
+    let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
+    if (ocSorted.length) {
+      const top = ocSorted[0];
+      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
+      insight = `${top[0]} ทำยอดขายสูงสุด ${share}% ของ TikTok ทั้งหมด — ใช้เมนู "ค้นหา Live" เพื่อดูรายละเอียดแต่ละรอบ Live ได้`;
+    }
+    document.getElementById('tthub-insight').textContent = insight;
+  };
+
+  if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+}
+
+// ===== SHOPEE HUB =====
+function renderShHub() {
+  const d = filteredData.filter(r => r.channel === 'Shopee');
+
+  const finish = () => {
+    const adData = getAdFiltered().filter(r => r.channel==='Shopee mall'||r.channel==='Shopee 24hr');
+    const tAds = adData.reduce((s,r) => s + r.ads, 0);
+    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+    const totalOrd = d.length;
+    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
+
+    document.getElementById('shhub-kpis').innerHTML = `
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
+    `;
+
+    const bySub = {};
+    d.forEach(r => {
+      const k = r.sub_channel || 'ไม่ระบุ';
+      if (!bySub[k]) bySub[k] = { rev: 0, ord: 0 };
+      bySub[k].rev += parseFloat(r.revenue) || 0;
+      bySub[k].ord++;
+    });
+    const sorted = Object.entries(bySub).sort((a,b) => b[1].rev - a[1].rev);
+    document.getElementById('tbodyShSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
+      <tr>
+        <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+        <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+        <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+
+    renderAdpChannel('chartShAds', null, 'sh');
+  };
+
+  if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+}
+
+// ===== LIVE SEARCH (TikTok) =====
+let lsSelectedCreators = [];
+let _lsAllCreators = [];
+
+function populateLiveSearchFilters() {
+  const ttData = allData.filter(r => r.channel === 'TikTok');
+  _lsAllCreators = [...new Set(ttData.map(r => r.creator_handle).filter(Boolean))].sort();
+
+  const ocSet = [...new Set(ttData.map(r => r.order_channel).filter(Boolean))].sort();
+  const ocSel = document.getElementById('lsOrderChannel');
+  if (ocSel && ocSel.options.length <= 1) {
+    ocSel.innerHTML = '<option value="">ทั้งหมด</option>' + ocSet.map(v => `<option value="${v}">${v}</option>`).join('');
+  }
+  renderLsCreatorChips();
+}
+
+function filterLsCreatorDropdown() {
+  showLsCreatorDropdown();
+  const q = (document.getElementById('lsCreatorSearch')?.value||'').toLowerCase();
+  const list = document.getElementById('lsCreatorDropdown');
+  if (!list) return;
+  const filtered = _lsAllCreators.filter(c => !lsSelectedCreators.includes(c) && c.toLowerCase().includes(q));
+  list.innerHTML = filtered.slice(0,25).map(c => `
+    <div onclick="addLsCreator('${c}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;color:var(--text);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${c}</div>
+  `).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบ creator</div>';
+}
+function showLsCreatorDropdown() { const l=document.getElementById('lsCreatorDropdown'); if(l) l.style.display='block'; }
+function hideLsCreatorDropdown() { const l=document.getElementById('lsCreatorDropdown'); if(l) l.style.display='none'; }
+
+function addLsCreator(c) {
+  if (lsSelectedCreators.includes(c)) return;
+  lsSelectedCreators.push(c);
+  const inp = document.getElementById('lsCreatorSearch'); if (inp) inp.value = '';
+  hideLsCreatorDropdown();
+  renderLsCreatorChips();
+}
+function removeLsCreator(c) {
+  lsSelectedCreators = lsSelectedCreators.filter(x => x !== c);
+  renderLsCreatorChips();
+}
+function renderLsCreatorChips() {
+  const el = document.getElementById('lsCreatorChips'); if (!el) return;
+  if (!lsSelectedCreators.length) { el.innerHTML = '<span style="font-size:11px;color:var(--text3);">ยังไม่ได้เลือก creator</span>'; return; }
+  el.innerHTML = lsSelectedCreators.map(c => `
+    <span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11.5px;color:var(--text);">
+      ${c}<span onclick="removeLsCreator('${c}')" style="cursor:pointer;color:var(--text3);">✕</span>
+    </span>`).join('');
+}
+
+function runLiveSearch() {
+  const creators = lsSelectedCreators;
+  const fromV = document.getElementById('lsFrom').value; // YYYY-MM-DDTHH:MM
+  const toV = document.getElementById('lsTo').value;
+  const ocFilter = document.getElementById('lsOrderChannel').value;
+
+  if (!creators.length || !fromV || !toV) {
+    document.getElementById('ls-kpis').innerHTML = '<div class="card" style="color:var(--red);">กรุณาเลือก Creator Handle และช่วงเวลาให้ครบ</div>';
+    return;
+  }
+
+  const fromISO = fromV.replace('T', ' ') + ':00';
+  const toISO = toV.replace('T', ' ') + ':00';
+
+  const matched = allData.filter(r =>
+    r.channel === 'TikTok' &&
+    creators.includes(r.creator_handle) &&
+    (!ocFilter || r.order_channel === ocFilter) &&
+    r.created_at_precise && r.created_at_precise >= fromISO && r.created_at_precise <= toISO
+  );
+
+  const soldIds = new Set(), cancelledIds = new Set();
+  let soldAmount = 0, cancelledAmount = 0;
+  matched.forEach(r => {
+    const isSold = r.order_status ? (r.order_status === 'เสร็จสมบูรณ์' || r.order_status === 'จัดส่งแล้ว') : !!r.settled;
+    if (isSold) { soldIds.add(r.order_id); soldAmount += parseFloat(r.revenue)||0; }
+    else { cancelledIds.add(r.order_id); cancelledAmount += parseFloat(r.revenue)||0; }
+  });
+
+  document.getElementById('ls-kpis').innerHTML = `
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์ทั้งหมด</div><div class="kpi-value">${fmt(matched.length)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;border-top:3px solid var(--green);"><div class="card-title">ขายได้</div><div class="kpi-value">${fmt(soldIds.size)}</div><div class="kpi-sub">฿${fmt(soldAmount)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;border-top:3px solid var(--red);"><div class="card-title">ยกเลิก/ตีกลับ</div><div class="kpi-value">${fmt(cancelledIds.size)}</div><div class="kpi-sub">฿${fmt(cancelledAmount)}</div></div>
+  `;
+
+  const skuBySold = {}, skuByCancelled = {};
+  skuRevenueAll.filter(r => soldIds.has(r.order_id) || cancelledIds.has(r.order_id)).forEach(r => {
+    const target = soldIds.has(r.order_id) ? skuBySold : skuByCancelled;
+    const k = r.parent_sku || 'ไม่ระบุ';
+    if (!target[k]) target[k] = { qty: 0, rev: 0, name: productsMap[k] || k };
+    target[k].qty += parseInt(r.qty) || 0;
+    target[k].rev += parseFloat(r.revenue_share) || 0;
+  });
+
+  const soldSorted = Object.entries(skuBySold).sort((a,b) => b[1].qty - a[1].qty);
+  document.getElementById('tbodyLsSold').innerHTML = soldSorted.length ? soldSorted.map(([k,v],i) => `
+    <tr><td>${i+1}</td><td>${k}</td><td>${v.name}</td><td>${fmt(v.qty)}</td><td>฿${fmt(v.rev)}</td></tr>
+  `).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
+
+  const cancSorted = Object.entries(skuByCancelled).sort((a,b) => b[1].qty - a[1].qty);
+  document.getElementById('tbodyLsCancelled').innerHTML = cancSorted.length ? cancSorted.map(([k,v],i) => `
+    <tr><td>${i+1}</td><td>${k}</td><td>${v.name}</td><td>${fmt(v.qty)}</td><td>฿${fmt(v.rev)}</td></tr>
+  `).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
 
