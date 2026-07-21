@@ -58,6 +58,12 @@
   .page-title { font-size: 15px; font-weight: 600; color: var(--text); }
   .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .filter-group { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+  .ls-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; align-items: end; }
+  .ls-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .ls-field label { font-size: 11px; color: var(--text2); font-weight: 600; }
+  .ls-input { background: var(--bg3) !important; border: 1px solid var(--border) !important; border-radius: 6px; padding: 8px 10px; color: var(--text) !important; font-size: 12.5px !important; font-family: 'Sarabun', sans-serif; width: 100%; box-sizing: border-box; cursor: text; }
+  select.ls-input { cursor: pointer; }
+  .ls-input:focus { border-color: var(--accent) !important; outline: none; }
   .filter-label { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
   select, input[type="date"], input[type="datetime-local"] { background: transparent; border: none; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 12px; outline: none; cursor: pointer; color-scheme: dark; }
   select option { background: var(--bg3); color: var(--text); }
@@ -785,28 +791,32 @@
 
     <div class="page" id="page-livesearch">
       <div class="card" style="margin-bottom:20px;">
-        <div class="section-title" style="margin-bottom:12px;">ค้นหายอดขาย Live ตาม Creator + ช่วงเวลา</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-          <div class="filter-group" style="position:relative;min-width:240px;">
+        <div class="section-title" style="margin-bottom:14px;">ค้นหายอดขาย Live ตาม Creator + ช่วงเวลา</div>
+        <div class="ls-filter-grid">
+          <div class="ls-field" style="position:relative;grid-column:span 2;">
             <label>Creator Handle</label>
-            <input type="text" id="lsCreatorSearch" placeholder="ค้นหา creator..." oninput="filterLsCreatorDropdown()" onfocus="showLsCreatorDropdown()" onblur="setTimeout(hideLsCreatorDropdown,200)" style="width:100%;">
+            <input type="text" class="ls-input" id="lsCreatorSearch" placeholder="ค้นหา creator..." oninput="filterLsCreatorDropdown()" onfocus="showLsCreatorDropdown()" onblur="setTimeout(hideLsCreatorDropdown,200)">
             <div id="lsCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
-          <div class="filter-group">
+          <div class="ls-field">
             <label>ตั้งแต่ (วันที่ เวลา)</label>
-            <input type="datetime-local" id="lsFrom" step="1">
+            <input type="datetime-local" class="ls-input" id="lsFrom" step="1">
           </div>
-          <div class="filter-group">
+          <div class="ls-field">
             <label>ถึง (วันที่ เวลา)</label>
-            <input type="datetime-local" id="lsTo" step="1">
+            <input type="datetime-local" class="ls-input" id="lsTo" step="1">
           </div>
-          <div class="filter-group">
+          <div class="ls-field">
             <label>Order Channel</label>
-            <select id="lsOrderChannel"><option value="">ทั้งหมด</option></select>
+            <select class="ls-input" id="lsOrderChannel"><option value="">ทั้งหมด</option></select>
           </div>
-          <button class="btn btn-primary" onclick="runLiveSearch()">🔍 ค้นหา</button>
+          <div class="ls-field">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="runLiveSearch()" style="width:100%;">🔍 ค้นหา</button>
+          </div>
         </div>
-        <div id="lsCreatorChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);min-height:28px;"><span style="font-size:11px;color:var(--text3);">ยังไม่ได้เลือก creator</span></div>
+        <div id="lsCreatorChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);min-height:28px;"><span style="font-size:11px;color:var(--text3);">ยังไม่ได้เลือก creator</span></div>
+        <div id="lsDebugInfo" style="font-size:11px;color:var(--text3);margin-top:8px;"></div>
       </div>
       <div id="ls-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2">
@@ -1650,6 +1660,8 @@ function populateLiveSearchFilters() {
     ocSel.innerHTML = '<option value="">ทั้งหมด</option>' + ocSet.map(v => `<option value="${v}">${v}</option>`).join('');
   }
   renderLsCreatorChips();
+  const dbg = document.getElementById('lsDebugInfo');
+  if (dbg) dbg.textContent = `พบ ${ttData.length.toLocaleString()} ออเดอร์ TikTok · ${_lsAllCreators.length} creator ที่มีชื่อ · ${ocSet.length} order channel`;
 }
 
 function filterLsCreatorDropdown() {
