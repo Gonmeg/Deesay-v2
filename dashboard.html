@@ -1698,12 +1698,10 @@ function renderLsCreatorChips() {
 }
 
 function toComparableDT(v) {
-  // v = 'YYYY-MM-DDTHH:MM' หรือ 'YYYY-MM-DDTHH:MM:SS' (ขึ้นกับว่า browser ใส่วินาทีมาให้ด้วยไหม)
+  // v = 'YYYY-MM-DDTHH:MM' หรือ 'YYYY-MM-DDTHH:MM:SS' — คงตัว "T" ไว้เหมือนที่ Supabase ส่ง created_at_precise กลับมา
+  // (ก่อนหน้านี้เคยแปลง T เป็นช่องว่างโดยไม่ตั้งใจ ทำให้เทียบ string ไม่ตรงกันเลยสักครั้ง)
   if (!v) return null;
-  const [datePart, timePartRaw] = v.split('T');
-  let timePart = timePartRaw || '00:00';
-  if (timePart.length === 5) timePart += ':00'; // HH:MM -> HH:MM:SS เติมแค่ตอนที่ยังไม่มีวินาทีมาให้เท่านั้น
-  return datePart + ' ' + timePart;
+  return v.length === 16 ? v + ':00' : v; // เติมวินาทีให้ถ้ายังไม่มี (บาง browser ไม่ส่งวินาทีมาให้)
 }
 
 function runLiveSearch() {
