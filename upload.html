@@ -349,6 +349,9 @@
         <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Order Status
           <select id="attrColStatus" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
         </label>
+        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Created Time (เวลาละเอียด)
+          <select id="attrColCreatedAt" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
+        </label>
       </div>
       <button class="btn-sync" id="btnAttrUpdate" style="margin-top:10px;background:var(--accent);color:white;">📎 อัพเดตข้อมูล</button>
     </div>
@@ -1001,6 +1004,7 @@ document.getElementById('attrFileInput').addEventListener('change', async (e) =>
     fillSelect('attrColChannel', ['order channel', 'channel'])
     fillSelect('attrColCreator', ['creator handle', 'creator', 'handle'])
     fillSelect('attrColStatus', ['order status', 'status'])
+    fillSelect('attrColCreatedAt', ['created time', 'create time'])
 
     document.getElementById('attrMapArea').style.display = 'block'
     attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">พบ ${attrRows.length.toLocaleString()} แถวในไฟล์ — เช็คคอลัมน์ด้านบนให้ตรงแล้วกด "อัพเดตข้อมูล"</div>`
@@ -1015,6 +1019,7 @@ document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
   const colChannel = document.getElementById('attrColChannel').value
   const colCreator = document.getElementById('attrColCreator').value
   const colStatus = document.getElementById('attrColStatus').value
+  const colCreatedAt = document.getElementById('attrColCreatedAt').value
   const btn = document.getElementById('btnAttrUpdate')
 
   const rows = attrRows
@@ -1023,6 +1028,7 @@ document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
       order_channel: String(r[colChannel] || '').trim() || null,
       creator_handle: String(r[colCreator] || '').trim() || null,
       order_status: String(r[colStatus] || '').trim() || null,
+      created_at_precise: parseDateTime(r[colCreatedAt]),
     }))
     .filter(r => r.order_id)
 
@@ -1041,7 +1047,7 @@ document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
       const batch = deduped.slice(i, i + CONCURRENCY)
       await Promise.all(batch.map(async (r) => {
         const { data, error } = await DB.from('orders')
-          .update({ order_channel: r.order_channel, creator_handle: r.creator_handle, order_status: r.order_status })
+          .update({ order_channel: r.order_channel, creator_handle: r.creator_handle, order_status: r.order_status, created_at_precise: r.created_at_precise })
           .eq('order_id', r.order_id)
           .select('order_id')
         if (error) throw error
@@ -1771,6 +1777,25 @@ function parseDate(v) {
   return result
 }
 
+// เก็บวันที่+เวลาแบบละเอียด (ไม่ตัดเวลาทิ้งเหมือน parseDate) — ใช้คนละคอลัมน์กับ date เดิม (created_at_precise)
+// ไม่กระทบ query/MV เดิมที่ใช้ date อยู่แล้วทั่วระบบ
+function parseDateTime(v) {
+  if (v === null || v === undefined || v === '') return null
+  if (v instanceof Date) return v.toISOString()
+  if (typeof v === 'number') { const d = new Date(Math.round((v-25569)*86400*1000)); return d.toISOString() }
+  const s = String(v).trim()
+  if (!s || s === '-') return null
+  // DD/MM/YYYY HH:MM:SS
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[\s,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?/)
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}T${m[4].padStart(2,'0')}:${m[5]}:${m[6]||'00'}`
+  // YYYY-MM-DD HH:MM:SS
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})[\s,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?/)
+  if (m) return `${m[1]}-${m[2]}-${m[3]}T${m[4].padStart(2,'0')}:${m[5]}:${m[6]||'00'}`
+  // ไม่มีเวลากำกับ — เก็บแค่วันที่ (เวลา 00:00:00) ดีกว่าไม่มีเลย
+  const dateOnly = parseDateRaw(v)
+  return dateOnly ? dateOnly + 'T00:00:00' : null
+}
+
 function processSettlementRows(rows, mappings) {
   return rows.map(row => {
     const orderIdRaw = mappings['settle_order_id'] ? row[mappings['settle_order_id']] : null
@@ -1794,11 +1819,12 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     const g = k => mappings[k] ? row[mappings[k]] : null
     const gs = k => { const v = g(k); return v !== null && v !== undefined ? String(v).trim() : '' }
     const date = parseDate(g('date')), sub = forcedSubChannel || gs('sub_channel')
+    const created_at_precise = parseDateTime(g('date'))
     const rawSku = gs('sku_promotion'), qtyMul = gs('qty_multiplier')
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
     const revenueRaw = (() => { const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null; if (!v) return 0; return parseFloat(String(v).replace(/,/g,''))||0 })()
-    return { order_id: gs('order_id'), date, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
+    return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
   }).filter(r => r.order_id && r.date)
 
   const orderGroups = new Map()
@@ -1809,7 +1835,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
 
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
-    return { order_id:g.order_id, date:g.date, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
+    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
