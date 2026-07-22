@@ -355,7 +355,13 @@
         </div>
       </div>
 
-      <div class="section-divider">Promotion / SKU</div>
+      <div class="section-divider" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Promotion / SKU</span>
+        <div class="filter-group" style="text-transform:none;letter-spacing:normal;font-weight:400;">
+          <span class="filter-label">Sub-Channel</span>
+          <select id="fbPromoSubChannel" onchange="renderPromotion('Fb','Facebook')"><option value="">ทั้งหมด</option></select>
+        </div>
+      </div>
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
@@ -1298,7 +1304,9 @@ function showPage(page, lockCh, el) {
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee' };
   const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['fbhub']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
+  if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
@@ -1562,6 +1570,10 @@ function renderFbHub() {
       bySub[k].ord++;
     });
     const sorted = Object.entries(bySub).sort((a,b) => b[1].rev - a[1].rev);
+    const subSel = document.getElementById('fbPromoSubChannel');
+    if (subSel && subSel.options.length <= 1) {
+      subSel.innerHTML = '<option value="">ทั้งหมด</option>' + sorted.map(([k]) => `<option value="${k}">${k}</option>`).join('');
+    }
     document.getElementById('tbodyFbSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
       <tr>
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
@@ -1811,9 +1823,25 @@ function runLiveSearch() {
 function renderPromotion(idSuffix, forceChannel) {
   idSuffix = idSuffix || '';
   const ch = forceChannel || document.getElementById('filterChannel').value;
-  const sub = document.getElementById('filterSubChannel').value;
-  const monthsCurr = getSelectedMVMonths();
-  const monthsPrev = getSelectedMVPrevMonth();
+  const sub = idSuffix ? (document.getElementById('fbPromoSubChannel')?.value || '') : document.getElementById('filterSubChannel').value;
+  let monthsCurr, monthsPrev;
+  if (idSuffix) {
+    // ใช้แบบฝังในหน้า hub — หน้านี้ไม่มี month selector (ซ่อนไว้) ต้องคำนวณเดือนจากช่วงวันที่ปกติที่มองเห็นอยู่แทน
+    const dFrom = document.getElementById('dateFrom').value;
+    const dTo = document.getElementById('dateTo').value;
+    monthsCurr = getMonthsInRange(dFrom, dTo);
+    const count = monthsCurr.length;
+    const [y, m] = (dFrom || '').split('-').map(Number);
+    monthsPrev = [];
+    for (let i = count; i >= 1; i--) {
+      const d = new Date(y, (m||1) - 1 - i, 1);
+      monthsPrev.push(d.toISOString().substring(0,7));
+    }
+    monthsPrev.sort();
+  } else {
+    monthsCurr = getSelectedMVMonths();
+    monthsPrev = getSelectedMVPrevMonth();
+  }
   const promoData = window._promoMonthlyCache || [];
 
   if (!promoData.length) {
