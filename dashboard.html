@@ -64,6 +64,7 @@
   .ls-input { background: var(--bg3) !important; border: 1px solid var(--border) !important; border-radius: 6px; padding: 8px 10px; color: var(--text) !important; font-size: 12.5px !important; font-family: 'Sarabun', sans-serif; width: 100%; box-sizing: border-box; cursor: text; }
   select.ls-input { cursor: pointer; }
   .ls-input:focus { border-color: var(--accent) !important; outline: none; }
+  .section-divider { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 8px; margin-top: 12px; margin-bottom: 14px; border-top: 1px solid var(--border); }
   .filter-label { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
   select, input[type="date"], input[type="datetime-local"] { background: transparent; border: none; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 12px; outline: none; cursor: pointer; color-scheme: dark; }
   select option { background: var(--bg3); color: var(--text); }
@@ -175,7 +176,6 @@
     </div>
     <div id="navGroup-fb" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('fbhub',null,this)"><span class="nav-icon">🅕</span> ภาพรวม Facebook</div>
-      <div class="nav-item nav-sub" onclick="showPage('promotion','Facebook',this)"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
       <div class="nav-item nav-sub" onclick="showPage('geo','Facebook',this)"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
       <div class="nav-item nav-sub" onclick="showPage('crm',null,this)"><span class="nav-icon">👥</span> CRM</div>
       <div class="nav-item nav-sub" onclick="showPage('flow',null,this)"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
@@ -221,7 +221,7 @@
         <span class="filter-label" style="margin:0 2px;">ถึง</span>
         <select id="filterMonthTo" onchange="onMonthFilterChange()" style="max-width:120px;"></select>
       </div>
-      <div class="filter-group">
+      <div class="filter-group" id="channelFilterGroup">
         <span class="filter-label">Channel</span>
         <select id="filterChannel" onchange="onChannelChange()">
           <option value="">ทั้งหมด</option>
@@ -335,7 +335,14 @@
     </div>
     <div class="page" id="page-fbhub">
       <div id="fbhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="card">
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartFbAds"></canvas></div></div>
+        <div class="card">
+          <div class="card-title">สัดส่วนยอดขายตาม Sub-Channel</div>
+          <div id="fbSubChannelBars" style="padding-top:6px;"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
           <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
           <button class="btn btn-ghost" onclick="exportTable('tblFbSubChannel')">⬇ Export CSV</button>
@@ -347,10 +354,34 @@
           </table>
         </div>
       </div>
-      <div class="grid-2">
-        <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartFbAds"></canvas></div></div>
-        <div class="card"><div class="card-title">สัดส่วนยอดขายตาม Sub-Channel</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartFbSubPie"></canvas></div></div>
+
+      <div class="section-divider">Promotion / SKU</div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Top 20 Promotion (รูปแบบที่ลูกค้าสั่งจริง)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopSKUFb')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopSKUFb">
+            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKUFb"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
       </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Top 20 สินค้าเดี่ยว (จำนวนชิ้นที่ขาย)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopProductFb')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopProductFb">
+            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopProductFb"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card ai-summary-card">
         <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
         <div class="ai-summary-body" id="fbhub-insight">กำลังวิเคราะห์...</div>
@@ -1263,8 +1294,11 @@ function showPage(page, lockCh, el) {
   currentPage = page;
 
   const chFilter = document.getElementById('filterChannel');
+  const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee' };
+  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
@@ -1535,8 +1569,22 @@ function renderFbHub() {
         <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
       </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
 
-    makeChart('chartFbSubPie', 'doughnut', sorted.map(([k])=>k), [{ data: sorted.map(([,v])=>v.rev), backgroundColor: COLORS, borderWidth: 0 }]);
+    document.getElementById('fbSubChannelBars').innerHTML = sorted.length ? sorted.slice(0,8).map(([k,v],i) => {
+      const pct = totalRev ? (v.rev/totalRev*100) : 0;
+      return `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;">
+          <span style="color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;">${k}</span>
+          <span style="color:var(--text2);font-family:'IBM Plex Mono',monospace;">฿${fmtB(v.rev)} · ${pct.toFixed(1)}%</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:4px;height:8px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${COLORS[i % COLORS.length]};border-radius:4px;"></div>
+        </div>
+      </div>`;
+    }).join('') : '<div class="empty">ไม่มีข้อมูล</div>';
+
     renderAdpChannel('chartFbAds', null, 'fb');
+    renderPromotion('Fb', 'Facebook');
 
     // คำแนะนำอย่างง่าย: sub-channel ที่ ROAS/AOV เด่นสุด (เทียบจาก AOV เพราะไม่มี ad ต่อ sub-channel)
     let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
@@ -1760,15 +1808,16 @@ function runLiveSearch() {
 }
 
 
-function renderPromotion() {
-  const ch = document.getElementById('filterChannel').value;
+function renderPromotion(idSuffix, forceChannel) {
+  idSuffix = idSuffix || '';
+  const ch = forceChannel || document.getElementById('filterChannel').value;
   const sub = document.getElementById('filterSubChannel').value;
   const monthsCurr = getSelectedMVMonths();
   const monthsPrev = getSelectedMVPrevMonth();
   const promoData = window._promoMonthlyCache || [];
 
   if (!promoData.length) {
-    document.getElementById('tbodyTopSKU').innerHTML = '<tr><td colspan="8" class="empty">กำลังโหลดข้อมูล...</td></tr>';
+    document.getElementById('tbodyTopSKU'+idSuffix).innerHTML = '<tr><td colspan="8" class="empty">กำลังโหลดข้อมูล...</td></tr>';
     return;
   }
 
@@ -1799,7 +1848,7 @@ function renderPromotion() {
     return promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim()) + 'x' + m[2] : p; }).join('+');
   }
 
-  document.getElementById('tbodyTopSKU').innerHTML = byRev.map(([k, v], i) => {
+  document.getElementById('tbodyTopSKU'+idSuffix).innerHTML = byRev.map(([k, v], i) => {
     const currRank = i + 1;
     const sharePct = totalRev ? ((v.rev / totalRev) * 100).toFixed(1) : '0.0';
     const prevRev = prevBySKU[k]?.rev || 0;
@@ -1845,7 +1894,7 @@ function renderPromotion() {
   const totalQty = Object.values(byProduct).reduce((s,v) => s+v, 0);
   const sortedProd = Object.entries(byProduct).sort((a,b) => b[1]-a[1]).slice(0, 20);
 
-  document.getElementById('tbodyTopProduct').innerHTML = sortedProd.map(([sku, qty], i) => {
+  document.getElementById('tbodyTopProduct'+idSuffix).innerHTML = sortedProd.map(([sku, qty], i) => {
     const currRank = i + 1;
     const sharePct = totalQty ? ((qty/totalQty)*100).toFixed(1) : '0.0';
     const prevQty = prevByProduct[sku] || 0;
@@ -1868,7 +1917,7 @@ function renderPromotion() {
     </tr>`;
   }).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  renderRealPromoAndUpsell();
+  if (!idSuffix) renderRealPromoAndUpsell();
 }
 
 // ===== SECTION 3: Top Promotion ของจริง (Facebook) + Best Upsell =====
