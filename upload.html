@@ -1598,7 +1598,19 @@ async function handleConfirm() {
 
   if (uploadMode === 'settlement') {
     try {
-      const dedupMap = new Map(); processed.forEach(r => dedupMap.set(r.order_id, r))
+      // ไฟล์รับเงินบางแบบ (เช่น Lazada) เป็นรายการธุรกรรมย่อย — 1 ออเดอร์มีได้หลายบรรทัด
+      // (ค่าคอมมิชชั่น, ค่าธรรมเนียม, ยอดขาย ฯลฯ) ต้องบวกยอดทุกบรรทัดของ order_id เดียวกันรวมกัน
+      // ไม่ใช่จับแค่บรรทัดเดียว ไม่งั้นอาจได้ยอดที่ไม่ใช่ยอดสุทธิจริง (เช่นไปเจอแค่บรรทัดค่าธรรมเนียม)
+      const dedupMap = new Map()
+      processed.forEach(r => {
+        if (dedupMap.has(r.order_id)) {
+          const existing = dedupMap.get(r.order_id)
+          existing.settle_amount = (existing.settle_amount || 0) + (r.settle_amount || 0)
+          if (r.settled_date && (!existing.settled_date || r.settled_date > existing.settled_date)) existing.settled_date = r.settled_date
+        } else {
+          dedupMap.set(r.order_id, { ...r })
+        }
+      })
       const deduped = [...dedupMap.values()]
       const CONCURRENCY = 20; let done = 0; let matchedCount = 0; let zeroOrNegativeCount = 0
       const unmatchedOrders = [] // เก็บ order ที่หาไม่เจอ
@@ -1607,8 +1619,10 @@ async function handleConfirm() {
         await Promise.all(batch.map(async (r) => {
           // ยอดเงินที่ได้รับจริงต้องมากกว่า 0 ถึงจะถือว่า "ขายได้" — ถ้า match เจอแต่ยอด 0 หรือติดลบ
           // (ตีกลับ/คืนเงินเต็มจำนวน) ให้ถือว่ายังไม่ได้เงินเหมือนกัน (settled = false ไม่ใช่ true)
+          // ⚠️ ยกเว้น Lazada — ไฟล์รับเงินเป็นรายการธุรกรรมย่อยหลายบรรทัดต่อออเดอร์ (ค่าธรรมเนียม/คอมมิชชั่นแยกบรรทัด)
+          // เช็คยอด >0 ไม่น่าเชื่อถือสำหรับช่องทางนี้ กลับไปใช้กติกาเดิม: เจอ Order ID ในไฟล์ = ถือว่าได้เงินแล้ว ไม่สนยอด
           const amt = r.settle_amount || 0
-          const isPaid = amt > 0
+          const isPaid = channel === 'Lazada' ? true : amt > 0
           const { data, error } = await DB.from('orders').update({ settled: isPaid, settled_date: r.settled_date }).eq('order_id', r.order_id).select('order_id')
           if (error) throw error
           if (data && data.length) {
