@@ -1313,6 +1313,26 @@ function getFields(channel) {
 }
 
 let FIELDS = BASE_FIELDS, rawHeaders = [], rawData = [], mappings = {}, channel = '', processed = []
+let _settlementSweepRange = null
+
+async function sweepStaleNulls() {
+  if (!_settlementSweepRange) return
+  const { channel: ch, from, to } = _settlementSweepRange
+  const btn = document.getElementById('btnSweepNulls')
+  const resultEl = document.getElementById('sweepResult')
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังกวาด...' }
+  try {
+    const { error: e1 } = await DB.from('orders').update({ settled: false }).eq('channel', ch).is('settled', null).gte('date', from).lte('date', to)
+    if (e1) throw e1
+    const { error: e2 } = await DB.from('sku_revenue').update({ settled: 'False' }).eq('channel', ch).is('settled', null).gte('date', from).lte('date', to)
+    if (e2) console.error('sku_revenue sweep failed', e2)
+    if (resultEl) resultEl.innerHTML = `<div style="color:#34d399;font-size:0.78rem;margin-top:8px;">✅ กวาดเรียบร้อย — ออเดอร์ที่ค้าง NULL ในช่วง ${from} – ${to} ของ ${ch} ถูกตั้งเป็น false ทั้งหมดแล้ว</div>`
+    if (btn) btn.style.display = 'none'
+  } catch (err) {
+    if (resultEl) resultEl.innerHTML = `<div style="color:#ef4444;font-size:0.78rem;margin-top:8px;">❌ กวาดไม่สำเร็จ: ${err.message}</div>`
+    if (btn) { btn.disabled = false; btn.textContent = '🧹 กวาด NULL ที่เหลือให้เป็น false' }
+  }
+}
 let uploadMode = 'order'
 
 const CHANNEL_OPTIONS_ORDER = [
@@ -1638,6 +1658,20 @@ async function handleConfirm() {
       }
       const notMatched = deduped.length - matchedCount
 
+      // เช็คว่ามีออเดอร์ในช่วงวันที่ที่ไฟล์นี้ครอบคลุม ที่ยัง settled=NULL ค้างอยู่ไหม (ตกหล่นจากเหตุการณ์อื่นมาก่อน)
+      // เพราะกฎ "ไม่เจอในไฟล์รับเงิน = false" ไม่เคยถูกบังคับใช้จริงเลย ต้องมากวาดตรงนี้แทน
+      const settledDatesAll = deduped.map(r => r.settled_date).filter(Boolean).sort()
+      const sweepFrom = settledDatesAll[0]
+      const sweepTo = settledDatesAll[settledDatesAll.length - 1]
+      let staleNullCount = 0
+      if (sweepFrom && sweepTo) {
+        const { count: nullCnt, error: staleErr } = await DB.from('orders')
+          .select('order_id', { count: 'exact', head: true })
+          .eq('channel', channel).is('settled', null).gte('date', sweepFrom).lte('date', sweepTo)
+        if (!staleErr) staleNullCount = nullCnt || 0
+        _settlementSweepRange = { channel, from: sweepFrom, to: sweepTo }
+      }
+
       const unmatchedByDate = {}
       unmatchedOrders.forEach(r => {
         const d = r.order_created_date || r.settled_date || 'ไม่ระบุ'
@@ -1690,6 +1724,13 @@ async function handleConfirm() {
             <div class="success-stat"><div class="success-stat-num" style="color:${zeroOrNegativeCount>0?'#fb923c':'#818cf8'}">${zeroOrNegativeCount.toLocaleString()}</div><div class="success-stat-label">Match แต่ยอด ≤0 (ตั้ง settled=false)</div></div>
             <div class="success-stat"><div class="success-stat-num" style="color:${notMatched>0?'#fb923c':'#818cf8'}">${notMatched.toLocaleString()}</div><div class="success-stat-label">ไม่เจอออเดอร์</div></div>
           </div>
+          ${staleNullCount > 0 ? `
+          <div style="margin-top:16px;padding:12px 14px;border-radius:8px;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.3);">
+            <div style="font-size:0.78rem;color:#fb923c;font-weight:600;margin-bottom:6px;">⚠️ พบออเดอร์ ${staleNullCount.toLocaleString()} รายการ ในช่วง ${sweepFrom}–${sweepTo} ของ ${channel} ที่ยังเป็น settled=NULL ค้างมาจากก่อนหน้านี้ (ไม่เกี่ยวกับไฟล์รอบนี้)</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">ออเดอร์เหล่านี้ไม่ได้อยู่ในไฟล์รับเงินรอบนี้เลย ตามกฎที่ตกลงกันไว้ควรตั้งเป็น false (ยังไม่ได้เงิน) — กดกวาดให้ถูกต้องได้เลย</div>
+            <button class="btn-sync" id="btnSweepNulls" onclick="sweepStaleNulls()" style="background:#fb923c;color:white;">🧹 กวาด NULL ที่เหลือให้เป็น false</button>
+            <div id="sweepResult"></div>
+          </div>` : ''}
           ${unmatchedTableHTML}
           <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
           <div class="success-actions">
@@ -1849,7 +1890,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
 
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
-    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, settled:channel==='Facebook'?true:undefined, settled_date:channel==='Facebook'?g.date:undefined }
+    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
