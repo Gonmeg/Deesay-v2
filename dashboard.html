@@ -203,6 +203,7 @@
   <div class="sidebar-footer">
     <span class="status-dot"></span>Supabase Connected<br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
+    <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
     <div id="refreshMVStatus" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
     <button class="btn btn-ghost" id="themeToggleBtn" onclick="toggleTheme()" style="width:100%;margin-top:8px;justify-content:center;">🌙 โหมดมืด</button>
@@ -3301,13 +3302,24 @@ async function refreshDashboardData() {
 
     await new Promise(r => setTimeout(r, 2000))
 
-    const [promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows] = await Promise.all([
-      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchSkuAll()
+    const [orders, promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows] = await Promise.all([
+      fetchAll(), fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchSkuAll()
     ])
+    allData = orders.filter(r => !isExcludedRow(r))
     window._promoMonthlyCache = promoMonthly
     window._skuParentMonthlyCache = skuParentMonthly
     window._provinceMonthlyCache = provinceMonthly
     skuRevenueAll = skuRevRows.filter(r => !isExcludedRow(r))
+    orderIdToPromo = {}
+    allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
+    const from = getDateValue('From'), to = getDateValue('To')
+    filteredData = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r))
+    idbSet(CACHE_KEY, {
+      allData, productsMap, provinceRegionMap, promotionsMap,
+      promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
+      skuRevenueAll, cachedAt: Date.now()
+    })
+    updateCacheStatus('fresh')
 
     const monthSelFrom = document.getElementById('filterMonthFrom')
     const monthSelTo = document.getElementById('filterMonthTo')
@@ -3514,37 +3526,102 @@ function fixCostStickyPositions(tableId, frozenCols) {
   });
 }
 
+// ===== แคชข้อมูลไว้ในเบราว์เซอร์ (IndexedDB) — เปิดหน้าครั้งถัดไปเห็นข้อมูลทันที ไม่ต้องรอโหลดใหม่ทั้งหมด =====
+const IDB_NAME = 'deesay_dashboard_cache', IDB_STORE = 'snapshot', CACHE_KEY = 'dashboard_snapshot_v1'
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1)
+    req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE) }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+async function idbGet(key) {
+  try {
+    const db = await idbOpen()
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(key)
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+  } catch (e) { console.error('idbGet failed', e); return null }
+}
+async function idbSet(key, value) {
+  try {
+    const db = await idbOpen()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite')
+      tx.objectStore(IDB_STORE).put(value, key)
+      tx.oncomplete = () => resolve(true)
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (e) { console.error('idbSet failed', e); return false }
+}
+
+function applySnapshot(snap) {
+  allData = snap.allData
+  productsMap = snap.productsMap
+  provinceRegionMap = snap.provinceRegionMap
+  promotionsMap = snap.promotionsMap
+  window._promoMonthlyCache = snap.promoMonthlyCache
+  window._skuParentMonthlyCache = snap.skuParentMonthlyCache
+  window._provinceMonthlyCache = snap.provinceMonthlyCache
+  skuRevenueAll = snap.skuRevenueAll
+  orderIdToPromo = {}
+  allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
+  const from = getDateValue('From'), to = getDateValue('To')
+  filteredData = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r))
+  const lastDate = allData.map(r => r.date).filter(Boolean).sort().reverse()[0]
+  document.getElementById('lastUpdate').textContent = 'ข้อมูลล่าสุด: ' + (lastDate || '—')
+}
+
+function updateCacheStatus(mode, timestamp) {
+  const el = document.getElementById('cacheStatus'); if (!el) return
+  if (mode === 'loading-fresh') el.innerHTML = '<span style="color:#fbbf24;">🔄 กำลังโหลดข้อมูลสดล่าสุด...</span>'
+  else if (mode === 'fresh') el.innerHTML = '<span style="color:#34d399;">🟢 ข้อมูลอัพเดตล่าสุดแล้ว (เมื่อสักครู่)</span>'
+  else if (mode === 'cached') {
+    const mins = Math.round((Date.now() - timestamp) / 60000)
+    const ageText = mins < 1 ? 'เมื่อสักครู่' : mins + ' นาทีที่แล้ว'
+    const color = mins < 5 ? '#34d399' : mins < 30 ? '#fbbf24' : '#fb923c'
+    el.innerHTML = `<span style="color:${color};">🕒 กำลังแสดงจากแคช (${ageText})</span>`
+  }
+}
+
+async function fetchFreshSnapshot() {
+  const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows] = await Promise.all([
+    fetchAll(), fetchProducts(), fetchProvinceRegion(),
+    fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchPromotionsMap(),
+    fetchSkuAll()
+  ])
+  return {
+    allData: orders.filter(r => !isExcludedRow(r)),
+    productsMap: prods, provinceRegionMap: regions, promotionsMap: promosMap,
+    promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
+    skuRevenueAll: skuRevRows.filter(r => !isExcludedRow(r)),
+    cachedAt: Date.now()
+  }
+}
+
 async function init() {
   try {
     setDefaultDateFilter();
-    const from = getDateValue('From');
-    const to = getDateValue('To');
+    let usedCache = false
+    const cached = await idbGet(CACHE_KEY)
+    if (cached && cached.allData && cached.allData.length) {
+      applySnapshot(cached)
+      renderOverview()
+      document.getElementById('loadingOverlay').classList.add('hidden')
+      updateCacheStatus('cached', cached.cachedAt)
+      usedCache = true
+    }
 
-    const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows] = await Promise.all([
-      fetchAll(), fetchProducts(), fetchProvinceRegion(),
-      fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchPromotionsMap(),
-      fetchSkuAll()
-    ]);
-    allData = orders.filter(r => !isExcludedRow(r));
-    productsMap = prods;
-    provinceRegionMap = regions;
-    promotionsMap = promosMap;
-    window._promoMonthlyCache = promoMonthly;
-    window._skuParentMonthlyCache = skuParentMonthly;
-    window._provinceMonthlyCache = provinceMonthly;
-
-    // sku_revenue: ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" ระดับรายวัน — ให้หน้าวิเคราะห์ SKU ใช้แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
-    skuRevenueAll = skuRevRows.filter(r => !isExcludedRow(r));
-    orderIdToPromo = {};
-    allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || ''; });
-
-    filteredData = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r));
-
-    const lastDate = allData.map(r => r.date).filter(Boolean).sort().reverse()[0];
-    document.getElementById('lastUpdate').textContent = 'ข้อมูลล่าสุด: ' + (lastDate || '—');
-
-    renderOverview();
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    if (usedCache) updateCacheStatus('loading-fresh')
+    const fresh = await fetchFreshSnapshot()
+    applySnapshot(fresh)
+    if (usedCache) renderCurrentPage(); else renderOverview()
+    document.getElementById('loadingOverlay').classList.add('hidden')
+    updateCacheStatus('fresh')
+    idbSet(CACHE_KEY, fresh) // เก็บแคชไว้ใช้รอบถัดไป (ไม่ต้องรอให้เสร็จ)
   } catch (e) {
     document.getElementById('loadingOverlay').classList.add('hidden');
     showError('โหลดข้อมูลไม่สำเร็จ: ' + e.message + ' — กรุณาตรวจสอบ Supabase key และ RLS settings');
