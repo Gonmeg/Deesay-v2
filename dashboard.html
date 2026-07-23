@@ -337,7 +337,17 @@
     <div class="page" id="page-fbhub">
       <div id="fbhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartFbAds"></canvas></div></div>
+        <div class="card">
+          <div class="section-header">
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook)</div>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="fbhub-yr" onclick="setHubAdView('fb','year',this)">ทั้งปี</button>
+              <button class="toggle-btn active" id="fbhub-mo" onclick="setHubAdView('fb','month',this)">รายเดือน</button>
+              <button class="toggle-btn" id="fbhub-dy" onclick="setHubAdView('fb','day',this)">รายวัน</button>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="chartFbAds"></canvas></div>
+        </div>
         <div class="card">
           <div class="card-title">สัดส่วนยอดขายตาม Sub-Channel</div>
           <div id="fbSubChannelBars" style="padding-top:6px;"></div>
@@ -826,7 +836,17 @@
           </div>
         </div>
       </div>
-      <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div></div>
+      <div class="card">
+        <div class="section-header">
+          <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok)</div>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
+            <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
+            <button class="toggle-btn" id="tthub-dy" onclick="setHubAdView('tt','day',this)">รายวัน</button>
+          </div>
+        </div>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div>
+      </div>
       <div class="card ai-summary-card">
         <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
         <div class="ai-summary-body" id="tthub-insight">กำลังวิเคราะห์...</div>
@@ -905,7 +925,17 @@
           </table>
         </div>
       </div>
-      <div class="card"><div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartShAds"></canvas></div></div>
+      <div class="card">
+        <div class="section-header">
+          <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee)</div>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="shhub-yr" onclick="setHubAdView('sh','year',this)">ทั้งปี</button>
+            <button class="toggle-btn active" id="shhub-mo" onclick="setHubAdView('sh','month',this)">รายเดือน</button>
+            <button class="toggle-btn" id="shhub-dy" onclick="setHubAdView('sh','day',this)">รายวัน</button>
+          </div>
+        </div>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="chartShAds"></canvas></div>
+      </div>
       <div class="card" style="background:var(--bg2);border-style:dashed;">
         <div style="font-size:12.5px;color:var(--text2);">🚧 ฟีเจอร์ Live สำหรับ Shopee จะเพิ่มในอนาคต — ตอนนี้แสดงได้แค่ยอดขายกับค่าโฆษณาภาพรวมก่อน</div>
       </div>
@@ -1603,7 +1633,7 @@ function renderFbHub() {
       </div>`;
     }).join('') : '<div class="empty">ไม่มีข้อมูล</div>';
 
-    renderAdpChannel('chartFbAds', null, 'fb');
+    renderAdpChannel('chartFbAds', null, 'fb', hubAdView.fb);
     renderPromotion('Fb', 'Facebook');
 
     // คำแนะนำอย่างง่าย: sub-channel ที่ ROAS/AOV เด่นสุด (เทียบจาก AOV เพราะไม่มี ad ต่อ sub-channel)
@@ -1661,7 +1691,7 @@ function renderTtHub() {
       <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
     `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
 
-    renderAdpChannel('chartTtAds', null, 'tt');
+    renderAdpChannel('chartTtAds', null, 'tt', hubAdView.tt);
 
     let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
     if (ocSorted.length) {
@@ -1708,7 +1738,7 @@ function renderShHub() {
         <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
       </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
 
-    renderAdpChannel('chartShAds', null, 'sh');
+    renderAdpChannel('chartShAds', null, 'sh', hubAdView.sh);
   };
 
   if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
@@ -2856,9 +2886,10 @@ function aggAdGmv(adsArr, ordersArr, view) {
   return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0]));
 }
 
-function adLabel(k) {
-  if(adView==='month'){const[,mo]=k.split('-');return MONTHS_TH[parseInt(mo)-1];}
-  return adView==='day'?k.substring(5):k;
+function adLabel(k, view) {
+  view = view || adView;
+  if(view==='month'){const[,mo]=k.split('-');return MONTHS_TH[parseInt(mo)-1];}
+  return view==='day'?k.substring(5):k;
 }
 
 function makeAdChart(id, labels, gmvArr, adsArr, pctArr) {
@@ -2889,6 +2920,22 @@ function setAdpView(v, btn) {
   renderAdpAll();
 }
 
+// view แยกต่างหากต่อหน้า Hub (Facebook/TikTok/Shopee) ไม่ใช้ตัวแปร adView ตัวเดียวกับหน้า Ad Performance
+// กันไม่ให้สลับมุมมองในหน้าหนึ่งไปกระทบอีกหน้าโดยไม่ตั้งใจ
+const hubAdView = { fb: 'month', tt: 'month', sh: 'month' };
+const HUB_AD_CONFIG = {
+  fb: { prefix: 'fbhub', chartId: 'chartFbAds' },
+  tt: { prefix: 'tthub', chartId: 'chartTtAds' },
+  sh: { prefix: 'shhub', chartId: 'chartShAds' },
+};
+function setHubAdView(hub, v, btn) {
+  hubAdView[hub] = v;
+  const cfg = HUB_AD_CONFIG[hub];
+  document.querySelectorAll(`#${cfg.prefix}-yr, #${cfg.prefix}-mo, #${cfg.prefix}-dy`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdpChannel(cfg.chartId, null, hub, v);
+}
+
 // เติม option รายเพจ Facebook ใน dropdown ครั้งแรกที่มีข้อมูล (ดึงชื่อจาก mapping เอง ไม่ hardcode ซ้ำ)
 let _fbSelectPopulated = false;
 function populateFbSelect() {
@@ -2899,7 +2946,8 @@ function populateFbSelect() {
   _fbSelectPopulated = true;
 }
 
-function renderAdpChannel(chartId, subId, ch) {
+function renderAdpChannel(chartId, subId, ch, viewOverride) {
+  const view = viewOverride || adView;
   const {ads, orders} = getAdDateFiltered();
   let adsF, ordF;
   if (ch === 'fb') {
@@ -2920,8 +2968,8 @@ function renderAdpChannel(chartId, subId, ch) {
     else { adsF = ads.filter(r=>r.channel==='Lazada' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Lazada' && r.sub_channel===sel); }
   } else { adsF = ads; ordF = orders; }
 
-  const a = aggAdGmv(adsF, ordF, adView);
-  const labels = a.map(([k])=>adLabel(k));
+  const a = aggAdGmv(adsF, ordF, view);
+  const labels = a.map(([k])=>adLabel(k, view));
   const gmvArr = a.map(([,v])=>v.gmv), adsArr = a.map(([,v])=>v.ads);
   const pctArr = a.map(([,v])=>v.gmv>0?(v.ads/v.gmv*100):0);
   const tGmv = gmvArr.reduce((s,v)=>s+v,0), tAds = adsArr.reduce((s,v)=>s+v,0);
@@ -3585,20 +3633,14 @@ async function renderCostPage() {
     filtered.forEach(r=>{ const cat = normalizeCostCategory(r.cost_category); catTotals[cat]=(catTotals[cat]||0)+(parseFloat(r.amount)||0); });
     const cats = Object.keys(catTotals).sort((a,b)=>catTotals[b]-catTotals[a]);
 
-    // ความกว้าง sticky zone ขยายตามจำนวนคอลัมน์ ads ที่มี (แต่ละคอลัมน์กว้าง 100px)
-    const adsColW = 100;
-    const stickyBeforeAds = 525; // ตำแหน่งซ้ายก่อนถึงคอลัมน์ ads แรก (เท่าเดิม: SKU+ชื่อ+ต้นทุน+ยอดขาย+%ต้นทุน)
-    const adsLeftPositions = adsChannels.map((ch,i) => stickyBeforeAds + i*adsColW);
-    const totalStickyWidth = stickyBeforeAds + adsChannels.length*adsColW;
-
     document.getElementById('costOverviewHead').innerHTML = `<tr>
-      <th style="width:70px;min-width:70px;max-width:70px;position:sticky;left:0;z-index:2;background-color:${bg};">SKU</th>
-      <th style="width:170px;min-width:170px;max-width:170px;position:sticky;left:70px;z-index:2;background-color:${bg};">ชื่อสินค้า</th>
-      <th style="width:105px;min-width:105px;max-width:105px;text-align:right;color:var(--red);white-space:nowrap;position:sticky;left:240px;z-index:2;background-color:${bg};">รวมต้นทุน</th>
-      <th style="width:105px;min-width:105px;max-width:105px;text-align:right;color:var(--green);white-space:nowrap;position:sticky;left:345px;z-index:2;background-color:${bg};">ยอดขาย</th>
-      <th style="width:75px;min-width:75px;max-width:75px;text-align:right;white-space:nowrap;position:sticky;left:450px;z-index:2;background-color:${bg};">% ต้นทุน</th>
-      ${adsChannels.map((ch,i)=>`<th style="width:${adsColW}px;min-width:${adsColW}px;max-width:${adsColW}px;text-align:right;color:var(--blue);white-space:nowrap;position:sticky;left:${adsLeftPositions[i]}px;z-index:2;${i===adsChannels.length-1?'border-right:2px solid var(--border);':''}background-color:${bg};">Ads ${ch}</th>`).join('')}
-      ${cats.map(c=>`<th style="text-align:right;min-width:100px;white-space:nowrap;font-size:10px;">${c}</th>`).join('')}
+      <th style="text-align:left;white-space:nowrap;">SKU</th>
+      <th style="text-align:left;white-space:nowrap;">ชื่อสินค้า</th>
+      <th style="text-align:right;color:var(--red);white-space:nowrap;">รวมต้นทุน</th>
+      <th style="text-align:right;color:var(--green);white-space:nowrap;">ยอดขาย</th>
+      <th style="text-align:right;white-space:nowrap;">% ต้นทุน</th>
+      ${adsChannels.map(ch=>`<th style="text-align:right;color:var(--blue);white-space:nowrap;">Ads ${ch}</th>`).join('')}
+      ${cats.map(c=>`<th style="text-align:right;white-space:nowrap;font-size:10px;">${c}</th>`).join('')}
     </tr>`;
 
     document.getElementById('costOverviewBody').innerHTML = skus.map(sku => {
@@ -3606,20 +3648,20 @@ async function renderCostPage() {
       const pct = rev>0?(cost/rev*100).toFixed(1):'—';
       const col = parseFloat(pct)>50?'var(--red)':parseFloat(pct)>30?'var(--orange)':'var(--green)';
       return `<tr style="cursor:pointer;" onclick="renderCostDeep('${sku}')">
-        <td style="width:70px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;position:sticky;left:0;z-index:1;overflow:hidden;text-overflow:ellipsis;background-color:${bg};">${sku}</td>
-        <td style="width:170px;color:var(--text);font-weight:600;position:sticky;left:70px;z-index:1;overflow:hidden;white-space:nowrap;background-color:${bg};">${skuToName(sku)} <span style="font-size:10px;color:var(--text3);">🔍</span></td>
-        <td style="width:105px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);position:sticky;left:240px;z-index:1;background-color:${bg};">฿${fmt(Math.round(cost))}</td>
-        <td style="width:105px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);position:sticky;left:345px;z-index:1;background-color:${bg};">฿${fmt(Math.round(rev))}</td>
-        <td style="width:75px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};position:sticky;left:450px;z-index:1;background-color:${bg};">${pct}%</td>
-        ${adsChannels.map((ch,i)=>{const a=adsBySkuChannel[ch]?.[sku]||0;return `<td style="width:${adsColW}px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blue);position:sticky;left:${adsLeftPositions[i]}px;z-index:1;${i===adsChannels.length-1?'border-right:2px solid var(--border);':''}background-color:${bg};">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;">${sku}</td>
+        <td style="color:var(--text);font-weight:600;white-space:nowrap;">${skuToName(sku)} <span style="font-size:10px;color:var(--text3);">🔍</span></td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(cost))}</td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(rev))}</td>
+        <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};">${pct}%</td>
+        ${adsChannels.map(ch=>{const a=adsBySkuChannel[ch]?.[sku]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blue);">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
         ${cats.map(cat=>{const a=costByCatSku[sku]?.[cat]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
       </tr>`;
     }).join('') + `<tr style="border-top:2px solid var(--border);">
-      <td colspan="2" style="font-weight:700;position:sticky;left:0;z-index:1;background-color:${bg};">รวมทั้งหมด</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);position:sticky;left:240px;z-index:1;background-color:${bg};">฿${fmt(Math.round(totalCost))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);position:sticky;left:345px;z-index:1;background-color:${bg};">฿${fmt(Math.round(totalRev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};position:sticky;left:450px;z-index:1;background-color:${bg};">${costPct}%</td>
-      ${adsChannels.map((ch,i)=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue);position:sticky;left:${adsLeftPositions[i]}px;z-index:1;${i===adsChannels.length-1?'border-right:2px solid var(--border);':''}background-color:${bg};">฿${fmt(Math.round(totalAdsByChannel[ch]||0))}</td>`).join('')}
+      <td colspan="2" style="font-weight:700;">รวมทั้งหมด</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(totalCost))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);">฿${fmt(Math.round(totalRev))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};">${costPct}%</td>
+      ${adsChannels.map(ch=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue);">฿${fmt(Math.round(totalAdsByChannel[ch]||0))}</td>`).join('')}
       ${cats.map(cat=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(catTotals[cat]||0))}</td>`).join('')}
 
     </tr>`;
@@ -3631,7 +3673,6 @@ async function renderCostPage() {
     window._costMonths = months;
     window._costMLabels = mLabels;
     window._costAdsBySkuChannel = adsBySkuChannel;
-    requestAnimationFrame(() => fixCostStickyPositions('tblCostOverview', 5 + adsChannels.length));
     window._costCats = cats;
   } catch(e) {
     console.error(e);
