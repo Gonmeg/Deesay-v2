@@ -534,6 +534,13 @@ async function syncDealerOrders() {
   btn.disabled = true; btn.textContent = '⏳ กำลัง sync...'; resultEl.textContent = ''
 
   try {
+    // โหลด mapping child_sku → parent_sku จากตาราง products ก่อนเสมอ
+    // (แก้บั๊ก: เดิมใช้ SKU ดิบจาก Sheet ตรงๆ ไม่เคย join กับ products เลย
+    //  ทำให้ child SKU เช่น DSP01/DSP02/ZOL01 หลุดเข้า parent_sku โดยไม่ถูกรวมเป็น DSP/ZOL)
+    const { data: prods } = await DB.from('products').select('child_sku,parent_sku')
+    const skuMap = {}
+    if (prods) prods.forEach(p => skuMap[p.child_sku.toUpperCase()] = p.parent_sku.toUpperCase())
+
     const url = `https://docs.google.com/spreadsheets/d/${DEALER_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(DEALER_SHEET_TAB)}`
     const res = await fetch(url)
     const text = await res.text()
@@ -570,7 +577,9 @@ async function syncDealerOrders() {
       }
       const group = String(get(idx.group)).trim()
       const customer = String(get(idx.customer)).trim()
-      const sku = String(get(idx.sku)).trim()
+      const skuRaw = String(get(idx.sku)).trim()
+      // แปลง child_sku → parent_sku ผ่าน norm() ตัวเดียวกับที่ช่องทางอื่นใช้ (ตัดขีด/จุด + ตัวพิมพ์ใหญ่ + map)
+      const sku = skuRaw ? norm(skuRaw, skuMap) : ''
       const qty = parseInt(get(idx.qty)) || 0
       const rev = parseFloat(get(idx.revenue)) || 0
       if (!dateStr || !sku || !qty) return
@@ -582,6 +591,7 @@ async function syncDealerOrders() {
     // Group by วันที่ + กลุ่มลูกค้า + ชื่อลูกค้า → 1 ออเดอร์
     // เก็บ revenue แยกรายSKU ด้วย (จากคอลัมน์ "ราคารวม vat" ที่ Sheet มีให้อยู่แล้วรายบรรทัด)
     // เพื่อไม่ให้ revenue_share ใน sku_revenue กลายเป็น 0 เหมือนเดิม
+    // (sku ตอนนี้เป็น parent_sku แล้ว ดังนั้น child SKU คนละตัวที่ parent เดียวกันจะถูกรวม qty/revenue เข้าด้วยกันถูกต้องในขั้นตอนนี้เลย)
     const orderMap = {}
     rawRows.forEach(r => {
       const key = `${r.dateStr}||${r.group}||${r.customer}`
@@ -1518,7 +1528,7 @@ async function handleStep2() {
   al.style.display = 'none'
 
   if (channel === 'ตัวแทน/MT') {
-    processed = processDealerRows(rawData, mappings)
+    processed = await processDealerRows(rawData, mappings)
     const totalOrders = new Set(processed.map(r => r.order_id)).size
     const totalRev = processed.reduce((s,r) => s + (r.revenue||0), 0)
     document.getElementById('summaryGrid').innerHTML = `
@@ -1926,7 +1936,14 @@ async function calcSkuRevenue(orders) {
 
 let _dealerSkuRevMap = {} // order_id -> { sku: revenue } — ใช้ตอนสร้าง sku_revenue rows ใน handleConfirm
 
-function processDealerRows(rows, mappings) {
+async function processDealerRows(rows, mappings) {
+  // โหลด mapping child_sku → parent_sku จาก products ก่อนเสมอ
+  // (แก้บั๊ก: เดิมใช้ SKU ดิบจากไฟล์ตรงๆ ไม่เคย join กับ products
+  //  ทำให้ child SKU เช่น DSP01/DSP02/ZOL01 หลุดเข้า parent_sku โดยไม่ถูกรวมเป็น DSP/ZOL)
+  const { data: prods } = await DB.from('products').select('child_sku,parent_sku')
+  const skuMap = {}
+  if (prods) prods.forEach(p => skuMap[p.child_sku.toUpperCase()] = p.parent_sku.toUpperCase())
+
   const gs = (row, key) => {
     const col = mappings[key]; if (!col) return ''
     const v = row[col]; return v !== null && v !== undefined ? String(v).trim() : ''
@@ -1938,12 +1955,15 @@ function processDealerRows(rows, mappings) {
 
   // Group by วันที่ + กลุ่มลูกค้า + ชื่อลูกค้า
   // เก็บ revenue แยกรายSKU ด้วย เพื่อไม่ให้ sku_revenue.revenue_share กลายเป็น 0
+  // (sku ถูกแปลงเป็น parent_sku ผ่าน norm()+skuMap ก่อนแล้ว ดังนั้น child SKU คนละตัวที่ parent เดียวกัน
+  //  จะถูกรวม qty/revenue เข้าด้วยกันถูกต้องตั้งแต่ตอน group นี้เลย)
   const orderMap = {}
   rows.forEach(row => {
     const dateStr = parseDate(row[mappings['date']])
     const group = gs(row, 'group')
     const customer = gs(row, 'customer_name')
-    const sku = gs(row, 'sku')
+    const skuRaw = gs(row, 'sku')
+    const sku = skuRaw ? norm(skuRaw, skuMap) : ''
     const qty = parseInt(gn(row, 'qty')) || 0
     const rev = gn(row, 'revenue')
     if (!dateStr || !sku || !qty) return
