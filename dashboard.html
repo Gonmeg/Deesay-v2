@@ -695,9 +695,10 @@
       </div>
     </div>
     <div class="page" id="page-adperf">
-      <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:16px;">
-        📌 ข้อมูลดึงจาก Google Sheets (อัพเดทรายวัน) — ใช้ filter วันที่จากแถบด้านบน
+      <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:8px;">
+        📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ (ตรงกับหน้าอื่นๆ) · ค่าโฆษณาดึงจาก Google Sheets แยกราย sub-channel — ใช้ filter วันที่จากแถบด้านบน
       </div>
+      <div id="adp-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:16px;"></div>
       <div class="grid-4" style="margin-bottom:20px;">
         <div class="card"><div class="card-title">ยอดขาย GMV</div><div class="kpi-value" id="adp-gmv" style="color:var(--blue);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
         <div class="card"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" id="adp-ads" style="color:var(--red);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
@@ -725,7 +726,12 @@
       </div>
       <div class="grid-2" style="margin-bottom:16px;">
         <div class="card">
-          <div class="section-header"><div class="section-title">Facebook / Online</div></div>
+          <div class="section-header">
+            <div class="section-title">Facebook / Online</div>
+            <select id="adp-sel-fb" onchange="renderAdpChannel('adpChartFB','adp-sub-fb','fb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;max-width:170px;">
+              <option value="all">รวมทุกเพจ</option>
+            </select>
+          </div>
           <div class="kpi-sub" id="adp-sub-fb" style="margin-bottom:10px;">—</div>
           <div class="chart-wrap"><canvas id="adpChartFB"></canvas></div>
         </div>
@@ -738,7 +744,7 @@
           <div class="section-header">
             <div class="section-title">Shopee</div>
             <select id="adp-sel-sh" onchange="renderAdpChannel('adpChartSH','adp-sub-sh','sh')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee mall">Shopee mall</option>
+              <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee Mall">Shopee Mall</option>
             </select>
           </div>
           <div class="kpi-sub" id="adp-sub-sh" style="margin-bottom:10px;">—</div>
@@ -748,7 +754,7 @@
           <div class="section-header">
             <div class="section-title">Lazada</div>
             <select id="adp-sel-lz" onchange="renderAdpChannel('adpChartLZ','adp-sub-lz','lz')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada mall">Lazada mall</option>
+              <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada Mall">Lazada Mall</option>
             </select>
           </div>
           <div class="kpi-sub" id="adp-sub-lz" style="margin-bottom:10px;">—</div>
@@ -906,6 +912,7 @@
     </div>
 
     <div class="page" id="page-cost">
+      <div id="cost-ads-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:12px;"></div>
       <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
@@ -2752,21 +2759,76 @@ function renderSkuAnalysisTrend() {
 }
 
 // ===== AD PERFORMANCE =====
+// GMV มาจากตาราง orders จริง (ตรงกับหน้าอื่นๆ ทั้งหมด) — ไม่ใช้ gmv จาก Google Sheet อีกต่อไป
+// ค่าโฆษณา (Ads) ยังคงดึงจาก Google Sheet แต่เปลี่ยนมาใช้แท็บ "Ads" ที่แยกราย sub-channel/เพจละเอียดกว่าเดิม (แท็บ "summary" เดิมเป็นแค่ยอดรวม)
 const GSHEET_ID = '110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I';
-const GSHEET_TAB = 'summary';
-let adRawData = [];
+const GSHEET_ADS_TAB = 'Ads';
+
+// แปลงชื่อ Channel ดิบในชีตให้เป็นชื่อ canonical ที่ระบบใช้ (เผื่อสะกดต่างกัน เช่น Tiktok vs TikTok)
+const AD_CHANNEL_NORMALIZE = { 'Tiktok':'TikTok', 'TikTok':'TikTok', 'Shopee':'Shopee', 'Lazada':'Lazada', 'Facebook':'Facebook' };
+
+// Mapping "Channel||Sub Channel" ตามที่เห็นในชีต → { channel, subChannel (ต้องตรงกับ orders.sub_channel เป๊ะ), tag (optional) }
+// subChannel: null หมายถึงไม่ผูกกับ sub_channel ไหนเจาะจง (เช่น เอเจนซี่ที่ยิงหลายเพจพร้อมกัน) — จะรวมในยอด channel รวม แต่ไม่โผล่ตอนแยกรายเพจ
+const AD_SHEET_MAPPING = {
+  'Tiktok||Deesay Thailand':        { channel:'TikTok', subChannel:'Deesay Thailand' },
+  'Shopee||Shopee mall':            { channel:'Shopee', subChannel:'Shopee Mall' },
+  'Shopee||Shopee mall CPAS':       { channel:'Shopee', subChannel:'Shopee Mall', tag:'CPAS' },
+  'Shopee||Shopee 24hr':            { channel:'Shopee', subChannel:'Shopee 24hr' },
+  'Lazada||Lazada mall':            { channel:'Lazada', subChannel:'Lazada Mall' },
+  'Lazada||Lazada 24hr':            { channel:'Lazada', subChannel:'Lazada 24hr' },
+  'Facebook||Page: Deesay Thailand - บริษัท':              { channel:'Facebook', subChannel:'01. FB - N - Deesay Thailand - บริษัท' },
+  'Facebook||Page: Deesay Cosmetics - Thailand 2':         { channel:'Facebook', subChannel:'02. FB - M - Deesay Cosmetics - Thailand' },
+  'Facebook||Page: แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก-มีปลายทาง':    { channel:'Facebook', subChannel:'05. FB - M - แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก - มีปลายทาง' },
+  'Facebook||Page: ลิปสักปาก ดีเซ้ย์ มีเก็บปลายทาง':          { channel:'Facebook', subChannel:'07. FB - M - ลิปสักปาก ดีเซ้ย์ มีเก็บปลายทาง' },
+  'Facebook||Page: ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอางของแท้':      { channel:'Facebook', subChannel:'10. FB - M - ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอางของแท้' },
+  'Facebook||Page: Deesay กันแดดฟิลเตอร์ - เพจบริษัท':        { channel:'Facebook', subChannel:'09. FB - M - กันแดดฟิลเตอร์ - เพจบริษัท' },
+  'Facebook||Page: Deesay Makeup':                          { channel:'Facebook', subChannel:'08. FB - N - Deesay Makeup' },
+  // Facebook OS = ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัท โดยเฉพาะ → รวมเข้า sub_channel เดียวกันเลยตามที่ Meg ยืนยัน
+  'Facebook||Facebook OS':  { channel:'Facebook', subChannel:'01. FB - N - Deesay Thailand - บริษัท' },
+  // Facebook AWA = เอเจนซี่ที่ยิงหลายเพจพร้อมกัน ไม่ผูกเพจเดียว → รวมเฉพาะยอดรวม Facebook ไม่โผล่ตอนแยกรายเพจ
+  'Facebook||Facebook AWA': { channel:'Facebook', subChannel:null },
+};
+
+let adRawData = [];   // ค่าแอดที่ map แล้ว: {channel, subChannel, tag, date, ads}
+let adUnmapped = [];  // เก็บ "Channel||SubChannel" ที่หาไม่เจอใน mapping ไว้เตือน Meg
 let adView = 'month';
 
 async function fetchAdData() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&sheet=${GSHEET_TAB}`;
+    const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(GSHEET_ADS_TAB)}`;
     const res = await fetch(url);
     const text = await res.text();
     const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    adRawData = json.table.rows.map(r => ({
-      channel: r.c[0]?.v || '', date: r.c[1]?.v ? formatGDate(r.c[1].v) : '',
-      ads: parseFloat(r.c[2]?.v) || 0, gmv: parseFloat(r.c[3]?.v) || 0,
-    })).filter(r => r.channel && r.date);
+    const unmappedSet = new Set();
+    adRawData = json.table.rows.map(r => {
+      const rawCh = (r.c[0]?.v || '').toString().trim();
+      const rawSub = (r.c[1]?.v || '').toString().trim();
+      const date = r.c[2]?.v ? formatGDate(r.c[2].v) : '';
+      const ads = parseFloat(r.c[3]?.v) || 0;
+      if (!date) return null;
+      // กรองวันที่ผิดปกติทิ้ง (เช่น 1899-12-30 = ค่า default ของ Excel/Sheets ตอนเซลล์ว่าง, 2343-07-16 = พิมพ์ปี พ.ศ. ผิดเป็น ค.ศ.)
+      const yr = parseInt(date.substring(0,4));
+      const curYr = new Date().getFullYear();
+      if (isNaN(yr) || yr < 2020 || yr > curYr + 1) return null;
+      const mapKey = rawCh + '||' + rawSub;
+      const mapped = AD_SHEET_MAPPING[mapKey];
+      if (mapped) return { channel: mapped.channel, subChannel: mapped.subChannel, tag: mapped.tag || null, date, ads };
+      // ไม่เจอใน mapping — ถ้ายัง identify channel หลักได้ ให้รวมในยอดรวม channel นั้นไปก่อน (ไม่ทิ้งเงิน) แค่ไม่โผล่แยกราย sub-channel
+      const canonicalCh = AD_CHANNEL_NORMALIZE[rawCh];
+      unmappedSet.add(mapKey);
+      if (canonicalCh) return { channel: canonicalCh, subChannel: null, tag: null, date, ads };
+      return null; // channel ไม่รู้จักเลยจริงๆ ถึงจะตัดทิ้ง
+    }).filter(Boolean);
+    adUnmapped = [...unmappedSet];
+    const warnEl = document.getElementById('adp-unmapped-warning');
+    if (warnEl) {
+      if (adUnmapped.length) {
+        warnEl.style.display = 'block';
+        warnEl.textContent = `⚠️ พบ Channel/Sub Channel ใหม่ในชีต Ads ที่ยังไม่ได้ map ${adUnmapped.length} รายการ: ${adUnmapped.join(', ')} — ยอดถูกรวมในยอดรวม channel แล้ว (ถ้า identify ได้) แต่ยังแยกดูรายเพจ/ร้านไม่ได้ จนกว่าจะเพิ่ม mapping`;
+      } else {
+        warnEl.style.display = 'none';
+      }
+    }
   } catch(e) { console.error('Ad fetch error:', e); adRawData = []; }
 }
 
@@ -2778,18 +2840,19 @@ function formatGDate(v) {
   return v;
 }
 
-function getAdFiltered() {
+// กรองตามช่วงวันที่จาก filter บนสุด (เหมือนหน้าอื่นๆ) — ไม่ใช้ filter channel/sub_channel ของแถบบนเพราะหน้านี้ต้องเห็นทุกช่องทางพร้อมกันเสมอ
+function getAdDateFiltered() {
   const from = getDateValue('From'), to = getDateValue('To');
-  return adRawData.filter(r => r.date >= from && r.date <= to);
+  const ads = adRawData.filter(r => r.date >= from && r.date <= to);
+  const orders = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r));
+  return { ads, orders };
 }
 
-function aggAd(data, view) {
+function aggAdGmv(adsArr, ordersArr, view) {
   const m = {};
-  data.forEach(r => {
-    const k = view==='year'?r.date.substring(0,4):view==='month'?r.date.substring(0,7):r.date;
-    if(!m[k]) m[k]={gmv:0,ads:0};
-    m[k].gmv+=r.gmv; m[k].ads+=r.ads;
-  });
+  const keyOf = d => view==='year' ? d.substring(0,4) : view==='month' ? d.substring(0,7) : d;
+  adsArr.forEach(r => { const k=keyOf(r.date); if(!m[k]) m[k]={gmv:0,ads:0}; m[k].ads+=r.ads; });
+  ordersArr.forEach(r => { const k=keyOf(r.date); if(!m[k]) m[k]={gmv:0,ads:0}; m[k].gmv+=(parseFloat(r.revenue)||0); });
   return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0]));
 }
 
@@ -2826,42 +2889,69 @@ function setAdpView(v, btn) {
   renderAdpAll();
 }
 
+// เติม option รายเพจ Facebook ใน dropdown ครั้งแรกที่มีข้อมูล (ดึงชื่อจาก mapping เอง ไม่ hardcode ซ้ำ)
+let _fbSelectPopulated = false;
+function populateFbSelect() {
+  if (_fbSelectPopulated) return;
+  const sel = document.getElementById('adp-sel-fb'); if (!sel) return;
+  const pages = [...new Set(Object.values(AD_SHEET_MAPPING).filter(m => m.channel==='Facebook' && m.subChannel).map(m => m.subChannel))].sort();
+  sel.innerHTML = '<option value="all">รวมทุกเพจ</option>' + pages.map(p => `<option value="${p}">${p.replace(/^\d+\.\s*FB\s*-\s*[A-Z]\s*-\s*/,'')}</option>`).join('') + '<option value="__other__">อื่นๆ (ไม่ระบุเพจ — AWA)</option>';
+  _fbSelectPopulated = true;
+}
+
 function renderAdpChannel(chartId, subId, ch) {
-  const d = getAdFiltered();
-  let filtered;
-  if(ch==='fb') filtered=d.filter(r=>r.channel==='Facebook'||r.channel==='Facebook AWA'||r.channel==='Online');
-  else if(ch==='tt') filtered=d.filter(r=>r.channel==='Tiktok'||r.channel==='TikTok');
-  else if(ch==='sh'){
-    const sel=document.getElementById('adp-sel-sh')?.value||'all';
-    filtered = sel==='all' ? d.filter(r=>r.channel==='Shopee mall'||r.channel==='Shopee 24hr') : d.filter(r=>r.channel===sel);
-  } else if(ch==='lz'){
-    const sel=document.getElementById('adp-sel-lz')?.value||'all';
-    filtered = sel==='all' ? d.filter(r=>r.channel==='Lazada mall'||r.channel==='Lazada 24hr') : d.filter(r=>r.channel===sel);
-  } else filtered=d;
-  const a=aggAd(filtered,adView);
-  const labels=a.map(([k])=>adLabel(k));
-  const gmvArr=a.map(([,v])=>v.gmv), adsArr=a.map(([,v])=>v.ads);
-  const pctArr=a.map(([,v])=>v.gmv>0?(v.ads/v.gmv*100):0);
-  const tGmv=gmvArr.reduce((s,v)=>s+v,0), tAds=adsArr.reduce((s,v)=>s+v,0);
-  const roas=tAds>0?(tGmv/tAds).toFixed(2):0;
-  if(subId) document.getElementById(subId).textContent=`GMV ฿${fmtB(tGmv)} · แอด ฿${fmtB(tAds)} · ROAS ${roas}x`;
-  makeAdChart(chartId,labels,gmvArr,adsArr,pctArr);
+  const {ads, orders} = getAdDateFiltered();
+  let adsF, ordF;
+  if (ch === 'fb') {
+    populateFbSelect();
+    const sel = document.getElementById('adp-sel-fb')?.value || 'all';
+    if (sel === 'all') { adsF = ads.filter(r=>r.channel==='Facebook'); ordF = orders.filter(r=>r.channel==='Facebook'); }
+    else if (sel === '__other__') { adsF = ads.filter(r=>r.channel==='Facebook' && !r.subChannel); ordF = []; }
+    else { adsF = ads.filter(r=>r.channel==='Facebook' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Facebook' && r.sub_channel===sel); }
+  } else if (ch === 'tt') {
+    adsF = ads.filter(r=>r.channel==='TikTok'); ordF = orders.filter(r=>r.channel==='TikTok');
+  } else if (ch === 'sh') {
+    const sel = document.getElementById('adp-sel-sh')?.value || 'all';
+    if (sel === 'all') { adsF = ads.filter(r=>r.channel==='Shopee'); ordF = orders.filter(r=>r.channel==='Shopee'); }
+    else { adsF = ads.filter(r=>r.channel==='Shopee' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Shopee' && r.sub_channel===sel); }
+  } else if (ch === 'lz') {
+    const sel = document.getElementById('adp-sel-lz')?.value || 'all';
+    if (sel === 'all') { adsF = ads.filter(r=>r.channel==='Lazada'); ordF = orders.filter(r=>r.channel==='Lazada'); }
+    else { adsF = ads.filter(r=>r.channel==='Lazada' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Lazada' && r.sub_channel===sel); }
+  } else { adsF = ads; ordF = orders; }
+
+  const a = aggAdGmv(adsF, ordF, adView);
+  const labels = a.map(([k])=>adLabel(k));
+  const gmvArr = a.map(([,v])=>v.gmv), adsArr = a.map(([,v])=>v.ads);
+  const pctArr = a.map(([,v])=>v.gmv>0?(v.ads/v.gmv*100):0);
+  const tGmv = gmvArr.reduce((s,v)=>s+v,0), tAds = adsArr.reduce((s,v)=>s+v,0);
+  const roas = tAds>0?(tGmv/tAds).toFixed(2):0;
+  if (subId) {
+    let extra = '';
+    if (ch === 'sh') {
+      const cpas = adsF.filter(r=>r.tag==='CPAS').reduce((s,r)=>s+r.ads,0);
+      const normal = adsF.filter(r=>r.tag!=='CPAS').reduce((s,r)=>s+r.ads,0);
+      if (cpas > 0) extra = ` (ปกติ ฿${fmtB(normal)} + CPAS ฿${fmtB(cpas)})`;
+    }
+    document.getElementById(subId).textContent = `GMV ฿${fmtB(tGmv)} · แอด ฿${fmtB(tAds)}${extra} · ROAS ${roas}x`;
+  }
+  makeAdChart(chartId, labels, gmvArr, adsArr, pctArr);
 }
 
 function renderAdpAll() {
-  if(adRawData.length===0){
+  if (adRawData.length === 0) {
     const sEl = document.getElementById('adp-summary');
-    if (sEl) sEl.textContent='⏳ กำลังโหลดข้อมูลจาก Google Sheets...';
+    if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่าแอดจาก Google Sheets...';
     fetchAdData().then(()=>renderAdpAll()); return;
   }
-  const d=getAdFiltered();
-  const a=aggAd(d,adView);
-  const labels=a.map(([k])=>adLabel(k));
-  const gmvArr=a.map(([,v])=>v.gmv), adsArr=a.map(([,v])=>v.ads);
-  const pctArr=a.map(([,v])=>v.gmv>0?(v.ads/v.gmv*100):0);
-  const tGmv=gmvArr.reduce((s,v)=>s+v,0), tAds=adsArr.reduce((s,v)=>s+v,0);
-  const roas=tAds>0?(tGmv/tAds).toFixed(2):0;
-  const adPct=tGmv>0?(tAds/tGmv*100).toFixed(1):0;
+  const { ads, orders } = getAdDateFiltered();
+  const a = aggAdGmv(ads, orders, adView);
+  const labels = a.map(([k])=>adLabel(k));
+  const gmvArr = a.map(([,v])=>v.gmv), adsArr = a.map(([,v])=>v.ads);
+  const pctArr = a.map(([,v])=>v.gmv>0?(v.ads/v.gmv*100):0);
+  const tGmv = gmvArr.reduce((s,v)=>s+v,0), tAds = adsArr.reduce((s,v)=>s+v,0);
+  const roas = tAds>0?(tGmv/tAds).toFixed(2):0;
+  const adPct = tGmv>0?(tAds/tGmv*100).toFixed(1):0;
   document.getElementById('adp-gmv').textContent='฿'+fmtB(tGmv);
   document.getElementById('adp-ads').textContent='฿'+fmtB(tAds);
   document.getElementById('adp-roas').textContent=roas+'x';
@@ -2878,15 +2968,16 @@ function renderAdpSummary() {
   const el=document.getElementById('adp-summary'); if(!el) return;
   el.innerHTML='<div class="ai-loading">กำลังวิเคราะห์...</div>';
   setTimeout(()=>{
-    const d=getAdFiltered();
-    if(!d.length){el.textContent='ไม่มีข้อมูลในช่วงที่เลือก';return;}
+    const { ads, orders } = getAdDateFiltered();
+    if(!ads.length && !orders.length){el.textContent='ไม่มีข้อมูลในช่วงที่เลือก';return;}
     const lines=[];
-    const tGmv=d.reduce((s,r)=>s+r.gmv,0), tAds=d.reduce((s,r)=>s+r.ads,0);
+    const tGmv=orders.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0), tAds=ads.reduce((s,r)=>s+r.ads,0);
     const roas=tAds>0?(tGmv/tAds).toFixed(2):0, adPct=tGmv>0?(tAds/tGmv*100).toFixed(1):0;
     lines.push(`• GMV ฿${fmtB(tGmv)} | ค่าแอด ฿${fmtB(tAds)} | ROAS ${roas}x | %ค่าแอด ${adPct}%`);
     lines.push(parseFloat(roas)>=5?`• 💚 ROAS ${roas}x — ดีมาก`:parseFloat(roas)>=3?`• 🟡 ROAS ${roas}x — พอใช้ ควรเพิ่ม efficiency`:`• 🔴 ROAS ${roas}x — ต่ำ ค่าแอดสูงเกินไป`);
     const chMap={};
-    d.forEach(r=>{if(!chMap[r.channel])chMap[r.channel]={gmv:0,ads:0};chMap[r.channel].gmv+=r.gmv;chMap[r.channel].ads+=r.ads;});
+    ads.forEach(r=>{if(!chMap[r.channel])chMap[r.channel]={gmv:0,ads:0};chMap[r.channel].ads+=r.ads;});
+    orders.forEach(r=>{if(!chMap[r.channel])chMap[r.channel]={gmv:0,ads:0};chMap[r.channel].gmv+=(parseFloat(r.revenue)||0);});
     const chArr=Object.entries(chMap).filter(([,v])=>v.gmv>0).map(([k,v])=>({k,gmv:v.gmv,roas:v.ads>0?v.gmv/v.ads:0}));
     if(chArr.length){
       const bestG=[...chArr].sort((a,b)=>b.gmv-a.gmv)[0];
@@ -2894,6 +2985,7 @@ function renderAdpSummary() {
       lines.push(`• ช่องทาง GMV สูงสุด: ${bestG.k} (฿${fmtB(bestG.gmv)})`);
       lines.push(`• ช่องทาง ROAS ดีสุด: ${bestR.k} (${bestR.roas.toFixed(2)}x)`);
     }
+    if (adUnmapped.length) lines.push(`• ⚠️ มี ${adUnmapped.length} sub-channel ในชีต Ads ที่ยังไม่ได้ map เข้าระบบ (ดูรายละเอียดในแบนเนอร์ด้านบน)`);
     el.textContent=lines.join('\n');
   },300);
 }
@@ -3350,15 +3442,71 @@ async function fetchProductCosts() {
   return _costData;
 }
 
+// ===== ค่าแอดแยกราย SKU (จาก Google Sheet คนละไฟล์กับ Ad Performance) =====
+// Sheet นี้เก็บชื่อสินค้าเป็น "ชื่อสินค้า" (ภาษาไทย) ไม่ใช่ SKU โค้ด ต้อง map ผ่าน productsMap แบบย้อนกลับ
+const ADS_BY_SKU_SHEET_ID = '1OYHECWiGUf60Chju_7ohP9O-rQpZe1C4m91LKwhJsqQ';
+const ADS_BY_SKU_TAB = 'Ads';
+let _adsBySkuData = null;   // [{month, parent_sku, channel, amount}]
+let _adsBySkuUnmapped = []; // ชื่อสินค้าที่หา parent_sku ไม่เจอ (แจ้งเตือน ไม่ทิ้งเงียบๆ)
+
+function nameToSkuMap() {
+  // สร้าง map ย้อนกลับ product_name -> parent_sku จาก productsMap (parent_sku -> product_name) ทุกครั้งที่เรียก
+  // เผื่อ productsMap โหลดช้ากว่า/มาทีหลัง ไม่ cache ค้างไว้ตอน productsMap ยังว่าง
+  const m = {};
+  Object.entries(productsMap).forEach(([sku, name]) => { if (name && !m[name]) m[name] = sku; });
+  return m;
+}
+
+async function fetchAdsBySku() {
+  if (_adsBySkuData) return _adsBySkuData;
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${ADS_BY_SKU_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(ADS_BY_SKU_TAB)}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    const n2s = nameToSkuMap();
+    const unmappedSet = new Set();
+    _adsBySkuData = json.table.rows.map(r => {
+      const channel = (r.c[0]?.v || '').toString().trim();
+      let month = (r.c[1]?.v || '').toString().trim(); // ปกติมาเป็น "YYYY-MM" อยู่แล้วในชีตนี้
+      if (month.startsWith('Date(')) { // เผื่อ Google Sheets ตีความคอลัมน์นี้เป็นวันที่จริงแทนข้อความ
+        const p = month.replace('Date(','').replace(')','').split(',');
+        month = `${p[0]}-${String(parseInt(p[1])+1).padStart(2,'0')}`;
+      }
+      const product = (r.c[2]?.v || '').toString().trim();
+      const amount = parseFloat(r.c[3]?.v) || 0;
+      if (!month || !product) return null;
+      // แถว "รวม" / "รวมกันแดด" เป็นแถวสรุปยอดรวมที่มีอยู่แล้วในชีต (ไม่ใช่ SKU จริง) — ข้ามไปเพื่อไม่นับซ้ำ
+      if (product.startsWith('รวม')) return null;
+      const sku = n2s[product];
+      if (!sku) { unmappedSet.add(product); return null; }
+      return { channel, month: month.length===7?month:month.substring(0,7), parent_sku: sku, amount };
+    }).filter(Boolean);
+    _adsBySkuUnmapped = [...unmappedSet];
+  } catch(e) { console.error('fetchAdsBySku error:', e); _adsBySkuData = []; _adsBySkuUnmapped = []; }
+  return _adsBySkuData;
+}
+
 async function renderCostPage() {
   const bg = document.body.classList.contains('light-theme') ? '#ffffff' : '#111827';
   try {
-    const costs = await fetchProductCosts();
+    const [costs, adsBySkuRaw] = await Promise.all([fetchProductCosts(), fetchAdsBySku()]);
     const from = selectedMonthFrom, to = selectedMonthTo || selectedMonthFrom;
     const filtered = costs.filter(r => {
       const m = String(r.month).substring(0,7);
       return (!from || m >= from) && (!to || m <= to);
     });
+    const adsFiltered = adsBySkuRaw.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
+
+    const warnEl = document.getElementById('cost-ads-unmapped-warning');
+    if (warnEl) {
+      if (_adsBySkuUnmapped.length) {
+        warnEl.style.display = 'block';
+        warnEl.textContent = `⚠️ พบชื่อสินค้าในชีตค่าแอด ${_adsBySkuUnmapped.length} รายการ ที่ map เข้ากับ SKU ในระบบไม่ได้ (ชื่อไม่ตรงกับ products table เป๊ะ): ${_adsBySkuUnmapped.join(', ')} — ค่าแอดของรายการนี้ยังไม่ถูกนับรวม`;
+      } else {
+        warnEl.style.display = 'none';
+      }
+    }
 
     const skuMV = (window._skuParentMonthlyCache||[]).filter(r => {
       const m = String(r.month).substring(0,7);
@@ -3380,20 +3528,25 @@ async function renderCostPage() {
       costByMonthSku[r.parent_sku][m] = (costByMonthSku[r.parent_sku][m]||0) + amt;
     });
 
+    // ค่าแอดแยก SKU — แสดงเป็นคอลัมน์ข้อมูลแยกต่างหาก ไม่รวมเข้า "ต้นทุนรวม"/"% ต้นทุน" เพราะเป็นค่าการตลาด ไม่ใช่ต้นทุนสินค้า (COGS)
+    const adsBySKU = {};
+    adsFiltered.forEach(r => { adsBySKU[r.parent_sku] = (adsBySKU[r.parent_sku]||0) + r.amount; });
+    const totalAds = Object.values(adsBySKU).reduce((a,b)=>a+b,0);
+
     const totalCost = Object.values(costBySKU).reduce((a,b)=>a+b,0);
     const totalRev = Object.values(revBySKU).reduce((a,b)=>a+b,0);
     const totalQty = Object.values(qtyBySKU).reduce((a,b)=>a+b,0);
     const costPct = totalRev>0?(totalCost/totalRev*100).toFixed(1):'—';
 
     document.getElementById('costKPIs').innerHTML = `
-      <div class="card"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(totalCost)}</div><div class="kpi-sub">ทุกหัวข้อรวมกัน</div></div>
+      <div class="card"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(totalCost)}</div><div class="kpi-sub">ทุกหัวข้อรวมกัน (ไม่รวมค่าแอด)</div></div>
       <div class="card"><div class="card-title">ยอดขาย (Settled)</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub">จากออเดอร์รับเงินแล้ว</div></div>
       <div class="card"><div class="card-title">% ต้นทุน / ยอดขาย</div><div class="kpi-value" style="color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};">${costPct}%</div><div class="kpi-sub">ต้นทุน ÷ ยอดขาย</div></div>
-      <div class="card"><div class="card-title">ต้นทุน / ชิ้น</div><div class="kpi-value">฿${totalQty>0?fmt(Math.round(totalCost/totalQty)):'—'}</div><div class="kpi-sub">เฉลี่ยทุก SKU</div></div>`;
+      <div class="card"><div class="card-title">ค่าแอดรวม (แยก SKU)</div><div class="kpi-value" style="color:var(--blue);">฿${fmtB(totalAds)}</div><div class="kpi-sub">Facebook เท่านั้น (ตอนนี้)</div></div>`;
 
     const months = [...new Set(filtered.map(r=>String(r.month).substring(0,7)))].sort();
     const mLabels = months.map(m=>{const[,mo]=m.split('-');return MONTHS_TH[parseInt(mo)-1];});
-    const skus = Object.keys(costBySKU).sort((a,b)=>costBySKU[b]-costBySKU[a]);
+    const skus = [...new Set([...Object.keys(costBySKU), ...Object.keys(adsBySKU)])].sort((a,b)=>(costBySKU[b]||0)-(costBySKU[a]||0));
 
     const catTotals = {};
     filtered.forEach(r=>{catTotals[r.cost_category]=(catTotals[r.cost_category]||0)+(parseFloat(r.amount)||0);});
@@ -3404,12 +3557,13 @@ async function renderCostPage() {
       <th style="width:170px;min-width:170px;max-width:170px;position:sticky;left:70px;z-index:2;background-color:${bg};">ชื่อสินค้า</th>
       <th style="width:105px;min-width:105px;max-width:105px;text-align:right;color:var(--red);white-space:nowrap;position:sticky;left:240px;z-index:2;background-color:${bg};">รวมต้นทุน</th>
       <th style="width:105px;min-width:105px;max-width:105px;text-align:right;color:var(--green);white-space:nowrap;position:sticky;left:345px;z-index:2;background-color:${bg};">ยอดขาย</th>
-      <th style="width:75px;min-width:75px;max-width:75px;text-align:right;white-space:nowrap;position:sticky;left:450px;z-index:2;border-right:2px solid var(--border);background-color:${bg};">% ต้นทุน</th>
+      <th style="width:75px;min-width:75px;max-width:75px;text-align:right;white-space:nowrap;position:sticky;left:450px;z-index:2;background-color:${bg};">% ต้นทุน</th>
+      <th style="width:100px;min-width:100px;max-width:100px;text-align:right;color:var(--blue);white-space:nowrap;position:sticky;left:525px;z-index:2;border-right:2px solid var(--border);background-color:${bg};">ค่าแอด (FB)</th>
       ${cats.map(c=>`<th style="text-align:right;min-width:100px;white-space:nowrap;font-size:10px;">${c}</th>`).join('')}
     </tr>`;
 
     document.getElementById('costOverviewBody').innerHTML = skus.map(sku => {
-      const cost = costBySKU[sku]||0, rev = revBySKU[sku]||0;
+      const cost = costBySKU[sku]||0, rev = revBySKU[sku]||0, ads = adsBySKU[sku]||0;
       const pct = rev>0?(cost/rev*100).toFixed(1):'—';
       const col = parseFloat(pct)>50?'var(--red)':parseFloat(pct)>30?'var(--orange)':'var(--green)';
       return `<tr style="cursor:pointer;" onclick="renderCostDeep('${sku}')">
@@ -3417,15 +3571,18 @@ async function renderCostPage() {
         <td style="width:170px;color:var(--text);font-weight:600;position:sticky;left:70px;z-index:1;overflow:hidden;white-space:nowrap;background-color:${bg};">${skuToName(sku)} <span style="font-size:10px;color:var(--text3);">🔍</span></td>
         <td style="width:105px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);position:sticky;left:240px;z-index:1;background-color:${bg};">฿${fmt(Math.round(cost))}</td>
         <td style="width:105px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);position:sticky;left:345px;z-index:1;background-color:${bg};">฿${fmt(Math.round(rev))}</td>
-        <td style="width:75px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};position:sticky;left:450px;z-index:1;border-right:2px solid var(--border);background-color:${bg};">${pct}%</td>
+        <td style="width:75px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};position:sticky;left:450px;z-index:1;background-color:${bg};">${pct}%</td>
+        <td style="width:100px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blue);position:sticky;left:525px;z-index:1;border-right:2px solid var(--border);background-color:${bg};">${ads>0?'฿'+fmt(Math.round(ads)):''}</td>
         ${cats.map(cat=>{const a=costByCatSku[sku]?.[cat]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
       </tr>`;
     }).join('') + `<tr style="border-top:2px solid var(--border);">
       <td colspan="2" style="font-weight:700;position:sticky;left:0;z-index:1;background-color:${bg};">รวมทั้งหมด</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);position:sticky;left:240px;z-index:1;background-color:${bg};">฿${fmt(Math.round(totalCost))}</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--green);position:sticky;left:345px;z-index:1;background-color:${bg};">฿${fmt(Math.round(totalRev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};position:sticky;left:450px;z-index:1;border-right:2px solid var(--border);background-color:${bg};">${costPct}%</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${parseFloat(costPct)>50?'var(--red)':parseFloat(costPct)>30?'var(--orange)':'var(--green)'};position:sticky;left:450px;z-index:1;background-color:${bg};">${costPct}%</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue);position:sticky;left:525px;z-index:1;border-right:2px solid var(--border);background-color:${bg};">฿${fmt(Math.round(totalAds))}</td>
       ${cats.map(cat=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(catTotals[cat]||0))}</td>`).join('')}
+
     </tr>`;
 
     window._costByMonthSku = costByMonthSku;
@@ -3434,7 +3591,7 @@ async function renderCostPage() {
     window._costQtyBySKU = qtyBySKU;
     window._costMonths = months;
     window._costMLabels = mLabels;
-    requestAnimationFrame(() => fixCostStickyPositions('tblCostOverview', 5));
+    requestAnimationFrame(() => fixCostStickyPositions('tblCostOverview', 6));
     window._costCats = cats;
   } catch(e) {
     console.error(e);
