@@ -152,7 +152,8 @@
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }.hub-subch-bar:hover { background: var(--bg3); }
+.hub-subch-bar.selected:hover { background: rgba(99,102,241,0.18) !important; }
 </style>
 </head>
 <body>
@@ -339,7 +340,7 @@
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook)</div>
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook) <span id="fbhub-ads-info" style="cursor:help;color:var(--text3);font-size:12px;font-weight:400;" title="กำลังโหลด...">ⓘ</span></div>
             <div class="toggle-group">
               <button class="toggle-btn" id="fbhub-yr" onclick="setHubAdView('fb','year',this)">ทั้งปี</button>
               <button class="toggle-btn active" id="fbhub-mo" onclick="setHubAdView('fb','month',this)">รายเดือน</button>
@@ -838,7 +839,7 @@
       </div>
       <div class="card">
         <div class="section-header">
-          <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok)</div>
+          <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span id="tthub-ads-info" style="cursor:help;color:var(--text3);font-size:12px;font-weight:400;" title="กำลังโหลด...">ⓘ</span></div>
           <div class="toggle-group">
             <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
             <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
@@ -927,7 +928,7 @@
       </div>
       <div class="card">
         <div class="section-header">
-          <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee)</div>
+          <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee) <span id="shhub-ads-info" style="cursor:help;color:var(--text3);font-size:12px;font-weight:400;" title="กำลังโหลด...">ⓘ</span></div>
           <div class="toggle-group">
             <button class="toggle-btn" id="shhub-yr" onclick="setHubAdView('sh','year',this)">ทั้งปี</button>
             <button class="toggle-btn active" id="shhub-mo" onclick="setHubAdView('sh','month',this)">รายเดือน</button>
@@ -1607,6 +1608,7 @@ function renderFbHub() {
   const d = filteredData.filter(r => r.channel === 'Facebook');
 
   const finish = () => {
+    const infoElFb = document.getElementById('fbhub-ads-info'); if (infoElFb) infoElFb.title = ADS_SOURCE_INFO.fb;
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Facebook');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
@@ -1642,19 +1644,21 @@ function renderFbHub() {
 
     document.getElementById('fbSubChannelBars').innerHTML = sorted.length ? sorted.slice(0,8).map(([k,v],i) => {
       const pct = totalRev ? (v.rev/totalRev*100) : 0;
+      const isSelected = hubSelectedSub.fb === k;
+      const safeSub = k.replace(/'/g, "\\'");
       return `
-      <div style="margin-bottom:10px;">
+      <div class="hub-subch-bar${isSelected?' selected':''}" data-hub="fb" data-sub="${k}" onclick="selectHubSubChannel('fb','${safeSub}')" style="margin-bottom:10px;cursor:pointer;padding:4px 6px;margin-left:-6px;margin-right:-6px;border-radius:6px;transition:background 0.15s;${isSelected?'background:rgba(99,102,241,0.12);box-shadow:inset 0 0 0 1px var(--accent);':''}">
         <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;">
-          <span style="color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;">${k}</span>
+          <span style="color:${isSelected?'var(--accent)':'var(--text)'};font-weight:${isSelected?'700':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;">${isSelected?'✓ ':''}${k}</span>
           <span style="color:var(--text2);font-family:'IBM Plex Mono',monospace;">฿${fmtB(v.rev)} · ${pct.toFixed(1)}%</span>
         </div>
         <div style="background:var(--bg3);border-radius:4px;height:8px;overflow:hidden;">
           <div style="width:${pct}%;height:100%;background:${COLORS[i % COLORS.length]};border-radius:4px;"></div>
         </div>
       </div>`;
-    }).join('') : '<div class="empty">ไม่มีข้อมูล</div>';
+    }).join('') + '<div style="font-size:10.5px;color:var(--text3);margin-top:8px;">💡 คลิกที่เพจเพื่อดูกราฟยอดขาย vs ค่าโฆษณาเฉพาะเพจนั้น (คลิกซ้ำเพื่อยกเลิก)</div>' : '<div class="empty">ไม่มีข้อมูล</div>';
 
-    renderAdpChannel('chartFbAds', null, 'fb', hubAdView.fb);
+    renderAdpChannel('chartFbAds', null, 'fb', hubAdView.fb, hubSelectedSub.fb);
     renderPromotion('Fb', 'Facebook');
 
     // คำแนะนำอย่างง่าย: sub-channel ที่ ROAS/AOV เด่นสุด (เทียบจาก AOV เพราะไม่มี ad ต่อ sub-channel)
@@ -1675,6 +1679,7 @@ function renderTtHub() {
   const d = filteredData.filter(r => r.channel === 'TikTok');
 
   const finish = () => {
+    const infoElTt = document.getElementById('tthub-ads-info'); if (infoElTt) infoElTt.title = ADS_SOURCE_INFO.tt;
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='TikTok');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
@@ -1731,6 +1736,7 @@ function renderShHub() {
   const d = filteredData.filter(r => r.channel === 'Shopee');
 
   const finish = () => {
+    const infoElSh = document.getElementById('shhub-ads-info'); if (infoElSh) infoElSh.title = ADS_SOURCE_INFO.sh;
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Shopee');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
@@ -2944,6 +2950,15 @@ function setAdpView(v, btn) {
 // view แยกต่างหากต่อหน้า Hub (Facebook/TikTok/Shopee) ไม่ใช้ตัวแปร adView ตัวเดียวกับหน้า Ad Performance
 // กันไม่ให้สลับมุมมองในหน้าหนึ่งไปกระทบอีกหน้าโดยไม่ตั้งใจ
 const hubAdView = { fb: 'month', tt: 'month', sh: 'month' };
+// เพจ/sub-channel ที่ถูกเลือก (คลิก) ไว้ในแต่ละหน้า Hub — null = ยังไม่เลือก (แสดงรวมทุกเพจ/ร้าน)
+const hubSelectedSub = { fb: null, sh: null };
+
+// คำอธิบายที่มาของค่าแอดแต่ละช่องทาง ใช้แสดงเป็น tooltip ข้างกราฟ "ยอดขาย vs ค่าโฆษณา" ในแต่ละหน้า Hub
+const ADS_SOURCE_INFO = {
+  fb: 'ค่าโฆษณา Facebook รวมมาจาก:\n• 7 เพจหลัก: Deesay Thailand-บริษัท, Deesay Cosmetics-Thailand, แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก, ลิปสักปาก ดีเซ้ย์, ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอาง, กันแดดฟิลเตอร์-เพจบริษัท, Deesay Makeup\n• Facebook OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (เอเจนซี่ที่ยิงหลายเพจพร้อมกัน ไม่ผูกเพจเดียว) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ\nที่มา: Google Sheet (ชีต Ads)',
+  tt: 'ค่าโฆษณา TikTok จาก Google Sheet (ชีต Ads)\nsub-channel: Deesay Thailand',
+  sh: 'ค่าโฆษณา Shopee รวมมาจาก:\n• Shopee Mall (ปกติ)\n• Shopee Mall CPAS\n• Shopee 24hr\nที่มา: Google Sheet (ชีต Ads)',
+};
 const HUB_AD_CONFIG = {
   fb: { prefix: 'fbhub', chartId: 'chartFbAds' },
   tt: { prefix: 'tthub', chartId: 'chartTtAds' },
@@ -2954,7 +2969,26 @@ function setHubAdView(hub, v, btn) {
   const cfg = HUB_AD_CONFIG[hub];
   document.querySelectorAll(`#${cfg.prefix}-yr, #${cfg.prefix}-mo, #${cfg.prefix}-dy`).forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderAdpChannel(cfg.chartId, null, hub, v);
+  renderAdpChannel(cfg.chartId, null, hub, v, hubSelectedSub[hub]);
+}
+
+// คลิกเลือก/ยกเลิกเพจ (sub-channel) จาก list ข้างๆ กราฟ "ยอดขาย vs ค่าโฆษณา" — กราฟซ้ายจะกรองตามเพจนั้นทันที คลิกซ้ำ = ยกเลิกกลับไปดูรวมทุกเพจ
+function selectHubSubChannel(hub, subChannel) {
+  hubSelectedSub[hub] = hubSelectedSub[hub] === subChannel ? null : subChannel;
+  const cfg = HUB_AD_CONFIG[hub];
+  renderAdpChannel(cfg.chartId, null, hub, hubAdView[hub], hubSelectedSub[hub]);
+  document.querySelectorAll(`.hub-subch-bar[data-hub="${hub}"]`).forEach(el => {
+    const selected = el.dataset.sub === hubSelectedSub[hub];
+    el.classList.toggle('selected', selected);
+    el.style.background = selected ? 'rgba(99,102,241,0.12)' : '';
+    el.style.boxShadow = selected ? 'inset 0 0 0 1px var(--accent)' : '';
+    const nameSpan = el.querySelector('span');
+    if (nameSpan) {
+      nameSpan.style.color = selected ? 'var(--accent)' : 'var(--text)';
+      nameSpan.style.fontWeight = selected ? '700' : '400';
+      nameSpan.textContent = (selected ? '✓ ' : '') + el.dataset.sub;
+    }
+  });
 }
 
 // เติม option รายเพจ Facebook ใน dropdown ครั้งแรกที่มีข้อมูล (ดึงชื่อจาก mapping เอง ไม่ hardcode ซ้ำ)
@@ -2967,20 +3001,20 @@ function populateFbSelect() {
   _fbSelectPopulated = true;
 }
 
-function renderAdpChannel(chartId, subId, ch, viewOverride) {
+function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) {
   const view = viewOverride || adView;
   const {ads, orders} = getAdDateFiltered();
   let adsF, ordF;
   if (ch === 'fb') {
     populateFbSelect();
-    const sel = document.getElementById('adp-sel-fb')?.value || 'all';
+    const sel = subChannelOverride !== undefined ? (subChannelOverride || 'all') : (document.getElementById('adp-sel-fb')?.value || 'all');
     if (sel === 'all') { adsF = ads.filter(r=>r.channel==='Facebook'); ordF = orders.filter(r=>r.channel==='Facebook'); }
     else if (sel === '__other__') { adsF = ads.filter(r=>r.channel==='Facebook' && !r.subChannel); ordF = []; }
     else { adsF = ads.filter(r=>r.channel==='Facebook' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Facebook' && r.sub_channel===sel); }
   } else if (ch === 'tt') {
     adsF = ads.filter(r=>r.channel==='TikTok'); ordF = orders.filter(r=>r.channel==='TikTok');
   } else if (ch === 'sh') {
-    const sel = document.getElementById('adp-sel-sh')?.value || 'all';
+    const sel = subChannelOverride !== undefined ? (subChannelOverride || 'all') : (document.getElementById('adp-sel-sh')?.value || 'all');
     if (sel === 'all') { adsF = ads.filter(r=>r.channel==='Shopee'); ordF = orders.filter(r=>r.channel==='Shopee'); }
     else { adsF = ads.filter(r=>r.channel==='Shopee' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Shopee' && r.sub_channel===sel); }
   } else if (ch === 'lz') {
