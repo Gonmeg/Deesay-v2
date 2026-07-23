@@ -1054,22 +1054,64 @@ function showError(msg) {
 }
 
 // ===== SUPABASE FETCH (paginated) — orders table =====
-async function fetchAll() {
-  const PAGE = 1000;
-  let all = [], offset = 0;
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
-  while (true) {
-    const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items,order_channel,creator_handle,order_status,created_at_precise&order=date.asc,order_id.asc&limit=${PAGE}&offset=${offset}`,
-      { headers }
-    );
-    if (!res.ok) throw new Error('API error: ' + res.status);
-    const rows = await res.json();
-    all = all.concat(rows);
-    if (rows.length < PAGE) break;
-    offset += PAGE;
+// ลองใหม่อัตโนมัติเมื่อเจอ error 5xx ชั่วคราว (Supabase hiccup ระหว่าง paginate ข้อมูลจำนวนมาก)
+// ไม่ retry 4xx (เช่น 401/403 คีย์ผิด/สิทธิ์ไม่พอ) เพราะลองใหม่กี่ครั้งก็ไม่หาย ต้องแจ้ง error ทันที
+async function fetchWithRetry(url, headers, retries = 3, backoffMs = 800) {
+  let lastErr;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(url, { headers });
+      if (res.ok) return res;
+      lastErr = new Error('API error: ' + res.status);
+      if (res.status < 500) throw lastErr;
+    } catch (e) { lastErr = e; }
+    if (i < retries) await new Promise(r => setTimeout(r, backoffMs * (i + 1)));
+  }
+  throw lastErr;
+}
+
+// ดึงข้อมูลแบบแบ่งหน้า (pagination) โดย "ยิงหลายหน้าพร้อมกัน" แทนการต่อคิวทีละหน้า
+// ข้อดี: เร็วขึ้นมาก (เร็วขึ้นประมาณเท่าตัวเลข concurrency) และยิ่งข้อมูลเยอะขึ้นในอนาคต เวลาที่ใช้จะโตช้ากว่าเดิมมาก
+// (เดิม 163,000 แถวต้องรอ 163 รอบต่อคิว ~163x เวลาต่อ request เดียว ตอนนี้ลดเหลือ ~163/CONCURRENCY รอบ)
+// วิธีทำ: ขอ total count จาก Supabase ก่อน (header Prefer: count=exact) โดยไม่ต้องโหลดข้อมูลจริงเลย
+// แล้วคำนวณว่าต้องมีกี่หน้า จากนั้นยิงพร้อมกันเป็นชุดๆ (batch) จำกัดจำนวนพร้อมกันไม่ให้เยอะเกินไปจนโดน rate limit
+async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concurrency = 6) {
+  const countHeaders = { ...headers, 'Prefer': 'count=exact' };
+  const probe = await fetchWithRetry(`${baseUrl}&limit=1&offset=0`, countHeaders);
+  const range = probe.headers.get('content-range'); // รูปแบบ "0-0/163245"
+  const total = range && range.includes('/') ? parseInt(range.split('/')[1]) : null;
+
+  if (total === null || isNaN(total)) {
+    // เผื่อ Supabase/PostgREST ไม่ส่ง count มาให้ (เช่น ปิด header นี้ไว้) — fallback กลับไปดึงทีละหน้าแบบเดิม กันไม่ให้ทั้งระบบพัง
+    let all = [], offset = 0;
+    while (true) {
+      const res = await fetchWithRetry(`${baseUrl}&limit=${pageSize}&offset=${offset}`, headers);
+      const rows = await res.json();
+      all = all.concat(rows);
+      if (rows.length < pageSize) break;
+      offset += pageSize;
+    }
+    return all;
+  }
+
+  if (total === 0) return [];
+  const pageCount = Math.ceil(total / pageSize);
+  const offsets = Array.from({ length: pageCount }, (_, i) => i * pageSize);
+  let all = [];
+  for (let i = 0; i < offsets.length; i += concurrency) {
+    const batch = offsets.slice(i, i + concurrency);
+    const results = await Promise.all(batch.map(offset =>
+      fetchWithRetry(`${baseUrl}&limit=${pageSize}&offset=${offset}`, headers).then(r => r.json())
+    ));
+    results.forEach(rows => { all = all.concat(rows); });
   }
   return all;
+}
+
+async function fetchAll() {
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const baseUrl = `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items,order_channel,creator_handle,order_status,created_at_precise&order=date.asc,order_id.asc`;
+  return fetchPaginatedConcurrent(baseUrl, headers);
 }
 
 // ===== SETTLED FILTER LOGIC =====
@@ -1102,22 +1144,10 @@ function shouldIncludeRow(r) {
 
 // ===== SUPABASE FETCH: sku_revenue table =====
 async function fetchSkuAll(fromDate, toDate) {
-  const PAGE = 1000;
-  let all = [], offset = 0;
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   const dateFilter = fromDate && toDate ? `&date=gte.${fromDate}&date=lte.${toDate}` : '';
-  while (true) {
-    const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc,parent_sku.asc${dateFilter}&limit=${PAGE}&offset=${offset}`,
-      { headers }
-    );
-    if (!res.ok) throw new Error('sku_revenue API error: ' + res.status);
-    const rows = await res.json();
-    all = all.concat(rows);
-    if (rows.length < PAGE) break;
-    offset += PAGE;
-  }
-  return all;
+  const baseUrl = `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc,parent_sku.asc${dateFilter}`;
+  return fetchPaginatedConcurrent(baseUrl, headers);
 }
 
 // ===== SUPABASE FETCH: products table (parent_sku -> ชื่อไทย) =====
@@ -1165,19 +1195,10 @@ function getRegion(prov) {
 
 // ===== SUPABASE FETCH: new Materialized Views (monthly granularity) =====
 async function fetchMV(viewName, selectCols, orderCols) {
-  const PAGE = 1000;
-  let all = [], offset = 0;
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   const orderParam = orderCols ? `&order=${orderCols}` : '';
-  while (true) {
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/${viewName}?select=${selectCols}${orderParam}&limit=${PAGE}&offset=${offset}`, { headers });
-    if (!res.ok) throw new Error(viewName + ' API error: ' + res.status);
-    const rows = await res.json();
-    all = all.concat(rows);
-    if (rows.length < PAGE) break;
-    offset += PAGE;
-  }
-  return all;
+  const baseUrl = `${window.SUPABASE_URL}/rest/v1/${viewName}?select=${selectCols}${orderParam}`;
+  return fetchPaginatedConcurrent(baseUrl, headers);
 }
 const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'month,channel,sub_channel,sku_promotion,total_orders,total_revenue,aov', 'month.asc,channel.asc,sku_promotion.asc');
 const fetchSkuParentMonthly = () => fetchMV('mv_sku_parent_monthly', 'month,channel,sub_channel,parent_sku,total_qty,total_revenue,total_orders', 'month.asc,channel.asc,sub_channel.asc,parent_sku.asc');
@@ -3758,59 +3779,102 @@ function renderCostTableBody() {
 }
 
 function renderCostDeep(sku) {
-  const bg = document.body.classList.contains('light-theme') ? '#ffffff' : '#111827';
-  const catData = window._costByCatSku?.[sku]||{};
   const months = window._costMonths||[];
   const mLabels = window._costMLabels||[];
-  const filtered = _costData.filter(r=>r.parent_sku===sku);
+  const adsChannels = window._costAdsChannelsCache || [];
+
+  // ต้นทุน/ค่าการตลาดรายเดือน — normalize ชื่อหมวด + ตัด "ซื้อสินค้าเข้า"/"ค่าใช้จ่ายอื่นๆในการซื้อสินค้า" ทิ้ง เหมือนตารางหลักเป๊ะ
+  const costRows = _costData.filter(r => r.parent_sku===sku && !COST_CATEGORY_EXCLUDE.has(r.cost_category));
   const costByMonthCat = {};
-  const cats = Object.keys(catData).sort((a,b)=>catData[b]-catData[a]);
-  filtered.forEach(r=>{
+  costRows.forEach(r=>{
     const m=String(r.month).substring(0,7);
+    const cat = normalizeCostCategory(r.cost_category);
     if(!costByMonthCat[m])costByMonthCat[m]={};
-    costByMonthCat[m][r.cost_category]=(costByMonthCat[m][r.cost_category]||0)+(parseFloat(r.amount)||0);
+    costByMonthCat[m][cat]=(costByMonthCat[m][cat]||0)+(parseFloat(r.amount)||0);
   });
+
+  // ค่าแอดรายเดือนแยก channel ของ SKU นี้ (ใช้ข้อมูลที่ fetchAdsBySku โหลดไว้แล้วในตัวแปร _adsBySkuData)
+  const adsByMonthChannel = {};
+  (_adsBySkuData||[]).filter(r=>r.parent_sku===sku).forEach(r=>{
+    if(!adsByMonthChannel[r.month]) adsByMonthChannel[r.month]={};
+    adsByMonthChannel[r.month][r.channel]=(adsByMonthChannel[r.month][r.channel]||0)+r.amount;
+  });
+
+  const revByMonth = {}, qtyByMonth = {};
+  (window._skuParentMonthlyCache||[]).filter(r=>r.parent_sku===sku).forEach(r=>{
+    const m=String(r.month).substring(0,7);
+    revByMonth[m]=(revByMonth[m]||0)+(parseFloat(r.total_revenue)||0);
+    qtyByMonth[m]=(qtyByMonth[m]||0)+(parseFloat(r.total_qty)||0);
+  });
+
   document.getElementById('costDeepCard').style.display='block';
   document.getElementById('costDeepTitle').textContent=`รายละเอียดต้นทุน — ${skuToName(sku)} (${sku})`;
   const chartEl = document.getElementById('chartCostDeep');
   if(chartEl) chartEl.parentElement.style.display='none';
 
   document.getElementById('costDeepHead').innerHTML=`<tr>
-    <th style="width:80px;min-width:80px;max-width:80px;position:sticky;left:0;z-index:2;background-color:${bg};">เดือน</th>
-    <th style="width:105px;min-width:105px;max-width:105px;text-align:right;color:var(--red);white-space:nowrap;position:sticky;left:80px;z-index:2;background-color:${bg};">รวมต้นทุน</th>
-    <th style="width:105px;min-width:105px;max-width:105px;text-align:right;color:var(--green);white-space:nowrap;position:sticky;left:185px;z-index:2;background-color:${bg};">ยอดขาย</th>
-    <th style="width:75px;min-width:75px;max-width:75px;text-align:right;white-space:nowrap;position:sticky;left:290px;z-index:2;border-right:2px solid var(--border);background-color:${bg};">%ต้นทุน</th>
-    ${cats.map(cat=>`<th style="text-align:right;min-width:90px;font-size:10px;white-space:nowrap;">${cat}</th>`).join('')}
+    <th style="text-align:left;white-space:nowrap;">เดือน</th>
+    <th style="text-align:right;color:var(--green);white-space:nowrap;">ยอดขาย</th>
+    <th style="text-align:right;white-space:nowrap;">จำนวนชิ้น</th>
+    <th style="text-align:right;white-space:nowrap;font-size:10px;">ค่าการตลาดอื่นๆ</th>
+    <th style="text-align:right;white-space:nowrap;font-size:10px;">ค่ารีวิว-PR</th>
+    <th style="text-align:right;white-space:nowrap;font-size:10px;">ค่ารีวิว-Conversion</th>
+    ${adsChannels.map(ch=>`<th style="text-align:right;color:var(--blue);white-space:nowrap;">Ads ${ch}</th>`).join('')}
+    <th style="text-align:right;color:var(--red);white-space:nowrap;">รวมการตลาด</th>
+    <th style="text-align:right;white-space:nowrap;">% Budget</th>
+    <th style="text-align:right;color:var(--green);white-space:nowrap;">ROI</th>
   </tr>`;
 
-  const revByMonth = {};
-  (window._skuParentMonthlyCache||[]).filter(r=>r.parent_sku===sku).forEach(r=>{
-    const m=String(r.month).substring(0,7);revByMonth[m]=(revByMonth[m]||0)+(parseFloat(r.total_revenue)||0);
-  });
-
-  document.getElementById('costDeepBody').innerHTML=months.map((m,i)=>{
-    const rowCosts = cats.map(cat=>costByMonthCat[m]?.[cat]||0);
-    const tot=rowCosts.reduce((a,b)=>a+b,0);
-    const rev=revByMonth[m]||0;
-    const pct=rev>0?(tot/rev*100).toFixed(1):'—';
-    const col=parseFloat(pct)>50?'var(--red)':parseFloat(pct)>30?'var(--orange)':'var(--green)';
+  document.getElementById('costDeepBody').innerHTML = months.map((m,i)=>{
+    const marketingOther = costByMonthCat[m]?.['ค่าการตลาดอื่นๆ']||0;
+    const prAmt = costByMonthCat[m]?.['ค่ารีวิวสินค้า-PR']||0;
+    const convAmt = costByMonthCat[m]?.['ค่ารีวิวสินค้า-Conversion']||0;
+    const adsVals = adsChannels.map(ch=>adsByMonthChannel[m]?.[ch]||0);
+    const adsSum = adsVals.reduce((a,b)=>a+b,0);
+    const totalMkt = marketingOther+prAmt+convAmt+adsSum;
+    const rev = revByMonth[m]||0, qty = qtyByMonth[m]||0;
+    const pctBudget = rev>0?(totalMkt/rev*100):null;
+    const roi = totalMkt>0?(rev/totalMkt):null;
+    const pctCol = pctBudget===null?'var(--muted)':pctBudget>30?'var(--red)':pctBudget>15?'var(--orange)':'var(--green)';
     return `<tr>
-      <td style="width:80px;font-weight:600;position:sticky;left:0;z-index:1;background-color:${bg};">${mLabels[i]}</td>
-      <td style="width:105px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);position:sticky;left:80px;z-index:1;background-color:${bg};">฿${fmt(Math.round(tot))}</td>
-      <td style="width:105px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);position:sticky;left:185px;z-index:1;background-color:${bg};">฿${fmt(Math.round(rev))}</td>
-      <td style="width:75px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${col};position:sticky;left:290px;z-index:1;border-right:2px solid var(--border);background-color:${bg};">${pct}%</td>
-      ${rowCosts.map(a=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${a>0?'฿'+fmt(Math.round(a)):''}</td>`).join('')}
+      <td style="font-weight:600;white-space:nowrap;">${mLabels[i]}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(rev))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${fmt(Math.round(qty))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${marketingOther>0?'฿'+fmt(Math.round(marketingOther)):''}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${prAmt>0?'฿'+fmt(Math.round(prAmt)):''}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${convAmt>0?'฿'+fmt(Math.round(convAmt)):''}</td>
+      ${adsVals.map(a=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blue);">${a>0?'฿'+fmt(Math.round(a)):''}</td>`).join('')}
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(totalMkt))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${pctCol};">${pctBudget===null?'—':pctBudget.toFixed(1)+'%'}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--green);">${roi===null?'—':roi.toFixed(2)+'x'}</td>
     </tr>`;
-  }).join('') + `<tr style="border-top:2px solid var(--border);">
-    <td style="width:80px;font-weight:700;position:sticky;left:0;z-index:1;background-color:${bg};">รวม</td>
-    <td style="width:105px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);position:sticky;left:80px;z-index:1;background-color:${bg};">฿${fmt(Math.round(Object.values(catData).reduce((a,b)=>a+b,0)))}</td>
-    <td style="width:105px;position:sticky;left:185px;z-index:1;background-color:${bg};"></td>
-    <td style="width:75px;position:sticky;left:290px;z-index:1;border-right:2px solid var(--border);background-color:${bg};"></td>
-    ${cats.map(cat=>{const t=months.reduce((s,m)=>s+(costByMonthCat[m]?.[cat]||0),0);return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(t))}</td>`;}).join('')}
-  </tr>`;
+  }).join('') + (() => {
+    const totRev = months.reduce((s,m)=>s+(revByMonth[m]||0),0);
+    const totQty = months.reduce((s,m)=>s+(qtyByMonth[m]||0),0);
+    const totOther = months.reduce((s,m)=>s+(costByMonthCat[m]?.['ค่าการตลาดอื่นๆ']||0),0);
+    const totPR = months.reduce((s,m)=>s+(costByMonthCat[m]?.['ค่ารีวิวสินค้า-PR']||0),0);
+    const totConv = months.reduce((s,m)=>s+(costByMonthCat[m]?.['ค่ารีวิวสินค้า-Conversion']||0),0);
+    const totAdsVals = adsChannels.map(ch=>months.reduce((s,m)=>s+(adsByMonthChannel[m]?.[ch]||0),0));
+    const totAdsSum = totAdsVals.reduce((a,b)=>a+b,0);
+    const totMkt = totOther+totPR+totConv+totAdsSum;
+    const totPct = totRev>0?(totMkt/totRev*100).toFixed(1):'—';
+    const totRoi = totMkt>0?(totRev/totMkt).toFixed(2):'—';
+    return `<tr style="border-top:2px solid var(--border);">
+      <td style="font-weight:700;">รวม</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">฿${fmt(Math.round(totRev))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;">${fmt(Math.round(totQty))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(totOther))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(totPR))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(totConv))}</td>
+      ${totAdsVals.map(v=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue);">฿${fmt(Math.round(v))}</td>`).join('')}
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(totMkt))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;">${totPct}%</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">${totRoi}x</td>
+    </tr>`;
+  })();
   document.getElementById('costDeepCard').scrollIntoView({behavior:'smooth'});
-  requestAnimationFrame(() => fixCostStickyPositions('tblCostDeep', 4));
 }
+
 
 function fixCostStickyPositions(tableId, frozenCols) {
   const table = document.getElementById(tableId);
@@ -3900,6 +3964,7 @@ function updateCacheStatus(mode, timestamp) {
     const color = mins < 5 ? '#34d399' : mins < 30 ? '#fbbf24' : '#fb923c'
     el.innerHTML = `<span style="color:${color};">🕒 กำลังแสดงจากแคช (${ageText})</span>`
   }
+  else if (mode === 'refresh-failed') el.innerHTML = '<span style="color:#fb923c;" title="กำลังแสดงข้อมูลจากแคชเดิมไปก่อน — ลองกด รีเฟรชข้อมูล Dashboard อีกครั้ง">⚠️ อัพเดตข้อมูลสดไม่สำเร็จ (ยังแสดงจากแคชเดิมอยู่)</span>'
 }
 
 async function fetchFreshSnapshot() {
@@ -3939,8 +4004,15 @@ async function init() {
     idbSet(CACHE_KEY, fresh) // เก็บแคชไว้ใช้รอบถัดไป (ไม่ต้องรอให้เสร็จ)
   } catch (e) {
     document.getElementById('loadingOverlay').classList.add('hidden');
-    showError('โหลดข้อมูลไม่สำเร็จ: ' + e.message + ' — กรุณาตรวจสอบ Supabase key และ RLS settings');
     console.error(e);
+    if (usedCache) {
+      // มีข้อมูลแคชแสดงอยู่แล้วตั้งแต่ต้น (dashboard ใช้งานได้ปกติ) แค่ background refresh รอบนี้พัง (เช่น Supabase timeout ชั่วคราว)
+      // ไม่ต้องขึ้น banner สีแดงใหญ่ให้ตกใจว่าระบบพังทั้งหมด — บอกแค่สถานะเล็กๆ ตรง cacheStatus พอ
+      updateCacheStatus('refresh-failed');
+    } else {
+      // ไม่มีแคชเลยและโหลดสดก็พัง = จริงๆ ไม่มีข้อมูลอะไรให้ดูเลย ต้องแจ้งเตือนใหญ่
+      showError('โหลดข้อมูลไม่สำเร็จ: ' + e.message + ' — กรุณาตรวจสอบ Supabase key และ RLS settings');
+    }
   }
 }
 
