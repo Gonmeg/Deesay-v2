@@ -707,7 +707,7 @@
       <div class="grid-2" style="margin-bottom:16px;">
         <div class="card">
           <div class="section-header">
-            <div class="section-title">Facebook / Online</div>
+            <div class="section-title">Facebook / Online <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb','adperf-fb-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-fb-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <select id="adp-sel-fb" onchange="renderAdpChannel('adpChartFB','adp-sub-fb','fb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;max-width:170px;">
               <option value="all">รวมทุกเพจ</option>
             </select>
@@ -716,13 +716,13 @@
           <div class="chart-wrap"><canvas id="adpChartFB"></canvas></div>
         </div>
         <div class="card">
-          <div class="section-header"><div class="section-title">TikTok Shop</div></div>
+          <div class="section-header"><div class="section-title">TikTok Shop <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt','adperf-tt-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-tt-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div></div>
           <div class="kpi-sub" id="adp-sub-tt" style="margin-bottom:10px;">—</div>
           <div class="chart-wrap"><canvas id="adpChartTT"></canvas></div>
         </div>
         <div class="card">
           <div class="section-header">
-            <div class="section-title">Shopee</div>
+            <div class="section-title">Shopee <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('sh','adperf-sh-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-sh-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <select id="adp-sel-sh" onchange="renderAdpChannel('adpChartSH','adp-sub-sh','sh')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
               <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee Mall">Shopee Mall</option>
             </select>
@@ -732,7 +732,7 @@
         </div>
         <div class="card">
           <div class="section-header">
-            <div class="section-title">Lazada</div>
+            <div class="section-title">Lazada <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('lz','adperf-lz-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-lz-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <select id="adp-sel-lz" onchange="renderAdpChannel('adpChartLZ','adp-sub-lz','lz')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
               <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada Mall">Lazada Mall</option>
             </select>
@@ -786,7 +786,7 @@
 
     <div class="page" id="page-tthub">
       <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="grid-2" style="margin-bottom:20px;align-items:stretch;">
+      <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
             <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tthub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
@@ -798,24 +798,45 @@
           </div>
           <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:20px;">
-          <div class="card" style="flex:1;display:flex;flex-direction:column;">
-            <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
-            <div class="table-wrap">
-              <table id="tblTtOrderChannel">
-                <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
-                <tbody id="tbodyTtOrderChannel"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
+        <div class="card">
+          <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
+          <div class="table-wrap">
+            <table id="tblTtOrderChannel">
+              <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
+              <tbody id="tbodyTtOrderChannel"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
           </div>
-          <div class="card" style="flex:1;display:flex;flex-direction:column;">
-            <div class="section-header"><div class="section-title">Top 10 Creator (ตาม Live/Video)</div></div>
-            <div class="table-wrap">
-              <table id="tblTtCreator">
-                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-                <tbody id="tbodyTtCreator"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
+        </div>
+      </div>
+
+      <div class="section-divider"><span>Top Creator (ตาม Live/Video)</span></div>
+
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="section-header"><div class="section-title">Top 10 Creator (รวมทุกประเภท)</div></div>
+          <div class="table-wrap">
+            <table id="tblTtCreatorAll">
+              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+              <tbody id="tbodyTtCreatorAll"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header"><div class="section-title">Top 10 Creator (Live)</div></div>
+          <div class="table-wrap">
+            <table id="tblTtCreatorLive">
+              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+              <tbody id="tbodyTtCreatorLive"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header"><div class="section-title">Top 10 Creator (Video)</div></div>
+          <div class="table-wrap">
+            <table id="tblTtCreatorVideo">
+              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+              <tbody id="tbodyTtCreatorVideo"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1350,10 +1371,9 @@ function onChannelChange() {
 function setDefaultDateFilter() {
   const now = new Date();
   const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
-  document.getElementById('dateFrom').value = `${y}-${m}-01`;
-  document.getElementById('dateTo').value = `${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+  const todayStr = now.toISOString().substring(0,10);
+  document.getElementById('dateFrom').value = `${y}-01-01`;
+  document.getElementById('dateTo').value = todayStr;
 }
 
 function applyFilters() {
@@ -1467,6 +1487,15 @@ function showPage(page, lockCh, el) {
   } else {
     if (chFilter) { chFilter.disabled = false; chFilter.style.opacity = '1'; }
     if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
+  }
+
+  // หน้า "ภาพรวมยอดขาย" และ "แยกตาม Channel" ให้กลับไปเป็นค่า default เสมอทุกครั้งที่กดเข้ามา
+  // (ทุกช่องทาง + ปีนี้) กันปัญหา filter ค้างจากหน้า Hub ที่เพิ่งดูมาก่อนหน้า
+  if (page === 'overview' || page === 'channel') {
+    if (chFilter) chFilter.value = '';
+    const subSel = document.getElementById('filterSubChannel');
+    if (subSel) subSel.value = '';
+    setDefaultDateFilter();
   }
 
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้าอื่นใช้ช่วงวันที่ตามปกติ
@@ -1794,17 +1823,22 @@ function renderTtHub() {
       <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
     `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 
-    const byCreator = {};
-    d.forEach(r => {
-      const k = r.creator_handle || 'deesaythailand';
-      if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
-      byCreator[k].rev += parseFloat(r.revenue) || 0;
-      byCreator[k].ord++;
-    });
-    const crSorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 10);
-    document.getElementById('tbodyTtCreator').innerHTML = crSorted.length ? crSorted.map(([k,v]) => `
-      <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
-    `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
+    function buildCreatorTable(rows, tbodyId) {
+      const byCreator = {};
+      rows.forEach(r => {
+        const k = r.creator_handle || 'deesaythailand';
+        if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
+        byCreator[k].rev += parseFloat(r.revenue) || 0;
+        byCreator[k].ord++;
+      });
+      const sorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 10);
+      document.getElementById(tbodyId).innerHTML = sorted.length ? sorted.map(([k,v]) => `
+        <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
+      `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
+    }
+    buildCreatorTable(d, 'tbodyTtCreatorAll');
+    buildCreatorTable(d.filter(r => r.order_channel === 'LIVE'), 'tbodyTtCreatorLive');
+    buildCreatorTable(d.filter(r => r.order_channel === 'Videos'), 'tbodyTtCreatorVideo');
 
     renderAdpChannel('chartTtAds', null, 'tt', hubAdView.tt);
     renderPromotion('Tt', 'TikTok');
@@ -3090,8 +3124,8 @@ const ADS_SOURCE_INFO = {
   lz: 'ค่าโฆษณา Lazada รวมมาจาก:\n• Lazada Mall\n• Lazada 24hr',
 };
 
-function toggleAdsPopover(hub) {
-  const el = document.getElementById(hub + 'hub-ads-popover');
+function toggleAdsPopover(hub, popoverId) {
+  const el = document.getElementById(popoverId || (hub + 'hub-ads-popover'));
   if (!el) return;
   const isOpen = el.style.display === 'block';
   document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
