@@ -186,7 +186,6 @@
     </div>
     <div id="navGroup-tt" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
-      <div class="nav-item nav-sub" onclick="showPage('promotion','TikTok',this)"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
       <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
     </div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('sh')" id="navGroupLabel-sh">
@@ -194,10 +193,9 @@
     </div>
     <div id="navGroup-sh" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('shhub',null,this)"><span class="nav-icon">🛍️</span> ภาพรวม Shopee</div>
-      <div class="nav-item nav-sub" onclick="showPage('promotion','Shopee',this)"><span class="nav-icon">🏷️</span> Promotion / SKU</div>
     </div>
     <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">💰</span> ยอดขายแยก SKU</div>
-    <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">📊</span> ต้นทุนสินค้า</div>
+    <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">📊</span> MKT Tracking</div>
     <div class="nav-item" onclick="showPage('skuanalysis',null,this)"><span class="nav-icon">🔬</span> วิเคราะห์ SKU</div>
     <div class="nav-item" onclick="showPage('adperf',null,this)"><span class="nav-icon">📈</span> Ad Performance</div>
   </nav>
@@ -340,7 +338,7 @@
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook) <span id="fbhub-ads-info" style="cursor:help;color:var(--text3);font-size:12px;font-weight:400;" title="กำลังโหลด...">ⓘ</span></div>
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="fbhub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <div class="toggle-group">
               <button class="toggle-btn" id="fbhub-yr" onclick="setHubAdView('fb','year',this)">ทั้งปี</button>
               <button class="toggle-btn active" id="fbhub-mo" onclick="setHubAdView('fb','month',this)">รายเดือน</button>
@@ -817,7 +815,18 @@
 
     <div class="page" id="page-tthub">
       <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="grid-2">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tthub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
+            <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
+            <button class="toggle-btn" id="tthub-dy" onclick="setHubAdView('tt','day',this)">รายวัน</button>
+          </div>
+        </div>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
           <div class="table-wrap">
@@ -837,17 +846,34 @@
           </div>
         </div>
       </div>
-      <div class="card">
+
+      <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
+
+      <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span id="tthub-ads-info" style="cursor:help;color:var(--text3);font-size:12px;font-weight:400;" title="กำลังโหลด...">ⓘ</span></div>
-          <div class="toggle-group">
-            <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
-            <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
-            <button class="toggle-btn" id="tthub-dy" onclick="setHubAdView('tt','day',this)">รายวัน</button>
-          </div>
+          <div class="section-title">Top 20 Promotion (รูปแบบที่ลูกค้าสั่งจริง)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopSKUTt')">⬇ Export CSV</button>
         </div>
-        <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div>
+        <div class="table-wrap">
+          <table id="tblTopSKUTt">
+            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKUTt"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
       </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Top 20 สินค้าเดี่ยว (จำนวนชิ้นที่ขาย)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopProductTt')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopProductTt">
+            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopProductTt"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card ai-summary-card">
         <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
         <div class="ai-summary-body" id="tthub-insight">กำลังวิเคราะห์...</div>
@@ -914,7 +940,18 @@
 
     <div class="page" id="page-shhub">
       <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="card">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('sh')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="shhub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="shhub-yr" onclick="setHubAdView('sh','year',this)">ทั้งปี</button>
+            <button class="toggle-btn active" id="shhub-mo" onclick="setHubAdView('sh','month',this)">รายเดือน</button>
+            <button class="toggle-btn" id="shhub-dy" onclick="setHubAdView('sh','day',this)">รายวัน</button>
+          </div>
+        </div>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="chartShAds"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
           <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
           <button class="btn btn-ghost" onclick="exportTable('tblShSubChannel')">⬇ Export CSV</button>
@@ -926,17 +963,34 @@
           </table>
         </div>
       </div>
-      <div class="card">
+
+      <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
+
+      <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee) <span id="shhub-ads-info" style="cursor:help;color:var(--text3);font-size:12px;font-weight:400;" title="กำลังโหลด...">ⓘ</span></div>
-          <div class="toggle-group">
-            <button class="toggle-btn" id="shhub-yr" onclick="setHubAdView('sh','year',this)">ทั้งปี</button>
-            <button class="toggle-btn active" id="shhub-mo" onclick="setHubAdView('sh','month',this)">รายเดือน</button>
-            <button class="toggle-btn" id="shhub-dy" onclick="setHubAdView('sh','day',this)">รายวัน</button>
-          </div>
+          <div class="section-title">Top 20 Promotion (รูปแบบที่ลูกค้าสั่งจริง)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopSKUSh')">⬇ Export CSV</button>
         </div>
-        <div class="chart-wrap chart-wrap-lg"><canvas id="chartShAds"></canvas></div>
+        <div class="table-wrap">
+          <table id="tblTopSKUSh">
+            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKUSh"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
       </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Top 20 สินค้าเดี่ยว (จำนวนชิ้นที่ขาย)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopProductSh')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopProductSh">
+            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopProductSh"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card" style="background:var(--bg2);border-style:dashed;">
         <div style="font-size:12.5px;color:var(--text2);">🚧 ฟีเจอร์ Live สำหรับ Shopee จะเพิ่มในอนาคต — ตอนนี้แสดงได้แค่ยอดขายกับค่าโฆษณาภาพรวมก่อน</div>
       </div>
@@ -947,7 +1001,7 @@
       <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
-          <div class="section-title">ต้นทุนรายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
+          <div class="section-title">MKT Tracking รายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
           <button class="btn btn-ghost" onclick="exportTable('tblCostOverview')">⬇ Export CSV</button>
         </div>
         <div style="overflow-x:auto;">
@@ -960,7 +1014,7 @@
       </div>
       <div class="card" id="costDeepCard" style="display:none;overflow:hidden;">
         <div class="section-header">
-          <div class="section-title" id="costDeepTitle">รายละเอียดต้นทุน</div>
+          <div class="section-title" id="costDeepTitle">รายละเอียด MKT Tracking</div>
           <div style="display:flex;gap:8px;">
             <button class="btn btn-ghost" onclick="exportTable('tblCostDeep')">⬇ Export</button>
             <button class="btn btn-ghost" onclick="document.getElementById('costDeepCard').style.display='none'">✕ ปิด</button>
@@ -1295,9 +1349,9 @@ const pageTitles = {
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
   tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', shhub: 'ภาพรวม Shopee',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
-  cost: 'ต้นทุนสินค้า'
+  cost: 'MKT Tracking'
 };
-const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','promotion','livesearch','shhub','promotion','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','shhub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1608,7 +1662,6 @@ function renderFbHub() {
   const d = filteredData.filter(r => r.channel === 'Facebook');
 
   const finish = () => {
-    const infoElFb = document.getElementById('fbhub-ads-info'); if (infoElFb) infoElFb.title = ADS_SOURCE_INFO.fb;
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Facebook');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
@@ -1679,7 +1732,6 @@ function renderTtHub() {
   const d = filteredData.filter(r => r.channel === 'TikTok');
 
   const finish = () => {
-    const infoElTt = document.getElementById('tthub-ads-info'); if (infoElTt) infoElTt.title = ADS_SOURCE_INFO.tt;
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='TikTok');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
@@ -1707,7 +1759,7 @@ function renderTtHub() {
 
     const byCreator = {};
     d.forEach(r => {
-      const k = r.creator_handle || 'ไม่ระบุ';
+      const k = r.creator_handle || 'deesaythailand';
       if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
       byCreator[k].rev += parseFloat(r.revenue) || 0;
       byCreator[k].ord++;
@@ -1718,6 +1770,7 @@ function renderTtHub() {
     `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
 
     renderAdpChannel('chartTtAds', null, 'tt', hubAdView.tt);
+    renderPromotion('Tt', 'TikTok');
 
     let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
     if (ocSorted.length) {
@@ -1736,7 +1789,6 @@ function renderShHub() {
   const d = filteredData.filter(r => r.channel === 'Shopee');
 
   const finish = () => {
-    const infoElSh = document.getElementById('shhub-ads-info'); if (infoElSh) infoElSh.title = ADS_SOURCE_INFO.sh;
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Shopee');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
@@ -1766,6 +1818,7 @@ function renderShHub() {
       </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
 
     renderAdpChannel('chartShAds', null, 'sh', hubAdView.sh);
+    renderPromotion('Sh', 'Shopee');
   };
 
   if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
@@ -2953,12 +3006,27 @@ const hubAdView = { fb: 'month', tt: 'month', sh: 'month' };
 // เพจ/sub-channel ที่ถูกเลือก (คลิก) ไว้ในแต่ละหน้า Hub — null = ยังไม่เลือก (แสดงรวมทุกเพจ/ร้าน)
 const hubSelectedSub = { fb: null, sh: null };
 
-// คำอธิบายที่มาของค่าแอดแต่ละช่องทาง ใช้แสดงเป็น tooltip ข้างกราฟ "ยอดขาย vs ค่าโฆษณา" ในแต่ละหน้า Hub
+// คำอธิบายที่มาของค่าแอดแต่ละช่องทาง ใช้แสดงใน popover ข้างกราฟ "ยอดขาย vs ค่าโฆษณา" ในแต่ละหน้า Hub
+const ADS_SOURCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I/edit?gid=16390889#gid=16390889';
 const ADS_SOURCE_INFO = {
-  fb: 'ค่าโฆษณา Facebook รวมมาจาก:\n• 7 เพจหลัก: Deesay Thailand-บริษัท, Deesay Cosmetics-Thailand, แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก, ลิปสักปาก ดีเซ้ย์, ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอาง, กันแดดฟิลเตอร์-เพจบริษัท, Deesay Makeup\n• Facebook OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (เอเจนซี่ที่ยิงหลายเพจพร้อมกัน ไม่ผูกเพจเดียว) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ\nที่มา: Google Sheet (ชีต Ads)',
-  tt: 'ค่าโฆษณา TikTok จาก Google Sheet (ชีต Ads)\nsub-channel: Deesay Thailand',
-  sh: 'ค่าโฆษณา Shopee รวมมาจาก:\n• Shopee Mall (ปกติ)\n• Shopee Mall CPAS\n• Shopee 24hr\nที่มา: Google Sheet (ชีต Ads)',
+  fb: 'ค่าโฆษณา Facebook รวมมาจาก:\n• 7 เพจหลัก: Deesay Thailand-บริษัท, Deesay Cosmetics-Thailand, แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก, ลิปสักปาก ดีเซ้ย์, ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอาง, กันแดดฟิลเตอร์-เพจบริษัท, Deesay Makeup\n• Facebook OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
+  tt: 'ค่าโฆษณา TikTok\nsub-channel: Deesay Thailand',
+  sh: 'ค่าโฆษณา Shopee รวมมาจาก:\n• Shopee Mall (ปกติ)\n• Shopee Mall CPAS\n• Shopee 24hr',
 };
+
+function toggleAdsPopover(hub) {
+  const el = document.getElementById(hub + 'hub-ads-popover');
+  if (!el) return;
+  const isOpen = el.style.display === 'block';
+  document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
+  if (!isOpen) {
+    el.innerHTML = ADS_SOURCE_INFO[hub].replace(/\n/g,'<br>') + `<br><br><a href="${ADS_SOURCE_SHEET_URL}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">📄 เปิด Google Sheet ต้นทาง ↗</a>`;
+    el.style.display = 'block';
+  }
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.ads-info-wrap')) document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
+});
 const HUB_AD_CONFIG = {
   fb: { prefix: 'fbhub', chartId: 'chartFbAds' },
   tt: { prefix: 'tthub', chartId: 'chartTtAds' },
@@ -3842,7 +3910,7 @@ function renderCostDeep(sku) {
   });
 
   document.getElementById('costDeepCard').style.display='block';
-  document.getElementById('costDeepTitle').textContent=`รายละเอียดต้นทุน — ${skuToName(sku)} (${sku})`;
+  document.getElementById('costDeepTitle').textContent=`รายละเอียด MKT Tracking — ${skuToName(sku)} (${sku})`;
   const chartEl = document.getElementById('chartCostDeep');
   if(chartEl) chartEl.parentElement.style.display='none';
 
