@@ -193,6 +193,7 @@
     </div>
     <div id="navGroup-sh" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('shhub',null,this)"><span class="nav-icon">🛍️</span> ภาพรวม Shopee</div>
+      <div class="nav-item nav-sub" onclick="showPage('lzhub',null,this)"><span class="nav-icon">🅻</span> ภาพรวม Lazada</div>
     </div>
     <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">💰</span> ยอดขายแยก SKU</div>
     <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">📊</span> MKT Tracking</div>
@@ -338,7 +339,7 @@
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="fbhub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="fbhub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <div class="toggle-group">
               <button class="toggle-btn" id="fbhub-yr" onclick="setHubAdView('fb','year',this)">ทั้งปี</button>
               <button class="toggle-btn active" id="fbhub-mo" onclick="setHubAdView('fb','month',this)">รายเดือน</button>
@@ -398,39 +399,9 @@
         </div>
       </div>
 
-      <div class="card ai-summary-card">
-        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
-        <div class="ai-summary-body" id="fbhub-insight">กำลังวิเคราะห์...</div>
-      </div>
-    </div>
-    <div class="page" id="page-promotion">
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">Top 20 Promotion (รูปแบบที่ลูกค้าสั่งจริง — ทุก Channel)</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblTopSKU')">⬇ Export CSV</button>
-        </div>
-        <div class="table-wrap">
-          <table id="tblTopSKU">
-            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKU"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="section-header">
-          <div class="section-title">Top 20 สินค้าเดี่ยว (จำนวนชิ้นที่ขาย — จาก sku_revenue)</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblTopProduct')">⬇ Export CSV</button>
-        </div>
-        <div class="table-wrap">
-          <table id="tblTopProduct">
-            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopProduct"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card" style="margin-top:24px;margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Top Promotion ของจริง (เฉพาะ Facebook — match กับโปรที่สร้างไว้ใน Google Sheet)</div>
+          <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Top Promotion ของจริง (match กับโปรที่สร้างไว้ใน Google Sheet)</div>
           <button class="btn btn-ghost" onclick="exportTable('tblTopRealPromo')">⬇ Export CSV</button>
         </div>
         <div class="table-wrap">
@@ -442,7 +413,7 @@
       </div>
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Upsell ที่ขายดีที่สุด (เฉพาะ Facebook)</div>
+          <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Upsell ที่ขายดีที่สุด</div>
           <div style="display:flex;gap:8px;align-items:center;">
             <span style="font-size:11px;color:var(--text3);">เรียงตาม:</span>
             <select id="upsellSortMode" onchange="renderRealPromoAndUpsell()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;">
@@ -459,10 +430,10 @@
           </table>
         </div>
       </div>
+
       <div class="card ai-summary-card">
-        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">สรุป Promotion & สินค้า</span>
-          <button class="btn btn-ghost btn-sm" onclick="generateSummary('promotion')">🔄 วิเคราะห์ใหม่</button></div>
-        <div class="ai-summary-body" id="ai-summary-promotion">กด "วิเคราะห์ใหม่" เพื่อสรุปข้อมูลในช่วงที่เลือก</div>
+        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
+        <div class="ai-summary-body" id="fbhub-insight">กำลังวิเคราะห์...</div>
       </div>
     </div>
     <div class="page" id="page-geo">
@@ -815,34 +786,36 @@
 
     <div class="page" id="page-tthub">
       <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tthub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-          <div class="toggle-group">
-            <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
-            <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
-            <button class="toggle-btn" id="tthub-dy" onclick="setHubAdView('tt','day',this)">รายวัน</button>
-          </div>
-        </div>
-        <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div>
-      </div>
-      <div class="grid-2" style="margin-bottom:20px;">
+      <div class="grid-2" style="margin-bottom:20px;align-items:stretch;">
         <div class="card">
-          <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
-          <div class="table-wrap">
-            <table id="tblTtOrderChannel">
-              <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyTtOrderChannel"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
-            </table>
+          <div class="section-header">
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tthub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
+              <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
+              <button class="toggle-btn" id="tthub-dy" onclick="setHubAdView('tt','day',this)">รายวัน</button>
+            </div>
           </div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div>
         </div>
-        <div class="card">
-          <div class="section-header"><div class="section-title">Top Creator (ตาม Live/Video)</div></div>
-          <div class="table-wrap">
-            <table id="tblTtCreator">
-              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-              <tbody id="tbodyTtCreator"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-            </table>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div class="card" style="flex:1;display:flex;flex-direction:column;">
+            <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
+            <div class="table-wrap">
+              <table id="tblTtOrderChannel">
+                <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
+                <tbody id="tbodyTtOrderChannel"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card" style="flex:1;display:flex;flex-direction:column;">
+            <div class="section-header"><div class="section-title">Top 10 Creator (ตาม Live/Video)</div></div>
+            <div class="table-wrap">
+              <table id="tblTtCreator">
+                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+                <tbody id="tbodyTtCreator"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -940,27 +913,29 @@
 
     <div class="page" id="page-shhub">
       <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('sh')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="shhub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-          <div class="toggle-group">
-            <button class="toggle-btn" id="shhub-yr" onclick="setHubAdView('sh','year',this)">ทั้งปี</button>
-            <button class="toggle-btn active" id="shhub-mo" onclick="setHubAdView('sh','month',this)">รายเดือน</button>
-            <button class="toggle-btn" id="shhub-dy" onclick="setHubAdView('sh','day',this)">รายวัน</button>
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="section-header">
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('sh')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="shhub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="shhub-yr" onclick="setHubAdView('sh','year',this)">ทั้งปี</button>
+              <button class="toggle-btn active" id="shhub-mo" onclick="setHubAdView('sh','month',this)">รายเดือน</button>
+              <button class="toggle-btn" id="shhub-dy" onclick="setHubAdView('sh','day',this)">รายวัน</button>
+            </div>
           </div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="chartShAds"></canvas></div>
         </div>
-        <div class="chart-wrap chart-wrap-lg"><canvas id="chartShAds"></canvas></div>
-      </div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblShSubChannel')">⬇ Export CSV</button>
-        </div>
-        <div class="table-wrap">
-          <table id="tblShSubChannel">
-            <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-            <tbody id="tbodyShSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
-          </table>
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
+            <button class="btn btn-ghost" onclick="exportTable('tblShSubChannel')">⬇ Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tblShSubChannel">
+              <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
+              <tbody id="tbodyShSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -993,6 +968,66 @@
 
       <div class="card" style="background:var(--bg2);border-style:dashed;">
         <div style="font-size:12.5px;color:var(--text2);">🚧 ฟีเจอร์ Live สำหรับ Shopee จะเพิ่มในอนาคต — ตอนนี้แสดงได้แค่ยอดขายกับค่าโฆษณาภาพรวมก่อน</div>
+      </div>
+    </div>
+
+    <div class="page" id="page-lzhub">
+      <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="section-header">
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Lazada) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('lz')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="lzhub-ads-popover" class="ads-info-popover" style="display:none;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="lzhub-yr" onclick="setHubAdView('lz','year',this)">ทั้งปี</button>
+              <button class="toggle-btn active" id="lzhub-mo" onclick="setHubAdView('lz','month',this)">รายเดือน</button>
+              <button class="toggle-btn" id="lzhub-dy" onclick="setHubAdView('lz','day',this)">รายวัน</button>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="chartLzAds"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
+            <button class="btn btn-ghost" onclick="exportTable('tblLzSubChannel')">⬇ Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tblLzSubChannel">
+              <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
+              <tbody id="tbodyLzSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Top 20 Promotion (รูปแบบที่ลูกค้าสั่งจริง)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopSKULz')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopSKULz">
+            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKULz"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Top 20 สินค้าเดี่ยว (จำนวนชิ้นที่ขาย)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTopProductLz')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTopProductLz">
+            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopProductLz"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="background:var(--bg2);border-style:dashed;">
+        <div style="font-size:12.5px;color:var(--text2);">🚧 ฟีเจอร์ Live สำหรับ Lazada จะเพิ่มในอนาคต — ตอนนี้แสดงได้แค่ยอดขายกับค่าโฆษณาภาพรวมก่อน</div>
       </div>
     </div>
 
@@ -1347,11 +1382,11 @@ function applyFilters() {
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
-  tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', shhub: 'ภาพรวม Shopee',
+  tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking'
 };
-const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','shhub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','shhub','lzhub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1416,8 +1451,8 @@ function showPage(page, lockCh, el) {
   const chFilter = document.getElementById('filterChannel');
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
-  const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee' };
-  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada' };
+  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub', 'lzhub']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
   const HIDE_SUBCHANNEL_FILTER = ['fbhub']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
@@ -1462,6 +1497,7 @@ function renderCurrentPage() {
   else if (currentPage === 'fbhub') renderFbHub();
   else if (currentPage === 'tthub') renderTtHub();
   else if (currentPage === 'shhub') renderShHub();
+  else if (currentPage === 'lzhub') renderLzHub();
   else if (currentPage === 'promotion') renderPromotion();
   else if (currentPage === 'geo') renderGeo();
   else if (currentPage === 'crm') renderCRM();
@@ -1713,6 +1749,7 @@ function renderFbHub() {
 
     renderAdpChannel('chartFbAds', null, 'fb', hubAdView.fb, hubSelectedSub.fb);
     renderPromotion('Fb', 'Facebook');
+    renderRealPromoAndUpsell();
 
     // คำแนะนำอย่างง่าย: sub-channel ที่ ROAS/AOV เด่นสุด (เทียบจาก AOV เพราะไม่มี ad ต่อ sub-channel)
     let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
@@ -1764,7 +1801,7 @@ function renderTtHub() {
       byCreator[k].rev += parseFloat(r.revenue) || 0;
       byCreator[k].ord++;
     });
-    const crSorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 15);
+    const crSorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 10);
     document.getElementById('tbodyTtCreator').innerHTML = crSorted.length ? crSorted.map(([k,v]) => `
       <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
     `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
@@ -1819,6 +1856,46 @@ function renderShHub() {
 
     renderAdpChannel('chartShAds', null, 'sh', hubAdView.sh);
     renderPromotion('Sh', 'Shopee');
+  };
+
+  if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+}
+
+// ===== LAZADA HUB =====
+function renderLzHub() {
+  const d = filteredData.filter(r => r.channel === 'Lazada');
+
+  const finish = () => {
+    const adData = getAdDateFiltered().ads.filter(r => r.channel==='Lazada');
+    const tAds = adData.reduce((s,r) => s + r.ads, 0);
+    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+    const totalOrd = d.length;
+    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
+
+    document.getElementById('lzhub-kpis').innerHTML = `
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
+    `;
+
+    const bySub = {};
+    d.forEach(r => {
+      const k = r.sub_channel || 'ไม่ระบุ';
+      if (!bySub[k]) bySub[k] = { rev: 0, ord: 0 };
+      bySub[k].rev += parseFloat(r.revenue) || 0;
+      bySub[k].ord++;
+    });
+    const sorted = Object.entries(bySub).sort((a,b) => b[1].rev - a[1].rev);
+    document.getElementById('tbodyLzSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
+      <tr>
+        <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+        <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+        <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+
+    renderAdpChannel('chartLzAds', null, 'lz', hubAdView.lz);
+    renderPromotion('Lz', 'Lazada');
   };
 
   if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
@@ -1941,7 +2018,7 @@ function runLiveSearch() {
 function renderPromotion(idSuffix, forceChannel) {
   idSuffix = idSuffix || '';
   const ch = forceChannel || document.getElementById('filterChannel').value;
-  const sub = idSuffix ? (document.getElementById('fbPromoSubChannel')?.value || '') : document.getElementById('filterSubChannel').value;
+  const sub = idSuffix ? (document.getElementById(idSuffix.toLowerCase()+'PromoSubChannel')?.value || '') : document.getElementById('filterSubChannel').value;
   let monthsCurr, monthsPrev;
   if (idSuffix) {
     // ใช้แบบฝังในหน้า hub — หน้านี้ไม่มี month selector (ซ่อนไว้) ต้องคำนวณเดือนจากช่วงวันที่ปกติที่มองเห็นอยู่แทน
@@ -2068,11 +2145,9 @@ function renderPromotion(idSuffix, forceChannel) {
 
 // ===== SECTION 3: Top Promotion ของจริง (Facebook) + Best Upsell =====
 function getFacebookOrdersForSelectedMonth() {
-  if (!selectedMonth) return [];
-  const [y, m] = selectedMonth.split('-').map(Number);
-  const from = `${selectedMonth}-01`;
-  const lastDay = new Date(y, m, 0).getDate();
-  const to = `${selectedMonth}-${String(lastDay).padStart(2,'0')}`;
+  const from = document.getElementById('dateFrom')?.value;
+  const to = document.getElementById('dateTo')?.value;
+  if (!from || !to) return [];
   return allData.filter(r => r.date >= from && r.date <= to && r.channel === 'Facebook' && shouldIncludeRow(r));
 }
 
@@ -3002,9 +3077,9 @@ function setAdpView(v, btn) {
 
 // view แยกต่างหากต่อหน้า Hub (Facebook/TikTok/Shopee) ไม่ใช้ตัวแปร adView ตัวเดียวกับหน้า Ad Performance
 // กันไม่ให้สลับมุมมองในหน้าหนึ่งไปกระทบอีกหน้าโดยไม่ตั้งใจ
-const hubAdView = { fb: 'month', tt: 'month', sh: 'month' };
+const hubAdView = { fb: 'month', tt: 'month', sh: 'month', lz: 'month' };
 // เพจ/sub-channel ที่ถูกเลือก (คลิก) ไว้ในแต่ละหน้า Hub — null = ยังไม่เลือก (แสดงรวมทุกเพจ/ร้าน)
-const hubSelectedSub = { fb: null, sh: null };
+const hubSelectedSub = { fb: null, sh: null, lz: null };
 
 // คำอธิบายที่มาของค่าแอดแต่ละช่องทาง ใช้แสดงใน popover ข้างกราฟ "ยอดขาย vs ค่าโฆษณา" ในแต่ละหน้า Hub
 const ADS_SOURCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I/edit?gid=16390889#gid=16390889';
@@ -3012,6 +3087,7 @@ const ADS_SOURCE_INFO = {
   fb: 'ค่าโฆษณา Facebook รวมมาจาก:\n• 7 เพจหลัก: Deesay Thailand-บริษัท, Deesay Cosmetics-Thailand, แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก, ลิปสักปาก ดีเซ้ย์, ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอาง, กันแดดฟิลเตอร์-เพจบริษัท, Deesay Makeup\n• Facebook OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
   tt: 'ค่าโฆษณา TikTok\nsub-channel: Deesay Thailand',
   sh: 'ค่าโฆษณา Shopee รวมมาจาก:\n• Shopee Mall (ปกติ)\n• Shopee Mall CPAS\n• Shopee 24hr',
+  lz: 'ค่าโฆษณา Lazada รวมมาจาก:\n• Lazada Mall\n• Lazada 24hr',
 };
 
 function toggleAdsPopover(hub) {
@@ -3031,6 +3107,7 @@ const HUB_AD_CONFIG = {
   fb: { prefix: 'fbhub', chartId: 'chartFbAds' },
   tt: { prefix: 'tthub', chartId: 'chartTtAds' },
   sh: { prefix: 'shhub', chartId: 'chartShAds' },
+  lz: { prefix: 'lzhub', chartId: 'chartLzAds' },
 };
 function setHubAdView(hub, v, btn) {
   hubAdView[hub] = v;
