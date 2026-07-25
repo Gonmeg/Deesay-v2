@@ -1255,7 +1255,11 @@ const TIKTOK_ATTR_FIELDS = [
   { key:'order_channel', label:'Order Channel', required:false, keywords:['order channel'] },
   { key:'creator_handle', label:'Creator Handle', required:false, keywords:['creator handle'] },
   { key:'order_status', label:'Order Status', required:false, keywords:['order status'] },
+  // คนละคอลัมน์กับ "Order Status" — นี่คือตัวที่ตรงกับยอด Cancel/Return ในบัญชีจริงๆ (Order Status ใช้กรองไม่ตรง)
+  { key:'cancel_return_type', label:'Cancelation/Return Type', required:false, keywords:['cancelation/return type','cancellation/return type','cancel/return type'] },
 ]
+// เฉพาะ Facebook เท่านั้น — ช่องทางอื่นใช้วันที่สั่งซื้อเป็นตัวตัดรอบเดือนอยู่แล้ว ไม่ต้องเก็บวันที่จัดส่งเพิ่ม
+const FACEBOOK_DELIVERY_FIELD = { key:'delivery_date', label:'วันที่จัดส่ง (สำหรับเทียบบัญชี)', required:false, keywords:['วันที่จัดส่ง','delivery date','ship date','shipdate'] }
 
 const REVENUE_FIELDS = {
   Facebook: [
@@ -1319,6 +1323,7 @@ function getFields(channel) {
   let base = BASE_FIELDS
   if (channel === 'Lazada') base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
   if (channel === 'TikTok') base = [...base, QTY_MULTIPLIER_FIELD, ...TIKTOK_ATTR_FIELDS]
+  if (channel === 'Facebook') base = [...base, FACEBOOK_DELIVERY_FIELD]
   return [...base, ...revFields]
 }
 
@@ -1889,18 +1894,25 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
     const revenueRaw = (() => { const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null; if (!v) return 0; return parseFloat(String(v).replace(/,/g,''))||0 })()
-    return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
+    const delivery_date = mappings['delivery_date'] ? parseDate(g('delivery_date')) : null
+    const cancel_return_type = mappings['cancel_return_type'] ? (gs('cancel_return_type') || null) : null
+    return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
   }).filter(r => r.order_id && r.date)
 
+  const CRT_SEVERITY = { 'Cancel': 2, 'Return/Refund': 2, 'None': 0 }
+  const worseCancelReturnType = (a, b) => {
+    const sa = CRT_SEVERITY[a] ?? 0, sb = CRT_SEVERITY[b] ?? 0
+    return sb > sa ? b : a
+  }
   const orderGroups = new Map()
   rawProcessed.forEach(r => {
     if (!orderGroups.has(r.order_id)) orderGroups.set(r.order_id, { ...r, _skuParts:[r.sku_promotion_part], _rawParts:[r.sku_promotion_raw], _revenueSum:r.revenue, _revenueRawSum:r.revenue_raw })
-    else { const g = orderGroups.get(r.order_id); if(r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part); if(r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw); g._revenueSum+=r.revenue; g._revenueRawSum+=r.revenue_raw }
+    else { const g = orderGroups.get(r.order_id); if(r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part); if(r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw); g._revenueSum+=r.revenue; g._revenueRawSum+=r.revenue_raw; g.cancel_return_type = worseCancelReturnType(g.cancel_return_type, r.cancel_return_type) }
   })
 
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
-    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
+    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
