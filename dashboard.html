@@ -785,7 +785,8 @@
     </div>
 
     <div class="page" id="page-tthub">
-      <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="tthub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
@@ -933,7 +934,8 @@
     </div>
 
     <div class="page" id="page-shhub">
-      <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="shhub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
@@ -1221,7 +1223,7 @@ async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concu
 
 async function fetchAll() {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const baseUrl = `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items,order_channel,creator_handle,order_status,created_at_precise&order=date.asc,order_id.asc`;
+  const baseUrl = `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items,order_channel,creator_handle,order_status,created_at_precise,cancel_return_type,delivery_date&order=date.asc,order_id.asc`;
   return fetchPaginatedConcurrent(baseUrl, headers);
 }
 
@@ -1236,6 +1238,9 @@ function getSettledCutoff() {
 
 function shouldIncludeRow(r) {
   if (!r.date) return false;
+  // TikTok + Shopee: ออเดอร์ที่ยกเลิก/คืนสินค้า (Cancelation/Return Type) ไม่นับเป็นยอดขายเลย ตรงกับที่บัญชีตัดออก
+  // (คนละคอลัมน์กับ order_status เดิม ซึ่งกรองไม่ตรงกับบัญชี — cancel_return_type คือตัวที่ต้องใช้)
+  if ((r.channel === 'TikTok' || r.channel === 'Shopee') && (r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund')) return false;
   const rowDate = new Date(r.date);
   const now = new Date();
   const cutoff = getSettledCutoff();
@@ -1811,6 +1816,24 @@ function renderTtHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
     `;
 
+    // ยอด Cancel/Return ที่ถูกตัดออกจากยอดขายด้านบนแล้ว (ไม่ใช้ shouldIncludeRow ตรงนี้ เพราะต้องการเห็นค่าที่ถูกกรองออกไป)
+    const from = getDateValue('From'), to = getDateValue('To');
+    const crRows = allData.filter(r => r.channel==='TikTok' && r.date>=from && r.date<=to && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
+    const cancelRows = crRows.filter(r=>r.cancel_return_type==='Cancel');
+    const returnRows = crRows.filter(r=>r.cancel_return_type==='Return/Refund');
+    const cancelRev = cancelRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
+    const returnRev = returnRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
+    const crEl = document.getElementById('tthub-cancel-return-note');
+    if (crEl) {
+      if (crRows.length > 0) {
+        crEl.style.display = 'block';
+        crEl.innerHTML = `📌 ยอดขายด้านบน<b>ตัดออกแล้ว</b>: ยกเลิก ฿${fmt(cancelRev)} (${fmt(cancelRows.length)} ออเดอร์) · คืนสินค้า ฿${fmt(returnRev)} (${fmt(returnRows.length)} ออเดอร์)`;
+      } else {
+        crEl.style.display = 'block';
+        crEl.innerHTML = `📌 ยังไม่มีข้อมูล Cancelation/Return Type ในช่วงที่เลือก (อาจเป็นเพราะยังไม่ได้ backfill เดือนนี้ — ยอดขายด้านบนจึงยังไม่ได้ตัด Cancel/Return ออก)`;
+      }
+    }
+
     const byOC = {};
     d.forEach(r => {
       const k = r.order_channel || 'ไม่ระบุ';
@@ -1872,6 +1895,24 @@ function renderShHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
     `;
+
+    // ยอด Cancel/Return ที่ถูกตัดออกจากยอดขายด้านบนแล้ว
+    const shFrom = getDateValue('From'), shTo = getDateValue('To');
+    const shCrRows = allData.filter(r => r.channel==='Shopee' && r.date>=shFrom && r.date<=shTo && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
+    const shCancelRows = shCrRows.filter(r=>r.cancel_return_type==='Cancel');
+    const shReturnRows = shCrRows.filter(r=>r.cancel_return_type==='Return/Refund');
+    const shCancelRev = shCancelRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
+    const shReturnRev = shReturnRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
+    const shCrEl = document.getElementById('shhub-cancel-return-note');
+    if (shCrEl) {
+      if (shCrRows.length > 0) {
+        shCrEl.style.display = 'block';
+        shCrEl.innerHTML = `📌 ยอดขายด้านบน<b>ตัดออกแล้ว</b>: ยกเลิก ฿${fmt(shCancelRev)} (${fmt(shCancelRows.length)} ออเดอร์) · คืนสินค้า ฿${fmt(shReturnRev)} (${fmt(shReturnRows.length)} ออเดอร์)`;
+      } else {
+        shCrEl.style.display = 'block';
+        shCrEl.innerHTML = `📌 ยังไม่มีข้อมูล Cancelation/Return Type ในช่วงที่เลือก (อาจเป็นเพราะยังไม่ได้ backfill เดือนนี้ — ยอดขายด้านบนจึงยังไม่ได้ตัด Cancel/Return ออก)`;
+      }
+    }
 
     const bySub = {};
     d.forEach(r => {
