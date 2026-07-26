@@ -1272,10 +1272,8 @@ const REVENUE_FIELDS = {
     { key:'rev_discount', label:'ส่วนลดร้านค้าต่อรายการ', required:false, keywords:['ส่วนลดร้านค้าต่อรายการ','sku seller discount','seller discount'] },
   ],
   Shopee: [
-    { key:'rev_subtotal', label:'ราคาขาย', required:true, keywords:['ราคาขาย','subtotal'] },
+    { key:'rev_subtotal', label:'ราคาขายสุทธิ', required:true, keywords:['ราคาขายสุทธิ','net sales price'] },
     { key:'rev_platform', label:'ส่วนลดจาก Shopee', required:false, keywords:['ส่วนลดจาก shopee','ส่วนลดแพลตฟอร์ม','shopee discount'] },
-    { key:'rev_seller_discount', label:'โค้ดส่วนลดชำระโดยผู้ขาย', required:false, keywords:['โค้ดส่วนลดชำระโดยผู้ขาย','seller voucher'] },
-    { key:'rev_shipping', label:'ค่าจัดส่งที่ชำระโดยผู้ซื้อ', required:false, keywords:['ค่าจัดส่งที่ชำระโดยผู้ซื้อ','buyer shipping'] },
   ],
   Lazada: [
     { key:'rev_subtotal', label:'unitPrice', required:true, keywords:['unitPrice','unit price','ราคาต่อหน่วย'] },
@@ -1296,7 +1294,7 @@ function calcRevenue(channel, m, row) {
   switch(channel) {
     case 'Facebook': return getNum('rev_subtotal') - getNum('rev_discount') + getNum('rev_shipping')
     case 'TikTok': return getNum('rev_subtotal') - getNum('rev_discount')
-    case 'Shopee': return getNum('rev_subtotal') + getNum('rev_platform') - getNum('rev_seller_discount') + getNum('rev_shipping')
+    case 'Shopee': return getNum('rev_subtotal') + getNum('rev_platform')
     case 'Lazada': {
       const paidRaw = mappings['rev_paid'] ? row[mappings['rev_paid']] : null;
       const paid = parseFloat(paidRaw || 0);
@@ -1317,6 +1315,12 @@ const DEALER_FIELDS = [
   { key:'revenue', label:'ราคารวม vat', required:true, keywords:['ราคารวม vat','ราคารวม','vat'] },
 ]
 
+// เฉพาะ Shopee — เทียบกับบัญชีแล้วว่าต้องใช้ "สถานะการสั่งซื้อ" + "จำนวนที่ส่งคืน" ในการตัด Cancel/Return ออกจากยอดขาย
+const SHOPEE_STATUS_FIELDS = [
+  { key:'shopee_order_status', label:'สถานะการสั่งซื้อ', required:false, keywords:['สถานะการสั่งซื้อ'] },
+  { key:'shopee_returned_qty', label:'จำนวนที่ส่งคืน', required:false, keywords:['จำนวนที่ส่งคืน'] },
+]
+
 function getFields(channel) {
   if (channel === 'ตัวแทน/MT') return DEALER_FIELDS
   const revFields = REVENUE_FIELDS[channel] || [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }]
@@ -1324,6 +1328,7 @@ function getFields(channel) {
   if (channel === 'Lazada') base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
   if (channel === 'TikTok') base = [...base, QTY_MULTIPLIER_FIELD, ...TIKTOK_ATTR_FIELDS]
   if (channel === 'Facebook') base = [...base, FACEBOOK_DELIVERY_FIELD]
+  if (channel === 'Shopee') base = [...base, ...SHOPEE_STATUS_FIELDS]
   return [...base, ...revFields]
 }
 
@@ -1895,7 +1900,15 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     const revenue = calcRevenue(channel, mappings, row)
     const revenueRaw = (() => { const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null; if (!v) return 0; return parseFloat(String(v).replace(/,/g,''))||0 })()
     const delivery_date = mappings['delivery_date'] ? parseDate(g('delivery_date')) : null
-    const cancel_return_type = mappings['cancel_return_type'] ? (gs('cancel_return_type') || null) : null
+    let cancel_return_type = mappings['cancel_return_type'] ? (gs('cancel_return_type') || null) : null
+    if (channel === 'Shopee') {
+      // เทียบกับบัญชีแล้วยืนยัน: Cancel = สถานะการสั่งซื้อ "ยกเลิกแล้ว", Return = จำนวนที่ส่งคืน > 0
+      const shopeeStatus = mappings['shopee_order_status'] ? gs('shopee_order_status') : ''
+      const shopeeReturnedQty = mappings['shopee_returned_qty'] ? parseFloat(String(gs('shopee_returned_qty')||'0').replace(/,/g,'')) || 0 : 0
+      if (shopeeStatus === 'ยกเลิกแล้ว') cancel_return_type = 'Cancel'
+      else if (shopeeReturnedQty > 0) cancel_return_type = 'Return/Refund'
+      else cancel_return_type = 'None'
+    }
     return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
   }).filter(r => r.order_id && r.date)
 
