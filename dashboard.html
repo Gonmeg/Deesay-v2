@@ -995,7 +995,8 @@
     </div>
 
     <div class="page" id="page-lzhub">
-      <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="lzhub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
@@ -1238,9 +1239,10 @@ function getSettledCutoff() {
 
 function shouldIncludeRow(r) {
   if (!r.date) return false;
-  // TikTok + Shopee: ออเดอร์ที่ยกเลิก/คืนสินค้า (Cancelation/Return Type) ไม่นับเป็นยอดขายเลย ตรงกับที่บัญชีตัดออก
+  // TikTok + Shopee + Lazada: ออเดอร์ที่ยกเลิก/คืนสินค้า (Cancelation/Return Type) ไม่นับเป็นยอดขายเลย ตรงกับที่บัญชีตัดออก
   // (คนละคอลัมน์กับ order_status เดิม ซึ่งกรองไม่ตรงกับบัญชี — cancel_return_type คือตัวที่ต้องใช้)
-  if ((r.channel === 'TikTok' || r.channel === 'Shopee') && (r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund')) return false;
+  // Lazada เพิ่มเข้ามาหลัง backfill+เช็คกับบัญชีแล้ว (residual เล็กน้อย <1%/เดือน จาก cross-month return ที่ยอมรับไว้)
+  if ((r.channel === 'TikTok' || r.channel === 'Shopee' || r.channel === 'Lazada') && (r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund')) return false;
   const rowDate = new Date(r.date);
   const now = new Date();
   const cutoff = getSettledCutoff();
@@ -1953,6 +1955,24 @@ function renderLzHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
     `;
+
+    // ยอด Cancel/Return ที่ถูกตัดออกจากยอดขายด้านบนแล้ว (เหมือน Shopee — เช็คกับบัญชีแล้ว residual เล็กน้อย <1%/เดือน จาก cross-month return ที่ยอมรับไว้)
+    const lzFrom = getDateValue('From'), lzTo = getDateValue('To');
+    const lzCrRows = allData.filter(r => r.channel==='Lazada' && r.date>=lzFrom && r.date<=lzTo && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
+    const lzCancelRows = lzCrRows.filter(r=>r.cancel_return_type==='Cancel');
+    const lzReturnRows = lzCrRows.filter(r=>r.cancel_return_type==='Return/Refund');
+    const lzCancelRev = lzCancelRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
+    const lzReturnRev = lzReturnRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
+    const lzCrEl = document.getElementById('lzhub-cancel-return-note');
+    if (lzCrEl) {
+      if (lzCrRows.length > 0) {
+        lzCrEl.style.display = 'block';
+        lzCrEl.innerHTML = `📌 ยอดขายด้านบน<b>ตัดออกแล้ว</b>: ยกเลิก ฿${fmt(lzCancelRev)} (${fmt(lzCancelRows.length)} ออเดอร์) · คืนสินค้า ฿${fmt(lzReturnRev)} (${fmt(lzReturnRows.length)} ออเดอร์)`;
+      } else {
+        lzCrEl.style.display = 'block';
+        lzCrEl.innerHTML = `📌 ยังไม่มีข้อมูล status ในช่วงที่เลือก (อาจเป็นเพราะยังไม่ได้ backfill เดือนนี้ — ยอดขายด้านบนจึงยังไม่ได้ตัด Cancel/Return ออก)`;
+      }
+    }
 
     const bySub = {};
     d.forEach(r => {
