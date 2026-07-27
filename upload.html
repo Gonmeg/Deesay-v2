@@ -1321,6 +1321,12 @@ const SHOPEE_STATUS_FIELDS = [
   { key:'shopee_returned_qty', label:'จำนวนที่ส่งคืน', required:false, keywords:['จำนวนที่ส่งคืน'] },
 ]
 
+// เฉพาะ Lazada — เทียบกับบัญชีแล้วยืนยัน: Cancel = status "canceled", Return = status "Package Returned"
+// (ตรงตัว, case-sensitive — สถานะอื่นเช่น "returned" ตัวเล็กไม่ถูกนับเป็น Return เพราะเช็คกับบัญชีแล้วไม่ตรง)
+const LAZADA_STATUS_FIELDS = [
+  { key:'lazada_status', label:'status', required:false, keywords:['status'] },
+]
+
 function getFields(channel) {
   if (channel === 'ตัวแทน/MT') return DEALER_FIELDS
   const revFields = REVENUE_FIELDS[channel] || [{ key:'rev_subtotal', label:'ยอดรวม', required:true, keywords:['รวมทั้งสิ้น','ยอดรวม','total'] }]
@@ -1329,6 +1335,7 @@ function getFields(channel) {
   if (channel === 'TikTok') base = [...base, QTY_MULTIPLIER_FIELD, ...TIKTOK_ATTR_FIELDS]
   if (channel === 'Facebook') base = [...base, FACEBOOK_DELIVERY_FIELD]
   if (channel === 'Shopee') base = [...base, ...SHOPEE_STATUS_FIELDS]
+  if (channel === 'Lazada') base = [...base, ...LAZADA_STATUS_FIELDS]
   return [...base, ...revFields]
 }
 
@@ -1907,6 +1914,14 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       const shopeeReturnedQty = mappings['shopee_returned_qty'] ? parseFloat(String(gs('shopee_returned_qty')||'0').replace(/,/g,'')) || 0 : 0
       if (shopeeStatus === 'ยกเลิกแล้ว') cancel_return_type = 'Cancel'
       else if (shopeeReturnedQty > 0) cancel_return_type = 'Return/Refund'
+      else cancel_return_type = 'None'
+    }
+    if (channel === 'Lazada') {
+      // เทียบกับบัญชีแล้วยืนยัน: Cancel = status "canceled", Return = status "Package Returned" (ตรงตัว)
+      // หมายเหตุ: มี residual เล็กน้อย (<1%/เดือน) จากเคส cross-month return ที่ยอมรับไว้แล้ว (ดู session notes)
+      const lazStatus = mappings['lazada_status'] ? gs('lazada_status') : ''
+      if (lazStatus === 'canceled') cancel_return_type = 'Cancel'
+      else if (lazStatus === 'Package Returned') cancel_return_type = 'Return/Refund'
       else cancel_return_type = 'None'
     }
     return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
