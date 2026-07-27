@@ -1241,23 +1241,13 @@ function shouldIncludeRow(r) {
   if (!r.date) return false;
   // TikTok + Shopee + Lazada: ออเดอร์ที่ยกเลิก/คืนสินค้า (Cancelation/Return Type) ไม่นับเป็นยอดขายเลย ตรงกับที่บัญชีตัดออก
   // (คนละคอลัมน์กับ order_status เดิม ซึ่งกรองไม่ตรงกับบัญชี — cancel_return_type คือตัวที่ต้องใช้)
-  // Lazada เพิ่มเข้ามาหลัง backfill+เช็คกับบัญชีแล้ว (residual เล็กน้อย <1%/เดือน จาก cross-month return ที่ยอมรับไว้)
   if ((r.channel === 'TikTok' || r.channel === 'Shopee' || r.channel === 'Lazada') && (r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund')) return false;
-  const rowDate = new Date(r.date);
-  const now = new Date();
-  const cutoff = getSettledCutoff();
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  // settled เก็บเป็น boolean ในตาราง orders แต่เก็บเป็น string 'True'/'False' ในตาราง sku_revenue — เช็คทั้งสองแบบ
-  const isSettled = r.settled === true || r.settled === 'True';
-
-  if (rowDate >= currentMonthStart) return true;
-  if (now <= cutoff) {
-    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    if (rowDate >= prevMonthStart) return true;
-    return isSettled;
-  } else {
-    return isSettled;
-  }
+  // หมายเหตุ: เดิมมี logic ตัดยอดเดือนที่ปิดรอบแล้วให้เหลือเฉพาะ settled=true (คิดว่า settled คือ
+  // "ข้อมูลผ่านการปิดเดือนด้วยไฟล์บัญชีแล้ว") แต่เช็คกับบัญชีจริงแล้วพบว่า "รับรู้รายได้" ของบัญชี
+  // มาจากไฟล์คำสั่งซื้ออย่างเดียว ไม่เกี่ยวกับไฟล์รับเงินเลย -- Net Revenue ที่ตรงกับบัญชี = Income + AR
+  // เสมอ (settled แค่บอกว่าเก็บเงินมาแล้วหรือยัง ไม่ควรใช้ตัดสินว่านับเป็นยอดขายหรือไม่) ตัด logic
+  // settled-cutoff ออกทั้งหมดตามที่เช็คและยืนยันกับบัญชีแล้ว (เก็บ session 2026-07)
+  return true;
 }
 
 // ===== SUPABASE FETCH: sku_revenue table =====
