@@ -272,9 +272,9 @@
 
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card" style="border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.04);">
-          <div class="card-title" style="color:var(--red);">ยอดตีกลับ / ยังไม่รับเงิน</div>
+          <div class="card-title" style="color:var(--red);">ยอดตีกลับ (ยกเลิก/คืนสินค้า)</div>
           <div class="kpi-value" id="kpi-unsettled-rev" style="color:var(--red);">—</div>
-          <div class="kpi-sub" id="kpi-unsettled-orders">— ออเดอร์ที่ยังไม่ settled</div>
+          <div class="kpi-sub" id="kpi-unsettled-orders">— ออเดอร์ที่ถูกยกเลิก/คืน</div>
         </div>
         <div class="card" style="border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.04);">
           <div class="card-title">สัดส่วนตีกลับ</div>
@@ -1617,13 +1617,14 @@ function renderOverview() {
     if (sub && r.sub_channel !== sub) return false;
     return true;
   });
-  const unsettled = allInRange.filter(r => !r.settled && !shouldIncludeRow(r));
+  // ยอดตีกลับ (ยกเลิก/คืนสินค้า) — เฉพาะรายได้เท่านั้น ไม่เกี่ยวกับ settled/AR (เรื่องบัญชี แยกออกจาก dashboard แล้ว)
+  const unsettled = allInRange.filter(r => r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund');
   const unsettledRev = unsettled.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
   const totalWithUnsettled = allInRange.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
   const unsettledPct = totalWithUnsettled ? ((unsettledRev/totalWithUnsettled)*100).toFixed(1) : '0.0';
 
   document.getElementById('kpi-unsettled-rev').textContent = fmtB(unsettledRev);
-  document.getElementById('kpi-unsettled-orders').textContent = `${fmt(unsettled.length)} ออเดอร์ที่ยังไม่ settled`;
+  document.getElementById('kpi-unsettled-orders').textContent = `${fmt(unsettled.length)} ออเดอร์ที่ถูกยกเลิก/คืน`;
   document.getElementById('kpi-unsettled-pct').textContent = unsettledPct + '%';
 
   // Monthly
@@ -2958,8 +2959,11 @@ function runSkuAnalysis() {
 
   // ตาราง Promotion ที่มี SKU นี้ — ใช้ส่วนแบ่งยอดขายของ SKU นี้เท่านั้น (revenue_share) ไม่ใช่ยอดขายเต็มออเดอร์ของทั้งโปร
   // label ชื่อโปรผ่าน order_id -> sku_promotion (มาจาก orders) เพราะ sku_revenue ไม่มีคอลัมน์นี้เก็บตรงๆ
+  // ตัวแทน/Modern Trade ไม่มี sku_promotion ที่จับพฤติกรรมจริงได้ (ไม่ใช่โปรที่ลูกค้าเลือกเอง) เลยไม่โชว์ในตารางนี้
+  // (ตารางอื่น/ยอดรวมด้านบนยังนับ ตัวแทน/Modern Trade ครบเหมือนเดิม ไม่กระทบ)
+  const promoChannelList = channelList.filter(ch => ch !== 'ตัวแทน' && ch !== 'Modern Trade');
   const promoAgg = {};
-  channelList.forEach(ch => {
+  promoChannelList.forEach(ch => {
     skus.forEach(sku => {
       skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).forEach(r => {
         const promo = orderIdToPromo[r.order_id] || '—';
@@ -2973,7 +2977,7 @@ function runSkuAnalysis() {
   });
   const allPromoRows = Object.values(promoAgg).map(v => ({ch:v.ch, promo:v.promo, rev:v.rev, qty:v.qty, ord:v.orderIds.size}));
   const promoRows = [];
-  channelList.forEach(ch => { allPromoRows.filter(r=>r.ch===ch).sort((a,b)=>b.rev-a.rev).slice(0,5).forEach(r=>promoRows.push(r)); });
+  promoChannelList.forEach(ch => { allPromoRows.filter(r=>r.ch===ch).sort((a,b)=>b.rev-a.rev).slice(0,5).forEach(r=>promoRows.push(r)); });
   window._skuPromoRows = promoRows;
   renderSkuAnalysisPromo();
 
@@ -3952,7 +3956,7 @@ async function renderCostPage() {
 
     document.getElementById('costKPIs').innerHTML = `
       <div class="card"><div class="card-title">รวมการตลาด</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(totalMarketingAll)}</div><div class="kpi-sub">ค่าการตลาดอื่นๆ + รีวิว + Ads ทุกช่องทาง</div></div>
-      <div class="card"><div class="card-title">ยอดขาย (Settled)</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub">จากออเดอร์รับเงินแล้ว</div></div>
+      <div class="card"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub">รับรู้รายได้ทั้งหมด (ตัด Cancel/Return แล้ว)</div></div>
       <div class="card"><div class="card-title">% Budget</div><div class="kpi-value" style="color:${parseFloat(pctBudgetAll)>30?'var(--red)':parseFloat(pctBudgetAll)>15?'var(--orange)':'var(--green)'};">${pctBudgetAll}%</div><div class="kpi-sub">รวมการตลาด ÷ ยอดขาย</div></div>
       <div class="card"><div class="card-title">ROI</div><div class="kpi-value" style="color:var(--green);">${roiAll}x</div><div class="kpi-sub">ยอดขาย ÷ รวมการตลาด</div></div>`;
 
