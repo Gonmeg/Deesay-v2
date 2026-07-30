@@ -195,6 +195,12 @@
       <div class="nav-item nav-sub" onclick="showPage('shhub',null,this)"><span class="nav-icon">🛍️</span> ภาพรวม Shopee</div>
       <div class="nav-item nav-sub" onclick="showPage('lzhub',null,this)"><span class="nav-icon">🅻</span> ภาพรวม Lazada</div>
     </div>
+    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('mt')" id="navGroupLabel-mt">
+      <span>Modern Trade</span><span class="nav-group-chevron" id="navGroupChevron-mt">▸</span>
+    </div>
+    <div id="navGroup-mt" style="display:none;">
+      <div class="nav-item nav-sub" onclick="showPage('mthub',null,this)"><span class="nav-icon">🏬</span> ภาพรวม Modern Trade</div>
+    </div>
     <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">💰</span> ยอดขายแยก SKU</div>
     <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">📊</span> MKT Tracking</div>
     <div class="nav-item" onclick="showPage('skuanalysis',null,this)"><span class="nav-icon">🔬</span> วิเคราะห์ SKU</div>
@@ -994,6 +1000,50 @@
       </div>
     </div>
 
+    <div class="page" id="page-mthub">
+      <div id="mthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="mthub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="section-header"><div class="section-title">ยอดขายรายเดือน</div></div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="chartMtRevenue"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">ยอดขายแยกตามร้าน</div>
+            <button class="btn btn-ghost" onclick="exportTable('tblMtSubChannel')">⬇ Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tblMtSubChannel">
+              <thead><tr><th>#</th><th>ร้านค้า</th><th>ยอดขาย</th><th>บิล</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
+              <tbody id="tbodyMtSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">ค่าโฆษณา (Awareness)</div>
+          <div style="font-size:11.5px;color:var(--text3);">แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง</div>
+        </div>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="chartMtAds"></canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">Top SKU (Modern Trade)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblMtTopSKU')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblMtTopSKU">
+            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย</th><th>ชิ้น</th><th>สัดส่วน %</th></tr></thead>
+            <tbody id="tbodyMtTopSKU"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-lzhub">
       <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
       <div id="lzhub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
@@ -1400,10 +1450,11 @@ const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
   tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
+  mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking'
 };
-const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','shhub','lzhub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1468,8 +1519,8 @@ function showPage(page, lockCh, el) {
   const chFilter = document.getElementById('filterChannel');
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
-  const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada' };
-  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub', 'lzhub']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
+  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub', 'lzhub', 'mthub']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
   const HIDE_SUBCHANNEL_FILTER = ['fbhub']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
@@ -1524,6 +1575,7 @@ function renderCurrentPage() {
   else if (currentPage === 'tthub') renderTtHub();
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'lzhub') renderLzHub();
+  else if (currentPage === 'mthub') renderMtHub();
   else if (currentPage === 'promotion') renderPromotion();
   else if (currentPage === 'geo') renderGeo();
   else if (currentPage === 'crm') renderCRM();
@@ -1990,6 +2042,88 @@ function renderLzHub() {
 // ===== LIVE SEARCH (TikTok) =====
 let lsSelectedCreators = [];
 let _lsAllCreators = [];
+
+// ===== MODERN TRADE HUB =====
+function renderMtHub() {
+  const d = filteredData.filter(r => r.channel === 'Modern Trade');
+  const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+  const totalOrd = d.length;
+  const activeStores = new Set(d.map(r => r.sub_channel || 'ไม่ระบุ')).size;
+
+  document.getElementById('mthub-kpis').innerHTML = `
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">จำนวนบิล</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ร้านค้าที่ Active</div><div class="kpi-value">${fmt(activeStores)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">เฉลี่ยต่อบิล</div><div class="kpi-value">฿${fmtB(totalOrd ? totalRev/totalOrd : 0)}</div></div>
+  `;
+
+  // ยอด Cancel/Return — Modern Trade ยังไม่ได้ทำ classification เหมือน Shopee/Lazada/TikTok เลยยังไม่มีให้ตัด (บันทึกไว้เตือน)
+  const mtCrEl = document.getElementById('mthub-cancel-return-note');
+  if (mtCrEl) {
+    const hasAnyTag = d.some(r => r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund');
+    mtCrEl.style.display = 'block';
+    mtCrEl.innerHTML = hasAnyTag
+      ? '📌 ยอดขายด้านบนตัด Cancel/Return ออกแล้ว'
+      : '📌 Modern Trade ยังไม่ได้ทำ Cancel/Return classification (ยอดที่คืน/ยกเลิกอาจยังปนอยู่ในยอดขายด้านบน)';
+  }
+
+  // ยอดขายรายเดือน
+  const byMonth = {};
+  d.forEach(r => {
+    if (!r.date) return;
+    const m = r.date.substring(0,7);
+    byMonth[m] = (byMonth[m]||0) + (parseFloat(r.revenue)||0);
+  });
+  const months = Object.keys(byMonth).sort();
+  makeChart('chartMtRevenue', 'bar', months, [{ label: 'ยอดขาย', data: months.map(m => byMonth[m]), backgroundColor: '#2a78d6', borderRadius: 4 }]);
+
+  // ยอดขายแยกตามร้าน (sub_channel)
+  const byStore = {};
+  d.forEach(r => {
+    const k = r.sub_channel || 'ไม่ระบุ';
+    if (!byStore[k]) byStore[k] = { rev: 0, ord: 0 };
+    byStore[k].rev += parseFloat(r.revenue) || 0;
+    byStore[k].ord++;
+  });
+  const sortedStores = Object.entries(byStore).sort((a,b) => b[1].rev - a[1].rev);
+  document.getElementById('tbodyMtSubChannel').innerHTML = sortedStores.length ? sortedStores.map(([k,v],i) => `
+    <tr>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+      <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+
+  // ค่าโฆษณา Awareness (แยกจากยอดขาย ไม่คำนวณ ROI)
+  const renderAdsChart = () => {
+    const from = getDateValue('From'), to = getDateValue('To');
+    const adsInRange = mtAdsDaily.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
+    const byMonthAds = {};
+    adsInRange.forEach(r => { const m = r.date.substring(0,7); byMonthAds[m] = (byMonthAds[m]||0) + r.ads; });
+    const adMonths = Object.keys(byMonthAds).sort();
+    makeChart('chartMtAds', 'line', adMonths, [{ label: 'ค่าโฆษณา Awareness', data: adMonths.map(m => byMonthAds[m]), borderColor: '#eda100', backgroundColor: 'rgba(237,161,0,0.1)', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }]);
+  };
+  if (!mtAdsFetched) { fetchMTAdsData().then(renderAdsChart); } else { renderAdsChart(); }
+
+  // Top SKU (Modern Trade)
+  const from = getDateValue('From'), to = getDateValue('To');
+  const skuRows = skuRevenueAll.filter(r => r.channel === 'Modern Trade' && r.date && r.date >= from && r.date <= to);
+  const bySku = {};
+  skuRows.forEach(r => {
+    const k = r.parent_sku || '—';
+    if (!bySku[k]) bySku[k] = { rev: 0, qty: 0 };
+    bySku[k].rev += parseFloat(r.revenue_share) || 0;
+    bySku[k].qty += parseFloat(r.qty) || 0;
+  });
+  const totalSkuRev = Object.values(bySku).reduce((s,v) => s+v.rev, 0) || 1;
+  const sortedSku = Object.entries(bySku).sort((a,b) => b[1].rev - a[1].rev).slice(0,20);
+  document.getElementById('tbodyMtTopSKU').innerHTML = sortedSku.length ? sortedSku.map(([sku,v],i) => `
+    <tr>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
+      <td>${skuToName(sku)}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.qty)}</td>
+      <td>${(v.rev/totalSkuRev*100).toFixed(1)}%</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+}
 
 function populateLiveSearchFilters() {
   const ttData = allData.filter(r => r.channel === 'TikTok');
@@ -3112,6 +3246,37 @@ function formatGDate(v) {
     return `${p[0]}-${String(parseInt(p[1])+1).padStart(2,'0')}-${String(p[2]).padStart(2,'0')}`;
   }
   return v;
+}
+
+// ===== MODERN TRADE ADS (Awareness) =====
+// ข้อมูลดิบรายชั่วโมงของ Modern Trade อยู่คนละรูปแบบกับ Ads tab หลัก (ที่สรุปเป็น Channel/SubChannel/Date/Ads แล้ว)
+// ต้องดึงตรงจากชีต gid นี้ (คอลัม U=Page, V=Day, W=Time of day, X=Amount spent) แล้วรวมรายชั่วโมง -> รายวันเอง
+// แยกเป็นก้อนของตัวเอง ไม่ปนกับ AD_SHEET_MAPPING หลัก เพราะเป็นแอด Awareness ไม่ผูกกับยอดขาย/ROI
+const MT_ADS_GID = '2101377475';
+let mtAdsDaily = []; // [{date, ads}] รวมแล้วรายวัน
+let mtAdsFetched = false;
+
+async function fetchMTAdsData() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&gid=${MT_ADS_GID}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    const byDay = {};
+    json.table.rows.forEach(r => {
+      const page = (r.c[20]?.v || '').toString(); // คอลัม U
+      if (!page.startsWith('Deesay Modern Trade')) return; // กันแถวบล็อกอื่นที่อาจอยู่แถวเดียวกัน
+      const dateRaw = r.c[21]?.v; // คอลัม V
+      const date = dateRaw ? formatGDate(dateRaw) : '';
+      const ads = parseFloat(r.c[23]?.v) || 0; // คอลัม X
+      if (!date) return;
+      const yr = parseInt(date.substring(0,4));
+      if (isNaN(yr) || yr < 2020 || yr > new Date().getFullYear() + 1) return;
+      byDay[date] = (byDay[date] || 0) + ads;
+    });
+    mtAdsDaily = Object.entries(byDay).map(([date, ads]) => ({ date, ads })).sort((a,b) => a.date.localeCompare(b.date));
+    mtAdsFetched = true;
+  } catch(e) { console.error('MT Ads fetch error:', e); mtAdsDaily = []; mtAdsFetched = true; }
 }
 
 // กรองตามช่วงวันที่จาก filter บนสุด (เหมือนหน้าอื่นๆ) — ไม่ใช้ filter channel/sub_channel ของแถบบนเพราะหน้านี้ต้องเห็นทุกช่องทางพร้อมกันเสมอ
