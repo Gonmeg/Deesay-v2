@@ -1001,8 +1001,7 @@
     </div>
 
     <div class="page" id="page-mthub">
-      <div id="mthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
-      <div id="mthub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
+      <div id="mthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header"><div class="section-title">ยอดขายรายเดือน</div></div>
@@ -1024,8 +1023,12 @@
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">ค่าโฆษณา (Awareness)</div>
-          <div style="font-size:11.5px;color:var(--text3);">แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง</div>
+          <div class="card-title">ค่าโฆษณา (Awareness) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('mt')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="mthub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="mthub-yr" onclick="setMtAdsView('year',this)">ทั้งปี</button>
+            <button class="toggle-btn active" id="mthub-mo" onclick="setMtAdsView('month',this)">รายเดือน</button>
+            <button class="toggle-btn" id="mthub-dy" onclick="setMtAdsView('day',this)">รายวัน</button>
+          </div>
         </div>
         <div class="chart-wrap chart-wrap-lg"><canvas id="chartMtAds"></canvas></div>
       </div>
@@ -1033,7 +1036,16 @@
       <div class="card">
         <div class="section-header">
           <div class="section-title">Top SKU (Modern Trade)</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblMtTopSKU')">⬇ Export CSV</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="mtTopSkuStoreFilter" onchange="renderMtTopSkuTable()" style="font-size:12.5px;">
+              <option value="">ร้านค้า: ทั้งหมด</option>
+              <option value="MT-EVE">Eveandboy</option>
+              <option value="MT-KONVY">Konvy</option>
+              <option value="MT-WATSONS">Watsons</option>
+              <option value="MT-CJ">CJ</option>
+            </select>
+            <button class="btn btn-ghost" onclick="exportTable('tblMtTopSKU')">⬇ Export CSV</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table id="tblMtTopSKU">
@@ -2044,28 +2056,18 @@ let lsSelectedCreators = [];
 let _lsAllCreators = [];
 
 // ===== MODERN TRADE HUB =====
+const MT_STORE_NAMES = { 'MT-EVE': 'Eveandboy', 'MT-KONVY': 'Konvy', 'MT-WATSONS': 'Watsons', 'MT-CJ': 'CJ' };
+function mtStoreName(sub) { return MT_STORE_NAMES[sub] || sub || 'ไม่ระบุ'; }
+
 function renderMtHub() {
   const d = filteredData.filter(r => r.channel === 'Modern Trade');
   const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-  const totalOrd = d.length;
   const activeStores = new Set(d.map(r => r.sub_channel || 'ไม่ระบุ')).size;
 
   document.getElementById('mthub-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">จำนวนบิล</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ร้านค้าที่ Active</div><div class="kpi-value">${fmt(activeStores)}</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">เฉลี่ยต่อบิล</div><div class="kpi-value">฿${fmtB(totalOrd ? totalRev/totalOrd : 0)}</div></div>
   `;
-
-  // ยอด Cancel/Return — Modern Trade ยังไม่ได้ทำ classification เหมือน Shopee/Lazada/TikTok เลยยังไม่มีให้ตัด (บันทึกไว้เตือน)
-  const mtCrEl = document.getElementById('mthub-cancel-return-note');
-  if (mtCrEl) {
-    const hasAnyTag = d.some(r => r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund');
-    mtCrEl.style.display = 'block';
-    mtCrEl.innerHTML = hasAnyTag
-      ? '📌 ยอดขายด้านบนตัด Cancel/Return ออกแล้ว'
-      : '📌 Modern Trade ยังไม่ได้ทำ Cancel/Return classification (ยอดที่คืน/ยกเลิกอาจยังปนอยู่ในยอดขายด้านบน)';
-  }
 
   // ยอดขายรายเดือน
   const byMonth = {};
@@ -2077,7 +2079,7 @@ function renderMtHub() {
   const months = Object.keys(byMonth).sort();
   makeChart('chartMtRevenue', 'bar', months, [{ label: 'ยอดขาย', data: months.map(m => byMonth[m]), backgroundColor: '#2a78d6', borderRadius: 4 }]);
 
-  // ยอดขายแยกตามร้าน (sub_channel)
+  // ยอดขายแยกตามร้าน (sub_channel) — ใช้ชื่อร้านจริงแทน MT-xxx
   const byStore = {};
   d.forEach(r => {
     const k = r.sub_channel || 'ไม่ระบุ';
@@ -2089,24 +2091,41 @@ function renderMtHub() {
   document.getElementById('tbodyMtSubChannel').innerHTML = sortedStores.length ? sortedStores.map(([k,v],i) => `
     <tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+      <td>${mtStoreName(k)}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
       <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
     </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  // ค่าโฆษณา Awareness (แยกจากยอดขาย ไม่คำนวณ ROI)
-  const renderAdsChart = () => {
-    const from = getDateValue('From'), to = getDateValue('To');
-    const adsInRange = mtAdsDaily.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
-    const byMonthAds = {};
-    adsInRange.forEach(r => { const m = r.date.substring(0,7); byMonthAds[m] = (byMonthAds[m]||0) + r.ads; });
-    const adMonths = Object.keys(byMonthAds).sort();
-    makeChart('chartMtAds', 'line', adMonths, [{ label: 'ค่าโฆษณา Awareness', data: adMonths.map(m => byMonthAds[m]), borderColor: '#eda100', backgroundColor: 'rgba(237,161,0,0.1)', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }]);
-  };
-  if (!mtAdsFetched) { fetchMTAdsData().then(renderAdsChart); } else { renderAdsChart(); }
+  if (!mtAdsFetched) { fetchMTAdsData().then(renderMtAdsChart); } else { renderMtAdsChart(); }
+  renderMtTopSkuTable();
+}
 
-  // Top SKU (Modern Trade)
+// ค่าโฆษณา Awareness (แยกจากยอดขาย ไม่คำนวณ ROI) — รองรับมุมมอง ปี/เดือน/วัน เหมือนกราฟ ads ช่องทางอื่น
+function renderMtAdsChart() {
   const from = getDateValue('From'), to = getDateValue('To');
-  const skuRows = skuRevenueAll.filter(r => r.channel === 'Modern Trade' && r.date && r.date >= from && r.date <= to);
+  const adsInRange = mtAdsDaily.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
+  let labels, data;
+  if (mtAdsView === 'day') {
+    labels = adsInRange.map(r => r.date);
+    data = adsInRange.map(r => r.ads);
+  } else if (mtAdsView === 'year') {
+    const byYear = {};
+    adsInRange.forEach(r => { const y = r.date.substring(0,4); byYear[y] = (byYear[y]||0) + r.ads; });
+    labels = Object.keys(byYear).sort();
+    data = labels.map(y => byYear[y]);
+  } else {
+    const byM = {};
+    adsInRange.forEach(r => { const m = r.date.substring(0,7); byM[m] = (byM[m]||0) + r.ads; });
+    labels = Object.keys(byM).sort();
+    data = labels.map(m => byM[m]);
+  }
+  makeChart('chartMtAds', 'line', labels, [{ label: 'ค่าโฆษณา Awareness', data, borderColor: '#eda100', backgroundColor: 'rgba(237,161,0,0.1)', borderWidth: 2, pointRadius: mtAdsView==='day' && labels.length>60 ? 0 : 3, fill: true, tension: 0.3 }]);
+}
+
+// Top SKU (Modern Trade) — เลือกกรองตามร้านได้ (default = ทั้งหมด)
+function renderMtTopSkuTable() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const storeFilter = document.getElementById('mtTopSkuStoreFilter')?.value || '';
+  const skuRows = skuRevenueAll.filter(r => r.channel === 'Modern Trade' && r.date && r.date >= from && r.date <= to && (!storeFilter || r.sub_channel === storeFilter));
   const bySku = {};
   skuRows.forEach(r => {
     const k = r.parent_sku || '—';
@@ -3332,16 +3351,25 @@ function setAdpView(v, btn) {
 // view แยกต่างหากต่อหน้า Hub (Facebook/TikTok/Shopee) ไม่ใช้ตัวแปร adView ตัวเดียวกับหน้า Ad Performance
 // กันไม่ให้สลับมุมมองในหน้าหนึ่งไปกระทบอีกหน้าโดยไม่ตั้งใจ
 const hubAdView = { fb: 'month', tt: 'month', sh: 'month', lz: 'month' };
+let mtAdsView = 'month';
+function setMtAdsView(v, btn) {
+  mtAdsView = v;
+  document.querySelectorAll('#mthub-yr, #mthub-mo, #mthub-dy').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMtAdsChart();
+}
 // เพจ/sub-channel ที่ถูกเลือก (คลิก) ไว้ในแต่ละหน้า Hub — null = ยังไม่เลือก (แสดงรวมทุกเพจ/ร้าน)
 const hubSelectedSub = { fb: null, sh: null, lz: null };
 
 // คำอธิบายที่มาของค่าแอดแต่ละช่องทาง ใช้แสดงใน popover ข้างกราฟ "ยอดขาย vs ค่าโฆษณา" ในแต่ละหน้า Hub
 const ADS_SOURCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I/edit?gid=16390889#gid=16390889';
+const ADS_SOURCE_SHEET_URL_MT = 'https://docs.google.com/spreadsheets/d/110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I/edit?gid=2101377475#gid=2101377475';
 const ADS_SOURCE_INFO = {
   fb: 'ค่าโฆษณา Facebook รวมมาจาก:\n• 7 เพจหลัก: Deesay Thailand-บริษัท, Deesay Cosmetics-Thailand, แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก, ลิปสักปาก ดีเซ้ย์, ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอาง, กันแดดฟิลเตอร์-เพจบริษัท, Deesay Makeup\n• Facebook OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
   tt: 'ค่าโฆษณา TikTok รวมมาจาก:\n• Sub-channel เดียว: Deesay Thailand',
   sh: 'ค่าโฆษณา Shopee รวมมาจาก:\n• Shopee Mall (ปกติ)\n• Shopee Mall CPAS\n• Shopee 24hr',
   lz: 'ค่าโฆษณา Lazada รวมมาจาก:\n• Lazada Mall\n• Lazada 24hr',
+  mt: 'ค่าโฆษณา Modern Trade (Awareness) รวมมาจาก:\n• แคมเปญ "Deesay Modern Trade" ในชีตเดียวกัน (ข้อมูลดิบรายชั่วโมง รวมเป็นรายวันแล้ว)\n• แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง',
 };
 
 function toggleAdsPopover(hub, popoverId) {
@@ -3350,7 +3378,8 @@ function toggleAdsPopover(hub, popoverId) {
   const isOpen = el.style.display === 'block';
   document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
   if (!isOpen) {
-    el.innerHTML = ADS_SOURCE_INFO[hub].replace(/\n/g,'<br>') + `<br><br><a href="${ADS_SOURCE_SHEET_URL}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">📄 เปิด Google Sheet ต้นทาง ↗</a>`;
+    const sheetUrl = hub === 'mt' ? ADS_SOURCE_SHEET_URL_MT : ADS_SOURCE_SHEET_URL;
+    el.innerHTML = ADS_SOURCE_INFO[hub].replace(/\n/g,'<br>') + `<br><br><a href="${sheetUrl}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">📄 เปิด Google Sheet ต้นทาง ↗</a>`;
     el.style.display = 'block';
   }
 }
