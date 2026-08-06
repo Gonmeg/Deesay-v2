@@ -4154,7 +4154,9 @@ async function renderCostPage() {
       <div class="card"><div class="card-title">% Budget</div><div class="kpi-value" style="color:${parseFloat(pctBudgetAll)>30?'var(--red)':parseFloat(pctBudgetAll)>15?'var(--orange)':'var(--green)'};">${pctBudgetAll}%</div><div class="kpi-sub">รวมการตลาด ÷ ยอดขาย</div></div>
       <div class="card"><div class="card-title">ROI</div><div class="kpi-value" style="color:var(--green);">${roiAll}x</div><div class="kpi-sub">ยอดขาย ÷ รวมการตลาด</div></div>`;
 
-    const months = [...new Set(filtered.map(r=>String(r.month).substring(0,7)))].sort();
+    // ใช้ทุกเดือนในช่วงที่เลือกจริง (เหมือนตารางหลัก) — เดิมเอาแค่เดือนที่มีข้อมูลต้นทุน/ค่าแอด
+    // ทำให้เดือนที่มียอดขายแต่ไม่มีค่าการตลาดเลยสักบาทหายไปจาก popup รายละเอียด (ยอดรวม popup ต่ำกว่าตารางหลัก)
+    const months = getMonthsInRange(from ? from + '-01' : null, to ? to + '-01' : null);
     const mLabels = months.map(m=>{const[,mo]=m.split('-');return MONTHS_TH[parseInt(mo)-1];});
 
     window._costByMonthSku = costByMonthSku;
