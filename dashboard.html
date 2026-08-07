@@ -580,12 +580,10 @@
       <div id="nb-empty-state" class="card" style="text-align:center;color:var(--text3);padding:40px;">
         เลือกสินค้าด้านบนเพื่อดูรายชื่อลูกค้าที่ยังไม่เคยซื้อ
       </div>
+      <div id="nb-kpis" style="display:none;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="card" id="nb-result-card" style="display:none;">
         <div class="section-header">
-          <div>
-            <div class="section-title">ลูกค้าที่ยังไม่เคยซื้อสินค้าที่เลือก</div>
-            <div id="nb-count" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
-          </div>
+          <div class="section-title">ลูกค้าที่ยังไม่เคยซื้อสินค้าที่เลือก</div>
           <button class="btn btn-ghost" onclick="exportTable('tblNb')">⬇ Export CSV</button>
         </div>
         <div class="table-wrap" style="max-height:500px;overflow-y:auto;">
@@ -2819,13 +2817,16 @@ function clearNbProduct() {
 // ลูกค้าที่เคยซื้อกับเรามาก่อน (Facebook) แต่ไม่เคยซื้อสินค้าที่เลือกไว้เลยสักครั้ง (ใช้ประวัติทั้งหมด ไม่จำกัดช่วงวันที่)
 function renderNeverBoughtPage() {
   const emptyEl = document.getElementById('nb-empty-state');
+  const kpiEl = document.getElementById('nb-kpis');
   const resultEl = document.getElementById('nb-result-card');
   if (!nbSelectedSKUs.length) {
     emptyEl.style.display = 'block';
+    kpiEl.style.display = 'none';
     resultEl.style.display = 'none';
     return;
   }
   emptyEl.style.display = 'none';
+  kpiEl.style.display = 'flex';
   resultEl.style.display = 'block';
 
   const customers = {};
@@ -2841,12 +2842,17 @@ function renderNeverBoughtPage() {
     if (nbSelectedSKUs.some(sku => rowHasSKU(r, sku))) boughtSelected.add(phone);
   });
 
+  const totalCustomers = Object.keys(customers).length;
   const neverBought = Object.entries(customers).filter(([phone]) => !boughtSelected.has(phone))
     .sort((a,b) => b[1].rev - a[1].rev);
+  const pct = totalCustomers ? (neverBought.length/totalCustomers*100).toFixed(1) : 0;
 
-  document.getElementById('nb-count').textContent =
-    `${fmt(neverBought.length)} คน จากลูกค้าทั้งหมด ${fmt(Object.keys(customers).length)} คน`;
-  document.getElementById('tbodyNb').innerHTML = neverBought.length ? neverBought.slice(0,300).map(([phone,v],i) => `
+  kpiEl.innerHTML = `
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยังไม่เคยซื้อ</div><div class="kpi-value">${fmt(neverBought.length)} คน</div></div>
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ลูกค้าทั้งหมด</div><div class="kpi-value">${fmt(totalCustomers)} คน</div></div>
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">สัดส่วนที่ยังไม่เคยซื้อ</div><div class="kpi-value" style="color:var(--accent);">${pct}%</div></div>
+  `;
+  document.getElementById('tbodyNb').innerHTML = neverBought.length ? neverBought.map(([phone,v],i) => `
     <tr>
       <td>${i+1}</td><td>${phone}</td><td>${v.name || '—'}</td>
       <td>${fmt(v.orders)}</td><td>฿${fmt(v.rev)}</td><td>${v.lastDate || '—'}</td>
