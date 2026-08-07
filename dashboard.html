@@ -510,14 +510,14 @@
       </div>
       <div class="card" style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ค้นหาสินค้า (ดูเฉพาะลูกค้าที่ซื้อสินค้านี้ ไม่ว่าเดี่ยวหรือคู่โปร):</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ค้นหาสินค้า (ดูเฉพาะลูกค้าที่ซื้อสินค้าที่เลือก ไม่ว่าเดี่ยวหรือคู่โปร — เลือกได้หลายตัว):</div>
           <div style="position:relative;flex:1;min-width:200px;">
             <input type="text" id="crmProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="filterCrmProductDropdown()" onfocus="showCrmProductDropdown()" onblur="setTimeout(hideCrmProductDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="crmProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
-          <span id="crmProductChip" style="display:none;"></span>
           <button class="btn btn-ghost" onclick="clearCrmProduct()" id="crmProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
         </div>
+        <div id="crmProductChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เฉพาะลูกค้าที่ซื้อล่าสุดไม่เกิน:</div>
           <input type="number" id="crmRecencyFilter" placeholder="เช่น 60" min="1" oninput="onCrmRecencyChange()" style="width:90px;text-align:center;">
@@ -791,8 +791,7 @@
     </div>
 
     <div class="page" id="page-tthub">
-      <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
-      <div id="tthub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
+      <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
@@ -940,8 +939,7 @@
     </div>
 
     <div class="page" id="page-shhub">
-      <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
-      <div id="shhub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
+      <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
@@ -1057,8 +1055,7 @@
     </div>
 
     <div class="page" id="page-lzhub">
-      <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
-      <div id="lzhub-cancel-return-note" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--orange);margin-bottom:20px;"></div>
+      <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
@@ -1871,25 +1868,8 @@ function renderTtHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
+      ${cancelReturnCardHtml('tt', 'TikTok', getDateValue('From'), getDateValue('To'), totalRev)}
     `;
-
-    // ยอด Cancel/Return ที่ถูกตัดออกจากยอดขายด้านบนแล้ว (ไม่ใช้ shouldIncludeRow ตรงนี้ เพราะต้องการเห็นค่าที่ถูกกรองออกไป)
-    const from = getDateValue('From'), to = getDateValue('To');
-    const crRows = allData.filter(r => r.channel==='TikTok' && r.date>=from && r.date<=to && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
-    const cancelRows = crRows.filter(r=>r.cancel_return_type==='Cancel');
-    const returnRows = crRows.filter(r=>r.cancel_return_type==='Return/Refund');
-    const cancelRev = cancelRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-    const returnRev = returnRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-    const crEl = document.getElementById('tthub-cancel-return-note');
-    if (crEl) {
-      if (crRows.length > 0) {
-        crEl.style.display = 'block';
-        crEl.innerHTML = `📌 ยอดขายด้านบน<b>ตัดออกแล้ว</b>: ยกเลิก ฿${fmt(cancelRev)} (${fmt(cancelRows.length)} ออเดอร์) · คืนสินค้า ฿${fmt(returnRev)} (${fmt(returnRows.length)} ออเดอร์)`;
-      } else {
-        crEl.style.display = 'block';
-        crEl.innerHTML = `📌 ยังไม่มีข้อมูล Cancelation/Return Type ในช่วงที่เลือก (อาจเป็นเพราะยังไม่ได้ backfill เดือนนี้ — ยอดขายด้านบนจึงยังไม่ได้ตัด Cancel/Return ออก)`;
-      }
-    }
 
     const byOC = {};
     d.forEach(r => {
@@ -1951,25 +1931,8 @@ function renderShHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
+      ${cancelReturnCardHtml('sh', 'Shopee', getDateValue('From'), getDateValue('To'), totalRev)}
     `;
-
-    // ยอด Cancel/Return ที่ถูกตัดออกจากยอดขายด้านบนแล้ว
-    const shFrom = getDateValue('From'), shTo = getDateValue('To');
-    const shCrRows = allData.filter(r => r.channel==='Shopee' && r.date>=shFrom && r.date<=shTo && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
-    const shCancelRows = shCrRows.filter(r=>r.cancel_return_type==='Cancel');
-    const shReturnRows = shCrRows.filter(r=>r.cancel_return_type==='Return/Refund');
-    const shCancelRev = shCancelRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-    const shReturnRev = shReturnRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-    const shCrEl = document.getElementById('shhub-cancel-return-note');
-    if (shCrEl) {
-      if (shCrRows.length > 0) {
-        shCrEl.style.display = 'block';
-        shCrEl.innerHTML = `📌 ยอดขายด้านบน<b>ตัดออกแล้ว</b>: ยกเลิก ฿${fmt(shCancelRev)} (${fmt(shCancelRows.length)} ออเดอร์) · คืนสินค้า ฿${fmt(shReturnRev)} (${fmt(shReturnRows.length)} ออเดอร์)`;
-      } else {
-        shCrEl.style.display = 'block';
-        shCrEl.innerHTML = `📌 ยังไม่มีข้อมูล Cancelation/Return Type ในช่วงที่เลือก (อาจเป็นเพราะยังไม่ได้ backfill เดือนนี้ — ยอดขายด้านบนจึงยังไม่ได้ตัด Cancel/Return ออก)`;
-      }
-    }
 
     const bySub = {};
     d.forEach(r => {
@@ -2009,25 +1972,8 @@ function renderLzHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
+      ${cancelReturnCardHtml('lz', 'Lazada', getDateValue('From'), getDateValue('To'), totalRev)}
     `;
-
-    // ยอด Cancel/Return ที่ถูกตัดออกจากยอดขายด้านบนแล้ว (เหมือน Shopee — เช็คกับบัญชีแล้ว residual เล็กน้อย <1%/เดือน จาก cross-month return ที่ยอมรับไว้)
-    const lzFrom = getDateValue('From'), lzTo = getDateValue('To');
-    const lzCrRows = allData.filter(r => r.channel==='Lazada' && r.date>=lzFrom && r.date<=lzTo && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
-    const lzCancelRows = lzCrRows.filter(r=>r.cancel_return_type==='Cancel');
-    const lzReturnRows = lzCrRows.filter(r=>r.cancel_return_type==='Return/Refund');
-    const lzCancelRev = lzCancelRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-    const lzReturnRev = lzReturnRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-    const lzCrEl = document.getElementById('lzhub-cancel-return-note');
-    if (lzCrEl) {
-      if (lzCrRows.length > 0) {
-        lzCrEl.style.display = 'block';
-        lzCrEl.innerHTML = `📌 ยอดขายด้านบน<b>ตัดออกแล้ว</b>: ยกเลิก ฿${fmt(lzCancelRev)} (${fmt(lzCancelRows.length)} ออเดอร์) · คืนสินค้า ฿${fmt(lzReturnRev)} (${fmt(lzReturnRows.length)} ออเดอร์)`;
-      } else {
-        lzCrEl.style.display = 'block';
-        lzCrEl.innerHTML = `📌 ยังไม่มีข้อมูล status ในช่วงที่เลือก (อาจเป็นเพราะยังไม่ได้ backfill เดือนนี้ — ยอดขายด้านบนจึงยังไม่ได้ตัด Cancel/Return ออก)`;
-      }
-    }
 
     const bySub = {};
     d.forEach(r => {
@@ -2558,12 +2504,12 @@ function renderGeo() {
 }
 
 // ===== CRM
-let crmSelectedSKU = null;
+let crmSelectedSKUs = [];
 let crmMaxDaysSince = null;
 
 function renderCRMTrendChart() {
   let base = allData.filter(r => r.channel === 'Facebook' && shouldIncludeRow(r));
-  if (crmSelectedSKU) base = base.filter(r => rowHasSKU(r, crmSelectedSKU));
+  if (crmSelectedSKUs.length) base = base.filter(r => crmSelectedSKUs.some(sku => rowHasSKU(r, sku)));
 
   const firstPurchaseByPhone = {};
   base.forEach(r => {
@@ -2625,7 +2571,7 @@ function renderCRMTrendChart() {
 
 function renderCRM() {
   let d = filteredData.filter(r => r.channel === 'Facebook');
-  if (crmSelectedSKU) d = d.filter(r => rowHasSKU(r, crmSelectedSKU));
+  if (crmSelectedSKUs.length) d = d.filter(r => crmSelectedSKUs.some(sku => rowHasSKU(r, sku)));
 
   renderCRMTrendChart();
 
@@ -2658,7 +2604,7 @@ function renderCRM() {
   const repeatCustomers = Object.values(byPhone).filter(v => v.orders.length >= 2).length;
   const maxPurchases = Math.max(...Object.values(byPhone).map(v => v.orders.length), 0);
 
-  document.getElementById('crm-total-label').textContent = crmSelectedSKU ? `ลูกค้าที่ซื้อ "${skuToName(crmSelectedSKU)}"` : 'ลูกค้า Facebook ทั้งหมด';
+  document.getElementById('crm-total-label').textContent = crmSelectedSKUs.length ? `ลูกค้าที่ซื้อ "${crmSelectedSKUs.map(skuToName).join(' / ')}"` : 'ลูกค้า Facebook ทั้งหมด';
   document.getElementById('crm-total').textContent = fmt(totalCustomers);
   document.getElementById('crm-repeat').textContent = fmt(repeatCustomers);
   document.getElementById('crm-repeat-pct').textContent = fmtPct(repeatCustomers, totalCustomers) + ' ของทั้งหมด';
@@ -2666,7 +2612,7 @@ function renderCRM() {
 
   const avgRow = document.getElementById('crmAvgRepurchaseRow');
   window._crmAvgGap = null;
-  if (crmSelectedSKU) {
+  if (crmSelectedSKUs.length) {
     avgRow.style.display = 'grid';
     let gaps = [];
     Object.values(byPhoneAll).forEach(c => {
@@ -2708,7 +2654,7 @@ function renderCRM() {
       <div class="crm-count" style="color:${COLORS[i%COLORS.length]}">${fmt(groups[k].length)}</div>
       <div class="crm-label"><div class="crm-label-main">${groupLabels[k] || 'ซื้อ '+k+' ครั้ง'}</div><div class="crm-label-sub">คน — กดเพื่อดูรายชื่อ</div></div>
       <div class="crm-pct">${fmtPct(groups[k].length, totalCustomers)}</div>
-    </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKU ? 'ที่ซื้อสินค้านี้' : ' Facebook') + (crmMaxDaysSince !== null ? ` (ในช่วง ${crmMaxDaysSince} วัน)` : '') + '</div>';
+    </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKUs.length ? 'ที่ซื้อสินค้านี้' : ' Facebook') + (crmMaxDaysSince !== null ? ` (ในช่วง ${crmMaxDaysSince} วัน)` : '') + '</div>';
 
   window._crmGroups = groups;
   window._crmGroupLabels = groupLabels;
@@ -2735,7 +2681,7 @@ function showCRMDetail(key) {
   document.querySelectorAll('.crm-group-row').forEach(el => el.classList.remove('selected'));
   if (event?.currentTarget) event.currentTarget.classList.add('selected');
   const customers = groups[key];
-  document.getElementById('crmDetailTitle').textContent = `รายชื่อลูกค้า — ${labels[key] || key} (${fmt(customers.length)} คน)${crmSelectedSKU ? ' · สินค้า: ' + skuToName(crmSelectedSKU) : ''}${crmMaxDaysSince !== null ? ' · ซื้อล่าสุดไม่เกิน ' + crmMaxDaysSince + ' วัน' : ''}`;
+  document.getElementById('crmDetailTitle').textContent = `รายชื่อลูกค้า — ${labels[key] || key} (${fmt(customers.length)} คน)${crmSelectedSKUs.length ? ' · สินค้า: ' + crmSelectedSKUs.map(skuToName).join(' / ') : ''}${crmMaxDaysSince !== null ? ' · ซื้อล่าสุดไม่เกิน ' + crmMaxDaysSince + ' วัน' : ''}`;
   document.getElementById('crmDetailCard').style.display = 'block';
 
   const today = new Date();
@@ -2781,7 +2727,7 @@ function exportCRMDetail() {
     if (avgGap !== null) row.push(c.statusText);
     rows.push(row);
   });
-  downloadCSV(rows, 'crm_export' + (crmSelectedSKU ? '_' + crmSelectedSKU : '') + '.csv');
+  downloadCSV(rows, 'crm_export' + (crmSelectedSKUs.length ? '_' + crmSelectedSKUs.join('-') : '') + '.csv');
 }
 
 // ===== CRM Product Search =====
@@ -2794,10 +2740,10 @@ function filterCrmProductDropdown() {
     [...new Set(allData.flatMap(r => (r.sku_promotion||'').split('+').map(s=>s.trim().replace(/x\d+$/i,'').trim()).filter(Boolean)))].sort();
   const filtered = allSKUs.filter(sku => {
     const thaiName = skuToName(sku).toLowerCase();
-    return thaiName.includes(q) || sku.toLowerCase().includes(q);
+    return (thaiName.includes(q) || sku.toLowerCase().includes(q)) && !crmSelectedSKUs.includes(sku);
   });
   list.innerHTML = filtered.slice(0,25).map(sku => `
-    <div onclick="selectCrmProduct('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+    <div onclick="addCrmProduct('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <div style="font-size:13px;color:var(--text);">${skuToName(sku)}</div>
       <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px;">${sku}</div>
     </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
@@ -2805,21 +2751,30 @@ function filterCrmProductDropdown() {
 function showCrmProductDropdown() { const l=document.getElementById('crmProductDropdown'); if(l) l.style.display='block'; }
 function hideCrmProductDropdown() { const l=document.getElementById('crmProductDropdown'); if(l) l.style.display='none'; }
 
-function selectCrmProduct(sku) {
-  crmSelectedSKU = sku;
+function addCrmProduct(sku) {
+  if (crmSelectedSKUs.includes(sku)) return;
+  crmSelectedSKUs.push(sku);
   const inp = document.getElementById('crmProductSearch'); if (inp) inp.value = '';
-  hideCrmProductDropdown();
-  const chip = document.getElementById('crmProductChip');
-  chip.style.display = 'inline-flex';
-  chip.innerHTML = `<span class="sku-chip selected" style="background:${COLORS[0]};">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span></span>`;
-  document.getElementById('crmProductClearBtn').style.display = 'inline-flex';
+  renderCrmProductChips();
+  filterCrmProductDropdown();
   document.getElementById('crmDetailCard').style.display = 'none';
   renderCRM();
 }
+function removeCrmProduct(sku) {
+  crmSelectedSKUs = crmSelectedSKUs.filter(s => s !== sku);
+  renderCrmProductChips();
+  document.getElementById('crmDetailCard').style.display = 'none';
+  renderCRM();
+}
+function renderCrmProductChips() {
+  const el = document.getElementById('crmProductChips'); if (!el) return;
+  el.innerHTML = crmSelectedSKUs.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i%COLORS.length]};" onclick="removeCrmProduct('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span> ✕</span>`).join('');
+  document.getElementById('crmProductClearBtn').style.display = crmSelectedSKUs.length ? 'inline-flex' : 'none';
+}
 
 function clearCrmProduct() {
-  crmSelectedSKU = null;
-  document.getElementById('crmProductChip').style.display = 'none';
+  crmSelectedSKUs = [];
+  renderCrmProductChips();
   document.getElementById('crmProductClearBtn').style.display = 'none';
   document.getElementById('crmDetailCard').style.display = 'none';
   renderCRM();
@@ -3364,6 +3319,32 @@ const hubSelectedSub = { fb: null, sh: null, lz: null };
 // คำอธิบายที่มาของค่าแอดแต่ละช่องทาง ใช้แสดงใน popover ข้างกราฟ "ยอดขาย vs ค่าโฆษณา" ในแต่ละหน้า Hub
 const ADS_SOURCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I/edit?gid=16390889#gid=16390889';
 const ADS_SOURCE_SHEET_URL_MT = 'https://docs.google.com/spreadsheets/d/110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I/edit?gid=2101377475#gid=2101377475';
+const CANCEL_RETURN_INFO = {
+  tt: 'จัดเป็นยกเลิก/คืนสินค้า จากคอลัมน์ "Cancelation/Return Type" ในไฟล์ออเดอร์ TikTok โดยตรง:\n• ยกเลิก = ค่าคอลัมน์นี้ = "Cancel"\n• คืนสินค้า = ค่าคอลัมน์นี้ = "Return/Refund"\n• ค่าอื่น (None ฯลฯ) นับเป็นยอดขายปกติ',
+  sh: 'จัดเป็นยกเลิก/คืนสินค้า จาก 2 คอลัมน์ในไฟล์ออเดอร์ Shopee:\n• ยกเลิก = "สถานะการสั่งซื้อ" = "ยกเลิกแล้ว" (ตรงตัว)\n• คืนสินค้า = "จำนวนที่ส่งคืน" > 0\n• ถ้าไม่เข้าเงื่อนไขไหนเลย นับเป็นยอดขายปกติ',
+  lz: 'จัดเป็นยกเลิก/คืนสินค้า จากคอลัมน์ "status" ในไฟล์ออเดอร์ Lazada:\n• ยกเลิก = status = "canceled"\n• คืนสินค้า = status = "Package Returned" (ตรงตัว)\n• สถานะอื่น (confirmed/delivered/shipped ฯลฯ) นับเป็นยอดขายปกติ\n• หมายเหตุ: มี residual เล็กน้อย (<1%/เดือน) จากเคสคืนสินค้าข้ามเดือนที่ระบบตรวจจับไม่ได้ 100% (เช็คกับบัญชีแล้วยอมรับได้)',
+};
+function toggleCRPopover(hub) {
+  const el = document.getElementById(hub + 'hub-cr-popover');
+  if (!el) return;
+  const isOpen = el.style.display === 'block';
+  document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
+  if (!isOpen) { el.innerHTML = CANCEL_RETURN_INFO[hub].replace(/\n/g,'<br>'); el.style.display = 'block'; }
+}
+function cancelReturnCardHtml(hub, channel, from, to, totalRev) {
+  const crRows = allData.filter(r => r.channel===channel && r.date>=from && r.date<=to && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
+  if (crRows.length === 0) {
+    return `<div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยอดตีกลับ</div><div class="kpi-value" style="color:var(--text3);font-size:15px;">ยังไม่มีข้อมูล</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">อาจยังไม่ได้ backfill เดือนนี้</div></div>`;
+  }
+  const crRev = crRows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
+  const grossRev = totalRev + crRev; // ยอดขายก่อนตัด Cancel/Return ออก (ใช้เป็นตัวหารคิด %)
+  const pct = grossRev ? (crRev/grossRev*100) : 0;
+  return `<div class="card" style="flex:1;min-width:160px;border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.04);">
+    <div class="card-title" style="color:var(--red);">ยอดตีกลับ (ยกเลิก+คืนสินค้า) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleCRPopover('${hub}')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="${hub}hub-cr-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+    <div class="kpi-value" style="color:var(--red);">฿${fmtB(crRev)}</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:2px;">${pct.toFixed(1)}% ของยอดรวมก่อนตัดออก · ${fmt(crRows.length)} ออเดอร์</div>
+  </div>`;
+}
 const ADS_SOURCE_INFO = {
   fb: 'ค่าโฆษณา Facebook รวมมาจาก:\n• 7 เพจหลัก: Deesay Thailand-บริษัท, Deesay Cosmetics-Thailand, แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก, ลิปสักปาก ดีเซ้ย์, ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอาง, กันแดดฟิลเตอร์-เพจบริษัท, Deesay Makeup\n• Facebook OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
   tt: 'ค่าโฆษณา TikTok รวมมาจาก:\n• Sub-channel เดียว: Deesay Thailand',
