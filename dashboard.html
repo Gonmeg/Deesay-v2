@@ -1174,6 +1174,7 @@ let crmRawData = {};
 let crmDetailData = [];
 let selectedAnalysisSKUs = [];
 let skuRevenueAll = [];   // จาก sku_revenue table — ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" (revenue_share ต่อ SKU จริง) แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
+let tiktokFreeSampleRows = []; // ออเดอร์ TikTok revenue=0 (ของตัวอย่าง/รีวิวที่ส่งฟรี) ที่ถูกตัดออกจาก skuRevenueAll — เก็บแยกไว้โชว์ต่างหาก
 let orderIdToPromo = {};  // order_id -> sku_promotion (มาจาก orders) ใช้ label ชื่อโปรในตาราง promotion ของหน้าวิเคราะห์ SKU
 
 // ===== UTILS =====
@@ -1869,6 +1870,7 @@ function renderTtHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
       ${cancelReturnCardHtml('tt', 'TikTok', getDateValue('From'), getDateValue('To'), totalRev)}
+      ${freeSampleCardHtml(getDateValue('From'), getDateValue('To'))}
     `;
 
     const byOC = {};
@@ -3331,6 +3333,29 @@ function toggleCRPopover(hub) {
   document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
   if (!isOpen) { el.innerHTML = CANCEL_RETURN_INFO[hub].replace(/\n/g,'<br>'); el.style.display = 'block'; }
 }
+function freeSampleCardHtml(from, to) {
+  const rows = tiktokFreeSampleRows.filter(r => r.date && r.date >= from && r.date <= to);
+  if (rows.length === 0) {
+    return `<div class="card" style="flex:1;min-width:160px;"><div class="card-title">ตัวอย่าง/รีวิวที่ส่งฟรี</div><div class="kpi-value" style="color:var(--text3);font-size:15px;">ไม่มีในช่วงนี้</div></div>`;
+  }
+  const qty = rows.reduce((s,r) => s + (parseFloat(r.qty)||0), 0);
+  const orderIds = new Set(rows.map(r => r.order_id));
+  return `<div class="card" style="flex:1;min-width:160px;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.05);">
+    <div class="card-title" style="color:#a78bfa;">ตัวอย่าง/รีวิวที่ส่งฟรี <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFreeSamplePopover()" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tt-freesample-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+    <div class="kpi-value" style="color:#a78bfa;">${fmt(qty)} ชิ้น</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:2px;">${fmt(orderIds.size)} ออเดอร์ · ไม่นับเป็นยอดขาย ไม่นับเป็นจำนวนชิ้นขายจริง</div>
+  </div>`;
+}
+function toggleFreeSamplePopover() {
+  const el = document.getElementById('tt-freesample-popover');
+  if (!el) return;
+  const isOpen = el.style.display === 'block';
+  document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
+  if (!isOpen) {
+    el.innerHTML = 'ออเดอร์ TikTok ที่เข้าเงื่อนไขทั้ง 2 ข้อ:<br>• ยอดขาย (revenue) = 0 บาท<br>• ไม่ใช่ Cancel/Return (สถานะปกติ ส่งสำเร็จ)<br><br>เดาว่าเป็นสินค้าตัวอย่าง/ของที่ส่งให้รีวิวฟรี ไม่ใช่ยอดขายจริง — ตัดออกจาก "จำนวนชิ้น" ทุกหน้าแล้ว แต่โชว์แยกไว้ตรงนี้ให้เห็นภาพรวม';
+    el.style.display = 'block';
+  }
+}
 function cancelReturnCardHtml(hub, channel, from, to, totalRev) {
   const crRows = allData.filter(r => r.channel===channel && r.date>=from && r.date<=to && (r.cancel_return_type==='Cancel' || r.cancel_return_type==='Return/Refund'));
   if (crRows.length === 0) {
@@ -3340,7 +3365,7 @@ function cancelReturnCardHtml(hub, channel, from, to, totalRev) {
   const grossRev = totalRev + crRev; // ยอดขายก่อนตัด Cancel/Return ออก (ใช้เป็นตัวหารคิด %)
   const pct = grossRev ? (crRev/grossRev*100) : 0;
   return `<div class="card" style="flex:1;min-width:160px;border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.04);">
-    <div class="card-title" style="color:var(--red);">ยอดตีกลับ (ยกเลิก+คืนสินค้า) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleCRPopover('${hub}')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="${hub}hub-cr-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+    <div class="card-title" style="color:var(--red);">ยอดตีกลับ (ยกเลิก+คืนสินค้า) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleCRPopover('${hub}')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="${hub}hub-cr-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
     <div class="kpi-value" style="color:var(--red);">฿${fmtB(crRev)}</div>
     <div style="font-size:11px;color:var(--text3);margin-top:2px;">${pct.toFixed(1)}% ของยอดรวมก่อนตัดออก · ${fmt(crRows.length)} ออเดอร์</div>
   </div>`;
@@ -3913,7 +3938,15 @@ async function refreshDashboardData() {
     window._promoMonthlyCache = promoMonthly
     window._skuParentMonthlyCache = skuParentMonthly
     window._provinceMonthlyCache = provinceMonthly
-    skuRevenueAll = skuRevRows.filter(r => !isExcludedRow(r))
+    // ออเดอร์ TikTok ที่ revenue=0 (ไม่ใช่ Cancel/Return) = ของตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง
+    // ตัดออกจาก "จำนวนชิ้น" ทุกที่ที่ใช้ skuRevenueAll แต่เก็บแยกไว้ต่างหากเพื่อโชว์เป็นตัวเลขของตัวเอง
+    const tiktokFreeSampleOrderIds = new Set(
+      allData.filter(r => r.channel === 'TikTok' && parseFloat(r.revenue) === 0 &&
+        r.cancel_return_type !== 'Cancel' && r.cancel_return_type !== 'Return/Refund').map(r => r.order_id)
+    )
+    const skuRevFiltered = skuRevRows.filter(r => !isExcludedRow(r))
+    tiktokFreeSampleRows = skuRevFiltered.filter(r => r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id))
+    skuRevenueAll = skuRevFiltered.filter(r => !(r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)))
     orderIdToPromo = {}
     allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
     const from = getDateValue('From'), to = getDateValue('To')
@@ -4082,6 +4115,15 @@ async function renderCostPage() {
       qtyBySKU[r.parent_sku] = (qtyBySKU[r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
     });
 
+    // จำนวนตัวอย่าง/รีวิวฟรีของ TikTok (revenue=0, ไม่ใช่ Cancel/Return) แยกต่างหาก ไม่รวมใน qtyBySKU
+    const freeSampleQtyBySKU = {};
+    tiktokFreeSampleRows.forEach(r => {
+      const m = r.date ? r.date.substring(0,7) : '';
+      if ((!from || m >= from) && (!to || m <= to)) {
+        freeSampleQtyBySKU[r.parent_sku] = (freeSampleQtyBySKU[r.parent_sku]||0) + (parseFloat(r.qty)||0);
+      }
+    });
+
     const costByCatSku = {}, costByMonthSku = {};
     filtered.forEach(r => {
       const m = String(r.month).substring(0,7), amt = parseFloat(r.amount)||0;
@@ -4120,7 +4162,7 @@ async function renderCostPage() {
       const totalMkt = marketingOther + prAmt + convAmt + adsSum;
       const pctBudget = rev>0 ? (totalMkt/rev*100) : null;
       const roi = totalMkt>0 ? (rev/totalMkt) : null;
-      return { sku, name: skuToName(sku), rev, qty, marketingOther, prAmt, convAmt, adsVals, totalMkt, pctBudget, roi };
+      return { sku, name: skuToName(sku), rev, qty, freeSampleQty: freeSampleQtyBySKU[sku]||0, marketingOther, prAmt, convAmt, adsVals, totalMkt, pctBudget, roi };
     });
 
     const totalRev = Object.values(revBySKU).reduce((a,b)=>a+b,0);
@@ -4150,7 +4192,8 @@ async function renderCostPage() {
     window._costCats = FIXED_CAT_ORDER;
     window._costRowsCache = rows;
     window._costAdsChannelsCache = adsChannels;
-    window._costTotalsCache = { totalRev, totalQty, totalMarketingAll, totalAdsByChannel, pctBudgetAll, roiAll };
+    const totalFreeSampleQty = rows.reduce((s,r)=>s+r.freeSampleQty,0);
+    window._costTotalsCache = { totalRev, totalQty, totalMarketingAll, totalAdsByChannel, pctBudgetAll, roiAll, totalFreeSampleQty };
 
     renderCostTableBody();
   } catch(e) {
@@ -4185,6 +4228,7 @@ function renderCostTableBody() {
     <th style="${thStyle('name','text-align:left;')}" onclick="setCostSort('name')">ชื่อสินค้า ${sortIcon('name')}</th>
     <th style="${thStyle('rev','text-align:right;color:var(--green);')}" onclick="setCostSort('rev')">ยอดขาย ${sortIcon('rev')}</th>
     <th style="${thStyle('qty','text-align:right;')}" onclick="setCostSort('qty')">จำนวนชิ้น ${sortIcon('qty')}</th>
+    <th title="ออเดอร์ TikTok ที่ยอดขาย=0 บาท (ไม่ใช่ยกเลิก/คืน) — เดาว่าเป็นสินค้าตัวอย่าง/ที่ส่งให้รีวิวฟรี ไม่นับเป็นจำนวนชิ้นขายจริง" style="${thStyle('freeSampleQty','text-align:right;color:#a78bfa;font-size:10px;')}" onclick="setCostSort('freeSampleQty')">รีวิวฟรี (TikTok) ⓘ ${sortIcon('freeSampleQty')}</th>
     <th style="${thStyle('marketingOther','text-align:right;font-size:10px;')}" onclick="setCostSort('marketingOther')">ค่าการตลาดอื่นๆ ${sortIcon('marketingOther')}</th>
     <th style="${thStyle('prAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('prAmt')">ค่ารีวิว-PR ${sortIcon('prAmt')}</th>
     <th style="${thStyle('convAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('convAmt')">ค่ารีวิว-Conversion ${sortIcon('convAmt')}</th>
@@ -4201,6 +4245,7 @@ function renderCostTableBody() {
       <td style="color:var(--text);font-weight:600;white-space:nowrap;">${r.name} <span style="font-size:10px;color:var(--text3);">🔍</span></td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(r.rev))}</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${fmt(Math.round(r.qty))}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a78bfa;">${r.freeSampleQty>0?fmt(Math.round(r.freeSampleQty)):''}</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.marketingOther>0?'฿'+fmt(Math.round(r.marketingOther)):''}</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.prAmt>0?'฿'+fmt(Math.round(r.prAmt)):''}</td>
       <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.convAmt>0?'฿'+fmt(Math.round(r.convAmt)):''}</td>
@@ -4213,6 +4258,7 @@ function renderCostTableBody() {
     <td colspan="2" style="font-weight:700;">รวมทั้งหมด</td>
     <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">฿${fmt(Math.round(totals.totalRev||0))}</td>
     <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;">${fmt(Math.round(totals.totalQty||0))}</td>
+    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#a78bfa;">${fmt(Math.round(totals.totalFreeSampleQty||0))}</td>
     <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(rows.reduce((s,r)=>s+r.marketingOther,0)))}</td>
     <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(rows.reduce((s,r)=>s+r.prAmt,0)))}</td>
     <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(rows.reduce((s,r)=>s+r.convAmt,0)))}</td>
@@ -4391,6 +4437,7 @@ function applySnapshot(snap) {
   window._skuParentMonthlyCache = snap.skuParentMonthlyCache
   window._provinceMonthlyCache = snap.provinceMonthlyCache
   skuRevenueAll = snap.skuRevenueAll
+  tiktokFreeSampleRows = snap.tiktokFreeSampleRows || []
   orderIdToPromo = {}
   allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
   const from = getDateValue('From'), to = getDateValue('To')
@@ -4418,11 +4465,19 @@ async function fetchFreshSnapshot() {
     fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchPromotionsMap(),
     fetchSkuAll()
   ])
+  const ordersFiltered = orders.filter(r => !isExcludedRow(r))
+  // ออเดอร์ TikTok ที่ revenue=0 (ไม่ใช่ Cancel/Return) = ของตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง
+  const freeSampleOrderIds = new Set(
+    ordersFiltered.filter(r => r.channel === 'TikTok' && parseFloat(r.revenue) === 0 &&
+      r.cancel_return_type !== 'Cancel' && r.cancel_return_type !== 'Return/Refund').map(r => r.order_id)
+  )
+  const skuRevFiltered = skuRevRows.filter(r => !isExcludedRow(r))
   return {
-    allData: orders.filter(r => !isExcludedRow(r)),
+    allData: ordersFiltered,
     productsMap: prods, provinceRegionMap: regions, promotionsMap: promosMap,
     promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
-    skuRevenueAll: skuRevRows.filter(r => !isExcludedRow(r)),
+    skuRevenueAll: skuRevFiltered.filter(r => !(r.channel === 'TikTok' && freeSampleOrderIds.has(r.order_id))),
+    tiktokFreeSampleRows: skuRevFiltered.filter(r => r.channel === 'TikTok' && freeSampleOrderIds.has(r.order_id)),
     cachedAt: Date.now()
   }
 }
