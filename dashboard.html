@@ -180,6 +180,7 @@
       <div class="nav-item nav-sub" onclick="showPage('geo','Facebook',this)"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
       <div class="nav-item nav-sub" onclick="showPage('crm',null,this)"><span class="nav-icon">👥</span> CRM</div>
       <div class="nav-item nav-sub" onclick="showPage('flow',null,this)"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
+      <div class="nav-item nav-sub" onclick="showPage('neverbought',null,this)"><span class="nav-icon">🔍</span> ลูกค้าที่ยังไม่ซื้อ</div>
     </div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('tt')" id="navGroupLabel-tt">
       <span>TikTok</span><span class="nav-group-chevron" id="navGroupChevron-tt">▸</span>
@@ -559,19 +560,38 @@
           </table>
         </div>
       </div>
-      <div class="card" id="crm-never-bought-section" style="display:none;margin-top:20px;">
+    </div>
+
+    <div class="page" id="page-neverbought">
+      <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;">
+        📌 ค้นหาเฉพาะช่องทาง <strong>Facebook</strong> โดยใช้ <strong>เบอร์โทร</strong> เป็นตัวระบุลูกค้า — เช็คจากประวัติการซื้อทั้งหมด ไม่จำกัดแค่ช่วงวันที่ที่เลือกด้านบน
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เลือกสินค้า:</div>
+          <div style="position:relative;flex:1;min-width:200px;">
+            <input type="text" id="nbProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="filterNbProductDropdown()" onfocus="showNbProductDropdown()" onblur="setTimeout(hideNbProductDropdown,200)" style="width:100%;padding:7px 12px;">
+            <div id="nbProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+          </div>
+          <button class="btn btn-ghost" onclick="clearNbProduct()" id="nbProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
+        </div>
+        <div id="nbProductChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
+      </div>
+      <div id="nb-empty-state" class="card" style="text-align:center;color:var(--text3);padding:40px;">
+        เลือกสินค้าด้านบนเพื่อดูรายชื่อลูกค้าที่ยังไม่เคยซื้อ
+      </div>
+      <div class="card" id="nb-result-card" style="display:none;">
         <div class="section-header">
           <div>
             <div class="section-title">ลูกค้าที่ยังไม่เคยซื้อสินค้าที่เลือก</div>
-            <div id="crm-never-bought-count" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+            <div id="nb-count" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
           </div>
-          <button class="btn btn-ghost" onclick="exportTable('tblCrmNeverBought')">⬇ Export CSV</button>
+          <button class="btn btn-ghost" onclick="exportTable('tblNb')">⬇ Export CSV</button>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">ลูกค้าที่เคยซื้อกับเรา (Facebook) มาก่อน แต่ไม่เคยซื้อสินค้าที่เลือกไว้ด้านบนเลยสักครั้ง — เรียงตามยอดซื้อสะสมมากไปน้อย</div>
-        <div class="table-wrap" style="max-height:400px;overflow-y:auto;">
-          <table id="tblCrmNeverBought">
+        <div class="table-wrap" style="max-height:500px;overflow-y:auto;">
+          <table id="tblNb">
             <thead><tr><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนออเดอร์ (ทั้งหมด)</th><th>ยอดซื้อสะสม</th><th>ซื้อล่าสุด</th></tr></thead>
-            <tbody id="tbodyCrmNeverBought"></tbody>
+            <tbody id="tbodyNb"></tbody>
           </table>
         </div>
       </div>
@@ -1518,13 +1538,13 @@ function applyFilters() {
 // ===== NAVIGATION =====
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
-  geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
+  geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking'
 };
-const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','neverbought','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1652,6 +1672,7 @@ function renderCurrentPage() {
   else if (currentPage === 'geo') renderGeo();
   else if (currentPage === 'crm') renderCRM();
   else if (currentPage === 'flow') renderFlowPage();
+  else if (currentPage === 'neverbought') renderNeverBoughtPage();
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'skurev') renderSkuRev();
@@ -2747,12 +2768,65 @@ function renderCRMTrendChart() {
   });
 }
 
+// ===== ลูกค้าที่ยังไม่ซื้อ (Facebook) — หน้าแยกต่างหาก =====
+let nbSelectedSKUs = [];
+
+function filterNbProductDropdown() {
+  const q = (document.getElementById('nbProductSearch')?.value || '').toLowerCase();
+  showNbProductDropdown();
+  const list = document.getElementById('nbProductDropdown');
+  if (!list) return;
+  const allSKUs = Object.keys(productsMap).length ? Object.keys(productsMap) :
+    [...new Set(allData.flatMap(r => (r.sku_promotion||'').split('+').map(s=>s.trim().replace(/x\d+$/i,'').trim()).filter(Boolean)))].sort();
+  const filtered = allSKUs.filter(sku => {
+    const thaiName = skuToName(sku).toLowerCase();
+    return (thaiName.includes(q) || sku.toLowerCase().includes(q)) && !nbSelectedSKUs.includes(sku);
+  });
+  list.innerHTML = filtered.slice(0,25).map(sku => `
+    <div onclick="addNbProduct('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <div style="font-size:13px;color:var(--text);">${skuToName(sku)}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px;">${sku}</div>
+    </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
+}
+function showNbProductDropdown() { const l=document.getElementById('nbProductDropdown'); if(l) l.style.display='block'; }
+function hideNbProductDropdown() { const l=document.getElementById('nbProductDropdown'); if(l) l.style.display='none'; }
+
+function addNbProduct(sku) {
+  if (nbSelectedSKUs.includes(sku)) return;
+  nbSelectedSKUs.push(sku);
+  const inp = document.getElementById('nbProductSearch'); if (inp) inp.value = '';
+  renderNbProductChips();
+  filterNbProductDropdown();
+  renderNeverBoughtPage();
+}
+function removeNbProduct(sku) {
+  nbSelectedSKUs = nbSelectedSKUs.filter(s => s !== sku);
+  renderNbProductChips();
+  renderNeverBoughtPage();
+}
+function renderNbProductChips() {
+  const el = document.getElementById('nbProductChips'); if (!el) return;
+  el.innerHTML = nbSelectedSKUs.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i%COLORS.length]};" onclick="removeNbProduct('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span> ✕</span>`).join('');
+  document.getElementById('nbProductClearBtn').style.display = nbSelectedSKUs.length ? 'inline-flex' : 'none';
+}
+function clearNbProduct() {
+  nbSelectedSKUs = [];
+  renderNbProductChips();
+  document.getElementById('nbProductClearBtn').style.display = 'none';
+  renderNeverBoughtPage();
+}
+
 // ลูกค้าที่เคยซื้อกับเรามาก่อน (Facebook) แต่ไม่เคยซื้อสินค้าที่เลือกไว้เลยสักครั้ง (ใช้ประวัติทั้งหมด ไม่จำกัดช่วงวันที่)
-function renderCrmNeverBought() {
-  const section = document.getElementById('crm-never-bought-section');
-  if (!section) return;
-  if (!crmSelectedSKUs.length) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
+function renderNeverBoughtPage() {
+  const emptyEl = document.getElementById('nb-empty-state');
+  const resultEl = document.getElementById('nb-result-card');
+  if (!nbSelectedSKUs.length) {
+    emptyEl.style.display = 'block';
+    resultEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  resultEl.style.display = 'block';
 
   const customers = {};
   const boughtSelected = new Set();
@@ -2764,15 +2838,15 @@ function renderCrmNeverBought() {
     customers[phone].rev += parseFloat(r.revenue) || 0;
     if (!customers[phone].name && r.customer_name) customers[phone].name = r.customer_name;
     if (!customers[phone].lastDate || (r.date && r.date > customers[phone].lastDate)) customers[phone].lastDate = r.date || '';
-    if (crmSelectedSKUs.some(sku => rowHasSKU(r, sku))) boughtSelected.add(phone);
+    if (nbSelectedSKUs.some(sku => rowHasSKU(r, sku))) boughtSelected.add(phone);
   });
 
   const neverBought = Object.entries(customers).filter(([phone]) => !boughtSelected.has(phone))
     .sort((a,b) => b[1].rev - a[1].rev);
 
-  document.getElementById('crm-never-bought-count').textContent =
+  document.getElementById('nb-count').textContent =
     `${fmt(neverBought.length)} คน จากลูกค้าทั้งหมด ${fmt(Object.keys(customers).length)} คน`;
-  document.getElementById('tbodyCrmNeverBought').innerHTML = neverBought.length ? neverBought.slice(0,300).map(([phone,v],i) => `
+  document.getElementById('tbodyNb').innerHTML = neverBought.length ? neverBought.slice(0,300).map(([phone,v],i) => `
     <tr>
       <td>${i+1}</td><td>${phone}</td><td>${v.name || '—'}</td>
       <td>${fmt(v.orders)}</td><td>฿${fmt(v.rev)}</td><td>${v.lastDate || '—'}</td>
@@ -2785,7 +2859,6 @@ function renderCRM() {
   if (eligiblePhones) d = d.filter(r => eligiblePhones.has(r.phone));
 
   renderCRMTrendChart();
-  renderCrmNeverBought();
 
   const byPhoneAll = {};
   d.forEach(r => {
