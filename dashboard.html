@@ -578,7 +578,7 @@
         <div id="nbProductChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
       </div>
       <div id="nb-empty-state" class="card" style="text-align:center;color:var(--text3);padding:40px;">
-        เลือกสินค้าด้านบนเพื่อดูรายชื่อลูกค้าที่ยังไม่เคยซื้อ
+        เลือกสินค้าด้านบน แล้วกด "🔍 ค้นหา" มุมขวาบนเพื่อดูรายชื่อลูกค้าที่ยังไม่เคยซื้อ
       </div>
       <div id="nb-kpis" style="display:none;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="card" id="nb-result-card" style="display:none;">
@@ -983,7 +983,7 @@
         </div>
       </div>
       <div id="cp-empty-state" class="card" style="text-align:center;color:var(--text3);padding:40px;">
-        เลือก creator ด้านบนเพื่อดูผลงาน
+        เลือก creator ด้านบน แล้วกด "🔍 ค้นหา" มุมขวาบนเพื่อดูผลงาน
       </div>
       <div id="cp-content" style="display:none;">
         <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
@@ -2199,7 +2199,6 @@ function selectCpCreator(handle) {
   cpSelectedCreator = handle;
   document.getElementById('cpCreatorSearch').value = handle;
   hideCpCreatorDropdown();
-  renderCreatorPerf();
 }
 
 function renderCreatorPerf() {
@@ -2815,12 +2814,10 @@ function addNbProduct(sku) {
   const inp = document.getElementById('nbProductSearch'); if (inp) inp.value = '';
   renderNbProductChips();
   filterNbProductDropdown();
-  renderNeverBoughtPage();
 }
 function removeNbProduct(sku) {
   nbSelectedSKUs = nbSelectedSKUs.filter(s => s !== sku);
   renderNbProductChips();
-  renderNeverBoughtPage();
 }
 function renderNbProductChips() {
   const el = document.getElementById('nbProductChips'); if (!el) return;
@@ -3074,13 +3071,11 @@ function addCrmProduct(sku) {
   renderCrmProductChips();
   filterCrmProductDropdown();
   document.getElementById('crmDetailCard').style.display = 'none';
-  renderCRM();
 }
 function removeCrmProduct(sku) {
   crmSelectedSKUs = crmSelectedSKUs.filter(s => s !== sku);
   renderCrmProductChips();
   document.getElementById('crmDetailCard').style.display = 'none';
-  renderCRM();
 }
 function renderCrmProductChips() {
   const el = document.getElementById('crmProductChips'); if (!el) return;
