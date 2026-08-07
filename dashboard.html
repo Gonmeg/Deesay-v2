@@ -584,8 +584,9 @@
       <div class="card" id="nb-result-card" style="display:none;">
         <div class="section-header">
           <div class="section-title">ลูกค้าที่ยังไม่เคยซื้อสินค้าที่เลือก</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblNb')">⬇ Export CSV</button>
+          <button class="btn btn-ghost" onclick="exportNbCSV()">⬇ Export CSV</button>
         </div>
+        <div id="nb-display-note" style="font-size:11px;color:var(--text3);margin-bottom:8px;"></div>
         <div class="table-wrap" style="max-height:500px;overflow-y:auto;">
           <table id="tblNb">
             <thead><tr><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนออเดอร์ (ทั้งหมด)</th><th>ยอดซื้อสะสม</th><th>ซื้อล่าสุด</th></tr></thead>
@@ -2856,17 +2857,31 @@ function renderNeverBoughtPage() {
   const neverBought = Object.entries(customers).filter(([, v]) => !selectedUpper.some(sku => v.skus.has(sku)))
     .sort((a,b) => b[1].rev - a[1].rev);
   const pct = totalCustomers ? (neverBought.length/totalCustomers*100).toFixed(1) : 0;
+  _nbFullResult = neverBought; // เก็บ full list ไว้ให้ export CSV ใช้ (ไม่จำกัดเหมือนที่โชว์บนจอ)
 
   kpiEl.innerHTML = `
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยังไม่เคยซื้อ</div><div class="kpi-value">${fmt(neverBought.length)} คน</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ลูกค้าทั้งหมด</div><div class="kpi-value">${fmt(totalCustomers)} คน</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">สัดส่วนที่ยังไม่เคยซื้อ</div><div class="kpi-value" style="color:var(--accent);">${pct}%</div></div>
   `;
-  document.getElementById('tbodyNb').innerHTML = neverBought.length ? neverBought.map(([phone,v],i) => `
+  const DISPLAY_CAP = 300;
+  const shown = neverBought.slice(0, DISPLAY_CAP);
+  document.getElementById('tbodyNb').innerHTML = shown.length ? shown.map(([phone,v],i) => `
     <tr>
       <td>${i+1}</td><td>${phone}</td><td>${v.name || '—'}</td>
       <td>${fmt(v.orders)}</td><td>฿${fmt(v.rev)}</td><td>${v.lastDate || '—'}</td>
     </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีลูกค้าที่เข้าเงื่อนไข</td></tr>';
+  document.getElementById('nb-display-note').textContent = neverBought.length > DISPLAY_CAP
+    ? `แสดง ${fmt(DISPLAY_CAP)} จาก ${fmt(neverBought.length)} คนแรก (เรียงตามยอดซื้อสะสม) — กด Export CSV เพื่อดูครบทุกคน`
+    : '';
+}
+
+// export ตรงจาก full array ที่คำนวณไว้ ไม่ใช่จากตารางบนจอที่โดนจำกัดไว้ 500 แถว
+let _nbFullResult = [];
+function exportNbCSV() {
+  const rows = [['#','เบอร์โทร','ชื่อลูกค้า','จำนวนออเดอร์ (ทั้งหมด)','ยอดซื้อสะสม','ซื้อล่าสุด']];
+  _nbFullResult.forEach(([phone,v],i) => rows.push([i+1, phone, v.name||'—', v.orders, v.rev, v.lastDate||'—']));
+  downloadCSV(rows, 'ลูกค้าที่ยังไม่ซื้อ.csv');
 }
 
 function renderCRM() {
@@ -3002,7 +3017,7 @@ function showCRMDetail(key) {
     return { phone: c.phone, name: c.name, count: c.orders.length, history, revenue, lastDate: lastDate || '—', daysSince, statusText, statusColor };
   }).sort((a, b) => b.count - a.count);
 
-  document.getElementById('tbodyCRMDetail').innerHTML = crmDetailData.map((c, i) => `
+  document.getElementById('tbodyCRMDetail').innerHTML = crmDetailData.slice(0,300).map((c, i) => `
     <tr>
       <td>${i+1}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${c.phone}</td>
@@ -3013,7 +3028,7 @@ function showCRMDetail(key) {
       <td>${c.lastDate}</td>
       <td>${c.daysSince !== null ? fmt(c.daysSince) + ' วัน' : '—'}</td>
       ${avgGap !== null ? `<td style="color:${c.statusColor};font-weight:600;">${c.statusText}</td>` : ''}
-    </tr>`).join('');
+    </tr>`).join('') + (crmDetailData.length > 300 ? `<tr><td colspan="9" style="text-align:center;color:var(--text3);font-size:11px;padding:10px;">แสดง 300 จาก ${fmt(crmDetailData.length)} คนแรก — กด Export CSV เพื่อดูครบทุกคน</td></tr>` : '');
   document.getElementById('crmDetailCard').scrollIntoView({ behavior: 'smooth' });
 }
 
