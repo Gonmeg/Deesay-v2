@@ -2686,19 +2686,11 @@ let crmMaxDaysSince = null;
 // return null = ไม่ได้เลือกสินค้าอะไรเลย (ไม่ต้องกรอง)
 function getCrmEligiblePhones() {
   if (!crmSelectedSKUs.length) return null;
-  const skuSetByPhone = {};
-  allData.forEach(r => {
-    if (r.channel !== 'Facebook' || !r.phone || !shouldIncludeRow(r)) return;
-    crmSelectedSKUs.forEach(sku => {
-      if (rowHasSKU(r, sku)) {
-        if (!skuSetByPhone[r.phone]) skuSetByPhone[r.phone] = new Set();
-        skuSetByPhone[r.phone].add(sku);
-      }
-    });
-  });
+  const customers = getFbCustomerCache();
+  const selectedUpper = crmSelectedSKUs.map(s => s.toUpperCase());
   const eligible = new Set();
-  Object.entries(skuSetByPhone).forEach(([phone, skuSet]) => {
-    if (crmSelectedSKUs.every(sku => skuSet.has(sku))) eligible.add(phone);
+  Object.entries(customers).forEach(([phone, v]) => {
+    if (selectedUpper.every(sku => v.skus.has(sku))) eligible.add(phone);
   });
   return eligible;
 }
@@ -2766,6 +2758,33 @@ function renderCRMTrendChart() {
   });
 }
 
+// ===== ลูกค้า Facebook cache ที่ใช้ร่วมกัน (CRM + ลูกค้าที่ยังไม่ซื้อ) =====
+// { phone: {name, orders, rev, lastDate, skus:Set} } — สร้างครั้งเดียว ไม่สแกน allData ใหม่ทุกครั้งที่คลิกเลือก/ลบสินค้า
+let _fbCustomerCache = null;
+
+function buildFbCustomerCache() {
+  const customers = {};
+  allData.forEach(r => {
+    if (r.channel !== 'Facebook' || !r.phone || r.phone.length < 5 || !shouldIncludeRow(r)) return;
+    const phone = r.phone;
+    if (!customers[phone]) customers[phone] = { name: '', orders: 0, rev: 0, lastDate: '', skus: new Set() };
+    const c = customers[phone];
+    c.orders++;
+    c.rev += parseFloat(r.revenue) || 0;
+    if (!c.name && r.customer_name) c.name = r.customer_name;
+    if (!c.lastDate || (r.date && r.date > c.lastDate)) c.lastDate = r.date || '';
+    (r.sku_promotion || '').split('+').forEach(p => {
+      const sku = p.trim().replace(/x\d+$/i, '').trim().toUpperCase();
+      if (sku) c.skus.add(sku);
+    });
+  });
+  _fbCustomerCache = customers;
+}
+function getFbCustomerCache() {
+  if (!_fbCustomerCache) buildFbCustomerCache();
+  return _fbCustomerCache;
+}
+
 // ===== ลูกค้าที่ยังไม่ซื้อ (Facebook) — หน้าแยกต่างหาก =====
 let nbSelectedSKUs = [];
 
@@ -2829,21 +2848,12 @@ function renderNeverBoughtPage() {
   kpiEl.style.display = 'flex';
   resultEl.style.display = 'block';
 
-  const customers = {};
-  const boughtSelected = new Set();
-  allData.forEach(r => {
-    if (r.channel !== 'Facebook' || !r.phone || r.phone.length < 5 || !shouldIncludeRow(r)) return;
-    const phone = r.phone;
-    if (!customers[phone]) customers[phone] = { name: '', orders: 0, rev: 0, lastDate: '' };
-    customers[phone].orders++;
-    customers[phone].rev += parseFloat(r.revenue) || 0;
-    if (!customers[phone].name && r.customer_name) customers[phone].name = r.customer_name;
-    if (!customers[phone].lastDate || (r.date && r.date > customers[phone].lastDate)) customers[phone].lastDate = r.date || '';
-    if (nbSelectedSKUs.some(sku => rowHasSKU(r, sku))) boughtSelected.add(phone);
-  });
+  if (!_fbCustomerCache) buildFbCustomerCache();
+  const customers = _fbCustomerCache;
+  const selectedUpper = nbSelectedSKUs.map(s => s.toUpperCase());
 
   const totalCustomers = Object.keys(customers).length;
-  const neverBought = Object.entries(customers).filter(([phone]) => !boughtSelected.has(phone))
+  const neverBought = Object.entries(customers).filter(([, v]) => !selectedUpper.some(sku => v.skus.has(sku)))
     .sort((a,b) => b[1].rev - a[1].rev);
   const pct = totalCustomers ? (neverBought.length/totalCustomers*100).toFixed(1) : 0;
 
@@ -4224,6 +4234,7 @@ async function refreshDashboardData() {
       fetchAll(), fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchSkuAll()
     ])
     allData = orders.filter(r => !isExcludedRow(r))
+    _fbCustomerCache = null // ข้อมูลใหม่มา ต้องสร้าง cache ลูกค้าใหม่รอบหน้าที่เข้าหน้านี้
     window._promoMonthlyCache = promoMonthly
     window._skuParentMonthlyCache = skuParentMonthly
     window._provinceMonthlyCache = provinceMonthly
@@ -4724,6 +4735,7 @@ async function idbSet(key, value) {
 
 function applySnapshot(snap) {
   allData = snap.allData
+  _fbCustomerCache = null // ข้อมูลใหม่มา ต้องสร้าง cache ลูกค้าใหม่รอบหน้าที่เข้าหน้านี้
   productsMap = snap.productsMap
   provinceRegionMap = snap.provinceRegionMap
   promotionsMap = snap.promotionsMap
