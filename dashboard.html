@@ -4097,7 +4097,7 @@ async function refreshDashboardData() {
     idbSet(CACHE_KEY, {
       allData, productsMap, provinceRegionMap, promotionsMap,
       promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
-      skuRevenueAll, cachedAt: Date.now()
+      skuRevenueAll, freeSampleRows, cachedAt: Date.now()
     })
     updateCacheStatus('fresh')
 
