@@ -511,7 +511,7 @@
       </div>
       <div class="card" style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ค้นหาสินค้า (ดูเฉพาะลูกค้าที่ซื้อสินค้าที่เลือก ไม่ว่าเดี่ยวหรือคู่โปร — เลือกได้หลายตัว):</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ค้นหาสินค้า (ดูเฉพาะลูกค้าที่เคยซื้อสินค้าที่เลือก "ครบทุกตัว" ในประวัติ ไม่ต้องซื้อพร้อมกัน — เลือกได้หลายตัว):</div>
           <div style="position:relative;flex:1;min-width:200px;">
             <input type="text" id="crmProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="filterCrmProductDropdown()" onfocus="showCrmProductDropdown()" onblur="setTimeout(hideCrmProductDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="crmProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
@@ -556,6 +556,22 @@
           <table id="tblCRMDetail">
             <thead><tr id="crmDetailHead"><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนซื้อ</th><th>ประวัติการซื้อ (วันที่ / โปรที่ซื้อ / ยอด)</th><th>ยอดรวมทั้งหมด</th><th>ซื้อล่าสุด</th><th>ห่างมาแล้ว (วัน)</th><th>สถานะรอบซื้อซ้ำ</th></tr></thead>
             <tbody id="tbodyCRMDetail"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" id="crm-never-bought-section" style="display:none;margin-top:20px;">
+        <div class="section-header">
+          <div>
+            <div class="section-title">ลูกค้าที่ยังไม่เคยซื้อสินค้าที่เลือก</div>
+            <div id="crm-never-bought-count" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+          </div>
+          <button class="btn btn-ghost" onclick="exportTable('tblCrmNeverBought')">⬇ Export CSV</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">ลูกค้าที่เคยซื้อกับเรา (Facebook) มาก่อน แต่ไม่เคยซื้อสินค้าที่เลือกไว้ด้านบนเลยสักครั้ง — เรียงตามยอดซื้อสะสมมากไปน้อย</div>
+        <div class="table-wrap" style="max-height:400px;overflow-y:auto;">
+          <table id="tblCrmNeverBought">
+            <thead><tr><th>#</th><th>เบอร์โทร</th><th>ชื่อลูกค้า</th><th>จำนวนออเดอร์ (ทั้งหมด)</th><th>ยอดซื้อสะสม</th><th>ซื้อล่าสุด</th></tr></thead>
+            <tbody id="tbodyCrmNeverBought"></tbody>
           </table>
         </div>
       </div>
@@ -2647,9 +2663,31 @@ function renderGeo() {
 let crmSelectedSKUs = [];
 let crmMaxDaysSince = null;
 
+// ลูกค้าที่ "เคยซื้อสินค้าที่เลือกไว้ครบทุกตัว" ในประวัติทั้งหมด (ไม่จำกัดช่วงวันที่ที่เลือกบนหน้าจอ, ไม่ต้องซื้อพร้อมกัน)
+// return null = ไม่ได้เลือกสินค้าอะไรเลย (ไม่ต้องกรอง)
+function getCrmEligiblePhones() {
+  if (!crmSelectedSKUs.length) return null;
+  const skuSetByPhone = {};
+  allData.forEach(r => {
+    if (r.channel !== 'Facebook' || !r.phone || !shouldIncludeRow(r)) return;
+    crmSelectedSKUs.forEach(sku => {
+      if (rowHasSKU(r, sku)) {
+        if (!skuSetByPhone[r.phone]) skuSetByPhone[r.phone] = new Set();
+        skuSetByPhone[r.phone].add(sku);
+      }
+    });
+  });
+  const eligible = new Set();
+  Object.entries(skuSetByPhone).forEach(([phone, skuSet]) => {
+    if (crmSelectedSKUs.every(sku => skuSet.has(sku))) eligible.add(phone);
+  });
+  return eligible;
+}
+
 function renderCRMTrendChart() {
   let base = allData.filter(r => r.channel === 'Facebook' && shouldIncludeRow(r));
-  if (crmSelectedSKUs.length) base = base.filter(r => crmSelectedSKUs.some(sku => rowHasSKU(r, sku)));
+  const eligiblePhones = getCrmEligiblePhones();
+  if (eligiblePhones) base = base.filter(r => eligiblePhones.has(r.phone));
 
   const firstPurchaseByPhone = {};
   base.forEach(r => {
@@ -2709,11 +2747,45 @@ function renderCRMTrendChart() {
   });
 }
 
+// ลูกค้าที่เคยซื้อกับเรามาก่อน (Facebook) แต่ไม่เคยซื้อสินค้าที่เลือกไว้เลยสักครั้ง (ใช้ประวัติทั้งหมด ไม่จำกัดช่วงวันที่)
+function renderCrmNeverBought() {
+  const section = document.getElementById('crm-never-bought-section');
+  if (!section) return;
+  if (!crmSelectedSKUs.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const customers = {};
+  const boughtSelected = new Set();
+  allData.forEach(r => {
+    if (r.channel !== 'Facebook' || !r.phone || r.phone.length < 5 || !shouldIncludeRow(r)) return;
+    const phone = r.phone;
+    if (!customers[phone]) customers[phone] = { name: '', orders: 0, rev: 0, lastDate: '' };
+    customers[phone].orders++;
+    customers[phone].rev += parseFloat(r.revenue) || 0;
+    if (!customers[phone].name && r.customer_name) customers[phone].name = r.customer_name;
+    if (!customers[phone].lastDate || (r.date && r.date > customers[phone].lastDate)) customers[phone].lastDate = r.date || '';
+    if (crmSelectedSKUs.some(sku => rowHasSKU(r, sku))) boughtSelected.add(phone);
+  });
+
+  const neverBought = Object.entries(customers).filter(([phone]) => !boughtSelected.has(phone))
+    .sort((a,b) => b[1].rev - a[1].rev);
+
+  document.getElementById('crm-never-bought-count').textContent =
+    `${fmt(neverBought.length)} คน จากลูกค้าทั้งหมด ${fmt(Object.keys(customers).length)} คน`;
+  document.getElementById('tbodyCrmNeverBought').innerHTML = neverBought.length ? neverBought.slice(0,300).map(([phone,v],i) => `
+    <tr>
+      <td>${i+1}</td><td>${phone}</td><td>${v.name || '—'}</td>
+      <td>${fmt(v.orders)}</td><td>฿${fmt(v.rev)}</td><td>${v.lastDate || '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีลูกค้าที่เข้าเงื่อนไข</td></tr>';
+}
+
 function renderCRM() {
   let d = filteredData.filter(r => r.channel === 'Facebook');
-  if (crmSelectedSKUs.length) d = d.filter(r => crmSelectedSKUs.some(sku => rowHasSKU(r, sku)));
+  const eligiblePhones = getCrmEligiblePhones();
+  if (eligiblePhones) d = d.filter(r => eligiblePhones.has(r.phone));
 
   renderCRMTrendChart();
+  renderCrmNeverBought();
 
   const byPhoneAll = {};
   d.forEach(r => {
@@ -3490,7 +3562,7 @@ function toggleFreeSamplePopover() {
   const isOpen = el.style.display === 'block';
   document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
   if (!isOpen) {
-    el.innerHTML = 'รวมจาก 2 ช่องทาง:<br>• <b>TikTok</b> — ออเดอร์ที่ยอดขาย (revenue) = 0 บาท และไม่ใช่ Cancel/Return<br>• <b>Facebook</b> — sub-channel "รีวิว ฟีมิคส์" ทั้งหมด<br><br>เดาว่าเป็นสินค้าตัวอย่าง/ที่ส่งให้รีวิวฟรี ไม่ใช่ยอดขายจริง — ตัดออกจาก "จำนวนชิ้น" ทุกหน้าแล้ว แต่โชว์แยกไว้ตรงนี้ให้เห็นภาพรวม';
+    el.innerHTML = 'รวมจาก 2 ช่องทาง:<br>• <b>TikTok</b> — ออเดอร์ที่ยอดขาย (revenue) = 0 บาท และไม่ใช่ Cancel/Return<br>• <b>Facebook</b> — sub-channel "รีวิว ฟีมิคส์" ทั้งหมด<br><br>ตัดออกจาก "จำนวนชิ้น" ทุกหน้าแล้ว แต่โชว์แยกไว้ตรงนี้ให้เห็นภาพรวม';
     el.style.display = 'block';
   }
 }
@@ -4371,7 +4443,7 @@ function renderCostTableBody() {
     <th style="${thStyle('name','text-align:left;')}" onclick="setCostSort('name')">ชื่อสินค้า ${sortIcon('name')}</th>
     <th style="${thStyle('rev','text-align:right;color:var(--green);')}" onclick="setCostSort('rev')">ยอดขาย ${sortIcon('rev')}</th>
     <th style="${thStyle('qty','text-align:right;')}" onclick="setCostSort('qty')">จำนวนชิ้น ${sortIcon('qty')}</th>
-    <th title="รวมจาก 2 ช่องทาง: TikTok (ออเดอร์ยอดขาย=0 บาท ไม่ใช่ยกเลิก/คืน) + Facebook (sub-channel รีวิว ฟีมิคส์) — เดาว่าเป็นสินค้าตัวอย่าง/ที่ส่งให้รีวิวฟรี ไม่นับเป็นจำนวนชิ้นขายจริง" style="${thStyle('freeSampleQty','text-align:right;color:#a78bfa;font-size:10px;')}" onclick="setCostSort('freeSampleQty')">รีวิวฟรี ⓘ ${sortIcon('freeSampleQty')}</th>
+    <th title="รวมจาก 2 ช่องทาง: TikTok (ออเดอร์ยอดขาย=0 บาท ไม่ใช่ยกเลิก/คืน) + Facebook (sub-channel รีวิว ฟีมิคส์) — ไม่นับเป็นจำนวนชิ้นขายจริง" style="${thStyle('freeSampleQty','text-align:right;color:#a78bfa;font-size:10px;')}" onclick="setCostSort('freeSampleQty')">รีวิวฟรี ⓘ ${sortIcon('freeSampleQty')}</th>
     <th style="${thStyle('marketingOther','text-align:right;font-size:10px;')}" onclick="setCostSort('marketingOther')">ค่าการตลาดอื่นๆ ${sortIcon('marketingOther')}</th>
     <th style="${thStyle('prAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('prAmt')">ค่ารีวิว-PR ${sortIcon('prAmt')}</th>
     <th style="${thStyle('convAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('convAmt')">ค่ารีวิว-Conversion ${sortIcon('convAmt')}</th>
