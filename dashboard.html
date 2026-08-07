@@ -187,6 +187,7 @@
     <div id="navGroup-tt" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
       <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
+      <div class="nav-item nav-sub" onclick="showPage('creatorperf',null,this)"><span class="nav-icon">👤</span> Creator Performance</div>
     </div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('sh')" id="navGroupLabel-sh">
       <span>Shopee / Lazada</span><span class="nav-group-chevron" id="navGroupChevron-sh">▸</span>
@@ -938,6 +939,49 @@
       </div>
     </div>
 
+    <div class="page" id="page-creatorperf">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-title" style="margin-bottom:14px;">ค้นหา Creator</div>
+        <div style="position:relative;max-width:400px;">
+          <input type="text" class="ls-input" id="cpCreatorSearch" placeholder="พิมพ์ชื่อ creator เช่น deesaythailand..." oninput="filterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
+          <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+        </div>
+      </div>
+      <div id="cp-empty-state" class="card" style="text-align:center;color:var(--text3);padding:40px;">
+        เลือก creator ด้านบนเพื่อดูผลงาน
+      </div>
+      <div id="cp-content" style="display:none;">
+        <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="section-header"><div class="section-title" id="cp-trend-title">ยอดขายรายวัน</div></div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="chartCpTrend"></canvas></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-header">
+              <div class="section-title">Top SKU ของ creator นี้</div>
+              <button class="btn btn-ghost" onclick="exportTable('tblCpSku')">⬇ Export CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table id="tblCpSku">
+                <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย</th><th>ชิ้น</th></tr></thead>
+                <tbody id="tbodyCpSku"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-header"><div class="section-title">LIVE vs Videos</div></div>
+            <div class="table-wrap">
+              <table id="tblCpOrderChannel">
+                <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
+                <tbody id="tbodyCpOrderChannel"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-shhub">
       <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
@@ -1174,7 +1218,7 @@ let crmRawData = {};
 let crmDetailData = [];
 let selectedAnalysisSKUs = [];
 let skuRevenueAll = [];   // จาก sku_revenue table — ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" (revenue_share ต่อ SKU จริง) แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
-let tiktokFreeSampleRows = []; // ออเดอร์ TikTok revenue=0 (ของตัวอย่าง/รีวิวที่ส่งฟรี) ที่ถูกตัดออกจาก skuRevenueAll — เก็บแยกไว้โชว์ต่างหาก
+let freeSampleRows = []; // ออเดอร์ที่เป็นตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง — รวมจากหลายช่องทาง (TikTok revenue=0, Facebook รีวิว ฟีมิคส์) ถูกตัดออกจาก skuRevenueAll แล้ว เก็บแยกไว้โชว์ต่างหาก
 let orderIdToPromo = {};  // order_id -> sku_promotion (มาจาก orders) ใช้ label ชื่อโปรในตาราง promotion ของหน้าวิเคราะห์ SKU
 
 // ===== UTILS =====
@@ -1459,12 +1503,12 @@ function applyFilters() {
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)',
-  tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
+  tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking'
 };
-const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1487,8 +1531,8 @@ function populateMonthFilter() {
   }).join('');
   selFrom.innerHTML = '<option value="">— เดือน —</option>' + options;
   selTo.innerHTML = '<option value="">— เดือน —</option>' + options;
-  // default: latest month only
-  selectedMonthFrom = sorted[0] || null;
+  // default: เดือนแรกสุดที่มีข้อมูล ถึงเดือนล่าสุด (ทั้งหมดที่มี ไม่ใช่แค่เดือนล่าสุดเดือนเดียว)
+  selectedMonthFrom = sorted[sorted.length - 1] || null;
   selectedMonthTo = sorted[0] || null;
   selectedMonth = selectedMonthFrom;
   if (selectedMonthFrom) { selFrom.value = selectedMonthFrom; selTo.value = selectedMonthTo; }
@@ -1539,7 +1583,7 @@ function showPage(page, lockCh, el) {
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
     if (chFilter) { chFilter.value = lockCh; chFilter.disabled = true; chFilter.style.opacity = '0.5'; }
     if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
-  } else if (HUB_CHANNEL[page] || page === 'skuanalysis' || page === 'adperf' || page === 'livesearch') {
+  } else if (HUB_CHANNEL[page] || page === 'skuanalysis' || page === 'adperf' || page === 'livesearch' || page === 'creatorperf') {
     if (chFilter) { chFilter.value = HUB_CHANNEL[page] || ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
     if (subGroup) { subGroup.style.opacity = '0.35'; subGroup.style.pointerEvents = 'none'; }
   } else {
@@ -1573,6 +1617,8 @@ function showPage(page, lockCh, el) {
     renderCostPage();
   } else if (page === 'livesearch') {
     populateLiveSearchFilters();
+  } else if (page === 'creatorperf') {
+    populateCpCreatorList();
   } else {
     applyFilters();
   }
@@ -1593,6 +1639,7 @@ function renderCurrentPage() {
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'skurev') renderSkuRev();
+  else if (currentPage === 'creatorperf') renderCreatorPerf();
   // skuanalysis, adperf, livesearch render on-demand ผ่านปุ่ม
 }
 
@@ -2090,6 +2137,97 @@ function renderMtTopSkuTable() {
       <td>${skuToName(sku)}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.qty)}</td>
       <td>${(v.rev/totalSkuRev*100).toFixed(1)}%</td>
     </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+}
+
+// ===== CREATOR PERFORMANCE (TikTok) =====
+let cpSelectedCreator = null;
+let _cpAllCreators = [];
+
+function populateCpCreatorList() {
+  const ttData = allData.filter(r => r.channel === 'TikTok');
+  _cpAllCreators = [...new Set(ttData.map(r => r.creator_handle).filter(Boolean))].sort();
+}
+function showCpCreatorDropdown() { filterCpCreatorDropdown(); const l=document.getElementById('cpCreatorDropdown'); if(l) l.style.display='block'; }
+function hideCpCreatorDropdown() { const l=document.getElementById('cpCreatorDropdown'); if(l) l.style.display='none'; }
+function filterCpCreatorDropdown() {
+  const q = (document.getElementById('cpCreatorSearch')?.value||'').toLowerCase();
+  const list = document.getElementById('cpCreatorDropdown');
+  if (!list) return;
+  const filtered = _cpAllCreators.filter(c => c.toLowerCase().includes(q));
+  list.innerHTML = filtered.slice(0,25).map(c => `
+    <div onclick="selectCpCreator('${c}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${c}</div>
+  `).join('') || '<div style="padding:8px 12px;color:var(--text3);">ไม่พบ creator</div>';
+  list.style.display = 'block';
+}
+function selectCpCreator(handle) {
+  cpSelectedCreator = handle;
+  document.getElementById('cpCreatorSearch').value = handle;
+  hideCpCreatorDropdown();
+  renderCreatorPerf();
+}
+
+function renderCreatorPerf() {
+  const emptyEl = document.getElementById('cp-empty-state');
+  const contentEl = document.getElementById('cp-content');
+  if (!cpSelectedCreator) {
+    emptyEl.style.display = 'block';
+    contentEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  contentEl.style.display = 'block';
+
+  const from = getDateValue('From'), to = getDateValue('To');
+  const d = allData.filter(r => r.channel === 'TikTok' && r.creator_handle === cpSelectedCreator &&
+    r.date && r.date >= from && r.date <= to && shouldIncludeRow(r));
+
+  const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+  const totalOrd = d.length;
+  const aov = totalOrd ? totalRev/totalOrd : 0;
+
+  document.getElementById('cp-kpis').innerHTML = `
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขายรวม</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">เฉลี่ยต่อออเดอร์</div><div class="kpi-value">฿${fmtB(aov)}</div></div>
+  `;
+  document.getElementById('cp-trend-title').textContent = `ยอดขายรายวัน — ${cpSelectedCreator}`;
+
+  // เทรนด์รายวัน
+  const byDay = {};
+  d.forEach(r => { byDay[r.date] = (byDay[r.date]||0) + (parseFloat(r.revenue)||0); });
+  const days = Object.keys(byDay).sort();
+  makeChart('chartCpTrend', 'line', days, [{ label: 'ยอดขาย', data: days.map(dt => byDay[dt]), borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.08)', borderWidth: 2, pointRadius: days.length>60?0:3, fill: true, tension: 0.3 }]);
+
+  // Top SKU ของ creator นี้ (ใช้ sku_promotion แกะจากออเดอร์ตรงๆ เพราะ sku_revenue ไม่มี creator_handle)
+  const orderIds = new Set(d.map(r => r.order_id));
+  const skuRows = skuRevenueAll.filter(r => r.channel === 'TikTok' && orderIds.has(r.order_id));
+  const bySku = {};
+  skuRows.forEach(r => {
+    const k = r.parent_sku || '—';
+    if (!bySku[k]) bySku[k] = { rev: 0, qty: 0 };
+    bySku[k].rev += parseFloat(r.revenue_share) || 0;
+    bySku[k].qty += parseFloat(r.qty) || 0;
+  });
+  const sortedSku = Object.entries(bySku).sort((a,b) => b[1].rev - a[1].rev).slice(0,15);
+  document.getElementById('tbodyCpSku').innerHTML = sortedSku.length ? sortedSku.map(([sku,v],i) => `
+    <tr>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
+      <td>${skuToName(sku)}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.qty)}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
+
+  // LIVE vs Videos
+  const byOC = {};
+  d.forEach(r => {
+    const k = r.order_channel || 'ไม่ระบุ';
+    if (!byOC[k]) byOC[k] = { rev: 0, ord: 0 };
+    byOC[k].rev += parseFloat(r.revenue) || 0;
+    byOC[k].ord++;
+  });
+  const ocSorted = Object.entries(byOC).sort((a,b) => b[1].rev - a[1].rev);
+  document.getElementById('tbodyCpOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
+    <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
+  `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
 function populateLiveSearchFilters() {
@@ -3334,7 +3472,7 @@ function toggleCRPopover(hub) {
   if (!isOpen) { el.innerHTML = CANCEL_RETURN_INFO[hub].replace(/\n/g,'<br>'); el.style.display = 'block'; }
 }
 function freeSampleCardHtml(from, to) {
-  const rows = tiktokFreeSampleRows.filter(r => r.date && r.date >= from && r.date <= to);
+  const rows = freeSampleRows.filter(r => r.date && r.date >= from && r.date <= to);
   if (rows.length === 0) {
     return `<div class="card" style="flex:1;min-width:160px;"><div class="card-title">ตัวอย่าง/รีวิวที่ส่งฟรี</div><div class="kpi-value" style="color:var(--text3);font-size:15px;">ไม่มีในช่วงนี้</div></div>`;
   }
@@ -3352,7 +3490,7 @@ function toggleFreeSamplePopover() {
   const isOpen = el.style.display === 'block';
   document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
   if (!isOpen) {
-    el.innerHTML = 'ออเดอร์ TikTok ที่เข้าเงื่อนไขทั้ง 2 ข้อ:<br>• ยอดขาย (revenue) = 0 บาท<br>• ไม่ใช่ Cancel/Return (สถานะปกติ ส่งสำเร็จ)<br><br>เดาว่าเป็นสินค้าตัวอย่าง/ของที่ส่งให้รีวิวฟรี ไม่ใช่ยอดขายจริง — ตัดออกจาก "จำนวนชิ้น" ทุกหน้าแล้ว แต่โชว์แยกไว้ตรงนี้ให้เห็นภาพรวม';
+    el.innerHTML = 'รวมจาก 2 ช่องทาง:<br>• <b>TikTok</b> — ออเดอร์ที่ยอดขาย (revenue) = 0 บาท และไม่ใช่ Cancel/Return<br>• <b>Facebook</b> — sub-channel "รีวิว ฟีมิคส์" ทั้งหมด<br><br>เดาว่าเป็นสินค้าตัวอย่าง/ที่ส่งให้รีวิวฟรี ไม่ใช่ยอดขายจริง — ตัดออกจาก "จำนวนชิ้น" ทุกหน้าแล้ว แต่โชว์แยกไว้ตรงนี้ให้เห็นภาพรวม';
     el.style.display = 'block';
   }
 }
@@ -3938,15 +4076,20 @@ async function refreshDashboardData() {
     window._promoMonthlyCache = promoMonthly
     window._skuParentMonthlyCache = skuParentMonthly
     window._provinceMonthlyCache = provinceMonthly
-    // ออเดอร์ TikTok ที่ revenue=0 (ไม่ใช่ Cancel/Return) = ของตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง
+    // ตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง — รวม 2 แหล่ง:
+    // (1) TikTok: ออเดอร์ revenue=0 ที่ไม่ใช่ Cancel/Return
+    // (2) Facebook: sub_channel = "รีวิว ฟีมิคส์" ทั้งหมด (ถูกตัดออกจาก allData ไปแล้วโดย isExcludedRow ตั้งแต่ต้น)
     // ตัดออกจาก "จำนวนชิ้น" ทุกที่ที่ใช้ skuRevenueAll แต่เก็บแยกไว้ต่างหากเพื่อโชว์เป็นตัวเลขของตัวเอง
     const tiktokFreeSampleOrderIds = new Set(
       allData.filter(r => r.channel === 'TikTok' && parseFloat(r.revenue) === 0 &&
         r.cancel_return_type !== 'Cancel' && r.cancel_return_type !== 'Return/Refund').map(r => r.order_id)
     )
-    const skuRevFiltered = skuRevRows.filter(r => !isExcludedRow(r))
-    tiktokFreeSampleRows = skuRevFiltered.filter(r => r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id))
-    skuRevenueAll = skuRevFiltered.filter(r => !(r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)))
+    const skuRevRaw = skuRevRows; // ยังไม่ตัด isExcludedRow ออก เพราะต้องดึงแถวรีวิว ฟีมิคส์ (Facebook) มาก่อน
+    freeSampleRows = skuRevRaw.filter(r =>
+      (r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)) ||
+      (r.channel === 'Facebook' && r.sub_channel === 'รีวิว ฟีมิคส์')
+    )
+    skuRevenueAll = skuRevRaw.filter(r => !isExcludedRow(r) && !(r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)))
     orderIdToPromo = {}
     allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
     const from = getDateValue('From'), to = getDateValue('To')
@@ -4115,9 +4258,9 @@ async function renderCostPage() {
       qtyBySKU[r.parent_sku] = (qtyBySKU[r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
     });
 
-    // จำนวนตัวอย่าง/รีวิวฟรีของ TikTok (revenue=0, ไม่ใช่ Cancel/Return) แยกต่างหาก ไม่รวมใน qtyBySKU
+    // จำนวนตัวอย่าง/รีวิวฟรี (ทุกช่องทาง) แยกต่างหาก ไม่รวมใน qtyBySKU
     const freeSampleQtyBySKU = {};
-    tiktokFreeSampleRows.forEach(r => {
+    freeSampleRows.forEach(r => {
       const m = r.date ? r.date.substring(0,7) : '';
       if ((!from || m >= from) && (!to || m <= to)) {
         freeSampleQtyBySKU[r.parent_sku] = (freeSampleQtyBySKU[r.parent_sku]||0) + (parseFloat(r.qty)||0);
@@ -4228,7 +4371,7 @@ function renderCostTableBody() {
     <th style="${thStyle('name','text-align:left;')}" onclick="setCostSort('name')">ชื่อสินค้า ${sortIcon('name')}</th>
     <th style="${thStyle('rev','text-align:right;color:var(--green);')}" onclick="setCostSort('rev')">ยอดขาย ${sortIcon('rev')}</th>
     <th style="${thStyle('qty','text-align:right;')}" onclick="setCostSort('qty')">จำนวนชิ้น ${sortIcon('qty')}</th>
-    <th title="ออเดอร์ TikTok ที่ยอดขาย=0 บาท (ไม่ใช่ยกเลิก/คืน) — เดาว่าเป็นสินค้าตัวอย่าง/ที่ส่งให้รีวิวฟรี ไม่นับเป็นจำนวนชิ้นขายจริง" style="${thStyle('freeSampleQty','text-align:right;color:#a78bfa;font-size:10px;')}" onclick="setCostSort('freeSampleQty')">รีวิวฟรี (TikTok) ⓘ ${sortIcon('freeSampleQty')}</th>
+    <th title="รวมจาก 2 ช่องทาง: TikTok (ออเดอร์ยอดขาย=0 บาท ไม่ใช่ยกเลิก/คืน) + Facebook (sub-channel รีวิว ฟีมิคส์) — เดาว่าเป็นสินค้าตัวอย่าง/ที่ส่งให้รีวิวฟรี ไม่นับเป็นจำนวนชิ้นขายจริง" style="${thStyle('freeSampleQty','text-align:right;color:#a78bfa;font-size:10px;')}" onclick="setCostSort('freeSampleQty')">รีวิวฟรี ⓘ ${sortIcon('freeSampleQty')}</th>
     <th style="${thStyle('marketingOther','text-align:right;font-size:10px;')}" onclick="setCostSort('marketingOther')">ค่าการตลาดอื่นๆ ${sortIcon('marketingOther')}</th>
     <th style="${thStyle('prAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('prAmt')">ค่ารีวิว-PR ${sortIcon('prAmt')}</th>
     <th style="${thStyle('convAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('convAmt')">ค่ารีวิว-Conversion ${sortIcon('convAmt')}</th>
@@ -4437,7 +4580,7 @@ function applySnapshot(snap) {
   window._skuParentMonthlyCache = snap.skuParentMonthlyCache
   window._provinceMonthlyCache = snap.provinceMonthlyCache
   skuRevenueAll = snap.skuRevenueAll
-  tiktokFreeSampleRows = snap.tiktokFreeSampleRows || []
+  freeSampleRows = snap.freeSampleRows || []
   orderIdToPromo = {}
   allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
   const from = getDateValue('From'), to = getDateValue('To')
@@ -4466,18 +4609,24 @@ async function fetchFreshSnapshot() {
     fetchSkuAll()
   ])
   const ordersFiltered = orders.filter(r => !isExcludedRow(r))
-  // ออเดอร์ TikTok ที่ revenue=0 (ไม่ใช่ Cancel/Return) = ของตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง
-  const freeSampleOrderIds = new Set(
+  // ตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง — รวม 2 แหล่ง:
+  // (1) TikTok: ออเดอร์ revenue=0 ที่ไม่ใช่ Cancel/Return
+  // (2) Facebook: sub_channel = "รีวิว ฟีมิคส์" ทั้งหมด (ถูกตัดออกจาก ordersFiltered ไปแล้วโดย isExcludedRow)
+  const tiktokFreeSampleOrderIds = new Set(
     ordersFiltered.filter(r => r.channel === 'TikTok' && parseFloat(r.revenue) === 0 &&
       r.cancel_return_type !== 'Cancel' && r.cancel_return_type !== 'Return/Refund').map(r => r.order_id)
   )
-  const skuRevFiltered = skuRevRows.filter(r => !isExcludedRow(r))
+  const freeSampleRowsSnap = skuRevRows.filter(r =>
+    (r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)) ||
+    (r.channel === 'Facebook' && r.sub_channel === 'รีวิว ฟีมิคส์')
+  )
+  const skuRevFiltered = skuRevRows.filter(r => !isExcludedRow(r) && !(r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)))
   return {
     allData: ordersFiltered,
     productsMap: prods, provinceRegionMap: regions, promotionsMap: promosMap,
     promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
-    skuRevenueAll: skuRevFiltered.filter(r => !(r.channel === 'TikTok' && freeSampleOrderIds.has(r.order_id))),
-    tiktokFreeSampleRows: skuRevFiltered.filter(r => r.channel === 'TikTok' && freeSampleOrderIds.has(r.order_id)),
+    skuRevenueAll: skuRevFiltered,
+    freeSampleRows: freeSampleRowsSnap,
     cachedAt: Date.now()
   }
 }
