@@ -1196,6 +1196,16 @@
     <div class="page" id="page-cost">
       <div id="cost-ads-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:12px;"></div>
       <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">กำไรคงเหลือ vs ค่าใช้จ่ายการตลาดแยกสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เรียงตามยอดขายมาก→น้อย)</span></div>
+        </div>
+        <div style="position:relative;width:100%;" id="mktSkuChartWrap">
+          <canvas id="chartMktSkuBreakdown" role="img" aria-label="กราฟแท่งแนวนอนเทียบกำไรคงเหลือและค่าใช้จ่ายการตลาดแยกหมวดของแต่ละสินค้า"></canvas>
+        </div>
+        <div id="mktSkuChartLegend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:11.5px;color:var(--text3);"></div>
+        <div id="mktSkuChartNote" style="font-size:11px;color:var(--text3);margin-top:8px;"></div>
+      </div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
           <div class="section-title">MKT Tracking รายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
@@ -4511,9 +4521,85 @@ async function renderCostPage() {
     window._costTotalsCache = { totalRev, totalQty, totalMarketingAll, totalAdsByChannel, pctBudgetAll, roiAll, totalFreeSampleQty };
 
     renderCostTableBody();
+    renderMktSkuBreakdownChart();
   } catch(e) {
     console.error(e);
     document.getElementById('costKPIs').innerHTML = `<div style="color:var(--red);padding:12px;">❌ ${e.message}</div>`;
+  }
+}
+
+const MKT_CHART_COLORS = {
+  profit: '#1baf7a',
+  Facebook: '#2a78d6',
+  TikTok: '#e34948',
+  Shopee: '#eb6834',
+  Lazada: '#4a3aa7',
+  convAmt: '#eda100',
+  prAmt: '#e87ba4',
+  marketingOther: '#898787',
+};
+const MKT_CHART_LABELS = {
+  profit: 'กำไรคงเหลือ',
+  convAmt: 'ค่ารีวิว-Conversion',
+  prAmt: 'ค่ารีวิว-PR',
+  marketingOther: 'ค่าการตลาดอื่นๆ',
+};
+
+function renderMktSkuBreakdownChart() {
+  const allRows = window._costRowsCache || [];
+  const adsChannels = window._costAdsChannelsCache || [];
+  const TOP_N = 15;
+  const sorted = [...allRows].sort((a,b) => b.rev - a.rev).filter(r => r.rev > 0);
+  const rows = sorted.slice(0, TOP_N);
+
+  const wrap = document.getElementById('mktSkuChartWrap');
+  if (wrap) wrap.style.height = Math.max(200, rows.length * 38 + 40) + 'px';
+
+  const datasets = [];
+  datasets.push({
+    label: MKT_CHART_LABELS.profit,
+    data: rows.map(r => (r.rev - r.totalMkt) / 1e6),
+    backgroundColor: MKT_CHART_COLORS.profit,
+  });
+  adsChannels.forEach(ch => {
+    datasets.push({
+      label: `Ads ${ch}`,
+      data: rows.map(r => (r.adsVals[ch]||0) / 1e6),
+      backgroundColor: MKT_CHART_COLORS[ch] || '#888888',
+    });
+  });
+  ['convAmt','prAmt','marketingOther'].forEach(key => {
+    datasets.push({
+      label: MKT_CHART_LABELS[key],
+      data: rows.map(r => (r[key]||0) / 1e6),
+      backgroundColor: MKT_CHART_COLORS[key],
+    });
+  });
+
+  if (window._mktSkuChart) window._mktSkuChart.destroy();
+  window._mktSkuChart = new Chart(document.getElementById('chartMktSkuBreakdown'), {
+    type: 'bar',
+    data: { labels: rows.map(r => `${r.sku} (${r.name})`), datasets },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ฿${c.raw.toFixed(2)}M` } }
+      },
+      scales: {
+        x: { stacked: true, ticks: { callback: v => '฿'+v+'M', color: '#898781' }, grid: { color: 'rgba(136,136,136,0.15)' } },
+        y: { stacked: true, grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } } }
+      }
+    }
+  });
+
+  const legendEl = document.getElementById('mktSkuChartLegend');
+  if (legendEl) {
+    legendEl.innerHTML = datasets.map(d => `<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${d.backgroundColor};display:inline-block;"></span>${d.label}</span>`).join('');
+  }
+  const noteEl = document.getElementById('mktSkuChartNote');
+  if (noteEl) {
+    noteEl.textContent = sorted.length > TOP_N ? `แสดง Top ${TOP_N} จาก ${sorted.length} SKU ทั้งหมด (เรียงตามยอดขาย)` : '';
   }
 }
 
