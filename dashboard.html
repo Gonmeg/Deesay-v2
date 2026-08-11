@@ -181,6 +181,7 @@
       <div class="nav-item nav-sub" onclick="showPage('crm',null,this)"><span class="nav-icon">👥</span> CRM</div>
       <div class="nav-item nav-sub" onclick="showPage('flow',null,this)"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
       <div class="nav-item nav-sub" onclick="showPage('neverbought',null,this)"><span class="nav-icon">🔍</span> ลูกค้าที่ยังไม่ซื้อ</div>
+      <div class="nav-item nav-sub" onclick="showPage('promotarget',null,this)"><span class="nav-icon">🎯</span> ตั้งเป้าโปรโมชั่น</div>
     </div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('tt')" id="navGroupLabel-tt">
       <span>TikTok</span><span class="nav-group-chevron" id="navGroupChevron-tt">▸</span>
@@ -342,6 +343,50 @@
         <div class="ai-summary-body" id="ai-summary-channel">กด "วิเคราะห์ใหม่" เพื่อสรุปข้อมูลในช่วงที่เลือก</div>
       </div>
     </div>
+
+    <div class="page" id="page-promotarget">
+      <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;">
+        📌 เริ่มเฉพาะโปรของ <b>Facebook</b> ก่อน · <b>ราคาต่อบิล</b> ดึงจาก AOV จริงของโปรนั้น (เฉลี่ยทั้งหมด) โดยอัตโนมัติ · ช่องพื้นหลังเหลือง = กรอกเองได้ · ช่องอื่นคำนวณให้อัตโนมัติ · บันทึกอัตโนมัติทุกครั้งที่แก้ ปิดเปิดใหม่ค่าไม่หาย
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เทียบยอดขายจริงของวันที่:</div>
+          <input type="date" id="ptActualDate" onchange="renderPromoTargets()">
+          <button class="btn btn-primary" style="margin-left:auto;" onclick="addPtEmptyRow()">+ เพิ่มแถว</button>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <div class="section-header">
+          <div class="section-title">ตั้งเป้าต่อโปร/สินค้า (Facebook)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblPromoTarget')">⬇ Export CSV</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="tblPromoTarget" style="font-size:12px;">
+            <thead>
+              <tr>
+                <th style="min-width:140px;">โปร / สินค้า</th>
+                <th>ราคาต่อบิล<br>(AOV)</th>
+                <th style="background:rgba(255,224,102,0.15);">อัตราปิด<br>เป้า %</th>
+                <th style="background:rgba(255,224,102,0.15);">ต้นทุน<br>สินค้า %</th>
+                <th style="background:rgba(255,224,102,0.15);">ค่าแอด %<br>เป้า</th>
+                <th>ยอดขายจริง<br>(ชุด)</th>
+                <th style="background:rgba(255,224,102,0.15);">เป้ายอดขาย<br>(ชุด/วัน)</th>
+                <th>ขาดอีก<br>(ชุด)</th>
+                <th>ค่าแอด/ออเดอร์<br>เป้า (บาท)</th>
+                <th>CPL เป้า<br>(บาท)</th>
+                <th>เป้า Lead<br>/วัน (คน)</th>
+                <th>เป้ายอดขาย<br>(บาท/วัน)</th>
+                <th>ต้นทุนสินค้า<br>(บาท)</th>
+                <th>กำไร/บิล<br>(บาท)</th>
+                <th>% กำไร</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPromoTarget"><tr><td colspan="16" class="empty">ยังไม่มีโปรที่ติดตาม — เพิ่มด้านบน</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
     <div class="page" id="page-fbhub">
       <div id="fbhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
@@ -389,8 +434,8 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopSKUFb">
-            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKUFb"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+            <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKUFb"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -401,7 +446,7 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopProductFb">
-            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
             <tbody id="tbodyTopProductFb"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
@@ -892,8 +937,8 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopSKUTt">
-            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKUTt"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+            <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKUTt"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -904,7 +949,7 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopProductTt">
-            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
             <tbody id="tbodyTopProductTt"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
@@ -1054,8 +1099,8 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopSKUSh">
-            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKUSh"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+            <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKUSh"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1066,7 +1111,7 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopProductSh">
-            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
             <tbody id="tbodyTopProductSh"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
@@ -1170,8 +1215,8 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopSKULz">
-            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKULz"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+            <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <tbody id="tbodyTopSKULz"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1182,7 +1227,7 @@
         </div>
         <div class="table-wrap">
           <table id="tblTopProductLz">
-            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>จำนวนชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
+            <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
             <tbody id="tbodyTopProductLz"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
@@ -1450,6 +1495,20 @@ function getRegion(prov) {
   return provinceRegionMap[prov] || 'ไม่ระบุ';
 }
 
+// ===== SUPABASE WRITE: upsert แถวเดียว (ใช้กับหน้าตั้งเป้าโปรโมชั่น) =====
+async function upsertRow(table, data, conflictCol) {
+  const headers = {
+    'apikey': window.SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'resolution=merge-duplicates,return=minimal',
+  };
+  const url = `${window.SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflictCol}`;
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(data) });
+  if (!res.ok) { console.error('upsertRow failed:', table, await res.text()); return false; }
+  return true;
+}
+
 // ===== SUPABASE FETCH: new Materialized Views (monthly granularity) =====
 async function fetchMV(viewName, selectCols, orderCols) {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
@@ -1557,14 +1616,14 @@ function applyFilters() {
 
 // ===== NAVIGATION =====
 const pageTitles = {
-  overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
+  overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking'
 };
-const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','neverbought','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','promotarget','fbhub','promotion','geo','crm','flow','neverbought','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -1675,6 +1734,8 @@ function showPage(page, lockCh, el) {
     populateLiveSearchFilters();
   } else if (page === 'creatorperf') {
     populateCpCreatorList();
+  } else if (page === 'promotarget') {
+    initPromoTargetPage();
   } else {
     applyFilters();
   }
@@ -2396,8 +2457,24 @@ function runLiveSearch() {
 }
 
 
+// ===== การเรียงลำดับตาราง Top Promotion / Top Product (ใช้ร่วมกันทั้ง 4 หน้า hub) =====
+let _promoSortCol = 'rev', _promoSortDir = 'desc';
+let _prodSortCol = 'qty', _prodSortDir = 'desc';
+function setPromoSort(col) {
+  if (_promoSortCol === col) { _promoSortDir = _promoSortDir === 'desc' ? 'asc' : 'desc'; }
+  else { _promoSortCol = col; _promoSortDir = (col === 'sku' || col === 'name') ? 'asc' : 'desc'; }
+  renderPromotion(window._lastPromoSuffix, window._lastPromoChannel);
+}
+function setProdSort(col) {
+  if (_prodSortCol === col) { _prodSortDir = _prodSortDir === 'desc' ? 'asc' : 'desc'; }
+  else { _prodSortCol = col; _prodSortDir = (col === 'sku' || col === 'name') ? 'asc' : 'desc'; }
+  renderPromotion(window._lastPromoSuffix, window._lastPromoChannel);
+}
+
 function renderPromotion(idSuffix, forceChannel) {
   idSuffix = idSuffix || '';
+  window._lastPromoSuffix = idSuffix;
+  window._lastPromoChannel = forceChannel;
   const ch = forceChannel || document.getElementById('filterChannel').value;
   const sub = idSuffix ? (document.getElementById(idSuffix.toLowerCase()+'PromoSubChannel')?.value || '') : document.getElementById('filterSubChannel').value;
   const from = idSuffix ? document.getElementById('dateFrom').value : getDateValue('From');
@@ -2406,7 +2483,7 @@ function renderPromotion(idSuffix, forceChannel) {
   const promoData = window._promoMonthlyCache || [];
 
   if (!promoData.length) {
-    document.getElementById('tbodyTopSKU'+idSuffix).innerHTML = '<tr><td colspan="8" class="empty">กำลังโหลดข้อมูล...</td></tr>';
+    document.getElementById('tbodyTopSKU'+idSuffix).innerHTML = '<tr><td colspan="9" class="empty">กำลังโหลดข้อมูล...</td></tr>';
     return;
   }
 
@@ -2431,14 +2508,31 @@ function renderPromotion(idSuffix, forceChannel) {
   const prevRankMap = {};
   Object.entries(prevBySKU).sort((a,b) => b[1].rev - a[1].rev).forEach(([k], i) => { prevRankMap[k] = i + 1; });
   const totalRev = Object.values(bySKU).reduce((s, v) => s + v.rev, 0);
-  const byRev = Object.entries(bySKU).sort((a,b) => b[1].rev - a[1].rev).slice(0, 20);
+  const top20 = Object.entries(bySKU).sort((a,b) => b[1].rev - a[1].rev).slice(0, 20);
+  const rankMap = {};
+  top20.forEach(([k], i) => { rankMap[k] = i + 1; }); // อันดับอิงยอดขายเสมอ ไม่ว่าจะเรียงตารางแสดงผลด้วยคอลัมน์ไหน
 
   function thaiNameForPromo(promo) {
     return promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim()) + 'x' + m[2] : p; }).join('+');
   }
 
+  const promoSortGetters = {
+    sku: ([k]) => k,
+    name: ([k]) => thaiNameForPromo(k),
+    rev: ([,v]) => v.rev,
+    ord: ([,v]) => v.ord,
+    aov: ([,v]) => v.ord ? v.rev / v.ord : 0,
+    share: ([,v]) => v.rev,
+  };
+  const promoGetVal = promoSortGetters[_promoSortCol] || promoSortGetters.rev;
+  const byRev = [...top20].sort((a,b) => {
+    const av = promoGetVal(a), bv = promoGetVal(b);
+    const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
+    return _promoSortDir === 'asc' ? cmp : -cmp;
+  });
+
   document.getElementById('tbodyTopSKU'+idSuffix).innerHTML = byRev.map(([k, v], i) => {
-    const currRank = i + 1;
+    const currRank = rankMap[k];
     const sharePct = totalRev ? ((v.rev / totalRev) * 100).toFixed(1) : '0.0';
     const prevRev = prevBySKU[k]?.rev || 0;
     let cmpHtml = prevRev > 0
@@ -2451,15 +2545,16 @@ function renderPromotion(idSuffix, forceChannel) {
       : diff < 0 ? `<span style="color:var(--red);font-size:11px;">▼${Math.abs(diff)}</span>`
       : `<span style="color:var(--text3);font-size:11px;">—</span>`;
     return `<tr>
-      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${currRank}</td>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${k}</td>
       <td style="color:var(--text);">${thaiNameForPromo(k)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(v.rev)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.ord)}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--blue);">฿${fmt(Math.round(v.ord ? v.rev/v.ord : 0))}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${sharePct}%</td>
       <td>${cmpHtml}</td><td>${rankHtml}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
 
   // TABLE 2: Top 20 สินค้าเดี่ยว — จาก mv_sku_parent_monthly
   const skuParentData = window._skuParentMonthlyCache || [];
@@ -2481,10 +2576,25 @@ function renderPromotion(idSuffix, forceChannel) {
   const prevProdRankMap = {};
   Object.entries(prevByProduct).sort((a,b) => b[1]-a[1]).forEach(([k], i) => { prevProdRankMap[k] = i + 1; });
   const totalQty = Object.values(byProduct).reduce((s,v) => s+v, 0);
-  const sortedProd = Object.entries(byProduct).sort((a,b) => b[1]-a[1]).slice(0, 20);
+  const top20Prod = Object.entries(byProduct).sort((a,b) => b[1]-a[1]).slice(0, 20);
+  const prodRankMap = {};
+  top20Prod.forEach(([k], i) => { prodRankMap[k] = i + 1; });
+
+  const prodSortGetters = {
+    sku: ([k]) => k,
+    name: ([k]) => skuToName(k),
+    qty: ([,qty]) => qty,
+    share: ([,qty]) => qty,
+  };
+  const prodGetVal = prodSortGetters[_prodSortCol] || prodSortGetters.qty;
+  const sortedProd = [...top20Prod].sort((a,b) => {
+    const av = prodGetVal(a), bv = prodGetVal(b);
+    const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
+    return _prodSortDir === 'asc' ? cmp : -cmp;
+  });
 
   document.getElementById('tbodyTopProduct'+idSuffix).innerHTML = sortedProd.map(([sku, qty], i) => {
-    const currRank = i + 1;
+    const currRank = prodRankMap[sku];
     const sharePct = totalQty ? ((qty/totalQty)*100).toFixed(1) : '0.0';
     const prevQty = prevByProduct[sku] || 0;
     let cmpHtml = prevQty > 0
@@ -2497,7 +2607,7 @@ function renderPromotion(idSuffix, forceChannel) {
       : diff < 0 ? `<span style="color:var(--red);font-size:11px;">▼${Math.abs(diff)}</span>`
       : `<span style="color:var(--text3);font-size:11px;">—</span>`;
     return `<tr>
-      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${currRank}</td>
+      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
       <td style="color:var(--text);">${skuToName(sku)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(qty)} ชิ้น</td>
@@ -2570,6 +2680,171 @@ function renderRealPromoAndUpsell() {
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.qty)} ชิ้น</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${fmt(v.count)} ครั้ง</td>
     </tr>`).join('') || '<tr><td colspan="6" class="empty">ไม่มีข้อมูล upsell ในเดือนนี้</td></tr>';
+}
+
+// ===== ตั้งเป้าโปรโมชั่น (เฉพาะ Facebook ก่อน) =====
+let _ptTargets = {};      // sku_promotion -> {target_close_rate, target_cost_pct, target_ad_pct, target_qty_per_day}
+let _ptRows = [];         // [{rowId, sku_promotion}] — sku_promotion เป็น null ได้ถ้ายังไม่ได้เลือกโปรสำหรับแถวนั้น
+let _ptAovCache = {};     // sku_promotion -> {rev, ord} (เฉพาะ Facebook, คำนวณจากข้อมูลทั้งหมด ไม่ผูกกับวันที่เลือก)
+let _ptRowIdCounter = 0;
+
+async function fetchPromotionTargets() {
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/promotion_targets?select=*`, { headers });
+  if (!res.ok) { console.error('fetchPromotionTargets failed'); return []; }
+  return res.json();
+}
+
+async function initPromoTargetPage() {
+  const dateEl = document.getElementById('ptActualDate');
+  if (dateEl && !dateEl.value) {
+    const dates = [...new Set((window._promoMonthlyCache||[]).filter(r=>r.channel==='Facebook').map(r=>r.date))].sort();
+    dateEl.value = dates.length ? dates[dates.length-1] : new Date().toISOString().substring(0,10);
+  }
+  // AOV คำนวณจากยอดขายทั้งหมดเท่าที่มี เฉพาะ Facebook (ไม่ผูกกับวันเดียวที่เลือกไว้เทียบยอดจริง — กันค่าไม่นิ่งเวลาบางวันไม่มีออเดอร์)
+  _ptAovCache = {};
+  (window._promoMonthlyCache||[]).filter(r => r.channel === 'Facebook').forEach(r => {
+    const k = r.sku_promotion; if (!k) return;
+    if (!_ptAovCache[k]) _ptAovCache[k] = { rev: 0, ord: 0 };
+    _ptAovCache[k].rev += parseFloat(r.total_revenue)||0;
+    _ptAovCache[k].ord += parseInt(r.total_orders)||0;
+  });
+
+  const saved = await fetchPromotionTargets();
+  _ptTargets = {};
+  saved.forEach(r => { _ptTargets[r.sku_promotion] = r; });
+  _ptRows = saved.map(r => ({ rowId: ++_ptRowIdCounter, sku_promotion: r.sku_promotion }));
+  renderPromoTargets();
+}
+
+function addPtEmptyRow() {
+  _ptRows.push({ rowId: ++_ptRowIdCounter, sku_promotion: null });
+  renderPromoTargets();
+}
+
+function thaiNameForPromoGlobal(promo) {
+  return promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim()) + 'x' + m[2] : p; }).join('+');
+}
+
+function filterPtRowDropdown(rowId) {
+  const q = (document.getElementById('ptRowSearch-'+rowId)?.value || '').toLowerCase();
+  const list = document.getElementById('ptRowDropdown-'+rowId);
+  if (!list) return;
+  const assignedElsewhere = _ptRows.filter(r => r.rowId !== rowId && r.sku_promotion).map(r => r.sku_promotion);
+  const allPromos = Object.keys(_ptAovCache);
+  const filtered = allPromos.filter(p => {
+    const name = (promotionsMap[p] || thaiNameForPromoGlobal(p) || '').toLowerCase();
+    return (p.toLowerCase().includes(q) || name.includes(q)) && !assignedElsewhere.includes(p);
+  });
+  list.innerHTML = filtered.slice(0,25).map(p => `
+    <div onclick="selectPtRowPromo(${rowId},'${p}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <div style="font-size:13px;">${promotionsMap[p] || thaiNameForPromoGlobal(p)}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${p}</div>
+    </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบโปร</div>';
+  list.style.display = 'block';
+}
+function showPtRowDropdown(rowId) { filterPtRowDropdown(rowId); }
+function hidePtRowDropdown(rowId) { const l=document.getElementById('ptRowDropdown-'+rowId); if(l) l.style.display='none'; }
+
+async function selectPtRowPromo(rowId, sku_promotion) {
+  const row = _ptRows.find(r => r.rowId === rowId);
+  if (!row) return;
+  row.sku_promotion = sku_promotion;
+  _ptTargets[sku_promotion] = _ptTargets[sku_promotion] || { sku_promotion };
+  renderPromoTargets();
+  await upsertRow('promotion_targets', { sku_promotion }, 'sku_promotion');
+}
+
+async function removePtRow(rowId) {
+  const row = _ptRows.find(r => r.rowId === rowId);
+  _ptRows = _ptRows.filter(r => r.rowId !== rowId);
+  renderPromoTargets();
+  if (row && row.sku_promotion) {
+    const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+    await fetch(`${window.SUPABASE_URL}/rest/v1/promotion_targets?sku_promotion=eq.${encodeURIComponent(row.sku_promotion)}`, { method: 'DELETE', headers });
+  }
+}
+
+async function updatePtField(sku_promotion, field, rawValue) {
+  const pct = ['target_close_rate','target_cost_pct','target_ad_pct'].includes(field);
+  let value = parseFloat(rawValue);
+  if (isNaN(value)) value = null;
+  else if (pct) value = value / 100; // กรอกเป็น % (เช่น 40) เก็บเป็นทศนิยม (0.40)
+  if (!_ptTargets[sku_promotion]) _ptTargets[sku_promotion] = { sku_promotion };
+  _ptTargets[sku_promotion][field] = value;
+  renderPromoTargets();
+  await upsertRow('promotion_targets', { sku_promotion, [field]: value }, 'sku_promotion');
+}
+
+function renderPromoTargets() {
+  const actualDate = document.getElementById('ptActualDate')?.value || '';
+  const actualBySku = {};
+  (window._promoMonthlyCache||[]).filter(r => r.date === actualDate && r.channel === 'Facebook').forEach(r => {
+    actualBySku[r.sku_promotion] = (actualBySku[r.sku_promotion]||0) + (parseInt(r.total_orders)||0);
+  });
+
+  const editableCell = (sku, field, value, suffix) => {
+    const displayVal = value === null || value === undefined ? '' : (['target_close_rate','target_cost_pct','target_ad_pct'].includes(field) ? (value*100) : value);
+    return `<td style="background:rgba(255,224,102,0.12);padding:2px;">
+      <input type="number" value="${displayVal}" step="any" placeholder="กรอก"
+        onchange="updatePtField('${sku}','${field}',this.value)"
+        style="width:64px;text-align:right;background:transparent;border:1px solid var(--border);border-radius:4px;padding:3px 4px;font-size:12px;">${suffix||''}
+    </td>`;
+  };
+
+  document.getElementById('tbodyPromoTarget').innerHTML = _ptRows.length ? _ptRows.map(row => {
+    const { rowId, sku_promotion: sku } = row;
+
+    if (!sku) {
+      // แถวเปล่า — ยังไม่ได้เลือกโปร โชว์แค่ dropdown เลือกในเซลล์แรก
+      return `<tr>
+        <td colspan="15" style="position:relative;">
+          <input type="text" id="ptRowSearch-${rowId}" placeholder="พิมพ์ชื่อโปร/SKU เพื่อเลือก..." autofocus
+            oninput="filterPtRowDropdown(${rowId})" onfocus="showPtRowDropdown(${rowId})" onblur="setTimeout(()=>hidePtRowDropdown(${rowId}),200)"
+            style="width:100%;max-width:320px;padding:6px 10px;">
+          <div id="ptRowDropdown-${rowId}" style="display:none;position:absolute;top:100%;left:0;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+        </td>
+        <td><button class="btn btn-ghost" style="padding:2px 8px;font-size:11px;" onclick="removePtRow(${rowId})">✕</button></td>
+      </tr>`;
+    }
+
+    const t = _ptTargets[sku] || {};
+    const aovData = _ptAovCache[sku] || { rev: 0, ord: 0 };
+    const aov = aovData.ord ? aovData.rev / aovData.ord : 0;
+    const closeRate = t.target_close_rate || 0;
+    const costPct = t.target_cost_pct || 0;
+    const adPct = t.target_ad_pct || 0;
+    const targetQty = t.target_qty_per_day || 0;
+    const actualQty = actualBySku[sku] || 0;
+    const gap = targetQty - actualQty;
+
+    const adPerOrder = aov * adPct;
+    const cpl = adPerOrder * closeRate;
+    const leadPerDay = closeRate ? targetQty / closeRate : 0;
+    const targetRevPerDay = targetQty * aov;
+    const productCostBaht = aov * costPct;
+    const profitPerBill = aov - productCostBaht - adPerOrder;
+    const profitPct = aov ? profitPerBill / aov : 0;
+
+    return `<tr>
+      <td style="font-size:12px;">${promotionsMap[sku] || thaiNameForPromoGlobal(sku)}<br><span style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${sku}</span></td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--blue);">฿${fmt(Math.round(aov))}</td>
+      ${editableCell(sku, 'target_close_rate', t.target_close_rate, '%')}
+      ${editableCell(sku, 'target_cost_pct', t.target_cost_pct, '%')}
+      ${editableCell(sku, 'target_ad_pct', t.target_ad_pct, '%')}
+      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(actualQty)}</td>
+      ${editableCell(sku, 'target_qty_per_day', t.target_qty_per_day, '')}
+      <td style="font-family:'IBM Plex Mono',monospace;color:${gap>0?'var(--red)':'var(--green)'};">${gap>0?fmt(gap):(gap<0?'เกินเป้า '+fmt(Math.abs(gap)):'0')}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(adPerOrder))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(cpl))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(leadPerDay))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(targetRevPerDay))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(productCostBaht))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--green);">฿${fmt(Math.round(profitPerBill))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--green);">${(profitPct*100).toFixed(1)}%</td>
+      <td><button class="btn btn-ghost" style="padding:2px 8px;font-size:11px;" onclick="removePtRow(${rowId})">✕</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="16" class="empty">ยังไม่มีโปรที่ติดตาม — กด "+ เพิ่มแถว" ด้านบน</td></tr>';
 }
 
 // ===== GEO =====
