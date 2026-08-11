@@ -2710,10 +2710,14 @@ async function initPromoTargetPage() {
     _ptAovCache[k].ord += parseInt(r.total_orders)||0;
   });
 
-  const saved = await fetchPromotionTargets();
-  _ptTargets = {};
-  saved.forEach(r => { _ptTargets[r.sku_promotion] = r; });
-  _ptRows = saved.map(r => ({ rowId: ++_ptRowIdCounter, sku_promotion: r.sku_promotion }));
+  // โหลดจาก Supabase แค่ครั้งแรกที่เข้าหน้านี้ในเซสชันนี้เท่านั้น — ป้องกัน race condition
+  // (ถ้าเพิ่งเลือก/แก้ค่าแล้วรีบสลับหน้าไปมา การโหลดซ้ำอาจได้ข้อมูลเก่าที่ยังบันทึกไม่เสร็จมาทับของที่เพิ่งแก้)
+  if (_ptRows.length === 0) {
+    const saved = await fetchPromotionTargets();
+    _ptTargets = {};
+    saved.forEach(r => { _ptTargets[r.sku_promotion] = r; });
+    _ptRows = saved.map(r => ({ rowId: ++_ptRowIdCounter, sku_promotion: r.sku_promotion }));
+  }
   renderPromoTargets();
 }
 
@@ -2727,16 +2731,27 @@ function thaiNameForPromoGlobal(promo) {
 }
 
 function filterPtRowDropdown(rowId) {
-  const q = (document.getElementById('ptRowSearch-'+rowId)?.value || '').toLowerCase();
+  const qRaw = (document.getElementById('ptRowSearch-'+rowId)?.value || '');
+  const q = qRaw.toLowerCase().trim();
   const list = document.getElementById('ptRowDropdown-'+rowId);
   if (!list) return;
   const assignedElsewhere = _ptRows.filter(r => r.rowId !== rowId && r.sku_promotion).map(r => r.sku_promotion);
   const allPromos = Object.keys(_ptAovCache);
-  const filtered = allPromos.filter(p => {
+  const matches = allPromos.filter(p => {
     const name = (promotionsMap[p] || thaiNameForPromoGlobal(p) || '').toLowerCase();
     return (p.toLowerCase().includes(q) || name.includes(q)) && !assignedElsewhere.includes(p);
   });
-  list.innerHTML = filtered.slice(0,25).map(p => `
+  // เอาตัวที่ตรงเป๊ะ (SKU หรือชื่อ) ขึ้นก่อนเสมอ ตามด้วยที่แค่มีคำนั้นอยู่บางส่วน
+  matches.sort((a, b) => {
+    const aName = (promotionsMap[a] || thaiNameForPromoGlobal(a) || '').toLowerCase();
+    const bName = (promotionsMap[b] || thaiNameForPromoGlobal(b) || '').toLowerCase();
+    const aExact = a.toLowerCase() === q || aName === q;
+    const bExact = b.toLowerCase() === q || bName === q;
+    if (aExact && !bExact) return -1;
+    if (bExact && !aExact) return 1;
+    return 0;
+  });
+  list.innerHTML = matches.slice(0,40).map(p => `
     <div onclick="selectPtRowPromo(${rowId},'${p}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <div style="font-size:13px;">${promotionsMap[p] || thaiNameForPromoGlobal(p)}</div>
       <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${p}</div>
@@ -2801,8 +2816,8 @@ function renderPromoTargets() {
         <td colspan="15" style="position:relative;">
           <input type="text" id="ptRowSearch-${rowId}" placeholder="พิมพ์ชื่อโปร/SKU เพื่อเลือก..." autofocus
             oninput="filterPtRowDropdown(${rowId})" onfocus="showPtRowDropdown(${rowId})" onblur="setTimeout(()=>hidePtRowDropdown(${rowId}),200)"
-            style="width:100%;max-width:320px;padding:6px 10px;">
-          <div id="ptRowDropdown-${rowId}" style="display:none;position:absolute;top:100%;left:0;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+            style="width:100%;max-width:420px;padding:8px 12px;">
+          <div id="ptRowDropdown-${rowId}" style="display:none;position:absolute;top:100%;left:0;width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:420px;overflow-y:auto;z-index:999;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
         </td>
         <td><button class="btn btn-ghost" style="padding:2px 8px;font-size:11px;" onclick="removePtRow(${rowId})">✕</button></td>
       </tr>`;
