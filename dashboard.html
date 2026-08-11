@@ -348,11 +348,18 @@
       <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;">
         📌 เริ่มเฉพาะโปรของ <b>Facebook</b> ก่อน · <b>ราคาต่อบิล</b> ดึงจาก AOV จริงของโปรนั้น (เฉลี่ยทั้งหมด) โดยอัตโนมัติ · ช่องพื้นหลังเหลือง = กรอกเองได้ · ช่องอื่นคำนวณให้อัตโนมัติ · บันทึกอัตโนมัติทุกครั้งที่แก้ ปิดเปิดใหม่ค่าไม่หาย
       </div>
+      <div id="ptErrorBanner" style="display:none;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เทียบยอดขายจริงของวันที่:</div>
           <input type="date" id="ptActualDate" onchange="renderPromoTargets()">
-          <button class="btn btn-primary" style="margin-left:auto;" onclick="addPtEmptyRow()">+ เพิ่มแถว</button>
+          <div style="position:relative;margin-left:auto;">
+            <button class="btn btn-primary" onclick="toggleAddPtPromo()">+ เพิ่มแถว</button>
+            <div id="ptAddPromoBox" style="display:none;position:absolute;top:calc(100% + 6px);right:0;width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:50;">
+              <input type="text" id="ptPromoSearch" placeholder="พิมพ์ชื่อโปร/SKU (ขึ้นต้นตรงกัน)..." oninput="filterPtAddDropdown()" style="width:100%;padding:8px 10px;margin-bottom:6px;">
+              <div id="ptAddDropdown" style="max-height:380px;overflow-y:auto;"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="card" style="overflow:hidden;">
@@ -2684,14 +2691,31 @@ function renderRealPromoAndUpsell() {
 
 // ===== ตั้งเป้าโปรโมชั่น (เฉพาะ Facebook ก่อน) =====
 let _ptTargets = {};      // sku_promotion -> {target_close_rate, target_cost_pct, target_ad_pct, target_qty_per_day}
-let _ptRows = [];         // [{rowId, sku_promotion}] — sku_promotion เป็น null ได้ถ้ายังไม่ได้เลือกโปรสำหรับแถวนั้น
+let _ptRows = [];         // [{rowId, sku_promotion}] — ทุกแถวมี sku_promotion เสมอ (เลือกจากช่องค้นหาด้านบนก่อนถึงจะเป็นแถวได้)
 let _ptAovCache = {};     // sku_promotion -> {rev, ord} (เฉพาะ Facebook, คำนวณจากข้อมูลทั้งหมด ไม่ผูกกับวันที่เลือก)
 let _ptRowIdCounter = 0;
+
+function showPtError(msg) {
+  const el = document.getElementById('ptErrorBanner');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = '⚠️ ' + msg;
+}
+function clearPtError() {
+  const el = document.getElementById('ptErrorBanner');
+  if (el) el.style.display = 'none';
+}
 
 async function fetchPromotionTargets() {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   const res = await fetch(`${window.SUPABASE_URL}/rest/v1/promotion_targets?select=*`, { headers });
-  if (!res.ok) { console.error('fetchPromotionTargets failed'); return []; }
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('fetchPromotionTargets failed:', errText);
+    showPtError(`โหลดข้อมูลที่บันทึกไว้ไม่สำเร็จ (ตาราง promotion_targets อาจยังไม่ถูกสร้าง — เช็คว่ารัน SQL แล้วหรือยัง) รายละเอียด: ${errText.substring(0,200)}`);
+    return [];
+  }
+  clearPtError();
   return res.json();
 }
 
@@ -2721,53 +2745,52 @@ async function initPromoTargetPage() {
   renderPromoTargets();
 }
 
-function addPtEmptyRow() {
-  _ptRows.push({ rowId: ++_ptRowIdCounter, sku_promotion: null });
-  renderPromoTargets();
-}
-
 function thaiNameForPromoGlobal(promo) {
   return promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim()) + 'x' + m[2] : p; }).join('+');
 }
 
-function filterPtRowDropdown(rowId) {
-  const qRaw = (document.getElementById('ptRowSearch-'+rowId)?.value || '');
+// ===== ช่องเพิ่มแถว (แยกจากตาราง ไม่เลื่อนตามตารางแล้ว) =====
+function toggleAddPtPromo() {
+  const box = document.getElementById('ptAddPromoBox');
+  const isOpen = box.style.display === 'block';
+  box.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    const inp = document.getElementById('ptPromoSearch');
+    inp.value = '';
+    inp.focus();
+    filterPtAddDropdown();
+  }
+}
+
+function filterPtAddDropdown() {
+  const qRaw = document.getElementById('ptPromoSearch')?.value || '';
   const q = qRaw.toLowerCase().trim();
-  const list = document.getElementById('ptRowDropdown-'+rowId);
+  const list = document.getElementById('ptAddDropdown');
   if (!list) return;
-  const assignedElsewhere = _ptRows.filter(r => r.rowId !== rowId && r.sku_promotion).map(r => r.sku_promotion);
+  const tracked = _ptRows.map(r => r.sku_promotion);
   const allPromos = Object.keys(_ptAovCache);
+  // ขึ้นต้นตรงกับที่พิมพ์เป๊ะๆ เท่านั้น (ไม่เอาแบบมีคำนั้นแฝงอยู่ตรงไหนก็ได้) — ว่างไว้ = โชว์ทั้งหมด
   const matches = allPromos.filter(p => {
+    if (tracked.includes(p)) return false;
+    if (!q) return true;
     const name = (promotionsMap[p] || thaiNameForPromoGlobal(p) || '').toLowerCase();
-    return (p.toLowerCase().includes(q) || name.includes(q)) && !assignedElsewhere.includes(p);
+    return p.toLowerCase().startsWith(q) || name.startsWith(q);
   });
-  // เอาตัวที่ตรงเป๊ะ (SKU หรือชื่อ) ขึ้นก่อนเสมอ ตามด้วยที่แค่มีคำนั้นอยู่บางส่วน
-  matches.sort((a, b) => {
-    const aName = (promotionsMap[a] || thaiNameForPromoGlobal(a) || '').toLowerCase();
-    const bName = (promotionsMap[b] || thaiNameForPromoGlobal(b) || '').toLowerCase();
-    const aExact = a.toLowerCase() === q || aName === q;
-    const bExact = b.toLowerCase() === q || bName === q;
-    if (aExact && !bExact) return -1;
-    if (bExact && !aExact) return 1;
-    return 0;
-  });
-  list.innerHTML = matches.slice(0,40).map(p => `
-    <div onclick="selectPtRowPromo(${rowId},'${p}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+  list.innerHTML = matches.slice(0,50).map(p => `
+    <div onclick="addPtPromoRow('${p}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <div style="font-size:13px;">${promotionsMap[p] || thaiNameForPromoGlobal(p)}</div>
       <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${p}</div>
-    </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบโปร</div>';
-  list.style.display = 'block';
+    </div>`).join('') || '<div style="padding:8px 10px;color:var(--text3);font-size:12px;">ไม่พบโปรที่ขึ้นต้นด้วยคำนี้</div>';
 }
-function showPtRowDropdown(rowId) { filterPtRowDropdown(rowId); }
-function hidePtRowDropdown(rowId) { const l=document.getElementById('ptRowDropdown-'+rowId); if(l) l.style.display='none'; }
 
-async function selectPtRowPromo(rowId, sku_promotion) {
-  const row = _ptRows.find(r => r.rowId === rowId);
-  if (!row) return;
-  row.sku_promotion = sku_promotion;
+async function addPtPromoRow(sku_promotion) {
+  if (_ptRows.some(r => r.sku_promotion === sku_promotion)) return;
+  _ptRows.push({ rowId: ++_ptRowIdCounter, sku_promotion });
   _ptTargets[sku_promotion] = _ptTargets[sku_promotion] || { sku_promotion };
+  document.getElementById('ptAddPromoBox').style.display = 'none';
   renderPromoTargets();
-  await upsertRow('promotion_targets', { sku_promotion }, 'sku_promotion');
+  const ok = await upsertRow('promotion_targets', { sku_promotion }, 'sku_promotion');
+  if (!ok) showPtError(`บันทึกโปร "${promotionsMap[sku_promotion] || sku_promotion}" ไม่สำเร็จ — ลองแก้ค่าอีกครั้ง หรือเช็คว่าตาราง promotion_targets ถูกสร้างแล้วหรือยัง`);
 }
 
 async function removePtRow(rowId) {
@@ -2776,7 +2799,8 @@ async function removePtRow(rowId) {
   renderPromoTargets();
   if (row && row.sku_promotion) {
     const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
-    await fetch(`${window.SUPABASE_URL}/rest/v1/promotion_targets?sku_promotion=eq.${encodeURIComponent(row.sku_promotion)}`, { method: 'DELETE', headers });
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/promotion_targets?sku_promotion=eq.${encodeURIComponent(row.sku_promotion)}`, { method: 'DELETE', headers });
+    if (!res.ok) showPtError('ลบโปรออกจากฐานข้อมูลไม่สำเร็จ (แต่ลบออกจากหน้าจอแล้ว — เปิดเว็บใหม่อาจโผล่กลับมา)');
   }
 }
 
@@ -2788,7 +2812,8 @@ async function updatePtField(sku_promotion, field, rawValue) {
   if (!_ptTargets[sku_promotion]) _ptTargets[sku_promotion] = { sku_promotion };
   _ptTargets[sku_promotion][field] = value;
   renderPromoTargets();
-  await upsertRow('promotion_targets', { sku_promotion, [field]: value }, 'sku_promotion');
+  const ok = await upsertRow('promotion_targets', { sku_promotion, [field]: value }, 'sku_promotion');
+  if (!ok) showPtError(`บันทึกค่าไม่สำเร็จ — เช็คว่าตาราง promotion_targets ถูกสร้างแล้วหรือยัง`);
 }
 
 function renderPromoTargets() {
@@ -2809,20 +2834,6 @@ function renderPromoTargets() {
 
   document.getElementById('tbodyPromoTarget').innerHTML = _ptRows.length ? _ptRows.map(row => {
     const { rowId, sku_promotion: sku } = row;
-
-    if (!sku) {
-      // แถวเปล่า — ยังไม่ได้เลือกโปร โชว์แค่ dropdown เลือกในเซลล์แรก
-      return `<tr>
-        <td colspan="15" style="position:relative;">
-          <input type="text" id="ptRowSearch-${rowId}" placeholder="พิมพ์ชื่อโปร/SKU เพื่อเลือก..." autofocus
-            oninput="filterPtRowDropdown(${rowId})" onfocus="showPtRowDropdown(${rowId})" onblur="setTimeout(()=>hidePtRowDropdown(${rowId}),200)"
-            style="width:100%;max-width:420px;padding:8px 12px;">
-          <div id="ptRowDropdown-${rowId}" style="display:none;position:absolute;top:100%;left:0;width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:420px;overflow-y:auto;z-index:999;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
-        </td>
-        <td><button class="btn btn-ghost" style="padding:2px 8px;font-size:11px;" onclick="removePtRow(${rowId})">✕</button></td>
-      </tr>`;
-    }
-
     const t = _ptTargets[sku] || {};
     const aovData = _ptAovCache[sku] || { rev: 0, ord: 0 };
     const aov = aovData.ord ? aovData.rev / aovData.ord : 0;
