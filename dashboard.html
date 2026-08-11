@@ -1457,9 +1457,9 @@ async function fetchMV(viewName, selectCols, orderCols) {
   const baseUrl = `${window.SUPABASE_URL}/rest/v1/${viewName}?select=${selectCols}${orderParam}`;
   return fetchPaginatedConcurrent(baseUrl, headers);
 }
-const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'month,channel,sub_channel,sku_promotion,total_orders,total_revenue,aov', 'month.asc,channel.asc,sku_promotion.asc');
-const fetchSkuParentMonthly = () => fetchMV('mv_sku_parent_monthly', 'month,channel,sub_channel,parent_sku,total_qty,total_revenue,total_orders', 'month.asc,channel.asc,sub_channel.asc,parent_sku.asc');
-const fetchProvinceMonthly = () => fetchMV('mv_province_monthly', 'month,channel,province,total_orders,total_revenue,aov', 'month.asc,channel.asc,province.asc');
+const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'date,channel,sub_channel,sku_promotion,total_orders,total_revenue,aov', 'date.asc,channel.asc,sku_promotion.asc');
+const fetchSkuParentMonthly = () => fetchMV('mv_sku_parent_monthly', 'date,channel,sub_channel,parent_sku,total_qty,total_revenue,total_orders', 'date.asc,channel.asc,sub_channel.asc,parent_sku.asc');
+const fetchProvinceMonthly = () => fetchMV('mv_province_monthly', 'date,channel,province,total_orders,total_revenue,aov', 'date.asc,channel.asc,province.asc');
 
 // คืนรายการเดือน "YYYY-MM" ที่อยู่ในช่วง from-to (inclusive)
 function getMonthsInRange(from, to) {
@@ -1482,6 +1482,17 @@ function getPrevMonthsInRange() {
   const prevTo = new Date(fromDate - 86400000);
   const prevFrom = new Date(prevTo - diffMs + 86400000);
   return getMonthsInRange(prevFrom.toISOString().substring(0,10), prevTo.toISOString().substring(0,10));
+}
+
+// คืนช่วงวันที่ "ก่อนหน้า" ที่ยาวเท่ากับช่วงที่เลือกไว้ (ใช้เทียบ % เปลี่ยนแปลง / NEW / อันดับขยับ)
+function getPrevPeriodRange(from, to) {
+  if (!from || !to) return { from: null, to: null };
+  const fromD = new Date(from + 'T00:00:00');
+  const toD = new Date(to + 'T00:00:00');
+  const days = Math.round((toD - fromD) / 86400000) + 1;
+  const prevTo = new Date(fromD); prevTo.setDate(prevTo.getDate() - 1);
+  const prevFrom = new Date(prevTo); prevFrom.setDate(prevFrom.getDate() - days + 1);
+  return { from: prevFrom.toISOString().substring(0,10), to: prevTo.toISOString().substring(0,10) };
 }
 
 function getSelectedMVMonths() {
@@ -1554,7 +1565,7 @@ const pageTitles = {
   cost: 'MKT Tracking'
 };
 const pageOrder = ['overview','channel','fbhub','promotion','geo','crm','flow','neverbought','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
-const MONTH_ONLY_PAGES = ['promotion', 'geo', 'skurev', 'cost']; // หน้าที่ MV เก็บข้อมูลระดับเดือน — ใช้ตัวเลือก "เดือน" แทนช่วงวันที่
+const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -1566,9 +1577,9 @@ function populateMonthFilter() {
   const selTo = document.getElementById('filterMonthTo');
   if (!selFrom || selFrom.options.length > 1) return;
   const months = new Set();
-  (window._promoMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
-  (window._skuParentMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
-  (window._provinceMonthlyCache || []).forEach(r => months.add(String(r.month).substring(0,7)));
+  (window._promoMonthlyCache || []).forEach(r => months.add(String(r.date).substring(0,7)));
+  (window._skuParentMonthlyCache || []).forEach(r => months.add(String(r.date).substring(0,7)));
+  (window._provinceMonthlyCache || []).forEach(r => months.add(String(r.date).substring(0,7)));
   const sorted = [...months].sort().reverse();
   const options = sorted.map(m => {
     const [y, mo] = m.split('-');
@@ -2389,24 +2400,9 @@ function renderPromotion(idSuffix, forceChannel) {
   idSuffix = idSuffix || '';
   const ch = forceChannel || document.getElementById('filterChannel').value;
   const sub = idSuffix ? (document.getElementById(idSuffix.toLowerCase()+'PromoSubChannel')?.value || '') : document.getElementById('filterSubChannel').value;
-  let monthsCurr, monthsPrev;
-  if (idSuffix) {
-    // ใช้แบบฝังในหน้า hub — หน้านี้ไม่มี month selector (ซ่อนไว้) ต้องคำนวณเดือนจากช่วงวันที่ปกติที่มองเห็นอยู่แทน
-    const dFrom = document.getElementById('dateFrom').value;
-    const dTo = document.getElementById('dateTo').value;
-    monthsCurr = getMonthsInRange(dFrom, dTo);
-    const count = monthsCurr.length;
-    const [y, m] = (dFrom || '').split('-').map(Number);
-    monthsPrev = [];
-    for (let i = count; i >= 1; i--) {
-      const d = new Date(y, (m||1) - 1 - i, 1);
-      monthsPrev.push(d.toISOString().substring(0,7));
-    }
-    monthsPrev.sort();
-  } else {
-    monthsCurr = getSelectedMVMonths();
-    monthsPrev = getSelectedMVPrevMonth();
-  }
+  const from = idSuffix ? document.getElementById('dateFrom').value : getDateValue('From');
+  const to = idSuffix ? document.getElementById('dateTo').value : getDateValue('To');
+  const prevRange = getPrevPeriodRange(from, to);
   const promoData = window._promoMonthlyCache || [];
 
   if (!promoData.length) {
@@ -2415,8 +2411,8 @@ function renderPromotion(idSuffix, forceChannel) {
   }
 
   // TABLE 1: Top 20 Promotion (จาก mv_promo_monthly — ระดับเดือน, ตอนนี้กรอง sub_channel ได้แล้ว)
-  const inRange = r => monthsCurr.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
-  const inPrevRange = r => monthsPrev.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
+  const inRange = r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
+  const inPrevRange = r => r.date >= prevRange.from && r.date <= prevRange.to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
 
   const bySKU = {};
   promoData.filter(inRange).forEach(r => {
@@ -2467,8 +2463,8 @@ function renderPromotion(idSuffix, forceChannel) {
 
   // TABLE 2: Top 20 สินค้าเดี่ยว — จาก mv_sku_parent_monthly
   const skuParentData = window._skuParentMonthlyCache || [];
-  const inRangeProd = r => monthsCurr.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
-  const inPrevRangeProd = r => monthsPrev.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
+  const inRangeProd = r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
+  const inPrevRangeProd = r => r.date >= prevRange.from && r.date <= prevRange.to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
 
   const byProduct = {};
   skuParentData.filter(inRangeProd).forEach(r => {
@@ -2605,7 +2601,7 @@ function renderGeoProvinceDetail() {
 
 function renderGeo() {
   const ch = document.getElementById('filterChannel').value;
-  const monthsCurr = getSelectedMVMonths();
+  const from = getDateValue('From'), to = getDateValue('To');
   const provData = window._provinceMonthlyCache || [];
 
   if (!provData.length) {
@@ -2614,7 +2610,7 @@ function renderGeo() {
   }
 
   const byProv = {};
-  provData.filter(r => monthsCurr.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch)).forEach(r => {
+  provData.filter(r => r.date >= from && r.date <= to && (!ch || r.channel === ch)).forEach(r => {
     const k = r.province || '';
     if (!k) return;
     if (!byProv[k]) byProv[k] = { rev: 0, ord: 0 };
@@ -2622,7 +2618,6 @@ function renderGeo() {
     byProv[k].ord += parseInt(r.total_orders) || 0;
   });
 
-  const from = getDateValue('From'), to = getDateValue('To');
   const custByProv = {};
   allData.filter(r => r.channel === 'Facebook' && r.province && r.phone && r.phone.length >= 5 && shouldIncludeRow(r)).forEach(r => {
     if (!custByProv[r.province]) custByProv[r.province] = new Set();
@@ -3121,8 +3116,8 @@ function downloadCSV(rows, filename) {
 // ===== SKU REVENUE PAGE =====
 function renderSkuRev() {
   const ch = document.getElementById('filterChannel').value, sub = document.getElementById('filterSubChannel').value;
-  const monthsCurr = getSelectedMVMonths();
-  const monthsPrev = getSelectedMVPrevMonth();
+  const from = getDateValue('From'), to = getDateValue('To');
+  const prevRange = getPrevPeriodRange(from, to);
   const allRows = window._skuParentMonthlyCache || [];
 
   if (!allRows.length) {
@@ -3130,9 +3125,9 @@ function renderSkuRev() {
     return;
   }
 
-  const matchFilter = (r, months) => months.includes(String(r.month).substring(0,7)) && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
-  const d = allRows.filter(r => matchFilter(r, monthsCurr));
-  const prev = allRows.filter(r => matchFilter(r, monthsPrev));
+  const matchFilter = (r, f, t) => r.date >= f && r.date <= t && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
+  const d = allRows.filter(r => matchFilter(r, from, to));
+  const prev = allRows.filter(r => matchFilter(r, prevRange.from, prevRange.to));
 
   if (!d.length) {
     document.getElementById('tbodySkuRev').innerHTML = '<tr><td colspan="9" class="empty">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
@@ -3230,19 +3225,18 @@ function renderSkuTrend() {
   d.forEach(r => {
     const k = r.parent_sku || '—';
     if (!selectedSKUs.includes(k)) return;
-    const month = String(r.month).substring(0,7);
+    const day = r.date;
     if (!trendData[k]) trendData[k] = {};
-    if (!trendData[k][month]) trendData[k][month] = { rev: 0, qty: 0 };
-    trendData[k][month].rev += parseFloat(r.total_revenue)||0;
-    trendData[k][month].qty += parseFloat(r.total_qty)||0;
+    if (!trendData[k][day]) trendData[k][day] = { rev: 0, qty: 0 };
+    trendData[k][day].rev += parseFloat(r.total_revenue)||0;
+    trendData[k][day].qty += parseFloat(r.total_qty)||0;
   });
-  const months = [...new Set(d.map(r => String(r.month).substring(0,7)))].sort();
-  const monthLabels = months.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  const days = [...new Set(d.map(r => r.date))].sort();
   const datasets = selectedSKUs.map((sku, i) => ({
-    label: sku, data: months.map(m => trendData[sku]?.[m]?.[trendMode === 'revenue' ? 'rev' : 'qty'] || 0),
-    borderColor: COLORS[i], backgroundColor: COLORS[i] + '20', borderWidth: 2, pointRadius: 3, tension: 0.3, fill: false
+    label: sku, data: days.map(dt => trendData[sku]?.[dt]?.[trendMode === 'revenue' ? 'rev' : 'qty'] || 0),
+    borderColor: COLORS[i], backgroundColor: COLORS[i] + '20', borderWidth: 2, pointRadius: days.length > 60 ? 0 : 3, tension: 0.3, fill: false
   }));
-  makeChart('chartSkuTrend', 'line', monthLabels, datasets);
+  makeChart('chartSkuTrend', 'line', days, datasets);
 }
 
 function renderSkuRevTable() {
@@ -4431,7 +4425,7 @@ async function renderCostPage() {
     }
 
     const skuMV = (window._skuParentMonthlyCache||[]).filter(r => {
-      const m = String(r.month).substring(0,7);
+      const m = String(r.date).substring(0,7);
       return (!from || m >= from) && (!to || m <= to);
     });
     const revBySKU = {}, qtyBySKU = {};
@@ -4694,7 +4688,7 @@ function renderCostDeep(sku) {
 
   const revByMonth = {}, qtyByMonth = {};
   (window._skuParentMonthlyCache||[]).filter(r=>r.parent_sku===sku).forEach(r=>{
-    const m=String(r.month).substring(0,7);
+    const m=String(r.date).substring(0,7);
     revByMonth[m]=(revByMonth[m]||0)+(parseFloat(r.total_revenue)||0);
     qtyByMonth[m]=(qtyByMonth[m]||0)+(parseFloat(r.total_qty)||0);
   });
