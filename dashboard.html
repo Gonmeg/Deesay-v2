@@ -2887,26 +2887,35 @@ function filterPtAddDropdown() {
   if (!list) return;
   const tracked = _ptRows.map(r => r.sku_promotion);
   const allPromos = Object.keys(_ptAovCache);
-  // ขึ้นต้นตรงกับที่พิมพ์เป๊ะๆ เท่านั้น (ไม่เอาแบบมีคำนั้นแฝงอยู่ตรงไหนก็ได้) — ว่างไว้ = โชว์ทั้งหมด
+  // เช็คทั้ง 3 อย่าง: รหัส SKU ดิบ, ชื่อโปรที่ตั้งเองใน Google Sheet (ถ้ามี), และชื่อที่ระบบแปลอัตโนมัติจากรหัสสินค้า
+  // (เดิมเช็คแค่ "ชื่อที่ตั้งเอง || ชื่อแปลอัตโนมัติ" คือถ้ามีชื่อตั้งเองจะบังชื่อแปลอัตโนมัติไปเลย —
+  //  แต่ตาราง Top20 Promotion ที่พี่เมกดูมาโชว์ "ชื่อแปลอัตโนมัติ" เท่านั้น ไม่เคยดึงชื่อตั้งเองมาโชว์
+  //  พอโปรนั้นมีชื่อทางการต่างจากชื่อแปลอัตโนมัติ พิมพ์ชื่อที่เห็นในตาราง Top20 เลยหาไม่เจอเลย)
   const matches = allPromos.filter(p => {
     if (tracked.includes(p)) return false;
     if (!q) return true;
-    const name = (promotionsMap[p] || thaiNameForPromoGlobal(p) || '').toLowerCase();
-    return p.toLowerCase().startsWith(q) || name.startsWith(q);
+    const customName = (promotionsMap[p] || '').toLowerCase();
+    const autoName = thaiNameForPromoGlobal(p).toLowerCase();
+    return p.toLowerCase().startsWith(q) || customName.startsWith(q) || autoName.startsWith(q);
   });
-  // เรียง: โปรที่ตรงกับคำค้นเป๊ะๆ (exact match) ขึ้นก่อนเสมอ แล้วตามด้วยยอดขายมาก→น้อย
-  // (เดิมไม่เรียงเลย ใช้ลำดับ insertion ตาม object ทำให้โปรฐาน เช่น "Ax2+Bx1" ที่พิมพ์ตรงเป๊ะ
-  //  หลุดไปอยู่หลังลำดับที่ 50 ได้ถ้ามีโปรพ่วงของแถมต่อท้าย เช่น "Ax2+Bx1+Cx1" เยอะมาก แล้วโดน slice(0,50) ตัดทิ้งไปเลย)
+  // เรียง: โปรที่ตรงกับคำค้นเป๊ะๆ (เทียบทุกชื่อที่เป็นไปได้) ขึ้นก่อนเสมอ แล้วตามด้วยยอดขายมาก→น้อย
+  const isExactMatch = (p) => p.toLowerCase() === q || thaiNameForPromoGlobal(p).toLowerCase() === q || (promotionsMap[p] || '').toLowerCase() === q;
   matches.sort((a, b) => {
-    const aExact = a.toLowerCase() === q, bExact = b.toLowerCase() === q;
+    const aExact = isExactMatch(a), bExact = isExactMatch(b);
     if (aExact !== bExact) return aExact ? -1 : 1;
     return (_ptAovCache[b]?.rev || 0) - (_ptAovCache[a]?.rev || 0);
   });
-  list.innerHTML = matches.slice(0,50).map(p => `
+  list.innerHTML = matches.slice(0,50).map(p => {
+    const autoName = thaiNameForPromoGlobal(p);
+    const customName = promotionsMap[p];
+    const hasDifferentCustomName = customName && customName !== autoName;
+    return `
     <div onclick="addPtPromoRow('${p}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-      <div style="font-size:13px;">${promotionsMap[p] || thaiNameForPromoGlobal(p)}</div>
+      <div style="font-size:13px;">${customName || autoName}</div>
+      ${hasDifferentCustomName ? `<div style="font-size:10.5px;color:var(--text3);">(ชื่อตามยอดขาย: ${autoName})</div>` : ''}
       <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${p}</div>
-    </div>`).join('') || '<div style="padding:8px 10px;color:var(--text3);font-size:12px;">ไม่พบโปรที่ขึ้นต้นด้วยคำนี้</div>';
+    </div>`;
+  }).join('') || '<div style="padding:8px 10px;color:var(--text3);font-size:12px;">ไม่พบโปรที่ขึ้นต้นด้วยคำนี้</div>';
 }
 
 async function addPtPromoRow(sku_promotion) {
