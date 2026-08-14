@@ -1369,7 +1369,24 @@ function getDateValue(suffix) {
 }
 
 // ===== Quick Date Preset (แบบ Shopee) — ใช้ร่วมกันทุกหน้าที่มีตัวกรองวันที่ =====
-function fmtDateISO(d) { return d.toISOString().substring(0,10); }
+// ⚠️ ห้ามใช้ .toISOString() กับวันที่ล้วนๆ (ไม่มีเวลา) เด็ดขาด — มันแปลงเป็น UTC เสมอ
+// สำหรับโซนเวลาไทย (+7) เที่ยงคืนท้องถิ่นจะกลายเป็นบ่ายของ "เมื่อวาน" ใน UTC ทำให้วันที่เพี้ยนไป 1 วัน
+// (เช่น เลือก "เดือนนี้" 1 ส.ค. ท้องถิ่น → toISOString() ดันโชว์ 31 ก.ค. แทน)
+// ใช้คู่ fmtDateISO/fmtMonthISO (แปลง Date→string ด้วย local component) + parseDateLocal (แปลง string→Date แบบ local)
+// ทุกจุดในไฟล์เพื่อให้ parse/format สอดคล้องกันตลอดสาย ไม่มีจุดไหนหลุดไปแตะ UTC เลย
+function fmtDateISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function fmtMonthISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function parseDateLocal(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
 
 function toggleDatePresetMenu(e) {
   if (e) e.stopPropagation();
@@ -1440,13 +1457,13 @@ function getPrevPeriodData() {
   const from = getDateValue('From');
   const to = getDateValue('To');
   if (!from || !to) return [];
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
+  const fromDate = parseDateLocal(from);
+  const toDate = parseDateLocal(to);
   const diffMs = toDate - fromDate + 86400000;
   const prevTo = new Date(fromDate - 86400000);
   const prevFrom = new Date(prevTo - diffMs + 86400000);
-  const prevFromStr = prevFrom.toISOString().substring(0,10);
-  const prevToStr = prevTo.toISOString().substring(0,10);
+  const prevFromStr = fmtDateISO(prevFrom);
+  const prevToStr = fmtDateISO(prevTo);
   const ch = document.getElementById('filterChannel').value;
   const sub = document.getElementById('filterSubChannel').value;
   return allData.filter(r => {
@@ -1636,10 +1653,10 @@ const fetchProvinceMonthly = () => fetchMV('mv_province_monthly', 'date,channel,
 function getMonthsInRange(from, to) {
   if (!from || !to) return [];
   const months = [];
-  let cur = new Date(from.substring(0,7) + '-01');
-  const end = new Date(to.substring(0,7) + '-01');
+  let cur = parseDateLocal(from.substring(0,7) + '-01');
+  const end = parseDateLocal(to.substring(0,7) + '-01');
   while (cur <= end) {
-    months.push(cur.toISOString().substring(0,7));
+    months.push(fmtMonthISO(cur));
     cur.setMonth(cur.getMonth() + 1);
   }
   return months;
@@ -1648,22 +1665,22 @@ function getMonthsInRange(from, to) {
 function getPrevMonthsInRange() {
   const from = getDateValue('From'), to = getDateValue('To');
   if (!from || !to) return [];
-  const fromDate = new Date(from), toDate = new Date(to);
+  const fromDate = parseDateLocal(from), toDate = parseDateLocal(to);
   const diffMs = toDate - fromDate + 86400000;
   const prevTo = new Date(fromDate - 86400000);
   const prevFrom = new Date(prevTo - diffMs + 86400000);
-  return getMonthsInRange(prevFrom.toISOString().substring(0,10), prevTo.toISOString().substring(0,10));
+  return getMonthsInRange(fmtDateISO(prevFrom), fmtDateISO(prevTo));
 }
 
 // คืนช่วงวันที่ "ก่อนหน้า" ที่ยาวเท่ากับช่วงที่เลือกไว้ (ใช้เทียบ % เปลี่ยนแปลง / NEW / อันดับขยับ)
 function getPrevPeriodRange(from, to) {
   if (!from || !to) return { from: null, to: null };
-  const fromD = new Date(from + 'T00:00:00');
-  const toD = new Date(to + 'T00:00:00');
+  const fromD = parseDateLocal(from);
+  const toD = parseDateLocal(to);
   const days = Math.round((toD - fromD) / 86400000) + 1;
   const prevTo = new Date(fromD); prevTo.setDate(prevTo.getDate() - 1);
   const prevFrom = new Date(prevTo); prevFrom.setDate(prevFrom.getDate() - days + 1);
-  return { from: prevFrom.toISOString().substring(0,10), to: prevTo.toISOString().substring(0,10) };
+  return { from: fmtDateISO(prevFrom), to: fmtDateISO(prevTo) };
 }
 
 function getSelectedMVMonths() {
@@ -1680,7 +1697,7 @@ function getSelectedMVPrevMonth() {
   const result = [];
   for (let i = count; i >= 1; i--) {
     const d = new Date(y, m - 1 - i, 1);
-    result.push(d.toISOString().substring(0,7));
+    result.push(fmtMonthISO(d));
   }
   return result.sort();
 }
@@ -1699,7 +1716,7 @@ function onChannelChange() {
 function setDefaultDateFilter() {
   const now = new Date();
   const y = now.getFullYear();
-  const todayStr = now.toISOString().substring(0,10);
+  const todayStr = fmtDateISO(now);
   document.getElementById('dateFrom').value = `${y}-01-01`;
   document.getElementById('dateTo').value = todayStr;
   updateDateRangeLabel();
@@ -3315,14 +3332,14 @@ function renderCRM() {
     if (!byPhoneAll[phone].name && r.customer_name) byPhoneAll[phone].name = r.customer_name;
   });
 
-  const today = new Date();
+  const today = new Date(); today.setHours(0,0,0,0); // ตัดเวลาออก เหลือแค่เที่ยงคืนวันนี้ (ท้องถิ่น) กัน daysSince เพี้ยนตามเวลาปัจจุบันที่กดดู
   let byPhone = byPhoneAll;
   if (crmMaxDaysSince !== null) {
     byPhone = {};
     Object.entries(byPhoneAll).forEach(([phone, v]) => {
       const lastDate = v.orders.map(o => o.date).filter(Boolean).sort().reverse()[0];
       if (!lastDate) return;
-      const daysSince = Math.floor((today - new Date(lastDate)) / 86400000);
+      const daysSince = Math.floor((today - parseDateLocal(lastDate)) / 86400000);
       if (daysSince <= crmMaxDaysSince) byPhone[phone] = v;
     });
   }
@@ -3412,14 +3429,14 @@ function showCRMDetail(key) {
   document.getElementById('crmDetailTitle').textContent = `รายชื่อลูกค้า — ${labels[key] || key} (${fmt(customers.length)} คน)${crmSelectedSKUs.length ? ' · สินค้า: ' + crmSelectedSKUs.map(skuToName).join(' / ') : ''}${crmMaxDaysSince !== null ? ' · ซื้อล่าสุดไม่เกิน ' + crmMaxDaysSince + ' วัน' : ''}`;
   document.getElementById('crmDetailCard').style.display = 'block';
 
-  const today = new Date();
+  const today = new Date(); today.setHours(0,0,0,0); // ตัดเวลาออก เหลือแค่เที่ยงคืนวันนี้ (ท้องถิ่น) กัน daysSince เพี้ยนตามเวลาปัจจุบันที่กดดู
   const avgGap = window._crmAvgGap;
   crmDetailData = customers.map(c => {
     const sortedOrders = [...c.orders].sort((a,b) => (a.date||'').localeCompare(b.date||''));
     const history = sortedOrders.map(o => `${o.date||'-'} (${o.sku_promotion||'-'}, ฿${fmt(Math.round(parseFloat(o.revenue)||0))})`).join(' | ');
     const revenue = sortedOrders.reduce((s, r) => s + (parseFloat(r.revenue) || 0), 0);
     const lastDate = sortedOrders.map(r => r.date).filter(Boolean).sort().reverse()[0] || '';
-    const daysSince = lastDate ? Math.floor((today - new Date(lastDate)) / 86400000) : null;
+    const daysSince = lastDate ? Math.floor((today - parseDateLocal(lastDate)) / 86400000) : null;
     let statusText = '—', statusColor = 'var(--text3)';
     if (avgGap !== null && daysSince !== null) {
       const diff = daysSince - avgGap;
