@@ -2844,6 +2844,7 @@ async function fetchPromotionTargets() {
 
 async function initPromoTargetPage() {
   // AOV คำนวณจากยอดขายทั้งหมดเท่าที่มี เฉพาะ Facebook (ไม่ผูกกับช่วงวันที่ที่เลือกไว้เทียบยอดจริง — กันค่าไม่นิ่งเวลาบางช่วงไม่มีออเดอร์)
+  // ใช้ sku_promotion ดิบ (พฤติกรรมการสั่งซื้อจริงจากไฟล์ที่อัพโหลด) — ไม่ใช่ base_promotion ที่คำนวณย้อนหลังจากการ match กับ Google Sheet
   _ptAovCache = {};
   (window._promoMonthlyCache||[]).filter(r => r.channel === 'Facebook').forEach(r => {
     const k = r.sku_promotion; if (!k) return;
@@ -2886,11 +2887,9 @@ function filterPtAddDropdown() {
   const list = document.getElementById('ptAddDropdown');
   if (!list) return;
   const tracked = _ptRows.map(r => r.sku_promotion);
-  const allPromos = Object.keys(_ptAovCache);
+  const allPromos = Object.keys(_ptAovCache); // รายการ sku_promotion ดิบ (พฤติกรรมการสั่งซื้อจริงจากไฟล์ที่อัพโหลด)
   // เช็คทั้ง 3 อย่าง: รหัส SKU ดิบ, ชื่อโปรที่ตั้งเองใน Google Sheet (ถ้ามี), และชื่อที่ระบบแปลอัตโนมัติจากรหัสสินค้า
-  // (เดิมเช็คแค่ "ชื่อที่ตั้งเอง || ชื่อแปลอัตโนมัติ" คือถ้ามีชื่อตั้งเองจะบังชื่อแปลอัตโนมัติไปเลย —
-  //  แต่ตาราง Top20 Promotion ที่พี่เมกดูมาโชว์ "ชื่อแปลอัตโนมัติ" เท่านั้น ไม่เคยดึงชื่อตั้งเองมาโชว์
-  //  พอโปรนั้นมีชื่อทางการต่างจากชื่อแปลอัตโนมัติ พิมพ์ชื่อที่เห็นในตาราง Top20 เลยหาไม่เจอเลย)
+  // (เผื่อบางโปรยังไม่มีชื่อตั้งเองใน promotions table หรือถูกปิด status active ไปแล้ว)
   const matches = allPromos.filter(p => {
     if (tracked.includes(p)) return false;
     if (!q) return true;
