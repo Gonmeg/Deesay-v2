@@ -223,21 +223,35 @@
   <div class="topbar">
     <div class="page-title" id="pageTitle">ภาพรวมยอดขาย</div>
     <div class="filters">
-      <div class="filter-group" id="dateFromGroup"><span class="filter-label">ตั้งแต่</span><input type="date" id="dateFrom"></div>
-      <div class="filter-group" id="dateToGroup"><span class="filter-label">ถึง</span><input type="date" id="dateTo"></div>
-      <div class="filter-group" id="datePresetGroup" style="position:relative;">
-        <button class="btn btn-ghost" onclick="toggleDatePresetMenu(event)" style="padding:6px 10px;font-size:12px;white-space:nowrap;">📅 ช่วงเวลาด่วน ▾</button>
-        <div id="datePresetMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:190px;padding:6px 0;max-height:400px;overflow-y:auto;">
-          <div onclick="setDatePreset('today')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">วันนี้</div>
-          <div onclick="setDatePreset('yesterday')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เมื่อวาน</div>
-          <div onclick="setDatePreset('7d')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">7 วันที่แล้ว</div>
-          <div onclick="setDatePreset('30d')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">30 วันที่แล้ว</div>
-          <div onclick="setDatePreset('thisMonth')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนนี้</div>
-          <div onclick="setDatePreset('lastMonth')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนที่แล้ว</div>
-          <div onclick="setDatePreset('3m')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">3 เดือนที่แล้ว</div>
-          <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
-          <div style="padding:4px 12px;font-size:10.5px;color:var(--text3);">หรือเลือกเดือนที่ผ่านมา:</div>
-          <div id="datePresetMonthList"></div>
+      <div class="filter-group" id="dateRangeGroup" style="position:relative;padding:0;background:transparent;border:none;">
+        <button class="btn btn-ghost" id="dateRangeBtn" onclick="toggleDatePresetMenu(event)" style="padding:6px 10px;font-size:12px;white-space:nowrap;">📅 <span id="dateRangeLabel">เลือกช่วงเวลา</span> ▾</button>
+        <div id="datePresetMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:320px;padding:10px;">
+          <div style="display:flex;gap:14px;">
+            <div style="min-width:130px;border-right:1px solid var(--border);padding-right:10px;">
+              <div onclick="setDatePreset('today')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">วันนี้</div>
+              <div onclick="setDatePreset('yesterday')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เมื่อวาน</div>
+              <div onclick="setDatePreset('7d')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">7 วันที่แล้ว</div>
+              <div onclick="setDatePreset('30d')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">30 วันที่แล้ว</div>
+              <div onclick="setDatePreset('thisMonth')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนนี้</div>
+              <div onclick="setDatePreset('lastMonth')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนที่แล้ว</div>
+              <div onclick="setDatePreset('3m')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">3 เดือนที่แล้ว</div>
+              <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
+              <div style="padding:4px 8px;font-size:10.5px;color:var(--text3);">เดือนที่ผ่านมา:</div>
+              <div id="datePresetMonthList" style="max-height:180px;overflow-y:auto;"></div>
+            </div>
+            <div style="flex:1;min-width:150px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">กำหนดเอง</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <label style="font-size:11.5px;color:var(--text2);display:flex;flex-direction:column;gap:3px;">ตั้งแต่
+                  <input type="date" id="dateFrom" onchange="updateDateRangeLabel()" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);">
+                </label>
+                <label style="font-size:11.5px;color:var(--text2);display:flex;flex-direction:column;gap:3px;">ถึง
+                  <input type="date" id="dateTo" onchange="updateDateRangeLabel()" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);">
+                </label>
+                <button class="btn btn-primary" onclick="applyFilters(); hideDatePresetMenu();" style="margin-top:4px;justify-content:center;">🔍 ค้นหา</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="filter-group" id="monthFilterGroup" style="display:none;gap:4px;">
@@ -1373,6 +1387,16 @@ document.addEventListener('click', (e) => {
   if (menu && menu.style.display === 'block' && !menu.contains(e.target)) hideDatePresetMenu();
 });
 
+function updateDateRangeLabel() {
+  const label = document.getElementById('dateRangeLabel');
+  if (!label) return;
+  const from = document.getElementById('dateFrom')?.value;
+  const to = document.getElementById('dateTo')?.value;
+  const fmtDMY = (iso) => { if (!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+  if (!from || !to) { label.textContent = 'เลือกช่วงเวลา'; return; }
+  label.textContent = from === to ? fmtDMY(from) : `${fmtDMY(from)} - ${fmtDMY(to)}`;
+}
+
 function setDatePreset(preset) {
   const today = new Date();
   let from, to;
@@ -1385,6 +1409,7 @@ function setDatePreset(preset) {
   else if (preset === '3m') { const f = new Date(today); f.setMonth(f.getMonth()-3); from = fmtDateISO(f); to = fmtDateISO(today); }
   document.getElementById('dateFrom').value = from;
   document.getElementById('dateTo').value = to;
+  updateDateRangeLabel();
   hideDatePresetMenu();
   // ไม่ค้นหาอัตโนมัติ — แค่เติมวันที่ในช่องให้ ต้องกด "ค้นหา" เองเหมือนตัวกรองอื่นทั้งหมด
 }
@@ -1395,6 +1420,7 @@ function setDatePresetMonth(monthStr) {
   const to = new Date(y, m, 0);
   document.getElementById('dateFrom').value = fmtDateISO(from);
   document.getElementById('dateTo').value = fmtDateISO(to);
+  updateDateRangeLabel();
   hideDatePresetMenu();
   // ไม่ค้นหาอัตโนมัติ — แค่เติมวันที่ในช่องให้ ต้องกด "ค้นหา" เองเหมือนตัวกรองอื่นทั้งหมด
 }
@@ -1402,13 +1428,12 @@ function setDatePresetMonth(monthStr) {
 function buildMonthPresetList() {
   const el = document.getElementById('datePresetMonthList');
   if (!el) return;
-  const now = new Date();
-  const months = [];
-  for (let i = 0; i < 12; i++) months.push(fmtDateISO(new Date(now.getFullYear(), now.getMonth()-i, 1)).substring(0,7));
-  el.innerHTML = months.map(m => {
+  // ใช้เดือนที่มีข้อมูลจริงในระบบเท่านั้น (เดิมไล่ย้อนหลัง 12 เดือนจากวันนี้ตรงๆ ทำให้โผล่เดือนที่ยังไม่มีข้อมูลเลย หรือขาดเดือนเก่ากว่านั้นที่จริงมีข้อมูลอยู่)
+  const monthsWithData = [...new Set((allData || []).map(r => (r.date || '').substring(0,7)).filter(Boolean))].sort().reverse();
+  el.innerHTML = monthsWithData.map(m => {
     const [y, mo] = m.split('-');
     return `<div onclick="setDatePresetMonth('${m}')" style="padding:6px 12px;cursor:pointer;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${MONTHS_TH[parseInt(mo)-1]} ${y}</div>`;
-  }).join('');
+  }).join('') || '<div style="padding:6px 12px;color:var(--text3);font-size:11px;">ไม่มีข้อมูล</div>';
 }
 
 function getPrevPeriodData() {
@@ -1677,6 +1702,7 @@ function setDefaultDateFilter() {
   const todayStr = now.toISOString().substring(0,10);
   document.getElementById('dateFrom').value = `${y}-01-01`;
   document.getElementById('dateTo').value = todayStr;
+  updateDateRangeLabel();
 }
 
 function applyFilters() {
@@ -1804,9 +1830,7 @@ function showPage(page, lockCh, el) {
 
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
-  document.getElementById('dateFromGroup').style.display = isMonthOnly ? 'none' : 'flex';
-  document.getElementById('dateToGroup').style.display = isMonthOnly ? 'none' : 'flex';
-  document.getElementById('datePresetGroup').style.display = isMonthOnly ? 'none' : 'flex';
+  document.getElementById('dateRangeGroup').style.display = isMonthOnly ? 'none' : 'flex';
   document.getElementById('monthFilterGroup').style.display = isMonthOnly ? 'flex' : 'none';
   if (isMonthOnly) {
     const selFrom = document.getElementById('filterMonthFrom');
@@ -2852,6 +2876,14 @@ function filterPtAddDropdown() {
     if (!q) return true;
     const name = (promotionsMap[p] || thaiNameForPromoGlobal(p) || '').toLowerCase();
     return p.toLowerCase().startsWith(q) || name.startsWith(q);
+  });
+  // เรียง: โปรที่ตรงกับคำค้นเป๊ะๆ (exact match) ขึ้นก่อนเสมอ แล้วตามด้วยยอดขายมาก→น้อย
+  // (เดิมไม่เรียงเลย ใช้ลำดับ insertion ตาม object ทำให้โปรฐาน เช่น "Ax2+Bx1" ที่พิมพ์ตรงเป๊ะ
+  //  หลุดไปอยู่หลังลำดับที่ 50 ได้ถ้ามีโปรพ่วงของแถมต่อท้าย เช่น "Ax2+Bx1+Cx1" เยอะมาก แล้วโดน slice(0,50) ตัดทิ้งไปเลย)
+  matches.sort((a, b) => {
+    const aExact = a.toLowerCase() === q, bExact = b.toLowerCase() === q;
+    if (aExact !== bExact) return aExact ? -1 : 1;
+    return (_ptAovCache[b]?.rev || 0) - (_ptAovCache[a]?.rev || 0);
   });
   list.innerHTML = matches.slice(0,50).map(p => `
     <div onclick="addPtPromoRow('${p}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
