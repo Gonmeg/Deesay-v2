@@ -378,6 +378,31 @@ const DB = createClient(
   window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmRpem1qZG1oeWpxcmFvaGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NjAyNTMsImV4cCI6MjA1OTIzNjI1M30.j1IqHbPJPADLCMHl4Z78BSYX-g8cCECGHJmtBIi6hBA'
 )
 
+// ===== Retry ช่วย request ที่หลุดเพราะปัญหา network ชั่วคราว (เช่น TypeError: Failed to fetch จากแท็บถูก throttle / เน็ตสะดุด) =====
+// ใช้ห่อ query ของ Supabase ที่ยิงทีละแถวจำนวนมาก (settlement matching, promotion matching ฯลฯ)
+// โดย retry เฉพาะ "network-level error" เท่านั้น (fetch ไม่ถึงปลายทางเลย) — ไม่ retry error จริงจาก Supabase
+// (เช่น RLS ปฏิเสธ, constraint ผิด) เพราะแบบนั้น retry ไปก็พังซ้ำเหมือนเดิม ไม่มีประโยชน์
+function isNetworkLevelError(err) {
+  if (!err) return false
+  if (err.name === 'TypeError') return true
+  const msg = String(err.message || err)
+  return /Failed to fetch|NetworkError|network error|ERR_NETWORK|ERR_FAILED|Load failed/i.test(msg)
+}
+async function withRetry(fn, { retries = 4, baseDelayMs = 700 } = {}) {
+  let lastErr
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+      if (!isNetworkLevelError(err) || attempt === retries) throw err
+      const delay = baseDelayMs * Math.pow(2, attempt) + Math.random() * 300 // exponential backoff + jitter กันยิงพร้อมกันซ้ำ
+      await new Promise(r => setTimeout(r, delay))
+    }
+  }
+  throw lastErr
+}
+
 // ===== Sync Promotions =====
 const PROMO_SHEET_ID = '1pDkvPNFUTZpj9EkOsL7FdaB3g0tSgWQIRkS0qE52_zU'
 const PROMO_SHEET_TAB = 'Facebook'
@@ -515,10 +540,16 @@ async function matchPromotionsForOrders(orders) {
   const CONCURRENCY = 20
   for (let i = 0; i < updates.length; i += CONCURRENCY) {
     const batch = updates.slice(i, i + CONCURRENCY)
-    await Promise.all(batch.map(u =>
-      DB.from('orders').update({ base_promotion: u.base_promotion, upsell_items: u.upsell_items }).eq('order_id', u.order_id)
-        .then(({ error }) => { if (error) console.error('match update failed for', u.order_id, error) })
-    ))
+    await Promise.all(batch.map(async u => {
+      try {
+        const { error } = await withRetry(() =>
+          DB.from('orders').update({ base_promotion: u.base_promotion, upsell_items: u.upsell_items }).eq('order_id', u.order_id)
+        )
+        if (error) console.error('match update failed for', u.order_id, error)
+      } catch (rowErr) {
+        console.error('match update failed permanently (network) for', u.order_id, rowErr) // retry แล้วยังพัง — ข้ามแถวนี้ไป ไม่ฉุดทั้งชุด
+      }
+    }))
   }
   return { matchedCount, behaviorCount, total: orders.length }
 }
@@ -637,7 +668,7 @@ async function syncDealerOrders() {
 
     const BATCH = 500
     for (let i = 0; i < orders.length; i += BATCH) {
-      const { error } = await DB.from('orders').insert(orders.slice(i, i + BATCH))
+      const { error } = await withRetry(() => DB.from('orders').insert(orders.slice(i, i + BATCH)))
       if (error) throw error
     }
 
@@ -666,7 +697,7 @@ async function syncDealerOrders() {
     const { error: delSKU } = await DB.from('sku_revenue').delete().in('channel', ['ตัวแทน','Modern Trade'])
     if (delSKU) throw delSKU
     for (let i = 0; i < skuRows.length; i += BATCH) {
-      const { error } = await DB.from('sku_revenue').insert(skuRows.slice(i, i + BATCH))
+      const { error } = await withRetry(() => DB.from('sku_revenue').insert(skuRows.slice(i, i + BATCH)))
       if (error) throw error
     }
 
@@ -802,7 +833,7 @@ async function uploadCostData() {
     await DB.from('product_costs').delete().eq('month', monthDate)
     const BATCH = 500
     for (let i = 0; i < _costParsed.length; i += BATCH) {
-      const { error } = await DB.from('product_costs').insert(_costParsed.slice(i, i+BATCH))
+      const { error } = await withRetry(() => DB.from('product_costs').insert(_costParsed.slice(i, i+BATCH)))
       if (error) throw error
     }
     const totalAmt = _costParsed.reduce((s,r)=>s+r.amount, 0)
@@ -1053,23 +1084,31 @@ document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
   let matched = 0, done = 0
   const CONCURRENCY = 20
   try {
+    const failedAttr = []
     for (let i = 0; i < deduped.length; i += CONCURRENCY) {
       const batch = deduped.slice(i, i + CONCURRENCY)
       await Promise.all(batch.map(async (r) => {
-        const { data, error } = await DB.from('orders')
-          .update({ order_channel: r.order_channel, creator_handle: r.creator_handle, order_status: r.order_status, created_at_precise: r.created_at_precise })
-          .eq('order_id', r.order_id)
-          .select('order_id')
-        if (error) throw error
-        if (data && data.length) matched++
+        try {
+          const { data, error } = await withRetry(() =>
+            DB.from('orders')
+              .update({ order_channel: r.order_channel, creator_handle: r.creator_handle, order_status: r.order_status, created_at_precise: r.created_at_precise })
+              .eq('order_id', r.order_id)
+              .select('order_id')
+          )
+          if (error) throw error
+          if (data && data.length) matched++
+        } catch (rowErr) {
+          failedAttr.push(r.order_id) // retry แล้วยังพัง — จดไว้ ไม่ให้ฉุดทั้งชุด
+        }
       }))
       done += batch.length
       attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังอัพเดต ${done.toLocaleString()} / ${deduped.length.toLocaleString()}...</div>`
     }
-    const notMatched = deduped.length - matched
+    const notMatched = deduped.length - matched - failedAttr.length
     attrResultEl.innerHTML = `
       <div style="font-size:0.74rem;color:#34d399;">✅ อัพเดตสำเร็จ ${matched.toLocaleString()} ออเดอร์</div>
       ${notMatched > 0 ? `<div style="font-size:0.72rem;color:#fbbf24;margin-top:4px;">⚠️ ไม่พบ order_id ในระบบ ${notMatched.toLocaleString()} รายการ (อาจเป็นออเดอร์ที่ยังไม่เคยอัพโหลด)</div>` : ''}
+      ${failedAttr.length > 0 ? `<div style="font-size:0.72rem;color:#ef4444;margin-top:4px;">🚨 ${failedAttr.length.toLocaleString()} รายการพังแม้ retry แล้ว (เน็ตหลุดยาว) — ลองกดอัพไฟล์เดิมซ้ำอีกรอบ</div>` : ''}
     `
   } catch (err) {
     attrResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ อัพเดตไม่สำเร็จ: ${err.message}</div>`
@@ -1176,12 +1215,12 @@ window.executeDeleteLog = async function(logId, subChannel, createdAt) {
       const BATCH = 200
       // ลบ sku_revenue ก่อน
       for (let i = 0; i < ids.length; i += BATCH) {
-        const { error } = await DB.from('sku_revenue').delete().in('order_id', ids.slice(i, i + BATCH))
+        const { error } = await withRetry(() => DB.from('sku_revenue').delete().in('order_id', ids.slice(i, i + BATCH)))
         if (error) throw error
       }
       // ลบ orders
       for (let i = 0; i < ids.length; i += BATCH) {
-        const { error } = await DB.from('orders').delete().in('order_id', ids.slice(i, i + BATCH))
+        const { error } = await withRetry(() => DB.from('orders').delete().in('order_id', ids.slice(i, i + BATCH)))
         if (error) throw error
       }
     }
@@ -1594,7 +1633,7 @@ async function handleConfirm() {
       await DB.from('orders').delete().in('channel', ['ตัวแทน','Modern Trade'])
       const BATCH = 500
       for (let i = 0; i < processed.length; i += BATCH) {
-        const { error } = await DB.from('orders').insert(processed.slice(i, i+BATCH))
+        const { error } = await withRetry(() => DB.from('orders').insert(processed.slice(i, i+BATCH)))
         if (error) throw error
         pf.style.width = Math.round((i+BATCH)/processed.length*60) + '%'
       }
@@ -1609,7 +1648,7 @@ async function handleConfirm() {
         })
       })
       for (let i = 0; i < skuRows.length; i += BATCH) {
-        const { error } = await DB.from('sku_revenue').insert(skuRows.slice(i, i+BATCH))
+        const { error } = await withRetry(() => DB.from('sku_revenue').insert(skuRows.slice(i, i+BATCH)))
         if (error) throw error
       }
       pf.style.width = '100%'
@@ -1661,29 +1700,40 @@ async function handleConfirm() {
       const deduped = [...dedupMap.values()]
       const CONCURRENCY = 20; let done = 0; let matchedCount = 0; let zeroOrNegativeCount = 0
       const unmatchedOrders = [] // เก็บ order ที่หาไม่เจอ
+      const failedRows = [] // เก็บ order ที่ query พังถาวรแม้ retry แล้ว (ไม่ให้ฉุดทั้งชุดพัง)
       for (let i = 0; i < deduped.length; i += CONCURRENCY) {
         const batch = deduped.slice(i, i + CONCURRENCY)
         await Promise.all(batch.map(async (r) => {
-          // ยอดเงินที่ได้รับจริงต้องมากกว่า 0 ถึงจะถือว่า "ขายได้" — ถ้า match เจอแต่ยอด 0 หรือติดลบ
-          // (ตีกลับ/คืนเงินเต็มจำนวน) ให้ถือว่ายังไม่ได้เงินเหมือนกัน (settled = false ไม่ใช่ true)
-          // ⚠️ ยกเว้น Lazada — ไฟล์รับเงินเป็นรายการธุรกรรมย่อยหลายบรรทัดต่อออเดอร์ (ค่าธรรมเนียม/คอมมิชชั่นแยกบรรทัด)
-          // เช็คยอด >0 ไม่น่าเชื่อถือสำหรับช่องทางนี้ กลับไปใช้กติกาเดิม: เจอ Order ID ในไฟล์ = ถือว่าได้เงินแล้ว ไม่สนยอด
-          const amt = r.settle_amount || 0
-          const isPaid = channel === 'Lazada' ? true : amt > 0
-          const { data, error } = await DB.from('orders').update({ settled: isPaid, settled_date: r.settled_date }).eq('order_id', r.order_id).select('order_id')
-          if (error) throw error
-          if (data && data.length) {
-            matchedCount++
-            if (!isPaid) zeroOrNegativeCount++
-            const { error: srError } = await DB.from('sku_revenue').update({ settled: isPaid ? 'True' : 'False', settled_date: r.settled_date }).eq('order_id', r.order_id)
-            if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
-          } else {
-            unmatchedOrders.push({ order_id: r.order_id, settled_date: r.settled_date, order_created_date: r.order_created_date, settle_amount: r.settle_amount || 0 })
+          try {
+            // ยอดเงินที่ได้รับจริงต้องมากกว่า 0 ถึงจะถือว่า "ขายได้" — ถ้า match เจอแต่ยอด 0 หรือติดลบ
+            // (ตีกลับ/คืนเงินเต็มจำนวน) ให้ถือว่ายังไม่ได้เงินเหมือนกัน (settled = false ไม่ใช่ true)
+            // ⚠️ ยกเว้น Lazada — ไฟล์รับเงินเป็นรายการธุรกรรมย่อยหลายบรรทัดต่อออเดอร์ (ค่าธรรมเนียม/คอมมิชชั่นแยกบรรทัด)
+            // เช็คยอด >0 ไม่น่าเชื่อถือสำหรับช่องทางนี้ กลับไปใช้กติกาเดิม: เจอ Order ID ในไฟล์ = ถือว่าได้เงินแล้ว ไม่สนยอด
+            const amt = r.settle_amount || 0
+            const isPaid = channel === 'Lazada' ? true : amt > 0
+            const { data, error } = await withRetry(() =>
+              DB.from('orders').update({ settled: isPaid, settled_date: r.settled_date }).eq('order_id', r.order_id).select('order_id')
+            )
+            if (error) throw error
+            if (data && data.length) {
+              matchedCount++
+              if (!isPaid) zeroOrNegativeCount++
+              const { error: srError } = await withRetry(() =>
+                DB.from('sku_revenue').update({ settled: isPaid ? 'True' : 'False', settled_date: r.settled_date }).eq('order_id', r.order_id)
+              )
+              if (srError) console.error('sku_revenue sync failed for', r.order_id, srError)
+            } else {
+              unmatchedOrders.push({ order_id: r.order_id, settled_date: r.settled_date, order_created_date: r.order_created_date, settle_amount: r.settle_amount || 0 })
+            }
+          } catch (rowErr) {
+            // แม้ retry 4 รอบแล้วยังพังอยู่ (เช่นเน็ตหลุดยาวจริงๆ) ก็แค่จดไว้ ไม่ทำให้ทั้ง batch/ทั้งไฟล์พังตาม
+            console.error('settlement update failed permanently for', r.order_id, rowErr)
+            failedRows.push({ order_id: r.order_id, settled_date: r.settled_date, error: rowErr.message || String(rowErr) })
           }
         }))
         done += batch.length; pf.style.width = Math.round(done / deduped.length * 100) + '%'
       }
-      const notMatched = deduped.length - matchedCount
+      const notMatched = deduped.length - matchedCount - failedRows.length
 
       // เช็คว่ามีออเดอร์ในช่วงวันที่ที่ไฟล์นี้ครอบคลุม ที่ยัง settled=NULL ค้างอยู่ไหม (ตกหล่นจากเหตุการณ์อื่นมาก่อน)
       // เพราะกฎ "ไม่เจอในไฟล์รับเงิน = false" ไม่เคยถูกบังคับใช้จริงเลย ต้องมากวาดตรงนี้แทน
@@ -1739,17 +1789,28 @@ async function handleConfirm() {
           </table>
         </div>` : ''
 
-      logUpload({ upload_type:'settlement', channel, sub_channel:null, file_name:(fileInput.files.length>1?`${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}`:(fileInput.files[0]?.name||null)), total_rows:deduped.length, success_count:matchedCount, not_matched_count:notMatched, total_revenue:null, status:'success' })
+      const failedRowsHTML = failedRows.length > 0 ? `
+        <div style="margin-top:16px;padding:12px 14px;border-radius:8px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.3);">
+          <div style="font-size:0.78rem;color:#ef4444;font-weight:600;margin-bottom:6px;">🚨 ${failedRows.length.toLocaleString()} ออเดอร์ update ไม่สำเร็จแม้ retry แล้ว (เน็ต/เซิร์ฟเวอร์หลุดยาวจริงๆ) — ไม่กระทบออเดอร์อื่นที่เหลือ</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">แก้ได้ง่ายๆ: กด "อัพรับเงินต่อ" แล้วเลือกไฟล์เดิมอัพซ้ำอีกรอบ — ระบบจะ update ทับค่าเดิมแค่ ${failedRows.length.toLocaleString()} แถวนี้ ไม่ซ้ำซ้อนกับที่ทำสำเร็จไปแล้ว</div>
+          <div style="max-height:120px;overflow-y:auto;font-family:monospace;font-size:0.7rem;color:var(--muted);">
+            ${failedRows.slice(0,50).map(r => `${r.order_id} — ${r.error}`).join('<br>')}
+            ${failedRows.length > 50 ? `<br>...และอีก ${failedRows.length - 50} รายการ` : ''}
+          </div>
+        </div>` : ''
+
+      logUpload({ upload_type:'settlement', channel, sub_channel:null, file_name:(fileInput.files.length>1?`${fileInput.files.length} files: ${[...fileInput.files].map(f=>f.name).join(', ')}`:(fileInput.files[0]?.name||null)), total_rows:deduped.length, success_count:matchedCount, not_matched_count:notMatched, total_revenue:null, status: failedRows.length > 0 ? 'partial' : 'success' })
       pt.style.display = 'none'; al.style.display = 'none'
       document.getElementById('btnRow3').innerHTML = `
         <div style="width:100%">
-          <div class="success-banner"><span class="success-banner-icon">✓</span><div><div class="success-banner-title">Map Settlement สำเร็จ</div><div class="success-banner-sub">${(matchedCount-zeroOrNegativeCount).toLocaleString()} ออเดอร์ได้เงินจริง (>0) · ${channel}</div></div></div>
+          <div class="success-banner"><span class="success-banner-icon">${failedRows.length > 0 ? '⚠️' : '✓'}</span><div><div class="success-banner-title">${failedRows.length > 0 ? 'Map Settlement เสร็จบางส่วน' : 'Map Settlement สำเร็จ'}</div><div class="success-banner-sub">${(matchedCount-zeroOrNegativeCount).toLocaleString()} ออเดอร์ได้เงินจริง (>0) · ${channel}</div></div></div>
           <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที</div>
           <div class="success-stats">
             <div class="success-stat"><div class="success-stat-num">${deduped.length.toLocaleString()}</div><div class="success-stat-label">รายการในไฟล์</div></div>
             <div class="success-stat"><div class="success-stat-num">${(matchedCount-zeroOrNegativeCount).toLocaleString()}</div><div class="success-stat-label">Match + ได้เงิน >0</div></div>
             <div class="success-stat"><div class="success-stat-num" style="color:${zeroOrNegativeCount>0?'#fb923c':'#818cf8'}">${zeroOrNegativeCount.toLocaleString()}</div><div class="success-stat-label">Match แต่ยอด ≤0 (ตั้ง settled=false)</div></div>
             <div class="success-stat"><div class="success-stat-num" style="color:${notMatched>0?'#fb923c':'#818cf8'}">${notMatched.toLocaleString()}</div><div class="success-stat-label">ไม่เจอออเดอร์</div></div>
+            ${failedRows.length > 0 ? `<div class="success-stat"><div class="success-stat-num" style="color:#ef4444">${failedRows.length.toLocaleString()}</div><div class="success-stat-label">Update ไม่สำเร็จ (ลอง retry แล้ว)</div></div>` : ''}
           </div>
           ${staleNullCount > 0 ? `
           <div style="margin-top:16px;padding:12px 14px;border-radius:8px;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.3);">
@@ -1758,6 +1819,7 @@ async function handleConfirm() {
             <button class="btn-sync" id="btnSweepNulls" onclick="sweepStaleNulls()" style="background:#fb923c;color:white;">🧹 กวาด NULL ที่เหลือให้เป็น false</button>
             <div id="sweepResult"></div>
           </div>` : ''}
+          ${failedRowsHTML}
           ${unmatchedTableHTML}
           <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
           <div class="success-actions">
@@ -1778,7 +1840,7 @@ async function handleConfirm() {
     const deduped = [...dedupMap.values()]
     const BATCH = 500; let done = 0
     for (let i = 0; i < deduped.length; i += BATCH) {
-      const { error } = await DB.from('orders').upsert(deduped.slice(i, i + BATCH), { onConflict: 'order_id' })
+      const { error } = await withRetry(() => DB.from('orders').upsert(deduped.slice(i, i + BATCH), { onConflict: 'order_id' }))
       if (error) throw error
       done += Math.min(BATCH, deduped.length - i); pf.style.width = Math.round(done / deduped.length * 100) + '%'
     }
@@ -1968,9 +2030,9 @@ async function calcSkuRevenue(orders) {
   if (!skuRows.length) return 0
   const orderIds = [...new Set(orders.map(o => o.order_id))]
   const DELETE_BATCH = 200
-  for (let i = 0; i < orderIds.length; i += DELETE_BATCH) { const {error:delError} = await DB.from('sku_revenue').delete().in('order_id', orderIds.slice(i,i+DELETE_BATCH)); if (delError) throw delError }
+  for (let i = 0; i < orderIds.length; i += DELETE_BATCH) { const {error:delError} = await withRetry(() => DB.from('sku_revenue').delete().in('order_id', orderIds.slice(i,i+DELETE_BATCH))); if (delError) throw delError }
   const BATCH = 500
-  for (let i = 0; i < skuRows.length; i += BATCH) { const {error} = await DB.from('sku_revenue').insert(skuRows.slice(i,i+BATCH)); if (error) throw error }
+  for (let i = 0; i < skuRows.length; i += BATCH) { const {error} = await withRetry(() => DB.from('sku_revenue').insert(skuRows.slice(i,i+BATCH))); if (error) throw error }
   return skuRows.length
 }
 
