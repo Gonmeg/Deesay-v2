@@ -225,6 +225,21 @@
     <div class="filters">
       <div class="filter-group" id="dateFromGroup"><span class="filter-label">ตั้งแต่</span><input type="date" id="dateFrom"></div>
       <div class="filter-group" id="dateToGroup"><span class="filter-label">ถึง</span><input type="date" id="dateTo"></div>
+      <div class="filter-group" id="datePresetGroup" style="position:relative;">
+        <button class="btn btn-ghost" onclick="toggleDatePresetMenu(event)" style="padding:6px 10px;font-size:12px;white-space:nowrap;">📅 ช่วงเวลาด่วน ▾</button>
+        <div id="datePresetMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:190px;padding:6px 0;max-height:400px;overflow-y:auto;">
+          <div onclick="setDatePreset('today')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">วันนี้</div>
+          <div onclick="setDatePreset('yesterday')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เมื่อวาน</div>
+          <div onclick="setDatePreset('7d')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">7 วันที่แล้ว</div>
+          <div onclick="setDatePreset('30d')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">30 วันที่แล้ว</div>
+          <div onclick="setDatePreset('thisMonth')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนนี้</div>
+          <div onclick="setDatePreset('lastMonth')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนที่แล้ว</div>
+          <div onclick="setDatePreset('3m')" style="padding:7px 12px;cursor:pointer;font-size:12.5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">3 เดือนที่แล้ว</div>
+          <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
+          <div style="padding:4px 12px;font-size:10.5px;color:var(--text3);">หรือเลือกเดือนที่ผ่านมา:</div>
+          <div id="datePresetMonthList"></div>
+        </div>
+      </div>
       <div class="filter-group" id="monthFilterGroup" style="display:none;gap:4px;">
         <span class="filter-label">ตั้งแต่</span>
         <select id="filterMonthFrom" onchange="onMonthFilterChange()" style="max-width:120px;"></select>
@@ -351,8 +366,7 @@
       <div id="ptErrorBanner" style="display:none;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เทียบยอดขายจริงของวันที่:</div>
-          <input type="date" id="ptActualDate" onchange="renderPromoTargets()">
+          <div style="font-size:12px;color:var(--text3);">📅 "ยอดขายจริง" รวมตามช่วงวันที่ที่เลือกไว้บนสุดของหน้า (ตั้งแต่...ถึง...) — เปลี่ยนช่วงแล้วกด "ค้นหา" ด้านบน</div>
           <div style="position:relative;margin-left:auto;">
             <button class="btn btn-primary" onclick="toggleAddPtPromo()">+ เพิ่มแถว</button>
             <div id="ptAddPromoBox" style="display:none;position:absolute;top:calc(100% + 6px);right:0;width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:50;">
@@ -1340,6 +1354,63 @@ function getDateValue(suffix) {
   return el ? el.value : '';
 }
 
+// ===== Quick Date Preset (แบบ Shopee) — ใช้ร่วมกันทุกหน้าที่มีตัวกรองวันที่ =====
+function fmtDateISO(d) { return d.toISOString().substring(0,10); }
+
+function toggleDatePresetMenu(e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById('datePresetMenu');
+  const willOpen = el.style.display !== 'block';
+  el.style.display = willOpen ? 'block' : 'none';
+  if (willOpen) buildMonthPresetList();
+}
+function hideDatePresetMenu() {
+  const el = document.getElementById('datePresetMenu');
+  if (el) el.style.display = 'none';
+}
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('datePresetMenu');
+  if (menu && menu.style.display === 'block' && !menu.contains(e.target)) hideDatePresetMenu();
+});
+
+function setDatePreset(preset) {
+  const today = new Date();
+  let from, to;
+  if (preset === 'today') { from = to = fmtDateISO(today); }
+  else if (preset === 'yesterday') { const y = new Date(today); y.setDate(y.getDate()-1); from = to = fmtDateISO(y); }
+  else if (preset === '7d') { const f = new Date(today); f.setDate(f.getDate()-6); from = fmtDateISO(f); to = fmtDateISO(today); }
+  else if (preset === '30d') { const f = new Date(today); f.setDate(f.getDate()-29); from = fmtDateISO(f); to = fmtDateISO(today); }
+  else if (preset === 'thisMonth') { from = fmtDateISO(new Date(today.getFullYear(), today.getMonth(), 1)); to = fmtDateISO(today); }
+  else if (preset === 'lastMonth') { const f = new Date(today.getFullYear(), today.getMonth()-1, 1); const t = new Date(today.getFullYear(), today.getMonth(), 0); from = fmtDateISO(f); to = fmtDateISO(t); }
+  else if (preset === '3m') { const f = new Date(today); f.setMonth(f.getMonth()-3); from = fmtDateISO(f); to = fmtDateISO(today); }
+  document.getElementById('dateFrom').value = from;
+  document.getElementById('dateTo').value = to;
+  hideDatePresetMenu();
+  // ไม่ค้นหาอัตโนมัติ — แค่เติมวันที่ในช่องให้ ต้องกด "ค้นหา" เองเหมือนตัวกรองอื่นทั้งหมด
+}
+
+function setDatePresetMonth(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const from = new Date(y, m-1, 1);
+  const to = new Date(y, m, 0);
+  document.getElementById('dateFrom').value = fmtDateISO(from);
+  document.getElementById('dateTo').value = fmtDateISO(to);
+  hideDatePresetMenu();
+  // ไม่ค้นหาอัตโนมัติ — แค่เติมวันที่ในช่องให้ ต้องกด "ค้นหา" เองเหมือนตัวกรองอื่นทั้งหมด
+}
+
+function buildMonthPresetList() {
+  const el = document.getElementById('datePresetMonthList');
+  if (!el) return;
+  const now = new Date();
+  const months = [];
+  for (let i = 0; i < 12; i++) months.push(fmtDateISO(new Date(now.getFullYear(), now.getMonth()-i, 1)).substring(0,7));
+  el.innerHTML = months.map(m => {
+    const [y, mo] = m.split('-');
+    return `<div onclick="setDatePresetMonth('${m}')" style="padding:6px 12px;cursor:pointer;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${MONTHS_TH[parseInt(mo)-1]} ${y}</div>`;
+  }).join('');
+}
+
 function getPrevPeriodData() {
   const from = getDateValue('From');
   const to = getDateValue('To');
@@ -1511,9 +1582,18 @@ async function upsertRow(table, data, conflictCol) {
     'Prefer': 'resolution=merge-duplicates,return=minimal',
   };
   const url = `${window.SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflictCol}`;
-  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(data) });
-  if (!res.ok) { console.error('upsertRow failed:', table, await res.text()); return false; }
-  return true;
+  try {
+    const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(data) });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('upsertRow failed:', table, errText);
+      return { ok: false, error: errText };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error('upsertRow network error:', e);
+    return { ok: false, error: e.message || String(e) };
+  }
 }
 
 // ===== SUPABASE FETCH: new Materialized Views (monthly granularity) =====
@@ -1672,7 +1752,7 @@ function onMonthFilterChange() {
     selectedMonthTo = to || from || null;
   }
   selectedMonth = selectedMonthFrom;
-  renderCurrentPage();
+  // ไม่ render ทันที — รอกด "ค้นหา" เหมือนตัวกรองอื่นทั้งหมดในเว็บ
 }
 
 function toggleNavGroup(key) {
@@ -1726,6 +1806,7 @@ function showPage(page, lockCh, el) {
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
   document.getElementById('dateFromGroup').style.display = isMonthOnly ? 'none' : 'flex';
   document.getElementById('dateToGroup').style.display = isMonthOnly ? 'none' : 'flex';
+  document.getElementById('datePresetGroup').style.display = isMonthOnly ? 'none' : 'flex';
   document.getElementById('monthFilterGroup').style.display = isMonthOnly ? 'flex' : 'none';
   if (isMonthOnly) {
     const selFrom = document.getElementById('filterMonthFrom');
@@ -1751,6 +1832,7 @@ function showPage(page, lockCh, el) {
 function renderCurrentPage() {
   if (currentPage === 'overview') renderOverview();
   else if (currentPage === 'channel') renderChannel();
+  else if (currentPage === 'promotarget') renderPromoTargets();
   else if (currentPage === 'fbhub') renderFbHub();
   else if (currentPage === 'tthub') renderTtHub();
   else if (currentPage === 'shhub') renderShHub();
@@ -2720,12 +2802,7 @@ async function fetchPromotionTargets() {
 }
 
 async function initPromoTargetPage() {
-  const dateEl = document.getElementById('ptActualDate');
-  if (dateEl && !dateEl.value) {
-    const dates = [...new Set((window._promoMonthlyCache||[]).filter(r=>r.channel==='Facebook').map(r=>r.date))].sort();
-    dateEl.value = dates.length ? dates[dates.length-1] : new Date().toISOString().substring(0,10);
-  }
-  // AOV คำนวณจากยอดขายทั้งหมดเท่าที่มี เฉพาะ Facebook (ไม่ผูกกับวันเดียวที่เลือกไว้เทียบยอดจริง — กันค่าไม่นิ่งเวลาบางวันไม่มีออเดอร์)
+  // AOV คำนวณจากยอดขายทั้งหมดเท่าที่มี เฉพาะ Facebook (ไม่ผูกกับช่วงวันที่ที่เลือกไว้เทียบยอดจริง — กันค่าไม่นิ่งเวลาบางช่วงไม่มีออเดอร์)
   _ptAovCache = {};
   (window._promoMonthlyCache||[]).filter(r => r.channel === 'Facebook').forEach(r => {
     const k = r.sku_promotion; if (!k) return;
@@ -2789,8 +2866,8 @@ async function addPtPromoRow(sku_promotion) {
   _ptTargets[sku_promotion] = _ptTargets[sku_promotion] || { sku_promotion };
   document.getElementById('ptAddPromoBox').style.display = 'none';
   renderPromoTargets();
-  const ok = await upsertRow('promotion_targets', { sku_promotion }, 'sku_promotion');
-  if (!ok) showPtError(`บันทึกโปร "${promotionsMap[sku_promotion] || sku_promotion}" ไม่สำเร็จ — ลองแก้ค่าอีกครั้ง หรือเช็คว่าตาราง promotion_targets ถูกสร้างแล้วหรือยัง`);
+  const result = await upsertRow('promotion_targets', { sku_promotion }, 'sku_promotion');
+  if (!result.ok) showPtError(`บันทึกโปร "${promotionsMap[sku_promotion] || sku_promotion}" ไม่สำเร็จ: ${result.error}`);
 }
 
 async function removePtRow(rowId) {
@@ -2812,14 +2889,14 @@ async function updatePtField(sku_promotion, field, rawValue) {
   if (!_ptTargets[sku_promotion]) _ptTargets[sku_promotion] = { sku_promotion };
   _ptTargets[sku_promotion][field] = value;
   renderPromoTargets();
-  const ok = await upsertRow('promotion_targets', { sku_promotion, [field]: value }, 'sku_promotion');
-  if (!ok) showPtError(`บันทึกค่าไม่สำเร็จ — เช็คว่าตาราง promotion_targets ถูกสร้างแล้วหรือยัง`);
+  const result = await upsertRow('promotion_targets', { sku_promotion, [field]: value }, 'sku_promotion');
+  if (!result.ok) showPtError(`บันทึกค่าไม่สำเร็จ: ${result.error}`);
 }
 
 function renderPromoTargets() {
-  const actualDate = document.getElementById('ptActualDate')?.value || '';
+  const from = getDateValue('From'), to = getDateValue('To');
   const actualBySku = {};
-  (window._promoMonthlyCache||[]).filter(r => r.date === actualDate && r.channel === 'Facebook').forEach(r => {
+  (window._promoMonthlyCache||[]).filter(r => r.date >= from && r.date <= to && r.channel === 'Facebook').forEach(r => {
     actualBySku[r.sku_promotion] = (actualBySku[r.sku_promotion]||0) + (parseInt(r.total_orders)||0);
   });
 
