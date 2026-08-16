@@ -154,6 +154,21 @@
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }.hub-subch-bar:hover { background: var(--bg3); }
 .hub-subch-bar.selected:hover { background: rgba(99,102,241,0.18) !important; }
+
+  /* ===== ตั้งเป้าโปรโมชั่น: ช่องกรอกเอง — ใช้โทนสี accent ของแบรนด์แทนสีเหลืองสดเดิมที่ไม่เข้าธีม ===== */
+  .pt-editable-th { background: rgba(200,169,110,0.10) !important; border-bottom: 2px solid var(--accent) !important; }
+  .pt-editable-td { background: rgba(200,169,110,0.04); padding: 4px 6px !important; }
+  .pt-input {
+    width: 60px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
+    background: rgba(200,169,110,0.08); color: var(--accent2); border: 1px solid rgba(200,169,110,0.35);
+    border-radius: 6px; padding: 5px 7px; outline: none; transition: all 0.15s;
+  }
+  .pt-input::placeholder { color: var(--text3); font-family: 'Sarabun', sans-serif; font-weight: 400; }
+  .pt-input:hover { border-color: rgba(200,169,110,0.6); }
+  .pt-input:focus { border-color: var(--accent); background: rgba(200,169,110,0.14); box-shadow: 0 0 0 3px rgba(200,169,110,0.15); }
+  .pt-window-cell { text-align: center; font-family: 'IBM Plex Mono', monospace; padding: 6px 8px !important; }
+  .pt-window-actual { font-size: 13.5px; font-weight: 700; }
+  .pt-window-gap { font-size: 10px; margin-top: 3px; font-family: 'Sarabun', sans-serif; }
 </style>
 </head>
 <body>
@@ -375,12 +390,12 @@
 
     <div class="page" id="page-promotarget">
       <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;">
-        📌 เริ่มเฉพาะโปรของ <b>Facebook</b> ก่อน · <b>ราคาต่อบิล</b> ดึงจาก AOV จริงของโปรนั้น (เฉลี่ยทั้งหมด) โดยอัตโนมัติ · ช่องพื้นหลังเหลือง = กรอกเองได้ · ช่องอื่นคำนวณให้อัตโนมัติ · บันทึกอัตโนมัติทุกครั้งที่แก้ ปิดเปิดใหม่ค่าไม่หาย
+        📌 เริ่มเฉพาะโปรของ <b>Facebook</b> ก่อน · <b>ราคาต่อบิล</b> ดึงจาก AOV จริงของโปรนั้น (เฉลี่ยทั้งหมด) โดยอัตโนมัติ · ช่องพื้นหลังทอง = กรอกเองได้ · ช่องอื่นคำนวณให้อัตโนมัติ · บันทึกอัตโนมัติทุกครั้งที่แก้ ปิดเปิดใหม่ค่าไม่หาย
       </div>
       <div id="ptErrorBanner" style="display:none;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:12px;color:var(--text3);">📅 "ยอดขายจริง" รวมตามช่วงวันที่ที่เลือกไว้บนสุดของหน้า (ตั้งแต่...ถึง...) — เปลี่ยนช่วงแล้วกด "ค้นหา" ด้านบน</div>
+          <div style="font-size:12px;color:var(--text3);">📅 "เมื่อวาน / 3 วันล่าสุด / 7 วันล่าสุด" นับจากวันล่าสุดที่มีข้อมูลจริงเสมอ ไม่เกี่ยวกับตัวกรองวันที่ (หน้านี้ไม่มีตัวกรองวันที่แล้ว)</div>
           <div style="position:relative;margin-left:auto;">
             <button class="btn btn-primary" onclick="toggleAddPtPromo()">+ เพิ่มแถว</button>
             <div id="ptAddPromoBox" style="display:none;position:absolute;top:calc(100% + 6px);right:0;width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:50;">
@@ -392,7 +407,10 @@
       </div>
       <div class="card" style="overflow:hidden;">
         <div class="section-header">
-          <div class="section-title">ตั้งเป้าต่อโปร/สินค้า (Facebook)</div>
+          <div>
+            <div class="section-title">ตั้งเป้าต่อโปร/สินค้า (Facebook)</div>
+            <div id="ptLatestDateCaption" style="font-size:11.5px;color:var(--text3);margin-top:2px;"></div>
+          </div>
           <button class="btn btn-ghost" onclick="exportTable('tblPromoTarget')">⬇ Export CSV</button>
         </div>
         <div style="overflow-x:auto;">
@@ -401,12 +419,13 @@
               <tr>
                 <th style="min-width:140px;">โปร / สินค้า</th>
                 <th>ราคาต่อบิล<br>(AOV)</th>
-                <th style="background:rgba(255,224,102,0.15);">อัตราปิด<br>เป้า %</th>
-                <th style="background:rgba(255,224,102,0.15);">ต้นทุน<br>สินค้า %</th>
-                <th style="background:rgba(255,224,102,0.15);">ค่าแอด %<br>เป้า</th>
-                <th>ยอดขายจริง<br>(ชุด)</th>
-                <th style="background:rgba(255,224,102,0.15);">เป้ายอดขาย<br>(ชุด/วัน)</th>
-                <th>ขาดอีก<br>(ชุด)</th>
+                <th class="pt-editable-th">อัตราปิด<br>เป้า %</th>
+                <th class="pt-editable-th">ต้นทุน<br>สินค้า %</th>
+                <th class="pt-editable-th">ค่าแอด %<br>เป้า</th>
+                <th class="pt-editable-th">เป้ายอดขาย<br>(ชุด/วัน)</th>
+                <th>เมื่อวาน<br>(ชุด)</th>
+                <th>3 วันล่าสุด<br>(ชุด)</th>
+                <th>7 วันล่าสุด<br>(ชุด)</th>
                 <th>ค่าแอด/ออเดอร์<br>เป้า (บาท)</th>
                 <th>CPL เป้า<br>(บาท)</th>
                 <th>เป้า Lead<br>/วัน (คน)</th>
@@ -417,7 +436,7 @@
                 <th></th>
               </tr>
             </thead>
-            <tbody id="tbodyPromoTarget"><tr><td colspan="16" class="empty">ยังไม่มีโปรที่ติดตาม — เพิ่มด้านบน</td></tr></tbody>
+            <tbody id="tbodyPromoTarget"><tr><td colspan="17" class="empty">ยังไม่มีโปรที่ติดตาม — เพิ่มด้านบน</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1755,6 +1774,7 @@ const pageTitles = {
 };
 const pageOrder = ['overview','channel','promotarget','fbhub','promotion','geo','crm','flow','neverbought','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
+const NO_DATE_FILTER_PAGES = ['promotarget']; // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -1845,9 +1865,10 @@ function showPage(page, lockCh, el) {
     setDefaultDateFilter();
   }
 
-  // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้าอื่นใช้ช่วงวันที่ตามปกติ
+  // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
-  document.getElementById('dateRangeGroup').style.display = isMonthOnly ? 'none' : 'flex';
+  const noDateFilter = NO_DATE_FILTER_PAGES.includes(page);
+  document.getElementById('dateRangeGroup').style.display = (isMonthOnly || noDateFilter) ? 'none' : 'flex';
   document.getElementById('monthFilterGroup').style.display = isMonthOnly ? 'flex' : 'none';
   if (isMonthOnly) {
     const selFrom = document.getElementById('filterMonthFrom');
@@ -2842,6 +2863,43 @@ async function fetchPromotionTargets() {
   return res.json();
 }
 
+// แปลง "YYYY-MM-DD" เป็นข้อความวันที่ไทยอ่านง่าย เช่น "14 ส.ค. 2569"
+function fmtDateThai(iso) {
+  if (!iso) return '';
+  const d = parseDateLocal(iso);
+  return `${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear() + 543}`;
+}
+
+// หาวันล่าสุดที่มีข้อมูลจริงของ Facebook (จาก mv_promo_monthly) — ใช้เป็นจุดยึดสำหรับ เมื่อวาน/3วัน/7วัน
+// แทนการผูกกับตัวกรองวันที่บนสุดของหน้า (หน้านี้ไม่มีตัวกรองวันที่ให้เลือกแล้ว)
+function getPtLatestDataDate() {
+  let maxDate = null;
+  (window._promoMonthlyCache||[]).forEach(r => {
+    if (r.channel === 'Facebook' && r.date && (!maxDate || r.date > maxDate)) maxDate = r.date;
+  });
+  return maxDate;
+}
+
+// คืน { [sku_promotion]: { d1, d3, d7 } } นับยอดขายจริงย้อนหลังจากวันล่าสุดที่มีข้อมูล (นับรวมวันนั้นด้วย)
+function getPtActualWindows(latestDate) {
+  const result = {};
+  if (!latestDate) return result;
+  const end = parseDateLocal(latestDate);
+  const start3 = new Date(end); start3.setDate(start3.getDate() - 2);
+  const start7 = new Date(end); start7.setDate(start7.getDate() - 6);
+  const start3Str = fmtDateISO(start3), start7Str = fmtDateISO(start7);
+  (window._promoMonthlyCache||[]).forEach(r => {
+    if (r.channel !== 'Facebook' || !r.date || r.date < start7Str || r.date > latestDate) return;
+    const sku = r.sku_promotion; if (!sku) return;
+    if (!result[sku]) result[sku] = { d1: 0, d3: 0, d7: 0 };
+    const qty = parseInt(r.total_orders) || 0;
+    result[sku].d7 += qty;
+    if (r.date >= start3Str) result[sku].d3 += qty;
+    if (r.date === latestDate) result[sku].d1 += qty;
+  });
+  return result;
+}
+
 async function initPromoTargetPage() {
   // AOV คำนวณจากยอดขายทั้งหมดเท่าที่มี เฉพาะ Facebook (ไม่ผูกกับช่วงวันที่ที่เลือกไว้เทียบยอดจริง — กันค่าไม่นิ่งเวลาบางช่วงไม่มีออเดอร์)
   // ใช้ sku_promotion ดิบ (พฤติกรรมการสั่งซื้อจริงจากไฟล์ที่อัพโหลด) — ไม่ใช่ base_promotion ที่คำนวณย้อนหลังจากการ match กับ Google Sheet
@@ -2888,33 +2946,26 @@ function filterPtAddDropdown() {
   if (!list) return;
   const tracked = _ptRows.map(r => r.sku_promotion);
   const allPromos = Object.keys(_ptAovCache); // รายการ sku_promotion ดิบ (พฤติกรรมการสั่งซื้อจริงจากไฟล์ที่อัพโหลด)
-  // เช็คทั้ง 3 อย่าง: รหัส SKU ดิบ, ชื่อโปรที่ตั้งเองใน Google Sheet (ถ้ามี), และชื่อที่ระบบแปลอัตโนมัติจากรหัสสินค้า
-  // (เผื่อบางโปรยังไม่มีชื่อตั้งเองใน promotions table หรือถูกปิด status active ไปแล้ว)
+  // เช็ค 2 อย่าง: รหัส SKU ดิบ และชื่อที่ระบบแปลอัตโนมัติจากรหัสสินค้า (ไม่ใช้ชื่อจาก Google Sheet แล้ว —
+  // เน้นโปรที่เกิดขึ้นจริงตามข้อมูลที่อัพโหลดเป็นหลัก กันสับสนกับชื่อทางการที่อาจไม่ตรงกับพฤติกรรมจริง)
   const matches = allPromos.filter(p => {
     if (tracked.includes(p)) return false;
     if (!q) return true;
-    const customName = (promotionsMap[p] || '').toLowerCase();
     const autoName = thaiNameForPromoGlobal(p).toLowerCase();
-    return p.toLowerCase().startsWith(q) || customName.startsWith(q) || autoName.startsWith(q);
+    return p.toLowerCase().startsWith(q) || autoName.startsWith(q);
   });
-  // เรียง: โปรที่ตรงกับคำค้นเป๊ะๆ (เทียบทุกชื่อที่เป็นไปได้) ขึ้นก่อนเสมอ แล้วตามด้วยยอดขายมาก→น้อย
-  const isExactMatch = (p) => p.toLowerCase() === q || thaiNameForPromoGlobal(p).toLowerCase() === q || (promotionsMap[p] || '').toLowerCase() === q;
+  // เรียง: โปรที่ตรงกับคำค้นเป๊ะๆ ขึ้นก่อนเสมอ แล้วตามด้วยยอดขายมาก→น้อย
+  const isExactMatch = (p) => p.toLowerCase() === q || thaiNameForPromoGlobal(p).toLowerCase() === q;
   matches.sort((a, b) => {
     const aExact = isExactMatch(a), bExact = isExactMatch(b);
     if (aExact !== bExact) return aExact ? -1 : 1;
     return (_ptAovCache[b]?.rev || 0) - (_ptAovCache[a]?.rev || 0);
   });
-  list.innerHTML = matches.slice(0,50).map(p => {
-    const autoName = thaiNameForPromoGlobal(p);
-    const customName = promotionsMap[p];
-    const hasDifferentCustomName = customName && customName !== autoName;
-    return `
+  list.innerHTML = matches.slice(0,50).map(p => `
     <div onclick="addPtPromoRow('${p}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-      <div style="font-size:13px;">${customName || autoName}</div>
-      ${hasDifferentCustomName ? `<div style="font-size:10.5px;color:var(--text3);">(ชื่อตามยอดขาย: ${autoName})</div>` : ''}
+      <div style="font-size:13px;">${thaiNameForPromoGlobal(p)}</div>
       <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${p}</div>
-    </div>`;
-  }).join('') || '<div style="padding:8px 10px;color:var(--text3);font-size:12px;">ไม่พบโปรที่ขึ้นต้นด้วยคำนี้</div>';
+    </div>`).join('') || '<div style="padding:8px 10px;color:var(--text3);font-size:12px;">ไม่พบโปรที่ขึ้นต้นด้วยคำนี้</div>';
 }
 
 async function addPtPromoRow(sku_promotion) {
@@ -2924,7 +2975,7 @@ async function addPtPromoRow(sku_promotion) {
   document.getElementById('ptAddPromoBox').style.display = 'none';
   renderPromoTargets();
   const result = await upsertRow('promotion_targets', { sku_promotion }, 'sku_promotion');
-  if (!result.ok) showPtError(`บันทึกโปร "${promotionsMap[sku_promotion] || sku_promotion}" ไม่สำเร็จ: ${result.error}`);
+  if (!result.ok) showPtError(`บันทึกโปร "${thaiNameForPromoGlobal(sku_promotion)}" ไม่สำเร็จ: ${result.error}`);
 }
 
 async function removePtRow(rowId) {
@@ -2951,18 +3002,31 @@ async function updatePtField(sku_promotion, field, rawValue) {
 }
 
 function renderPromoTargets() {
-  const from = getDateValue('From'), to = getDateValue('To');
-  const actualBySku = {};
-  (window._promoMonthlyCache||[]).filter(r => r.date >= from && r.date <= to && r.channel === 'Facebook').forEach(r => {
-    actualBySku[r.sku_promotion] = (actualBySku[r.sku_promotion]||0) + (parseInt(r.total_orders)||0);
-  });
+  const latestDate = getPtLatestDataDate();
+  const captionEl = document.getElementById('ptLatestDateCaption');
+  if (captionEl) {
+    captionEl.textContent = latestDate
+      ? `ข้อมูลยอดขายจริงล่าสุดถึงวันที่ ${fmtDateThai(latestDate)}`
+      : 'ยังไม่มีข้อมูลยอดขาย Facebook ในระบบ';
+  }
+  const windows = getPtActualWindows(latestDate);
 
   const editableCell = (sku, field, value, suffix) => {
     const displayVal = value === null || value === undefined ? '' : (['target_close_rate','target_cost_pct','target_ad_pct'].includes(field) ? (value*100) : value);
-    return `<td style="background:rgba(255,224,102,0.12);padding:2px;">
-      <input type="number" value="${displayVal}" step="any" placeholder="กรอก"
-        onchange="updatePtField('${sku}','${field}',this.value)"
-        style="width:64px;text-align:right;background:transparent;border:1px solid var(--border);border-radius:4px;padding:3px 4px;font-size:12px;">${suffix||''}
+    return `<td class="pt-editable-td">
+      <input type="number" class="pt-input" value="${displayVal}" step="any" placeholder="กรอก"
+        onchange="updatePtField('${sku}','${field}',this.value)">${suffix||''}
+    </td>`;
+  };
+
+  // เซลล์แสดงยอดขายจริงของแต่ละช่วงเวลา (1/3/7 วัน) เทียบกับเป้า (เป้ารายวัน × จำนวนวันของช่วงนั้น)
+  const windowCell = (actual, target) => {
+    const gap = target - actual;
+    const gapText = gap > 0 ? `ขาดอีก ${fmt(gap)}` : (gap < 0 ? `เกินเป้า ${fmt(Math.abs(gap))}` : target > 0 ? 'ตรงเป้า' : '—');
+    const gapColor = gap > 0 ? 'var(--red)' : (gap < 0 ? 'var(--green)' : 'var(--text3)');
+    return `<td class="pt-window-cell">
+      <div class="pt-window-actual">${fmt(actual)}</div>
+      <div class="pt-window-gap" style="color:${gapColor};">${gapText}</div>
     </td>`;
   };
 
@@ -2975,8 +3039,7 @@ function renderPromoTargets() {
     const costPct = t.target_cost_pct || 0;
     const adPct = t.target_ad_pct || 0;
     const targetQty = t.target_qty_per_day || 0;
-    const actualQty = actualBySku[sku] || 0;
-    const gap = targetQty - actualQty;
+    const w = windows[sku] || { d1: 0, d3: 0, d7: 0 };
 
     const adPerOrder = aov * adPct;
     const cpl = adPerOrder * closeRate;
@@ -2987,14 +3050,15 @@ function renderPromoTargets() {
     const profitPct = aov ? profitPerBill / aov : 0;
 
     return `<tr>
-      <td style="font-size:12px;">${promotionsMap[sku] || thaiNameForPromoGlobal(sku)}<br><span style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${sku}</span></td>
+      <td style="font-size:12px;">${thaiNameForPromoGlobal(sku)}<br><span style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${sku}</span></td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--blue);">฿${fmt(Math.round(aov))}</td>
       ${editableCell(sku, 'target_close_rate', t.target_close_rate, '%')}
       ${editableCell(sku, 'target_cost_pct', t.target_cost_pct, '%')}
       ${editableCell(sku, 'target_ad_pct', t.target_ad_pct, '%')}
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(actualQty)}</td>
       ${editableCell(sku, 'target_qty_per_day', t.target_qty_per_day, '')}
-      <td style="font-family:'IBM Plex Mono',monospace;color:${gap>0?'var(--red)':'var(--green)'};">${gap>0?fmt(gap):(gap<0?'เกินเป้า '+fmt(Math.abs(gap)):'0')}</td>
+      ${windowCell(w.d1, targetQty)}
+      ${windowCell(w.d3, targetQty * 3)}
+      ${windowCell(w.d7, targetQty * 7)}
       <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(adPerOrder))}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(cpl))}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(leadPerDay))}</td>
