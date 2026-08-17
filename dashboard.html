@@ -952,15 +952,9 @@
         <div class="chart-wrap chart-wrap-lg"><canvas id="chartFbcTrend"></canvas></div>
       </div>
 
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
-          <div class="card-title">ER เฉลี่ยตามประเภทคอนเทนต์</div>
-          <div id="fbcContentTypeBars" style="padding-top:10px;"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">คอมเมนต์ในช่วงที่เลือก</div>
-          <div id="fbcCommentSummary" style="padding-top:6px;"></div>
-        </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">สรุปตามประเภทคอนเทนต์</div>
+        <div id="fbcContentTypeSummary" style="padding-top:10px;"></div>
       </div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -2332,7 +2326,11 @@ async function renderFbContent() {
   fbcPostsCache = posts.map(p => {
     const m = latestMetricByPost[p.post_id] || {};
     const reach = m.reach || m.impressions || 0;
-    const er = reach > 0 && m.reactions_total != null ? (m.reactions_total / reach * 100) : (p.post_type === 'reel' ? null : null);
+    // สำคัญ: Reels ไม่มี reach/reactions จริงจาก Facebook API เลย ห้ามคำนวณ ER
+    // (ถ้าไม่กันไว้ ตัว reach จะ fallback ไปใช้ยอดเล่นแทน แล้ว reactions_total ที่ default เป็น 0
+    //  ในฐานข้อมูลจะทำให้คำนวณออกมาเป็น 0.00% ซึ่งดูเหมือนมีข้อมูลจริงทั้งที่ไม่มี)
+    const er = (p.post_type !== 'reel' && reach > 0 && m.reactions_total != null)
+      ? (m.reactions_total / reach * 100) : null;
     return {
       ...p, ...m,
       reach, er,
@@ -2341,12 +2339,24 @@ async function renderFbContent() {
     };
   });
 
+  // Facebook มักสร้างโพสต์วิดีโอคู่แฝดในฟีดปกติอัตโนมัติเมื่อโพสต์ Reels (แคปชั่น+เวลาโพสต์ใกล้กันมาก)
+  // เทียบแค่ 60 ตัวอักษรแรกแบบ trim (กันกรณีมีอักขระที่มองไม่เห็นต่างกันเล็กน้อย) + เวลาห่างกันไม่เกิน 5 นาที
+  const fbcSig = s => (s || '').trim().slice(0, 60);
+  const reelSignatures = fbcPostsCache
+    .filter(p => p.post_type === 'reel')
+    .map(p => ({ caption: fbcSig(p.caption), time: new Date(p.posted_at).getTime() }));
+  fbcPostsCache = fbcPostsCache.filter(p => {
+    if (p.post_type !== 'video') return true;
+    const pTime = new Date(p.posted_at).getTime();
+    const isDupOfReel = reelSignatures.some(r => r.caption === fbcSig(p.caption) && Math.abs(r.time - pTime) < 300000);
+    return !isDupOfReel;
+  });
+
   document.getElementById('fbcUpdatedAt').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
 
   renderFbcKpis(followers, comments);
   renderFbcTrendChart(followers);
-  renderFbcContentTypeBars();
-  renderFbcCommentSummary(comments.length);
+  renderFbcContentTypeSummary();
   renderFbcPostsTable();
   renderFbcInsight();
 }
@@ -2370,6 +2380,23 @@ function renderFbcKpis(followers, comments) {
 }
 
 function renderFbcTrendChart(followers) {
+  const wrap = document.getElementById('chartFbcTrend').closest('.chart-wrap');
+  let noteEl = document.getElementById('fbcTrendNote');
+  if (!noteEl) {
+    noteEl = document.createElement('div');
+    noteEl.id = 'fbcTrendNote';
+    noteEl.style.cssText = 'font-size:12px;color:var(--text3);text-align:center;padding:40px 0;';
+    wrap.parentNode.insertBefore(noteEl, wrap);
+  }
+  if (followers.length < 2) {
+    wrap.style.display = 'none';
+    noteEl.style.display = 'block';
+    noteEl.textContent = `ยังสะสมข้อมูลผู้ติดตามได้แค่ ${followers.length} วัน — ต้องมีอย่างน้อย 2 วันถึงจะแสดงเทรนด์ได้ (ระบบเก็บข้อมูลอัตโนมัติทุกเช้า รออีกไม่กี่วันจะเห็นกราฟ)`;
+    return;
+  }
+  wrap.style.display = '';
+  noteEl.style.display = 'none';
+
   const byDay = {};
   fbcPostsCache.forEach(p => {
     const day = fbcThaiDate(p.posted_at);
@@ -2398,7 +2425,25 @@ function renderFbcTrendChart(followers) {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } } },
+      plugins: {
+        legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.dataset.label.includes('ผู้ติดตาม')) {
+                const idx = ctx.dataIndex;
+                const cur = followerSeries[idx];
+                const prev = idx > 0 ? followerSeries[idx - 1] : null;
+                if (cur == null) return 'ผู้ติดตามสะสม: —';
+                const delta = (prev != null) ? cur - prev : null;
+                const deltaStr = delta != null ? `  (${delta >= 0 ? '+' : ''}${fmt(delta)} จากวันก่อน)` : '';
+                return `ผู้ติดตามสะสม: ${fmt(cur)}${deltaStr}`;
+              }
+              return `ER รายวัน: ${ctx.parsed.y != null ? ctx.parsed.y + '%' : '—'}`;
+            }
+          }
+        }
+      },
       scales: {
         x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
         y: { position: 'left', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
@@ -2408,33 +2453,35 @@ function renderFbcTrendChart(followers) {
   });
 }
 
-function renderFbcContentTypeBars() {
+function renderFbcContentTypeSummary(commentCountByPost) {
+  const typeLabel = { reel: 'Reels', video: 'วิดีโอ', photo: 'รูปภาพ', album: 'อัลบั้ม', status: 'สเตตัส' };
   const byType = {};
   fbcPostsCache.forEach(p => {
-    if (p.er == null) return;
     const t = p.post_type || 'อื่นๆ';
-    if (!byType[t]) byType[t] = { sum: 0, count: 0 };
-    byType[t].sum += p.er; byType[t].count++;
+    if (!byType[t]) byType[t] = { count: 0, erSum: 0, erCount: 0, retSum: 0, retCount: 0, comments: 0 };
+    byType[t].count++;
+    if (p.er != null) { byType[t].erSum += p.er; byType[t].erCount++; }
+    if (p.retention_end_pct != null) { byType[t].retSum += p.retention_end_pct * 100; byType[t].retCount++; }
+    byType[t].comments += p.commentCount;
   });
-  const rows = Object.entries(byType).map(([t, v]) => [t, v.sum / v.count]).sort((a, b) => b[1] - a[1]);
-  const maxEr = rows.length ? rows[0][1] : 1;
-  const typeLabel = { reel: 'Reels', video: 'วิดีโอ', photo: 'รูปภาพ', album: 'อัลบั้ม', status: 'สเตตัส' };
-  const colors = { reel: '#a78bfa', video: '#60a5fa', photo: '#c8a96e', album: '#4ade80', status: '#f472b6' };
-  document.getElementById('fbcContentTypeBars').innerHTML = rows.length ? rows.map(([t, er]) => `
-    <div style="margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;"><span style="color:var(--text2);">${typeLabel[t] || t}</span><span>${er.toFixed(2)}%</span></div>
-      <div style="background:var(--bg3);border-radius:4px;height:6px;"><div style="width:${maxEr ? (er/maxEr*100) : 0}%;background:${colors[t] || 'var(--accent)'};height:6px;border-radius:4px;"></div></div>
-    </div>
-  `).join('') : '<div class="empty">ไม่มีข้อมูลเพียงพอ</div>';
-}
-
-function renderFbcCommentSummary(total) {
-  document.getElementById('fbcCommentSummary').innerHTML = `
-    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;">
-      <div class="kpi-value" style="font-size:22px;">${fmt(total)}</div>
-      <div style="font-size:11px;color:var(--text2);">คอมเมนต์ทั้งหมดในช่วงที่เลือก</div>
-    </div>
-    <div style="font-size:10.5px;color:var(--text3);margin-top:6px;">* การแยกเชิงบวก/ลบ/คำถาม (sentiment) ยังไม่เปิดใช้งาน — ดูข้อความคอมเมนต์ดิบได้จากการกด "ดู" ที่แต่ละโพสต์</div>
+  const order = ['reel', 'video', 'photo', 'album', 'status'];
+  const rows = order.filter(t => byType[t]).map(t => {
+    const v = byType[t];
+    const erText = v.erCount ? (v.erSum / v.erCount).toFixed(2) + '%' : (v.retCount ? (v.retSum / v.retCount).toFixed(1) + '% (Retention)' : '—');
+    return `<tr>
+      <td>${typeLabel[t] || t}</td>
+      <td>${v.count} โพสต์</td>
+      <td>${erText}</td>
+      <td>${v.comments} 💬</td>
+    </tr>`;
+  }).join('');
+  const totalPosts = fbcPostsCache.length;
+  document.getElementById('fbcContentTypeSummary').innerHTML = `
+    <table style="width:100%;font-size:12px;">
+      <thead><tr style="color:var(--text3);text-align:left;"><th>ประเภท</th><th>จำนวนโพสต์</th><th>ER เฉลี่ย</th><th>คอมเมนต์รวม</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>'}</tbody>
+    </table>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;">รวมทั้งหมด ${totalPosts} โพสต์ในช่วงที่เลือก — Reels แสดงค่า Retention แทน ER เพราะไม่มีข้อมูล reach/reactions</div>
   `;
 }
 
