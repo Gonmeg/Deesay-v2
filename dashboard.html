@@ -954,18 +954,14 @@
         <div id="fbcContentTypeSummary" style="padding-top:6px;"></div>
       </div>
 
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — ไม่เกิน 3 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate3')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุไม่เกิน 3 วัน เรียงจาก ER/Retention สูงสุด — สัญญาณเร็วสุดว่าคอนเทนต์ไหนตอบรับดีตั้งแต่ต้น</div></span></div>
+        <div id="fbcAdCandidates3d" style="margin-top:8px;"></div>
+      </div>
+
       <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">เทียบเฉพาะโพสต์ที่มี "อายุ" เท่ากัน (≤3 วัน หรือ ≤7 วัน) เพื่อความแฟร์ — ไม่เอาโพสต์เก่าที่สะสมยอดมานานมาเทียบกับโพสต์ใหม่ เรียงจาก ER/Retention สูงสุด ใช้เลือกคอนเทนต์ organic ที่ดีที่สุดก่อนตัดสินใจยิงแอด</div></span></div>
-        <div class="grid-2" style="margin-top:10px;">
-          <div>
-            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">📅 โพสต์ไม่เกิน 3 วัน</div>
-            <div id="fbcAdCandidates3d"></div>
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">📅 โพสต์ไม่เกิน 7 วัน</div>
-            <div id="fbcAdCandidates7d"></div>
-          </div>
-        </div>
+        <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — 4-7 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate7')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate7" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุ 4-7 วัน (ไม่ซ้ำกับตารางด้านบน) — ข้อมูลนิ่งกว่าเพราะสะสมมานานกว่า เชื่อถือได้มากกว่าสำหรับตัดสินใจยิงแอด</div></span></div>
+        <div id="fbcAdCandidates7d" style="margin-top:8px;"></div>
       </div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -975,14 +971,14 @@
         </div>
         <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
           <table id="tblFbcPosts">
-            <thead><tr>
-              <th onclick="setFbcSort('posted_at')" style="cursor:pointer;">โพสต์ ⇅</th>
-              <th>ประเภท</th>
-              <th onclick="setFbcSort('posted_at')" style="cursor:pointer;">วันที่โพสต์ ⇅</th>
-              <th onclick="setFbcSort('reach')" style="cursor:pointer;">Reach/ยอดเล่น ⇅</th>
-              <th onclick="setFbcSort('er')" style="cursor:pointer;">ER ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-er-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-er-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>รูปภาพ/วิดีโอ:</b> ER = (Reactions ÷ Reach) × 100<br><br><b>Reels:</b> แสดงค่า Retention แทน = % คนที่ยังดูอยู่ ณ ช่วงท้ายคลิป (เพราะ Reels ไม่มี Reach/Reactions จาก Facebook API)</div></span></th>
-              <th onclick="setFbcSort('comments')" style="cursor:pointer;">คอมเมนต์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-comments')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-comments" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคอมเมนต์ดิบทั้งหมด — ยังไม่แยกเชิงบวก/ลบ/คำถาม (sentiment ยังไม่เปิดใช้งาน)</div></span></th>
-              <th></th>
+            <thead style="position:sticky;top:0;z-index:10;background:var(--bg);"><tr>
+              <th onclick="setFbcSort('posted_at')" style="cursor:pointer;background:var(--bg);">โพสต์ ⇅</th>
+              <th style="background:var(--bg);">ประเภท</th>
+              <th onclick="setFbcSort('posted_at')" style="cursor:pointer;background:var(--bg);">วันที่โพสต์ ⇅</th>
+              <th onclick="setFbcSort('reach')" style="cursor:pointer;background:var(--bg);">Reach/ยอดเล่น ⇅</th>
+              <th onclick="setFbcSort('er')" style="cursor:pointer;background:var(--bg);">ER ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-er-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-er-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>รูปภาพ/วิดีโอ:</b> ER = (Reactions ÷ Reach) × 100<br><br><b>Reels:</b> แสดงค่า Retention แทน = % คนที่ยังดูอยู่ ณ ช่วงท้ายคลิป (เพราะ Reels ไม่มี Reach/Reactions จาก Facebook API)</div></span></th>
+              <th onclick="setFbcSort('comments')" style="cursor:pointer;background:var(--bg);">คอมเมนต์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-comments')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-comments" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคอมเมนต์ดิบทั้งหมด — ยังไม่แยกเชิงบวก/ลบ/คำถาม (sentiment ยังไม่เปิดใช้งาน)</div></span></th>
+              <th style="background:var(--bg);"></th>
             </tr></thead>
             <tbody id="tbodyFbcPosts"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
@@ -2559,23 +2555,26 @@ function fbcScoreOf(p) {
 }
 
 function renderFbcAdCandidates() {
-  [3, 7].forEach(maxDays => {
-    const elId = maxDays === 3 ? 'fbcAdCandidates3d' : 'fbcAdCandidates7d';
+  const ranges = [
+    { elId: 'fbcAdCandidates3d', minDays: 0, maxDays: 3 },
+    { elId: 'fbcAdCandidates7d', minDays: 3, maxDays: 7 } // 4-7 วัน ไม่ซ้ำกับตารางด้านบน
+  ];
+  ranges.forEach(({ elId, minDays, maxDays }) => {
     const candidates = fbcPostsCache
-      .filter(p => p.ageInfo.days <= maxDays && fbcScoreOf(p) != null)
+      .filter(p => p.ageInfo.days > minDays && p.ageInfo.days <= maxDays && fbcScoreOf(p) != null)
       .map(p => ({ ...p, score: fbcScoreOf(p) }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
     document.getElementById(elId).innerHTML = candidates.length ? candidates.map((p, i) => `
-      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
-        <div style="font-size:13px;font-weight:700;color:var(--accent);min-width:16px;">${i + 1}</div>
-        <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:700;color:var(--accent);min-width:18px;flex-shrink:0;">${i + 1}</div>
+        <div style="flex:1;min-width:0;overflow:hidden;">
           <div style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
-          <div style="font-size:10px;color:var(--text3);">${fbcTypeBadge(p.post_type)} · ${Math.floor(p.ageInfo.days) < 1 ? 'ไม่ถึง 1 วัน' : Math.floor(p.ageInfo.days) + ' วัน'}ที่แล้ว</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">${fbcTypeBadge(p.post_type)} <span style="margin-left:4px;">${Math.floor(p.ageInfo.days) < 1 ? 'ไม่ถึง 1 วัน' : Math.floor(p.ageInfo.days) + ' วัน'}ที่แล้ว</span></div>
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:12px;font-weight:600;color:var(--green);">${p.score.toFixed(2)}%</div>
+        <div style="text-align:right;flex-shrink:0;white-space:nowrap;">
+          <div style="font-size:13px;font-weight:600;color:var(--green);">${p.score.toFixed(2)}%</div>
           ${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" style="font-size:10px;color:var(--accent);">↗ ดู</a>` : ''}
         </div>
       </div>
