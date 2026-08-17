@@ -937,7 +937,7 @@
 
       <div style="background:color-mix(in srgb, var(--accent) 12%, transparent);border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">
         <span style="font-size:15px;">⚠️</span>
-        <span><b>ตัวกรองวันที่กรองเฉพาะ "โพสต์ไหนถูกโพสต์ในช่วงนี้"</b> — แต่ตัวเลข Reach/ER ที่เห็นคือยอดสะสมล่าสุด ณ วันนี้เสมอ ไม่ใช่ยอดเฉพาะช่วงที่เลือก (Facebook ให้ข้อมูลแบบสะสมเท่านั้น) เหมาะสำหรับดู "คอนเทนต์ไหนผลงานดี" มากกว่า "เดือนนี้ภาพรวมเป็นไง"</span>
+        <span><b>ตัวกรองวันที่กรองเฉพาะ "โพสต์ไหนถูกโพสต์ในช่วงนี้"</b> — แต่ตัวเลข Reach/ER ที่เห็นคือยอดสะสมล่าสุด ณ วันนี้เสมอ ไม่ใช่ยอดเฉพาะช่วงที่เลือก (Facebook ให้ข้อมูลแบบสะสมเท่านั้น)</span>
       </div>
       <div id="fbcontent-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
@@ -977,9 +977,11 @@
               <th onclick="setFbcSort('reach')" style="cursor:pointer;background:var(--bg);">Reach/ยอดเล่น ⇅</th>
               <th onclick="setFbcSort('er')" style="cursor:pointer;background:var(--bg);">ER ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-er-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-er-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>รูปภาพ/วิดีโอ:</b> ER = (Reactions ÷ Reach) × 100<br><br><b>Reels:</b> แสดงค่า Retention แทน = % คนที่ยังดูอยู่ ณ ช่วงท้ายคลิป (เพราะ Reels ไม่มี Reach/Reactions จาก Facebook API)</div></span></th>
               <th onclick="setFbcSort('comments')" style="cursor:pointer;background:var(--bg);">คอมเมนต์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-comments')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-comments" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคอมเมนต์ดิบทั้งหมด — ยังไม่แยกเชิงบวก/ลบ/คำถาม (sentiment ยังไม่เปิดใช้งาน)</div></span></th>
+              <th onclick="setFbcSort('shares')" style="cursor:pointer;background:var(--bg);">แชร์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-shares')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-shares" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนครั้งที่ถูกแชร์ — มีเฉพาะรูปภาพ/วิดีโอปกติ (Reels ไม่มีให้ดึงจาก Facebook API)</div></span></th>
+              <th onclick="setFbcSort('newFollowers')" style="cursor:pointer;background:var(--bg);">ผู้ติดตามใหม่ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-newfollowers')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-newfollowers" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคนที่กดติดตามเพจหลังดู Reels นี้ — มีเฉพาะ Reels เท่านั้น</div></span></th>
               <th style="background:var(--bg);">ลิงก์โพสต์</th>
             </tr></thead>
-            <tbody id="tbodyFbcPosts"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyFbcPosts"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
         <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">โพสต์ที่มีวันที่สีแดง คือโพสต์มาไม่ถึง 24 ชม. — metric อาจยังสะสมไม่ครบ เทียบกับโพสต์เก่าโดยตรงได้ไม่แม่น</div>
@@ -2611,6 +2613,8 @@ function renderFbcPostsTable() {
     else if (fbcSortKey === 'reach') { av = a.reach || 0; bv = b.reach || 0; }
     else if (fbcSortKey === 'er') { av = a.er ?? (a.retention_end_pct != null ? a.retention_end_pct*100 : -1); bv = b.er ?? (b.retention_end_pct != null ? b.retention_end_pct*100 : -1); }
     else if (fbcSortKey === 'comments') { av = a.commentCount; bv = b.commentCount; }
+    else if (fbcSortKey === 'shares') { av = a.shares_count ?? -1; bv = b.shares_count ?? -1; }
+    else if (fbcSortKey === 'newFollowers') { av = a.new_followers ?? -1; bv = b.new_followers ?? -1; }
     return fbcSortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
   });
   document.getElementById('tbodyFbcPosts').innerHTML = sorted.length ? sorted.map(p => `
@@ -2624,9 +2628,11 @@ function renderFbcPostsTable() {
       <td>${fmt(p.reach || 0)}</td>
       <td>${p.er != null ? p.er.toFixed(2) + '%' : (p.retention_end_pct != null ? (p.retention_end_pct*100).toFixed(1) + '% <span style="color:var(--text3);font-size:9.5px;">(Retention)</span>' : '—')}</td>
       <td>${p.commentCount} 💬</td>
+      <td>${p.post_type !== 'reel' ? fmt(p.shares_count || 0) : '—'}</td>
+      <td>${p.post_type === 'reel' ? fmt(p.new_followers || 0) : '—'}</td>
       <td>${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" style="color:var(--accent);">↗ ดู</a>` : ''}</td>
     </tr>
-  `).join('') : '<tr><td colspan="7" class="empty">ไม่มีโพสต์ในช่วงที่เลือก</td></tr>';
+  `).join('') : '<tr><td colspan="9" class="empty">ไม่มีโพสต์ในช่วงที่เลือก</td></tr>';
 }
 
 function renderFbcInsight() {
