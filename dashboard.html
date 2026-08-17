@@ -2367,6 +2367,7 @@ function renderFbcKpis(followers) {
   const followerDelta = (followerFirst != null && followerLast != null) ? followerLast - followerFirst : null;
 
   document.getElementById('fbcontent-kpis').innerHTML = `
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">จำนวนโพสต์ทั้งหมด</div><div class="kpi-value">${fmt(fbcPostsCache.length)}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Reach/ยอดเล่นรวม ${fbcInfoIcon('fbc-info-reach', 'สำหรับรูปภาพ/วิดีโอปกติ: จำนวนคนไม่ซ้ำที่เห็นโพสต์ (reach)<br><br>สำหรับ Reels: จำนวนครั้งที่เล่น (play count) เพราะ Facebook ไม่เปิดให้ดึง "คนดูไม่ซ้ำ" ของ Reels ผ่าน API')}</div><div class="kpi-value">${fmt(totalReach)}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ER เฉลี่ย ${fbcInfoIcon('fbc-info-er', 'Engagement Rate = (Reactions ÷ Reach) × 100<br><br>คำนวณเฉพาะรูปภาพ/วิดีโอปกติ — Reels ไม่มี Reach จาก API จึง<b>ไม่ถูกนับรวม</b>')}</div><div class="kpi-value">${avgEr != null ? avgEr.toFixed(2) + '%' : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Retention เฉลี่ย (Reels) ${fbcInfoIcon('fbc-info-retention', '% ของคนที่ยังดูอยู่ ณ ช่วงท้ายคลิป เทียบกับตอนเริ่มเล่น<br><br>ยิ่งสูงยิ่งดี แปลว่าคนดูจนเกือบจบ ไม่เลื่อนผ่านกลางคลิป')}</div><div class="kpi-value">${avgRetention != null ? avgRetention.toFixed(1) + '%' : '—'}</div></div>
@@ -2404,13 +2405,15 @@ function renderFbcTrendChart(followers) {
   wrap.style.display = '';
   noteEl.style.display = 'none';
 
-  // นับจำนวนโพสต์แยกตามประเภทของแต่ละวัน (ใช้ทำ tooltip) — ไม่รวม Reels ในผลรวม reach/reactions ของ ER
+  // นับจำนวนโพสต์ทั้งหมด + แยกตามประเภทของแต่ละวัน — ไม่รวม Reels ในผลรวม reach/reactions ของ ER
   const byDay = {};
   const byDayTypeCounts = {};
+  const byDayPostCount = {};
   fbcPostsCache.forEach(p => {
     const day = fbcThaiDate(p.posted_at);
     if (!byDayTypeCounts[day]) byDayTypeCounts[day] = {};
     byDayTypeCounts[day][p.post_type] = (byDayTypeCounts[day][p.post_type] || 0) + 1;
+    byDayPostCount[day] = (byDayPostCount[day] || 0) + 1;
 
     if (p.post_type === 'reel') return; // สำคัญ: กัน Reels ปนเข้าไปเจือจาง ER ของวันนั้น
     if (!byDay[day]) byDay[day] = { reach: 0, reactions: 0 };
@@ -2424,6 +2427,7 @@ function renderFbcTrendChart(followers) {
     const b = byDay[d];
     return (b && b.reach > 0) ? +(b.reactions / b.reach * 100).toFixed(2) : null;
   });
+  const postCountSeries = days.map(d => byDayPostCount[d] || 0);
 
   if (charts['chartFbcTrend']) charts['chartFbcTrend'].destroy();
   const ctx = document.getElementById('chartFbcTrend');
@@ -2432,27 +2436,37 @@ function renderFbcTrendChart(followers) {
     data: {
       labels: days,
       datasets: [
-        { type: 'line', label: 'ผู้ติดตามสะสม', data: followerSeries, borderColor: '#60a5fa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.2, pointRadius: 3, pointHoverRadius: 5 },
-        { type: 'bar', label: 'ER รายวัน (%)', data: erSeries, backgroundColor: 'rgba(200,169,110,0.55)', yAxisID: 'y1' }
+        { type: 'line', label: '👥 ผู้ติดตามสะสม', data: followerSeries, borderColor: '#60a5fa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 },
+        { type: 'line', label: '📊 ER รายวัน (%)', data: erSeries, borderColor: '#c8a96e', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, spanGaps: true },
+        { type: 'line', label: '📝 จำนวนโพสต์', data: postCountSeries, borderColor: '#4ade80', backgroundColor: 'transparent', yAxisID: 'y2', tension: 0.2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, borderDash: [4, 3] }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } },
         tooltip: {
+          backgroundColor: 'rgba(17,17,24,0.95)',
+          titleFont: { family: 'Sarabun', size: 12, weight: '600' },
+          bodyFont: { family: 'Sarabun', size: 11.5 },
+          padding: 10,
+          cornerRadius: 8,
           callbacks: {
             label: function(ctx) {
               if (ctx.dataset.label.includes('ผู้ติดตาม')) {
                 const idx = ctx.dataIndex;
                 const cur = followerSeries[idx];
                 const prev = idx > 0 ? followerSeries[idx - 1] : null;
-                if (cur == null) return 'ผู้ติดตามสะสม: —';
+                if (cur == null) return '👥 ผู้ติดตามสะสม: —';
                 const delta = (prev != null) ? cur - prev : null;
                 const deltaStr = delta != null ? `  (${delta >= 0 ? '+' : ''}${fmt(delta)} จากวันก่อน)` : '';
                 return `👥 ผู้ติดตามสะสม: ${fmt(cur)}${deltaStr}`;
               }
-              return `📊 ER รายวัน: ${ctx.parsed.y != null ? ctx.parsed.y + '%' : '—'}`;
+              if (ctx.dataset.label.includes('ER')) {
+                return `📊 ER รายวัน: ${ctx.parsed.y != null ? ctx.parsed.y + '%' : '—'}`;
+              }
+              return `📝 จำนวนโพสต์: ${ctx.parsed.y} โพสต์`;
             },
             afterBody: function(items) {
               if (!items.length) return [];
@@ -2461,7 +2475,7 @@ function renderFbcTrendChart(followers) {
               if (!counts) return ['', 'ไม่มีโพสต์ในวันนี้'];
               const total = Object.values(counts).reduce((a, b) => a + b, 0);
               const lines = Object.entries(counts).map(([t, c]) => `${FBC_TYPE_ICON[t] || '⚪'} ${(FBC_TYPE_META[t] || {}).label || t}: ${c} โพสต์`);
-              return ['', `รวม ${total} โพสต์ในวันนี้:`, ...lines];
+              return ['', `แยกตามประเภท (รวม ${total}):`, ...lines];
             }
           }
         }
@@ -2469,7 +2483,8 @@ function renderFbcTrendChart(followers) {
       scales: {
         x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
         y: { position: 'left', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
-        y1: { position: 'right', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => v + '%' }, grid: { drawOnChartArea: false } }
+        y1: { position: 'right', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => v + '%' }, grid: { drawOnChartArea: false } },
+        y2: { position: 'right', offset: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, stepSize: 1 }, grid: { drawOnChartArea: false } }
       }
     }
   });
