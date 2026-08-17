@@ -953,15 +953,15 @@
         <div id="fbcContentTypeSummary" style="padding-top:6px;"></div>
       </div>
 
-      <div class="card" style="margin-bottom:16px;">
+      <div style="margin-bottom:8px;margin-top:4px;">
         <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — ไม่เกิน 3 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate3')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุไม่เกิน 3 วัน เรียงจาก ER/Retention สูงสุด — สัญญาณเร็วสุดว่าคอนเทนต์ไหนตอบรับดีตั้งแต่ต้น</div></span></div>
-        <div id="fbcAdCandidates3d" style="margin-top:8px;"></div>
       </div>
+      <div id="fbcAdCandidates3d" style="margin-bottom:20px;"></div>
 
-      <div class="card" style="margin-bottom:20px;">
+      <div style="margin-bottom:8px;">
         <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — 4-7 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate7')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate7" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุ 4-7 วัน (ไม่ซ้ำกับตารางด้านบน) — ข้อมูลนิ่งกว่าเพราะสะสมมานานกว่า เชื่อถือได้มากกว่าสำหรับตัดสินใจยิงแอด</div></span></div>
-        <div id="fbcAdCandidates7d" style="margin-top:8px;"></div>
       </div>
+      <div id="fbcAdCandidates7d" style="margin-bottom:20px;"></div>
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
@@ -2587,14 +2587,20 @@ function renderFbcAdCandidates() {
     Object.values(byType).forEach(arr => arr.sort((a, b) => b.score - a.score));
 
     const typeOrder = ['reel', 'video', 'photo', 'album', 'status'].filter(t => byType[t] && byType[t].length);
+    const colCount = Math.min(typeOrder.length, 3);
 
-    // เรียงแนวตั้งทีละประเภท เต็มความกว้างเสมอ ไม่ใช้ grid หลายคอลัมน์ (กันปัญหาล้น)
-    document.getElementById(elId).innerHTML = typeOrder.length ? typeOrder.map(t => `
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:600;margin-bottom:6px;">${fbcTypeBadge(t)}</div>
-        ${fbcRenderMiniList(byType[t].slice(0, 3))}
+    // สำคัญ: minmax(0,1fr) ไม่ใช่แค่ 1fr — บังคับให้คอลัมน์บีบเล็กกว่าความยาวเนื้อหาได้จริง
+    // (ปัญหาล้นที่ผ่านมาเกิดจากใช้ 1fr เฉยๆ ซึ่งเทียบเท่า minmax(auto,1fr) ไม่ยอมหดต่ำกว่าความยาวข้อความ)
+    document.getElementById(elId).innerHTML = typeOrder.length ? `
+      <div style="display:grid;grid-template-columns:repeat(${colCount}, minmax(0,1fr));gap:12px;">
+        ${typeOrder.map(t => `
+          <div class="card" style="min-width:0;overflow:hidden;">
+            <div class="card-title">${fbcTypeBadge(t)}</div>
+            <div style="margin-top:6px;min-width:0;">${fbcRenderMiniList(byType[t].slice(0, 3))}</div>
+          </div>
+        `).join('')}
       </div>
-    `).join('') : '<div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงนี้ที่มีข้อมูลเพียงพอ</div>';
+    ` : '<div class="card"><div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงนี้ที่มีข้อมูลเพียงพอ</div></div>';
   });
 }
 
