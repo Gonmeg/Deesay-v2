@@ -241,7 +241,7 @@
     <div class="filters">
       <div class="filter-group" id="dateRangeGroup" style="position:relative;padding:0;background:transparent;border:none;">
         <button class="btn btn-ghost" id="dateRangeBtn" onclick="toggleDatePresetMenu(event)" style="padding:6px 10px;font-size:12px;white-space:nowrap;">📅 <span id="dateRangeLabel">เลือกช่วงเวลา</span> ▾</button>
-        <div id="datePresetMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:320px;padding:10px;">
+        <div id="datePresetMenu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:320px;padding:10px;">
           <div style="display:flex;gap:14px;">
             <div style="min-width:130px;border-right:1px solid var(--border);padding-right:10px;">
               <div onclick="setDatePreset('today')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">วันนี้</div>
@@ -936,6 +936,10 @@
         </div>
       </div>
 
+      <div style="background:color-mix(in srgb, var(--accent) 12%, transparent);border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:15px;">⚠️</span>
+        <span><b>ตัวกรองวันที่กรองเฉพาะ "โพสต์ไหนถูกโพสต์ในช่วงนี้"</b> — แต่ตัวเลข Reach/ER ที่เห็นคือยอดสะสมล่าสุด ณ วันนี้เสมอ ไม่ใช่ยอดเฉพาะช่วงที่เลือก (Facebook ให้ข้อมูลแบบสะสมเท่านั้น) เหมาะสำหรับดู "คอนเทนต์ไหนผลงานดี" มากกว่า "เดือนนี้ภาพรวมเป็นไง"</span>
+      </div>
       <div id="fbcontent-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -2303,7 +2307,7 @@ async function renderFbContent() {
   const [postsRes, metricsRes, followersRes, commentsRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,post_type,caption,permalink_url,posted_at&page_id=eq.${fbcSelectedPage}&posted_at=gte.${since}&posted_at=lte.${until}&order=posted_at.desc&limit=500`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,impressions,reach,reactions_total,shares_count,video_avg_watch_seconds,retention_end_pct,new_followers&order=snapshot_date.desc&limit=2000`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/page_daily_stats?select=snapshot_date,followers_count&page_id=eq.${fbcSelectedPage}&order=snapshot_date.asc`, { headers }),
+    fetch(`${window.SUPABASE_URL}/rest/v1/page_daily_stats?select=snapshot_date,followers_count&page_id=eq.${fbcSelectedPage}&snapshot_date=gte.${fromStr || '2020-01-01'}&snapshot_date=lte.${toStr || '2099-12-31'}&order=snapshot_date.asc`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/social_comments?select=post_id,commented_at&commented_at=gte.${since}&limit=2000`, { headers })
   ]);
   const posts = await postsRes.json();
@@ -2338,13 +2342,19 @@ async function renderFbContent() {
     return { ...p, ...m, reach, er, commentCount: commentCountByPost[p.post_id] || 0, ageInfo: fbcDaysAgo(p.posted_at) };
   });
 
-  // กรองโพสต์วิดีโอที่ Facebook สร้างเป็นคู่แฝดอัตโนมัติเมื่อโพสต์ Reels ออก (เทียบแคปชั่น 60 ตัวแรก + เวลาใกล้กันใน 5 นาที)
+  // ทีมคอนเทนต์ยืนยันว่าลงแค่ Reels เท่านั้น — วิดีโอคู่แฝดที่ Facebook สร้างอัตโนมัติไม่ใช่คอนเทนต์จริง
+  // จับคู่ด้วยแคปชั่น 60 ตัวแรก + เวลาใกล้กันใน 30 นาที แล้ว "ยุบ" คอมเมนต์ของวิดีโอเข้ากับ Reel ก่อนซ่อนแถว
   const fbcSig = s => (s || '').trim().slice(0, 60);
-  const reelSignatures = fbcPostsCache.filter(p => p.post_type === 'reel').map(p => ({ caption: fbcSig(p.caption), time: new Date(p.posted_at).getTime() }));
+  const reelPosts = fbcPostsCache.filter(p => p.post_type === 'reel');
   fbcPostsCache = fbcPostsCache.filter(p => {
     if (p.post_type !== 'video') return true;
     const pTime = new Date(p.posted_at).getTime();
-    return !reelSignatures.some(r => r.caption === fbcSig(p.caption) && Math.abs(r.time - pTime) < 300000);
+    const matchedReel = reelPosts.find(r => fbcSig(r.caption) === fbcSig(p.caption) && Math.abs(new Date(r.posted_at).getTime() - pTime) < 1800000);
+    if (matchedReel) {
+      matchedReel.commentCount += p.commentCount; // ยุบคอมเมนต์เข้าด้วยกัน ไม่ให้หายไปเฉยๆ
+      return false;
+    }
+    return true; // ไม่เจอคู่ที่ตรงกันเลย เผื่อไว้ยังโชว์อยู่ กันข้อมูลหายเงียบๆ
   });
 
   document.getElementById('fbcUpdatedAt').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' });
@@ -2368,7 +2378,7 @@ function renderFbcKpis(followers) {
 
   document.getElementById('fbcontent-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">จำนวนโพสต์ทั้งหมด</div><div class="kpi-value">${fmt(fbcPostsCache.length)}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Reach/ยอดเล่นรวม ${fbcInfoIcon('fbc-info-reach', 'สำหรับรูปภาพ/วิดีโอปกติ: จำนวนคนไม่ซ้ำที่เห็นโพสต์ (reach)<br><br>สำหรับ Reels: จำนวนครั้งที่เล่น (play count) เพราะ Facebook ไม่เปิดให้ดึง "คนดูไม่ซ้ำ" ของ Reels ผ่าน API')}</div><div class="kpi-value">${fmt(totalReach)}</div></div>
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Reach/ยอดเล่นรวม ${fbcInfoIcon('fbc-info-reach', '<b style="color:var(--accent);">⚠️ ตัวเลขนี้เป็นยอดสะสมล่าสุด ไม่ใช่ยอดเฉพาะช่วงวันที่เลือก</b><br><br>ตัวกรองวันที่กรองแค่ "โพสต์ไหนถูกโพสต์ในช่วงนี้" แต่ reach/ER ที่โชว์คือยอดสะสมทั้งชีวิตโพสต์ ณ ตอนนี้ (เพราะ Facebook ให้ข้อมูลแบบสะสมเท่านั้น)<br><br>สำหรับรูปภาพ/วิดีโอปกติ: จำนวนคนไม่ซ้ำที่เห็นโพสต์ | สำหรับ Reels: จำนวนครั้งที่เล่น')}</div><div class="kpi-value">${fmt(totalReach)}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ER เฉลี่ย ${fbcInfoIcon('fbc-info-er', 'Engagement Rate = (Reactions ÷ Reach) × 100<br><br>คำนวณเฉพาะรูปภาพ/วิดีโอปกติ — Reels ไม่มี Reach จาก API จึง<b>ไม่ถูกนับรวม</b>')}</div><div class="kpi-value">${avgEr != null ? avgEr.toFixed(2) + '%' : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Retention เฉลี่ย (Reels) ${fbcInfoIcon('fbc-info-retention', '% ของคนที่ยังดูอยู่ ณ ช่วงท้ายคลิป เทียบกับตอนเริ่มเล่น<br><br>ยิ่งสูงยิ่งดี แปลว่าคนดูจนเกือบจบ ไม่เลื่อนผ่านกลางคลิป')}</div><div class="kpi-value">${avgRetention != null ? avgRetention.toFixed(1) + '%' : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ผู้ติดตามสุทธิ ${fbcInfoIcon('fbc-info-followers', 'จำนวนผู้ติดตามเพจ ณ วันล่าสุดในช่วงที่เลือก (ดึงตรงจาก Facebook ทุกเช้า)<br><br>ตัวเลข ▲/▼ คือส่วนต่างเทียบกับต้นช่วงเวลาที่เลือก')}</div><div class="kpi-value">${followerLast != null ? fmt(followerLast) : '—'}</div><div style="font-size:11px;color:${followerDelta > 0 ? 'var(--green)' : followerDelta < 0 ? 'var(--red)' : 'var(--text3)'};margin-top:4px;">${followerDelta != null ? (followerDelta >= 0 ? '▲ +' : '▼ ') + fmt(followerDelta) : ''}</div></div>
@@ -2539,7 +2549,10 @@ function renderFbcPostsTable() {
     <tr>
       <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(p.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</td>
       <td>${fbcTypeBadge(p.post_type)}</td>
-      <td style="color:${p.ageInfo.fresh ? 'var(--red)' : 'var(--text2)'};white-space:nowrap;">${fbcThaiDateDisplay(p.posted_at)}${p.ageInfo.fresh ? ' 🆕' : ''}</td>
+      <td style="white-space:nowrap;">
+        <div style="color:${p.ageInfo.fresh ? 'var(--red)' : 'var(--text2)'};display:flex;align-items:center;gap:6px;">${fbcThaiDateDisplay(p.posted_at)}${p.ageInfo.fresh ? '<span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;">ใหม่</span>' : ''}</div>
+        <div style="font-size:10px;color:var(--text3);">${p.ageInfo.days < 1 ? 'ไม่ถึง 1 วันที่แล้ว' : Math.floor(p.ageInfo.days) + ' วันที่แล้ว'}</div>
+      </td>
       <td>${fmt(p.reach || 0)}</td>
       <td>${p.er != null ? p.er.toFixed(2) + '%' : '—'}</td>
       <td>${p.commentCount} 💬</td>
