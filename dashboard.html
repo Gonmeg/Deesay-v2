@@ -2293,8 +2293,12 @@ async function renderFbContent() {
   // ใช้ตัวกรองวันที่ร่วมกับหน้าอื่นทั้งเว็บ (dateFrom/dateTo) แทนตัว toggle เดิม
   const fromStr = getDateValue('From');
   const toStr = getDateValue('To');
-  const since = fromStr ? `${fromStr}T00:00:00+07:00` : new Date(Date.now() - 30 * 86400000).toISOString();
-  const until = toStr ? `${toStr}T23:59:59+07:00` : new Date().toISOString();
+  const sinceRaw = fromStr ? `${fromStr}T00:00:00+07:00` : new Date(Date.now() - 30 * 86400000).toISOString();
+  const untilRaw = toStr ? `${toStr}T23:59:59+07:00` : new Date().toISOString();
+  // สำคัญ: ต้อง encodeURIComponent เสมอ เพราะเครื่องหมาย "+" ใน +07:00 จะถูกตีความเป็นช่องว่างถ้าไม่เข้ารหัส
+  // ทำให้ Supabase parse วันที่ไม่ได้ แล้ว error 400 ทุกคำขอที่มีวันที่ปนอยู่
+  const since = encodeURIComponent(sinceRaw);
+  const until = encodeURIComponent(untilRaw);
 
   const [postsRes, metricsRes, followersRes, commentsRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,post_type,caption,permalink_url,posted_at&page_id=eq.${fbcSelectedPage}&posted_at=gte.${since}&posted_at=lte.${until}&order=posted_at.desc&limit=500`, { headers }),
@@ -2305,7 +2309,15 @@ async function renderFbContent() {
   const posts = await postsRes.json();
   const allMetrics = await metricsRes.json();
   const followers = await followersRes.json();
-  const comments = await commentsRes.json();
+  const commentsRaw = await commentsRes.json();
+
+  // กันพัง ถ้าคำขอไหน error กลับมาเป็น object แทน array (จะได้ไม่พังทั้งหน้า)
+  if (!Array.isArray(posts) || !Array.isArray(allMetrics) || !Array.isArray(followers) || !Array.isArray(commentsRaw)) {
+    console.error('FB Content: การดึงข้อมูลบางส่วนล้มเหลว', { posts, allMetrics, followers, commentsRaw });
+    document.getElementById('tbodyFbcPosts').innerHTML = '<tr><td colspan="7" class="empty">เกิดข้อผิดพลาดในการดึงข้อมูล ลองรีเฟรชหน้าใหม่</td></tr>';
+    return;
+  }
+  const comments = commentsRaw;
 
   const latestMetricByPost = {};
   allMetrics.forEach(m => {
