@@ -2588,16 +2588,13 @@ function renderFbcAdCandidates() {
 
     const typeOrder = ['reel', 'video', 'photo', 'album', 'status'].filter(t => byType[t] && byType[t].length);
 
-    document.getElementById(elId).innerHTML = typeOrder.length ? `
-      <div style="display:grid;grid-template-columns:repeat(${Math.min(typeOrder.length, 3)}, 1fr);gap:16px;">
-        ${typeOrder.map(t => `
-          <div>
-            <div style="font-size:11px;font-weight:600;margin-bottom:6px;">${fbcTypeBadge(t)}</div>
-            ${fbcRenderMiniList(byType[t].slice(0, 3))}
-          </div>
-        `).join('')}
+    // เรียงแนวตั้งทีละประเภท เต็มความกว้างเสมอ ไม่ใช้ grid หลายคอลัมน์ (กันปัญหาล้น)
+    document.getElementById(elId).innerHTML = typeOrder.length ? typeOrder.map(t => `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:600;margin-bottom:6px;">${fbcTypeBadge(t)}</div>
+        ${fbcRenderMiniList(byType[t].slice(0, 3))}
       </div>
-    ` : '<div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงนี้ที่มีข้อมูลเพียงพอ</div>';
+    `).join('') : '<div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงนี้ที่มีข้อมูลเพียงพอ</div>';
   });
 }
 
