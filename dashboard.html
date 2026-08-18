@@ -965,7 +965,30 @@
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">โพสต์ทั้งหมดในช่วงที่เลือก</div>
+          <div class="section-title">🟣 Reels ในช่วงที่เลือก <span style="font-size:10.5px;font-weight:400;color:var(--text3);">— ใช้ metric ชุดเฉพาะของ Reels ตามที่ Facebook เปิดให้จริง</span></div>
+          <button class="btn btn-ghost" onclick="exportTable('tblFbcReels')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
+          <table id="tblFbcReels">
+            <thead style="position:sticky;top:0;z-index:10;background:var(--bg);"><tr>
+              <th onclick="setFbcReelSort('posted_at')" style="cursor:pointer;background:var(--bg);">โพสต์ ⇅</th>
+              <th onclick="setFbcReelSort('posted_at')" style="cursor:pointer;background:var(--bg);">วันที่โพสต์ ⇅</th>
+              <th onclick="setFbcReelSort('plays')" style="cursor:pointer;background:var(--bg);">ยอดเล่น ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-plays')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-plays" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>fb_reels_total_plays</b><br>จำนวนครั้งที่คลิป Reels เริ่มเล่น นับรวมการเล่นซ้ำ (replay) ด้วย — ตรงกับตัวเลข "Views" ที่เห็นใน Meta Business Suite</div></span></th>
+              <th onclick="setFbcReelSort('avgWatch')" style="cursor:pointer;background:var(--bg);">เวลาดูเฉลี่ย ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-avgwatch')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-avgwatch" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>post_video_avg_time_watched</b><br>ระยะเวลาที่คนดูคลิปโดยเฉลี่ย รวมเวลาที่เล่นซ้ำด้วย</div></span></th>
+              <th onclick="setFbcReelSort('retention')" style="cursor:pointer;background:var(--bg);">Retention ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-retention-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-retention-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>post_video_retention_graph</b><br>% ของคนที่ยังดูคลิปอยู่ ณ วินาทีสุดท้าย เทียบกับตอนเริ่มเล่น — ใช้แทน ER เพราะ Reels ไม่มี Reach/Reactions จาก Facebook API</div></span></th>
+              <th onclick="setFbcReelSort('newFollowers')" style="cursor:pointer;background:var(--bg);">ผู้ติดตามใหม่ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-newfollowers')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-newfollowers" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>post_video_followers</b><br>จำนวนคนที่กดติดตามเพจภายใน 24 ชม. หลังดู Reels นี้ (ค่าประมาณจาก Meta)</div></span></th>
+              <th onclick="setFbcReelSort('comments')" style="cursor:pointer;background:var(--bg);">คอมเมนต์ ⇅</th>
+              <th style="background:var(--bg);">ลิงก์โพสต์</th>
+            </tr></thead>
+            <tbody id="tbodyFbcReels"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">โพสต์ที่มีวันที่สีแดง คือโพสต์มาไม่ถึง 24 ชม. — metric อาจยังสะสมไม่ครบ เทียบกับโพสต์เก่าโดยตรงได้ไม่แม่น</div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">🔵🟡🟢 โพสต์ปกติในช่วงที่เลือก <span style="font-size:10.5px;font-weight:400;color:var(--text3);">— วิดีโอ/รูปภาพ/อัลบั้ม ใช้ metric ชุดเดียวกัน</span></div>
           <button class="btn btn-ghost" onclick="exportTable('tblFbcPosts')">⬇ Export CSV</button>
         </div>
         <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
@@ -974,11 +997,11 @@
               <th onclick="setFbcSort('posted_at')" style="cursor:pointer;background:var(--bg);">โพสต์ ⇅</th>
               <th style="background:var(--bg);">ประเภท</th>
               <th onclick="setFbcSort('posted_at')" style="cursor:pointer;background:var(--bg);">วันที่โพสต์ ⇅</th>
-              <th onclick="setFbcSort('reach')" style="cursor:pointer;background:var(--bg);">Reach/ยอดเล่น ⇅</th>
-              <th onclick="setFbcSort('er')" style="cursor:pointer;background:var(--bg);">ER ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-er-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-er-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>รูปภาพ/วิดีโอ:</b> ER = (Reactions ÷ Reach) × 100<br><br><b>Reels:</b> แสดงค่า Retention แทน = % คนที่ยังดูอยู่ ณ ช่วงท้ายคลิป (เพราะ Reels ไม่มี Reach/Reactions จาก Facebook API)</div></span></th>
+              <th onclick="setFbcSort('reach')" style="cursor:pointer;background:var(--bg);">Reach ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-reach-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-reach-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคนไม่ซ้ำที่เห็นโพสต์นี้</div></span></th>
+              <th onclick="setFbcSort('er')" style="cursor:pointer;background:var(--bg);">ER ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-er-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-er-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:220px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">ER = (Reactions ÷ Reach) × 100</div></span></th>
+              <th onclick="setFbcSort('reactions')" style="cursor:pointer;background:var(--bg);">Reactions ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-reactions-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-reactions-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">รวม Like + Love + Haha + Wow ทั้งหมด (Sad/Angry ไม่มีให้ดึงจาก Facebook API แล้ว)</div></span></th>
               <th onclick="setFbcSort('comments')" style="cursor:pointer;background:var(--bg);">คอมเมนต์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-comments')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-comments" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคอมเมนต์ดิบทั้งหมด — ยังไม่แยกเชิงบวก/ลบ/คำถาม (sentiment ยังไม่เปิดใช้งาน)</div></span></th>
-              <th onclick="setFbcSort('shares')" style="cursor:pointer;background:var(--bg);">แชร์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-shares')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-shares" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนครั้งที่ถูกแชร์ — มีเฉพาะรูปภาพ/วิดีโอปกติ (Reels ไม่มีให้ดึงจาก Facebook API)</div></span></th>
-              <th onclick="setFbcSort('newFollowers')" style="cursor:pointer;background:var(--bg);">ผู้ติดตามใหม่ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-newfollowers')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-newfollowers" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคนที่กดติดตามเพจหลังดู Reels นี้ — มีเฉพาะ Reels เท่านั้น</div></span></th>
+              <th onclick="setFbcSort('shares')" style="cursor:pointer;background:var(--bg);">แชร์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-shares')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-shares" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:220px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนครั้งที่ถูกแชร์</div></span></th>
               <th style="background:var(--bg);">ลิงก์โพสต์</th>
             </tr></thead>
             <tbody id="tbodyFbcPosts"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
@@ -2248,6 +2271,8 @@ let fbcSelectedPage = '';
 let fbcPostsCache = [];
 let fbcSortKey = 'posted_at';
 let fbcSortDir = 'desc';
+let fbcReelSortKey = 'posted_at';
+let fbcReelSortDir = 'desc';
 const FBC_TYPE_META = {
   reel:   { label: 'Reel',    color: 'var(--purple)' },
   video:  { label: 'วิดีโอ',   color: 'var(--blue)' },
@@ -2281,6 +2306,12 @@ function setFbcSort(key) {
   if (fbcSortKey === key) fbcSortDir = fbcSortDir === 'asc' ? 'desc' : 'asc';
   else { fbcSortKey = key; fbcSortDir = 'desc'; }
   renderFbcPostsTable();
+}
+
+function setFbcReelSort(key) {
+  if (fbcReelSortKey === key) fbcReelSortDir = fbcReelSortDir === 'asc' ? 'desc' : 'asc';
+  else { fbcReelSortKey = key; fbcReelSortDir = 'desc'; }
+  renderFbcReelsTable();
 }
 
 function fbcDaysAgo(postedAt) {
@@ -2319,7 +2350,7 @@ async function renderFbContent() {
 
   const [postsRes, metricsRes, followersRes, commentsRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,post_type,caption,permalink_url,posted_at&page_id=eq.${fbcSelectedPage}&posted_at=gte.${since}&posted_at=lte.${until}&order=posted_at.desc&limit=500`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,impressions,reach,reactions_total,shares_count,video_avg_watch_seconds,retention_end_pct,new_followers&order=snapshot_date.desc&limit=2000`, { headers }),
+    fetch(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,impressions,reach,reactions_total,shares_count,video_avg_watch_seconds,retention_end_pct,new_followers,total_plays_incl_replays&order=snapshot_date.desc&limit=2000`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/page_daily_stats?select=snapshot_date,followers_count&page_id=eq.${fbcSelectedPage}&snapshot_date=gte.${fromStr || '2020-01-01'}&snapshot_date=lte.${toStr || '2099-12-31'}&order=snapshot_date.asc`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/social_comments?select=post_id,commented_at&commented_at=gte.${since}&limit=2000`, { headers })
   ]);
@@ -2331,7 +2362,8 @@ async function renderFbContent() {
   // กันพัง ถ้าคำขอไหน error กลับมาเป็น object แทน array (จะได้ไม่พังทั้งหน้า)
   if (!Array.isArray(posts) || !Array.isArray(allMetrics) || !Array.isArray(followers) || !Array.isArray(commentsRaw)) {
     console.error('FB Content: การดึงข้อมูลบางส่วนล้มเหลว', { posts, allMetrics, followers, commentsRaw });
-    document.getElementById('tbodyFbcPosts').innerHTML = '<tr><td colspan="7" class="empty">เกิดข้อผิดพลาดในการดึงข้อมูล ลองรีเฟรชหน้าใหม่</td></tr>';
+    document.getElementById('tbodyFbcReels').innerHTML = '<tr><td colspan="8" class="empty">เกิดข้อผิดพลาดในการดึงข้อมูล ลองรีเฟรชหน้าใหม่</td></tr>';
+    document.getElementById('tbodyFbcPosts').innerHTML = '<tr><td colspan="9" class="empty">เกิดข้อผิดพลาดในการดึงข้อมูล ลองรีเฟรชหน้าใหม่</td></tr>';
     return;
   }
   const comments = commentsRaw;
@@ -2348,11 +2380,14 @@ async function renderFbContent() {
 
   fbcPostsCache = posts.map(p => {
     const m = latestMetricByPost[p.post_id] || {};
-    const reach = m.reach || m.impressions || 0;
+    // Reels: ใช้ total_plays_incl_replays (ตรงกับ "Views" ใน Meta Business Suite) ไม่ใช่ reach/impressions
+    // โพสต์ปกติ: ใช้ reach ตามเดิม
+    const reach = m.reach || 0;
+    const plays = p.post_type === 'reel' ? (m.total_plays_incl_replays || m.impressions || 0) : 0;
     // Reels ไม่มี reach/reactions จริงจาก Facebook API เลย ห้ามคำนวณ ER
     const er = (p.post_type !== 'reel' && reach > 0 && m.reactions_total != null)
       ? (m.reactions_total / reach * 100) : null;
-    return { ...p, ...m, reach, er, commentCount: commentCountByPost[p.post_id] || 0, ageInfo: fbcDaysAgo(p.posted_at) };
+    return { ...p, ...m, reach, plays, er, commentCount: commentCountByPost[p.post_id] || 0, ageInfo: fbcDaysAgo(p.posted_at) };
   });
 
   // ทีมคอนเทนต์ยืนยันว่าลงแค่ Reels เท่านั้น — วิดีโอคู่แฝดที่ Facebook สร้างอัตโนมัติไม่ใช่คอนเทนต์จริง
@@ -2376,15 +2411,19 @@ async function renderFbContent() {
   renderFbcTrendChart(followers);
   renderFbcContentTypeSummary();
   renderFbcAdCandidates();
+  renderFbcReelsTable();
   renderFbcPostsTable();
   renderFbcInsight();
 }
 
 function renderFbcKpis(followers) {
-  const totalReach = fbcPostsCache.reduce((s, p) => s + (p.reach || 0), 0);
+  const nonReel = fbcPostsCache.filter(p => p.post_type !== 'reel');
+  const reelsOnly = fbcPostsCache.filter(p => p.post_type === 'reel');
+  const totalReach = nonReel.reduce((s, p) => s + (p.reach || 0), 0);
+  const totalPlays = reelsOnly.reduce((s, p) => s + (p.plays || 0), 0);
   const validEr = fbcPostsCache.filter(p => p.er != null);
   const avgEr = validEr.length ? (validEr.reduce((s, p) => s + p.er, 0) / validEr.length) : null;
-  const reels = fbcPostsCache.filter(p => p.post_type === 'reel' && p.retention_end_pct != null);
+  const reels = reelsOnly.filter(p => p.retention_end_pct != null);
   const avgRetention = reels.length ? (reels.reduce((s, p) => s + p.retention_end_pct, 0) / reels.length * 100) : null;
   const followerFirst = followers.length ? followers[0].followers_count : null;
   const followerLast = followers.length ? followers[followers.length - 1].followers_count : null;
@@ -2392,8 +2431,9 @@ function renderFbcKpis(followers) {
 
   document.getElementById('fbcontent-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">จำนวนโพสต์ทั้งหมด</div><div class="kpi-value">${fmt(fbcPostsCache.length)}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Reach/ยอดเล่นรวม ${fbcInfoIcon('fbc-info-reach', '<b style="color:var(--accent);">⚠️ ตัวเลขนี้เป็นยอดสะสมล่าสุด ไม่ใช่ยอดเฉพาะช่วงวันที่เลือก</b><br><br>ตัวกรองวันที่กรองแค่ "โพสต์ไหนถูกโพสต์ในช่วงนี้" แต่ reach/ER ที่โชว์คือยอดสะสมทั้งชีวิตโพสต์ ณ ตอนนี้ (เพราะ Facebook ให้ข้อมูลแบบสะสมเท่านั้น)<br><br>สำหรับรูปภาพ/วิดีโอปกติ: จำนวนคนไม่ซ้ำที่เห็นโพสต์ | สำหรับ Reels: จำนวนครั้งที่เล่น')}</div><div class="kpi-value">${fmt(totalReach)}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ER เฉลี่ย ${fbcInfoIcon('fbc-info-er', 'Engagement Rate = (Reactions ÷ Reach) × 100<br><br>คำนวณเฉพาะรูปภาพ/วิดีโอปกติ — Reels ไม่มี Reach จาก API จึง<b>ไม่ถูกนับรวม</b>')}</div><div class="kpi-value">${avgEr != null ? avgEr.toFixed(2) + '%' : '—'}</div></div>
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Reach รวม (โพสต์ปกติ) ${fbcInfoIcon('fbc-info-reach', '<b style="color:var(--accent);">⚠️ ตัวเลขนี้เป็นยอดสะสมล่าสุด ไม่ใช่ยอดเฉพาะช่วงวันที่เลือก</b><br><br>ตัวกรองวันที่กรองแค่ "โพสต์ไหนถูกโพสต์ในช่วงนี้" แต่ reach ที่โชว์คือยอดสะสมทั้งชีวิตโพสต์ ณ ตอนนี้ (เพราะ Facebook ให้ข้อมูลแบบสะสมเท่านั้น)<br><br>นับเฉพาะรูปภาพ/วิดีโอ/อัลบั้ม ไม่รวม Reels')}</div><div class="kpi-value">${fmt(totalReach)}</div></div>
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยอดเล่นรวม (Reels) ${fbcInfoIcon('fbc-info-plays-kpi', '<b>fb_reels_total_plays</b> รวมทุก Reel ในช่วงที่เลือก — นับรวมการเล่นซ้ำ (replay) ด้วย ตรงกับ "Views" ใน Meta Business Suite')}</div><div class="kpi-value">${fmt(totalPlays)}</div></div>
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ER เฉลี่ย (โพสต์ปกติ) ${fbcInfoIcon('fbc-info-er', 'Engagement Rate = (Reactions ÷ Reach) × 100<br><br>คำนวณเฉพาะรูปภาพ/วิดีโอ/อัลบั้ม — Reels ไม่มี Reach จาก API จึง<b>ไม่ถูกนับรวม</b>')}</div><div class="kpi-value">${avgEr != null ? avgEr.toFixed(2) + '%' : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Retention เฉลี่ย (Reels) ${fbcInfoIcon('fbc-info-retention', '% ของคนที่ยังดูอยู่ ณ ช่วงท้ายคลิป เทียบกับตอนเริ่มเล่น<br><br>ยิ่งสูงยิ่งดี แปลว่าคนดูจนเกือบจบ ไม่เลื่อนผ่านกลางคลิป')}</div><div class="kpi-value">${avgRetention != null ? avgRetention.toFixed(1) + '%' : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ผู้ติดตามสุทธิ ${fbcInfoIcon('fbc-info-followers', 'จำนวนผู้ติดตามเพจ ณ วันล่าสุดในช่วงที่เลือก (ดึงตรงจาก Facebook ทุกเช้า)<br><br>ตัวเลข ▲/▼ คือส่วนต่างเทียบกับต้นช่วงเวลาที่เลือก')}</div><div class="kpi-value">${followerLast != null ? fmt(followerLast) : '—'}</div><div style="font-size:11px;color:${followerDelta > 0 ? 'var(--green)' : followerDelta < 0 ? 'var(--red)' : 'var(--text3)'};margin-top:4px;">${followerDelta != null ? (followerDelta >= 0 ? '▲ +' : '▼ ') + fmt(followerDelta) : ''}</div></div>
   `;
@@ -2606,15 +2646,47 @@ function renderFbcAdCandidates() {
   });
 }
 
+function renderFbcReelsTable() {
+  const reelPosts = fbcPostsCache.filter(p => p.post_type === 'reel');
+  const sorted = [...reelPosts].sort((a, b) => {
+    let av, bv;
+    if (fbcReelSortKey === 'posted_at') { av = a.posted_at; bv = b.posted_at; }
+    else if (fbcReelSortKey === 'plays') { av = a.plays || 0; bv = b.plays || 0; }
+    else if (fbcReelSortKey === 'avgWatch') { av = a.video_avg_watch_seconds ?? -1; bv = b.video_avg_watch_seconds ?? -1; }
+    else if (fbcReelSortKey === 'retention') { av = a.retention_end_pct ?? -1; bv = b.retention_end_pct ?? -1; }
+    else if (fbcReelSortKey === 'newFollowers') { av = a.new_followers ?? -1; bv = b.new_followers ?? -1; }
+    else if (fbcReelSortKey === 'comments') { av = a.commentCount; bv = b.commentCount; }
+    return fbcReelSortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+  const tbody = document.getElementById('tbodyFbcReels');
+  if (!tbody) return;
+  tbody.innerHTML = sorted.length ? sorted.map(p => `
+    <tr>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;" title="${(p.caption || '').replace(/"/g,'&quot;')}">${(p.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</td>
+      <td style="white-space:nowrap;">
+        <div style="color:${p.ageInfo.fresh ? 'var(--red)' : 'var(--text2)'};display:flex;align-items:center;gap:6px;">${fbcThaiDateDisplay(p.posted_at)}${p.ageInfo.fresh ? '<span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;">ใหม่</span>' : ''}</div>
+        <div style="font-size:10px;color:var(--text3);">${p.ageInfo.days < 1 ? 'ไม่ถึง 1 วันที่แล้ว' : Math.floor(p.ageInfo.days) + ' วันที่แล้ว'}</div>
+      </td>
+      <td>${fmt(p.plays || 0)}</td>
+      <td>${p.video_avg_watch_seconds != null ? p.video_avg_watch_seconds.toFixed(1) + ' วิ' : '—'}</td>
+      <td>${p.retention_end_pct != null ? (p.retention_end_pct * 100).toFixed(1) + '%' : '—'}</td>
+      <td>${fmt(p.new_followers || 0)}</td>
+      <td>${p.commentCount} 💬</td>
+      <td>${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" style="color:var(--accent);">↗ ดู</a>` : ''}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="8" class="empty">ไม่มี Reels ในช่วงที่เลือก</td></tr>';
+}
+
 function renderFbcPostsTable() {
-  const sorted = [...fbcPostsCache].sort((a, b) => {
+  const nonReelPosts = fbcPostsCache.filter(p => p.post_type !== 'reel');
+  const sorted = [...nonReelPosts].sort((a, b) => {
     let av, bv;
     if (fbcSortKey === 'posted_at') { av = a.posted_at; bv = b.posted_at; }
     else if (fbcSortKey === 'reach') { av = a.reach || 0; bv = b.reach || 0; }
-    else if (fbcSortKey === 'er') { av = a.er ?? (a.retention_end_pct != null ? a.retention_end_pct*100 : -1); bv = b.er ?? (b.retention_end_pct != null ? b.retention_end_pct*100 : -1); }
+    else if (fbcSortKey === 'er') { av = a.er ?? -1; bv = b.er ?? -1; }
+    else if (fbcSortKey === 'reactions') { av = a.reactions_total ?? -1; bv = b.reactions_total ?? -1; }
     else if (fbcSortKey === 'comments') { av = a.commentCount; bv = b.commentCount; }
     else if (fbcSortKey === 'shares') { av = a.shares_count ?? -1; bv = b.shares_count ?? -1; }
-    else if (fbcSortKey === 'newFollowers') { av = a.new_followers ?? -1; bv = b.new_followers ?? -1; }
     return fbcSortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
   });
   document.getElementById('tbodyFbcPosts').innerHTML = sorted.length ? sorted.map(p => `
@@ -2626,10 +2698,10 @@ function renderFbcPostsTable() {
         <div style="font-size:10px;color:var(--text3);">${p.ageInfo.days < 1 ? 'ไม่ถึง 1 วันที่แล้ว' : Math.floor(p.ageInfo.days) + ' วันที่แล้ว'}</div>
       </td>
       <td>${fmt(p.reach || 0)}</td>
-      <td>${p.er != null ? p.er.toFixed(2) + '%' : (p.retention_end_pct != null ? (p.retention_end_pct*100).toFixed(1) + '% <span style="color:var(--text3);font-size:9.5px;">(Retention)</span>' : '—')}</td>
+      <td>${p.er != null ? p.er.toFixed(2) + '%' : '—'}</td>
+      <td>${fmt(p.reactions_total || 0)}</td>
       <td>${p.commentCount} 💬</td>
-      <td>${p.post_type !== 'reel' ? fmt(p.shares_count || 0) : '—'}</td>
-      <td>${p.post_type === 'reel' ? fmt(p.new_followers || 0) : '—'}</td>
+      <td>${fmt(p.shares_count || 0)}</td>
       <td>${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" style="color:var(--accent);">↗ ดู</a>` : ''}</td>
     </tr>
   `).join('') : '<tr><td colspan="9" class="empty">ไม่มีโพสต์ในช่วงที่เลือก</td></tr>';
