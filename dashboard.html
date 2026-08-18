@@ -38,7 +38,7 @@
   .logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
   .logo-text { font-size: 20px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
   .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
-  .nav { padding: 16px 0; flex: 1; }
+  .nav { padding: 16px 0; flex: 1; overflow-y: auto; min-height: 0; }
   .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: all 0.15s; border-left: 2px solid transparent; }
   .nav-group-label { padding: 14px 20px 4px; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
   .nav-group-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 20px; }
@@ -172,8 +172,6 @@
 </style>
 </head>
 <body>
-<div id="fb-root"></div>
-<script async defer crossorigin="anonymous" src="https://connect.facebook.net/th_TH/sdk.js#xfbml=1&version=v21.0"></script>
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
@@ -199,7 +197,6 @@
       <div class="nav-item nav-sub" onclick="showPage('flow',null,this)"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
       <div class="nav-item nav-sub" onclick="showPage('neverbought',null,this)"><span class="nav-icon">🔍</span> ลูกค้าที่ยังไม่ซื้อ</div>
       <div class="nav-item nav-sub" onclick="showPage('promotarget',null,this)"><span class="nav-icon">🎯</span> ตั้งเป้าโปรโมชั่น</div>
-      <div class="nav-item nav-sub" onclick="showPage('fbcontent',null,this)"><span class="nav-icon">📱</span> วิเคราะห์คอนเทนต์</div>
     </div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('tt')" id="navGroupLabel-tt">
       <span>TikTok</span><span class="nav-group-chevron" id="navGroupChevron-tt">▸</span>
@@ -288,12 +285,6 @@
           <option value="Lazada">Lazada</option>
           <option value="ตัวแทน">ตัวแทน</option>
           <option value="Modern Trade">Modern Trade</option>
-        </select>
-      </div>
-      <div class="filter-group" id="fbcPageFilterGroup" style="display:none;">
-        <span class="filter-label">เพจ</span>
-        <select id="fbcPageSelect" onchange="onFbcPageChange()">
-          <option value="">กำลังโหลดเพจ...</option>
         </select>
       </div>
       <div class="filter-group" id="subChannelGroup">
@@ -934,84 +925,6 @@
       </div>
     </div>
 
-    <div class="page" id="page-fbcontent">
-      <div style="text-align:right;font-size:11px;color:var(--text3);margin-bottom:10px;" id="fbcUpdatedAt"></div>
-
-      <div style="background:color-mix(in srgb, var(--accent) 12%, transparent);border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">
-        <span style="font-size:15px;">⚠️</span>
-        <span><b>ตัวกรองวันที่กรองเฉพาะ "โพสต์ไหนถูกโพสต์ในช่วงนี้"</b> — แต่ตัวเลข Reach/ER ที่เห็นคือยอดสะสมล่าสุด ณ วันนี้เสมอ ไม่ใช่ยอดเฉพาะช่วงที่เลือก (Facebook ให้ข้อมูลแบบสะสมเท่านั้น)</span>
-      </div>
-      <div id="fbcontent-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="card-title">เทรนด์เพจรายวัน — ผู้ติดตาม vs ER <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-trend')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="fbc-info-trend" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">เส้นน้ำเงิน = จำนวนผู้ติดตามสะสม ณ วันนั้น<br>แท่งทอง = ER เฉลี่ยของโพสต์ที่โพสต์ในวันนั้น<br><br>หมายเหตุ: metric ของแต่ละโพสต์เป็นค่าสะสมตลอดชีพ (ไม่ใช่ยอดเฉพาะวันนั้น) ค่า ER ที่โชว์จึงเป็นค่า ณ ปัจจุบัน ไม่ใช่ ณ วันที่โพสต์เป๊ะๆ</div></span></div>
-        </div>
-        <div class="chart-wrap chart-wrap-lg"><canvas id="chartFbcTrend"></canvas></div>
-      </div>
-
-      <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">สรุปตามประเภทคอนเทนต์</div>
-        <div id="fbcContentTypeSummary" style="padding-top:6px;"></div>
-      </div>
-
-      <div style="margin-bottom:8px;margin-top:4px;">
-        <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — ไม่เกิน 7 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate3')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุไม่เกิน 7 วัน เรียงจาก ER/Retention สูงสุด — ช่วงที่ยังทันเอาไปยิงแอดต่อได้ทันที</div></span></div>
-      </div>
-      <div id="fbcAdCandidates3d" style="margin-bottom:20px;"></div>
-
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title">🟣 Reels ในช่วงที่เลือก <span style="font-size:10.5px;font-weight:400;color:var(--text3);">— ใช้ metric ชุดเฉพาะของ Reels ตามที่ Facebook เปิดให้จริง</span></div>
-          <button class="btn btn-ghost" onclick="exportTable('tblFbcReels')">⬇ Export CSV</button>
-        </div>
-        <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
-          <table id="tblFbcReels">
-            <thead style="position:sticky;top:0;z-index:10;background:var(--bg);"><tr>
-              <th onclick="setFbcReelSort('posted_at')" style="cursor:pointer;background:var(--bg);">โพสต์ ⇅</th>
-              <th onclick="setFbcReelSort('posted_at')" style="cursor:pointer;background:var(--bg);">วันที่โพสต์ ⇅</th>
-              <th onclick="setFbcReelSort('plays')" style="cursor:pointer;background:var(--bg);">ยอดเล่น ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-plays')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-plays" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>fb_reels_total_plays</b><br>จำนวนครั้งที่คลิป Reels เริ่มเล่น นับรวมการเล่นซ้ำ (replay) ด้วย — ตรงกับตัวเลข "Views" ที่เห็นใน Meta Business Suite</div></span></th>
-              <th onclick="setFbcReelSort('avgWatch')" style="cursor:pointer;background:var(--bg);">เวลาดูเฉลี่ย ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-avgwatch')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-avgwatch" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>post_video_avg_time_watched</b><br>ระยะเวลาที่คนดูคลิปโดยเฉลี่ย รวมเวลาที่เล่นซ้ำด้วย</div></span></th>
-              <th onclick="setFbcReelSort('retention')" style="cursor:pointer;background:var(--bg);">Retention ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-retention-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-retention-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>post_video_retention_graph</b><br>% ของคนที่ยังดูคลิปอยู่ ณ วินาทีสุดท้าย เทียบกับตอนเริ่มเล่น — ใช้แทน ER เพราะ Reels ไม่มี Reach/Reactions จาก Facebook API</div></span></th>
-              <th onclick="setFbcReelSort('newFollowers')" style="cursor:pointer;background:var(--bg);">ผู้ติดตามใหม่ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-newfollowers')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-newfollowers" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>post_video_followers</b><br>จำนวนคนที่กดติดตามเพจภายใน 24 ชม. หลังดู Reels นี้ (ค่าประมาณจาก Meta)</div></span></th>
-              <th onclick="setFbcReelSort('comments')" style="cursor:pointer;background:var(--bg);">คอมเมนต์ ⇅</th>
-              <th style="background:var(--bg);">ลิงก์โพสต์</th>
-            </tr></thead>
-            <tbody id="tbodyFbcReels"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">โพสต์ที่มีวันที่สีแดง คือโพสต์มาไม่ถึง 24 ชม. — metric อาจยังสะสมไม่ครบ เทียบกับโพสต์เก่าโดยตรงได้ไม่แม่น</div>
-      </div>
-
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title">🔵🟡🟢 โพสต์ปกติในช่วงที่เลือก <span style="font-size:10.5px;font-weight:400;color:var(--text3);">— วิดีโอ/รูปภาพ/อัลบั้ม ใช้ metric ชุดเดียวกัน</span></div>
-          <button class="btn btn-ghost" onclick="exportTable('tblFbcPosts')">⬇ Export CSV</button>
-        </div>
-        <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
-          <table id="tblFbcPosts">
-            <thead style="position:sticky;top:0;z-index:10;background:var(--bg);"><tr>
-              <th onclick="setFbcSort('posted_at')" style="cursor:pointer;background:var(--bg);">โพสต์ ⇅</th>
-              <th style="background:var(--bg);">ประเภท</th>
-              <th onclick="setFbcSort('posted_at')" style="cursor:pointer;background:var(--bg);">วันที่โพสต์ ⇅</th>
-              <th onclick="setFbcSort('reach')" style="cursor:pointer;background:var(--bg);">Reach ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-reach-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-reach-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคนไม่ซ้ำที่เห็นโพสต์นี้</div></span></th>
-              <th onclick="setFbcSort('er')" style="cursor:pointer;background:var(--bg);">ER ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-er-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-er-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:220px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">ER = (Reactions ÷ Reach) × 100</div></span></th>
-              <th onclick="setFbcSort('reactions')" style="cursor:pointer;background:var(--bg);">Reactions ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-reactions-col')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-reactions-col" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">รวม Like + Love + Haha + Wow ทั้งหมด (Sad/Angry ไม่มีให้ดึงจาก Facebook API แล้ว)</div></span></th>
-              <th onclick="setFbcSort('comments')" style="cursor:pointer;background:var(--bg);">คอมเมนต์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-comments')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-comments" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:240px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนคอมเมนต์ดิบทั้งหมด — ยังไม่แยกเชิงบวก/ลบ/คำถาม (sentiment ยังไม่เปิดใช้งาน)</div></span></th>
-              <th onclick="setFbcSort('shares')" style="cursor:pointer;background:var(--bg);">แชร์ ⇅ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation();"><span onclick="toggleFbcInfo('fbc-info-shares')" style="cursor:pointer;color:var(--text3);font-size:10.5px;font-weight:400;">ⓘ</span><div id="fbc-info-shares" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:220px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">จำนวนครั้งที่ถูกแชร์</div></span></th>
-              <th style="background:var(--bg);">ลิงก์โพสต์</th>
-            </tr></thead>
-            <tbody id="tbodyFbcPosts"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">โพสต์ที่มีวันที่สีแดง คือโพสต์มาไม่ถึง 24 ชม. — metric อาจยังสะสมไม่ครบ เทียบกับโพสต์เก่าโดยตรงได้ไม่แม่น</div>
-      </div>
-
-      <div class="card ai-summary-card">
-        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
-        <div class="ai-summary-body" id="fbcontent-insight">กำลังวิเคราะห์...</div>
-      </div>
-    </div>
 
     <div class="page" id="page-tthub">
       <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
@@ -1383,16 +1296,6 @@
     <div class="page" id="page-cost">
       <div id="cost-ads-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:12px;"></div>
       <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title">กำไรคงเหลือ vs ค่าใช้จ่ายการตลาดแยกสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เรียงตามยอดขายมาก→น้อย)</span></div>
-        </div>
-        <div style="position:relative;width:100%;" id="mktSkuChartWrap">
-          <canvas id="chartMktSkuBreakdown" role="img" aria-label="กราฟแท่งแนวนอนเทียบกำไรคงเหลือและค่าใช้จ่ายการตลาดแยกหมวดของแต่ละสินค้า"></canvas>
-        </div>
-        <div id="mktSkuChartLegend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:11.5px;color:var(--text3);"></div>
-        <div id="mktSkuChartNote" style="font-size:11px;color:var(--text3);margin-top:8px;"></div>
-      </div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
           <div class="section-title">MKT Tracking รายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
@@ -1858,9 +1761,9 @@ const pageTitles = {
   tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
-  cost: 'MKT Tracking', fbcontent: 'วิเคราะห์คอนเทนต์'
+  cost: 'MKT Tracking'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','promotion','geo','crm','flow','neverbought','fbcontent','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','promotarget','fbhub','promotion','geo','crm','flow','neverbought','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget']; // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
@@ -1927,12 +1830,10 @@ function showPage(page, lockCh, el) {
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
-  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub', 'lzhub', 'mthub', 'fbcontent']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
-  const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbcontent']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
+  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub', 'lzhub', 'mthub']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['fbhub']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
-  const fbcPageGroup = document.getElementById('fbcPageFilterGroup');
-  if (fbcPageGroup) fbcPageGroup.style.display = (page === 'fbcontent') ? 'flex' : 'none';
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
@@ -1976,8 +1877,6 @@ function showPage(page, lockCh, el) {
     populateCpCreatorList();
   } else if (page === 'promotarget') {
     initPromoTargetPage();
-  } else if (page === 'fbcontent') {
-    initFbContentPage();
   } else {
     applyFilters();
   }
@@ -1988,7 +1887,6 @@ function renderCurrentPage() {
   else if (currentPage === 'channel') renderChannel();
   else if (currentPage === 'promotarget') renderPromoTargets();
   else if (currentPage === 'fbhub') renderFbHub();
-  else if (currentPage === 'fbcontent') renderFbContent();
   else if (currentPage === 'tthub') renderTtHub();
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'lzhub') renderLzHub();
@@ -2262,477 +2160,6 @@ function renderFbHub() {
   if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
 }
 
-// ===== FB CONTENT ANALYSIS =====
-let fbcPages = [];
-let fbcSelectedPage = '';
-let fbcPostsCache = [];
-let fbcSortKey = 'posted_at';
-let fbcSortDir = 'desc';
-let fbcReelSortKey = 'posted_at';
-let fbcReelSortDir = 'desc';
-const FBC_TYPE_META = {
-  reel:   { label: 'Reel',    color: 'var(--purple)' },
-  video:  { label: 'วิดีโอ',   color: 'var(--blue)' },
-  photo:  { label: 'รูปภาพ',   color: 'var(--accent)' },
-  album:  { label: 'อัลบั้ม',   color: 'var(--green)' },
-  status: { label: 'สเตตัส',  color: 'var(--pink)' }
-};
-const FBC_TYPE_ICON = { reel: '🟣', video: '🔵', photo: '🟡', album: '🟢', status: '🩷' };
-
-async function initFbContentPage() {
-  if (fbcPages.length === 0) {
-    const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_pages_public?select=page_id,page_name&order=page_name.asc`, { headers });
-    fbcPages = await res.json();
-    const sel = document.getElementById('fbcPageSelect');
-    sel.innerHTML = fbcPages.map(p => `<option value="${p.page_id}">${p.page_name}</option>`).join('');
-    // ค่า default: เพจ Deesay Thailand เสมอ ถ้าไม่เจอค่อย fallback เป็นเพจแรกในลิสต์
-    const defaultPage = fbcPages.find(p => p.page_name === 'Deesay Thailand - บริษัท') || fbcPages[0];
-    if (defaultPage) fbcSelectedPage = defaultPage.page_id;
-    sel.value = fbcSelectedPage;
-  }
-  renderFbContent();
-}
-
-function onFbcPageChange() {
-  fbcSelectedPage = document.getElementById('fbcPageSelect').value;
-  renderFbContent();
-}
-
-function setFbcSort(key) {
-  if (fbcSortKey === key) fbcSortDir = fbcSortDir === 'asc' ? 'desc' : 'asc';
-  else { fbcSortKey = key; fbcSortDir = 'desc'; }
-  renderFbcPostsTable();
-}
-
-function setFbcReelSort(key) {
-  if (fbcReelSortKey === key) fbcReelSortDir = fbcReelSortDir === 'asc' ? 'desc' : 'asc';
-  else { fbcReelSortKey = key; fbcReelSortDir = 'desc'; }
-  renderFbcReelsTable();
-}
-
-function fbcDaysAgo(postedAt) {
-  const ms = Date.now() - new Date(postedAt).getTime();
-  const days = ms / 86400000;
-  return { days, fresh: days < 1 };
-}
-
-// แปลงเวลาใดๆ เป็นวันที่ไทย (Asia/Bangkok) แบบ YYYY-MM-DD เสมอ ไม่พึ่ง timezone เครื่องผู้ดู
-function fbcThaiDate(isoString) {
-  return new Date(isoString).toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
-}
-// วันที่ไทยแบบอ่านง่าย เช่น "17 ส.ค. 2569 10:48"
-function fbcThaiDateDisplay(isoString) {
-  return new Date(isoString).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
-function fbcTypeBadge(type) {
-  const meta = FBC_TYPE_META[type] || { label: type, color: 'var(--text3)' };
-  return `<span style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:10.5px;font-weight:600;color:${meta.color};background:color-mix(in srgb, ${meta.color} 16%, transparent);white-space:nowrap;">${meta.label}</span>`;
-}
-
-async function renderFbContent() {
-  if (!fbcSelectedPage) return;
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
-
-  // ใช้ตัวกรองวันที่ร่วมกับหน้าอื่นทั้งเว็บ (dateFrom/dateTo) แทนตัว toggle เดิม
-  const fromStr = getDateValue('From');
-  const toStr = getDateValue('To');
-  const sinceRaw = fromStr ? `${fromStr}T00:00:00+07:00` : new Date(Date.now() - 30 * 86400000).toISOString();
-  const untilRaw = toStr ? `${toStr}T23:59:59+07:00` : new Date().toISOString();
-  // สำคัญ: ต้อง encodeURIComponent เสมอ เพราะเครื่องหมาย "+" ใน +07:00 จะถูกตีความเป็นช่องว่างถ้าไม่เข้ารหัส
-  // ทำให้ Supabase parse วันที่ไม่ได้ แล้ว error 400 ทุกคำขอที่มีวันที่ปนอยู่
-  const since = encodeURIComponent(sinceRaw);
-  const until = encodeURIComponent(untilRaw);
-
-  const [postsRes, metricsRes, followersRes, commentsRes] = await Promise.all([
-    fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,post_type,caption,permalink_url,posted_at,thumbnail_url&page_id=eq.${fbcSelectedPage}&posted_at=gte.${since}&posted_at=lte.${until}&order=posted_at.desc&limit=500`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,impressions,reach,reactions_total,shares_count,video_avg_watch_seconds,retention_end_pct,new_followers,total_plays_incl_replays&order=snapshot_date.desc&limit=2000`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/page_daily_stats?select=snapshot_date,followers_count&page_id=eq.${fbcSelectedPage}&snapshot_date=gte.${fromStr || '2020-01-01'}&snapshot_date=lte.${toStr || '2099-12-31'}&order=snapshot_date.asc`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/social_comments?select=post_id,commented_at&commented_at=gte.${since}&limit=2000`, { headers })
-  ]);
-  const posts = await postsRes.json();
-  const allMetrics = await metricsRes.json();
-  const followers = await followersRes.json();
-  const commentsRaw = await commentsRes.json();
-
-  // กันพัง ถ้าคำขอไหน error กลับมาเป็น object แทน array (จะได้ไม่พังทั้งหน้า)
-  if (!Array.isArray(posts) || !Array.isArray(allMetrics) || !Array.isArray(followers) || !Array.isArray(commentsRaw)) {
-    console.error('FB Content: การดึงข้อมูลบางส่วนล้มเหลว', { posts, allMetrics, followers, commentsRaw });
-    document.getElementById('tbodyFbcReels').innerHTML = '<tr><td colspan="8" class="empty">เกิดข้อผิดพลาดในการดึงข้อมูล ลองรีเฟรชหน้าใหม่</td></tr>';
-    document.getElementById('tbodyFbcPosts').innerHTML = '<tr><td colspan="9" class="empty">เกิดข้อผิดพลาดในการดึงข้อมูล ลองรีเฟรชหน้าใหม่</td></tr>';
-    return;
-  }
-  const comments = commentsRaw;
-
-  const latestMetricByPost = {};
-  allMetrics.forEach(m => {
-    if (!latestMetricByPost[m.post_id] || m.snapshot_date > latestMetricByPost[m.post_id].snapshot_date) {
-      latestMetricByPost[m.post_id] = m;
-    }
-  });
-
-  const commentCountByPost = {};
-  comments.forEach(c => { commentCountByPost[c.post_id] = (commentCountByPost[c.post_id] || 0) + 1; });
-
-  fbcPostsCache = posts.map(p => {
-    const m = latestMetricByPost[p.post_id] || {};
-    // Reels: ใช้ total_plays_incl_replays (ตรงกับ "Views" ใน Meta Business Suite) ไม่ใช่ reach/impressions
-    // โพสต์ปกติ: ใช้ reach ตามเดิม
-    const reach = m.reach || 0;
-    const plays = p.post_type === 'reel' ? (m.total_plays_incl_replays || m.impressions || 0) : 0;
-    // Reels ไม่มี reach/reactions จริงจาก Facebook API เลย ห้ามคำนวณ ER
-    const er = (p.post_type !== 'reel' && reach > 0 && m.reactions_total != null)
-      ? (m.reactions_total / reach * 100) : null;
-    return { ...p, ...m, reach, plays, er, commentCount: commentCountByPost[p.post_id] || 0, ageInfo: fbcDaysAgo(p.posted_at) };
-  });
-
-  // ทีมคอนเทนต์ยืนยันว่าลงแค่ Reels เท่านั้น — วิดีโอคู่แฝดที่ Facebook สร้างอัตโนมัติไม่ใช่คอนเทนต์จริง
-  // จับคู่ด้วยแคปชั่น 60 ตัวแรก + เวลาใกล้กันใน 30 นาที แล้ว "ยุบ" คอมเมนต์ของวิดีโอเข้ากับ Reel ก่อนซ่อนแถว
-  const fbcSig = s => (s || '').trim().slice(0, 60);
-  const reelPosts = fbcPostsCache.filter(p => p.post_type === 'reel');
-  fbcPostsCache = fbcPostsCache.filter(p => {
-    if (p.post_type !== 'video') return true;
-    const pTime = new Date(p.posted_at).getTime();
-    const matchedReel = reelPosts.find(r => fbcSig(r.caption) === fbcSig(p.caption) && Math.abs(new Date(r.posted_at).getTime() - pTime) < 1800000);
-    if (matchedReel) {
-      matchedReel.commentCount += p.commentCount; // ยุบคอมเมนต์เข้าด้วยกัน ไม่ให้หายไปเฉยๆ
-      return false;
-    }
-    return true; // ไม่เจอคู่ที่ตรงกันเลย เผื่อไว้ยังโชว์อยู่ กันข้อมูลหายเงียบๆ
-  });
-
-  document.getElementById('fbcUpdatedAt').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' });
-
-  renderFbcKpis(followers);
-  renderFbcTrendChart(followers);
-  renderFbcContentTypeSummary();
-  renderFbcAdCandidates();
-  renderFbcReelsTable();
-  renderFbcPostsTable();
-  renderFbcInsight();
-}
-
-function renderFbcKpis(followers) {
-  const nonReel = fbcPostsCache.filter(p => p.post_type !== 'reel');
-  const reelsOnly = fbcPostsCache.filter(p => p.post_type === 'reel');
-  const avgPlays = reelsOnly.length ? (reelsOnly.reduce((s, p) => s + (p.plays || 0), 0) / reelsOnly.length) : null;
-  const validEr = fbcPostsCache.filter(p => p.er != null);
-  const avgEr = validEr.length ? (validEr.reduce((s, p) => s + p.er, 0) / validEr.length) : null;
-  const reels = reelsOnly.filter(p => p.retention_end_pct != null);
-  const avgRetention = reels.length ? (reels.reduce((s, p) => s + p.retention_end_pct, 0) / reels.length * 100) : null;
-  const followerFirst = followers.length ? followers[0].followers_count : null;
-  const followerLast = followers.length ? followers[followers.length - 1].followers_count : null;
-  const followerDelta = (followerFirst != null && followerLast != null) ? followerLast - followerFirst : null;
-
-  document.getElementById('fbcontent-kpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">จำนวนโพสต์ทั้งหมด</div><div class="kpi-value">${fmt(fbcPostsCache.length)}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยอดเล่นเฉลี่ยต่อ Reel ${fbcInfoIcon('fbc-info-plays-kpi', '<b>fb_reels_total_plays</b> เฉลี่ยต่อคลิป — นับรวมการเล่นซ้ำ (replay) ด้วย ตรงกับ "Views" ใน Meta Business Suite<br><br>ใช้ค่าเฉลี่ยแทนยอดรวม เพื่อเทียบกันได้ตรงๆ ไม่ว่าจะโพสต์กี่คลิปในช่วงนี้')}</div><div class="kpi-value">${avgPlays != null ? fmt(Math.round(avgPlays)) : '—'}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ER เฉลี่ย (โพสต์ปกติ) ${fbcInfoIcon('fbc-info-er', 'Engagement Rate = (Reactions ÷ Reach) × 100<br><br>คำนวณเฉพาะรูปภาพ/วิดีโอ/อัลบั้ม — Reels ไม่มี Reach จาก API จึง<b>ไม่ถูกนับรวม</b>')}</div><div class="kpi-value">${avgEr != null ? avgEr.toFixed(2) + '%' : '—'}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Retention เฉลี่ย (Reels) ${fbcInfoIcon('fbc-info-retention', '% ของคนที่ยังดูอยู่ ณ ช่วงท้ายคลิป เทียบกับตอนเริ่มเล่น<br><br>ยิ่งสูงยิ่งดี แปลว่าคนดูจนเกือบจบ ไม่เลื่อนผ่านกลางคลิป')}</div><div class="kpi-value">${avgRetention != null ? avgRetention.toFixed(1) + '%' : '—'}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ผู้ติดตามสุทธิ ${fbcInfoIcon('fbc-info-followers', 'จำนวนผู้ติดตามเพจ ณ วันล่าสุดในช่วงที่เลือก (ดึงตรงจาก Facebook ทุกเช้า)<br><br>ตัวเลข ▲/▼ คือส่วนต่างเทียบกับต้นช่วงเวลาที่เลือก')}</div><div class="kpi-value">${followerLast != null ? fmt(followerLast) : '—'}</div><div style="font-size:11px;color:${followerDelta > 0 ? 'var(--green)' : followerDelta < 0 ? 'var(--red)' : 'var(--text3)'};margin-top:4px;">${followerDelta != null ? (followerDelta >= 0 ? '▲ +' : '▼ ') + fmt(followerDelta) : ''}</div></div>
-  `;
-}
-
-function fbcInfoIcon(id, html) {
-  return `<span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">${html}</div></span>`;
-}
-
-function toggleFbcInfo(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const isOpen = el.style.display === 'block';
-  document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
-  if (!isOpen) el.style.display = 'block';
-}
-
-function renderFbcTrendChart(followers) {
-  const wrap = document.getElementById('chartFbcTrend').closest('.chart-wrap');
-  let noteEl = document.getElementById('fbcTrendNote');
-  if (!noteEl) {
-    noteEl = document.createElement('div');
-    noteEl.id = 'fbcTrendNote';
-    noteEl.style.cssText = 'font-size:12px;color:var(--text3);text-align:center;padding:40px 0;';
-    wrap.parentNode.insertBefore(noteEl, wrap);
-  }
-  if (followers.length < 2) {
-    wrap.style.display = 'none';
-    noteEl.style.display = 'block';
-    noteEl.textContent = `ยังสะสมข้อมูลผู้ติดตามได้แค่ ${followers.length} วัน — ต้องมีอย่างน้อย 2 วันถึงจะแสดงเทรนด์ได้`;
-    return;
-  }
-  wrap.style.display = '';
-  noteEl.style.display = 'none';
-
-  // นับจำนวนโพสต์ทั้งหมด + แยกตามประเภทของแต่ละวัน — ไม่รวม Reels ในผลรวม reach/reactions ของ ER
-  const byDay = {};
-  const byDayTypeCounts = {};
-  const byDayPostCount = {};
-  fbcPostsCache.forEach(p => {
-    const day = fbcThaiDate(p.posted_at);
-    if (!byDayTypeCounts[day]) byDayTypeCounts[day] = {};
-    byDayTypeCounts[day][p.post_type] = (byDayTypeCounts[day][p.post_type] || 0) + 1;
-    byDayPostCount[day] = (byDayPostCount[day] || 0) + 1;
-
-    if (p.post_type === 'reel') return; // สำคัญ: กัน Reels ปนเข้าไปเจือจาง ER ของวันนั้น
-    if (!byDay[day]) byDay[day] = { reach: 0, reactions: 0 };
-    byDay[day].reach += p.reach || 0;
-    byDay[day].reactions += p.reactions_total || 0;
-  });
-
-  const days = followers.map(f => f.snapshot_date);
-  const followerSeries = followers.map(f => f.followers_count);
-  const erSeries = days.map(d => {
-    const b = byDay[d];
-    return (b && b.reach > 0) ? +(b.reactions / b.reach * 100).toFixed(2) : null;
-  });
-  const postCountSeries = days.map(d => byDayPostCount[d] || 0);
-
-  if (charts['chartFbcTrend']) charts['chartFbcTrend'].destroy();
-  const ctx = document.getElementById('chartFbcTrend');
-  if (!ctx) return;
-  charts['chartFbcTrend'] = new Chart(ctx, {
-    data: {
-      labels: days,
-      datasets: [
-        { type: 'line', label: '👥 ผู้ติดตามสะสม', data: followerSeries, borderColor: '#60a5fa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 },
-        { type: 'line', label: '📊 ER รายวัน (%)', data: erSeries, borderColor: '#c8a96e', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, spanGaps: true },
-        { type: 'line', label: '📝 จำนวนโพสต์', data: postCountSeries, borderColor: '#4ade80', backgroundColor: 'transparent', yAxisID: 'y2', tension: 0.2, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, borderDash: [4, 3] }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } },
-        tooltip: {
-          backgroundColor: 'rgba(17,17,24,0.95)',
-          titleFont: { family: 'Sarabun', size: 12, weight: '600' },
-          bodyFont: { family: 'Sarabun', size: 11.5 },
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: function(ctx) {
-              if (ctx.dataset.label.includes('ผู้ติดตาม')) {
-                const idx = ctx.dataIndex;
-                const cur = followerSeries[idx];
-                const prev = idx > 0 ? followerSeries[idx - 1] : null;
-                if (cur == null) return '👥 ผู้ติดตามสะสม: —';
-                const delta = (prev != null) ? cur - prev : null;
-                const deltaStr = delta != null ? `  (${delta >= 0 ? '+' : ''}${fmt(delta)} จากวันก่อน)` : '';
-                return `👥 ผู้ติดตามสะสม: ${fmt(cur)}${deltaStr}`;
-              }
-              if (ctx.dataset.label.includes('ER')) {
-                return `📊 ER รายวัน: ${ctx.parsed.y != null ? ctx.parsed.y + '%' : '—'}`;
-              }
-              return `📝 จำนวนโพสต์: ${ctx.parsed.y} โพสต์`;
-            },
-            afterBody: function(items) {
-              if (!items.length) return [];
-              const day = items[0].label;
-              const counts = byDayTypeCounts[day];
-              if (!counts) return ['', 'ไม่มีโพสต์ในวันนี้'];
-              const total = Object.values(counts).reduce((a, b) => a + b, 0);
-              const lines = Object.entries(counts).map(([t, c]) => `${FBC_TYPE_ICON[t] || '⚪'} ${(FBC_TYPE_META[t] || {}).label || t}: ${c} โพสต์`);
-              return ['', `แยกตามประเภท (รวม ${total}):`, ...lines];
-            }
-          }
-        }
-      },
-      scales: {
-        x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
-        y: { position: 'left', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
-        y1: { position: 'right', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => v + '%' }, grid: { drawOnChartArea: false } },
-        y2: { position: 'right', offset: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, stepSize: 1 }, grid: { drawOnChartArea: false } }
-      }
-    }
-  });
-}
-
-function renderFbcContentTypeSummary() {
-  const byType = {};
-  fbcPostsCache.forEach(p => {
-    const t = p.post_type || 'อื่นๆ';
-    if (!byType[t]) byType[t] = { count: 0, erSum: 0, erCount: 0, retSum: 0, retCount: 0, comments: 0 };
-    byType[t].count++;
-    if (p.er != null) { byType[t].erSum += p.er; byType[t].erCount++; }
-    if (p.retention_end_pct != null) { byType[t].retSum += p.retention_end_pct * 100; byType[t].retCount++; }
-    byType[t].comments += p.commentCount;
-  });
-  const order = ['reel', 'video', 'photo', 'album', 'status'];
-  const rows = order.filter(t => byType[t]).map(t => {
-    const v = byType[t];
-    const erText = v.erCount ? (v.erSum / v.erCount).toFixed(2) + '%' : (v.retCount ? (v.retSum / v.retCount).toFixed(1) + '%' : '—');
-    const erLabel = !v.erCount && v.retCount ? ' <span style="color:var(--text3);font-size:9.5px;">(Retention)</span>' : '';
-    return `<tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:8px 6px;">${fbcTypeBadge(t)}</td>
-      <td style="padding:8px 6px;">${v.count} โพสต์</td>
-      <td style="padding:8px 6px;">${erText}${erLabel}</td>
-      <td style="padding:8px 6px;">${v.comments} 💬</td>
-    </tr>`;
-  }).join('');
-  const totalPosts = fbcPostsCache.length;
-  document.getElementById('fbcContentTypeSummary').innerHTML = `
-    <table style="width:100%;font-size:12px;border-collapse:collapse;">
-      <thead><tr style="color:var(--text3);text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;">
-        <th style="padding:6px;">ประเภท</th><th style="padding:6px;">จำนวนโพสต์</th>
-        <th style="padding:6px;">ER เฉลี่ย ${fbcInfoIcon('fbc-info-summary-er', 'ER = (Reactions ÷ Reach) × 100 คำนวณเฉพาะรูปภาพ/วิดีโอปกติ<br><br>Reels แสดงค่า <b>Retention</b> แทน (% คนดูจนเกือบจบคลิป) เพราะไม่มี Reach/Reactions จาก Facebook API ให้คำนวณ ER ได้')}</th>
-        <th style="padding:6px;">คอมเมนต์รวม</th>
-      </tr></thead>
-      <tbody>${rows || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>'}</tbody>
-    </table>
-    <div style="font-size:10.5px;color:var(--text3);margin-top:10px;">รวมทั้งหมด ${totalPosts} โพสต์ในช่วงที่เลือก</div>
-  `;
-}
-
-function fbcScoreOf(p) {
-  // ER สำหรับโพสต์ปกติ, Retention สำหรับ Reels — ใช้ "ในกลุ่มประเภทเดียวกัน" เท่านั้น ไม่เทียบข้ามประเภท
-  if (p.er != null) return p.er;
-  if (p.retention_end_pct != null) return p.retention_end_pct * 100;
-  return null;
-}
-
-function fbcOpenEmbed(permalinkUrl, e) {
-  if (e) e.preventDefault();
-  if (!permalinkUrl) return;
-  let modal = document.getElementById('fbcEmbedModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'fbcEmbedModal';
-    modal.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;';
-    modal.onclick = (ev) => { if (ev.target === modal) fbcCloseEmbed(); };
-    modal.innerHTML = `
-      <div style="position:relative;max-width:560px;width:92%;max-height:88vh;overflow-y:auto;background:var(--bg2);border-radius:12px;padding:8px;">
-        <button onclick="fbcCloseEmbed()" style="position:absolute;top:8px;right:8px;z-index:2;background:var(--bg);border:none;border-radius:50%;width:28px;height:28px;color:var(--text);cursor:pointer;font-size:14px;">✕</button>
-        <div id="fbcEmbedContent"></div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  }
-  const content = document.getElementById('fbcEmbedContent');
-  content.innerHTML = `<div class="fb-post" data-href="${permalinkUrl}" data-width="540" data-show-text="true"></div>`;
-  modal.style.display = 'flex';
-  // สำคัญ: ต้องสั่ง FB.XFBML.parse() ใหม่ทุกครั้ง เพราะ embed ก่อนหน้าถูกแทนที่ด้วย innerHTML
-  if (window.FB && window.FB.XFBML) window.FB.XFBML.parse(content);
-}
-
-function fbcCloseEmbed() {
-  const modal = document.getElementById('fbcEmbedModal');
-  if (modal) modal.style.display = 'none';
-}
-
-function fbcRenderMiniList(posts) {
-  if (!posts.length) return '<div class="empty" style="padding:10px 0;font-size:11px;">ไม่มีโพสต์ประเภทนี้ในช่วงนี้</div>';
-  return posts.map((p, i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <div style="font-size:12px;font-weight:700;color:var(--accent);min-width:14px;flex-shrink:0;">${i + 1}</div>
-      ${p.thumbnail_url ? `<img src="${p.thumbnail_url}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;" loading="lazy" onerror="this.style.display='none';">` : ''}
-      <div style="flex:1;min-width:0;overflow:hidden;">
-        <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;" title="${(p.caption || '').replace(/"/g,'&quot;')}">${(p.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
-        <div style="font-size:9.5px;color:var(--text3);margin-top:1px;">${Math.floor(p.ageInfo.days) < 1 ? 'ไม่ถึง 1 วัน' : Math.floor(p.ageInfo.days) + ' วัน'}ที่แล้ว</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0;white-space:nowrap;">
-        <div style="font-size:12px;font-weight:600;color:var(--green);">${p.score.toFixed(2)}%</div>
-        ${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" onclick="fbcOpenEmbed('${p.permalink_url}', event)" style="font-size:9.5px;color:var(--accent);">▶ เล่น</a>` : ''}
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderFbcAdCandidates() {
-  const inRange = fbcPostsCache
-    .filter(p => p.ageInfo.days <= 7 && fbcScoreOf(p) != null)
-    .map(p => ({ ...p, score: fbcScoreOf(p) }));
-
-  const byType = {};
-  inRange.forEach(p => { (byType[p.post_type] = byType[p.post_type] || []).push(p); });
-  Object.values(byType).forEach(arr => arr.sort((a, b) => b.score - a.score));
-
-  const typeOrder = ['reel', 'video', 'photo', 'album', 'status'].filter(t => byType[t] && byType[t].length);
-
-  document.getElementById('fbcAdCandidates3d').innerHTML = typeOrder.length ? `
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      ${typeOrder.map(t => `
-        <div class="card" style="min-width:0;overflow:hidden;">
-          <div class="card-title">${fbcTypeBadge(t)}</div>
-          <div style="margin-top:6px;min-width:0;">${fbcRenderMiniList(byType[t].slice(0, 3))}</div>
-        </div>
-      `).join('')}
-    </div>
-  ` : '<div class="card"><div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงนี้ที่มีข้อมูลเพียงพอ</div></div>';
-}
-
-function renderFbcReelsTable() {
-  const reelPosts = fbcPostsCache.filter(p => p.post_type === 'reel');
-  const sorted = [...reelPosts].sort((a, b) => {
-    let av, bv;
-    if (fbcReelSortKey === 'posted_at') { av = a.posted_at; bv = b.posted_at; }
-    else if (fbcReelSortKey === 'plays') { av = a.plays || 0; bv = b.plays || 0; }
-    else if (fbcReelSortKey === 'avgWatch') { av = a.video_avg_watch_seconds ?? -1; bv = b.video_avg_watch_seconds ?? -1; }
-    else if (fbcReelSortKey === 'retention') { av = a.retention_end_pct ?? -1; bv = b.retention_end_pct ?? -1; }
-    else if (fbcReelSortKey === 'newFollowers') { av = a.new_followers ?? -1; bv = b.new_followers ?? -1; }
-    else if (fbcReelSortKey === 'comments') { av = a.commentCount; bv = b.commentCount; }
-    return fbcReelSortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
-  });
-  const tbody = document.getElementById('tbodyFbcReels');
-  if (!tbody) return;
-  tbody.innerHTML = sorted.length ? sorted.map(p => `
-    <tr>
-      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;" title="${(p.caption || '').replace(/"/g,'&quot;')}">${(p.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</td>
-      <td style="white-space:nowrap;">
-        <div style="color:${p.ageInfo.fresh ? 'var(--red)' : 'var(--text2)'};display:flex;align-items:center;gap:6px;">${fbcThaiDateDisplay(p.posted_at)}${p.ageInfo.fresh ? '<span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;">ใหม่</span>' : ''}</div>
-        <div style="font-size:10px;color:var(--text3);">${p.ageInfo.days < 1 ? 'ไม่ถึง 1 วันที่แล้ว' : Math.floor(p.ageInfo.days) + ' วันที่แล้ว'}</div>
-      </td>
-      <td>${fmt(p.plays || 0)}</td>
-      <td>${p.video_avg_watch_seconds != null ? p.video_avg_watch_seconds.toFixed(1) + ' วิ' : '—'}</td>
-      <td>${p.retention_end_pct != null ? (p.retention_end_pct * 100).toFixed(1) + '%' : '—'}</td>
-      <td>${fmt(p.new_followers || 0)}</td>
-      <td>${p.commentCount} 💬</td>
-      <td>${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" style="color:var(--accent);">↗ ดู</a>` : ''}</td>
-    </tr>
-  `).join('') : '<tr><td colspan="8" class="empty">ไม่มี Reels ในช่วงที่เลือก</td></tr>';
-}
-
-function renderFbcPostsTable() {
-  const nonReelPosts = fbcPostsCache.filter(p => p.post_type !== 'reel');
-  const sorted = [...nonReelPosts].sort((a, b) => {
-    let av, bv;
-    if (fbcSortKey === 'posted_at') { av = a.posted_at; bv = b.posted_at; }
-    else if (fbcSortKey === 'reach') { av = a.reach || 0; bv = b.reach || 0; }
-    else if (fbcSortKey === 'er') { av = a.er ?? -1; bv = b.er ?? -1; }
-    else if (fbcSortKey === 'reactions') { av = a.reactions_total ?? -1; bv = b.reactions_total ?? -1; }
-    else if (fbcSortKey === 'comments') { av = a.commentCount; bv = b.commentCount; }
-    else if (fbcSortKey === 'shares') { av = a.shares_count ?? -1; bv = b.shares_count ?? -1; }
-    return fbcSortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
-  });
-  document.getElementById('tbodyFbcPosts').innerHTML = sorted.length ? sorted.map(p => `
-    <tr>
-      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;" title="${(p.caption || '').replace(/"/g,'&quot;')}">${(p.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</td>
-      <td>${fbcTypeBadge(p.post_type)}</td>
-      <td style="white-space:nowrap;">
-        <div style="color:${p.ageInfo.fresh ? 'var(--red)' : 'var(--text2)'};display:flex;align-items:center;gap:6px;">${fbcThaiDateDisplay(p.posted_at)}${p.ageInfo.fresh ? '<span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;">ใหม่</span>' : ''}</div>
-        <div style="font-size:10px;color:var(--text3);">${p.ageInfo.days < 1 ? 'ไม่ถึง 1 วันที่แล้ว' : Math.floor(p.ageInfo.days) + ' วันที่แล้ว'}</div>
-      </td>
-      <td>${fmt(p.reach || 0)}</td>
-      <td>${p.er != null ? p.er.toFixed(2) + '%' : '—'}</td>
-      <td>${fmt(p.reactions_total || 0)}</td>
-      <td>${p.commentCount} 💬</td>
-      <td>${fmt(p.shares_count || 0)}</td>
-      <td>${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" style="color:var(--accent);">↗ ดู</a>` : ''}</td>
-    </tr>
-  `).join('') : '<tr><td colspan="9" class="empty">ไม่มีโพสต์ในช่วงที่เลือก</td></tr>';
-}
-
-function renderFbcInsight() {
-  const withEr = fbcPostsCache.filter(p => p.er != null && !p.ageInfo.fresh);
-  let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
-  if (withEr.length >= 2) {
-    const top = [...withEr].sort((a, b) => b.er - a.er)[0];
-    const label = (FBC_TYPE_META[top.post_type] || {}).label || top.post_type;
-    insight = `โพสต์ที่ ER สูงสุดในช่วงนี้คือ "${(top.caption || '').slice(0, 40)}..." (${label}) ที่ ${top.er.toFixed(2)}% — ลองดูองค์ประกอบของโพสต์นี้ (แคปชั่น เวลาโพสต์ รูปแบบ) แล้วทำซ้ำแนวทางนี้`;
-  }
-  document.getElementById('fbcontent-insight').textContent = insight;
-}
 
 // ===== TIKTOK HUB =====
 function renderTtHub() {
@@ -5579,7 +5006,6 @@ async function renderCostPage() {
     window._costTotalsCache = { totalRev, totalQty, totalMarketingAll, totalAdsByChannel, pctBudgetAll, roiAll, totalFreeSampleQty };
 
     renderCostTableBody();
-    renderMktSkuBreakdownChart();
   } catch(e) {
     console.error(e);
     document.getElementById('costKPIs').innerHTML = `<div style="color:var(--red);padding:12px;">❌ ${e.message}</div>`;
