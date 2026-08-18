@@ -172,6 +172,8 @@
 </style>
 </head>
 <body>
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/th_TH/sdk.js#xfbml=1&version=v21.0"></script>
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
@@ -954,14 +956,9 @@
       </div>
 
       <div style="margin-bottom:8px;margin-top:4px;">
-        <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — ไม่เกิน 3 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate3')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุไม่เกิน 3 วัน เรียงจาก ER/Retention สูงสุด — สัญญาณเร็วสุดว่าคอนเทนต์ไหนตอบรับดีตั้งแต่ต้น</div></span></div>
+        <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — ไม่เกิน 7 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate3')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุไม่เกิน 7 วัน เรียงจาก ER/Retention สูงสุด — ช่วงที่ยังทันเอาไปยิงแอดต่อได้ทันที</div></span></div>
       </div>
       <div id="fbcAdCandidates3d" style="margin-bottom:20px;"></div>
-
-      <div style="margin-bottom:8px;">
-        <div class="card-title">🎯 คอนเทนต์ Organic แนะนำก่อนยิงแอด — 4-7 วัน <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbcInfo('fbc-info-adcandidate7')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fbc-info-adcandidate7" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">โพสต์อายุ 4-7 วัน (ไม่ซ้ำกับตารางด้านบน) — ข้อมูลนิ่งกว่าเพราะสะสมมานานกว่า เชื่อถือได้มากกว่าสำหรับตัดสินใจยิงแอด</div></span></div>
-      </div>
-      <div id="fbcAdCandidates7d" style="margin-bottom:20px;"></div>
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
@@ -2349,7 +2346,7 @@ async function renderFbContent() {
   const until = encodeURIComponent(untilRaw);
 
   const [postsRes, metricsRes, followersRes, commentsRes] = await Promise.all([
-    fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,post_type,caption,permalink_url,posted_at&page_id=eq.${fbcSelectedPage}&posted_at=gte.${since}&posted_at=lte.${until}&order=posted_at.desc&limit=500`, { headers }),
+    fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,post_type,caption,permalink_url,posted_at,thumbnail_url&page_id=eq.${fbcSelectedPage}&posted_at=gte.${since}&posted_at=lte.${until}&order=posted_at.desc&limit=500`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,impressions,reach,reactions_total,shares_count,video_avg_watch_seconds,retention_end_pct,new_followers,total_plays_incl_replays&order=snapshot_date.desc&limit=2000`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/page_daily_stats?select=snapshot_date,followers_count&page_id=eq.${fbcSelectedPage}&snapshot_date=gte.${fromStr || '2020-01-01'}&snapshot_date=lte.${toStr || '2099-12-31'}&order=snapshot_date.asc`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/social_comments?select=post_id,commented_at&commented_at=gte.${since}&limit=2000`, { headers })
@@ -2419,8 +2416,7 @@ async function renderFbContent() {
 function renderFbcKpis(followers) {
   const nonReel = fbcPostsCache.filter(p => p.post_type !== 'reel');
   const reelsOnly = fbcPostsCache.filter(p => p.post_type === 'reel');
-  const totalReach = nonReel.reduce((s, p) => s + (p.reach || 0), 0);
-  const totalPlays = reelsOnly.reduce((s, p) => s + (p.plays || 0), 0);
+  const avgPlays = reelsOnly.length ? (reelsOnly.reduce((s, p) => s + (p.plays || 0), 0) / reelsOnly.length) : null;
   const validEr = fbcPostsCache.filter(p => p.er != null);
   const avgEr = validEr.length ? (validEr.reduce((s, p) => s + p.er, 0) / validEr.length) : null;
   const reels = reelsOnly.filter(p => p.retention_end_pct != null);
@@ -2431,8 +2427,7 @@ function renderFbcKpis(followers) {
 
   document.getElementById('fbcontent-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">จำนวนโพสต์ทั้งหมด</div><div class="kpi-value">${fmt(fbcPostsCache.length)}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Reach รวม (โพสต์ปกติ) ${fbcInfoIcon('fbc-info-reach', '<b style="color:var(--accent);">⚠️ ตัวเลขนี้เป็นยอดสะสมล่าสุด ไม่ใช่ยอดเฉพาะช่วงวันที่เลือก</b><br><br>ตัวกรองวันที่กรองแค่ "โพสต์ไหนถูกโพสต์ในช่วงนี้" แต่ reach ที่โชว์คือยอดสะสมทั้งชีวิตโพสต์ ณ ตอนนี้ (เพราะ Facebook ให้ข้อมูลแบบสะสมเท่านั้น)<br><br>นับเฉพาะรูปภาพ/วิดีโอ/อัลบั้ม ไม่รวม Reels')}</div><div class="kpi-value">${fmt(totalReach)}</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยอดเล่นรวม (Reels) ${fbcInfoIcon('fbc-info-plays-kpi', '<b>fb_reels_total_plays</b> รวมทุก Reel ในช่วงที่เลือก — นับรวมการเล่นซ้ำ (replay) ด้วย ตรงกับ "Views" ใน Meta Business Suite')}</div><div class="kpi-value">${fmt(totalPlays)}</div></div>
+    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยอดเล่นเฉลี่ยต่อ Reel ${fbcInfoIcon('fbc-info-plays-kpi', '<b>fb_reels_total_plays</b> เฉลี่ยต่อคลิป — นับรวมการเล่นซ้ำ (replay) ด้วย ตรงกับ "Views" ใน Meta Business Suite<br><br>ใช้ค่าเฉลี่ยแทนยอดรวม เพื่อเทียบกันได้ตรงๆ ไม่ว่าจะโพสต์กี่คลิปในช่วงนี้')}</div><div class="kpi-value">${avgPlays != null ? fmt(Math.round(avgPlays)) : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ER เฉลี่ย (โพสต์ปกติ) ${fbcInfoIcon('fbc-info-er', 'Engagement Rate = (Reactions ÷ Reach) × 100<br><br>คำนวณเฉพาะรูปภาพ/วิดีโอ/อัลบั้ม — Reels ไม่มี Reach จาก API จึง<b>ไม่ถูกนับรวม</b>')}</div><div class="kpi-value">${avgEr != null ? avgEr.toFixed(2) + '%' : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">Retention เฉลี่ย (Reels) ${fbcInfoIcon('fbc-info-retention', '% ของคนที่ยังดูอยู่ ณ ช่วงท้ายคลิป เทียบกับตอนเริ่มเล่น<br><br>ยิ่งสูงยิ่งดี แปลว่าคนดูจนเกือบจบ ไม่เลื่อนผ่านกลางคลิป')}</div><div class="kpi-value">${avgRetention != null ? avgRetention.toFixed(1) + '%' : '—'}</div></div>
     <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ผู้ติดตามสุทธิ ${fbcInfoIcon('fbc-info-followers', 'จำนวนผู้ติดตามเพจ ณ วันล่าสุดในช่วงที่เลือก (ดึงตรงจาก Facebook ทุกเช้า)<br><br>ตัวเลข ▲/▼ คือส่วนต่างเทียบกับต้นช่วงเวลาที่เลือก')}</div><div class="kpi-value">${followerLast != null ? fmt(followerLast) : '—'}</div><div style="font-size:11px;color:${followerDelta > 0 ? 'var(--green)' : followerDelta < 0 ? 'var(--red)' : 'var(--text3)'};margin-top:4px;">${followerDelta != null ? (followerDelta >= 0 ? '▲ +' : '▼ ') + fmt(followerDelta) : ''}</div></div>
@@ -2597,53 +2592,74 @@ function fbcScoreOf(p) {
   return null;
 }
 
+function fbcOpenEmbed(permalinkUrl, e) {
+  if (e) e.preventDefault();
+  if (!permalinkUrl) return;
+  let modal = document.getElementById('fbcEmbedModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'fbcEmbedModal';
+    modal.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;';
+    modal.onclick = (ev) => { if (ev.target === modal) fbcCloseEmbed(); };
+    modal.innerHTML = `
+      <div style="position:relative;max-width:560px;width:92%;max-height:88vh;overflow-y:auto;background:var(--bg2);border-radius:12px;padding:8px;">
+        <button onclick="fbcCloseEmbed()" style="position:absolute;top:8px;right:8px;z-index:2;background:var(--bg);border:none;border-radius:50%;width:28px;height:28px;color:var(--text);cursor:pointer;font-size:14px;">✕</button>
+        <div id="fbcEmbedContent"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  const content = document.getElementById('fbcEmbedContent');
+  content.innerHTML = `<div class="fb-post" data-href="${permalinkUrl}" data-width="540" data-show-text="true"></div>`;
+  modal.style.display = 'flex';
+  // สำคัญ: ต้องสั่ง FB.XFBML.parse() ใหม่ทุกครั้ง เพราะ embed ก่อนหน้าถูกแทนที่ด้วย innerHTML
+  if (window.FB && window.FB.XFBML) window.FB.XFBML.parse(content);
+}
+
+function fbcCloseEmbed() {
+  const modal = document.getElementById('fbcEmbedModal');
+  if (modal) modal.style.display = 'none';
+}
+
 function fbcRenderMiniList(posts) {
   if (!posts.length) return '<div class="empty" style="padding:10px 0;font-size:11px;">ไม่มีโพสต์ประเภทนี้ในช่วงนี้</div>';
   return posts.map((p, i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
       <div style="font-size:12px;font-weight:700;color:var(--accent);min-width:14px;flex-shrink:0;">${i + 1}</div>
+      ${p.thumbnail_url ? `<img src="${p.thumbnail_url}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;" loading="lazy" onerror="this.style.display='none';">` : ''}
       <div style="flex:1;min-width:0;overflow:hidden;">
         <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;" title="${(p.caption || '').replace(/"/g,'&quot;')}">${(p.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
         <div style="font-size:9.5px;color:var(--text3);margin-top:1px;">${Math.floor(p.ageInfo.days) < 1 ? 'ไม่ถึง 1 วัน' : Math.floor(p.ageInfo.days) + ' วัน'}ที่แล้ว</div>
       </div>
       <div style="text-align:right;flex-shrink:0;white-space:nowrap;">
         <div style="font-size:12px;font-weight:600;color:var(--green);">${p.score.toFixed(2)}%</div>
-        ${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" style="font-size:9.5px;color:var(--accent);">↗ ดู</a>` : ''}
+        ${p.permalink_url ? `<a href="${p.permalink_url}" target="_blank" onclick="fbcOpenEmbed('${p.permalink_url}', event)" style="font-size:9.5px;color:var(--accent);">▶ เล่น</a>` : ''}
       </div>
     </div>
   `).join('');
 }
 
 function renderFbcAdCandidates() {
-  const ranges = [
-    { elId: 'fbcAdCandidates3d', minDays: 0, maxDays: 3 },
-    { elId: 'fbcAdCandidates7d', minDays: 3, maxDays: 7 } // 4-7 วัน ไม่ซ้ำกับตารางด้านบน
-  ];
-  ranges.forEach(({ elId, minDays, maxDays }) => {
-    const inRange = fbcPostsCache
-      .filter(p => p.ageInfo.days > minDays && p.ageInfo.days <= maxDays && fbcScoreOf(p) != null)
-      .map(p => ({ ...p, score: fbcScoreOf(p) }));
+  const inRange = fbcPostsCache
+    .filter(p => p.ageInfo.days <= 7 && fbcScoreOf(p) != null)
+    .map(p => ({ ...p, score: fbcScoreOf(p) }));
 
-    const byType = {};
-    inRange.forEach(p => { (byType[p.post_type] = byType[p.post_type] || []).push(p); });
-    Object.values(byType).forEach(arr => arr.sort((a, b) => b.score - a.score));
+  const byType = {};
+  inRange.forEach(p => { (byType[p.post_type] = byType[p.post_type] || []).push(p); });
+  Object.values(byType).forEach(arr => arr.sort((a, b) => b.score - a.score));
 
-    const typeOrder = ['reel', 'video', 'photo', 'album', 'status'].filter(t => byType[t] && byType[t].length);
-    const colCount = Math.min(typeOrder.length, 3);
+  const typeOrder = ['reel', 'video', 'photo', 'album', 'status'].filter(t => byType[t] && byType[t].length);
 
-    // สำคัญ: minmax(0,1fr) ไม่ใช่แค่ 1fr — บังคับให้คอลัมน์บีบเล็กกว่าความยาวเนื้อหาได้จริง
-    // (ปัญหาล้นที่ผ่านมาเกิดจากใช้ 1fr เฉยๆ ซึ่งเทียบเท่า minmax(auto,1fr) ไม่ยอมหดต่ำกว่าความยาวข้อความ)
-    document.getElementById(elId).innerHTML = typeOrder.length ? `
-      <div style="display:grid;grid-template-columns:repeat(${colCount}, minmax(0,1fr));gap:12px;">
-        ${typeOrder.map(t => `
-          <div class="card" style="min-width:0;overflow:hidden;">
-            <div class="card-title">${fbcTypeBadge(t)}</div>
-            <div style="margin-top:6px;min-width:0;">${fbcRenderMiniList(byType[t].slice(0, 3))}</div>
-          </div>
-        `).join('')}
-      </div>
-    ` : '<div class="card"><div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงนี้ที่มีข้อมูลเพียงพอ</div></div>';
-  });
+  document.getElementById('fbcAdCandidates3d').innerHTML = typeOrder.length ? `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${typeOrder.map(t => `
+        <div class="card" style="min-width:0;overflow:hidden;">
+          <div class="card-title">${fbcTypeBadge(t)}</div>
+          <div style="margin-top:6px;min-width:0;">${fbcRenderMiniList(byType[t].slice(0, 3))}</div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '<div class="card"><div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงนี้ที่มีข้อมูลเพียงพอ</div></div>';
 }
 
 function renderFbcReelsTable() {
