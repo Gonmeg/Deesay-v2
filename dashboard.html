@@ -67,6 +67,7 @@
   .fbe-post-comment-item.open .fbe-post-comment-body { max-height: 320px; overflow-y: auto; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
   .fbe-comment-row { font-size: 11.5px; color: var(--text2); padding: 6px 0; line-height: 1.5; }
   .fbe-comment-row b { color: var(--text); }
+  .fbe-post-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; flex-shrink: 0; cursor: pointer; }
 
   .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
   .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 10px; }
@@ -301,6 +302,12 @@
           <option value="Lazada">Lazada</option>
           <option value="ตัวแทน">ตัวแทน</option>
           <option value="Modern Trade">Modern Trade</option>
+        </select>
+      </div>
+      <div class="filter-group" id="fbePageFilterGroup" style="display:none;">
+        <span class="filter-label">เพจ</span>
+        <select id="fbePageSelect" onchange="fbeOnPageChange()">
+          <option value="">รวมทุกเพจ</option>
         </select>
       </div>
       <div class="filter-group" id="subChannelGroup">
@@ -943,10 +950,6 @@
 
 
     <div class="page" id="page-fbengage">
-      <div class="page-tabs" id="fbeTabs" style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
-        <div class="tab-item active" data-page-id="" onclick="fbeSelectPage('', this)">ทุกเพจ (รวม)</div>
-      </div>
-
       <div id="fbeKpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
       <div class="grid-2" style="margin-bottom:20px;">
@@ -964,12 +967,6 @@
           <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:10px;">นับจาก social_posts.post_type ที่บันทึกไว้ตอนดึงจาก Facebook (กรอง video เงาของ Reel ออกแล้ว)</div>
           <div id="fbePostTypeBreakdown"></div>
         </div>
-      </div>
-
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-title">จำนวนโพสต์ต่อวัน แยกตามประเภท</div>
-        <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:10px;">เช็ควินัยการโพสต์ เทียบกับความถี่ที่วางแผนไว้</div>
-        <canvas id="fbePostCountChart" style="max-height:220px;"></canvas>
       </div>
 
       <div class="card">
@@ -1897,6 +1894,8 @@ function showPage(page, lockCh, el) {
   const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbengage']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
+  const fbePageGroup = document.getElementById('fbePageFilterGroup');
+  if (fbePageGroup) fbePageGroup.style.display = (page === 'fbengage') ? 'flex' : 'none';
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
@@ -2234,6 +2233,7 @@ let fbeEngagementCache = [];
 let fbePostCountCache = [];
 let fbeCommentTagsCache = [];
 let fbeKeywordsCache = [];
+let fbeCommentTotalExact = null;
 
 function fbeInfoIcon(id, html) {
   return `<span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">${html}</div></span>`;
@@ -2254,14 +2254,12 @@ async function renderFbEngagePage() {
   if (fbePagesCache.length === 0) {
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/fb_pages?select=page_id,page_name`, { headers });
     fbePagesCache = await res.json();
-    const tabsEl = document.getElementById('fbeTabs');
+    const sel = document.getElementById('fbePageSelect');
     fbePagesCache.forEach(p => {
-      const tab = document.createElement('div');
-      tab.className = 'tab-item';
-      tab.dataset.pageId = p.page_id;
-      tab.textContent = p.page_name;
-      tab.onclick = () => fbeSelectPage(p.page_id, tab);
-      tabsEl.appendChild(tab);
+      const opt = document.createElement('option');
+      opt.value = p.page_id;
+      opt.textContent = p.page_name;
+      sel.appendChild(opt);
     });
   }
   if (fbeKeywordsCache.length === 0) {
@@ -2271,14 +2269,23 @@ async function renderFbEngagePage() {
 
   const pageFilter = fbeSelectedPageId ? `&page_id=eq.${fbeSelectedPageId}` : '';
 
-  const [engRes, cntRes, tagsRes] = await Promise.all([
+  const [engRes, cntRes, tagsRes, countRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_engagement?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_post_count?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=*&commented_at=gte.${dateFrom}&commented_at=lte.${dateTo}T23:59:59${pageFilter}&order=commented_at.desc&limit=3000`, { headers }),
+    // ยิงแยกอีกรอบแบบขอ exact count จริงจากฐานข้อมูล (ไม่พึ่ง limit) เพื่อเทียบว่าตรงกับที่ fetch มาไหม
+    fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=comment_id&commented_at=gte.${dateFrom}&commented_at=lte.${dateTo}T23:59:59${pageFilter}`, {
+      headers: { ...headers, Prefer: 'count=exact', Range: '0-0' }
+    }),
   ]);
   fbeEngagementCache = await engRes.json();
   fbePostCountCache = await cntRes.json();
   fbeCommentTagsCache = await tagsRes.json();
+
+  // อ่านจำนวนจริงจาก header Content-Range (รูปแบบ "0-0/1234")
+  const contentRange = countRes.headers.get('content-range');
+  fbeCommentTotalExact = contentRange ? parseInt(contentRange.split('/')[1], 10) : null;
+  console.log('FB Engage — เช็คจำนวนคอมเมนต์: fetch มาได้', fbeCommentTagsCache.length, 'แถว, ของจริงในฐานข้อมูลมี', fbeCommentTotalExact, 'แถว');
 
   if (!Array.isArray(fbeEngagementCache) || !Array.isArray(fbePostCountCache) || !Array.isArray(fbeCommentTagsCache)) {
     console.error('FB Engage: ดึงข้อมูลบางส่วนล้มเหลว — เช็คว่า grant สิทธิ์ view ให้ anon/authenticated แล้วหรือยัง (ดูไฟล์ 55_grant_views.sql)', { fbeEngagementCache, fbePostCountCache, fbeCommentTagsCache });
@@ -2288,14 +2295,11 @@ async function renderFbEngagePage() {
   renderFbeKpis();
   renderFbeTrendChart();
   renderFbePostTypeBreakdown();
-  renderFbePostCountChart();
   renderFbeCommentSection();
 }
 
-function fbeSelectPage(pageId, el) {
-  fbeSelectedPageId = pageId;
-  document.querySelectorAll('#fbeTabs .tab-item').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+function fbeOnPageChange() {
+  fbeSelectedPageId = document.getElementById('fbePageSelect').value;
   renderFbEngagePage();
 }
 
@@ -2307,7 +2311,6 @@ function renderFbeKpis() {
   const postsToday = todayRows.reduce((s, r) => s + r.post_count, 0);
   const commentsToday = todayRows.reduce((s, r) => s + r.comments_total, 0);
 
-  // เพจที่ engagement รวมต่ำสุดในช่วงที่เลือก (รวมทุกวัน)
   const byPage = {};
   fbeEngagementCache.forEach(r => { byPage[r.page_name] = (byPage[r.page_name] || 0) + r.engagement_total; });
   const pageEntries = Object.entries(byPage);
@@ -2324,7 +2327,6 @@ function renderFbeKpis() {
 function renderFbeTrendChart() {
   const dates = [...new Set(fbeEngagementCache.map(r => r.post_date))].sort();
   const pageNames = [...new Set(fbeEngagementCache.map(r => r.page_name))];
-  const colors = ['#c8a96e', '#60a5fa', '#f472b6', '#a78bfa', '#4ade80'];
 
   const datasets = pageNames.map((name, i) => ({
     label: name,
@@ -2332,8 +2334,8 @@ function renderFbeTrendChart() {
       const row = fbeEngagementCache.find(r => r.post_date === d && r.page_name === name);
       return row ? row.engagement_total : 0;
     }),
-    borderColor: colors[i % colors.length],
-    backgroundColor: colors[i % colors.length] + '14',
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '22',
     tension: 0.35, fill: true, pointRadius: 2
   }));
 
@@ -2343,10 +2345,10 @@ function renderFbeTrendChart() {
     data: { labels: dates.map(d => fbeThaiDateShort(d)), datasets },
     options: {
       responsive: true,
-      plugins: { legend: { position: 'bottom', labels: { color: '#9090a8', font: { family: 'Sarabun', size: 11 }, boxWidth: 10 } } },
+      plugins: { legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 10 } } },
       scales: {
-        x: { ticks: { color: '#5a5a72', font: { family: 'Sarabun', size: 10 } }, grid: { color: '#2a2a3a' } },
-        y: { ticks: { color: '#5a5a72', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: '#2a2a3a' } }
+        x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
+        y: { ticks: { color: chartTickColor(), font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: chartGridColor() } }
       }
     }
   });
@@ -2362,48 +2364,18 @@ function renderFbePostTypeBreakdown() {
   const byType = {};
   fbePostCountCache.forEach(r => { byType[r.post_type] = (byType[r.post_type] || 0) + r.post_count; });
   const total = Object.values(byType).reduce((a, b) => a + b, 0) || 1;
-  const typeColors = { reel: '#a78bfa', video: '#60a5fa', photo: '#60a5fa', album: '#fb923c', status: '#5a5a72' };
+  const typeColorMap = { reel: COLORS[5], video: COLORS[1], photo: COLORS[1], album: COLORS[4], status: '#9090a8' };
   const typeLabels = { reel: 'Reel', video: 'วิดีโอ', photo: 'รูปภาพ', album: 'อัลบั้ม', status: 'สถานะ' };
 
   const rows = Object.entries(byType).sort((a, b) => b[1] - a[1]);
   document.getElementById('fbePostTypeBreakdown').innerHTML = rows.length ? rows.map(([type, count]) => `
     <div class="fbe-post-type-row">
-      <span style="width:8px;height:8px;border-radius:50%;background:${typeColors[type] || '#5a5a72'};flex-shrink:0;"></span>
+      <span style="width:8px;height:8px;border-radius:50%;background:${typeColorMap[type] || '#9090a8'};flex-shrink:0;"></span>
       <span style="width:60px;">${typeLabels[type] || type}</span>
-      <div class="fbe-bar-track"><div class="fbe-bar-fill" style="width:${(count/total*100).toFixed(0)}%;background:${typeColors[type] || '#5a5a72'};"></div></div>
+      <div class="fbe-bar-track"><div class="fbe-bar-fill" style="width:${(count/total*100).toFixed(0)}%;background:${typeColorMap[type] || '#9090a8'};"></div></div>
       <span style="font-family:'IBM Plex Mono',monospace;">${count}</span>
     </div>
   `).join('') : '<div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงที่เลือก</div>';
-}
-
-function renderFbePostCountChart() {
-  const dates = [...new Set(fbePostCountCache.map(r => r.post_date))].sort();
-  const types = [...new Set(fbePostCountCache.map(r => r.post_type))];
-  const typeColors = { reel: '#a78bfa', video: '#60a5fa', photo: '#60a5fa', album: '#fb923c', status: '#5a5a72' };
-  const typeLabels = { reel: 'Reel', video: 'วิดีโอ', photo: 'รูปภาพ', album: 'อัลบั้ม', status: 'สถานะ' };
-
-  const datasets = types.map(t => ({
-    label: typeLabels[t] || t,
-    data: dates.map(d => {
-      const rows = fbePostCountCache.filter(r => r.post_date === d && r.post_type === t);
-      return rows.reduce((s, r) => s + r.post_count, 0);
-    }),
-    backgroundColor: typeColors[t] || '#5a5a72'
-  }));
-
-  if (window._fbePostCountChart) window._fbePostCountChart.destroy();
-  window._fbePostCountChart = new Chart(document.getElementById('fbePostCountChart'), {
-    type: 'bar',
-    data: { labels: dates.map(d => fbeThaiDateShort(d)), datasets },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom', labels: { color: '#9090a8', font: { family: 'Sarabun', size: 11 }, boxWidth: 10 } } },
-      scales: {
-        x: { stacked: true, ticks: { color: '#5a5a72', font: { family: 'Sarabun', size: 10 } }, grid: { display: false } },
-        y: { stacked: true, ticks: { color: '#5a5a72', font: { family: 'IBM Plex Mono', size: 10 }, precision: 0 }, grid: { color: '#2a2a3a' } }
-      }
-    }
-  });
 }
 
 function renderFbeCommentSection() {
@@ -2415,7 +2387,10 @@ function renderFbeCommentSection() {
   const quality = countTag('tag_quality');
   const question = countTag('tag_is_question');
 
-  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์ (กรองคอมเมนต์ของเพจเองออกแล้ว) · ช่วงวันที่เลือกไว้ด้านบน`;
+  const mismatchNote = (fbeCommentTotalExact != null && fbeCommentTotalExact !== total)
+    ? ` — ⚠️ ของจริงในฐานข้อมูลมี ${fmt(fbeCommentTotalExact)} คอมเมนต์ แต่ดึงมาแสดงได้ ${fmt(total)} (เช็ค console log เพิ่มเติม)`
+    : '';
+  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์ (กรองคอมเมนต์ของเพจเองออกแล้ว) · ช่วงวันที่เลือกไว้ด้านบน${mismatchNote}`;
 
   document.getElementById('fbeTagPills').innerHTML = `
     <span class="tag-pill" style="border:1px solid rgba(74,222,128,0.3);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(74,222,128,0.12);color:var(--green);">อยากซื้อ/สนใจ ${wantBuy}</span>
@@ -2425,7 +2400,6 @@ function renderFbeCommentSection() {
     <span class="tag-pill" style="border:1px solid rgba(248,113,113,0.3);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(248,113,113,0.12);color:var(--red);">เป็นคำถาม ${question} (${total ? (question/total*100).toFixed(0) : 0}%)</span>
   `;
 
-  // นับความถี่คำ จาก comment ที่ fetch มาแล้ว (ช่วงเวลาเดียวกับข้างบนเป๊ะๆ ไม่ต้องยิง query ใหม่)
   const freq = fbeKeywordsCache.map(kw => ({
     kw,
     count: fbeCommentTagsCache.filter(c => c.message && c.message.includes(kw)).length
@@ -2438,7 +2412,6 @@ function renderFbeCommentSection() {
     return `<span style="font-size:${size.toFixed(0)}px;font-weight:${f.count/maxCount > 0.5 ? 700 : 500};color:${color};">${f.kw} ${f.count}</span>`;
   }).join('') : '<div class="empty" style="padding:8px 0;">ไม่พบคำที่ตั้งไว้ในช่วงนี้</div>';
 
-  // top 5 โพสต์ที่คอมเมนต์เยอะสุด
   const byPost = {};
   fbeCommentTagsCache.forEach(c => { (byPost[c.post_id] = byPost[c.post_id] || []).push(c); });
   const topPosts = Object.entries(byPost).sort((a, b) => b[1].length - a[1].length).slice(0, 5);
@@ -2448,10 +2421,9 @@ function renderFbeCommentSection() {
     return;
   }
 
-  // ดึง caption/permalink ของโพสต์ที่ติด top เท่านั้น (ไม่ดึงทั้งหมด ประหยัด quota)
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
   const postIds = topPosts.map(([pid]) => pid);
-  fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,caption,permalink_url,post_type,posted_at&post_id=in.(${postIds.map(id => `"${id}"`).join(',')})`, { headers })
+  fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,caption,permalink_url,post_type,posted_at,thumbnail_url&post_id=in.(${postIds.map(id => `"${id}"`).join(',')})`, { headers })
     .then(r => r.json())
     .then(postsMeta => {
       const metaById = {}; postsMeta.forEach(p => metaById[p.post_id] = p);
@@ -2462,12 +2434,18 @@ function renderFbeCommentSection() {
           : c.tag_quality ? '<span style="color:var(--purple);font-size:10px;">🏷️ คุณภาพสินค้า</span>'
           : c.tag_is_question ? '<span style="color:var(--red);font-size:10px;">🏷️ เป็นคำถาม</span>'
           : '<span style="color:var(--text3);font-size:10px;">🏷️ ทั่วไป</span>';
+        const thumb = meta.thumbnail_url
+          ? `<img src="${meta.thumbnail_url}" class="fbe-post-thumb" onclick="event.stopPropagation(); window.open('${meta.permalink_url || '#'}','_blank');" onerror="this.style.display='none';">`
+          : '';
         return `
           <div class="fbe-post-comment-item" onclick="this.classList.toggle('open')">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-              <div style="min-width:0;flex:1;">
-                <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(meta.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
-                <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${meta.posted_at ? fbeThaiDateShort(meta.posted_at.slice(0,10)) : ''} · ${meta.post_type || ''} · ${comments.length} คอมเมนต์${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
+              <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                ${thumb}
+                <div style="min-width:0;flex:1;">
+                  <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(meta.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
+                  <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${meta.posted_at ? fbeThaiDateShort(meta.posted_at.slice(0,10)) : ''} · ${meta.post_type || ''} · ${comments.length} คอมเมนต์${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
+                </div>
               </div>
               <span class="fbe-chevron">▾</span>
             </div>
