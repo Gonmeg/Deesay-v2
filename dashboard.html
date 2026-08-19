@@ -64,7 +64,7 @@
   .fbe-chevron { color: var(--text3); font-size: 12px; transition: transform 0.15s; flex-shrink: 0; }
   .fbe-post-comment-item.open .fbe-chevron { transform: rotate(180deg); }
   .fbe-post-comment-body { max-height: 0; overflow: hidden; transition: max-height 0.2s ease; }
-  .fbe-post-comment-item.open .fbe-post-comment-body { max-height: 320px; overflow-y: auto; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .fbe-post-comment-item.open .fbe-post-comment-body { max-height: 500px; overflow-y: auto; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
   .fbe-comment-row { font-size: 11.5px; color: var(--text2); padding: 6px 0; line-height: 1.5; }
   .fbe-comment-row b { color: var(--text); }
   .fbe-post-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; flex-shrink: 0; cursor: pointer; }
@@ -2317,26 +2317,38 @@ async function renderFbEngagePage() {
 
   const pageFilter = fbeSelectedPageId ? `&page_id=eq.${fbeSelectedPageId}` : '';
 
-  const [engRes, cntRes, tagsRes, countRes] = await Promise.all([
+  const [engRes, cntRes, postsInRangeRes, tagsRes, countRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_engagement?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_post_count?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=*&commented_at=gte.${dateFrom}&commented_at=lte.${dateTo}T23:59:59${pageFilter}&order=commented_at.desc&limit=3000`, { headers }),
-    // ยิงแยกอีกรอบแบบขอ exact count จริงจากฐานข้อมูล (ไม่พึ่ง limit) เพื่อเทียบว่าตรงกับที่ fetch มาไหม
-    fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=comment_id&commented_at=gte.${dateFrom}&commented_at=lte.${dateTo}T23:59:59${pageFilter}`, {
+    // ดึง post_id ของโพสต์ที่ "ตีพิมพ์" อยู่ในช่วงวันที่เลือก (ใช้กรองคอมเมนต์ตามวันที่โพสต์ ไม่ใช่วันที่คอมเมนต์)
+    fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id&posted_at=gte.${dateFrom}&posted_at=lte.${dateTo}T23:59:59${pageFilter}&limit=5000`, { headers }),
+    // ดึงคอมเมนต์ทั้งหมด (ไม่กรองวันที่คอมเมนต์ — จะกรองตาม post_id ที่ได้จากข้างบนแทนในโค้ด)
+    fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=*${pageFilter}&limit=10000`, { headers }),
+    fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=comment_id${pageFilter}`, {
       headers: { ...headers, Prefer: 'count=exact', Range: '0-0' }
     }),
   ]);
   fbeEngagementCache = await engRes.json();
   fbePostCountCache = await cntRes.json();
-  fbeCommentTagsCache = await tagsRes.json();
+  const postsInRange = await postsInRangeRes.json();
+  const allCommentTags = await tagsRes.json();
 
-  // อ่านจำนวนจริงจาก header Content-Range (รูปแบบ "0-0/1234")
+  if (!Array.isArray(postsInRange) || !Array.isArray(allCommentTags)) {
+    console.error('FB Engage: ดึงโพสต์/คอมเมนต์บางส่วนล้มเหลว', { postsInRange, allCommentTags });
+    fbeCommentTagsCache = [];
+  } else {
+    const postIdsInRange = new Set(postsInRange.map(p => p.post_id));
+    fbeCommentTagsCache = allCommentTags.filter(c => postIdsInRange.has(c.post_id));
+  }
+
+  // อ่านจำนวนจริงจาก header Content-Range (รูปแบบ "0-0/1234") — ตัวนี้เช็คว่าคอมเมนต์ทั้งหมด
+  // (ก่อนกรองตามวันที่โพสต์) ดึงมาครบไหม ไม่ใช่ของหลังกรองแล้ว
   const contentRange = countRes.headers.get('content-range');
   fbeCommentTotalExact = contentRange ? parseInt(contentRange.split('/')[1], 10) : null;
-  console.log('FB Engage — เช็คจำนวนคอมเมนต์: fetch มาได้', fbeCommentTagsCache.length, 'แถว, ของจริงในฐานข้อมูลมี', fbeCommentTotalExact, 'แถว');
+  console.log('FB Engage — คอมเมนต์ทั้งหมด (ก่อนกรองวันที่โพสต์): fetch มาได้', allCommentTags.length, 'แถว, ของจริงในฐานข้อมูลมี', fbeCommentTotalExact, 'แถว | หลังกรองตามวันที่โพสต์เหลือ', fbeCommentTagsCache.length, 'แถว');
 
-  if (!Array.isArray(fbeEngagementCache) || !Array.isArray(fbePostCountCache) || !Array.isArray(fbeCommentTagsCache)) {
-    console.error('FB Engage: ดึงข้อมูลบางส่วนล้มเหลว — เช็คว่า grant สิทธิ์ view ให้ anon/authenticated แล้วหรือยัง (ดูไฟล์ 55_grant_views.sql)', { fbeEngagementCache, fbePostCountCache, fbeCommentTagsCache });
+  if (!Array.isArray(fbeEngagementCache) || !Array.isArray(fbePostCountCache)) {
+    console.error('FB Engage: ดึงข้อมูลบางส่วนล้มเหลว — เช็คว่า grant สิทธิ์ view ให้ anon/authenticated แล้วหรือยัง (ดูไฟล์ 55_grant_views.sql)', { fbeEngagementCache, fbePostCountCache });
     return;
   }
 
@@ -2445,11 +2457,8 @@ function renderFbeCommentSection() {
   const quality = countTag('tag_quality');
   const question = countTag('tag_is_question');
 
-  const mismatchNote = (fbeCommentTotalExact != null && fbeCommentTotalExact !== total)
-    ? ` — ⚠️ ของจริงในฐานข้อมูลมี ${fmt(fbeCommentTotalExact)} คอมเมนต์ แต่ดึงมาแสดงได้ ${fmt(total)} (เช็ค console log เพิ่มเติม)`
-    : '';
   const filterNote = fbeActiveTagFilter ? ` · 🔍 กรองเฉพาะแท็กที่เลือก — กดป้ายซ้ำเพื่อยกเลิก` : '';
-  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์ (กรองคอมเมนต์ของเพจเองออกแล้ว) · ช่วงวันที่เลือกไว้ด้านบน${mismatchNote}${filterNote}`;
+  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์ (กรองคอมเมนต์ของเพจเองออกแล้ว) · เฉพาะโพสต์ที่ตีพิมพ์ในช่วงวันที่เลือกไว้ด้านบน${filterNote}`;
 
   const pillDef = [
     { key: 'tag_want_to_buy', label: 'อยากซื้อ/สนใจ', count: wantBuy, color: 'green', rgb: '74,222,128' },
@@ -2531,18 +2540,19 @@ function fbeRenderPostListPage(pageNum) {
       : c.tag_is_question ? '<span style="color:var(--red);font-size:10px;">🏷️ เป็นคำถาม</span>'
       : '<span style="color:var(--text3);font-size:10px;">🏷️ ทั่วไป</span>';
 
-    document.getElementById('fbeTopCommentedPosts').innerHTML = pageItems.map(([pid, comments]) => {
+    document.getElementById('fbeTopCommentedPosts').innerHTML = pageItems.map(([pid, comments], idx) => {
       const meta = metaById[pid] || {};
       const metric = metricById[pid] || {};
       const pageName = pageNameById[meta.page_id] || '';
       const engagementTotal = (metric.reactions_total || 0) + comments.length + (metric.shares_count || 0);
       const postDate = meta.posted_at ? meta.posted_at.slice(0, 10) : null;
-      const latestCommentDate = comments.reduce((max, c) => (!max || c.commented_at > max) ? c.commented_at : max, null);
-      // ถ้าโพสต์เก่ากว่าช่วงที่กรองไว้มาก แต่มีคนมาคอมเมนต์ใหม่ในช่วงนี้ ให้บอกไว้ชัดๆ กันงง
-      const isOldPostNewComment = postDate && latestCommentDate && postDate < document.getElementById('dateFrom').value;
       const thumb = meta.thumbnail_url
         ? `<img src="${meta.thumbnail_url}" class="fbe-post-thumb" onclick="event.stopPropagation(); window.open('${meta.permalink_url || '#'}','_blank');" onerror="this.style.display='none';">`
         : '';
+      const rowId = `fbe-comments-${pageNum}-${idx}`;
+      const previewCount = 5;
+      const previewHtml = comments.slice(0, previewCount).map(c => `<div class="fbe-comment-row"><b>${(c.author_name||'(ไม่ทราบชื่อ)').replace(/</g,'&lt;')}</b> · ${fbeThaiDateShort(c.commented_at.slice(0,10))} — ${(c.message||'').replace(/</g,'&lt;')} ${tagLabel(c)}</div>`).join('');
+      const fullHtml = comments.map(c => `<div class="fbe-comment-row"><b>${(c.author_name||'(ไม่ทราบชื่อ)').replace(/</g,'&lt;')}</b> · ${fbeThaiDateShort(c.commented_at.slice(0,10))} — ${(c.message||'').replace(/</g,'&lt;')} ${tagLabel(c)}</div>`).join('');
       return `
         <div class="fbe-post-comment-item" onclick="this.classList.toggle('open')">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
@@ -2550,15 +2560,20 @@ function fbeRenderPostListPage(pageNum) {
               ${thumb}
               <div style="min-width:0;flex:1;">
                 <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(meta.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
-                <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${pageName ? `<b style="color:var(--accent2);">${pageName}</b> · ` : ''}โพสต์: ${postDate ? fbeThaiDateShort(postDate) : '—'} · ${meta.post_type || ''}${isOldPostNewComment ? ` · <span style="color:var(--orange);">⚠️ โพสต์เก่า มีคอมเมนต์ใหม่ในช่วงนี้</span>` : ''}${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
+                <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${pageName ? `<b style="color:var(--accent2);">${pageName}</b> · ` : ''}โพสต์: ${postDate ? fbeThaiDateShort(postDate) : '—'} · ${meta.post_type || ''}${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
                 <div style="font-size:10.5px;color:var(--text2);margin-top:2px;">💬 ${comments.length} คอมเมนต์ · ❤️ ${fmt(metric.reactions_total || 0)} · 🔁 ${fmt(metric.shares_count || 0)} · <b>Engagement รวม ${fmt(engagementTotal)}</b></div>
               </div>
             </div>
             <span class="fbe-chevron">▾</span>
           </div>
           <div class="fbe-post-comment-body">
-            ${comments.slice(0, 8).map(c => `<div class="fbe-comment-row"><b>${(c.author_name||'(ไม่ทราบชื่อ)').replace(/</g,'&lt;')}</b> · ${fbeThaiDateShort(c.commented_at.slice(0,10))} — ${(c.message||'').replace(/</g,'&lt;')} ${tagLabel(c)}</div>`).join('')}
-            ${comments.length > 8 ? `<div style="font-size:10.5px;color:var(--text3);padding-top:6px;">... และอีก ${comments.length - 8} คอมเมนต์</div>` : ''}
+            <div id="${rowId}-preview">
+              ${previewHtml}
+              ${comments.length > previewCount ? `<div style="padding-top:8px;"><button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="event.stopPropagation(); document.getElementById('${rowId}-preview').style.display='none'; document.getElementById('${rowId}-full').style.display='block';">▾ ดูคอมเมนต์ทั้งหมด (${comments.length})</button></div>` : ''}
+            </div>
+            <div id="${rowId}-full" style="display:none;">
+              ${fullHtml}
+            </div>
           </div>
         </div>
       `;
