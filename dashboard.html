@@ -89,6 +89,7 @@
   .btn-primary:hover { background: var(--accent2); }
   .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
   .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 
   .content { padding: 24px 28px; flex: 1; min-width: 0; }
   .page { display: none; }
@@ -983,6 +984,7 @@
 
         <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:8px;">โพสต์ที่มีคนคอมเมนต์บ่อยสุด — กดเปิดดูคอมเมนต์ได้</div>
         <div id="fbeTopCommentedPosts"></div>
+        <div id="fbePostListPager"></div>
       </div>
     </div>
 
@@ -2352,8 +2354,11 @@ function fbeOnPageChange() {
 function renderFbeKpis() {
   const dates = [...new Set(fbeEngagementCache.map(r => r.post_date))].sort();
   const latestDate = dates[dates.length - 1];
+  const prevDate = dates[dates.length - 2];
   const todayRows = fbeEngagementCache.filter(r => r.post_date === latestDate);
+  const prevRows = fbeEngagementCache.filter(r => r.post_date === prevDate);
   const engToday = todayRows.reduce((s, r) => s + r.engagement_total, 0);
+  const engPrev = prevRows.reduce((s, r) => s + r.engagement_total, 0);
   const postsToday = todayRows.reduce((s, r) => s + r.post_count, 0);
   const commentsToday = todayRows.reduce((s, r) => s + r.comments_total, 0);
 
@@ -2363,7 +2368,7 @@ function renderFbeKpis() {
   const lowestPage = pageEntries.length ? pageEntries.sort((a, b) => a[1] - b[1])[0][0] : '—';
 
   document.getElementById('fbeKpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:170px;"><div class="card-title">Engagement วันล่าสุดในช่วงที่เลือก ${fbeInfoIcon('fbe-info-eng', 'วันล่าสุด: ' + (latestDate || '—') + '<br><br>Engagement = Reactions + คอมเมนต์ + แชร์ (รวมทุกเพจที่เลือก)')}</div><div class="kpi-value" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmt(engToday)}</div></div>
+    <div class="card" style="flex:1;min-width:170px;"><div class="card-title">Engagement วันล่าสุดในช่วงที่เลือก ${fbeInfoIcon('fbe-info-eng', 'วันล่าสุด: ' + (latestDate || '—') + '<br><br>Engagement = Reactions + คอมเมนต์ + แชร์ (รวมทุกเพจที่เลือก)<br><br>⚠️ ถ้าวันล่าสุดคือ "วันนี้" ตัวเลขจะดูต่ำผิดปกติ เพราะวันยังไม่จบ ข้อมูลยังสะสมไม่ครบ — ดูตัวเลข "เมื่อวาน" กำกับไว้ด้านล่างเทียบจะแม่นกว่า')}</div><div class="kpi-value" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmt(engToday)}</div>${prevDate ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">เมื่อวาน (${fbeThaiDateShort(prevDate)}): ${fmt(engPrev)}</div>` : ''}</div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">โพสต์วันล่าสุด</div><div class="kpi-value" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmt(postsToday)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คอมเมนต์วันล่าสุด</div><div class="kpi-value" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmt(commentsToday)}</div></div>
     <div class="card" style="flex:1;min-width:170px;"><div class="card-title">เพจ engagement ต่ำสุดในช่วงนี้ ${fbeInfoIcon('fbe-info-low', 'รวม engagement ทุกวันในช่วงที่เลือก แล้วเทียบว่าเพจไหนน้อยที่สุด — อาจต้องดูก่อนเพจอื่น')}</div><div class="kpi-value" style="font-size:15px;font-weight:700;color:var(--red);">${lowestPage}</div></div>
@@ -2424,6 +2429,13 @@ function renderFbePostTypeBreakdown() {
   `).join('') : '<div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงที่เลือก</div>';
 }
 
+let fbeActiveTagFilter = null; // null = ไม่กรอง, หรือ 'tag_want_to_buy'/'tag_service'/'tag_price'/'tag_quality'/'tag_is_question'
+
+function fbeToggleTagFilter(tagKey) {
+  fbeActiveTagFilter = (fbeActiveTagFilter === tagKey) ? null : tagKey;
+  renderFbeCommentSection();
+}
+
 function renderFbeCommentSection() {
   const total = fbeCommentTagsCache.length;
   const countTag = key => fbeCommentTagsCache.filter(c => c[key]).length;
@@ -2436,19 +2448,29 @@ function renderFbeCommentSection() {
   const mismatchNote = (fbeCommentTotalExact != null && fbeCommentTotalExact !== total)
     ? ` — ⚠️ ของจริงในฐานข้อมูลมี ${fmt(fbeCommentTotalExact)} คอมเมนต์ แต่ดึงมาแสดงได้ ${fmt(total)} (เช็ค console log เพิ่มเติม)`
     : '';
-  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์ (กรองคอมเมนต์ของเพจเองออกแล้ว) · ช่วงวันที่เลือกไว้ด้านบน${mismatchNote}`;
+  const filterNote = fbeActiveTagFilter ? ` · 🔍 กรองเฉพาะแท็กที่เลือก — กดป้ายซ้ำเพื่อยกเลิก` : '';
+  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์ (กรองคอมเมนต์ของเพจเองออกแล้ว) · ช่วงวันที่เลือกไว้ด้านบน${mismatchNote}${filterNote}`;
 
-  document.getElementById('fbeTagPills').innerHTML = `
-    <span class="tag-pill" style="border:1px solid rgba(74,222,128,0.3);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(74,222,128,0.12);color:var(--green);">อยากซื้อ/สนใจ ${wantBuy}</span>
-    <span class="tag-pill" style="border:1px solid rgba(96,165,250,0.3);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(96,165,250,0.12);color:var(--blue);">บริการ/การตอบ ${service}</span>
-    <span class="tag-pill" style="border:1px solid rgba(251,146,60,0.3);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(251,146,60,0.12);color:var(--orange);">ถามราคา ${price}</span>
-    <span class="tag-pill" style="border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(167,139,250,0.12);color:var(--purple);">คุณภาพสินค้า ${quality}</span>
-    <span class="tag-pill" style="border:1px solid rgba(248,113,113,0.3);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(248,113,113,0.12);color:var(--red);">เป็นคำถาม ${question} (${total ? (question/total*100).toFixed(0) : 0}%)</span>
-  `;
+  const pillDef = [
+    { key: 'tag_want_to_buy', label: 'อยากซื้อ/สนใจ', count: wantBuy, color: 'green', rgb: '74,222,128' },
+    { key: 'tag_service', label: 'บริการ/การตอบ', count: service, color: 'blue', rgb: '96,165,250' },
+    { key: 'tag_price', label: 'ถามราคา', count: price, color: 'orange', rgb: '251,146,60' },
+    { key: 'tag_quality', label: 'คุณภาพสินค้า', count: quality, color: 'purple', rgb: '167,139,250' },
+    { key: 'tag_is_question', label: `เป็นคำถาม (${total ? (question/total*100).toFixed(0) : 0}%)`, count: question, color: 'red', rgb: '248,113,113' },
+  ];
+  document.getElementById('fbeTagPills').innerHTML = pillDef.map(p => {
+    const active = fbeActiveTagFilter === p.key;
+    return `<span class="tag-pill" onclick="fbeToggleTagFilter('${p.key}')" style="cursor:pointer;user-select:none;border:1.5px solid ${active ? `rgb(${p.rgb})` : `rgba(${p.rgb},0.3)`};border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(${p.rgb},${active ? 0.28 : 0.12});color:var(--${p.color});transition:all 0.15s;">${active ? '✓ ' : ''}${p.label} ${p.count}</span>`;
+  }).join('');
+
+  // กรองด้วย tag ที่เลือกไว้ (ถ้ามี) ก่อนไปคำนวณคำที่พบบ่อย + ลิสต์โพสต์
+  const scopedComments = fbeActiveTagFilter
+    ? fbeCommentTagsCache.filter(c => c[fbeActiveTagFilter])
+    : fbeCommentTagsCache;
 
   const freq = fbeKeywordsCache.map(kw => ({
     kw,
-    count: fbeCommentTagsCache.filter(c => c.message && c.message.includes(kw)).length
+    count: scopedComments.filter(c => c.message && c.message.includes(kw)).length
   })).filter(x => x.count > 0).sort((a, b) => b.count - a.count).slice(0, 12);
 
   const maxCount = freq.length ? freq[0].count : 1;
@@ -2459,51 +2481,108 @@ function renderFbeCommentSection() {
   }).join('') : '<div class="empty" style="padding:8px 0;">ไม่พบคำที่ตั้งไว้ในช่วงนี้</div>';
 
   const byPost = {};
-  fbeCommentTagsCache.forEach(c => { (byPost[c.post_id] = byPost[c.post_id] || []).push(c); });
-  const topPosts = Object.entries(byPost).sort((a, b) => b[1].length - a[1].length).slice(0, 5);
+  scopedComments.forEach(c => { (byPost[c.post_id] = byPost[c.post_id] || []).push(c); });
+  fbePostListAll = Object.entries(byPost).sort((a, b) => b[1].length - a[1].length).slice(0, 300);
+  fbePostListPage = 1;
 
-  if (topPosts.length === 0) {
-    document.getElementById('fbeTopCommentedPosts').innerHTML = '<div class="empty" style="padding:16px 0;">ไม่มีคอมเมนต์ในช่วงที่เลือก</div>';
+  if (fbePostListAll.length === 0) {
+    document.getElementById('fbeTopCommentedPosts').innerHTML = `<div class="empty" style="padding:16px 0;">ไม่มีคอมเมนต์${fbeActiveTagFilter ? 'ที่ตรงกับแท็กนี้' : ''}ในช่วงที่เลือก</div>`;
+    document.getElementById('fbePostListPager').innerHTML = '';
     return;
   }
 
+  fbeRenderPostListPage(1);
+}
+
+let fbePostListAll = [];
+let fbePostListPage = 1;
+const FBE_PAGE_SIZE = 15;
+
+function fbeGoToPostListPage(n) {
+  fbePostListPage = n;
+  fbeRenderPostListPage(n);
+  document.getElementById('fbeTopCommentedPosts').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function fbeRenderPostListPage(pageNum) {
+  const totalPages = Math.ceil(fbePostListAll.length / FBE_PAGE_SIZE);
+  const start = (pageNum - 1) * FBE_PAGE_SIZE;
+  const pageItems = fbePostListAll.slice(start, start + FBE_PAGE_SIZE);
+
+  document.getElementById('fbeTopCommentedPosts').innerHTML = '<div class="empty" style="padding:16px 0;">กำลังโหลด...</div>';
+
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
-  const postIds = topPosts.map(([pid]) => pid);
-  fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,page_id,caption,permalink_url,post_type,posted_at,thumbnail_url&post_id=in.(${postIds.map(id => `"${id}"`).join(',')})`, { headers })
-    .then(r => r.json())
-    .then(postsMeta => {
-      const metaById = {}; postsMeta.forEach(p => metaById[p.post_id] = p);
-      const pageNameById = {}; fbePagesCache.forEach(p => pageNameById[p.page_id] = p.page_name);
-      document.getElementById('fbeTopCommentedPosts').innerHTML = topPosts.map(([pid, comments]) => {
-        const meta = metaById[pid] || {};
-        const pageName = pageNameById[meta.page_id] || '';
-        const tagLabel = c => c.tag_want_to_buy ? '<span style="color:var(--green);font-size:10px;">🏷️ อยากซื้อ</span>'
-          : c.tag_price ? '<span style="color:var(--orange);font-size:10px;">🏷️ ถามราคา</span>'
-          : c.tag_quality ? '<span style="color:var(--purple);font-size:10px;">🏷️ คุณภาพสินค้า</span>'
-          : c.tag_is_question ? '<span style="color:var(--red);font-size:10px;">🏷️ เป็นคำถาม</span>'
-          : '<span style="color:var(--text3);font-size:10px;">🏷️ ทั่วไป</span>';
-        const thumb = meta.thumbnail_url
-          ? `<img src="${meta.thumbnail_url}" class="fbe-post-thumb" onclick="event.stopPropagation(); window.open('${meta.permalink_url || '#'}','_blank');" onerror="this.style.display='none';">`
-          : '';
-        return `
-          <div class="fbe-post-comment-item" onclick="this.classList.toggle('open')">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-              <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-                ${thumb}
-                <div style="min-width:0;flex:1;">
-                  <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(meta.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
-                  <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${pageName ? `<b style="color:var(--accent2);">${pageName}</b> · ` : ''}${meta.posted_at ? fbeThaiDateShort(meta.posted_at.slice(0,10)) : ''} · ${meta.post_type || ''} · ${comments.length} คอมเมนต์${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
-                </div>
+  const postIds = pageItems.map(([pid]) => pid);
+  const idFilter = postIds.map(id => `"${id}"`).join(',');
+
+  Promise.all([
+    fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,page_id,caption,permalink_url,post_type,posted_at,thumbnail_url&post_id=in.(${idFilter})`, { headers }).then(r => r.json()),
+    fetch(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,reactions_total,shares_count&post_id=in.(${idFilter})&order=snapshot_date.desc`, { headers }).then(r => r.json()),
+  ]).then(([postsMeta, metricsRaw]) => {
+    const metaById = {}; (Array.isArray(postsMeta) ? postsMeta : []).forEach(p => metaById[p.post_id] = p);
+    // เอา snapshot ล่าสุดของแต่ละโพสต์ (ผลมาเรียง desc แล้ว หยิบตัวแรกที่เจอต่อ post_id พอ)
+    const metricById = {};
+    (Array.isArray(metricsRaw) ? metricsRaw : []).forEach(m => { if (!metricById[m.post_id]) metricById[m.post_id] = m; });
+    const pageNameById = {}; fbePagesCache.forEach(p => pageNameById[p.page_id] = p.page_name);
+
+    const tagLabel = c => c.tag_want_to_buy ? '<span style="color:var(--green);font-size:10px;">🏷️ อยากซื้อ</span>'
+      : c.tag_price ? '<span style="color:var(--orange);font-size:10px;">🏷️ ถามราคา</span>'
+      : c.tag_quality ? '<span style="color:var(--purple);font-size:10px;">🏷️ คุณภาพสินค้า</span>'
+      : c.tag_is_question ? '<span style="color:var(--red);font-size:10px;">🏷️ เป็นคำถาม</span>'
+      : '<span style="color:var(--text3);font-size:10px;">🏷️ ทั่วไป</span>';
+
+    document.getElementById('fbeTopCommentedPosts').innerHTML = pageItems.map(([pid, comments]) => {
+      const meta = metaById[pid] || {};
+      const metric = metricById[pid] || {};
+      const pageName = pageNameById[meta.page_id] || '';
+      const engagementTotal = (metric.reactions_total || 0) + comments.length + (metric.shares_count || 0);
+      const postDate = meta.posted_at ? meta.posted_at.slice(0, 10) : null;
+      const latestCommentDate = comments.reduce((max, c) => (!max || c.commented_at > max) ? c.commented_at : max, null);
+      // ถ้าโพสต์เก่ากว่าช่วงที่กรองไว้มาก แต่มีคนมาคอมเมนต์ใหม่ในช่วงนี้ ให้บอกไว้ชัดๆ กันงง
+      const isOldPostNewComment = postDate && latestCommentDate && postDate < document.getElementById('dateFrom').value;
+      const thumb = meta.thumbnail_url
+        ? `<img src="${meta.thumbnail_url}" class="fbe-post-thumb" onclick="event.stopPropagation(); window.open('${meta.permalink_url || '#'}','_blank');" onerror="this.style.display='none';">`
+        : '';
+      return `
+        <div class="fbe-post-comment-item" onclick="this.classList.toggle('open')">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+              ${thumb}
+              <div style="min-width:0;flex:1;">
+                <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(meta.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
+                <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${pageName ? `<b style="color:var(--accent2);">${pageName}</b> · ` : ''}โพสต์: ${postDate ? fbeThaiDateShort(postDate) : '—'} · ${meta.post_type || ''}${isOldPostNewComment ? ` · <span style="color:var(--orange);">⚠️ โพสต์เก่า มีคอมเมนต์ใหม่ในช่วงนี้</span>` : ''}${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
+                <div style="font-size:10.5px;color:var(--text2);margin-top:2px;">💬 ${comments.length} คอมเมนต์ · ❤️ ${fmt(metric.reactions_total || 0)} · 🔁 ${fmt(metric.shares_count || 0)} · <b>Engagement รวม ${fmt(engagementTotal)}</b></div>
               </div>
-              <span class="fbe-chevron">▾</span>
             </div>
-            <div class="fbe-post-comment-body">
-              ${comments.slice(0, 8).map(c => `<div class="fbe-comment-row"><b>${(c.author_name||'').replace(/</g,'&lt;')}</b> · ${fbeThaiDateShort(c.commented_at.slice(0,10))} — ${(c.message||'').replace(/</g,'&lt;')} ${tagLabel(c)}</div>`).join('')}
-            </div>
+            <span class="fbe-chevron">▾</span>
           </div>
-        `;
-      }).join('');
+          <div class="fbe-post-comment-body">
+            ${comments.slice(0, 8).map(c => `<div class="fbe-comment-row"><b>${(c.author_name||'(ไม่ทราบชื่อ)').replace(/</g,'&lt;')}</b> · ${fbeThaiDateShort(c.commented_at.slice(0,10))} — ${(c.message||'').replace(/</g,'&lt;')} ${tagLabel(c)}</div>`).join('')}
+            ${comments.length > 8 ? `<div style="font-size:10.5px;color:var(--text3);padding-top:6px;">... และอีก ${comments.length - 8} คอมเมนต์</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // ปุ่มแบ่งหน้า
+    const pagerEl = document.getElementById('fbePostListPager');
+    if (totalPages <= 1) { pagerEl.innerHTML = ''; return; }
+    let pagerHtml = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:14px;font-size:12px;">`;
+    pagerHtml += `<button class="btn btn-ghost" ${pageNum === 1 ? 'disabled' : ''} onclick="fbeGoToPostListPage(${pageNum - 1})">‹ ก่อนหน้า</button>`;
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - pageNum) <= 2) pageNumbers.push(i);
+      else if (pageNumbers[pageNumbers.length - 1] !== '...') pageNumbers.push('...');
+    }
+    pageNumbers.forEach(p => {
+      if (p === '...') { pagerHtml += `<span style="color:var(--text3);padding:0 4px;">...</span>`; return; }
+      pagerHtml += `<button class="btn ${p === pageNum ? 'btn-primary' : 'btn-ghost'}" style="min-width:32px;" onclick="fbeGoToPostListPage(${p})">${p}</button>`;
     });
+    pagerHtml += `<button class="btn btn-ghost" ${pageNum === totalPages ? 'disabled' : ''} onclick="fbeGoToPostListPage(${pageNum + 1})">ถัดไป ›</button>`;
+    pagerHtml += `<span style="color:var(--text3);margin-left:8px;">หน้า ${pageNum}/${totalPages} · ทั้งหมด ${fmt(fbePostListAll.length)} โพสต์${fbePostListAll.length >= 300 ? ' (สูงสุด 300)' : ''}</span>`;
+    pagerHtml += `</div>`;
+    pagerEl.innerHTML = pagerHtml;
+  });
 }
 
 // ===== TIKTOK HUB =====
