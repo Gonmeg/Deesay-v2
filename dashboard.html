@@ -1011,38 +1011,6 @@
         </div>
       </div>
 
-      <div class="section-divider"><span>Top Creator (ตาม Live/Video)</span></div>
-
-      <div class="grid-3" style="margin-bottom:20px;">
-        <div class="card">
-          <div class="section-header"><div class="section-title">Top 10 Creator (รวมทุกประเภท)</div></div>
-          <div class="table-wrap">
-            <table id="tblTtCreatorAll">
-              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-              <tbody id="tbodyTtCreatorAll"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card">
-          <div class="section-header"><div class="section-title">Top 10 Creator (Live)</div></div>
-          <div class="table-wrap">
-            <table id="tblTtCreatorLive">
-              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-              <tbody id="tbodyTtCreatorLive"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card">
-          <div class="section-header"><div class="section-title">Top 10 Creator (Video)</div></div>
-          <div class="table-wrap">
-            <table id="tblTtCreatorVideo">
-              <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-              <tbody id="tbodyTtCreatorVideo"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
       <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -1145,6 +1113,70 @@
           <button class="btn btn-ghost" id="cpClearBtn" onclick="clearCpCreator()" style="display:none;white-space:nowrap;">✕ ดูทุกคน</button>
         </div>
       </div>
+      <div id="cp-overview-section">
+        <div class="section-divider"><span>🔥 มาแรงช่วง 7 วันล่าสุด <span style="font-size:11px;font-weight:400;color:var(--text3);" id="cp-trending-daterange"></span></span></div>
+        <div class="grid-3" style="margin-bottom:20px;">
+          <div class="card">
+            <div class="section-header"><div class="section-title">รวมทุกประเภท <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('cp-info-trend-all')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="cp-info-trend-all" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">เทียบยอดขาย 7 วันล่าสุด กับ 7 วันก่อนหน้านั้น (นับจากวันสุดท้ายของตัวกรองวันที่ด้านบน)<br><br>เรียงตาม % เติบโต ไม่ใช่ยอดขายสูงสุด — เพื่อเห็น creator ที่กระแสกำลังมา ไม่ใช่แค่ตัวท็อปเดิม<br><br>แสดงเฉพาะ creator ที่มียอดขาย 7 วันล่าสุด ≥ ฿1,000 กันสัญญาณรบกวนจากยอดน้อยเกินไป</div></span></div></div>
+            <div class="table-wrap">
+              <table id="tblCpTrendAll">
+                <thead><tr><th>Creator</th><th>7 วันล่าสุด</th><th>เติบโต</th></tr></thead>
+                <tbody id="tbodyCpTrendAll"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-header"><div class="section-title">LIVE</div></div>
+            <div class="table-wrap">
+              <table id="tblCpTrendLive">
+                <thead><tr><th>Creator</th><th>7 วันล่าสุด</th><th>เติบโต</th></tr></thead>
+                <tbody id="tbodyCpTrendLive"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-header"><div class="section-title">Videos</div></div>
+            <div class="table-wrap">
+              <table id="tblCpTrendVideo">
+                <thead><tr><th>Creator</th><th>7 วันล่าสุด</th><th>เติบโต</th></tr></thead>
+                <tbody id="tbodyCpTrendVideo"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider"><span>Top Creator (ตาม Live/Video) — ทั้งช่วงที่เลือก</span></div>
+        <div class="grid-3" style="margin-bottom:20px;">
+          <div class="card">
+            <div class="section-header"><div class="section-title">Top 10 Creator (รวมทุกประเภท)</div></div>
+            <div class="table-wrap">
+              <table id="tblTtCreatorAll">
+                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+                <tbody id="tbodyTtCreatorAll"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-header"><div class="section-title">Top 10 Creator (Live)</div></div>
+            <div class="table-wrap">
+              <table id="tblTtCreatorLive">
+                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+                <tbody id="tbodyTtCreatorLive"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-header"><div class="section-title">Top 10 Creator (Video)</div></div>
+            <div class="table-wrap">
+              <table id="tblTtCreatorVideo">
+                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
+                <tbody id="tbodyTtCreatorVideo"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="cp-content">
         <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
         <div class="card" style="margin-bottom:20px;">
@@ -2506,23 +2538,6 @@ function renderTtHub() {
       <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
     `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 
-    function buildCreatorTable(rows, tbodyId) {
-      const byCreator = {};
-      rows.forEach(r => {
-        const k = r.creator_handle || 'deesaythailand';
-        if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
-        byCreator[k].rev += parseFloat(r.revenue) || 0;
-        byCreator[k].ord++;
-      });
-      const sorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 10);
-      document.getElementById(tbodyId).innerHTML = sorted.length ? sorted.map(([k,v]) => `
-        <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
-      `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
-    }
-    buildCreatorTable(d, 'tbodyTtCreatorAll');
-    buildCreatorTable(d.filter(r => r.order_channel === 'LIVE'), 'tbodyTtCreatorLive');
-    buildCreatorTable(d.filter(r => r.order_channel === 'Videos'), 'tbodyTtCreatorVideo');
-
     renderAdpChannel('chartTtAds', null, 'tt', hubAdView.tt);
     renderPromotion('Tt', 'TikTok');
 
@@ -2747,12 +2762,98 @@ function clearCpCreator() {
   renderCreatorPerf();
 }
 
+function renderCpTopCreatorTables(dAllTypes) {
+  function buildCreatorTable(rows, tbodyId) {
+    const byCreator = {};
+    rows.forEach(r => {
+      const k = r.creator_handle || 'deesaythailand';
+      if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
+      byCreator[k].rev += parseFloat(r.revenue) || 0;
+      byCreator[k].ord++;
+    });
+    const sorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 10);
+    document.getElementById(tbodyId).innerHTML = sorted.length ? sorted.map(([k,v]) => `
+      <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
+    `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
+  }
+  buildCreatorTable(dAllTypes, 'tbodyTtCreatorAll');
+  buildCreatorTable(dAllTypes.filter(r => r.order_channel === 'LIVE'), 'tbodyTtCreatorLive');
+  buildCreatorTable(dAllTypes.filter(r => r.order_channel === 'Videos'), 'tbodyTtCreatorVideo');
+}
+
+function renderCpTrendingCreators(to) {
+  // จุดยึดคือวันสุดท้ายของตัวกรองวันที่ด้านบน (ไม่ใช่วันนี้จริง) ตามที่ตกลงกันไว้
+  const toDate = new Date(to + 'T00:00:00');
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const fmtISO = d => d.toISOString().slice(0, 10);
+
+  const last7Start = fmtISO(addDays(toDate, -6));
+  const last7End = to;
+  const prev7Start = fmtISO(addDays(toDate, -13));
+  const prev7End = fmtISO(addDays(toDate, -7));
+
+  document.getElementById('cp-trending-daterange').textContent =
+    `(${last7Start} ถึง ${last7End} เทียบกับ ${prev7Start} ถึง ${prev7End})`;
+
+  const ttAll = allData.filter(r => r.channel === 'TikTok' && shouldIncludeRow(r));
+
+  function buildTrendTable(rows, tbodyId) {
+    const last7 = rows.filter(r => r.date >= last7Start && r.date <= last7End);
+    const prev7 = rows.filter(r => r.date >= prev7Start && r.date <= prev7End);
+
+    const revByCreator = arr => {
+      const m = {};
+      arr.forEach(r => { const k = r.creator_handle || 'deesaythailand'; m[k] = (m[k]||0) + (parseFloat(r.revenue)||0); });
+      return m;
+    };
+    const last7Map = revByCreator(last7);
+    const prev7Map = revByCreator(prev7);
+
+    const rowsOut = Object.entries(last7Map)
+      .filter(([k, rev]) => rev >= 1000) // กันสัญญาณรบกวนจากยอดน้อยเกินไป
+      .map(([k, rev]) => {
+        const prevRev = prev7Map[k] || 0;
+        const growth = prevRev > 0 ? ((rev - prevRev) / prevRev * 100) : null; // null = ไม่มียอดช่วงก่อนหน้าเลย (ใหม่)
+        return { creator: k, rev, growth };
+      })
+      .sort((a, b) => {
+        // ตัวที่ "ใหม่" (growth=null) ไว้บนสุดถ้ายอดสูงพอ ตามด้วยเรียง % เติบโตมาก->น้อย
+        if (a.growth === null && b.growth === null) return b.rev - a.rev;
+        if (a.growth === null) return -1;
+        if (b.growth === null) return 1;
+        return b.growth - a.growth;
+      })
+      .slice(0, 8);
+
+    document.getElementById(tbodyId).innerHTML = rowsOut.length ? rowsOut.map(r => `
+      <tr>
+        <td>${r.creator}</td>
+        <td>฿${fmt(r.rev)}</td>
+        <td>${r.growth === null ? '<span style="color:var(--purple);font-weight:600;">🆕 ใหม่</span>' : `<span style="color:${r.growth >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:600;">${r.growth >= 0 ? '▲' : '▼'} ${Math.abs(r.growth).toFixed(0)}%</span>`}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูลเพียงพอในช่วงนี้</td></tr>';
+  }
+
+  buildTrendTable(ttAll, 'tbodyCpTrendAll');
+  buildTrendTable(ttAll.filter(r => r.order_channel === 'LIVE'), 'tbodyCpTrendLive');
+  buildTrendTable(ttAll.filter(r => r.order_channel === 'Videos'), 'tbodyCpTrendVideo');
+}
+
 function renderCreatorPerf() {
+  const overviewEl = document.getElementById('cp-overview-section');
+  if (overviewEl) overviewEl.style.display = cpSelectedCreator ? 'none' : 'block';
+
   const from = getDateValue('From'), to = getDateValue('To');
   const creatorFilter = r => cpSelectedCreator ? (r.creator_handle === cpSelectedCreator) : true;
   const dAll = allData.filter(r => r.channel === 'TikTok' && creatorFilter(r) &&
     r.date && r.date >= from && r.date <= to);
   const d = dAll.filter(r => shouldIncludeRow(r));
+
+  if (!cpSelectedCreator) {
+    renderCpTopCreatorTables(d);
+    renderCpTrendingCreators(to);
+  }
+
   const cancelledRows = dAll.filter(r => r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund');
   const cancelledRev = cancelledRows.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
 
