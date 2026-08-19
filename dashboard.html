@@ -1136,25 +1136,25 @@
 
     <div class="page" id="page-creatorperf">
       <div class="card" style="margin-bottom:20px;">
-        <div class="section-title" style="margin-bottom:14px;">ค้นหา Creator</div>
-        <div style="position:relative;max-width:400px;">
-          <input type="text" class="ls-input" id="cpCreatorSearch" placeholder="พิมพ์ชื่อ creator เช่น deesaythailand..." oninput="filterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
-          <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+        <div class="section-title" style="margin-bottom:14px;">ค้นหา Creator <span style="font-size:11px;font-weight:400;color:var(--text3);">— ไม่เลือก = ดูยอดรวมทุก creator</span></div>
+        <div style="position:relative;max-width:400px;display:flex;gap:8px;align-items:center;">
+          <div style="position:relative;flex:1;">
+            <input type="text" class="ls-input" id="cpCreatorSearch" placeholder="พิมพ์ชื่อ creator เช่น deesaythailand..." oninput="filterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
+            <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+          </div>
+          <button class="btn btn-ghost" id="cpClearBtn" onclick="clearCpCreator()" style="display:none;white-space:nowrap;">✕ ดูทุกคน</button>
         </div>
       </div>
-      <div id="cp-empty-state" class="card" style="text-align:center;color:var(--text3);padding:40px;">
-        เลือก creator ด้านบน แล้วกด "🔍 ค้นหา" มุมขวาบนเพื่อดูผลงาน
-      </div>
-      <div id="cp-content" style="display:none;">
+      <div id="cp-content">
         <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
         <div class="card" style="margin-bottom:20px;">
-          <div class="section-header"><div class="section-title" id="cp-trend-title">ยอดขายรายวัน</div></div>
+          <div class="section-header"><div class="section-title" id="cp-trend-title">ยอดขายรายวัน — รวมทุก Creator</div></div>
           <div class="chart-wrap chart-wrap-lg"><canvas id="chartCpTrend"></canvas></div>
         </div>
         <div class="grid-2">
           <div class="card">
             <div class="section-header">
-              <div class="section-title">Top SKU ของ creator นี้</div>
+              <div class="section-title" id="cp-sku-title">Top SKU ของ creator นี้</div>
               <button class="btn btn-ghost" onclick="exportTable('tblCpSku')">⬇ Export CSV</button>
             </div>
             <div class="table-wrap">
@@ -1937,9 +1937,11 @@ function showPage(page, lockCh, el) {
     populateLiveSearchFilters();
   } else if (page === 'creatorperf') {
     populateCpCreatorList();
+    renderCreatorPerf();
   } else if (page === 'promotarget') {
     initPromoTargetPage();
   } else if (page === 'fbengage') {
+    fbeInitPageOptions();
     renderFbEngagePage();
   } else {
     applyFilters();
@@ -2245,23 +2247,35 @@ function toggleFbeInfo(id) {
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+async function fbeInitPageOptions() {
+  if (fbePagesCache.length > 0) return;
+  try {
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/fb_pages?select=page_id,page_name`, { headers });
+    const data = await res.json();
+    if (!Array.isArray(data)) { console.error('FB Engage: โหลดรายชื่อเพจไม่สำเร็จ', data); return; }
+    fbePagesCache = data;
+    const sel = document.getElementById('fbePageSelect');
+    if (sel) {
+      fbePagesCache.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.page_id;
+        opt.textContent = p.page_name;
+        sel.appendChild(opt);
+      });
+    }
+  } catch (e) {
+    console.error('FB Engage: error ตอนโหลดรายชื่อเพจ', e);
+  }
+}
+
 async function renderFbEngagePage() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
+  await fbeInitPageOptions();
   const dateFrom = document.getElementById('dateFrom').value;
   const dateTo = document.getElementById('dateTo').value;
   if (!dateFrom || !dateTo) return;
 
-  if (fbePagesCache.length === 0) {
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/fb_pages?select=page_id,page_name`, { headers });
-    fbePagesCache = await res.json();
-    const sel = document.getElementById('fbePageSelect');
-    fbePagesCache.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.page_id;
-      opt.textContent = p.page_name;
-      sel.appendChild(opt);
-    });
-  }
   if (fbeKeywordsCache.length === 0) {
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/comment_keywords?select=keyword`, { headers });
     fbeKeywordsCache = (await res.json()).map(r => r.keyword);
@@ -2423,12 +2437,14 @@ function renderFbeCommentSection() {
 
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
   const postIds = topPosts.map(([pid]) => pid);
-  fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,caption,permalink_url,post_type,posted_at,thumbnail_url&post_id=in.(${postIds.map(id => `"${id}"`).join(',')})`, { headers })
+  fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,page_id,caption,permalink_url,post_type,posted_at,thumbnail_url&post_id=in.(${postIds.map(id => `"${id}"`).join(',')})`, { headers })
     .then(r => r.json())
     .then(postsMeta => {
       const metaById = {}; postsMeta.forEach(p => metaById[p.post_id] = p);
+      const pageNameById = {}; fbePagesCache.forEach(p => pageNameById[p.page_id] = p.page_name);
       document.getElementById('fbeTopCommentedPosts').innerHTML = topPosts.map(([pid, comments]) => {
         const meta = metaById[pid] || {};
+        const pageName = pageNameById[meta.page_id] || '';
         const tagLabel = c => c.tag_want_to_buy ? '<span style="color:var(--green);font-size:10px;">🏷️ อยากซื้อ</span>'
           : c.tag_price ? '<span style="color:var(--orange);font-size:10px;">🏷️ ถามราคา</span>'
           : c.tag_quality ? '<span style="color:var(--purple);font-size:10px;">🏷️ คุณภาพสินค้า</span>'
@@ -2444,7 +2460,7 @@ function renderFbeCommentSection() {
                 ${thumb}
                 <div style="min-width:0;flex:1;">
                   <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(meta.caption || '(ไม่มีข้อความ)').replace(/</g,'&lt;')}</div>
-                  <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${meta.posted_at ? fbeThaiDateShort(meta.posted_at.slice(0,10)) : ''} · ${meta.post_type || ''} · ${comments.length} คอมเมนต์${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
+                  <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${pageName ? `<b style="color:var(--accent2);">${pageName}</b> · ` : ''}${meta.posted_at ? fbeThaiDateShort(meta.posted_at.slice(0,10)) : ''} · ${meta.post_type || ''} · ${comments.length} คอมเมนต์${meta.permalink_url ? ` · <a href="${meta.permalink_url}" target="_blank" style="color:var(--accent);" onclick="event.stopPropagation();">↗ ดูโพสต์</a>` : ''}</div>
                 </div>
               </div>
               <span class="fbe-chevron">▾</span>
@@ -2721,22 +2737,24 @@ function selectCpCreator(handle) {
   cpSelectedCreator = handle;
   document.getElementById('cpCreatorSearch').value = handle;
   hideCpCreatorDropdown();
+  document.getElementById('cpClearBtn').style.display = 'inline-block';
+  renderCreatorPerf();
+}
+function clearCpCreator() {
+  cpSelectedCreator = null;
+  document.getElementById('cpCreatorSearch').value = '';
+  document.getElementById('cpClearBtn').style.display = 'none';
+  renderCreatorPerf();
 }
 
 function renderCreatorPerf() {
-  const emptyEl = document.getElementById('cp-empty-state');
-  const contentEl = document.getElementById('cp-content');
-  if (!cpSelectedCreator) {
-    emptyEl.style.display = 'block';
-    contentEl.style.display = 'none';
-    return;
-  }
-  emptyEl.style.display = 'none';
-  contentEl.style.display = 'block';
-
   const from = getDateValue('From'), to = getDateValue('To');
-  const d = allData.filter(r => r.channel === 'TikTok' && r.creator_handle === cpSelectedCreator &&
-    r.date && r.date >= from && r.date <= to && shouldIncludeRow(r));
+  const creatorFilter = r => cpSelectedCreator ? (r.creator_handle === cpSelectedCreator) : true;
+  const dAll = allData.filter(r => r.channel === 'TikTok' && creatorFilter(r) &&
+    r.date && r.date >= from && r.date <= to);
+  const d = dAll.filter(r => shouldIncludeRow(r));
+  const cancelledRows = dAll.filter(r => r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund');
+  const cancelledRev = cancelledRows.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
 
   const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
   const totalOrd = d.length;
@@ -2746,8 +2764,14 @@ function renderCreatorPerf() {
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขายรวม</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">เฉลี่ยต่อออเดอร์</div><div class="kpi-value">฿${fmtB(aov)}</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดยกเลิก/คืน ${fbeInfoIcon('cp-info-cancel', 'ยอดขายของออเดอร์ที่ cancel_return_type = Cancel หรือ Return/Refund<br><br>ไม่รวมอยู่ใน "ยอดขายรวม" ด้านซ้าย — แยกไว้ให้ดูต่างหาก')}</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(cancelledRev)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">${fmt(cancelledRows.length)} ออเดอร์</div></div>
   `;
-  document.getElementById('cp-trend-title').textContent = `ยอดขายรายวัน — ${cpSelectedCreator}`;
+  document.getElementById('cp-trend-title').textContent = cpSelectedCreator
+    ? `ยอดขายรายวัน — ${cpSelectedCreator}`
+    : `ยอดขายรายวัน — รวมทุก Creator (${_cpAllCreators.length} คน)`;
+  document.getElementById('cp-sku-title').textContent = cpSelectedCreator
+    ? `Top SKU ของ ${cpSelectedCreator}`
+    : `Top SKU รวมทุก Creator`;
 
   // เทรนด์รายวัน
   const byDay = {};
