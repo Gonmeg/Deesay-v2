@@ -778,6 +778,7 @@
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" id="skurevSearch" placeholder="ค้นหา SKU หรือชื่อสินค้า..." onkeyup="renderSkuRevTable()" style="width:220px;">
             <button class="btn btn-ghost" onclick="exportTable('tblSkuRev')">⬇ Export CSV</button>
+            <button class="btn btn-ghost" onclick="exportSkuRevWithChannel()" title="Export พร้อมคอลัมน์แยกยอดขาย/จำนวนชิ้นตามช่องทาง">⬇ Export CSV (แยกช่องทาง)</button>
           </div>
         </div>
         <div class="table-wrap" style="max-height:480px;overflow-y:auto;">
@@ -4411,6 +4412,51 @@ function renderSkuRevTable() {
       <td>${cmpHtml}</td><td>${rankHtml}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
+}
+
+// ===== Export SKU revenue พร้อมแยกคอลัมน์ตามช่องทาง (ใช้ตอน Channel filter = "ทั้งหมด" แล้วอยากได้ breakdown ในไฟล์เดียว) =====
+const CHANNEL_EXPORT_ORDER = ['Facebook','TikTok','Shopee','Lazada','ตัวแทน','Modern Trade'];
+function exportSkuRevWithChannel() {
+  const sorted = window._skuSorted || [];
+  const rawRows = window._skuTrendAllData || []; // มี field channel ติดมาด้วย (จาก mv_sku_parent_monthly)
+  const search = (document.getElementById('skurevSearch')?.value || '').toLowerCase();
+  const filtered = sorted.filter(([k]) => !search || k.toLowerCase().includes(search) || skuToName(k).toLowerCase().includes(search));
+  const totalRev = window._skuTotalRev || 1;
+
+  // รวมยอดต่อ SKU แยกตามช่องทาง
+  const bySkuChannel = {}; // { sku: { channel: {rev, qty} } }
+  rawRows.forEach(r => {
+    const k = r.parent_sku || '—', ch = r.channel || 'ไม่ระบุ';
+    if (!bySkuChannel[k]) bySkuChannel[k] = {};
+    if (!bySkuChannel[k][ch]) bySkuChannel[k][ch] = { rev: 0, qty: 0 };
+    bySkuChannel[k][ch].rev += parseFloat(r.total_revenue) || 0;
+    bySkuChannel[k][ch].qty += parseFloat(r.total_qty) || 0;
+  });
+
+  // หา channel ที่มีข้อมูลจริงทั้งหมด เรียงตามลำดับมาตรฐาน แล้วเติมตัวที่เจอเพิ่ม (ถ้ามี) ต่อท้าย
+  const foundChannels = new Set();
+  Object.values(bySkuChannel).forEach(o => Object.keys(o).forEach(ch => foundChannels.add(ch)));
+  const channelList = [
+    ...CHANNEL_EXPORT_ORDER.filter(c => foundChannels.has(c)),
+    ...[...foundChannels].filter(c => !CHANNEL_EXPORT_ORDER.includes(c)).sort()
+  ];
+
+  const header = ['#','SKU','ชื่อสินค้า','ยอดขายรวม (฿)','จำนวนชิ้นรวม','ราคา/ชิ้น','สัดส่วน %'];
+  channelList.forEach(ch => { header.push(`ยอดขาย-${ch} (฿)`, `จำนวนชิ้น-${ch}`); });
+  const rows = [header];
+
+  filtered.forEach(([k, v], i) => {
+    const avgPrice = v.qty ? Math.round(v.rev/v.qty) : 0;
+    const sharePct = totalRev ? ((v.rev/totalRev)*100).toFixed(1) : '0.0';
+    const row = [i+1, k, skuToName(k), Math.round(v.rev), v.qty, avgPrice, sharePct+'%'];
+    channelList.forEach(ch => {
+      const cv = bySkuChannel[k]?.[ch];
+      row.push(cv ? Math.round(cv.rev) : 0, cv ? cv.qty : 0);
+    });
+    rows.push(row);
+  });
+
+  downloadCSV(rows, 'ยอดขายแยก_SKU_แยกช่องทาง.csv');
 }
 
 // ===== SKU ANALYSIS PAGE =====
