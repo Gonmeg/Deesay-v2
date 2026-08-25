@@ -1142,7 +1142,7 @@
           oninput="renderTtaCreatorSummary(); renderTtaTable();" style="width:100%;">
       </div>
 
-      <div class="section-title" style="margin-bottom:10px;">📈 สรุปตาม Creator</div>
+      <div class="section-title" style="margin-bottom:10px;" id="ttaCreatorSummaryTitle">📈 สรุปตาม Creator (Top 10)</div>
       <div id="ttaCreatorSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:22px;"></div>
 
       <div class="section-header">
@@ -2056,8 +2056,8 @@ function showPage(page, lockCh, el) {
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
-  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'shhub', 'lzhub', 'mthub', 'fbengage']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
-  const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbengage']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
+  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'ttcontent', 'ttads', 'shhub', 'lzhub', 'mthub', 'fbengage']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbengage', 'ttcontent', 'ttads']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   const fbePageGroup = document.getElementById('fbePageFilterGroup');
@@ -6252,7 +6252,7 @@ function setTtcView(v, btn) {
   renderTtcCurrentView();
 }
 function renderTtcCurrentView() { ttcView === 'grid' ? renderTtcGrid() : renderTtcTable(); }
-function ttcGoToPage(n) { ttcPage = n; renderTtcCurrentView(); document.getElementById('page-ttcontent').scrollIntoView({behavior:'smooth',block:'start'}); }
+function ttcGoToPage(n) { ttcPage = n; renderTtcCurrentView(); }
 
 async function renderTtc() {
   if (!ttcData.length) await fetchTtcData();
@@ -6354,18 +6354,24 @@ function renderTtcTable() {
 // ===== FETCH: TikTok Ads (ทุกคลิปที่ยิงแอด รวม KOL/affiliate) =====
 let ttaByClip = [];
 let ttaPage = 1;
+let ttaLastRange = null; // เก็บช่วงวันที่ที่ fetch ล่าสุด กันดึงซ้ำถ้าช่วงเดิม
 const TTA_PAGE_SIZE = 10;
-async function fetchTtaData() {
+function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
+async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=*&limit=20000`, { headers });
+  let url = `${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=*&limit=20000`;
+  if (fromDate) url += `&date=gte.${fromDate}`;
+  if (toDate) url += `&date=lte.${toDate}`;
+  const res = await fetch(url, { headers });
   let ttaRaw = await res.json();
   if (!Array.isArray(ttaRaw)) ttaRaw = [];
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
     // ตัดสินว่าเป็นของ Deesay เองหรือไม่จาก "handle จริง" ที่ oEmbed บอกมาเป็นหลัก (ไม่ใช่แค่ join กับตาราง organic
-    // ที่มีคลิปให้ match ได้น้อยมาก) — กัน handle เดียวกันโดนแยกเป็นทั้ง Deesay และ KOL ในเวลาเดียวกัน
-    const rawHandle = (r.is_deesay_own_channel ? 'deesaythailand' : (r.creator_handle || '')).toLowerCase();
+    // ที่มีคลิปให้ match ได้น้อยมาก) — normalize handle (ตัดช่องว่าง/ตัวพิมพ์เล็กหมด) กัน handle เดียวกัน
+    // โดนแยกเป็นทั้ง Deesay/KOL หรือถูกนับเป็นคนละคนเพราะพิมพ์ไม่ตรงกัน (เช่น "deesay thailand" vs "deesaythailand")
+    const rawHandle = normalizeHandle(r.is_deesay_own_channel ? 'deesaythailand' : (r.creator_handle || ''));
     const isDeesay = r.is_deesay_own_channel || KNOWN_DEESAY_HANDLES.includes(rawHandle);
     const handle = rawHandle || '(ไม่ทราบชื่อ)';
     if (!byClip[id]) byClip[id] = {
@@ -6399,7 +6405,7 @@ function setTtaSourceFilter(src, btn) {
   btn.classList.add('active');
   renderTtaTable();
 }
-function ttaGoToPage(n) { ttaPage = n; renderTtaTable(); document.getElementById('page-ttads').scrollIntoView({behavior:'smooth',block:'start'}); }
+function ttaGoToPage(n) { ttaPage = n; renderTtaTable(); }
 
 function ttaFilteredClips() {
   const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase();
@@ -6412,7 +6418,9 @@ function ttaFilteredClips() {
 }
 
 async function renderTta() {
-  if (!ttaByClip.length) await fetchTtaData();
+  const from = getDateValue('From'), to = getDateValue('To');
+  const rangeKey = from + '|' + to;
+  if (ttaLastRange !== rangeKey) { await fetchTtaData(from, to); ttaLastRange = rangeKey; }
   const totalSpend = ttaByClip.reduce((s,c)=>s+c.spend,0);
   const totalOrders = ttaByClip.reduce((s,c)=>s+c.orders,0);
   const deesayCount = ttaByClip.filter(c=>c.isDeesay).length;
@@ -6483,6 +6491,10 @@ function renderTtaCreatorSummary() {
     cpo: v.orders ? (v.spend/v.orders) : null
   })).sort((a,b) => b.spend - a.spend);
   if (q) arr = arr.filter(c => c.handle.toLowerCase().includes(q));
+  const totalCreatorCount = arr.length;
+  arr = arr.slice(0, 10);
+  const titleEl = document.getElementById('ttaCreatorSummaryTitle');
+  if (titleEl) titleEl.textContent = `📈 สรุปตาม Creator (Top 10 จากทั้งหมด ${totalCreatorCount} คนในช่วงที่เลือก)`;
   document.getElementById('ttaCreatorSummary').innerHTML = arr.length ? arr.map(c => `
     <div class="creator-card" style="border-left-color:${c.isDeesay?'var(--blue)':'#a78bfa'};">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
