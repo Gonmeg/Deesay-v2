@@ -778,7 +778,7 @@
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" id="skurevSearch" placeholder="ค้นหา SKU หรือชื่อสินค้า..." onkeyup="renderSkuRevTable()" style="width:220px;">
             <button class="btn btn-ghost" onclick="exportTable('tblSkuRev')">⬇ Export CSV</button>
-            <button class="btn btn-ghost" onclick="exportSkuRevWithChannel()" title="Export พร้อมคอลัมน์แยกยอดขาย/จำนวนชิ้นตามช่องทาง">⬇ Export CSV (แยกช่องทาง)</button>
+            <button class="btn btn-ghost" onclick="exportSkuRevWithChannel()" title="Export แบบยาวลงล่าง แยกเดือน x SKU x ช่องทาง — เอาไปทำ Pivot Table ได้เลย">⬇ Export CSV (แยกช่องทาง+เดือน)</button>
           </div>
         </div>
         <div class="table-wrap" style="max-height:480px;overflow-y:auto;">
@@ -4414,49 +4414,37 @@ function renderSkuRevTable() {
   }).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
-// ===== Export SKU revenue พร้อมแยกคอลัมน์ตามช่องทาง (ใช้ตอน Channel filter = "ทั้งหมด" แล้วอยากได้ breakdown ในไฟล์เดียว) =====
-const CHANNEL_EXPORT_ORDER = ['Facebook','TikTok','Shopee','Lazada','ตัวแทน','Modern Trade'];
+// ===== Export SKU revenue แบบ "ยาวลงล่าง" (tidy/long format) แยกตามเดือน x SKU x ช่องทาง — เอาไปทำ Pivot Table ต่อได้ง่าย
 function exportSkuRevWithChannel() {
-  const sorted = window._skuSorted || [];
-  const rawRows = window._skuTrendAllData || []; // มี field channel ติดมาด้วย (จาก mv_sku_parent_monthly)
+  const rawRows = window._skuTrendAllData || []; // จาก mv_sku_parent_monthly: มี date(รายเดือน), channel, parent_sku, total_qty, total_revenue ติดมาอยู่แล้ว
   const search = (document.getElementById('skurevSearch')?.value || '').toLowerCase();
-  const filtered = sorted.filter(([k]) => !search || k.toLowerCase().includes(search) || skuToName(k).toLowerCase().includes(search));
-  const totalRev = window._skuTotalRev || 1;
-
-  // รวมยอดต่อ SKU แยกตามช่องทาง
-  const bySkuChannel = {}; // { sku: { channel: {rev, qty} } }
-  rawRows.forEach(r => {
-    const k = r.parent_sku || '—', ch = r.channel || 'ไม่ระบุ';
-    if (!bySkuChannel[k]) bySkuChannel[k] = {};
-    if (!bySkuChannel[k][ch]) bySkuChannel[k][ch] = { rev: 0, qty: 0 };
-    bySkuChannel[k][ch].rev += parseFloat(r.total_revenue) || 0;
-    bySkuChannel[k][ch].qty += parseFloat(r.total_qty) || 0;
+  const filteredRows = rawRows.filter(r => {
+    const k = r.parent_sku || '—';
+    return !search || k.toLowerCase().includes(search) || skuToName(k).toLowerCase().includes(search);
   });
 
-  // หา channel ที่มีข้อมูลจริงทั้งหมด เรียงตามลำดับมาตรฐาน แล้วเติมตัวที่เจอเพิ่ม (ถ้ามี) ต่อท้าย
-  const foundChannels = new Set();
-  Object.values(bySkuChannel).forEach(o => Object.keys(o).forEach(ch => foundChannels.add(ch)));
-  const channelList = [
-    ...CHANNEL_EXPORT_ORDER.filter(c => foundChannels.has(c)),
-    ...[...foundChannels].filter(c => !CHANNEL_EXPORT_ORDER.includes(c)).sort()
-  ];
-
-  const header = ['#','SKU','ชื่อสินค้า','ยอดขายรวม (฿)','จำนวนชิ้นรวม','ราคา/ชิ้น','สัดส่วน %'];
-  channelList.forEach(ch => { header.push(`ยอดขาย-${ch} (฿)`, `จำนวนชิ้น-${ch}`); });
-  const rows = [header];
-
-  filtered.forEach(([k, v], i) => {
-    const avgPrice = v.qty ? Math.round(v.rev/v.qty) : 0;
-    const sharePct = totalRev ? ((v.rev/totalRev)*100).toFixed(1) : '0.0';
-    const row = [i+1, k, skuToName(k), Math.round(v.rev), v.qty, avgPrice, sharePct+'%'];
-    channelList.forEach(ch => {
-      const cv = bySkuChannel[k]?.[ch];
-      row.push(cv ? Math.round(cv.rev) : 0, cv ? cv.qty : 0);
-    });
-    rows.push(row);
+  // รวมยอดต่อ (เดือน x SKU x ช่องทาง) — เผื่อข้อมูลดิบมีแยกย่อยตาม sub_channel อีกชั้นซ่อนอยู่ ป้องกันแถวซ้ำเดือน/SKU/ช่องทางเดียวกัน
+  const grouped = {};
+  filteredRows.forEach(r => {
+    const month = (r.date || '').slice(0, 7); // YYYY-MM ให้ pivot ง่าย
+    const sku = r.parent_sku || '—';
+    const channel = r.channel || 'ไม่ระบุ';
+    const key = month + '|' + sku + '|' + channel;
+    if (!grouped[key]) grouped[key] = { month, sku, channel, qty: 0, rev: 0 };
+    grouped[key].qty += parseFloat(r.total_qty) || 0;
+    grouped[key].rev += parseFloat(r.total_revenue) || 0;
   });
 
-  downloadCSV(rows, 'ยอดขายแยก_SKU_แยกช่องทาง.csv');
+  const rowsArr = Object.values(grouped).sort((a, b) => {
+    if (a.month !== b.month) return a.month < b.month ? -1 : 1;
+    if (a.sku !== b.sku) return a.sku < b.sku ? -1 : 1;
+    return a.channel.localeCompare(b.channel);
+  });
+
+  const header = ['เดือน', 'SKU', 'ชื่อสินค้า', 'ช่องทาง', 'จำนวนชิ้น', 'ยอดขาย (฿)'];
+  const rows = [header, ...rowsArr.map(r => [r.month, r.sku, skuToName(r.sku), r.channel, Math.round(r.qty), Math.round(r.rev)])];
+
+  downloadCSV(rows, 'ยอดขายแยก_SKU_รายเดือน_ช่องทาง.csv');
 }
 
 // ===== SKU ANALYSIS PAGE =====
@@ -6423,10 +6411,15 @@ async function fetchTtaData(fromDate, toDate) {
     if (!byClip[id]) byClip[id] = {
       item_id: id, campaign: r.campaign, isDeesay, handle, objective: r.objective_type || null,
       caption: r.clip_title || '(ไม่มีชื่อ)', thumbnail: r.thumbnail_url,
-      spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0, v25:0, v50:0, v100:0, paidcomments:0, paidshares:0
+      spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0, v25:0, v50:0, v100:0, paidcomments:0, paidshares:0,
+      hasFunnelData: false, hasEngagementData: false // ติดตามว่าคลิปนี้มีข้อมูล impressions/clicks (task 311) และ %ดูจบ/paid comments (task 312) จริงไหม
+      // แยกจากกันเพราะ 2 ตารางนี้ backfill ไปคนละช่วงวันที่ (task 311 = 30 วัน, task 312 = ~7-9 วัน)
+      // ค่า 0 ที่คำนวณได้กับ "ไม่มีข้อมูลเก็บไว้เลย" หน้าตาต่างกัน ต้องแยกแสดงผลไม่ให้ดูเหมือนบั๊ก
     };
     const c = byClip[id];
     if (!c.objective && r.objective_type) c.objective = r.objective_type;
+    if (r.impressions !== null && r.impressions !== undefined) c.hasFunnelData = true;
+    if (r.play_first_quartile !== null && r.play_first_quartile !== undefined) c.hasEngagementData = true;
     c.spend += parseFloat(r.spend) || 0;
     c.orders += parseFloat(r.gmv_max_orders) || 0;
     c.impressions += parseFloat(r.impressions) || 0;
@@ -6555,6 +6548,7 @@ function renderTtaCreatorSummary() {
     </div>`).join('') : '<div class="empty" style="grid-column:1/-1;">ไม่พบ creator ที่ค้นหา</div>';
 }
 
+const OUT_OF_RANGE_HTML = '<span style="color:var(--text3);font-style:italic;font-size:10px;" title="คลิปนี้เก่ากว่าช่วงวันที่ที่ระบบเก็บข้อมูลส่วนนี้ไว้ (ไม่ใช่ค่า 0 จริง แค่ยังไม่มีข้อมูลให้แสดง)">นอกช่วงเก็บ</span>';
 function ttaCellHtml(c, k) {
   const clipUrl = `https://www.tiktok.com/@i/video/${c.item_id}`;
   switch(k) {
@@ -6564,20 +6558,20 @@ function ttaCellHtml(c, k) {
       </div><span title="${ttcEscAttr(c.caption)}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span></div>`;
     case 'source': return c.isDeesay ? '<span style="color:var(--blue);font-weight:700;font-size:10.5px;">🏠 Deesay</span>' : '<span style="color:#a78bfa;font-weight:700;font-size:10.5px;">🎭 KOL</span>';
     case 'handle': return `@${ttcEsc(c.handle)}`;
-    case 'objective': return `<span style="color:var(--text2);">${objectiveLabel(c.objective)}</span>`;
+    case 'objective': return c.hasFunnelData ? `<span style="color:var(--text2);">${objectiveLabel(c.objective)}</span>` : OUT_OF_RANGE_HTML;
     case 'campaign': return ttcEsc(c.campaign||'—');
     case 'spend': return '฿'+fmt(c.spend);
     case 'orders': return fmt(c.orders);
     case 'cpo': return c.cpo!==null ? '฿'+Math.round(c.cpo) : '—';
-    case 'impressions': return fmt(c.impressions);
-    case 'clicks': return fmt(c.clicks);
-    case 'ctr': return c.ctr.toFixed(2)+'%';
+    case 'impressions': return c.hasFunnelData ? fmt(c.impressions) : OUT_OF_RANGE_HTML;
+    case 'clicks': return c.hasFunnelData ? fmt(c.clicks) : OUT_OF_RANGE_HTML;
+    case 'ctr': return c.hasFunnelData ? c.ctr.toFixed(2)+'%' : OUT_OF_RANGE_HTML;
     case 'convs': return fmt(c.convs);
-    case 'v25': return c.impressions?((c.v25/c.impressions)*100).toFixed(0)+'%':'—';
-    case 'v50': return c.impressions?((c.v50/c.impressions)*100).toFixed(0)+'%':'—';
-    case 'v100': return c.impressions?((c.v100/c.impressions)*100).toFixed(0)+'%':'—';
-    case 'paidcomments': return fmt(c.paidcomments);
-    case 'paidshares': return fmt(c.paidshares);
+    case 'v25': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : (c.impressions?((c.v25/c.impressions)*100).toFixed(0)+'%':'—');
+    case 'v50': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : (c.impressions?((c.v50/c.impressions)*100).toFixed(0)+'%':'—');
+    case 'v100': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : (c.impressions?((c.v100/c.impressions)*100).toFixed(0)+'%':'—');
+    case 'paidcomments': return c.hasEngagementData ? fmt(c.paidcomments) : OUT_OF_RANGE_HTML;
+    case 'paidshares': return c.hasEngagementData ? fmt(c.paidshares) : OUT_OF_RANGE_HTML;
     default: return '—';
   }
 }
