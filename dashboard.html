@@ -186,6 +186,30 @@
   .pt-window-cell { text-align: center; font-family: 'IBM Plex Mono', monospace; padding: 6px 8px !important; }
   .pt-window-actual { font-size: 13.5px; font-weight: 700; }
   .pt-window-gap { font-size: 10px; margin-top: 3px; font-family: 'Sarabun', sans-serif; }
+
+  .metrics-panel {
+    position: absolute; top: calc(100% + 6px); right: 0; width: 270px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    max-height: 380px; overflow-y: auto;
+  }
+  .metrics-dragrow { display: flex; align-items: center; gap: 6px; padding: 6px 4px; border-radius: 5px; }
+  .metrics-dragrow[draggable="true"] { cursor: grab; }
+  .metrics-dragrow .drag-handle { color: var(--text3); font-size: 13px; }
+  .metrics-dragrow.drag-over { background: rgba(200,169,110,0.08); }
+
+  .ttc-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .ttc-card-cover { position: relative; height: 130px; background: linear-gradient(135deg, var(--bg3), var(--border)); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .ttc-card-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .ttc-badge-score { position: absolute; top: 7px; right: 7px; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid; }
+  .ttc-badge-ads { position: absolute; top: 7px; left: 7px; background: rgba(200,169,110,0.92); color: #0a0a0f; font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .ttc-card-body { padding: 9px; }
+  .ttc-card-title { font-size: 11px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
+  .ttc-card-date { font-size: 9.5px; color: var(--text3); margin-bottom: 5px; }
+  .ttc-card-pills { font-size: 10px; display: flex; flex-wrap: wrap; gap: 6px; font-family: 'IBM Plex Mono', monospace; }
+
+  .creator-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; border-left-width: 3px; border-left-style: solid; }
+  .trend-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -221,6 +245,8 @@
     </div>
     <div id="navGroup-tt" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
+      <div class="nav-item nav-sub" onclick="showPage('ttcontent',null,this)"><span class="nav-icon">🎬</span> ผลงานคอนเทนต์</div>
+      <div class="nav-item nav-sub" onclick="showPage('ttads',null,this)"><span class="nav-icon">📢</span> TikTok Ads</div>
       <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
       <div class="nav-item nav-sub" onclick="showPage('creatorperf',null,this)"><span class="nav-icon">👤</span> Creator Performance</div>
     </div>
@@ -1046,6 +1072,96 @@
       </div>
     </div>
 
+    <div class="page" id="page-ttcontent">
+      <div id="ttc-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+
+      <div class="card" style="margin-bottom:20px;border-color:rgba(200,169,110,0.3);">
+        <div class="section-header">
+          <div class="section-title">🔥 มาแรงตอนนี้ — โพสต์ใน 7 วันล่าสุด เรียงตามความเร็ว (วิว/วัน)</div>
+        </div>
+        <div class="table-wrap">
+          <table id="tblTtcTrending">
+            <thead><tr><th>คลิป</th><th>โพสต์เมื่อ</th><th>วิวสะสม</th><th>วิว/วัน</th><th>ผู้ติดตามใหม่</th><th>ความเร็ว</th></tr></thead>
+            <tbody id="tbodyTtcTrending"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">คลิปทั้งหมด</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="ttc-view-grid" onclick="setTtcView('grid',this)">Grid</button>
+            <button class="toggle-btn" id="ttc-view-table" onclick="setTtcView('table',this)">ตาราง</button>
+          </div>
+          <div style="position:relative;">
+            <button class="btn btn-ghost" id="ttcMetricsBtn" onclick="toggleMetricsPanel('ttc')">
+              ⚙ Metrics <span id="ttc-metric-count" style="color:var(--accent);"></span>
+            </button>
+            <div id="ttc-metrics-panel" class="metrics-panel" style="display:none;">
+              <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
+              <div id="ttc-metrics-checks"></div>
+              <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('ttc')">ค่าแนะนำ</button>
+                <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('ttc')">เลือกทั้งหมด</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ttcGridView" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px;"></div>
+      <div id="ttcTableView" class="table-wrap" style="display:none;margin-bottom:20px;">
+        <table id="tblTtcAll">
+          <thead id="ttcTableHead"></thead>
+          <tbody id="ttcTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-ttads">
+      <div id="tta-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <input type="text" id="ttaCreatorSearch" placeholder="🔍 ค้นหา creator เช่น @beam_reviews หรือ deesaythailand..."
+          oninput="renderTtaCreatorSummary(); renderTtaTable();" style="width:100%;">
+      </div>
+
+      <div class="section-title" style="margin-bottom:10px;">📈 สรุปตาม Creator</div>
+      <div id="ttaCreatorSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:22px;"></div>
+
+      <div class="section-header">
+        <div class="section-title">รายละเอียดคลิปทั้งหมด</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="toggle-group" id="ttaSourceFilter">
+            <button class="toggle-btn active" data-src="all" onclick="setTtaSourceFilter('all',this)">ทั้งหมด</button>
+            <button class="toggle-btn" data-src="deesay" onclick="setTtaSourceFilter('deesay',this)">🏠 Deesay</button>
+            <button class="toggle-btn" data-src="kol" onclick="setTtaSourceFilter('kol',this)">🎭 KOL</button>
+          </div>
+          <div style="position:relative;">
+            <button class="btn btn-ghost" id="ttaMetricsBtn" onclick="toggleMetricsPanel('tta')">
+              ⚙ Metrics <span id="tta-metric-count" style="color:var(--accent);"></span>
+            </button>
+            <div id="tta-metrics-panel" class="metrics-panel" style="display:none;">
+              <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
+              <div id="tta-metrics-checks"></div>
+              <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('tta')">ค่าแนะนำ</button>
+                <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('tta')">เลือกทั้งหมด</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="tblTtaAll">
+          <thead id="ttaTableHead"></thead>
+          <tbody id="ttaTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="page" id="page-livesearch">
       <div class="card" style="margin-bottom:20px;">
         <div class="section-title" style="margin-bottom:14px;">ค้นหายอดขาย Live ตาม Creator + ช่วงเวลา</div>
@@ -1852,12 +1968,12 @@ function applyFilters() {
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
-  tthub: 'ภาพรวม TikTok', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
+  tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','promotion','geo','crm','flow','neverbought','fbengage','tthub','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','promotarget','fbhub','promotion','geo','crm','flow','neverbought','fbengage','tthub','ttcontent','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget']; // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
@@ -1989,6 +2105,8 @@ function renderCurrentPage() {
   else if (currentPage === 'fbhub') renderFbHub();
   else if (currentPage === 'fbengage') renderFbEngagePage();
   else if (currentPage === 'tthub') renderTtHub();
+  else if (currentPage === 'ttcontent') renderTtc();
+  else if (currentPage === 'ttads') renderTta();
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'lzhub') renderLzHub();
   else if (currentPage === 'mthub') renderMtHub();
@@ -5889,6 +6007,395 @@ async function fetchFreshSnapshot() {
     cachedAt: Date.now()
   }
 }
+
+// ===================== TIKTOK CONTENT + ADS PAGES ===================== //
+// หมายเหตุ: ใช้ fmt() ที่มีอยู่แล้วในไฟล์ (บรรทัด ~1570) ไม่ประกาศซ้ำ
+function fmtK(n) { if (n===null||n===undefined) return '—'; return n>=1000 ? (n/1000).toFixed(1)+'K' : Math.round(n); }
+function ttcEsc(s) { return (s||'').replace(/</g,'&lt;'); }
+
+const METRIC_CONFIGS = {
+  ttc: {
+    order: ['cover','caption','date','views','wr','eng','score','likes','comments','shares','reach','favorites','pv','followers','duration','avgwatch','adspend','cpo','impressions','clicks','convs','v25','v50','v100'],
+    meta: {
+      cover:{label:'ปก',always:true}, caption:{label:'แคปชั่น',always:true}, score:{label:'คะแนน',always:true},
+      date:{label:'โพสต์เมื่อ',default:true}, views:{label:'ยอดวิว',default:true}, wr:{label:'watch rate',default:true},
+      eng:{label:'engagement rate',default:true}, likes:{label:'ไลค์'}, comments:{label:'คอมเมนต์'}, shares:{label:'แชร์'},
+      reach:{label:'reach (คนดูไม่ซ้ำ)'}, favorites:{label:'บันทึกเก็บ'}, pv:{label:'profile views'},
+      followers:{label:'ผู้ติดตามใหม่',default:true}, duration:{label:'ความยาวคลิป'}, avgwatch:{label:'เวลาดูเฉลี่ย'},
+      adspend:{label:'ค่าแอด',default:true}, cpo:{label:'CPO',default:true},
+      impressions:{label:'impressions'}, clicks:{label:'clicks'}, convs:{label:'conversions'},
+      v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v100:{label:'% ดูจบ 100%'}
+    }
+  },
+  tta: {
+    order: ['clip','source','handle','campaign','spend','orders','cpo','impressions','clicks','ctr','convs','v25','v50','v100','paidcomments','paidshares'],
+    meta: {
+      clip:{label:'คลิป',always:true}, source:{label:'แหล่งที่มา',always:true}, handle:{label:'ชื่อช่อง',always:true},
+      campaign:{label:'แคมเปญ',default:true}, spend:{label:'ค่าแอด',default:true}, orders:{label:'GMV Max orders',default:true},
+      cpo:{label:'CPO',default:true}, impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'},
+      convs:{label:'conversions'}, v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v100:{label:'% ดูจบ 100%'},
+      paidcomments:{label:'paid comments'}, paidshares:{label:'paid shares'}
+    }
+  }
+};
+const metricState = {
+  ttc: { order: [...METRIC_CONFIGS.ttc.order], active: {} },
+  tta: { order: [...METRIC_CONFIGS.tta.order], active: {} }
+};
+['ttc','tta'].forEach(page => {
+  METRIC_CONFIGS[page].order.forEach(k => {
+    const m = METRIC_CONFIGS[page].meta[k];
+    metricState[page].active[k] = !!(m.always || m.default);
+  });
+});
+
+function toggleMetricsPanel(page) {
+  const panel = document.getElementById(page + '-metrics-panel');
+  const willOpen = panel.style.display === 'none' || !panel.style.display;
+  document.querySelectorAll('.metrics-panel').forEach(p => p.style.display = 'none');
+  if (willOpen) { renderMetricsChecks(page); panel.style.display = 'block'; }
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.metrics-panel') && !e.target.closest('[id$="MetricsBtn"]')) {
+    document.querySelectorAll('.metrics-panel').forEach(p => p.style.display = 'none');
+  }
+});
+
+let dragSrcIdx = null;
+function renderMetricsChecks(page) {
+  const cfg = METRIC_CONFIGS[page], st = metricState[page];
+  const container = document.getElementById(page + '-metrics-checks');
+  container.innerHTML = st.order.map((k, idx) => {
+    const m = cfg.meta[k];
+    return `<div class="metrics-dragrow" draggable="${!m.always}" data-page="${page}" data-idx="${idx}">
+      <span class="drag-handle" style="${m.always ? 'opacity:.25;' : ''}">⠿</span>
+      <input type="checkbox" data-page="${page}" data-key="${k}" ${st.active[k] ? 'checked' : ''} ${m.always ? 'disabled' : ''} style="accent-color:var(--accent);width:14px;height:14px;">
+      <span style="font-size:12px;color:${m.always ? 'var(--text3)' : 'var(--text)'};">${m.label}${m.always ? ' <span style="font-size:9px;">(คงที่)</span>' : ''}</span>
+    </div>`;
+  }).join('');
+  container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', function () {
+      metricState[this.dataset.page].active[this.dataset.key] = this.checked;
+      updateMetricCount(this.dataset.page);
+      rerenderPage(this.dataset.page);
+    });
+  });
+  container.querySelectorAll('.metrics-dragrow').forEach(row => {
+    row.addEventListener('dragstart', function () { dragSrcIdx = parseInt(this.dataset.idx); this.style.opacity = '0.4'; });
+    row.addEventListener('dragend', function () { this.style.opacity = '1'; });
+    row.addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('drag-over'); });
+    row.addEventListener('dragleave', function () { this.classList.remove('drag-over'); });
+    row.addEventListener('drop', function (e) {
+      e.preventDefault(); this.classList.remove('drag-over');
+      const p = this.dataset.page, targetIdx = parseInt(this.dataset.idx);
+      if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+      const moved = metricState[p].order.splice(dragSrcIdx, 1)[0];
+      metricState[p].order.splice(targetIdx, 0, moved);
+      renderMetricsChecks(p); rerenderPage(p);
+    });
+  });
+  updateMetricCount(page);
+}
+function updateMetricCount(page) {
+  const n = metricState[page].order.filter(k => metricState[page].active[k]).length;
+  const el = document.getElementById(page + '-metric-count');
+  if (el) el.textContent = `(${n})`;
+}
+function resetMetrics(page) {
+  METRIC_CONFIGS[page].order.forEach(k => {
+    const m = METRIC_CONFIGS[page].meta[k];
+    metricState[page].active[k] = !!(m.always || m.default);
+  });
+  metricState[page].order = [...METRIC_CONFIGS[page].order];
+  renderMetricsChecks(page); rerenderPage(page);
+}
+function allMetrics(page) {
+  metricState[page].order.forEach(k => metricState[page].active[k] = true);
+  renderMetricsChecks(page); rerenderPage(page);
+}
+function rerenderPage(page) {
+  if (page === 'ttc') renderTtcCurrentView(); else if (page === 'tta') renderTtaTable();
+}
+function activeCols(page) {
+  return metricState[page].order.filter(k => metricState[page].active[k]);
+}
+
+// ===== FETCH: TikTok Content (organic + boosted flag) =====
+let ttcData = [];
+async function fetchTtcData() {
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const [organicRes, adsRes] = await Promise.all([
+    fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_organic_raw?select=*&order=video_create_datetime.desc&limit=2000`, { headers }),
+    fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=item_id,spend,gmv_max_orders,is_deesay_own_channel&is_deesay_own_channel=eq.true&limit=5000`, { headers })
+  ]);
+  const organic = await organicRes.json();
+  const adsRows = await adsRes.json();
+  const adByClip = {};
+  (Array.isArray(adsRows) ? adsRows : []).forEach(r => {
+    if (!adByClip[r.item_id]) adByClip[r.item_id] = { spend: 0, orders: 0 };
+    adByClip[r.item_id].spend += parseFloat(r.spend) || 0;
+    adByClip[r.item_id].orders += parseFloat(r.gmv_max_orders) || 0;
+  });
+  ttcData = (Array.isArray(organic) ? organic : []).map(o => {
+    const ad = adByClip[o.video_id];
+    const views = parseFloat(o.video_views_count) || 0;
+    const eng = views ? ((parseFloat(o.video_likes||0) + parseFloat(o.video_comments||0) + parseFloat(o.video_shares||0)) / views * 100) : 0;
+    return {
+      video_id: o.video_id, caption: o.video_caption || '(ไม่มีแคปชั่น)', date: o.video_create_datetime,
+      thumbnail: o.video_thumbnail_url, url: o.video_share_url,
+      views, likes: parseFloat(o.video_likes)||0, comments: parseFloat(o.video_comments)||0, shares: parseFloat(o.video_shares)||0,
+      wr: parseFloat(o.video_full_watched_rate)||0, reach: parseFloat(o.video_reach)||0, favorites: parseFloat(o.video_favorites)||0,
+      pv: parseFloat(o.video_profile_views)||0, followers: parseFloat(o.video_new_followers)||0,
+      duration: parseFloat(o.video_duration)||0, avgwatch: parseFloat(o.video_average_time_watched)||0,
+      eng, wasBoosted: !!ad, adspend: ad ? ad.spend : 0, adorders: ad ? ad.orders : 0,
+      cpo: (ad && ad.orders) ? (ad.spend/ad.orders) : null
+    };
+  });
+  scoreTtcClips();
+}
+function scoreTtcClips() {
+  if (!ttcData.length) return;
+  const rank = (arr, key) => {
+    const sorted = [...arr].sort((a,b)=>a[key]-b[key]);
+    const m = new Map(); sorted.forEach((r,i)=>m.set(r.video_id, i/(sorted.length-1||1)));
+    return m;
+  };
+  const rV = rank(ttcData,'views'), rW = rank(ttcData,'wr'), rE = rank(ttcData,'eng');
+  ttcData.forEach(c => {
+    const p = ((rV.get(c.video_id)||0) + (rW.get(c.video_id)||0) + (rE.get(c.video_id)||0)) / 3;
+    c.percentile = p;
+    c.score = p >= 0.66 ? 'good' : p >= 0.33 ? 'mid' : 'bad';
+    c.scoreLabel = p >= 0.66 ? 'ดีเยี่ยม' : p >= 0.33 ? 'ปานกลาง' : 'ควรปรับปรุง';
+    c.scoreColor = p >= 0.66 ? 'var(--green)' : p >= 0.33 ? '#fbbf24' : 'var(--red)';
+  });
+}
+
+// ===== RENDER: TikTok Content page =====
+let ttcView = 'grid';
+function setTtcView(v, btn) {
+  ttcView = v;
+  document.querySelectorAll('#page-ttcontent .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ttcGridView').style.display = v === 'grid' ? 'grid' : 'none';
+  document.getElementById('ttcTableView').style.display = v === 'table' ? 'block' : 'none';
+  renderTtcCurrentView();
+}
+function renderTtcCurrentView() { ttcView === 'grid' ? renderTtcGrid() : renderTtcTable(); }
+
+async function renderTtc() {
+  if (!ttcData.length) await fetchTtcData();
+  const totalViews = ttcData.reduce((s,c)=>s+c.views,0);
+  const totalEng = ttcData.length ? (ttcData.reduce((s,c)=>s+c.eng,0)/ttcData.length) : 0;
+  const boosted = ttcData.filter(c=>c.wasBoosted).length;
+  const totalFollowers = ttcData.reduce((s,c)=>s+c.followers,0);
+  const totalAdspend = ttcData.reduce((s,c)=>s+c.adspend,0);
+  document.getElementById('ttc-kpis').innerHTML = `
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">คลิปทั้งหมด</div><div class="kpi-value">${ttcData.length}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยอดวิวรวม</div><div class="kpi-value">${fmtK(totalViews)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">engagement เฉลี่ย</div><div class="kpi-value">${totalEng.toFixed(1)}%</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ผู้ติดตามใหม่</div><div class="kpi-value" style="color:var(--green);">+${fmt(totalFollowers)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยิงแอด / organic</div><div class="kpi-value">${boosted} / ${ttcData.length-boosted}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่าแอดคอนเทนต์</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalAdspend)}</div></div>
+  `;
+  renderTtcTrending();
+  renderTtcCurrentView();
+}
+
+function renderTtcTrending() {
+  const now = new Date();
+  const trending = ttcData.filter(c => c.date && (now - new Date(c.date)) / 86400000 <= 7)
+    .map(c => {
+      const days = Math.max(1, (now - new Date(c.date)) / 86400000);
+      return { ...c, perDay: c.views / days, daysAgo: Math.floor(days) };
+    }).sort((a,b) => b.perDay - a.perDay).slice(0, 10);
+  document.getElementById('tbodyTtcTrending').innerHTML = trending.length ? trending.map(c => {
+    const speed = c.perDay > 20000 ? ['เร็วมาก','var(--green)'] : c.perDay > 5000 ? ['ปกติ','var(--text2)'] : ['ช้า','var(--text3)'];
+    return `<tr><td>${ttcEsc(c.caption)}</td><td>${c.daysAgo} วันก่อน</td><td>${fmtK(c.views)}</td>
+      <td style="color:var(--accent);">${fmtK(c.perDay)}</td><td style="color:var(--green);">+${c.followers}</td>
+      <td><span style="color:${speed[1]};font-weight:600;">${speed[0]}</span></td></tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty">ไม่มีคลิปโพสต์ใน 7 วันล่าสุด</td></tr>';
+}
+
+function ttcCellHtml(c, k) {
+  switch(k) {
+    case 'cover': return c.thumbnail
+      ? `<img src="${c.thumbnail}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+      : `<div style="color:var(--text3);font-size:24px;">🎬</div>`;
+    case 'caption': return `<span style="color:var(--text);">${ttcEsc(c.caption)}</span>`;
+    case 'date': return c.date ? new Date(c.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}) : '—';
+    case 'views': return fmtK(c.views);
+    case 'wr': return c.wr.toFixed(0)+'%';
+    case 'eng': return c.eng.toFixed(1)+'%';
+    case 'likes': return fmtK(c.likes);
+    case 'comments': return fmtK(c.comments);
+    case 'shares': return fmtK(c.shares);
+    case 'reach': return fmtK(c.reach);
+    case 'favorites': return fmtK(c.favorites);
+    case 'pv': return fmtK(c.pv);
+    case 'followers': return `<span style="color:var(--green);">+${c.followers}</span>`;
+    case 'duration': return c.duration ? c.duration.toFixed(0)+'s' : '—';
+    case 'avgwatch': return c.avgwatch ? c.avgwatch.toFixed(1)+'s' : '—';
+    case 'adspend': return c.wasBoosted ? '฿'+fmt(c.adspend) : '—';
+    case 'cpo': return c.cpo!==null ? '฿'+Math.round(c.cpo) : '—';
+    case 'score': return `<span style="color:${c.scoreColor};font-weight:600;">${c.scoreLabel}</span>`;
+    default: return '—';
+  }
+}
+
+function renderTtcGrid() {
+  const cols = activeCols('ttc').filter(k => !['cover','caption','score'].includes(k));
+  document.getElementById('ttcGridView').innerHTML = ttcData.map(c => `
+    <div class="ttc-card">
+      <div class="ttc-card-cover">
+        ${ttcCellHtml(c,'cover')}
+        <span class="ttc-badge-score" style="color:${c.scoreColor};border-color:${c.scoreColor};background:${c.scoreColor}22;">${c.scoreLabel}</span>
+        ${c.wasBoosted ? '<span class="ttc-badge-ads">🚀 ยิงแอด</span>' : ''}
+      </div>
+      <div class="ttc-card-body">
+        <div class="ttc-card-title">${ttcEsc(c.caption)}</div>
+        ${metricState.ttc.active.date ? `<div class="ttc-card-date">โพสต์ ${ttcCellHtml(c,'date')}</div>` : ''}
+        <div class="ttc-card-pills">${cols.map(k => `<span>${METRIC_CONFIGS.ttc.meta[k].label}: ${ttcCellHtml(c,k)}</span>`).join('')}</div>
+      </div>
+    </div>`).join('') || '<div class="empty">ไม่มีข้อมูล</div>';
+}
+
+function renderTtcTable() {
+  const cols = activeCols('ttc');
+  document.getElementById('ttcTableHead').innerHTML = '<tr>' + cols.map(k =>
+    `<th style="${k==='cover'?'width:44px;':''}">${METRIC_CONFIGS.ttc.meta[k].label}</th>`).join('') + '</tr>';
+  document.getElementById('ttcTableBody').innerHTML = ttcData.map(c => '<tr>' + cols.map(k => {
+    if (k==='cover') return `<td><div style="width:34px;height:34px;border-radius:6px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;">${ttcCellHtml(c,'cover')}</div></td>`;
+    return `<td>${ttcCellHtml(c,k)}</td>`;
+  }).join('') + '</tr>').join('') || '<tr><td class="empty">ไม่มีข้อมูล</td></tr>';
+}
+
+// ===== FETCH: TikTok Ads (ทุกคลิปที่ยิงแอด รวม KOL/affiliate) =====
+let ttaByClip = [];
+async function fetchTtaData() {
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=*&limit=20000`, { headers });
+  let ttaRaw = await res.json();
+  if (!Array.isArray(ttaRaw)) ttaRaw = [];
+  const byClip = {};
+  ttaRaw.forEach(r => {
+    const id = r.item_id;
+    if (!byClip[id]) byClip[id] = {
+      item_id: id, campaign: r.campaign, isDeesay: r.is_deesay_own_channel,
+      handle: r.is_deesay_own_channel ? 'deesaythailand' : (r.creator_handle || '(ไม่ทราบชื่อ)'),
+      caption: r.clip_title || '(ไม่มีชื่อ)', thumbnail: r.thumbnail_url,
+      spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0, v25:0, v50:0, v100:0, paidcomments:0, paidshares:0
+    };
+    const c = byClip[id];
+    c.spend += parseFloat(r.spend) || 0;
+    c.orders += parseFloat(r.gmv_max_orders) || 0;
+    c.impressions += parseFloat(r.impressions) || 0;
+    c.clicks += parseFloat(r.clicks) || 0;
+    c.convs += parseFloat(r.conversions) || 0;
+    c.v25 += parseFloat(r.play_first_quartile) || 0;
+    c.v50 += parseFloat(r.play_midpoint) || 0;
+    c.v100 += parseFloat(r.play_over) || 0;
+    c.paidcomments += parseFloat(r.ad_paid_comments) || 0;
+    c.paidshares += parseFloat(r.ad_paid_shares) || 0;
+  });
+  ttaByClip = Object.values(byClip).map(c => ({
+    ...c, ctr: c.impressions ? (c.clicks/c.impressions*100) : 0, cpo: c.orders ? (c.spend/c.orders) : null
+  }));
+}
+
+let ttaSourceFilter = 'all';
+function setTtaSourceFilter(src, btn) {
+  ttaSourceFilter = src;
+  document.querySelectorAll('#ttaSourceFilter .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTtaTable();
+}
+
+function ttaFilteredClips() {
+  const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase();
+  return ttaByClip.filter(c => {
+    if (ttaSourceFilter === 'deesay' && !c.isDeesay) return false;
+    if (ttaSourceFilter === 'kol' && c.isDeesay) return false;
+    if (q && !c.handle.toLowerCase().includes(q) && !c.caption.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+async function renderTta() {
+  if (!ttaByClip.length) await fetchTtaData();
+  const totalSpend = ttaByClip.reduce((s,c)=>s+c.spend,0);
+  const totalOrders = ttaByClip.reduce((s,c)=>s+c.orders,0);
+  const deesayCount = ttaByClip.filter(c=>c.isDeesay).length;
+  document.getElementById('tta-kpis').innerHTML = `
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${ttaByClip.length}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">GMV Max Orders</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">CPO เฉลี่ย</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">Deesay / affi-KOL</div><div class="kpi-value"><span style="color:var(--blue);">${deesayCount}</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount}</span></div></div>
+  `;
+  renderTtaCreatorSummary();
+  renderTtaTable();
+}
+
+function renderTtaCreatorSummary() {
+  const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase();
+  const byHandle = {};
+  ttaByClip.forEach(c => {
+    if (!byHandle[c.handle]) byHandle[c.handle] = { isDeesay: c.isDeesay, clips: 0, spend: 0, orders: 0 };
+    byHandle[c.handle].clips++;
+    byHandle[c.handle].spend += c.spend;
+    byHandle[c.handle].orders += c.orders;
+  });
+  let arr = Object.entries(byHandle).map(([handle, v]) => ({
+    handle, isDeesay: v.isDeesay, clips: v.clips, spend: v.spend, orders: v.orders,
+    cpo: v.orders ? (v.spend/v.orders) : null
+  })).sort((a,b) => b.spend - a.spend);
+  if (q) arr = arr.filter(c => c.handle.toLowerCase().includes(q));
+  document.getElementById('ttaCreatorSummary').innerHTML = arr.length ? arr.map(c => `
+    <div class="creator-card" style="border-left-color:${c.isDeesay?'var(--blue)':'#a78bfa'};">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:12px;font-weight:600;">@${ttcEsc(c.handle)}</span>
+        <span style="font-size:9px;font-weight:700;color:${c.isDeesay?'var(--blue)':'#a78bfa'};">${c.isDeesay?'🏠 Deesay':'🎭 KOL'}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">${c.clips} คลิป · ฿${fmt(c.spend)} ค่าแอด</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'IBM Plex Mono',monospace;">
+        <span style="color:var(--green);">${fmt(c.orders)} orders</span>
+        <span style="color:var(--accent);">CPO ${c.cpo!==null?'฿'+Math.round(c.cpo):'—'}</span>
+      </div>
+    </div>`).join('') : '<div class="empty" style="grid-column:1/-1;">ไม่พบ creator ที่ค้นหา</div>';
+}
+
+function ttaCellHtml(c, k) {
+  switch(k) {
+    case 'clip': return `<div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:5px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${c.thumbnail ? `<img src="${c.thumbnail}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : '🎬'}
+      </div><span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span></div>`;
+    case 'source': return c.isDeesay ? '<span style="color:var(--blue);font-weight:700;font-size:10.5px;">🏠 Deesay</span>' : '<span style="color:#a78bfa;font-weight:700;font-size:10.5px;">🎭 KOL</span>';
+    case 'handle': return `@${ttcEsc(c.handle)}`;
+    case 'campaign': return ttcEsc(c.campaign||'—');
+    case 'spend': return '฿'+fmt(c.spend);
+    case 'orders': return fmt(c.orders);
+    case 'cpo': return c.cpo!==null ? '฿'+Math.round(c.cpo) : '—';
+    case 'impressions': return fmt(c.impressions);
+    case 'clicks': return fmt(c.clicks);
+    case 'ctr': return c.ctr.toFixed(2)+'%';
+    case 'convs': return fmt(c.convs);
+    case 'v25': return c.impressions?((c.v25/c.impressions)*100).toFixed(0)+'%':'—';
+    case 'v50': return c.impressions?((c.v50/c.impressions)*100).toFixed(0)+'%':'—';
+    case 'v100': return c.impressions?((c.v100/c.impressions)*100).toFixed(0)+'%':'—';
+    case 'paidcomments': return fmt(c.paidcomments);
+    case 'paidshares': return fmt(c.paidshares);
+    default: return '—';
+  }
+}
+function renderTtaTable() {
+  const cols = activeCols('tta');
+  const rows = ttaFilteredClips().sort((a,b)=>b.spend-a.spend);
+  document.getElementById('ttaTableHead').innerHTML = '<tr>' + cols.map(k => `<th>${METRIC_CONFIGS.tta.meta[k].label}</th>`).join('') + '</tr>';
+  document.getElementById('ttaTableBody').innerHTML = rows.map(c => '<tr>' + cols.map(k => `<td>${ttaCellHtml(c,k)}</td>`).join('') + '</tr>').join('')
+    || '<tr><td class="empty">ไม่พบข้อมูล</td></tr>';
+}
+// ===================== END TIKTOK CONTENT + ADS PAGES ===================== //
 
 async function init() {
   try {
