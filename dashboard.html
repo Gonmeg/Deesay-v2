@@ -1110,17 +1110,32 @@
         </div>
       </div>
 
-      <div id="ttcGridView" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px;"></div>
-      <div id="ttcTableView" class="table-wrap" style="display:none;margin-bottom:20px;">
+      <div id="ttcGridView" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:8px;"></div>
+      <div id="ttcTableView" class="table-wrap" style="display:none;margin-bottom:8px;">
         <table id="tblTtcAll">
           <thead id="ttcTableHead"></thead>
           <tbody id="ttcTableBody"></tbody>
         </table>
       </div>
+      <div id="ttcTablePager"></div>
     </div>
 
     <div class="page" id="page-ttads">
       <div id="tta-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">ค่าแอดรายวัน (ยอดรวมทั้งหมด — ใช้เทียบกับที่บันทึกเอง)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblTtaDaily')">⬇ Export CSV</button>
+        </div>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtaDaily"></canvas></div>
+        <div class="table-wrap" style="margin-top:16px;max-height:300px;overflow-y:auto;">
+          <table id="tblTtaDaily">
+            <thead><tr><th>วันที่</th><th>Spend ปกติ</th><th>GMV Max</th><th>รวมทั้งหมด</th></tr></thead>
+            <tbody id="tbodyTtaDaily"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
 
       <div class="card" style="margin-bottom:20px;">
         <input type="text" id="ttaCreatorSearch" placeholder="🔍 ค้นหา creator เช่น @beam_reviews หรือ deesaythailand..."
@@ -1160,6 +1175,7 @@
           <tbody id="ttaTableBody"></tbody>
         </table>
       </div>
+      <div id="ttaTablePager"></div>
     </div>
 
     <div class="page" id="page-livesearch">
@@ -6009,9 +6025,39 @@ async function fetchFreshSnapshot() {
 }
 
 // ===================== TIKTOK CONTENT + ADS PAGES ===================== //
-// หมายเหตุ: ใช้ fmt() ที่มีอยู่แล้วในไฟล์ (บรรทัด ~1570) ไม่ประกาศซ้ำ
+// หมายเหตุ: ใช้ fmt() และ fbeInfoIcon()/toggleFbeInfo() ที่มีอยู่แล้วในไฟล์ ไม่ประกาศซ้ำ
 function fmtK(n) { if (n===null||n===undefined) return '—'; return n>=1000 ? (n/1000).toFixed(1)+'K' : Math.round(n); }
 function ttcEsc(s) { return (s||'').replace(/</g,'&lt;'); }
+function ttcEscAttr(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+const KNOWN_DEESAY_HANDLES = ['deesaythailand'];
+
+const METRIC_INFO = {
+  wr: 'สัดส่วนคนที่ดูคลิปจนจบทั้งคลิป (Full Watched Rate) — ยิ่งสูงยิ่งแปลว่าคลิปน่าติดตามตั้งแต่ต้นจนจบ',
+  eng: 'engagement rate = (ไลค์ + คอมเมนต์ + แชร์) ÷ ยอดวิว × 100 — คำนวณเองจากข้อมูลดิบ ไม่ใช่ field ที่ TikTok ให้มาตรงๆ',
+  reach: 'จำนวนคนดูไม่ซ้ำ (unique viewers) ต่างจากยอดวิวที่นับซ้ำได้ถ้าคนเดิมดูหลายรอบ',
+  favorites: 'จำนวนคนกดบันทึกคลิปนี้เก็บไว้ดูภายหลัง — สัญญาณว่าคลิปนี้น่าสนใจอยากเก็บไว้',
+  pv: 'จำนวนคนที่กดเข้าไปดูโปรไฟล์ต่อ หลังจากดูคลิปนี้จบ — บอกได้ว่าคลิปทำให้คนอยากรู้จักแบรนด์เพิ่มไหม',
+  duration: 'ความยาวของคลิป (วินาที)',
+  avgwatch: 'เวลาเฉลี่ยที่คนดูคลิปนี้จริง (วินาที) ก่อนเลื่อนผ่าน',
+  cpo: 'Cost Per Order = ค่าแอด ÷ จำนวน GMV Max Orders — ยิ่งต่ำยิ่งคุ้ม (คำนวณได้เฉพาะคลิปที่ยิงแอดและมี order เกิดขึ้น)',
+  ctr: 'Click Through Rate = clicks ÷ impressions × 100 — สัดส่วนคนที่เห็นแอดแล้วกดเข้ามาดู',
+  v25: '% ของคนที่ดูแอดนี้ผ่านไปอย่างน้อย 25% ของความยาวคลิป',
+  v50: '% ของคนที่ดูแอดนี้ผ่านไปอย่างน้อย 50% ของความยาวคลิป',
+  v100: '% ของคนที่ดูแอดนี้จนจบทั้งคลิป',
+  paidcomments: 'จำนวนคอมเมนต์ที่เกิดขึ้นจากแอด (นับแยกจากคอมเมนต์ organic)',
+  paidshares: 'จำนวนแชร์ที่เกิดขึ้นจากแอด (นับแยกจากแชร์ organic)',
+  orders: 'จำนวนออเดอร์ที่ TikTok นับว่ามาจากแอดคลิปนี้ (GMV Max Orders) — คลิปที่ตั้งเป้าเป็น "ยอดวิว/การรับรู้" (ไม่ใช่ "ยอดขาย") มักมีค่าเป็น 0 เพราะไม่ได้ตั้งเป้าให้ TikTok นับยอดขายจากคลิปนั้นโดยตรง',
+  objective: 'วัตถุประสงค์ที่ตั้งไว้ตอนสร้างแคมเปญนี้ (Objective) — บอกได้ว่าทำไม order ถึงมีหรือไม่มี: แคมเปญ "ยอดวิว/การรับรู้แบรนด์" มักไม่มี order เพราะไม่ได้ตั้งเป้าขาย ส่วน "GMV Max/Conversion" จะมี order จริง',
+};
+const OBJECTIVE_TH = {
+  VIDEO_VIEWS: 'ยอดวิว', BRAND_CONSIDERATION: 'การรับรู้แบรนด์', ENGAGEMENT: 'การมีส่วนร่วม',
+  REACH: 'การเข้าถึง', TRAFFIC: 'ทราฟฟิก', CONVERSIONS: 'คอนเวอร์ชั่น', PRODUCT_SALES: 'ยอดขายสินค้า',
+  LIVE_SHOPPING: 'ไลฟ์ช้อปปิ้ง', SHOP_PROMOTION: 'โปรโมทร้าน', LEAD_GENERATION: 'เก็บ Lead',
+};
+function objectiveLabel(raw) { return raw ? (OBJECTIVE_TH[raw] || raw) : '—'; }
+function metricInfoIcon(key) {
+  return METRIC_INFO[key] ? fbeInfoIcon('ttc-info-'+key, METRIC_INFO[key]) : '';
+}
 
 const METRIC_CONFIGS = {
   ttc: {
@@ -6019,20 +6065,20 @@ const METRIC_CONFIGS = {
     meta: {
       cover:{label:'ปก',always:true}, caption:{label:'แคปชั่น',always:true}, score:{label:'คะแนน',always:true},
       date:{label:'โพสต์เมื่อ',default:true}, views:{label:'ยอดวิว',default:true}, wr:{label:'watch rate',default:true},
-      eng:{label:'engagement rate',default:true}, likes:{label:'ไลค์'}, comments:{label:'คอมเมนต์'}, shares:{label:'แชร์'},
+      eng:{label:'engagement rate'}, likes:{label:'ไลค์'}, comments:{label:'คอมเมนต์'}, shares:{label:'แชร์'},
       reach:{label:'reach (คนดูไม่ซ้ำ)'}, favorites:{label:'บันทึกเก็บ'}, pv:{label:'profile views'},
       followers:{label:'ผู้ติดตามใหม่',default:true}, duration:{label:'ความยาวคลิป'}, avgwatch:{label:'เวลาดูเฉลี่ย'},
-      adspend:{label:'ค่าแอด',default:true}, cpo:{label:'CPO',default:true},
+      adspend:{label:'ค่าแอด'}, cpo:{label:'CPO'},
       impressions:{label:'impressions'}, clicks:{label:'clicks'}, convs:{label:'conversions'},
       v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v100:{label:'% ดูจบ 100%'}
     }
   },
   tta: {
-    order: ['clip','source','handle','campaign','spend','orders','cpo','impressions','clicks','ctr','convs','v25','v50','v100','paidcomments','paidshares'],
+    order: ['clip','source','handle','objective','campaign','spend','orders','cpo','impressions','clicks','ctr','convs','v25','v50','v100','paidcomments','paidshares'],
     meta: {
       clip:{label:'คลิป',always:true}, source:{label:'แหล่งที่มา',always:true}, handle:{label:'ชื่อช่อง',always:true},
-      campaign:{label:'แคมเปญ',default:true}, spend:{label:'ค่าแอด',default:true}, orders:{label:'GMV Max orders',default:true},
-      cpo:{label:'CPO',default:true}, impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'},
+      objective:{label:'วัตถุประสงค์แอด',default:true}, campaign:{label:'แคมเปญ',default:true}, spend:{label:'ค่าแอด',default:true}, orders:{label:'GMV Max orders',default:true},
+      cpo:{label:'CPO'}, impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'},
       convs:{label:'conversions'}, v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v100:{label:'% ดูจบ 100%'},
       paidcomments:{label:'paid comments'}, paidshares:{label:'paid shares'}
     }
@@ -6114,14 +6160,35 @@ function allMetrics(page) {
   renderMetricsChecks(page); rerenderPage(page);
 }
 function rerenderPage(page) {
-  if (page === 'ttc') renderTtcCurrentView(); else if (page === 'tta') renderTtaTable();
+  if (page === 'ttc') { ttcPage = 1; renderTtcCurrentView(); }
+  else if (page === 'tta') { ttaPage = 1; renderTtaTable(); }
 }
 function activeCols(page) {
   return metricState[page].order.filter(k => metricState[page].active[k]);
 }
 
+// ===== generic pager (สไตล์เดียวกับ fbePostListPager) =====
+function renderPagerHtml(containerId, curPage, totalPages, gotoFnName) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  let html = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:14px;font-size:12px;">`;
+  html += `<button class="btn btn-ghost" ${curPage===1?'disabled':''} onclick="${gotoFnName}(${curPage-1})">‹ ก่อนหน้า</button>`;
+  const nums = [];
+  for (let i=1;i<=totalPages;i++){ if(i===1||i===totalPages||Math.abs(i-curPage)<=2) nums.push(i); else if (nums[nums.length-1]!=='...') nums.push('...'); }
+  nums.forEach(p => {
+    if (p==='...') { html += `<span style="color:var(--text3);padding:0 4px;">...</span>`; return; }
+    html += `<button class="btn ${p===curPage?'btn-primary':'btn-ghost'}" style="min-width:32px;" onclick="${gotoFnName}(${p})">${p}</button>`;
+  });
+  html += `<button class="btn btn-ghost" ${curPage===totalPages?'disabled':''} onclick="${gotoFnName}(${curPage+1})">ถัดไป ›</button>`;
+  html += `<span style="color:var(--text3);margin-left:8px;">หน้า ${curPage}/${totalPages}</span></div>`;
+  el.innerHTML = html;
+}
+
 // ===== FETCH: TikTok Content (organic + boosted flag) =====
 let ttcData = [];
+let ttcPage = 1;
+const TTC_PAGE_SIZE = 10;
 async function fetchTtcData() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const [organicRes, adsRes] = await Promise.all([
@@ -6140,11 +6207,14 @@ async function fetchTtcData() {
     const ad = adByClip[o.video_id];
     const views = parseFloat(o.video_views_count) || 0;
     const eng = views ? ((parseFloat(o.video_likes||0) + parseFloat(o.video_comments||0) + parseFloat(o.video_shares||0)) / views * 100) : 0;
+    // watch rate: TikTok บาง field ส่งมาเป็นสัดส่วน 0-1 บางทีเป็น 0-100 แล้วแต่คลิป — เดาสเกลจากค่าที่ได้ ถ้า <=1 ถือว่าเป็นสัดส่วน คูณ 100
+    let wrRaw = parseFloat(o.video_full_watched_rate) || 0;
+    const wr = wrRaw <= 1 ? wrRaw * 100 : wrRaw;
     return {
       video_id: o.video_id, caption: o.video_caption || '(ไม่มีแคปชั่น)', date: o.video_create_datetime,
       thumbnail: o.video_thumbnail_url, url: o.video_share_url,
       views, likes: parseFloat(o.video_likes)||0, comments: parseFloat(o.video_comments)||0, shares: parseFloat(o.video_shares)||0,
-      wr: parseFloat(o.video_full_watched_rate)||0, reach: parseFloat(o.video_reach)||0, favorites: parseFloat(o.video_favorites)||0,
+      wr, reach: parseFloat(o.video_reach)||0, favorites: parseFloat(o.video_favorites)||0,
       pv: parseFloat(o.video_profile_views)||0, followers: parseFloat(o.video_new_followers)||0,
       duration: parseFloat(o.video_duration)||0, avgwatch: parseFloat(o.video_average_time_watched)||0,
       eng, wasBoosted: !!ad, adspend: ad ? ad.spend : 0, adorders: ad ? ad.orders : 0,
@@ -6174,6 +6244,7 @@ function scoreTtcClips() {
 let ttcView = 'grid';
 function setTtcView(v, btn) {
   ttcView = v;
+  ttcPage = 1;
   document.querySelectorAll('#page-ttcontent .toggle-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('ttcGridView').style.display = v === 'grid' ? 'grid' : 'none';
@@ -6181,6 +6252,7 @@ function setTtcView(v, btn) {
   renderTtcCurrentView();
 }
 function renderTtcCurrentView() { ttcView === 'grid' ? renderTtcGrid() : renderTtcTable(); }
+function ttcGoToPage(n) { ttcPage = n; renderTtcCurrentView(); document.getElementById('page-ttcontent').scrollIntoView({behavior:'smooth',block:'start'}); }
 
 async function renderTtc() {
   if (!ttcData.length) await fetchTtcData();
@@ -6192,7 +6264,7 @@ async function renderTtc() {
   document.getElementById('ttc-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">คลิปทั้งหมด</div><div class="kpi-value">${ttcData.length}</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยอดวิวรวม</div><div class="kpi-value">${fmtK(totalViews)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">engagement เฉลี่ย</div><div class="kpi-value">${totalEng.toFixed(1)}%</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">engagement เฉลี่ย ${metricInfoIcon('eng')}</div><div class="kpi-value">${totalEng.toFixed(1)}%</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ผู้ติดตามใหม่</div><div class="kpi-value" style="color:var(--green);">+${fmt(totalFollowers)}</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยิงแอด / organic</div><div class="kpi-value">${boosted} / ${ttcData.length-boosted}</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่าแอดคอนเทนต์</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalAdspend)}</div></div>
@@ -6210,7 +6282,9 @@ function renderTtcTrending() {
     }).sort((a,b) => b.perDay - a.perDay).slice(0, 10);
   document.getElementById('tbodyTtcTrending').innerHTML = trending.length ? trending.map(c => {
     const speed = c.perDay > 20000 ? ['เร็วมาก','var(--green)'] : c.perDay > 5000 ? ['ปกติ','var(--text2)'] : ['ช้า','var(--text3)'];
-    return `<tr><td>${ttcEsc(c.caption)}</td><td>${c.daysAgo} วันก่อน</td><td>${fmtK(c.views)}</td>
+    return `<tr style="cursor:${c.url?'pointer':'default'};" ${c.url?`onclick="window.open('${c.url}','_blank')"`:''}>
+      <td title="${ttcEscAttr(c.caption)}" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</td>
+      <td>${c.daysAgo} วันก่อน</td><td>${fmtK(c.views)}</td>
       <td style="color:var(--accent);">${fmtK(c.perDay)}</td><td style="color:var(--green);">+${c.followers}</td>
       <td><span style="color:${speed[1]};font-weight:600;">${speed[0]}</span></td></tr>`;
   }).join('') : '<tr><td colspan="6" class="empty">ไม่มีคลิปโพสต์ใน 7 วันล่าสุด</td></tr>';
@@ -6221,10 +6295,10 @@ function ttcCellHtml(c, k) {
     case 'cover': return c.thumbnail
       ? `<img src="${c.thumbnail}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
       : `<div style="color:var(--text3);font-size:24px;">🎬</div>`;
-    case 'caption': return `<span style="color:var(--text);">${ttcEsc(c.caption)}</span>`;
+    case 'caption': return `<span title="${ttcEscAttr(c.caption)}" style="color:var(--text);display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span>`;
     case 'date': return c.date ? new Date(c.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}) : '—';
     case 'views': return fmtK(c.views);
-    case 'wr': return c.wr.toFixed(0)+'%';
+    case 'wr': return c.wr.toFixed(1)+'%';
     case 'eng': return c.eng.toFixed(1)+'%';
     case 'likes': return fmtK(c.likes);
     case 'comments': return fmtK(c.comments);
@@ -6244,33 +6318,43 @@ function ttcCellHtml(c, k) {
 
 function renderTtcGrid() {
   const cols = activeCols('ttc').filter(k => !['cover','caption','score'].includes(k));
-  document.getElementById('ttcGridView').innerHTML = ttcData.map(c => `
-    <div class="ttc-card">
+  const start = (ttcPage-1)*TTC_PAGE_SIZE;
+  const pageItems = ttcData.slice(start, start+TTC_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(ttcData.length/TTC_PAGE_SIZE));
+  document.getElementById('ttcGridView').innerHTML = pageItems.map(c => `
+    <div class="ttc-card" style="cursor:${c.url?'pointer':'default'};" ${c.url?`onclick="window.open('${c.url}','_blank')"`:''}>
       <div class="ttc-card-cover">
         ${ttcCellHtml(c,'cover')}
         <span class="ttc-badge-score" style="color:${c.scoreColor};border-color:${c.scoreColor};background:${c.scoreColor}22;">${c.scoreLabel}</span>
         ${c.wasBoosted ? '<span class="ttc-badge-ads">🚀 ยิงแอด</span>' : ''}
       </div>
       <div class="ttc-card-body">
-        <div class="ttc-card-title">${ttcEsc(c.caption)}</div>
+        <div class="ttc-card-title" title="${ttcEscAttr(c.caption)}">${ttcEsc(c.caption)}</div>
         ${metricState.ttc.active.date ? `<div class="ttc-card-date">โพสต์ ${ttcCellHtml(c,'date')}</div>` : ''}
         <div class="ttc-card-pills">${cols.map(k => `<span>${METRIC_CONFIGS.ttc.meta[k].label}: ${ttcCellHtml(c,k)}</span>`).join('')}</div>
       </div>
     </div>`).join('') || '<div class="empty">ไม่มีข้อมูล</div>';
+  renderPagerHtml('ttcTablePager', ttcPage, totalPages, 'ttcGoToPage');
 }
 
 function renderTtcTable() {
   const cols = activeCols('ttc');
+  const start = (ttcPage-1)*TTC_PAGE_SIZE;
+  const pageItems = ttcData.slice(start, start+TTC_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(ttcData.length/TTC_PAGE_SIZE));
   document.getElementById('ttcTableHead').innerHTML = '<tr>' + cols.map(k =>
-    `<th style="${k==='cover'?'width:44px;':''}">${METRIC_CONFIGS.ttc.meta[k].label}</th>`).join('') + '</tr>';
-  document.getElementById('ttcTableBody').innerHTML = ttcData.map(c => '<tr>' + cols.map(k => {
+    `<th style="${k==='cover'?'width:44px;':''}">${METRIC_CONFIGS.ttc.meta[k].label}${metricInfoIcon(k)}</th>`).join('') + '</tr>';
+  document.getElementById('ttcTableBody').innerHTML = pageItems.map(c => `<tr style="cursor:${c.url?'pointer':'default'};" ${c.url?`onclick="window.open('${c.url}','_blank')"`:''}>` + cols.map(k => {
     if (k==='cover') return `<td><div style="width:34px;height:34px;border-radius:6px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;">${ttcCellHtml(c,'cover')}</div></td>`;
     return `<td>${ttcCellHtml(c,k)}</td>`;
   }).join('') + '</tr>').join('') || '<tr><td class="empty">ไม่มีข้อมูล</td></tr>';
+  renderPagerHtml('ttcTablePager', ttcPage, totalPages, 'ttcGoToPage');
 }
 
 // ===== FETCH: TikTok Ads (ทุกคลิปที่ยิงแอด รวม KOL/affiliate) =====
 let ttaByClip = [];
+let ttaPage = 1;
+const TTA_PAGE_SIZE = 10;
 async function fetchTtaData() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const res = await fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=*&limit=20000`, { headers });
@@ -6279,13 +6363,18 @@ async function fetchTtaData() {
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
+    // ตัดสินว่าเป็นของ Deesay เองหรือไม่จาก "handle จริง" ที่ oEmbed บอกมาเป็นหลัก (ไม่ใช่แค่ join กับตาราง organic
+    // ที่มีคลิปให้ match ได้น้อยมาก) — กัน handle เดียวกันโดนแยกเป็นทั้ง Deesay และ KOL ในเวลาเดียวกัน
+    const rawHandle = (r.is_deesay_own_channel ? 'deesaythailand' : (r.creator_handle || '')).toLowerCase();
+    const isDeesay = r.is_deesay_own_channel || KNOWN_DEESAY_HANDLES.includes(rawHandle);
+    const handle = rawHandle || '(ไม่ทราบชื่อ)';
     if (!byClip[id]) byClip[id] = {
-      item_id: id, campaign: r.campaign, isDeesay: r.is_deesay_own_channel,
-      handle: r.is_deesay_own_channel ? 'deesaythailand' : (r.creator_handle || '(ไม่ทราบชื่อ)'),
+      item_id: id, campaign: r.campaign, isDeesay, handle, objective: r.objective_type || null,
       caption: r.clip_title || '(ไม่มีชื่อ)', thumbnail: r.thumbnail_url,
       spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0, v25:0, v50:0, v100:0, paidcomments:0, paidshares:0
     };
     const c = byClip[id];
+    if (!c.objective && r.objective_type) c.objective = r.objective_type;
     c.spend += parseFloat(r.spend) || 0;
     c.orders += parseFloat(r.gmv_max_orders) || 0;
     c.impressions += parseFloat(r.impressions) || 0;
@@ -6305,10 +6394,12 @@ async function fetchTtaData() {
 let ttaSourceFilter = 'all';
 function setTtaSourceFilter(src, btn) {
   ttaSourceFilter = src;
+  ttaPage = 1;
   document.querySelectorAll('#ttaSourceFilter .toggle-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderTtaTable();
 }
+function ttaGoToPage(n) { ttaPage = n; renderTtaTable(); document.getElementById('page-ttads').scrollIntoView({behavior:'smooth',block:'start'}); }
 
 function ttaFilteredClips() {
   const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase();
@@ -6328,12 +6419,52 @@ async function renderTta() {
   document.getElementById('tta-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${ttaByClip.length}</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">GMV Max Orders</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">CPO เฉลี่ย</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">GMV Max Orders ${metricInfoIcon('orders')}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">CPO เฉลี่ย ${metricInfoIcon('cpo')}</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">Deesay / affi-KOL</div><div class="kpi-value"><span style="color:var(--blue);">${deesayCount}</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount}</span></div></div>
   `;
   renderTtaCreatorSummary();
   renderTtaTable();
+  renderTtaDaily();
+}
+
+let ttaDailyData = [];
+async function fetchTtaDaily() {
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_daily_total?select=date,normal_spend,gmv_max_total,grand_total&order=date.asc`, { headers });
+  const rows = await res.json();
+  ttaDailyData = Array.isArray(rows) ? rows : [];
+}
+async function renderTtaDaily() {
+  if (!ttaDailyData.length) await fetchTtaDaily();
+  const labels = ttaDailyData.map(r => new Date(r.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+  const normalArr = ttaDailyData.map(r => parseFloat(r.normal_spend)||0);
+  const gmvArr = ttaDailyData.map(r => parseFloat(r.gmv_max_total)||0);
+  if (charts['chartTtaDaily']) charts['chartTtaDaily'].destroy();
+  const ctx = document.getElementById('chartTtaDaily');
+  if (ctx) {
+    charts['chartTtaDaily'] = new Chart(ctx, {
+      data: { labels, datasets: [
+        { type:'bar', label:'Spend ปกติ', data: normalArr, backgroundColor:'rgba(96,165,250,0.65)', borderColor:'#60a5fa', borderWidth:1, borderRadius:3, stack:'s' },
+        { type:'bar', label:'GMV Max', data: gmvArr, backgroundColor:'rgba(200,169,110,0.65)', borderColor:'#c8a96e', borderWidth:1, borderRadius:3, stack:'s' },
+      ]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color: chartLegendColor(), font:{family:'Sarabun',size:11}, boxWidth:12 } } },
+        scales:{
+          x:{ stacked:true, ticks:{color:chartTickColor(),font:{family:'Sarabun',size:10}}, grid:{color:chartGridColor()} },
+          y:{ stacked:true, ticks:{color:chartTickColor(),font:{size:10},callback:v=>fmtB(v)}, grid:{color:chartGridColor()} }
+        }
+      }
+    });
+  }
+  document.getElementById('tbodyTtaDaily').innerHTML = [...ttaDailyData].reverse().map(r => `
+    <tr>
+      <td>${new Date(r.date).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})}</td>
+      <td>฿${fmt(r.normal_spend)}</td>
+      <td style="color:var(--accent);">฿${fmt(r.gmv_max_total)}</td>
+      <td style="font-weight:700;">฿${fmt(r.grand_total)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
 function renderTtaCreatorSummary() {
@@ -6341,6 +6472,8 @@ function renderTtaCreatorSummary() {
   const byHandle = {};
   ttaByClip.forEach(c => {
     if (!byHandle[c.handle]) byHandle[c.handle] = { isDeesay: c.isDeesay, clips: 0, spend: 0, orders: 0 };
+    // ป้องกัน handle เดียวกันมีค่า isDeesay ขัดแย้งกันระหว่างคลิป — ถ้าเจอ true ครั้งเดียวถือว่าเป็น Deesay ทั้งหมด
+    if (c.isDeesay) byHandle[c.handle].isDeesay = true;
     byHandle[c.handle].clips++;
     byHandle[c.handle].spend += c.spend;
     byHandle[c.handle].orders += c.orders;
@@ -6365,13 +6498,15 @@ function renderTtaCreatorSummary() {
 }
 
 function ttaCellHtml(c, k) {
+  const clipUrl = `https://www.tiktok.com/@i/video/${c.item_id}`;
   switch(k) {
     case 'clip': return `<div style="display:flex;align-items:center;gap:8px;">
       <div style="width:28px;height:28px;border-radius:5px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         ${c.thumbnail ? `<img src="${c.thumbnail}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : '🎬'}
-      </div><span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span></div>`;
+      </div><span title="${ttcEscAttr(c.caption)}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span></div>`;
     case 'source': return c.isDeesay ? '<span style="color:var(--blue);font-weight:700;font-size:10.5px;">🏠 Deesay</span>' : '<span style="color:#a78bfa;font-weight:700;font-size:10.5px;">🎭 KOL</span>';
     case 'handle': return `@${ttcEsc(c.handle)}`;
+    case 'objective': return `<span style="color:var(--text2);">${objectiveLabel(c.objective)}</span>`;
     case 'campaign': return ttcEsc(c.campaign||'—');
     case 'spend': return '฿'+fmt(c.spend);
     case 'orders': return fmt(c.orders);
@@ -6390,12 +6525,19 @@ function ttaCellHtml(c, k) {
 }
 function renderTtaTable() {
   const cols = activeCols('tta');
-  const rows = ttaFilteredClips().sort((a,b)=>b.spend-a.spend);
-  document.getElementById('ttaTableHead').innerHTML = '<tr>' + cols.map(k => `<th>${METRIC_CONFIGS.tta.meta[k].label}</th>`).join('') + '</tr>';
-  document.getElementById('ttaTableBody').innerHTML = rows.map(c => '<tr>' + cols.map(k => `<td>${ttaCellHtml(c,k)}</td>`).join('') + '</tr>').join('')
-    || '<tr><td class="empty">ไม่พบข้อมูล</td></tr>';
+  const filtered = ttaFilteredClips().sort((a,b)=>b.spend-a.spend);
+  const start = (ttaPage-1)*TTA_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start+TTA_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length/TTA_PAGE_SIZE));
+  document.getElementById('ttaTableHead').innerHTML = '<tr>' + cols.map(k => `<th>${METRIC_CONFIGS.tta.meta[k].label}${metricInfoIcon(k)}</th>`).join('') + '</tr>';
+  document.getElementById('ttaTableBody').innerHTML = pageItems.map(c => {
+    const clipUrl = `https://www.tiktok.com/@i/video/${c.item_id}`;
+    return `<tr style="cursor:pointer;" onclick="window.open('${clipUrl}','_blank')">` + cols.map(k => `<td>${ttaCellHtml(c,k)}</td>`).join('') + '</tr>';
+  }).join('') || '<tr><td class="empty">ไม่พบข้อมูล</td></tr>';
+  renderPagerHtml('ttaTablePager', ttaPage, totalPages, 'ttaGoToPage');
 }
 // ===================== END TIKTOK CONTENT + ADS PAGES ===================== //
+ //
 
 async function init() {
   try {
