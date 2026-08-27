@@ -1543,7 +1543,7 @@
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
           <div class="section-title">MKT Tracking รายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
-          <button class="btn btn-ghost" onclick="exportTable('tblCostOverview')">⬇ Export CSV</button>
+          <button class="btn btn-ghost" onclick="exportCostByMonth()">⬇ Export CSV</button>
         </div>
         <div style="overflow-x:auto;">
           <table id="tblCostOverview" style="border-collapse:separate;border-spacing:0;">
@@ -4264,6 +4264,49 @@ function exportTable(tableId) {
   downloadCSV(rows, tableId + '_export.csv');
 }
 
+// Export MKT Tracking แบบแยกรายเดือน — 1 แถว = 1 SKU ของ 1 เดือน ไล่ตามเดือนที่ filter ไว้
+function exportCostByMonth() {
+  const months = window._costMonths || [];
+  const adsChannels = window._costAdsChannelsCache || [];
+  const revByMonthSku = window._costRevByMonthSku || {};
+  const qtyByMonthSku = window._costQtyByMonthSku || {};
+  const costByMonthCatSku = window._costByMonthCatSku || {};
+  const adsByMonthSkuChannel = window._adsByMonthSkuChannel || {};
+
+  if (!months.length) { alert('ไม่มีข้อมูลให้ export (เลือกช่วงเดือนก่อน)'); return; }
+
+  const header = ['เดือน', 'SKU', 'ชื่อสินค้า', 'ยอดขาย', 'จำนวนชิ้น', 'ค่าการตลาดอื่นๆ', 'ค่ารีวิว-PR', 'ค่ารีวิว-Conversion',
+    ...adsChannels.map(ch => `Ads ${ch}`), 'รวมการตลาด', '% Budget', 'ROI'];
+  const rows = [header];
+
+  months.forEach(m => {
+    // รวมทุก SKU ที่มีข้อมูลในเดือนนี้ ไม่ว่าจะเป็นยอดขาย ต้นทุน หรือค่าแอด
+    const skuSet = new Set([
+      ...Object.keys(revByMonthSku[m] || {}),
+      ...Object.keys(costByMonthCatSku[m] || {}),
+      ...adsChannels.flatMap(ch => Object.keys((adsByMonthSkuChannel[m] || {})[ch] || {})),
+    ]);
+    [...skuSet].sort().forEach(sku => {
+      const rev = (revByMonthSku[m] || {})[sku] || 0;
+      const qty = (qtyByMonthSku[m] || {})[sku] || 0;
+      const cats = (costByMonthCatSku[m] || {})[sku] || {};
+      const marketingOther = cats['ค่าการตลาดอื่นๆ'] || 0;
+      const prAmt = cats['ค่ารีวิวสินค้า-PR'] || 0;
+      const convAmt = cats['ค่ารีวิวสินค้า-Conversion'] || 0;
+      const adsVals = adsChannels.map(ch => ((adsByMonthSkuChannel[m] || {})[ch] || {})[sku] || 0);
+      const adsSum = adsVals.reduce((a, b) => a + b, 0);
+      const totalMkt = marketingOther + prAmt + convAmt + adsSum;
+      const pctBudget = rev > 0 ? (totalMkt / rev * 100).toFixed(1) : '';
+      const roi = totalMkt > 0 ? (rev / totalMkt).toFixed(2) : '';
+      const mLabel = (() => { const [, mo] = m.split('-'); return `${MONTHS_TH[parseInt(mo) - 1]} ${m.split('-')[0]}`; })();
+      rows.push([mLabel, sku, skuToName(sku), Math.round(rev), Math.round(qty), Math.round(marketingOther), Math.round(prAmt), Math.round(convAmt),
+        ...adsVals.map(v => Math.round(v)), Math.round(totalMkt), pctBudget, roi]);
+    });
+  });
+
+  downloadCSV(rows, `MKT_Tracking_รายเดือน_${months[0]}_ถึง_${months[months.length - 1]}.csv`);
+}
+
 function downloadCSV(rows, filename) {
   const csv = '\uFEFF' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
   const a = document.createElement('a');
@@ -5573,7 +5616,7 @@ async function fetchAdsBySku() {
 // กระจายยอด "รวม"/"รวมกันแดด" เข้า adsBySkuChannel ตามสัดส่วนยอดขายของแต่ละเดือน (แยกเดือนต่อเดือน ไม่ปนกัน)
 // revByMonthSku: { 'YYYY-MM': { parent_sku: revenue } } — ยอดขายรวมทุกช่องทางของ SKU นั้นในเดือนนั้น
 // คืนค่า array ของคำเตือน (เดือน/ช่องทางที่กระจายไม่ได้เพราะไม่มียอดขายเป็นตัวหาร)
-function applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to) {
+function applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to, adsByMonthSkuChannel) {
   const warnings = [];
   const { skus: sunscreenSkus, missing: sunscreenMissing } = getSunscreenSkus();
   if (sunscreenMissing.length) {
@@ -5599,9 +5642,17 @@ function applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to)
     }
 
     if (!adsBySkuChannel[row.channel]) adsBySkuChannel[row.channel] = {};
+    if (adsByMonthSkuChannel) {
+      if (!adsByMonthSkuChannel[row.month]) adsByMonthSkuChannel[row.month] = {};
+      if (!adsByMonthSkuChannel[row.month][row.channel]) adsByMonthSkuChannel[row.month][row.channel] = {};
+    }
     candidateSkus.forEach(sku => {
       const share = (revThisMonth[sku] || 0) / denom;
-      adsBySkuChannel[row.channel][sku] = (adsBySkuChannel[row.channel][sku] || 0) + row.amount * share;
+      const distributed = row.amount * share;
+      adsBySkuChannel[row.channel][sku] = (adsBySkuChannel[row.channel][sku] || 0) + distributed;
+      if (adsByMonthSkuChannel) {
+        adsByMonthSkuChannel[row.month][row.channel][sku] = (adsByMonthSkuChannel[row.month][row.channel][sku] || 0) + distributed;
+      }
     });
   });
 
@@ -5677,13 +5728,15 @@ async function renderCostPage() {
       return (!from || m >= from) && (!to || m <= to);
     });
     const revBySKU = {}, qtyBySKU = {};
-    const revByMonthSku = {}; // { 'YYYY-MM': { parent_sku: revenue } } ใช้เป็นตัวหารตอนกระจายยอด "รวม"/"รวมกันแดด" แยกทีละเดือน
+    const revByMonthSku = {}, qtyByMonthSku = {}; // { 'YYYY-MM': { parent_sku: value } } ใช้ทั้งกระจายยอดรวม และ export รายเดือน
     skuMV.forEach(r => {
       revBySKU[r.parent_sku] = (revBySKU[r.parent_sku]||0) + (parseFloat(r.total_revenue)||0);
       qtyBySKU[r.parent_sku] = (qtyBySKU[r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
       const m = String(r.date).substring(0,7);
       if (!revByMonthSku[m]) revByMonthSku[m] = {};
+      if (!qtyByMonthSku[m]) qtyByMonthSku[m] = {};
       revByMonthSku[m][r.parent_sku] = (revByMonthSku[m][r.parent_sku]||0) + (parseFloat(r.total_revenue)||0);
+      qtyByMonthSku[m][r.parent_sku] = (qtyByMonthSku[m][r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
     });
 
     // จำนวนตัวอย่าง/รีวิวฟรี (ทุกช่องทาง) แยกต่างหาก ไม่รวมใน qtyBySKU
@@ -5695,7 +5748,7 @@ async function renderCostPage() {
       }
     });
 
-    const costByCatSku = {}, costByMonthSku = {};
+    const costByCatSku = {}, costByMonthSku = {}, costByMonthCatSku = {};
     filtered.forEach(r => {
       const m = String(r.month).substring(0,7), amt = parseFloat(r.amount)||0;
       const cat = normalizeCostCategory(r.cost_category);
@@ -5703,17 +5756,24 @@ async function renderCostPage() {
       costByCatSku[r.parent_sku][cat] = (costByCatSku[r.parent_sku][cat]||0) + amt;
       if (!costByMonthSku[r.parent_sku]) costByMonthSku[r.parent_sku] = {};
       costByMonthSku[r.parent_sku][m] = (costByMonthSku[r.parent_sku][m]||0) + amt;
+      if (!costByMonthCatSku[m]) costByMonthCatSku[m] = {};
+      if (!costByMonthCatSku[m][r.parent_sku]) costByMonthCatSku[m][r.parent_sku] = {};
+      costByMonthCatSku[m][r.parent_sku][cat] = (costByMonthCatSku[m][r.parent_sku][cat]||0) + amt;
     });
 
     // ค่าแอดแยก SKU แยกราย channel (Facebook/TikTok/...) — Shopee ถูกตัดออกตั้งแต่ตอน fetchAdsBySku แล้ว
-    const adsBySkuChannel = {}; // { channel: { sku: amount } }
+    const adsBySkuChannel = {}; // { channel: { sku: amount } } — ยอดรวมทั้งช่วง ใช้กับตารางหลัก
+    const adsByMonthSkuChannel = {}; // { 'YYYY-MM': { channel: { sku: amount } } } — แยกรายเดือน ใช้กับ export
     adsFiltered.forEach(r => {
       if (!adsBySkuChannel[r.channel]) adsBySkuChannel[r.channel] = {};
       adsBySkuChannel[r.channel][r.parent_sku] = (adsBySkuChannel[r.channel][r.parent_sku]||0) + r.amount;
+      if (!adsByMonthSkuChannel[r.month]) adsByMonthSkuChannel[r.month] = {};
+      if (!adsByMonthSkuChannel[r.month][r.channel]) adsByMonthSkuChannel[r.month][r.channel] = {};
+      adsByMonthSkuChannel[r.month][r.channel][r.parent_sku] = (adsByMonthSkuChannel[r.month][r.channel][r.parent_sku]||0) + r.amount;
     });
 
-    // กระจายยอด "รวม"/"รวมกันแดด" เข้า adsBySkuChannel ตามสัดส่วนยอดขายรายเดือน (แยกทีละเดือนที่มีค่า)
-    const aggDistributionWarnings = applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to);
+    // กระจายยอด "รวม"/"รวมกันแดด" เข้าทั้ง adsBySkuChannel (รวม) และ adsByMonthSkuChannel (รายเดือน) ตามสัดส่วนยอดขายรายเดือน
+    const aggDistributionWarnings = applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to, adsByMonthSkuChannel);
 
     // รวมคำเตือนทั้ง 2 แบบ: ชื่อสินค้า map ไม่เจอ + เดือน/ช่องทางที่กระจายยอด รวม/รวมกันแดด ไม่ได้
     if (warnEl) {
@@ -5784,6 +5844,11 @@ async function renderCostPage() {
     window._costCats = FIXED_CAT_ORDER;
     window._costRowsCache = rows;
     window._costAdsChannelsCache = adsChannels;
+    // เก็บข้อมูลแยกรายเดือนไว้ใช้ตอน export CSV แบบแยกเดือน (ไม่ใช้แสดงในตารางหลักซึ่งยังคงรวมทั้งช่วงเหมือนเดิม)
+    window._costRevByMonthSku = revByMonthSku;
+    window._costQtyByMonthSku = qtyByMonthSku;
+    window._costByMonthCatSku = costByMonthCatSku;
+    window._adsByMonthSkuChannel = adsByMonthSkuChannel;
     const totalFreeSampleQty = rows.reduce((s,r)=>s+r.freeSampleQty,0);
     window._costTotalsCache = { totalRev, totalQty, totalMarketingAll, totalAdsByChannel, pctBudgetAll, roiAll, totalFreeSampleQty };
 
@@ -6538,51 +6603,53 @@ const TTA_PAGE_SIZE = 10;
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  let url = `${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=*&limit=20000`;
-  if (fromDate) url += `&date=gte.${fromDate}`;
-  if (toDate) url += `&date=lte.${toDate}`;
+  let url = `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&limit=20000`;
+  if (fromDate) url += `&stat_date=gte.${fromDate}`;
+  if (toDate) url += `&stat_date=lte.${toDate}`;
   const res = await fetch(url, { headers });
   let ttaRaw = await res.json();
   if (!Array.isArray(ttaRaw)) ttaRaw = [];
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
-    const rawHandle = normalizeHandle(r.is_deesay_own_channel ? 'deesaythailand' : (r.creator_handle || ''));
-    const isDeesay = r.is_deesay_own_channel || KNOWN_DEESAY_HANDLES.includes(rawHandle);
-    const handle = rawHandle || '(ไม่ทราบชื่อ)';
+    const isDeesay = r.tt_account_authorization_type === 'TTS_TT';
+    const handle = r.tt_account_name || '(ไม่ทราบชื่อ)';
     if (!byClip[id]) byClip[id] = {
-      item_id: id, campaign: r.campaign, isDeesay, handle, objective: r.objective_type || null,
-      caption: r.clip_title || '(ไม่มีชื่อ)', thumbnail: r.thumbnail_url,
-      spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0, v25:0, v50:0, v100:0, paidcomments:0, paidshares:0, purchaseValue: 0,
-      allDates: new Set(), funnelDates: new Set(), engagementDates: new Set() // track วันที่ยิงจริง vs วันที่มีข้อมูล funnel/engagement
-      // เพื่อคำนวณ "สัดส่วนความครอบคลุมของข้อมูล" — ตาราง funnel (task311)/engagement(task312) คนละช่วง backfill กัน
-      // ถ้ามีข้อมูลแค่บางวันในช่วงที่คลิปยิงจริง ต้องบอกว่าเป็นยอด "บางส่วน" ไม่ใช่ยอดเต็ม
+      item_id: id, campaign: r.campaign_name, isDeesay, handle, objective: r.objective || null,
+      caption: r.title || '(ไม่มีชื่อ)', thumbnail: null,
+      spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0,
+      v25Sum:0, v50Sum:0, v100Sum:0, v25Cnt:0, v50Cnt:0, v100Cnt:0,
+      paidcomments:0, paidshares:0, purchaseValue: 0,
+      allDates: new Set(), funnelDates: new Set(), engagementDates: new Set()
     };
     const c = byClip[id];
-    if (!c.objective && r.objective_type) c.objective = r.objective_type;
-    if (r.date) c.allDates.add(r.date);
-    if (r.impressions !== null && r.impressions !== undefined) { c.funnelDates.add(r.date); }
-    if (r.play_first_quartile !== null && r.play_first_quartile !== undefined) { c.engagementDates.add(r.date); }
-    c.spend += parseFloat(r.spend) || 0;
-    c.orders += parseFloat(r.gmv_max_orders) || 0;
-    c.impressions += parseFloat(r.impressions) || 0;
-    c.clicks += parseFloat(r.clicks) || 0;
-    c.convs += parseFloat(r.conversions) || 0;
-    c.v25 += parseFloat(r.play_first_quartile) || 0;
-    c.v50 += parseFloat(r.play_midpoint) || 0;
-    c.v100 += parseFloat(r.play_over) || 0;
-    c.paidcomments += parseFloat(r.ad_paid_comments) || 0;
-    c.paidshares += parseFloat(r.ad_paid_shares) || 0;
-    c.purchaseValue += parseFloat(r.onsite_total_purchase_value) || 0;
+    if (!c.objective && r.objective) c.objective = r.objective;
+    if (r.stat_date) c.allDates.add(r.stat_date);
+    // ยอดใช้จ่าย: รวมทั้ง GMV Max (cost) และ Traditional (spend) เป็นยอดแอดของคลิปนี้
+    c.spend += (parseFloat(r.cost) || 0) + (parseFloat(r.spend) || 0);
+    c.orders += parseFloat(r.orders) || 0;
+    c.purchaseValue += parseFloat(r.gross_revenue) || 0;
+    // impressions/clicks: ใช้ product_impressions/clicks (GMV Max) ถ้ามี ไม่งั้นใช้ impressions/clicks (Traditional)
+    const impr = r.product_impressions ?? r.impressions;
+    const clk = r.product_clicks ?? r.clicks;
+    if (impr !== null && impr !== undefined) { c.impressions += parseFloat(impr) || 0; c.funnelDates.add(r.stat_date); }
+    if (clk !== null && clk !== undefined) c.clicks += parseFloat(clk) || 0;
+    // video retention: เก็บเป็นค่าเฉลี่ย % ต่อวัน (ทั้ง video_view_rate_* ของ GMV Max และ video_views_p*/impressions ของ Traditional เป็น % อยู่แล้วหรือคำนวณจากสัดส่วน)
+    if (r.video_view_rate_p25 !== null && r.video_view_rate_p25 !== undefined) { c.v25Sum += parseFloat(r.video_view_rate_p25)||0; c.v25Cnt++; c.engagementDates.add(r.stat_date); }
+    if (r.video_view_rate_p50 !== null && r.video_view_rate_p50 !== undefined) { c.v50Sum += parseFloat(r.video_view_rate_p50)||0; c.v50Cnt++; }
+    if (r.video_view_rate_p100 !== null && r.video_view_rate_p100 !== undefined) { c.v100Sum += parseFloat(r.video_view_rate_p100)||0; c.v100Cnt++; }
+    c.paidcomments += parseFloat(r.comments) || 0;
+    c.paidshares += parseFloat(r.shares) || 0;
   });
   ttaByClip = Object.values(byClip).map(c => {
     const datesSorted = [...c.allDates].sort();
     const totalDays = c.allDates.size || 1;
-    const funnelCoverage = c.funnelDates.size / totalDays;   // 0 = ไม่มีเลย, 1 = ครบทุกวันที่ยิงจริง, ระหว่างกลาง = บางส่วน
+    const funnelCoverage = c.funnelDates.size / totalDays;
     const engagementCoverage = c.engagementDates.size / totalDays;
     return {
       ...c, ctr: c.impressions ? (c.clicks/c.impressions*100) : 0, cpo: c.orders ? (c.spend/c.orders) : null,
-      roas: c.spend ? (c.purchaseValue / c.spend) : null, // คำนวณเองจาก purchaseValue/spend รวม แม่นกว่าเฉลี่ย roas รายวันดิบ
+      roas: c.spend ? (c.purchaseValue / c.spend) : null,
+      v25: c.v25Cnt ? c.v25Sum/c.v25Cnt : 0, v50: c.v50Cnt ? c.v50Sum/c.v50Cnt : 0, v100: c.v100Cnt ? c.v100Sum/c.v100Cnt : 0,
       dateMin: datesSorted[0] || null, dateMax: datesSorted[datesSorted.length-1] || null,
       hasFunnelData: funnelCoverage > 0, funnelPartial: funnelCoverage > 0 && funnelCoverage < 1,
       hasEngagementData: engagementCoverage > 0, engagementPartial: engagementCoverage > 0 && engagementCoverage < 1
@@ -6637,9 +6704,18 @@ async function renderTta() {
 let ttaDailyData = [];
 async function fetchTtaDaily() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_daily_total?select=date,normal_spend,gmv_max_total,grand_total&order=date.asc`, { headers });
+  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost&order=stat_date.asc&limit=5000`, { headers });
   const rows = await res.json();
-  ttaDailyData = Array.isArray(rows) ? rows : [];
+  const byDate = {};
+  (Array.isArray(rows) ? rows : []).forEach(r => {
+    const d = r.stat_date;
+    if (!byDate[d]) byDate[d] = { date: d, normal_spend: 0, gmv_max_total: 0 };
+    const amt = parseFloat(r.total_cost) || 0;
+    if (r.objective === 'Product GMV Max' || r.objective === 'LIVE GMV Max') byDate[d].gmv_max_total += amt;
+    else byDate[d].normal_spend += amt;
+  });
+  ttaDailyData = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date))
+    .map(r => ({ ...r, grand_total: r.normal_spend + r.gmv_max_total }));
 }
 async function renderTtaDaily() {
   if (!ttaDailyData.length) await fetchTtaDaily();
@@ -6738,9 +6814,9 @@ function ttaCellHtml(c, k) {
     case 'clicks': return c.hasFunnelData ? partialWrap(fmt(c.clicks), c.funnelPartial) : OUT_OF_RANGE_HTML;
     case 'ctr': return c.hasFunnelData ? partialWrap(c.ctr.toFixed(2)+'%', c.funnelPartial) : OUT_OF_RANGE_HTML;
     case 'convs': return fmt(c.convs);
-    case 'v25': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.impressions?((c.v25/c.impressions)*100).toFixed(0)+'%':'—', c.engagementPartial);
-    case 'v50': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.impressions?((c.v50/c.impressions)*100).toFixed(0)+'%':'—', c.engagementPartial);
-    case 'v100': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.impressions?((c.v100/c.impressions)*100).toFixed(0)+'%':'—', c.engagementPartial);
+    case 'v25': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v25.toFixed(0)+'%', c.engagementPartial);
+    case 'v50': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v50.toFixed(0)+'%', c.engagementPartial);
+    case 'v100': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v100.toFixed(0)+'%', c.engagementPartial);
     case 'paidcomments': return c.hasEngagementData ? partialWrap(fmt(c.paidcomments), c.engagementPartial) : OUT_OF_RANGE_HTML;
     case 'paidshares': return c.hasEngagementData ? partialWrap(fmt(c.paidshares), c.engagementPartial) : OUT_OF_RANGE_HTML;
     default: return '—';
@@ -6793,9 +6869,9 @@ function renderTtaTable() {
  //
 
 async function init() {
+  let usedCache = false;
   try {
     setDefaultDateFilter();
-    let usedCache = false
     const cached = await idbGet(CACHE_KEY)
     if (cached && cached.allData && cached.allData.length) {
       applySnapshot(cached)
