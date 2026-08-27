@@ -6259,7 +6259,7 @@ function objectiveLabel(raw) { return raw ? (OBJECTIVE_TH[raw] || raw) : '—'; 
 const FUNNEL_STAGES = {
   Awareness: ['REACH'],
   Consideration: ['VIDEO_VIEWS','TRAFFIC','ENGAGEMENT','BRAND_CONSIDERATION','LEAD_GENERATION'],
-  Conversion: ['CONVERSIONS','PRODUCT_SALES','LIVE_SHOPPING','SHOP_PROMOTION']
+  Conversion: ['CONVERSIONS','PRODUCT_SALES','LIVE_SHOPPING','SHOP_PROMOTION','Product GMV Max','LIVE GMV Max']
 };
 const FUNNEL_STAGE_TH = { Awareness: 'Awareness (การรับรู้)', Consideration: 'Consideration (การพิจารณา / C-Ads)', Conversion: 'Conversion (คอนเวอร์ชั่น)' };
 const FUNNEL_STAGE_COLOR = { Awareness: '#60a5fa', Consideration: '#c8a96e', Conversion: '#4ade80' };
@@ -6315,7 +6315,7 @@ const METRIC_CONFIGS = {
     }
   },
   tta: {
-    order: ['clip','source','handle','date','objective','campaign','spend','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','convs','v25','v50','v100','paidcomments','paidshares'],
+    order: ['clip','source','handle','date','objective','campaign','spend','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','convs','v6s','v25','v50','v75','v100','likes','paidcomments','paidshares','follows','profilevisits'],
     meta: {
       clip:{label:'คลิป',always:true}, source:{label:'แหล่งที่มา',always:true}, handle:{label:'ชื่อช่อง',always:true},
       date:{label:'ช่วงวันที่ยิง',default:true},
@@ -6323,8 +6323,9 @@ const METRIC_CONFIGS = {
       purchaseValue:{label:'ยอดขาย (TikTok Shop)',default:true}, roas:{label:'ROAS',default:true},
       orders:{label:'GMV Max orders',default:true},
       cpo:{label:'CPO'}, impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'},
-      convs:{label:'conversions'}, v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v100:{label:'% ดูจบ 100%'},
-      paidcomments:{label:'paid comments'}, paidshares:{label:'paid shares'}
+      convs:{label:'conversions'}, v6s:{label:'% ดูจบ 6 วิ'}, v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v75:{label:'% ดูจบ 75%'}, v100:{label:'% ดูจบ 100%'},
+      likes:{label:'ไลค์ (จากแอด)'}, paidcomments:{label:'คอมเมนต์ (จากแอด)'}, paidshares:{label:'แชร์ (จากแอด)'},
+      follows:{label:'ผู้ติดตามใหม่ (จากแอด)'}, profilevisits:{label:'เข้าดูโปรไฟล์ (จากแอด)'}
     }
   }
 };
@@ -6603,43 +6604,46 @@ const TTA_PAGE_SIZE = 10;
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  let url = `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&limit=20000`;
-  if (fromDate) url += `&stat_date=gte.${fromDate}`;
-  if (toDate) url += `&stat_date=lte.${toDate}`;
-  const res = await fetch(url, { headers });
-  let ttaRaw = await res.json();
-  if (!Array.isArray(ttaRaw)) ttaRaw = [];
+  let baseUrl = `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*`;
+  if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
+  if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
+  const ttaRaw = await fetchPaginatedConcurrent(baseUrl, headers);
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
-    const isDeesay = r.tt_account_authorization_type === 'TTS_TT';
+    const rawHandle = normalizeHandle(r.tt_account_name || '');
+    const isDeesay = KNOWN_DEESAY_HANDLES.includes(rawHandle);
     const handle = r.tt_account_name || '(ไม่ทราบชื่อ)';
     if (!byClip[id]) byClip[id] = {
       item_id: id, campaign: r.campaign_name, isDeesay, handle, objective: r.objective || null,
       caption: r.title || '(ไม่มีชื่อ)', thumbnail: null,
       spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0,
-      v25Sum:0, v50Sum:0, v100Sum:0, v25Cnt:0, v50Cnt:0, v100Cnt:0,
+      likes: 0, follows: 0, profileVisits: 0,
+      v25Sum:0, v50Sum:0, v75Sum:0, v100Sum:0, v6sSum:0, v25Cnt:0, v50Cnt:0, v75Cnt:0, v100Cnt:0, v6sCnt:0,
       paidcomments:0, paidshares:0, purchaseValue: 0,
       allDates: new Set(), funnelDates: new Set(), engagementDates: new Set()
     };
     const c = byClip[id];
     if (!c.objective && r.objective) c.objective = r.objective;
     if (r.stat_date) c.allDates.add(r.stat_date);
-    // ยอดใช้จ่าย: รวมทั้ง GMV Max (cost) และ Traditional (spend) เป็นยอดแอดของคลิปนี้
     c.spend += (parseFloat(r.cost) || 0) + (parseFloat(r.spend) || 0);
     c.orders += parseFloat(r.orders) || 0;
     c.purchaseValue += parseFloat(r.gross_revenue) || 0;
-    // impressions/clicks: ใช้ product_impressions/clicks (GMV Max) ถ้ามี ไม่งั้นใช้ impressions/clicks (Traditional)
     const impr = r.product_impressions ?? r.impressions;
     const clk = r.product_clicks ?? r.clicks;
     if (impr !== null && impr !== undefined) { c.impressions += parseFloat(impr) || 0; c.funnelDates.add(r.stat_date); }
     if (clk !== null && clk !== undefined) c.clicks += parseFloat(clk) || 0;
-    // video retention: เก็บเป็นค่าเฉลี่ย % ต่อวัน (ทั้ง video_view_rate_* ของ GMV Max และ video_views_p*/impressions ของ Traditional เป็น % อยู่แล้วหรือคำนวณจากสัดส่วน)
-    if (r.video_view_rate_p25 !== null && r.video_view_rate_p25 !== undefined) { c.v25Sum += parseFloat(r.video_view_rate_p25)||0; c.v25Cnt++; c.engagementDates.add(r.stat_date); }
+    if (r.video_view_rate_2s !== null && r.video_view_rate_2s !== undefined) { c.engagementDates.add(r.stat_date); }
+    if (r.video_view_rate_6s !== null && r.video_view_rate_6s !== undefined) { c.v6sSum += parseFloat(r.video_view_rate_6s)||0; c.v6sCnt++; }
+    if (r.video_view_rate_p25 !== null && r.video_view_rate_p25 !== undefined) { c.v25Sum += parseFloat(r.video_view_rate_p25)||0; c.v25Cnt++; }
     if (r.video_view_rate_p50 !== null && r.video_view_rate_p50 !== undefined) { c.v50Sum += parseFloat(r.video_view_rate_p50)||0; c.v50Cnt++; }
+    if (r.video_view_rate_p75 !== null && r.video_view_rate_p75 !== undefined) { c.v75Sum += parseFloat(r.video_view_rate_p75)||0; c.v75Cnt++; }
     if (r.video_view_rate_p100 !== null && r.video_view_rate_p100 !== undefined) { c.v100Sum += parseFloat(r.video_view_rate_p100)||0; c.v100Cnt++; }
+    c.likes += parseFloat(r.likes) || 0;
     c.paidcomments += parseFloat(r.comments) || 0;
     c.paidshares += parseFloat(r.shares) || 0;
+    c.follows += parseFloat(r.follows) || 0;
+    c.profileVisits += parseFloat(r.profile_visits) || 0;
   });
   ttaByClip = Object.values(byClip).map(c => {
     const datesSorted = [...c.allDates].sort();
@@ -6649,7 +6653,8 @@ async function fetchTtaData(fromDate, toDate) {
     return {
       ...c, ctr: c.impressions ? (c.clicks/c.impressions*100) : 0, cpo: c.orders ? (c.spend/c.orders) : null,
       roas: c.spend ? (c.purchaseValue / c.spend) : null,
-      v25: c.v25Cnt ? c.v25Sum/c.v25Cnt : 0, v50: c.v50Cnt ? c.v50Sum/c.v50Cnt : 0, v100: c.v100Cnt ? c.v100Sum/c.v100Cnt : 0,
+      v6s: c.v6sCnt ? c.v6sSum/c.v6sCnt : 0, v25: c.v25Cnt ? c.v25Sum/c.v25Cnt : 0, v50: c.v50Cnt ? c.v50Sum/c.v50Cnt : 0,
+      v75: c.v75Cnt ? c.v75Sum/c.v75Cnt : 0, v100: c.v100Cnt ? c.v100Sum/c.v100Cnt : 0,
       dateMin: datesSorted[0] || null, dateMax: datesSorted[datesSorted.length-1] || null,
       hasFunnelData: funnelCoverage > 0, funnelPartial: funnelCoverage > 0 && funnelCoverage < 1,
       hasEngagementData: engagementCoverage > 0, engagementPartial: engagementCoverage > 0 && engagementCoverage < 1
@@ -6814,9 +6819,14 @@ function ttaCellHtml(c, k) {
     case 'clicks': return c.hasFunnelData ? partialWrap(fmt(c.clicks), c.funnelPartial) : OUT_OF_RANGE_HTML;
     case 'ctr': return c.hasFunnelData ? partialWrap(c.ctr.toFixed(2)+'%', c.funnelPartial) : OUT_OF_RANGE_HTML;
     case 'convs': return fmt(c.convs);
+    case 'v6s': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v6s.toFixed(0)+'%', c.engagementPartial);
     case 'v25': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v25.toFixed(0)+'%', c.engagementPartial);
     case 'v50': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v50.toFixed(0)+'%', c.engagementPartial);
+    case 'v75': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v75.toFixed(0)+'%', c.engagementPartial);
     case 'v100': return !c.hasEngagementData ? OUT_OF_RANGE_HTML : partialWrap(c.v100.toFixed(0)+'%', c.engagementPartial);
+    case 'likes': return fmt(c.likes);
+    case 'follows': return fmt(c.follows);
+    case 'profilevisits': return fmt(c.profileVisits);
     case 'paidcomments': return c.hasEngagementData ? partialWrap(fmt(c.paidcomments), c.engagementPartial) : OUT_OF_RANGE_HTML;
     case 'paidshares': return c.hasEngagementData ? partialWrap(fmt(c.paidshares), c.engagementPartial) : OUT_OF_RANGE_HTML;
     default: return '—';
