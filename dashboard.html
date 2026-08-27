@@ -5504,6 +5504,19 @@ const ADS_BY_SKU_SHEET_ID = '1OYHECWiGUf60Chju_7ohP9O-rQpZe1C4m91LKwhJsqQ';
 const ADS_BY_SKU_TAB = 'Ads';
 let _adsBySkuData = null;   // [{month, parent_sku, channel, amount}]
 let _adsBySkuUnmapped = []; // ชื่อสินค้าที่หา parent_sku ไม่เจอ (แจ้งเตือน ไม่ทิ้งเงียบๆ)
+let _adsBySkuAggRows = [];  // แถว "รวม"/"รวมกันแดด" เก็บแยกไว้ ใช้กระจายสัดส่วนทีหลัง: [{channel, month, type:'total'|'sunscreen', amount}]
+
+// ช่องทางที่ไม่ต้องแสดง/ไม่ต้องนับในหน้านี้เลย (ตัดออกตั้งแต่ต้นทาง — ไม่ใช่แค่ซ่อนคอลัมน์)
+const ADS_BY_SKU_EXCLUDE_CHANNELS = new Set(['Shopee']);
+
+// 5 SKU กันแดดที่ใช้กระจายยอด "รวมกันแดด" — ชื่อต้องตรงกับ product_name ในระบบเป๊ะ
+const SUNSCREEN_PRODUCT_NAMES = [
+  'กันแดดเดลี่เดย์ 15 ml',
+  'กันแดดเดลี่เดย์ 50 ml',
+  'กันแดดไดฟูกุ 50 ml',
+  'กันแดดไดฟูกุซอง 5 ml',
+  'กันแดดไดฟูกุหลอด 15 ml',
+];
 
 function nameToSkuMap() {
   // สร้าง map ย้อนกลับ product_name -> parent_sku จาก productsMap (parent_sku -> product_name) ทุกครั้งที่เรียก
@@ -5511,6 +5524,14 @@ function nameToSkuMap() {
   const m = {};
   Object.entries(productsMap).forEach(([sku, name]) => { if (name && !m[name]) m[name] = sku; });
   return m;
+}
+
+// รายการ parent_sku ของ 5 สินค้ากันแดด (map จากชื่อจริงในระบบ) — เรียกใหม่ทุกครั้งเผื่อ productsMap เพิ่งโหลดเสร็จ
+function getSunscreenSkus() {
+  const n2s = nameToSkuMap();
+  const found = [], missing = [];
+  SUNSCREEN_PRODUCT_NAMES.forEach(name => { const sku = n2s[name]; if (sku) found.push(sku); else missing.push(name); });
+  return { skus: found, missing };
 }
 
 async function fetchAdsBySku() {
@@ -5522,9 +5543,11 @@ async function fetchAdsBySku() {
     const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
     const n2s = nameToSkuMap();
     const unmappedSet = new Set();
+    const aggRows = [];
     _adsBySkuData = json.table.rows.map(r => {
       const chRaw = (r.c[0]?.v || '').toString().trim();
       const channel = AD_CHANNEL_NORMALIZE[chRaw] || chRaw; // Facebook/Tiktok/Shopee/Lazada -> ชื่อมาตรฐาน (Tiktok -> TikTok)
+      if (ADS_BY_SKU_EXCLUDE_CHANNELS.has(channel)) return null; // ตัด Shopee ทิ้งตั้งแต่ต้นทาง ทั้งแถวสินค้าปกติและแถวรวม
       let month = (r.c[1]?.v || '').toString().trim(); // ปกติมาเป็น "YYYY-MM" อยู่แล้วในชีตนี้
       if (month.startsWith('Date(')) { // เผื่อ Google Sheets ตีความคอลัมน์นี้เป็นวันที่จริงแทนข้อความ
         const p = month.replace('Date(','').replace(')','').split(',');
@@ -5533,15 +5556,56 @@ async function fetchAdsBySku() {
       const product = (r.c[2]?.v || '').toString().trim();
       const amount = parseFloat(r.c[3]?.v) || 0;
       if (!month || !product) return null;
-      // แถว "รวม" / "รวมกันแดด" เป็นแถวสรุปยอดรวมที่มีอยู่แล้วในชีต (ไม่ใช่ SKU จริง) — ข้ามไปเพื่อไม่นับซ้ำ
-      if (product.startsWith('รวม')) return null;
+      const monthNorm = month.length===7 ? month : month.substring(0,7);
+      // แถว "รวม" / "รวมกันแดด" เป็นแถวสรุปยอดรวมที่ยังไม่ระบุสินค้า — เก็บแยกไว้กระจายสัดส่วนทีหลัง (ไม่ทิ้งอีกต่อไป)
+      if (product.startsWith('รวมกันแดด')) { aggRows.push({ channel, month: monthNorm, type: 'sunscreen', amount }); return null; }
+      if (product.startsWith('รวม')) { aggRows.push({ channel, month: monthNorm, type: 'total', amount }); return null; }
       const sku = n2s[product];
       if (!sku) { unmappedSet.add(`${channel}: ${product}`); return null; }
-      return { channel, month: month.length===7?month:month.substring(0,7), parent_sku: sku, amount };
+      return { channel, month: monthNorm, parent_sku: sku, amount };
     }).filter(Boolean);
     _adsBySkuUnmapped = [...unmappedSet];
-  } catch(e) { console.error('fetchAdsBySku error:', e); _adsBySkuData = []; _adsBySkuUnmapped = []; }
+    _adsBySkuAggRows = aggRows;
+  } catch(e) { console.error('fetchAdsBySku error:', e); _adsBySkuData = []; _adsBySkuUnmapped = []; _adsBySkuAggRows = []; }
   return _adsBySkuData;
+}
+
+// กระจายยอด "รวม"/"รวมกันแดด" เข้า adsBySkuChannel ตามสัดส่วนยอดขายของแต่ละเดือน (แยกเดือนต่อเดือน ไม่ปนกัน)
+// revByMonthSku: { 'YYYY-MM': { parent_sku: revenue } } — ยอดขายรวมทุกช่องทางของ SKU นั้นในเดือนนั้น
+// คืนค่า array ของคำเตือน (เดือน/ช่องทางที่กระจายไม่ได้เพราะไม่มียอดขายเป็นตัวหาร)
+function applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to) {
+  const warnings = [];
+  const { skus: sunscreenSkus, missing: sunscreenMissing } = getSunscreenSkus();
+  if (sunscreenMissing.length) {
+    warnings.push(`หาชื่อสินค้ากันแดดในระบบไม่เจอ ${sunscreenMissing.length} รายการ (map ไม่ได้): ${sunscreenMissing.join(', ')}`);
+  }
+
+  _adsBySkuAggRows.forEach(row => {
+    if ((from && row.month < from) || (to && row.month > to)) return; // นอกช่วง filter ข้ามไป
+    if (row.amount === 0) return;
+
+    const revThisMonth = revByMonthSku[row.month] || {};
+    let candidateSkus;
+    if (row.type === 'sunscreen') {
+      candidateSkus = sunscreenSkus.filter(sku => (revThisMonth[sku] || 0) > 0);
+    } else {
+      candidateSkus = Object.keys(revThisMonth).filter(sku => (revThisMonth[sku] || 0) > 0);
+    }
+
+    const denom = candidateSkus.reduce((s, sku) => s + (revThisMonth[sku] || 0), 0);
+    if (denom <= 0) {
+      warnings.push(`เดือน ${row.month} ช่องทาง ${row.channel}: ยอด "${row.type==='sunscreen'?'รวมกันแดด':'รวม'}" ฿${Math.round(row.amount).toLocaleString()} กระจายไม่ได้ (ไม่มียอดขายในกลุ่มสินค้าที่เกี่ยวข้องเดือนนั้น)`);
+      return;
+    }
+
+    if (!adsBySkuChannel[row.channel]) adsBySkuChannel[row.channel] = {};
+    candidateSkus.forEach(sku => {
+      const share = (revThisMonth[sku] || 0) / denom;
+      adsBySkuChannel[row.channel][sku] = (adsBySkuChannel[row.channel][sku] || 0) + row.amount * share;
+    });
+  });
+
+  return warnings;
 }
 
 // จัดกลุ่มหัวข้อต้นทุนตามที่ Meg ยืนยัน:
@@ -5607,23 +5671,19 @@ async function renderCostPage() {
     const adsFiltered = adsBySkuRaw.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
 
     const warnEl = document.getElementById('cost-ads-unmapped-warning');
-    if (warnEl) {
-      if (_adsBySkuUnmapped.length) {
-        warnEl.style.display = 'block';
-        warnEl.textContent = `⚠️ พบชื่อสินค้าในชีตค่าแอด ${_adsBySkuUnmapped.length} รายการ ที่ map เข้ากับ SKU ในระบบไม่ได้ (ชื่อไม่ตรงกับ products table เป๊ะ): ${_adsBySkuUnmapped.join(', ')} — ค่าแอดของรายการนี้ยังไม่ถูกนับรวม`;
-      } else {
-        warnEl.style.display = 'none';
-      }
-    }
 
     const skuMV = (window._skuParentMonthlyCache||[]).filter(r => {
       const m = String(r.date).substring(0,7);
       return (!from || m >= from) && (!to || m <= to);
     });
     const revBySKU = {}, qtyBySKU = {};
+    const revByMonthSku = {}; // { 'YYYY-MM': { parent_sku: revenue } } ใช้เป็นตัวหารตอนกระจายยอด "รวม"/"รวมกันแดด" แยกทีละเดือน
     skuMV.forEach(r => {
       revBySKU[r.parent_sku] = (revBySKU[r.parent_sku]||0) + (parseFloat(r.total_revenue)||0);
       qtyBySKU[r.parent_sku] = (qtyBySKU[r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
+      const m = String(r.date).substring(0,7);
+      if (!revByMonthSku[m]) revByMonthSku[m] = {};
+      revByMonthSku[m][r.parent_sku] = (revByMonthSku[m][r.parent_sku]||0) + (parseFloat(r.total_revenue)||0);
     });
 
     // จำนวนตัวอย่าง/รีวิวฟรี (ทุกช่องทาง) แยกต่างหาก ไม่รวมใน qtyBySKU
@@ -5645,12 +5705,33 @@ async function renderCostPage() {
       costByMonthSku[r.parent_sku][m] = (costByMonthSku[r.parent_sku][m]||0) + amt;
     });
 
-    // ค่าแอดแยก SKU แยกราย channel (Facebook/TikTok/Shopee/...)
+    // ค่าแอดแยก SKU แยกราย channel (Facebook/TikTok/...) — Shopee ถูกตัดออกตั้งแต่ตอน fetchAdsBySku แล้ว
     const adsBySkuChannel = {}; // { channel: { sku: amount } }
     adsFiltered.forEach(r => {
       if (!adsBySkuChannel[r.channel]) adsBySkuChannel[r.channel] = {};
       adsBySkuChannel[r.channel][r.parent_sku] = (adsBySkuChannel[r.channel][r.parent_sku]||0) + r.amount;
     });
+
+    // กระจายยอด "รวม"/"รวมกันแดด" เข้า adsBySkuChannel ตามสัดส่วนยอดขายรายเดือน (แยกทีละเดือนที่มีค่า)
+    const aggDistributionWarnings = applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to);
+
+    // รวมคำเตือนทั้ง 2 แบบ: ชื่อสินค้า map ไม่เจอ + เดือน/ช่องทางที่กระจายยอด รวม/รวมกันแดด ไม่ได้
+    if (warnEl) {
+      const msgs = [];
+      if (_adsBySkuUnmapped.length) {
+        msgs.push(`พบชื่อสินค้าในชีตค่าแอด ${_adsBySkuUnmapped.length} รายการ ที่ map เข้ากับ SKU ในระบบไม่ได้ (ชื่อไม่ตรงกับ products table เป๊ะ): ${_adsBySkuUnmapped.join(', ')} — ค่าแอดของรายการนี้ยังไม่ถูกนับรวม`);
+      }
+      if (aggDistributionWarnings.length) {
+        msgs.push(...aggDistributionWarnings);
+      }
+      if (msgs.length) {
+        warnEl.style.display = 'block';
+        warnEl.innerHTML = msgs.map(m => `⚠️ ${m}`).join('<br>');
+      } else {
+        warnEl.style.display = 'none';
+      }
+    }
+
     const adsChannelsFound = Object.keys(adsBySkuChannel);
     const adsChannels = [
       ...ADS_COLUMN_ORDER.filter(c => adsChannelsFound.includes(c)),
