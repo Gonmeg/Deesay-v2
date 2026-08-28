@@ -1149,7 +1149,7 @@
         <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtaDaily"></canvas></div>
         <div class="table-wrap" style="margin-top:16px;max-height:300px;overflow-y:auto;">
           <table id="tblTtaDaily">
-            <thead><tr><th>วันที่</th><th>Spend ปกติ</th><th>GMV Max</th><th>รวมทั้งหมด</th></tr></thead>
+            <thead><tr><th>วันที่</th><th>Awareness</th><th>GMV Max</th><th>รวมทั้งหมด</th></tr></thead>
             <tbody id="tbodyTtaDaily"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
@@ -1162,6 +1162,18 @@
 
       <div class="section-title" style="margin-bottom:10px;" id="ttaCreatorSummaryTitle">📈 สรุปตาม Creator (Top 10)</div>
       <div id="ttaCreatorSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:22px;"></div>
+
+      <div class="section-header">
+        <div class="section-title">สรุปตามแคมเปญ</div>
+        <button class="btn btn-ghost" onclick="exportTable('tblTtaCampaign')">⬇ Export CSV</button>
+      </div>
+      <input type="text" id="ttaCampaignSearch" placeholder="🔍 ค้นหาชื่อแคมเปญ..." oninput="renderTtaCampaignTable()" style="width:100%;margin-bottom:12px;">
+      <div class="table-wrap" style="max-height:320px;overflow-y:auto;margin-bottom:22px;">
+        <table id="tblTtaCampaign" class="sticky-head-table">
+          <thead><tr><th>แคมเปญ</th><th>จำนวนคลิป</th><th>ค่าแอด</th><th>ยอดขาย</th><th>ROAS</th><th>orders</th><th>CPO</th></tr></thead>
+          <tbody id="ttaCampaignBody"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+        </table>
+      </div>
 
       <div class="section-header">
         <div class="section-title">รายละเอียดคลิปทั้งหมด</div>
@@ -1186,6 +1198,7 @@
           </div>
         </div>
       </div>
+      <input type="text" id="ttaClipSearch" placeholder="🔍 ค้นหาคลิป (แคปชั่น / แคมเปญ / ชื่อช่อง)..." oninput="ttaPage=1;renderTtaTable();" style="width:100%;margin-bottom:12px;">
 
       <div class="table-wrap" style="max-height:560px;overflow-y:auto;">
         <table id="tblTtaAll" class="sticky-head-table">
@@ -6262,6 +6275,11 @@ const FUNNEL_STAGES = {
   Conversion: ['CONVERSIONS','PRODUCT_SALES','LIVE_SHOPPING','SHOP_PROMOTION','Product GMV Max','LIVE GMV Max']
 };
 const FUNNEL_STAGE_TH = { Awareness: 'Awareness (การรับรู้)', Consideration: 'Consideration (การพิจารณา / C-Ads)', Conversion: 'Conversion (คอนเวอร์ชั่น)' };
+const FUNNEL_STAGE_TOOLTIP = {
+  Awareness: 'Objective: REACH',
+  Consideration: 'Objective: VIDEO_VIEWS, TRAFFIC, ENGAGEMENT, BRAND_CONSIDERATION, LEAD_GENERATION',
+  Conversion: 'Objective: CONVERSIONS, PRODUCT_SALES, LIVE_SHOPPING, SHOP_PROMOTION, Product GMV Max, LIVE GMV Max'
+};
 const FUNNEL_STAGE_COLOR = { Awareness: '#60a5fa', Consideration: '#c8a96e', Conversion: '#4ade80' };
 function objectiveToStage(obj) {
   if (!obj) return null;
@@ -6287,8 +6305,9 @@ function renderTtaFunnel() {
     const val = stageSpend[stage];
     const widthPct = 22 + (val / maxStage) * 68; // ขั้นต่ำ 22% กันแท่งหายไปเลยตอนค่าน้อยมาก
     const pct = total ? ((val/total)*100).toFixed(1) : '0.0';
-    return `<div class="funnel-tier" style="width:${widthPct}%;background:${FUNNEL_STAGE_COLOR[stage]};">
-      <span class="funnel-label">${FUNNEL_STAGE_TH[stage]}</span>
+    const tip = FUNNEL_STAGE_TOOLTIP[stage];
+    return `<div class="funnel-tier" style="width:${widthPct}%;background:${FUNNEL_STAGE_COLOR[stage]};position:relative;">
+      <span class="funnel-label">${FUNNEL_STAGE_TH[stage]} <span title="${tip}" style="cursor:help;opacity:0.7;">ⓘ</span></span>
       <span class="funnel-value">฿${fmt(val)}</span>
       <span class="funnel-pct">${pct}% ของงบทั้งหมด</span>
     </div>`;
@@ -6673,37 +6692,93 @@ function setTtaSourceFilter(src, btn) {
 function ttaGoToPage(n) { ttaPage = n; renderTtaTable(); }
 
 function ttaFilteredClips() {
-  const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase();
+  const q1 = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase();
+  const q2 = (document.getElementById('ttaClipSearch')?.value || '').toLowerCase();
   return ttaByClip.filter(c => {
     if (ttaSourceFilter === 'deesay' && !c.isDeesay) return false;
     if (ttaSourceFilter === 'kol' && c.isDeesay) return false;
-    if (q && !c.handle.toLowerCase().includes(q) && !c.caption.toLowerCase().includes(q)) return false;
+    if (q1 && !c.handle.toLowerCase().includes(q1) && !c.caption.toLowerCase().includes(q1)) return false;
+    if (q2 && !c.caption.toLowerCase().includes(q2) && !(c.campaign||'').toLowerCase().includes(q2) && !c.handle.toLowerCase().includes(q2)) return false;
     return true;
   });
+}
+
+async function fetchTtaTrueTotals(fromDate, toDate) {
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  let gmvUrl = `${window.SUPABASE_URL}/rest/v1/tiktok_gmv_max_creative_raw?select=gross_revenue,orders`;
+  if (fromDate) gmvUrl += `&stat_date=gte.${fromDate}`;
+  if (toDate) gmvUrl += `&stat_date=lte.${toDate}`;
+  const gmvRows = await fetchPaginatedConcurrent(gmvUrl, headers);
+  let liveUrl = `${window.SUPABASE_URL}/rest/v1/tiktok_gmv_max_live_summary_raw?select=gross_revenue,orders`;
+  if (fromDate) liveUrl += `&stat_date=gte.${fromDate}`;
+  if (toDate) liveUrl += `&stat_date=lte.${toDate}`;
+  const liveRows = await fetchPaginatedConcurrent(liveUrl, headers);
+  const sum = (arr, key) => arr.reduce((s,r) => s + (parseFloat(r[key])||0), 0);
+  return {
+    revenue: sum(gmvRows,'gross_revenue') + sum(liveRows,'gross_revenue'),
+    orders: sum(gmvRows,'orders') + sum(liveRows,'orders')
+  };
 }
 
 async function renderTta() {
   const from = getDateValue('From'), to = getDateValue('To');
   const rangeKey = from + '|' + to;
   if (ttaLastRange !== rangeKey) { await fetchTtaData(from, to); ttaLastRange = rangeKey; }
-  const totalSpend = ttaByClip.reduce((s,c)=>s+c.spend,0);
-  const totalOrders = ttaByClip.reduce((s,c)=>s+c.orders,0);
-  const totalPurchaseValue = ttaByClip.reduce((s,c)=>s+c.purchaseValue,0);
+  await fetchTtaDaily(); // โหลดยอดจริงจากระบบ (v_tiktok_objective_summary รวม UNSPECIFIED) มาใช้เป็นยอดหลักของการ์ด KPI
+  const trueTrue = await fetchTtaTrueTotals(from, to); // ยอดขาย/orders จริงทั้งระบบ รวม LIVE GMV Max + ส่วนที่ไม่ระบุคลิป
+  const totalSpend = ttaDailyData.filter(r => (!from || r.date >= from) && (!to || r.date <= to)).reduce((s,r)=>s+r.grand_total,0);
+  const totalOrders = trueTrue.orders;
+  const totalPurchaseValue = trueTrue.revenue;
   const overallRoas = totalSpend ? (totalPurchaseValue/totalSpend) : null;
+  const namedSpend = ttaByClip.reduce((s,c)=>s+c.spend,0);
   const deesayCount = ttaByClip.filter(c=>c.isDeesay).length;
+  const unattributedGap = Math.max(0, totalSpend - namedSpend);
+  const spendTip = 'รวม Product GMV Max + LIVE GMV Max + Traditional Ads (Awareness) ทั้งหมด รวมส่วนที่ TikTok ไม่ระบุคลิปให้ด้วย (ยอดนี้ตรงกับตาราง "ค่าแอดรายวัน" ด้านล่าง)' + (unattributedGap>1 ? ` — ในนี้มี ฿${fmt(unattributedGap)} ที่ระบุคลิปไม่ได้ จึงไม่โผล่ในตารางรายละเอียดคลิป` : '');
+  const revTip = 'รวมยอดขายจาก Product GMV Max ทุกคลิป (รวมที่ระบุคลิปไม่ได้) + LIVE GMV Max ทั้งหมด';
+  const ordersTip = 'รวมออเดอร์จาก Product GMV Max ทุกคลิป (รวมที่ระบุคลิปไม่ได้) + LIVE GMV Max ทั้งหมด';
+  const roasTip = 'ยอดขายจริงทั้งระบบ ÷ ค่าแอดจริงทั้งระบบ (ไม่ใช่แค่ที่แจกแจงลงคลิปได้)';
+  const cpoTip = 'ค่าแอดจริงทั้งระบบ ÷ จำนวนออเดอร์จริงทั้งระบบ';
   document.getElementById('tta-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${ttaByClip.length}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยอดขาย TikTok Shop ${metricInfoIcon('purchaseValue')}</div><div class="kpi-value" style="color:var(--green);">฿${fmt(totalPurchaseValue)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ROAS รวม ${metricInfoIcon('roas')}</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">GMV Max Orders ${metricInfoIcon('orders')}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">CPO เฉลี่ย ${metricInfoIcon('cpo')}</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">Deesay / affi-KOL</div><div class="kpi-value"><span style="color:var(--blue);">${deesayCount}</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount}</span></div></div>
+    <div class="card" style="flex:1;min-width:160px;" title="${spendTip}"><div class="card-title">ค่าแอดรวม (ยอดจริงทั้งระบบ) ⓘ</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;" title="${revTip}"><div class="card-title">ยอดขาย TikTok Shop ⓘ</div><div class="kpi-value" style="color:var(--green);">฿${fmt(totalPurchaseValue)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;" title="${roasTip}"><div class="card-title">ROAS รวม ⓘ</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;" title="${ordersTip}"><div class="card-title">GMV Max Orders ⓘ</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;" title="${cpoTip}"><div class="card-title">CPO เฉลี่ย ⓘ</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;" title="นับเฉพาะคลิปที่ระบุตัวตนได้ (ไม่รวม LIVE ซึ่งไม่มีคลิปให้จับคู่)"><div class="card-title">Deesay / affi-KOL ⓘ</div><div class="kpi-value"><span style="color:var(--blue);">${deesayCount}</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount}</span></div></div>
   `;
   renderTtaFunnel();
   renderTtaCreatorSummary();
+  renderTtaCampaignTable();
   renderTtaTable();
   renderTtaDaily();
+}
+
+function renderTtaCampaignTable() {
+  const q = (document.getElementById('ttaCampaignSearch')?.value || '').toLowerCase();
+  const byCampaign = {};
+  ttaByClip.forEach(c => {
+    const name = c.campaign || '(ไม่มีชื่อแคมเปญ)';
+    if (!byCampaign[name]) byCampaign[name] = { name, clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
+    byCampaign[name].clips++;
+    byCampaign[name].spend += c.spend;
+    byCampaign[name].orders += c.orders;
+    byCampaign[name].purchaseValue += c.purchaseValue;
+  });
+  let arr = Object.values(byCampaign).map(v => ({
+    ...v, cpo: v.orders ? (v.spend/v.orders) : null, roas: v.spend ? (v.purchaseValue/v.spend) : null
+  })).sort((a,b) => b.spend - a.spend);
+  if (q) arr = arr.filter(c => c.name.toLowerCase().includes(q));
+  document.getElementById('ttaCampaignBody').innerHTML = arr.length ? arr.map(c => `
+    <tr>
+      <td>${ttcEsc(c.name)}</td>
+      <td style="text-align:right;">${fmt(c.clips)}</td>
+      <td style="text-align:right;">฿${fmt(c.spend)}</td>
+      <td style="text-align:right;color:var(--green);">฿${fmt(c.purchaseValue)}</td>
+      <td style="text-align:right;">${c.roas!==null?c.roas.toFixed(2)+'x':'—'}</td>
+      <td style="text-align:right;">${fmt(c.orders)}</td>
+      <td style="text-align:right;">${c.cpo!==null?'฿'+Math.round(c.cpo):'—'}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">ไม่พบข้อมูล</td></tr>';
 }
 
 let ttaDailyData = [];
@@ -6732,7 +6807,7 @@ async function renderTtaDaily() {
   if (ctx) {
     charts['chartTtaDaily'] = new Chart(ctx, {
       data: { labels, datasets: [
-        { type:'bar', label:'Spend ปกติ', data: normalArr, backgroundColor:'rgba(96,165,250,0.65)', borderColor:'#60a5fa', borderWidth:1, borderRadius:3, stack:'s' },
+        { type:'bar', label:'Awareness', data: normalArr, backgroundColor:'rgba(96,165,250,0.65)', borderColor:'#60a5fa', borderWidth:1, borderRadius:3, stack:'s' },
         { type:'bar', label:'GMV Max', data: gmvArr, backgroundColor:'rgba(200,169,110,0.65)', borderColor:'#c8a96e', borderWidth:1, borderRadius:3, stack:'s' },
       ]},
       options: {
