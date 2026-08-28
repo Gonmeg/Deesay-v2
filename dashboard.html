@@ -6703,32 +6703,15 @@ function ttaFilteredClips() {
   });
 }
 
-async function fetchTtaTrueTotals(fromDate, toDate) {
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  let gmvUrl = `${window.SUPABASE_URL}/rest/v1/tiktok_gmv_max_creative_raw?select=gross_revenue,orders`;
-  if (fromDate) gmvUrl += `&stat_date=gte.${fromDate}`;
-  if (toDate) gmvUrl += `&stat_date=lte.${toDate}`;
-  const gmvRows = await fetchPaginatedConcurrent(gmvUrl, headers);
-  let liveUrl = `${window.SUPABASE_URL}/rest/v1/tiktok_gmv_max_live_summary_raw?select=gross_revenue,orders`;
-  if (fromDate) liveUrl += `&stat_date=gte.${fromDate}`;
-  if (toDate) liveUrl += `&stat_date=lte.${toDate}`;
-  const liveRows = await fetchPaginatedConcurrent(liveUrl, headers);
-  const sum = (arr, key) => arr.reduce((s,r) => s + (parseFloat(r[key])||0), 0);
-  return {
-    revenue: sum(gmvRows,'gross_revenue') + sum(liveRows,'gross_revenue'),
-    orders: sum(gmvRows,'orders') + sum(liveRows,'orders')
-  };
-}
-
 async function renderTta() {
   const from = getDateValue('From'), to = getDateValue('To');
   const rangeKey = from + '|' + to;
   if (ttaLastRange !== rangeKey) { await fetchTtaData(from, to); ttaLastRange = rangeKey; }
-  await fetchTtaDaily(); // โหลดยอดจริงจากระบบ (v_tiktok_objective_summary รวม UNSPECIFIED) มาใช้เป็นยอดหลักของการ์ด KPI
-  const trueTrue = await fetchTtaTrueTotals(from, to); // ยอดขาย/orders จริงทั้งระบบ รวม LIVE GMV Max + ส่วนที่ไม่ระบุคลิป
-  const totalSpend = ttaDailyData.filter(r => (!from || r.date >= from) && (!to || r.date <= to)).reduce((s,r)=>s+r.grand_total,0);
-  const totalOrders = trueTrue.orders;
-  const totalPurchaseValue = trueTrue.revenue;
+  await fetchTtaDaily(); // โหลดยอดจริงจากระบบ (v_tiktok_objective_summary รวม revenue/orders/UNSPECIFIED) — เบา ไม่ดึงข้อมูลดิบ
+  const dailyInRange = ttaDailyData.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
+  const totalSpend = dailyInRange.reduce((s,r)=>s+r.grand_total,0);
+  const totalOrders = dailyInRange.reduce((s,r)=>s+(r.total_orders||0),0);
+  const totalPurchaseValue = dailyInRange.reduce((s,r)=>s+(r.total_revenue||0),0);
   const overallRoas = totalSpend ? (totalPurchaseValue/totalSpend) : null;
   const namedSpend = ttaByClip.reduce((s,c)=>s+c.spend,0);
   const deesayCount = ttaByClip.filter(c=>c.isDeesay).length;
@@ -6784,15 +6767,17 @@ function renderTtaCampaignTable() {
 let ttaDailyData = [];
 async function fetchTtaDaily() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost&order=stat_date.asc&limit=5000`, { headers });
+  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc&limit=5000`, { headers });
   const rows = await res.json();
   const byDate = {};
   (Array.isArray(rows) ? rows : []).forEach(r => {
     const d = r.stat_date;
-    if (!byDate[d]) byDate[d] = { date: d, normal_spend: 0, gmv_max_total: 0 };
+    if (!byDate[d]) byDate[d] = { date: d, normal_spend: 0, gmv_max_total: 0, total_revenue: 0, total_orders: 0 };
     const amt = parseFloat(r.total_cost) || 0;
     if (r.objective === 'Product GMV Max' || r.objective === 'LIVE GMV Max') byDate[d].gmv_max_total += amt;
     else byDate[d].normal_spend += amt;
+    byDate[d].total_revenue += parseFloat(r.total_revenue) || 0;
+    byDate[d].total_orders += parseFloat(r.total_orders) || 0;
   });
   ttaDailyData = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date))
     .map(r => ({ ...r, grand_total: r.normal_spend + r.gmv_max_total }));
