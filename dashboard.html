@@ -6651,7 +6651,7 @@ const TTA_PAGE_SIZE = 10;
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  let baseUrl = `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*`;
+  let baseUrl = `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&order=item_id.asc,stat_date.asc`;
   if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
   if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
   const ttaRaw = await fetchPaginatedConcurrent(baseUrl, headers);
