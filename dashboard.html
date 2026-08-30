@@ -6290,7 +6290,7 @@ function metricInfoIcon(key) {
   return METRIC_INFO[key] ? fbeInfoIcon('ttc-info-'+key, METRIC_INFO[key]) : '';
 }
 
-function renderTtaFunnel() {
+function renderTtaFunnel(unattributedGap = 0) {
   const stageSpend = { Awareness: 0, Consideration: 0, Conversion: 0 };
   let unknownSpend = 0;
   ttaByClip.forEach(c => {
@@ -6298,6 +6298,9 @@ function renderTtaFunnel() {
     const stage = objectiveToStage(c.objective);
     stageSpend[stage] = (stageSpend[stage] || 0) + c.spend;
   });
+  // ยอดที่ระบบเก็บได้ (ค่าแอดรวมจริง) แต่ไม่มี item_id ให้จับคู่เป็นคลิปเลย (เช่น GMV Max ส่วนที่ TikTok ไม่ระบุคลิป)
+  // ไม่รู้ objective ที่แน่ชัด แต่ยึดตามที่เคยยืนยันไว้ก่อนหน้าว่า GMV Max ที่ไม่ระบุคลิปอยู่ Conversion stage เป็นส่วนใหญ่
+  stageSpend.Conversion += unattributedGap;
   const total = Object.values(stageSpend).reduce((s,v)=>s+v,0) + unknownSpend;
   const maxStage = Math.max(...Object.values(stageSpend), 1);
   const stageOrder = ['Awareness','Consideration','Conversion'];
@@ -6305,9 +6308,9 @@ function renderTtaFunnel() {
     const val = stageSpend[stage];
     const widthPct = 22 + (val / maxStage) * 68; // ขั้นต่ำ 22% กันแท่งหายไปเลยตอนค่าน้อยมาก
     const pct = total ? ((val/total)*100).toFixed(1) : '0.0';
-    const tip = FUNNEL_STAGE_TOOLTIP[stage];
+    const tip = FUNNEL_STAGE_TOOLTIP[stage] + (stage === 'Conversion' && unattributedGap > 1 ? `<br><br>รวม ฿${fmt(unattributedGap)} จากค่าแอดที่ระบุคลิปไม่ได้ (GMV Max ส่วนที่ TikTok ไม่ระบุ item_id)` : '');
     return `<div class="funnel-tier" style="width:${widthPct}%;background:${FUNNEL_STAGE_COLOR[stage]};position:relative;">
-      <span class="funnel-label">${FUNNEL_STAGE_TH[stage]} <span title="${tip}" style="cursor:help;opacity:0.7;">ⓘ</span></span>
+      <span class="funnel-label">${FUNNEL_STAGE_TH[stage]} ${fbeInfoIcon('tta-funnel-info-'+stage, tip)}</span>
       <span class="funnel-value">฿${fmt(val)}</span>
       <span class="funnel-pct">${pct}% ของงบทั้งหมด</span>
     </div>`;
@@ -6707,8 +6710,8 @@ async function renderTta() {
   const from = getDateValue('From'), to = getDateValue('To');
   const rangeKey = from + '|' + to;
   if (ttaLastRange !== rangeKey) { await fetchTtaData(from, to); ttaLastRange = rangeKey; }
-  await fetchTtaDaily(); // โหลดยอดจริงจากระบบ (v_tiktok_objective_summary รวม revenue/orders/UNSPECIFIED) — เบา ไม่ดึงข้อมูลดิบ
-  const dailyInRange = ttaDailyData.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
+  await fetchTtaDaily(from, to); // โหลดยอดจริงจากระบบ เฉพาะช่วงวันที่ที่เลือกอยู่ตอนนี้ (v_tiktok_objective_summary รวม revenue/orders/UNSPECIFIED)
+  const dailyInRange = ttaDailyData; // fetchTtaDaily กรองตามช่วงวันที่มาให้แล้ว ไม่ต้องกรองซ้ำ
   const totalSpend = dailyInRange.reduce((s,r)=>s+r.grand_total,0);
   const totalOrders = dailyInRange.reduce((s,r)=>s+(r.total_orders||0),0);
   const totalPurchaseValue = dailyInRange.reduce((s,r)=>s+(r.total_revenue||0),0);
@@ -6723,14 +6726,14 @@ async function renderTta() {
   const cpoTip = 'ค่าแอดจริงทั้งระบบ ÷ จำนวนออเดอร์จริงทั้งระบบ';
   document.getElementById('tta-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${ttaByClip.length}</div></div>
-    <div class="card" style="flex:1;min-width:160px;" title="${spendTip}"><div class="card-title">ค่าแอดรวม (ยอดจริงทั้งระบบ) ⓘ</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;" title="${revTip}"><div class="card-title">ยอดขาย TikTok Shop ⓘ</div><div class="kpi-value" style="color:var(--green);">฿${fmt(totalPurchaseValue)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;" title="${roasTip}"><div class="card-title">ROAS รวม ⓘ</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
-    <div class="card" style="flex:1;min-width:130px;" title="${ordersTip}"><div class="card-title">GMV Max Orders ⓘ</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;" title="${cpoTip}"><div class="card-title">CPO เฉลี่ย ⓘ</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
-    <div class="card" style="flex:1;min-width:130px;" title="นับเฉพาะคลิปที่ระบุตัวตนได้ (ไม่รวม LIVE ซึ่งไม่มีคลิปให้จับคู่)"><div class="card-title">Deesay / affi-KOL ⓘ</div><div class="kpi-value"><span style="color:var(--blue);">${deesayCount}</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount}</span></div></div>
+    <div class="card" style="flex:1;min-width:160px;position:relative;"><div class="card-title">ค่าแอดรวม (ยอดจริงทั้งระบบ) ${fbeInfoIcon('tta-kpi-spend', spendTip)}</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ยอดขาย TikTok Shop ${fbeInfoIcon('tta-kpi-rev', revTip)}</div><div class="kpi-value" style="color:var(--green);">฿${fmt(totalPurchaseValue)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ROAS รวม ${fbeInfoIcon('tta-kpi-roas', roasTip)}</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">GMV Max Orders ${fbeInfoIcon('tta-kpi-orders', ordersTip)}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">CPO เฉลี่ย ${fbeInfoIcon('tta-kpi-cpo', cpoTip)}</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">Deesay / affi-KOL ${fbeInfoIcon('tta-kpi-deesay', 'นับเฉพาะคลิปที่ระบุตัวตนได้ (ไม่รวม LIVE ซึ่งไม่มีคลิปให้จับคู่)')}</div><div class="kpi-value"><span style="color:var(--blue);">${deesayCount}</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount}</span></div></div>
   `;
-  renderTtaFunnel();
+  renderTtaFunnel(unattributedGap);
   renderTtaCreatorSummary();
   renderTtaCampaignTable();
   renderTtaTable();
@@ -6765,9 +6768,15 @@ function renderTtaCampaignTable() {
 }
 
 let ttaDailyData = [];
-async function fetchTtaDaily() {
+let ttaDailyLastRange = null;
+async function fetchTtaDaily(fromDate, toDate) {
+  const rangeKey = (fromDate||'') + '|' + (toDate||'');
+  if (ttaDailyLastRange === rangeKey && ttaDailyData.length) return; // ช่วงวันที่เดิม ไม่ต้องดึงซ้ำ
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc&limit=5000`, { headers });
+  let url = `${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc&limit=5000`;
+  if (fromDate) url += `&stat_date=gte.${fromDate}`;
+  if (toDate) url += `&stat_date=lte.${toDate}`;
+  const res = await fetch(url, { headers });
   const rows = await res.json();
   const byDate = {};
   (Array.isArray(rows) ? rows : []).forEach(r => {
@@ -6781,9 +6790,10 @@ async function fetchTtaDaily() {
   });
   ttaDailyData = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date))
     .map(r => ({ ...r, grand_total: r.normal_spend + r.gmv_max_total }));
+  ttaDailyLastRange = rangeKey;
 }
 async function renderTtaDaily() {
-  if (!ttaDailyData.length) await fetchTtaDaily();
+  if (!ttaDailyData.length) { const from = getDateValue('From'), to = getDateValue('To'); await fetchTtaDaily(from, to); }
   const labels = ttaDailyData.map(r => new Date(r.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
   const normalArr = ttaDailyData.map(r => parseFloat(r.normal_spend)||0);
   const gmvArr = ttaDailyData.map(r => parseFloat(r.gmv_max_total)||0);
