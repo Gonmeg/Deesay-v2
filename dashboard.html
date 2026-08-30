@@ -1784,7 +1784,7 @@ async function fetchWithRetry(url, headers, retries = 3, backoffMs = 800) {
 // (เดิม 163,000 แถวต้องรอ 163 รอบต่อคิว ~163x เวลาต่อ request เดียว ตอนนี้ลดเหลือ ~163/CONCURRENCY รอบ)
 // วิธีทำ: ขอ total count จาก Supabase ก่อน (header Prefer: count=exact) โดยไม่ต้องโหลดข้อมูลจริงเลย
 // แล้วคำนวณว่าต้องมีกี่หน้า จากนั้นยิงพร้อมกันเป็นชุดๆ (batch) จำกัดจำนวนพร้อมกันไม่ให้เยอะเกินไปจนโดน rate limit
-async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concurrency = 6) {
+async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concurrency = 2) {
   const countHeaders = { ...headers, 'Prefer': 'count=exact' };
   const probe = await fetchWithRetry(`${baseUrl}&limit=1&offset=0`, countHeaders);
   const range = probe.headers.get('content-range'); // รูปแบบ "0-0/163245"
@@ -1813,6 +1813,10 @@ async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concu
       fetchWithRetry(`${baseUrl}&limit=${pageSize}&offset=${offset}`, headers).then(r => r.json())
     ));
     results.forEach(rows => { all = all.concat(rows); });
+  }
+  if (all.length !== total) {
+    // ป้องกันข้อมูลหายเงียบๆ (เช่น Supabase จำกัด max-rows ต่อคำขอไว้น้อยกว่า pageSize ที่ขอ) — โยน error ให้เห็นทันทีแทนที่จะโชว์เลขผิดแบบไม่รู้ตัว
+    throw new Error(`fetchPaginatedConcurrent: ได้ ${all.length} แถว แต่ระบบรายงานว่ามี ${total} แถว (ข้อมูลอาจหายระหว่างแบ่งหน้า) — ${baseUrl.split('?')[0]}`);
   }
   return all;
 }
