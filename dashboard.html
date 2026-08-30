@@ -6773,7 +6773,7 @@ function renderTtaCampaignTable() {
     let name = c.campaign;
     if (!name) {
       name = (c.objective === 'Product GMV Max' || c.objective === 'LIVE GMV Max')
-        ? `GMV Max (ไม่มีชื่อแคมเปญ — ${c.objective})`
+        ? c.objective
         : '(ไม่มีชื่อแคมเปญ)';
     }
     if (!byCampaign[name]) byCampaign[name] = { name, clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
