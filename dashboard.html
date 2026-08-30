@@ -1144,15 +1144,10 @@
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
           <div class="section-title">ค่าแอดรายวัน (ยอดรวมทั้งหมด — ใช้เทียบกับที่บันทึกเอง)</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblTtaDaily')">⬇ Export CSV</button>
+          <button class="btn btn-ghost" onclick="exportTtaDailyCsv()">⬇ Export CSV</button>
         </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">เอาเมาส์วางที่กราฟเพื่อดูยอดทั้ง 2 ก้อนพร้อมกัน</div>
         <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtaDaily"></canvas></div>
-        <div class="table-wrap" style="margin-top:16px;max-height:300px;overflow-y:auto;">
-          <table id="tblTtaDaily">
-            <thead><tr><th>วันที่</th><th>Awareness</th><th>GMV Max</th><th>รวมทั้งหมด</th></tr></thead>
-            <tbody id="tbodyTtaDaily"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
       </div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -1163,18 +1158,36 @@
       <div class="section-title" style="margin-bottom:10px;" id="ttaCreatorSummaryTitle">📈 สรุปตาม Creator (Top 10)</div>
       <div id="ttaCreatorSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:22px;"></div>
 
-      <div class="section-header">
-        <div class="section-title">สรุปตามแคมเปญ</div>
-        <button class="btn btn-ghost" onclick="exportTable('tblTtaCampaign')">⬇ Export CSV</button>
-      </div>
-      <input type="text" id="ttaCampaignSearch" placeholder="🔍 ค้นหาชื่อแคมเปญ..." oninput="renderTtaCampaignTable()" style="width:100%;margin-bottom:12px;">
-      <div class="table-wrap" style="max-height:320px;overflow-y:auto;margin-bottom:22px;">
-        <table id="tblTtaCampaign" class="sticky-head-table">
-          <thead><tr><th>แคมเปญ</th><th>จำนวนคลิป</th><th>ค่าแอด</th><th>ยอดขาย</th><th>ROAS</th><th>orders</th><th>CPO</th></tr></thead>
-          <tbody id="ttaCampaignBody"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
-        </table>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">สรุปตามแคมเปญ</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-ghost" onclick="exportTable('tblTtaCampaign')">⬇ Export CSV</button>
+            <div style="position:relative;">
+              <button class="btn btn-ghost" id="ttaCampaignMetricsBtn" onclick="toggleMetricsPanel('ttaCampaign')">
+                ⚙ Metrics <span id="ttaCampaign-metric-count" style="color:var(--accent);"></span>
+              </button>
+              <div id="ttaCampaign-metrics-panel" class="metrics-panel" style="display:none;">
+                <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
+                <div id="ttaCampaign-metrics-checks"></div>
+                <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                  <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('ttaCampaign')">ค่าแนะนำ</button>
+                  <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('ttaCampaign')">เลือกทั้งหมด</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <input type="text" id="ttaCampaignSearch" placeholder="🔍 ค้นหาชื่อแคมเปญ..." oninput="renderTtaCampaignTable()" style="width:100%;margin-bottom:12px;">
+        <div class="table-wrap" style="max-height:320px;overflow-y:auto;">
+          <table id="tblTtaCampaign" class="sticky-head-table">
+            <thead id="ttaCampaignTableHead"></thead>
+            <tbody id="ttaCampaignBody"><tr><td class="empty">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
       </div>
 
+      <div class="card" style="margin-bottom:20px;">
       <div class="section-header">
         <div class="section-title">รายละเอียดคลิปทั้งหมด</div>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -1207,6 +1220,7 @@
         </table>
       </div>
       <div id="ttaTablePager"></div>
+      </div>
     </div>
 
     <div class="page" id="page-livesearch">
@@ -6349,13 +6363,23 @@ const METRIC_CONFIGS = {
       likes:{label:'ไลค์ (จากแอด)'}, paidcomments:{label:'คอมเมนต์ (จากแอด)'}, paidshares:{label:'แชร์ (จากแอด)'},
       follows:{label:'ผู้ติดตามใหม่ (จากแอด)'}, profilevisits:{label:'เข้าดูโปรไฟล์ (จากแอด)'}
     }
+  },
+  ttaCampaign: {
+    order: ['campaign','clips','spend','revenue','roas','orders','cpo'],
+    meta: {
+      campaign:{label:'แคมเปญ',always:true},
+      clips:{label:'จำนวนคลิป',default:true}, spend:{label:'ค่าแอด',default:true},
+      revenue:{label:'ยอดขาย',default:true}, roas:{label:'ROAS',default:true},
+      orders:{label:'orders',default:true}, cpo:{label:'CPO',default:true}
+    }
   }
 };
 const metricState = {
   ttc: { order: [...METRIC_CONFIGS.ttc.order], active: {} },
-  tta: { order: [...METRIC_CONFIGS.tta.order], active: {} }
+  tta: { order: [...METRIC_CONFIGS.tta.order], active: {} },
+  ttaCampaign: { order: [...METRIC_CONFIGS.ttaCampaign.order], active: {} }
 };
-['ttc','tta'].forEach(page => {
+['ttc','tta','ttaCampaign'].forEach(page => {
   METRIC_CONFIGS[page].order.forEach(k => {
     const m = METRIC_CONFIGS[page].meta[k];
     metricState[page].active[k] = !!(m.always || m.default);
@@ -6429,6 +6453,7 @@ function allMetrics(page) {
 function rerenderPage(page) {
   if (page === 'ttc') { ttcPage = 1; renderTtcCurrentView(); }
   else if (page === 'tta') { ttaPage = 1; renderTtaTable(); }
+  else if (page === 'ttaCampaign') { renderTtaCampaignTable(); }
 }
 function activeCols(page) {
   return metricState[page].order.filter(k => metricState[page].active[k]);
@@ -6744,7 +6769,13 @@ function renderTtaCampaignTable() {
   const q = (document.getElementById('ttaCampaignSearch')?.value || '').toLowerCase();
   const byCampaign = {};
   ttaByClip.forEach(c => {
-    const name = c.campaign || '(ไม่มีชื่อแคมเปญ)';
+    // ถ้าไม่มีชื่อแคมเปญ แต่รู้ objective ว่าเป็น GMV Max ให้แยกกลุ่มชัดเจน ไม่ปนกับ "(ไม่มีชื่อแคมเปญ)" ทั่วไปที่ไม่รู้ที่มา
+    let name = c.campaign;
+    if (!name) {
+      name = (c.objective === 'Product GMV Max' || c.objective === 'LIVE GMV Max')
+        ? `GMV Max (ไม่มีชื่อแคมเปญ — ${c.objective})`
+        : '(ไม่มีชื่อแคมเปญ)';
+    }
     if (!byCampaign[name]) byCampaign[name] = { name, clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
     byCampaign[name].clips++;
     byCampaign[name].spend += c.spend;
@@ -6755,16 +6786,25 @@ function renderTtaCampaignTable() {
     ...v, cpo: v.orders ? (v.spend/v.orders) : null, roas: v.spend ? (v.purchaseValue/v.spend) : null
   })).sort((a,b) => b.spend - a.spend);
   if (q) arr = arr.filter(c => c.name.toLowerCase().includes(q));
+  const cols = activeCols('ttaCampaign');
+  const cellHtml = (c, k) => {
+    switch (k) {
+      case 'campaign': return ttcEsc(c.name);
+      case 'clips': return fmt(c.clips);
+      case 'spend': return '฿'+fmt(c.spend);
+      case 'revenue': return `<span style="color:var(--green);">฿${fmt(c.purchaseValue)}</span>`;
+      case 'roas': return c.roas!==null?c.roas.toFixed(2)+'x':'—';
+      case 'orders': return fmt(c.orders);
+      case 'cpo': return c.cpo!==null?'฿'+Math.round(c.cpo):'—';
+      default: return '';
+    }
+  };
+  document.getElementById('ttaCampaignTableHead').innerHTML = '<tr>' + cols.map(k =>
+    `<th style="${k==='campaign'?'':'text-align:right;'}">${METRIC_CONFIGS.ttaCampaign.meta[k].label}</th>`
+  ).join('') + '</tr>';
   document.getElementById('ttaCampaignBody').innerHTML = arr.length ? arr.map(c => `
-    <tr>
-      <td>${ttcEsc(c.name)}</td>
-      <td style="text-align:right;">${fmt(c.clips)}</td>
-      <td style="text-align:right;">฿${fmt(c.spend)}</td>
-      <td style="text-align:right;color:var(--green);">฿${fmt(c.purchaseValue)}</td>
-      <td style="text-align:right;">${c.roas!==null?c.roas.toFixed(2)+'x':'—'}</td>
-      <td style="text-align:right;">${fmt(c.orders)}</td>
-      <td style="text-align:right;">${c.cpo!==null?'฿'+Math.round(c.cpo):'—'}</td>
-    </tr>`).join('') : '<tr><td colspan="7" class="empty">ไม่พบข้อมูล</td></tr>';
+    <tr>${cols.map(k => `<td style="${k==='campaign'?'':'text-align:right;'}">${cellHtml(c,k)}</td>`).join('')}</tr>`).join('')
+    : `<tr><td colspan="${cols.length}" class="empty">ไม่พบข้อมูล</td></tr>`;
 }
 
 let ttaDailyData = [];
@@ -6792,22 +6832,45 @@ async function fetchTtaDaily(fromDate, toDate) {
     .map(r => ({ ...r, grand_total: r.normal_spend + r.gmv_max_total }));
   ttaDailyLastRange = rangeKey;
 }
+function exportTtaDailyCsv() {
+  const rows = [['วันที่','อื่นๆ (ไม่ใช่ GMV Max)','GMV Max','รวมทั้งหมด']];
+  [...ttaDailyData].reverse().forEach(r => {
+    rows.push([r.date, r.normal_spend, r.gmv_max_total, r.grand_total]);
+  });
+  const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'tiktok_ads_daily.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function renderTtaDaily() {
   if (!ttaDailyData.length) { const from = getDateValue('From'), to = getDateValue('To'); await fetchTtaDaily(from, to); }
   const labels = ttaDailyData.map(r => new Date(r.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
   const normalArr = ttaDailyData.map(r => parseFloat(r.normal_spend)||0);
   const gmvArr = ttaDailyData.map(r => parseFloat(r.gmv_max_total)||0);
+  const totalArr = ttaDailyData.map(r => (parseFloat(r.normal_spend)||0) + (parseFloat(r.gmv_max_total)||0));
   if (charts['chartTtaDaily']) charts['chartTtaDaily'].destroy();
   const ctx = document.getElementById('chartTtaDaily');
   if (ctx) {
     charts['chartTtaDaily'] = new Chart(ctx, {
       data: { labels, datasets: [
-        { type:'bar', label:'Awareness', data: normalArr, backgroundColor:'rgba(96,165,250,0.65)', borderColor:'#60a5fa', borderWidth:1, borderRadius:3, stack:'s' },
+        { type:'bar', label:'อื่นๆ (Awareness/Consideration/Traditional Ads)', data: normalArr, backgroundColor:'rgba(96,165,250,0.65)', borderColor:'#60a5fa', borderWidth:1, borderRadius:3, stack:'s' },
         { type:'bar', label:'GMV Max', data: gmvArr, backgroundColor:'rgba(200,169,110,0.65)', borderColor:'#c8a96e', borderWidth:1, borderRadius:3, stack:'s' },
       ]},
       options: {
         responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ labels:{ color: chartLegendColor(), font:{family:'Sarabun',size:11}, boxWidth:12 } } },
+        interaction: { mode:'index', intersect:false }, // เอาเมาส์วางตรงไหนของแท่งก็ได้ ขึ้น tooltip ทั้ง 2 ค่าพร้อมกัน ไม่ต้องเล็งเฉพาะสี
+        plugins:{
+          legend:{ labels:{ color: chartLegendColor(), font:{family:'Sarabun',size:11}, boxWidth:12 } },
+          tooltip:{
+            callbacks: {
+              footer: (items) => { const sum = items.reduce((s,i)=>s+(i.parsed.y||0),0); return 'รวมทั้งหมด: ฿'+fmt(sum); },
+              label: (item) => `${item.dataset.label}: ฿${fmt(item.parsed.y)}`
+            }
+          }
+        },
         scales:{
           x:{ stacked:true, ticks:{color:chartTickColor(),font:{family:'Sarabun',size:10}}, grid:{color:chartGridColor()} },
           y:{ stacked:true, ticks:{color:chartTickColor(),font:{size:10},callback:v=>fmtB(v)}, grid:{color:chartGridColor()} }
@@ -6815,13 +6878,6 @@ async function renderTtaDaily() {
       }
     });
   }
-  document.getElementById('tbodyTtaDaily').innerHTML = [...ttaDailyData].reverse().map(r => `
-    <tr>
-      <td>${new Date(r.date).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})}</td>
-      <td>฿${fmt(r.normal_spend)}</td>
-      <td style="color:var(--accent);">฿${fmt(r.gmv_max_total)}</td>
-      <td style="font-weight:700;">฿${fmt(r.grand_total)}</td>
-    </tr>`).join('') || '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
 function renderTtaCreatorSummary() {
