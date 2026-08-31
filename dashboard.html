@@ -6923,12 +6923,13 @@ const TTA_PAGE_SIZE = 40;
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  // ดึงทีละก้อน 7 วัน แบบเรียงลำดับทีละคำขอ (ไม่ยิงพร้อมกันเลย) — v_tiktok_creative_performance เป็น view ที่รวมข้อมูล
-  // จากหลายตาราง คำนวณหนักกว่าตารางธรรมดา ยิงพร้อมกันหลายคำขอ (แม้แค่ 4) ทำให้พังบนช่วงวันที่กว้างๆ
-  // ก้อนละ 7 วันเล็กพอที่จะไม่ทำให้ query ช้า และไม่ต้องพึ่ง item_id เป็นตัวคั่นหน้าเหมือนก่อนหน้า (กัน bug ตัวเลขเพี้ยน)
+  // ดึงทีละก้อน 4 วัน แบบเรียงลำดับทีละคำขอ (ไม่ยิงพร้อมกันเลย) — v_tiktok_creative_performance เป็น view ที่รวมข้อมูล
+  // จากหลายตาราง คำนวณหนักกว่าตารางธรรมดา แต่ละก้อนแยก try/catch กันเอง ก้อนไหนพังไม่ทำให้ก้อนอื่นหยุดตามไปด้วย
+  // ถ้ามีก้อนไหนพังจริงๆ จะเก็บรายชื่อไว้ใน ttaFailedChunks ให้ renderTta() เตือนผู้ใช้ชัดเจน ไม่ปล่อยให้ดูเหมือนข้อมูลครบ
   let ttaRaw = [];
+  const failedChunks = [];
   if (fromDate && toDate) {
-    const CHUNK_DAYS = 7;
+    const CHUNK_DAYS = 4;
     let chunkStart = new Date(fromDate + 'T00:00:00Z');
     const end = new Date(toDate + 'T00:00:00Z');
     while (chunkStart <= end) {
@@ -6937,16 +6938,22 @@ async function fetchTtaData(fromDate, toDate) {
       const actualEnd = chunkEnd > end ? end : chunkEnd;
       const s = chunkStart.toISOString().split('T')[0];
       const e = actualEnd.toISOString().split('T')[0];
-      const res = await fetchWithRetry(
-        `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&stat_date=gte.${s}&stat_date=lte.${e}&limit=5000`,
-        headers
-      );
-      const rows = await res.json();
-      ttaRaw = ttaRaw.concat(Array.isArray(rows) ? rows : []);
+      try {
+        const res = await fetchWithRetry(
+          `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&stat_date=gte.${s}&stat_date=lte.${e}&limit=5000`,
+          headers, 5, 1000 // เพิ่มจำนวนลองซ้ำจาก 3 เป็น 5 ครั้ง หน่วงนานขึ้น ให้โอกาส view ที่คำนวณหนักตอบทันมากขึ้น
+        );
+        const rows = await res.json();
+        ttaRaw = ttaRaw.concat(Array.isArray(rows) ? rows : []);
+      } catch (err) {
+        console.error(`TikTok Ads: ดึงข้อมูลช่วง ${s} ถึง ${e} ไม่สำเร็จ`, err);
+        failedChunks.push(`${s} - ${e}`);
+      }
       chunkStart.setUTCDate(chunkStart.getUTCDate() + CHUNK_DAYS);
     }
   }
   ttaRawRows = ttaRaw;
+  window._ttaFailedChunks = failedChunks;
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
@@ -7033,6 +7040,9 @@ async function renderTta() {
     console.error('renderTta fetch failed:', e);
     showError('โหลดข้อมูล TikTok Ads ไม่สำเร็จ: ' + e.message + ' — ลองกดค้นหาใหม่อีกครั้ง');
     return;
+  }
+  if (window._ttaFailedChunks && window._ttaFailedChunks.length) {
+    showError(`⚠️ ข้อมูลระดับคลิป (พีระมิด/ตารางคลิป) โหลดไม่ครบ — ช่วงวันที่นี้ดึงไม่สำเร็จ: ${window._ttaFailedChunks.join(', ')} — ลองกดค้นหาใหม่อีกครั้ง`);
   }
   const dailyInRange = ttaDailyData; // fetchTtaDaily กรองตามช่วงวันที่มาให้แล้ว ไม่ต้องกรองซ้ำ
   const totalSpend = dailyInRange.reduce((s,r)=>s+r.grand_total,0);
