@@ -6910,7 +6910,7 @@ async function fetchTtaData(fromDate, toDate) {
   let baseUrl = `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&order=item_id.asc,stat_date.asc`;
   if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
   if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
-  const ttaRaw = await fetchPaginatedConcurrent(baseUrl, headers);
+  const ttaRaw = await fetchKeyset(baseUrl, headers, ['item_id', 'stat_date']);
   ttaRawRows = ttaRaw;
   const byClip = {};
   ttaRaw.forEach(r => {
@@ -7074,11 +7074,10 @@ async function fetchTtaDaily(fromDate, toDate) {
   const rangeKey = (fromDate||'') + '|' + (toDate||'');
   if (ttaDailyLastRange === rangeKey && ttaDailyData.length) return; // ช่วงวันที่เดิม ไม่ต้องดึงซ้ำ
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  let url = `${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc&limit=5000`;
-  if (fromDate) url += `&stat_date=gte.${fromDate}`;
-  if (toDate) url += `&stat_date=lte.${toDate}`;
-  const res = await fetch(url, { headers });
-  const rows = await res.json();
+  let baseUrl = `${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc,objective.asc`;
+  if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
+  if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
+  const rows = await fetchKeyset(baseUrl, headers, ['stat_date', 'objective']);
   const byDate = {};
   (Array.isArray(rows) ? rows : []).forEach(r => {
     const d = r.stat_date;
