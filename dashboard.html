@@ -6923,30 +6923,28 @@ const TTA_PAGE_SIZE = 40;
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  // ดึงทีละวันแทนการใช้ keyset pagination ที่พึ่ง item_id เป็นตัวคั่นหน้า — item_id ของ TikTok ยาว 19 หลัก
-  // เกินขีดจำกัดความแม่นยำของตัวเลขใน JavaScript (16 หลัก) ทำให้คำนวณ "แถวถัดไป" เพี้ยนได้ถ้าใช้เป็น cursor
-  // แต่ละวันมีข้อมูลไม่เยอะ (ไม่ถึง 1000 แถวแน่นอน) เลยไม่ต้องแบ่งหน้าเลย ปลอดภัยและเรียบง่ายกว่ามาก
-  const dates = [];
-  if (fromDate && toDate) {
-    const cur = new Date(fromDate + 'T00:00:00Z');
-    const end = new Date(toDate + 'T00:00:00Z');
-    while (cur <= end) { dates.push(cur.toISOString().split('T')[0]); cur.setUTCDate(cur.getUTCDate() + 1); }
-  }
+  // ดึงทีละก้อน 7 วัน แบบเรียงลำดับทีละคำขอ (ไม่ยิงพร้อมกันเลย) — v_tiktok_creative_performance เป็น view ที่รวมข้อมูล
+  // จากหลายตาราง คำนวณหนักกว่าตารางธรรมดา ยิงพร้อมกันหลายคำขอ (แม้แค่ 4) ทำให้พังบนช่วงวันที่กว้างๆ
+  // ก้อนละ 7 วันเล็กพอที่จะไม่ทำให้ query ช้า และไม่ต้องพึ่ง item_id เป็นตัวคั่นหน้าเหมือนก่อนหน้า (กัน bug ตัวเลขเพี้ยน)
   let ttaRaw = [];
-  if (dates.length) {
-    const concurrency = 4;
-    for (let i = 0; i < dates.length; i += concurrency) {
-      const batch = dates.slice(i, i + concurrency);
-      const results = await Promise.all(batch.map(d =>
-        fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&stat_date=eq.${d}&limit=5000`, headers)
-          .then(r => r.json())
-      ));
-      results.forEach(rows => { ttaRaw = ttaRaw.concat(rows); });
+  if (fromDate && toDate) {
+    const CHUNK_DAYS = 7;
+    let chunkStart = new Date(fromDate + 'T00:00:00Z');
+    const end = new Date(toDate + 'T00:00:00Z');
+    while (chunkStart <= end) {
+      const chunkEnd = new Date(chunkStart);
+      chunkEnd.setUTCDate(chunkEnd.getUTCDate() + CHUNK_DAYS - 1);
+      const actualEnd = chunkEnd > end ? end : chunkEnd;
+      const s = chunkStart.toISOString().split('T')[0];
+      const e = actualEnd.toISOString().split('T')[0];
+      const res = await fetchWithRetry(
+        `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&stat_date=gte.${s}&stat_date=lte.${e}&limit=5000`,
+        headers
+      );
+      const rows = await res.json();
+      ttaRaw = ttaRaw.concat(Array.isArray(rows) ? rows : []);
+      chunkStart.setUTCDate(chunkStart.getUTCDate() + CHUNK_DAYS);
     }
-  } else {
-    // ไม่มีช่วงวันที่ระบุ (ไม่ควรเกิดขึ้นปกติ) — fallback ดึงทั้งหมดแบบ keyset เดิม กันพังไปเลย
-    const baseUrl = `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&order=stat_date.asc`;
-    ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date']);
   }
   ttaRawRows = ttaRaw;
   const byClip = {};
