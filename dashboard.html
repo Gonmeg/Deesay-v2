@@ -256,7 +256,7 @@
     </div>
     <div id="navGroup-tt" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
-      <div class="nav-item nav-sub" onclick="showPage('ttcontent',null,this)"><span class="nav-icon">🎬</span> ผลงานคอนเทนต์</div>
+      <!-- ผลงานคอนเทนต์ (ttcontent) ซ่อนไว้ชั่วคราว — รอสมัคร TikTok Accounts API (แทน Windsor) อนุมัติก่อนแล้วค่อยเปิดกลับมา โค้ด renderTtc() ยังอยู่ครบ ไม่ได้ลบ -->
       <div class="nav-item nav-sub" onclick="showPage('ttads',null,this)"><span class="nav-icon">📢</span> TikTok Ads</div>
       <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
       <div class="nav-item nav-sub" onclick="showPage('creatorperf',null,this)"><span class="nav-icon">👤</span> Creator Performance</div>
@@ -460,7 +460,7 @@
           <div style="position:relative;margin-left:auto;">
             <button class="btn btn-primary" onclick="toggleAddPtPromo()">+ เพิ่มแถว</button>
             <div id="ptAddPromoBox" style="display:none;position:absolute;top:calc(100% + 6px);right:0;width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:50;">
-              <input type="text" id="ptPromoSearch" placeholder="พิมพ์ชื่อโปร/SKU (ขึ้นต้นตรงกัน)..." oninput="filterPtAddDropdown()" style="width:100%;padding:8px 10px;margin-bottom:6px;">
+              <input type="text" id="ptPromoSearch" placeholder="พิมพ์ชื่อโปร/SKU (ขึ้นต้นตรงกัน)..." oninput="debouncedFilterPtAddDropdown()" style="width:100%;padding:8px 10px;margin-bottom:6px;">
               <div id="ptAddDropdown" style="max-height:380px;overflow-y:auto;"></div>
             </div>
           </div>
@@ -674,7 +674,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ค้นหาสินค้า (ดูเฉพาะลูกค้าที่เคยซื้อสินค้าที่เลือก "ครบทุกตัว" ในประวัติ ไม่ต้องซื้อพร้อมกัน — เลือกได้หลายตัว):</div>
           <div style="position:relative;flex:1;min-width:200px;">
-            <input type="text" id="crmProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="filterCrmProductDropdown()" onfocus="showCrmProductDropdown()" onblur="setTimeout(hideCrmProductDropdown,200)" style="width:100%;padding:7px 12px;">
+            <input type="text" id="crmProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="debouncedFilterCrmProductDropdown()" onfocus="showCrmProductDropdown()" onblur="setTimeout(hideCrmProductDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="crmProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <button class="btn btn-ghost" onclick="clearCrmProduct()" id="crmProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
@@ -682,7 +682,7 @@
         <div id="crmProductChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เฉพาะลูกค้าที่ซื้อล่าสุดไม่เกิน:</div>
-          <input type="number" id="crmRecencyFilter" placeholder="เช่น 60" min="1" oninput="onCrmRecencyChange()" style="width:90px;text-align:center;">
+          <input type="number" id="crmRecencyFilter" placeholder="เช่น 60" min="1" oninput="debouncedOnCrmRecencyChange()" style="width:90px;text-align:center;">
           <div style="font-size:13px;color:var(--text2);">วัน (เว้นว่าง = ดูทั้งหมด)</div>
           <button class="btn btn-ghost" onclick="clearCrmRecency()" id="crmRecencyClearBtn" style="display:none;">✕ ล้าง</button>
         </div>
@@ -730,7 +730,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เลือกสินค้า:</div>
           <div style="position:relative;flex:1;min-width:200px;">
-            <input type="text" id="nbProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="filterNbProductDropdown()" onfocus="showNbProductDropdown()" onblur="setTimeout(hideNbProductDropdown,200)" style="width:100%;padding:7px 12px;">
+            <input type="text" id="nbProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="debouncedFilterNbProductDropdown()" onfocus="showNbProductDropdown()" onblur="setTimeout(hideNbProductDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="nbProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <button class="btn btn-ghost" onclick="clearNbProduct()" id="nbProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
@@ -775,7 +775,7 @@
             </select>
             <div style="font-size:11px;color:var(--text3);">เลือก SKU (สูงสุด 5):</div>
             <div style="position:relative;">
-              <input type="text" id="skuSearchInput" placeholder="พิมพ์ค้นหา SKU..." oninput="filterSkuDropdown()" onfocus="showSkuDropdown()" onblur="setTimeout(hideSkuDropdown,200)" style="width:160px;font-family:'IBM Plex Mono',monospace;">
+              <input type="text" id="skuSearchInput" placeholder="พิมพ์ค้นหา SKU..." oninput="debouncedFilterSkuDropdown()" onfocus="showSkuDropdown()" onblur="setTimeout(hideSkuDropdown,200)" style="width:160px;font-family:'IBM Plex Mono',monospace;">
               <div id="skuDropdownList" style="display:none;position:absolute;top:100%;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;min-width:200px;max-height:200px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
             </div>
             <div id="skuTrendSelector" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
@@ -811,7 +811,7 @@
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เลือก SKU ที่ต้องการวิเคราะห์:</div>
           <div style="position:relative;flex:1;min-width:200px;">
-            <input type="text" id="skuAnalysisSearch" placeholder="พิมพ์ค้นหา SKU หรือชื่อสินค้า..." oninput="filterSkuAnalysisDropdown()" onfocus="showSkuAnalysisDropdown()" onblur="setTimeout(hideSkuAnalysisDropdown,200)" style="width:100%;padding:7px 12px;">
+            <input type="text" id="skuAnalysisSearch" placeholder="พิมพ์ค้นหา SKU หรือชื่อสินค้า..." oninput="debouncedFilterSkuAnalysisDropdown()" onfocus="showSkuAnalysisDropdown()" onblur="setTimeout(hideSkuAnalysisDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="skuAnalysisDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <div id="skuAnalysisChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
@@ -959,7 +959,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เลือกสินค้าที่ต้องการดู:</div>
           <div style="position:relative;flex:1;min-width:180px;">
-            <input type="text" id="flowSkuSearch" placeholder="ค้นหาสินค้าเพิ่มเติม..." oninput="filterFlowSkuDropdown()" onfocus="showFlowSkuDropdown()" onblur="setTimeout(hideFlowSkuDropdown,200)" style="width:100%;padding:7px 12px;">
+            <input type="text" id="flowSkuSearch" placeholder="ค้นหาสินค้าเพิ่มเติม..." oninput="debouncedFilterFlowSkuDropdown()" onfocus="showFlowSkuDropdown()" onblur="setTimeout(hideFlowSkuDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="flowSkuDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <button class="btn btn-ghost btn-sm" onclick="resetFlowTopSKUs()" style="white-space:nowrap;">↺ Top 10 อัตโนมัติ</button>
@@ -1152,7 +1152,7 @@
 
       <div class="card" style="margin-bottom:20px;">
         <input type="text" id="ttaCreatorSearch" placeholder="🔍 ค้นหา creator เช่น @beam_reviews หรือ deesaythailand..."
-          oninput="renderTtaCreatorSummary(); renderTtaTable();" style="width:100%;">
+          oninput="debouncedTtaCreatorAndTable()" style="width:100%;">
       </div>
 
       <div class="section-title" style="margin-bottom:10px;" id="ttaCreatorSummaryTitle">📈 สรุปตาม Creator (Top 10)</div>
@@ -1178,7 +1178,7 @@
             </div>
           </div>
         </div>
-        <input type="text" id="ttaCampaignSearch" placeholder="🔍 ค้นหาชื่อแคมเปญ..." oninput="renderTtaCampaignTable()" style="width:100%;margin-bottom:12px;">
+        <input type="text" id="ttaCampaignSearch" placeholder="🔍 ค้นหาชื่อแคมเปญ..." oninput="debouncedRenderTtaCampaignTable()" style="width:100%;margin-bottom:12px;">
         <div class="table-wrap" style="max-height:320px;overflow-y:auto;">
           <table id="tblTtaCampaign" class="sticky-head-table">
             <thead id="ttaCampaignTableHead"></thead>
@@ -1211,7 +1211,7 @@
           </div>
         </div>
       </div>
-      <input type="text" id="ttaClipSearch" placeholder="🔍 ค้นหาคลิป (แคปชั่น / แคมเปญ / ชื่อช่อง)..." oninput="ttaPage=1;renderTtaTable();" style="width:100%;margin-bottom:12px;">
+      <input type="text" id="ttaClipSearch" placeholder="🔍 ค้นหาคลิป (แคปชั่น / แคมเปญ / ชื่อช่อง)..." oninput="debouncedTtaClipSearch()" style="width:100%;margin-bottom:12px;">
 
       <div class="table-wrap" style="max-height:560px;overflow-y:auto;">
         <table id="tblTtaAll" class="sticky-head-table">
@@ -1229,7 +1229,7 @@
         <div class="ls-filter-grid">
           <div class="ls-field" style="position:relative;grid-column:span 2;">
             <label>Creator Handle</label>
-            <input type="text" class="ls-input" id="lsCreatorSearch" placeholder="ค้นหา creator..." oninput="filterLsCreatorDropdown()" onfocus="showLsCreatorDropdown()" onblur="setTimeout(hideLsCreatorDropdown,200)">
+            <input type="text" class="ls-input" id="lsCreatorSearch" placeholder="ค้นหา creator..." oninput="debouncedFilterLsCreatorDropdown()" onfocus="showLsCreatorDropdown()" onblur="setTimeout(hideLsCreatorDropdown,200)">
             <div id="lsCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <div class="ls-field">
@@ -1286,7 +1286,7 @@
         <div class="section-title" style="margin-bottom:14px;">ค้นหา Creator <span style="font-size:11px;font-weight:400;color:var(--text3);">— ไม่เลือก = ดูยอดรวมทุก creator</span></div>
         <div style="position:relative;max-width:400px;display:flex;gap:8px;align-items:center;">
           <div style="position:relative;flex:1;">
-            <input type="text" class="ls-input" id="cpCreatorSearch" placeholder="พิมพ์ชื่อ creator เช่น deesaythailand..." oninput="filterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
+            <input type="text" class="ls-input" id="cpCreatorSearch" placeholder="พิมพ์ชื่อ creator เช่น deesaythailand..." oninput="debouncedFilterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
             <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <button class="btn btn-ghost" id="cpClearBtn" onclick="clearCpCreator()" style="display:none;white-space:nowrap;">✕ ดูทุกคน</button>
@@ -1629,6 +1629,23 @@ let orderIdToPromo = {};  // order_id -> sku_promotion (มาจาก orders) 
 
 // ===== UTILS =====
 const fmt = n => isNaN(n) ? '—' : Number(n).toLocaleString('th-TH', {maximumFractionDigits:0});
+// หน่วงเวลาก่อน render จริง กันกระตุกตอนพิมพ์เร็วๆ ในช่องค้นหาที่กรองข้อมูลชุดใหญ่ (มีผลกับ UX เท่านั้น ไม่กระทบผลลัพธ์การกรอง)
+function debounce(fn, ms = 250) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+const debouncedFilterPtAddDropdown = debounce(() => filterPtAddDropdown());
+const debouncedFilterCrmProductDropdown = debounce(() => filterCrmProductDropdown());
+const debouncedOnCrmRecencyChange = debounce(() => onCrmRecencyChange());
+const debouncedFilterNbProductDropdown = debounce(() => filterNbProductDropdown());
+const debouncedFilterSkuDropdown = debounce(() => filterSkuDropdown());
+const debouncedFilterSkuAnalysisDropdown = debounce(() => filterSkuAnalysisDropdown());
+const debouncedFilterFlowSkuDropdown = debounce(() => filterFlowSkuDropdown());
+const debouncedTtaCreatorAndTable = debounce(() => { renderTtaCreatorSummary(); renderTtaTable(); });
+const debouncedRenderTtaCampaignTable = debounce(() => renderTtaCampaignTable());
+const debouncedTtaClipSearch = debounce(() => { ttaPage = 1; renderTtaTable(); });
+const debouncedFilterLsCreatorDropdown = debounce(() => filterLsCreatorDropdown());
+const debouncedFilterCpCreatorDropdown = debounce(() => filterCpCreatorDropdown());
 const fmtB = n => {
   if (isNaN(n) || n === null) return '—';
   if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
@@ -2031,14 +2048,14 @@ function applyFilters() {
 
 // ===== NAVIGATION =====
 const pageTitles = {
-  overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook', promotion: 'Promotion / SKU',
+  overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook',
   geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
-  tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
+  tthub: 'ภาพรวม TikTok', /* ttcontent: 'ผลงานคอนเทนต์ (TikTok)' — ซ่อนชั่วคราว รอ TikTok Accounts API */ ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','promotion','geo','crm','flow','neverbought','fbengage','tthub','ttcontent','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf'];
+const pageOrder = ['overview','channel','promotarget','fbhub','geo','crm','flow','neverbought','fbengage','tthub','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf']; // ttcontent ซ่อนชั่วคราว รอ TikTok Accounts API
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget']; // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
@@ -2175,12 +2192,10 @@ function renderCurrentPage() {
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'lzhub') renderLzHub();
   else if (currentPage === 'mthub') renderMtHub();
-  else if (currentPage === 'promotion') renderPromotion();
   else if (currentPage === 'geo') renderGeo();
   else if (currentPage === 'crm') renderCRM();
   else if (currentPage === 'flow') renderFlowPage();
   else if (currentPage === 'neverbought') renderNeverBoughtPage();
-  else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'skurev') renderSkuRev();
   else if (currentPage === 'creatorperf') renderCreatorPerf();
@@ -5091,6 +5106,7 @@ function renderAdpSummary() {
     const roas=tAds>0?(tGmv/tAds).toFixed(2):0, adPct=tGmv>0?(tAds/tGmv*100).toFixed(1):0;
     lines.push(`• GMV ฿${fmtB(tGmv)} | ค่าแอด ฿${fmtB(tAds)} | ROAS ${roas}x | %ค่าแอด ${adPct}%`);
     lines.push(parseFloat(roas)>=5?`• 💚 ROAS ${roas}x — ดีมาก`:parseFloat(roas)>=3?`• 🟡 ROAS ${roas}x — พอใช้ ควรเพิ่ม efficiency`:`• 🔴 ROAS ${roas}x — ต่ำ ค่าแอดสูงเกินไป`);
+    lines.push(`• หมายเหตุ: ประเมินจาก ROAS (ยอดขาย ÷ ค่าแอด) เท่านั้น ยังไม่รวมต้นทุนสินค้า — ROAS สูงไม่ได้แปลว่ากำไรเสมอไป`);
     const chMap={};
     ads.forEach(r=>{if(!chMap[r.channel])chMap[r.channel]={gmv:0,ads:0};chMap[r.channel].ads+=r.ads;});
     orders.forEach(r=>{if(!chMap[r.channel])chMap[r.channel]={gmv:0,ads:0};chMap[r.channel].gmv+=(parseFloat(r.revenue)||0);});
@@ -6484,7 +6500,7 @@ function renderPagerHtml(containerId, curPage, totalPages, gotoFnName) {
 // ===== FETCH: TikTok Content (organic + boosted flag) =====
 let ttcData = [];
 let ttcPage = 1;
-const TTC_PAGE_SIZE = 10;
+const TTC_PAGE_SIZE = 40;
 async function fetchTtcData() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const [organicRes, adsRes] = await Promise.all([
@@ -6651,7 +6667,7 @@ function renderTtcTable() {
 let ttaByClip = [];
 let ttaPage = 1;
 let ttaLastRange = null; // เก็บช่วงวันที่ที่ fetch ล่าสุด กันดึงซ้ำถ้าช่วงเดิม
-const TTA_PAGE_SIZE = 10;
+const TTA_PAGE_SIZE = 40;
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
