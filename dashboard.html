@@ -1838,10 +1838,37 @@ async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concu
   return all;
 }
 
+// สร้างเงื่อนไข "เอาแถวถัดจากแถวสุดท้ายที่ได้มา" แบบ seek method รองรับ key ผสมได้หลายคอลัมน์ (เช่น date+order_id)
+function buildKeysetFilter(keyCols, lastRow) {
+  const clauses = [];
+  for (let i = 0; i < keyCols.length; i++) {
+    const parts = [];
+    for (let j = 0; j < i; j++) parts.push(`${keyCols[j]}.eq.${encodeURIComponent(lastRow[keyCols[j]])}`);
+    parts.push(`${keyCols[i]}.gt.${encodeURIComponent(lastRow[keyCols[i]])}`);
+    clauses.push(parts.length > 1 ? `and(${parts.join(',')})` : parts[0]);
+  }
+  return `or=(${clauses.join(',')})`;
+}
+
+// ดึงข้อมูลตารางใหญ่แบบ keyset pagination — ใช้ index กระโดดหาแถวถัดไปแทนการไล่นับข้าม (offset) จากต้นตาราง
+// เร็วเท่ากันไม่ว่าจะลึกแค่ไหนในตาราง ต้องมี order= ตรงกับ keyCols เป๊ะๆ ใน baseUrl (เรียงจากซ้ายไปขวาตามลำดับ keyCols)
+async function fetchKeyset(baseUrl, headers, keyCols, pageSize = 2000) {
+  let all = [];
+  let cursorFilter = '';
+  while (true) {
+    const res = await fetchWithRetry(`${baseUrl}&limit=${pageSize}${cursorFilter}`, headers);
+    const rows = await res.json();
+    all = all.concat(rows);
+    if (rows.length < pageSize) break; // ได้น้อยกว่าที่ขอ = หมดข้อมูลจริงแล้ว
+    cursorFilter = '&' + buildKeysetFilter(keyCols, rows[rows.length - 1]);
+  }
+  return all;
+}
+
 async function fetchAll() {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   const baseUrl = `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items,order_channel,creator_handle,order_status,created_at_precise,cancel_return_type,delivery_date&order=date.asc,order_id.asc`;
-  return fetchPaginatedConcurrent(baseUrl, headers);
+  return fetchKeyset(baseUrl, headers, ['date', 'order_id']);
 }
 
 // ===== SETTLED FILTER LOGIC =====
@@ -1871,7 +1898,7 @@ async function fetchSkuAll(fromDate, toDate) {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
   const dateFilter = fromDate && toDate ? `&date=gte.${fromDate}&date=lte.${toDate}` : '';
   const baseUrl = `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc,parent_sku.asc${dateFilter}`;
-  return fetchPaginatedConcurrent(baseUrl, headers);
+  return fetchKeyset(baseUrl, headers, ['date', 'order_id', 'parent_sku']);
 }
 
 // ===== SUPABASE FETCH: products table (parent_sku -> ชื่อไทย) =====
