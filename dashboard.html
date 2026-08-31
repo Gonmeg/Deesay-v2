@@ -234,7 +234,10 @@
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">กำลังโหลดข้อมูล...</div>
-  <div class="loading-text" id="loadingProgressText" style="font-size:11px;opacity:0.7;margin-top:4px;"></div>
+  <div class="loading-text" id="loadingProgressText" style="font-size:11px;opacity:0.7;margin-top:8px;"></div>
+  <div style="width:200px;height:6px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:6px;">
+    <div id="loadingProgressBar" style="width:0%;height:100%;background:var(--accent);transition:width 0.3s ease;"></div>
+  </div>
 </div>
 
 <aside class="sidebar">
@@ -2213,7 +2216,9 @@ function showPage(page, lockCh, el) {
     if (chFilter) { chFilter.value = HUB_CHANNEL[page] || ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
     if (subGroup) { subGroup.style.opacity = '0.35'; subGroup.style.pointerEvents = 'none'; }
   } else {
-    if (chFilter) { chFilter.disabled = false; chFilter.style.opacity = '1'; }
+    // หน้าที่ไม่ได้ล็อก channel (เช่น MKT Tracking, ยอดขายแยก SKU) ให้กลับมาเป็น "ทั้งหมด" เสมอ
+    // กันปัญหา filter ดูเหมือนค้างที่ channel เดิมจากหน้า Hub ที่เพิ่งออกมาก่อนหน้า (ตัวเลือกเปิดใช้ได้แล้วแต่ค่ายังไม่รีเซ็ต)
+    if (chFilter) { chFilter.value = ''; chFilter.disabled = false; chFilter.style.opacity = '1'; onChannelChange(); }
     if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
   }
 
@@ -6389,15 +6394,17 @@ function updateCacheStatus(mode, timestamp) {
   else if (mode === 'refresh-failed') el.innerHTML = '<span style="color:#fb923c;" title="กำลังแสดงข้อมูลจากแคชเดิมไปก่อน — ลองกด รีเฟรชข้อมูล Dashboard อีกครั้ง">⚠️ อัพเดตข้อมูลสดไม่สำเร็จ (ยังแสดงจากแคชเดิมอยู่)</span>'
 }
 
-function updateLoadingProgress(msg) {
+function updateLoadingProgress(msg, pct) {
   const el = document.getElementById('loadingProgressText');
-  if (el) el.textContent = msg;
+  if (el) el.textContent = pct !== undefined ? `${msg} — ${pct}%` : msg;
+  const bar = document.getElementById('loadingProgressBar');
+  if (bar && pct !== undefined) bar.style.width = pct + '%';
 }
 
 async function fetchFreshSnapshot() {
   let loadedCount = 0;
   const totalSteps = 8;
-  const tick = (label) => (r) => { loadedCount++; updateLoadingProgress(`โหลด${label}แล้ว (${loadedCount}/${totalSteps})`); return r; };
+  const tick = (label) => (r) => { loadedCount++; updateLoadingProgress(`โหลด${label}แล้ว (${loadedCount}/${totalSteps})`, Math.round(loadedCount/totalSteps*100)); return r; };
   const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows] = await Promise.all([
     fetchAll().then(tick('ออเดอร์')),
     fetchProducts().then(tick('รายชื่อสินค้า')),
@@ -6490,10 +6497,14 @@ function metricInfoIcon(key) {
 function renderTtaFunnel(unattributedGap = 0) {
   const stageSpend = { Awareness: 0, Consideration: 0, Conversion: 0 };
   let unknownSpend = 0;
-  ttaByClip.forEach(c => {
-    if (!c.hasFunnelData) { unknownSpend += c.spend; return; } // ไม่รู้ objective เพราะนอกช่วงเก็บข้อมูล — แยกไว้ไม่เดาสุ่ม
-    const stage = objectiveToStage(c.objective);
-    stageSpend[stage] = (stageSpend[stage] || 0) + c.spend;
+  // คำนวณจากแถวดิบทีละแถว (แยกตามวันที่+objective ของแถวนั้นเอง) ไม่ใช่รวมทั้งคลิปเป็น objective เดียว
+  // เพราะคลิปเดียวกัน (item_id เดิม) อาจถูกยิงคนละ objective กันคนละวันได้จริง (เช่น REACH วันหนึ่ง, Product GMV Max อีกวันหนึ่ง)
+  ttaRawRows.forEach(r => {
+    const rowSpend = (parseFloat(r.cost) || 0) + (parseFloat(r.spend) || 0);
+    if (!rowSpend) return;
+    if (!r.objective) { unknownSpend += rowSpend; return; } // แถวนี้ไม่รู้ objective จริงๆ (ไม่ใช่แค่คลิปโดยรวมไม่รู้)
+    const stage = objectiveToStage(r.objective);
+    stageSpend[stage] = (stageSpend[stage] || 0) + rowSpend;
   });
   // ยอดที่ระบบเก็บได้ (ค่าแอดรวมจริง) แต่ไม่มี item_id ให้จับคู่เป็นคลิปเลย (เช่น GMV Max ส่วนที่ TikTok ไม่ระบุคลิป)
   // ไม่รู้ objective ที่แน่ชัด แต่ยึดตามที่เคยยืนยันไว้ก่อนหน้าว่า GMV Max ที่ไม่ระบุคลิปอยู่ Conversion stage เป็นส่วนใหญ่
@@ -6514,7 +6525,7 @@ function renderTtaFunnel(unattributedGap = 0) {
   }).join('');
   if (unknownSpend > 0) {
     const pct = total ? ((unknownSpend/total)*100).toFixed(1) : '0.0';
-    html += `<div style="margin-top:8px;font-size:10.5px;color:var(--text3);text-align:center;">+ ฿${fmt(unknownSpend)} (${pct}%) จากคลิปที่ยังไม่มีข้อมูล objective (นอกช่วงที่เก็บได้)</div>`;
+    html += `<div style="margin-top:8px;font-size:10.5px;color:var(--text3);text-align:center;">+ ฿${fmt(unknownSpend)} (${pct}%) จากแถวที่ไม่มีข้อมูล objective บันทึกไว้</div>`;
   }
   document.getElementById('ttaFunnelChart').innerHTML = html || '<div class="empty">ไม่มีข้อมูล</div>';
 }
@@ -6867,6 +6878,7 @@ function renderTtcTable() {
 
 // ===== FETCH: TikTok Ads (ทุกคลิปที่ยิงแอด รวม KOL/affiliate) =====
 let ttaByClip = [];
+let ttaRawRows = []; // แถวดิบก่อนรวมเป็นคลิป — ใช้คำนวณ funnel แยกตาม (วันที่+objective) จริง เพราะคลิปเดียวกันอาจถูกยิงคนละ objective กันคนละวันได้
 let ttaPage = 1;
 let ttaLastRange = null; // เก็บช่วงวันที่ที่ fetch ล่าสุด กันดึงซ้ำถ้าช่วงเดิม
 const TTA_PAGE_SIZE = 40;
@@ -6877,6 +6889,7 @@ async function fetchTtaData(fromDate, toDate) {
   if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
   if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
   const ttaRaw = await fetchPaginatedConcurrent(baseUrl, headers);
+  ttaRawRows = ttaRaw;
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
