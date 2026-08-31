@@ -2007,6 +2007,8 @@ async function fetchMV(viewName, selectCols, orderCols) {
 const fetchPromoMonthly = () => fetchMV('mv_promo_monthly', 'date,channel,sub_channel,sku_promotion,total_orders,total_revenue,aov', 'date.asc,channel.asc,sku_promotion.asc');
 const fetchSkuParentMonthly = () => fetchMV('mv_sku_parent_monthly', 'date,channel,sub_channel,parent_sku,total_qty,total_revenue,total_orders', 'date.asc,channel.asc,sub_channel.asc,parent_sku.asc');
 const fetchProvinceMonthly = () => fetchMV('mv_province_monthly', 'date,channel,province,total_orders,total_revenue,aov', 'date.asc,channel.asc,province.asc');
+const fetchDailyChannelSummary = () => fetchMV('mv_daily_channel_summary', 'date,channel,sub_channel,province,net_orders,net_revenue,total_orders,total_revenue,cancelled_orders,cancelled_revenue,unique_customers_fb', 'date.asc,channel.asc,sub_channel.asc,province.asc');
+let dailyChannelSummaryAll = []; // แคชไว้ในตัวแปรเดียว ดึงครั้งเดียวตอนโหลด แล้วกรองใหม่ทุกครั้งที่เปลี่ยน filter (ข้อมูลเบากว่า orders ดิบมาก ~53,852 แถว จาก 217,658)
 
 // คืนรายการเดือน "YYYY-MM" ที่อยู่ในช่วง from-to (inclusive)
 function getMonthsInRange(from, to) {
@@ -2338,16 +2340,34 @@ const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.',
 
 // ===== OVERVIEW =====
 function renderOverview() {
-  const d = filteredData;
-  const prev = getPrevPeriodData();
+  const from = getDateValue('From'), to = getDateValue('To');
+  const ch = document.getElementById('filterChannel').value;
+  const sub = document.getElementById('filterSubChannel').value;
 
-  const totalRevenue = d.reduce((s, r) => s + (parseFloat(r.revenue) || 0), 0);
-  const totalOrders = d.length;
+  // ใช้ mv_daily_channel_summary (~53,852 แถว รวมระดับวัน+ช่องทาง+จังหวัดแล้ว) แทนการวนลูป orders ดิบ 217,658 แถว
+  const mvMatch = r => {
+    if (!r.date || r.date < from || r.date > to) return false;
+    if (ch && r.channel !== ch) return false;
+    if (sub && r.sub_channel !== sub) return false;
+    return true;
+  };
+  const mvInRange = dailyChannelSummaryAll.filter(mvMatch);
+
+  const totalRevenue = mvInRange.reduce((s, r) => s + (parseFloat(r.net_revenue) || 0), 0);
+  const totalOrders = mvInRange.reduce((s, r) => s + (parseInt(r.net_orders) || 0), 0);
   const aov = totalOrders ? totalRevenue / totalOrders : 0;
-  const uniqueCustomers = new Set(d.map(r => r.phone).filter(Boolean)).size;
+  // จำนวนลูกค้าไม่ซ้ำต้องนับจากข้อมูลระดับออเดอร์จริง (MV รวมเป็นยอดแล้ว นับ distinct ข้ามกลุ่มให้แม่นยำไม่ได้)
+  const uniqueCustomers = new Set(filteredData.map(r => r.phone).filter(Boolean)).size;
 
-  const prevRevenue = prev.reduce((s, r) => s + (parseFloat(r.revenue) || 0), 0);
-  const prevOrders = prev.length;
+  const prevRange = getPrevPeriodRange(from, to);
+  const mvPrev = dailyChannelSummaryAll.filter(r => {
+    if (!r.date || r.date < prevRange.from || r.date > prevRange.to) return false;
+    if (ch && r.channel !== ch) return false;
+    if (sub && r.sub_channel !== sub) return false;
+    return true;
+  });
+  const prevRevenue = mvPrev.reduce((s, r) => s + (parseFloat(r.net_revenue) || 0), 0);
+  const prevOrders = mvPrev.reduce((s, r) => s + (parseInt(r.net_orders) || 0), 0);
 
   document.getElementById('kpi-revenue').textContent = fmtB(totalRevenue);
   document.getElementById('kpi-orders').textContent = fmt(totalOrders);
@@ -2359,33 +2379,23 @@ function renderOverview() {
   const rwow = document.getElementById('kpi-revenue-wow'); rwow.textContent = rCmp.text; rwow.className = rCmp.cls;
   const owow = document.getElementById('kpi-orders-wow'); owow.textContent = oCmp.text; owow.className = oCmp.cls;
 
-  // ยอดตีกลับ
-  const from = getDateValue('From'), to = getDateValue('To');
-  const ch = document.getElementById('filterChannel').value;
-  const sub = document.getElementById('filterSubChannel').value;
-  const allInRange = allData.filter(r => {
-    if (!r.date || r.date < from || r.date > to) return false;
-    if (ch && r.channel !== ch) return false;
-    if (sub && r.sub_channel !== sub) return false;
-    return true;
-  });
   // ยอดตีกลับ (ยกเลิก/คืนสินค้า) — เฉพาะรายได้เท่านั้น ไม่เกี่ยวกับ settled/AR (เรื่องบัญชี แยกออกจาก dashboard แล้ว)
-  const unsettled = allInRange.filter(r => r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund');
-  const unsettledRev = unsettled.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
-  const totalWithUnsettled = allInRange.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
+  const unsettledRev = mvInRange.reduce((s,r) => s+(parseFloat(r.cancelled_revenue)||0), 0);
+  const unsettledOrders = mvInRange.reduce((s,r) => s+(parseInt(r.cancelled_orders)||0), 0);
+  const totalWithUnsettled = mvInRange.reduce((s,r) => s+(parseFloat(r.total_revenue)||0), 0);
   const unsettledPct = totalWithUnsettled ? ((unsettledRev/totalWithUnsettled)*100).toFixed(1) : '0.0';
 
   document.getElementById('kpi-unsettled-rev').textContent = fmtB(unsettledRev);
-  document.getElementById('kpi-unsettled-orders').textContent = `${fmt(unsettled.length)} ออเดอร์ที่ถูกยกเลิก/คืน`;
+  document.getElementById('kpi-unsettled-orders').textContent = `${fmt(unsettledOrders)} ออเดอร์ที่ถูกยกเลิก/คืน`;
   document.getElementById('kpi-unsettled-pct').textContent = unsettledPct + '%';
 
   // Monthly
   const monthly = {};
-  d.forEach(r => {
+  mvInRange.forEach(r => {
     const m = r.date ? r.date.substring(0, 7) : 'unknown';
     if (!monthly[m]) monthly[m] = { rev: 0, ord: 0 };
-    monthly[m].rev += parseFloat(r.revenue) || 0;
-    monthly[m].ord++;
+    monthly[m].rev += parseFloat(r.net_revenue) || 0;
+    monthly[m].ord += parseInt(r.net_orders) || 0;
   });
   const months = Object.keys(monthly).sort();
   const monthLabels = months.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
@@ -2395,7 +2405,7 @@ function renderOverview() {
 
   // Daily trend
   const daily = {};
-  d.forEach(r => { if (!r.date) return; if (!daily[r.date]) daily[r.date] = 0; daily[r.date] += parseFloat(r.revenue) || 0; });
+  mvInRange.forEach(r => { if (!r.date) return; if (!daily[r.date]) daily[r.date] = 0; daily[r.date] += parseFloat(r.net_revenue) || 0; });
   const days = Object.keys(daily).sort();
   makeChart('chartDailyTrend', 'line', days, [{ label: 'ยอดขายรายวัน', data: days.map(d => daily[d]), borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,0.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]);
 }
@@ -5681,7 +5691,7 @@ async function refreshDashboardData() {
   if (barWrap) barWrap.style.display = 'block'
   if (bar) bar.style.width = '0%'
   let refreshLoaded = 0
-  const refreshTotalSteps = 5
+  const refreshTotalSteps = 6
   const refreshTick = (label) => (r) => {
     refreshLoaded++
     const pct = Math.round(refreshLoaded/refreshTotalSteps*100)
@@ -5697,13 +5707,15 @@ async function refreshDashboardData() {
 
     await new Promise(r => setTimeout(r, 2000))
 
-    const [orders, promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows] = await Promise.all([
+    const [orders, promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows, dailyChannelSummary] = await Promise.all([
       fetchAll().then(refreshTick('ออเดอร์')),
       fetchPromoMonthly().then(refreshTick('โปรโมชั่นรายเดือน')),
       fetchSkuParentMonthly().then(refreshTick('SKU รายเดือน')),
       fetchProvinceMonthly().then(refreshTick('ยอดขายรายจังหวัด')),
-      fetchSkuAll().then(refreshTick('รายการ SKU ต่อออเดอร์'))
+      fetchSkuAll().then(refreshTick('รายการ SKU ต่อออเดอร์')),
+      fetchDailyChannelSummary().then(refreshTick('สรุปยอดรายวัน (MV)'))
     ])
+    dailyChannelSummaryAll = dailyChannelSummary;
     allData = orders.filter(r => !isExcludedRow(r))
     _fbCustomerCache = null // ข้อมูลใหม่มา ต้องสร้าง cache ลูกค้าใหม่รอบหน้าที่เข้าหน้านี้
     window._promoMonthlyCache = promoMonthly
@@ -6393,6 +6405,7 @@ function applySnapshot(snap) {
   window._promoMonthlyCache = snap.promoMonthlyCache
   window._skuParentMonthlyCache = snap.skuParentMonthlyCache
   window._provinceMonthlyCache = snap.provinceMonthlyCache
+  dailyChannelSummaryAll = snap.dailyChannelSummaryCache || dailyChannelSummaryAll
   skuRevenueAll = snap.skuRevenueAll
   freeSampleRows = snap.freeSampleRows || []
   orderIdToPromo = {}
@@ -6425,9 +6438,9 @@ function updateLoadingProgress(msg, pct) {
 
 async function fetchFreshSnapshot() {
   let loadedCount = 0;
-  const totalSteps = 8;
+  const totalSteps = 9;
   const tick = (label) => (r) => { loadedCount++; updateLoadingProgress(`โหลด${label}แล้ว (${loadedCount}/${totalSteps})`, Math.round(loadedCount/totalSteps*100)); return r; };
-  const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows] = await Promise.all([
+  const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows, dailyChannelSummary] = await Promise.all([
     fetchAll().then(tick('ออเดอร์')),
     fetchProducts().then(tick('รายชื่อสินค้า')),
     fetchProvinceRegion().then(tick('จังหวัด/ภูมิภาค')),
@@ -6435,8 +6448,10 @@ async function fetchFreshSnapshot() {
     fetchSkuParentMonthly().then(tick('SKU รายเดือน')),
     fetchProvinceMonthly().then(tick('ยอดขายรายจังหวัด')),
     fetchPromotionsMap().then(tick('ชื่อโปรโมชั่น')),
-    fetchSkuAll().then(tick('รายการ SKU ต่อออเดอร์'))
+    fetchSkuAll().then(tick('รายการ SKU ต่อออเดอร์')),
+    fetchDailyChannelSummary().then(tick('สรุปยอดรายวัน (MV)'))
   ])
+  dailyChannelSummaryAll = dailyChannelSummary;
   const ordersFiltered = orders.filter(r => !isExcludedRow(r))
   // ตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง — รวม 2 แหล่ง:
   // (1) TikTok: ออเดอร์ revenue=0 ที่ไม่ใช่ Cancel/Return
@@ -6454,6 +6469,7 @@ async function fetchFreshSnapshot() {
     allData: ordersFiltered,
     productsMap: prods, provinceRegionMap: regions, promotionsMap: promosMap,
     promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
+    dailyChannelSummaryCache: dailyChannelSummary,
     skuRevenueAll: skuRevFiltered,
     freeSampleRows: freeSampleRowsSnap,
     cachedAt: Date.now()
