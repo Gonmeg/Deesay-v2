@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deesay Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -98,6 +99,10 @@
   .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 16px; }
   .loading-overlay.hidden { display: none; }
   .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .skeleton { background: linear-gradient(90deg, var(--bg3) 25%, var(--border) 37%, var(--bg3) 63%); background-size: 400% 100%; animation: skeleton-pulse 1.4s ease infinite; border-radius: 4px; display: inline-block; }
+  @keyframes skeleton-pulse { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+  .skeleton-row td { padding: 10px 12px; }
+  .skeleton-row .skeleton { height: 14px; width: 80%; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { color: var(--text2); font-size: 13px; }
 
@@ -143,7 +148,8 @@
   .rank-1 { color: var(--accent); } .rank-2 { color: var(--text2); } .rank-3 { color: #cd7f32; }
   .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
   .section-title { font-size: 14px; font-weight: 600; color: var(--text); }
-  .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; line-height: 1.7; }
+  .empty::before { content: '📭'; display: block; font-size: 22px; margin-bottom: 6px; opacity: 0.6; }
   .prog-wrap { margin-top: 8px; }
   .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .prog-label { font-size: 12px; color: var(--text2); width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
@@ -228,6 +234,7 @@
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">กำลังโหลดข้อมูล...</div>
+  <div class="loading-text" id="loadingProgressText" style="font-size:11px;opacity:0.7;margin-top:4px;"></div>
 </div>
 
 <aside class="sidebar">
@@ -357,7 +364,7 @@
   </div>
 
   <div class="content">
-    <div class="error-banner" id="errorBanner"></div>
+    <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive"></div>
 
     <!-- PAGE: OVERVIEW -->
     <div class="page active" id="page-overview">
@@ -438,7 +445,7 @@
         <div class="table-wrap">
           <table id="tblSubChannel">
             <thead><tr><th>#</th><th>Sub Channel</th><th>Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th></tr></thead>
-            <tbody id="tbodySubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodySubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -507,7 +514,7 @@
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="fbhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Facebook) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="fbhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <div class="toggle-group">
               <button class="toggle-btn" id="fbhub-yr" onclick="setHubAdView('fb','year',this)">ทั้งปี</button>
               <button class="toggle-btn active" id="fbhub-mo" onclick="setHubAdView('fb','month',this)">รายเดือน</button>
@@ -529,7 +536,7 @@
         <div class="table-wrap">
           <table id="tblFbSubChannel">
             <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-            <tbody id="tbodyFbSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyFbSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -550,7 +557,7 @@
         <div class="table-wrap">
           <table id="tblTopSKUFb">
             <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKUFb"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopSKUFb"><tr><td colspan="9"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -562,7 +569,7 @@
         <div class="table-wrap">
           <table id="tblTopProductFb">
             <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopProductFb"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopProductFb"><tr><td colspan="7"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -575,7 +582,7 @@
         <div class="table-wrap">
           <table id="tblTopRealPromo">
             <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อโปรที่สร้างจริง</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
-            <tbody id="tbodyTopRealPromo"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopRealPromo"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -594,7 +601,7 @@
         <div class="table-wrap">
           <table id="tblTopUpsell">
             <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย (฿)</th><th>จำนวนชิ้น</th><th>จำนวนครั้งที่ถูก upsell</th></tr></thead>
-            <tbody id="tbodyTopUpsell"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopUpsell"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -795,7 +802,7 @@
         <div class="table-wrap" style="max-height:480px;overflow-y:auto;">
           <table id="tblSkuRev">
             <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย (฿)</th><th>จำนวนชิ้น</th><th>ราคา/ชิ้น</th><th>สัดส่วน %</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodySkuRev"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodySkuRev"><tr><td colspan="9"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1012,7 +1019,8 @@
         <div class="section-title">💬 คนพูดถึงอะไรบ้าง — วิเคราะห์คอมเมนต์</div>
         <div class="section-sub" id="fbeCommentSub" style="font-size:11px;color:var(--text3);margin-bottom:14px;"></div>
 
-        <div id="fbeTagPills" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+        <div id="fbeTagPills" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+        <div id="fbeSentimentBar" style="margin-bottom:16px;"></div>
 
         <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:6px;">
           คำที่พบบ่อยในคอมเมนต์จริง — ยิ่งตัวใหญ่ยิ่งพบบ่อย
@@ -1031,7 +1039,7 @@
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tthub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (TikTok) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tthub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <div class="toggle-group">
               <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
               <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
@@ -1061,7 +1069,7 @@
         <div class="table-wrap">
           <table id="tblTopSKUTt">
             <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKUTt"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopSKUTt"><tr><td colspan="9"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1073,7 +1081,7 @@
         <div class="table-wrap">
           <table id="tblTopProductTt">
             <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopProductTt"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopProductTt"><tr><td colspan="7"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1094,7 +1102,7 @@
         <div class="table-wrap">
           <table id="tblTtcTrending">
             <thead><tr><th>คลิป</th><th>โพสต์เมื่อ</th><th>วิวสะสม</th><th>วิว/วัน</th><th>ผู้ติดตามใหม่</th><th>ความเร็ว</th></tr></thead>
-            <tbody id="tbodyTtcTrending"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTtcTrending"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1182,7 +1190,7 @@
         <div class="table-wrap" style="max-height:320px;overflow-y:auto;">
           <table id="tblTtaCampaign" class="sticky-head-table">
             <thead id="ttaCampaignTableHead"></thead>
-            <tbody id="ttaCampaignBody"><tr><td class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="ttaCampaignBody"><tr><td><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1393,7 +1401,7 @@
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('sh')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="shhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Shopee) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('sh')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="shhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <div class="toggle-group">
               <button class="toggle-btn" id="shhub-yr" onclick="setHubAdView('sh','year',this)">ทั้งปี</button>
               <button class="toggle-btn active" id="shhub-mo" onclick="setHubAdView('sh','month',this)">รายเดือน</button>
@@ -1410,7 +1418,7 @@
           <div class="table-wrap">
             <table id="tblShSubChannel">
               <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyShSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+              <tbody id="tbodyShSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1426,7 +1434,7 @@
         <div class="table-wrap">
           <table id="tblTopSKUSh">
             <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKUSh"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopSKUSh"><tr><td colspan="9"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1438,9 +1446,14 @@
         <div class="table-wrap">
           <table id="tblTopProductSh">
             <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopProductSh"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopProductSh"><tr><td colspan="7"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
+      </div>
+
+      <div class="card ai-summary-card">
+        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
+        <div class="ai-summary-body" id="shhub-insight">กำลังวิเคราะห์...</div>
       </div>
 
       <div class="card" style="background:var(--bg2);border-style:dashed;">
@@ -1463,7 +1476,7 @@
           <div class="table-wrap">
             <table id="tblMtSubChannel">
               <thead><tr><th>#</th><th>ร้านค้า</th><th>ยอดขาย</th><th>บิล</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyMtSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+              <tbody id="tbodyMtSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1471,7 +1484,7 @@
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="card-title">ค่าโฆษณา (Awareness) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('mt')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="mthub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+          <div class="card-title">ค่าโฆษณา (Awareness) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('mt')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="mthub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
           <div class="toggle-group">
             <button class="toggle-btn" id="mthub-yr" onclick="setMtAdsView('year',this)">ทั้งปี</button>
             <button class="toggle-btn active" id="mthub-mo" onclick="setMtAdsView('month',this)">รายเดือน</button>
@@ -1498,7 +1511,7 @@
         <div class="table-wrap">
           <table id="tblMtTopSKU">
             <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย</th><th>ชิ้น</th><th>สัดส่วน %</th></tr></thead>
-            <tbody id="tbodyMtTopSKU"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyMtTopSKU"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1509,7 +1522,7 @@
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
           <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Lazada) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('lz')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="lzhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
+            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Lazada) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('lz')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="lzhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
             <div class="toggle-group">
               <button class="toggle-btn" id="lzhub-yr" onclick="setHubAdView('lz','year',this)">ทั้งปี</button>
               <button class="toggle-btn active" id="lzhub-mo" onclick="setHubAdView('lz','month',this)">รายเดือน</button>
@@ -1526,7 +1539,7 @@
           <div class="table-wrap">
             <table id="tblLzSubChannel">
               <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyLzSubChannel"><tr><td colspan="6" class="empty">กำลังโหลด...</td></tr></tbody>
+              <tbody id="tbodyLzSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1542,7 +1555,7 @@
         <div class="table-wrap">
           <table id="tblTopSKULz">
             <thead><tr><th>#</th><th onclick="setPromoSort('sku')" style="cursor:pointer;">Promotion (SKU) ⇅</th><th onclick="setPromoSort('name')" style="cursor:pointer;">ชื่อสินค้า (ไทย) ⇅</th><th onclick="setPromoSort('rev')" style="cursor:pointer;">ยอดขาย ⇅</th><th onclick="setPromoSort('ord')" style="cursor:pointer;">ออเดอร์ ⇅</th><th onclick="setPromoSort('aov')" style="cursor:pointer;">AOV ⇅</th><th onclick="setPromoSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopSKULz"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopSKULz"><tr><td colspan="9"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1554,9 +1567,14 @@
         <div class="table-wrap">
           <table id="tblTopProductLz">
             <thead><tr><th>#</th><th onclick="setProdSort('sku')" style="cursor:pointer;">SKU ⇅</th><th onclick="setProdSort('name')" style="cursor:pointer;">ชื่อสินค้า ⇅</th><th onclick="setProdSort('qty')" style="cursor:pointer;">จำนวนชิ้น ⇅</th><th onclick="setProdSort('share')" style="cursor:pointer;">สัดส่วน % ⇅</th><th>vs ช่วงก่อน</th><th>Ranking</th></tr></thead>
-            <tbody id="tbodyTopProductLz"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody>
+            <tbody id="tbodyTopProductLz"><tr><td colspan="7"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
           </table>
         </div>
+      </div>
+
+      <div class="card ai-summary-card">
+        <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">คำแนะนำ</span></div>
+        <div class="ai-summary-body" id="lzhub-insight">กำลังวิเคราะห์...</div>
       </div>
 
       <div class="card" style="background:var(--bg2);border-style:dashed;">
@@ -1629,6 +1647,12 @@ let orderIdToPromo = {};  // order_id -> sku_promotion (มาจาก orders) 
 
 // ===== UTILS =====
 const fmt = n => isNaN(n) ? '—' : Number(n).toLocaleString('th-TH', {maximumFractionDigits:0});
+// สร้างแถว skeleton (แท่งเทาเบลอ) ใส่ใน <tbody> ระหว่างรอโหลดข้อมูลจริง แทนข้อความ "กำลังโหลด..." เปล่าๆ
+function skeletonRows(cols, rows = 4) {
+  return Array.from({ length: rows }, () =>
+    `<tr class="skeleton-row">${Array.from({ length: cols }, () => `<td><span class="skeleton" style="width:${50+Math.random()*40}%;"></span></td>`).join('')}</tr>`
+  ).join('');
+}
 // หน่วงเวลาก่อน render จริง กันกระตุกตอนพิมพ์เร็วๆ ในช่องค้นหาที่กรองข้อมูลชุดใหญ่ (มีผลกับ UX เท่านั้น ไม่กระทบผลลัพธ์การกรอง)
 function debounce(fn, ms = 250) {
   let t;
@@ -1852,7 +1876,7 @@ function buildKeysetFilter(keyCols, lastRow) {
 
 // ดึงข้อมูลตารางใหญ่แบบ keyset pagination — ใช้ index กระโดดหาแถวถัดไปแทนการไล่นับข้าม (offset) จากต้นตาราง
 // เร็วเท่ากันไม่ว่าจะลึกแค่ไหนในตาราง ต้องมี order= ตรงกับ keyCols เป๊ะๆ ใน baseUrl (เรียงจากซ้ายไปขวาตามลำดับ keyCols)
-async function fetchKeyset(baseUrl, headers, keyCols, pageSize = 2000) {
+async function fetchKeyset(baseUrl, headers, keyCols, pageSize = 1000) {
   let all = [];
   let cursorFilter = '';
   while (true) {
@@ -2050,12 +2074,37 @@ function setDefaultDateFilter() {
   document.getElementById('dateTo').value = todayStr;
   updateDateRangeLabel();
 }
+// ใช้เฉพาะตอนเปิดเว็บครั้งแรก (init) — ถ้ามี filter ที่เคยกดค้นหาไว้ในเซสชันนี้ ให้ใช้ค่านั้นแทน default
+// (หน้า overview/channel ยังคง reset เป็น default ทุกครั้งที่ nav เข้ามาระหว่าง session ตามที่ตั้งใจไว้เดิม ไม่เปลี่ยนพฤติกรรมนั้น)
+function restoreOrDefaultDateFilter() {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem('deesay_last_filter') || 'null'); } catch (e) {}
+  if (saved && saved.from && saved.to) {
+    document.getElementById('dateFrom').value = saved.from;
+    document.getElementById('dateTo').value = saved.to;
+    updateDateRangeLabel();
+  } else {
+    setDefaultDateFilter();
+  }
+}
+function restoreSavedChannelFilter() {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem('deesay_last_filter') || 'null'); } catch (e) {}
+  if (!saved) return;
+  const chSel = document.getElementById('filterChannel');
+  if (saved.ch && [...chSel.options].some(o => o.value === saved.ch)) chSel.value = saved.ch;
+  onChannelChange();
+  const subSel = document.getElementById('filterSubChannel');
+  if (saved.sub && [...subSel.options].some(o => o.value === saved.sub)) subSel.value = saved.sub;
+}
 
 function applyFilters() {
   const from = getDateValue('From');
   const to = getDateValue('To');
   const ch = document.getElementById('filterChannel').value;
   const sub = document.getElementById('filterSubChannel').value;
+
+  try { sessionStorage.setItem('deesay_last_filter', JSON.stringify({ from, to, ch, sub })); } catch (e) {}
 
   filteredData = allData.filter(r => {
     if (from && r.date < from) return false;
@@ -2512,7 +2561,7 @@ async function fbeInitPageOptions() {
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/fb_pages?select=page_id,page_name`, { headers });
     const data = await res.json();
-    if (!Array.isArray(data)) { console.error('FB Engage: โหลดรายชื่อเพจไม่สำเร็จ', data); return; }
+    if (!Array.isArray(data)) { console.error('FB Engage: โหลดรายชื่อเพจไม่สำเร็จ', data); showError('โหลดรายชื่อเพจ Facebook ไม่สำเร็จ ลองกดรีเฟรชข้อมูลใหม่'); return; }
     fbePagesCache = data;
     const sel = document.getElementById('fbePageSelect');
     if (sel) {
@@ -2525,6 +2574,7 @@ async function fbeInitPageOptions() {
     }
   } catch (e) {
     console.error('FB Engage: error ตอนโหลดรายชื่อเพจ', e);
+    showError('โหลดรายชื่อเพจ Facebook ไม่สำเร็จ: ' + e.message);
   }
 }
 
@@ -2560,6 +2610,7 @@ async function renderFbEngagePage() {
 
   if (!Array.isArray(postsInRange) || !Array.isArray(allCommentTags)) {
     console.error('FB Engage: ดึงโพสต์/คอมเมนต์บางส่วนล้มเหลว', { postsInRange, allCommentTags });
+    showError('โหลดโพสต์/คอมเมนต์บางส่วนไม่สำเร็จ ตัวเลขที่เห็นอาจไม่ครบ');
     fbeCommentTagsCache = [];
   } else {
     const postIdsInRange = new Set(postsInRange.map(p => p.post_id));
@@ -2574,6 +2625,7 @@ async function renderFbEngagePage() {
 
   if (!Array.isArray(fbeEngagementCache) || !Array.isArray(fbePostCountCache)) {
     console.error('FB Engage: ดึงข้อมูลบางส่วนล้มเหลว — เช็คว่า grant สิทธิ์ view ให้ anon/authenticated แล้วหรือยัง (ดูไฟล์ 55_grant_views.sql)', { fbeEngagementCache, fbePostCountCache });
+    showError('โหลดข้อมูล Engagement บางส่วนไม่สำเร็จ — อาจเป็นเพราะสิทธิ์การเข้าถึง view ยังไม่ครบ');
     return;
   }
 
@@ -2673,6 +2725,19 @@ function fbeToggleTagFilter(tagKey) {
   renderFbeCommentSection();
 }
 
+// วิเคราะห์ sentiment คอมเมนต์แบบ keyword ง่ายๆ (ไม่ใช่ AI/NLP จริง — เป็นการเทียบคำในลิสต์ที่ตั้งไว้)
+// เพิ่ม/แก้คำได้ตรงนี้เลย ถ้าอยากได้แม่นยำกว่านี้ในอนาคตต้องต่อกับ AI API จริงฝั่ง Edge Function แทน
+const FBE_POSITIVE_WORDS = ['ดี','ชอบ','สวย','เยี่ยม','ประทับใจ','คุ้ม','พอใจ','โอเค','เจ๋ง','สุดยอด','น่ารัก','ขอบคุณ','รัก','ปัง','แนะนำ','เริ่ด','คุณภาพดี','ใช้ดี'];
+const FBE_NEGATIVE_WORDS = ['แย่','ไม่ดี','ผิดหวัง','ช้า','แพง','ปัญหา','เสียใจ','ไม่พอใจ','เสีย','พัง','หลอก','โกง','ผิด','บ่น','ร้องเรียน','ไม่คุ้ม','ไม่ชอบ'];
+function fbeSentimentOf(msg) {
+  if (!msg) return 'neutral';
+  const hasPos = FBE_POSITIVE_WORDS.some(w => msg.includes(w));
+  const hasNeg = FBE_NEGATIVE_WORDS.some(w => msg.includes(w));
+  if (hasPos && !hasNeg) return 'positive';
+  if (hasNeg && !hasPos) return 'negative';
+  return 'neutral';
+}
+
 function renderFbeCommentSection() {
   const total = fbeCommentTagsCache.length;
   const countTag = key => fbeCommentTagsCache.filter(c => c[key]).length;
@@ -2696,6 +2761,26 @@ function renderFbeCommentSection() {
     const active = fbeActiveTagFilter === p.key;
     return `<span class="tag-pill" onclick="fbeToggleTagFilter('${p.key}')" style="cursor:pointer;user-select:none;border:1.5px solid ${active ? `rgb(${p.rgb})` : `rgba(${p.rgb},0.3)`};border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(${p.rgb},${active ? 0.28 : 0.12});color:var(--${p.color});transition:all 0.15s;">${active ? '✓ ' : ''}${p.label} ${p.count}</span>`;
   }).join('');
+
+  // Sentiment คอมเมนต์ (บวก/กลาง/ลบ) — วิเคราะห์แบบ keyword ง่ายๆ ดูรายละเอียดเกณฑ์ได้ที่ fbeSentimentOf()
+  const posCount = fbeCommentTagsCache.filter(c => fbeSentimentOf(c.message) === 'positive').length;
+  const negCount = fbeCommentTagsCache.filter(c => fbeSentimentOf(c.message) === 'negative').length;
+  const neuCount = total - posCount - negCount;
+  const sentBarHtml = total ? `
+    <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text3);margin-bottom:4px;">
+      <span>Sentiment คอมเมนต์ (ประมาณการจากคำสำคัญ ไม่ใช่ AI วิเคราะห์จริง)</span>
+    </div>
+    <div style="display:flex;height:20px;border-radius:6px;overflow:hidden;">
+      <div style="width:${(posCount/total*100)}%;background:var(--green);" title="บวก ${posCount} (${(posCount/total*100).toFixed(0)}%)"></div>
+      <div style="width:${(neuCount/total*100)}%;background:var(--text3);opacity:0.4;" title="กลาง ${neuCount} (${(neuCount/total*100).toFixed(0)}%)"></div>
+      <div style="width:${(negCount/total*100)}%;background:var(--red);" title="ลบ ${negCount} (${(negCount/total*100).toFixed(0)}%)"></div>
+    </div>
+    <div style="display:flex;gap:14px;font-size:10.5px;margin-top:4px;color:var(--text2);">
+      <span>🟢 บวก ${fmt(posCount)} (${(posCount/total*100).toFixed(0)}%)</span>
+      <span>⚪ กลาง ${fmt(neuCount)} (${(neuCount/total*100).toFixed(0)}%)</span>
+      <span>🔴 ลบ ${fmt(negCount)} (${(negCount/total*100).toFixed(0)}%)</span>
+    </div>` : '';
+  document.getElementById('fbeSentimentBar').innerHTML = sentBarHtml;
 
   // กรองด้วย tag ที่เลือกไว้ (ถ้ามี) ก่อนไปคำนวณคำที่พบบ่อย + ลิสต์โพสต์
   const scopedComments = fbeActiveTagFilter
@@ -2875,6 +2960,9 @@ function renderTtHub() {
 // ===== SHOPEE HUB =====
 function renderShHub() {
   const d = filteredData.filter(r => r.channel === 'Shopee');
+  const prevD = getPrevPeriodData().filter(r => r.channel === 'Shopee');
+  const prevRev = prevD.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+  const prevOrd = prevD.length;
 
   const finish = () => {
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Shopee');
@@ -2882,10 +2970,11 @@ function renderShHub() {
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
     const totalOrd = d.length;
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
+    const revBadge = cmpBadge(totalRev, prevRev), ordBadge = cmpBadge(totalOrd, prevOrd);
 
     document.getElementById('shhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub"><span class="${revBadge.cls}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
       ${cancelReturnCardHtml('sh', 'Shopee', getDateValue('From'), getDateValue('To'), totalRev)}
@@ -2908,6 +2997,17 @@ function renderShHub() {
 
     renderAdpChannel('chartShAds', null, 'sh', hubAdView.sh);
     renderPromotion('Sh', 'Shopee');
+
+    // คำแนะนำอัตโนมัติ: sub-channel เด่นสุด + ประเมิน ROAS ภาพรวม (เกณฑ์เดียวกับ Ad Performance)
+    let shInsight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
+    if (sorted.length) {
+      const top = sorted[0];
+      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
+      const roasNum = parseFloat(roas);
+      const roasNote = isNaN(roasNum) ? '' : (roasNum>=5?` ROAS รวม ${roas}x อยู่ในเกณฑ์ดีมาก`:roasNum>=3?` ROAS รวม ${roas}x พอใช้ ลองดูช่องทางที่ efficiency ต่ำกว่าค่าเฉลี่ย`:` ROAS รวม ${roas}x ค่อนข้างต่ำ ควรทบทวนงบโฆษณา`);
+      shInsight = `Sub-channel "${top[0]}" ทำยอดขายสูงสุด ${share}% ของ Shopee ทั้งหมด (฿${fmt(top[1].rev)})${roasNote} — หมายเหตุ: ประเมินจาก ROAS เท่านั้น ยังไม่รวมต้นทุนสินค้า`;
+    }
+    document.getElementById('shhub-insight').textContent = shInsight;
   };
 
   if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
@@ -2916,6 +3016,9 @@ function renderShHub() {
 // ===== LAZADA HUB =====
 function renderLzHub() {
   const d = filteredData.filter(r => r.channel === 'Lazada');
+  const prevD = getPrevPeriodData().filter(r => r.channel === 'Lazada');
+  const prevRev = prevD.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
+  const prevOrd = prevD.length;
 
   const finish = () => {
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Lazada');
@@ -2923,10 +3026,11 @@ function renderLzHub() {
     const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
     const totalOrd = d.length;
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
+    const revBadge = cmpBadge(totalRev, prevRev), ordBadge = cmpBadge(totalOrd, prevOrd);
 
     document.getElementById('lzhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub"><span class="${revBadge.cls}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
       ${cancelReturnCardHtml('lz', 'Lazada', getDateValue('From'), getDateValue('To'), totalRev)}
@@ -2949,6 +3053,16 @@ function renderLzHub() {
 
     renderAdpChannel('chartLzAds', null, 'lz', hubAdView.lz);
     renderPromotion('Lz', 'Lazada');
+
+    let lzInsight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
+    if (sorted.length) {
+      const top = sorted[0];
+      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
+      const roasNum = parseFloat(roas);
+      const roasNote = isNaN(roasNum) ? '' : (roasNum>=5?` ROAS รวม ${roas}x อยู่ในเกณฑ์ดีมาก`:roasNum>=3?` ROAS รวม ${roas}x พอใช้ ลองดูช่องทางที่ efficiency ต่ำกว่าค่าเฉลี่ย`:` ROAS รวม ${roas}x ค่อนข้างต่ำ ควรทบทวนงบโฆษณา`);
+      lzInsight = `Sub-channel "${top[0]}" ทำยอดขายสูงสุด ${share}% ของ Lazada ทั้งหมด (฿${fmt(top[1].rev)})${roasNote} — หมายเหตุ: ประเมินจาก ROAS เท่านั้น ยังไม่รวมต้นทุนสินค้า`;
+    }
+    document.getElementById('lzhub-insight').textContent = lzInsight;
   };
 
   if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
@@ -3826,7 +3940,7 @@ function renderGeoProvinceDetail() {
   kpisEl.innerHTML = `
     <div class="card"><div class="card-title">${prov}</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(v.rev)}</div><div class="kpi-sub">ยอดขายรวม</div></div>
     <div class="card"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(v.ord)}</div><div class="kpi-sub">จำนวนออเดอร์ทั้งหมด</div></div>
-    <div class="card"><div class="card-title">ลูกค้าไม่ซ้ำ</div><div class="kpi-value" style="color:var(--blue);">${fmt(v.cust)}</div><div class="kpi-sub">unique เบอร์โทร (Facebook)</div></div>
+    <div class="card"><div class="card-title">ลูกค้าไม่ซ้ำ <span style="color:#e5a83b;font-weight:700;">(เฉพาะ Facebook)</span></div><div class="kpi-value" style="color:var(--blue);">${fmt(v.cust)}</div><div class="kpi-sub">unique เบอร์โทร — ไม่ผูกกับตัวกรอง Channel ด้านบน เพราะแพลตฟอร์มอื่นไม่เปิดข้อมูลลูกค้าให้เห็น</div></div>
     <div class="card"><div class="card-title">AOV</div><div class="kpi-value">฿${fmt(aov)}</div><div class="kpi-sub">เฉลี่ยต่อออเดอร์</div></div>`;
   detailEl.style.display = 'block';
 }
@@ -4334,7 +4448,16 @@ function exportTable(tableId) {
   if (!table) return;
   const rows = [];
   table.querySelectorAll('tr').forEach(tr => { rows.push([...tr.querySelectorAll('th,td')].map(c => c.textContent.trim())); });
-  downloadCSV(rows, tableId + '_export.csv');
+  if (window.XLSX) {
+    try {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      XLSX.writeFile(wb, tableId + '_export.xlsx');
+      return;
+    } catch (e) { console.error('Excel export failed, fallback to CSV:', e); }
+  }
+  downloadCSV(rows, tableId + '_export.csv'); // fallback กรณี SheetJS โหลดไม่สำเร็จ กันปุ่ม export ใช้งานไม่ได้เลย
 }
 
 // Export MKT Tracking แบบแยกรายเดือน — 1 แถว = 1 SKU ของ 1 เดือน ไล่ตามเดือนที่ filter ไว้
@@ -4834,7 +4957,7 @@ async function fetchAdData() {
         warnEl.style.display = 'none';
       }
     }
-  } catch(e) { console.error('Ad fetch error:', e); adRawData = []; }
+  } catch(e) { console.error('Ad fetch error:', e); showError('โหลดข้อมูลค่าแอดจาก Google Sheet ไม่สำเร็จ: ' + e.message); adRawData = []; }
 }
 
 function formatGDate(v) {
@@ -4873,7 +4996,7 @@ async function fetchMTAdsData() {
     });
     mtAdsDaily = Object.entries(byDay).map(([date, ads]) => ({ date, ads })).sort((a,b) => a.date.localeCompare(b.date));
     mtAdsFetched = true;
-  } catch(e) { console.error('MT Ads fetch error:', e); mtAdsDaily = []; mtAdsFetched = true; }
+  } catch(e) { console.error('MT Ads fetch error:', e); showError('โหลดข้อมูลค่าแอด Modern Trade ไม่สำเร็จ: ' + e.message); mtAdsDaily = []; mtAdsFetched = true; }
 }
 
 // กรองตามช่วงวันที่จาก filter บนสุด (เหมือนหน้าอื่นๆ) — ไม่ใช้ filter channel/sub_channel ของแถบบนเพราะหน้านี้ต้องเห็นทุกช่องทางพร้อมกันเสมอ
@@ -5683,7 +5806,7 @@ async function fetchAdsBySku() {
     }).filter(Boolean);
     _adsBySkuUnmapped = [...unmappedSet];
     _adsBySkuAggRows = aggRows;
-  } catch(e) { console.error('fetchAdsBySku error:', e); _adsBySkuData = []; _adsBySkuUnmapped = []; _adsBySkuAggRows = []; }
+  } catch(e) { console.error('fetchAdsBySku error:', e); showError('โหลดข้อมูลค่าแอดต่อ SKU ไม่สำเร็จ: ' + e.message); _adsBySkuData = []; _adsBySkuUnmapped = []; _adsBySkuAggRows = []; }
   return _adsBySkuData;
 }
 
@@ -6266,11 +6389,24 @@ function updateCacheStatus(mode, timestamp) {
   else if (mode === 'refresh-failed') el.innerHTML = '<span style="color:#fb923c;" title="กำลังแสดงข้อมูลจากแคชเดิมไปก่อน — ลองกด รีเฟรชข้อมูล Dashboard อีกครั้ง">⚠️ อัพเดตข้อมูลสดไม่สำเร็จ (ยังแสดงจากแคชเดิมอยู่)</span>'
 }
 
+function updateLoadingProgress(msg) {
+  const el = document.getElementById('loadingProgressText');
+  if (el) el.textContent = msg;
+}
+
 async function fetchFreshSnapshot() {
+  let loadedCount = 0;
+  const totalSteps = 8;
+  const tick = (label) => (r) => { loadedCount++; updateLoadingProgress(`โหลด${label}แล้ว (${loadedCount}/${totalSteps})`); return r; };
   const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows] = await Promise.all([
-    fetchAll(), fetchProducts(), fetchProvinceRegion(),
-    fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchPromotionsMap(),
-    fetchSkuAll()
+    fetchAll().then(tick('ออเดอร์')),
+    fetchProducts().then(tick('รายชื่อสินค้า')),
+    fetchProvinceRegion().then(tick('จังหวัด/ภูมิภาค')),
+    fetchPromoMonthly().then(tick('โปรโมชั่นรายเดือน')),
+    fetchSkuParentMonthly().then(tick('SKU รายเดือน')),
+    fetchProvinceMonthly().then(tick('ยอดขายรายจังหวัด')),
+    fetchPromotionsMap().then(tick('ชื่อโปรโมชั่น')),
+    fetchSkuAll().then(tick('รายการ SKU ต่อออเดอร์'))
   ])
   const ordersFiltered = orders.filter(r => !isExcludedRow(r))
   // ตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง — รวม 2 แหล่ง:
@@ -6445,11 +6581,50 @@ document.addEventListener('click', (e) => {
   }
 });
 
+function getMetricPresets(page) {
+  try { return JSON.parse(localStorage.getItem('deesay_metric_presets_' + page) || '{}'); } catch (e) { return {}; }
+}
+function saveMetricPreset(page) {
+  const name = prompt('ตั้งชื่อ preset นี้ (เช่น "มุมมอง KOL", "มุมมองผู้บริหาร")');
+  if (!name) return;
+  const presets = getMetricPresets(page);
+  presets[name] = { order: [...metricState[page].order], active: { ...metricState[page].active } };
+  localStorage.setItem('deesay_metric_presets_' + page, JSON.stringify(presets));
+  renderMetricsChecks(page);
+}
+function loadMetricPreset(page, name) {
+  if (!name) return;
+  const presets = getMetricPresets(page);
+  const p = presets[name];
+  if (!p) return;
+  metricState[page].order = [...p.order];
+  metricState[page].active = { ...p.active };
+  renderMetricsChecks(page); rerenderPage(page);
+}
+function deleteMetricPreset(page, name) {
+  if (!name || !confirm(`ลบ preset "${name}" ใช่ไหม?`)) return;
+  const presets = getMetricPresets(page);
+  delete presets[name];
+  localStorage.setItem('deesay_metric_presets_' + page, JSON.stringify(presets));
+  renderMetricsChecks(page);
+}
+
 let dragSrcIdx = null;
 function renderMetricsChecks(page) {
   const cfg = METRIC_CONFIGS[page], st = metricState[page];
   const container = document.getElementById(page + '-metrics-checks');
-  container.innerHTML = st.order.map((k, idx) => {
+  const presets = getMetricPresets(page);
+  const presetNames = Object.keys(presets);
+  const presetHtml = `
+    <div style="display:flex;gap:6px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+      <select id="${page}-preset-select" onchange="loadMetricPreset('${page}', this.value)" style="flex:1;font-size:11px;padding:4px 6px;">
+        <option value="">— preset ที่บันทึกไว้ —</option>
+        ${presetNames.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('')}
+      </select>
+      <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="saveMetricPreset('${page}')" title="บันทึกชุดที่เลือกตอนนี้เป็น preset ใหม่">💾</button>
+      ${presetNames.length ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="deleteMetricPreset('${page}', document.getElementById('${page}-preset-select').value)" title="ลบ preset ที่เลือกอยู่ในช่องด้านซ้าย">🗑</button>` : ''}
+    </div>`;
+  container.innerHTML = presetHtml + st.order.map((k, idx) => {
     const m = cfg.meta[k];
     return `<div class="metrics-dragrow" draggable="${!m.always}" data-page="${page}" data-idx="${idx}">
       <span class="drag-handle" style="${m.always ? 'opacity:.25;' : ''}">⠿</span>
@@ -6781,8 +6956,14 @@ function ttaFilteredClips() {
 async function renderTta() {
   const from = getDateValue('From'), to = getDateValue('To');
   const rangeKey = from + '|' + to;
-  if (ttaLastRange !== rangeKey) { await fetchTtaData(from, to); ttaLastRange = rangeKey; }
-  await fetchTtaDaily(from, to); // โหลดยอดจริงจากระบบ เฉพาะช่วงวันที่ที่เลือกอยู่ตอนนี้ (v_tiktok_objective_summary รวม revenue/orders/UNSPECIFIED)
+  try {
+    if (ttaLastRange !== rangeKey) { await fetchTtaData(from, to); ttaLastRange = rangeKey; }
+    await fetchTtaDaily(from, to); // โหลดยอดจริงจากระบบ เฉพาะช่วงวันที่ที่เลือกอยู่ตอนนี้ (v_tiktok_objective_summary รวม revenue/orders/UNSPECIFIED)
+  } catch (e) {
+    console.error('renderTta fetch failed:', e);
+    showError('โหลดข้อมูล TikTok Ads ไม่สำเร็จ: ' + e.message + ' — ลองกดค้นหาใหม่อีกครั้ง');
+    return;
+  }
   const dailyInRange = ttaDailyData; // fetchTtaDaily กรองตามช่วงวันที่มาให้แล้ว ไม่ต้องกรองซ้ำ
   const totalSpend = dailyInRange.reduce((s,r)=>s+r.grand_total,0);
   const totalOrders = dailyInRange.reduce((s,r)=>s+(r.total_orders||0),0);
@@ -6797,13 +6978,11 @@ async function renderTta() {
   const roasTip = 'ยอดขายจริงทั้งระบบ ÷ ค่าแอดจริงทั้งระบบ (ไม่ใช่แค่ที่แจกแจงลงคลิปได้)';
   const cpoTip = 'ค่าแอดจริงทั้งระบบ ÷ จำนวนออเดอร์จริงทั้งระบบ';
   document.getElementById('tta-kpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${ttaByClip.length}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${ttaByClip.length}</div><div class="kpi-sub"><span style="color:var(--blue);">${deesayCount} Deesay</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount} affi-KOL</span></div></div>
     <div class="card" style="flex:1;min-width:160px;position:relative;"><div class="card-title">ค่าแอดรวม (ยอดจริงทั้งระบบ) ${fbeInfoIcon('tta-kpi-spend', spendTip)}</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ยอดขาย TikTok Shop ${fbeInfoIcon('tta-kpi-rev', revTip)}</div><div class="kpi-value" style="color:var(--green);">฿${fmt(totalPurchaseValue)}</div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ROAS รวม ${fbeInfoIcon('tta-kpi-roas', roasTip)}</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
-    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">GMV Max Orders ${fbeInfoIcon('tta-kpi-orders', ordersTip)}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">CPO เฉลี่ย ${fbeInfoIcon('tta-kpi-cpo', cpoTip)}</div><div class="kpi-value">฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
-    <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">Deesay / affi-KOL ${fbeInfoIcon('tta-kpi-deesay', 'นับเฉพาะคลิปที่ระบุตัวตนได้ (ไม่รวม LIVE ซึ่งไม่มีคลิปให้จับคู่)')}</div><div class="kpi-value"><span style="color:var(--blue);">${deesayCount}</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount}</span></div></div>
+    <div class="card" style="flex:1;min-width:150px;position:relative;"><div class="card-title">GMV Max Orders ${fbeInfoIcon('tta-kpi-orders', ordersTip)}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div><div class="kpi-sub">CPO เฉลี่ย ${fbeInfoIcon('tta-kpi-cpo', cpoTip)} ฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
   `;
   renderTtaFunnel(unattributedGap);
   renderTtaCreatorSummary();
@@ -7045,7 +7224,7 @@ function renderTtaTable() {
   document.getElementById('ttaTableBody').innerHTML = pageItems.map(c => {
     const clipUrl = `https://www.tiktok.com/@i/video/${c.item_id}`;
     return `<tr style="cursor:pointer;" onclick="window.open('${clipUrl}','_blank')">` + cols.map(k => `<td>${ttaCellHtml(c,k)}</td>`).join('') + '</tr>';
-  }).join('') || '<tr><td class="empty">ไม่พบข้อมูล</td></tr>';
+  }).join('') || '<tr><td class="empty">ไม่พบคลิปในช่วงวันที่/คำค้นหานี้<br><span style="font-size:11px;">ระบบเก็บข้อมูลย้อนหลังแบบ rolling ~7 วัน ลองเลือกช่วงที่ใกล้ปัจจุบันมากขึ้น หรือล้างคำค้นหาดู</span></td></tr>';
   renderPagerHtml('ttaTablePager', ttaPage, totalPages, 'ttaGoToPage');
 }
 // ===================== END TIKTOK CONTENT + ADS PAGES ===================== //
@@ -7054,10 +7233,11 @@ function renderTtaTable() {
 async function init() {
   let usedCache = false;
   try {
-    setDefaultDateFilter();
+    restoreOrDefaultDateFilter();
     const cached = await idbGet(CACHE_KEY)
     if (cached && cached.allData && cached.allData.length) {
       applySnapshot(cached)
+      restoreSavedChannelFilter()
       renderOverview()
       document.getElementById('loadingOverlay').classList.add('hidden')
       updateCacheStatus('cached', cached.cachedAt)
@@ -7067,6 +7247,7 @@ async function init() {
     if (usedCache) updateCacheStatus('loading-fresh')
     const fresh = await fetchFreshSnapshot()
     applySnapshot(fresh)
+    restoreSavedChannelFilter()
     if (usedCache) renderCurrentPage(); else renderOverview()
     document.getElementById('loadingOverlay').classList.add('hidden')
     updateCacheStatus('fresh')
