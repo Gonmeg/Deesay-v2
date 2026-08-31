@@ -294,6 +294,9 @@
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
+    <div style="width:100%;height:4px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px;display:none;" id="refreshMVBarWrap">
+      <div id="refreshMVBar" style="width:0%;height:100%;background:var(--accent);transition:width 0.3s ease;"></div>
+    </div>
     <div id="refreshMVStatus" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
     <button class="btn btn-ghost" id="themeToggleBtn" onclick="toggleTheme()" style="width:100%;margin-top:8px;justify-content:center;">🌙 โหมดมืด</button>
   </div>
@@ -5670,9 +5673,22 @@ function renderFlowTable() {
 async function refreshDashboardData() {
   const btn = document.getElementById('btnRefreshMV')
   const statusEl = document.getElementById('refreshMVStatus')
+  const barWrap = document.getElementById('refreshMVBarWrap')
+  const bar = document.getElementById('refreshMVBar')
   btn.disabled = true
   btn.textContent = '⏳ กำลังรีเฟรช...'
   statusEl.textContent = ''
+  if (barWrap) barWrap.style.display = 'block'
+  if (bar) bar.style.width = '0%'
+  let refreshLoaded = 0
+  const refreshTotalSteps = 5
+  const refreshTick = (label) => (r) => {
+    refreshLoaded++
+    const pct = Math.round(refreshLoaded/refreshTotalSteps*100)
+    if (bar) bar.style.width = pct + '%'
+    statusEl.textContent = `โหลด${label}แล้ว (${refreshLoaded}/${refreshTotalSteps}) — ${pct}%`
+    return r
+  }
   try {
     const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }
 
@@ -5682,7 +5698,11 @@ async function refreshDashboardData() {
     await new Promise(r => setTimeout(r, 2000))
 
     const [orders, promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows] = await Promise.all([
-      fetchAll(), fetchPromoMonthly(), fetchSkuParentMonthly(), fetchProvinceMonthly(), fetchSkuAll()
+      fetchAll().then(refreshTick('ออเดอร์')),
+      fetchPromoMonthly().then(refreshTick('โปรโมชั่นรายเดือน')),
+      fetchSkuParentMonthly().then(refreshTick('SKU รายเดือน')),
+      fetchProvinceMonthly().then(refreshTick('ยอดขายรายจังหวัด')),
+      fetchSkuAll().then(refreshTick('รายการ SKU ต่อออเดอร์'))
     ])
     allData = orders.filter(r => !isExcludedRow(r))
     _fbCustomerCache = null // ข้อมูลใหม่มา ต้องสร้าง cache ลูกค้าใหม่รอบหน้าที่เข้าหน้านี้
@@ -5720,6 +5740,7 @@ async function refreshDashboardData() {
     if (monthSelTo) { monthSelTo.innerHTML = '<option value="">— เดือน —</option>'; }
     populateMonthFilter()
 
+    if (barWrap) barWrap.style.display = 'none'
     statusEl.innerHTML = '<span style="color:var(--green);">✅ โหลดข้อมูลใหม่แล้ว ' + new Date().toLocaleTimeString('th-TH') + '</span><br><span style="font-size:9px;color:var(--text3);">MV refresh ทำงานใน background — ข้อมูลอัพเดทเต็มภายใน 5 นาที</span>'
     if (currentPage === 'adperf') renderAdpAll(); else renderCurrentPage()
   } catch (e) {
@@ -5728,6 +5749,7 @@ async function refreshDashboardData() {
   } finally {
     btn.disabled = false
     btn.textContent = '🔄 รีเฟรชข้อมูล Dashboard'
+    if (barWrap) barWrap.style.display = 'none'
   }
 }
 
