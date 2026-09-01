@@ -6923,37 +6923,15 @@ const TTA_PAGE_SIZE = 40;
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  // ดึงทีละก้อน 4 วัน แบบเรียงลำดับทีละคำขอ (ไม่ยิงพร้อมกันเลย) — v_tiktok_creative_performance เป็น view ที่รวมข้อมูล
-  // จากหลายตาราง คำนวณหนักกว่าตารางธรรมดา แต่ละก้อนแยก try/catch กันเอง ก้อนไหนพังไม่ทำให้ก้อนอื่นหยุดตามไปด้วย
-  // ถ้ามีก้อนไหนพังจริงๆ จะเก็บรายชื่อไว้ใน ttaFailedChunks ให้ renderTta() เตือนผู้ใช้ชัดเจน ไม่ปล่อยให้ดูเหมือนข้อมูลครบ
-  let ttaRaw = [];
-  const failedChunks = [];
-  if (fromDate && toDate) {
-    const CHUNK_DAYS = 4;
-    let chunkStart = new Date(fromDate + 'T00:00:00Z');
-    const end = new Date(toDate + 'T00:00:00Z');
-    while (chunkStart <= end) {
-      const chunkEnd = new Date(chunkStart);
-      chunkEnd.setUTCDate(chunkEnd.getUTCDate() + CHUNK_DAYS - 1);
-      const actualEnd = chunkEnd > end ? end : chunkEnd;
-      const s = chunkStart.toISOString().split('T')[0];
-      const e = actualEnd.toISOString().split('T')[0];
-      try {
-        const res = await fetchWithRetry(
-          `${window.SUPABASE_URL}/rest/v1/v_tiktok_creative_performance?select=*&stat_date=gte.${s}&stat_date=lte.${e}&limit=5000`,
-          headers, 5, 1000 // เพิ่มจำนวนลองซ้ำจาก 3 เป็น 5 ครั้ง หน่วงนานขึ้น ให้โอกาส view ที่คำนวณหนักตอบทันมากขึ้น
-        );
-        const rows = await res.json();
-        ttaRaw = ttaRaw.concat(Array.isArray(rows) ? rows : []);
-      } catch (err) {
-        console.error(`TikTok Ads: ดึงข้อมูลช่วง ${s} ถึง ${e} ไม่สำเร็จ`, err);
-        failedChunks.push(`${s} - ${e}`);
-      }
-      chunkStart.setUTCDate(chunkStart.getUTCDate() + CHUNK_DAYS);
-    }
-  }
+  // ดึงจาก mv_tiktok_creative_performance (Materialized View รีเฟรชทุกชั่วโมง) แทน v_tiktok_creative_performance
+  // เดิมที่คำนวณ join สดทุกครั้ง — ข้อมูลนิ่งแล้ว ใช้ keyset pagination ได้อย่างปลอดภัย เรียงตาม stat_date ก่อน
+  // ให้ตรงกับ index ใหม่ (stat_date, item_id, advertiser_id) เพราะ dashboard กรองด้วยช่วงวันที่เป็นหลัก
+  let baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc`;
+  if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
+  if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
+  const ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
   ttaRawRows = ttaRaw;
-  window._ttaFailedChunks = failedChunks;
+  window._ttaFailedChunks = [];
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
