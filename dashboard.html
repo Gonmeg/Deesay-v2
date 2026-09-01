@@ -2610,13 +2610,14 @@ async function renderFbEngagePage() {
 
   const pageFilter = fbeSelectedPageId ? `&page_id=eq.${fbeSelectedPageId}` : '';
 
-  const [engRes, cntRes, postsInRangeRes, tagsRes, countRes] = await Promise.all([
+  const [engRes, cntRes, postsInRangeRes, allCommentTags, countRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_engagement?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
     fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_post_count?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
     // ดึง post_id ของโพสต์ที่ "ตีพิมพ์" อยู่ในช่วงวันที่เลือก (ใช้กรองคอมเมนต์ตามวันที่โพสต์ ไม่ใช่วันที่คอมเมนต์)
     fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id&posted_at=gte.${dateFrom}&posted_at=lte.${dateTo}T23:59:59${pageFilter}&limit=5000`, { headers }),
     // ดึงคอมเมนต์ทั้งหมด (ไม่กรองวันที่คอมเมนต์ — จะกรองตาม post_id ที่ได้จากข้างบนแทนในโค้ด)
-    fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=*${pageFilter}&limit=10000`, { headers }),
+    // ใช้ fetchKeyset แทนขอ limit=10000 ตรงๆ เพราะ Supabase ตัดจำนวนแถวต่อคำขอไว้ที่ 1,000 แถวเสมอ (ยืนยันแล้วจากที่เจอคอมเมนต์หายไปเกือบ 4,000 แถว)
+    fetchKeyset(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=*${pageFilter}&order=comment_id.asc`, headers, ['comment_id']),
     fetch(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=comment_id${pageFilter}`, {
       headers: { ...headers, Prefer: 'count=exact', Range: '0-0' }
     }),
@@ -2624,7 +2625,6 @@ async function renderFbEngagePage() {
   fbeEngagementCache = await engRes.json();
   fbePostCountCache = await cntRes.json();
   const postsInRange = await postsInRangeRes.json();
-  const allCommentTags = await tagsRes.json();
 
   if (!Array.isArray(postsInRange) || !Array.isArray(allCommentTags)) {
     console.error('FB Engage: ดึงโพสต์/คอมเมนต์บางส่วนล้มเหลว', { postsInRange, allCommentTags });
