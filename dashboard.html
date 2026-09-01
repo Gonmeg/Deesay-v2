@@ -6924,34 +6924,13 @@ function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   // ดึงจาก mv_tiktok_creative_performance (Materialized View รีเฟรชทุกชั่วโมง) แทน v_tiktok_creative_performance
-  // เดิมที่คำนวณ join สดทุกครั้ง — ข้อมูลนิ่งแล้ว ยิงพร้อมกันได้อย่างปลอดภัย (ต่างจาก view สดก่อนหน้าที่ยิงพร้อมกันแล้วพัง)
-  // แบ่งช่วงวันที่เป็น 6 ส่วนเท่าๆ กัน ยิง fetchKeyset พร้อมกันทั้ง 6 ส่วน แทนเรียงคิวทีละหน้าทั้งช่วงเดียว (เร็วขึ้นมาก บนตาราง 230,282+ แถว)
-  let ttaRaw = [];
-  if (fromDate && toDate) {
-    const PARTS = 6;
-    const fromD = new Date(fromDate + 'T00:00:00Z');
-    const toD = new Date(toDate + 'T00:00:00Z');
-    const totalDays = Math.max(1, Math.round((toD - fromD) / 86400000) + 1);
-    const daysPerPart = Math.max(1, Math.ceil(totalDays / PARTS));
-    const ranges = [];
-    let cursor = new Date(fromD);
-    while (cursor <= toD) {
-      const partEnd = new Date(cursor);
-      partEnd.setUTCDate(partEnd.getUTCDate() + daysPerPart - 1);
-      const actualEnd = partEnd > toD ? toD : partEnd;
-      ranges.push([cursor.toISOString().split('T')[0], actualEnd.toISOString().split('T')[0]]);
-      cursor = new Date(actualEnd);
-      cursor.setUTCDate(cursor.getUTCDate() + 1);
-    }
-    const results = await Promise.all(ranges.map(([s, e]) => {
-      const baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc&stat_date=gte.${s}&stat_date=lte.${e}`;
-      return fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
-    }));
-    results.forEach(rows => { ttaRaw = ttaRaw.concat(rows); });
-  } else {
-    const baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc`;
-    ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
-  }
+  // หมายเหตุ: เคยลองแบ่งช่วงวันที่ยิงพร้อมกัน 6 ทางเพื่อความเร็ว แต่ตอนนี้โปรเจกต์ Supabase ยังติดปัญหาโควตาเกิน
+  // (Database Size / Egress) อยู่ — ยิงพร้อมกันหนักไปกลับไปกระตุ้นให้ตารางอื่นที่ไม่เกี่ยวข้องพังไปด้วย (เช่น sku_revenue)
+  // เลยถอยกลับมาเรียงคิวทีละคำขอก่อน (ช้ากว่าแต่นิ่งกว่า) จนกว่าจะแก้เรื่องโควตาเสร็จ ค่อยกลับไปทำให้เร็วขึ้นอีกครั้ง
+  let baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc`;
+  if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
+  if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
+  const ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
   ttaRawRows = ttaRaw;
   window._ttaFailedChunks = [];
   const byClip = {};
