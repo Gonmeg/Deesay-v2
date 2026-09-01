@@ -254,7 +254,7 @@
     </div>
     <div id="navGroup-fb" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('fbhub',null,this)"><span class="nav-icon">🅕</span> ภาพรวม Facebook</div>
-      <div class="nav-item nav-sub" onclick="showPage('geo','Facebook',this)"><span class="nav-icon">🗺️</span> จังหวัด / ภูมิภาค</div>
+      <!-- จังหวัด / ภูมิภาค (geo) ซ่อนไว้ — ไม่ค่อยได้ใช้งาน โค้ด renderGeo() ยังอยู่ครบ ไม่ได้ลบ -->
       <div class="nav-item nav-sub" onclick="showPage('crm',null,this)"><span class="nav-icon">👥</span> CRM</div>
       <div class="nav-item nav-sub" onclick="showPage('flow',null,this)"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
       <div class="nav-item nav-sub" onclick="showPage('neverbought',null,this)"><span class="nav-icon">🔍</span> ลูกค้าที่ยังไม่ซื้อ</div>
@@ -2133,13 +2133,13 @@ function applyFilters() {
 // ===== NAVIGATION =====
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook',
-  geo: 'จังหวัด / ภูมิภาค', crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
+  /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', /* ttcontent: 'ผลงานคอนเทนต์ (TikTok)' — ซ่อนชั่วคราว รอ TikTok Accounts API */ ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','geo','crm','flow','neverbought','fbengage','tthub','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf']; // ttcontent ซ่อนชั่วคราว รอ TikTok Accounts API
+const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','tthub','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf']; // ttcontent, geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget']; // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
@@ -6924,12 +6924,34 @@ function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   // ดึงจาก mv_tiktok_creative_performance (Materialized View รีเฟรชทุกชั่วโมง) แทน v_tiktok_creative_performance
-  // เดิมที่คำนวณ join สดทุกครั้ง — ข้อมูลนิ่งแล้ว ใช้ keyset pagination ได้อย่างปลอดภัย เรียงตาม stat_date ก่อน
-  // ให้ตรงกับ index ใหม่ (stat_date, item_id, advertiser_id) เพราะ dashboard กรองด้วยช่วงวันที่เป็นหลัก
-  let baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc`;
-  if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
-  if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
-  const ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
+  // เดิมที่คำนวณ join สดทุกครั้ง — ข้อมูลนิ่งแล้ว ยิงพร้อมกันได้อย่างปลอดภัย (ต่างจาก view สดก่อนหน้าที่ยิงพร้อมกันแล้วพัง)
+  // แบ่งช่วงวันที่เป็น 6 ส่วนเท่าๆ กัน ยิง fetchKeyset พร้อมกันทั้ง 6 ส่วน แทนเรียงคิวทีละหน้าทั้งช่วงเดียว (เร็วขึ้นมาก บนตาราง 230,282+ แถว)
+  let ttaRaw = [];
+  if (fromDate && toDate) {
+    const PARTS = 6;
+    const fromD = new Date(fromDate + 'T00:00:00Z');
+    const toD = new Date(toDate + 'T00:00:00Z');
+    const totalDays = Math.max(1, Math.round((toD - fromD) / 86400000) + 1);
+    const daysPerPart = Math.max(1, Math.ceil(totalDays / PARTS));
+    const ranges = [];
+    let cursor = new Date(fromD);
+    while (cursor <= toD) {
+      const partEnd = new Date(cursor);
+      partEnd.setUTCDate(partEnd.getUTCDate() + daysPerPart - 1);
+      const actualEnd = partEnd > toD ? toD : partEnd;
+      ranges.push([cursor.toISOString().split('T')[0], actualEnd.toISOString().split('T')[0]]);
+      cursor = new Date(actualEnd);
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+    const results = await Promise.all(ranges.map(([s, e]) => {
+      const baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc&stat_date=gte.${s}&stat_date=lte.${e}`;
+      return fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
+    }));
+    results.forEach(rows => { ttaRaw = ttaRaw.concat(rows); });
+  } else {
+    const baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc`;
+    ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
+  }
   ttaRawRows = ttaRaw;
   window._ttaFailedChunks = [];
   const byClip = {};
