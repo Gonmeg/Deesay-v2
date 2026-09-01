@@ -7097,7 +7097,7 @@ async function fetchTtaDaily(fromDate, toDate) {
   const rangeKey = (fromDate||'') + '|' + (toDate||'');
   if (ttaDailyLastRange === rangeKey && ttaDailyData.length) return; // ช่วงวันที่เดิม ไม่ต้องดึงซ้ำ
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  let baseUrl = `${window.SUPABASE_URL}/rest/v1/v_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc,objective.asc`;
+  let baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc,objective.asc`;
   if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
   if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
   const rows = await fetchKeyset(baseUrl, headers, ['stat_date', 'objective']);
