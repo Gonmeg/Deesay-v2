@@ -1397,7 +1397,44 @@
                 <tbody id="tbodyCpOrderChannel"></tbody>
               </table>
             </div>
+            <div id="cp-oc-note" style="font-size:11px;color:var(--text3);margin-top:8px;display:none;"></div>
           </div>
+        </div>
+
+        <!-- ===== คลิปที่ยิงแอด (เชื่อมกับ TikTok Ads ด้วยชื่อ creator) — source: mv_tiktok_creative_performance ===== -->
+        <div class="card" style="margin-top:20px;">
+          <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+            <div>
+              <div class="section-title" id="cp-ads-title">คลิปที่ยิงแอด — รวมทุก Creator</div>
+              <div style="font-size:10.5px;color:var(--text3);margin-top:3px;">source: TikTok Ads (mv_tiktok_creative_performance) · เชื่อมด้วยชื่อ creator (ตัด @ / ตัวพิมพ์เล็ก)</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:10.5px;padding:3px 9px;border-radius:6px;background:rgba(239,159,39,0.15);color:#ef9f27;font-weight:600;">⚠ ยอด ฿ ในตารางนี้ = ยอดที่แอดนับ (GMV Max) ไม่ใช่ยอดออเดอร์จริงด้านบน</span>
+              <div style="position:relative;" id="cp-ads-metrics-wrap">
+                <button class="btn btn-ghost" id="cpAdsMetricsBtn" onclick="toggleMetricsPanel('cpAds')">
+                  ⚙ Metrics <span id="cpAds-metric-count" style="color:var(--accent);"></span>
+                </button>
+                <div id="cpAds-metrics-panel" class="metrics-panel" style="display:none;">
+                  <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
+                  <div id="cpAds-metrics-checks"></div>
+                  <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                    <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('cpAds')">ค่าแนะนำ</button>
+                    <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('cpAds')">เลือกทั้งหมด</button>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-ghost" onclick="exportTable('tblCpAds')">⬇ Export CSV</button>
+            </div>
+          </div>
+          <div id="cp-ads-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
+          <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
+            <table id="tblCpAds" class="sticky-head-table">
+              <thead id="cpAdsTableHead"></thead>
+              <tbody id="cpAdsTableBody"><tr><td class="empty">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+          <div id="cpAdsTablePager"></div>
+          <div id="cp-ads-foot" style="font-size:11px;color:var(--text3);margin-top:8px;"></div>
         </div>
       </div>
     </div>
@@ -3361,6 +3398,200 @@ function renderCreatorPerf() {
   document.getElementById('tbodyCpOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
     <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
   `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
+
+  // เก็บยอด Videos จากออเดอร์จริงไว้ให้ส่วนคลิปยิงแอดใช้เทียบ/กำกับ
+  _cpVideosRev = byOC['Videos'] ? byOC['Videos'].rev : 0;
+  _cpVideosOrd = byOC['Videos'] ? byOC['Videos'].ord : 0;
+  renderCpAdsSection(); // async — โหลด MV ฝั่ง Ads แยกต่างหาก ไม่บล็อกส่วนอื่นของหน้า
+}
+
+// ===== CREATOR PERFORMANCE × TikTok Ads: คลิปที่ยิงแอดของ creator (เชื่อมด้วยชื่อ) =====
+// canonical source ของส่วนนี้ = mv_tiktok_creative_performance (ยอดที่แอดนับ / GMV Max) — คนละแหล่งกับยอดออเดอร์จริง (orders) ด้านบน จึงไม่เท่ากันโดยธรรมชาติ
+let _cpVideosRev = 0, _cpVideosOrd = 0;
+let cpAdsPage = 1;
+const CP_ADS_PAGE_SIZE = 40;
+let cpAdsSortKey = 'spend', cpAdsSortDir = 'desc';
+let _cpAdsLoadSeq = 0; // กันผลลัพธ์ fetch เก่ามาทับผลใหม่ตอนเปลี่ยนช่วงวันที่/creator เร็วๆ
+
+// ตัด @ นำหน้า + ช่องว่าง + ตัวพิมพ์เล็ก — ใช้เทียบชื่อระหว่าง orders.creator_handle กับ mv.tt_account_name (เช็คแล้ว 2026-09: ฝั่ง Ads มี @ นำหน้าแค่ 15 จาก 5,643 ช่อง)
+function cpNormHandle(s) { return normalizeHandle(s).replace(/^@+/, ''); }
+
+async function ensureTtaDataForRange(from, to) {
+  // reuse cache เดียวกับหน้า TikTok Ads: ถ้าช่วงวันที่เดิม ไม่ยิง Supabase ซ้ำ (โปรเจกต์ยังติดโควตา — ห้ามเพิ่มคำขอโดยไม่จำเป็น)
+  const rangeKey = from + '|' + to;
+  if (ttaLastRange === rangeKey && ttaByClip.length) return;
+  await fetchTtaData(from, to);
+  ttaLastRange = rangeKey;
+}
+
+function cpAdsSortBy(key) {
+  if (cpAdsSortKey === key) cpAdsSortDir = cpAdsSortDir === 'desc' ? 'asc' : 'desc';
+  else { cpAdsSortKey = key; cpAdsSortDir = 'desc'; }
+  cpAdsPage = 1;
+  renderCpAdsClipTable();
+}
+function cpAdsGoToPage(n) { cpAdsPage = n; renderCpAdsClipTable(); }
+
+function cpAdsClipsOfSelected() {
+  const target = cpNormHandle(cpSelectedCreator);
+  return ttaByClip.filter(c => cpNormHandle(c.handle) === target);
+}
+
+async function renderCpAdsSection() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const seq = ++_cpAdsLoadSeq;
+  const titleEl = document.getElementById('cp-ads-title');
+  const kpiEl = document.getElementById('cp-ads-kpis');
+  const headEl = document.getElementById('cpAdsTableHead');
+  const bodyEl = document.getElementById('cpAdsTableBody');
+  const footEl = document.getElementById('cp-ads-foot');
+  const ocNote = document.getElementById('cp-oc-note');
+  const metricsWrap = document.getElementById('cp-ads-metrics-wrap');
+  if (!bodyEl) return;
+
+  titleEl.textContent = cpSelectedCreator ? `คลิปที่ยิงแอดของ ${cpSelectedCreator}` : 'คลิปที่ยิงแอด — Top 10 Creator (เฉพาะคนที่มีทั้งยอดออเดอร์และคลิปยิงแอด)';
+  if (metricsWrap) metricsWrap.style.display = cpSelectedCreator ? 'block' : 'none';
+  if (ocNote) ocNote.style.display = 'none';
+  kpiEl.innerHTML = '';
+  headEl.innerHTML = '';
+  bodyEl.innerHTML = '<tr><td class="empty">กำลังโหลดข้อมูล TikTok Ads...</td></tr>';
+  footEl.textContent = '';
+  renderPagerHtml('cpAdsTablePager', 1, 1, 'cpAdsGoToPage');
+
+  try {
+    await ensureTtaDataForRange(from, to);
+  } catch (e) {
+    console.error('renderCpAdsSection fetch failed:', e);
+    if (seq !== _cpAdsLoadSeq) return;
+    bodyEl.innerHTML = `<tr><td class="empty">โหลดข้อมูล TikTok Ads ไม่สำเร็จ: ${ttcEsc(e.message)}<br><span style="font-size:11px;">ถ้าเจอบ่อย ให้เช็คหน้า Usage ของ Supabase ก่อน (โควตาเกิน = 500 แบบสุ่ม ไม่ใช่บั๊กโค้ด)</span></td></tr>`;
+    return;
+  }
+  if (seq !== _cpAdsLoadSeq) return; // มีการโหลดใหม่ทับไปแล้ว
+
+  if (cpSelectedCreator) renderCpAdsClipTable();
+  else renderCpAdsCreatorSummary();
+}
+
+// ---- โหมดหน้ารวม: Top 10 creator ที่มีทั้งยอดออเดอร์ (orders) และคลิปยิงแอด (MV) ----
+function renderCpAdsCreatorSummary() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const headEl = document.getElementById('cpAdsTableHead');
+  const bodyEl = document.getElementById('cpAdsTableBody');
+  const footEl = document.getElementById('cp-ads-foot');
+  const kpiEl = document.getElementById('cp-ads-kpis');
+
+  // ยอดออเดอร์จริงฝั่ง Videos ต่อ creator (source: orders — ไม่รวม Cancel/Return)
+  const ordByHandle = {};
+  allData.forEach(r => {
+    if (r.channel !== 'TikTok' || !r.date || r.date < from || r.date > to || !shouldIncludeRow(r)) return;
+    if (r.order_channel !== 'Videos') return;
+    const h = cpNormHandle(r.creator_handle || 'deesaythailand');
+    if (!ordByHandle[h]) ordByHandle[h] = { display: r.creator_handle || 'deesaythailand', rev: 0, ord: 0 };
+    ordByHandle[h].rev += parseFloat(r.revenue) || 0;
+    ordByHandle[h].ord++;
+  });
+
+  // สรุปฝั่ง Ads ต่อ creator
+  const adsByHandle = {};
+  ttaByClip.forEach(c => {
+    const h = cpNormHandle(c.handle);
+    if (!adsByHandle[h]) adsByHandle[h] = { clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
+    adsByHandle[h].clips++;
+    adsByHandle[h].spend += c.spend;
+    adsByHandle[h].orders += c.orders;
+    adsByHandle[h].purchaseValue += c.purchaseValue;
+  });
+
+  const matched = Object.keys(ordByHandle).filter(h => adsByHandle[h]);
+  const rows = matched.map(h => ({
+    handle: ordByHandle[h].display, ...adsByHandle[h],
+    roas: adsByHandle[h].spend ? adsByHandle[h].purchaseValue / adsByHandle[h].spend : null,
+    ordRev: ordByHandle[h].rev, ordN: ordByHandle[h].ord
+  })).sort((a, b) => b.spend - a.spend);
+
+  const totalCreators = Object.keys(ordByHandle).length;
+  const unmatchedRev = Object.keys(ordByHandle).filter(h => !adsByHandle[h]).reduce((s, h) => s + ordByHandle[h].rev, 0);
+  const matchedRev = matched.reduce((s, h) => s + ordByHandle[h].rev, 0);
+
+  kpiEl.innerHTML = `
+    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">creator ที่มีคลิปยิงแอด</div><div class="kpi-value" style="font-size:20px;">${fmt(matched.length)} <span style="font-size:11px;color:var(--text3);font-weight:400;">/ ${fmt(totalCreators)} คนที่มียอด Videos</span></div></div>
+    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ยอด Videos จากออเดอร์จริง — มีคลิปยิงแอด</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(matchedRev)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ยอด Videos จากออเดอร์จริง — จากคลิปที่ไม่ได้ยิงแอด</div><div class="kpi-value" style="font-size:20px;color:var(--text2);">฿${fmtB(unmatchedRev)}</div></div>
+  `;
+
+  headEl.innerHTML = `<tr><th>Creator</th><th>คลิปยิงแอด</th><th>ค่าแอด</th><th>ยอดขาย (แอดนับ)</th><th>ROAS</th><th>GMV Max orders</th><th style="border-left:2px solid var(--border);">ยอด Videos (ออเดอร์จริง)</th><th>ออเดอร์ Videos</th></tr>`;
+  bodyEl.innerHTML = rows.length ? rows.slice(0, 10).map(r => `
+    <tr style="cursor:pointer;" onclick="selectCpCreator('${r.handle.replace(/'/g, "\\'")}')" title="คลิกเพื่อดูคลิปของ creator นี้">
+      <td>${ttcEsc(r.handle)}</td><td>${fmt(r.clips)}</td><td>฿${fmt(r.spend)}</td><td>฿${fmt(r.purchaseValue)}</td>
+      <td>${r.roas !== null ? r.roas.toFixed(2) + 'x' : '—'}</td><td>${fmt(r.orders)}</td>
+      <td style="border-left:2px solid var(--border);">฿${fmt(r.ordRev)}</td><td>${fmt(r.ordN)}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">ไม่มี creator ที่มีทั้งยอดออเดอร์และคลิปยิงแอดในช่วงนี้</td></tr>';
+  footEl.innerHTML = `แสดง Top ${Math.min(10, rows.length)} จาก ${rows.length} คน เรียงตามค่าแอด · คลิกแถวเพื่อดูรายคลิป · creator ที่ยอดมาจาก LIVE อย่างเดียวไม่อยู่ในตารางนี้ (ดูได้ที่ Top 10 Creator (Live) ด้านบน) · คอลัมน์ขวาสุด 2 ช่องมาจากออเดอร์จริง (orders) เพื่อให้เทียบกับยอดที่แอดนับได้`;
+  renderPagerHtml('cpAdsTablePager', 1, 1, 'cpAdsGoToPage');
+}
+
+// ---- โหมดเลือก creator: รายคลิปที่ยิงแอด ----
+function renderCpAdsClipTable() {
+  const headEl = document.getElementById('cpAdsTableHead');
+  const bodyEl = document.getElementById('cpAdsTableBody');
+  const footEl = document.getElementById('cp-ads-foot');
+  const kpiEl = document.getElementById('cp-ads-kpis');
+  const ocNote = document.getElementById('cp-oc-note');
+  if (!cpSelectedCreator || !bodyEl) return;
+
+  const clips = cpAdsClipsOfSelected();
+
+  // ไม่มีคลิปยิงแอดเลย → กำกับว่ายอด Videos ที่เห็นด้านบนมาจากคลิปที่ไม่ได้ยิงแอด (รอ TikTok Accounts API ถึงจะเห็นคลิป organic)
+  if (!clips.length) {
+    kpiEl.innerHTML = '';
+    headEl.innerHTML = '';
+    bodyEl.innerHTML = `<tr><td class="empty">creator นี้ไม่มีคลิปที่ยิงแอดในช่วงวันที่ที่เลือก${_cpVideosRev > 0 ? `<br><span style="font-size:11px;">ยอด Videos ฿${fmt(_cpVideosRev)} (${fmt(_cpVideosOrd)} ออเดอร์) ที่เห็นในตาราง LIVE vs Videos มาจากคลิปที่ไม่ได้ยิงแอด — จะเห็นรายคลิปได้เมื่อ TikTok Accounts API อนุมัติ</span>` : ''}</td></tr>`;
+    footEl.textContent = '';
+    if (ocNote && _cpVideosRev > 0) { ocNote.style.display = 'block'; ocNote.textContent = 'ℹ ยอด Videos ของ creator นี้มาจากคลิปที่ไม่ได้ยิงแอด (ไม่พบในระบบ TikTok Ads)'; }
+    renderPagerHtml('cpAdsTablePager', 1, 1, 'cpAdsGoToPage');
+    return;
+  }
+  if (ocNote && _cpVideosRev > 0) { ocNote.style.display = 'block'; ocNote.textContent = `ℹ ยอด Videos ของ creator นี้เป็นยอดออเดอร์จริง ส่วนตารางคลิปยิงแอดด้านล่างเป็นยอดที่แอดนับ (คนละแหล่ง — เทียบกันเป็นสัดส่วนได้ แต่ไม่เท่ากัน)`; }
+
+  const spend = clips.reduce((s, c) => s + c.spend, 0);
+  const pv = clips.reduce((s, c) => s + c.purchaseValue, 0);
+  const ord = clips.reduce((s, c) => s + c.orders, 0);
+  const roas = spend ? pv / spend : null;
+  const dates = clips.flatMap(c => [c.dateMin, c.dateMax]).filter(Boolean).sort();
+  const thDate = d => new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  kpiEl.innerHTML = `
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value" style="font-size:20px;">${fmt(clips.length)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(spend)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ยอดขาย (แอดนับ)</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(pv)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ROAS รวม</div><div class="kpi-value" style="font-size:20px;">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">GMV Max orders</div><div class="kpi-value" style="font-size:20px;">${fmt(ord)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ช่วงที่ยิงแอด</div><div class="kpi-value" style="font-size:14px;">${dates.length ? thDate(dates[0]) + ' – ' + thDate(dates[dates.length - 1]) : '—'}</div></div>
+  `;
+
+  const cols = activeCols('cpAds');
+  const sorted = [...clips].sort((a, b) => {
+    const va = ttaSortValue(a, cpAdsSortKey), vb = ttaSortValue(b, cpAdsSortKey);
+    let cmp;
+    if (typeof va === 'string' || typeof vb === 'string') cmp = String(va).localeCompare(String(vb));
+    else cmp = va - vb;
+    return cpAdsSortDir === 'desc' ? -cmp : cmp;
+  });
+  const totalPages = Math.max(1, Math.ceil(sorted.length / CP_ADS_PAGE_SIZE));
+  if (cpAdsPage > totalPages) cpAdsPage = totalPages;
+  const start = (cpAdsPage - 1) * CP_ADS_PAGE_SIZE;
+  const pageItems = sorted.slice(start, start + CP_ADS_PAGE_SIZE);
+
+  headEl.innerHTML = '<tr>' + cols.map(k => {
+    const label = METRIC_CONFIGS.cpAds.meta[k].label;
+    const arrow = cpAdsSortKey === k ? `<span class="sort-arrow">${cpAdsSortDir === 'desc' ? '▼' : '▲'}</span>` : '';
+    return `<th><span class="sortable-th" onclick="cpAdsSortBy('${k}')">${label}${arrow}</span></th>`;
+  }).join('') + '</tr>';
+  bodyEl.innerHTML = pageItems.map(c => {
+    const clipUrl = `https://www.tiktok.com/@i/video/${c.item_id}`;
+    return `<tr style="cursor:pointer;" onclick="window.open('${clipUrl}','_blank')" title="คลิกเพื่อเปิดคลิปใน TikTok">` + cols.map(k => `<td>${ttaCellHtml(c, k)}</td>`).join('') + '</tr>';
+  }).join('');
+  footEl.textContent = `แสดง ${fmt(start + 1)}–${fmt(Math.min(start + CP_ADS_PAGE_SIZE, sorted.length))} จาก ${fmt(sorted.length)} คลิป · คลิกแถวเพื่อเปิดคลิป · ~ = ข้อมูลบางส่วน (ตารางต้นทางยังเก็บไม่ครบทุกวัน) · คลิปที่ไม่ได้ยิงแอดไม่แสดงในตารางนี้`;
+  renderPagerHtml('cpAdsTablePager', cpAdsPage, totalPages, 'cpAdsGoToPage');
 }
 
 function populateLiveSearchFilters() {
@@ -6604,14 +6835,29 @@ const METRIC_CONFIGS = {
       revenue:{label:'ยอดขาย',default:true}, roas:{label:'ROAS',default:true},
       orders:{label:'orders',default:true}, cpo:{label:'CPO',default:true}
     }
+  },
+  // ตารางคลิปที่ยิงแอดในหน้า Creator Performance — ใช้ cell renderer เดียวกับหน้า TikTok Ads (ttaCellHtml) แค่ตัดคอลัมน์แหล่งที่มา/ชื่อช่องออกเพราะเลือก creator อยู่แล้ว
+  cpAds: {
+    order: ['clip','date','objective','campaign','spend','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','v6s','v25','v50','v75','v100','likes','paidcomments','paidshares','follows','profilevisits'],
+    meta: {
+      clip:{label:'คลิป',always:true},
+      date:{label:'ช่วงวันที่ยิง',default:true}, objective:{label:'วัตถุประสงค์แอด'}, campaign:{label:'แคมเปญ'},
+      spend:{label:'ค่าแอด',default:true}, purchaseValue:{label:'ยอดขาย (แอดนับ)',default:true}, roas:{label:'ROAS',default:true},
+      orders:{label:'GMV Max orders',default:true}, cpo:{label:'CPO'},
+      impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'},
+      v6s:{label:'% ดูจบ 6 วิ'}, v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v75:{label:'% ดูจบ 75%'}, v100:{label:'% ดูจบ 100%'},
+      likes:{label:'ไลค์ (จากแอด)'}, paidcomments:{label:'คอมเมนต์ (จากแอด)'}, paidshares:{label:'แชร์ (จากแอด)'},
+      follows:{label:'ผู้ติดตามใหม่ (จากแอด)'}, profilevisits:{label:'เข้าดูโปรไฟล์ (จากแอด)'}
+    }
   }
 };
 const metricState = {
   ttc: { order: [...METRIC_CONFIGS.ttc.order], active: {} },
   tta: { order: [...METRIC_CONFIGS.tta.order], active: {} },
-  ttaCampaign: { order: [...METRIC_CONFIGS.ttaCampaign.order], active: {} }
+  ttaCampaign: { order: [...METRIC_CONFIGS.ttaCampaign.order], active: {} },
+  cpAds: { order: [...METRIC_CONFIGS.cpAds.order], active: {} }
 };
-['ttc','tta','ttaCampaign'].forEach(page => {
+['ttc','tta','ttaCampaign','cpAds'].forEach(page => {
   METRIC_CONFIGS[page].order.forEach(k => {
     const m = METRIC_CONFIGS[page].meta[k];
     metricState[page].active[k] = !!(m.always || m.default);
@@ -6725,6 +6971,7 @@ function rerenderPage(page) {
   if (page === 'ttc') { ttcPage = 1; renderTtcCurrentView(); }
   else if (page === 'tta') { ttaPage = 1; renderTtaTable(); }
   else if (page === 'ttaCampaign') { renderTtaCampaignTable(); }
+  else if (page === 'cpAds') { cpAdsPage = 1; renderCpAdsSection(); }
 }
 function activeCols(page) {
   return metricState[page].order.filter(k => metricState[page].active[k]);
@@ -7328,3 +7575,4 @@ init();
 </script>
 </body>
 </html>
+  
