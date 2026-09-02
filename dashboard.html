@@ -266,7 +266,7 @@
     </div>
     <div id="navGroup-tt" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
-      <!-- ผลงานคอนเทนต์ (ttcontent) ซ่อนไว้ชั่วคราว — รอสมัคร TikTok Accounts API (แทน Windsor) อนุมัติก่อนแล้วค่อยเปิดกลับมา โค้ด renderTtc() ยังอยู่ครบ ไม่ได้ลบ -->
+      <div class="nav-item nav-sub" onclick="showPage('ttcontent',null,this)"><span class="nav-icon">🎬</span> ผลงานคอนเทนต์</div>
       <div class="nav-item nav-sub" onclick="showPage('ttads',null,this)"><span class="nav-icon">📢</span> TikTok Ads</div>
       <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
       <div class="nav-item nav-sub" onclick="showPage('creatorperf',null,this)"><span class="nav-icon">👤</span> Creator Performance</div>
@@ -2134,12 +2134,12 @@ function applyFilters() {
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook',
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
-  tthub: 'ภาพรวม TikTok', /* ttcontent: 'ผลงานคอนเทนต์ (TikTok)' — ซ่อนชั่วคราว รอ TikTok Accounts API */ ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
+  tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','tthub','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf']; // ttcontent, geo ซ่อนชั่วคราว
+const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','tthub','ttcontent','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget']; // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
