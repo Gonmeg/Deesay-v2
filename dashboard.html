@@ -313,6 +313,14 @@
   <div class="topbar">
     <div class="page-title" id="pageTitle">ภาพรวมยอดขาย</div>
     <div class="filters">
+      <!-- ค้นหา creator: โชว์เฉพาะหน้า Creator Performance (ควบคุมใน showPage) -->
+      <div class="filter-group" id="cpCreatorFilterGroup" style="display:none;position:relative;padding:0;background:transparent;border:none;gap:6px;">
+        <div style="position:relative;">
+          <input type="text" class="ls-input" style="width:210px;padding:6px 10px;font-size:12px;" id="cpCreatorSearch" placeholder="🔎 ค้นหา creator..." oninput="debouncedFilterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
+          <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;min-width:260px;right:auto;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+        </div>
+        <button class="btn btn-ghost" id="cpClearBtn" onclick="clearCpCreator()" style="display:none;white-space:nowrap;">✕ ดูทุกคน</button>
+      </div>
       <div class="filter-group" id="dateRangeGroup" style="position:relative;padding:0;background:transparent;border:none;">
         <button class="btn btn-ghost" id="dateRangeBtn" onclick="toggleDatePresetMenu(event)" style="padding:6px 10px;font-size:12px;white-space:nowrap;">📅 <span id="dateRangeLabel">เลือกช่วงเวลา</span> ▾</button>
         <div id="datePresetMenu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:320px;padding:10px;">
@@ -1303,16 +1311,21 @@
     </div>
 
     <div class="page" id="page-creatorperf">
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-title" style="margin-bottom:14px;">ค้นหา Creator <span style="font-size:11px;font-weight:400;color:var(--text3);">— ไม่เลือก = ดูยอดรวมทุก creator</span></div>
-        <div style="position:relative;max-width:400px;display:flex;gap:8px;align-items:center;">
-          <div style="position:relative;flex:1;">
-            <input type="text" class="ls-input" id="cpCreatorSearch" placeholder="พิมพ์ชื่อ creator เช่น deesaythailand..." oninput="debouncedFilterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
-            <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+      <div id="cp-content">
+        <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+        <div id="cp-cost-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+            <div class="section-title" id="cp-trend-title">ยอดขาย vs ต้นทุน รายวัน</div>
+            <div style="font-size:10.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap;">
+              <span><span style="display:inline-block;width:14px;height:3px;background:#2a78d6;vertical-align:middle;border-radius:2px;"></span> ยอดขาย (ออเดอร์จริง)</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(96,165,250,0.55);vertical-align:middle;border-radius:2px;"></span> ค่าแอด</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(167,139,250,0.75);vertical-align:middle;border-radius:2px;"></span> ค่าจ้าง KOL (วันโพสต์)</span>
+              <span><span style="display:inline-block;color:#a78bfa;font-size:12px;vertical-align:middle;">▼</span> วันที่มีโพสต์ — ชี้ดูรายละเอียด</span>
+            </div>
           </div>
-          <button class="btn btn-ghost" id="cpClearBtn" onclick="clearCpCreator()" style="display:none;white-space:nowrap;">✕ ดูทุกคน</button>
+          <div class="chart-wrap" style="height:340px;"><canvas id="chartCpTrend"></canvas></div>
         </div>
-      </div>
       <div id="cp-overview-section">
         <div class="section-divider"><span>🔥 มาแรงช่วง 7 วันล่าสุด <span style="font-size:11px;font-weight:400;color:var(--text3);" id="cp-trending-daterange"></span></span></div>
         <div class="grid-3" style="margin-bottom:20px;">
@@ -1377,21 +1390,6 @@
         </div>
       </div>
 
-      <div id="cp-content">
-        <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
-        <div id="cp-cost-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-        <div class="card" style="margin-bottom:20px;">
-          <div class="section-header" style="flex-wrap:wrap;gap:8px;">
-            <div class="section-title" id="cp-trend-title">ยอดขายรายวัน — รวมทุก Creator</div>
-            <div style="font-size:10.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap;">
-              <span><span style="display:inline-block;width:14px;height:3px;background:#2a78d6;vertical-align:middle;border-radius:2px;"></span> ยอดขาย (ออเดอร์จริง)</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(96,165,250,0.55);vertical-align:middle;border-radius:2px;"></span> ค่าแอด</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(167,139,250,0.75);vertical-align:middle;border-radius:2px;"></span> ค่าจ้าง KOL (วันโพสต์)</span>
-              <span><span style="display:inline-block;color:#a78bfa;font-size:12px;vertical-align:middle;">▼</span> วันที่มีโพสต์ — ชี้ดูรายละเอียด</span>
-            </div>
-          </div>
-          <div class="chart-wrap" style="height:340px;"><canvas id="chartCpTrend"></canvas></div>
-        </div>
         <div class="grid-2">
           <div class="card">
             <div class="section-header">
@@ -2266,6 +2264,8 @@ function showPage(page, lockCh, el) {
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   const fbePageGroup = document.getElementById('fbePageFilterGroup');
   if (fbePageGroup) fbePageGroup.style.display = (page === 'fbengage') ? 'flex' : 'none';
+  const cpGroup = document.getElementById('cpCreatorFilterGroup');
+  if (cpGroup) cpGroup.style.display = (page === 'creatorperf') ? 'flex' : 'none';
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
@@ -2354,7 +2354,7 @@ function makeChart(id, type, labels, datasets, extra) {
   const options = {
     responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } },
+      legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 }, ...((extra && extra.legend) || {}) },
       tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, ...((extra && extra.tooltip) || {}) }
     },
     scales: { ...baseScales, ...((extra && extra.scales) || {}) },
@@ -3373,8 +3373,8 @@ function renderCreatorPerf() {
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดยกเลิก/คืน ${fbeInfoIcon('cp-info-cancel', 'ยอดขายของออเดอร์ที่ cancel_return_type = Cancel หรือ Return/Refund<br><br>ไม่รวมอยู่ใน "ยอดขายรวม" ด้านซ้าย — แยกไว้ให้ดูต่างหาก')}</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(cancelledRev)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">${fmt(cancelledRows.length)} ออเดอร์</div></div>
   `;
   document.getElementById('cp-trend-title').textContent = cpSelectedCreator
-    ? `ยอดขายรายวัน — ${cpSelectedCreator}`
-    : `ยอดขายรายวัน — รวมทุก Creator (${_cpAllCreators.length} คน)`;
+    ? `ยอดขาย vs ต้นทุน รายวัน — ${cpSelectedCreator}`
+    : `ยอดขาย vs ต้นทุน รายวัน — รวมทุก creator`;
   document.getElementById('cp-sku-title').textContent = cpSelectedCreator
     ? `Top SKU ของ ${cpSelectedCreator}`
     : `Top SKU รวมทุก Creator`;
@@ -3384,7 +3384,7 @@ function renderCreatorPerf() {
   d.forEach(r => { _cpTrendByDay[r.date] = (_cpTrendByDay[r.date]||0) + (parseFloat(r.revenue)||0); });
   renderCpTrendChart();
   // KPI ต้นทุน (แถวที่ 2) — ขึ้น skeleton ก่อน แล้วเติมเมื่อโหลด Ads/KOL เสร็จ
-  document.getElementById('cp-cost-kpis').innerHTML = ['ค่าจ้าง KOL','ค่าแอด (boost)','ต้นทุนรวม','ยอด Videos จริง ÷ ต้นทุน'].map(t =>
+  document.getElementById('cp-cost-kpis').innerHTML = ['ROI','ต้นทุนรวม','ค่าจ้าง KOL','ค่าแอด (boost)'].map(t =>
     `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">${t}</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
 
   // Top SKU ของ creator นี้ (ใช้ sku_promotion แกะจากออเดอร์ตรงๆ เพราะ sku_revenue ไม่มี creator_handle)
@@ -3590,6 +3590,7 @@ function renderCpTrendChart() {
   ];
   const thD = dt => new Date(dt + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
   makeChart('chartCpTrend', 'bar', days, datasets, {
+    legend: { display: false }, // ใช้ legend ที่หัวการ์ดแทน (ไม่ซ้ำ)
     options: { interaction: { mode: 'index', intersect: false } },
     scales: {
       x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 14, callback: (v, i) => thD(days[i]) }, grid: { color: chartGridColor() }, stacked: true },
@@ -3598,13 +3599,18 @@ function renderCpTrendChart() {
       yMark: { display: false, min: 0, max: 1.08 }
     },
     tooltip: {
-      filter: item => !(item.dataset.yAxisID === 'y2' && !item.raw) && !(item.dataset.label === 'โพสต์' && item.raw === null),
+      filter: item => !(item.dataset.yAxisID === 'y2' && !item.raw) && !(item.dataset.label === 'โพสต์' && item.raw === null) && !(!target && item.dataset.label === 'ค่าจ้าง KOL'),
       callbacks: {
         title: items => items.length ? thD(days[items[0].dataIndex]) : '',
         label: item => {
           if (item.dataset.label === 'โพสต์') {
             const ps = postsByDay[days[item.dataIndex]] || [];
-            return ps.map(p => `▼ ${p.kol_name || p.handle} · ฿${fmt(p.budget)}${p.clip ? ' · boost แล้ว' : ''}${p.products ? ' · ' + p.products : ''}`);
+            const lines = ps.slice(0, 10).map(p => target
+              ? `▼ ${p.products || p.content_name} · ฿${fmt(p.budget)}${p.clip ? ' · boost แล้ว' : ''}`
+              : `▼ ${p.kol_name || p.handle}${p.products ? ' — ' + p.products : ''}`);
+            if (ps.length > 10) lines.push(`…และอีก ${ps.length - 10} โพสต์`);
+            if (!target) lines.push(`รวม ${ps.length} โพสต์ · ค่าจ้าง ฿${fmt(feeByDay[days[item.dataIndex]] || 0)}`);
+            return lines;
           }
           return `${item.dataset.label}: ฿${fmt(item.raw || 0)}`;
         },
@@ -3620,12 +3626,13 @@ function renderCpTrendChart() {
 function fillCpCostKpis(fee, spend, rev, subtitle) {
   const el = document.getElementById('cp-cost-kpis'); if (!el) return;
   const total = fee + spend, roi = total ? rev / total : null;
-  const roiCol = roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--text)' : 'var(--red)';
+  const roiCol = roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--accent)' : 'var(--red)';
+  const roiTag = roi === null ? 'ยังไม่มีต้นทุน' : roi >= 3 ? 'คุ้มมาก' : roi >= 1 ? 'คุ้ม' : 'ยังไม่คุ้ม';
   el.innerHTML = `
-    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #a78bfa;"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmtB(fee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${subtitle.fee || ''}</div></div>
-    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #60a5fa;"><div class="card-title">ค่าแอด (boost)</div><div class="kpi-value">฿${fmtB(spend)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${subtitle.spend || ''}</div></div>
+    <div class="card" style="flex:1.3;min-width:170px;border:1px solid ${roiCol};"><div class="card-title">ROI ${fbeInfoIcon('cp-info-roi', 'ROI = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม<br><br>ต้นทุนรวม = ค่าจ้าง KOL (ตามวันโพสต์ในช่วงที่เลือก) + ค่าแอดที่ boost คลิป (ตามวันยิง)<br>ยอดขายเป็นยอดจริงจาก orders ไม่รวม LIVE เพราะต้นทุนตรงนี้เป็นของคลิปเท่านั้น<br><br>ยังไม่หักต้นทุนสินค้า — เขียว ≥ 3x (คุ้มมาก) · ทอง 1–3x (คุ้ม) · แดง < 1x (ยังไม่คุ้ม)')}</div><div class="kpi-value" style="color:${roiCol};font-size:30px;">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:${roiCol};margin-top:3px;font-weight:600;">${roiTag}</div></div>
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value">฿${fmtB(total)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">ค่าจ้าง + ค่าแอด</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอด Videos จริง ÷ ต้นทุน ${fbeInfoIcon('cp-info-roi', 'ยอด Videos จากออเดอร์จริง (orders) หารด้วย ค่าจ้าง KOL + ค่าแอด<br><br>ยังไม่หักต้นทุนสินค้า — ใช้เทียบว่าเงินที่จ่ายให้ creator กลับมาเป็นยอดกี่เท่า<br>เขียว ≥ 3x · แดง < 1x')}</div><div class="kpi-value" style="color:${roiCol};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">฿${fmt(rev)} ÷ ฿${fmt(total)}</div></div>`;
+    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #a78bfa;"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmtB(fee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${subtitle.fee || ''}</div></div>
+    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #60a5fa;"><div class="card-title">ค่าแอด (boost)</div><div class="kpi-value">฿${fmtB(spend)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${subtitle.spend || ''}</div></div>`;
 }
 
 // ---- โหมดหน้ารวม: creator ที่มียอด Videos จากออเดอร์ + (คลิปยิงแอด หรือ จ้าง KOL) ----
@@ -3688,17 +3695,17 @@ function renderCpAdsCreatorSummary() {
     ${feeUnlinked > 0 ? `<div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ค่าจ้างที่ยังผูกกับออเดอร์ไม่ได้</div><div class="kpi-value" style="font-size:20px;color:#ef9f27;">฿${fmtB(feeUnlinked)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">ชื่อใน sheet ไม่ตรงกับ creator ในออเดอร์ หรือยังไม่มียอด</div></div>` : ''}
   `;
 
-  headEl.innerHTML = `<tr><th>Creator</th><th>Tier</th><th>โพสต์ที่จ้าง</th><th>ค่าจ้าง</th><th>คลิป boost</th><th>ค่าแอด</th><th>ต้นทุนรวม</th><th>ยอดขาย (แอดนับ)</th><th style="border-left:2px solid var(--border);">ยอด Videos (ออเดอร์จริง)</th><th>ยอดจริง / ต้นทุน</th></tr>`;
+  headEl.innerHTML = `<tr><th>Creator</th><th>Tier</th><th>ROI</th><th>ต้นทุนรวม</th><th>ยอด Videos (ออเดอร์จริง)</th><th style="border-left:2px solid var(--border);">โพสต์ที่จ้าง</th><th>ค่าจ้าง</th><th>คลิป boost</th><th>ค่าแอด</th><th>ยอดขาย (แอดนับ)</th></tr>`;
   bodyEl.innerHTML = rows.length ? rows.slice(0, 15).map(r => `
     <tr style="cursor:pointer;" onclick="selectCpCreator('${r.handle.replace(/'/g, "\\'")}')" title="คลิกเพื่อดูรายคลิป/รายโพสต์ของ creator นี้">
       <td>${ttcEsc(r.handle)}</td><td style="font-size:11px;color:var(--text3);">${ttcEsc(r.tier) || '—'}</td>
-      <td>${r.posts ? fmt(r.posts) : '—'}</td><td>${r.fee ? '฿' + fmt(r.fee) : '—'}</td>
+      <td style="color:${r.realRoi === null ? 'var(--text3)' : r.realRoi >= 3 ? 'var(--green)' : r.realRoi >= 1 ? 'var(--accent)' : 'var(--red)'};font-weight:700;font-size:13px;">${r.realRoi !== null ? r.realRoi.toFixed(2) + 'x' : '—'}</td>
+      <td style="font-weight:600;">฿${fmt(r.totalCost)}</td><td>฿${fmt(r.ordRev)}</td>
+      <td style="border-left:2px solid var(--border);">${r.posts ? fmt(r.posts) : '—'}</td><td>${r.fee ? '฿' + fmt(r.fee) : '—'}</td>
       <td>${r.clips ? fmt(r.clips) : '—'}</td><td>${r.spend ? '฿' + fmt(r.spend) : '—'}</td>
-      <td style="font-weight:600;">฿${fmt(r.totalCost)}</td><td>${r.spend ? '฿' + fmt(r.purchaseValue) : '—'}</td>
-      <td style="border-left:2px solid var(--border);">฿${fmt(r.ordRev)}</td>
-      <td style="color:${r.realRoi === null ? 'var(--text3)' : r.realRoi >= 3 ? 'var(--green)' : r.realRoi >= 1 ? 'var(--text)' : 'var(--red)'};font-weight:600;">${r.realRoi !== null ? r.realRoi.toFixed(2) + 'x' : '—'}</td>
+      <td>${r.spend ? '฿' + fmt(r.purchaseValue) : '—'}</td>
     </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มี creator ที่มีทั้งยอดออเดอร์และต้นทุน (แอด/ค่าจ้าง) ในช่วงนี้</td></tr>';
-  footEl.innerHTML = `แสดง Top ${Math.min(15, rows.length)} จาก ${rows.length} คน เรียงตามต้นทุนรวม (ค่าจ้าง + ค่าแอด) · คลิกแถวเพื่อดูรายคลิป · "ยอดจริง / ต้นทุน" = ยอด Videos จากออเดอร์จริง ÷ ต้นทุนรวม (ยังไม่หักต้นทุนสินค้า) · ค่าจ้างนับตามวันโพสต์ ค่าแอดนับตามวันยิง · creator ที่ยอดมาจาก LIVE อย่างเดียวไม่อยู่ในตารางนี้`;
+  footEl.innerHTML = `แสดง Top ${Math.min(15, rows.length)} จาก ${rows.length} คน เรียงตามต้นทุนรวม (ค่าจ้าง + ค่าแอด) · คลิกแถวเพื่อดูรายคลิป · ROI = ยอด Videos จากออเดอร์จริง ÷ ต้นทุนรวม (ยังไม่หักต้นทุนสินค้า) · ค่าจ้างนับตามวันโพสต์ ค่าแอดนับตามวันยิง · creator ที่ยอดมาจาก LIVE อย่างเดียวไม่อยู่ในตารางนี้`;
   renderPagerHtml('cpAdsTablePager', 1, 1, 'cpAdsGoToPage');
 }
 
@@ -3776,14 +3783,12 @@ function renderCpAdsClipTable() {
   const nBoost = rows.filter(c => !c.kolOnly).length, nPaid = rows.filter(c => c.kolPost).length, nBoth = rows.filter(c => c.kolPost && !c.kolOnly).length;
   const realRoi = totalCost ? _cpVideosRev / totalCost : null;
   const roas = spend ? pv / spend : null;
+  const dates = rows.flatMap(c => [c.dateMin, c.dateMax, c.postDate]).filter(Boolean).sort();
   kpiEl.innerHTML = `
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">โพสต์ที่จ้าง</div><div class="kpi-value" style="font-size:20px;">${fmt(nPaid)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">boost ต่อ ${fmt(nBoth)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(fee)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value" style="font-size:20px;">${fmt(nBoost)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ค่าแอด</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(spend)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(totalCost)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">โพสต์ที่จ้าง</div><div class="kpi-value" style="font-size:20px;">${fmt(nPaid)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">boost ต่อ ${fmt(nBoth)} · จ้างอย่างเดียว ${fmt(nPaid - nBoth)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value" style="font-size:20px;">${fmt(nBoost)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">boost อย่างเดียว ${fmt(nBoost - nBoth)}</div></div>
     <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ยอดขาย (แอดนับ) · ROAS แอด</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(pv)} <span style="font-size:12px;color:var(--accent);">${roas !== null ? roas.toFixed(2) + 'x' : ''}</span></div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ยอด Videos จริง / ต้นทุนรวม</div><div class="kpi-value" style="font-size:20px;color:${realRoi === null ? 'var(--text3)' : realRoi >= 3 ? 'var(--green)' : realRoi >= 1 ? 'var(--text)' : 'var(--red)'};">${realRoi !== null ? realRoi.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">฿${fmt(_cpVideosRev)} ÷ ฿${fmt(totalCost)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ช่วงที่มีโพสต์/ยิงแอด</div><div class="kpi-value" style="font-size:14px;">${dates.length ? thShort(dates[0]) + ' – ' + thShort(dates[dates.length - 1]) : '—'}</div></div>
   `;
 
   const cols = activeCols('cpAds');
