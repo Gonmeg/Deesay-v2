@@ -1406,10 +1406,10 @@
           <div class="section-header" style="flex-wrap:wrap;gap:8px;">
             <div>
               <div class="section-title" id="cp-ads-title">คลิปที่ยิงแอด — รวมทุก Creator</div>
-              <div style="font-size:10.5px;color:var(--text3);margin-top:3px;">source: TikTok Ads (mv_tiktok_creative_performance) · เชื่อมด้วยชื่อ creator (ตัด @ / ตัวพิมพ์เล็ก)</div>
+              <div style="font-size:10.5px;color:var(--text3);margin-top:3px;">source: TikTok Ads (mv_tiktok_creative_performance) + ค่าจ้าง KOL (kol_posts จาก Google Sheet ทีม KOL, sync ทุกคืน) · เชื่อมด้วยเลขคลิป (item_id) ก่อน แล้วค่อยใช้ชื่อ creator</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <span style="font-size:10.5px;padding:3px 9px;border-radius:6px;background:rgba(239,159,39,0.15);color:#ef9f27;font-weight:600;">⚠ ยอด ฿ ในตารางนี้ = ยอดที่แอดนับ (GMV Max) ไม่ใช่ยอดออเดอร์จริงด้านบน</span>
+              <span style="font-size:10.5px;padding:3px 9px;border-radius:6px;background:rgba(239,159,39,0.15);color:#ef9f27;font-weight:600;">⚠ "ยอดขาย (แอดนับ)" = ยอดที่ TikTok Ads นับ ไม่ใช่ยอดออเดอร์จริง · คอลัมน์ที่ระบุว่า "ออเดอร์จริง" เท่านั้นที่มาจาก orders</span>
               <div style="position:relative;" id="cp-ads-metrics-wrap">
                 <button class="btn btn-ghost" id="cpAdsMetricsBtn" onclick="toggleMetricsPanel('cpAds')">
                   ⚙ Metrics <span id="cpAds-metric-count" style="color:var(--accent);"></span>
@@ -3460,6 +3460,7 @@ async function renderCpAdsSection() {
 
   try {
     await ensureTtaDataForRange(from, to);
+    await ensureKolPosts(); // ตารางเล็ก โหลดครั้งเดียวต่อ session
   } catch (e) {
     console.error('renderCpAdsSection fetch failed:', e);
     if (seq !== _cpAdsLoadSeq) return;
@@ -3472,7 +3473,32 @@ async function renderCpAdsSection() {
   else renderCpAdsCreatorSummary();
 }
 
-// ---- โหมดหน้ารวม: Top 10 creator ที่มีทั้งยอดออเดอร์ (orders) และคลิปยิงแอด (MV) ----
+// ===== ค่าจ้าง KOL (kol_posts — sync จาก Google Sheet ทีม KOL ทุกคืน) =====
+let kolPosts = [];          // แถวทั้งหมด (ตารางเล็ก ~1–2 พันแถว โหลดครั้งเดียวต่อ session)
+let _kolPostsLoaded = false;
+async function ensureKolPosts() {
+  if (_kolPostsLoaded) return;
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const url = `${window.SUPABASE_URL}/rest/v1/kol_posts?select=content_name,post_date,platform,kol_name,kol_handle,products,tier,budget,post_link,item_id&order=post_date.asc&limit=10000`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) throw new Error('kol_posts ' + res.status);
+  kolPosts = (await res.json()).map(p => ({ ...p, budget: parseFloat(p.budget) || 0, kol_handle: cpNormHandle(p.kol_handle || ''), isTikTok: /tiktok/i.test(p.platform || '') }));
+  _kolPostsLoaded = true;
+}
+function thShort(d) { return d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'; }
+
+// โพสต์ TikTok ที่จ้างในช่วงวันที่ (นับด้วย post_date) พร้อม handle ที่ resolve แล้ว:
+// ถ้าเลขคลิปตรงกับคลิปในระบบ Ads → ใช้ชื่อช่องจาก Ads (แม่นกว่าที่ทีม KOL พิมพ์) ไม่งั้นใช้ชื่อจาก sheet
+function kolPostsInRange(from, to) {
+  const clipById = {};
+  ttaByClip.forEach(c => { clipById[c.item_id] = c; });
+  return kolPosts.filter(p => p.isTikTok && p.post_date && p.post_date >= from && p.post_date <= to).map(p => {
+    const clip = p.item_id ? clipById[p.item_id] : null;
+    return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle };
+  });
+}
+
+// ---- โหมดหน้ารวม: creator ที่มียอด Videos จากออเดอร์ + (คลิปยิงแอด หรือ จ้าง KOL) ----
 function renderCpAdsCreatorSummary() {
   const from = getDateValue('From'), to = getDateValue('To');
   const headEl = document.getElementById('cpAdsTableHead');
@@ -3490,47 +3516,102 @@ function renderCpAdsCreatorSummary() {
     ordByHandle[h].rev += parseFloat(r.revenue) || 0;
     ordByHandle[h].ord++;
   });
-
-  // สรุปฝั่ง Ads ต่อ creator
+  // ฝั่ง Ads ต่อ creator
   const adsByHandle = {};
   ttaByClip.forEach(c => {
     const h = cpNormHandle(c.handle);
     if (!adsByHandle[h]) adsByHandle[h] = { clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
-    adsByHandle[h].clips++;
-    adsByHandle[h].spend += c.spend;
-    adsByHandle[h].orders += c.orders;
-    adsByHandle[h].purchaseValue += c.purchaseValue;
+    adsByHandle[h].clips++; adsByHandle[h].spend += c.spend; adsByHandle[h].orders += c.orders; adsByHandle[h].purchaseValue += c.purchaseValue;
+  });
+  // ฝั่งค่าจ้าง KOL ต่อ creator
+  const kolByHandle = {};
+  const posts = kolPostsInRange(from, to);
+  posts.forEach(p => {
+    const h = p.handle;
+    if (!kolByHandle[h]) kolByHandle[h] = { posts: 0, fee: 0, boosted: 0, tier: p.tier || '' };
+    kolByHandle[h].posts++; kolByHandle[h].fee += p.budget; if (p.clip) kolByHandle[h].boosted++;
+    if (p.tier) kolByHandle[h].tier = p.tier;
   });
 
-  const matched = Object.keys(ordByHandle).filter(h => adsByHandle[h]);
-  const rows = matched.map(h => ({
-    handle: ordByHandle[h].display, ...adsByHandle[h],
-    roas: adsByHandle[h].spend ? adsByHandle[h].purchaseValue / adsByHandle[h].spend : null,
-    ordRev: ordByHandle[h].rev, ordN: ordByHandle[h].ord
-  })).sort((a, b) => b.spend - a.spend);
+  const handles = Object.keys(ordByHandle).filter(h => adsByHandle[h] || kolByHandle[h]);
+  const rows = handles.map(h => {
+    const a = adsByHandle[h] || { clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
+    const k = kolByHandle[h] || { posts: 0, fee: 0, boosted: 0, tier: '' };
+    const totalCost = a.spend + k.fee;
+    return { handle: ordByHandle[h].display, tier: k.tier, posts: k.posts, fee: k.fee, clips: a.clips, spend: a.spend, totalCost,
+      purchaseValue: a.purchaseValue, ordRev: ordByHandle[h].rev, ordN: ordByHandle[h].ord,
+      realRoi: totalCost ? ordByHandle[h].rev / totalCost : null };
+  }).sort((a, b) => b.totalCost - a.totalCost);
 
   const totalCreators = Object.keys(ordByHandle).length;
-  const unmatchedRev = Object.keys(ordByHandle).filter(h => !adsByHandle[h]).reduce((s, h) => s + ordByHandle[h].rev, 0);
-  const matchedRev = matched.reduce((s, h) => s + ordByHandle[h].rev, 0);
+  const feeInRange = posts.reduce((s, p) => s + p.budget, 0);
+  const feeUnlinked = posts.filter(p => !ordByHandle[p.handle]).reduce((s, p) => s + p.budget, 0);
+  const unmatchedRev = Object.keys(ordByHandle).filter(h => !adsByHandle[h] && !kolByHandle[h]).reduce((s, h) => s + ordByHandle[h].rev, 0);
 
   kpiEl.innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">creator ที่มีคลิปยิงแอด</div><div class="kpi-value" style="font-size:20px;">${fmt(matched.length)} <span style="font-size:11px;color:var(--text3);font-weight:400;">/ ${fmt(totalCreators)} คนที่มียอด Videos</span></div></div>
-    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ยอด Videos จากออเดอร์จริง — มีคลิปยิงแอด</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(matchedRev)}</div></div>
-    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ยอด Videos จากออเดอร์จริง — จากคลิปที่ไม่ได้ยิงแอด</div><div class="kpi-value" style="font-size:20px;color:var(--text2);">฿${fmtB(unmatchedRev)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ค่าจ้าง KOL (TikTok) ช่วงนี้</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(feeInRange)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">${fmt(posts.length)} โพสต์ · boost ${fmt(posts.filter(p => p.clip).length)} คลิป</div></div>
+    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">creator ที่มีต้นทุน (แอด/ค่าจ้าง)</div><div class="kpi-value" style="font-size:20px;">${fmt(handles.length)} <span style="font-size:11px;color:var(--text3);font-weight:400;">/ ${fmt(totalCreators)} คนที่มียอด Videos</span></div></div>
+    <div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ยอด Videos (ออเดอร์จริง) จากคลิปที่ไม่มีต้นทุน</div><div class="kpi-value" style="font-size:20px;color:var(--text2);">฿${fmtB(unmatchedRev)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">organic / affiliate ที่ไม่ได้จ้างและไม่ได้ boost</div></div>
+    ${feeUnlinked > 0 ? `<div class="card" style="flex:1;min-width:150px;padding:10px 12px;"><div class="card-title">ค่าจ้างที่ยังผูกกับออเดอร์ไม่ได้</div><div class="kpi-value" style="font-size:20px;color:#ef9f27;">฿${fmtB(feeUnlinked)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">ชื่อใน sheet ไม่ตรงกับ creator ในออเดอร์ หรือยังไม่มียอด</div></div>` : ''}
   `;
 
-  headEl.innerHTML = `<tr><th>Creator</th><th>คลิปยิงแอด</th><th>ค่าแอด</th><th>ยอดขาย (แอดนับ)</th><th>ROAS</th><th>GMV Max orders</th><th style="border-left:2px solid var(--border);">ยอด Videos (ออเดอร์จริง)</th><th>ออเดอร์ Videos</th></tr>`;
-  bodyEl.innerHTML = rows.length ? rows.slice(0, 10).map(r => `
-    <tr style="cursor:pointer;" onclick="selectCpCreator('${r.handle.replace(/'/g, "\\'")}')" title="คลิกเพื่อดูคลิปของ creator นี้">
-      <td>${ttcEsc(r.handle)}</td><td>${fmt(r.clips)}</td><td>฿${fmt(r.spend)}</td><td>฿${fmt(r.purchaseValue)}</td>
-      <td>${r.roas !== null ? r.roas.toFixed(2) + 'x' : '—'}</td><td>${fmt(r.orders)}</td>
-      <td style="border-left:2px solid var(--border);">฿${fmt(r.ordRev)}</td><td>${fmt(r.ordN)}</td>
-    </tr>`).join('') : '<tr><td colspan="8" class="empty">ไม่มี creator ที่มีทั้งยอดออเดอร์และคลิปยิงแอดในช่วงนี้</td></tr>';
-  footEl.innerHTML = `แสดง Top ${Math.min(10, rows.length)} จาก ${rows.length} คน เรียงตามค่าแอด · คลิกแถวเพื่อดูรายคลิป · creator ที่ยอดมาจาก LIVE อย่างเดียวไม่อยู่ในตารางนี้ (ดูได้ที่ Top 10 Creator (Live) ด้านบน) · คอลัมน์ขวาสุด 2 ช่องมาจากออเดอร์จริง (orders) เพื่อให้เทียบกับยอดที่แอดนับได้`;
+  headEl.innerHTML = `<tr><th>Creator</th><th>Tier</th><th>โพสต์ที่จ้าง</th><th>ค่าจ้าง</th><th>คลิป boost</th><th>ค่าแอด</th><th>ต้นทุนรวม</th><th>ยอดขาย (แอดนับ)</th><th style="border-left:2px solid var(--border);">ยอด Videos (ออเดอร์จริง)</th><th>ยอดจริง / ต้นทุน</th></tr>`;
+  bodyEl.innerHTML = rows.length ? rows.slice(0, 15).map(r => `
+    <tr style="cursor:pointer;" onclick="selectCpCreator('${r.handle.replace(/'/g, "\\'")}')" title="คลิกเพื่อดูรายคลิป/รายโพสต์ของ creator นี้">
+      <td>${ttcEsc(r.handle)}</td><td style="font-size:11px;color:var(--text3);">${ttcEsc(r.tier) || '—'}</td>
+      <td>${r.posts ? fmt(r.posts) : '—'}</td><td>${r.fee ? '฿' + fmt(r.fee) : '—'}</td>
+      <td>${r.clips ? fmt(r.clips) : '—'}</td><td>${r.spend ? '฿' + fmt(r.spend) : '—'}</td>
+      <td style="font-weight:600;">฿${fmt(r.totalCost)}</td><td>${r.spend ? '฿' + fmt(r.purchaseValue) : '—'}</td>
+      <td style="border-left:2px solid var(--border);">฿${fmt(r.ordRev)}</td>
+      <td style="color:${r.realRoi === null ? 'var(--text3)' : r.realRoi >= 3 ? 'var(--green)' : r.realRoi >= 1 ? 'var(--text)' : 'var(--red)'};font-weight:600;">${r.realRoi !== null ? r.realRoi.toFixed(2) + 'x' : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มี creator ที่มีทั้งยอดออเดอร์และต้นทุน (แอด/ค่าจ้าง) ในช่วงนี้</td></tr>';
+  footEl.innerHTML = `แสดง Top ${Math.min(15, rows.length)} จาก ${rows.length} คน เรียงตามต้นทุนรวม (ค่าจ้าง + ค่าแอด) · คลิกแถวเพื่อดูรายคลิป · "ยอดจริง / ต้นทุน" = ยอด Videos จากออเดอร์จริง ÷ ต้นทุนรวม (ยังไม่หักต้นทุนสินค้า) · ค่าจ้างนับตามวันโพสต์ ค่าแอดนับตามวันยิง · creator ที่ยอดมาจาก LIVE อย่างเดียวไม่อยู่ในตารางนี้`;
   renderPagerHtml('cpAdsTablePager', 1, 1, 'cpAdsGoToPage');
 }
 
-// ---- โหมดเลือก creator: รายคลิปที่ยิงแอด ----
+// ---- โหมดเลือก creator: รายคลิป (ยิงแอด) + รายโพสต์ (จ้าง KOL) รวมในตารางเดียว ----
+function cpAdsRowsOfSelected() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const target = cpNormHandle(cpSelectedCreator);
+  const clips = ttaByClip.filter(c => cpNormHandle(c.handle) === target);
+  const clipIds = new Set(clips.map(c => c.item_id));
+  const posts = kolPostsInRange(from, to).filter(p => p.handle === target || (p.item_id && clipIds.has(p.item_id)));
+  const postByItem = {};
+  posts.forEach(p => { if (p.item_id) postByItem[p.item_id] = p; });
+  const rows = clips.map(c => {
+    const p = postByItem[c.item_id];
+    return { ...c, kolPost: p || null, kolStatus: p ? 'จ้าง + boost' : 'boost อย่างเดียว', postDate: p ? p.post_date : '', tier: p ? (p.tier || '') : '',
+      kolFee: p ? p.budget : 0, totalCost: c.spend + (p ? p.budget : 0) };
+  });
+  posts.filter(p => !p.item_id || !clipIds.has(p.item_id)).forEach(p => {
+    rows.push({ item_id: p.item_id || null, kolOnly: true, kolPost: p, handle: p.handle, caption: p.products ? `${p.content_name} · ${p.products}` : p.content_name, thumbnail: null,
+      kolStatus: 'จ้างอย่างเดียว', postDate: p.post_date, tier: p.tier || '', kolFee: p.budget, totalCost: p.budget,
+      spend: 0, purchaseValue: 0, orders: 0, roas: null, cpo: null, impressions: 0, clicks: 0, ctr: 0, convs: 0, likes: 0, follows: 0, profileVisits: 0,
+      paidcomments: 0, paidshares: 0, v6s: 0, v25: 0, v50: 0, v75: 0, v100: 0, dateMin: null, dateMax: null, campaign: '', objective: null,
+      hasFunnelData: false, funnelPartial: false, hasEngagementData: false, engagementPartial: false, postLink: p.post_link || '' });
+  });
+  return rows;
+}
+const ADS_ONLY_KEYS = new Set(['date','objective','campaign','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','convs','v6s','v25','v50','v75','v100','likes','paidcomments','paidshares','follows','profilevisits']);
+function cpAdsCellHtml(c, k) {
+  switch (k) {
+    case 'kolStatus': {
+      const col = c.kolStatus === 'จ้าง + boost' ? 'var(--green)' : c.kolStatus === 'จ้างอย่างเดียว' ? '#a78bfa' : 'var(--blue)';
+      return `<span style="color:${col};font-weight:700;font-size:10.5px;white-space:nowrap;">${c.kolStatus}</span>`;
+    }
+    case 'postDate': return c.postDate ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;">${thShort(c.postDate)}</span>` : '<span style="color:var(--text3);">—</span>';
+    case 'tier': return c.tier ? ttcEsc(c.tier) : '<span style="color:var(--text3);">—</span>';
+    case 'kolFee': return c.kolPost ? '฿' + fmt(c.kolFee) : '<span style="color:var(--text3);" title="ไม่พบโพสต์นี้ใน sheet ทีม KOL ในช่วงวันที่ที่เลือก">—</span>';
+    case 'totalCost': return '฿' + fmt(c.totalCost);
+    case 'spend': return c.kolOnly ? '<span style="color:var(--text3);">—</span>' : '฿' + fmt(c.spend);
+    case 'clip': if (c.kolOnly) return `<div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:5px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">📝</div><span title="${ttcEscAttr(c.caption)}" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span></div>`;
+      return ttaCellHtml(c, k);
+    default:
+      if (c.kolOnly && ADS_ONLY_KEYS.has(k)) return '<span style="color:var(--text3);font-size:10px;" title="โพสต์นี้ไม่ได้ยิงแอด จึงไม่มีข้อมูลจาก TikTok Ads">ไม่ได้ boost</span>';
+      return ttaCellHtml(c, k);
+  }
+}
+
 function renderCpAdsClipTable() {
   const headEl = document.getElementById('cpAdsTableHead');
   const bodyEl = document.getElementById('cpAdsTableBody');
@@ -3539,37 +3620,36 @@ function renderCpAdsClipTable() {
   const ocNote = document.getElementById('cp-oc-note');
   if (!cpSelectedCreator || !bodyEl) return;
 
-  const clips = cpAdsClipsOfSelected();
-
-  // ไม่มีคลิปยิงแอดเลย → กำกับว่ายอด Videos ที่เห็นด้านบนมาจากคลิปที่ไม่ได้ยิงแอด (รอ TikTok Accounts API ถึงจะเห็นคลิป organic)
-  if (!clips.length) {
-    kpiEl.innerHTML = '';
-    headEl.innerHTML = '';
-    bodyEl.innerHTML = `<tr><td class="empty">creator นี้ไม่มีคลิปที่ยิงแอดในช่วงวันที่ที่เลือก${_cpVideosRev > 0 ? `<br><span style="font-size:11px;">ยอด Videos ฿${fmt(_cpVideosRev)} (${fmt(_cpVideosOrd)} ออเดอร์) ที่เห็นในตาราง LIVE vs Videos มาจากคลิปที่ไม่ได้ยิงแอด — จะเห็นรายคลิปได้เมื่อ TikTok Accounts API อนุมัติ</span>` : ''}</td></tr>`;
+  const rows = cpAdsRowsOfSelected();
+  if (!rows.length) {
+    kpiEl.innerHTML = ''; headEl.innerHTML = '';
+    bodyEl.innerHTML = `<tr><td class="empty">creator นี้ไม่มีคลิปที่ยิงแอด และไม่มีโพสต์ที่จ้างใน sheet ทีม KOL ในช่วงวันที่ที่เลือก${_cpVideosRev > 0 ? `<br><span style="font-size:11px;">ยอด Videos ฿${fmt(_cpVideosRev)} (${fmt(_cpVideosOrd)} ออเดอร์) ในตาราง LIVE vs Videos มาจากคลิป organic/affiliate ที่ไม่มีต้นทุน — จะเห็นรายคลิปได้เมื่อ TikTok Accounts API อนุมัติ</span>` : ''}</td></tr>`;
     footEl.textContent = '';
-    if (ocNote && _cpVideosRev > 0) { ocNote.style.display = 'block'; ocNote.textContent = 'ℹ ยอด Videos ของ creator นี้มาจากคลิปที่ไม่ได้ยิงแอด (ไม่พบในระบบ TikTok Ads)'; }
+    if (ocNote && _cpVideosRev > 0) { ocNote.style.display = 'block'; ocNote.textContent = 'ℹ ยอด Videos ของ creator นี้มาจากคลิปที่ไม่ได้จ้างและไม่ได้ boost'; }
     renderPagerHtml('cpAdsTablePager', 1, 1, 'cpAdsGoToPage');
     return;
   }
-  if (ocNote && _cpVideosRev > 0) { ocNote.style.display = 'block'; ocNote.textContent = `ℹ ยอด Videos ของ creator นี้เป็นยอดออเดอร์จริง ส่วนตารางคลิปยิงแอดด้านล่างเป็นยอดที่แอดนับ (คนละแหล่ง — เทียบกันเป็นสัดส่วนได้ แต่ไม่เท่ากัน)`; }
+  if (ocNote && _cpVideosRev > 0) { ocNote.style.display = 'block'; ocNote.textContent = 'ℹ ยอด Videos ตรงนี้เป็นยอดออเดอร์จริง ส่วนตารางด้านล่าง "ยอดขาย (แอดนับ)" มาจาก TikTok Ads (คนละแหล่ง — ไม่เท่ากันโดยธรรมชาติ)'; }
 
-  const spend = clips.reduce((s, c) => s + c.spend, 0);
-  const pv = clips.reduce((s, c) => s + c.purchaseValue, 0);
-  const ord = clips.reduce((s, c) => s + c.orders, 0);
+  const spend = rows.reduce((s, c) => s + (c.spend || 0), 0);
+  const fee = rows.reduce((s, c) => s + (c.kolFee || 0), 0);
+  const pv = rows.reduce((s, c) => s + (c.purchaseValue || 0), 0);
+  const totalCost = spend + fee;
+  const nBoost = rows.filter(c => !c.kolOnly).length, nPaid = rows.filter(c => c.kolPost).length, nBoth = rows.filter(c => c.kolPost && !c.kolOnly).length;
+  const realRoi = totalCost ? _cpVideosRev / totalCost : null;
   const roas = spend ? pv / spend : null;
-  const dates = clips.flatMap(c => [c.dateMin, c.dateMax]).filter(Boolean).sort();
-  const thDate = d => new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
   kpiEl.innerHTML = `
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value" style="font-size:20px;">${fmt(clips.length)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(spend)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ยอดขาย (แอดนับ)</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(pv)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ROAS รวม</div><div class="kpi-value" style="font-size:20px;">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">GMV Max orders</div><div class="kpi-value" style="font-size:20px;">${fmt(ord)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ช่วงที่ยิงแอด</div><div class="kpi-value" style="font-size:14px;">${dates.length ? thDate(dates[0]) + ' – ' + thDate(dates[dates.length - 1]) : '—'}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">โพสต์ที่จ้าง</div><div class="kpi-value" style="font-size:20px;">${fmt(nPaid)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">boost ต่อ ${fmt(nBoth)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(fee)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value" style="font-size:20px;">${fmt(nBoost)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ค่าแอด</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(spend)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(totalCost)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ยอดขาย (แอดนับ) · ROAS แอด</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(pv)} <span style="font-size:12px;color:var(--accent);">${roas !== null ? roas.toFixed(2) + 'x' : ''}</span></div></div>
+    <div class="card" style="flex:1;min-width:130px;padding:10px 12px;"><div class="card-title">ยอด Videos จริง / ต้นทุนรวม</div><div class="kpi-value" style="font-size:20px;color:${realRoi === null ? 'var(--text3)' : realRoi >= 3 ? 'var(--green)' : realRoi >= 1 ? 'var(--text)' : 'var(--red)'};">${realRoi !== null ? realRoi.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">฿${fmt(_cpVideosRev)} ÷ ฿${fmt(totalCost)}</div></div>
   `;
 
   const cols = activeCols('cpAds');
-  const sorted = [...clips].sort((a, b) => {
+  const sorted = [...rows].sort((a, b) => {
     const va = ttaSortValue(a, cpAdsSortKey), vb = ttaSortValue(b, cpAdsSortKey);
     let cmp;
     if (typeof va === 'string' || typeof vb === 'string') cmp = String(va).localeCompare(String(vb));
@@ -3587,10 +3667,11 @@ function renderCpAdsClipTable() {
     return `<th><span class="sortable-th" onclick="cpAdsSortBy('${k}')">${label}${arrow}</span></th>`;
   }).join('') + '</tr>';
   bodyEl.innerHTML = pageItems.map(c => {
-    const clipUrl = `https://www.tiktok.com/@i/video/${c.item_id}`;
-    return `<tr style="cursor:pointer;" onclick="window.open('${clipUrl}','_blank')" title="คลิกเพื่อเปิดคลิปใน TikTok">` + cols.map(k => `<td>${ttaCellHtml(c, k)}</td>`).join('') + '</tr>';
+    const url = c.item_id ? `https://www.tiktok.com/@i/video/${c.item_id}` : (c.postLink && /^https?:/i.test(c.postLink) ? c.postLink : '');
+    const click = url ? `style="cursor:pointer;" onclick="window.open('${url.replace(/'/g, '')}','_blank')" title="คลิกเพื่อเปิดโพสต์"` : '';
+    return `<tr ${click}>` + cols.map(k => `<td>${cpAdsCellHtml(c, k)}</td>`).join('') + '</tr>';
   }).join('');
-  footEl.textContent = `แสดง ${fmt(start + 1)}–${fmt(Math.min(start + CP_ADS_PAGE_SIZE, sorted.length))} จาก ${fmt(sorted.length)} คลิป · คลิกแถวเพื่อเปิดคลิป · ~ = ข้อมูลบางส่วน (ตารางต้นทางยังเก็บไม่ครบทุกวัน) · คลิปที่ไม่ได้ยิงแอดไม่แสดงในตารางนี้`;
+  footEl.textContent = `แสดง ${fmt(start + 1)}–${fmt(Math.min(start + CP_ADS_PAGE_SIZE, sorted.length))} จาก ${fmt(sorted.length)} รายการ · สถานะ: "จ้าง + boost" = อยู่ใน sheet และเรายิงแอดต่อ · "boost อย่างเดียว" = ยิงแอดแต่ไม่พบใน sheet · "จ้างอย่างเดียว" = จ่ายค่าจ้างแต่ไม่ได้ยิงแอด · ค่าจ้างนับตามวันโพสต์ในช่วงที่เลือก · ~ = ข้อมูลแอดบางส่วน`;
   renderPagerHtml('cpAdsTablePager', cpAdsPage, totalPages, 'cpAdsGoToPage');
 }
 
@@ -6838,12 +6919,13 @@ const METRIC_CONFIGS = {
   },
   // ตารางคลิปที่ยิงแอดในหน้า Creator Performance — ใช้ cell renderer เดียวกับหน้า TikTok Ads (ttaCellHtml) แค่ตัดคอลัมน์แหล่งที่มา/ชื่อช่องออกเพราะเลือก creator อยู่แล้ว
   cpAds: {
-    order: ['clip','date','objective','campaign','spend','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','v6s','v25','v50','v75','v100','likes','paidcomments','paidshares','follows','profilevisits'],
+    order: ['clip','kolStatus','postDate','tier','kolFee','date','objective','campaign','spend','totalCost','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','v6s','v25','v50','v75','v100','likes','paidcomments','paidshares','follows','profilevisits'],
     meta: {
       clip:{label:'คลิป',always:true},
+      kolStatus:{label:'สถานะ',default:true}, postDate:{label:'โพสต์เมื่อ',default:true}, tier:{label:'Tier'}, kolFee:{label:'ค่าจ้าง KOL',default:true},
       date:{label:'ช่วงวันที่ยิง',default:true}, objective:{label:'วัตถุประสงค์แอด'}, campaign:{label:'แคมเปญ'},
-      spend:{label:'ค่าแอด',default:true}, purchaseValue:{label:'ยอดขาย (แอดนับ)',default:true}, roas:{label:'ROAS',default:true},
-      orders:{label:'GMV Max orders',default:true}, cpo:{label:'CPO'},
+      spend:{label:'ค่าแอด',default:true}, totalCost:{label:'ต้นทุนรวม',default:true}, purchaseValue:{label:'ยอดขาย (แอดนับ)',default:true}, roas:{label:'ROAS (แอด)',default:true},
+      orders:{label:'GMV Max orders'}, cpo:{label:'CPO'},
       impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'},
       v6s:{label:'% ดูจบ 6 วิ'}, v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v75:{label:'% ดูจบ 75%'}, v100:{label:'% ดูจบ 100%'},
       likes:{label:'ไลค์ (จากแอด)'}, paidcomments:{label:'คอมเมนต์ (จากแอด)'}, paidshares:{label:'แชร์ (จากแอด)'},
@@ -7575,4 +7657,3 @@ init();
 </script>
 </body>
 </html>
-  
