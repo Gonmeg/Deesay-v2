@@ -910,13 +910,13 @@
     <div class="page" id="page-kol">
       <div class="card" style="margin-bottom:16px;padding:12px 16px;">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <span style="font-size:11px;color:var(--text3);">กรอง:</span>
-          <select class="ls-input" id="kolFilterPlatform" onchange="renderKolPage()" style="padding:6px 10px;font-size:12px;"><option value="">ทุกแพลตฟอร์ม</option></select>
-          <select class="ls-input" id="kolFilterTier" onchange="renderKolPage()" style="padding:6px 10px;font-size:12px;"><option value="">ทุก Tier</option></select>
-          <select class="ls-input" id="kolFilterProduct" onchange="renderKolPage()" style="padding:6px 10px;font-size:12px;max-width:220px;"><option value="">ทุกสินค้า</option></select>
-          <input type="text" class="ls-input" id="kolFilterSearch" placeholder="🔎 ชื่อ creator..." oninput="debouncedRenderKolPage()" style="padding:6px 10px;font-size:12px;width:180px;">
-          <span style="flex:1;"></span>
-          <span style="font-size:10.5px;color:var(--text3);">นับตาม<b>วันโพสต์</b>ในช่วงวันที่ที่เลือกด้านบน · ยอดที่กลับมา = ยอด Videos จากออเดอร์จริง (TikTok) ของ creator คนนั้นในช่วงเดียวกัน</span>
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap;">กรอง</span>
+          <select class="ls-input" id="kolFilterPlatform" onchange="renderKolPage()" style="width:160px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุกแพลตฟอร์ม</option></select>
+          <select class="ls-input" id="kolFilterTier" onchange="renderKolPage()" style="width:150px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุก Tier</option></select>
+          <select class="ls-input" id="kolFilterProduct" onchange="renderKolPage()" style="width:210px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุกสินค้า</option></select>
+          <input type="text" class="ls-input" id="kolFilterSearch" placeholder="🔎 ชื่อ creator..." oninput="debouncedRenderKolPage()" style="width:190px;flex:0 0 auto;padding:6px 10px;font-size:12px;">
+          <button class="btn btn-ghost" onclick="['kolFilterPlatform','kolFilterTier','kolFilterProduct','kolFilterSearch'].forEach(id=>{document.getElementById(id).value='';}); renderKolPage();" style="flex:0 0 auto;">✕ ล้าง</button>
+          <span style="margin-left:auto;font-size:10.5px;color:var(--text3);text-align:right;line-height:1.4;">นับตาม<b>วันโพสต์</b>ในช่วงวันที่ด้านบน<br>ยอดที่กลับมา = ยอด Videos จากออเดอร์จริง (TikTok) ของ creator ในช่วงเดียวกัน</span>
         </div>
       </div>
 
@@ -3639,15 +3639,16 @@ async function fetchKolPosts() {
   } catch (e) { console.warn('kol_product_map', e.message); }
   setBgSync(`ค่าจ้าง KOL ${fmt(raw.length)} โพสต์ อัปเดตแล้ว`, null);
   applyKolPosts(raw, mapRows);
-  idbSet('kol_posts', { rows: raw, mapRows, cachedAt: Date.now() });
+  idbSet(KOL_CACHE_KEY, { rows: raw, mapRows, cachedAt: Date.now() });
 }
-// แคชใน IndexedDB เหมือนกัน — sheet sync ทุกคืน จึงใช้แคชได้ถึง 6 ชม. ก่อนดึงใหม่เบื้องหลัง
+// แคชใน IndexedDB (key มี version — เปลี่ยนโครงข้อมูลเมื่อไรบั๊มเลขแล้วแคชเก่าถูกทิ้งเอง) ตารางเล็ก ดึงใหม่เบื้องหลังถ้าเก่ากว่า 15 นาที
+const KOL_CACHE_KEY = 'kol_posts_v2';
 async function ensureKolPosts(onFresh) {
   if (_kolPostsLoaded) return;
-  const cached = await idbGet('kol_posts');
+  const cached = await idbGet(KOL_CACHE_KEY);
   if (cached && cached.rows) {
     applyKolPosts(cached.rows, cached.mapRows || []);
-    if (Date.now() - (cached.cachedAt || 0) > 6 * 60 * 60 * 1000) {
+    if (Date.now() - (cached.cachedAt || 0) > 15 * 60 * 1000) {
       fetchKolPosts().then(() => { if (typeof onFresh === 'function') onFresh(); }).catch(e => console.warn('kol_posts background refresh failed:', e.message));
     }
     return;
@@ -6249,6 +6250,10 @@ function renderFlowTable() {
 }
 
 async function refreshDashboardData() {
+  // ล้างแคชฝั่ง TikTok Ads + ค่าจ้าง KOL ด้วย (ตารางในหน้า Creator / KOL) ให้โหลดใหม่รอบถัดไป
+  _kolPostsLoaded = false; ttaLastRange = null;
+  idbSet(KOL_CACHE_KEY, null);
+  if (currentPage === 'kol' || currentPage === 'creatorperf' || currentPage === 'ttads') { const f = getDateValue('From'), t = getDateValue('To'); idbSet('tta:' + f + '|' + t, null); }
   const btn = document.getElementById('btnRefreshMV')
   const statusEl = document.getElementById('refreshMVStatus')
   const barWrap = document.getElementById('refreshMVBarWrap')
