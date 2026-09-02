@@ -3627,11 +3627,18 @@ function applyKolPosts(raw, mapRows) {
 }
 async function fetchKolPosts() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const url = `${window.SUPABASE_URL}/rest/v1/kol_posts?select=content_name,post_date,platform,kol_name,kol_handle,products,tier,budget,post_link,item_id&order=post_date.asc&limit=10000`;
+  const url = `${window.SUPABASE_URL}/rest/v1/kol_posts?select=content_name,post_date,platform,kol_name,kol_handle,products,tier,budget,post_link,item_id&order=post_date.asc,content_name.asc&limit=1000`;
   setBgSync('โหลดค่าจ้าง KOL (Google Sheet)...', 30);
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error('kol_posts ' + res.status);
-  const raw = await res.json();
+  // PostgREST ส่งได้สูงสุด 1,000 แถว/คำขอ (ไม่สนค่า limit ที่ใส่) — ดึงเป็นหน้าๆ ด้วย offset จนหมด (ตารางเล็ก 2–3 หน้า)
+  const raw = [];
+  for (let off = 0; ; off += 1000) {
+    const res = await fetch(`${url}&offset=${off}`, { headers });
+    if (!res.ok) throw new Error('kol_posts ' + res.status);
+    const page = await res.json();
+    raw.push(...page);
+    setBgSync(`โหลดค่าจ้าง KOL (${fmt(raw.length)} โพสต์)...`, Math.min(90, 30 + off / 20));
+    if (page.length < 1000) break;
+  }
   let mapRows = [];
   try { // ตาราง map เล็กมาก — ถ้ายังไม่ได้สร้างก็ทำงานต่อได้ (ทุกสินค้าจะขึ้นเป็น "ยังไม่ได้ map")
     const r2 = await fetch(`${window.SUPABASE_URL}/rest/v1/kol_product_map?select=product_text,parent_sku,group_label,spread_skus&limit=1000`, { headers });
