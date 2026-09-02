@@ -298,6 +298,13 @@
       <div id="refreshMVBar" style="width:0%;height:100%;background:var(--accent);transition:width 0.3s ease;"></div>
     </div>
     <div id="refreshMVStatus" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
+    <!-- แถบโหลดเบื้องหลัง (TikTok Ads / ค่าจ้าง KOL) — โชว์เฉพาะตอนกำลังดึง -->
+    <div id="bgSyncWrap" style="display:none;margin-top:8px;">
+      <div id="bgSyncStatus" style="font-size:10px;color:var(--text3);line-height:1.4;margin-bottom:4px;"></div>
+      <div style="width:100%;height:4px;background:var(--bg3);border-radius:3px;overflow:hidden;">
+        <div id="bgSyncBar" style="width:0%;height:100%;background:#a78bfa;transition:width 0.3s ease;"></div>
+      </div>
+    </div>
     <button class="btn btn-ghost" id="themeToggleBtn" onclick="toggleTheme()" style="width:100%;margin-top:8px;justify-content:center;">🌙 โหมดมืด</button>
   </div>
 </aside>
@@ -1371,10 +1378,19 @@
       </div>
 
       <div id="cp-content">
-        <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+        <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+        <div id="cp-cost-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
         <div class="card" style="margin-bottom:20px;">
-          <div class="section-header"><div class="section-title" id="cp-trend-title">ยอดขายรายวัน — รวมทุก Creator</div></div>
-          <div class="chart-wrap chart-wrap-lg"><canvas id="chartCpTrend"></canvas></div>
+          <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+            <div class="section-title" id="cp-trend-title">ยอดขายรายวัน — รวมทุก Creator</div>
+            <div style="font-size:10.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap;">
+              <span><span style="display:inline-block;width:14px;height:3px;background:#2a78d6;vertical-align:middle;border-radius:2px;"></span> ยอดขาย (ออเดอร์จริง)</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(96,165,250,0.55);vertical-align:middle;border-radius:2px;"></span> ค่าแอด</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(167,139,250,0.75);vertical-align:middle;border-radius:2px;"></span> ค่าจ้าง KOL (วันโพสต์)</span>
+              <span><span style="display:inline-block;color:#a78bfa;font-size:12px;vertical-align:middle;">▼</span> วันที่มีโพสต์ — ชี้ดูรายละเอียด</span>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:340px;"><canvas id="chartCpTrend"></canvas></div>
         </div>
         <div class="grid-2">
           <div class="card">
@@ -1919,13 +1935,14 @@ function buildKeysetFilter(keyCols, lastRow) {
 
 // ดึงข้อมูลตารางใหญ่แบบ keyset pagination — ใช้ index กระโดดหาแถวถัดไปแทนการไล่นับข้าม (offset) จากต้นตาราง
 // เร็วเท่ากันไม่ว่าจะลึกแค่ไหนในตาราง ต้องมี order= ตรงกับ keyCols เป๊ะๆ ใน baseUrl (เรียงจากซ้ายไปขวาตามลำดับ keyCols)
-async function fetchKeyset(baseUrl, headers, keyCols, pageSize = 1000) {
+async function fetchKeyset(baseUrl, headers, keyCols, pageSize = 1000, onProgress) {
   let all = [];
   let cursorFilter = '';
   while (true) {
     const res = await fetchWithRetry(`${baseUrl}&limit=${pageSize}${cursorFilter}`, headers);
     const rows = await res.json();
     all = all.concat(rows);
+    if (typeof onProgress === 'function' && rows.length) { try { onProgress(all.length, rows[rows.length - 1]); } catch (e) {} }
     if (rows.length < pageSize) break; // ได้น้อยกว่าที่ขอ = หมดข้อมูลจริงแล้ว
     cursorFilter = '&' + buildKeysetFilter(keyCols, rows[rows.length - 1]);
   }
@@ -2326,24 +2343,24 @@ function renderCurrentPage() {
 }
 
 // ===== CHART HELPER =====
-function makeChart(id, type, labels, datasets) {
+function makeChart(id, type, labels, datasets, extra) {
   if (charts[id]) charts[id].destroy();
   const ctx = document.getElementById(id);
   if (!ctx) return;
-  charts[id] = new Chart(ctx, {
-    type, data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } },
-        tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } }
-      },
-      scales: type === 'pie' || type === 'doughnut' ? {} : {
-        x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
-        y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } }
-      }
-    }
-  });
+  const baseScales = type === 'pie' || type === 'doughnut' ? {} : {
+    x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
+    y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } }
+  };
+  const options = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 } },
+      tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, ...((extra && extra.tooltip) || {}) }
+    },
+    scales: { ...baseScales, ...((extra && extra.scales) || {}) },
+    ...((extra && extra.options) || {})
+  };
+  charts[id] = new Chart(ctx, { type, data: { labels, datasets }, options });
 }
 
 const COLORS = ['#c8a96e','#60a5fa','#4ade80','#f472b6','#fb923c','#a78bfa','#34d399','#f87171','#fbbf24','#38bdf8'];
@@ -3362,11 +3379,13 @@ function renderCreatorPerf() {
     ? `Top SKU ของ ${cpSelectedCreator}`
     : `Top SKU รวมทุก Creator`;
 
-  // เทรนด์รายวัน
-  const byDay = {};
-  d.forEach(r => { byDay[r.date] = (byDay[r.date]||0) + (parseFloat(r.revenue)||0); });
-  const days = Object.keys(byDay).sort();
-  makeChart('chartCpTrend', 'line', days, [{ label: 'ยอดขาย', data: days.map(dt => byDay[dt]), borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.08)', borderWidth: 2, pointRadius: days.length>60?0:3, fill: true, tension: 0.3 }]);
+  // เทรนด์รายวัน (ยอดขายจริง + ค่าแอด/ค่าจ้าง + จุดที่โพสต์) — วาดด้วยข้อมูลเท่าที่มี แล้ววาดซ้ำเมื่อฝั่ง Ads/KOL โหลดเสร็จ
+  _cpTrendByDay = {};
+  d.forEach(r => { _cpTrendByDay[r.date] = (_cpTrendByDay[r.date]||0) + (parseFloat(r.revenue)||0); });
+  renderCpTrendChart();
+  // KPI ต้นทุน (แถวที่ 2) — ขึ้น skeleton ก่อน แล้วเติมเมื่อโหลด Ads/KOL เสร็จ
+  document.getElementById('cp-cost-kpis').innerHTML = ['ค่าจ้าง KOL','ค่าแอด (boost)','ต้นทุนรวม','ยอด Videos จริง ÷ ต้นทุน'].map(t =>
+    `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">${t}</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
 
   // Top SKU ของ creator นี้ (ใช้ sku_promotion แกะจากออเดอร์ตรงๆ เพราะ sku_revenue ไม่มี creator_handle)
   const orderIds = new Set(d.map(r => r.order_id));
@@ -3416,10 +3435,22 @@ let _cpAdsLoadSeq = 0; // กันผลลัพธ์ fetch เก่าม�
 // ตัด @ นำหน้า + ช่องว่าง + ตัวพิมพ์เล็ก — ใช้เทียบชื่อระหว่าง orders.creator_handle กับ mv.tt_account_name (เช็คแล้ว 2026-09: ฝั่ง Ads มี @ นำหน้าแค่ 15 จาก 5,643 ช่อง)
 function cpNormHandle(s) { return normalizeHandle(s).replace(/^@+/, ''); }
 
-async function ensureTtaDataForRange(from, to) {
-  // reuse cache เดียวกับหน้า TikTok Ads: ถ้าช่วงวันที่เดิม ไม่ยิง Supabase ซ้ำ (โปรเจกต์ยังติดโควตา — ห้ามเพิ่มคำขอโดยไม่จำเป็น)
+// โหลดข้อมูลคลิป TikTok Ads สำหรับช่วงวันที่ — ใช้ร่วมกันทั้งหน้า TikTok Ads และ Creator Performance
+// ลำดับ: 1) มีในหน่วยความจำช่วงเดิม → ใช้เลย  2) มีแคชใน IndexedDB → โชว์ทันที ถ้าแคชเก่ากว่า 1 ชม. ค่อยดึงใหม่เบื้องหลังแล้วเรียก onFresh  3) ไม่มีเลย → ดึงจาก Supabase (รอ)
+const TTA_CACHE_MAX_AGE = 60 * 60 * 1000;
+async function ensureTtaDataForRange(from, to, onFresh) {
   const rangeKey = from + '|' + to;
   if (ttaLastRange === rangeKey && ttaByClip.length) return;
+  const cached = await idbGet('tta:' + rangeKey);
+  if (cached && cached.rows && cached.rows.length) {
+    buildTtaByClip(cached.rows);
+    ttaLastRange = rangeKey;
+    if (Date.now() - (cached.cachedAt || 0) > TTA_CACHE_MAX_AGE) {
+      fetchTtaData(from, to).then(() => { if (ttaLastRange === rangeKey && typeof onFresh === 'function') onFresh(); })
+        .catch(e => console.warn('tta background refresh failed (ใช้แคชต่อไป):', e.message));
+    }
+    return;
+  }
   await fetchTtaData(from, to);
   ttaLastRange = rangeKey;
 }
@@ -3459,11 +3490,13 @@ async function renderCpAdsSection() {
   renderPagerHtml('cpAdsTablePager', 1, 1, 'cpAdsGoToPage');
 
   try {
-    await ensureTtaDataForRange(from, to);
-    await ensureKolPosts(); // ตารางเล็ก โหลดครั้งเดียวต่อ session
+    const rerender = () => { if (currentPage === 'creatorperf' && seq === _cpAdsLoadSeq) (cpSelectedCreator ? renderCpAdsClipTable() : renderCpAdsCreatorSummary()); };
+    await ensureTtaDataForRange(from, to, rerender);
+    await ensureKolPosts(rerender);
   } catch (e) {
     console.error('renderCpAdsSection fetch failed:', e);
     if (seq !== _cpAdsLoadSeq) return;
+    const ck = document.getElementById('cp-cost-kpis'); if (ck) ck.innerHTML = `<div class="card" style="flex:1;"><div class="card-title">ต้นทุน creator</div><div style="font-size:12px;color:var(--red);">โหลดไม่สำเร็จ — ${ttcEsc(e.message)}</div></div>`;
     bodyEl.innerHTML = `<tr><td class="empty">โหลดข้อมูล TikTok Ads ไม่สำเร็จ: ${ttcEsc(e.message)}<br><span style="font-size:11px;">ถ้าเจอบ่อย ให้เช็คหน้า Usage ของ Supabase ก่อน (โควตาเกิน = 500 แบบสุ่ม ไม่ใช่บั๊กโค้ด)</span></td></tr>`;
     return;
   }
@@ -3476,14 +3509,33 @@ async function renderCpAdsSection() {
 // ===== ค่าจ้าง KOL (kol_posts — sync จาก Google Sheet ทีม KOL ทุกคืน) =====
 let kolPosts = [];          // แถวทั้งหมด (ตารางเล็ก ~1–2 พันแถว โหลดครั้งเดียวต่อ session)
 let _kolPostsLoaded = false;
-async function ensureKolPosts() {
-  if (_kolPostsLoaded) return;
+function applyKolPosts(raw) {
+  kolPosts = raw.map(p => ({ ...p, budget: parseFloat(p.budget) || 0, kol_handle: cpNormHandle(p.kol_handle || ''), isTikTok: /tiktok/i.test(p.platform || '') }));
+  _kolPostsLoaded = true;
+}
+async function fetchKolPosts() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const url = `${window.SUPABASE_URL}/rest/v1/kol_posts?select=content_name,post_date,platform,kol_name,kol_handle,products,tier,budget,post_link,item_id&order=post_date.asc&limit=10000`;
+  setBgSync('โหลดค่าจ้าง KOL (Google Sheet)...', 30);
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error('kol_posts ' + res.status);
-  kolPosts = (await res.json()).map(p => ({ ...p, budget: parseFloat(p.budget) || 0, kol_handle: cpNormHandle(p.kol_handle || ''), isTikTok: /tiktok/i.test(p.platform || '') }));
-  _kolPostsLoaded = true;
+  const raw = await res.json();
+  setBgSync(`ค่าจ้าง KOL ${fmt(raw.length)} โพสต์ อัปเดตแล้ว`, null);
+  applyKolPosts(raw);
+  idbSet('kol_posts', { rows: raw, cachedAt: Date.now() });
+}
+// แคชใน IndexedDB เหมือนกัน — sheet sync ทุกคืน จึงใช้แคชได้ถึง 6 ชม. ก่อนดึงใหม่เบื้องหลัง
+async function ensureKolPosts(onFresh) {
+  if (_kolPostsLoaded) return;
+  const cached = await idbGet('kol_posts');
+  if (cached && cached.rows) {
+    applyKolPosts(cached.rows);
+    if (Date.now() - (cached.cachedAt || 0) > 6 * 60 * 60 * 1000) {
+      fetchKolPosts().then(() => { if (typeof onFresh === 'function') onFresh(); }).catch(e => console.warn('kol_posts background refresh failed:', e.message));
+    }
+    return;
+  }
+  await fetchKolPosts();
 }
 function thShort(d) { return d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'; }
 
@@ -3496,6 +3548,84 @@ function kolPostsInRange(from, to) {
     const clip = p.item_id ? clipById[p.item_id] : null;
     return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle };
   });
+}
+
+// ===== กราฟ timeline: ยอดขายจริง (เส้น) + ค่าแอด/ค่าจ้าง (แท่ง แกนขวา) + จุดโพสต์ (▼ ด้านบน) =====
+let _cpTrendByDay = {};
+function cpDailyAdSpend(from, to, target) {
+  // จาก ttaRawRows (แถวรายวันรายคลิป) — กรอง creator ถ้าเลือก
+  const m = {};
+  ttaRawRows.forEach(r => {
+    if (!r.stat_date || r.stat_date < from || r.stat_date > to) return;
+    if (target && cpNormHandle(r.tt_account_name || '') !== target) return;
+    m[r.stat_date] = (m[r.stat_date] || 0) + (parseFloat(r.cost) || 0) + (parseFloat(r.spend) || 0);
+  });
+  return m;
+}
+function renderCpTrendChart() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const target = cpSelectedCreator ? cpNormHandle(cpSelectedCreator) : null;
+  const feeByDay = {}, postsByDay = {};
+  if (_kolPostsLoaded) {
+    kolPostsInRange(from, to).filter(p => !target || p.handle === target).forEach(p => {
+      feeByDay[p.post_date] = (feeByDay[p.post_date] || 0) + p.budget;
+      (postsByDay[p.post_date] = postsByDay[p.post_date] || []).push(p);
+    });
+  }
+  const adByDay = ttaRawRows.length ? cpDailyAdSpend(from, to, target) : {};
+  // แกน x = ทุกวันที่มีอย่างใดอย่างหนึ่ง (ยอด/ค่าแอด/โพสต์) เรียงตามวัน
+  const days = [...new Set([...Object.keys(_cpTrendByDay), ...Object.keys(feeByDay), ...Object.keys(adByDay)])].sort();
+  if (!days.length) { makeChart('chartCpTrend', 'line', [], []); return; }
+  const many = days.length > 60;
+  const datasets = [
+    { type: 'line', label: 'ยอดขาย (ออเดอร์จริง)', data: days.map(dt => _cpTrendByDay[dt] || 0), yAxisID: 'y', order: 1,
+      borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', borderWidth: 2, pointRadius: many ? 0 : 3, pointHoverRadius: 5, fill: true, tension: 0.3 },
+    { type: 'bar', label: 'ค่าแอด', data: days.map(dt => adByDay[dt] || 0), yAxisID: 'y2', order: 3, stack: 'cost',
+      backgroundColor: 'rgba(96,165,250,0.55)', borderWidth: 0, borderRadius: 2, barPercentage: many ? 1 : 0.7, categoryPercentage: 0.9 },
+    { type: 'bar', label: 'ค่าจ้าง KOL', data: days.map(dt => feeByDay[dt] || 0), yAxisID: 'y2', order: 2, stack: 'cost',
+      backgroundColor: 'rgba(167,139,250,0.75)', borderWidth: 0, borderRadius: 2, barPercentage: many ? 1 : 0.7, categoryPercentage: 0.9 },
+    { type: 'line', label: 'โพสต์', data: days.map(dt => postsByDay[dt] ? 1 : null), yAxisID: 'yMark', order: 0, spanGaps: false,
+      pointStyle: 'triangle', rotation: 180, pointRadius: many ? 6 : 8, pointHoverRadius: 10,
+      backgroundColor: '#a78bfa', borderColor: '#7c5cff', borderWidth: 1, showLine: false }
+  ];
+  const thD = dt => new Date(dt + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  makeChart('chartCpTrend', 'bar', days, datasets, {
+    options: { interaction: { mode: 'index', intersect: false } },
+    scales: {
+      x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 14, callback: (v, i) => thD(days[i]) }, grid: { color: chartGridColor() }, stacked: true },
+      y: { position: 'left', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() }, title: { display: true, text: 'ยอดขาย', color: chartTickColor(), font: { family: 'Sarabun', size: 10 } } },
+      y2: { position: 'right', stacked: true, beginAtZero: true, ticks: { color: '#a78bfa', font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { drawOnChartArea: false }, title: { display: true, text: 'ต้นทุน (แอด + ค่าจ้าง)', color: '#a78bfa', font: { family: 'Sarabun', size: 10 } } },
+      yMark: { display: false, min: 0, max: 1.08 }
+    },
+    tooltip: {
+      filter: item => !(item.dataset.yAxisID === 'y2' && !item.raw) && !(item.dataset.label === 'โพสต์' && item.raw === null),
+      callbacks: {
+        title: items => items.length ? thD(days[items[0].dataIndex]) : '',
+        label: item => {
+          if (item.dataset.label === 'โพสต์') {
+            const ps = postsByDay[days[item.dataIndex]] || [];
+            return ps.map(p => `▼ ${p.kol_name || p.handle} · ฿${fmt(p.budget)}${p.clip ? ' · boost แล้ว' : ''}${p.products ? ' · ' + p.products : ''}`);
+          }
+          return `${item.dataset.label}: ฿${fmt(item.raw || 0)}`;
+        },
+        afterBody: items => {
+          const dt = days[items[0].dataIndex];
+          const rev = _cpTrendByDay[dt] || 0, cost = (adByDay[dt] || 0) + (feeByDay[dt] || 0);
+          return cost ? [`ยอดจริง ÷ ต้นทุนวันนี้: ${(rev / cost).toFixed(2)}x`] : [];
+        }
+      }
+    }
+  });
+}
+function fillCpCostKpis(fee, spend, rev, subtitle) {
+  const el = document.getElementById('cp-cost-kpis'); if (!el) return;
+  const total = fee + spend, roi = total ? rev / total : null;
+  const roiCol = roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--text)' : 'var(--red)';
+  el.innerHTML = `
+    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #a78bfa;"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmtB(fee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${subtitle.fee || ''}</div></div>
+    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #60a5fa;"><div class="card-title">ค่าแอด (boost)</div><div class="kpi-value">฿${fmtB(spend)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${subtitle.spend || ''}</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value">฿${fmtB(total)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">ค่าจ้าง + ค่าแอด</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอด Videos จริง ÷ ต้นทุน ${fbeInfoIcon('cp-info-roi', 'ยอด Videos จากออเดอร์จริง (orders) หารด้วย ค่าจ้าง KOL + ค่าแอด<br><br>ยังไม่หักต้นทุนสินค้า — ใช้เทียบว่าเงินที่จ่ายให้ creator กลับมาเป็นยอดกี่เท่า<br>เขียว ≥ 3x · แดง < 1x')}</div><div class="kpi-value" style="color:${roiCol};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">฿${fmt(rev)} ÷ ฿${fmt(total)}</div></div>`;
 }
 
 // ---- โหมดหน้ารวม: creator ที่มียอด Videos จากออเดอร์ + (คลิปยิงแอด หรือ จ้าง KOL) ----
@@ -3545,6 +3675,9 @@ function renderCpAdsCreatorSummary() {
 
   const totalCreators = Object.keys(ordByHandle).length;
   const feeInRange = posts.reduce((s, p) => s + p.budget, 0);
+  const spendInRange = Object.values(adsByHandle).reduce((s, a) => s + a.spend, 0);
+  fillCpCostKpis(feeInRange, spendInRange, _cpVideosRev, { fee: `${fmt(posts.length)} โพสต์ TikTok · ${fmt(Object.keys(kolByHandle).length)} creator`, spend: `${fmt(ttaByClip.length)} คลิป · ${fmt(Object.keys(adsByHandle).length)} ช่อง` });
+  renderCpTrendChart();
   const feeUnlinked = posts.filter(p => !ordByHandle[p.handle]).reduce((s, p) => s + p.budget, 0);
   const unmatchedRev = Object.keys(ordByHandle).filter(h => !adsByHandle[h] && !kolByHandle[h]).reduce((s, h) => s + ordByHandle[h].rev, 0);
 
@@ -3621,6 +3754,11 @@ function renderCpAdsClipTable() {
   if (!cpSelectedCreator || !bodyEl) return;
 
   const rows = cpAdsRowsOfSelected();
+  {
+    const f = rows.reduce((s, c) => s + (c.kolFee || 0), 0), sp = rows.reduce((s, c) => s + (c.spend || 0), 0);
+    fillCpCostKpis(f, sp, _cpVideosRev, { fee: `${fmt(rows.filter(c => c.kolPost).length)} โพสต์ที่จ้าง`, spend: `${fmt(rows.filter(c => !c.kolOnly).length)} คลิปที่ boost` });
+    renderCpTrendChart();
+  }
   if (!rows.length) {
     kpiEl.innerHTML = ''; headEl.innerHTML = '';
     bodyEl.innerHTML = `<tr><td class="empty">creator นี้ไม่มีคลิปที่ยิงแอด และไม่มีโพสต์ที่จ้างใน sheet ทีม KOL ในช่วงวันที่ที่เลือก${_cpVideosRev > 0 ? `<br><span style="font-size:11px;">ยอด Videos ฿${fmt(_cpVideosRev)} (${fmt(_cpVideosOrd)} ออเดอร์) ในตาราง LIVE vs Videos มาจากคลิป organic/affiliate ที่ไม่มีต้นทุน — จะเห็นรายคลิปได้เมื่อ TikTok Accounts API อนุมัติ</span>` : ''}</td></tr>`;
@@ -6741,6 +6879,21 @@ function updateCacheStatus(mode, timestamp) {
   else if (mode === 'refresh-failed') el.innerHTML = '<span style="color:#fb923c;" title="กำลังแสดงข้อมูลจากแคชเดิมไปก่อน — ลองกด รีเฟรชข้อมูล Dashboard อีกครั้ง">⚠️ อัพเดตข้อมูลสดไม่สำเร็จ (ยังแสดงจากแคชเดิมอยู่)</span>'
 }
 
+// แถบโหลดเบื้องหลังใน sidebar: pct = 0–100, pct === null → ซ่อนหลัง 2.5 วิ
+let _bgSyncHideTimer = null;
+function setBgSync(msg, pct) {
+  const wrap = document.getElementById('bgSyncWrap'), bar = document.getElementById('bgSyncBar'), st = document.getElementById('bgSyncStatus');
+  if (!wrap) return;
+  clearTimeout(_bgSyncHideTimer);
+  if (pct === null) {
+    st.innerHTML = `<span style="color:#34d399;">✓ ${msg}</span>`; bar.style.width = '100%';
+    _bgSyncHideTimer = setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 2500);
+    return;
+  }
+  wrap.style.display = 'block';
+  st.innerHTML = `<span style="color:#a78bfa;">⟳</span> ${msg}${pct !== undefined ? ` — ${pct}%` : ''}`;
+  if (pct !== undefined) bar.style.width = pct + '%';
+}
 function updateLoadingProgress(msg, pct) {
   const el = document.getElementById('loadingProgressText');
   if (el) el.textContent = pct !== undefined ? `${msg} — ${pct}%` : msg;
@@ -7259,9 +7412,23 @@ async function fetchTtaData(fromDate, toDate) {
   let baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=*&order=stat_date.asc,item_id.asc`;
   if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
   if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
-  const ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id']);
-  ttaRawRows = ttaRaw;
+  const dFrom = new Date((fromDate || '2026-01-01') + 'T00:00:00').getTime();
+  const dTo = new Date((toDate || new Date().toISOString().slice(0, 10)) + 'T00:00:00').getTime();
+  setBgSync('โหลดคลิป TikTok Ads...', 0);
+  const ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id'], 1000, (n, last) => {
+    // แถวเรียงตามวันที่ → คิด % จากวันที่ล่าสุดที่โหลดถึง เทียบกับช่วงที่ขอ (keyset ไม่รู้จำนวนรวมล่วงหน้า)
+    const cur = last && last.stat_date ? new Date(last.stat_date + 'T00:00:00').getTime() : dFrom;
+    const pct = dTo > dFrom ? Math.min(99, Math.max(1, Math.round((cur - dFrom) / (dTo - dFrom) * 100))) : 50;
+    setBgSync(`โหลดคลิป TikTok Ads (${fmt(n)} แถว)`, pct);
+  });
+  setBgSync(`TikTok Ads ${fmt(ttaRaw.length)} แถว อัปเดตแล้ว`, null);
   window._ttaFailedChunks = [];
+  buildTtaByClip(ttaRaw);
+  // เก็บแคชแถวดิบไว้ใน IndexedDB ตามช่วงวันที่ — เปิดหน้าครั้งถัดไปโชว์ทันทีไม่ต้องรอ Supabase (MV รีเฟรชทุกชั่วโมง)
+  idbSet('tta:' + fromDate + '|' + toDate, { rows: ttaRaw, cachedAt: Date.now() });
+}
+function buildTtaByClip(ttaRaw) {
+  ttaRawRows = ttaRaw;
   const byClip = {};
   ttaRaw.forEach(r => {
     const id = r.item_id;
@@ -7342,7 +7509,7 @@ async function renderTta() {
   const from = getDateValue('From'), to = getDateValue('To');
   const rangeKey = from + '|' + to;
   try {
-    if (ttaLastRange !== rangeKey) { await fetchTtaData(from, to); ttaLastRange = rangeKey; }
+    await ensureTtaDataForRange(from, to, () => { if (currentPage === 'ttads') renderTta(); });
     await fetchTtaDaily(from, to); // โหลดยอดจริงจากระบบ เฉพาะช่วงวันที่ที่เลือกอยู่ตอนนี้ (v_tiktok_objective_summary รวม revenue/orders/UNSPECIFIED)
   } catch (e) {
     console.error('renderTta fetch failed:', e);
