@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected<br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.02-e</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -3649,7 +3649,7 @@ async function fetchKolPosts() {
   idbSet(KOL_CACHE_KEY, { rows: raw, mapRows, cachedAt: Date.now() });
 }
 // แคชใน IndexedDB (key มี version — เปลี่ยนโครงข้อมูลเมื่อไรบั๊มเลขแล้วแคชเก่าถูกทิ้งเอง) ตารางเล็ก ดึงใหม่เบื้องหลังถ้าเก่ากว่า 15 นาที
-const KOL_CACHE_KEY = 'kol_posts_v2';
+const KOL_CACHE_KEY = 'kol_posts_v3';
 async function ensureKolPosts(onFresh) {
   if (_kolPostsLoaded) return;
   const cached = await idbGet(KOL_CACHE_KEY);
