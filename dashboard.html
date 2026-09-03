@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.02-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.03-b</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1950,11 +1950,11 @@ function showError(msg) {
 // ===== SUPABASE FETCH (paginated) — orders table =====
 // ลองใหม่อัตโนมัติเมื่อเจอ error 5xx ชั่วคราว (Supabase hiccup ระหว่าง paginate ข้อมูลจำนวนมาก)
 // ไม่ retry 4xx (เช่น 401/403 คีย์ผิด/สิทธิ์ไม่พอ) เพราะลองใหม่กี่ครั้งก็ไม่หาย ต้องแจ้ง error ทันที
-async function fetchWithRetry(url, headers, retries = 3, backoffMs = 800) {
+async function fetchWithRetry(url, headers, retries = 3, backoffMs = 800, opts = {}) {
   let lastErr;
   for (let i = 0; i <= retries; i++) {
     try {
-      const res = await fetch(url, { headers });
+      const res = await fetch(url, { ...opts, headers });
       if (res.ok) return res;
       lastErr = new Error('API error: ' + res.status);
       if (res.status < 500) throw lastErr;
@@ -2483,52 +2483,48 @@ function toggleTheme() {
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
 // ===== OVERVIEW =====
-function renderOverview() {
+async function renderOverview() {
   const from = getDateValue('From'), to = getDateValue('To');
   const ch = document.getElementById('filterChannel').value;
   const sub = document.getElementById('filterSubChannel').value;
 
-  // ใช้ mv_daily_channel_summary (~53,852 แถว รวมระดับวัน+ช่องทาง+จังหวัดแล้ว) แทนการวนลูป orders ดิบ 217,658 แถว
-  const mvMatch = r => {
-    if (!r.date || r.date < from || r.date > to) return false;
-    if (ch && r.channel !== ch) return false;
-    if (sub && r.sub_channel !== sub) return false;
-    return true;
-  };
-  const mvInRange = dailyChannelSummaryAll.filter(mvMatch);
+  // เฟส 1: ยอดจาก sales_summary() (v_orders_clean) — แหล่งเดียวกับหน้าแยก Channel ตัวเลขจึงเท่ากันเสมอ
+  const seq = (renderOverview._seq = (renderOverview._seq || 0) + 1);
+  try {
+    await ensureSalesSummary(from, to, () => { if (currentPage === 'overview' && seq === renderOverview._seq) renderOverview(); });
+  } catch (e) {
+    showError && showError('โหลดยอดขายไม่สำเร็จ: ' + e.message);
+    return;
+  }
+  if (seq !== renderOverview._seq || currentPage !== 'overview') return;
 
+  const mvInRange = salesRows(from, to, ch, sub);
   const totalRevenue = mvInRange.reduce((s, r) => s + (parseFloat(r.net_revenue) || 0), 0);
   const totalOrders = mvInRange.reduce((s, r) => s + (parseInt(r.net_orders) || 0), 0);
   const aov = totalOrders ? totalRevenue / totalOrders : 0;
-  // จำนวนลูกค้าไม่ซ้ำต้องนับจากข้อมูลระดับออเดอร์จริง (MV รวมเป็นยอดแล้ว นับ distinct ข้ามกลุ่มให้แม่นยำไม่ได้)
-  const uniqueCustomers = new Set(filteredData.map(r => r.phone).filter(Boolean)).size;
 
   const prevRange = getPrevPeriodRange(from, to);
-  const mvPrev = dailyChannelSummaryAll.filter(r => {
-    if (!r.date || r.date < prevRange.from || r.date > prevRange.to) return false;
-    if (ch && r.channel !== ch) return false;
-    if (sub && r.sub_channel !== sub) return false;
-    return true;
-  });
+  const mvPrev = prevRange.from ? salesRows(prevRange.from, prevRange.to, ch, sub) : [];
   const prevRevenue = mvPrev.reduce((s, r) => s + (parseFloat(r.net_revenue) || 0), 0);
   const prevOrders = mvPrev.reduce((s, r) => s + (parseInt(r.net_orders) || 0), 0);
 
   document.getElementById('kpi-revenue').textContent = fmtB(totalRevenue);
   document.getElementById('kpi-orders').textContent = fmt(totalOrders);
   document.getElementById('kpi-aov').textContent = fmtB(aov);
-  document.getElementById('kpi-customers').textContent = fmt(uniqueCustomers);
+  // ลูกค้าไม่ซ้ำ: นับ distinct ที่ DB (RPC unique_customers) — ขึ้นทีหลังไม่บล็อกส่วนอื่น
+  document.getElementById('kpi-customers').textContent = '…';
+  fetchUniqueCustomers(from, to, ch, sub).then(n => { if (seq === renderOverview._seq) document.getElementById('kpi-customers').textContent = fmt(n); }).catch(() => { document.getElementById('kpi-customers').textContent = '—'; });
 
   const rCmp = cmpBadge(totalRevenue, prevRevenue);
   const oCmp = cmpBadge(totalOrders, prevOrders);
   const rwow = document.getElementById('kpi-revenue-wow'); rwow.textContent = rCmp.text; rwow.className = rCmp.cls;
   const owow = document.getElementById('kpi-orders-wow'); owow.textContent = oCmp.text; owow.className = oCmp.cls;
 
-  // ยอดตีกลับ (ยกเลิก/คืนสินค้า) — เฉพาะรายได้เท่านั้น ไม่เกี่ยวกับ settled/AR (เรื่องบัญชี แยกออกจาก dashboard แล้ว)
+  // ยอดตีกลับ (ยกเลิก/คืนสินค้า)
   const unsettledRev = mvInRange.reduce((s,r) => s+(parseFloat(r.cancelled_revenue)||0), 0);
   const unsettledOrders = mvInRange.reduce((s,r) => s+(parseInt(r.cancelled_orders)||0), 0);
-  const totalWithUnsettled = mvInRange.reduce((s,r) => s+(parseFloat(r.total_revenue)||0), 0);
+  const totalWithUnsettled = totalRevenue + unsettledRev;
   const unsettledPct = totalWithUnsettled ? ((unsettledRev/totalWithUnsettled)*100).toFixed(1) : '0.0';
-
   document.getElementById('kpi-unsettled-rev').textContent = fmtB(unsettledRev);
   document.getElementById('kpi-unsettled-orders').textContent = `${fmt(unsettledOrders)} ออเดอร์ที่ถูกยกเลิก/คืน`;
   document.getElementById('kpi-unsettled-pct').textContent = unsettledPct + '%';
@@ -2543,56 +2539,58 @@ function renderOverview() {
   });
   const months = Object.keys(monthly).sort();
   const monthLabels = months.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
-
   makeChart('chartMonthlyRevenue', 'bar', monthLabels, [{ label: 'ยอดขาย', data: months.map(m => monthly[m].rev), backgroundColor: 'rgba(200,169,110,0.7)', borderColor: '#c8a96e', borderWidth: 1, borderRadius: 4 }]);
   makeChart('chartMonthlyOrders', 'bar', monthLabels, [{ label: 'ออเดอร์', data: months.map(m => monthly[m].ord), backgroundColor: 'rgba(96,165,250,0.7)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 4 }]);
 
   // Daily trend
   const daily = {};
-  mvInRange.forEach(r => { if (!r.date) return; if (!daily[r.date]) daily[r.date] = 0; daily[r.date] += parseFloat(r.net_revenue) || 0; });
+  mvInRange.forEach(r => { if (!r.date) return; daily[r.date] = (daily[r.date] || 0) + (parseFloat(r.net_revenue) || 0); });
   const days = Object.keys(daily).sort();
   makeChart('chartDailyTrend', 'line', days, [{ label: 'ยอดขายรายวัน', data: days.map(d => daily[d]), borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,0.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]);
 }
 
 // ===== CHANNEL =====
-function renderChannel() {
-  const d = filteredData;
+async function renderChannel() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const chF = document.getElementById('filterChannel').value;
+  const subF = document.getElementById('filterSubChannel').value;
+  const seq = (renderChannel._seq = (renderChannel._seq || 0) + 1);
+  try {
+    await ensureSalesSummary(from, to, () => { if (currentPage === 'channel' && seq === renderChannel._seq) renderChannel(); });
+  } catch (e) { showError && showError('โหลดยอดขายไม่สำเร็จ: ' + e.message); return; }
+  if (seq !== renderChannel._seq || currentPage !== 'channel') return;
+  // เฟส 1: แถวสรุป วัน×ช่อง×sub จาก sales_summary() (v_orders_clean) — แหล่งเดียวกับหน้าภาพรวม
+  const d = salesRows(from, to, chF, subF);
 
   const byMainCh = {};
   d.forEach(r => {
     const k = r.channel || 'ไม่ระบุ';
     if (!byMainCh[k]) byMainCh[k] = { rev: 0, ord: 0 };
-    byMainCh[k].rev += parseFloat(r.revenue) || 0;
-    byMainCh[k].ord++;
+    byMainCh[k].rev += parseFloat(r.net_revenue) || 0;
+    byMainCh[k].ord += parseInt(r.net_orders) || 0;
   });
   const channels = Object.entries(byMainCh).sort((a,b) => b[1].rev - a[1].rev);
   const totalRev = channels.reduce((s,[,v]) => s+v.rev, 0);
 
-  // Dynamic KPI cards — แสดงทุก channel
   document.getElementById('ch-kpis').innerHTML = channels.map(([ch, v], i) => `
     <div class="card" style="flex:1;min-width:140px;border-top:3px solid ${COLORS[i%COLORS.length]};">
       <div class="card-title" style="color:${COLORS[i%COLORS.length]};">${ch}</div>
       <div class="kpi-value" style="font-size:20px;">฿${fmtB(v.rev)}</div>
-      <div class="kpi-sub">${fmt(v.ord)} ออเดอร์ · ${((v.rev/totalRev)*100).toFixed(1)}%</div>
+      <div class="kpi-sub">${fmt(v.ord)} ออเดอร์ · ${totalRev ? ((v.rev/totalRev)*100).toFixed(1) : 0}%</div>
     </div>`).join('');
 
-  // Bar chart รายเดือนแยก channel
   const monthly = {};
   d.forEach(r => {
     const m = r.date ? r.date.substring(0,7) : 'unknown';
     const ch = r.channel || 'ไม่ระบุ';
     if (!monthly[m]) monthly[m] = {};
-    if (!monthly[m][ch]) monthly[m][ch] = 0;
-    monthly[m][ch] += parseFloat(r.revenue) || 0;
+    monthly[m][ch] = (monthly[m][ch] || 0) + (parseFloat(r.net_revenue) || 0);
   });
   const months = Object.keys(monthly).sort();
   const monthLabels = months.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
   const barDatasets = channels.map(([ch], i) => ({
-    label: ch,
-    data: months.map(m => monthly[m]?.[ch] || 0),
-    backgroundColor: COLORS[i%COLORS.length] + 'cc',
-    borderColor: COLORS[i%COLORS.length],
-    borderWidth: 1, borderRadius: 3,
+    label: ch, data: months.map(m => monthly[m]?.[ch] || 0),
+    backgroundColor: COLORS[i%COLORS.length] + 'cc', borderColor: COLORS[i%COLORS.length], borderWidth: 1, borderRadius: 3,
   }));
   makeChart('chartChannelRevenue', 'bar', monthLabels, barDatasets);
   if (charts['chartChannelRevenue']) {
@@ -2601,19 +2599,17 @@ function renderChannel() {
     charts['chartChannelRevenue'].update();
   }
 
-  // Pie chart สัดส่วน
   const chLabels = channels.map(([k]) => k);
   makeChart('chartChannelPie', 'doughnut', chLabels, [{ data: channels.map(([,v]) => v.rev), backgroundColor: COLORS, borderWidth: 0 }]);
 
-  // Sub-channel table — ถ้า channel = ตัวแทน และ sub_channel = null → แสดงเป็น "ตัวแทน"
+  // Sub-channel — ถ้า channel = ตัวแทน และ sub_channel = null → แสดงเป็น "ตัวแทน"
   const bySubCh = {};
   d.forEach(r => {
     const ch = r.channel || 'ไม่ระบุ';
-    const rawSub = r.sub_channel;
-    const k = rawSub || (ch === 'ตัวแทน' ? 'ตัวแทน' : 'ไม่ระบุ');
+    const k = r.sub_channel || (ch === 'ตัวแทน' ? 'ตัวแทน' : 'ไม่ระบุ');
     if (!bySubCh[k]) bySubCh[k] = { rev: 0, ord: 0, ch };
-    bySubCh[k].rev += parseFloat(r.revenue) || 0;
-    bySubCh[k].ord++;
+    bySubCh[k].rev += parseFloat(r.net_revenue) || 0;
+    bySubCh[k].ord += parseInt(r.net_orders) || 0;
   });
   const sorted = Object.entries(bySubCh).sort((a,b) => b[1].rev - a[1].rev);
   document.getElementById('tbodySubChannel').innerHTML = sorted.length ? sorted.map(([k, v], i) => `
@@ -3524,6 +3520,70 @@ let _cpAdsLoadSeq = 0; // กันผลลัพธ์ fetch เก่าม�
 // ตัด @ นำหน้า + ช่องว่าง + ตัวพิมพ์เล็ก — ใช้เทียบชื่อระหว่าง orders.creator_handle กับ mv.tt_account_name (เช็คแล้ว 2026-09: ฝั่ง Ads มี @ นำหน้าแค่ 15 จาก 5,643 ช่อง)
 function cpNormHandle(s) { return normalizeHandle(s).replace(/^@+/, ''); }
 
+// ===== TikTok Ads แบบเบา (RPC รวมยอดฝั่ง Supabase) — ใช้ในหน้า Creator Performance + KOL แทนการดึง MV ทั้งก้อน =====
+// หน้า TikTok Ads ยังใช้ fetchTtaData/ttaByClip แบบเต็มเหมือนเดิม (ต้องการรายคลิปทุกคลิป)
+const cpTta = { rangeKey: null, handles: [], kolClips: [], daily: [], clipsByHandle: {}, dailyByHandle: {} };
+async function supaRpc(name, params, paginate = false) {
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const out = [];
+  for (let off = 0; ; off += 1000) {
+    const res = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/rpc/${name}?limit=1000&offset=${off}`, headers, 3, 800, { method: 'POST', body: JSON.stringify(params) });
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return rows;   // function ที่คืนค่าเดียว (เช่น unique_customers) → คืนค่าตรงๆ
+    out.push(...rows);
+    if (!paginate || rows.length < 1000) break;
+  }
+  return out;
+}
+// แปลงแถว RPC → รูปเดียวกับ ttaByClip (ให้ ttaCellHtml / ttaSortValue ใช้ได้ทันที)
+function rpcClipToObj(r) {
+  const days = Number(r.days) || 1, fd = Number(r.funnel_days) || 0, ed = Number(r.engagement_days) || 0;
+  const spend = +r.spend || 0, orders = +r.orders || 0, pv = +r.gross_revenue || 0, impr = +r.impressions || 0, clk = +r.clicks || 0;
+  const handle = r.handle || '(ไม่ทราบชื่อ)';
+  return { item_id: r.item_id, handle, isDeesay: KNOWN_DEESAY_HANDLES.includes(normalizeHandle(handle)), campaign: r.campaign_name, objective: r.objective || null,
+    caption: r.title || '(ไม่มีชื่อ)', thumbnail: null, spend, orders, purchaseValue: pv, impressions: impr, clicks: clk, convs: 0,
+    ctr: impr ? clk / impr * 100 : 0, cpo: orders ? spend / orders : null, roas: spend ? pv / spend : null,
+    likes: +r.likes || 0, paidcomments: +r.comments || 0, paidshares: +r.shares || 0, follows: +r.follows || 0, profileVisits: +r.profile_visits || 0,
+    v6s: +r.v6s || 0, v25: +r.v25 || 0, v50: +r.v50 || 0, v75: +r.v75 || 0, v100: +r.v100 || 0,
+    dateMin: r.date_min, dateMax: r.date_max,
+    hasFunnelData: fd > 0, funnelPartial: fd > 0 && fd < days, hasEngagementData: ed > 0, engagementPartial: ed > 0 && ed < days };
+}
+// โหลดชุดหลักของช่วงวันที่: สรุปต่อช่อง + คลิปที่จ้าง + ค่าแอดรายวัน (3 คำขอ, แคช IndexedDB 1 ชม.)
+async function ensureCpTta(from, to, onFresh) {
+  const rangeKey = from + '|' + to;
+  if (cpTta.rangeKey === rangeKey) return;
+  const apply = d => { cpTta.rangeKey = rangeKey; cpTta.handles = d.handles; cpTta.kolClips = d.kolClips.map(rpcClipToObj); cpTta.daily = d.daily; cpTta.clipsByHandle = {}; cpTta.dailyByHandle = {}; };
+  const load = async () => {
+    setBgSync('รวมยอด TikTok Ads (Supabase)...', 20);
+    const handles = await supaRpc('tta_handle_summary', { p_from: from, p_to: to }, true);
+    setBgSync('รวมยอด TikTok Ads (Supabase)...', 60);
+    const kolClips = await supaRpc('tta_clip_summary', { p_from: from, p_to: to, p_handle: null, p_kol_only: true }, true);
+    const daily = await supaRpc('tta_daily_spend', { p_from: from, p_to: to, p_handle: null }, true);
+    setBgSync(`TikTok Ads ${fmt(handles.length)} ช่อง อัปเดตแล้ว`, null);
+    const d = { handles, kolClips, daily, cachedAt: Date.now() };
+    idbSet('cptta:' + rangeKey, d);
+    return d;
+  };
+  const cached = await idbGet('cptta:' + rangeKey);
+  if (cached && cached.handles) {
+    apply(cached);
+    if (Date.now() - (cached.cachedAt || 0) > TTA_CACHE_MAX_AGE) load().then(d => { if (cpTta.rangeKey === rangeKey) { apply(d); typeof onFresh === 'function' && onFresh(); } }).catch(e => console.warn('cptta refresh failed:', e.message));
+    return;
+  }
+  apply(await load());
+}
+// รายคลิป + รายวันของ creator คนเดียว (โหลดเมื่อเลือก, เก็บในหน่วยความจำต่อช่วง)
+async function ensureCpClips(from, to, handle) {
+  await ensureCpTta(from, to);
+  const h = cpNormHandle(handle);
+  if (cpTta.clipsByHandle[h]) return;
+  setBgSync(`โหลดคลิปของ ${handle}...`, 50);
+  const [clips, daily] = [await supaRpc('tta_clip_summary', { p_from: from, p_to: to, p_handle: h, p_kol_only: false }, true), await supaRpc('tta_daily_spend', { p_from: from, p_to: to, p_handle: h })];
+  cpTta.clipsByHandle[h] = clips.map(rpcClipToObj);
+  cpTta.dailyByHandle[h] = daily;
+  setBgSync(`คลิปของ ${handle} พร้อมแล้ว`, null);
+}
+
 // โหลดข้อมูลคลิป TikTok Ads สำหรับช่วงวันที่ — ใช้ร่วมกันทั้งหน้า TikTok Ads และ Creator Performance
 // ลำดับ: 1) มีในหน่วยความจำช่วงเดิม → ใช้เลย  2) มีแคชใน IndexedDB → โชว์ทันที ถ้าแคชเก่ากว่า 1 ชม. ค่อยดึงใหม่เบื้องหลังแล้วเรียก onFresh  3) ไม่มีเลย → ดึงจาก Supabase (รอ)
 const TTA_CACHE_MAX_AGE = 60 * 60 * 1000;
@@ -3553,8 +3613,7 @@ function cpAdsSortBy(key) {
 function cpAdsGoToPage(n) { cpAdsPage = n; renderCpAdsClipTable(); }
 
 function cpAdsClipsOfSelected() {
-  const target = cpNormHandle(cpSelectedCreator);
-  return ttaByClip.filter(c => cpNormHandle(c.handle) === target);
+  return cpTta.clipsByHandle[cpNormHandle(cpSelectedCreator)] || [];
 }
 
 async function renderCpAdsSection() {
@@ -3580,7 +3639,8 @@ async function renderCpAdsSection() {
 
   try {
     const rerender = () => { if (currentPage === 'creatorperf' && seq === _cpAdsLoadSeq) (cpSelectedCreator ? renderCpAdsClipTable() : renderCpAdsCreatorSummary()); };
-    await ensureTtaDataForRange(from, to, rerender);
+    await ensureCpTta(from, to, rerender);          // 3 คำขอเล็ก (RPC) แทนการดึง MV 72k แถว
+    if (cpSelectedCreator) await ensureCpClips(from, to, cpSelectedCreator);
     await ensureKolPosts(rerender);
   } catch (e) {
     console.error('renderCpAdsSection fetch failed:', e);
@@ -3593,6 +3653,40 @@ async function renderCpAdsSection() {
 
   if (cpSelectedCreator) renderCpAdsClipTable();
   else renderCpAdsCreatorSummary();
+}
+
+// ===== เฟส 1: ยอดขายสรุปจาก Supabase (RPC sales_summary บน v_orders_clean) — canonical source ระดับออเดอร์ =====
+// ใช้โดยหน้าภาพรวม + แยก Channel (ต่อไปจะทยอยย้ายหน้าอื่นมาใช้ตัวเดียวกัน) แทนการคำนวณจาก allData ในเบราว์เซอร์
+const salesSum = { rangeKey: null, rows: [] };   // rows ครอบคลุม [ช่วงก่อนหน้า .. to] เพื่อทำ badge เทียบช่วงก่อน
+const SALES_CACHE_MAX_AGE = 30 * 60 * 1000;
+async function ensureSalesSummary(from, to, onFresh) {
+  const prev = getPrevPeriodRange(from, to);
+  const loadFrom = prev.from || from;
+  const key = loadFrom + '|' + to;
+  if (salesSum.rangeKey === key) return;
+  const apply = d => { salesSum.rangeKey = key; salesSum.rows = d.rows; };
+  const load = async () => {
+    setBgSync('รวมยอดขาย (Supabase)...', 40);
+    const rows = await supaRpc('sales_summary', { p_from: loadFrom, p_to: to }, true);
+    setBgSync(`ยอดขาย ${fmt(rows.length)} แถว อัปเดตแล้ว`, null);
+    const d = { rows, cachedAt: Date.now() };
+    idbSet('sales:' + key, d);
+    return d;
+  };
+  const cached = await idbGet('sales:' + key);
+  if (cached && cached.rows) {
+    apply(cached);
+    if (Date.now() - (cached.cachedAt || 0) > SALES_CACHE_MAX_AGE) load().then(d => { if (salesSum.rangeKey === key) { apply(d); typeof onFresh === 'function' && onFresh(); } }).catch(e => console.warn('sales refresh failed:', e.message));
+    return;
+  }
+  apply(await load());
+}
+function salesRows(from, to, ch, sub) {
+  return salesSum.rows.filter(r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub));
+}
+async function fetchUniqueCustomers(from, to, ch, sub) {
+  const r = await supaRpc('unique_customers', { p_from: from, p_to: to, p_channel: ch || null, p_sub: sub || null });
+  return typeof r === 'number' ? r : (Array.isArray(r) ? r[0] : r);
 }
 
 // ===== ค่าจ้าง KOL (kol_posts — sync จาก Google Sheet ทีม KOL ทุกคืน) =====
@@ -3668,7 +3762,7 @@ function thShort(d) { return d ? new Date(d).toLocaleDateString('th-TH', { day: 
 // ถ้าเลขคลิปตรงกับคลิปในระบบ Ads → ใช้ชื่อช่องจาก Ads (แม่นกว่าที่ทีม KOL พิมพ์) ไม่งั้นใช้ชื่อจาก sheet
 function kolPostsInRange(from, to) {
   const clipById = {};
-  ttaByClip.forEach(c => { clipById[c.item_id] = c; });
+  cpTta.kolClips.forEach(c => { clipById[c.item_id] = c; });
   return kolPosts.filter(p => p.isTikTok && p.post_date && p.post_date >= from && p.post_date <= to).map(p => {
     const clip = p.item_id ? clipById[p.item_id] : null;
     return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle };
@@ -3678,13 +3772,10 @@ function kolPostsInRange(from, to) {
 // ===== กราฟ timeline: ยอดขายจริง (เส้น) + ค่าแอด/ค่าจ้าง (แท่ง แกนขวา) + จุดโพสต์ (▼ ด้านบน) =====
 let _cpTrendByDay = {};
 function cpDailyAdSpend(from, to, target) {
-  // จาก ttaRawRows (แถวรายวันรายคลิป) — กรอง creator ถ้าเลือก
+  // จาก RPC tta_daily_spend (รวมยอดรายวันฝั่ง Supabase) — ทั้งหมด หรือเฉพาะ creator ที่เลือก
+  const rows = target ? (cpTta.dailyByHandle[target] || []) : cpTta.daily;
   const m = {};
-  ttaRawRows.forEach(r => {
-    if (!r.stat_date || r.stat_date < from || r.stat_date > to) return;
-    if (target && cpNormHandle(r.tt_account_name || '') !== target) return;
-    m[r.stat_date] = (m[r.stat_date] || 0) + (parseFloat(r.cost) || 0) + (parseFloat(r.spend) || 0);
-  });
+  rows.forEach(r => { if (r.stat_date >= from && r.stat_date <= to) m[r.stat_date] = (m[r.stat_date] || 0) + (+r.spend || 0); });
   return m;
 }
 function renderCpTrendChart() {
@@ -3697,7 +3788,7 @@ function renderCpTrendChart() {
       (postsByDay[p.post_date] = postsByDay[p.post_date] || []).push(p);
     });
   }
-  const adByDay = ttaRawRows.length ? cpDailyAdSpend(from, to, target) : {};
+  const adByDay = cpTta.rangeKey ? cpDailyAdSpend(from, to, target) : {};
   // แกน x = ทุกวันที่มีอย่างใดอย่างหนึ่ง (ยอด/ค่าแอด/โพสต์) เรียงตามวัน
   const days = [...new Set([...Object.keys(_cpTrendByDay), ...Object.keys(feeByDay), ...Object.keys(adByDay)])].sort();
   if (!days.length) { makeChart('chartCpTrend', 'line', [], []); return; }
@@ -3772,12 +3863,12 @@ function renderCpAdsCreatorSummary() {
     ordByHandle[h].rev += parseFloat(r.revenue) || 0;
     ordByHandle[h].ord++;
   });
-  // ฝั่ง Ads ต่อ creator
+  // ฝั่ง Ads ต่อ creator (จาก RPC tta_handle_summary — รวมยอดฝั่ง Supabase แล้ว)
   const adsByHandle = {};
-  ttaByClip.forEach(c => {
-    const h = cpNormHandle(c.handle);
+  cpTta.handles.forEach(r => {
+    const h = cpNormHandle(r.handle || '');
     if (!adsByHandle[h]) adsByHandle[h] = { clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
-    adsByHandle[h].clips++; adsByHandle[h].spend += c.spend; adsByHandle[h].orders += c.orders; adsByHandle[h].purchaseValue += c.purchaseValue;
+    adsByHandle[h].clips += +r.clips || 0; adsByHandle[h].spend += +r.spend || 0; adsByHandle[h].orders += +r.orders || 0; adsByHandle[h].purchaseValue += +r.gross_revenue || 0;
   });
   // ฝั่งค่าจ้าง KOL ต่อ creator
   const kolByHandle = {};
@@ -3802,7 +3893,7 @@ function renderCpAdsCreatorSummary() {
   const totalCreators = Object.keys(ordByHandle).length;
   const feeInRange = posts.reduce((s, p) => s + p.budget, 0);
   const spendInRange = Object.values(adsByHandle).reduce((s, a) => s + a.spend, 0);
-  fillCpCostKpis(feeInRange, spendInRange, _cpVideosRev, { fee: `${fmt(posts.length)} โพสต์ TikTok · ${fmt(Object.keys(kolByHandle).length)} creator`, spend: `${fmt(ttaByClip.length)} คลิป · ${fmt(Object.keys(adsByHandle).length)} ช่อง` });
+  fillCpCostKpis(feeInRange, spendInRange, _cpVideosRev, { fee: `${fmt(posts.length)} โพสต์ TikTok · ${fmt(Object.keys(kolByHandle).length)} creator`, spend: `${fmt(Object.values(adsByHandle).reduce((s, a) => s + a.clips, 0))} คลิป · ${fmt(Object.keys(adsByHandle).length)} ช่อง` });
   renderCpTrendChart();
   const feeUnlinked = posts.filter(p => !ordByHandle[p.handle]).reduce((s, p) => s + p.budget, 0);
   const unmatchedRev = Object.keys(ordByHandle).filter(h => !adsByHandle[h] && !kolByHandle[h]).reduce((s, h) => s + ordByHandle[h].rev, 0);
@@ -3833,7 +3924,7 @@ const CP_SHOW_HIRED_ONLY_POSTS = false;
 function cpAdsRowsOfSelected() {
   const from = getDateValue('From'), to = getDateValue('To');
   const target = cpNormHandle(cpSelectedCreator);
-  const clips = ttaByClip.filter(c => cpNormHandle(c.handle) === target);
+  const clips = cpTta.clipsByHandle[target] || [];
   const clipIds = new Set(clips.map(c => c.item_id));
   const posts = kolPostsInRange(from, to).filter(p => p.handle === target || (p.item_id && clipIds.has(p.item_id)));
   const postByItem = {};
@@ -6260,7 +6351,10 @@ async function refreshDashboardData() {
   // ล้างแคชฝั่ง TikTok Ads + ค่าจ้าง KOL ด้วย (ตารางในหน้า Creator / KOL) ให้โหลดใหม่รอบถัดไป
   _kolPostsLoaded = false; ttaLastRange = null;
   idbSet(KOL_CACHE_KEY, null);
-  if (currentPage === 'kol' || currentPage === 'creatorperf' || currentPage === 'ttads') { const f = getDateValue('From'), t = getDateValue('To'); idbSet('tta:' + f + '|' + t, null); }
+  if (currentPage === 'kol' || currentPage === 'creatorperf' || currentPage === 'ttads') { const f = getDateValue('From'), t = getDateValue('To'); idbSet('tta:' + f + '|' + t, null); idbSet('cptta:' + f + '|' + t, null); }
+  cpTta.rangeKey = null;
+  salesSum.rangeKey = null;
+  { const f = getDateValue('From'), t = getDateValue('To'); const p = getPrevPeriodRange(f, t); idbSet('sales:' + (p.from || f) + '|' + t, null); }
   const btn = document.getElementById('btnRefreshMV')
   const statusEl = document.getElementById('refreshMVStatus')
   const barWrap = document.getElementById('refreshMVBarWrap')
@@ -6293,7 +6387,7 @@ async function refreshDashboardData() {
       fetchSkuParentMonthly().then(refreshTick('SKU รายเดือน')),
       fetchProvinceMonthly().then(refreshTick('ยอดขายรายจังหวัด')),
       fetchSkuAll().then(refreshTick('รายการ SKU ต่อออเดอร์')),
-      fetchDailyChannelSummary().then(refreshTick('สรุปยอดรายวัน (MV)'))
+      Promise.resolve([]).then(refreshTick('สรุปยอดรายวัน')) // เฟส 1: หน้าภาพรวมใช้ sales_summary() แล้ว ไม่ต้องโหลด MV 53k แถว
     ])
     dailyChannelSummaryAll = dailyChannelSummary;
     allData = orders.filter(r => !isExcludedRow(r))
@@ -7044,7 +7138,7 @@ async function fetchFreshSnapshot() {
     fetchProvinceMonthly().then(tick('ยอดขายรายจังหวัด')),
     fetchPromotionsMap().then(tick('ชื่อโปรโมชั่น')),
     fetchSkuAll().then(tick('รายการ SKU ต่อออเดอร์')),
-    fetchDailyChannelSummary().then(tick('สรุปยอดรายวัน (MV)'))
+    Promise.resolve([]).then(tick('สรุปยอดรายวัน')) // เฟส 1: หน้าภาพรวมใช้ sales_summary() แล้ว ไม่ต้องโหลด MV 53k แถว
   ])
   dailyChannelSummaryAll = dailyChannelSummary;
   const ordersFiltered = orders.filter(r => !isExcludedRow(r))
@@ -7938,7 +8032,7 @@ function kolBuildData() {
   const fSearch = (document.getElementById('kolFilterSearch')?.value || '').toLowerCase().trim();
 
   const clipById = {};
-  ttaByClip.forEach(c => { clipById[c.item_id] = c; });
+  cpTta.kolClips.forEach(c => { clipById[c.item_id] = c; });
 
   // โพสต์ทุกแพลตฟอร์มในช่วง (นับตามวันโพสต์)
   // สินค้าที่ creator แต่ละคนเคยรีวิว (ทั้ง sheet ไม่จำกัดช่วง) — ใช้กระจาย "งบรวม/รวม"
@@ -8026,12 +8120,12 @@ async function renderKolPage() {
   const from = getDateValue('From'), to = getDateValue('To');
   const seq = ++_kolLoadSeq;
   const kpi = document.getElementById('kol-kpis'); if (!kpi) return;
-  if (!_kolPostsLoaded || ttaLastRange !== from + '|' + to) {
+  if (!_kolPostsLoaded || cpTta.rangeKey !== from + '|' + to) {
     kpi.innerHTML = Array.from({ length: 6 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
     try {
       const rerender = () => { if (currentPage === 'kol' && seq === _kolLoadSeq) renderKolPage(); };
       await ensureKolPosts(rerender);
-      await ensureTtaDataForRange(from, to, rerender);
+      await ensureCpTta(from, to, rerender);
     } catch (e) {
       kpi.innerHTML = `<div class="card" style="flex:1;"><div style="color:var(--red);font-size:12px;">โหลดข้อมูลไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`;
       return;
@@ -8220,3 +8314,4 @@ init();
 </script>
 </body>
 </html>
+  
