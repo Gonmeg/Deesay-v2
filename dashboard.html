@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.03-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.03-d</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1914,7 +1914,7 @@ function buildMonthPresetList() {
   const el = document.getElementById('datePresetMonthList');
   if (!el) return;
   // ใช้เดือนที่มีข้อมูลจริงในระบบเท่านั้น (เดิมไล่ย้อนหลัง 12 เดือนจากวันนี้ตรงๆ ทำให้โผล่เดือนที่ยังไม่มีข้อมูลเลย หรือขาดเดือนเก่ากว่านั้นที่จริงมีข้อมูลอยู่)
-  const monthsWithData = [...new Set((allData || []).map(r => (r.date || '').substring(0,7)).filter(Boolean))].sort().reverse();
+  const monthsWithData = _filterOptions ? _filterOptions.months : [...new Set((allData || []).map(r => (r.date || '').substring(0,7)).filter(Boolean))].sort().reverse();
   el.innerHTML = monthsWithData.map(m => {
     const [y, mo] = m.split('-');
     return `<div onclick="setDatePresetMonth('${m}')" style="padding:6px 12px;cursor:pointer;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${MONTHS_TH[parseInt(mo)-1]} ${y}</div>`;
@@ -2208,7 +2208,7 @@ function onChannelChange() {
   const ch = document.getElementById('filterChannel').value;
   const subSel = document.getElementById('filterSubChannel');
   if (ch) {
-    const subs = [...new Set(allData.filter(r => r.channel === ch).map(r => r.sub_channel).filter(Boolean))].sort();
+    const subs = _filterOptions ? (_filterOptions.subs[ch] || []) : [...new Set(allData.filter(r => r.channel === ch).map(r => r.sub_channel).filter(Boolean))].sort();
     subSel.innerHTML = '<option value="">ทั้งหมด</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
   } else {
     subSel.innerHTML = '<option value="">ทั้งหมด</option>';
@@ -3260,17 +3260,17 @@ function renderMtAdsChart() {
 }
 
 // Top SKU (Modern Trade) — เลือกกรองตามร้านได้ (default = ทั้งหมด)
-function renderMtTopSkuTable() {
+async function renderMtTopSkuTable() {
   const from = getDateValue('From'), to = getDateValue('To');
   const storeFilter = document.getElementById('mtTopSkuStoreFilter')?.value || '';
-  const skuRows = skuRevenueAll.filter(r => r.channel === 'Modern Trade' && r.date && r.date >= from && r.date <= to && (!storeFilter || r.sub_channel === storeFilter));
+  // เฟส 3: RPC sku_top (mv_sku_daily) กรองช่อง MT + ร้าน
+  const seq = (renderMtTopSkuTable._seq = (renderMtTopSkuTable._seq || 0) + 1);
+  let rows = [];
+  try { rows = await supaRpc('sku_top', { p_from: from, p_to: to, p_channel: 'Modern Trade', p_sub: storeFilter || null }, true); }
+  catch (e) { document.getElementById('tbodyMtTopSKU').innerHTML = `<tr><td colspan="6" class="empty">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</td></tr>`; return; }
+  if (seq !== renderMtTopSkuTable._seq) return;
   const bySku = {};
-  skuRows.forEach(r => {
-    const k = r.parent_sku || '—';
-    if (!bySku[k]) bySku[k] = { rev: 0, qty: 0 };
-    bySku[k].rev += parseFloat(r.revenue_share) || 0;
-    bySku[k].qty += parseFloat(r.qty) || 0;
-  });
+  rows.forEach(r => { bySku[r.parent_sku || '—'] = { rev: parseFloat(r.revenue) || 0, qty: parseFloat(r.qty) || 0 }; });
   const totalSkuRev = Object.values(bySku).reduce((s,v) => s+v.rev, 0) || 1;
   const sortedSku = Object.entries(bySku).sort((a,b) => b[1].rev - a[1].rev).slice(0,20);
   document.getElementById('tbodyMtTopSKU').innerHTML = sortedSku.length ? sortedSku.map(([sku,v],i) => `
@@ -3287,8 +3287,7 @@ let cpSelectedCreator = null;
 let _cpAllCreators = [];
 
 function populateCpCreatorList() {
-  const ttData = allData.filter(r => r.channel === 'TikTok');
-  _cpAllCreators = [...new Set(ttData.map(r => r.creator_handle).filter(Boolean))].sort();
+  ensureCreatorList().catch(e => console.warn('creator_list', e.message));   // เฟส 3: จาก RPC creator_list (mv_creator_daily)
 }
 function showCpCreatorDropdown() { filterCpCreatorDropdown(); const l=document.getElementById('cpCreatorDropdown'); if(l) l.style.display='block'; }
 function hideCpCreatorDropdown() { const l=document.getElementById('cpCreatorDropdown'); if(l) l.style.display='none'; }
@@ -3317,13 +3316,14 @@ function clearCpCreator() {
 }
 
 function renderCpTopCreatorTables(dAllTypes) {
+  // dAllTypes = แถวสรุปจาก creator_summary (creator_handle × order_channel) — เฟส 3
   function buildCreatorTable(rows, tbodyId) {
     const byCreator = {};
     rows.forEach(r => {
       const k = r.creator_handle || 'deesaythailand';
       if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
       byCreator[k].rev += parseFloat(r.revenue) || 0;
-      byCreator[k].ord++;
+      byCreator[k].ord += parseInt(r.orders) || 0;
     });
     const sorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 10);
     document.getElementById(tbodyId).innerHTML = sorted.length ? sorted.map(([k,v]) => `
@@ -3349,19 +3349,11 @@ function renderCpTrendingCreators(to) {
   document.getElementById('cp-trending-daterange').textContent =
     `(${last7Start} ถึง ${last7End} เทียบกับ ${prev7Start} ถึง ${prev7End})`;
 
-  const ttAll = allData.filter(r => r.channel === 'TikTok' && shouldIncludeRow(r));
+  const ttAll = cpCreator.trend;   // เฟส 3: จาก RPC creator_trend (7 วันล่าสุด vs 7 วันก่อน ต่อ creator × order_channel)
 
   function buildTrendTable(rows, tbodyId) {
-    const last7 = rows.filter(r => r.date >= last7Start && r.date <= last7End);
-    const prev7 = rows.filter(r => r.date >= prev7Start && r.date <= prev7End);
-
-    const revByCreator = arr => {
-      const m = {};
-      arr.forEach(r => { const k = r.creator_handle || 'deesaythailand'; m[k] = (m[k]||0) + (parseFloat(r.revenue)||0); });
-      return m;
-    };
-    const last7Map = revByCreator(last7);
-    const prev7Map = revByCreator(prev7);
+    const last7Map = {}, prev7Map = {};
+    rows.forEach(r => { const k = r.creator_handle || 'deesaythailand'; last7Map[k] = (last7Map[k]||0) + (parseFloat(r.last7_revenue)||0); prev7Map[k] = (prev7Map[k]||0) + (parseFloat(r.prev7_revenue)||0); });
 
     const rowsOut = Object.entries(last7Map)
       .filter(([k, rev]) => rev >= 1000) // กันสัญญาณรบกวนจากยอดน้อยเกินไป
@@ -3393,26 +3385,32 @@ function renderCpTrendingCreators(to) {
   buildTrendTable(ttAll.filter(r => r.order_channel === 'Videos'), 'tbodyCpTrendVideo');
 }
 
-function renderCreatorPerf() {
+async function renderCreatorPerf() {
   const overviewEl = document.getElementById('cp-overview-section');
   if (overviewEl) overviewEl.style.display = cpSelectedCreator ? 'none' : 'block';
 
   const from = getDateValue('From'), to = getDateValue('To');
-  const creatorFilter = r => cpSelectedCreator ? (r.creator_handle === cpSelectedCreator) : true;
-  const dAll = allData.filter(r => r.channel === 'TikTok' && creatorFilter(r) &&
-    r.date && r.date >= from && r.date <= to);
-  const d = dAll.filter(r => shouldIncludeRow(r));
+  // เฟส 3: จาก mv_creator_daily ผ่าน RPC (สรุปต่อคน / มาแรง / Top SKU / รายวัน) — ไม่แตะ allData
+  const seq = (renderCreatorPerf._seq = (renderCreatorPerf._seq || 0) + 1);
+  let detail = null;
+  try {
+    await ensureCreatorData(from, to, () => { if (currentPage === 'creatorperf' && seq === renderCreatorPerf._seq) renderCreatorPerf(); });
+    if (cpSelectedCreator) detail = await ensureCreatorDetail(from, to, cpSelectedCreator);
+  } catch (e) { showError('โหลดข้อมูล creator ไม่สำเร็จ: ' + e.message); return; }
+  if (seq !== renderCreatorPerf._seq || currentPage !== 'creatorperf') return;
+
+  const d = cpSelectedCreator ? cpCreator.summary.filter(r => r.creator_handle === cpSelectedCreator) : cpCreator.summary;
+  const dailyRows = cpSelectedCreator ? detail.daily : cpCreator.daily;
+  const topSkuRows = cpSelectedCreator ? detail.topSku : cpCreator.topSku;
 
   if (!cpSelectedCreator) {
     renderCpTopCreatorTables(d);
     renderCpTrendingCreators(to);
   }
 
-  const cancelledRows = dAll.filter(r => r.cancel_return_type === 'Cancel' || r.cancel_return_type === 'Return/Refund');
-  const cancelledRev = cancelledRows.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-
+  const cancelledRev = d.reduce((s,r) => s + (parseFloat(r.cancelled_revenue)||0), 0);
   const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-  const totalOrd = d.length;
+  const totalOrd = d.reduce((s,r) => s + (parseInt(r.orders)||0), 0);
   const aov = totalOrd ? totalRev/totalOrd : 0;
 
   const skel = '<span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span>';
@@ -3431,21 +3429,12 @@ function renderCreatorPerf() {
 
   // เทรนด์รายวัน (ยอดขายจริง + ค่าแอด/ค่าจ้าง + จุดที่โพสต์) — วาดด้วยข้อมูลเท่าที่มี แล้ววาดซ้ำเมื่อฝั่ง Ads/KOL โหลดเสร็จ
   _cpTrendByDay = {};
-  d.forEach(r => { _cpTrendByDay[r.date] = (_cpTrendByDay[r.date]||0) + (parseFloat(r.revenue)||0); });
+  dailyRows.forEach(r => { _cpTrendByDay[r.date] = (_cpTrendByDay[r.date]||0) + (parseFloat(r.revenue)||0); });
   renderCpTrendChart();
   // KPI ROI / ต้นทุน อยู่ในแถวเดียวกัน (id cp-kpi-roi / cp-kpi-cost) — เติมเมื่อโหลด Ads/KOL เสร็จ
 
-  // Top SKU ของ creator นี้ (ใช้ sku_promotion แกะจากออเดอร์ตรงๆ เพราะ sku_revenue ไม่มี creator_handle)
-  const orderIds = new Set(d.map(r => r.order_id));
-  const skuRows = skuRevenueAll.filter(r => r.channel === 'TikTok' && orderIds.has(r.order_id));
-  const bySku = {};
-  skuRows.forEach(r => {
-    const k = r.parent_sku || '—';
-    if (!bySku[k]) bySku[k] = { rev: 0, qty: 0 };
-    bySku[k].rev += parseFloat(r.revenue_share) || 0;
-    bySku[k].qty += parseFloat(r.qty) || 0;
-  });
-  const sortedSku = Object.entries(bySku).sort((a,b) => b[1].rev - a[1].rev).slice(0,15);
+  // Top SKU (เฟส 3: จาก RPC creator_top_sku บน mv_creator_sku_daily — revenue_share ต่อ SKU)
+  const sortedSku = topSkuRows.map(r => [r.parent_sku || '—', { rev: parseFloat(r.revenue) || 0, qty: parseFloat(r.qty) || 0 }]).sort((a,b) => b[1].rev - a[1].rev).slice(0,15);
   document.getElementById('tbodyCpSku').innerHTML = sortedSku.length ? sortedSku.map(([sku,v],i) => `
     <tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
@@ -3459,7 +3448,7 @@ function renderCreatorPerf() {
     const k = r.order_channel || 'ไม่ระบุ';
     if (!byOC[k]) byOC[k] = { rev: 0, ord: 0 };
     byOC[k].rev += parseFloat(r.revenue) || 0;
-    byOC[k].ord++;
+    byOC[k].ord += parseInt(r.orders) || 0;
   });
   const ocSorted = Object.entries(byOC).sort((a,b) => b[1].rev - a[1].rev);
   document.getElementById('tbodyCpOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
@@ -3680,7 +3669,73 @@ async function hubPrepare(page) {
   const from = getDateValue('From'), to = getDateValue('To');
   const seq = (hubPrepare._seq = (hubPrepare._seq || 0) + 1);
   await ensureSalesSummary(from, to, () => { if (currentPage === page && seq === hubPrepare._seq) renderCurrentPage(); });
+  if (page === 'tthub') { try { await ensureFreeSamples(from, to); } catch (e) { console.warn('free samples', e.message); } }
   return seq === hubPrepare._seq && currentPage === page;
+}
+// ===== เฟส 3: creator / SKU / ตัวอย่างฟรี / ตัวเลือกกรอง — จาก MV + RPC (ไม่ใช้ allData / sku_revenue ในเบราว์เซอร์อีก) =====
+const cpCreator = { rangeKey: null, summary: [], trend: [], topSku: [], daily: [], detail: {} };
+async function ensureCreatorData(from, to, onFresh) {
+  const key = from + '|' + to;
+  if (cpCreator.rangeKey === key) return;
+  const apply = d => { cpCreator.rangeKey = key; cpCreator.summary = d.summary; cpCreator.trend = d.trend; cpCreator.topSku = d.topSku; cpCreator.daily = d.daily; cpCreator.detail = {}; };
+  const load = async () => {
+    setBgSync('รวมยอด creator (Supabase)...', 30);
+    const summary = await supaRpc('creator_summary', { p_from: from, p_to: to }, true);
+    const trend = await supaRpc('creator_trend', { p_to: to }, true);
+    const topSku = await supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: null }, true);
+    const daily = await supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: null }, true);
+    setBgSync(`creator ${fmt(new Set(summary.map(r => r.creator_handle)).size)} คน อัปเดตแล้ว`, null);
+    const d = { summary, trend, topSku, daily, cachedAt: Date.now() };
+    idbSet('creator:' + key, d);
+    return d;
+  };
+  const cached = await idbGet('creator:' + key);
+  if (cached && cached.summary) {
+    apply(cached);
+    if (Date.now() - (cached.cachedAt || 0) > SALES_CACHE_MAX_AGE) load().then(d => { if (cpCreator.rangeKey === key) { apply(d); typeof onFresh === 'function' && onFresh(); } }).catch(e => console.warn('creator refresh failed:', e.message));
+    return;
+  }
+  apply(await load());
+}
+async function ensureCreatorDetail(from, to, handle) {
+  await ensureCreatorData(from, to);
+  if (cpCreator.detail[handle]) return cpCreator.detail[handle];
+  const [daily, topSku] = [await supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: handle }, true), await supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: handle }, true)];
+  cpCreator.detail[handle] = { daily, topSku };
+  return cpCreator.detail[handle];
+}
+let _creatorListLoaded = false;
+async function ensureCreatorList() {
+  if (_creatorListLoaded) return;
+  const rows = await supaRpc('creator_list', {}, true);
+  _cpAllCreators = rows.map(r => r.creator_handle).filter(Boolean).sort();
+  _creatorListLoaded = true;
+}
+// ตัวอย่างฟรี (ต่อ SKU) ในช่วงวันที่
+const freeSample = { rangeKey: null, rows: [] };
+async function ensureFreeSamples(from, to) {
+  const key = from + '|' + to;
+  if (freeSample.rangeKey === key) return;
+  freeSample.rows = await supaRpc('free_sample_by_sku', { p_from: from, p_to: to }, true);
+  freeSample.rangeKey = key;
+}
+// ตัวเลือกกรอง (เดือนที่มีข้อมูล / sub-channel ต่อช่อง) — โหลดครั้งเดียว
+let _filterOptions = null;
+async function ensureFilterOptions() {
+  if (_filterOptions) return _filterOptions;
+  const rows = await supaRpc('filter_options', {}, true);
+  const o = { months: [], subs: {} };
+  rows.forEach(r => { if (r.kind === 'month') o.months.push(r.value); else { (o.subs[r.channel] = o.subs[r.channel] || []).push(r.value); } });
+  o.months.sort().reverse(); Object.values(o.subs).forEach(a => a.sort());
+  _filterOptions = o;
+  return o;
+}
+// sku_revenue แบบเต็ม: โหลดเฉพาะเมื่อหน้า "ค้นหา Live" ต้องการ (ไม่โหลดตอนเปิด dashboard แล้ว)
+let _skuAllLoading = null;
+async function ensureSkuAllLazy() {
+  if (skuRevenueAll.length) return;
+  if (!_skuAllLoading) _skuAllLoading = (async () => { setBgSync('โหลดรายการ SKU ต่อออเดอร์ (สำหรับค้นหา Live)...', 20); skuRevenueAll = await fetchSkuAll(); setBgSync(`SKU ${fmt(skuRevenueAll.length)} แถว พร้อมแล้ว`, null); })();
+  await _skuAllLoading;
 }
 function salesRows(from, to, ch, sub) {
   return salesSum.rows.filter(r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub));
@@ -3856,13 +3911,12 @@ function renderCpAdsCreatorSummary() {
 
   // ยอดออเดอร์จริงฝั่ง Videos ต่อ creator (source: orders — ไม่รวม Cancel/Return)
   const ordByHandle = {};
-  allData.forEach(r => {
-    if (r.channel !== 'TikTok' || !r.date || r.date < from || r.date > to || !shouldIncludeRow(r)) return;
+  cpCreator.summary.forEach(r => {   // เฟส 3: จาก creator_summary (mv_creator_daily)
     if (r.order_channel !== 'Videos') return;
     const h = cpNormHandle(r.creator_handle || 'deesaythailand');
     if (!ordByHandle[h]) ordByHandle[h] = { display: r.creator_handle || 'deesaythailand', rev: 0, ord: 0 };
     ordByHandle[h].rev += parseFloat(r.revenue) || 0;
-    ordByHandle[h].ord++;
+    ordByHandle[h].ord += parseInt(r.orders) || 0;
   });
   // ฝั่ง Ads ต่อ creator (จาก RPC tta_handle_summary — รวมยอดฝั่ง Supabase แล้ว)
   const adsByHandle = {};
@@ -4085,7 +4139,7 @@ function toComparableDT(v) {
   return v.length === 16 ? v + ':00' : v; // เติมวินาทีให้ถ้ายังไม่มี (บาง browser ไม่ส่งวินาทีมาให้)
 }
 
-function runLiveSearch() {
+async function runLiveSearch() {
   const creators = lsSelectedCreators;
   const fromV = document.getElementById('lsFrom').value;
   const toV = document.getElementById('lsTo').value;
@@ -4094,6 +4148,11 @@ function runLiveSearch() {
   if (!creators.length || !fromV || !toV) {
     document.getElementById('ls-kpis').innerHTML = '<div class="card" style="color:var(--red);">กรุณาเลือก Creator Handle และช่วงเวลาให้ครบ</div>';
     return;
+  }
+  // เฟส 3: sku_revenue ไม่โหลดตอนเปิด dashboard แล้ว — โหลดเฉพาะเมื่อหน้านี้ต้องการ (ครั้งเดียวต่อ session; เฟส 4 จะเปลี่ยนเป็นค้นที่ server)
+  if (!skuRevenueAll.length) {
+    document.getElementById('ls-kpis').innerHTML = '<div class="card">⏳ โหลดรายการ SKU ต่อออเดอร์ครั้งแรก (ครั้งเดียว)...</div>';
+    try { await ensureSkuAllLazy(); } catch (e) { showError('โหลด SKU ไม่สำเร็จ: ' + e.message); return; }
   }
 
   const fromISO = toComparableDT(fromV);
@@ -5444,19 +5503,30 @@ function getSKUQty(r, sku) {
   return qty;
 }
 
-function runSkuAnalysis() {
+async function runSkuAnalysis() {
   if (selectedAnalysisSKUs.length === 0) return;
   document.getElementById('skuAnalysisEmpty').style.display = 'none';
   document.getElementById('skuAnalysisContent').style.display = 'block';
-  const skus = selectedAnalysisSKUs, d = filteredData, isCompare = skus.length > 1;
-  // ยอดขาย/จำนวนชิ้น "แกะจากโปรแล้ว" — แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU (ไม่ใช่ยอดขายเต็มออเดอร์แบบเดิม)
-  const skuRev = getFilteredSkuRevenue();
+  const skus = selectedAnalysisSKUs, isCompare = skus.length > 1;
+  const from = getDateValue('From'), to = getDateValue('To');
+  // เฟส 3: แถวรายวัน×ช่อง×sub×โปร ของ SKU ที่เลือก จาก RPC sku_summary (mv_sku_daily — revenue_share, ตัด Cancel/Return + ตัวอย่างฟรี เหมือนทุกหน้า)
+  const seq = (runSkuAnalysis._seq = (runSkuAnalysis._seq || 0) + 1);
+  document.getElementById('skuAnalysisKPIs').innerHTML = skus.map(() => `<div class="card"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
+  let skuRev = [], custRows = [];
+  try {
+    skuRev = await supaRpc('sku_summary', { p_from: from, p_to: to, p_channel: null, p_skus: skus }, true);
+    custRows = await supaRpc('sku_fb_customers', { p_from: from, p_to: to, p_skus: skus }, true);
+  } catch (e) { showError('โหลดข้อมูล SKU ไม่สำเร็จ: ' + e.message); return; }
+  if (seq !== runSkuAnalysis._seq) return;
+  const chF = document.getElementById('filterChannel').value, subF = document.getElementById('filterSubChannel').value;
+  if (chF) skuRev = skuRev.filter(r => r.channel === chF);
+  if (subF) skuRev = skuRev.filter(r => r.sub_channel === subF);
 
   document.getElementById('skuAnalysisKPIs').innerHTML = skus.map((sku, i) => {
     const rows = skuRev.filter(r => r.parent_sku === sku);
-    const rev = rows.reduce((s,r) => s+(parseFloat(r.revenue_share)||0), 0);
+    const rev = rows.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
     const qty = rows.reduce((s,r) => s+(parseFloat(r.qty)||0), 0);
-    const ord = new Set(rows.map(r=>r.order_id)).size;
+    const ord = rows.reduce((s,r) => s+(parseInt(r.orders)||0), 0);
     return `<div class="card" style="border-color:${COLORS[i]}40;">
       <div class="card-title" style="color:${COLORS[i]};">${skuToName(sku)}</div>
       <div class="kpi-value">฿${fmtB(rev)}</div>
@@ -5464,24 +5534,24 @@ function runSkuAnalysis() {
     </div>`;
   }).join('');
 
-  window._skuAnalysisData = { skus, d, skuRev, isCompare };
+  window._skuAnalysisData = { skus, skuRev, isCompare };
   renderSkuAnalysisTrend();
 
   const channelList = [...new Set(skuRev.map(r=>r.channel).filter(Boolean))];
   makeChart('chartSkuAnalysisChannel', 'bar', channelList, skus.map((sku,i) => ({
-    label: skuToName(sku), data: channelList.map(ch => skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0)),
+    label: skuToName(sku), data: channelList.map(ch => skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).reduce((s,r)=>s+(parseFloat(r.revenue)||0),0)),
     backgroundColor: COLORS[i]+'cc', borderColor: COLORS[i], borderWidth:1, borderRadius:4
   })));
 
-  const totalRevAll = skuRev.filter(r=>skus.includes(r.parent_sku)).reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0)||1;
+  const totalRevAll = skuRev.filter(r=>skus.includes(r.parent_sku)).reduce((s,r)=>s+(parseFloat(r.revenue)||0),0)||1;
   let chRows = [];
   channelList.forEach(ch => {
     skus.forEach((sku,i) => {
       const rows = skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch);
       if (!rows.length) return;
-      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0);
+      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
       const qty = rows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
-      const ord = new Set(rows.map(r=>r.order_id)).size;
+      const ord = rows.reduce((s,r)=>s+(parseInt(r.orders)||0),0);
       chRows.push({ch,sku,rev,ord,qty,i});
     });
   });
@@ -5506,33 +5576,32 @@ function runSkuAnalysis() {
   promoChannelList.forEach(ch => {
     skus.forEach(sku => {
       skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).forEach(r => {
-        const promo = orderIdToPromo[r.order_id] || '—';
+        const promo = r.sku_promotion || '—';
         const key = ch+'||'+promo;
-        if (!promoAgg[key]) promoAgg[key]={ch,promo,rev:0,qty:0,orderIds:new Set()};
-        promoAgg[key].rev += parseFloat(r.revenue_share)||0;
+        if (!promoAgg[key]) promoAgg[key]={ch,promo,rev:0,qty:0,ord:0};
+        promoAgg[key].rev += parseFloat(r.revenue)||0;
         promoAgg[key].qty += parseFloat(r.qty)||0;
-        promoAgg[key].orderIds.add(r.order_id);
+        promoAgg[key].ord += parseInt(r.orders)||0;
       });
     });
   });
-  const allPromoRows = Object.values(promoAgg).map(v => ({ch:v.ch, promo:v.promo, rev:v.rev, qty:v.qty, ord:v.orderIds.size}));
+  const allPromoRows = Object.values(promoAgg).map(v => ({ch:v.ch, promo:v.promo, rev:v.rev, qty:v.qty, ord:v.ord}));
   const promoRows = [];
   promoChannelList.forEach(ch => { allPromoRows.filter(r=>r.ch===ch).sort((a,b)=>b.rev-a.rev).slice(0,5).forEach(r=>promoRows.push(r)); });
   window._skuPromoRows = promoRows;
   renderSkuAnalysisPromo();
 
-  const fbRows = d.filter(r=>r.channel==='Facebook').filter(r=>skus.some(sku=>rowHasSKU(r,sku)));
-  const byPhone={};
-  fbRows.forEach(r=>{ const p=r.phone||''; if(!p||p.length<5)return; byPhone[p]=(byPhone[p]||0)+1; });
-  const totalCust=Object.keys(byPhone).length, repeatCust=Object.values(byPhone).filter(v=>v>=2).length;
-  const maxPurchase=Math.max(...Object.values(byPhone),0);
-  const avgFreq=totalCust?(Object.values(byPhone).reduce((s,v)=>s+v,0)/totalCust).toFixed(1):0;
+  // ลูกค้า FB ที่ซื้อ SKU นี้ — เฟส 3: จาก RPC sku_fb_customers คืน (จำนวนครั้ง, จำนวนลูกค้า)
+  const totalCust = custRows.reduce((s,r)=>s+(parseInt(r.customers)||0),0);
+  const repeatCust = custRows.filter(r=>parseInt(r.purchases)>=2).reduce((s,r)=>s+(parseInt(r.customers)||0),0);
+  const maxPurchase = custRows.reduce((m,r)=>Math.max(m,parseInt(r.purchases)||0),0);
+  const avgFreq = totalCust ? (custRows.reduce((s,r)=>s+(parseInt(r.purchases)||0)*(parseInt(r.customers)||0),0)/totalCust).toFixed(1) : 0;
   document.getElementById('skuAnalysisCRMKPIs').innerHTML=`
     <div class="card"><div class="card-title">ลูกค้า FB ที่ซื้อ SKU นี้</div><div class="kpi-value">${fmt(totalCust)}</div><div class="kpi-sub">unique เบอร์โทร</div></div>
     <div class="card"><div class="card-title">ซื้อซ้ำ (2+ ครั้ง)</div><div class="kpi-value">${fmt(repeatCust)}</div><div class="kpi-sub">${fmtPct(repeatCust,totalCust)} ของลูกค้าทั้งหมด</div></div>
     <div class="card"><div class="card-title">ซื้อเฉลี่ย / คน</div><div class="kpi-value">${avgFreq}</div><div class="kpi-sub">สูงสุด ${fmt(maxPurchase)} ครั้ง</div></div>`;
   const cgroups={'1':0,'2':0,'3':0,'4':0,'5':0,'6+':0};
-  Object.values(byPhone).forEach(v=>{ if(v<=5) cgroups[v+'']++; else cgroups['6+']++; });
+  custRows.forEach(r=>{ const v=parseInt(r.purchases)||0, n=parseInt(r.customers)||0; if(v<=5) cgroups[v+'']+=n; else cgroups['6+']+=n; });
   makeChart('chartSkuAnalysisCRM','bar',Object.keys(cgroups).map(k=>k+' ครั้ง'), [{label:'จำนวนลูกค้า',data:Object.values(cgroups),backgroundColor:COLORS,borderRadius:4}]);
 }
 
@@ -5566,7 +5635,7 @@ function renderSkuAnalysisTrend() {
   const days = [...new Set(skuRev.map(r=>r.date).filter(Boolean))].sort();
   const datasets = skus.map((sku,i)=>{
     const daily={};
-    skuRev.filter(r=>r.parent_sku===sku).forEach(r=>{ if(!r.date)return; if(!daily[r.date])daily[r.date]={rev:0,qty:0}; daily[r.date].rev+=parseFloat(r.revenue_share)||0; daily[r.date].qty+=parseFloat(r.qty)||0; });
+    skuRev.filter(r=>r.parent_sku===sku).forEach(r=>{ if(!r.date)return; if(!daily[r.date])daily[r.date]={rev:0,qty:0}; daily[r.date].rev+=parseFloat(r.revenue)||0; daily[r.date].qty+=parseFloat(r.qty)||0; });
     return { label:skuToName(sku), data:days.map(day=>daily[day]?.[mode==='revenue'?'rev':'qty']||0), borderColor:COLORS[i], backgroundColor:COLORS[i]+'20', borderWidth:2, pointRadius:days.length>60?0:2, tension:0.3, fill:false };
   });
   makeChart('chartSkuAnalysisTrend','line',days,datasets);
@@ -5689,7 +5758,8 @@ async function fetchMTAdsData() {
 function getAdDateFiltered() {
   const from = getDateValue('From'), to = getDateValue('To');
   const ads = adRawData.filter(r => r.date >= from && r.date <= to);
-  const orders = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r));
+  // เฟส 3: GMV รายวันจาก mv_sales_daily (แหล่งเดียวกับทุกหน้า) — แถวสรุป (date, channel, sub_channel, revenue)
+  const orders = salesRows(from, to, '', '').map(r => ({ date: r.date, channel: r.channel, sub_channel: r.sub_channel, revenue: parseFloat(r.net_revenue) || 0 }));
   return { ads, orders };
 }
 
@@ -5764,12 +5834,13 @@ function toggleCRPopover(hub) {
   if (!isOpen) { el.innerHTML = CANCEL_RETURN_INFO[hub].replace(/\n/g,'<br>'); el.style.display = 'block'; }
 }
 function freeSampleCardHtml(from, to) {
-  const rows = freeSampleRows.filter(r => r.date && r.date >= from && r.date <= to);
+  // เฟส 3: จาก RPC free_sample_by_sku (โหลดใน hubPrepare) — แถวต่อ SKU × ช่อง
+  const rows = (freeSample.rangeKey === from + '|' + to) ? freeSample.rows : [];
   if (rows.length === 0) {
     return `<div class="card" style="flex:1;min-width:160px;"><div class="card-title">ตัวอย่าง/รีวิวที่ส่งฟรี</div><div class="kpi-value" style="color:var(--text3);font-size:15px;">ไม่มีในช่วงนี้</div></div>`;
   }
   const qty = rows.reduce((s,r) => s + (parseFloat(r.qty)||0), 0);
-  const orderIds = new Set(rows.map(r => r.order_id));
+  const orderIds = { size: rows.reduce((s,r) => s + (parseInt(r.orders)||0), 0) };
   return `<div class="card" style="flex:1;min-width:160px;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.05);">
     <div class="card-title" style="color:#a78bfa;">ตัวอย่าง/รีวิวที่ส่งฟรี <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFreeSamplePopover()" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tt-freesample-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
     <div class="kpi-value" style="color:#a78bfa;">${fmt(qty)} ชิ้น</div>
@@ -5905,12 +5976,15 @@ function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) 
   makeAdChart(chartId, labels, gmvArr, adsArr, pctArr);
 }
 
-function renderAdpAll() {
+async function renderAdpAll() {
   if (adRawData.length === 0) {
     const sEl = document.getElementById('adp-summary');
     if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่าแอดจาก Google Sheets...';
     fetchAdData().then(()=>renderAdpAll()); return;
   }
+  { const f = getDateValue('From'), t = getDateValue('To'); const seq = (renderAdpAll._seq = (renderAdpAll._seq || 0) + 1);
+    try { await ensureSalesSummary(f, t, () => { if (currentPage === 'adperf' && seq === renderAdpAll._seq) renderAdpAll(); }); } catch (e) { showError('โหลดยอดขายไม่สำเร็จ: ' + e.message); return; }
+    if (seq !== renderAdpAll._seq) return; }
   const { ads, orders } = getAdDateFiltered();
   const a = aggAdGmv(ads, orders, adView);
   const labels = a.map(([k])=>adLabel(k));
@@ -6355,6 +6429,8 @@ async function refreshDashboardData() {
   if (currentPage === 'kol' || currentPage === 'creatorperf' || currentPage === 'ttads') { const f = getDateValue('From'), t = getDateValue('To'); idbSet('tta:' + f + '|' + t, null); idbSet('cptta:' + f + '|' + t, null); }
   cpTta.rangeKey = null;
   salesSum.rangeKey = null;
+  cpCreator.rangeKey = null; freeSample.rangeKey = null; _filterOptions = null; _creatorListLoaded = false;
+  { const f = getDateValue('From'), t = getDateValue('To'); idbSet('creator:' + f + '|' + t, null); }
   { const f = getDateValue('From'), t = getDateValue('To'); const p = getPrevPeriodRange(f, t); idbSet('sales:' + (p.from || f) + '|' + t, null); }
   const btn = document.getElementById('btnRefreshMV')
   const statusEl = document.getElementById('refreshMVStatus')
@@ -6387,7 +6463,7 @@ async function refreshDashboardData() {
       fetchPromoMonthly().then(refreshTick('โปรโมชั่นรายเดือน')),
       fetchSkuParentMonthly().then(refreshTick('SKU รายเดือน')),
       fetchProvinceMonthly().then(refreshTick('ยอดขายรายจังหวัด')),
-      fetchSkuAll().then(refreshTick('รายการ SKU ต่อออเดอร์')),
+      Promise.resolve([]).then(refreshTick('รายการ SKU ต่อออเดอร์')), // เฟส 3: ไม่โหลด sku_revenue 278k แถวอีก (หน้า SKU/creator ใช้ MV+RPC)
       Promise.resolve([]).then(refreshTick('สรุปยอดรายวัน')) // เฟส 1: หน้าภาพรวมใช้ sales_summary() แล้ว ไม่ต้องโหลด MV 53k แถว
     ])
     dailyChannelSummaryAll = dailyChannelSummary;
@@ -6650,14 +6726,14 @@ async function renderCostPage() {
       qtyByMonthSku[m][r.parent_sku] = (qtyByMonthSku[m][r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
     });
 
-    // จำนวนตัวอย่าง/รีวิวฟรี (ทุกช่องทาง) แยกต่างหาก ไม่รวมใน qtyBySKU
+    // จำนวนตัวอย่าง/รีวิวฟรี (ทุกช่องทาง) แยกต่างหาก ไม่รวมใน qtyBySKU — เฟส 3: RPC free_sample_by_sku ตามช่วงเดือน
     const freeSampleQtyBySKU = {};
-    freeSampleRows.forEach(r => {
-      const m = r.date ? r.date.substring(0,7) : '';
-      if ((!from || m >= from) && (!to || m <= to)) {
-        freeSampleQtyBySKU[r.parent_sku] = (freeSampleQtyBySKU[r.parent_sku]||0) + (parseFloat(r.qty)||0);
-      }
-    });
+    try {
+      const fsFrom = (from || '2020-01') + '-01';
+      const fsToD = new Date((to || from) + '-01T00:00:00'); fsToD.setMonth(fsToD.getMonth() + 1); fsToD.setDate(0);
+      const fsTo = fmtDateISO(fsToD);
+      (await supaRpc('free_sample_by_sku', { p_from: fsFrom, p_to: fsTo }, true)).forEach(r => { freeSampleQtyBySKU[r.parent_sku] = (freeSampleQtyBySKU[r.parent_sku]||0) + (parseFloat(r.qty)||0); });
+    } catch (e) { console.warn('free_sample_by_sku', e.message); }
 
     const costByCatSku = {}, costByMonthSku = {}, costByMonthCatSku = {};
     filtered.forEach(r => {
@@ -7138,7 +7214,7 @@ async function fetchFreshSnapshot() {
     fetchSkuParentMonthly().then(tick('SKU รายเดือน')),
     fetchProvinceMonthly().then(tick('ยอดขายรายจังหวัด')),
     fetchPromotionsMap().then(tick('ชื่อโปรโมชั่น')),
-    fetchSkuAll().then(tick('รายการ SKU ต่อออเดอร์')),
+    Promise.resolve([]).then(tick('รายการ SKU ต่อออเดอร์')), // เฟส 3: ไม่โหลด sku_revenue 278k แถวอีก
     Promise.resolve([]).then(tick('สรุปยอดรายวัน')) // เฟส 1: หน้าภาพรวมใช้ sales_summary() แล้ว ไม่ต้องโหลด MV 53k แถว
   ])
   dailyChannelSummaryAll = dailyChannelSummary;
@@ -8059,13 +8135,12 @@ function kolBuildData() {
 
   // ยอดออเดอร์จริง TikTok Videos ต่อ creator ในช่วงเดียวกัน (source: orders)
   const revByHandle = {}, allOrderHandles = new Set();
-  allData.forEach(r => {
-    if (r.channel !== 'TikTok' || !r.date || r.date < from || r.date > to || !shouldIncludeRow(r)) return;
+  cpCreator.summary.forEach(r => {   // เฟส 3: จาก creator_summary (mv_creator_daily) ช่วงเดียวกัน
     const h = cpNormHandle(r.creator_handle || 'deesaythailand');
     allOrderHandles.add(h);
     if (r.order_channel !== 'Videos') return;
     if (!revByHandle[h]) revByHandle[h] = { rev: 0, ord: 0 };
-    revByHandle[h].rev += parseFloat(r.revenue) || 0; revByHandle[h].ord++;
+    revByHandle[h].rev += parseFloat(r.revenue) || 0; revByHandle[h].ord += parseInt(r.orders) || 0;
   });
 
   // ต่อ creator
@@ -8121,12 +8196,13 @@ async function renderKolPage() {
   const from = getDateValue('From'), to = getDateValue('To');
   const seq = ++_kolLoadSeq;
   const kpi = document.getElementById('kol-kpis'); if (!kpi) return;
-  if (!_kolPostsLoaded || cpTta.rangeKey !== from + '|' + to) {
+  if (!_kolPostsLoaded || cpTta.rangeKey !== from + '|' + to || cpCreator.rangeKey !== from + '|' + to) {
     kpi.innerHTML = Array.from({ length: 6 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
     try {
       const rerender = () => { if (currentPage === 'kol' && seq === _kolLoadSeq) renderKolPage(); };
       await ensureKolPosts(rerender);
       await ensureCpTta(from, to, rerender);
+      await ensureCreatorData(from, to, rerender);
     } catch (e) {
       kpi.innerHTML = `<div class="card" style="flex:1;"><div style="color:var(--red);font-size:12px;">โหลดข้อมูลไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`;
       return;
@@ -8277,6 +8353,7 @@ function renderKolDetail(handle, D) {
 
 async function init() {
   let usedCache = false;
+  ensureFilterOptions().then(() => { if (document.getElementById('filterChannel')?.value) onChannelChange(); }).catch(e => console.warn('filter_options', e.message)); // เฟส 3: dropdown เดือน/sub-channel จาก mv_sales_daily
   try {
     restoreOrDefaultDateFilter();
     const cached = await idbGet(CACHE_KEY)
