@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.03-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.03-e</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -3737,6 +3737,47 @@ async function ensureSkuAllLazy() {
   if (!_skuAllLoading) _skuAllLoading = (async () => { setBgSync('โหลดรายการ SKU ต่อออเดอร์ (สำหรับค้นหา Live)...', 20); skuRevenueAll = await fetchSkuAll(); setBgSync(`SKU ${fmt(skuRevenueAll.length)} แถว พร้อมแล้ว`, null); })();
   await _skuAllLoading;
 }
+// ===== เฟส 4 (แบบ A): ไม่โหลด orders ทั้งก้อนตอนเปิด — หน้า CRM 3 หน้าโหลดออเดอร์ Facebook อย่างเดียวเมื่อเปิดใช้ =====
+let fbOrders = [];           // ออเดอร์ Facebook ทั้งประวัติ (ตัด excluded sub-channel แล้ว) — ต้องทั้งประวัติเพื่อรู้ลูกค้าใหม่/เก่า
+let _fbOrdersLoaded = false, _fbOrdersLoading = null;
+const FB_ORDERS_CACHE_KEY = 'fb_orders_v1';
+async function ensureFbOrders() {
+  if (_fbOrdersLoaded) return;
+  if (_fbOrdersLoading) return _fbOrdersLoading;
+  _fbOrdersLoading = (async () => {
+    const cached = await idbGet(FB_ORDERS_CACHE_KEY);
+    if (cached && cached.rows && Date.now() - (cached.cachedAt || 0) < 60 * 60 * 1000) { fbOrders = cached.rows; _fbOrdersLoaded = true; _fbCustomerCache = null; return; }
+    setBgSync('โหลดออเดอร์ Facebook (สำหรับ CRM)...', 10);
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const baseUrl = `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,revenue,sku_promotion,cancel_return_type&channel=eq.Facebook&order=date.asc,order_id.asc`;
+    const rows = await fetchKeyset(baseUrl, headers, ['date', 'order_id'], 1000, (n) => setBgSync(`โหลดออเดอร์ Facebook (${fmt(n)} แถว)...`, Math.min(90, 10 + n / 1000)));
+    fbOrders = rows.filter(r => !isExcludedRow(r));
+    _fbOrdersLoaded = true; _fbCustomerCache = null;
+    setBgSync(`ออเดอร์ Facebook ${fmt(fbOrders.length)} แถว พร้อมแล้ว`, null);
+    idbSet(FB_ORDERS_CACHE_KEY, { rows: fbOrders, cachedAt: Date.now() });
+  })();
+  try { await _fbOrdersLoading; } finally { _fbOrdersLoading = null; }
+}
+function fbOrdersFiltered() {
+  const from = getDateValue('From'), to = getDateValue('To'), sub = document.getElementById('filterSubChannel').value;
+  return fbOrders.filter(r => r.date && r.date >= from && r.date <= to && (!sub || r.sub_channel === sub) && shouldIncludeRow(r));
+}
+function fbPageReady(page, rerender) {
+  if (_fbOrdersLoaded) return true;
+  ensureFbOrders().then(() => { if (currentPage === page) rerender(); }).catch(e => showError('โหลดออเดอร์ Facebook ไม่สำเร็จ: ' + e.message));
+  return false;
+}
+async function fetchLastOrderDate() {
+  try {
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/orders?select=date&order=date.desc&limit=1`, { headers });
+    const rows = await res.json(); return rows[0]?.date || null;
+  } catch (e) { return null; }
+}
+function salesPseudoRows(from, to) {
+  const ch = document.getElementById('filterChannel').value, sub = document.getElementById('filterSubChannel').value;
+  return salesRows(from, to, ch, sub).map(r => ({ date: r.date, channel: r.channel, sub_channel: r.sub_channel, revenue: parseFloat(r.net_revenue) || 0, n: parseInt(r.net_orders) || 0 }));
+}
 function salesRows(from, to, ch, sub) {
   return salesSum.rows.filter(r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub));
 }
@@ -4086,17 +4127,18 @@ function renderCpAdsClipTable() {
 }
 
 function populateLiveSearchFilters() {
-  const ttData = allData.filter(r => r.channel === 'TikTok');
-  _lsAllCreators = [...new Set(ttData.map(r => r.creator_handle).filter(Boolean))].sort();
-
-  const ocSet = [...new Set(ttData.map(r => r.order_channel).filter(Boolean))].sort();
+  // เฟส 4: รายชื่อ creator จาก RPC creator_list — ไม่ต้องมี allData
+  const ocSet = ['LIVE', 'Videos', 'Product cards'];
   const ocSel = document.getElementById('lsOrderChannel');
   if (ocSel && ocSel.options.length <= 1) {
     ocSel.innerHTML = '<option value="">ทั้งหมด</option>' + ocSet.map(v => `<option value="${v}">${v}</option>`).join('');
   }
-  renderLsCreatorChips();
-  const dbg = document.getElementById('lsDebugInfo');
-  if (dbg) dbg.textContent = `พบ ${ttData.length.toLocaleString()} ออเดอร์ TikTok · ${_lsAllCreators.length} creator ที่มีชื่อ · ${ocSet.length} order channel`;
+  ensureCreatorList().then(() => {
+    _lsAllCreators = [..._cpAllCreators];
+    renderLsCreatorChips();
+    const dbg = document.getElementById('lsDebugInfo');
+    if (dbg) dbg.textContent = `${_lsAllCreators.length} creator · ค้นหาจะดึงเฉพาะออเดอร์ของ creator ที่เลือกในช่วงเวลาที่กำหนด`;
+  }).catch(e => console.warn('creator_list', e.message));
 }
 
 function filterLsCreatorDropdown() {
@@ -4149,21 +4191,25 @@ async function runLiveSearch() {
     document.getElementById('ls-kpis').innerHTML = '<div class="card" style="color:var(--red);">กรุณาเลือก Creator Handle และช่วงเวลาให้ครบ</div>';
     return;
   }
-  // เฟส 3: sku_revenue ไม่โหลดตอนเปิด dashboard แล้ว — โหลดเฉพาะเมื่อหน้านี้ต้องการ (ครั้งเดียวต่อ session; เฟส 4 จะเปลี่ยนเป็นค้นที่ server)
-  if (!skuRevenueAll.length) {
-    document.getElementById('ls-kpis').innerHTML = '<div class="card">⏳ โหลดรายการ SKU ต่อออเดอร์ครั้งแรก (ครั้งเดียว)...</div>';
-    try { await ensureSkuAllLazy(); } catch (e) { showError('โหลด SKU ไม่สำเร็จ: ' + e.message); return; }
-  }
+  document.getElementById('ls-kpis').innerHTML = '<div class="card">⏳ กำลังค้นหาออเดอร์ที่ Supabase...</div>';
 
   const fromISO = toComparableDT(fromV);
   const toISO = toComparableDT(toV);
 
-  const matched = allData.filter(r =>
-    r.channel === 'TikTok' &&
-    creators.includes(r.creator_handle) &&
-    (!ocFilter || r.order_channel === ocFilter) &&
-    r.created_at_precise && r.created_at_precise >= fromISO && r.created_at_precise <= toISO
-  );
+  // เฟส 4: ค้นที่ server — ดึงเฉพาะออเดอร์ TikTok ของ creator ที่เลือกในช่วงเวลา แล้วดึงแถว SKU ของออเดอร์นั้น
+  let matched = [], skuRowsLs = [];
+  try {
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const inList = creators.map(c => '"' + String(c).replace(/"/g, '') + '"').join(',');
+    const base = `${window.SUPABASE_URL}/rest/v1/orders?select=order_id,creator_handle,order_channel,order_status,settled,revenue,created_at_precise&channel=eq.TikTok&creator_handle=in.(${encodeURIComponent(inList)})&created_at_precise=gte.${encodeURIComponent(fromISO)}&created_at_precise=lte.${encodeURIComponent(toISO)}${ocFilter ? '&order_channel=eq.' + encodeURIComponent(ocFilter) : ''}&order=created_at_precise.asc,order_id.asc`;
+    matched = await fetchKeyset(base, headers, ['created_at_precise', 'order_id']);
+    const ids = matched.map(r => r.order_id).filter(Boolean);
+    for (let i = 0; i < ids.length; i += 150) {
+      const chunk = ids.slice(i, i + 150).map(x => '"' + String(x).replace(/"/g, '') + '"').join(',');
+      const res = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/sku_revenue?select=order_id,parent_sku,qty,revenue_share&order_id=in.(${encodeURIComponent(chunk)})&limit=1000`, headers);
+      skuRowsLs.push(...await res.json());
+    }
+  } catch (e) { document.getElementById('ls-kpis').innerHTML = `<div class="card" style="color:var(--red);">ค้นหาไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
 
   const soldIds = new Set(), cancelledIds = new Set();
   let soldAmount = 0, cancelledAmount = 0;
@@ -4180,7 +4226,7 @@ async function runLiveSearch() {
   `;
 
   const skuBySold = {}, skuByCancelled = {};
-  skuRevenueAll.filter(r => soldIds.has(r.order_id) || cancelledIds.has(r.order_id)).forEach(r => {
+  skuRowsLs.filter(r => soldIds.has(r.order_id) || cancelledIds.has(r.order_id)).forEach(r => {
     const target = soldIds.has(r.order_id) ? skuBySold : skuByCancelled;
     const k = r.parent_sku || 'ไม่ระบุ';
     if (!target[k]) target[k] = { qty: 0, rev: 0, name: productsMap[k] || k };
@@ -4792,7 +4838,7 @@ function getCrmEligiblePhones() {
 }
 
 function renderCRMTrendChart() {
-  let base = allData.filter(r => r.channel === 'Facebook' && shouldIncludeRow(r));
+  let base = fbOrders.filter(r => shouldIncludeRow(r));   // เฟส 4: ออเดอร์ FB ทั้งประวัติ (โหลดเมื่อเปิดหน้า)
   const eligiblePhones = getCrmEligiblePhones();
   if (eligiblePhones) base = base.filter(r => eligiblePhones.has(r.phone));
 
@@ -4860,8 +4906,8 @@ let _fbCustomerCache = null;
 
 function buildFbCustomerCache() {
   const customers = {};
-  allData.forEach(r => {
-    if (r.channel !== 'Facebook' || !r.phone || r.phone.length < 5 || !shouldIncludeRow(r)) return;
+  fbOrders.forEach(r => {   // เฟส 4
+    if (!r.phone || r.phone.length < 5 || !shouldIncludeRow(r)) return;
     const phone = r.phone;
     if (!customers[phone]) customers[phone] = { name: '', orders: 0, rev: 0, lastDate: '', skus: new Set() };
     const c = customers[phone];
@@ -4932,6 +4978,7 @@ function renderNeverBoughtPage() {
   const emptyEl = document.getElementById('nb-empty-state');
   const kpiEl = document.getElementById('nb-kpis');
   const resultEl = document.getElementById('nb-result-card');
+  if (nbSelectedSKUs.length && !fbPageReady('neverbought', renderNeverBoughtPage)) { emptyEl.style.display = 'block'; emptyEl.innerHTML = '<div class="empty">⏳ กำลังโหลดออเดอร์ Facebook (ครั้งแรกของ session)...</div>'; return; }
   if (!nbSelectedSKUs.length) {
     emptyEl.style.display = 'block';
     kpiEl.style.display = 'none';
@@ -4978,7 +5025,8 @@ function exportNbCSV() {
 }
 
 function renderCRM() {
-  let d = filteredData.filter(r => r.channel === 'Facebook');
+  if (!fbPageReady('crm', renderCRM)) { document.getElementById('crmGroups').innerHTML = '<div class="empty">⏳ กำลังโหลดออเดอร์ Facebook (ครั้งแรกของ session)...</div>'; return; }
+  let d = fbOrdersFiltered();   // เฟส 4
   const eligiblePhones = getCrmEligiblePhones();
   if (eligiblePhones) d = d.filter(r => eligiblePhones.has(r.phone));
 
@@ -6038,18 +6086,19 @@ function generateSummary(page) {
   if (!el) return;
   el.innerHTML = '<div class="ai-loading">กำลังวิเคราะห์...</div>';
 
-  const d = filteredData;
-  const prev = getPrevPeriodData();
+  const _f = getDateValue('From'), _t = getDateValue('To'), _p = getPrevPeriodRange(_f, _t);
+  const d = salesPseudoRows(_f, _t);
+  const prev = _p.from ? salesPseudoRows(_p.from, _p.to) : [];
   const totalRev = d.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
-  const totalOrd = d.length;
+  const totalOrd = d.reduce((s,r) => s+(r.n||0), 0);
   const prevRev = prev.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
-  const prevOrd = prev.length;
+  const prevOrd = prev.reduce((s,r) => s+(r.n||0), 0);
   const revChg = prevRev ? ((totalRev-prevRev)/prevRev*100).toFixed(1) : null;
   const ordChg = prevOrd ? ((totalOrd-prevOrd)/prevOrd*100).toFixed(1) : null;
   let lines = [];
 
   const monthly = {};
-  d.forEach(r => { const m = r.date ? r.date.substring(0,7) : 'x'; if (!monthly[m]) monthly[m] = { rev: 0, ord: 0 }; monthly[m].rev += parseFloat(r.revenue)||0; monthly[m].ord++; });
+  d.forEach(r => { const m = r.date ? r.date.substring(0,7) : 'x'; if (!monthly[m]) monthly[m] = { rev: 0, ord: 0 }; monthly[m].rev += parseFloat(r.revenue)||0; monthly[m].ord += r.n||0; });
   const months = Object.entries(monthly).sort();
   const thaiMonth = m => MONTHS_TH[parseInt(m.split('-')[1])-1];
 
@@ -6076,14 +6125,13 @@ function generateSummaryExtra(page) {
   const el = document.getElementById('ai-summary-' + page);
   if (!el) return;
   el.innerHTML = '<div class="ai-loading">กำลังวิเคราะห์...</div>';
-  const d = filteredData;
-  const prev = getPrevPeriodData();
+  const d = salesPseudoRows(getDateValue('From'), getDateValue('To'));   // เฟส 4: จาก mv_sales_daily
   const totalRev = d.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
   let lines = [];
 
   if (page === 'channel') {
     const byCh = {};
-    d.forEach(r => { const k=r.channel||'ไม่ระบุ'; if(!byCh[k])byCh[k]={rev:0,ord:0}; byCh[k].rev+=parseFloat(r.revenue)||0; byCh[k].ord++; });
+    d.forEach(r => { const k=r.channel||'ไม่ระบุ'; if(!byCh[k])byCh[k]={rev:0,ord:0}; byCh[k].rev+=parseFloat(r.revenue)||0; byCh[k].ord+=r.n||0; });
     const sorted = Object.entries(byCh).sort((a,b)=>b[1].rev-a[1].rev);
     if (sorted.length) {
       const top = sorted[0];
@@ -6159,11 +6207,9 @@ let _flowTopSKUs = [];
 let _flowAllSKUs = [];
 
 function computeFlowTransitions(fromDate, toDate) {
-  const fbOrders = allData.filter(r =>
-    r.channel === 'Facebook' && r.phone && r.phone.length >= 5 && shouldIncludeRow(r)
-  );
+  const fbRows = fbOrders.filter(r => r.phone && r.phone.length >= 5 && shouldIncludeRow(r));   // เฟส 4
   const byPhone = {};
-  fbOrders.forEach(r => {
+  fbRows.forEach(r => {
     if (!byPhone[r.phone]) byPhone[r.phone] = [];
     byPhone[r.phone].push(r);
   });
@@ -6251,6 +6297,7 @@ function toggleFlowSKU(sku) {
 }
 
 function renderFlowPage() {
+  if (!fbPageReady('flow', renderFlowPage)) { const k = document.getElementById('flowKPIs'); if (k) k.innerHTML = '<div class="card">⏳ กำลังโหลดออเดอร์ Facebook (ครั้งแรกของ session)...</div>'; return; }
   const from = getDateValue('From');
   const to = getDateValue('To');
   const { transitions, topSKUs, allSkus } = computeFlowTransitions(from, to);
@@ -6430,6 +6477,7 @@ async function refreshDashboardData() {
   cpTta.rangeKey = null;
   salesSum.rangeKey = null;
   cpCreator.rangeKey = null; freeSample.rangeKey = null; _filterOptions = null; _creatorListLoaded = false;
+  _fbOrdersLoaded = false; idbSet(FB_ORDERS_CACHE_KEY, null);
   { const f = getDateValue('From'), t = getDateValue('To'); idbSet('creator:' + f + '|' + t, null); }
   { const f = getDateValue('From'), t = getDateValue('To'); const p = getPrevPeriodRange(f, t); idbSet('sales:' + (p.from || f) + '|' + t, null); }
   const btn = document.getElementById('btnRefreshMV')
@@ -6459,7 +6507,7 @@ async function refreshDashboardData() {
     await new Promise(r => setTimeout(r, 2000))
 
     const [orders, promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows, dailyChannelSummary] = await Promise.all([
-      fetchAll().then(refreshTick('ออเดอร์')),
+      Promise.resolve([]).then(refreshTick('ออเดอร์')), // เฟส 4: ไม่โหลด orders ทั้งก้อนอีก
       fetchPromoMonthly().then(refreshTick('โปรโมชั่นรายเดือน')),
       fetchSkuParentMonthly().then(refreshTick('SKU รายเดือน')),
       fetchProvinceMonthly().then(refreshTick('ยอดขายรายจังหวัด')),
@@ -6490,8 +6538,10 @@ async function refreshDashboardData() {
     allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
     const from = getDateValue('From'), to = getDateValue('To')
     filteredData = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r))
+    const lastOrderDate = await fetchLastOrderDate()
+    document.getElementById('lastUpdate').textContent = 'ข้อมูลล่าสุด: ' + (lastOrderDate || '—')
     idbSet(CACHE_KEY, {
-      allData, productsMap, provinceRegionMap, promotionsMap,
+      allData, productsMap, provinceRegionMap, promotionsMap, lastOrderDate,
       promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
       skuRevenueAll, freeSampleRows, cachedAt: Date.now()
     })
@@ -7116,7 +7166,7 @@ function fixCostStickyPositions(tableId, frozenCols) {
 }
 
 // ===== แคชข้อมูลไว้ในเบราว์เซอร์ (IndexedDB) — เปิดหน้าครั้งถัดไปเห็นข้อมูลทันที ไม่ต้องรอโหลดใหม่ทั้งหมด =====
-const IDB_NAME = 'deesay_dashboard_cache', IDB_STORE = 'snapshot', CACHE_KEY = 'dashboard_snapshot_v1'
+const IDB_NAME = 'deesay_dashboard_cache', IDB_STORE = 'snapshot', CACHE_KEY = 'dashboard_snapshot_v2'
 function idbOpen() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(IDB_NAME, 1)
@@ -7148,7 +7198,7 @@ async function idbSet(key, value) {
 }
 
 function applySnapshot(snap) {
-  allData = snap.allData
+  allData = snap.allData || []
   _fbCustomerCache = null // ข้อมูลใหม่มา ต้องสร้าง cache ลูกค้าใหม่รอบหน้าที่เข้าหน้านี้
   productsMap = snap.productsMap
   provinceRegionMap = snap.provinceRegionMap
@@ -7163,7 +7213,7 @@ function applySnapshot(snap) {
   allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
   const from = getDateValue('From'), to = getDateValue('To')
   filteredData = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r))
-  const lastDate = allData.map(r => r.date).filter(Boolean).sort().reverse()[0]
+  const lastDate = snap.lastOrderDate || allData.map(r => r.date).filter(Boolean).sort().reverse()[0]
   document.getElementById('lastUpdate').textContent = 'ข้อมูลล่าสุด: ' + (lastDate || '—')
 }
 
@@ -7207,7 +7257,7 @@ async function fetchFreshSnapshot() {
   const totalSteps = 9;
   const tick = (label) => (r) => { loadedCount++; updateLoadingProgress(`โหลด${label}แล้ว (${loadedCount}/${totalSteps})`, Math.round(loadedCount/totalSteps*100)); return r; };
   const [orders, prods, regions, promoMonthly, skuParentMonthly, provinceMonthly, promosMap, skuRevRows, dailyChannelSummary] = await Promise.all([
-    fetchAll().then(tick('ออเดอร์')),
+    Promise.resolve([]).then(tick('ออเดอร์')), // เฟส 4: ไม่โหลด orders ทั้งก้อนอีก
     fetchProducts().then(tick('รายชื่อสินค้า')),
     fetchProvinceRegion().then(tick('จังหวัด/ภูมิภาค')),
     fetchPromoMonthly().then(tick('โปรโมชั่นรายเดือน')),
@@ -7231,8 +7281,9 @@ async function fetchFreshSnapshot() {
     (r.channel === 'Facebook' && r.sub_channel === 'รีวิว ฟีมิคส์')
   )
   const skuRevFiltered = skuRevRows.filter(r => !isExcludedRow(r) && !(r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)))
+  const lastOrderDate = await fetchLastOrderDate();
   return {
-    allData: ordersFiltered,
+    allData: ordersFiltered, lastOrderDate,
     productsMap: prods, provinceRegionMap: regions, promotionsMap: promosMap,
     promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
     dailyChannelSummaryCache: dailyChannelSummary,
@@ -8357,7 +8408,7 @@ async function init() {
   try {
     restoreOrDefaultDateFilter();
     const cached = await idbGet(CACHE_KEY)
-    if (cached && cached.allData && cached.allData.length) {
+    if (cached && cached.productsMap && cached.cachedAt) {   // เฟส 4: แคชไม่มี allData แล้ว
       applySnapshot(cached)
       restoreSavedChannelFilter()
       renderOverview()
