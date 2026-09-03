@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.03-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.03-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -596,7 +596,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card" style="margin-bottom:20px;display:none;" data-hidden-reason="ซ่อนไว้ก่อน 2026-09-03: attribution ยังไม่ validate — เปิดคืนโดยลบ display:none และ uncomment renderRealPromoAndUpsell()">
         <div class="section-header">
           <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Top Promotion ของจริง (match กับโปรที่สร้างไว้ใน Google Sheet)</div>
           <button class="btn btn-ghost" onclick="exportTable('tblTopRealPromo')">⬇ Export CSV</button>
@@ -608,7 +608,7 @@
           </table>
         </div>
       </div>
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card" style="margin-bottom:20px;display:none;" data-hidden-reason="ซ่อนไว้ก่อน 2026-09-03: attribution ยังไม่ validate — เปิดคืนโดยลบ display:none และ uncomment renderRealPromoAndUpsell()">
         <div class="section-header">
           <div class="section-title" style="display:flex;align-items:center;gap:8px;"><span class="fb-badge">f</span> Upsell ที่ขายดีที่สุด</div>
           <div style="display:flex;gap:8px;align-items:center;">
@@ -1824,6 +1824,8 @@ const fmtPct = (a, b) => b ? ((a/b)*100).toFixed(1) + '%' : '—';
 
 function cmpBadge(curr, prev) {
   if (!prev || prev === 0) return { text: '—', cls: '' };
+  // ช่วงก่อนหน้ามีข้อมูลน้อยกว่า 10% ของช่วงนี้ (เช่น เทียบปีที่ยังไม่มีข้อมูล) → ไม่โชว์ % ที่หลอกตา
+  if (prev < curr * 0.1) return { text: 'ช่วงก่อนหน้าข้อมูลไม่ครบ', cls: '' };
   const pct = ((curr - prev) / prev * 100).toFixed(1);
   const up = parseFloat(pct) >= 0;
   return { text: (up ? '▲' : '▼') + Math.abs(pct) + '%', cls: up ? 'badge-up' : 'badge-down' };
@@ -2623,14 +2625,15 @@ async function renderChannel() {
 // ===== FACEBOOK HUB =====
 // หมายเหตุ: ค่าโฆษณามีระดับความละเอียดแค่ channel รวม (Facebook/TikTok/Shopee/Lazada)
 // Google Sheet ต้นทางไม่มีคอลัมน์ sub_channel เลยแสดงค่าโฆษณา/ROAS ได้แค่ระดับ Facebook รวม ไม่ใช่รายsub-channel
-function renderFbHub() {
-  const d = filteredData.filter(r => r.channel === 'Facebook');
+async function renderFbHub() {
+  if (!(await hubPrepare('fbhub'))) return;
+  const H = hubAgg('Facebook');   // เฟส 2: จาก sales_summary (v_orders_clean)
 
   const finish = () => {
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Facebook');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
-    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-    const totalOrd = d.length;
+    const totalRev = H.totalRev;
+    const totalOrd = H.totalOrd;
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
 
     document.getElementById('fbhub-kpis').innerHTML = `
@@ -2641,14 +2644,7 @@ function renderFbHub() {
     `;
 
     // Sub-channel breakdown (ยอดขาย/ออเดอร์เท่านั้น — ไม่มีข้อมูลค่าโฆษณาระดับ sub-channel)
-    const bySub = {};
-    d.forEach(r => {
-      const k = r.sub_channel || 'ไม่ระบุ';
-      if (!bySub[k]) bySub[k] = { rev: 0, ord: 0 };
-      bySub[k].rev += parseFloat(r.revenue) || 0;
-      bySub[k].ord++;
-    });
-    const sorted = Object.entries(bySub).sort((a,b) => b[1].rev - a[1].rev);
+    const sorted = H.sortedSub;
     const subSel = document.getElementById('fbPromoSubChannel');
     if (subSel && subSel.options.length <= 1) {
       subSel.innerHTML = '<option value="">ทั้งหมด</option>' + sorted.map(([k]) => `<option value="${k}">${k}</option>`).join('');
@@ -2678,7 +2674,7 @@ function renderFbHub() {
 
     renderAdpChannel('chartFbAds', null, 'fb', hubAdView.fb, hubSelectedSub.fb);
     renderPromotion('Fb', 'Facebook');
-    renderRealPromoAndUpsell();
+    // renderRealPromoAndUpsell() — ซ่อนตาราง "Top Promotion ของจริง / Upsell" ไว้ก่อน (เงื่อนไข attribution ยังไม่ validate) โค้ดคงไว้
 
     // คำแนะนำอย่างง่าย: sub-channel ที่ ROAS/AOV เด่นสุด (เทียบจาก AOV เพราะไม่มี ad ต่อ sub-channel)
     let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
@@ -3069,14 +3065,15 @@ function fbeRenderPostListPage(pageNum) {
 }
 
 // ===== TIKTOK HUB =====
-function renderTtHub() {
-  const d = filteredData.filter(r => r.channel === 'TikTok');
+async function renderTtHub() {
+  if (!(await hubPrepare('tthub'))) return;
+  const H = hubAgg('TikTok');   // เฟส 2: จาก sales_summary (v_orders_clean)
 
   const finish = () => {
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='TikTok');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
-    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-    const totalOrd = d.length;
+    const totalRev = H.totalRev;
+    const totalOrd = H.totalOrd;
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
 
     document.getElementById('tthub-kpis').innerHTML = `
@@ -3084,18 +3081,11 @@ function renderTtHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
-      ${cancelReturnCardHtml('tt', 'TikTok', getDateValue('From'), getDateValue('To'), totalRev)}
+      ${cancelReturnCardHtml2('tt', H.cancelRev, H.cancelOrd, totalRev)}
       ${freeSampleCardHtml(getDateValue('From'), getDateValue('To'))}
     `;
 
-    const byOC = {};
-    d.forEach(r => {
-      const k = r.order_channel || 'ไม่ระบุ';
-      if (!byOC[k]) byOC[k] = { rev: 0, ord: 0 };
-      byOC[k].rev += parseFloat(r.revenue) || 0;
-      byOC[k].ord++;
-    });
-    const ocSorted = Object.entries(byOC).sort((a,b) => b[1].rev - a[1].rev);
+    const ocSorted = Object.entries(H.byOC).sort((a,b) => b[1].rev - a[1].rev);
     document.getElementById('tbodyTtOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
       <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
     `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
@@ -3116,17 +3106,16 @@ function renderTtHub() {
 }
 
 // ===== SHOPEE HUB =====
-function renderShHub() {
-  const d = filteredData.filter(r => r.channel === 'Shopee');
-  const prevD = getPrevPeriodData().filter(r => r.channel === 'Shopee');
-  const prevRev = prevD.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-  const prevOrd = prevD.length;
+async function renderShHub() {
+  if (!(await hubPrepare('shhub'))) return;
+  const H = hubAgg('Shopee');   // เฟส 2: จาก sales_summary (v_orders_clean)
+  const prevRev = H.prevRev, prevOrd = H.prevOrd;
 
   const finish = () => {
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Shopee');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
-    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-    const totalOrd = d.length;
+    const totalRev = H.totalRev;
+    const totalOrd = H.totalOrd;
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
     const revBadge = cmpBadge(totalRev, prevRev), ordBadge = cmpBadge(totalOrd, prevOrd);
 
@@ -3135,17 +3124,10 @@ function renderShHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
-      ${cancelReturnCardHtml('sh', 'Shopee', getDateValue('From'), getDateValue('To'), totalRev)}
+      ${cancelReturnCardHtml2('sh', H.cancelRev, H.cancelOrd, totalRev)}
     `;
 
-    const bySub = {};
-    d.forEach(r => {
-      const k = r.sub_channel || 'ไม่ระบุ';
-      if (!bySub[k]) bySub[k] = { rev: 0, ord: 0 };
-      bySub[k].rev += parseFloat(r.revenue) || 0;
-      bySub[k].ord++;
-    });
-    const sorted = Object.entries(bySub).sort((a,b) => b[1].rev - a[1].rev);
+    const sorted = H.sortedSub;
     document.getElementById('tbodyShSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
       <tr>
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
@@ -3172,17 +3154,16 @@ function renderShHub() {
 }
 
 // ===== LAZADA HUB =====
-function renderLzHub() {
-  const d = filteredData.filter(r => r.channel === 'Lazada');
-  const prevD = getPrevPeriodData().filter(r => r.channel === 'Lazada');
-  const prevRev = prevD.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-  const prevOrd = prevD.length;
+async function renderLzHub() {
+  if (!(await hubPrepare('lzhub'))) return;
+  const H = hubAgg('Lazada');   // เฟส 2: จาก sales_summary (v_orders_clean)
+  const prevRev = H.prevRev, prevOrd = H.prevOrd;
 
   const finish = () => {
     const adData = getAdDateFiltered().ads.filter(r => r.channel==='Lazada');
     const tAds = adData.reduce((s,r) => s + r.ads, 0);
-    const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-    const totalOrd = d.length;
+    const totalRev = H.totalRev;
+    const totalOrd = H.totalOrd;
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
     const revBadge = cmpBadge(totalRev, prevRev), ordBadge = cmpBadge(totalOrd, prevOrd);
 
@@ -3191,17 +3172,10 @@ function renderLzHub() {
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">฿${fmtB(tAds)}</div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
-      ${cancelReturnCardHtml('lz', 'Lazada', getDateValue('From'), getDateValue('To'), totalRev)}
+      ${cancelReturnCardHtml2('lz', H.cancelRev, H.cancelOrd, totalRev)}
     `;
 
-    const bySub = {};
-    d.forEach(r => {
-      const k = r.sub_channel || 'ไม่ระบุ';
-      if (!bySub[k]) bySub[k] = { rev: 0, ord: 0 };
-      bySub[k].rev += parseFloat(r.revenue) || 0;
-      bySub[k].ord++;
-    });
-    const sorted = Object.entries(bySub).sort((a,b) => b[1].rev - a[1].rev);
+    const sorted = H.sortedSub;
     document.getElementById('tbodyLzSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
       <tr>
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
@@ -3234,10 +3208,11 @@ let _lsAllCreators = [];
 const MT_STORE_NAMES = { 'MT-EVE': 'Eveandboy', 'MT-KONVY': 'Konvy', 'MT-WATSONS': 'Watsons', 'MT-CJ': 'CJ' };
 function mtStoreName(sub) { return MT_STORE_NAMES[sub] || sub || 'ไม่ระบุ'; }
 
-function renderMtHub() {
-  const d = filteredData.filter(r => r.channel === 'Modern Trade');
-  const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
-  const activeStores = new Set(d.map(r => r.sub_channel || 'ไม่ระบุ')).size;
+async function renderMtHub() {
+  if (!(await hubPrepare('mthub'))) return;
+  const H = hubAgg('Modern Trade');   // เฟส 2: จาก sales_summary (v_orders_clean)
+  const totalRev = H.totalRev;
+  const activeStores = Object.keys(H.bySub).length;
 
   document.getElementById('mthub-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
@@ -3245,24 +3220,12 @@ function renderMtHub() {
   `;
 
   // ยอดขายรายเดือน
-  const byMonth = {};
-  d.forEach(r => {
-    if (!r.date) return;
-    const m = r.date.substring(0,7);
-    byMonth[m] = (byMonth[m]||0) + (parseFloat(r.revenue)||0);
-  });
+  const byMonth = H.byMonth;
   const months = Object.keys(byMonth).sort();
   makeChart('chartMtRevenue', 'bar', months, [{ label: 'ยอดขาย', data: months.map(m => byMonth[m]), backgroundColor: '#2a78d6', borderRadius: 4 }]);
 
   // ยอดขายแยกตามร้าน (sub_channel) — ใช้ชื่อร้านจริงแทน MT-xxx
-  const byStore = {};
-  d.forEach(r => {
-    const k = r.sub_channel || 'ไม่ระบุ';
-    if (!byStore[k]) byStore[k] = { rev: 0, ord: 0 };
-    byStore[k].rev += parseFloat(r.revenue) || 0;
-    byStore[k].ord++;
-  });
-  const sortedStores = Object.entries(byStore).sort((a,b) => b[1].rev - a[1].rev);
+  const sortedStores = H.sortedSub;
   document.getElementById('tbodyMtSubChannel').innerHTML = sortedStores.length ? sortedStores.map(([k,v],i) => `
     <tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
@@ -3680,6 +3643,44 @@ async function ensureSalesSummary(from, to, onFresh) {
     return;
   }
   apply(await load());
+}
+// รวมยอดสำหรับ Hub 1 ช่อง จาก sales_summary (เฟส 2) — ใช้แทน filteredData.filter(channel) + getPrevPeriodData()
+function hubAgg(channel) {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const subF = document.getElementById('filterSubChannel').value;
+  const rows = salesRows(from, to, channel, subF);
+  const prev = getPrevPeriodRange(from, to);
+  const prevRows = prev.from ? salesRows(prev.from, prev.to, channel, subF) : [];
+  const A = { from, to, totalRev: 0, totalOrd: 0, cancelRev: 0, cancelOrd: 0, freeSampleOrd: 0, prevRev: 0, prevOrd: 0, bySub: {}, byOC: {}, byMonth: {} };
+  rows.forEach(r => {
+    const rev = parseFloat(r.net_revenue) || 0, ord = parseInt(r.net_orders) || 0;
+    A.totalRev += rev; A.totalOrd += ord;
+    A.cancelRev += parseFloat(r.cancelled_revenue) || 0; A.cancelOrd += parseInt(r.cancelled_orders) || 0;
+    A.freeSampleOrd += parseInt(r.free_sample_orders) || 0;
+    const s = r.sub_channel || 'ไม่ระบุ';
+    (A.bySub[s] = A.bySub[s] || { rev: 0, ord: 0 }); A.bySub[s].rev += rev; A.bySub[s].ord += ord;
+    if (r.order_channel !== null && r.order_channel !== undefined) { const oc = r.order_channel || 'ไม่ระบุ'; (A.byOC[oc] = A.byOC[oc] || { rev: 0, ord: 0 }); A.byOC[oc].rev += rev; A.byOC[oc].ord += ord; }
+    if (r.date) { const m = r.date.substring(0, 7); A.byMonth[m] = (A.byMonth[m] || 0) + rev; }
+  });
+  prevRows.forEach(r => { A.prevRev += parseFloat(r.net_revenue) || 0; A.prevOrd += parseInt(r.net_orders) || 0; });
+  A.sortedSub = Object.entries(A.bySub).sort((a, b) => b[1].rev - a[1].rev);
+  return A;
+}
+// การ์ดยอดตีกลับจากตัวเลขที่รวมแล้ว (แทน cancelReturnCardHtml ที่อ่าน allData)
+function cancelReturnCardHtml2(hub, crRev, crOrd, totalRev) {
+  if (!crOrd) return `<div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยอดตีกลับ</div><div class="kpi-value" style="color:var(--text3);font-size:15px;">ยังไม่มีข้อมูล</div><div style="font-size:11px;color:var(--text3);">ไม่มีออเดอร์ยกเลิก/คืนในช่วงนี้</div></div>`;
+  const grossRev = totalRev + crRev, pct = grossRev ? (crRev / grossRev * 100) : 0;
+  return `<div class="card" style="flex:1;min-width:160px;border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.04);">
+    <div class="card-title" style="color:var(--red);">ยอดตีกลับ (ยกเลิก+คืนสินค้า)</div>
+    <div class="kpi-value" style="color:var(--red);">฿${fmtB(crRev)}</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:2px;">${pct.toFixed(1)}% ของยอดรวมก่อนตัดออก · ${fmt(crOrd)} ออเดอร์</div>
+  </div>`;
+}
+async function hubPrepare(page) {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const seq = (hubPrepare._seq = (hubPrepare._seq || 0) + 1);
+  await ensureSalesSummary(from, to, () => { if (currentPage === page && seq === hubPrepare._seq) renderCurrentPage(); });
+  return seq === hubPrepare._seq && currentPage === page;
 }
 function salesRows(from, to, ch, sub) {
   return salesSum.rows.filter(r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub));
@@ -8314,4 +8315,3 @@ init();
 </script>
 </body>
 </html>
-  
