@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.04-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.04-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -906,7 +906,9 @@
         <div style="font-size:13px;">ค้นหาและเลือก SKU จาก dropdown ด้านบน แล้วกด "วิเคราะห์"</div>
       </div>
     </div>
-    <!-- ===================== KOL / AFFILIATE — ตั้งต้นจากคนที่จ้าง (source: kol_posts จาก Google Sheet + orders + TikTok Ads) ===================== -->
+    <!-- ===================== KOL / AFFILIATE — ตั้งต้นจากคนที่จ้าง (source: kol_posts จาก Google Sheet + TikTok Ads GMV Max) ===================== -->
+    <!-- หลักการ (2026-09-04): ทุกแพลตฟอร์มใช้ "ยอดที่แอดนับ" ต่อโพสต์ (สะสมทั้งชีวิตโพสต์) — TikTok จาก GMV Max (mv_tiktok_creative_performance), แพลตฟอร์มอื่นจากคอลัมน์ ยอดขาย/ค่าโฆษณา ในชีททีม KOL
+         ไม่ใช้ยอดออเดอร์จริงต่อ creator ในหน้านี้ (ดูที่ Creator Performance) · ฟิลเตอร์วันที่ด้านบน = วันโพสต์เท่านั้น · รอ TikTok Accounts API สำหรับคลิปที่ไม่ได้ boost -->
     <div class="page" id="page-kol">
       <div class="card" style="margin-bottom:16px;padding:12px 16px;">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -916,12 +918,14 @@
           <select class="ls-input" id="kolFilterProduct" onchange="renderKolPage()" style="width:210px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุกสินค้า</option></select>
           <input type="text" class="ls-input" id="kolFilterSearch" placeholder="🔎 ชื่อ creator..." oninput="debouncedRenderKolPage()" style="width:190px;flex:0 0 auto;padding:6px 10px;font-size:12px;">
           <button class="btn btn-ghost" onclick="['kolFilterPlatform','kolFilterTier','kolFilterProduct','kolFilterSearch'].forEach(id=>{document.getElementById(id).value='';}); renderKolPage();" style="flex:0 0 auto;">✕ ล้าง</button>
-          <span style="margin-left:auto;font-size:10.5px;color:var(--text3);text-align:right;line-height:1.4;">นับตาม<b>วันโพสต์</b>ในช่วงวันที่ด้านบน<br>ยอดที่กลับมา: TikTok = ยอด Videos จากออเดอร์จริงของ creator ในช่วงเดียวกัน · Facebook = ยอดขายที่ทีม KOL กรอกในชีท (ต่อโพสต์)</span>
+          <span style="margin-left:auto;font-size:10.5px;color:var(--text3);text-align:right;line-height:1.4;">นับตาม<b>วันโพสต์</b>ในช่วงวันที่ด้านบน<br>ยอดขาย/ค่าแอด = ตัวเลขที่<b>แอดนับ</b> สะสมทั้งชีวิตโพสต์ (TikTok จาก GMV Max · แพลตฟอร์มอื่นจากชีททีม KOL)</span>
         </div>
       </div>
 
       <div id="kol-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div id="kol-unmapped" style="display:none;margin-bottom:14px;font-size:11.5px;padding:10px 14px;border-radius:8px;background:rgba(239,159,39,0.12);color:#ef9f27;"></div>
+
+      <div class="card" id="kol-reco" style="margin-bottom:20px;"></div>
 
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
@@ -929,29 +933,39 @@
           <div class="chart-wrap" style="height:260px;"><canvas id="chartKolMonthly"></canvas></div>
         </div>
         <div class="card">
-          <div class="section-header"><div class="section-title">ตามแพลตฟอร์ม</div></div>
-          <div class="table-wrap">
-            <table id="tblKolPlatform">
-              <thead><tr><th>แพลตฟอร์ม</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>ยอดที่กลับมา</th><th>ROAS ค่าจ้าง</th></tr></thead>
-              <tbody id="tbodyKolPlatform"></tbody>
-            </table>
-          </div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">TikTok: ยอด Videos จากออเดอร์จริง · Facebook: ยอดขาย/ค่าแอดที่ทีม KOL กรอกในชีท (ต่อโพสต์ ไม่แยกรายวัน) · Instagram / Lemon8: ยังไม่มี tracking — เว้นว่าง</div>
+          <div class="section-header"><div class="section-title">งบจ้างรายเดือน แยก Tier</div></div>
+          <div class="chart-wrap" style="height:260px;"><canvas id="chartKolTier"></canvas></div>
         </div>
       </div>
 
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="section-header"><div class="section-title">ตามแพลตฟอร์ม</div><button class="btn btn-ghost" onclick="exportTable('tblKolPlatform')">⬇ Export CSV</button></div>
+          <div class="table-wrap"><table id="tblKolPlatform">
+            <thead><tr><th>แพลตฟอร์ม</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th></tr></thead>
+            <tbody id="tbodyKolPlatform"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="section-header"><div class="section-title">ตาม Tier</div><button class="btn btn-ghost" onclick="exportTable('tblKolTier')">⬇ Export CSV</button></div>
+          <div class="table-wrap"><table id="tblKolTier">
+            <thead><tr><th>Tier</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>เฉลี่ย/โพสต์</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th></tr></thead>
+            <tbody id="tbodyKolTier"></tbody></table></div>
+        </div>
+      </div>
+      <div style="font-size:10.5px;color:var(--text3);margin:-12px 0 20px 4px;">"วัดได้" = โพสต์ที่มีตัวเลขยอดแอด (TikTok ที่ boost / แพลตฟอร์มอื่นที่ทีมกรอกยอด) · ROAS ทุกตารางคิดจาก<b>เฉพาะโพสต์ที่วัดได้</b> — ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขไม่อยู่ในตัวหาร แต่ดูได้ในการ์ด "งบที่ยังวัดผลไม่ได้"</div>
+
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">ตามสินค้า — ใช้งบจ้างไปเท่าไร</div>
+          <div class="section-title">ตามสินค้า — ใช้งบจ้างไปเท่าไร คุ้มไหม</div>
           <button class="btn btn-ghost" onclick="exportTable('tblKolProduct')">⬇ Export CSV</button>
         </div>
         <div class="table-wrap">
           <table id="tblKolProduct">
-            <thead><tr><th>สินค้า</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>boost (คลิป)</th><th>ค่าแอด boost</th><th>ยอดที่กลับมา (ประมาณ)</th><th>ROAS ค่าจ้าง (ประมาณ)</th></tr></thead>
+            <thead><tr><th>สินค้า</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th></tr></thead>
             <tbody id="tbodyKolProduct"></tbody>
           </table>
         </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">ยอดต่อสินค้าเป็น<b>ค่าประมาณ</b>: ออเดอร์บอกได้แค่ว่ามาจาก creator คนไหน ไม่รู้ว่ามาจากโพสต์ไหน จึงกระจายยอดของ creator ให้โพสต์ TikTok ของเขาเท่าๆ กัน (โพสต์ที่มีหลายสินค้าแบ่งต่อเท่าๆ กัน) · "~ กระจาย" = งบที่ sheet ระบุเป็น "รวมกันแดด" (แบ่งไดฟูกุทุกไซส์เท่าๆ กัน) หรือ "งบรวม/รวม" (แบ่งตามทุกสินค้าที่ creator คนนั้นเคยรีวิว)</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">โพสต์ที่มีหลายสินค้า แบ่งค่าจ้าง/ค่าแอด/ยอดเท่าๆ กันต่อสินค้า · "~ กระจาย" = งบที่ sheet ระบุเป็น "รวมกันแดด" (แบ่งไดฟูกุทุกไซส์เท่าๆ กัน) หรือ "งบรวม/รวม" (แบ่งตามทุกสินค้าที่ creator คนนั้นเคยรีวิว)</div>
       </div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -960,14 +974,14 @@
           <div style="display:flex;gap:8px;align-items:center;">
             <span style="font-size:11px;color:var(--text3);">เรียงตาม</span>
             <select class="ls-input" id="kolCreatorSort" onchange="renderKolCreatorTable()" style="padding:5px 8px;font-size:12px;">
-              <option value="fee">งบจ้าง</option><option value="roi">ROAS ค่าจ้าง</option><option value="rev">ยอดที่กลับมา</option><option value="posts">จำนวนโพสต์</option><option value="last">โพสต์ล่าสุด</option>
+              <option value="fee">งบจ้าง</option><option value="roiAll">ROAS รวม</option><option value="roiFee">ROAS ค่าจ้าง</option><option value="rev">ยอดแอด</option><option value="posts">จำนวนโพสต์</option><option value="last">โพสต์ล่าสุด</option>
             </select>
             <button class="btn btn-ghost" onclick="exportTable('tblKolCreator')">⬇ Export CSV</button>
           </div>
         </div>
         <div class="table-wrap" style="max-height:560px;overflow-y:auto;">
           <table id="tblKolCreator" class="sticky-head-table">
-            <thead><tr><th>Creator</th><th>Tier</th><th>แพลตฟอร์ม</th><th>โพสต์</th><th>ค่าจ้าง</th><th>boost</th><th>ยอด TikTok</th><th>ยอด Facebook</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม boost</th><th>โพสต์ล่าสุด</th></tr></thead>
+            <thead><tr><th>Creator</th><th>Tier</th><th>แพลตฟอร์ม</th><th>โพสต์ (วัดได้)</th><th>ค่าจ้าง</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th><th>สถานะ</th><th>โพสต์ล่าสุด</th></tr></thead>
             <tbody id="tbodyKolCreator"></tbody>
           </table>
         </div>
@@ -985,11 +999,11 @@
         <div id="kol-detail-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
         <div class="table-wrap">
           <table id="tblKolDetail">
-            <thead><tr><th>วันโพสต์</th><th>อายุโพสต์</th><th>แพลตฟอร์ม</th><th>สินค้า</th><th>ค่าจ้าง</th><th>boost</th><th>ค่าแอด</th><th>ยอดขาย</th><th>ROAS</th><th>ลิงก์</th></tr></thead>
+            <thead><tr><th>วันโพสต์</th><th>อายุโพสต์</th><th>แพลตฟอร์ม</th><th>สินค้า</th><th>ค่าจ้าง</th><th>boost</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th><th>ลิงก์</th></tr></thead>
             <tbody id="tbodyKolDetail"></tbody>
           </table>
         </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">อายุโพสต์ = จำนวนวันนับจากวันโพสต์ถึงวันนี้ (ใช้ดูว่ายอดที่เห็นสะสมมานานแค่ไหน) · TikTok: "ยอดขาย / ROAS" = ยอดจากแอด ÷ ค่าแอด มีเฉพาะโพสต์ที่ boost (ข้อมูลจาก TikTok Ads) โพสต์ที่ไม่ได้ boost จะเห็นผลรายคลิปได้เมื่อ TikTok Accounts API อนุมัติ · Facebook: ยอดขาย/ค่าแอดจากชีททีม KOL, ROAS = ยอดขาย ÷ (ค่าจ้าง + ค่าแอด)</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">อายุโพสต์ = วันนับจากวันโพสต์ถึงวันนี้ (ยอดที่เห็นสะสมมานานแค่ไหน) · TikTok: ค่าแอด/ยอดแอดจาก GMV Max สะสมทั้งชีวิตคลิป มีเฉพาะคลิปที่ boost — คลิปที่ไม่ได้ boost จะเห็นผลได้เมื่อ TikTok Accounts API อนุมัติ · แพลตฟอร์มอื่น: จากชีททีม KOL · ROAS ค่าจ้าง = ยอดแอด ÷ ค่าจ้าง · ROAS รวม = ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) · ROI = ROAS − 1</div>
       </div>
     </div>
 
@@ -1370,6 +1384,19 @@
         <div id="lsDebugInfo" style="font-size:11px;color:var(--text3);margin-top:8px;"></div>
       </div>
       <div id="ls-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">โปรโมชั่นที่ขายได้ในไลฟ์ (รูปแบบที่ลูกค้าสั่งจริง)</div>
+          <button class="btn btn-ghost" onclick="exportTable('tblLsPromo')">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="tblLsPromo">
+            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ออเดอร์</th><th>ยอดขาย</th><th>AOV</th><th>สัดส่วน %</th><th>ยกเลิก/ตีกลับ</th></tr></thead>
+            <tbody id="tbodyLsPromo"><tr><td colspan="8" class="empty">ยังไม่ได้ค้นหา</td></tr></tbody>
+          </table>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">นับจากออเดอร์ที่ขายได้จริงของ creator ที่เลือกในช่วงเวลาไลฟ์ · 1 ออเดอร์ = 1 โปร (ตามช่อง sku_promotion) · ยกเลิก/ตีกลับ = ออเดอร์โปรเดียวกันที่ไม่สำเร็จ (ไม่นับในยอดขาย)</div>
+      </div>
       <div class="grid-2">
         <div class="card">
           <div class="section-header">
@@ -3794,7 +3821,7 @@ function kolPlatformNorm(p) {
   const s = (p || '').toLowerCase();
   if (s.includes('tiktok')) return 'TikTok'; if (s.includes('facebook') || s === 'fb') return 'Facebook';
   if (s.includes('instagram') || s === 'ig') return 'Instagram'; if (s.includes('lemon')) return 'Lemon8';
-  if (s.includes('youtube')) return 'YouTube'; return p ? p.trim() : 'ไม่ระบุ';
+  if (s.includes('youtube')) return 'YouTube'; if (s.includes('twitter') || s === 'x') return 'Twitter'; return p ? p.trim() : 'ไม่ระบุ';
 }
 // แปลงข้อความสินค้าใน sheet → รายการ { sku, label } (รองรับหลายสินค้าคั่นด้วย + , /)
 function kolResolveProducts(text) {
@@ -3815,8 +3842,9 @@ function applyKolPosts(raw, mapRows) {
   if (mapRows) { kolProductMap = {}; mapRows.forEach(m => { kolProductMap[(m.product_text || '').trim()] = m; }); }
   kolPosts = raw.map(p => ({ ...p, budget: parseFloat(p.budget) || 0, kol_handle: cpNormHandle(p.kol_handle || ''), isTikTok: /tiktok/i.test(p.platform || ''),
     platformNorm: kolPlatformNorm(p.platform),
-    // Facebook: ทีม KOL กรอกค่าแอด/ยอดขายต่อโพสต์ในชีท (คอลัมน์ "ค่าโฆษณา" / "ยอดขาย") — ใช้เฉพาะแถว Facebook; แถว TikTok ใช้ตัวเลขจาก Supabase เสมอ (ค่าในชีทถูกเก็บแต่ไม่ถูกใช้)
+    // ทีม KOL กรอกค่าแอด/ยอดขายต่อโพสต์ในชีท (คอลัมน์ "ค่าโฆษณา" / "ยอดขาย") — dashboard ใช้กับแถวที่ไม่ใช่ TikTok; แถว TikTok ใช้ GMV Max (ค่าในชีทถูกเก็บแต่ไม่ถูกใช้)
     isFacebook: kolPlatformNorm(p.platform) === 'Facebook',
+    // ค่าจากชีทใช้กับทุกแพลตฟอร์มที่ไม่ใช่ TikTok (Facebook/IG/Twitter/FB group…) — TikTok ใช้ GMV Max เสมอ
     sheetAd: parseFloat(p.sheet_ad_spend) || 0, sheetRev: parseFloat(p.sheet_revenue) || 0 }));
   _kolPostsLoaded = true;
 }
@@ -4205,7 +4233,7 @@ async function runLiveSearch() {
   try {
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
     const inList = creators.map(c => '"' + String(c).replace(/"/g, '') + '"').join(',');
-    const base = `${window.SUPABASE_URL}/rest/v1/orders?select=order_id,creator_handle,order_channel,order_status,settled,revenue,created_at_precise&channel=eq.TikTok&creator_handle=in.(${encodeURIComponent(inList)})&created_at_precise=gte.${encodeURIComponent(fromISO)}&created_at_precise=lte.${encodeURIComponent(toISO)}${ocFilter ? '&order_channel=eq.' + encodeURIComponent(ocFilter) : ''}&order=created_at_precise.asc,order_id.asc`;
+    const base = `${window.SUPABASE_URL}/rest/v1/orders?select=order_id,creator_handle,order_channel,order_status,settled,revenue,created_at_precise,sku_promotion&channel=eq.TikTok&creator_handle=in.(${encodeURIComponent(inList)})&created_at_precise=gte.${encodeURIComponent(fromISO)}&created_at_precise=lte.${encodeURIComponent(toISO)}${ocFilter ? '&order_channel=eq.' + encodeURIComponent(ocFilter) : ''}&order=created_at_precise.asc,order_id.asc`;
     matched = await fetchKeyset(base, headers, ['created_at_precise', 'order_id']);
     const ids = matched.map(r => r.order_id).filter(Boolean);
     for (let i = 0; i < ids.length; i += 150) {
@@ -4228,6 +4256,22 @@ async function runLiveSearch() {
     <div class="card" style="flex:1;min-width:140px;border-top:3px solid var(--green);"><div class="card-title">ขายได้</div><div class="kpi-value">${fmt(soldIds.size)}</div><div class="kpi-sub">฿${fmt(soldAmount)}</div></div>
     <div class="card" style="flex:1;min-width:140px;border-top:3px solid var(--red);"><div class="card-title">ยกเลิก/ตีกลับ</div><div class="kpi-value">${fmt(cancelledIds.size)}</div><div class="kpi-sub">฿${fmt(cancelledAmount)}</div></div>
   `;
+
+  // ---- โปรโมชั่นที่ขายได้ (จาก sku_promotion ของออเดอร์ที่ขายได้จริง) ----
+  const promoBy = {};
+  matched.forEach(r => {
+    const k = (r.sku_promotion || '').trim() || 'ไม่ระบุ';
+    if (!promoBy[k]) promoBy[k] = { ord: 0, rev: 0, canc: 0 };
+    if (soldIds.has(r.order_id)) { promoBy[k].ord++; promoBy[k].rev += parseFloat(r.revenue) || 0; } else promoBy[k].canc++;
+  });
+  const promoName = promo => promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim()) + 'x' + m[2] : skuToName(p.trim()); }).join(' + ');
+  const promoRows = Object.entries(promoBy).filter(([, v]) => v.ord || v.canc).sort((a, b) => b[1].rev - a[1].rev);
+  document.getElementById('tbodyLsPromo').innerHTML = promoRows.length ? promoRows.map(([k, v], i) => `
+    <tr><td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${ttcEsc(k)}</td><td>${ttcEsc(promoName(k))}</td>
+      <td>${fmt(v.ord)}</td><td style="font-weight:600;">฿${fmt(v.rev)}</td><td>฿${fmt(v.ord ? v.rev / v.ord : 0)}</td>
+      <td>${soldAmount ? (v.rev / soldAmount * 100).toFixed(1) : 0}%</td>
+      <td>${v.canc ? `<span style="color:var(--red);">${fmt(v.canc)}</span>` : '—'}</td></tr>`).join('') : '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>';
 
   const skuBySold = {}, skuByCancelled = {};
   skuRowsLs.filter(r => soldIds.has(r.order_id) || cancelledIds.has(r.order_id)).forEach(r => {
@@ -6477,7 +6521,7 @@ async function refreshDashboardData() {
   // ล้างแคชฝั่ง TikTok Ads + ค่าจ้าง KOL ด้วย (ตารางในหน้า Creator / KOL) ให้โหลดใหม่รอบถัดไป
   _kolPostsLoaded = false; ttaLastRange = null;
   idbSet(KOL_CACHE_KEY, null);
-  if (currentPage === 'kol' || currentPage === 'creatorperf' || currentPage === 'ttads') { const f = getDateValue('From'), t = getDateValue('To'); idbSet('tta:' + f + '|' + t, null); idbSet('cptta:' + f + '|' + t, null); }
+  if (currentPage === 'kol' || currentPage === 'creatorperf' || currentPage === 'ttads') { const f = getDateValue('From'), t = getDateValue('To'); idbSet('tta:' + f + '|' + t, null); idbSet('cptta:' + f + '|' + t, null); idbSet('kolclips_v1', null); kolClips.loaded = false; }
   cpTta.rangeKey = null;
   salesSum.rangeKey = null;
   cpCreator.rangeKey = null; freeSample.rangeKey = null; _filterOptions = null; _creatorListLoaded = false;
@@ -8146,15 +8190,21 @@ function renderTtaTable() {
 }
 
 // ===================== KOL / AFFILIATE PAGE =====================
-// canonical sources: ค่าจ้าง = kol_posts (Google Sheet) · ยอดที่กลับมา = orders (TikTok, Videos, ไม่รวม Cancel/Return) · boost = mv_tiktok_creative_performance
+// ===================== KOL / AFFILIATE PAGE =====================
+// หลักการ (2026-09-04): "ยอดที่แอดนับ" ต่อโพสต์ สะสมทั้งชีวิตโพสต์ ทุกแพลตฟอร์ม
+//   ค่าจ้าง = kol_posts (Google Sheet ทีม KOL) นับตามวันโพสต์
+//   TikTok: ค่าแอด/ยอดแอด = GMV Max ต่อคลิป (RPC tta_clip_summary บน mv_tiktok_creative_performance) ดึงตั้งแต่ต้นข้อมูลถึงวันนี้ ไม่ใช่เฉพาะช่วงที่เลือก
+//   แพลตฟอร์มอื่น (Facebook/IG/Twitter/FB group…): ค่าแอด/ยอดแอด = คอลัมน์ "ค่าโฆษณา"/"ยอดขาย" ในชีท (sheet_ad_spend / sheet_revenue)
+//   ไม่ใช้ยอดออเดอร์จริงต่อ creator ในหน้านี้ (นั่นคือหน้า Creator Performance) — จนกว่า TikTok Accounts API จะอนุมัติค่อยดูคลิปที่ไม่ได้ boost
+//   ROAS ทุกระดับคิดจากเฉพาะ "โพสต์ที่วัดได้" (มีตัวเลขยอดแอด) ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขแยกไว้ในการ์ด "งบที่ยังวัดผลไม่ได้"
 const debouncedRenderKolPage = debounce(() => renderKolPage(), 300);
 let _kolCreatorRows = [];
 let _kolSelected = null;
 let _kolLoadSeq = 0;
 
-function kolRoiColor(roi) { return roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--accent)' : 'var(--red)'; }
 // ROAS = ยอดขาย ÷ ต้นทุน (x เท่า) · ROI = (ยอดขาย − ต้นทุน) ÷ ต้นทุน = ROAS − 1 (แสดงเป็น %) — ตัวเลขเดียวกันคนละสเกล
 function kolRoiPct(roas) { return roas === null ? '' : `ROI ${roas - 1 >= 0 ? '+' : ''}${((roas - 1) * 100).toFixed(0)}%`; }
+function kolRoiColor(roi) { return roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--accent)' : 'var(--red)'; }
 function kolRoiHtml(roi, extra) {
   if (roi === null) return `<span style="color:var(--text3);" ${extra || ''}>—</span>`;
   return `<span style="color:${kolRoiColor(roi)};font-weight:700;" ${extra || ''}>${roi.toFixed(2)}x</span><div style="font-size:9.5px;color:var(--text3);">${kolRoiPct(roi)}</div>`;
@@ -8162,11 +8212,52 @@ function kolRoiHtml(roi, extra) {
 function kolDaysAgo(d) { if (!d) return null; return Math.max(0, Math.round((Date.now() - new Date(d + 'T00:00:00').getTime()) / 86400000)); }
 function kolAgeHtml(d) { const n = kolDaysAgo(d); return n === null ? '—' : `${fmt(n)} วัน`; }
 function kolPlatformBadge(p) {
-  const col = { TikTok: '#25f4ee', Facebook: '#1877f2', Instagram: '#e1306c', Lemon8: '#ffd21f', YouTube: '#ff0000' }[p] || 'var(--text3)';
+  const col = { TikTok: '#25f4ee', Facebook: '#1877f2', Instagram: '#e1306c', Lemon8: '#ffd21f', YouTube: '#ff0000', Twitter: '#1da1f2' }[p] || 'var(--text3)';
   return `<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid ${col};color:${col};margin-right:3px;">${ttcEsc(p)}</span>`;
 }
+// สถานะ "จ้างต่อไหม" จาก ROAS รวม (ยอดแอด ÷ (ค่าจ้าง + ค่าแอด)) ของโพสต์ที่วัดได้
+function kolStatus(c) {
+  if (!c.mPosts) return { key: 'na', label: '⏳ ยังไม่มีตัวเลข', color: 'var(--text3)', title: 'ยังไม่มีโพสต์ที่วัดผลได้ (TikTok ไม่ได้ boost / ทีมยังไม่กรอกยอด)' };
+  if (c.roiAll >= 3) return { key: 'good', label: '✅ จ้างต่อ', color: 'var(--green)', title: 'ROAS รวม ≥ 3x' };
+  if (c.roiAll >= 1) return { key: 'ok', label: '🟡 คุ้ม', color: 'var(--accent)', title: 'ROAS รวม 1–3x (ได้ยอดคืนมากกว่าที่จ่าย แต่ยังไม่แรง)' };
+  return { key: 'bad', label: '❌ ยังไม่คุ้ม', color: 'var(--red)', title: 'ROAS รวม < 1x (ยอดที่แอดนับน้อยกว่าเงินที่จ่าย)' };
+}
 
-// รวมข้อมูลทั้งหน้า: โพสต์ในช่วง (ตาม filter) + ยอด creator + boost
+// ---- ผลแอดต่อคลิป TikTok (สะสมทั้งชีวิตคลิป) — ดึงครั้งเดียวต่อ session, แคช IndexedDB 6 ชม. ----
+const kolClips = { loaded: false, byId: {} };
+const KOL_CLIPS_KEY = 'kolclips_v1';
+async function ensureKolClips(onFresh) {
+  if (kolClips.loaded) return;
+  const apply = rows => { kolClips.byId = {}; rows.forEach(r => { const c = rpcClipToObj(r); kolClips.byId[c.item_id] = c; }); kolClips.loaded = true; };
+  const load = async () => {
+    setBgSync('โหลดผลแอดคลิป KOL (สะสมทั้งคลิป)...', 40);
+    const rows = await supaRpc('tta_clip_summary', { p_from: '2025-01-01', p_to: fmtDateISO(new Date()), p_handle: null, p_kol_only: true }, true);
+    setBgSync(`ผลแอดคลิป KOL ${fmt(rows.length)} คลิป อัปเดตแล้ว`, null);
+    idbSet(KOL_CLIPS_KEY, { rows, cachedAt: Date.now() });
+    return rows;
+  };
+  const cached = await idbGet(KOL_CLIPS_KEY);
+  if (cached && cached.rows) {
+    apply(cached.rows);
+    if (Date.now() - (cached.cachedAt || 0) > TTA_CACHE_MAX_AGE) load().then(rows => { apply(rows); typeof onFresh === 'function' && onFresh(); }).catch(e => console.warn('kol clips refresh failed:', e.message));
+    return;
+  }
+  apply(await load());
+}
+
+// ---- รวมข้อมูลทั้งหน้า: โพสต์ในช่วง (ตาม filter) + ผลแอดต่อโพสต์ ----
+function kolNewAgg(extra) { return Object.assign({ posts: 0, mPosts: 0, creators: new Set(), fee: 0, mFee: 0, adSpend: 0, rev: 0, spreadFee: 0 }, extra || {}); }
+function kolAddTo(a, p, w) {
+  w = w || 1;
+  a.posts += w; a.fee += p.budget * w; a.creators.add(p.handle);
+  if (p.measured) { a.mPosts += w; a.mFee += p.budget * w; a.adSpend += p.adSpend * w; a.rev += p.rev * w; }
+}
+function kolFinish(a) {
+  a.roiFee = a.mFee > 0 ? a.rev / a.mFee : null;
+  a.roiAll = (a.mFee + a.adSpend) > 0 ? a.rev / (a.mFee + a.adSpend) : null;
+  a.unmeasuredFee = a.fee - a.mFee;
+  return a;
+}
 function kolBuildData() {
   const from = getDateValue('From'), to = getDateValue('To');
   const fPlat = document.getElementById('kolFilterPlatform')?.value || '';
@@ -8174,26 +8265,24 @@ function kolBuildData() {
   const fProd = document.getElementById('kolFilterProduct')?.value || '';
   const fSearch = (document.getElementById('kolFilterSearch')?.value || '').toLowerCase().trim();
 
-  const clipById = {};
-  cpTta.kolClips.forEach(c => { clipById[c.item_id] = c; });
-
-  // โพสต์ทุกแพลตฟอร์มในช่วง (นับตามวันโพสต์)
   // สินค้าที่ creator แต่ละคนเคยรีวิว (ทั้ง sheet ไม่จำกัดช่วง) — ใช้กระจาย "งบรวม/รวม"
   const creatorSkus = {};
   kolPosts.forEach(p => {
     kolResolveProducts(p.products).forEach(x => { if (x.sku && !x.spreadCreator) (creatorSkus[p.kol_handle] = creatorSkus[p.kol_handle] || new Set()).add(x.sku); });
   });
   let posts = kolPosts.filter(p => p.post_date && p.post_date >= from && p.post_date <= to).map(p => {
-    const clip = p.item_id ? clipById[p.item_id] : null;
+    const clip = p.isTikTok && p.item_id ? kolClips.byId[p.item_id] : null;
     let products = kolResolveProducts(p.products);
     if (products.some(x => x.spreadCreator)) {
       const skus = [...(creatorSkus[p.kol_handle] || [])];
       products = skus.length ? skus.map(s => ({ sku: s, label: productsMap[s] || s, unmapped: false, spread: true })) : [{ sku: null, label: 'ไม่ระบุสินค้า (creator ไม่เคยรีวิวสินค้าอื่น)', unmapped: false }];
     }
-    // ค่าแอด: TikTok จาก Ads (คลิปที่ match item_id) · Facebook จากชีททีม KOL · ยอด Facebook ต่อโพสต์จากชีทเช่นกัน
-    return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle, productsResolved: products,
-      adSpend: clip ? clip.spend : (p.isFacebook ? p.sheetAd : 0), adGmv: clip ? clip.purchaseValue : 0,
-      fbRev: p.isFacebook ? p.sheetRev : 0, boosted: !!clip || (p.isFacebook && p.sheetAd > 0) };
+    // TikTok: จากคลิป GMV Max (ถ้าถูก boost) · อื่นๆ: จากชีท — "วัดได้" = มีตัวเลขยอดแอดให้ใช้
+    const adSpend = p.isTikTok ? (clip ? clip.spend : 0) : p.sheetAd;
+    const rev = p.isTikTok ? (clip ? clip.purchaseValue : 0) : p.sheetRev;
+    const measured = p.isTikTok ? !!clip : (p.sheetRev > 0 || p.sheetAd > 0);
+    return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle, productsResolved: products, adSpend, rev, measured, boosted: adSpend > 0,
+      roiFee: measured && p.budget > 0 ? rev / p.budget : null, roiAll: measured && (p.budget + adSpend) > 0 ? rev / (p.budget + adSpend) : null };
   });
   const allPosts = posts;
   if (fPlat) posts = posts.filter(p => p.platformNorm === fPlat);
@@ -8201,53 +8290,26 @@ function kolBuildData() {
   if (fProd) posts = posts.filter(p => p.productsResolved.some(x => (x.sku || x.label) === fProd));
   if (fSearch) posts = posts.filter(p => (p.kol_name || '').toLowerCase().includes(fSearch) || p.handle.includes(fSearch));
 
-  // ยอดออเดอร์จริง TikTok Videos ต่อ creator ในช่วงเดียวกัน (source: orders)
-  const revByHandle = {}, allOrderHandles = new Set();
-  cpCreator.summary.forEach(r => {   // เฟส 3: จาก creator_summary (mv_creator_daily) ช่วงเดียวกัน
-    const h = cpNormHandle(r.creator_handle || 'deesaythailand');
-    allOrderHandles.add(h);
-    if (r.order_channel !== 'Videos') return;
-    if (!revByHandle[h]) revByHandle[h] = { rev: 0, ord: 0 };
-    revByHandle[h].rev += parseFloat(r.revenue) || 0; revByHandle[h].ord += parseInt(r.orders) || 0;
-  });
-
   // ต่อ creator
   const byC = {};
   posts.forEach(p => {
     const h = p.handle || ('?' + (p.kol_name || ''));
-    if (!byC[h]) byC[h] = { handle: h, display: p.kol_name || h, tier: '', platforms: new Set(), posts: 0, ttPosts: 0, fee: 0, ttFee: 0, fbPosts: 0, fbFee: 0, fbRev: 0, fbAd: 0, boostN: 0, adSpend: 0, adGmv: 0, last: '', products: new Set() };
+    if (!byC[h]) byC[h] = kolNewAgg({ handle: h, display: p.kol_name || h, tier: '', platforms: new Set(), byPlat: {}, last: '', products: new Set() });
     const c = byC[h];
-    c.posts++; c.fee += p.budget; c.platforms.add(p.platformNorm);
+    kolAddTo(c, p);
+    c.platforms.add(p.platformNorm);
     if (p.tier) c.tier = p.tier;
-    if (p.isTikTok) { c.ttPosts++; c.ttFee += p.budget; }
-    if (p.isFacebook) { c.fbPosts++; c.fbFee += p.budget; c.fbRev += p.fbRev; c.fbAd += p.adSpend; }
-    if (p.boosted) { c.boostN++; c.adSpend += p.adSpend; c.adGmv += p.adGmv; }
     if (p.post_date > c.last) c.last = p.post_date;
     p.productsResolved.forEach(x => c.products.add(x.label));
+    if (!c.byPlat[p.platformNorm]) c.byPlat[p.platformNorm] = { posts: 0, mPosts: 0, fee: 0, rev: 0, adSpend: 0 };
+    const bp = c.byPlat[p.platformNorm]; bp.posts++; bp.fee += p.budget; if (p.measured) { bp.mPosts++; bp.rev += p.rev; bp.adSpend += p.adSpend; }
   });
-  const creators = Object.values(byC).map(c => {
-    const r = revByHandle[c.handle];
-    const ttRev = r ? r.rev : 0;
-    const rev = ttRev + c.fbRev;                 // ยอดรวมที่ track ได้ (TikTok จากออเดอร์ + Facebook จากชีท)
-    const trackedFee = c.ttFee + c.fbFee;        // ค่าจ้างเฉพาะแพลตฟอร์มที่มียอดให้เทียบ (IG/Lemon8 ไม่นับในตัวหาร)
-    const knownInOrders = allOrderHandles.has(c.handle);
-    return { ...c, platforms: [...c.platforms], products: [...c.products], rev, ttRev, trackedFee, ord: r ? r.ord : 0, knownInOrders,
-      roiFee: trackedFee > 0 ? rev / trackedFee : null,
-      roiAll: (trackedFee + c.adSpend) > 0 ? rev / (trackedFee + c.adSpend) : null };
-  });
-
-  // กระจายยอด creator → โพสต์ TikTok เท่าๆ กัน (ใช้ประมาณต่อสินค้า/แพลตฟอร์ม)
-  const ttPostsByHandle = {};
-  posts.forEach(p => { if (p.isTikTok) ttPostsByHandle[p.handle] = (ttPostsByHandle[p.handle] || 0) + 1; });
-  posts.forEach(p => {
-    const r = revByHandle[p.handle];
-    p.revShare = p.isFacebook ? p.fbRev : ((p.isTikTok && r && ttPostsByHandle[p.handle]) ? r.rev / ttPostsByHandle[p.handle] : 0);
-  });
-  return { posts, allPosts, creators, revByHandle, from, to };
+  const creators = Object.values(byC).map(c => { kolFinish(c); c.platforms = [...c.platforms]; c.products = [...c.products]; c.status = kolStatus(c); return c; });
+  return { posts, allPosts, creators, from, to };
 }
 
-function kolFillFilters(allPosts) {
-  const keep = (id, values, fmtLabel) => {
+function kolFillFilters() {
+  const keep = (id, values) => {
     const sel = document.getElementById(id); if (!sel) return;
     const cur = sel.value;
     const first = sel.options[0].outerHTML;
@@ -8263,17 +8325,27 @@ function kolFillFilters(allPosts) {
   keep('kolFilterProduct', Object.entries(prodMap).sort((a, b) => a[1].localeCompare(b[1], 'th')).map(([value, label]) => ({ value, label })));
 }
 
+// แถวตาราง (แพลตฟอร์ม / Tier / สินค้า) รูปแบบเดียวกัน
+function kolAggRow(label, a, totalFee, opts) {
+  opts = opts || {};
+  const measuredCell = a.posts ? `${fmt(Math.round(a.mPosts))}/${fmt(Math.round(a.posts))}<div style="font-size:9.5px;color:var(--text3);">${a.posts ? Math.round(a.mPosts / a.posts * 100) : 0}%</div>` : '—';
+  return `<tr><td>${label}</td><td>${fmt(Math.round(a.posts))}</td><td>${fmt(a.creators.size)}</td>
+    <td style="font-weight:600;">฿${fmt(a.fee)}${a.spreadFee ? `<div style="font-size:10px;color:var(--text3);" title="ส่วนที่มาจากการกระจายงบรวม/รวมกันแดด">~ กระจาย ฿${fmt(a.spreadFee)}</div>` : ''}</td>
+    <td>${totalFee ? (a.fee / totalFee * 100).toFixed(1) : 0}%</td>${opts.avg ? `<td>฿${fmt(a.posts ? a.fee / a.posts : 0)}</td>` : ''}
+    <td title="โพสต์ที่มีตัวเลขยอดแอด / ทั้งหมด">${measuredCell}</td>
+    <td>${a.adSpend ? '฿' + fmt(a.adSpend) : '—'}</td><td>${a.mPosts ? '฿' + fmt(a.rev) : '<span style="color:var(--text3);">—</span>'}</td>
+    <td>${kolRoiHtml(a.roiFee)}</td><td>${kolRoiHtml(a.roiAll)}</td></tr>`;
+}
+
 async function renderKolPage() {
-  const from = getDateValue('From'), to = getDateValue('To');
   const seq = ++_kolLoadSeq;
   const kpi = document.getElementById('kol-kpis'); if (!kpi) return;
-  if (!_kolPostsLoaded || cpTta.rangeKey !== from + '|' + to || cpCreator.rangeKey !== from + '|' + to) {
-    kpi.innerHTML = Array.from({ length: 6 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
+  if (!_kolPostsLoaded || !kolClips.loaded) {
+    kpi.innerHTML = Array.from({ length: 7 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
     try {
       const rerender = () => { if (currentPage === 'kol' && seq === _kolLoadSeq) renderKolPage(); };
       await ensureKolPosts(rerender);
-      await ensureCpTta(from, to, rerender);
-      await ensureCreatorData(from, to, rerender);
+      await ensureKolClips(rerender);
     } catch (e) {
       kpi.innerHTML = `<div class="card" style="flex:1;"><div style="color:var(--red);font-size:12px;">โหลดข้อมูลไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`;
       return;
@@ -8285,25 +8357,20 @@ async function renderKolPage() {
   const { posts, creators } = D;
 
   // ---- KPI ----
-  const fee = posts.reduce((s, p) => s + p.budget, 0);
-  const ttFee = posts.filter(p => p.isTikTok).reduce((s, p) => s + p.budget, 0);
-  const fbFee = posts.filter(p => p.isFacebook).reduce((s, p) => s + p.budget, 0);
-  const ttRev = creators.reduce((s, c) => s + c.ttRev, 0);
-  const fbRev = creators.reduce((s, c) => s + c.fbRev, 0);
-  const fbPostsN = posts.filter(p => p.isFacebook).length, fbWithRev = posts.filter(p => p.isFacebook && p.fbRev > 0).length;
-  const boostN = posts.filter(p => p.boosted).length, ttN = posts.filter(p => p.isTikTok).length;
-  const adSpend = posts.reduce((s, p) => s + p.adSpend, 0);
-  const trackedFee = ttFee + fbFee, rev = ttRev + fbRev;
-  const roi = trackedFee > 0 ? rev / trackedFee : null;
-  const roiAll = (trackedFee + adSpend) > 0 ? rev / (trackedFee + adSpend) : null;
-  const nonTtFee = fee - ttFee;
+  const T = kolFinish(kolNewAgg()); posts.forEach(p => kolAddTo(T, p)); T.creators = new Set(posts.map(p => p.handle));
+  kolFinish(T);
+  const byPlatRev = {}; posts.forEach(p => { if (p.measured) byPlatRev[p.platformNorm] = (byPlatRev[p.platformNorm] || 0) + p.rev; });
+  const byPlatFee = {}; posts.forEach(p => { byPlatFee[p.platformNorm] = (byPlatFee[p.platformNorm] || 0) + p.budget; });
+  const platLine = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} ฿${fmtB(v)}`).join(' · ');
+  const boostN = posts.filter(p => p.boosted).length;
   kpi.innerHTML = `
-    <div class="card" style="flex:1.2;min-width:170px;border:1px solid ${kolRoiColor(roi)};"><div class="card-title">ROAS ค่าจ้าง ${fbeInfoIcon('kol-info-roi', 'ROAS = ยอดขาย ÷ ค่าจ้าง (จ่าย 1 บาท ได้ยอดกลับกี่บาท) · ROI = (ยอดขาย − ค่าจ้าง) ÷ ค่าจ้าง = ROAS − 1<br><br>ยอดขาย: TikTok = ยอด Videos จากออเดอร์จริงของ creator ที่จ้าง · Facebook = ยอดขายที่ทีม KOL กรอกในชีท<br>ค่าจ้าง: เฉพาะโพสต์ TikTok + Facebook ในช่วงที่เลือก (IG/Lemon8 ไม่มียอดให้เทียบ จึงไม่อยู่ในตัวหาร)<br><br>ไม่รวมค่าแอด boost (ดู "ROAS รวม boost")<br>ยังไม่หักต้นทุนสินค้า<br>เขียว ≥ 3x · ทอง 1–3x · แดง < 1x')}</div><div class="kpi-value" style="font-size:30px;color:${kolRoiColor(roi)};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${roi !== null ? `<b>${kolRoiPct(roi)}</b> · ` : ''}ยอด ฿${fmtB(rev)} ÷ ค่าจ้าง ฿${fmtB(trackedFee)}${roiAll !== null ? ` · รวม boost ${roiAll.toFixed(2)}x` : ''}</div></div>
-    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #a78bfa;"><div class="card-title">งบจ้างรวม (ทุกแพลตฟอร์ม)</div><div class="kpi-value">฿${fmtB(fee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">TikTok ฿${fmtB(ttFee)}${nonTtFee ? ` · อื่นๆ ฿${fmtB(nonTtFee)}` : ''}</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">โพสต์ / creator</div><div class="kpi-value">${fmt(posts.length)} <span style="font-size:13px;color:var(--text3);">/ ${fmt(creators.length)} คน</span></div><div style="font-size:10px;color:var(--text3);margin-top:3px;">เฉลี่ย ฿${fmt(posts.length ? fee / posts.length : 0)} ต่อโพสต์</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดที่กลับมา (TikTok)</div><div class="kpi-value">฿${fmtB(ttRev)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(creators.filter(c => c.ttRev > 0).length)} จาก ${fmt(creators.filter(c => c.ttPosts).length)} คนที่ลง TikTok มียอด</div></div>
-    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #60a5fa;"><div class="card-title">boost ต่อ</div><div class="kpi-value">${ttN ? Math.round(boostN / ttN * 100) : 0}%</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(boostN)} จาก ${fmt(ttN + fbPostsN)} โพสต์ TikTok+Facebook · ค่าแอด ฿${fmtB(adSpend)}</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดที่กลับมา (Facebook) ${fbeInfoIcon('kol-info-fb', 'จากคอลัมน์ "ยอดขาย" ในชีททีม KOL (กรอกต่อโพสต์ ไม่ใช่รายวัน) — นับตามวันโพสต์ในช่วงที่เลือก · ค่าแอด Facebook จากคอลัมน์ "ค่าโฆษณา" รวมอยู่ใน boost')}</div><div class="kpi-value">${fbPostsN ? '฿' + fmtB(fbRev) : '<span style="color:var(--text3);">—</span>'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fbPostsN ? `${fmt(fbWithRev)} จาก ${fmt(fbPostsN)} โพสต์ Facebook มียอด · ค่าจ้าง ฿${fmtB(fbFee)}` : 'ไม่มีโพสต์ Facebook ในช่วงนี้'}</div></div>
+    <div class="card" style="flex:1.2;min-width:170px;border:1px solid ${kolRoiColor(T.roiFee)};"><div class="card-title">ROAS ค่าจ้าง ${fbeInfoIcon('kol-info-roi', 'ยอดแอด ÷ ค่าจ้าง (จ่ายค่าจ้าง 1 บาท ได้ยอดกลับกี่บาท) · ROI = ROAS − 1<br><br>คิดจาก<b>เฉพาะโพสต์ที่วัดได้</b> (TikTok ที่ boost / แพลตฟอร์มอื่นที่ทีมกรอกยอด) — ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขไม่อยู่ในตัวหาร ดูแยกที่การ์ด "งบที่ยังวัดผลไม่ได้"<br><br>ยอดแอด = ตัวเลขที่แอดนับ สะสมทั้งชีวิตโพสต์ (TikTok จาก GMV Max · อื่นๆ จากชีททีม KOL)<br>ยังไม่หักต้นทุนสินค้า · เขียว ≥ 3x · ทอง 1–3x · แดง < 1x')}</div><div class="kpi-value" style="font-size:30px;color:${kolRoiColor(T.roiFee)};">${T.roiFee !== null ? T.roiFee.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${T.roiFee !== null ? `<b>${kolRoiPct(T.roiFee)}</b> · ` : ''}ยอดแอด ฿${fmtB(T.rev)} ÷ ค่าจ้าง ฿${fmtB(T.mFee)} (${fmt(T.mPosts)} โพสต์ที่วัดได้)</div></div>
+    <div class="card" style="flex:1;min-width:150px;border:1px solid ${kolRoiColor(T.roiAll)};"><div class="card-title">ROAS รวม boost ${fbeInfoIcon('kol-info-roiall', 'ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) ของโพสต์ที่วัดได้ — ต้นทุนทั้งหมดที่ลงกับโพสต์นั้น 1 บาท ได้ยอดกลับกี่บาท<br>ใช้ตัวนี้ตัดสิน "จ้างต่อไหม"')}</div><div class="kpi-value" style="color:${kolRoiColor(T.roiAll)};">${T.roiAll !== null ? T.roiAll.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${T.roiAll !== null ? `<b>${kolRoiPct(T.roiAll)}</b> · ` : ''}ต้นทุน ฿${fmtB(T.mFee + T.adSpend)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;border-left:3px solid #a78bfa;"><div class="card-title">งบจ้างรวม (ทุกแพลตฟอร์ม)</div><div class="kpi-value">฿${fmtB(T.fee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatFee) || '—'}</div></div>
+    <div class="card" style="flex:1;min-width:150px;border-left:3px solid #ef9f27;"><div class="card-title">งบที่ยังวัดผลไม่ได้ ${fbeInfoIcon('kol-info-unm', 'ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขยอดแอด:<br>• TikTok ที่ไม่ได้ boost → รอ TikTok Accounts API<br>• แพลตฟอร์มอื่นที่ทีมยังไม่กรอกยอด/ค่าแอดในชีท<br><br>เงินก้อนนี้ไม่ได้แปลว่าขายไม่ได้ แค่ยังตอบไม่ได้')}</div><div class="kpi-value" style="color:#ef9f27;">฿${fmtB(T.unmeasuredFee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(T.posts - T.mPosts)} จาก ${fmt(T.posts)} โพสต์ (${T.posts ? Math.round((T.posts - T.mPosts) / T.posts * 100) : 0}%) ยังไม่มีตัวเลข</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">โพสต์ / creator</div><div class="kpi-value">${fmt(posts.length)} <span style="font-size:13px;color:var(--text3);">/ ${fmt(creators.length)} คน</span></div><div style="font-size:10px;color:var(--text3);margin-top:3px;">เฉลี่ย ฿${fmt(posts.length ? T.fee / posts.length : 0)} ต่อโพสต์</div></div>
+    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #60a5fa;"><div class="card-title">ค่าแอด boost</div><div class="kpi-value">฿${fmtB(T.adSpend)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(boostN)} โพสต์ที่ยิงแอดต่อ</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดแอดรวม</div><div class="kpi-value">฿${fmtB(T.rev)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatRev) || 'ยังไม่มีตัวเลข'}</div></div>
   `;
 
   // ---- unmapped products ----
@@ -8314,44 +8381,60 @@ async function renderKolPage() {
   unmEl.style.display = unmKeys.length ? 'block' : 'none';
   if (unmKeys.length) unmEl.innerHTML = `⚠ ชื่อสินค้าใน sheet ที่ยังไม่ได้ map เป็นสินค้ามาตรฐาน (${unmKeys.length}): ` + unmKeys.map(k => `<b>${ttcEsc(k)}</b> (${unm[k]})`).join(' · ') + ` — เพิ่มแถวใน <code>kol_product_map</code> แล้วรีเฟรช`;
 
-  // ---- chart: monthly fee by platform ----
+  // ---- คำแนะนำ: ใครควรจ้างต่อ ----
+  const good = creators.filter(c => c.status.key === 'good').sort((a, b) => b.rev - a.rev);
+  const ok = creators.filter(c => c.status.key === 'ok').sort((a, b) => b.rev - a.rev);
+  const bad = creators.filter(c => c.status.key === 'bad').sort((a, b) => b.fee - a.fee);
+  const na = creators.filter(c => c.status.key === 'na').sort((a, b) => b.fee - a.fee);
+  const recoList = (arr, n, fmtRow) => arr.slice(0, n).map(c => `<div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);cursor:pointer;" onclick="kolSelectCreator('${ttcEscAttr(c.handle)}')"><span><b>${ttcEsc(c.display)}</b> <span style="font-size:10px;color:var(--text3);">${ttcEsc(c.tier) || ''}</span></span><span style="white-space:nowrap;">${fmtRow(c)}</span></div>`).join('') + (arr.length > n ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;">…และอีก ${arr.length - n} คน (ดูในตาราง)</div>` : '');
+  const recoCol = (title, color, arr, sub, fmtRow) => `<div style="flex:1;min-width:220px;"><div style="font-size:12px;font-weight:700;color:${color};margin-bottom:2px;">${title} <span style="font-weight:400;color:var(--text3);">(${fmt(arr.length)} คน)</span></div><div style="font-size:10px;color:var(--text3);margin-bottom:6px;">${sub}</div>${arr.length ? recoList(arr, 6, fmtRow) : '<div style="font-size:11px;color:var(--text3);">—</div>'}</div>`;
+  document.getElementById('kol-reco').innerHTML = `
+    <div class="section-header"><div class="section-title">ใครควรจ้างต่อ ${fbeInfoIcon('kol-info-reco', 'จัดกลุ่มจาก ROAS รวม boost ของแต่ละ creator (โพสต์ที่วัดได้ ในช่วงวันโพสต์ที่เลือก)<br>✅ ≥ 3x · 🟡 1–3x · ❌ < 1x · ⏳ ไม่มีโพสต์ที่วัดได้<br><br>คนที่วัดได้แค่โพสต์เดียวควรดูอายุโพสต์ประกอบ (ยอดสะสมของโพสต์ใหม่ยังโตได้) · คลิกชื่อเพื่อดูรายโพสต์')}</div></div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;">
+      ${recoCol('✅ จ้างต่อ', 'var(--green)', good, 'ROAS รวม ≥ 3x — เรียงตามยอดแอด', c => `${c.roiAll.toFixed(1)}x · ฿${fmtB(c.rev)}`)}
+      ${recoCol('🟡 คุ้ม แต่ยังไม่แรง', 'var(--accent)', ok, 'ROAS รวม 1–3x — เรียงตามยอดแอด', c => `${c.roiAll.toFixed(1)}x · ฿${fmtB(c.rev)}`)}
+      ${recoCol('❌ ยังไม่คุ้ม', 'var(--red)', bad, 'ROAS รวม < 1x — เรียงตามค่าจ้าง', c => `${c.roiAll.toFixed(2)}x · จ่าย ฿${fmtB(c.fee + c.adSpend)}`)}
+      ${recoCol('⏳ ยังวัดไม่ได้', 'var(--text3)', na, `ไม่มีตัวเลขยอดแอด — รวมค่าจ้าง ฿${fmtB(na.reduce((s, c) => s + c.fee, 0))}`, c => `฿${fmtB(c.fee)} · ${fmt(c.posts)} โพสต์`)}
+    </div>`;
+
+  // ---- charts: งบรายเดือน แยกแพลตฟอร์ม / แยก Tier ----
   const months = [...new Set(posts.map(p => p.post_date.slice(0, 7)))].sort();
+  const mLabels = months.map(m => new Date(m + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' }));
+  const chartOpts = {
+    scales: { x: { stacked: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } }, y: { stacked: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } } },
+    options: { interaction: { mode: 'index', intersect: false } }, // เอาเมาส์วางเดือนไหน ขึ้นครบทุกแท่งของเดือนนั้น + ยอดรวม
+    tooltip: { callbacks: { label: it => `${it.dataset.label}: ฿${fmt(it.raw)}`, footer: items => `รวม: ฿${fmt(items.reduce((s, it) => s + (it.raw || 0), 0))}` } }
+  };
   const plats = [...new Set(posts.map(p => p.platformNorm))].sort((a, b) => (a === 'TikTok' ? -1 : b === 'TikTok' ? 1 : a.localeCompare(b)));
-  const pc = { TikTok: '#a78bfa', Facebook: '#60a5fa', Instagram: '#f472b6', Lemon8: '#fbbf24', YouTube: '#f87171' };
-  makeChart('chartKolMonthly', 'bar', months.map(m => new Date(m + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })),
-    plats.map((pl, i) => ({ label: pl, data: months.map(m => posts.filter(p => p.platformNorm === pl && p.post_date.startsWith(m)).reduce((s, p) => s + p.budget, 0)), backgroundColor: pc[pl] || COLORS[i % COLORS.length], stack: 'fee', borderRadius: 3 })),
-    { scales: { x: { stacked: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } }, y: { stacked: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } } },
-      options: { interaction: { mode: 'index', intersect: false } }, // เอาเมาส์วางเดือนไหน ขึ้นงบทุกแพลตฟอร์มของเดือนนั้นพร้อมกัน
-      tooltip: { callbacks: { label: it => `${it.dataset.label}: ฿${fmt(it.raw)}`, footer: items => `รวม: ฿${fmt(items.reduce((s, it) => s + (it.raw || 0), 0))}` } } });
+  const pc = { TikTok: '#a78bfa', Facebook: '#60a5fa', Instagram: '#f472b6', Lemon8: '#fbbf24', YouTube: '#f87171', Twitter: '#38bdf8' };
+  makeChart('chartKolMonthly', 'bar', mLabels,
+    plats.map((pl, i) => ({ label: pl, data: months.map(m => posts.filter(p => p.platformNorm === pl && p.post_date.startsWith(m)).reduce((s, p) => s + p.budget, 0)), backgroundColor: pc[pl] || COLORS[i % COLORS.length], stack: 'fee', borderRadius: 3 })), chartOpts);
+  const tiers = [...new Set(posts.map(p => (p.tier || '').trim() || 'ไม่ระบุ'))].sort();
+  makeChart('chartKolTier', 'bar', mLabels,
+    tiers.map((t, i) => ({ label: t, data: months.map(m => posts.filter(p => ((p.tier || '').trim() || 'ไม่ระบุ') === t && p.post_date.startsWith(m)).reduce((s, p) => s + p.budget, 0)), backgroundColor: COLORS[i % COLORS.length], stack: 'fee', borderRadius: 3 })), chartOpts);
 
-  // ---- by platform ----
-  const byP = {};
-  posts.forEach(p => { const k = p.platformNorm; if (!byP[k]) byP[k] = { posts: 0, fee: 0, creators: new Set(), rev: 0 }; byP[k].posts++; byP[k].fee += p.budget; byP[k].creators.add(p.handle); byP[k].rev += p.revShare; });
-  document.getElementById('tbodyKolPlatform').innerHTML = Object.entries(byP).sort((a, b) => b[1].fee - a[1].fee).map(([k, v]) => {
-    const tracked = k === 'TikTok' || k === 'Facebook';
-    return `<tr><td>${kolPlatformBadge(k)}</td><td>${fmt(v.posts)}</td><td>${fmt(v.creators.size)}</td><td>฿${fmt(v.fee)}</td><td>${fee ? (v.fee / fee * 100).toFixed(1) : 0}%</td>
-      <td>${tracked ? '฿' + fmt(v.rev) : '<span style="color:var(--text3);" title="ยังไม่มีการ tracking ยอดของแพลตฟอร์มนี้">—</span>'}</td><td>${tracked ? kolRoiHtml(v.fee ? v.rev / v.fee : null) : '<span style="color:var(--text3);">—</span>'}</td></tr>`;
-  }).join('') || '<tr><td colspan="7" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
+  // ---- ตาราง แพลตฟอร์ม / Tier ----
+  const byP = {}, byT = {};
+  posts.forEach(p => {
+    const k = p.platformNorm; if (!byP[k]) byP[k] = kolNewAgg(); kolAddTo(byP[k], p);
+    const t = (p.tier || '').trim() || 'ไม่ระบุ'; if (!byT[t]) byT[t] = kolNewAgg(); kolAddTo(byT[t], p);
+  });
+  document.getElementById('tbodyKolPlatform').innerHTML = Object.entries(byP).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(kolPlatformBadge(k), kolFinish(a), T.fee)).join('') || '<tr><td colspan="10" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
+  document.getElementById('tbodyKolTier').innerHTML = Object.entries(byT).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(`<b>${ttcEsc(k)}</b>`, kolFinish(a), T.fee, { avg: true })).join('') || '<tr><td colspan="11" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
 
-  // ---- by product ----
+  // ---- ตามสินค้า (โพสต์หลายสินค้า แบ่งเท่าๆ กัน) ----
   const byProd = {};
   posts.forEach(p => {
     const n = p.productsResolved.length;
     p.productsResolved.forEach(x => {
       const k = x.sku || x.label;
-      if (!byProd[k]) byProd[k] = { label: x.label, sku: x.sku, unmapped: x.unmapped, posts: 0, fee: 0, spreadFee: 0, creators: new Set(), boostN: 0, adSpend: 0, rev: 0, ttFee: 0 };
-      const b = byProd[k];
-      if (x.spread) b.spreadFee += p.budget / n;
-      b.posts += 1 / n; b.fee += p.budget / n; b.creators.add(p.handle); b.rev += p.revShare / n;
-      if (p.isTikTok || p.isFacebook) b.ttFee += p.budget / n;   // ttFee = ค่าจ้างแพลตฟอร์มที่ track ยอดได้ (TikTok + Facebook)
-      if (p.boosted) { b.boostN += 1 / n; b.adSpend += p.adSpend / n; }
+      if (!byProd[k]) byProd[k] = kolNewAgg({ label: x.label, sku: x.sku, unmapped: x.unmapped });
+      kolAddTo(byProd[k], p, 1 / n);
+      if (x.spread) byProd[k].spreadFee += p.budget / n;
     });
   });
-  document.getElementById('tbodyKolProduct').innerHTML = Object.values(byProd).sort((a, b) => b.fee - a.fee).map(b => `
-    <tr><td>${b.unmapped ? '⚠ ' : ''}${ttcEsc(b.label)}${b.sku ? ` <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${b.sku}</span>` : ''}</td>
-      <td>${fmt(Math.round(b.posts))}</td><td>${fmt(b.creators.size)}</td><td style="font-weight:600;">฿${fmt(b.fee)}${b.spreadFee ? `<div style="font-size:10px;color:var(--text3);" title="ส่วนที่มาจากการกระจายงบรวม/รวมกันแดด">~ กระจาย ฿${fmt(b.spreadFee)}</div>` : ''}</td><td>${fee ? (b.fee / fee * 100).toFixed(1) : 0}%</td>
-      <td>${b.boostN ? fmt(Math.round(b.boostN)) : '—'}</td><td>${b.adSpend ? '฿' + fmt(b.adSpend) : '—'}</td>
-      <td>${b.ttFee ? '฿' + fmt(b.rev) : '<span style="color:var(--text3);">—</span>'}</td><td>${kolRoiHtml(b.ttFee ? b.rev / b.ttFee : null)}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
+  document.getElementById('tbodyKolProduct').innerHTML = Object.values(byProd).sort((a, b) => b.fee - a.fee).map(b =>
+    kolAggRow(`${b.unmapped ? '⚠ ' : ''}${ttcEsc(b.label)}${b.sku ? ` <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${b.sku}</span>` : ''}`, kolFinish(b), T.fee)).join('') || '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
   _kolCreatorRows = creators;
   renderKolCreatorTable();
@@ -8361,7 +8444,8 @@ async function renderKolPage() {
 function renderKolCreatorTable() {
   const sortKey = document.getElementById('kolCreatorSort')?.value || 'fee';
   const rows = [..._kolCreatorRows].sort((a, b) => {
-    if (sortKey === 'roi') return (b.roiFee ?? -1) - (a.roiFee ?? -1);
+    if (sortKey === 'roiAll') return (b.roiAll ?? -1) - (a.roiAll ?? -1);
+    if (sortKey === 'roiFee') return (b.roiFee ?? -1) - (a.roiFee ?? -1);
     if (sortKey === 'rev') return b.rev - a.rev;
     if (sortKey === 'posts') return b.posts - a.posts;
     if (sortKey === 'last') return (b.last || '').localeCompare(a.last || '');
@@ -8370,22 +8454,22 @@ function renderKolCreatorTable() {
   document.getElementById('kol-creator-count').textContent = `(${fmt(rows.length)} คน)`;
   document.getElementById('tbodyKolCreator').innerHTML = rows.slice(0, 300).map(c => {
     const sel = _kolSelected === c.handle;
-    const revCell = !c.ttPosts ? '<span style="color:var(--text3);" title="ไม่ได้ลง TikTok ในช่วงนี้">—</span>'
-      : (!c.knownInOrders ? `<span style="color:#ef9f27;" title="ไม่พบชื่อ '${ttcEscAttr(c.handle)}' ในออเดอร์ TikTok เลย — ชื่อใน sheet อาจสะกดต่างจาก creator_handle">฿0 ⚠</span>` : '฿' + fmt(c.ttRev));
-    const fbCell = !c.fbPosts ? '<span style="color:var(--text3);" title="ไม่ได้ลง Facebook ในช่วงนี้">—</span>'
-      : `<span title="จากชีททีม KOL (${fmt(c.fbPosts)} โพสต์)">฿${fmt(c.fbRev)}</span>`;
+    const platKeys = Object.keys(c.byPlat);
+    const revSub = platKeys.length > 1 ? `<div style="font-size:9.5px;color:var(--text3);">${platKeys.filter(k => c.byPlat[k].mPosts).map(k => `${k} ฿${fmtB(c.byPlat[k].rev)}`).join(' · ')}</div>` : '';
     return `<tr style="cursor:pointer;${sel ? 'background:var(--bg3);' : ''}" onclick="kolSelectCreator('${ttcEscAttr(c.handle)}')" title="คลิกดูรายโพสต์">
       <td><b>${ttcEsc(c.display)}</b>${c.display !== c.handle ? `<div style="font-size:10px;color:var(--text3);">${ttcEsc(c.handle)}</div>` : ''}</td>
       <td style="font-size:11px;color:var(--text3);">${ttcEsc(c.tier) || '—'}</td>
       <td>${c.platforms.map(kolPlatformBadge).join('')}</td>
-      <td>${fmt(c.posts)}</td><td style="font-weight:600;">฿${fmt(c.fee)}</td>
-      <td>${c.boostN ? `${fmt(c.boostN)} คลิป<div style="font-size:10px;color:var(--text3);">฿${fmt(c.adSpend)}</div>` : '<span style="color:var(--text3);">—</span>'}</td>
-      <td>${revCell}</td><td>${fbCell}</td>
+      <td>${fmt(c.posts)} <span style="font-size:10px;color:var(--text3);">(${fmt(c.mPosts)})</span></td>
+      <td style="font-weight:600;">฿${fmt(c.fee)}${c.unmeasuredFee > 0 && c.mPosts ? `<div style="font-size:9.5px;color:#ef9f27;" title="ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลข ไม่อยู่ในตัวหาร ROAS">ยังวัดไม่ได้ ฿${fmt(c.unmeasuredFee)}</div>` : ''}</td>
+      <td>${c.adSpend ? '฿' + fmt(c.adSpend) : '<span style="color:var(--text3);">—</span>'}</td>
+      <td>${c.mPosts ? '฿' + fmt(c.rev) + revSub : '<span style="color:var(--text3);">—</span>'}</td>
       <td>${kolRoiHtml(c.roiFee)}</td><td>${kolRoiHtml(c.roiAll)}</td>
+      <td style="white-space:nowrap;font-size:11px;color:${c.status.color};font-weight:600;" title="${ttcEscAttr(c.status.title)}">${c.status.label}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;">${c.last ? thShort(c.last) : '—'}${c.last ? `<div style="font-size:9.5px;color:var(--text3);">${kolAgeHtml(c.last)}ก่อน</div>` : ''}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="11" class="empty">ไม่มี creator ตามเงื่อนไข</td></tr>';
-  document.getElementById('kol-creator-foot').textContent = `แสดง ${fmt(Math.min(300, rows.length))} จาก ${fmt(rows.length)} คน · ROAS ค่าจ้าง = (ยอด TikTok + ยอด Facebook) ÷ ค่าจ้างโพสต์ TikTok+Facebook · ROAS รวม boost = ยอดเดียวกัน ÷ (ค่าจ้าง + ค่าแอด) · ROI = ROAS − 1 · ⚠ = ไม่พบชื่อในออเดอร์ (ให้ทีม KOL เช็คสะกดชื่อใน sheet ให้ตรง handle TikTok)`;
+  document.getElementById('kol-creator-foot').textContent = `แสดง ${fmt(Math.min(300, rows.length))} จาก ${fmt(rows.length)} คน · โพสต์ (วัดได้) = โพสต์ทั้งหมด (ที่มีตัวเลขยอดแอด) · ROAS ค่าจ้าง = ยอดแอด ÷ ค่าจ้างของโพสต์ที่วัดได้ · ROAS รวม = ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) · ROI = ROAS − 1 · สถานะดูจาก ROAS รวม`;
 }
 
 function kolSelectCreator(handle) {
@@ -8402,29 +8486,30 @@ function renderKolDetail(handle, D) {
   const posts = D.posts.filter(p => p.handle === handle).sort((a, b) => b.post_date.localeCompare(a.post_date));
   if (!c || !posts.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-  document.getElementById('kol-detail-title').innerHTML = `${ttcEsc(c.display)} <span style="font-size:11px;font-weight:400;color:var(--text3);">${c.tier ? c.tier + ' · ' : ''}${c.platforms.join(' / ')} · ${fmt(posts.length)} โพสต์ในช่วงที่เลือก</span>`;
+  document.getElementById('kol-detail-title').innerHTML = `${ttcEsc(c.display)} <span style="font-size:11px;font-weight:400;color:var(--text3);">${c.tier ? c.tier + ' · ' : ''}${c.platforms.join(' / ')} · ${fmt(posts.length)} โพสต์ในช่วงที่เลือก</span> <span style="font-size:11px;color:${c.status.color};font-weight:600;margin-left:6px;">${c.status.label}</span>`;
   const k = (t, v, sub, col) => `<div class="card" style="flex:1;min-width:120px;padding:10px 12px;"><div class="card-title">${t}</div><div class="kpi-value" style="font-size:20px;${col ? 'color:' + col + ';' : ''}">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">${sub}</div>` : ''}</div>`;
   document.getElementById('kol-detail-kpis').innerHTML =
-    k('ค่าจ้างรวม', '฿' + fmtB(c.fee), c.ttFee !== c.fee ? `TikTok ฿${fmtB(c.ttFee)}` : '') +
-    k('ยอด TikTok ที่กลับมา', c.ttPosts ? '฿' + fmtB(c.ttRev) : '—', c.ord ? `${fmt(c.ord)} ออเดอร์ (Videos)` : (c.ttPosts && !c.knownInOrders ? '⚠ ไม่พบชื่อในออเดอร์' : '')) +
-    (c.fbPosts ? k('ยอด Facebook (ชีท)', '฿' + fmtB(c.fbRev), `${fmt(c.fbPosts)} โพสต์ · ค่าแอด ฿${fmtB(c.fbAd)}`) : '') +
+    k('ค่าจ้างรวม', '฿' + fmtB(c.fee), c.unmeasuredFee > 0 ? `วัดได้ ฿${fmtB(c.mFee)} · ยังวัดไม่ได้ ฿${fmtB(c.unmeasuredFee)}` : `วัดได้ครบทุกโพสต์`) +
+    k('ค่าแอด boost', c.adSpend ? '฿' + fmtB(c.adSpend) : '—', `${fmt(posts.filter(p => p.boosted).length)} โพสต์ที่ยิงแอด`) +
+    k('ยอดแอด', c.mPosts ? '฿' + fmtB(c.rev) : '—', Object.keys(c.byPlat).filter(p => c.byPlat[p].mPosts).map(p => `${p} ฿${fmtB(c.byPlat[p].rev)}`).join(' · ') || 'ยังไม่มีตัวเลข') +
     k('ROAS ค่าจ้าง', c.roiFee !== null ? c.roiFee.toFixed(2) + 'x' : '—', kolRoiPct(c.roiFee), kolRoiColor(c.roiFee)) +
-    k('boost ต่อ', c.boostN ? `${fmt(c.boostN)} โพสต์` : '—', c.adSpend ? `ค่าแอด ฿${fmtB(c.adSpend)}${c.adGmv ? ` · ยอดจากแอด TikTok ฿${fmtB(c.adGmv)}` : ''}` : '') +
     k('ROAS รวม boost', c.roiAll !== null ? c.roiAll.toFixed(2) + 'x' : '—', kolRoiPct(c.roiAll), kolRoiColor(c.roiAll)) +
+    k('วัดได้', `${fmt(c.mPosts)} / ${fmt(c.posts)}`, 'โพสต์ที่มีตัวเลขยอดแอด') +
     k('สินค้าที่รีวิว', fmt(c.products.length), c.products.slice(0, 3).join(', ') + (c.products.length > 3 ? '…' : ''));
   document.getElementById('tbodyKolDetail').innerHTML = posts.map(p => {
     const link = p.post_link && /^https?:/i.test(p.post_link) ? p.post_link : (p.item_id ? `https://www.tiktok.com/@i/video/${p.item_id}` : '');
-    // TikTok: ROAS แอด = ยอดจากแอด ÷ ค่าแอด (เฉพาะคลิป boost) · Facebook: ROAS = ยอดขาย (ชีท) ÷ (ค่าจ้าง + ค่าแอดชีท)
-    const roas = p.isFacebook ? ((p.budget + p.adSpend) > 0 && p.fbRev ? p.fbRev / (p.budget + p.adSpend) : null) : (p.clip && p.adSpend ? p.adGmv / p.adSpend : null);
-    const revCell = p.isFacebook ? (p.fbRev ? '฿' + fmt(p.fbRev) : '<span style="color:var(--text3);">฿0</span>') : (p.clip ? '฿' + fmt(p.adGmv) : '—');
-    return `<tr>
+    const roiCell = r => r !== null ? `<span style="color:${kolRoiColor(r)};font-weight:700;">${r.toFixed(2)}x</span><div style="font-size:9.5px;color:var(--text3);">${kolRoiPct(r)}</div>` : '<span style="color:var(--text3);">—</span>';
+    const boostCell = p.boosted ? '<span style="color:var(--green);font-weight:700;font-size:10.5px;">boost แล้ว</span>'
+      : (p.isTikTok ? '<span style="color:var(--text3);font-size:10.5px;" title="ไม่พบคลิปนี้ในระบบ Ads — รอ Accounts API">ไม่ได้ boost</span>' : (p.measured ? '<span style="color:var(--text3);font-size:10.5px;">ไม่มีค่าแอด</span>' : '<span style="color:var(--text3);font-size:10.5px;" title="ทีม KOL ยังไม่กรอกยอด/ค่าแอดในชีท">ยังไม่กรอก</span>'));
+    return `<tr style="${p.measured ? '' : 'opacity:0.65;'}">
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;">${thShort(p.post_date)}</td>
       <td style="font-size:11px;white-space:nowrap;">${kolAgeHtml(p.post_date)}</td>
       <td>${kolPlatformBadge(p.platformNorm)}</td>
       <td>${p.productsResolved.map(x => (x.unmapped ? '⚠ ' : '') + ttcEsc(x.label)).join(', ')}${p.productsResolved.some(x => x.spread) ? ` <span style="font-size:10px;color:var(--text3);">(กระจายจาก "${ttcEsc(p.products || '')}")</span>` : ''}</td>
       <td>${p.budget ? '฿' + fmt(p.budget) : '<span style="color:var(--text3);">฿0</span>'}</td>
-      <td>${p.boosted ? '<span style="color:var(--green);font-weight:700;font-size:10.5px;">boost แล้ว</span>' : ((p.isTikTok || p.isFacebook) ? '<span style="color:var(--text3);font-size:10.5px;">ไม่ได้ boost</span>' : '<span style="color:var(--text3);">—</span>')}</td>
-      <td>${p.boosted ? '฿' + fmt(p.adSpend) : '—'}</td><td>${revCell}</td><td>${roas !== null ? `<span style="color:${kolRoiColor(roas)};font-weight:700;">${roas.toFixed(2)}x</span><div style="font-size:9.5px;color:var(--text3);">${kolRoiPct(roas)}</div>` : '—'}</td>
+      <td>${boostCell}</td>
+      <td>${p.adSpend ? '฿' + fmt(p.adSpend) : '—'}</td><td>${p.measured ? '฿' + fmt(p.rev) : '—'}</td>
+      <td>${roiCell(p.roiFee)}</td><td>${roiCell(p.roiAll)}</td>
       <td>${link ? `<a href="${ttcEscAttr(link)}" target="_blank" rel="noopener" style="color:var(--accent);">เปิด ↗</a>` : `<span style="color:var(--text3);font-size:10.5px;">${ttcEsc(p.post_link || '—')}</span>`}</td>
     </tr>`;
   }).join('');
