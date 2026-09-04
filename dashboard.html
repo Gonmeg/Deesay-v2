@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.05-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.05-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -923,7 +923,7 @@
           <button class="btn btn-ghost" onclick="['kolFilterPlatform','kolFilterTier','kolFilterProduct','kolFilterSearch'].forEach(id=>{document.getElementById(id).value='';}); renderKolPage();" style="flex:0 0 auto;">✕ ล้าง</button>
         </div>
         <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.5;">นับตาม<b>วันโพสต์</b> · ยอดแอด = ยอดขายที่<b>แอดนับได้</b> สะสมทั้งชีวิตโพสต์ (TikTok จาก GMV Max · แพลตฟอร์มอื่นจากชีททีม KOL) · ค่าแอด = เงินที่จ่ายยิงแอดต่อให้โพสต์นั้น (boost)<br>
-        <b>ROAS ค่าจ้าง</b> = ยอดแอด ÷ ค่าจ้าง &nbsp;·&nbsp; <b>ROAS รวม</b> = ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) &nbsp;·&nbsp; <b>ROI</b> = (ยอดแอด − ต้นทุน) ÷ ต้นทุน = ROAS − 1 &nbsp;·&nbsp; ทุกตัวคิดจากเฉพาะโพสต์ที่วัดได้ (มีตัวเลขยอดแอด) · เขียว ROAS ≥ 3x · ทอง 1–3x · แดง < 1x</div>
+        <b>ROAS</b> = ยอดขายจาก Ads ÷ ค่า Ads &nbsp;·&nbsp; <b>ROI</b> = (ยอดขายจาก Ads − เงินลงทุนทั้งหมด) ÷ เงินลงทุนทั้งหมด × 100 &nbsp;โดย เงินลงทุนทั้งหมด = ค่าจ้าง + ค่า Ads &nbsp;·&nbsp; ทั้งคู่คิดจากเฉพาะโพสต์ที่วัดได้ (มีตัวเลขยอดขายจาก Ads) · ROI เขียว ≥ +200% · ทอง 0 ถึง +200% · แดง ติดลบ</div>
       </div>
 
       <div id="kol-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
@@ -942,30 +942,30 @@
         </div>
       </div>
 
-      <div class="grid-2" style="margin-bottom:20px;">
+      <div style="display:flex;flex-direction:column;gap:20px;margin-bottom:20px;">
         <div class="card">
-          <div class="section-header"><div class="section-title">ตามแพลตฟอร์ม</div><button class="btn btn-ghost" onclick="exportTable('tblKolPlatform')">⬇ Export CSV</button></div>
+          <div class="section-header"><div class="section-title">ตามแพลตฟอร์ม</div><button class="btn btn-ghost" onclick="exportTable('tblKolPlatform')" style="white-space:nowrap;">⬇ Export CSV</button></div>
           <div class="table-wrap"><table id="tblKolPlatform">
-            <thead><tr><th>แพลตฟอร์ม</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th></tr></thead>
+            <thead><tr><th>แพลตฟอร์ม</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่า Ads</th><th>ยอดขายจาก Ads</th><th>ROAS</th><th>ROI</th></tr></thead>
             <tbody id="tbodyKolPlatform"></tbody></table></div>
         </div>
         <div class="card">
-          <div class="section-header"><div class="section-title">ตาม Tier</div><button class="btn btn-ghost" onclick="exportTable('tblKolTier')">⬇ Export CSV</button></div>
+          <div class="section-header"><div class="section-title">ตาม Tier</div><button class="btn btn-ghost" onclick="exportTable('tblKolTier')" style="white-space:nowrap;">⬇ Export CSV</button></div>
           <div class="table-wrap"><table id="tblKolTier">
-            <thead><tr><th>Tier</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>เฉลี่ย/โพสต์</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th></tr></thead>
+            <thead><tr><th>Tier</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>เฉลี่ย/โพสต์</th><th>วัดได้</th><th>ค่า Ads</th><th>ยอดขายจาก Ads</th><th>ROAS</th><th>ROI</th></tr></thead>
             <tbody id="tbodyKolTier"></tbody></table></div>
         </div>
       </div>
-      <div style="font-size:10.5px;color:var(--text3);margin:-12px 0 20px 4px;">"วัดได้" = โพสต์ที่มีตัวเลขยอดแอด (TikTok ที่ boost / แพลตฟอร์มอื่นที่ทีมกรอกยอด) · ROAS ทุกตารางคิดจาก<b>เฉพาะโพสต์ที่วัดได้</b> — ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขไม่อยู่ในตัวหาร แต่ดูได้ในการ์ด "งบที่ยังวัดผลไม่ได้"</div>
+      <div style="font-size:10.5px;color:var(--text3);margin:-12px 0 20px 4px;">"วัดได้" = โพสต์ที่มีตัวเลขยอดแอด (TikTok ที่ boost / แพลตฟอร์มอื่นที่ทีมกรอกยอด) · ROAS = ยอดขายจาก Ads ÷ ค่า Ads · ROI = (ยอดขายจาก Ads − (ค่าจ้าง + ค่า Ads)) ÷ (ค่าจ้าง + ค่า Ads) × 100 — ทั้งคู่คิดจาก<b>เฉพาะโพสต์ที่วัดได้</b> ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขไม่อยู่ในตัวหาร แต่ดูได้ในการ์ด "งบที่ยังวัดผลไม่ได้"</div>
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
           <div class="section-title">ตามสินค้า — ใช้งบจ้างไปเท่าไร คุ้มไหม</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblKolProduct')">⬇ Export CSV</button>
+          <button class="btn btn-ghost" onclick="exportTable('tblKolProduct')" style="white-space:nowrap;">⬇ Export CSV</button>
         </div>
         <div class="table-wrap">
           <table id="tblKolProduct">
-            <thead><tr><th>สินค้า</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th></tr></thead>
+            <thead><tr><th>สินค้า</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่า Ads</th><th>ยอดขายจาก Ads</th><th>ROAS</th><th>ROI</th></tr></thead>
             <tbody id="tbodyKolProduct"></tbody>
           </table>
         </div>
@@ -975,17 +975,11 @@
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header" style="flex-wrap:wrap;gap:8px;">
           <div class="section-title">Creator ที่จ้าง <span id="kol-creator-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <span style="font-size:11px;color:var(--text3);">เรียงตาม</span>
-            <select class="ls-input" id="kolCreatorSort" onchange="renderKolCreatorTable()" style="padding:5px 8px;font-size:12px;">
-              <option value="fee">งบจ้าง</option><option value="roiAll">ROAS รวม</option><option value="roiFee">ROAS ค่าจ้าง</option><option value="rev">ยอดแอด</option><option value="posts">จำนวนโพสต์</option><option value="last">โพสต์ล่าสุด</option>
-            </select>
-            <button class="btn btn-ghost" onclick="exportTable('tblKolCreator')">⬇ Export CSV</button>
-          </div>
+          <button class="btn btn-ghost" onclick="exportTable('tblKolCreator')" style="white-space:nowrap;">⬇ Export CSV</button>
         </div>
         <div class="table-wrap" style="max-height:560px;overflow-y:auto;">
           <table id="tblKolCreator" class="sticky-head-table">
-            <thead><tr><th>Creator</th><th>Tier</th><th>แพลตฟอร์ม</th><th>โพสต์ (วัดได้)</th><th>ค่าจ้าง</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th><th>สถานะ</th><th>โพสต์ล่าสุด</th></tr></thead>
+            <thead><tr><th class="sortable-th" onclick="kolCreatorSort('name')">Creator <span class="sort-ind" id="kcs-name"></span></th><th>Tier</th><th>แพลตฟอร์ม</th><th class="sortable-th" onclick="kolCreatorSort('posts')">โพสต์ (วัดได้) <span class="sort-ind" id="kcs-posts"></span></th><th class="sortable-th" onclick="kolCreatorSort('fee')">ค่าจ้าง <span class="sort-ind" id="kcs-fee"></span></th><th class="sortable-th" onclick="kolCreatorSort('adSpend')">ค่า Ads <span class="sort-ind" id="kcs-adSpend"></span></th><th class="sortable-th" onclick="kolCreatorSort('rev')">ยอดขายจาก Ads <span class="sort-ind" id="kcs-rev"></span></th><th class="sortable-th" onclick="kolCreatorSort('roas')">ROAS <span class="sort-ind" id="kcs-roas"></span></th><th class="sortable-th" onclick="kolCreatorSort('roiAll')">ROI <span class="sort-ind" id="kcs-roiAll"></span></th><th>สถานะ</th><th class="sortable-th" onclick="kolCreatorSort('last')">โพสต์ล่าสุด <span class="sort-ind" id="kcs-last"></span></th></tr></thead>
             <tbody id="tbodyKolCreator"></tbody>
           </table>
         </div>
@@ -996,18 +990,18 @@
         <div class="section-header" style="flex-wrap:wrap;gap:8px;">
           <div class="section-title" id="kol-detail-title"></div>
           <div style="display:flex;gap:8px;">
-            <button class="btn btn-ghost" onclick="exportTable('tblKolDetail')">⬇ Export CSV</button>
+            <button class="btn btn-ghost" onclick="exportTable('tblKolDetail')" style="white-space:nowrap;">⬇ Export CSV</button>
             <button class="btn btn-ghost" onclick="kolCloseDetail()">✕ ปิด</button>
           </div>
         </div>
         <div id="kol-detail-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
         <div class="table-wrap">
           <table id="tblKolDetail">
-            <thead><tr><th>วันโพสต์</th><th>อายุโพสต์</th><th>แพลตฟอร์ม</th><th>สินค้า</th><th>ค่าจ้าง</th><th>boost</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th><th>ลิงก์</th></tr></thead>
+            <thead><tr><th>วันโพสต์</th><th>อายุโพสต์</th><th>แพลตฟอร์ม</th><th>สินค้า</th><th>ค่าจ้าง</th><th>boost</th><th>ค่า Ads</th><th>ยอดขายจาก Ads</th><th>ROAS</th><th>ROI</th><th>ลิงก์</th></tr></thead>
             <tbody id="tbodyKolDetail"></tbody>
           </table>
         </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">อายุโพสต์ = วันนับจากวันโพสต์ถึงวันนี้ (ยอดที่เห็นสะสมมานานแค่ไหน) · TikTok: ค่าแอด/ยอดแอดจาก GMV Max สะสมทั้งชีวิตคลิป มีเฉพาะคลิปที่ boost — คลิปที่ไม่ได้ boost จะเห็นผลได้เมื่อ TikTok Accounts API อนุมัติ · แพลตฟอร์มอื่น: จากชีททีม KOL · ROAS ค่าจ้าง = ยอดแอด ÷ ค่าจ้าง · ROAS รวม = ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) · ROI = ROAS − 1</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">อายุโพสต์ = วันนับจากวันโพสต์ถึงวันนี้ (ยอดที่เห็นสะสมมานานแค่ไหน) · TikTok: ค่าแอด/ยอดแอดจาก GMV Max สะสมทั้งชีวิตคลิป มีเฉพาะคลิปที่ boost — คลิปที่ไม่ได้ boost จะเห็นผลได้เมื่อ TikTok Accounts API อนุมัติ · แพลตฟอร์มอื่น: จากชีททีม KOL · ROAS = ยอดขายจาก Ads ÷ ค่า Ads (โพสต์ที่ไม่ได้ boost ไม่มี ROAS) · ROI = (ยอดขายจาก Ads − (ค่าจ้าง + ค่า Ads)) ÷ (ค่าจ้าง + ค่า Ads) × 100</div>
       </div>
     </div>
 
@@ -8327,10 +8321,11 @@ function kolRoiHtml(roi, extra) {
   if (roi === null) return `<span style="color:var(--text3);" ${extra || ''}>—</span>`;
   return `<span style="color:${kolRoiColor(roi)};font-weight:700;" ${extra || ''}>${roi.toFixed(2)}x</span><div style="font-size:9.5px;color:var(--text3);">${kolRoiPct(roi)}</div>`;
 }
-// 2 คอลัมน์แยก: ROAS (x เท่า) และ ROI (%) — สีตามเกณฑ์เดียวกัน
-function kolRoasCell(r) { return r === null ? '<span style="color:var(--text3);">—</span>' : `<span style="color:${kolRoiColor(r)};font-weight:700;">${r.toFixed(2)}x</span>`; }
-function kolRoiCell(r) { return r === null ? '<span style="color:var(--text3);">—</span>' : `<span style="color:${kolRoiColor(r)};">${r - 1 >= 0 ? '+' : ''}${((r - 1) * 100).toFixed(0)}%</span>`; }
-function kolRoasRoiCells(roiFee, roiAll) { return `<td>${kolRoasCell(roiFee)}</td><td>${kolRoiCell(roiFee)}</td><td>${kolRoasCell(roiAll)}</td><td>${kolRoiCell(roiAll)}</td>`; }
+// 2 คอลัมน์: ROAS (ยอดขายจาก Ads ÷ ค่า Ads, x เท่า) และ ROI % ((ยอด − (ค่าจ้าง + ค่า Ads)) ÷ (ค่าจ้าง + ค่า Ads))
+function kolRoasCell(r) { return r === null ? '<span style="color:var(--text3);" title="ไม่มีค่า Ads (ไม่ได้ boost) จึงคิด ROAS ไม่ได้">—</span>' : `<span style="color:${kolRoiColor(r)};font-weight:700;">${r.toFixed(2)}x</span>`; }
+function kolRoiCell(r) { return r === null ? '<span style="color:var(--text3);">—</span>' : `<span style="color:${kolRoiColor(r)};font-weight:700;">${r - 1 >= 0 ? '+' : ''}${((r - 1) * 100).toFixed(0)}%</span>`; }
+function kolRoiPctText(r) { return r === null ? '—' : `${r - 1 >= 0 ? '+' : ''}${((r - 1) * 100).toFixed(0)}%`; }
+function kolRoasRoiCells(roas, roiAll) { return `<td>${kolRoasCell(roas)}</td><td>${kolRoiCell(roiAll)}</td>`; }
 function kolDaysAgo(d) { if (!d) return null; return Math.max(0, Math.round((Date.now() - new Date(d + 'T00:00:00').getTime()) / 86400000)); }
 function kolAgeHtml(d) { const n = kolDaysAgo(d); return n === null ? '—' : `${fmt(n)} วัน`; }
 function kolPlatformBadge(p) {
@@ -8338,11 +8333,12 @@ function kolPlatformBadge(p) {
   return `<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid ${col};color:${col};margin-right:3px;">${ttcEsc(p)}</span>`;
 }
 // สถานะ "จ้างต่อไหม" จาก ROAS รวม (ยอดแอด ÷ (ค่าจ้าง + ค่าแอด)) ของโพสต์ที่วัดได้
+// สถานะ "จ้างต่อไหม" ตัดสินจาก ROI (เงินลงทุน = ค่าจ้าง + ค่า Ads)
 function kolStatus(c) {
   if (!c.mPosts) return { key: 'na', label: '⏳ ยังไม่มีตัวเลข', color: 'var(--text3)', title: 'ยังไม่มีโพสต์ที่วัดผลได้ (TikTok ไม่ได้ boost / ทีมยังไม่กรอกยอด)' };
-  if (c.roiAll >= 3) return { key: 'good', label: '✅ จ้างต่อ', color: 'var(--green)', title: 'ROAS รวม ≥ 3x' };
-  if (c.roiAll >= 1) return { key: 'ok', label: '🟡 คุ้ม', color: 'var(--accent)', title: 'ROAS รวม 1–3x (ได้ยอดคืนมากกว่าที่จ่าย แต่ยังไม่แรง)' };
-  return { key: 'bad', label: '❌ ยังไม่คุ้ม', color: 'var(--red)', title: 'ROAS รวม < 1x (ยอดที่แอดนับน้อยกว่าเงินที่จ่าย)' };
+  if (c.roiAll >= 3) return { key: 'good', label: '✅ จ้างต่อ', color: 'var(--green)', title: 'ROI ≥ +200%' };
+  if (c.roiAll >= 1) return { key: 'ok', label: '🟡 คุ้ม', color: 'var(--accent)', title: 'ROI 0 ถึง +200% (ได้ยอดคืนมากกว่าที่ลงทุน แต่ยังไม่แรง)' };
+  return { key: 'bad', label: '❌ ยังไม่คุ้ม', color: 'var(--red)', title: 'ROI ติดลบ (ยอดขายจาก Ads น้อยกว่าเงินที่ลงทุน)' };
 }
 
 // ---- ผลแอดต่อคลิป TikTok (สะสมทั้งชีวิตคลิป) — ดึงครั้งเดียวต่อ session, แคช IndexedDB 6 ชม. ----
@@ -8375,8 +8371,9 @@ function kolAddTo(a, p, w) {
   if (p.measured) { a.mPosts += w; a.mFee += p.budget * w; a.adSpend += p.adSpend * w; a.rev += p.rev * w; }
 }
 function kolFinish(a) {
-  a.roiFee = a.mFee > 0 ? a.rev / a.mFee : null;
-  a.roiAll = (a.mFee + a.adSpend) > 0 ? a.rev / (a.mFee + a.adSpend) : null;
+  a.roas = a.adSpend > 0 ? a.rev / a.adSpend : null;                      // ROAS = ยอดขายจาก Ads ÷ ค่า Ads
+  a.roiAll = (a.mFee + a.adSpend) > 0 ? a.rev / (a.mFee + a.adSpend) : null; // อัตราส่วนภายใน → ROI% = (roiAll − 1) × 100  (เงินลงทุน = ค่าจ้าง + ค่า Ads ของโพสต์ที่วัดได้)
+  a.roiFee = a.roiAll; // เผื่อโค้ดเก่าอ้างถึง
   a.unmeasuredFee = a.fee - a.mFee;
   return a;
 }
@@ -8411,7 +8408,7 @@ function kolBuildData() {
     const rev = p.isTikTok ? (clip ? clip.purchaseValue : 0) : p.sheetRev;
     const measured = p.isTikTok ? !!clip : (p.sheetRev > 0 || p.sheetAd > 0);
     return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle, productsResolved: products, adSpend, rev, measured, boosted: adSpend > 0,
-      roiFee: measured && p.budget > 0 ? rev / p.budget : null, roiAll: measured && (p.budget + adSpend) > 0 ? rev / (p.budget + adSpend) : null };
+      roas: measured && adSpend > 0 ? rev / adSpend : null, roiAll: measured && (p.budget + adSpend) > 0 ? rev / (p.budget + adSpend) : null };
   });
   const allPosts = posts;
   if (fPlat) posts = posts.filter(p => p.platformNorm === fPlat);
@@ -8470,7 +8467,7 @@ function kolAggRow(label, a, totalFee, opts) {
     <td>${totalFee ? (a.fee / totalFee * 100).toFixed(1) : 0}%</td>${opts.avg ? `<td>฿${fmt(a.posts ? a.fee / a.posts : 0)}</td>` : ''}
     <td title="โพสต์ที่มีตัวเลขยอดแอด / ทั้งหมด">${measuredCell}</td>
     <td>${a.adSpend ? '฿' + fmt(a.adSpend) : '—'}</td><td>${a.mPosts ? '฿' + fmt(a.rev) : '<span style="color:var(--text3);">—</span>'}</td>
-    ${kolRoasRoiCells(a.roiFee, a.roiAll)}</tr>`;
+    ${kolRoasRoiCells(a.roas, a.roiAll)}</tr>`;
 }
 
 async function renderKolPage() {
@@ -8500,8 +8497,8 @@ async function renderKolPage() {
   const platLine = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} ฿${fmtB(v)}`).join(' · ');
   const boostN = posts.filter(p => p.boosted).length;
   kpi.innerHTML = `
-    <div class="card" style="flex:1.2;min-width:170px;border:1px solid ${kolRoiColor(T.roiFee)};"><div class="card-title">ROAS ค่าจ้าง ${fbeInfoIcon('kol-info-roi', 'ยอดแอด ÷ ค่าจ้าง (จ่ายค่าจ้าง 1 บาท ได้ยอดกลับกี่บาท) · ROI = ROAS − 1<br><br>คิดจาก<b>เฉพาะโพสต์ที่วัดได้</b> (TikTok ที่ boost / แพลตฟอร์มอื่นที่ทีมกรอกยอด) — ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขไม่อยู่ในตัวหาร ดูแยกที่การ์ด "งบที่ยังวัดผลไม่ได้"<br><br>ยอดแอด = ตัวเลขที่แอดนับ สะสมทั้งชีวิตโพสต์ (TikTok จาก GMV Max · อื่นๆ จากชีททีม KOL)<br>ยังไม่หักต้นทุนสินค้า · เขียว ≥ 3x · ทอง 1–3x · แดง < 1x')}</div><div class="kpi-value" style="font-size:30px;color:${kolRoiColor(T.roiFee)};">${T.roiFee !== null ? T.roiFee.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${T.roiFee !== null ? `<b>${kolRoiPct(T.roiFee)}</b> · ` : ''}ยอดแอด ฿${fmtB(T.rev)} ÷ ค่าจ้าง ฿${fmtB(T.mFee)} (${fmt(T.mPosts)} โพสต์ที่วัดได้)</div></div>
-    <div class="card" style="flex:1;min-width:150px;border:1px solid ${kolRoiColor(T.roiAll)};"><div class="card-title">ROAS รวม boost ${fbeInfoIcon('kol-info-roiall', 'ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) ของโพสต์ที่วัดได้ — ต้นทุนทั้งหมดที่ลงกับโพสต์นั้น 1 บาท ได้ยอดกลับกี่บาท<br>ใช้ตัวนี้ตัดสิน "จ้างต่อไหม"')}</div><div class="kpi-value" style="color:${kolRoiColor(T.roiAll)};">${T.roiAll !== null ? T.roiAll.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${T.roiAll !== null ? `<b>${kolRoiPct(T.roiAll)}</b> · ` : ''}ต้นทุน ฿${fmtB(T.mFee + T.adSpend)}</div></div>
+    <div class="card" style="flex:1.1;min-width:160px;border:1px solid ${kolRoiColor(T.roas)};"><div class="card-title">ROAS ${fbeInfoIcon('kol-info-roas', '<b>ROAS = ยอดขายจาก Ads ÷ ค่า Ads</b><br>จ่ายค่า Ads 1 บาท ได้ยอดขายกลับกี่บาท (ยังไม่รวมค่าจ้าง KOL — ดู ROI)<br><br>คิดจาก<b>เฉพาะโพสต์ที่วัดได้</b> · โพสต์ที่ไม่ได้ boost ไม่มีค่า Ads จึงไม่มี ROAS<br>ยอดขายจาก Ads = ตัวเลขที่ระบบแอดนับ สะสมทั้งชีวิตโพสต์ (TikTok จาก GMV Max · อื่นๆ จากชีททีม KOL)')}</div><div class="kpi-value" style="font-size:30px;color:${kolRoiColor(T.roas)};">${T.roas !== null ? T.roas.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">ยอด ฿${fmtB(T.rev)} ÷ ค่า Ads ฿${fmtB(T.adSpend)}</div></div>
+    <div class="card" style="flex:1.1;min-width:160px;border:1px solid ${kolRoiColor(T.roiAll)};"><div class="card-title">ROI ${fbeInfoIcon('kol-info-roi', '<b>ROI = (ยอดขายจาก Ads − เงินลงทุนทั้งหมด) ÷ เงินลงทุนทั้งหมด × 100</b><br>เงินลงทุนทั้งหมด = ค่าจ้าง KOL + ค่า Ads<br><br>+100% = ได้กำไรเท่าตัว · 0% = เท่าทุน · ติดลบ = ยอดน้อยกว่าที่ลงทุน<br>คิดจากเฉพาะโพสต์ที่วัดได้ — ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขดูที่การ์ด "งบที่ยังวัดผลไม่ได้"<br>ยังไม่หักต้นทุนสินค้า · ใช้ตัวนี้ตัดสิน "จ้างต่อไหม"')}</div><div class="kpi-value" style="font-size:30px;color:${kolRoiColor(T.roiAll)};">${kolRoiPctText(T.roiAll)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">(ยอด ฿${fmtB(T.rev)} − ลงทุน ฿${fmtB(T.mFee + T.adSpend)}) ÷ ฿${fmtB(T.mFee + T.adSpend)} · ${fmt(T.mPosts)} โพสต์ที่วัดได้</div></div>
     <div class="card" style="flex:1;min-width:150px;border-left:3px solid #a78bfa;"><div class="card-title">งบจ้างรวม (ทุกแพลตฟอร์ม)</div><div class="kpi-value">฿${fmtB(T.fee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatFee) || '—'}</div></div>
     <div class="card" style="flex:1;min-width:150px;border-left:3px solid #ef9f27;"><div class="card-title">งบที่ยังวัดผลไม่ได้ ${fbeInfoIcon('kol-info-unm', 'ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขยอดแอด:<br>• TikTok ที่ไม่ได้ boost → รอ TikTok Accounts API<br>• แพลตฟอร์มอื่นที่ทีมยังไม่กรอกยอด/ค่าแอดในชีท<br><br>เงินก้อนนี้ไม่ได้แปลว่าขายไม่ได้ แค่ยังตอบไม่ได้')}</div><div class="kpi-value" style="color:#ef9f27;">฿${fmtB(T.unmeasuredFee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(T.posts - T.mPosts)} จาก ${fmt(T.posts)} โพสต์ (${T.posts ? Math.round((T.posts - T.mPosts) / T.posts * 100) : 0}%) ยังไม่มีตัวเลข</div></div>
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">โพสต์ / creator</div><div class="kpi-value">${fmt(posts.length)} <span style="font-size:13px;color:var(--text3);">/ ${fmt(creators.length)} คน</span></div><div style="font-size:10px;color:var(--text3);margin-top:3px;">เฉลี่ย ฿${fmt(posts.length ? T.fee / posts.length : 0)} ต่อโพสต์</div></div>
@@ -8524,18 +8521,18 @@ async function renderKolPage() {
   const na = creators.filter(c => c.status.key === 'na').sort((a, b) => b.fee - a.fee);
   // ทุกกลุ่มแสดงข้อมูลชุดเดียวกัน: ROAS รวม · ยอดแอด · จ่ายไปทั้งหมด (ค่าจ้าง + ค่าแอด) — กลุ่ม ⏳ ไม่มี ROAS/ยอด
   const recoRow = c => c.mPosts
-    ? `<span style="color:${kolRoiColor(c.roiAll)};font-weight:700;">${c.roiAll.toFixed(2)}x</span> <span style="color:var(--text3);">· ยอด ฿${fmtB(c.rev)} · จ่าย ฿${fmtB(c.mFee + c.adSpend)}</span>`
-    : `<span style="color:var(--text3);">ROAS — · ยอด — · จ่าย ฿${fmtB(c.fee)} (${fmt(c.posts)} โพสต์)</span>`;
+    ? `<span style="color:${kolRoiColor(c.roiAll)};font-weight:700;">ROI ${kolRoiPctText(c.roiAll)}</span> <span style="color:var(--text3);">· ยอด ฿${fmtB(c.rev)} · ลงทุน ฿${fmtB(c.mFee + c.adSpend)}</span>`
+    : `<span style="color:var(--text3);">ROI — · ยอด — · ลงทุน ฿${fmtB(c.fee)} (${fmt(c.posts)} โพสต์)</span>`;
   const recoList = (arr, n) => arr.slice(0, n).map(c => `<div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);cursor:pointer;min-width:0;" onclick="kolSelectCreator('${ttcEscAttr(c.handle)}')"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><b>${ttcEsc(c.display)}</b> <span style="font-size:10px;color:var(--text3);">${ttcEsc(c.tier) || ''}</span></span><span style="white-space:nowrap;font-size:11px;">${recoRow(c)}</span></div>`).join('') + (arr.length > n ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;">…และอีก ${arr.length - n} คน (ดูในตาราง)</div>` : '');
   const recoCol = (title, color, arr, sub) => `<div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:${color};margin-bottom:2px;">${title} <span style="font-weight:400;color:var(--text3);">(${fmt(arr.length)} คน)</span></div><div style="font-size:10px;color:var(--text3);margin-bottom:6px;">${sub}</div>${arr.length ? recoList(arr, 6) : '<div style="font-size:11px;color:var(--text3);">—</div>'}</div>`;
   document.getElementById('kol-reco').innerHTML = `
-    <div class="section-header"><div class="section-title">ใครควรจ้างต่อ ${fbeInfoIcon('kol-info-reco', 'จัดกลุ่มจาก ROAS รวม boost ของแต่ละ creator (โพสต์ที่วัดได้ ในช่วงวันโพสต์ที่เลือก)<br>✅ ≥ 3x · 🟡 1–3x · ❌ < 1x · ⏳ ไม่มีโพสต์ที่วัดได้<br><br>คนที่วัดได้แค่โพสต์เดียวควรดูอายุโพสต์ประกอบ (ยอดสะสมของโพสต์ใหม่ยังโตได้) · คลิกชื่อเพื่อดูรายโพสต์')}</div></div>
-    <div style="font-size:10.5px;color:var(--text3);margin:-6px 0 10px;">ทุกกลุ่มแสดง: <b>ROAS รวม</b> (ยอดแอด ÷ (ค่าจ้าง + ค่าแอด)) · ยอดแอด · จ่ายไปทั้งหมด — เรียงตามยอดแอดมาก→น้อย (กลุ่ม ⏳ เรียงตามค่าจ้าง)</div>
+    <div class="section-header"><div class="section-title">ใครควรจ้างต่อ ${fbeInfoIcon('kol-info-reco', 'จัดกลุ่มจาก ROI ของแต่ละ creator (โพสต์ที่วัดได้ ในช่วงวันโพสต์ที่เลือก)<br>ROI = (ยอดขายจาก Ads − (ค่าจ้าง + ค่า Ads)) ÷ (ค่าจ้าง + ค่า Ads) × 100<br>✅ ≥ +200% · 🟡 0 ถึง +200% · ❌ ติดลบ · ⏳ ไม่มีโพสต์ที่วัดได้<br><br>คนที่วัดได้แค่โพสต์เดียวควรดูอายุโพสต์ประกอบ (ยอดสะสมของโพสต์ใหม่ยังโตได้) · คลิกชื่อเพื่อดูรายโพสต์')}</div></div>
+    <div style="font-size:10.5px;color:var(--text3);margin:-6px 0 10px;">ทุกกลุ่มแสดง: <b>ROI</b> · ยอดขายจาก Ads · เงินลงทุน (ค่าจ้าง + ค่า Ads) — เรียงตามยอดมาก→น้อย (กลุ่ม ⏳ เรียงตามค่าจ้าง)</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;">
-      ${recoCol('✅ จ้างต่อ', 'var(--green)', good, 'ROAS รวม ≥ 3x')}
-      ${recoCol('🟡 คุ้ม แต่ยังไม่แรง', 'var(--accent)', ok, 'ROAS รวม 1–3x')}
-      ${recoCol('❌ ยังไม่คุ้ม', 'var(--red)', bad.sort((a, b) => b.rev - a.rev), 'ROAS รวม < 1x')}
-      ${recoCol('⏳ ยังวัดไม่ได้', 'var(--text3)', na, `ยังไม่มีตัวเลขยอดแอด — รวมค่าจ้าง ฿${fmtB(na.reduce((s, c) => s + c.fee, 0))}`)}
+      ${recoCol('✅ จ้างต่อ', 'var(--green)', good, 'ROI ≥ +200%')}
+      ${recoCol('🟡 คุ้ม แต่ยังไม่แรง', 'var(--accent)', ok, 'ROI 0 ถึง +200%')}
+      ${recoCol('❌ ยังไม่คุ้ม', 'var(--red)', bad.sort((a, b) => b.rev - a.rev), 'ROI ติดลบ')}
+      ${recoCol('⏳ ยังวัดไม่ได้', 'var(--text3)', na, `ยังไม่มีตัวเลขยอดขายจาก Ads — รวมค่าจ้าง ฿${fmtB(na.reduce((s, c) => s + c.fee, 0))}`)}
     </div>`;
 
   // ---- charts: งบรายเดือน แยกแพลตฟอร์ม / แยก Tier ----
@@ -8560,8 +8557,8 @@ async function renderKolPage() {
     const k = p.platformNorm; if (!byP[k]) byP[k] = kolNewAgg(); kolAddTo(byP[k], p);
     const t = (p.tier || '').trim() || 'ไม่ระบุ'; if (!byT[t]) byT[t] = kolNewAgg(); kolAddTo(byT[t], p);
   });
-  document.getElementById('tbodyKolPlatform').innerHTML = Object.entries(byP).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(kolPlatformBadge(k), kolFinish(a), T.fee)).join('') || '<tr><td colspan="12" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
-  document.getElementById('tbodyKolTier').innerHTML = Object.entries(byT).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(`<b>${ttcEsc(k)}</b>`, kolFinish(a), T.fee, { avg: true })).join('') || '<tr><td colspan="13" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
+  document.getElementById('tbodyKolPlatform').innerHTML = Object.entries(byP).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(kolPlatformBadge(k), kolFinish(a), T.fee)).join('') || '<tr><td colspan="10" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
+  document.getElementById('tbodyKolTier').innerHTML = Object.entries(byT).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(`<b>${ttcEsc(k)}</b>`, kolFinish(a), T.fee, { avg: true })).join('') || '<tr><td colspan="11" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
 
   // ---- ตามสินค้า (โพสต์หลายสินค้า แบ่งเท่าๆ กัน) ----
   const byProd = {};
@@ -8575,23 +8572,24 @@ async function renderKolPage() {
     });
   });
   document.getElementById('tbodyKolProduct').innerHTML = Object.values(byProd).sort((a, b) => b.fee - a.fee).map(b =>
-    kolAggRow(`${b.unmapped ? '⚠ ' : ''}${ttcEsc(b.label)}${b.sku ? ` <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${b.sku}</span>` : ''}`, kolFinish(b), T.fee)).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
+    kolAggRow(`${b.unmapped ? '⚠ ' : ''}${ttcEsc(b.label)}${b.sku ? ` <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${b.sku}</span>` : ''}`, kolFinish(b), T.fee)).join('') || '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
   _kolCreatorRows = creators;
   renderKolCreatorTable();
   if (_kolSelected) renderKolDetail(_kolSelected, D);
 }
 
+let _kolSortCol = 'fee', _kolSortDir = 'desc';
+function kolCreatorSort(col) {
+  if (_kolSortCol === col) _kolSortDir = _kolSortDir === 'desc' ? 'asc' : 'desc';
+  else { _kolSortCol = col; _kolSortDir = col === 'name' ? 'asc' : 'desc'; }
+  renderKolCreatorTable();
+}
 function renderKolCreatorTable() {
-  const sortKey = document.getElementById('kolCreatorSort')?.value || 'fee';
-  const rows = [..._kolCreatorRows].sort((a, b) => {
-    if (sortKey === 'roiAll') return (b.roiAll ?? -1) - (a.roiAll ?? -1);
-    if (sortKey === 'roiFee') return (b.roiFee ?? -1) - (a.roiFee ?? -1);
-    if (sortKey === 'rev') return b.rev - a.rev;
-    if (sortKey === 'posts') return b.posts - a.posts;
-    if (sortKey === 'last') return (b.last || '').localeCompare(a.last || '');
-    return b.fee - a.fee;
-  });
+  const get = c => _kolSortCol === 'name' ? (c.display || '') : _kolSortCol === 'last' ? (c.last || '') : (c[_kolSortCol] ?? -Infinity);
+  const rows = [..._kolCreatorRows].sort((a, b) => { const av = get(a), bv = get(b); const c = typeof av === 'string' ? av.localeCompare(bv, 'th') : av - bv; return _kolSortDir === 'asc' ? c : -c; });
+  document.querySelectorAll('[id^="kcs-"]').forEach(el => { el.textContent = ''; });
+  const ind = document.getElementById('kcs-' + _kolSortCol); if (ind) ind.textContent = _kolSortDir === 'asc' ? '▲' : '▼';
   document.getElementById('kol-creator-count').textContent = `(${fmt(rows.length)} คน)`;
   document.getElementById('tbodyKolCreator').innerHTML = rows.slice(0, 300).map(c => {
     const sel = _kolSelected === c.handle;
@@ -8605,12 +8603,12 @@ function renderKolCreatorTable() {
       <td style="font-weight:600;">฿${fmt(c.fee)}${c.unmeasuredFee > 0 && c.mPosts ? `<div style="font-size:9.5px;color:#ef9f27;" title="ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลข ไม่อยู่ในตัวหาร ROAS">ยังวัดไม่ได้ ฿${fmt(c.unmeasuredFee)}</div>` : ''}</td>
       <td>${c.adSpend ? '฿' + fmt(c.adSpend) : '<span style="color:var(--text3);">—</span>'}</td>
       <td>${c.mPosts ? '฿' + fmt(c.rev) + revSub : '<span style="color:var(--text3);">—</span>'}</td>
-      ${kolRoasRoiCells(c.roiFee, c.roiAll)}
+      ${kolRoasRoiCells(c.roas, c.roiAll)}
       <td style="white-space:nowrap;font-size:11px;color:${c.status.color};font-weight:600;" title="${ttcEscAttr(c.status.title)}">${c.status.label}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;">${c.last ? thShort(c.last) : '—'}${c.last ? `<div style="font-size:9.5px;color:var(--text3);">${kolAgeHtml(c.last)}ก่อน</div>` : ''}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="13" class="empty">ไม่มี creator ตามเงื่อนไข</td></tr>';
-  document.getElementById('kol-creator-foot').textContent = `แสดง ${fmt(Math.min(300, rows.length))} จาก ${fmt(rows.length)} คน · โพสต์ (วัดได้) = โพสต์ทั้งหมด (ที่มีตัวเลขยอดแอด) · ROAS ค่าจ้าง = ยอดแอด ÷ ค่าจ้างของโพสต์ที่วัดได้ · ROAS รวม = ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) · ROI = ROAS − 1 · สถานะดูจาก ROAS รวม`;
+  }).join('') || '<tr><td colspan="11" class="empty">ไม่มี creator ตามเงื่อนไข</td></tr>';
+  document.getElementById('kol-creator-foot').textContent = `แสดง ${fmt(Math.min(300, rows.length))} จาก ${fmt(rows.length)} คน · คลิกหัวคอลัมน์เพื่อเรียง · โพสต์ (วัดได้) = โพสต์ทั้งหมด (ที่มีตัวเลขยอดขายจาก Ads) · ROAS = ยอดขายจาก Ads ÷ ค่า Ads · ROI = (ยอดขายจาก Ads − (ค่าจ้าง + ค่า Ads)) ÷ (ค่าจ้าง + ค่า Ads) × 100 · สถานะดูจาก ROI`;
 }
 
 function kolSelectCreator(handle) {
@@ -8631,10 +8629,10 @@ function renderKolDetail(handle, D) {
   const k = (t, v, sub, col) => `<div class="card" style="flex:1;min-width:120px;padding:10px 12px;"><div class="card-title">${t}</div><div class="kpi-value" style="font-size:20px;${col ? 'color:' + col + ';' : ''}">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">${sub}</div>` : ''}</div>`;
   document.getElementById('kol-detail-kpis').innerHTML =
     k('ค่าจ้างรวม', '฿' + fmtB(c.fee), c.unmeasuredFee > 0 ? `วัดได้ ฿${fmtB(c.mFee)} · ยังวัดไม่ได้ ฿${fmtB(c.unmeasuredFee)}` : `วัดได้ครบทุกโพสต์`) +
-    k('ค่าแอด boost', c.adSpend ? '฿' + fmtB(c.adSpend) : '—', `${fmt(posts.filter(p => p.boosted).length)} โพสต์ที่ยิงแอด`) +
-    k('ยอดแอด', c.mPosts ? '฿' + fmtB(c.rev) : '—', Object.keys(c.byPlat).filter(p => c.byPlat[p].mPosts).map(p => `${p} ฿${fmtB(c.byPlat[p].rev)}`).join(' · ') || 'ยังไม่มีตัวเลข') +
-    k('ROAS ค่าจ้าง', c.roiFee !== null ? c.roiFee.toFixed(2) + 'x' : '—', kolRoiPct(c.roiFee), kolRoiColor(c.roiFee)) +
-    k('ROAS รวม boost', c.roiAll !== null ? c.roiAll.toFixed(2) + 'x' : '—', kolRoiPct(c.roiAll), kolRoiColor(c.roiAll)) +
+    k('ค่า Ads', c.adSpend ? '฿' + fmtB(c.adSpend) : '—', `${fmt(posts.filter(p => p.boosted).length)} โพสต์ที่ยิงแอด`) +
+    k('ยอดขายจาก Ads', c.mPosts ? '฿' + fmtB(c.rev) : '—', Object.keys(c.byPlat).filter(p => c.byPlat[p].mPosts).map(p => `${p} ฿${fmtB(c.byPlat[p].rev)}`).join(' · ') || 'ยังไม่มีตัวเลข') +
+    k('ROAS', c.roas !== null ? c.roas.toFixed(2) + 'x' : '—', 'ยอดขายจาก Ads ÷ ค่า Ads', kolRoiColor(c.roas)) +
+    k('ROI', kolRoiPctText(c.roiAll), `ลงทุน ฿${fmtB(c.mFee + c.adSpend)} (ค่าจ้าง + ค่า Ads)`, kolRoiColor(c.roiAll)) +
     k('วัดได้', `${fmt(c.mPosts)} / ${fmt(c.posts)}`, 'โพสต์ที่มีตัวเลขยอดแอด') +
     k('สินค้าที่รีวิว', fmt(c.products.length), c.products.slice(0, 3).join(', ') + (c.products.length > 3 ? '…' : ''));
   document.getElementById('tbodyKolDetail').innerHTML = posts.map(p => {
@@ -8650,7 +8648,7 @@ function renderKolDetail(handle, D) {
       <td>${p.budget ? '฿' + fmt(p.budget) : '<span style="color:var(--text3);">฿0</span>'}</td>
       <td>${boostCell}</td>
       <td>${p.adSpend ? '฿' + fmt(p.adSpend) : '—'}</td><td>${p.measured ? '฿' + fmt(p.rev) : '—'}</td>
-      ${kolRoasRoiCells(p.roiFee, p.roiAll)}
+      ${kolRoasRoiCells(p.roas, p.roiAll)}
       <td>${link ? `<a href="${ttcEscAttr(link)}" target="_blank" rel="noopener" style="color:var(--accent);">เปิด ↗</a>` : `<span style="color:var(--text3);font-size:10.5px;">${ttcEsc(p.post_link || '—')}</span>`}</td>
     </tr>`;
   }).join('');
