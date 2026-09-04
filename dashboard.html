@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.04-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.05-a</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -381,7 +381,7 @@
         <span class="filter-label">Sub-Channel</span>
         <select id="filterSubChannel"><option value="">ทั้งหมด</option></select>
       </div>
-      <button class="btn btn-primary" onclick="applyFilters()">🔍 ค้นหา</button>
+      <button class="btn btn-primary" id="topSearchBtn" onclick="applyFilters()">🔍 ค้นหา</button>
     </div>
   </div>
 
@@ -912,14 +912,18 @@
     <div class="page" id="page-kol">
       <div class="card" style="margin-bottom:16px;padding:12px 16px;">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <span style="font-size:11px;color:var(--text3);white-space:nowrap;">กรอง</span>
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap;">ช่วงวันโพสต์</span>
+          <select class="ls-input" id="kolFilterYear" onchange="renderKolPage()" style="width:100px;flex:0 0 auto;padding:6px 10px;font-size:12px;"></select>
+          <select class="ls-input" id="kolFilterMonth" onchange="renderKolPage()" style="width:120px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทั้งปี</option><option value="01">ม.ค.</option><option value="02">ก.พ.</option><option value="03">มี.ค.</option><option value="04">เม.ย.</option><option value="05">พ.ค.</option><option value="06">มิ.ย.</option><option value="07">ก.ค.</option><option value="08">ส.ค.</option><option value="09">ก.ย.</option><option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option></select>
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap;margin-left:6px;">กรอง</span>
           <select class="ls-input" id="kolFilterPlatform" onchange="renderKolPage()" style="width:160px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุกแพลตฟอร์ม</option></select>
           <select class="ls-input" id="kolFilterTier" onchange="renderKolPage()" style="width:150px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุก Tier</option></select>
           <select class="ls-input" id="kolFilterProduct" onchange="renderKolPage()" style="width:210px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุกสินค้า</option></select>
           <input type="text" class="ls-input" id="kolFilterSearch" placeholder="🔎 ชื่อ creator..." oninput="debouncedRenderKolPage()" style="width:190px;flex:0 0 auto;padding:6px 10px;font-size:12px;">
           <button class="btn btn-ghost" onclick="['kolFilterPlatform','kolFilterTier','kolFilterProduct','kolFilterSearch'].forEach(id=>{document.getElementById(id).value='';}); renderKolPage();" style="flex:0 0 auto;">✕ ล้าง</button>
-          <span style="margin-left:auto;font-size:10.5px;color:var(--text3);text-align:right;line-height:1.4;">นับตาม<b>วันโพสต์</b>ในช่วงวันที่ด้านบน<br>ยอดขาย/ค่าแอด = ตัวเลขที่<b>แอดนับ</b> สะสมทั้งชีวิตโพสต์ (TikTok จาก GMV Max · แพลตฟอร์มอื่นจากชีททีม KOL)</span>
         </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.5;">นับตาม<b>วันโพสต์</b> · ยอดแอด = ยอดขายที่<b>แอดนับได้</b> สะสมทั้งชีวิตโพสต์ (TikTok จาก GMV Max · แพลตฟอร์มอื่นจากชีททีม KOL) · ค่าแอด = เงินที่จ่ายยิงแอดต่อให้โพสต์นั้น (boost)<br>
+        <b>ROAS ค่าจ้าง</b> = ยอดแอด ÷ ค่าจ้าง &nbsp;·&nbsp; <b>ROAS รวม</b> = ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) &nbsp;·&nbsp; <b>ROI</b> = (ยอดแอด − ต้นทุน) ÷ ต้นทุน = ROAS − 1 &nbsp;·&nbsp; ทุกตัวคิดจากเฉพาะโพสต์ที่วัดได้ (มีตัวเลขยอดแอด) · เขียว ROAS ≥ 3x · ทอง 1–3x · แดง < 1x</div>
       </div>
 
       <div id="kol-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
@@ -942,13 +946,13 @@
         <div class="card">
           <div class="section-header"><div class="section-title">ตามแพลตฟอร์ม</div><button class="btn btn-ghost" onclick="exportTable('tblKolPlatform')">⬇ Export CSV</button></div>
           <div class="table-wrap"><table id="tblKolPlatform">
-            <thead><tr><th>แพลตฟอร์ม</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th></tr></thead>
+            <thead><tr><th>แพลตฟอร์ม</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th></tr></thead>
             <tbody id="tbodyKolPlatform"></tbody></table></div>
         </div>
         <div class="card">
           <div class="section-header"><div class="section-title">ตาม Tier</div><button class="btn btn-ghost" onclick="exportTable('tblKolTier')">⬇ Export CSV</button></div>
           <div class="table-wrap"><table id="tblKolTier">
-            <thead><tr><th>Tier</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>เฉลี่ย/โพสต์</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th></tr></thead>
+            <thead><tr><th>Tier</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>เฉลี่ย/โพสต์</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th></tr></thead>
             <tbody id="tbodyKolTier"></tbody></table></div>
         </div>
       </div>
@@ -961,7 +965,7 @@
         </div>
         <div class="table-wrap">
           <table id="tblKolProduct">
-            <thead><tr><th>สินค้า</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th></tr></thead>
+            <thead><tr><th>สินค้า</th><th>โพสต์</th><th>creator</th><th>งบจ้าง</th><th>% งบ</th><th>วัดได้</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th></tr></thead>
             <tbody id="tbodyKolProduct"></tbody>
           </table>
         </div>
@@ -981,7 +985,7 @@
         </div>
         <div class="table-wrap" style="max-height:560px;overflow-y:auto;">
           <table id="tblKolCreator" class="sticky-head-table">
-            <thead><tr><th>Creator</th><th>Tier</th><th>แพลตฟอร์ม</th><th>โพสต์ (วัดได้)</th><th>ค่าจ้าง</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th><th>สถานะ</th><th>โพสต์ล่าสุด</th></tr></thead>
+            <thead><tr><th>Creator</th><th>Tier</th><th>แพลตฟอร์ม</th><th>โพสต์ (วัดได้)</th><th>ค่าจ้าง</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th><th>สถานะ</th><th>โพสต์ล่าสุด</th></tr></thead>
             <tbody id="tbodyKolCreator"></tbody>
           </table>
         </div>
@@ -999,7 +1003,7 @@
         <div id="kol-detail-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
         <div class="table-wrap">
           <table id="tblKolDetail">
-            <thead><tr><th>วันโพสต์</th><th>อายุโพสต์</th><th>แพลตฟอร์ม</th><th>สินค้า</th><th>ค่าจ้าง</th><th>boost</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROAS รวม</th><th>ลิงก์</th></tr></thead>
+            <thead><tr><th>วันโพสต์</th><th>อายุโพสต์</th><th>แพลตฟอร์ม</th><th>สินค้า</th><th>ค่าจ้าง</th><th>boost</th><th>ค่าแอด</th><th>ยอดแอด</th><th>ROAS ค่าจ้าง</th><th>ROI ค่าจ้าง</th><th>ROAS รวม</th><th>ROI รวม</th><th>ลิงก์</th></tr></thead>
             <tbody id="tbodyKolDetail"></tbody>
           </table>
         </div>
@@ -1381,21 +1385,41 @@
           </div>
         </div>
         <div id="lsCreatorChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);min-height:28px;"><span style="font-size:11px;color:var(--text3);">ยังไม่ได้เลือก creator</span></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+          <button class="btn btn-ghost" onclick="lsSaveSearch()" title="เซฟ creator + ช่วงเวลา + Order Channel ที่เลือกอยู่ ตั้งชื่อไว้เปิดซ้ำได้">💾 เซฟการค้นหานี้</button>
+          <div style="position:relative;">
+            <button class="btn btn-ghost" id="lsSavedBtn" onclick="lsToggleSaved(event)">📂 ที่เซฟไว้ <span id="lsSavedCount" style="color:var(--text3);">(0)</span> ▾</button>
+            <div id="lsSavedMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:360px;max-height:320px;overflow-y:auto;padding:6px;"></div>
+          </div>
+          <span id="lsSavedActive" style="font-size:11px;color:var(--text3);"></span>
+        </div>
         <div id="lsDebugInfo" style="font-size:11px;color:var(--text3);margin-top:8px;"></div>
       </div>
       <div id="ls-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">โปรโมชั่นที่ขายได้ในไลฟ์ (รูปแบบที่ลูกค้าสั่งจริง)</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblLsPromo')">⬇ Export CSV</button>
+          <div class="section-title">โปรโมชั่นที่ขายได้ในไลฟ์ (รูปแบบที่ลูกค้าสั่งจริง) <span id="lsPromoCount" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" class="ls-input" id="lsPromoFilter" placeholder="🔎 กรองโปร / ชื่อสินค้า..." oninput="_lsPromoPage=1; renderLsPromoTable()" style="width:200px;padding:5px 10px;font-size:12px;">
+            <button class="btn btn-ghost" onclick="exportTable('tblLsPromo')">⬇ Export CSV</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table id="tblLsPromo">
-            <thead><tr><th>#</th><th>Promotion (SKU)</th><th>ชื่อสินค้า (ไทย)</th><th>ออเดอร์</th><th>ยอดขาย</th><th>AOV</th><th>สัดส่วน %</th><th>ยกเลิก/ตีกลับ</th></tr></thead>
-            <tbody id="tbodyLsPromo"><tr><td colspan="8" class="empty">ยังไม่ได้ค้นหา</td></tr></tbody>
+            <thead><tr><th>#</th>
+              <th class="sortable-th" onclick="lsPromoSort('promo')">Promotion (SKU) <span class="sort-ind" id="lsps-promo"></span></th>
+              <th class="sortable-th" onclick="lsPromoSort('name')">ชื่อสินค้า (ไทย) <span class="sort-ind" id="lsps-name"></span></th>
+              <th class="sortable-th" onclick="lsPromoSort('ord')">ออเดอร์ <span class="sort-ind" id="lsps-ord"></span></th>
+              <th class="sortable-th" onclick="lsPromoSort('rev')">ยอดขาย <span class="sort-ind" id="lsps-rev"></span></th>
+              <th class="sortable-th" onclick="lsPromoSort('aov')">AOV <span class="sort-ind" id="lsps-aov"></span></th>
+              <th class="sortable-th" onclick="lsPromoSort('share')">สัดส่วน % <span class="sort-ind" id="lsps-share"></span></th>
+              <th class="sortable-th" onclick="lsPromoSort('canc')">ยกเลิก/ตีกลับ <span class="sort-ind" id="lsps-canc"></span></th>
+              <th class="sortable-th" onclick="lsPromoSort('cancPct')">% ตีกลับ <span class="sort-ind" id="lsps-cancPct"></span></th></tr></thead>
+            <tbody id="tbodyLsPromo"><tr><td colspan="9" class="empty">ยังไม่ได้ค้นหา</td></tr></tbody>
           </table>
         </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">นับจากออเดอร์ที่ขายได้จริงของ creator ที่เลือกในช่วงเวลาไลฟ์ · 1 ออเดอร์ = 1 โปร (ตามช่อง sku_promotion) · ยกเลิก/ตีกลับ = ออเดอร์โปรเดียวกันที่ไม่สำเร็จ (ไม่นับในยอดขาย)</div>
+        <div id="lsPromoPager"></div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">นับจากออเดอร์ของ creator ที่เลือกในช่วงเวลาไลฟ์ · 1 ออเดอร์ = 1 โปร (ตามช่อง sku_promotion) · ยกเลิก/ตีกลับ = ออเดอร์โปรเดียวกันที่ไม่สำเร็จ (ไม่นับในยอดขาย) · % ตีกลับ = ยกเลิก ÷ (ขายได้ + ยกเลิก) · คลิกหัวคอลัมน์เพื่อเรียง · 20 แถวต่อหน้า</div>
       </div>
       <div class="grid-2">
         <div class="card">
@@ -2382,6 +2406,10 @@ function showPage(page, lockCh, el) {
   if (fbePageGroup) fbePageGroup.style.display = (page === 'fbengage') ? 'flex' : 'none';
   const cpGroup = document.getElementById('cpCreatorFilterGroup');
   if (cpGroup) cpGroup.style.display = (page === 'creatorperf') ? 'flex' : 'none';
+  // หน้า KOL มีตัวเลือก ปี/เดือน ของตัวเอง (นับตามวันโพสต์) — ซ่อนช่วงวันที่ + ปุ่มค้นหาด้านบน
+  const dateGroup = document.getElementById('dateRangeGroup'), topSearch = document.getElementById('topSearchBtn');
+  if (dateGroup) dateGroup.style.display = (page === 'kol') ? 'none' : '';
+  if (topSearch) topSearch.style.display = (page === 'kol') ? 'none' : '';
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
@@ -3229,6 +3257,7 @@ async function renderLzHub() {
 
 // ===== LIVE SEARCH (TikTok) =====
 let lsSelectedCreators = [];
+document.addEventListener('DOMContentLoaded', () => { if (typeof lsLoadSavedList === 'function') lsLoadSavedList(); });
 let _lsAllCreators = [];
 
 // ===== MODERN TRADE HUB =====
@@ -4206,6 +4235,89 @@ function renderLsCreatorChips() {
     </span>`).join('');
 }
 
+// ---- ตารางโปรในไลฟ์: เรียงได้ทุกคอลัมน์ + กรอง + 20 แถว/หน้า ----
+let _lsPromoRows = [], _lsPromoPage = 1, _lsPromoSortCol = 'rev', _lsPromoSortDir = 'desc';
+const LS_PROMO_PAGE_SIZE = 20;
+function lsPromoSort(col) {
+  if (_lsPromoSortCol === col) _lsPromoSortDir = _lsPromoSortDir === 'desc' ? 'asc' : 'desc';
+  else { _lsPromoSortCol = col; _lsPromoSortDir = (col === 'promo' || col === 'name') ? 'asc' : 'desc'; }
+  _lsPromoPage = 1; renderLsPromoTable();
+}
+function lsPromoGoToPage(n) { _lsPromoPage = n; renderLsPromoTable(); }
+function renderLsPromoTable() {
+  const q = (document.getElementById('lsPromoFilter')?.value || '').toLowerCase().trim();
+  let rows = q ? _lsPromoRows.filter(r => r.promo.toLowerCase().includes(q) || r.name.toLowerCase().includes(q)) : [..._lsPromoRows];
+  // อันดับอิงยอดขายเสมอ ไม่ว่าจะเรียงด้วยคอลัมน์ไหน
+  const rank = {}; [..._lsPromoRows].sort((a, b) => b.rev - a.rev).forEach((r, i) => { rank[r.promo] = i + 1; });
+  rows.sort((a, b) => { const av = a[_lsPromoSortCol], bv = b[_lsPromoSortCol]; const c = typeof av === 'string' ? av.localeCompare(bv, 'th') : av - bv; return _lsPromoSortDir === 'asc' ? c : -c; });
+  document.querySelectorAll('[id^="lsps-"]').forEach(el => { el.textContent = ''; });
+  const ind = document.getElementById('lsps-' + _lsPromoSortCol); if (ind) ind.textContent = _lsPromoSortDir === 'asc' ? '▲' : '▼';
+  const totalPages = Math.max(1, Math.ceil(rows.length / LS_PROMO_PAGE_SIZE));
+  if (_lsPromoPage > totalPages) _lsPromoPage = totalPages;
+  const page = rows.slice((_lsPromoPage - 1) * LS_PROMO_PAGE_SIZE, _lsPromoPage * LS_PROMO_PAGE_SIZE);
+  document.getElementById('lsPromoCount').textContent = _lsPromoRows.length ? `(${fmt(rows.length)}${q ? ' จาก ' + fmt(_lsPromoRows.length) : ''} โปร)` : '';
+  document.getElementById('tbodyLsPromo').innerHTML = page.length ? page.map(r => { const rk = rank[r.promo]; return `
+    <tr><td class="rank ${rk===1?'rank-1':rk===2?'rank-2':rk===3?'rank-3':''}">${rk}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${ttcEsc(r.promo)}</td><td>${ttcEsc(r.name)}</td>
+      <td>${fmt(r.ord)}</td><td style="font-weight:600;">฿${fmt(r.rev)}</td><td>฿${fmt(r.aov)}</td><td>${r.share.toFixed(1)}%</td>
+      <td>${r.canc ? `<span style="color:var(--red);">${fmt(r.canc)}</span>` : '—'}</td>
+      <td>${r.canc ? `<span style="color:${r.cancPct >= 30 ? 'var(--red)' : 'var(--text2)'};">${r.cancPct.toFixed(1)}%</span>` : '—'}</td></tr>`; }).join('')
+    : `<tr><td colspan="9" class="empty">${_lsPromoRows.length ? 'ไม่มีโปรที่ตรงกับคำค้น' : 'ไม่มีข้อมูล'}</td></tr>`;
+  renderPagerHtml('lsPromoPager', _lsPromoPage, totalPages, 'lsPromoGoToPage');
+}
+
+// ---- เซฟการค้นหา (creator + ช่วงเวลา + Order Channel) ตั้งชื่อ เปิดซ้ำได้ — เก็บใน IndexedDB ของเบราว์เซอร์เครื่องนี้ ----
+const LS_SAVED_KEY = 'ls_saved_searches_v1';
+let _lsSaved = [], _lsSavedActive = null;
+async function lsLoadSavedList() { try { _lsSaved = (await idbGet(LS_SAVED_KEY)) || []; } catch { _lsSaved = []; } lsRenderSavedMenu(); }
+async function lsPersistSaved() { await idbSet(LS_SAVED_KEY, _lsSaved); lsRenderSavedMenu(); }
+async function lsSaveSearch() {
+  if (!lsSelectedCreators.length || !document.getElementById('lsFrom').value || !document.getElementById('lsTo').value) { alert('เลือก creator และช่วงเวลาให้ครบก่อนเซฟ'); return; }
+  const fromV = document.getElementById('lsFrom').value, toV = document.getElementById('lsTo').value;
+  const suggested = `${lsSelectedCreators[0]}${lsSelectedCreators.length > 1 ? ' +' + (lsSelectedCreators.length - 1) : ''} · ${thShort(fromV.slice(0, 10))} ${fromV.slice(11, 16)}`;
+  const name = prompt('ตั้งชื่อการค้นหานี้ (ไว้กดเปิดซ้ำ):', _lsSavedActive?.name || suggested);
+  if (name === null) return;
+  const rec = { id: Date.now(), name: (name.trim() || suggested), creators: [...lsSelectedCreators], from: fromV, to: toV, orderChannel: document.getElementById('lsOrderChannel').value, savedAt: new Date().toISOString() };
+  const idx = _lsSaved.findIndex(x => x.name === rec.name);
+  if (idx >= 0) { if (!confirm(`มีชื่อ "${rec.name}" อยู่แล้ว — เขียนทับไหม?`)) return; rec.id = _lsSaved[idx].id; _lsSaved[idx] = rec; } else _lsSaved.unshift(rec);
+  _lsSavedActive = rec;
+  await lsPersistSaved();
+  document.getElementById('lsSavedActive').textContent = `เซฟแล้ว: ${rec.name}`;
+}
+function lsToggleSaved(ev) { ev.stopPropagation(); const m = document.getElementById('lsSavedMenu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
+document.addEventListener('click', e => { const m = document.getElementById('lsSavedMenu'); if (m && m.style.display !== 'none' && !e.target.closest('#lsSavedMenu') && !e.target.closest('#lsSavedBtn')) m.style.display = 'none'; });
+function lsRenderSavedMenu() {
+  const cnt = document.getElementById('lsSavedCount'); if (cnt) cnt.textContent = `(${_lsSaved.length})`;
+  const m = document.getElementById('lsSavedMenu'); if (!m) return;
+  if (!_lsSaved.length) { m.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3);">ยังไม่มีการค้นหาที่เซฟไว้ — ตั้งค่าค้นหาแล้วกด "💾 เซฟการค้นหานี้"</div>'; return; }
+  m.innerHTML = _lsSaved.map(r => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <div style="flex:1;cursor:pointer;min-width:0;" onclick="lsLoadSaved(${r.id})">
+        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ttcEsc(r.name)}</div>
+        <div style="font-size:10.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ttcEsc(r.creators.join(', '))} · ${thShort(r.from.slice(0, 10))} ${r.from.slice(11, 16)} → ${thShort(r.to.slice(0, 10))} ${r.to.slice(11, 16)}${r.orderChannel ? ' · ' + ttcEsc(r.orderChannel) : ''}</div>
+      </div>
+      <span onclick="lsDeleteSaved(${r.id}, event)" title="ลบ" style="cursor:pointer;color:var(--text3);padding:2px 6px;">🗑</span>
+    </div>`).join('');
+}
+async function lsLoadSaved(id) {
+  const r = _lsSaved.find(x => x.id === id); if (!r) return;
+  lsSelectedCreators = [...r.creators]; renderLsCreatorChips();
+  document.getElementById('lsFrom').value = r.from; document.getElementById('lsTo').value = r.to;
+  const oc = document.getElementById('lsOrderChannel'); if ([...oc.options].some(o => o.value === r.orderChannel)) oc.value = r.orderChannel;
+  _lsSavedActive = r;
+  document.getElementById('lsSavedActive').textContent = `เปิดจากที่เซฟไว้: ${r.name}`;
+  document.getElementById('lsSavedMenu').style.display = 'none';
+  runLiveSearch();
+}
+async function lsDeleteSaved(id, ev) {
+  ev?.stopPropagation();
+  const r = _lsSaved.find(x => x.id === id); if (!r) return;
+  if (!confirm(`ลบ "${r.name}" ?`)) return;
+  _lsSaved = _lsSaved.filter(x => x.id !== id);
+  if (_lsSavedActive?.id === id) { _lsSavedActive = null; document.getElementById('lsSavedActive').textContent = ''; }
+  await lsPersistSaved();
+}
+
 function toComparableDT(v) {
   // v = 'YYYY-MM-DDTHH:MM' หรือ 'YYYY-MM-DDTHH:MM:SS' — คงตัว "T" ไว้เหมือนที่ Supabase ส่ง created_at_precise กลับมา
   // (ก่อนหน้านี้เคยแปลง T เป็นช่องว่างโดยไม่ตั้งใจ ทำให้เทียบ string ไม่ตรงกันเลยสักครั้ง)
@@ -4256,10 +4368,15 @@ async function runLiveSearch() {
 
   const dbg = document.getElementById('lsDebugInfo');
   if (dbg) dbg.textContent = `สถานะออเดอร์ที่พบ: ${Object.entries(statusCount).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${fmt(v)}`).join(' · ')} — ขายได้/ยกเลิก ตัดสินจาก cancel_return_type`;
+  const totalN = matched.length, totalAmt = soldAmount + cancelledAmount;
+  const cancPctN = totalN ? cancelledIds.size / totalN * 100 : 0, cancPctAmt = totalAmt ? cancelledAmount / totalAmt * 100 : 0;
   document.getElementById('ls-kpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์ทั้งหมด</div><div class="kpi-value">${fmt(matched.length)}</div></div>
-    <div class="card" style="flex:1;min-width:140px;border-top:3px solid var(--green);"><div class="card-title">ขายได้</div><div class="kpi-value">${fmt(soldIds.size)}</div><div class="kpi-sub">฿${fmt(soldAmount)}</div></div>
-    <div class="card" style="flex:1;min-width:140px;border-top:3px solid var(--red);"><div class="card-title">ยกเลิก/ตีกลับ</div><div class="kpi-value">${fmt(cancelledIds.size)}</div><div class="kpi-sub">฿${fmt(cancelledAmount)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ออเดอร์ทั้งหมด</div><div class="kpi-value">${fmt(totalN)}</div><div class="kpi-sub">รวมที่ยกเลิก/ตีกลับ</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">มูลค่ารวม</div><div class="kpi-value">฿${fmtB(totalAmt)}</div><div class="kpi-sub">รวมที่ยกเลิก/ตีกลับ</div></div>
+    <div class="card" style="flex:1;min-width:130px;border-top:3px solid var(--green);"><div class="card-title">ออเดอร์ที่ขายได้</div><div class="kpi-value" style="color:var(--green);">${fmt(soldIds.size)}</div><div class="kpi-sub">${totalN ? (100 - cancPctN).toFixed(1) : 0}% ของทั้งหมด</div></div>
+    <div class="card" style="flex:1;min-width:130px;border-top:3px solid var(--green);"><div class="card-title">ยอดขาย (ขายได้จริง)</div><div class="kpi-value" style="color:var(--green);">฿${fmtB(soldAmount)}</div><div class="kpi-sub">AOV ฿${fmt(soldIds.size ? soldAmount / soldIds.size : 0)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;border-top:3px solid var(--red);"><div class="card-title">ออเดอร์ยกเลิก/ตีกลับ</div><div class="kpi-value" style="color:var(--red);">${fmt(cancelledIds.size)}</div><div class="kpi-sub"><b style="color:var(--red);">${cancPctN.toFixed(1)}%</b> ของออเดอร์ทั้งหมด</div></div>
+    <div class="card" style="flex:1;min-width:130px;border-top:3px solid var(--red);"><div class="card-title">มูลค่าตีกลับ</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(cancelledAmount)}</div><div class="kpi-sub"><b style="color:var(--red);">${cancPctAmt.toFixed(1)}%</b> ของมูลค่ารวม</div></div>
   `;
 
   // ---- โปรโมชั่นที่ขายได้ (จาก sku_promotion ของออเดอร์ที่ขายได้จริง) ----
@@ -4270,13 +4387,9 @@ async function runLiveSearch() {
     if (soldIds.has(r.order_id)) { promoBy[k].ord++; promoBy[k].rev += parseFloat(r.revenue) || 0; } else promoBy[k].canc++;
   });
   const promoName = promo => promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim()) + 'x' + m[2] : skuToName(p.trim()); }).join(' + ');
-  const promoRows = Object.entries(promoBy).filter(([, v]) => v.ord || v.canc).sort((a, b) => b[1].rev - a[1].rev);
-  document.getElementById('tbodyLsPromo').innerHTML = promoRows.length ? promoRows.map(([k, v], i) => `
-    <tr><td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${ttcEsc(k)}</td><td>${ttcEsc(promoName(k))}</td>
-      <td>${fmt(v.ord)}</td><td style="font-weight:600;">฿${fmt(v.rev)}</td><td>฿${fmt(v.ord ? v.rev / v.ord : 0)}</td>
-      <td>${soldAmount ? (v.rev / soldAmount * 100).toFixed(1) : 0}%</td>
-      <td>${v.canc ? `<span style="color:var(--red);">${fmt(v.canc)}</span>` : '—'}</td></tr>`).join('') : '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>';
+  _lsPromoRows = Object.entries(promoBy).filter(([, v]) => v.ord || v.canc).map(([k, v]) => ({ promo: k, name: promoName(k), ord: v.ord, rev: v.rev, aov: v.ord ? v.rev / v.ord : 0, share: soldAmount ? v.rev / soldAmount * 100 : 0, canc: v.canc, cancPct: (v.ord + v.canc) ? v.canc / (v.ord + v.canc) * 100 : 0 }));
+  _lsPromoPage = 1;
+  renderLsPromoTable();
 
   const skuBySold = {}, skuByCancelled = {};
   skuRowsLs.filter(r => soldIds.has(r.order_id) || cancelledIds.has(r.order_id)).forEach(r => {
@@ -8214,6 +8327,10 @@ function kolRoiHtml(roi, extra) {
   if (roi === null) return `<span style="color:var(--text3);" ${extra || ''}>—</span>`;
   return `<span style="color:${kolRoiColor(roi)};font-weight:700;" ${extra || ''}>${roi.toFixed(2)}x</span><div style="font-size:9.5px;color:var(--text3);">${kolRoiPct(roi)}</div>`;
 }
+// 2 คอลัมน์แยก: ROAS (x เท่า) และ ROI (%) — สีตามเกณฑ์เดียวกัน
+function kolRoasCell(r) { return r === null ? '<span style="color:var(--text3);">—</span>' : `<span style="color:${kolRoiColor(r)};font-weight:700;">${r.toFixed(2)}x</span>`; }
+function kolRoiCell(r) { return r === null ? '<span style="color:var(--text3);">—</span>' : `<span style="color:${kolRoiColor(r)};">${r - 1 >= 0 ? '+' : ''}${((r - 1) * 100).toFixed(0)}%</span>`; }
+function kolRoasRoiCells(roiFee, roiAll) { return `<td>${kolRoasCell(roiFee)}</td><td>${kolRoiCell(roiFee)}</td><td>${kolRoasCell(roiAll)}</td><td>${kolRoiCell(roiAll)}</td>`; }
 function kolDaysAgo(d) { if (!d) return null; return Math.max(0, Math.round((Date.now() - new Date(d + 'T00:00:00').getTime()) / 86400000)); }
 function kolAgeHtml(d) { const n = kolDaysAgo(d); return n === null ? '—' : `${fmt(n)} วัน`; }
 function kolPlatformBadge(p) {
@@ -8263,8 +8380,15 @@ function kolFinish(a) {
   a.unmeasuredFee = a.fee - a.mFee;
   return a;
 }
+function kolDateRange() {
+  const y = document.getElementById('kolFilterYear')?.value || String(new Date().getFullYear());
+  const m = document.getElementById('kolFilterMonth')?.value || '';
+  if (!m) return { from: `${y}-01-01`, to: `${y}-12-31` };
+  const last = new Date(+y, +m, 0).getDate();
+  return { from: `${y}-${m}-01`, to: `${y}-${m}-${String(last).padStart(2, '0')}` };
+}
 function kolBuildData() {
-  const from = getDateValue('From'), to = getDateValue('To');
+  const { from, to } = kolDateRange();
   const fPlat = document.getElementById('kolFilterPlatform')?.value || '';
   const fTier = document.getElementById('kolFilterTier')?.value || '';
   const fProd = document.getElementById('kolFilterProduct')?.value || '';
@@ -8321,6 +8445,13 @@ function kolFillFilters() {
     sel.innerHTML = first + values.map(v => `<option value="${ttcEscAttr(v.value)}">${ttcEsc(v.label)}</option>`).join('');
     if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
   };
+  const ySel = document.getElementById('kolFilterYear');
+  if (ySel) {
+    const years = [...new Set(kolPosts.map(p => (p.post_date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+    const cur = ySel.value || String(new Date().getFullYear());
+    ySel.innerHTML = years.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
+    ySel.value = years.includes(cur) ? cur : (years[0] || cur);
+  }
   const plats = [...new Set(kolPosts.map(p => p.platformNorm))].sort();
   keep('kolFilterPlatform', plats.map(v => ({ value: v, label: v })));
   const tiers = [...new Set(kolPosts.map(p => (p.tier || '').trim()).filter(Boolean))].sort();
@@ -8339,7 +8470,7 @@ function kolAggRow(label, a, totalFee, opts) {
     <td>${totalFee ? (a.fee / totalFee * 100).toFixed(1) : 0}%</td>${opts.avg ? `<td>฿${fmt(a.posts ? a.fee / a.posts : 0)}</td>` : ''}
     <td title="โพสต์ที่มีตัวเลขยอดแอด / ทั้งหมด">${measuredCell}</td>
     <td>${a.adSpend ? '฿' + fmt(a.adSpend) : '—'}</td><td>${a.mPosts ? '฿' + fmt(a.rev) : '<span style="color:var(--text3);">—</span>'}</td>
-    <td>${kolRoiHtml(a.roiFee)}</td><td>${kolRoiHtml(a.roiAll)}</td></tr>`;
+    ${kolRoasRoiCells(a.roiFee, a.roiAll)}</tr>`;
 }
 
 async function renderKolPage() {
@@ -8374,8 +8505,8 @@ async function renderKolPage() {
     <div class="card" style="flex:1;min-width:150px;border-left:3px solid #a78bfa;"><div class="card-title">งบจ้างรวม (ทุกแพลตฟอร์ม)</div><div class="kpi-value">฿${fmtB(T.fee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatFee) || '—'}</div></div>
     <div class="card" style="flex:1;min-width:150px;border-left:3px solid #ef9f27;"><div class="card-title">งบที่ยังวัดผลไม่ได้ ${fbeInfoIcon('kol-info-unm', 'ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลขยอดแอด:<br>• TikTok ที่ไม่ได้ boost → รอ TikTok Accounts API<br>• แพลตฟอร์มอื่นที่ทีมยังไม่กรอกยอด/ค่าแอดในชีท<br><br>เงินก้อนนี้ไม่ได้แปลว่าขายไม่ได้ แค่ยังตอบไม่ได้')}</div><div class="kpi-value" style="color:#ef9f27;">฿${fmtB(T.unmeasuredFee)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(T.posts - T.mPosts)} จาก ${fmt(T.posts)} โพสต์ (${T.posts ? Math.round((T.posts - T.mPosts) / T.posts * 100) : 0}%) ยังไม่มีตัวเลข</div></div>
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">โพสต์ / creator</div><div class="kpi-value">${fmt(posts.length)} <span style="font-size:13px;color:var(--text3);">/ ${fmt(creators.length)} คน</span></div><div style="font-size:10px;color:var(--text3);margin-top:3px;">เฉลี่ย ฿${fmt(posts.length ? T.fee / posts.length : 0)} ต่อโพสต์</div></div>
-    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #60a5fa;"><div class="card-title">ค่าแอด boost</div><div class="kpi-value">฿${fmtB(T.adSpend)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(boostN)} โพสต์ที่ยิงแอดต่อ</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดแอดรวม</div><div class="kpi-value">฿${fmtB(T.rev)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatRev) || 'ยังไม่มีตัวเลข'}</div></div>
+    <div class="card" style="flex:1;min-width:140px;border-left:3px solid #60a5fa;"><div class="card-title">ค่าแอดที่จ่าย (boost) ${fbeInfoIcon('kol-info-ad', '<b>เงินที่จ่าย</b>ให้ TikTok/Facebook เพื่อยิงแอดต่อให้โพสต์ของ KOL (นอกเหนือจากค่าจ้าง)<br>TikTok จาก GMV Max ต่อคลิป · อื่นๆ จากคอลัมน์ "ค่าโฆษณา" ในชีท')}</div><div class="kpi-value">฿${fmtB(T.adSpend)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${fmt(boostN)} โพสต์ที่ยิงแอดต่อ</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขายที่แอดนับได้ ${fbeInfoIcon('kol-info-rev', '<b>ยอดขาย</b>ที่ระบบแอดบอกว่าเกิดจากโพสต์นั้น (สะสมทั้งชีวิตโพสต์)<br>TikTok จาก GMV Max ต่อคลิป · อื่นๆ จากคอลัมน์ "ยอดขาย" ในชีท<br><br>ค่าแอด = เงินออก · ยอดแอด = เงินเข้า → ROAS = เงินเข้า ÷ เงินออก')}</div><div class="kpi-value">฿${fmtB(T.rev)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatRev) || 'ยังไม่มีตัวเลข'}</div></div>
   `;
 
   // ---- unmapped products ----
@@ -8391,15 +8522,20 @@ async function renderKolPage() {
   const ok = creators.filter(c => c.status.key === 'ok').sort((a, b) => b.rev - a.rev);
   const bad = creators.filter(c => c.status.key === 'bad').sort((a, b) => b.fee - a.fee);
   const na = creators.filter(c => c.status.key === 'na').sort((a, b) => b.fee - a.fee);
-  const recoList = (arr, n, fmtRow) => arr.slice(0, n).map(c => `<div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);cursor:pointer;" onclick="kolSelectCreator('${ttcEscAttr(c.handle)}')"><span><b>${ttcEsc(c.display)}</b> <span style="font-size:10px;color:var(--text3);">${ttcEsc(c.tier) || ''}</span></span><span style="white-space:nowrap;">${fmtRow(c)}</span></div>`).join('') + (arr.length > n ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;">…และอีก ${arr.length - n} คน (ดูในตาราง)</div>` : '');
-  const recoCol = (title, color, arr, sub, fmtRow) => `<div style="flex:1;min-width:220px;"><div style="font-size:12px;font-weight:700;color:${color};margin-bottom:2px;">${title} <span style="font-weight:400;color:var(--text3);">(${fmt(arr.length)} คน)</span></div><div style="font-size:10px;color:var(--text3);margin-bottom:6px;">${sub}</div>${arr.length ? recoList(arr, 6, fmtRow) : '<div style="font-size:11px;color:var(--text3);">—</div>'}</div>`;
+  // ทุกกลุ่มแสดงข้อมูลชุดเดียวกัน: ROAS รวม · ยอดแอด · จ่ายไปทั้งหมด (ค่าจ้าง + ค่าแอด) — กลุ่ม ⏳ ไม่มี ROAS/ยอด
+  const recoRow = c => c.mPosts
+    ? `<span style="color:${kolRoiColor(c.roiAll)};font-weight:700;">${c.roiAll.toFixed(2)}x</span> <span style="color:var(--text3);">· ยอด ฿${fmtB(c.rev)} · จ่าย ฿${fmtB(c.mFee + c.adSpend)}</span>`
+    : `<span style="color:var(--text3);">ROAS — · ยอด — · จ่าย ฿${fmtB(c.fee)} (${fmt(c.posts)} โพสต์)</span>`;
+  const recoList = (arr, n) => arr.slice(0, n).map(c => `<div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);cursor:pointer;min-width:0;" onclick="kolSelectCreator('${ttcEscAttr(c.handle)}')"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><b>${ttcEsc(c.display)}</b> <span style="font-size:10px;color:var(--text3);">${ttcEsc(c.tier) || ''}</span></span><span style="white-space:nowrap;font-size:11px;">${recoRow(c)}</span></div>`).join('') + (arr.length > n ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;">…และอีก ${arr.length - n} คน (ดูในตาราง)</div>` : '');
+  const recoCol = (title, color, arr, sub) => `<div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:${color};margin-bottom:2px;">${title} <span style="font-weight:400;color:var(--text3);">(${fmt(arr.length)} คน)</span></div><div style="font-size:10px;color:var(--text3);margin-bottom:6px;">${sub}</div>${arr.length ? recoList(arr, 6) : '<div style="font-size:11px;color:var(--text3);">—</div>'}</div>`;
   document.getElementById('kol-reco').innerHTML = `
     <div class="section-header"><div class="section-title">ใครควรจ้างต่อ ${fbeInfoIcon('kol-info-reco', 'จัดกลุ่มจาก ROAS รวม boost ของแต่ละ creator (โพสต์ที่วัดได้ ในช่วงวันโพสต์ที่เลือก)<br>✅ ≥ 3x · 🟡 1–3x · ❌ < 1x · ⏳ ไม่มีโพสต์ที่วัดได้<br><br>คนที่วัดได้แค่โพสต์เดียวควรดูอายุโพสต์ประกอบ (ยอดสะสมของโพสต์ใหม่ยังโตได้) · คลิกชื่อเพื่อดูรายโพสต์')}</div></div>
-    <div style="display:flex;gap:18px;flex-wrap:wrap;">
-      ${recoCol('✅ จ้างต่อ', 'var(--green)', good, 'ROAS รวม ≥ 3x — เรียงตามยอดแอด', c => `${c.roiAll.toFixed(1)}x · ฿${fmtB(c.rev)}`)}
-      ${recoCol('🟡 คุ้ม แต่ยังไม่แรง', 'var(--accent)', ok, 'ROAS รวม 1–3x — เรียงตามยอดแอด', c => `${c.roiAll.toFixed(1)}x · ฿${fmtB(c.rev)}`)}
-      ${recoCol('❌ ยังไม่คุ้ม', 'var(--red)', bad, 'ROAS รวม < 1x — เรียงตามค่าจ้าง', c => `${c.roiAll.toFixed(2)}x · จ่าย ฿${fmtB(c.fee + c.adSpend)}`)}
-      ${recoCol('⏳ ยังวัดไม่ได้', 'var(--text3)', na, `ไม่มีตัวเลขยอดแอด — รวมค่าจ้าง ฿${fmtB(na.reduce((s, c) => s + c.fee, 0))}`, c => `฿${fmtB(c.fee)} · ${fmt(c.posts)} โพสต์`)}
+    <div style="font-size:10.5px;color:var(--text3);margin:-6px 0 10px;">ทุกกลุ่มแสดง: <b>ROAS รวม</b> (ยอดแอด ÷ (ค่าจ้าง + ค่าแอด)) · ยอดแอด · จ่ายไปทั้งหมด — เรียงตามยอดแอดมาก→น้อย (กลุ่ม ⏳ เรียงตามค่าจ้าง)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;">
+      ${recoCol('✅ จ้างต่อ', 'var(--green)', good, 'ROAS รวม ≥ 3x')}
+      ${recoCol('🟡 คุ้ม แต่ยังไม่แรง', 'var(--accent)', ok, 'ROAS รวม 1–3x')}
+      ${recoCol('❌ ยังไม่คุ้ม', 'var(--red)', bad.sort((a, b) => b.rev - a.rev), 'ROAS รวม < 1x')}
+      ${recoCol('⏳ ยังวัดไม่ได้', 'var(--text3)', na, `ยังไม่มีตัวเลขยอดแอด — รวมค่าจ้าง ฿${fmtB(na.reduce((s, c) => s + c.fee, 0))}`)}
     </div>`;
 
   // ---- charts: งบรายเดือน แยกแพลตฟอร์ม / แยก Tier ----
@@ -8424,8 +8560,8 @@ async function renderKolPage() {
     const k = p.platformNorm; if (!byP[k]) byP[k] = kolNewAgg(); kolAddTo(byP[k], p);
     const t = (p.tier || '').trim() || 'ไม่ระบุ'; if (!byT[t]) byT[t] = kolNewAgg(); kolAddTo(byT[t], p);
   });
-  document.getElementById('tbodyKolPlatform').innerHTML = Object.entries(byP).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(kolPlatformBadge(k), kolFinish(a), T.fee)).join('') || '<tr><td colspan="10" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
-  document.getElementById('tbodyKolTier').innerHTML = Object.entries(byT).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(`<b>${ttcEsc(k)}</b>`, kolFinish(a), T.fee, { avg: true })).join('') || '<tr><td colspan="11" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
+  document.getElementById('tbodyKolPlatform').innerHTML = Object.entries(byP).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(kolPlatformBadge(k), kolFinish(a), T.fee)).join('') || '<tr><td colspan="12" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
+  document.getElementById('tbodyKolTier').innerHTML = Object.entries(byT).sort((a, b) => b[1].fee - a[1].fee).map(([k, a]) => kolAggRow(`<b>${ttcEsc(k)}</b>`, kolFinish(a), T.fee, { avg: true })).join('') || '<tr><td colspan="13" class="empty">ไม่มีโพสต์ในช่วงนี้</td></tr>';
 
   // ---- ตามสินค้า (โพสต์หลายสินค้า แบ่งเท่าๆ กัน) ----
   const byProd = {};
@@ -8439,7 +8575,7 @@ async function renderKolPage() {
     });
   });
   document.getElementById('tbodyKolProduct').innerHTML = Object.values(byProd).sort((a, b) => b.fee - a.fee).map(b =>
-    kolAggRow(`${b.unmapped ? '⚠ ' : ''}${ttcEsc(b.label)}${b.sku ? ` <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${b.sku}</span>` : ''}`, kolFinish(b), T.fee)).join('') || '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
+    kolAggRow(`${b.unmapped ? '⚠ ' : ''}${ttcEsc(b.label)}${b.sku ? ` <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${b.sku}</span>` : ''}`, kolFinish(b), T.fee)).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
 
   _kolCreatorRows = creators;
   renderKolCreatorTable();
@@ -8469,11 +8605,11 @@ function renderKolCreatorTable() {
       <td style="font-weight:600;">฿${fmt(c.fee)}${c.unmeasuredFee > 0 && c.mPosts ? `<div style="font-size:9.5px;color:#ef9f27;" title="ค่าจ้างของโพสต์ที่ยังไม่มีตัวเลข ไม่อยู่ในตัวหาร ROAS">ยังวัดไม่ได้ ฿${fmt(c.unmeasuredFee)}</div>` : ''}</td>
       <td>${c.adSpend ? '฿' + fmt(c.adSpend) : '<span style="color:var(--text3);">—</span>'}</td>
       <td>${c.mPosts ? '฿' + fmt(c.rev) + revSub : '<span style="color:var(--text3);">—</span>'}</td>
-      <td>${kolRoiHtml(c.roiFee)}</td><td>${kolRoiHtml(c.roiAll)}</td>
+      ${kolRoasRoiCells(c.roiFee, c.roiAll)}
       <td style="white-space:nowrap;font-size:11px;color:${c.status.color};font-weight:600;" title="${ttcEscAttr(c.status.title)}">${c.status.label}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;">${c.last ? thShort(c.last) : '—'}${c.last ? `<div style="font-size:9.5px;color:var(--text3);">${kolAgeHtml(c.last)}ก่อน</div>` : ''}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="11" class="empty">ไม่มี creator ตามเงื่อนไข</td></tr>';
+  }).join('') || '<tr><td colspan="13" class="empty">ไม่มี creator ตามเงื่อนไข</td></tr>';
   document.getElementById('kol-creator-foot').textContent = `แสดง ${fmt(Math.min(300, rows.length))} จาก ${fmt(rows.length)} คน · โพสต์ (วัดได้) = โพสต์ทั้งหมด (ที่มีตัวเลขยอดแอด) · ROAS ค่าจ้าง = ยอดแอด ÷ ค่าจ้างของโพสต์ที่วัดได้ · ROAS รวม = ยอดแอด ÷ (ค่าจ้าง + ค่าแอด) · ROI = ROAS − 1 · สถานะดูจาก ROAS รวม`;
 }
 
@@ -8514,7 +8650,7 @@ function renderKolDetail(handle, D) {
       <td>${p.budget ? '฿' + fmt(p.budget) : '<span style="color:var(--text3);">฿0</span>'}</td>
       <td>${boostCell}</td>
       <td>${p.adSpend ? '฿' + fmt(p.adSpend) : '—'}</td><td>${p.measured ? '฿' + fmt(p.rev) : '—'}</td>
-      <td>${roiCell(p.roiFee)}</td><td>${roiCell(p.roiAll)}</td>
+      ${kolRoasRoiCells(p.roiFee, p.roiAll)}
       <td>${link ? `<a href="${ttcEscAttr(link)}" target="_blank" rel="noopener" style="color:var(--accent);">เปิด ↗</a>` : `<span style="color:var(--text3);font-size:10.5px;">${ttcEsc(p.post_link || '—')}</span>`}</td>
     </tr>`;
   }).join('');
