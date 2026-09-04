@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.05-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.05-d</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -3459,6 +3459,7 @@ async function renderCreatorPerf() {
   }
 
   const cancelledRev = d.reduce((s,r) => s + (parseFloat(r.cancelled_revenue)||0), 0);
+  const cancelledOrd = d.reduce((s,r) => s + (parseInt(r.cancelled_orders)||0), 0); // RPC creator_summary อาจไม่มีคอลัมน์นี้ → 0 แล้วโชว์ % แทน (เดิมอ้าง cancelledRows ที่ไม่มีแล้วหลัง Phase 4 → หน้าพัง)
   const totalRev = d.reduce((s,r) => s + (parseFloat(r.revenue)||0), 0);
   const totalOrd = d.reduce((s,r) => s + (parseInt(r.orders)||0), 0);
   const aov = totalOrd ? totalRev/totalOrd : 0;
@@ -3468,7 +3469,7 @@ async function renderCreatorPerf() {
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขายรวม</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">${fmt(totalOrd)} ออเดอร์ · เฉลี่ย ฿${fmtB(aov)}</div></div>
     <div class="card" id="cp-kpi-roi" style="flex:1.2;min-width:150px;"><div class="card-title">ROAS</div><div class="kpi-value">${skel}</div></div>
     <div class="card" id="cp-kpi-cost" style="flex:1;min-width:150px;"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value">${skel}</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดยกเลิก/คืน ${fbeInfoIcon('cp-info-cancel', 'ยอดขายของออเดอร์ที่ cancel_return_type = Cancel หรือ Return/Refund<br><br>ไม่รวมอยู่ใน "ยอดขายรวม" ด้านซ้าย — แยกไว้ให้ดูต่างหาก')}</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(cancelledRev)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">${fmt(cancelledRows.length)} ออเดอร์</div></div>
+    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดยกเลิก/คืน ${fbeInfoIcon('cp-info-cancel', 'ยอดขายของออเดอร์ที่ cancel_return_type = Cancel หรือ Return/Refund<br><br>ไม่รวมอยู่ใน "ยอดขายรวม" ด้านซ้าย — แยกไว้ให้ดูต่างหาก')}</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(cancelledRev)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">${cancelledOrd ? fmt(cancelledOrd) + ' ออเดอร์' : ((totalRev + cancelledRev) ? (cancelledRev / (totalRev + cancelledRev) * 100).toFixed(1) + '% ของยอดก่อนหักยกเลิก' : '—')}</div></div>
   `;
   document.getElementById('cp-trend-title').textContent = cpSelectedCreator
     ? `ยอดขาย vs ต้นทุน รายวัน — ${cpSelectedCreator}`
