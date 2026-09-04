@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.04-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.04-d</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -4233,7 +4233,7 @@ async function runLiveSearch() {
   try {
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
     const inList = creators.map(c => '"' + String(c).replace(/"/g, '') + '"').join(',');
-    const base = `${window.SUPABASE_URL}/rest/v1/orders?select=order_id,creator_handle,order_channel,order_status,settled,revenue,created_at_precise,sku_promotion&channel=eq.TikTok&creator_handle=in.(${encodeURIComponent(inList)})&created_at_precise=gte.${encodeURIComponent(fromISO)}&created_at_precise=lte.${encodeURIComponent(toISO)}${ocFilter ? '&order_channel=eq.' + encodeURIComponent(ocFilter) : ''}&order=created_at_precise.asc,order_id.asc`;
+    const base = `${window.SUPABASE_URL}/rest/v1/orders?select=order_id,creator_handle,order_channel,order_status,settled,revenue,created_at_precise,sku_promotion,cancel_return_type&channel=eq.TikTok&creator_handle=in.(${encodeURIComponent(inList)})&created_at_precise=gte.${encodeURIComponent(fromISO)}&created_at_precise=lte.${encodeURIComponent(toISO)}${ocFilter ? '&order_channel=eq.' + encodeURIComponent(ocFilter) : ''}&order=created_at_precise.asc,order_id.asc`;
     matched = await fetchKeyset(base, headers, ['created_at_precise', 'order_id']);
     const ids = matched.map(r => r.order_id).filter(Boolean);
     for (let i = 0; i < ids.length; i += 150) {
@@ -4245,12 +4245,17 @@ async function runLiveSearch() {
 
   const soldIds = new Set(), cancelledIds = new Set();
   let soldAmount = 0, cancelledAmount = 0;
+  // เกณฑ์ "ขายได้" = เกณฑ์เดียวกับทั้ง dashboard (v_orders_clean): ไม่ถูกแฟล็ก cancel_return_type — ไม่เทียบข้อความ order_status แล้ว (ค่าในไฟล์ TikTok เปลี่ยนได้ ทำให้ทุกออเดอร์ตกเป็นยกเลิก)
+  const statusCount = {};
   matched.forEach(r => {
-    const isSold = r.order_status ? (r.order_status === 'เสร็จสมบูรณ์' || r.order_status === 'จัดส่งแล้ว') : !!r.settled;
+    statusCount[r.order_status || '(ว่าง)'] = (statusCount[r.order_status || '(ว่าง)'] || 0) + 1;
+    const isSold = !r.cancel_return_type;
     if (isSold) { soldIds.add(r.order_id); soldAmount += parseFloat(r.revenue)||0; }
     else { cancelledIds.add(r.order_id); cancelledAmount += parseFloat(r.revenue)||0; }
   });
 
+  const dbg = document.getElementById('lsDebugInfo');
+  if (dbg) dbg.textContent = `สถานะออเดอร์ที่พบ: ${Object.entries(statusCount).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${fmt(v)}`).join(' · ')} — ขายได้/ยกเลิก ตัดสินจาก cancel_return_type`;
   document.getElementById('ls-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์ทั้งหมด</div><div class="kpi-value">${fmt(matched.length)}</div></div>
     <div class="card" style="flex:1;min-width:140px;border-top:3px solid var(--green);"><div class="card-title">ขายได้</div><div class="kpi-value">${fmt(soldIds.size)}</div><div class="kpi-sub">฿${fmt(soldAmount)}</div></div>
