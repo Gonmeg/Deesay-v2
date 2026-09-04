@@ -291,7 +291,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.05-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.05-e</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -2016,7 +2016,7 @@ async function fetchWithRetry(url, headers, retries = 3, backoffMs = 800, opts =
 // (เดิม 163,000 แถวต้องรอ 163 รอบต่อคิว ~163x เวลาต่อ request เดียว ตอนนี้ลดเหลือ ~163/CONCURRENCY รอบ)
 // วิธีทำ: ขอ total count จาก Supabase ก่อน (header Prefer: count=exact) โดยไม่ต้องโหลดข้อมูลจริงเลย
 // แล้วคำนวณว่าต้องมีกี่หน้า จากนั้นยิงพร้อมกันเป็นชุดๆ (batch) จำกัดจำนวนพร้อมกันไม่ให้เยอะเกินไปจนโดน rate limit
-async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concurrency = 2) {
+async function fetchPaginatedConcurrent(baseUrl, headers, pageSize = 1000, concurrency = 4) { // Pro plan: 4 พร้อมกัน (เดิม 2)
   const countHeaders = { ...headers, 'Prefer': 'count=exact' };
   const probe = await fetchWithRetry(`${baseUrl}&limit=1&offset=0`, countHeaders);
   const range = probe.headers.get('content-range'); // รูปแบบ "0-0/163245"
@@ -3444,6 +3444,8 @@ async function renderCreatorPerf() {
   const seq = (renderCreatorPerf._seq = (renderCreatorPerf._seq || 0) + 1);
   let detail = null;
   try {
+    // Pro plan: เริ่มโหลดฝั่ง Ads (ensureCpTta) คู่ขนานไปเลย ไม่ต้องรอ creator ก่อน — ผลไปโผล่ที่กราฟ/KPI ต้นทุนเมื่อเสร็จ
+    ensureCpTta(from, to).catch(() => {});
     await ensureCreatorData(from, to, () => { if (currentPage === 'creatorperf' && seq === renderCreatorPerf._seq) renderCreatorPerf(); });
     if (cpSelectedCreator) detail = await ensureCreatorDetail(from, to, cpSelectedCreator);
   } catch (e) { showError('โหลดข้อมูล creator ไม่สำเร็จ: ' + e.message); return; }
@@ -3557,11 +3559,12 @@ async function ensureCpTta(from, to, onFresh) {
   if (cpTta.rangeKey === rangeKey) return;
   const apply = d => { cpTta.rangeKey = rangeKey; cpTta.handles = d.handles; cpTta.kolClips = d.kolClips.map(rpcClipToObj); cpTta.daily = d.daily; cpTta.clipsByHandle = {}; cpTta.dailyByHandle = {}; };
   const load = async () => {
-    setBgSync('รวมยอด TikTok Ads (Supabase)...', 20);
-    const handles = await supaRpc('tta_handle_summary', { p_from: from, p_to: to }, true);
-    setBgSync('รวมยอด TikTok Ads (Supabase)...', 60);
-    const kolClips = await supaRpc('tta_clip_summary', { p_from: from, p_to: to, p_handle: null, p_kol_only: true }, true);
-    const daily = await supaRpc('tta_daily_spend', { p_from: from, p_to: to, p_handle: null }, true);
+    setBgSync('รวมยอด TikTok Ads (Supabase)...', 30);
+    // Pro plan (2026-09-04): ยิง 3 RPC พร้อมกันได้แล้ว (เดิมเรียงคิวเพราะโควตา Free)
+    const [handles, kolClips, daily] = await Promise.all([
+      supaRpc('tta_handle_summary', { p_from: from, p_to: to }, true),
+      supaRpc('tta_clip_summary', { p_from: from, p_to: to, p_handle: null, p_kol_only: true }, true),
+      supaRpc('tta_daily_spend', { p_from: from, p_to: to, p_handle: null }, true)]);
     setBgSync(`TikTok Ads ${fmt(handles.length)} ช่อง อัปเดตแล้ว`, null);
     const d = { handles, kolClips, daily, cachedAt: Date.now() };
     idbSet('cptta:' + rangeKey, d);
@@ -3581,7 +3584,7 @@ async function ensureCpClips(from, to, handle) {
   const h = cpNormHandle(handle);
   if (cpTta.clipsByHandle[h]) return;
   setBgSync(`โหลดคลิปของ ${handle}...`, 50);
-  const [clips, daily] = [await supaRpc('tta_clip_summary', { p_from: from, p_to: to, p_handle: h, p_kol_only: false }, true), await supaRpc('tta_daily_spend', { p_from: from, p_to: to, p_handle: h })];
+  const [clips, daily] = await Promise.all([supaRpc('tta_clip_summary', { p_from: from, p_to: to, p_handle: h, p_kol_only: false }, true), supaRpc('tta_daily_spend', { p_from: from, p_to: to, p_handle: h })]);
   cpTta.clipsByHandle[h] = clips.map(rpcClipToObj);
   cpTta.dailyByHandle[h] = daily;
   setBgSync(`คลิปของ ${handle} พร้อมแล้ว`, null);
@@ -3731,10 +3734,12 @@ async function ensureCreatorData(from, to, onFresh) {
   const apply = d => { cpCreator.rangeKey = key; cpCreator.summary = d.summary; cpCreator.trend = d.trend; cpCreator.topSku = d.topSku; cpCreator.daily = d.daily; cpCreator.detail = {}; };
   const load = async () => {
     setBgSync('รวมยอด creator (Supabase)...', 30);
-    const summary = await supaRpc('creator_summary', { p_from: from, p_to: to }, true);
-    const trend = await supaRpc('creator_trend', { p_to: to }, true);
-    const topSku = await supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: null }, true);
-    const daily = await supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: null }, true);
+    // Pro plan: 4 RPC พร้อมกัน (เดิมเรียงคิว)
+    const [summary, trend, topSku, daily] = await Promise.all([
+      supaRpc('creator_summary', { p_from: from, p_to: to }, true),
+      supaRpc('creator_trend', { p_to: to }, true),
+      supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: null }, true),
+      supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: null }, true)]);
     setBgSync(`creator ${fmt(new Set(summary.map(r => r.creator_handle)).size)} คน อัปเดตแล้ว`, null);
     const d = { summary, trend, topSku, daily, cachedAt: Date.now() };
     idbSet('creator:' + key, d);
@@ -3751,7 +3756,7 @@ async function ensureCreatorData(from, to, onFresh) {
 async function ensureCreatorDetail(from, to, handle) {
   await ensureCreatorData(from, to);
   if (cpCreator.detail[handle]) return cpCreator.detail[handle];
-  const [daily, topSku] = [await supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: handle }, true), await supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: handle }, true)];
+  const [daily, topSku] = await Promise.all([supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: handle }, true), supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: handle }, true)]);
   cpCreator.detail[handle] = { daily, topSku };
   return cpCreator.detail[handle];
 }
@@ -4343,10 +4348,14 @@ async function runLiveSearch() {
     const base = `${window.SUPABASE_URL}/rest/v1/orders?select=order_id,creator_handle,order_channel,order_status,settled,revenue,created_at_precise,sku_promotion,cancel_return_type&channel=eq.TikTok&creator_handle=in.(${encodeURIComponent(inList)})&created_at_precise=gte.${encodeURIComponent(fromISO)}&created_at_precise=lte.${encodeURIComponent(toISO)}${ocFilter ? '&order_channel=eq.' + encodeURIComponent(ocFilter) : ''}&order=created_at_precise.asc,order_id.asc`;
     matched = await fetchKeyset(base, headers, ['created_at_precise', 'order_id']);
     const ids = matched.map(r => r.order_id).filter(Boolean);
+    const chunkUrls = [];
     for (let i = 0; i < ids.length; i += 150) {
       const chunk = ids.slice(i, i + 150).map(x => '"' + String(x).replace(/"/g, '') + '"').join(',');
-      const res = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/sku_revenue?select=order_id,parent_sku,qty,revenue_share&order_id=in.(${encodeURIComponent(chunk)})&limit=1000`, headers);
-      skuRowsLs.push(...await res.json());
+      chunkUrls.push(`${window.SUPABASE_URL}/rest/v1/sku_revenue?select=order_id,parent_sku,qty,revenue_share&order_id=in.(${encodeURIComponent(chunk)})&limit=1000`);
+    }
+    for (let i = 0; i < chunkUrls.length; i += 4) { // Pro plan: 4 คำขอพร้อมกัน
+      const batch = await Promise.all(chunkUrls.slice(i, i + 4).map(u => fetchWithRetry(u, headers).then(r => r.json())));
+      batch.forEach(rows => skuRowsLs.push(...rows));
     }
   } catch (e) { document.getElementById('ls-kpis').innerHTML = `<div class="card" style="color:var(--red);">ค้นหาไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
 
@@ -7935,12 +7944,20 @@ async function fetchTtaData(fromDate, toDate) {
   const dFrom = new Date((fromDate || '2026-01-01') + 'T00:00:00').getTime();
   const dTo = new Date((toDate || new Date().toISOString().slice(0, 10)) + 'T00:00:00').getTime();
   setBgSync('โหลดคลิป TikTok Ads...', 0);
-  const ttaRaw = await fetchKeyset(baseUrl, headers, ['stat_date', 'item_id'], 1000, (n, last) => {
-    // แถวเรียงตามวันที่ → คิด % จากวันที่ล่าสุดที่โหลดถึง เทียบกับช่วงที่ขอ (keyset ไม่รู้จำนวนรวมล่วงหน้า)
-    const cur = last && last.stat_date ? new Date(last.stat_date + 'T00:00:00').getTime() : dFrom;
-    const pct = dTo > dFrom ? Math.min(99, Math.max(1, Math.round((cur - dFrom) / (dTo - dFrom) * 100))) : 50;
-    setBgSync(`โหลดคลิป TikTok Ads (${fmt(n)} แถว)`, pct);
-  });
+  // Pro plan (2026-09-04): แบ่งช่วงวันที่เป็นสูงสุด 4 ท่อน ยิง keyset พร้อมกัน แล้วรวม (เดิมเรียงคิวท่อนเดียวเพราะโควตา Free)
+  const baseNoDate = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=${ttaSelect}&order=stat_date.asc,item_id.asc`;
+  const dayMs = 86400000, totalDays = Math.max(1, Math.round((dTo - dFrom) / dayMs) + 1);
+  const parts = Math.min(4, Math.max(1, Math.ceil(totalDays / 14)));
+  const ranges = [];
+  for (let i = 0; i < parts; i++) {
+    const a = new Date(dFrom + Math.floor(totalDays * i / parts) * dayMs), b = new Date(dFrom + (Math.floor(totalDays * (i + 1) / parts) - 1) * dayMs);
+    ranges.push([fmtDateISO(a), fmtDateISO(b)]);
+  }
+  const loaded = new Array(parts).fill(0);
+  const chunks = await Promise.all(ranges.map(([a, b], i) => fetchKeyset(`${baseNoDate}&stat_date=gte.${a}&stat_date=lte.${b}`, headers, ['stat_date', 'item_id'], 1000, n => {
+    loaded[i] = n; setBgSync(`โหลดคลิป TikTok Ads (${fmt(loaded.reduce((x, y) => x + y, 0))} แถว, ${parts} ท่อนพร้อมกัน)`, 50);
+  })));
+  const ttaRaw = chunks.flat();
   setBgSync(`TikTok Ads ${fmt(ttaRaw.length)} แถว อัปเดตแล้ว`, null);
   window._ttaFailedChunks = [];
   buildTtaByClip(ttaRaw);
@@ -8478,8 +8495,7 @@ async function renderKolPage() {
     kpi.innerHTML = Array.from({ length: 7 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
     try {
       const rerender = () => { if (currentPage === 'kol' && seq === _kolLoadSeq) renderKolPage(); };
-      await ensureKolPosts(rerender);
-      await ensureKolClips(rerender);
+      await Promise.all([ensureKolPosts(rerender), ensureKolClips(rerender)]); // Pro plan: โหลดพร้อมกัน
     } catch (e) {
       kpi.innerHTML = `<div class="card" style="flex:1;"><div style="color:var(--red);font-size:12px;">โหลดข้อมูลไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`;
       return;
