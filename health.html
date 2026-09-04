@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สถานะระบบ | Deesay</title>
+<script src="config.js"></script>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg:#0a0f1e; --surface:#111827; --surface2:#1a2235; --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13); --text:#f0f4ff; --muted:#6b7a99; --accent:#6366f1; --accent2:#818cf8; --success:#10b981; --danger:#ef4444; --orange:#fb923c; --radius:12px; --radius-sm:8px; }
+  body.light-theme { --bg:#f5f5f7; --surface:#fff; --surface2:#ebebef; --border:rgba(0,0,0,0.08); --border2:rgba(0,0,0,0.15); --text:#1a1a2e; --muted:#5a5a72; --success:#16a34a; --danger:#dc2626; --orange:#ea580c; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  nav { border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 32px; height:52px; position:sticky; top:0; background:var(--bg); z-index:10; }
+  .nav-logo { font-size:.8rem; font-weight:700; letter-spacing:3px; }
+  .nav-right { display:flex; align-items:center; gap:16px; }
+  .nav-link { font-size:.8rem; color:var(--muted); text-decoration:none; } .nav-link:hover { color:var(--text); }
+  .btn-ghost { font-size:.8rem; color:var(--muted); background:none; border:1px solid var(--border2); padding:4px 12px; border-radius:6px; cursor:pointer; font-family:inherit; }
+  main { display:flex; justify-content:center; padding:36px 24px; } .shell { width:100%; max-width:1180px; }
+  .page-header { margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .page-header h1 { font-size:1.3rem; font-weight:600; margin-bottom:4px; } .page-header p { font-size:.82rem; color:var(--muted); }
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:22px; }
+  .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .kpi-label { font-size:.72rem; color:var(--muted); margin-bottom:6px; } .kpi-val { font-size:1.25rem; font-weight:700; } .kpi-sub { font-size:.72rem; color:var(--muted); margin-top:4px; }
+  .ok { color:var(--success); } .warn { color:var(--orange); } .bad { color:var(--danger); } .muted { color:var(--muted); }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:20px; }
+  .card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .card-head h2 { font-size:.95rem; font-weight:600; } .card-head span { font-size:.75rem; color:var(--muted); }
+  .tbl-wrap { overflow-x:auto; } table { width:100%; border-collapse:collapse; font-size:.8rem; }
+  th { background:var(--surface2); padding:9px 12px; text-align:left; color:var(--muted); font-weight:600; white-space:nowrap; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
+  td { padding:7px 12px; border-top:1px solid var(--border); vertical-align:middle; }
+  .mono { font-family:'IBM Plex Mono',monospace; font-size:.76rem; }
+  .pill { display:inline-block; font-size:.68rem; padding:2px 8px; border-radius:99px; font-weight:600; white-space:nowrap; }
+  .pill.ok { background:rgba(16,185,129,.15); } .pill.warn { background:rgba(251,146,60,.15); } .pill.bad { background:rgba(239,68,68,.15); } .pill.muted { background:rgba(107,122,153,.2); }
+  .banner { padding:12px 16px; border-radius:var(--radius-sm); margin-bottom:16px; font-size:.85rem; }
+  .banner.warn { background:rgba(251,146,60,.12); color:var(--orange); } .banner.bad { background:rgba(239,68,68,.12); color:var(--danger); }
+  .loading { padding:40px; text-align:center; color:var(--muted); }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">DEESAY</div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-link">Dashboard</a>
+    <a href="upload.html" class="nav-link">Upload</a>
+    <a href="admin.html" class="nav-link">Admin</a>
+    <a href="index.html" class="nav-link">หน้าแรก</a>
+    <button class="btn-ghost" id="themeBtn">โหมดสว่าง</button>
+    <button class="btn-ghost" id="logoutBtn">ออกจากระบบ</button>
+  </div>
+</nav>
+<main><div class="shell">
+  <div class="page-header">
+    <div><h1>🩺 สถานะระบบ</h1><p>cron / MV / การ sync ข้อมูล / token Facebook — ดูที่เดียวว่าอะไรยังเดินอยู่ อะไรค้าง</p></div>
+    <div style="display:flex;gap:8px;align-items:center;"><span id="genAt" style="font-size:.75rem;color:var(--muted);"></span><button class="btn-ghost" id="refreshBtn">↻ รีเฟรช</button></div>
+  </div>
+  <div id="banners"></div>
+  <div class="kpi-grid" id="kpis"></div>
+  <div id="content"><div class="loading">กำลังโหลด...</div></div>
+</div></main>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+if (sessionStorage.getItem('auth') !== 'true') window.location.href = 'login.html?redirect=health.html'
+document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('auth'); window.location.href = 'index.html' }
+if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme')
+document.getElementById('themeBtn').onclick = () => { document.body.classList.toggle('light-theme'); localStorage.setItem('deesay_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark') }
+const DB = createClient(window.SUPABASE_URL || 'https://plfdizmjdmhyjqraohfv.supabase.co', window.SUPABASE_ANON_KEY)
+
+// ===== วันที่รู้จัก (แก้ตรงนี้ถ้าเปลี่ยน) =====
+const FB_TOKEN_EXPIRY_FALLBACK = '2026-10-15' // ใช้เมื่อ fb_pages ไม่มีคอลัมน์วันหมดอายุ
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))
+const fmt = n => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toLocaleString('th-TH')
+const th = d => d ? new Date(d).toLocaleString('th-TH', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—'
+const ago = d => { if (!d) return '—'; const m = (Date.now() - new Date(d).getTime()) / 60000; return m < 60 ? `${Math.round(m)} นาทีก่อน` : m < 1440 ? `${(m/60).toFixed(1)} ชม.ก่อน` : `${(m/1440).toFixed(1)} วันก่อน` }
+const daysTo = d => Math.ceil((new Date(d + 'T00:00:00').getTime() - Date.now()) / 86400000)
+
+// คาดว่า cron ควรรันทุกกี่นาที จาก schedule (รองรับรูปแบบง่ายๆ)
+function expectedMinutes(sched) {
+  const p = (sched || '').trim().split(/\s+/); if (p.length < 5) return null
+  const [min, hour, dom, mon, dow] = p
+  if (min.startsWith('*/')) return parseInt(min.slice(2))
+  if (hour === '*') return 60
+  if (hour.startsWith('*/')) return parseInt(hour.slice(2)) * 60
+  if (dom === '*' && dow === '*') return 1440
+  if (dow !== '*') return 10080
+  return null
+}
+function cronState(j) {
+  if (!j.active) return ['muted', 'ปิดอยู่']
+  if (!j.last_start) return ['warn', 'ยังไม่เคยรัน']
+  const exp = expectedMinutes(j.schedule)
+  const lateMin = (Date.now() - new Date(j.last_start).getTime()) / 60000
+  if (j.last_status && j.last_status !== 'succeeded') return ['bad', 'รอบล่าสุดล้มเหลว']
+  if (exp && lateMin > exp * 2 + 10) return ['bad', `ไม่ได้รันมา ${ago(j.last_start)} (ควรทุก ${exp >= 1440 ? (exp/1440)+' วัน' : exp >= 60 ? (exp/60)+' ชม.' : exp+' นาที'})`]
+  if (j.fails_24h > 0) return ['warn', `ล้ม ${j.fails_24h} ครั้งใน 24 ชม.`]
+  return ['ok', 'ปกติ']
+}
+
+async function load() {
+  document.getElementById('content').innerHTML = '<div class="loading">กำลังโหลด...</div>'
+  const { data, error } = await DB.rpc('system_health')
+  if (error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(error.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 27_system_health_rpc.sql</div>`; return }
+  render(data)
+}
+
+function render(d) {
+  document.getElementById('genAt').textContent = `อัปเดต ${th(d.generated_at)}`
+  const banners = [], kpis = []
+  const cron = d.cron || [], mv = d.mv || [], sync = d.sync || [], ch = d.channels || []
+
+  // --- KPI แถวบน ---
+  const bad = cron.filter(j => cronState(j)[0] === 'bad'), warn = cron.filter(j => cronState(j)[0] === 'warn')
+  kpis.push(['Cron jobs', `${cron.length}`, bad.length ? `<span class="bad">${bad.length} มีปัญหา</span>` : warn.length ? `<span class="warn">${warn.length} ควรดู</span>` : '<span class="ok">ทุกตัวปกติ</span>'])
+  kpis.push(['ขนาด Database', `${fmt(d.db_size_mb)} MB`, 'Pro plan: 8 GB'])
+  const unpop = mv.filter(m => !m.populated)
+  kpis.push(['Materialized views', `${mv.length}`, unpop.length ? `<span class="bad">${unpop.length} ว่างเปล่า</span>` : `รวม ${fmt(mv.reduce((s,m)=>s+(+m.size_mb||0),0).toFixed(0))} MB`])
+  const stale = ch.filter(c => c.days_ago > 7)
+  kpis.push(['ข้อมูลยอดขายล่าสุด', ch.length ? Math.min(...ch.map(c=>c.days_ago)) + ' วันก่อน' : '—', stale.length ? `<span class="warn">${stale.map(c=>c.channel).join(', ')} เกิน 7 วัน</span>` : 'ทุกช่องทางไม่เกิน 7 วัน'])
+  // FB token
+  const pages = d.fb_pages || []
+  const expKey = pages.length ? Object.keys(pages[0]).find(k => /expir/i.test(k)) : null
+  const expDates = expKey ? pages.map(p => p[expKey]).filter(Boolean).map(x => String(x).slice(0,10)) : []
+  const tokenExp = expDates.length ? expDates.sort()[0] : FB_TOKEN_EXPIRY_FALLBACK
+  const dl = daysTo(tokenExp)
+  const tokCls = dl <= 7 ? 'bad' : dl <= 21 ? 'warn' : 'ok'
+  kpis.push(['Facebook Page Token', `<span class="${tokCls}">อีก ${dl} วัน</span>`, `หมด ${tokenExp}${expKey ? '' : ' (ค่าที่ตั้งไว้ในหน้านี้)'} · ${pages.length} เพจ`])
+  if (dl <= 21) banners.push(['warn', `🔑 Facebook Page Access Token จะหมดอายุ ${tokenExp} (อีก ${dl} วัน) — ต่ออายุผ่าน Graph API Explorer ตั้งแต่ 1 วันก่อนหมด แล้วอัปเดตในตาราง fb_pages ทั้ง ${pages.length || 3} เพจ ไม่งั้นการดึงโพสต์/Reels/Page stats จะหยุด`])
+  if (d.fb_thumbs) { const t = d.fb_thumbs; kpis.push(['Thumbnail FB รีเฟรชแล้ว', `${fmt(t.refreshed)} / ${fmt(t.total)}`, t.total ? `${Math.round(t.refreshed/t.total*100)}% · ล่าสุด ${ago(t.last)}` : '']) }
+  bad.forEach(j => banners.push(['bad', `⛔ cron "${esc(j.jobname)}" ${cronState(j)[1]}${j.last_msg ? ' — ' + esc(j.last_msg) : ''}`]))
+  document.getElementById('banners').innerHTML = banners.map(([c,t]) => `<div class="banner ${c}">${t}</div>`).join('')
+  document.getElementById('kpis').innerHTML = kpis.map(([l,v,s]) => `<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s||''}</div></div>`).join('')
+
+  let html = ''
+  // --- cron ---
+  html += `<div class="card"><div class="card-head"><h2>⏱ Cron jobs (${cron.length})</h2><span>สถานะจากรอบรันล่าสุด · เวลาไทย</span></div><div class="tbl-wrap"><table>
+    <thead><tr><th>#</th><th>งาน</th><th>ประเภท</th><th>เป้าหมาย</th><th>ตาราง (UTC)</th><th>รันล่าสุด</th><th>ใช้เวลา</th><th>24 ชม.</th><th>สถานะ</th></tr></thead><tbody>` +
+    cron.map(j => { const [c, t] = cronState(j); return `<tr><td class="mono">${j.jobid}</td><td><b>${esc(j.jobname||'(ไม่มีชื่อ)')}</b>${j.last_msg && c!=='ok' ? `<div class="muted" style="font-size:.7rem;">${esc(j.last_msg)}</div>` : ''}</td>
+      <td>${{mv:'รีเฟรช MV',edge:'Edge Function',sql:'SQL'}[j.kind]||j.kind}</td><td class="mono">${esc(j.target||'')}</td><td class="mono">${esc(j.schedule)}</td>
+      <td>${th(j.last_start)}<div class="muted" style="font-size:.7rem;">${ago(j.last_start)}</div></td><td>${j.last_ms != null ? (j.last_ms >= 1000 ? (j.last_ms/1000).toFixed(1)+' วิ' : j.last_ms+' ms') : '—'}</td>
+      <td>${fmt(j.runs_24h)} รัน${j.fails_24h ? ` <span class="bad">/ ล้ม ${j.fails_24h}</span>` : ''}</td><td><span class="pill ${c}">${t}</span></td></tr>` }).join('') +
+    `</tbody></table></div></div>`
+  if (d.cron_error) html += `<div class="banner bad">อ่าน cron ไม่ได้: ${esc(d.cron_error)}</div>`
+
+  // --- sync tables ---
+  html += `<div class="card"><div class="card-head"><h2>🔄 ข้อมูลที่ sync จากภายนอก</h2><span>วันที่ข้อมูลล่าสุด vs เวลาที่ sync ล่าสุด</span></div><div class="tbl-wrap"><table>
+    <thead><tr><th>แหล่ง</th><th>ตาราง</th><th>แถว</th><th>ข้อมูลล่าสุด</th><th>sync ล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
+    sync.map(s => { if (s.error) return `<tr><td>${esc(s.label)}</td><td class="mono">${esc(s.table)}</td><td colspan="4" class="bad">${esc(s.error)}</td></tr>`
+      const dAgo = s.last_data ? Math.floor((Date.now() - new Date(s.last_data).getTime())/86400000) : null
+      const sAgo = s.last_sync ? (Date.now() - new Date(s.last_sync).getTime())/3600000 : null
+      const cls = (sAgo !== null && sAgo > 48) || (dAgo !== null && dAgo > 14) ? 'warn' : 'ok'
+      return `<tr><td><b>${esc(s.label)}</b></td><td class="mono">${esc(s.table)}</td><td>${fmt(s.rows)}</td><td>${s.last_data ? esc(String(s.last_data).slice(0,10)) + `<div class="muted" style="font-size:.7rem;">${dAgo} วันก่อน</div>` : '—'}</td><td>${s.last_sync ? th(s.last_sync) + `<div class="muted" style="font-size:.7rem;">${ago(s.last_sync)}</div>` : '<span class="muted">ไม่มีคอลัมน์</span>'}</td><td><span class="pill ${cls}">${cls==='ok'?'ปกติ':'ควรดู'}</span></td></tr>` }).join('') +
+    `</tbody></table></div></div>`
+
+  // --- channels ---
+  html += `<div class="card"><div class="card-head"><h2>📦 ยอดขายล่าสุดต่อช่องทาง</h2><span>จาก mv_sales_daily</span></div><div class="tbl-wrap"><table>
+    <thead><tr><th>ช่องทาง</th><th>วันที่ล่าสุด</th><th>ห่างจากวันนี้</th><th>ยอด 30 วัน</th></tr></thead><tbody>` +
+    ch.map(c => `<tr><td><b>${esc(c.channel)}</b></td><td class="mono">${esc(c.last_date)}</td><td class="${c.days_ago > 14 ? 'bad' : c.days_ago > 7 ? 'warn' : ''}">${c.days_ago} วัน</td><td>${c.rev_30d != null ? '฿' + fmt(c.rev_30d) : '—'}</td></tr>`).join('') + `</tbody></table></div></div>`
+
+  // --- MVs ---
+  html += `<div class="card"><div class="card-head"><h2>🧱 Materialized views (${mv.length})</h2><span>จำนวนแถวโดยประมาณ · เวลารีเฟรชดูจาก cron ด้านบน (refresh_all_views รายชั่วโมง)</span></div><div class="tbl-wrap"><table>
+    <thead><tr><th>ชื่อ</th><th>แถว (ประมาณ)</th><th>ขนาด</th><th>สถานะ</th></tr></thead><tbody>` +
+    mv.map(m => `<tr><td class="mono">${esc(m.name)}</td><td>${fmt(m.rows)}</td><td>${fmt(m.size_mb)} MB</td><td><span class="pill ${m.populated?'ok':'bad'}">${m.populated?'มีข้อมูล':'ว่าง — ต้อง REFRESH'}</span></td></tr>`).join('') + `</tbody></table></div></div>`
+
+  // --- fb pages ---
+  if (pages.length) {
+    const keys = Object.keys(pages[0]).slice(0, 8)
+    html += `<div class="card"><div class="card-head"><h2>📘 Facebook pages (${pages.length})</h2><span>token ไม่แสดง</span></div><div class="tbl-wrap"><table><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>` +
+      pages.map(p => `<tr>${keys.map(k=>`<td class="mono">${esc(typeof p[k]==='object'?JSON.stringify(p[k]):p[k])}</td>`).join('')}</tr>`).join('') + `</tbody></table></div></div>`
+  }
+  document.getElementById('content').innerHTML = html
+}
+document.getElementById('refreshBtn').onclick = load
+load()
+setInterval(load, 5 * 60 * 1000)
+</script>
+</body>
+</html>
