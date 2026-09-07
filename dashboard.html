@@ -276,7 +276,8 @@
     </div>
     <div id="navGroup-sh" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('shhub',null,this)"><span class="nav-icon">🛍️</span> ภาพรวม Shopee</div>
-      <div class="nav-item nav-sub" onclick="showPage('lzhub',null,this)"><span class="nav-icon">🅻</span> ภาพรวม Lazada</div>
+      <div class="nav-item nav-sub" onclick="showPage('shads',null,this)"><span class="nav-icon">📢</span> Shopee Ads</div>
+<div class="nav-item nav-sub" onclick="showPage('lzhub',null,this)"><span class="nav-icon">🅻</span> ภาพรวม Lazada</div>
     </div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('mt')" id="navGroupLabel-mt">
       <span>Modern Trade</span><span class="nav-group-chevron" id="navGroupChevron-mt">▸</span>
@@ -291,7 +292,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.07-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.07-b</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1710,6 +1711,42 @@
       </div>
     </div>
 
+    <!-- ===================== SHOPEE ADS (จาก Shopee Open API: shopee_ads_daily + shopee_ads_campaign_daily) ===================== -->
+    <div class="page" id="page-shads">
+      <div id="shads-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header"><div class="section-title">ค่า Ads vs ยอดขายจาก Ads รายวัน (ทั้งร้าน)</div><span id="shads-sync-note" style="font-size:10.5px;color:var(--text3);"></span></div>
+        <div class="chart-wrap" style="height:280px;"><canvas id="chartShAdsDaily"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+          <div class="section-title">แคมเปญ (Item GMV Max / Manual) <span id="shads-camp-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select class="ls-input" id="shadsStatus" onchange="renderShAdsTable()" style="padding:5px 8px;font-size:12px;"><option value="">ทุกสถานะ</option><option value="ongoing">ongoing</option><option value="paused">paused</option><option value="ended">ended</option><option value="closed">closed</option></select>
+            <input type="text" class="ls-input" id="shadsSearch" placeholder="🔎 ชื่อแคมเปญ/สินค้า..." oninput="renderShAdsTable()" style="width:220px;padding:5px 10px;font-size:12px;">
+            <label style="font-size:11px;color:var(--text3);"><input type="checkbox" id="shadsActiveOnly" checked onchange="renderShAdsTable()"> เฉพาะที่มีค่าใช้จ่ายในช่วง</label>
+            <button class="btn btn-ghost" onclick="exportTable('tblShAds')" style="white-space:nowrap;">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="max-height:600px;overflow-y:auto;">
+          <table id="tblShAds" class="sticky-head-table">
+            <thead><tr>
+              <th class="sortable-th" onclick="shAdsSort('ad_name')">แคมเปญ <span class="sort-ind" id="shs-ad_name"></span></th>
+              <th>สถานะ</th><th>งบ/วัน</th><th>ROAS เป้า</th>
+              <th class="sortable-th" onclick="shAdsSort('expense')">ค่า Ads <span class="sort-ind" id="shs-expense"></span></th>
+              <th class="sortable-th" onclick="shAdsSort('broad_gmv')">ยอดขายจาก Ads <span class="sort-ind" id="shs-broad_gmv"></span></th>
+              <th class="sortable-th" onclick="shAdsSort('roas')">ROAS <span class="sort-ind" id="shs-roas"></span></th>
+              <th class="sortable-th" onclick="shAdsSort('broad_order')">ออเดอร์ <span class="sort-ind" id="shs-broad_order"></span></th>
+              <th>CPC</th><th>CTR</th>
+              <th class="sortable-th" onclick="shAdsSort('active_days')">วันที่ยิง <span class="sort-ind" id="shs-active_days"></span></th>
+              <th>ยิงล่าสุด</th></tr></thead>
+            <tbody id="tbodyShAds"></tbody>
+          </table>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">ค่าจาก Shopee Ads API (ตัวเลข broad = รวมสินค้าอื่นที่ซื้อหลังคลิกแอด เป็นค่าเดียวกับหน้า Shopee Ads) · ROAS = ยอดขายจาก Ads ÷ ค่า Ads · เขียว ≥ ROAS เป้าของแคมเปญ (หรือ ≥ 8x ถ้าไม่มีเป้า) · ทอง 1–เป้า · แดง < 1x · คลิกหัวคอลัมน์เพื่อเรียง</div>
+      </div>
+    </div>
+
     <div class="page" id="page-lzhub">
       <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
@@ -2324,12 +2361,12 @@ function applyFilters() {
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook',
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
-  tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', lzhub: 'ภาพรวม Lazada',
+  tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)', kol: 'KOL / Affiliate — คนที่จ้าง'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','tthub','ttcontent','ttads','livesearch','creatorperf','shhub','lzhub','mthub','skurev','cost','skuanalysis','adperf','kol']; // geo ซ่อนชั่วคราว
+const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','tthub','ttcontent','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','skuanalysis','adperf','kol']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget']; // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
@@ -2396,8 +2433,8 @@ function showPage(page, lockCh, el) {
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
-  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'ttcontent', 'ttads', 'shhub', 'lzhub', 'mthub', 'fbengage', 'kol']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
-  const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbengage', 'ttcontent', 'ttads', 'kol']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
+  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'ttcontent', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbengage', 'ttcontent', 'ttads', 'kol', 'shads']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   const fbePageGroup = document.getElementById('fbePageFilterGroup');
@@ -2474,6 +2511,7 @@ function renderCurrentPage() {
   else if (currentPage === 'ttcontent') renderTtc();
   else if (currentPage === 'ttads') renderTta();
   else if (currentPage === 'shhub') renderShHub();
+  else if (currentPage === 'shads') renderShAds();
   else if (currentPage === 'lzhub') renderLzHub();
   else if (currentPage === 'mthub') renderMtHub();
   else if (currentPage === 'geo') renderGeo();
@@ -8736,6 +8774,69 @@ function renderKolDetail(handle, D) {
     </tr>`;
   }).join('');
 }
+// ===================== SHOPEE ADS PAGE (Shopee Open API) =====================
+// อ่านตรงจากตาราง shopee_ads_daily (≤ 1 แถว/วัน) และ RPC shopee_ads_campaign_summary (≤ ~100 แถว) — ทั้งคู่เล็ก
+let _shAdsRows = [], _shAdsSortCol = 'expense', _shAdsSortDir = 'desc', _shAdsSeq = 0;
+function shAdsSort(col) { if (_shAdsSortCol === col) _shAdsSortDir = _shAdsSortDir === 'desc' ? 'asc' : 'desc'; else { _shAdsSortCol = col; _shAdsSortDir = col === 'ad_name' ? 'asc' : 'desc'; } renderShAdsTable(); }
+function shAdsRoasColor(roas, target) { if (roas === null) return 'var(--text3)'; const t = target || 8; return roas >= t ? 'var(--green)' : roas >= 1 ? 'var(--accent)' : 'var(--red)'; }
+async function renderShAds() {
+  const seq = ++_shAdsSeq;
+  const from = getDateValue('From'), to = getDateValue('To');
+  const kpi = document.getElementById('shads-kpis'); if (!kpi) return;
+  kpi.innerHTML = Array.from({ length: 6 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  let daily = [], camps = [];
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_daily?select=stat_date,expense,broad_gmv,direct_gmv,broad_order,direct_order,impression,clicks,broad_item_sold,synced_at&stat_date=gte.${from}&stat_date=lte.${to}&order=stat_date.asc`, { headers }),
+      fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_campaign_summary`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) })]);
+    if (!r1.ok) throw new Error('shopee_ads_daily: ' + await r1.text());
+    if (!r2.ok) throw new Error('shopee_ads_campaign_summary: ' + await r2.text());
+    daily = await r1.json(); camps = await r2.json();
+  } catch (e) { kpi.innerHTML = `<div class="card" style="flex:1;"><div style="color:var(--red);font-size:12px;">โหลดไม่สำเร็จ: ${ttcEsc(e.message)} — ถ้าขึ้นว่าไม่มีตาราง/ฟังก์ชัน ให้รัน SQL 36 และ 37 ก่อน</div></div>`; return; }
+  if (seq !== _shAdsSeq) return;
+  const sum = k => daily.reduce((a, r) => a + (parseFloat(r[k]) || 0), 0);
+  const spend = sum('expense'), gmv = sum('broad_gmv'), dgmv = sum('direct_gmv'), orders = sum('broad_order'), imp = sum('impression'), clicks = sum('clicks'), items = sum('broad_item_sold');
+  const roas = spend > 0 ? gmv / spend : null;
+  const lastSync = daily.length ? daily[daily.length - 1].synced_at : null;
+  document.getElementById('shads-sync-note').textContent = daily.length ? `${fmt(daily.length)} วัน · ข้อมูลล่าสุด ${thShort(daily[daily.length - 1].stat_date)} · sync ${lastSync ? new Date(lastSync).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}` : 'ยังไม่มีข้อมูลในช่วงนี้ (backfill กำลังทำงานทุก 20 นาที)';
+  kpi.innerHTML = `
+    <div class="card" style="flex:1;min-width:150px;border-left:3px solid #ee4d2d;"><div class="card-title">ค่า Ads</div><div class="kpi-value">฿${fmtB(spend)}</div><div class="kpi-sub">เฉลี่ย ฿${fmt(daily.length ? spend / daily.length : 0)}/วัน</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขายจาก Ads ${fbeInfoIcon('shads-info-gmv', 'broad GMV = ยอดที่เกิดหลังคลิกแอด รวมสินค้าอื่นในร้าน (ค่าเดียวกับหน้า Shopee Ads)<br>direct = เฉพาะสินค้าที่โฆษณา')}</div><div class="kpi-value">฿${fmtB(gmv)}</div><div class="kpi-sub">direct ฿${fmtB(dgmv)} (${gmv ? Math.round(dgmv / gmv * 100) : 0}%)</div></div>
+    <div class="card" style="flex:1;min-width:150px;border:1px solid ${shAdsRoasColor(roas)};"><div class="card-title">ROAS</div><div class="kpi-value" style="color:${shAdsRoasColor(roas)};">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</div><div class="kpi-sub">ยอดขายจาก Ads ÷ ค่า Ads</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ออเดอร์จาก Ads</div><div class="kpi-value">${fmt(orders)}</div><div class="kpi-sub">${fmt(items)} ชิ้น · ค่า Ads/ออเดอร์ ฿${fmt(orders ? spend / orders : 0)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิก / CPC</div><div class="kpi-value">${fmtB(clicks)}</div><div class="kpi-sub">CPC ฿${(clicks ? spend / clicks : 0).toFixed(2)} · CTR ${imp ? (clicks / imp * 100).toFixed(2) : 0}%</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">Impression</div><div class="kpi-value">${fmtB(imp)}</div><div class="kpi-sub">CVR ${clicks ? (orders / clicks * 100).toFixed(1) : 0}%</div></div>`;
+  makeChart('chartShAdsDaily', 'bar', daily.map(r => thShort(r.stat_date)), [
+    { label: 'ค่า Ads', data: daily.map(r => +r.expense || 0), backgroundColor: 'rgba(238,77,45,0.55)', yAxisID: 'y', order: 2 },
+    { label: 'ยอดขายจาก Ads', data: daily.map(r => +r.broad_gmv || 0), type: 'line', borderColor: '#a78bfa', backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, yAxisID: 'y', order: 1 },
+    { label: 'ROAS', data: daily.map(r => +r.expense > 0 ? +(r.broad_gmv / r.expense).toFixed(2) : null), type: 'line', borderColor: '#22c55e', backgroundColor: 'transparent', borderDash: [4, 3], tension: 0.3, pointRadius: 0, yAxisID: 'y2', order: 0 }], {
+    scales: { x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 16 }, grid: { color: chartGridColor() } },
+      y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } },
+      y2: { position: 'right', ticks: { color: '#22c55e', font: { family: 'Sarabun', size: 10 }, callback: v => v + 'x' }, grid: { display: false } } },
+    options: { interaction: { mode: 'index', intersect: false } },
+    tooltip: { callbacks: { label: it => it.dataset.label === 'ROAS' ? `ROAS: ${it.raw ?? '—'}x` : `${it.dataset.label}: ฿${fmt(it.raw)}` } } });
+  _shAdsRows = camps.map(c => ({ ...c, expense: +c.expense || 0, broad_gmv: +c.broad_gmv || 0, broad_order: +c.broad_order || 0, impression: +c.impression || 0, clicks: +c.clicks || 0, active_days: +c.active_days || 0,
+    roas: +c.expense > 0 ? c.broad_gmv / c.expense : null, product: (c.parent_skus || []).map(x => productsMap[x] || x).join(', ') }));
+  renderShAdsTable();
+}
+function renderShAdsTable() {
+  const st = document.getElementById('shadsStatus')?.value || '', q = (document.getElementById('shadsSearch')?.value || '').toLowerCase().trim(), activeOnly = document.getElementById('shadsActiveOnly')?.checked;
+  let rows = _shAdsRows.filter(r => (!st || r.campaign_status === st) && (!activeOnly || r.expense > 0) && (!q || (r.ad_name || '').toLowerCase().includes(q) || r.product.toLowerCase().includes(q)));
+  rows.sort((a, b) => { const av = a[_shAdsSortCol], bv = b[_shAdsSortCol]; const c = typeof av === 'string' ? av.localeCompare(bv || '', 'th') : ((av ?? -Infinity) - (bv ?? -Infinity)); return _shAdsSortDir === 'asc' ? c : -c; });
+  document.querySelectorAll('[id^="shs-"]').forEach(el => { el.textContent = ''; }); const ind = document.getElementById('shs-' + _shAdsSortCol); if (ind) ind.textContent = _shAdsSortDir === 'asc' ? '▲' : '▼';
+  document.getElementById('shads-camp-count').textContent = `(${fmt(rows.length)} จาก ${fmt(_shAdsRows.length)} แคมเปญ)`;
+  const stBadge = s => `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid ${s === 'ongoing' ? 'var(--green)' : s === 'paused' ? 'var(--accent)' : 'var(--text3)'};color:${s === 'ongoing' ? 'var(--green)' : s === 'paused' ? 'var(--accent)' : 'var(--text3)'};">${ttcEsc(s || '—')}</span>`;
+  document.getElementById('tbodyShAds').innerHTML = rows.map(r => `<tr>
+    <td style="max-width:360px;"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ttcEscAttr(r.ad_name || '')}">${ttcEsc(r.ad_name || ('#' + r.campaign_id))}</div><div style="font-size:10px;color:var(--text3);">${r.product ? ttcEsc(r.product) : `item ${(r.item_id_list || []).join(', ')}`} · ${r.bidding_method === 'auto' ? 'Item GMV Max' : ttcEsc(r.bidding_method || '')}</div></td>
+    <td>${stBadge(r.campaign_status)}</td><td>${r.campaign_budget ? '฿' + fmt(r.campaign_budget) : '—'}</td><td>${r.roas_target ? r.roas_target + 'x' : '—'}</td>
+    <td style="font-weight:600;">฿${fmt(r.expense)}</td><td>฿${fmt(r.broad_gmv)}</td>
+    <td style="color:${shAdsRoasColor(r.roas, r.roas_target)};font-weight:700;">${r.roas !== null ? r.roas.toFixed(2) + 'x' : '—'}</td>
+    <td>${fmt(r.broad_order)}</td><td>${r.clicks ? '฿' + (r.expense / r.clicks).toFixed(2) : '—'}</td><td>${r.impression ? (r.clicks / r.impression * 100).toFixed(2) + '%' : '—'}</td>
+    <td>${fmt(r.active_days)}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.last_active ? thShort(r.last_active) : '—'}</td></tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีแคมเปญตามเงื่อนไข</td></tr>';
+}
+// ===================== END SHOPEE ADS PAGE =====================
+
 // ===================== END KOL PAGE =====================
 
 // ===================== END TIKTOK CONTENT + ADS PAGES ===================== //
