@@ -292,7 +292,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.07-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.07-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1715,7 +1715,13 @@
     <div class="page" id="page-shads">
       <div id="shads-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:20px;">
-        <div class="section-header"><div class="section-title">ค่า Ads vs ยอดขายจาก Ads รายวัน (ทั้งร้าน)</div><span id="shads-sync-note" style="font-size:10.5px;color:var(--text3);"></span></div>
+        <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">รายวัน (ทั้งร้าน)</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="font-size:11px;color:var(--text3);">แท่ง</span><select class="ls-input" id="shadsBar" onchange="renderShAdsChart()" style="padding:4px 8px;font-size:12px;"></select>
+            <span style="font-size:11px;color:var(--text3);">เส้น</span><select class="ls-input" id="shadsLine" onchange="renderShAdsChart()" style="padding:4px 8px;font-size:12px;"></select>
+            <span style="font-size:11px;color:var(--text3);">เส้น 2 (แกนขวา)</span><select class="ls-input" id="shadsLine2" onchange="renderShAdsChart()" style="padding:4px 8px;font-size:12px;"></select>
+            <span id="shads-sync-note" style="font-size:10.5px;color:var(--text3);"></span>
+          </div></div>
         <div class="chart-wrap" style="height:280px;"><canvas id="chartShAdsDaily"></canvas></div>
       </div>
       <div class="card" style="margin-bottom:20px;">
@@ -1725,21 +1731,23 @@
             <select class="ls-input" id="shadsStatus" onchange="renderShAdsTable()" style="padding:5px 8px;font-size:12px;"><option value="">ทุกสถานะ</option><option value="ongoing">ongoing</option><option value="paused">paused</option><option value="ended">ended</option><option value="closed">closed</option></select>
             <input type="text" class="ls-input" id="shadsSearch" placeholder="🔎 ชื่อแคมเปญ/สินค้า..." oninput="renderShAdsTable()" style="width:220px;padding:5px 10px;font-size:12px;">
             <label style="font-size:11px;color:var(--text3);"><input type="checkbox" id="shadsActiveOnly" checked onchange="renderShAdsTable()"> เฉพาะที่มีค่าใช้จ่ายในช่วง</label>
+            <div style="position:relative;">
+              <button class="btn btn-ghost" id="shadsMetricsBtn" onclick="toggleMetricsPanel('shads')" style="white-space:nowrap;">⚙ Metrics <span id="shads-metric-count" style="color:var(--accent);"></span></button>
+              <div id="shads-metrics-panel" class="metrics-panel" style="display:none;">
+                <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
+                <div id="shads-metrics-checks"></div>
+                <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                  <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('shads')">ค่าแนะนำ</button>
+                  <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('shads')">เลือกทั้งหมด</button>
+                </div>
+              </div>
+            </div>
             <button class="btn btn-ghost" onclick="exportTable('tblShAds')" style="white-space:nowrap;">⬇ Export CSV</button>
           </div>
         </div>
         <div class="table-wrap" style="max-height:600px;overflow-y:auto;">
           <table id="tblShAds" class="sticky-head-table">
-            <thead><tr>
-              <th class="sortable-th" onclick="shAdsSort('ad_name')">แคมเปญ <span class="sort-ind" id="shs-ad_name"></span></th>
-              <th>สถานะ</th><th>งบ/วัน</th><th>ROAS เป้า</th>
-              <th class="sortable-th" onclick="shAdsSort('expense')">ค่า Ads <span class="sort-ind" id="shs-expense"></span></th>
-              <th class="sortable-th" onclick="shAdsSort('broad_gmv')">ยอดขายจาก Ads <span class="sort-ind" id="shs-broad_gmv"></span></th>
-              <th class="sortable-th" onclick="shAdsSort('roas')">ROAS <span class="sort-ind" id="shs-roas"></span></th>
-              <th class="sortable-th" onclick="shAdsSort('broad_order')">ออเดอร์ <span class="sort-ind" id="shs-broad_order"></span></th>
-              <th>CPC</th><th>CTR</th>
-              <th class="sortable-th" onclick="shAdsSort('active_days')">วันที่ยิง <span class="sort-ind" id="shs-active_days"></span></th>
-              <th>ยิงล่าสุด</th></tr></thead>
+            <thead id="theadShAds"></thead>
             <tbody id="tbodyShAds"></tbody>
           </table>
         </div>
@@ -7712,13 +7720,28 @@ const METRIC_CONFIGS = {
     }
   }
 };
+METRIC_CONFIGS.shads = {
+  // ทุก field ที่ Shopee Ads API (get_product_campaign_daily_performance) ส่งมา — broad = รวมสินค้าอื่นที่ซื้อหลังคลิกแอด (ค่าหลักของ Shopee) · direct = เฉพาะสินค้าที่โฆษณา
+  order: ['campaign','status','budget','roas_target','expense','broad_gmv','roas','broad_order','broad_items','cpo','direct_gmv','direct_order','direct_items','direct_roas','impression','clicks','ctr','cr','direct_cr','cpc','cpdc','broad_cir','direct_cir','active_days','last_active'],
+  meta: {
+    campaign:{label:'แคมเปญ',always:true},
+    status:{label:'สถานะ',default:true}, budget:{label:'งบ/วัน',default:true}, roas_target:{label:'ROAS เป้า',default:true},
+    expense:{label:'ค่า Ads',default:true}, broad_gmv:{label:'ยอดขายจาก Ads (broad)',default:true}, roas:{label:'ROAS (broad)',default:true},
+    broad_order:{label:'ออเดอร์ (broad)',default:true}, broad_items:{label:'ชิ้นที่ขาย (broad)'}, cpo:{label:'ค่า Ads/ออเดอร์'},
+    direct_gmv:{label:'ยอดขาย direct'}, direct_order:{label:'ออเดอร์ direct'}, direct_items:{label:'ชิ้นที่ขาย direct'}, direct_roas:{label:'ROAS direct'},
+    impression:{label:'Impression'}, clicks:{label:'คลิก'}, ctr:{label:'CTR',default:true}, cr:{label:'CVR (broad)'}, direct_cr:{label:'CVR direct'},
+    cpc:{label:'CPC',default:true}, cpdc:{label:'ค่า Ads/ออเดอร์ direct'}, broad_cir:{label:'CIR (Ads ÷ ยอด) broad'}, direct_cir:{label:'CIR direct'},
+    active_days:{label:'วันที่ยิง',default:true}, last_active:{label:'ยิงล่าสุด',default:true}
+  }
+};
 const metricState = {
+  shads: { order: [...METRIC_CONFIGS.shads.order], active: {} },
   ttc: { order: [...METRIC_CONFIGS.ttc.order], active: {} },
   tta: { order: [...METRIC_CONFIGS.tta.order], active: {} },
   ttaCampaign: { order: [...METRIC_CONFIGS.ttaCampaign.order], active: {} },
   cpAds: { order: [...METRIC_CONFIGS.cpAds.order], active: {} }
 };
-['ttc','tta','ttaCampaign','cpAds'].forEach(page => {
+['ttc','tta','ttaCampaign','cpAds','shads'].forEach(page => {
   METRIC_CONFIGS[page].order.forEach(k => {
     const m = METRIC_CONFIGS[page].meta[k];
     metricState[page].active[k] = !!(m.always || m.default);
@@ -7833,6 +7856,7 @@ function rerenderPage(page) {
   else if (page === 'tta') { ttaPage = 1; renderTtaTable(); }
   else if (page === 'ttaCampaign') { renderTtaCampaignTable(); }
   else if (page === 'cpAds') { cpAdsPage = 1; renderCpAdsSection(); }
+  else if (page === 'shads') { renderShAdsTable(); }
 }
 function activeCols(page) {
   return metricState[page].order.filter(k => metricState[page].active[k]);
@@ -8807,33 +8831,78 @@ async function renderShAds() {
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ออเดอร์จาก Ads</div><div class="kpi-value">${fmt(orders)}</div><div class="kpi-sub">${fmt(items)} ชิ้น · ค่า Ads/ออเดอร์ ฿${fmt(orders ? spend / orders : 0)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิก / CPC</div><div class="kpi-value">${fmtB(clicks)}</div><div class="kpi-sub">CPC ฿${(clicks ? spend / clicks : 0).toFixed(2)} · CTR ${imp ? (clicks / imp * 100).toFixed(2) : 0}%</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">Impression</div><div class="kpi-value">${fmtB(imp)}</div><div class="kpi-sub">CVR ${clicks ? (orders / clicks * 100).toFixed(1) : 0}%</div></div>`;
-  makeChart('chartShAdsDaily', 'bar', daily.map(r => thShort(r.stat_date)), [
-    { label: 'ค่า Ads', data: daily.map(r => +r.expense || 0), backgroundColor: 'rgba(238,77,45,0.55)', yAxisID: 'y', order: 2 },
-    { label: 'ยอดขายจาก Ads', data: daily.map(r => +r.broad_gmv || 0), type: 'line', borderColor: '#a78bfa', backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, yAxisID: 'y', order: 1 },
-    { label: 'ROAS', data: daily.map(r => +r.expense > 0 ? +(r.broad_gmv / r.expense).toFixed(2) : null), type: 'line', borderColor: '#22c55e', backgroundColor: 'transparent', borderDash: [4, 3], tension: 0.3, pointRadius: 0, yAxisID: 'y2', order: 0 }], {
+  _shAdsDaily = daily; renderShAdsChart();
+  _shAdsRows = camps.map(c => {
+    const n = k => +c[k] || 0; const r = { ...c, expense: n('expense'), broad_gmv: n('broad_gmv'), broad_order: n('broad_order'), broad_items: n('broad_order_amount'), direct_gmv: n('direct_gmv'), direct_order: n('direct_order'), direct_items: n('direct_order_amount'),
+      impression: n('impression'), clicks: n('clicks'), active_days: n('active_days'), budget: c.campaign_budget, status: c.campaign_status, product: (c.parent_skus || []).map(x => productsMap[x] || x).join(', ') };
+    r.roas = r.expense > 0 ? r.broad_gmv / r.expense : null; r.direct_roas = r.expense > 0 ? r.direct_gmv / r.expense : null;
+    r.cpo = r.broad_order ? r.expense / r.broad_order : null; r.cpdc = r.direct_order ? r.expense / r.direct_order : null;
+    r.ctr = r.impression ? r.clicks / r.impression : null; r.cr = r.clicks ? r.broad_order / r.clicks : null; r.direct_cr = r.clicks ? r.direct_order / r.clicks : null;
+    r.cpc = r.clicks ? r.expense / r.clicks : null; r.broad_cir = r.broad_gmv ? r.expense / r.broad_gmv : null; r.direct_cir = r.direct_gmv ? r.expense / r.direct_gmv : null;
+    return r; });
+  renderShAdsTable();
+}
+// ---- กราฟรายวัน: เลือก metric ได้ (แท่ง / เส้น / เส้นแกนขวา) ----
+let _shAdsDaily = [];
+const SHADS_DAILY_METRICS = {
+  expense:{label:'ค่า Ads',fmt:v=>'฿'+fmt(v)}, broad_gmv:{label:'ยอดขายจาก Ads (broad)',fmt:v=>'฿'+fmt(v)}, direct_gmv:{label:'ยอดขาย direct',fmt:v=>'฿'+fmt(v)},
+  broad_order:{label:'ออเดอร์ (broad)',fmt:v=>fmt(v)}, direct_order:{label:'ออเดอร์ direct',fmt:v=>fmt(v)}, broad_item_sold:{label:'ชิ้นที่ขาย (broad)',fmt:v=>fmt(v)},
+  impression:{label:'Impression',fmt:v=>fmt(v)}, clicks:{label:'คลิก',fmt:v=>fmt(v)},
+  roas:{label:'ROAS (broad)',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.broad_gmv/r.expense:null}, direct_roas:{label:'ROAS direct',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.direct_gmv/r.expense:null},
+  ctr:{label:'CTR %',fmt:v=>v.toFixed(2)+'%',calc:r=>+r.impression?r.clicks/r.impression*100:null}, cvr:{label:'CVR %',fmt:v=>v.toFixed(2)+'%',calc:r=>+r.clicks?r.broad_order/r.clicks*100:null},
+  cpc:{label:'CPC',fmt:v=>'฿'+v.toFixed(2),calc:r=>+r.clicks?r.expense/r.clicks:null}, cpo:{label:'ค่า Ads/ออเดอร์',fmt:v=>'฿'+v.toFixed(0),calc:r=>+r.broad_order?r.expense/r.broad_order:null},
+  none:{label:'— ไม่แสดง —'}
+};
+function shAdsFillSelects() {
+  const opts = Object.entries(SHADS_DAILY_METRICS).map(([k, m]) => `<option value="${k}">${m.label}</option>`).join('');
+  [['shadsBar','expense'],['shadsLine','broad_gmv'],['shadsLine2','roas']].forEach(([id, def]) => { const el = document.getElementById(id); if (el && !el.options.length) { el.innerHTML = opts; el.value = def; } });
+}
+function shAdsSeries(key) { const m = SHADS_DAILY_METRICS[key]; return _shAdsDaily.map(r => m.calc ? m.calc(r) : (+r[key] || 0)); }
+function renderShAdsChart() {
+  shAdsFillSelects();
+  const bar = document.getElementById('shadsBar').value, line = document.getElementById('shadsLine').value, line2 = document.getElementById('shadsLine2').value;
+  const ds = [];
+  if (bar !== 'none') ds.push({ label: SHADS_DAILY_METRICS[bar].label, data: shAdsSeries(bar), backgroundColor: 'rgba(238,77,45,0.55)', yAxisID: 'y', order: 2, _k: bar });
+  if (line !== 'none') ds.push({ label: SHADS_DAILY_METRICS[line].label, data: shAdsSeries(line), type: 'line', borderColor: '#a78bfa', backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, yAxisID: 'y', order: 1, _k: line });
+  if (line2 !== 'none') ds.push({ label: SHADS_DAILY_METRICS[line2].label, data: shAdsSeries(line2), type: 'line', borderColor: '#22c55e', backgroundColor: 'transparent', borderDash: [4, 3], tension: 0.3, pointRadius: 0, yAxisID: 'y2', order: 0, _k: line2 });
+  makeChart('chartShAdsDaily', 'bar', _shAdsDaily.map(r => thShort(r.stat_date)), ds, {
     scales: { x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 16 }, grid: { color: chartGridColor() } },
       y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } },
-      y2: { position: 'right', ticks: { color: '#22c55e', font: { family: 'Sarabun', size: 10 }, callback: v => v + 'x' }, grid: { display: false } } },
+      y2: { position: 'right', display: line2 !== 'none', ticks: { color: '#22c55e', font: { family: 'Sarabun', size: 10 }, callback: v => SHADS_DAILY_METRICS[line2]?.fmt ? SHADS_DAILY_METRICS[line2].fmt(+v) : v }, grid: { display: false } } },
     options: { interaction: { mode: 'index', intersect: false } },
-    tooltip: { callbacks: { label: it => it.dataset.label === 'ROAS' ? `ROAS: ${it.raw ?? '—'}x` : `${it.dataset.label}: ฿${fmt(it.raw)}` } } });
-  _shAdsRows = camps.map(c => ({ ...c, expense: +c.expense || 0, broad_gmv: +c.broad_gmv || 0, broad_order: +c.broad_order || 0, impression: +c.impression || 0, clicks: +c.clicks || 0, active_days: +c.active_days || 0,
-    roas: +c.expense > 0 ? c.broad_gmv / c.expense : null, product: (c.parent_skus || []).map(x => productsMap[x] || x).join(', ') }));
-  renderShAdsTable();
+    tooltip: { callbacks: { label: it => { const m = SHADS_DAILY_METRICS[it.dataset._k]; return `${it.dataset.label}: ${it.raw == null ? '—' : (m?.fmt ? m.fmt(+it.raw) : fmt(it.raw))}`; } } } });
 }
 function renderShAdsTable() {
   const st = document.getElementById('shadsStatus')?.value || '', q = (document.getElementById('shadsSearch')?.value || '').toLowerCase().trim(), activeOnly = document.getElementById('shadsActiveOnly')?.checked;
   let rows = _shAdsRows.filter(r => (!st || r.campaign_status === st) && (!activeOnly || r.expense > 0) && (!q || (r.ad_name || '').toLowerCase().includes(q) || r.product.toLowerCase().includes(q)));
-  rows.sort((a, b) => { const av = a[_shAdsSortCol], bv = b[_shAdsSortCol]; const c = typeof av === 'string' ? av.localeCompare(bv || '', 'th') : ((av ?? -Infinity) - (bv ?? -Infinity)); return _shAdsSortDir === 'asc' ? c : -c; });
-  document.querySelectorAll('[id^="shs-"]').forEach(el => { el.textContent = ''; }); const ind = document.getElementById('shs-' + _shAdsSortCol); if (ind) ind.textContent = _shAdsSortDir === 'asc' ? '▲' : '▼';
+  const sortKey = _shAdsSortCol === 'campaign' ? 'ad_name' : _shAdsSortCol;
+  rows.sort((a, b) => { const av = a[sortKey], bv = b[sortKey]; const c = typeof av === 'string' || typeof bv === 'string' ? String(av || '').localeCompare(String(bv || ''), 'th') : ((av ?? -Infinity) - (bv ?? -Infinity)); return _shAdsSortDir === 'asc' ? c : -c; });
   document.getElementById('shads-camp-count').textContent = `(${fmt(rows.length)} จาก ${fmt(_shAdsRows.length)} แคมเปญ)`;
+  const cols = activeCols('shads'), meta = METRIC_CONFIGS.shads.meta;
+  document.getElementById('theadShAds').innerHTML = '<tr>' + cols.map(k => `<th class="sortable-th" onclick="shAdsSort('${k}')">${meta[k].label} <span class="sort-ind">${_shAdsSortCol === k ? (_shAdsSortDir === 'asc' ? '▲' : '▼') : ''}</span></th>`).join('') + '</tr>';
+  updateMetricCount('shads');
   const stBadge = s => `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid ${s === 'ongoing' ? 'var(--green)' : s === 'paused' ? 'var(--accent)' : 'var(--text3)'};color:${s === 'ongoing' ? 'var(--green)' : s === 'paused' ? 'var(--accent)' : 'var(--text3)'};">${ttcEsc(s || '—')}</span>`;
-  document.getElementById('tbodyShAds').innerHTML = rows.map(r => `<tr>
-    <td style="max-width:360px;"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ttcEscAttr(r.ad_name || '')}">${ttcEsc(r.ad_name || ('#' + r.campaign_id))}</div><div style="font-size:10px;color:var(--text3);">${r.product ? ttcEsc(r.product) : `item ${(r.item_id_list || []).join(', ')}`} · ${r.bidding_method === 'auto' ? 'Item GMV Max' : ttcEsc(r.bidding_method || '')}</div></td>
-    <td>${stBadge(r.campaign_status)}</td><td>${r.campaign_budget ? '฿' + fmt(r.campaign_budget) : '—'}</td><td>${r.roas_target ? r.roas_target + 'x' : '—'}</td>
-    <td style="font-weight:600;">฿${fmt(r.expense)}</td><td>฿${fmt(r.broad_gmv)}</td>
-    <td style="color:${shAdsRoasColor(r.roas, r.roas_target)};font-weight:700;">${r.roas !== null ? r.roas.toFixed(2) + 'x' : '—'}</td>
-    <td>${fmt(r.broad_order)}</td><td>${r.clicks ? '฿' + (r.expense / r.clicks).toFixed(2) : '—'}</td><td>${r.impression ? (r.clicks / r.impression * 100).toFixed(2) + '%' : '—'}</td>
-    <td>${fmt(r.active_days)}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.last_active ? thShort(r.last_active) : '—'}</td></tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีแคมเปญตามเงื่อนไข</td></tr>';
+  const pct = v => v === null || v === undefined ? '—' : (v * 100).toFixed(2) + '%';
+  const money = v => '฿' + fmt(v), money2 = v => v === null || v === undefined ? '—' : '฿' + (+v).toFixed(2);
+  const cell = (r, k) => {
+    switch (k) {
+      case 'campaign': return `<td style="max-width:360px;"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ttcEscAttr(r.ad_name || '')}">${ttcEsc(r.ad_name || ('#' + r.campaign_id))}</div><div style="font-size:10px;color:var(--text3);">${r.product ? ttcEsc(r.product) : `item ${(r.item_id_list || []).join(', ')}`} · ${r.bidding_method === 'auto' ? 'Item GMV Max' : ttcEsc(r.bidding_method || '')}</div></td>`;
+      case 'status': return `<td>${stBadge(r.campaign_status)}</td>`;
+      case 'budget': return `<td>${r.campaign_budget ? money(r.campaign_budget) : '—'}</td>`;
+      case 'roas_target': return `<td>${r.roas_target ? r.roas_target + 'x' : '—'}</td>`;
+      case 'expense': return `<td style="font-weight:600;">${money(r.expense)}</td>`;
+      case 'broad_gmv': case 'direct_gmv': return `<td>${money(r[k])}</td>`;
+      case 'roas': return `<td style="color:${shAdsRoasColor(r.roas, r.roas_target)};font-weight:700;">${r.roas !== null ? r.roas.toFixed(2) + 'x' : '—'}</td>`;
+      case 'direct_roas': return `<td>${r.direct_roas !== null ? r.direct_roas.toFixed(2) + 'x' : '—'}</td>`;
+      case 'broad_order': case 'direct_order': case 'broad_items': case 'direct_items': case 'impression': case 'clicks': case 'active_days': return `<td>${fmt(r[k])}</td>`;
+      case 'cpo': case 'cpdc': return `<td>${r[k] !== null ? '฿' + fmt(r[k]) : '—'}</td>`;
+      case 'cpc': return `<td>${money2(r.cpc)}</td>`;
+      case 'ctr': case 'cr': case 'direct_cr': case 'broad_cir': case 'direct_cir': return `<td>${pct(r[k])}</td>`;
+      case 'last_active': return `<td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.last_active ? thShort(r.last_active) : '—'}</td>`;
+      default: return `<td>${ttcEsc(String(r[k] ?? '—'))}</td>`;
+    }
+  };
+  document.getElementById('tbodyShAds').innerHTML = rows.map(r => '<tr>' + cols.map(k => cell(r, k)).join('') + '</tr>').join('') || `<tr><td colspan="${cols.length}" class="empty">ไม่มีแคมเปญตามเงื่อนไข</td></tr>`;
 }
 // ===================== END SHOPEE ADS PAGE =====================
 
