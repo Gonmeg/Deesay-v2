@@ -292,7 +292,7 @@
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.08-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.08-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1714,19 +1714,22 @@
     <!-- ===================== SHOPEE ADS (จาก Shopee Open API: shopee_ads_daily + shopee_ads_campaign_daily) ===================== -->
     <div class="page" id="page-shads">
       <div id="shads-reminder" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:8px;background:rgba(239,159,39,0.12);color:#ef9f27;font-size:12px;"></div>
-      <div class="card" id="shads-total-card" style="margin-bottom:16px;border:1px solid #ee4d2d;"></div>
-      <div class="card" style="margin-bottom:16px;padding:12px 16px;">
+      <!-- ส่วนบน: ค่าใช้จ่ายจริงทุกประเภท เทียบกับยอดขายจริงตามบัญชี (v_orders_clean) -->
+      <div id="shads-total-card" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
+      <div class="card" style="margin-bottom:20px;padding:12px 16px;">
         <details style="margin-top:10px;" open>
-          <summary style="font-size:12px;font-weight:600;cursor:pointer;">📅 ค่าแอดรายวัน (ช่วงที่เลือก) <span id="shads-log-count" style="font-weight:400;color:var(--text3);"></span> <span style="font-weight:400;font-size:10.5px;color:var(--text3);">— Brand / Live / Meta มาจาก Cowork (skill shopee-ads-offapi) อ่าน Seller Centre ทุกเช้า</span></summary>
-          <div class="table-wrap" style="max-height:320px;overflow-y:auto;margin-top:8px;">
+          <summary style="font-size:12px;font-weight:600;cursor:pointer;">📅 ค่าแอดรายวัน เทียบยอดขายจริง (ช่วงที่เลือก) <span id="shads-log-count" style="font-weight:400;color:var(--text3);"></span> <span style="font-weight:400;font-size:10.5px;color:var(--text3);">— Product/Shop จาก Shopee API · Brand / Live / Meta / เหรียญ จาก Cowork (skill shopee-ads-offapi) อ่าน Seller Centre ทุกเช้า</span></summary>
+          <div class="table-wrap" style="max-height:360px;overflow-y:auto;margin-top:8px;">
             <table id="tblShAdsLog" class="sticky-head-table">
-              <thead><tr><th>วันที่</th><th>Product/Shop (API)</th><th>Brand</th><th>Live</th><th>Brand+Live</th><th>เครดิตรวม</th><th>Meta</th><th>เหรียญ</th><th>อื่นๆ</th><th>รวมทุกประเภท</th><th>ยอดขายจาก Ads</th><th>ROAS รวม</th><th>เติมเครดิต</th><th>Cowork</th></tr></thead>
+              <thead><tr><th>วันที่</th><th>Product/Shop (API)</th><th>Brand</th><th>Live</th><th>Meta</th><th>เหรียญ</th><th>อื่นๆ</th><th>ค่าแอดรวม</th><th>ยอดขายจริง (บัญชี)</th><th>ROAS จริง</th><th>Cowork</th></tr></thead>
               <tbody id="tbodyShAdsLog"></tbody>
             </table>
           </div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:6px;">ROAS รวม = ยอดขายจาก Ads (API) ÷ ค่าแอดทุกประเภท · แถวสีเหลือง = Cowork ยังไม่ได้อ่านวันนั้น · Brand+Live "ประมาณ" = ส่วนต่างเครดิตเมื่อยังไม่มีค่าอ่านจริง</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:6px;">ค่าแอดรวม = Product/Shop (API) + Brand + Live + Meta + เหรียญ + อื่นๆ (เฉพาะตัวเลขจริงที่อ่านมาแล้ว) · ยอดขายจริง = ยอดสุทธิ Shopee ตามสูตรบัญชี (แหล่งเดียวกับหน้าภาพรวม Shopee) · ROAS จริง = ยอดขายจริง ÷ ค่าแอดรวม · แถวสีเหลือง = Cowork ยังไม่ได้อ่านวันนั้น ค่าแอดรวมจึงยังไม่ครบ</div>
         </details>
       </div>
+      <!-- ส่วนล่าง: Shopee Ads Product Performance (จาก Shopee Open API เท่านั้น) -->
+      <div class="section-header" style="margin-bottom:10px;"><div><div class="section-title">Shopee Ads Product Performance (API)</div><div style="font-size:10.5px;color:var(--text3);margin-top:2px;">เฉพาะ Product/Shop Ads ที่ API ให้ข้อมูล — ยอดขายในส่วนนี้คือยอดที่ Shopee นับว่าเกิดจากแอด (attribution) ไม่ใช่ยอดขายตามบัญชี</div></div></div>
       <div id="shads-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div><div class="section-title">รายวัน (ทั้งร้าน)</div><div id="shads-sync-note" style="font-size:10.5px;color:var(--text3);margin-top:2px;"></div></div>
@@ -8824,32 +8827,33 @@ async function renderShAds() {
   kpi.innerHTML = Array.from({ length: 6 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
   let daily = [], camps = [];
+  // ยอดขายจริงตามบัญชี (sales_summary บน v_orders_clean — แหล่งเดียวกับหน้าภาพรวม Shopee) โหลดขนานกับข้อมูลแอด
+  const salesReady = ensureSalesSummary(from, to, () => { if (currentPage === 'shads' && seq === _shAdsSeq) renderShAds(); }).catch(e => console.warn('sales_summary (shads)', e.message));
   try {
-    const [r1, r2, r3, r4, r5] = await Promise.all([
+    const [r1, r2, r3, r5] = await Promise.all([
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_daily?select=stat_date,expense,broad_gmv,direct_gmv,broad_order,direct_order,impression,clicks,broad_item_sold,synced_at&stat_date=gte.${from}&stat_date=lte.${to}&order=stat_date.asc`, { headers }),
       fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_campaign_summary`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) }),
       fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_product_daily`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_credit_daily`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) }),
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_manual?select=*&stat_date=gte.${from}&stat_date=lte.${to}`, { headers })]);
     if (!r1.ok) throw new Error('shopee_ads_daily: ' + await r1.text());
     if (!r2.ok) throw new Error('shopee_ads_campaign_summary: ' + await r2.text());
     daily = await r1.json(); camps = await r2.json();
     // แยกค่าแอดทั้งร้านเป็น Product Ads (รายแคมเปญ) กับ "แอดอื่นๆ" (Shop/Brand/Live/Shop GMV Max — API ไม่แยกรายแคมเปญให้)
     const prod = {}; if (r3.ok) (await r3.json()).forEach(p => { prod[p.stat_date] = p; });
-    _shAdsCredit = {}; if (r4.ok) (await r4.json()).forEach(c => { _shAdsCredit[c.stat_date] = c; });
     _shAdsManual = {}; if (r5.ok) (await r5.json()).forEach(m => { _shAdsManual[m.stat_date] = m; });
-    // ทุกวันในช่วง (รวมวันที่ API ยังไม่มีแต่เครดิต/กรอกมี)
-    const dates = new Set(daily.map(r => r.stat_date)); Object.keys(_shAdsCredit).forEach(d => dates.add(d)); Object.keys(_shAdsManual).forEach(d => dates.add(d));
+    await salesReady;
+    // ยอดขายจริงรายวันของ Shopee (ยอดสุทธิตามสูตรบัญชี รวมแถวคืนเงินติดลบ) — เก็บทั้งช่วงไว้ทำ KPI แม้วันนั้นยังไม่มีข้อมูลแอด
+    _shAdsRealByDate = {}; salesRows(from, to, 'Shopee').forEach(s => { _shAdsRealByDate[s.date] = (_shAdsRealByDate[s.date] || 0) + (parseFloat(s.net_revenue) || 0); });
+    // ทุกวันในช่วงที่มีข้อมูลแอดอย่างน้อย 1 แหล่ง (API หรือ Cowork)
+    const dates = new Set(daily.map(r => r.stat_date)); Object.keys(_shAdsManual).forEach(d => dates.add(d));
     const byDate = {}; daily.forEach(r => { byDate[r.stat_date] = r; });
     daily = [...dates].sort().map(d => byDate[d] || { stat_date: d, expense: 0, broad_gmv: 0, direct_gmv: 0, broad_order: 0, direct_order: 0, impression: 0, clicks: 0, broad_item_sold: 0, _noapi: true });
-    daily.forEach(r => { const c = _shAdsCredit[r.stat_date], m = _shAdsManual[r.stat_date];
-      r.credit_spend = c ? +c.credit_spend : null; r.credit_topup = c ? +c.credit_topup : 0; r.snapshots = c ? +c.snapshots : 0;
-      r.meta_ads = m ? +m.meta_ads : 0; r.coins = m ? +m.coins : 0; r.manual_other = m ? +m.other_ads : 0;
+    daily.forEach(r => { const m = _shAdsManual[r.stat_date];
+      r.meta_ads = m ? +m.meta_ads || 0 : 0; r.coins = m ? +m.coins || 0 : 0; r.manual_other = m ? +m.other_ads || 0 : 0;
       r.brand_ads = m && m.brand_ads !== null && m.brand_ads !== undefined ? +m.brand_ads : null; r.live_ads = m && m.live_ads !== null && m.live_ads !== undefined ? +m.live_ads : null;
-      // Brand+Live: ใช้ตัวจริงที่ Cowork อ่านมาถ้ามี ไม่งั้นประมาณจากส่วนต่างเครดิต
-      r.brand_live_est = (r.brand_ads !== null || r.live_ads !== null) ? (r.brand_ads || 0) + (r.live_ads || 0) : (r.credit_spend !== null ? Math.max(0, r.credit_spend - (+r.expense || 0)) : null);
-      r.brand_live_src = (r.brand_ads !== null || r.live_ads !== null) ? 'อ่านจริง' : (r.credit_spend !== null ? 'ประมาณ' : '');
-      r.total_all = (r.credit_spend !== null ? r.credit_spend : (+r.expense || 0)) + r.meta_ads + r.coins + r.manual_other; });
+      // ค่าแอดรวม = ตัวเลขจริงทุกประเภทที่มีแล้ว (ไม่ประมาณจากเครดิตอีก) — วันที่ Cowork ยังไม่อ่านจะยังไม่ครบ (ตารางทำแถวสีเหลือง)
+      r.total_all = (+r.expense || 0) + (r.brand_ads || 0) + (r.live_ads || 0) + r.meta_ads + r.coins + r.manual_other;
+      r.real_revenue = _shAdsRealByDate[r.stat_date] !== undefined ? _shAdsRealByDate[r.stat_date] : null; });
     daily.forEach(r => { const p = prod[r.stat_date]; r.product_expense = p ? +p.expense : 0; r.product_gmv = p ? +p.broad_gmv : 0; r.other_expense = Math.max(0, (+r.expense || 0) - r.product_expense); r.other_gmv = Math.max(0, (+r.broad_gmv || 0) - r.product_gmv); });
   } catch (e) { kpi.innerHTML = `<div class="card" style="flex:1;"><div style="color:var(--red);font-size:12px;">โหลดไม่สำเร็จ: ${ttcEsc(e.message)} — ถ้าขึ้นว่าไม่มีตาราง/ฟังก์ชัน ให้รัน SQL 36 และ 37 ก่อน</div></div>`; return; }
   if (seq !== _shAdsSeq) return;
@@ -8857,7 +8861,7 @@ async function renderShAds() {
   const spend = sum('expense'), gmv = sum('broad_gmv'), dgmv = sum('direct_gmv'), orders = sum('broad_order'), imp = sum('impression'), clicks = sum('clicks'), items = sum('broad_item_sold');
   const roas = spend > 0 ? gmv / spend : null;
   const prodSpend = sum('product_expense'), otherSpend = sum('other_expense'), prodGmv = sum('product_gmv'), otherGmv = sum('other_gmv');
-  renderShAdsTotalCard(daily, spend, gmv);
+  renderShAdsTotalCard(daily, spend, gmv, from, to);
   const lastSync = daily.length ? daily[daily.length - 1].synced_at : null;
   document.getElementById('shads-sync-note').textContent = daily.length ? `${fmt(daily.length)} วัน · ข้อมูลล่าสุด ${thShort(daily[daily.length - 1].stat_date)} · sync ${lastSync ? new Date(lastSync).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}` : 'ยังไม่มีข้อมูลในช่วงนี้ (backfill กำลังทำงานทุก 20 นาที)';
   kpi.innerHTML = `
@@ -8879,40 +8883,33 @@ async function renderShAds() {
     return r; });
   renderShAdsTable();
 }
-// ---- การ์ดใหญ่: "ค่าแอด Shopee ทุกประเภทวันนี้เท่าไร" ----
-let _shAdsCredit = {}, _shAdsManual = {};
-function renderShAdsTotalCard(daily, apiSpend, apiGmv) {
+// ---- แถว KPI ส่วนบน: ค่าแอดรวมทุกประเภท (ตัวเลขจริง) แยกการ์ดรายประเภท เทียบยอดขายจริงตามบัญชี ----
+let _shAdsManual = {}, _shAdsRealByDate = {};
+function renderShAdsTotalCard(daily, apiSpend, apiGmv, from, to) {
   const el = document.getElementById('shads-total-card'); if (!el) return;
-  const withCredit = daily.filter(r => r.credit_spend !== null);
-  const creditSpend = withCredit.reduce((a, r) => a + r.credit_spend, 0), topup = daily.reduce((a, r) => a + (r.credit_topup || 0), 0);
-  const meta = daily.reduce((a, r) => a + r.meta_ads, 0), coins = daily.reduce((a, r) => a + r.coins, 0), other = daily.reduce((a, r) => a + r.manual_other, 0);
-  const total = daily.reduce((a, r) => a + r.total_all, 0);
-  const brandLive = daily.reduce((a, r) => a + (r.brand_live_est || 0), 0);
-  const lastSnap = Object.values(_shAdsCredit).map(c => c.close_balance).pop();
-  const lastDay = daily.length ? daily[daily.length - 1] : null;
-  el.innerHTML = `
-    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
-      <div style="flex:1.4;min-width:240px;">
-        <div class="card-title">ค่าแอด Shopee ทุกประเภท (ช่วงที่เลือก) ${fbeInfoIcon('shads-info-total', '<b>วิธีคิด</b>: แอด Shopee ทุกประเภท (Product / Shop / Brand / Live) หักจากเครดิตโฆษณาก้อนเดียวกัน ระบบถ่ายยอดเครดิตคงเหลือทุกชั่วโมง → ยอดที่ลดลง = ค่าแอดที่ใช้ · ยอดที่เพิ่ม = เติมเครดิต (แยกออกจากกันได้)<br>+ Meta Ads / เหรียญ / อื่นๆ ที่ทีมกรอก (ใช้เครดิตคนละก้อน API ไม่มี)<br><br>เริ่มนับได้ตั้งแต่วันที่เริ่มถ่ายเครดิต ย้อนหลังก่อนหน้านั้นใช้ Product Ads จาก API แทน')}</div>
-        <div class="kpi-value" style="font-size:34px;color:#ee4d2d;">฿${fmtB(total)}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px;">${withCredit.length ? `จากเครดิต ฿${fmtB(creditSpend)} (${fmt(withCredit.length)} วัน)` : 'ยังไม่มีภาพเครดิต — ใช้ Product Ads จาก API แทน'}${meta ? ` + Meta ฿${fmtB(meta)}` : ''}${coins ? ` + เหรียญ ฿${fmtB(coins)}` : ''}${other ? ` + อื่นๆ ฿${fmtB(other)}` : ''}${topup ? ` · เติมเครดิต ฿${fmtB(topup)}` : ''}</div>
-        ${lastDay ? `<div style="font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);"><b>${thShort(lastDay.stat_date)}</b>: ${lastDay.credit_spend !== null ? `ค่าแอดจากเครดิต <b>฿${fmt(lastDay.credit_spend)}</b> (${lastDay.snapshots} ภาพ)` : 'ยังไม่มีภาพเครดิต'}${lastDay.meta_ads ? ` + Meta ฿${fmt(lastDay.meta_ads)}` : ''} = <b style="color:#ee4d2d;">฿${fmt(lastDay.total_all)}</b>${lastDay.credit_topup ? ` · เติม ฿${fmt(lastDay.credit_topup)}` : ''}</div>` : ''}
-      </div>
-      <div style="flex:1;min-width:200px;border-left:1px solid var(--border);padding-left:16px;">
-        <div class="card-title">แยกตามประเภท</div>
-        <div style="font-size:12px;line-height:1.9;">
-          <div>Product/Shop Ads (API) <b>฿${fmtB(apiSpend)}</b> <span style="color:var(--text3);">ROAS ${apiSpend ? (apiGmv / apiSpend).toFixed(2) : '—'}x</span></div>
-          <div>Brand + Live <b>฿${fmtB(brandLive)}</b> <span style="color:var(--text3);">${daily.some(r => r.brand_ads !== null || r.live_ads !== null) ? '(อ่านจาก Seller Centre)' : withCredit.length ? '(ประมาณจากส่วนต่างเครดิต)' : 'รอภาพเครดิต'}</span></div>
-          <div>Meta Ads (กรอก) <b>฿${fmtB(meta)}</b></div>
-          ${coins ? `<div>เหรียญ (กรอก) <b>฿${fmtB(coins)}</b></div>` : ''}${other ? `<div>อื่นๆ (กรอก) <b>฿${fmtB(other)}</b></div>` : ''}
-        </div>
-      </div>
-      <div style="flex:1;min-width:180px;border-left:1px solid var(--border);padding-left:16px;">
-        <div class="card-title">เครดิตคงเหลือล่าสุด</div>
-        <div class="kpi-value">${lastSnap !== undefined ? '฿' + fmtB(+lastSnap) : '—'}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px;">ถ่ายทุกชั่วโมง · ถ้าเหลือน้อยกว่าค่าแอด 3 วัน ควรเติม</div>
-      </div>
-    </div>`;
+  const sumK = k => daily.reduce((a, r) => a + (+r[k] || 0), 0);
+  const brand = sumK('brand_ads'), live = sumK('live_ads'), meta = sumK('meta_ads'), coins = sumK('coins'), other = sumK('manual_other');
+  const total = sumK('total_all');
+  const readDays = daily.filter(r => _shAdsManual[r.stat_date]).length, apiDays = daily.filter(r => !r._noapi).length;
+  // ยอดขายจริงทั้งช่วง (ทุกวัน ไม่ใช่เฉพาะวันที่มีข้อมูลแอด) + จำนวนวันในช่วงเพื่อบอก coverage
+  const realTotal = Object.values(_shAdsRealByDate).reduce((a, v) => a + v, 0);
+  const daysInRange = Math.max(1, Math.round((new Date(to) - new Date(from)) / 86400000) + 1);
+  const realRoas = total > 0 ? realTotal / total : null;
+  const coverageWarn = daily.length < daysInRange || readDays < daily.length;
+  const card = (title, value, sub, style, valueStyle) => `<div class="card" style="flex:1;min-width:140px;${style || ''}"><div class="card-title">${title}</div><div class="kpi-value" style="${valueStyle || ''}">${value}</div><div class="kpi-sub">${sub || ''}</div></div>`;
+  el.innerHTML =
+    card(`ค่าแอดรวม (ทุกประเภท) ${fbeInfoIcon('shads-info-total', '<b>ค่าแอดรวม</b> = Product/Shop Ads (Shopee API) + Brand Ads + Live Ads + Meta Ads ผ่าน Shopee + เหรียญที่แจกใน Live + อื่นๆ<br>ทุกตัวเป็นตัวเลขจริง: API sync เอง / Brand-Live-Meta-เหรียญ Cowork อ่านจาก Seller Centre ทุกเช้า<br><br>วันที่ Cowork ยังไม่อ่าน ค่าแอดรวมจะยังไม่ครบ (ดูแถวสีเหลืองในตาราง)')}`,
+      `฿${fmtB(total)}`, `เฉลี่ย ฿${fmt(daily.length ? total / daily.length : 0)}/วัน · ${fmt(daily.length)} วัน${coverageWarn ? ` <span style="color:#ef9f27;">(API ${fmt(apiDays)} · Cowork ${fmt(readDays)} จาก ${fmt(daysInRange)} วัน)</span>` : ''}`,
+      'flex:1.6;min-width:220px;border:1px solid #ee4d2d;', 'color:#ee4d2d;font-size:30px;') +
+    card('Product/Shop Ads (API)', `฿${fmtB(apiSpend)}`, `${total ? Math.round(apiSpend / total * 100) : 0}% ของรวม · ROAS แอด ${apiSpend ? (apiGmv / apiSpend).toFixed(2) + 'x' : '—'}`) +
+    card('Brand Ads', `฿${fmtB(brand)}`, `${total ? Math.round(brand / total * 100) : 0}% ของรวม`) +
+    card('Live Ads', `฿${fmtB(live)}`, `${total ? Math.round(live / total * 100) : 0}% ของรวม`) +
+    card('Meta Ads (ผ่าน Shopee)', `฿${fmtB(meta)}`, `${total ? Math.round(meta / total * 100) : 0}% ของรวม`) +
+    card('เหรียญ (Live)', `฿${fmtB(coins)}`, `${total ? Math.round(coins / total * 100) : 0}% ของรวม · 1 เหรียญ = ฿1`) +
+    (other ? card('อื่นๆ', `฿${fmtB(other)}`, `${total ? Math.round(other / total * 100) : 0}% ของรวม`) : '') +
+    card(`ยอดขายจริง Shopee ${fbeInfoIcon('shads-info-real', 'ยอดสุทธิตามสูตรบัญชี จาก v_orders_clean (แหล่งเดียวกับหน้าภาพรวม Shopee) รวมแถวคืนเงินติดลบ — ไม่ใช่ยอดที่ Shopee นับว่ามาจากแอด')}`,
+      `฿${fmtB(realTotal)}`, `ทั้งช่วง ${fmt(daysInRange)} วัน · ยอดขายจาก Ads (API) ฿${fmtB(apiGmv)} (${realTotal ? Math.round(apiGmv / realTotal * 100) : 0}%)`, 'border-left:3px solid var(--green);') +
+    card('ROAS จริง', realRoas !== null ? realRoas.toFixed(2) + 'x' : '—', 'ยอดขายจริง ÷ ค่าแอดรวม', `border:1px solid ${shAdsRoasColor(realRoas)};`, `color:${shAdsRoasColor(realRoas)};`);
   renderShAdsReminder(daily); renderShAdsLog(daily);
 }
 // ---- เตือนวันที่ยังไม่ได้กรอก (ดู 7 วันย้อนหลังจากเมื่อวาน ไม่ขึ้นกับช่วงที่เลือก) ----
@@ -8923,31 +8920,35 @@ function renderShAdsReminder(daily) {
   for (let i = 0; i < 7; i++) { const d = new Date(y); d.setUTCDate(y.getUTCDate() - i); const iso = d.toISOString().slice(0, 10); if (!_shAdsManual[iso]) missing.push(iso); }
   if (!missing.length) { el.style.display = 'none'; return; }
   el.style.display = 'block';
-  el.innerHTML = `⚠ Cowork ยังไม่ได้อ่าน Brand/Live/Meta ${missing.length} วัน: <b>${missing.slice().reverse().map(thShort).join(' · ')}</b> — สั่ง Cowork "รัน shopee offapi ${missing.length > 1 ? 'ตั้งแต่ ' + thShort(missing[missing.length - 1]) + ' ถึง ' + thShort(missing[0]) : 'เมื่อวาน'}"`;
+  el.innerHTML = `⚠ Cowork ยังไม่ได้อ่าน Brand/Live/Meta/เหรียญ ${missing.length} วัน: <b>${missing.slice().reverse().map(thShort).join(' · ')}</b> — สั่ง Cowork "รัน shopee offapi ${missing.length > 1 ? 'ตั้งแต่ ' + thShort(missing[missing.length - 1]) + ' ถึง ' + thShort(missing[0]) : 'เมื่อวาน'}"`;
 }
-// ---- ตารางรายวัน ----
+// ---- ตารางรายวัน: ค่าใช้จ่ายจริงทุกประเภท เทียบยอดขายจริงตามบัญชี ----
 function renderShAdsLog(daily) {
   const tb = document.getElementById('tbodyShAdsLog'); if (!tb) return;
   const rows = daily.slice().sort((a, b) => b.stat_date.localeCompare(a.stat_date));
   document.getElementById('shads-log-count').textContent = `(${fmt(rows.length)} วัน)`;
   const money = v => v === null || v === undefined ? '<span style="color:var(--text3);">—</span>' : '฿' + fmt(v);
+  const roasColor = v => v === null ? 'var(--text3)' : v >= 8 ? 'var(--green)' : v >= 1 ? 'var(--accent)' : 'var(--red)';
   tb.innerHTML = rows.map(r => {
-    const m = _shAdsManual[r.stat_date]; const filled = !!m; const gmv = +r.broad_gmv || 0; const roas = r.total_all > 0 ? gmv / r.total_all : null;
+    const m = _shAdsManual[r.stat_date]; const filled = !!m;
+    const real = r.real_revenue; const roas = r.total_all > 0 && real !== null ? real / r.total_all : null;
     const st = filled ? `<span style="color:var(--green);font-size:10.5px;">✓ ${new Date(m.updated_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>` : '<span style="color:#ef9f27;font-size:10.5px;">ยังไม่ได้รัน</span>';
     return `<tr style="${filled ? '' : 'background:rgba(239,159,39,0.08);'}">
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;">${thShort(r.stat_date)}</td>
-      <td>${r._noapi ? money(null) : money(+r.expense || 0)}</td><td>${money(r.brand_ads)}</td><td>${money(r.live_ads)}</td><td>${money(r.brand_live_est)}${r.brand_live_src ? `<div style="font-size:9.5px;color:var(--text3);">${r.brand_live_src}</div>` : ''}</td><td>${money(r.credit_spend)}${r.snapshots ? `<div style="font-size:9.5px;color:var(--text3);">${r.snapshots} ภาพ</div>` : ''}</td>
-      <td>${filled ? money(r.meta_ads) : money(null)}</td><td>${r.coins ? money(r.coins) : '—'}</td><td>${r.manual_other ? money(r.manual_other) : '—'}</td>
-      <td style="font-weight:700;color:#ee4d2d;">${money(r.total_all)}</td><td>${money(gmv)}</td>
-      <td style="font-weight:700;color:${roas === null ? 'var(--text3)' : roas >= 8 ? 'var(--green)' : roas >= 1 ? 'var(--accent)' : 'var(--red)'};">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</td>
-      <td>${r.credit_topup ? '<span style="color:var(--accent);">+' + money(r.credit_topup).slice(1) + '</span>' : '—'}</td>
+      <td>${r._noapi ? money(null) : money(+r.expense || 0)}</td><td>${money(r.brand_ads)}</td><td>${money(r.live_ads)}</td>
+      <td>${filled ? money(r.meta_ads) : money(null)}</td><td>${filled ? money(r.coins) : money(null)}</td><td>${r.manual_other ? money(r.manual_other) : '—'}</td>
+      <td style="font-weight:700;color:#ee4d2d;">${money(r.total_all)}${filled && !r._noapi ? '' : '<div style="font-size:9.5px;color:#ef9f27;">ยังไม่ครบ</div>'}</td>
+      <td style="font-weight:600;">${money(real)}</td>
+      <td style="font-weight:700;color:${roasColor(roas)};">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</td>
       <td>${st}</td></tr>`;
-  }).join('') || '<tr><td colspan="14" class="empty">ไม่มีข้อมูล</td></tr>';
+  }).join('') || '<tr><td colspan="11" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 // ---- กราฟรายวัน: เลือก metric ได้ (แท่ง / เส้น / เส้นแกนขวา) ----
 let _shAdsDaily = [];
 const SHADS_DAILY_METRICS = {
-  total_all:{label:'ค่าแอดทุกประเภท (เครดิต + กรอก)',fmt:v=>'฿'+fmt(v)}, credit_spend:{label:'ค่าแอดจากเครดิต (Product+Shop+Brand+Live)',fmt:v=>'฿'+fmt(v)}, expense:{label:'Product/Shop Ads (API)',fmt:v=>'฿'+fmt(v)}, brand_live_est:{label:'Brand + Live (ส่วนต่างเครดิต)',fmt:v=>'฿'+fmt(v)}, meta_ads:{label:'Meta Ads (กรอก)',fmt:v=>'฿'+fmt(v)}, credit_topup:{label:'เติมเครดิต',fmt:v=>'฿'+fmt(v)}, broad_gmv:{label:'ยอดขายจาก Ads',fmt:v=>'฿'+fmt(v)}, direct_gmv:{label:'ยอดขาย (สินค้าที่ยิง)',fmt:v=>'฿'+fmt(v)},
+  total_all:{label:'ค่าแอดรวม (ทุกประเภท)',fmt:v=>'฿'+fmt(v)}, expense:{label:'Product/Shop Ads (API)',fmt:v=>'฿'+fmt(v)}, brand_ads:{label:'Brand Ads',fmt:v=>'฿'+fmt(v)}, live_ads:{label:'Live Ads',fmt:v=>'฿'+fmt(v)}, meta_ads:{label:'Meta Ads (ผ่าน Shopee)',fmt:v=>'฿'+fmt(v)}, coins:{label:'เหรียญ (Live)',fmt:v=>'฿'+fmt(v)},
+  real_revenue:{label:'ยอดขายจริง (บัญชี)',fmt:v=>'฿'+fmt(v)}, real_roas:{label:'ROAS จริง (ยอดจริง ÷ ค่าแอดรวม)',fmt:v=>v.toFixed(2)+'x',calc:r=>r.total_all>0&&r.real_revenue!==null&&r.real_revenue!==undefined?r.real_revenue/r.total_all:null},
+  broad_gmv:{label:'ยอดขายจาก Ads',fmt:v=>'฿'+fmt(v)}, direct_gmv:{label:'ยอดขาย (สินค้าที่ยิง)',fmt:v=>'฿'+fmt(v)},
   broad_order:{label:'ออเดอร์',fmt:v=>fmt(v)}, direct_order:{label:'ออเดอร์ (สินค้าที่ยิง)',fmt:v=>fmt(v)}, broad_item_sold:{label:'ชิ้นที่ขาย',fmt:v=>fmt(v)},
   impression:{label:'Impression',fmt:v=>fmt(v)}, clicks:{label:'คลิก',fmt:v=>fmt(v)},
   roas:{label:'ROAS',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.broad_gmv/r.expense:null}, direct_roas:{label:'ROAS (สินค้าที่ยิง)',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.direct_gmv/r.expense:null},
