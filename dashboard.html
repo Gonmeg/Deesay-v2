@@ -303,7 +303,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.09-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.09-b</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -2193,16 +2193,20 @@ async function fetchSkuAll(fromDate, toDate) {
 // ===== SUPABASE FETCH: products table (parent_sku -> ชื่อไทย) =====
 async function fetchProducts() {
   const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/products?select=parent_sku,product_name`, { headers });
+  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/products?select=parent_sku,child_sku,product_name`, { headers });
   if (!res.ok) return {};
   const rows = await res.json();
   const map = {};
   rows.forEach(r => { if (r.parent_sku && !map[r.parent_sku]) map[r.parent_sku] = r.product_name || r.parent_sku; });
+  // ชื่อของรหัสลูก (สี/เบอร์ เช่น NDSP02, DSP01) แยกเก็บ — ใช้แค่แปลชื่อในโปรที่ลูกค้าสั่ง ไม่ปนเข้า productsMap (ตัวเลือก SKU ทุกหน้ายังเป็นระดับแม่เหมือนเดิม)
+  childNameMap = {};
+  rows.forEach(r => { if (r.child_sku && r.child_sku !== r.parent_sku && !childNameMap[r.child_sku]) childNameMap[r.child_sku] = r.product_name || map[r.parent_sku] || r.child_sku; });
   return map;
 }
+let childNameMap = {}; // child_sku -> ชื่อไทย (เติมใน fetchProducts)
 
 function skuToName(sku) {
-  return productsMap[sku] || sku;
+  return productsMap[sku] || childNameMap[sku] || sku;
 }
 
 // ===== SUPABASE FETCH: promotions table (sku_promotion -> ชื่อโปรจริงที่สร้างใน Google Sheet) =====
