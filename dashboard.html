@@ -303,7 +303,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.09-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.09-e</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1230,7 +1230,7 @@
 
       <div class="card" style="margin-bottom:20px;border-color:rgba(200,169,110,0.3);">
         <div class="section-header">
-          <div class="section-title">🔥 มาแรงตอนนี้ — โพสต์ใน 7 วันล่าสุด เรียงตามความเร็ว (วิว/วัน)</div>
+          <div class="section-title">🔥 มาแรงตอนนี้ — โพสต์ใน 7 วันล่าสุด เรียงตามความเร็ว (วิว/วัน) <span id="ttcTrendInfoSlot"></span></div>
         </div>
         <div class="table-wrap">
           <table id="tblTtcTrending">
@@ -1241,7 +1241,7 @@
       </div>
 
       <div class="section-header">
-        <div class="section-title">คลิปทั้งหมด</div>
+        <div class="section-title">คลิปทั้งหมด <span id="ttcScoreInfoSlot"></span></div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div class="toggle-group">
             <button class="toggle-btn active" id="ttc-view-grid" onclick="setTtcView('grid',this)">Grid</button>
@@ -2843,7 +2843,7 @@ let fbeKeywordsCache = [];
 let fbeCommentTotalExact = null;
 
 function fbeInfoIcon(id, html) {
-  return `<span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">${html}</div></span>`;
+  return `<span class="ads-info-wrap" style="position:relative;display:inline-block;vertical-align:middle;"><span onclick="toggleFbeInfo('${id}')" style="cursor:pointer;color:var(--text3);font-size:13px;font-weight:400;font-family:'Sarabun',sans-serif;text-transform:none;letter-spacing:normal;padding:0 3px;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:22px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.75;white-space:normal;width:320px;max-width:min(320px,80vw);z-index:200;box-shadow:0 6px 22px rgba(0,0,0,0.45);color:var(--text2);font-weight:400;text-align:left;">${html}</div></span>`;
 }
 
 function toggleFbeInfo(id) {
@@ -7669,6 +7669,8 @@ const METRIC_INFO = {
   orders: 'จำนวนออเดอร์ที่ TikTok นับว่ามาจากแอดคลิปนี้ (GMV Max Orders) — คลิปที่ตั้งเป้าเป็น "ยอดวิว/การรับรู้" (ไม่ใช่ "ยอดขาย") มักมีค่าเป็น 0 เพราะไม่ได้ตั้งเป้าให้ TikTok นับยอดขายจากคลิปนั้นโดยตรง',
   objective: 'วัตถุประสงค์ที่ตั้งไว้ตอนสร้างแคมเปญนี้ (Objective) — บอกได้ว่าทำไม order ถึงมีหรือไม่มี: แคมเปญ "ยอดวิว/การรับรู้แบรนด์" มักไม่มี order เพราะไม่ได้ตั้งเป้าขาย ส่วน "GMV Max/Conversion" จะมี order จริง',
   purchaseValue: 'ยอดขายที่เกิดขึ้นจริงบน TikTok Shop ที่ TikTok นับว่ามาจากแอดคลิปนี้ (Purchase value on TikTok) — field คนละตัวกับ GMV Max Orders เป็นยอดเงินจริง (บาท) ไม่ใช่แค่จำนวนครั้ง',
+  score: '<b>ระดับ ER</b> — ป้ายสีบนคลิป บอกว่า engagement rate ของคลิปนั้นอยู่ระดับไหน<br>ER% = (ไลค์ + คอมเมนต์ + แชร์) ÷ ยอดวิว × 100<br><br><b style="color:var(--green);">เขียว</b> = ตั้งแต่ 2.0% ขึ้นไป (ดีกว่าค่าเฉลี่ยของเพจเกือบเท่าตัว)<br><b style="color:#fbbf24;">เหลือง</b> = 1.0–2.0% (ประมาณค่าเฉลี่ย)<br><b style="color:var(--red);">แดง</b> = ต่ำกว่า 1.0%<br><b style="color:var(--text3);">เทา</b> = วิวยังไม่ถึง 1,000 — ตัวเลข ER เชื่อไม่ได้ (คลิป 300 วิว 15 ไลค์ = 5% ทั้งที่แทบไม่มีคนเห็น)<br><br>ใช้เกณฑ์เดิมเสมอ เทียบข้ามเดือนได้ ไม่เปลี่ยนตามช่วงวันที่ที่เลือก',
+  trending: '<b>ตารางนี้คืออะไร</b><br>โพสต์ใน 7 วันล่าสุด เอามาเรียง 10 อันดับแรกตามความเร็ว<br><br><b>วิว/วัน</b> = ยอดวิวสะสม ÷ จำนวนวันตั้งแต่วันโพสต์ (โพสต์วันนี้นับเป็น 1 วัน) — ที่ต้องหารด้วยวัน เพราะคลิปเก่ามีเวลาสะสมวิวมากกว่า ถ้าดูวิวดิบ ๆ คลิปเก่าชนะตลอด<br><br><b>ความเร็ว</b> = เอาค่าวิว/วัน มาตีเป็น 3 ระดับ ด้วยเกณฑ์ตายตัว<br>• เร็วมาก = เกิน 20,000 วิว/วัน<br>• ปกติ = 5,000–20,000<br>• ช้า = ต่ำกว่า 5,000',
   roas: 'Return On Ad Spend = ยอดขาย TikTok Shop ÷ ค่าแอด — คำนวณจากยอดขายรวมหารค่าแอดรวมของคลิปนั้น (แม่นกว่าการเฉลี่ยค่า ROAS รายวัน) ยิ่งสูงยิ่งคุ้ม',
 };
 const OBJECTIVE_TH = {
@@ -7740,7 +7742,7 @@ const METRIC_CONFIGS = {
   ttc: {
     order: ['cover','caption','date','views','wr','eng','score','likes','comments','shares','reach','favorites','pv','followers','duration','avgwatch','adspend','cpo','impressions','clicks','convs','v25','v50','v100'],
     meta: {
-      cover:{label:'ปก',always:true}, caption:{label:'แคปชั่น',always:true}, score:{label:'คะแนน',always:true},
+      cover:{label:'ปก',always:true}, caption:{label:'แคปชั่น',always:true}, score:{label:'ระดับ ER',always:true},
       date:{label:'โพสต์เมื่อ',default:true}, views:{label:'ยอดวิว',default:true}, wr:{label:'watch rate',default:true},
       eng:{label:'engagement rate'}, likes:{label:'ไลค์'}, comments:{label:'คอมเมนต์'}, shares:{label:'แชร์'},
       reach:{label:'reach (คนดูไม่ซ้ำ)'}, favorites:{label:'บันทึกเก็บ'}, pv:{label:'profile views'},
@@ -7988,20 +7990,25 @@ async function fetchTtcData() {
   });
   scoreTtcClips();
 }
+// ป้ายบนคลิป = engagement rate จริง เทียบกับเกณฑ์ตายตัว (ไม่ใช่การจัดอันดับเทียบกันเองแบบเดิม
+// ที่ต้องมีคลิป "ควรปรับปรุง" เสมอ และคะแนนเปลี่ยนไปมาทุกครั้งที่เปลี่ยนช่วงวันที่)
+const TTC_ER_GOOD = 2.0;   // % ขึ้นไป = ดี
+const TTC_ER_MID  = 1.0;   // % ขึ้นไป = กลาง ๆ (ค่าเฉลี่ยของเพจอยู่แถวนี้)
+const TTC_MIN_VIEWS = 1000; // วิวน้อยกว่านี้ ER% เชื่อไม่ได้ (300 วิว 15 ไลค์ = 5% ทั้งที่แทบไม่มีคนเห็น)
 function scoreTtcClips() {
   if (!ttcData.length) return;
-  const rank = (arr, key) => {
-    const sorted = [...arr].sort((a,b)=>a[key]-b[key]);
-    const m = new Map(); sorted.forEach((r,i)=>m.set(r.video_id, i/(sorted.length-1||1)));
-    return m;
-  };
-  const rV = rank(ttcData,'views'), rW = rank(ttcData,'wr'), rE = rank(ttcData,'eng');
   ttcData.forEach(c => {
-    const p = ((rV.get(c.video_id)||0) + (rW.get(c.video_id)||0) + (rE.get(c.video_id)||0)) / 3;
-    c.percentile = p;
-    c.score = p >= 0.66 ? 'good' : p >= 0.33 ? 'mid' : 'bad';
-    c.scoreLabel = p >= 0.66 ? 'ดีเยี่ยม' : p >= 0.33 ? 'ปานกลาง' : 'ควรปรับปรุง';
-    c.scoreColor = p >= 0.66 ? 'var(--green)' : p >= 0.33 ? '#fbbf24' : 'var(--red)';
+    const er = c.eng || 0;
+    const erTxt = 'ER ' + er.toFixed(1) + '%';
+    if ((c.views || 0) < TTC_MIN_VIEWS) {
+      c.score = 'lowviews'; c.scoreLabel = erTxt + ' · วิวน้อย'; c.scoreColor = 'var(--text3)';
+    } else if (er >= TTC_ER_GOOD) {
+      c.score = 'good'; c.scoreLabel = erTxt; c.scoreColor = 'var(--green)';
+    } else if (er >= TTC_ER_MID) {
+      c.score = 'mid'; c.scoreLabel = erTxt; c.scoreColor = '#fbbf24';
+    } else {
+      c.score = 'bad'; c.scoreLabel = erTxt; c.scoreColor = 'var(--red)';
+    }
   });
 }
 
@@ -8034,6 +8041,10 @@ async function renderTtc() {
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยิงแอด / organic</div><div class="kpi-value">${boosted} / ${ttcData.length-boosted}</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่าแอดคอนเทนต์</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalAdspend)}</div></div>
   `;
+  const slot = document.getElementById('ttcScoreInfoSlot');
+  if (slot && !slot.innerHTML) slot.innerHTML = metricInfoIcon('score');
+  const slot2 = document.getElementById('ttcTrendInfoSlot');
+  if (slot2 && !slot2.innerHTML) slot2.innerHTML = metricInfoIcon('trending');
   renderTtcTrending();
   renderTtcCurrentView();
 }
