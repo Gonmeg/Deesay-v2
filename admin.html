@@ -85,6 +85,10 @@
   .kid-del { background: none; border: none; color: inherit; opacity: 0.45; cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 0 4px; font-family: inherit; }
   .kid-del:hover { opacity: 1; color: var(--danger); }
   .kid-edit { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; width: 90px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); padding: 2px 8px; border-radius: 99px; outline: none; }
+  .kid-editwrap { display: inline-flex; align-items: center; gap: 3px; }
+  .kid-btn { font-size: 0.75rem; line-height: 1; background: var(--surface2); border: 1px solid var(--border2); color: var(--muted); width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-family: inherit; }
+  .kid-btn.ok { color: var(--success); border-color: rgba(16,185,129,0.5); }
+  .kid-btn:hover { color: var(--text); border-color: var(--accent); }
   .kid-none { font-size: 0.72rem; color: var(--muted); font-style: italic; }
   .kid-addbtn { font-size: 0.72rem; color: var(--muted); background: none; border: 1px dashed var(--border2); padding: 2px 9px; border-radius: 99px; cursor: pointer; font-family: inherit; white-space: nowrap; }
   .kid-addbtn:hover { color: var(--accent2); border-color: var(--accent2); }
@@ -209,7 +213,7 @@ function showToast(msg, isError) {
   const t = document.getElementById('toast')
   t.textContent = msg
   t.className = 'toast show' + (isError ? ' error' : '')
-  setTimeout(() => { t.className = 'toast' }, 2600)
+  setTimeout(() => { t.className = 'toast' }, isError ? 6000 : 2600)
 }
 
 async function fetchAllProducts() {
@@ -354,13 +358,23 @@ function kidsHtml(p) {
   h += `<button class="kid-addbtn" title="เพิ่มรหัสลูก เช่น ${p.parent_sku}04">+ เพิ่ม</button>`
   return h
 }
-function kidInput(placeholder, value) {
-  const i = document.createElement('input'); i.className = 'kid-edit'; i.placeholder = placeholder; i.value = value || ''; return i
+// ช่องพิมพ์ + ปุ่ม ✓ บันทึก / ✕ ยกเลิก (Enter/Esc ใช้ได้เหมือนกัน)
+function kidEditor(placeholder, value, onSave, onCancel) {
+  const wrap = document.createElement('span'); wrap.className = 'kid-editwrap'
+  const i = document.createElement('input'); i.className = 'kid-edit'; i.placeholder = placeholder; i.value = value || ''
+  const ok = document.createElement('button'); ok.className = 'kid-btn ok'; ok.textContent = '✓'; ok.title = 'บันทึก'; ok.type = 'button'
+  const no = document.createElement('button'); no.className = 'kid-btn'; no.textContent = '✕'; no.title = 'ยกเลิก'; no.type = 'button'
+  let busy = false
+  const save = async () => { if (busy) return; const v = i.value.trim().toUpperCase(); if (!v) { onCancel(); return } busy = true; i.disabled = ok.disabled = true; await onSave(v) }
+  ok.onclick = save; no.onclick = onCancel
+  i.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); save() } else if (ev.key === 'Escape') onCancel() }
+  wrap.append(i, ok, no)
+  return { wrap, input: i }
 }
 async function kidAdd(p, kid) {
   if (allProducts.some(x => (x.kids||[]).includes(kid))) { showToast(`รหัส "${kid}" มีอยู่แล้ว`, true); return false }
   const { error } = await DB.from('products').insert({ child_sku: kid, parent_sku: p.parent_sku, product_name: p.product_name, product_name_child: p.product_name, mock_price: p.mock_price || 0, rsp: p.rsp || 0, status: p.status || 'Existing' })
-  if (error) { showToast(`เพิ่มไม่สำเร็จ: ${error.message}`, true); return false }
+  if (error) { console.error('kidAdd', error); showToast(`เพิ่มไม่สำเร็จ: ${error.message}${error.details ? ' — ' + error.details : ''}`, true); return false }
   p.kids = [...(p.kids||[]), kid]; showToast(`เพิ่ม ${kid} ใต้ ${p.parent_sku} แล้ว`); return true
 }
 async function kidRename(p, oldKid, newKid) {
@@ -383,14 +397,8 @@ document.getElementById('tblBody').addEventListener('click', async e => {
   const cell = tr.querySelector('.kids')
   // + เพิ่ม → เปิดช่องพิมพ์
   if (e.target.classList.contains('kid-addbtn')) {
-    const inp = kidInput(`${p.parent_sku}0?`); e.target.replaceWith(inp); inp.focus()
-    inp.onkeydown = async ev => {
-      if (ev.key === 'Escape') { cell.innerHTML = kidsHtml(p); return }
-      if (ev.key !== 'Enter') return
-      ev.preventDefault(); const kid = inp.value.trim().toUpperCase(); if (!kid) { cell.innerHTML = kidsHtml(p); return }
-      inp.disabled = true; await kidAdd(p, kid); cell.innerHTML = kidsHtml(p)
-    }
-    inp.onblur = () => { if (!inp.disabled && !inp.value.trim()) cell.innerHTML = kidsHtml(p) }
+    const ed = kidEditor(`${p.parent_sku}0?`, '', async v => { await kidAdd(p, v); cell.innerHTML = kidsHtml(p) }, () => { cell.innerHTML = kidsHtml(p) })
+    e.target.replaceWith(ed.wrap); ed.input.focus()
     return
   }
   // × → ลบ
@@ -401,14 +409,8 @@ document.getElementById('tblBody').addEventListener('click', async e => {
   // คลิกที่รหัส → แก้ชื่อรหัส
   if (e.target.classList.contains('kid-txt')) {
     const chip = e.target.closest('.kid'), oldKid = chip.dataset.kid
-    const inp = kidInput(oldKid, oldKid); chip.replaceWith(inp); inp.focus(); inp.select()
-    inp.onkeydown = async ev => {
-      if (ev.key === 'Escape') { cell.innerHTML = kidsHtml(p); return }
-      if (ev.key !== 'Enter') return
-      ev.preventDefault(); const kid = inp.value.trim().toUpperCase(); if (!kid) { cell.innerHTML = kidsHtml(p); return }
-      inp.disabled = true; await kidRename(p, oldKid, kid); cell.innerHTML = kidsHtml(p)
-    }
-    inp.onblur = () => { if (!inp.disabled) cell.innerHTML = kidsHtml(p) }
+    const ed = kidEditor(oldKid, oldKid, async v => { await kidRename(p, oldKid, v); cell.innerHTML = kidsHtml(p) }, () => { cell.innerHTML = kidsHtml(p) })
+    chip.replaceWith(ed.wrap); ed.input.focus(); ed.input.select()
   }
 })
 
