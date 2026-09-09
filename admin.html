@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | Deesay</title>
 <script src="config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -19,7 +20,7 @@
     --text: #1a1a2e; --muted: #5a5a72; --accent: #6366f1; --accent2: #4f46e5;
     --success: #16a34a; --danger: #dc2626; --orange: #ea580c;
   }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body { font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
   nav { border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 52px; position: sticky; top: 0; background: var(--bg); z-index: 10; }
   .nav-logo { font-size: 0.8rem; font-weight: 700; letter-spacing: 3px; }
   .nav-right { display: flex; align-items: center; gap: 16px; }
@@ -76,11 +77,17 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.error { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
   .loading-row { text-align: center; color: var(--muted); padding: 40px; font-size: 0.85rem; }
-  .kids { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-  .kid { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; background: rgba(99,102,241,0.12); color: var(--accent2); padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
+  .kids { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .kid { display: inline-flex; align-items: center; gap: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; background: rgba(99,102,241,0.12); color: var(--accent2); border: 1px solid transparent; padding: 2px 4px 2px 8px; border-radius: 99px; white-space: nowrap; }
+  .kid:hover { border-color: rgba(129,140,248,0.5); }
   .kid.self { background: rgba(107,122,153,0.15); color: var(--muted); }
-  .kid-add { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; width: 96px; background: transparent; border: 1px dashed var(--border2); color: var(--text); padding: 2px 6px; border-radius: 99px; outline: none; }
-  .kid-add:focus { border-color: var(--accent); }
+  .kid-txt { cursor: text; }
+  .kid-del { background: none; border: none; color: inherit; opacity: 0.45; cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 0 4px; font-family: inherit; }
+  .kid-del:hover { opacity: 1; color: var(--danger); }
+  .kid-edit { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; width: 90px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); padding: 2px 8px; border-radius: 99px; outline: none; }
+  .kid-none { font-size: 0.72rem; color: var(--muted); font-style: italic; }
+  .kid-addbtn { font-size: 0.72rem; color: var(--muted); background: none; border: 1px dashed var(--border2); padding: 2px 9px; border-radius: 99px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .kid-addbtn:hover { color: var(--accent2); border-color: var(--accent2); }
   .hint { font-size: 0.72rem; color: var(--muted); width: 100%; }
   @media (max-width: 900px) {
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
@@ -153,7 +160,7 @@
       </select>
       <button class="btn-primary" id="btnAddNew">บันทึกสินค้าใหม่</button>
       <button class="btn-ghost" id="btnCancelNew">ยกเลิก</button>
-      <div class="hint">⚠ ต้องใส่รหัสลูกให้ครบทุกสี/เบอร์ที่ใช้ในไฟล์ออเดอร์ — ถ้าไฟล์เขียน NDSP02 แต่สมุดมีแค่ NDSP ระบบจะจดยอดขายผิดชื่อและแบ่งเงินให้ 0 บาท · สินค้าที่ไม่มีสี/เบอร์ เว้นช่องรหัสลูกว่างได้</div>
+      <div class="hint">⚠ ต้องใส่รหัสลูกให้ครบทุกสี/เบอร์ที่ใช้ในไฟล์ออเดอร์ — ถ้าไฟล์เขียน NDSP02 แต่สมุดมีแค่ NDSP ระบบจะจดยอดขายผิดชื่อและแบ่งเงินให้ 0 บาท · สินค้าที่ไม่มีสี/เบอร์ เว้นช่องรหัสลูกว่างได้ · ในตาราง: คลิกรหัสลูกเพื่อแก้ · × เพื่อลบ · + เพิ่ม แล้วพิมพ์ + Enter</div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -161,7 +168,7 @@
           <tr>
             <th style="width:110px;">SKU</th>
             <th>ชื่อสินค้า</th>
-            <th style="width:230px;">รหัสลูก (สี/เบอร์)</th>
+            <th style="width:260px;">รหัสลูก (สี/เบอร์)</th>
             <th style="width:130px;">Mock (หน้ากล่อง)</th>
             <th style="width:130px;">RSP (คาดขาย)</th>
             <th style="width:150px;">สถานะ</th>
@@ -279,7 +286,7 @@ function renderTable() {
     <tr data-sku="${p.parent_sku}" class="${noRsp || noMock ? 'no-rsp' : ''}">
       <td><span class="sku-cell">${p.parent_sku}</span>${noRsp ? '<span class="badge-norsp">ไม่มี RSP</span>' : ''}${noMock ? '<span class="badge-norsp">ไม่มี Mock</span>' : ''}</td>
       <td><input class="row-input field-name" type="text" value="${(p.product_name||'').replace(/"/g,'&quot;')}" placeholder="ชื่อสินค้า"></td>
-      <td><div class="kids">${(p.kids||[]).map(k => `<span class="kid ${k===p.parent_sku?'self':''}" title="${k===p.parent_sku?'แถวแม่เอง (ยังไม่มีรหัสลูก)':'รหัสลูก'}">${k}</span>`).join('')}<input class="kid-add" type="text" placeholder="+ เพิ่มลูก" title="พิมพ์รหัสลูก เช่น ${p.parent_sku}04 แล้วกด Enter — คัดลอกชื่อ/ราคา/สถานะจากแม่ให้อัตโนมัติ"></div></td>
+      <td><div class="kids">${kidsHtml(p)}</div></td>
       <td><input class="row-input field-mock" type="number" value="${p.mock_price || ''}" placeholder="0"></td>
       <td><input class="row-input field-rsp" type="number" value="${p.rsp || ''}" placeholder="0"></td>
       <td>
@@ -337,26 +344,71 @@ document.getElementById('tblBody').addEventListener('click', async e => {
   }
 })
 
-// เพิ่มรหัสลูกให้สินค้าที่มีอยู่แล้ว: พิมพ์ในช่อง "+ เพิ่มลูก" แล้วกด Enter — คัดลอกชื่อ/Mock/RSP/สถานะจากแถวแม่
-document.getElementById('tblBody').addEventListener('keydown', async e => {
-  if (!e.target.classList.contains('kid-add') || e.key !== 'Enter') return
-  e.preventDefault()
-  const tr = e.target.closest('tr'), parent = tr.dataset.sku
-  const kid = e.target.value.trim().toUpperCase()
-  if (!kid) return
-  const p = allProducts.find(x => x.parent_sku === parent)
-  if (!p) return
-  if (allProducts.some(x => (x.kids||[]).includes(kid))) { showToast(`รหัส "${kid}" มีอยู่แล้ว`, true); return }
-  e.target.disabled = true
-  try {
-    const { error } = await DB.from('products').insert({ child_sku: kid, parent_sku: parent, product_name: p.product_name, product_name_child: p.product_name, mock_price: p.mock_price || 0, rsp: p.rsp || 0, status: p.status || 'Existing' })
-    if (error) throw error
-    p.kids = [...(p.kids||[]), kid]
-    renderTable()
-    showToast(`เพิ่มรหัสลูก ${kid} ใต้ ${parent} เรียบร้อย`)
-  } catch (err) {
-    showToast(`เพิ่มไม่สำเร็จ: ${err.message}`, true)
-    e.target.disabled = false
+// ===== รหัสลูก (สี/เบอร์): แสดง / เพิ่ม / เปลี่ยนชื่อ / ลบ — child_sku คือ primary key จริงของตาราง products =====
+function kidsHtml(p) {
+  const kids = (p.kids || []).filter(k => k !== p.parent_sku).sort()
+  const hasSelf = (p.kids || []).includes(p.parent_sku)
+  let h = kids.map(k => `<span class="kid" data-kid="${k}"><span class="kid-txt" title="คลิกเพื่อแก้รหัส">${k}</span><button class="kid-del" title="ลบรหัสลูกนี้">×</button></span>`).join('')
+  if (hasSelf && kids.length) h += `<span class="kid self" data-kid="${p.parent_sku}"><span class="kid-txt" title="แถวแม่ตัวเอง — ถ้ามีรหัสลูกครบแล้วลบทิ้งได้">${p.parent_sku}</span><button class="kid-del" title="ลบแถวแม่ตัวเอง">×</button></span>`
+  if (!kids.length) h += `<span class="kid-none">ไม่มีสี/เบอร์</span>`
+  h += `<button class="kid-addbtn" title="เพิ่มรหัสลูก เช่น ${p.parent_sku}04">+ เพิ่ม</button>`
+  return h
+}
+function kidInput(placeholder, value) {
+  const i = document.createElement('input'); i.className = 'kid-edit'; i.placeholder = placeholder; i.value = value || ''; return i
+}
+async function kidAdd(p, kid) {
+  if (allProducts.some(x => (x.kids||[]).includes(kid))) { showToast(`รหัส "${kid}" มีอยู่แล้ว`, true); return false }
+  const { error } = await DB.from('products').insert({ child_sku: kid, parent_sku: p.parent_sku, product_name: p.product_name, product_name_child: p.product_name, mock_price: p.mock_price || 0, rsp: p.rsp || 0, status: p.status || 'Existing' })
+  if (error) { showToast(`เพิ่มไม่สำเร็จ: ${error.message}`, true); return false }
+  p.kids = [...(p.kids||[]), kid]; showToast(`เพิ่ม ${kid} ใต้ ${p.parent_sku} แล้ว`); return true
+}
+async function kidRename(p, oldKid, newKid) {
+  if (newKid === oldKid) return true
+  if (allProducts.some(x => (x.kids||[]).includes(newKid))) { showToast(`รหัส "${newKid}" มีอยู่แล้ว`, true); return false }
+  const { error } = await DB.from('products').update({ child_sku: newKid }).eq('child_sku', oldKid)
+  if (error) { showToast(`แก้ไม่สำเร็จ: ${error.message}`, true); return false }
+  p.kids = p.kids.map(k => k === oldKid ? newKid : k); showToast(`เปลี่ยน ${oldKid} → ${newKid} แล้ว`); return true
+}
+async function kidDelete(p, kid) {
+  if ((p.kids||[]).length <= 1) { showToast('ลบไม่ได้ — สินค้าต้องมีอย่างน้อย 1 แถว (ถ้าจะเลิกขายให้เปลี่ยนสถานะเป็น Discontinued แทน)', true); return false }
+  if (!confirm(`ลบรหัส ${kid} ออกจาก ${p.parent_sku}?\nยอดขายเก่าที่จดไว้ใต้ ${p.parent_sku} ไม่หาย แต่ไฟล์ออเดอร์ใหม่ที่เขียน ${kid} จะ map ไม่เจอ`)) return false
+  const { error } = await DB.from('products').delete().eq('child_sku', kid)
+  if (error) { showToast(`ลบไม่สำเร็จ: ${error.message}`, true); return false }
+  p.kids = p.kids.filter(k => k !== kid); showToast(`ลบ ${kid} แล้ว`); return true
+}
+document.getElementById('tblBody').addEventListener('click', async e => {
+  const tr = e.target.closest('tr'); if (!tr) return
+  const p = allProducts.find(x => x.parent_sku === tr.dataset.sku); if (!p) return
+  const cell = tr.querySelector('.kids')
+  // + เพิ่ม → เปิดช่องพิมพ์
+  if (e.target.classList.contains('kid-addbtn')) {
+    const inp = kidInput(`${p.parent_sku}0?`); e.target.replaceWith(inp); inp.focus()
+    inp.onkeydown = async ev => {
+      if (ev.key === 'Escape') { cell.innerHTML = kidsHtml(p); return }
+      if (ev.key !== 'Enter') return
+      ev.preventDefault(); const kid = inp.value.trim().toUpperCase(); if (!kid) { cell.innerHTML = kidsHtml(p); return }
+      inp.disabled = true; await kidAdd(p, kid); cell.innerHTML = kidsHtml(p)
+    }
+    inp.onblur = () => { if (!inp.disabled && !inp.value.trim()) cell.innerHTML = kidsHtml(p) }
+    return
+  }
+  // × → ลบ
+  if (e.target.classList.contains('kid-del')) {
+    const kid = e.target.closest('.kid').dataset.kid
+    await kidDelete(p, kid); cell.innerHTML = kidsHtml(p); return
+  }
+  // คลิกที่รหัส → แก้ชื่อรหัส
+  if (e.target.classList.contains('kid-txt')) {
+    const chip = e.target.closest('.kid'), oldKid = chip.dataset.kid
+    const inp = kidInput(oldKid, oldKid); chip.replaceWith(inp); inp.focus(); inp.select()
+    inp.onkeydown = async ev => {
+      if (ev.key === 'Escape') { cell.innerHTML = kidsHtml(p); return }
+      if (ev.key !== 'Enter') return
+      ev.preventDefault(); const kid = inp.value.trim().toUpperCase(); if (!kid) { cell.innerHTML = kidsHtml(p); return }
+      inp.disabled = true; await kidRename(p, oldKid, kid); cell.innerHTML = kidsHtml(p)
+    }
+    inp.onblur = () => { if (!inp.disabled) cell.innerHTML = kidsHtml(p) }
   }
 })
 
