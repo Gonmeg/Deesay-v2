@@ -76,6 +76,12 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.error { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
   .loading-row { text-align: center; color: var(--muted); padding: 40px; font-size: 0.85rem; }
+  .kids { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .kid { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; background: rgba(99,102,241,0.12); color: var(--accent2); padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
+  .kid.self { background: rgba(107,122,153,0.15); color: var(--muted); }
+  .kid-add { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; width: 96px; background: transparent; border: 1px dashed var(--border2); color: var(--text); padding: 2px 6px; border-radius: 99px; outline: none; }
+  .kid-add:focus { border-color: var(--accent); }
+  .hint { font-size: 0.72rem; color: var(--muted); width: 100%; }
   @media (max-width: 900px) {
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
   }
@@ -134,7 +140,8 @@
 
   <div class="card">
     <div class="new-row-form" id="newRowForm">
-      <input type="text" id="newSku" placeholder="Parent SKU (เช่น DSP01)" style="width:160px;">
+      <input type="text" id="newSku" placeholder="รหัสแม่ (เช่น NDSP)" style="width:150px;">
+      <input type="text" id="newKids" placeholder="รหัสลูก สี/เบอร์ คั่นด้วย , (เช่น NDSP01, NDSP02, NDSP03)" style="flex:1;min-width:260px;">
       <input type="text" id="newName" placeholder="ชื่อสินค้า" style="flex:1;min-width:160px;">
       <input type="number" id="newMock" placeholder="Mock (ราคาหน้ากล่อง)" style="width:150px;">
       <input type="number" id="newRsp" placeholder="RSP (ราคาที่คาดว่าจะขาย)" style="width:150px;">
@@ -146,6 +153,7 @@
       </select>
       <button class="btn-primary" id="btnAddNew">บันทึกสินค้าใหม่</button>
       <button class="btn-ghost" id="btnCancelNew">ยกเลิก</button>
+      <div class="hint">⚠ ต้องใส่รหัสลูกให้ครบทุกสี/เบอร์ที่ใช้ในไฟล์ออเดอร์ — ถ้าไฟล์เขียน NDSP02 แต่สมุดมีแค่ NDSP ระบบจะจดยอดขายผิดชื่อและแบ่งเงินให้ 0 บาท · สินค้าที่ไม่มีสี/เบอร์ เว้นช่องรหัสลูกว่างได้</div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -153,6 +161,7 @@
           <tr>
             <th style="width:110px;">SKU</th>
             <th>ชื่อสินค้า</th>
+            <th style="width:230px;">รหัสลูก (สี/เบอร์)</th>
             <th style="width:130px;">Mock (หน้ากล่อง)</th>
             <th style="width:130px;">RSP (คาดขาย)</th>
             <th style="width:150px;">สถานะ</th>
@@ -160,7 +169,7 @@
           </tr>
         </thead>
         <tbody id="tblBody">
-          <tr><td colspan="6" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
+          <tr><td colspan="7" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
         </tbody>
       </table>
     </div>
@@ -201,7 +210,7 @@ async function fetchAllProducts() {
   let offset = 0
   const PAGE = 1000
   while (true) {
-    const { data, error } = await DB.from('products').select('parent_sku, product_name, mock_price, rsp, status')
+    const { data, error } = await DB.from('products').select('child_sku, parent_sku, product_name, mock_price, rsp, status')
       .order('parent_sku', { ascending: true }).range(offset, offset + PAGE - 1)
     if (error) throw error
     if (!data || !data.length) break
@@ -212,12 +221,12 @@ async function fetchAllProducts() {
   // ตาราง products จริงคีย์หลักคือ child_sku (มีหลายแถวต่อ parent_sku เดียวกัน)
   // แต่ Mock/RSP/ชื่อ/สถานะ ควรเหมือนกันทุกช่องทางในระดับ parent_sku เดียว
   // จึงยุบเหลือ 1 แถวต่อ parent_sku สำหรับหน้านี้ (แก้ทีเดียวมีผลกับทุก child SKU ใต้ parent นั้น)
-  const seen = new Set()
+  // เก็บรายชื่อรหัสลูกทุกตัวไว้ใต้แถวแม่ (kids) ให้เห็นและเพิ่มได้จากหน้านี้
+  const byParent = {}
   const deduped = []
   result.forEach(p => {
-    if (seen.has(p.parent_sku)) return
-    seen.add(p.parent_sku)
-    deduped.push(p)
+    if (!byParent[p.parent_sku]) { byParent[p.parent_sku] = { ...p, kids: [] }; deduped.push(byParent[p.parent_sku]) }
+    if (p.child_sku) byParent[p.parent_sku].kids.push(p.child_sku)
   })
   return deduped
 }
@@ -258,7 +267,7 @@ function renderTable() {
 
   const tbody = document.getElementById('tblBody')
   if (!list.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'
     return
   }
 
@@ -270,6 +279,7 @@ function renderTable() {
     <tr data-sku="${p.parent_sku}" class="${noRsp || noMock ? 'no-rsp' : ''}">
       <td><span class="sku-cell">${p.parent_sku}</span>${noRsp ? '<span class="badge-norsp">ไม่มี RSP</span>' : ''}${noMock ? '<span class="badge-norsp">ไม่มี Mock</span>' : ''}</td>
       <td><input class="row-input field-name" type="text" value="${(p.product_name||'').replace(/"/g,'&quot;')}" placeholder="ชื่อสินค้า"></td>
+      <td><div class="kids">${(p.kids||[]).map(k => `<span class="kid ${k===p.parent_sku?'self':''}" title="${k===p.parent_sku?'แถวแม่เอง (ยังไม่มีรหัสลูก)':'รหัสลูก'}">${k}</span>`).join('')}<input class="kid-add" type="text" placeholder="+ เพิ่มลูก" title="พิมพ์รหัสลูก เช่น ${p.parent_sku}04 แล้วกด Enter — คัดลอกชื่อ/ราคา/สถานะจากแม่ให้อัตโนมัติ"></div></td>
       <td><input class="row-input field-mock" type="number" value="${p.mock_price || ''}" placeholder="0"></td>
       <td><input class="row-input field-rsp" type="number" value="${p.rsp || ''}" placeholder="0"></td>
       <td>
@@ -327,6 +337,29 @@ document.getElementById('tblBody').addEventListener('click', async e => {
   }
 })
 
+// เพิ่มรหัสลูกให้สินค้าที่มีอยู่แล้ว: พิมพ์ในช่อง "+ เพิ่มลูก" แล้วกด Enter — คัดลอกชื่อ/Mock/RSP/สถานะจากแถวแม่
+document.getElementById('tblBody').addEventListener('keydown', async e => {
+  if (!e.target.classList.contains('kid-add') || e.key !== 'Enter') return
+  e.preventDefault()
+  const tr = e.target.closest('tr'), parent = tr.dataset.sku
+  const kid = e.target.value.trim().toUpperCase()
+  if (!kid) return
+  const p = allProducts.find(x => x.parent_sku === parent)
+  if (!p) return
+  if (allProducts.some(x => (x.kids||[]).includes(kid))) { showToast(`รหัส "${kid}" มีอยู่แล้ว`, true); return }
+  e.target.disabled = true
+  try {
+    const { error } = await DB.from('products').insert({ child_sku: kid, parent_sku: parent, product_name: p.product_name, product_name_child: p.product_name, mock_price: p.mock_price || 0, rsp: p.rsp || 0, status: p.status || 'Existing' })
+    if (error) throw error
+    p.kids = [...(p.kids||[]), kid]
+    renderTable()
+    showToast(`เพิ่มรหัสลูก ${kid} ใต้ ${parent} เรียบร้อย`)
+  } catch (err) {
+    showToast(`เพิ่มไม่สำเร็จ: ${err.message}`, true)
+    e.target.disabled = false
+  }
+})
+
 document.getElementById('searchInput').addEventListener('input', renderTable)
 document.getElementById('statusFilter').addEventListener('change', renderTable)
 document.getElementById('rspToggle').addEventListener('change', e => {
@@ -344,28 +377,33 @@ document.getElementById('btnShowNewRow').addEventListener('click', () => {
 })
 document.getElementById('btnCancelNew').addEventListener('click', () => {
   document.getElementById('newRowForm').classList.remove('show')
-  ;['newSku','newName','newMock','newRsp'].forEach(id => document.getElementById(id).value = '')
+  ;['newSku','newKids','newName','newMock','newRsp'].forEach(id => document.getElementById(id).value = '')
 })
 document.getElementById('btnAddNew').addEventListener('click', async () => {
   const sku = document.getElementById('newSku').value.trim().toUpperCase()
+  // รหัสลูก: คั่นด้วย , หรือช่องว่าง — ถ้าเว้นว่าง = สินค้าไม่มีสี/เบอร์ ใช้รหัสแม่เป็นรหัสลูกเอง
+  const kids = [...new Set(document.getElementById('newKids').value.split(/[\s,]+/).map(x => x.trim().toUpperCase()).filter(Boolean))]
   const name = document.getElementById('newName').value.trim()
   const mock_price = parseFloat(document.getElementById('newMock').value) || 0
   const rsp = parseFloat(document.getElementById('newRsp').value) || 0
   const status = document.getElementById('newStatus').value
   if (!sku) { showToast('กรุณากรอก SKU', true); return }
   if (allProducts.some(p => p.parent_sku === sku)) { showToast(`SKU "${sku}" มีอยู่แล้ว แก้ไขในตารางด้านล่างแทน`, true); return }
+  const dupKid = kids.find(k => allProducts.some(p => (p.kids||[]).includes(k)))
+  if (dupKid) { showToast(`รหัสลูก "${dupKid}" มีอยู่แล้วใต้สินค้าอื่น`, true); return }
   const btn = document.getElementById('btnAddNew')
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...'
   try {
-    // child_sku เป็น primary key จริงของตาราง — สินค้าที่ไม่มี variant ย่อย ใช้ค่าเดียวกับ parent_sku
-    const { error } = await DB.from('products').insert({ child_sku: sku, parent_sku: sku, product_name: name, product_name_child: name, mock_price, rsp, status })
+    // child_sku เป็น primary key จริงของตาราง — 1 แถวต่อรหัสลูก (สี/เบอร์) · ไม่มีรหัสลูก = ใช้รหัสแม่เป็นรหัสลูกเอง
+    const rows = (kids.length ? kids : [sku]).map(k => ({ child_sku: k, parent_sku: sku, product_name: name, product_name_child: name, mock_price, rsp, status }))
+    const { error } = await DB.from('products').insert(rows)
     if (error) throw error
-    allProducts.push({ parent_sku: sku, product_name: name, mock_price, rsp, status })
+    allProducts.push({ parent_sku: sku, product_name: name, mock_price, rsp, status, kids: rows.map(r => r.child_sku) })
     allProducts.sort((a,b) => a.parent_sku.localeCompare(b.parent_sku))
     document.getElementById('newRowForm').classList.remove('show')
-    ;['newSku','newName','newMock','newRsp'].forEach(id => document.getElementById(id).value = '')
+    ;['newSku','newKids','newName','newMock','newRsp'].forEach(id => document.getElementById(id).value = '')
     renderKPIs(allProducts); renderTable()
-    showToast(`เพิ่ม ${sku} เรียบร้อย`)
+    showToast(`เพิ่ม ${sku} เรียบร้อย (${rows.length} รหัสลูก)`)
   } catch (err) {
     showToast(`เพิ่มไม่สำเร็จ: ${err.message}`, true)
   } finally {
@@ -379,7 +417,7 @@ async function init() {
     renderKPIs(allProducts)
     renderTable()
   } catch (err) {
-    document.getElementById('tblBody').innerHTML = `<tr class="empty-row"><td colspan="5">❌ โหลดข้อมูลไม่สำเร็จ: ${err.message}</td></tr>`
+    document.getElementById('tblBody').innerHTML = `<tr class="empty-row"><td colspan="7">❌ โหลดข้อมูลไม่สำเร็จ: ${err.message}</td></tr>`
   }
 }
 init()
