@@ -303,7 +303,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.09-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.09-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -6018,8 +6018,8 @@ function renderSkuAnalysisPromo() {
     const name = promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim())+'x'+m[2] : p; }).join('+');
     return `<tr style="border-left:3px solid ${chColors[ch]||'transparent'};">
       <td style="font-weight:600;">${ch}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${promo.length>28?promo.substring(0,28)+'…':promo}</td>
-      <td>${name.length>35?name.substring(0,35)+'…':name}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);" title="${promo.replace(/"/g,'&quot;')}">${promo.length>40?promo.substring(0,40)+'…':promo}</td>
+      <td title="${name.replace(/"/g,'&quot;')}">${name.length>70?name.substring(0,70)+'…':name}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(rev))}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(ord)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(qty)} ชิ้น</td>
