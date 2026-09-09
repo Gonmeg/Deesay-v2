@@ -4,36 +4,58 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>สถานะระบบ | Deesay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="config.js"></script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  :root { --bg:#0a0f1e; --surface:#111827; --surface2:#1a2235; --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13); --text:#f0f4ff; --muted:#6b7a99; --accent:#6366f1; --accent2:#818cf8; --success:#10b981; --danger:#ef4444; --orange:#fb923c; --radius:12px; --radius-sm:8px; }
-  body.light-theme { --bg:#f5f5f7; --surface:#fff; --surface2:#ebebef; --border:rgba(0,0,0,0.08); --border2:rgba(0,0,0,0.15); --text:#1a1a2e; --muted:#5a5a72; --success:#16a34a; --danger:#dc2626; --orange:#ea580c; }
-  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-  nav { border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 32px; height:52px; position:sticky; top:0; background:var(--bg); z-index:10; }
-  .nav-logo { font-size:.8rem; font-weight:700; letter-spacing:3px; }
+  :root {
+    --bg:#0a0a0f; --surface:#111118; --surface2:#1a1a24;
+    --border:#2a2a3a; --border2:#3a3a4e;
+    --text:#e8e8f0; --muted:#9090a8; --muted2:#5a5a72;
+    --accent:#c8a96e; --accent2:#e8c98e; --on-accent:#0a0a0f;
+    --success:#4ade80; --danger:#f87171; --orange:#fb923c; --blue:#60a5fa;
+    --radius:10px; --radius-sm:8px;
+  }
+  body.light-theme {
+    --bg:#f5f5f7; --surface:#ffffff; --surface2:#ebebef;
+    --border:#d8d8e0; --border2:#c4c4d0;
+    --text:#1a1a2e; --muted:#4a4a6a; --muted2:#7a7a96;
+    --accent:#b8892e; --accent2:#a07020; --on-accent:#ffffff;
+    --success:#16a34a; --danger:#dc2626; --orange:#ea580c; --blue:#2563eb;
+  }
+  body { font-family:'Sarabun',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  nav { border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 28px; height:54px; position:sticky; top:0; background:var(--bg); z-index:10; }
+  .nav-logo { font-size:13px; font-weight:700; letter-spacing:3px; color:var(--accent); font-family:'IBM Plex Mono',monospace; }
   .nav-right { display:flex; align-items:center; gap:16px; }
-  .nav-link { font-size:.8rem; color:var(--muted); text-decoration:none; } .nav-link:hover { color:var(--text); }
-  .btn-ghost { font-size:.8rem; color:var(--muted); background:none; border:1px solid var(--border2); padding:4px 12px; border-radius:6px; cursor:pointer; font-family:inherit; }
-  main { display:flex; justify-content:center; padding:36px 24px; } .shell { width:100%; max-width:1180px; }
+  .nav-link { font-size:12.5px; color:var(--muted); text-decoration:none; } .nav-link:hover { color:var(--text); }
+  .btn-ghost { font-size:12px; font-weight:600; color:var(--muted); background:var(--surface2); border:1px solid var(--border); padding:6px 13px; border-radius:6px; cursor:pointer; font-family:'Sarabun',sans-serif; transition:all .15s; }
+  .btn-ghost:hover { color:var(--text); border-color:var(--muted2); }
+  main { display:flex; justify-content:center; padding:28px 24px 60px; } .shell { width:100%; max-width:1180px; }
   .page-header { margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-  .page-header h1 { font-size:1.3rem; font-weight:600; margin-bottom:4px; } .page-header p { font-size:.82rem; color:var(--muted); }
-  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:22px; }
-  .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
-  .kpi-label { font-size:.72rem; color:var(--muted); margin-bottom:6px; } .kpi-val { font-size:1.25rem; font-weight:700; } .kpi-sub { font-size:.72rem; color:var(--muted); margin-top:4px; }
+  .page-header h1 { font-size:19px; font-weight:600; margin-bottom:5px; }
+  .page-header p { font-size:12.5px; color:var(--muted); }
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:20px; }
+  .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
+  .kpi-label { font-size:11px; color:var(--muted2); text-transform:uppercase; letter-spacing:1.5px; font-family:'IBM Plex Mono',monospace; margin-bottom:10px; }
+  .kpi-val { font-size:24px; font-weight:700; line-height:1; font-family:'IBM Plex Mono',monospace; }
+  .kpi-sub { font-size:12px; color:var(--muted); margin-top:7px; line-height:1.4; }
   .ok { color:var(--success); } .warn { color:var(--orange); } .bad { color:var(--danger); } .muted { color:var(--muted); }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:20px; }
-  .card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-  .card-head h2 { font-size:.95rem; font-weight:600; } .card-head span { font-size:.75rem; color:var(--muted); }
-  .tbl-wrap { overflow-x:auto; } table { width:100%; border-collapse:collapse; font-size:.8rem; }
-  th { background:var(--surface2); padding:9px 12px; text-align:left; color:var(--muted); font-weight:600; white-space:nowrap; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
-  td { padding:7px 12px; border-top:1px solid var(--border); vertical-align:middle; }
-  .mono { font-family:'IBM Plex Mono',monospace; font-size:.76rem; }
-  .pill { display:inline-block; font-size:.68rem; padding:2px 8px; border-radius:99px; font-weight:600; white-space:nowrap; }
-  .pill.ok { background:rgba(16,185,129,.15); } .pill.warn { background:rgba(251,146,60,.15); } .pill.bad { background:rgba(239,68,68,.15); } .pill.muted { background:rgba(107,122,153,.2); }
-  .banner { padding:12px 16px; border-radius:var(--radius-sm); margin-bottom:16px; font-size:.85rem; }
-  .banner.warn { background:rgba(251,146,60,.12); color:var(--orange); } .banner.bad { background:rgba(239,68,68,.12); color:var(--danger); }
-  .loading { padding:40px; text-align:center; color:var(--muted); }
+  .card-head { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .card-head h2 { font-size:14px; font-weight:600; } .card-head span { font-size:12px; color:var(--muted); }
+  .tbl-wrap { overflow-x:auto; } table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:var(--surface2); padding:10px 12px; text-align:left; color:var(--muted2); font-weight:400; white-space:nowrap; font-size:11px; font-family:'IBM Plex Mono',monospace; letter-spacing:.5px; text-transform:uppercase; }
+  td { padding:9px 12px; border-top:1px solid var(--border); vertical-align:middle; color:var(--text); }
+  tbody tr:hover td { background:var(--surface2); }
+  .mono { font-family:'IBM Plex Mono',monospace; font-size:12px; }
+  .pill { display:inline-block; font-size:11px; padding:3px 9px; border-radius:99px; font-weight:600; white-space:nowrap; }
+  .pill.ok { background:rgba(74,222,128,.15); } .pill.warn { background:rgba(251,146,60,.15); } .pill.bad { background:rgba(248,113,113,.15); } .pill.muted { background:rgba(144,144,168,.18); }
+  .banner { padding:13px 16px; border-radius:var(--radius-sm); margin-bottom:14px; font-size:13px; line-height:1.55; border:1px solid transparent; }
+  .banner.warn { background:rgba(251,146,60,.1); border-color:rgba(251,146,60,.3); color:var(--orange); }
+  .banner.bad { background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.3); color:var(--danger); }
+  .loading { padding:44px; text-align:center; color:var(--muted); font-size:13px; }
 </style>
 </head>
 <body>
@@ -50,8 +72,8 @@
 </nav>
 <main><div class="shell">
   <div class="page-header">
-    <div><h1>🩺 สถานะระบบ</h1><p>cron / MV / การ sync ข้อมูล / token Facebook — ดูที่เดียวว่าอะไรยังเดินอยู่ อะไรค้าง</p></div>
-    <div style="display:flex;gap:8px;align-items:center;"><span id="genAt" style="font-size:.75rem;color:var(--muted);"></span><button class="btn-ghost" id="refreshBtn">↻ รีเฟรช</button></div>
+    <div><h1>🩺 สถานะระบบ</h1><p>cron / MV / การ sync ข้อมูล / token Facebook / SKU ที่ระบบไม่รู้จัก — ดูที่เดียวว่าอะไรยังเดินอยู่ อะไรค้าง</p></div>
+    <div style="display:flex;gap:8px;align-items:center;"><span id="genAt" style="font-size:12px;color:var(--muted);"></span><button class="btn-ghost" id="refreshBtn">↻ รีเฟรช</button></div>
   </div>
   <div id="banners"></div>
   <div class="kpi-grid" id="kpis"></div>
@@ -68,6 +90,7 @@ const DB = createClient(window.SUPABASE_URL || 'https://plfdizmjdmhyjqraohfv.sup
 
 // ===== วันที่รู้จัก (แก้ตรงนี้ถ้าเปลี่ยน) =====
 const FB_TOKEN_EXPIRY_FALLBACK = '2026-10-15' // ใช้เมื่อ fb_pages ไม่มีคอลัมน์วันหมดอายุ
+const UNKNOWN_SKU_DAYS = 180                  // ย้อนหลังกี่วันที่จะเช็ค SKU ที่ products ไม่รู้จัก
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))
 const fmt = n => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toLocaleString('th-TH')
@@ -99,15 +122,20 @@ function cronState(j) {
 
 async function load() {
   document.getElementById('content').innerHTML = '<div class="loading">กำลังโหลด...</div>'
-  const { data, error } = await DB.rpc('system_health')
-  if (error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(error.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 27_system_health_rpc.sql</div>`; return }
-  render(data)
+  const [health, unknown] = await Promise.all([
+    DB.rpc('system_health'),
+    DB.rpc('unknown_skus', { p_days: UNKNOWN_SKU_DAYS })
+  ])
+  if (health.error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(health.error.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 27_system_health_rpc.sql</div>`; return }
+  render(health.data, unknown)
 }
 
-function render(d) {
+function render(d, unknown) {
   document.getElementById('genAt').textContent = `อัปเดต ${th(d.generated_at)}`
   const banners = [], kpis = []
   const cron = d.cron || [], mv = d.mv || [], sync = d.sync || [], ch = d.channels || []
+  const unkRows = (!unknown.error && Array.isArray(unknown.data)) ? unknown.data : []
+  const unkErr = unknown.error ? unknown.error.message : null
 
   // --- KPI แถวบน ---
   const bad = cron.filter(j => cronState(j)[0] === 'bad'), warn = cron.filter(j => cronState(j)[0] === 'warn')
@@ -117,6 +145,9 @@ function render(d) {
   kpis.push(['Materialized views', `${mv.length}`, unpop.length ? `<span class="bad">${unpop.length} ว่างเปล่า</span>` : `รวม ${fmt(mv.reduce((s,m)=>s+(+m.size_mb||0),0).toFixed(0))} MB`])
   const stale = ch.filter(c => c.days_ago > 7)
   kpis.push(['ข้อมูลยอดขายล่าสุด', ch.length ? Math.min(...ch.map(c=>c.days_ago)) + ' วันก่อน' : '—', stale.length ? `<span class="warn">${stale.map(c=>c.channel).join(', ')} เกิน 7 วัน</span>` : 'ทุกช่องทางไม่เกิน 7 วัน'])
+  // SKU ที่ระบบไม่รู้จัก
+  if (unkErr) kpis.push(['SKU ที่ไม่รู้จัก', '<span class="muted">—</span>', 'ยังไม่ได้รัน 52_unknown_skus.sql'])
+  else kpis.push(['SKU ที่ไม่รู้จัก', unkRows.length ? `<span class="bad">${unkRows.length}</span>` : '<span class="ok">0</span>', unkRows.length ? `ยอดขายไม่ถูกนับ ${fmt(unkRows.reduce((s,r)=>s+(+r.qty||0),0))} ชิ้น` : `ครบทุกตัวใน ${UNKNOWN_SKU_DAYS} วัน`])
   // FB token
   const pages = d.fb_pages || []
   const expKey = pages.length ? Object.keys(pages[0]).find(k => /expir/i.test(k)) : null
@@ -127,17 +158,31 @@ function render(d) {
   kpis.push(['Facebook Page Token', `<span class="${tokCls}">อีก ${dl} วัน</span>`, `หมด ${tokenExp}${expKey ? '' : ' (ค่าที่ตั้งไว้ในหน้านี้)'} · ${pages.length} เพจ`])
   if (dl <= 21) banners.push(['warn', `🔑 Facebook Page Access Token จะหมดอายุ ${tokenExp} (อีก ${dl} วัน) — ต่ออายุผ่าน Graph API Explorer ตั้งแต่ 1 วันก่อนหมด แล้วอัปเดตในตาราง fb_pages ทั้ง ${pages.length || 3} เพจ ไม่งั้นการดึงโพสต์/Reels/Page stats จะหยุด`])
   if (d.fb_thumbs) { const t = d.fb_thumbs; kpis.push(['Thumbnail FB รีเฟรชแล้ว', `${fmt(t.refreshed)} / ${fmt(t.total)}`, t.total ? `${Math.round(t.refreshed/t.total*100)}% · ล่าสุด ${ago(t.last)}` : '']) }
+  // แถบเตือน SKU ที่ไม่รู้จัก (สำคัญกว่า cron เลยขึ้นก่อน)
+  if (unkRows.length) banners.push(['bad', `⚠️ มี ${unkRows.length} รหัสสินค้าที่ยังไม่มีในตาราง products — ยอดเงินของออเดอร์ที่มีรหัสพวกนี้ถูกคำนวณผิด (ไปกองที่สินค้าตัวอื่นในออเดอร์เดียวกัน หรือกลายเป็น 0) <b>วิธีแก้: เข้าหน้า Admin เพิ่มรหัสลูกให้ครบ แล้วอัปโหลดเดือนนั้นใหม่</b> — รายละเอียดในตารางด้านล่าง`])
   bad.forEach(j => banners.push(['bad', `⛔ cron "${esc(j.jobname)}" ${cronState(j)[1]}${j.last_msg ? ' — ' + esc(j.last_msg) : ''}`]))
   document.getElementById('banners').innerHTML = banners.map(([c,t]) => `<div class="banner ${c}">${t}</div>`).join('')
   document.getElementById('kpis').innerHTML = kpis.map(([l,v,s]) => `<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s||''}</div></div>`).join('')
 
   let html = ''
+  // --- SKU ที่ระบบไม่รู้จัก ---
+  html += `<div class="card"><div class="card-head"><h2>🏷 SKU ที่สมุดสินค้าไม่รู้จัก</h2><span>เทียบ sku_revenue กับตาราง products · ย้อนหลัง ${UNKNOWN_SKU_DAYS} วัน</span></div>`
+  if (unkErr) html += `<div class="loading">ยังใช้ไม่ได้ — รัน <b>52_unknown_skus.sql</b> ใน Supabase ก่อน<div class="muted" style="margin-top:6px;font-size:12px;">(${esc(unkErr)})</div></div>`
+  else if (!unkRows.length) html += `<div class="loading"><span class="ok">✓ ทุกรหัสสินค้ามีในตาราง products ครบ</span></div>`
+  else html += `<div class="tbl-wrap"><table>
+      <thead><tr><th>รหัสที่ไม่รู้จัก</th><th>ช่องทาง</th><th>ออเดอร์</th><th>ชิ้น</th><th>ยอดเงินที่บันทึกไว้</th><th>เจอครั้งแรก</th><th>เจอล่าสุด</th></tr></thead><tbody>` +
+      unkRows.map(r => `<tr><td><b class="mono">${esc(r.parent_sku)}</b></td><td>${esc(r.channels)}</td><td>${fmt(r.orders)}</td><td>${fmt(r.qty)}</td>
+        <td class="${(+r.revenue||0) === 0 ? 'bad' : ''}">฿${fmt(r.revenue)}${(+r.revenue||0) === 0 ? ' <span class="pill bad">เงินหาย</span>' : ''}</td>
+        <td class="mono">${esc(String(r.first_date||'').slice(0,10))}</td><td class="mono">${esc(String(r.last_date||'').slice(0,10))}</td></tr>`).join('') +
+      `</tbody></table></div>`
+  html += `</div>`
+
   // --- cron ---
   html += `<div class="card"><div class="card-head"><h2>⏱ Cron jobs (${cron.length})</h2><span>สถานะจากรอบรันล่าสุด · เวลาไทย</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>#</th><th>งาน</th><th>ประเภท</th><th>เป้าหมาย</th><th>ตาราง (UTC)</th><th>รันล่าสุด</th><th>ใช้เวลา</th><th>24 ชม.</th><th>สถานะ</th></tr></thead><tbody>` +
-    cron.map(j => { const [c, t] = cronState(j); return `<tr><td class="mono">${j.jobid}</td><td><b>${esc(j.jobname||'(ไม่มีชื่อ)')}</b>${j.last_msg && c!=='ok' ? `<div class="muted" style="font-size:.7rem;">${esc(j.last_msg)}</div>` : ''}</td>
+    cron.map(j => { const [c, t] = cronState(j); return `<tr><td class="mono">${j.jobid}</td><td><b>${esc(j.jobname||'(ไม่มีชื่อ)')}</b>${j.last_msg && c!=='ok' ? `<div class="muted" style="font-size:11px;">${esc(j.last_msg)}</div>` : ''}</td>
       <td>${{mv:'รีเฟรช MV',edge:'Edge Function',sql:'SQL'}[j.kind]||j.kind}</td><td class="mono">${esc(j.target||'')}</td><td class="mono">${esc(j.schedule)}</td>
-      <td>${th(j.last_start)}<div class="muted" style="font-size:.7rem;">${ago(j.last_start)}</div></td><td>${j.last_ms != null ? (j.last_ms >= 1000 ? (j.last_ms/1000).toFixed(1)+' วิ' : j.last_ms+' ms') : '—'}</td>
+      <td>${th(j.last_start)}<div class="muted" style="font-size:11px;">${ago(j.last_start)}</div></td><td>${j.last_ms != null ? (j.last_ms >= 1000 ? (j.last_ms/1000).toFixed(1)+' วิ' : j.last_ms+' ms') : '—'}</td>
       <td>${fmt(j.runs_24h)} รัน${j.fails_24h ? ` <span class="bad">/ ล้ม ${j.fails_24h}</span>` : ''}</td><td><span class="pill ${c}">${t}</span></td></tr>` }).join('') +
     `</tbody></table></div></div>`
   if (d.cron_error) html += `<div class="banner bad">อ่าน cron ไม่ได้: ${esc(d.cron_error)}</div>`
@@ -149,7 +194,7 @@ function render(d) {
       const dAgo = s.last_data ? Math.floor((Date.now() - new Date(s.last_data).getTime())/86400000) : null
       const sAgo = s.last_sync ? (Date.now() - new Date(s.last_sync).getTime())/3600000 : null
       const cls = (sAgo !== null && sAgo > 48) || (dAgo !== null && dAgo > 14) ? 'warn' : 'ok'
-      return `<tr><td><b>${esc(s.label)}</b></td><td class="mono">${esc(s.table)}</td><td>${fmt(s.rows)}</td><td>${s.last_data ? esc(String(s.last_data).slice(0,10)) + `<div class="muted" style="font-size:.7rem;">${dAgo} วันก่อน</div>` : '—'}</td><td>${s.last_sync ? th(s.last_sync) + `<div class="muted" style="font-size:.7rem;">${ago(s.last_sync)}</div>` : '<span class="muted">ไม่มีคอลัมน์</span>'}</td><td><span class="pill ${cls}">${cls==='ok'?'ปกติ':'ควรดู'}</span></td></tr>` }).join('') +
+      return `<tr><td><b>${esc(s.label)}</b></td><td class="mono">${esc(s.table)}</td><td>${fmt(s.rows)}</td><td>${s.last_data ? esc(String(s.last_data).slice(0,10)) + `<div class="muted" style="font-size:11px;">${dAgo} วันก่อน</div>` : '—'}</td><td>${s.last_sync ? th(s.last_sync) + `<div class="muted" style="font-size:11px;">${ago(s.last_sync)}</div>` : '<span class="muted">ไม่มีคอลัมน์</span>'}</td><td><span class="pill ${cls}">${cls==='ok'?'ปกติ':'ควรดู'}</span></td></tr>` }).join('') +
     `</tbody></table></div></div>`
 
   // --- channels ---
