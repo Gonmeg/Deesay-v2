@@ -146,7 +146,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="products">📦 สินค้า (Master Data)</button>
-    <button class="tab-btn" data-tab="supply">🚚 Supply Chain (lead time / MOQ / ต้นทุน)</button>
+    <button class="tab-btn" data-tab="supply">🚚 Supply Chain (lead time / MOQ / ซัพพลายเออร์)</button>
   </div>
 
   <div id="tab-products" class="tabpane">
@@ -219,7 +219,7 @@
     <div class="kpi-grid g4">
       <div class="kpi-card"><div class="kpi-label">สินค้าที่ต้องตั้งค่า</div><div class="kpi-val" id="spTotal">—</div></div>
       <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่ตั้ง Lead time</div><div class="kpi-val" id="spNoLt">—</div></div>
-      <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่มีต้นทุน</div><div class="kpi-val" id="spNoCost">—</div></div>
+      <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่ระบุซัพพลายเออร์</div><div class="kpi-val" id="spNoCost">—</div></div>
       <div class="kpi-card"><div class="kpi-label">ตั้งค่าครบแล้ว</div><div class="kpi-val" id="spDone">—</div></div>
     </div>
 
@@ -239,7 +239,7 @@
       <label class="f">ซัพพลายเออร์<input type="text" id="bkSupplier" class="wide" placeholder="ชื่อโรงงาน"></label>
       <label class="chip-toggle" id="bkOnlyEmptyLabel"><input type="checkbox" id="bkOnlyEmpty" checked> เฉพาะแถวที่ยังว่าง</label>
       <button class="btn-small" id="btnBulkApply">ใช้กับทุกแถวที่แสดงอยู่</button>
-      <div class="hint">ช่องไหนเว้นว่าง = ไม่แตะค่าเดิมของช่องนั้น · ต้นทุนกับสต็อกขั้นต่ำต้องกรอกรายตัวในตาราง (ไม่ให้ใส่ทีเดียวเพราะแต่ละตัวไม่เท่ากัน)</div>
+      <div class="hint">ช่องไหนเว้นว่าง = ไม่แตะค่าเดิมของช่องนั้น · สต็อกขั้นต่ำต้องกรอกรายตัวในตาราง เพราะแต่ละสินค้าไม่เท่ากัน</div>
     </div>
 
     <div class="card">
@@ -252,7 +252,6 @@
               <th style="width:100px;">Lead time<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">สั่งแล้วกี่วันของถึง</span></th>
               <th style="width:95px;">MOQ<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">สั่งขั้นต่ำ</span></th>
               <th style="width:95px;">ต่อแพ็ค</th>
-              <th style="width:105px;">ต้นทุน/ชิ้น</th>
               <th style="width:150px;">ซัพพลายเออร์</th>
               <th style="width:95px;">รอบสั่ง<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">กี่วันสั่งที</span></th>
               <th style="width:100px;">สต็อกขั้นต่ำ</th>
@@ -260,7 +259,7 @@
             </tr>
           </thead>
           <tbody id="spBody">
-            <tr><td colspan="10" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
+            <tr><td colspan="9" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
           </tbody>
         </table>
       </div>
@@ -548,7 +547,7 @@ document.getElementById('btnAddNew').addEventListener('click', async () => {
 
 
 // ============================================================================
-// แท็บ Supply Chain — ตั้งค่า lead time / MOQ / แพ็ค / ต้นทุน / ซัพพลายเออร์ ต่อสินค้า
+// แท็บ Supply Chain — ตั้งค่า lead time / MOQ / แพ็ค / ซัพพลายเออร์ ต่อสินค้า (ไม่เก็บต้นทุน — เมฆไม่ได้รับรู้ต้นทุนจริง)
 // เก็บลงตาราง supply_params ซึ่ง Supabase เอาไปคำนวณ "ควรสั่งเมื่อไร สั่งเท่าไร" ในหน้า Supply Chain
 // หมายเหตุ: supply_params เก็บที่ระดับ "รหัสลูก" (สี/เบอร์) เหมือนที่ mv_replenishment ใช้
 //           หน้านี้ให้กรอกที่ระดับรหัสแม่ตัวเดียว แล้วบันทึกลงรหัสลูกทุกตัวใต้มันให้อัตโนมัติ
@@ -597,8 +596,8 @@ function spVisibleList() {
 function renderSupplyKPIs() {
   const list = allProducts.filter(p => p.status !== 'Discontinued' && p.status !== 'GWP')
   const noLt = list.filter(p => !spOf(p)).length
-  const noCost = list.filter(p => { const r = spOf(p); return !r || !r.unit_cost || parseFloat(r.unit_cost) <= 0 }).length
-  const done = list.filter(p => { const r = spOf(p); return r && r.unit_cost && parseFloat(r.unit_cost) > 0 }).length
+  const noCost = list.filter(p => { const r = spOf(p); return !r || !r.supplier }).length
+  const done = list.filter(p => { const r = spOf(p); return r && r.supplier }).length
   document.getElementById('spTotal').textContent = list.length.toLocaleString()
   document.getElementById('spNoLt').textContent = noLt.toLocaleString()
   document.getElementById('spNoCost').textContent = noCost.toLocaleString()
@@ -608,7 +607,7 @@ function renderSupplyKPIs() {
 function renderSupplyTable() {
   const list = spVisibleList()
   const tbody = document.getElementById('spBody')
-  if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="10">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'; return }
+  if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'; return }
   tbody.innerHTML = list.map(p => {
     const r = spOf(p) || {}
     const unset = !spOf(p)
@@ -621,7 +620,6 @@ function renderSupplyTable() {
       <td><input class="sp-input sp-lt" type="number" value="${v(r.lead_time_days)}" placeholder="${SP_DEFAULTS.lead_time_days}"></td>
       <td><input class="sp-input sp-moq" type="number" value="${v(r.moq)}" placeholder="${SP_DEFAULTS.moq}"></td>
       <td><input class="sp-input sp-pack" type="number" value="${v(r.pack_size)}" placeholder="${SP_DEFAULTS.pack_size}"></td>
-      <td><input class="sp-input sp-cost" type="number" value="${v(r.unit_cost)}" placeholder="—"></td>
       <td><input class="sp-input wide sp-supplier" type="text" value="${String(r.supplier || '').replace(/"/g,'&quot;')}" placeholder="—"></td>
       <td><input class="sp-input sp-review" type="number" value="${v(r.review_days)}" placeholder="${SP_DEFAULTS.review_days}"></td>
       <td><input class="sp-input sp-min" type="number" value="${v(r.min_stock)}" placeholder="${SP_DEFAULTS.min_stock}"></td>
@@ -638,7 +636,6 @@ async function saveSupplyRow(p, vals) {
     lead_time_days: vals.lead_time_days ?? SP_DEFAULTS.lead_time_days,
     moq: vals.moq ?? SP_DEFAULTS.moq,
     pack_size: vals.pack_size ?? SP_DEFAULTS.pack_size,
-    unit_cost: vals.unit_cost,
     supplier: vals.supplier || null,
     review_days: vals.review_days ?? SP_DEFAULTS.review_days,
     min_stock: vals.min_stock ?? SP_DEFAULTS.min_stock,
@@ -666,7 +663,6 @@ document.getElementById('spBody').addEventListener('click', async e => {
       lead_time_days: spNum(tr.querySelector('.sp-lt').value),
       moq: spNum(tr.querySelector('.sp-moq').value),
       pack_size: spNum(tr.querySelector('.sp-pack').value),
-      unit_cost: spNum(tr.querySelector('.sp-cost').value),
       supplier: tr.querySelector('.sp-supplier').value.trim(),
       review_days: spNum(tr.querySelector('.sp-review').value),
       min_stock: spNum(tr.querySelector('.sp-min').value)
@@ -714,7 +710,6 @@ document.getElementById('btnBulkApply').addEventListener('click', async () => {
           lead_time_days: lt ?? old.lead_time_days ?? SP_DEFAULTS.lead_time_days,
           moq: moq ?? old.moq ?? SP_DEFAULTS.moq,
           pack_size: pack ?? old.pack_size ?? SP_DEFAULTS.pack_size,
-          unit_cost: old.unit_cost ?? null,
           supplier: supplier || old.supplier || null,
           review_days: review ?? old.review_days ?? SP_DEFAULTS.review_days,
           min_stock: old.min_stock ?? SP_DEFAULTS.min_stock,
@@ -772,7 +767,7 @@ async function loadSupplyTab() {
     supplyLoaded = true
     renderSupplyKPIs(); renderSupplyTable()
   } catch (err) {
-    document.getElementById('spBody').innerHTML = `<tr class="empty-row"><td colspan="10">❌ โหลดไม่สำเร็จ: ${err.message} — ถ้าขึ้นว่าไม่พบตาราง supply_params แปลว่ายังไม่ได้รัน 44_inventory_core.sql</td></tr>`
+    document.getElementById('spBody').innerHTML = `<tr class="empty-row"><td colspan="9">❌ โหลดไม่สำเร็จ: ${err.message} — ถ้าขึ้นว่าไม่พบตาราง supply_params แปลว่ายังไม่ได้รัน 44_inventory_core.sql</td></tr>`
   }
 }
 
