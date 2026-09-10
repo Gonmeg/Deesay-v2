@@ -680,18 +680,16 @@ async function syncDealerOrders() {
     const skuRows = []
     orders.forEach(o => {
       const revMap = orderSkuRevMap[o.order_id] || {}
-      o.sku_promotion.split('+').forEach(part => {
-        const m = part.match(/^(.+?)x(\d+)$/i)
-        if (!m) return
-        const sku = m[1]
+      buildChildRows(o, skuMap).forEach(t => {
         skuRows.push({
           order_id: o.order_id,
           date: o.date,
           channel: o.channel,
           sub_channel: o.sub_channel,
-          parent_sku: sku,
-          qty: parseInt(m[2]),
-          revenue_share: Math.round((revMap[sku] || 0) * 100) / 100, // revenue จริงต่อ SKU จาก Sheet ไม่ใช่ 0 อีกต่อไป
+          parent_sku: t.parent,
+          child_sku: t.child,
+          qty: t.qty,
+          revenue_share: Math.round((revMap[t.parent] || 0) * t.rev_ratio * 100) / 100,
           settled: 'True',
           settled_date: o.date,
         })
@@ -1644,11 +1642,10 @@ async function handleConfirm() {
       const skuRows = []
       processed.forEach(o => {
         const revMap = _dealerSkuRevMap[o.order_id] || {}
-        o.sku_promotion.split('+').forEach(part => {
-          const m = part.match(/^(.+?)x(\d+)$/i); if (!m) return
-          const sku = m[1]
+        buildChildRows(o, skuMap).forEach(t => {
           skuRows.push({ order_id:o.order_id, date:o.date, channel:o.channel, sub_channel:o.sub_channel,
-            parent_sku:sku, qty:parseInt(m[2]), revenue_share: Math.round((revMap[sku]||0)*100)/100, settled:'True', settled_date:o.date })
+            parent_sku:t.parent, child_sku:t.child, qty:t.qty,
+            revenue_share: Math.round((revMap[t.parent]||0)*t.rev_ratio*100)/100, settled:'True', settled_date:o.date })
         })
       })
       for (let i = 0; i < skuRows.length; i += BATCH) {
@@ -2006,7 +2003,9 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
 
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
-    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:mergeSkus(allSkus), sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
+    const _composite = mergeSkus(allSkus)
+    const _parentStr = promoParentStr(_composite), _childStr = promoChildStr(_composite)
+    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:_parentStr, sku_promotion_child:(_childStr && _childStr !== _parentStr) ? _childStr : null, sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
@@ -2015,8 +2014,38 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
 
 // รหัสสินค้าในไฟล์บางแหล่งมีเว้นวรรค/ขีด/จุด เช่น "DFKSC 5 ML" → ตัดทิ้งให้เหลือ DFKSC5ML ก่อนเทียบกับตาราง products
 function skuKey(s) { return String(s ?? '').toUpperCase().replace(/[\s\-\._]/g, '') }
-function buildSkuMap(prods) { const m = {}; if (prods) prods.forEach(p => { if (p.child_sku && p.parent_sku) m[skuKey(p.child_sku)] = String(p.parent_sku).toUpperCase().trim() }); return m }
+function buildSkuMap(prods) {
+  const m = {}
+  const child = {}                                   // skuKey(รหัสลูก) -> รหัสลูกตามที่เขียนใน products
+  if (prods) prods.forEach(p => {
+    if (p.child_sku && p.parent_sku) {
+      const k = skuKey(p.child_sku)
+      m[k] = String(p.parent_sku).toUpperCase().trim()
+      child[k] = String(p.child_sku).toUpperCase().trim()
+    }
+  })
+  Object.defineProperty(m, '__child', { value: child, enumerable: false })
+  return m
+}
 function norm(s, m) { const c = skuKey(s); return m[c] || c }
+// คืน "แม่@ลูก" ถ้ารหัสที่เจอเป็นรหัสลูก · คืน "แม่" เฉย ๆ ถ้าไม่ใช่ — ใช้ภายในตอนประมวลผลเท่านั้น
+function normPair(s, m) {
+  const c = skuKey(s)
+  const parent = m[c] || c
+  const kid = (m.__child && m.__child[c]) || null
+  return (kid && kid !== parent) ? parent + '@' + kid : parent
+}
+// แยกโทเคน "แม่@ลูกxจำนวน" ออกเป็นชิ้น ๆ
+function parsePromoTokens(str) {
+  if (!str) return []
+  return String(str).split('+').map(t => t.trim()).map(t => {
+    const m2 = t.match(/^(.+?)x(\d+)$/i); if (!m2) return null
+    const [parent, child] = m2[1].split('@')
+    return { parent, child: child || parent, qty: parseInt(m2[2]) }
+  }).filter(Boolean)
+}
+const promoParentStr = str => mergeSkus(parsePromoTokens(str).map(t => ({ sku: t.parent, qty: t.qty })))
+const promoChildStr  = str => mergeSkus(parsePromoTokens(str).map(t => ({ sku: t.child,  qty: t.qty })))
 
 const PROVINCE_MAP = { 'Bangkok':'กรุงเทพมหานคร','กรุงเทพฯ':'กรุงเทพมหานคร','กทม':'กรุงเทพมหานคร','กทม.':'กรุงเทพมหานคร','Nonthaburi':'นนทบุรี','Pathum Thani':'ปทุมธานี','Pathumthani':'ปทุมธานี','Samut Prakan':'สมุทรปราการ','Samutprakarn':'สมุทรปราการ','Samut Sakhon':'สมุทรสาคร','Samut Songkhram':'สมุทรสงคราม','Nakhon Pathom':'นครปฐม','Suphan Buri':'สุพรรณบุรี','Suphanburi':'สุพรรณบุรี','Kanchanaburi':'กาญจนบุรี','Ratchaburi':'ราชบุรี','Phetchaburi':'เพชรบุรี','Prachuap Khiri Khan':'ประจวบคีรีขันธ์','Ang Thong':'อ่างทอง','Sing Buri':'สิงห์บุรี','Lopburi':'ลพบุรี','Lop Buri':'ลพบุรี','Saraburi':'สระบุรี','Ayutthaya':'พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya':'พระนครศรีอยุธยา','Nakhon Nayok':'นครนายก','Chachoengsao':'ฉะเชิงเทรา','Prachin Buri':'ปราจีนบุรี','Sa Kaeo':'สระแก้ว','Chon Buri':'ชลบุรี','Chonburi':'ชลบุรี','Rayong':'ระยอง','Chanthaburi':'จันทบุรี','Trat':'ตราด','Chiang Mai':'เชียงใหม่','Chiangmai':'เชียงใหม่','Chiang Rai':'เชียงราย','Chiangrai':'เชียงราย','Lamphun':'ลำพูน','Lampang':'ลำปาง','Phrae':'แพร่','Nan':'น่าน','Phayao':'พะเยา','Mae Hong Son':'แม่ฮ่องสอน','Uttaradit':'อุตรดิตถ์','Sukhothai':'สุโขทัย','Phitsanulok':'พิษณุโลก','Phichit':'พิจิตร','Kamphaeng Phet':'กำแพงเพชร','Nakhon Sawan':'นครสวรรค์','Uthai Thani':'อุทัยธานี','Chainat':'ชัยนาท','Tak':'ตาก','Nakhon Ratchasima':'นครราชสีมา','Buriram':'บุรีรัมย์','Buri Ram':'บุรีรัมย์','Surin':'สุรินทร์','Si Sa Ket':'ศรีสะเกษ','Sisaket':'ศรีสะเกษ','Ubon Ratchathani':'อุบลราชธานี','Yasothon':'ยโสธร','Chaiyaphum':'ชัยภูมิ','Amnat Charoen':'อำนาจเจริญ','Mukdahan':'มุกดาหาร','Nakhon Phanom':'นครพนม','Sakon Nakhon':'สกลนคร','Kalasin':'กาฬสินธุ์','Maha Sarakham':'มหาสารคาม','Roi Et':'ร้อยเอ็ด','Khon Kaen':'ขอนแก่น','Udon Thani':'อุดรธานี','Loei':'เลย','Nong Khai':'หนองคาย','Nong Bua Lam Phu':'หนองบัวลำภู','Bueng Kan':'บึงกาฬ','Chumphon':'ชุมพร','Surat Thani':'สุราษฎร์ธานี','Nakhon Si Thammarat':'นครศรีธรรมราช','Phatthalung':'พัทลุง','Songkhla':'สงขลา','Satun':'สตูล','Trang':'ตรัง','Krabi':'กระบี่','Phang Nga':'พังงา','Phuket':'ภูเก็ต','Ranong':'ระนอง','Pattani':'ปัตตานี','Yala':'ยะลา','Narathiwat':'นราธิวาส' }
 function normalizeProvince(v) { if (!v) return ''; let s = String(v).trim(); if (s.includes('/')) s = s.split('/')[0].trim(); s = s.replace(/^จังหวัด/,'').trim(); return PROVINCE_MAP[s]||s }
@@ -2029,10 +2058,17 @@ async function calcSkuRevenue(orders) {
   const skuRows = []
   for (const order of orders) {
     if (!order.sku_promotion || !order.revenue) continue
-    const skus = order.sku_promotion.split('+').map(s => { const m=s.trim().match(/^(.+?)x(\d+)$/i); return m?{sku:m[1],qty:parseInt(m[2])}:null }).filter(Boolean)
-    if (!skus.length) continue
-    let totalRsp = 0; skus.forEach(({sku,qty}) => { const rsp=rspMap[sku]||0; if(rsp>0) totalRsp+=rsp*qty })
-    skus.forEach(({sku,qty}) => { const rsp=rspMap[sku]||0; let allocated=0; if(totalRsp>0&&rsp>0) allocated=order.revenue*((rsp*qty)/totalRsp); skuRows.push({date:order.date,channel:order.channel,sub_channel:order.sub_channel,order_id:order.order_id,parent_sku:sku,product_name:nameMap[sku]||sku,qty,revenue_share:Math.round(allocated*100)/100,settled_date:order.settled_date,settled:order.settled?'True':'False'}) })
+    const rows = buildChildRows(order, null)
+    if (!rows.length) continue
+    const byParent = {}
+    rows.forEach(t => { byParent[t.parent] = (byParent[t.parent] || 0) + t.qty })
+    let totalRsp = 0; Object.entries(byParent).forEach(([sku, qty]) => { const rsp=rspMap[sku]||0; if(rsp>0) totalRsp+=rsp*qty })
+    rows.forEach(t => {
+      const rsp = rspMap[t.parent] || 0
+      let allocated = 0
+      if (totalRsp > 0 && rsp > 0) allocated = order.revenue * ((rsp * byParent[t.parent]) / totalRsp) * t.rev_ratio
+      skuRows.push({date:order.date,channel:order.channel,sub_channel:order.sub_channel,order_id:order.order_id,parent_sku:t.parent,child_sku:t.child,product_name:nameMap[t.parent]||t.parent,qty:t.qty,revenue_share:Math.round(allocated*100)/100,settled_date:order.settled_date,settled:order.settled?'True':'False'})
+    })
   }
   if (!skuRows.length) return 0
   const orderIds = [...new Set(orders.map(o => o.order_id))]
@@ -2109,6 +2145,34 @@ async function processDealerRows(rows, mappings) {
   return result
 }
 
+// แตกออเดอร์เป็นแถวระดับสี: ใช้ sku_promotion_child ถ้ามี ถ้าไม่มีก็ใช้ระดับแม่เหมือนเดิม
+// rev_ratio = สัดส่วนที่ใช้แบ่งเงินของแม่ตัวนั้นลงแต่ละสี (รวมกันได้ 1 เสมอ → ยอดรวมไม่เปลี่ยน)
+function buildChildRows(o, m) {
+  const parentTokens = String(o.sku_promotion || '').split('+').map(t => t.trim())
+    .map(t => { const x = t.match(/^(.+?)x(\d+)$/i); return x ? { sku: x[1], qty: parseInt(x[2]) } : null }).filter(Boolean)
+  if (!parentTokens.length) return []
+  const childTokens = String(o.sku_promotion_child || '').split('+').map(t => t.trim())
+    .map(t => { const x = t.match(/^(.+?)x(\d+)$/i); return x ? { sku: x[1], qty: parseInt(x[2]) } : null }).filter(Boolean)
+  if (!childTokens.length) return parentTokens.map(t => ({ parent: t.sku, child: null, qty: t.qty, rev_ratio: 1 }))
+
+  const parentOf = {}
+  parentTokens.forEach(t => { parentOf[t.sku] = t.sku })
+  const out = []
+  const grouped = {}
+  childTokens.forEach(t => {
+    const par = (m ? norm(t.sku, m) : null) || (parentTokens.find(p => t.sku.indexOf(p.sku) === 0) || {}).sku || t.sku
+    grouped[par] = grouped[par] || []
+    grouped[par].push(t)
+  })
+  Object.entries(grouped).forEach(([par, list]) => {
+    const total = list.reduce((a, b) => a + b.qty, 0) || 1
+    list.forEach(t => out.push({ parent: par, child: t.sku, qty: t.qty, rev_ratio: t.qty / total }))
+  })
+  // แม่ที่ไม่มีสีในสตริงลูก (เช่นสินค้าไม่มีสี) ใส่กลับเข้าไปด้วย
+  parentTokens.forEach(t => { if (!grouped[t.sku]) out.push({ parent: t.sku, child: null, qty: t.qty, rev_ratio: 1 }) })
+  return out
+}
+
 function mergeSkus(skuList) {
   const merged = {}; skuList.forEach(({sku,qty}) => { merged[sku]=(merged[sku]||0)+qty })
   return Object.entries(merged).sort(([a],[b])=>a.localeCompare(b)).map(([sku,qty])=>sku+'x'+qty).join('+')
@@ -2116,20 +2180,20 @@ function mergeSkus(skuList) {
 
 function tfFB(raw, m) {
   if (!raw) return ''
-  const skus = raw.split(',').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)\s*\((\d+)\)$/); return x?{sku:norm(x[1],m),qty:parseInt(x[2])}:null }).filter(Boolean)
+  const skus = raw.split(',').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)\s*\((\d+)\)$/); return x?{sku:normPair(x[1],m),qty:parseInt(x[2])}:null }).filter(Boolean)
   return mergeSkus(skus)
 }
 function tfTT(raw, m, qtyMultiplier) {
   if (!raw) return ''
   if (!raw.includes('(') && qtyMultiplier) {
     const mul = parseInt(qtyMultiplier)||1
-    return mergeSkus(raw.split('+').map(s=>s.trim()).map(it => { const mi=it.match(/^(.+?)x(\d+)$/i); if(mi) return {sku:norm(mi[1],m),qty:parseInt(mi[2])*mul}; if(it) return {sku:norm(it,m),qty:mul}; return null }).filter(Boolean))
+    return mergeSkus(raw.split('+').map(s=>s.trim()).map(it => { const mi=it.match(/^(.+?)x(\d+)$/i); if(mi) return {sku:normPair(mi[1],m),qty:parseInt(mi[2])*mul}; if(it) return {sku:normPair(it,m),qty:mul}; return null }).filter(Boolean))
   }
-  const skus = []; raw.split(',').map(s=>s.trim()).forEach(g => { const mg=g.match(/^(.+?)\s*\((\d+)\)$/); if(!mg) return; const mul=parseInt(mg[2]); mg[1].split('+').map(s=>s.trim()).forEach(it => { const mi=it.match(/^(.+?)x(\d+)$/i); if(!mi) return; skus.push({sku:norm(mi[1],m),qty:parseInt(mi[2])*mul}) }) })
+  const skus = []; raw.split(',').map(s=>s.trim()).forEach(g => { const mg=g.match(/^(.+?)\s*\((\d+)\)$/); if(!mg) return; const mul=parseInt(mg[2]); mg[1].split('+').map(s=>s.trim()).forEach(it => { const mi=it.match(/^(.+?)x(\d+)$/i); if(!mi) return; skus.push({sku:normPair(mi[1],m),qty:parseInt(mi[2])*mul}) }) })
   return mergeSkus(skus)
 }
-function tfShopee(raw, m) { if (!raw) return ''; return mergeSkus(raw.split('+').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)x(\d+)$/i); if(x) return {sku:norm(x[1],m),qty:parseInt(x[2])}; if(p) return {sku:norm(p,m),qty:1}; return null }).filter(Boolean)) }
-function tfLazada(raw, m) { if (!raw) return ''; return mergeSkus(raw.split('+').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)x(\d+)$/i); if(x) return {sku:norm(x[1],m),qty:parseInt(x[2])}; if(p) return {sku:norm(p,m),qty:1}; return null }).filter(Boolean)) }
+function tfShopee(raw, m) { if (!raw) return ''; return mergeSkus(raw.split('+').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)x(\d+)$/i); if(x) return {sku:normPair(x[1],m),qty:parseInt(x[2])}; if(p) return {sku:normPair(p,m),qty:1}; return null }).filter(Boolean)) }
+function tfLazada(raw, m) { if (!raw) return ''; return mergeSkus(raw.split('+').map(s=>s.trim()).map(p => { const x=p.match(/^(.+?)x(\d+)$/i); if(x) return {sku:normPair(x[1],m),qty:parseInt(x[2])}; if(p) return {sku:normPair(p,m),qty:1}; return null }).filter(Boolean)) }
 function tfDealer(raw, m) { return raw ? norm(raw, m) : '' }
 function tfGeneric(raw, m) { return raw ? norm(raw, m) : '' }
 
