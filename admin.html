@@ -100,23 +100,93 @@
   .tab-btn:hover { color: var(--text); }
   .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent); }
   .kpi-grid.g4 { grid-template-columns: repeat(4, 1fr); }
-  .bulk-bar { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .bulk-bar .bulk-title { font-size: 0.8rem; font-weight: 600; color: var(--text); white-space: nowrap; }
-  .bulk-bar input[type="number"], .bulk-bar input[type="text"] { background: var(--bg); border: 1px solid var(--border2); color: var(--text); padding: 7px 9px; border-radius: 6px; font-size: 0.8rem; font-family: inherit; outline: none; width: 96px; }
-  .bulk-bar label.f { font-size: 0.75rem; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
-  .btn-small { background: var(--accent); color: var(--on-accent); border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
-  .btn-small.ghost { background: none; color: var(--muted); border: 1px solid var(--border2); }
-  .btn-small.ghost:hover { color: var(--text); border-color: var(--accent); }
-  .btn-small:disabled { opacity: 0.4; cursor: not-allowed; }
-  input.sp-input { width: 88px; text-align: right; background: transparent; border: 1px solid transparent; color: var(--text); padding: 7px 8px; border-radius: 6px; font-size: 0.82rem; font-family: inherit; outline: none; }
-  input.sp-input.wide { width: 140px; text-align: left; }
-  input.sp-input:hover { border-color: var(--border2); }
-  input.sp-input:focus { border-color: var(--accent); background: var(--surface2); }
-  tr.sp-unset { background: rgba(251,146,60,0.05); }
-  select.sp-mode { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; }
-  select.sp-mode.mode-watch { color: var(--orange); border-color: rgba(251,146,60,0.5); }
-  select.sp-mode.mode-hidden { color: var(--muted2); border-color: var(--border2); }
-  .kid-count { font-size: 0.7rem; color: var(--muted2); font-family: 'IBM Plex Mono', monospace; }
+  /* ===== แท็บ Supply Chain ===== */
+  .sp-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .sp-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; cursor: pointer; transition: border-color .15s; }
+  .sp-kpi:hover { border-color: var(--accent); }
+  .sp-kpi-l { font-size: 0.72rem; color: var(--muted2); letter-spacing: .5px; margin-bottom: 8px; }
+  .sp-kpi-v { font-size: 1.7rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .sp-kpi-v.warn { color: var(--orange); } .sp-kpi-v.orange { color: var(--orange); } .sp-kpi-v.dim { color: var(--muted2); }
+
+  .sp-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .sp-search { flex: 1 1 240px; min-width: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 9px 13px; border-radius: 8px; font-size: 0.85rem; font-family: inherit; outline: none; }
+  .sp-search:focus { border-color: var(--accent); }
+  .sp-seg { display: inline-flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
+  .sp-seg button { background: none; border: none; color: var(--muted); font-family: inherit; font-size: 0.78rem; font-weight: 600; padding: 6px 13px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+  .sp-seg button:hover { color: var(--text); }
+  .sp-seg button.on { background: var(--accent); color: var(--on-accent); }
+  .sp-check { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .sp-check input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+  .sp-btn { font-family: inherit; font-size: 0.78rem; font-weight: 600; padding: 8px 15px; border-radius: 7px; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: all .15s; }
+  .sp-btn.primary { background: var(--accent); color: var(--on-accent); }
+  .sp-btn.ghost { background: var(--surface2); color: var(--muted); border-color: var(--border); }
+  .sp-btn.ghost:hover { color: var(--text); border-color: var(--muted2); }
+  .sp-btn.sm { padding: 5px 11px; font-size: 0.72rem; }
+  .sp-btn.mode { border-width: 1px; background: transparent; }
+  .sp-btn.mode.plan { color: var(--accent2); border-color: var(--accent); }
+  .sp-btn.mode.plan:hover { background: var(--accent); color: var(--on-accent); }
+  .sp-btn.mode.watch { color: var(--orange); border-color: rgba(251,146,60,.55); }
+  .sp-btn.mode.watch:hover { background: rgba(251,146,60,.18); }
+  .sp-btn.mode.hidden { color: var(--muted2); border-color: var(--border2); }
+  .sp-btn.mode.hidden:hover { background: var(--surface2); color: var(--text); }
+  .sp-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .sp-actionbar { display: none; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius); padding: 11px 16px; margin-bottom: 12px; }
+  .sp-actionbar.on { display: flex; }
+  .sp-actionbar-left, .sp-actionbar-right { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .sp-count { font-size: 0.85rem; color: var(--text); } .sp-count b { color: var(--accent2); font-size: 1rem; }
+  .sp-actionbar-label { font-size: 0.76rem; color: var(--muted2); }
+  .sp-divider { width: 1px; height: 20px; background: var(--border2); margin: 0 4px; }
+
+  .sp-numbar { display: none; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+  .sp-numbar.on { display: flex; }
+  .sp-numbar-title { font-size: 0.82rem; font-weight: 600; color: var(--text); align-self: center; white-space: nowrap; }
+  .sp-numbar-title b { color: var(--accent2); }
+  .sp-numbar label { display: flex; flex-direction: column; gap: 5px; font-size: 0.72rem; color: var(--muted2); }
+  .sp-numbar input { background: var(--bg); border: 1px solid var(--border2); color: var(--text); padding: 8px 10px; border-radius: 7px; font-size: 0.82rem; font-family: inherit; outline: none; width: 92px; }
+  .sp-numbar label.wide input { width: 150px; }
+  .sp-numbar input:focus { border-color: var(--accent); }
+  .sp-numbar-hint { flex-basis: 100%; font-size: 0.72rem; color: var(--muted2); }
+
+  .sp-tablewrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: auto; max-height: 62vh; }
+  .sp-table { width: 100%; border-collapse: collapse; }
+  .sp-table th { position: sticky; top: 0; z-index: 3; background: var(--surface2); padding: 11px 12px; text-align: left;
+    font-size: 0.72rem; font-weight: 600; color: var(--muted); white-space: nowrap; border-bottom: 1px solid var(--border); }
+  .sp-table th span { display: block; font-size: 0.63rem; font-weight: 400; color: var(--muted2); margin-top: 2px; }
+  .sp-table th.sp-n, .sp-table td.sp-n { text-align: right; }
+  .sp-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 0.84rem; }
+  .sp-table tbody tr:hover { background: var(--surface2); }
+  .sp-table tbody tr.sel { background: rgba(200,169,110,.09); }
+  .sp-table tbody tr.sel:hover { background: rgba(200,169,110,.14); }
+  .sp-table tbody tr.mode-hidden .sp-sku, .sp-table tbody tr.mode-hidden .sp-name { opacity: .5; }
+  .sp-table td.sp-cb, .sp-table th.sp-cb { width: 40px; text-align: center; padding-right: 0; }
+  .sp-table input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .sp-col-name { min-width: 210px; }
+  .sp-sku { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--accent); letter-spacing: .3px; }
+  .sp-name { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .sp-kids { color: var(--muted2); font-size: 0.68rem; }
+  .sp-col-mode { width: 120px; }
+  .sp-badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+  .sp-badge.plan { background: rgba(200,169,110,.16); color: var(--accent2); }
+  .sp-badge.watch { background: rgba(251,146,60,.16); color: var(--orange); }
+  .sp-badge.hidden { background: rgba(144,144,168,.16); color: var(--muted2); }
+  .sp-in { width: 78px; text-align: right; background: transparent; border: 1px solid transparent; color: var(--text);
+    padding: 7px 9px; border-radius: 7px; font-size: 0.82rem; font-family: inherit; font-variant-numeric: tabular-nums; outline: none; }
+  .sp-in.wide { width: 150px; text-align: left; }
+  .sp-in:hover { border-color: var(--border2); }
+  .sp-in:focus { border-color: var(--accent); background: var(--bg); }
+  tr.unset .sp-in { color: var(--muted2); }
+  .sp-col-act { width: 90px; text-align: right; }
+  .sp-save { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-family: inherit;
+    font-size: 0.72rem; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+  .sp-save:hover { color: var(--text); border-color: var(--accent); }
+  .sp-empty { text-align: center; padding: 44px; color: var(--muted); font-size: 0.85rem; }
+  .sp-foot { font-size: 0.72rem; color: var(--muted2); margin-top: 10px; line-height: 1.6; }
+  @media (max-width: 1100px) { .sp-kpis { grid-template-columns: repeat(2, 1fr); } }
+
   @media (max-width: 900px) {
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     .kpi-grid.g4 { grid-template-columns: repeat(2, 1fr); }
@@ -219,56 +289,75 @@
   </div><!-- /tab-products -->
 
   <div id="tab-supply" class="tabpane" style="display:none;">
-    <div class="kpi-grid g4">
-      <div class="kpi-card"><div class="kpi-label">สินค้าที่ต้องตั้งค่า</div><div class="kpi-val" id="spTotal">—</div></div>
-      <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่ตั้ง Lead time</div><div class="kpi-val" id="spNoLt">—</div></div>
-      <div class="kpi-card"><div class="kpi-label">ดูเฉย ๆ / ซ่อน</div><div class="kpi-val" id="spNoCost">—</div></div>
-      <div class="kpi-card"><div class="kpi-label">ระบุซัพพลายเออร์แล้ว</div><div class="kpi-val" id="spDone">—</div></div>
+    <div class="sp-kpis">
+      <div class="sp-kpi" data-filter="all"><div class="sp-kpi-l">สินค้าทั้งหมด</div><div class="sp-kpi-v" id="spTotal">—</div></div>
+      <div class="sp-kpi" data-filter="unset"><div class="sp-kpi-l">ยังไม่ตั้งค่า</div><div class="sp-kpi-v warn" id="spNoLt">—</div></div>
+      <div class="sp-kpi" data-filter="watch"><div class="sp-kpi-l">ดูเฉย ๆ</div><div class="sp-kpi-v orange" id="spWatch">—</div></div>
+      <div class="sp-kpi" data-filter="hidden"><div class="sp-kpi-l">ซ่อนไว้</div><div class="sp-kpi-v dim" id="spHidden">—</div></div>
     </div>
 
-    <div class="toolbar">
-      <input type="text" id="spSearch" placeholder="ค้นหา SKU หรือชื่อสินค้า...">
-      <label class="chip-toggle" id="spUnsetLabel"><input type="checkbox" id="spUnsetOnly"> แสดงเฉพาะที่ยังไม่ตั้งค่า</label>
-      <label class="chip-toggle on" id="spActiveLabel"><input type="checkbox" id="spActiveOnly" checked> ซ่อนสินค้าเลิกขาย / ของแถม</label>
-      <button class="btn-small ghost" id="btnRefreshSupply" title="คำนวณตัวเลขในหน้า Supply Chain ใหม่ทันที">↻ อัปเดตตัวเลข Supply Chain</button>
+    <div class="sp-toolbar">
+      <input type="text" id="spSearch" class="sp-search" placeholder="ค้นหา SKU หรือชื่อสินค้า">
+      <div class="sp-seg" id="spModeFilter">
+        <button class="on" data-m="">ทั้งหมด</button>
+        <button data-m="plan">วางแผนปกติ</button>
+        <button data-m="watch">ดูเฉย ๆ</button>
+        <button data-m="hidden">ซ่อน</button>
+      </div>
+      <label class="sp-check"><input type="checkbox" id="spUnsetOnly"> เฉพาะที่ยังไม่ตั้งค่า</label>
+      <label class="sp-check"><input type="checkbox" id="spActiveOnly" checked> ซ่อนสินค้าเลิกขาย / ของแถม</label>
+      <button class="sp-btn ghost" id="btnRefreshSupply">↻ อัปเดตตัวเลข Supply Chain</button>
     </div>
 
-    <div class="bulk-bar">
-      <span class="bulk-title">ตั้งค่าทีเดียวหลายตัว →</span>
-      <label class="f">Lead time (วัน)<input type="number" id="bkLt" placeholder="60"></label>
-      <label class="f">MOQ<input type="number" id="bkMoq" placeholder="0"></label>
-      <label class="f">ต่อแพ็ค<input type="number" id="bkPack" placeholder="1"></label>
-      <label class="f">รอบสั่ง (วัน)<input type="number" id="bkReview" placeholder="30"></label>
-      <label class="f">ซัพพลายเออร์<input type="text" id="bkSupplier" class="wide" placeholder="ชื่อโรงงาน"></label>
-      <label class="f">การวางแผน<select id="bkMode" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 9px;border-radius:6px;font-size:0.8rem;font-family:inherit;width:125px;"><option value="">— ไม่เปลี่ยน —</option><option value="plan">วางแผนปกติ</option><option value="watch">ดูเฉย ๆ</option><option value="hidden">ซ่อน</option></select></label>
-      <label class="chip-toggle" id="bkOnlyEmptyLabel"><input type="checkbox" id="bkOnlyEmpty" checked> เฉพาะแถวที่ยังว่าง</label>
-      <button class="btn-small" id="btnBulkApply">ใช้กับทุกแถวที่แสดงอยู่</button>
-      <div class="hint">ช่องไหนเว้นว่าง = ไม่แตะค่าเดิม · <b>วางแผนปกติ</b> = คำนวณครบ · <b>ดูเฉย ๆ</b> = เห็นสต็อกแต่ไม่คำนวณแผนสั่ง (ของที่ไม่สั่งต่อแล้ว) · <b>ซ่อน</b> = ไม่แสดงในหน้า Supply Chain</div>
-    </div>
-
-    <div class="card">
-      <div class="tbl-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:110px;">SKU</th>
-              <th>ชื่อสินค้า</th>
-              <th style="width:135px;">การวางแผน<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">แสดง / คำนวณ</span></th>
-              <th style="width:100px;">Lead time<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">สั่งแล้วกี่วันของถึง</span></th>
-              <th style="width:95px;">MOQ<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">สั่งขั้นต่ำ</span></th>
-              <th style="width:95px;">ต่อแพ็ค</th>
-              <th style="width:150px;">ซัพพลายเออร์</th>
-              <th style="width:95px;">รอบสั่ง<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">กี่วันสั่งที</span></th>
-              <th style="width:100px;">สต็อกขั้นต่ำ</th>
-              <th style="width:100px;"></th>
-            </tr>
-          </thead>
-          <tbody id="spBody">
-            <tr><td colspan="10" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
-          </tbody>
-        </table>
+    <div class="sp-actionbar" id="spActionBar">
+      <div class="sp-actionbar-left">
+        <span class="sp-count"><b id="spSelCount">0</b> รายการที่เลือก</span>
+        <button class="sp-btn ghost sm" id="spSelClear">ล้างการเลือก</button>
+      </div>
+      <div class="sp-actionbar-right">
+        <span class="sp-actionbar-label">ตั้งเป็น</span>
+        <button class="sp-btn mode plan"   data-mode="plan">วางแผนปกติ</button>
+        <button class="sp-btn mode watch"  data-mode="watch">ดูเฉย ๆ</button>
+        <button class="sp-btn mode hidden" data-mode="hidden">ซ่อน</button>
+        <span class="sp-divider"></span>
+        <button class="sp-btn ghost" id="spOpenNums">ตั้งตัวเลขให้ที่เลือก…</button>
       </div>
     </div>
+
+    <div class="sp-numbar" id="spNumBar">
+      <span class="sp-numbar-title">ตั้งตัวเลขให้ <b id="spNumCount">0</b> รายการที่เลือก</span>
+      <label>Lead time<input type="number" id="bkLt" placeholder="60"></label>
+      <label>MOQ<input type="number" id="bkMoq" placeholder="0"></label>
+      <label>ต่อแพ็ค<input type="number" id="bkPack" placeholder="1"></label>
+      <label>รอบสั่ง<input type="number" id="bkReview" placeholder="30"></label>
+      <label class="wide">ซัพพลายเออร์<input type="text" id="bkSupplier" placeholder="ชื่อโรงงาน"></label>
+      <button class="sp-btn primary" id="btnBulkApply">ใช้กับที่เลือก</button>
+      <button class="sp-btn ghost" id="spCloseNums">ปิด</button>
+      <div class="sp-numbar-hint">ช่องไหนเว้นว่าง = ไม่แตะค่าเดิมของช่องนั้น</div>
+    </div>
+
+    <div class="sp-tablewrap">
+      <table class="sp-table">
+        <thead>
+          <tr>
+            <th class="sp-cb"><input type="checkbox" id="spSelAll" title="เลือกทั้งหมดที่แสดงอยู่"></th>
+            <th class="sp-col-name">สินค้า</th>
+            <th class="sp-col-mode">การวางแผน</th>
+            <th class="sp-n">Lead time<span>วันกว่าของจะถึง</span></th>
+            <th class="sp-n">MOQ<span>สั่งขั้นต่ำ</span></th>
+            <th class="sp-n">ต่อแพ็ค</th>
+            <th class="sp-n">รอบสั่ง<span>กี่วันสั่งที</span></th>
+            <th class="sp-n">สต็อกขั้นต่ำ</th>
+            <th class="sp-col-sup">ซัพพลายเออร์</th>
+            <th class="sp-col-act"></th>
+          </tr>
+        </thead>
+        <tbody id="spBody">
+          <tr><td colspan="10" class="sp-empty">กำลังโหลดข้อมูล…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="sp-foot" id="spFoot"></div>
   </div><!-- /tab-supply -->
 
 </div>
@@ -552,15 +641,17 @@ document.getElementById('btnAddNew').addEventListener('click', async () => {
 
 
 // ============================================================================
-// แท็บ Supply Chain — ตั้งค่า lead time / MOQ / แพ็ค / ซัพพลายเออร์ ต่อสินค้า (ไม่เก็บต้นทุน — เมฆไม่ได้รับรู้ต้นทุนจริง)
-// เก็บลงตาราง supply_params ซึ่ง Supabase เอาไปคำนวณ "ควรสั่งเมื่อไร สั่งเท่าไร" ในหน้า Supply Chain
-// หมายเหตุ: supply_params เก็บที่ระดับ "รหัสลูก" (สี/เบอร์) เหมือนที่ mv_replenishment ใช้
-//           หน้านี้ให้กรอกที่ระดับรหัสแม่ตัวเดียว แล้วบันทึกลงรหัสลูกทุกตัวใต้มันให้อัตโนมัติ
+// แท็บ Supply Chain — ตั้งค่าต่อสินค้า: การวางแผน / lead time / MOQ / แพ็ค / รอบสั่ง / สต็อกขั้นต่ำ / ซัพพลายเออร์
+// เก็บลงตาราง supply_params ซึ่ง Supabase เอาไปคำนวณแผนสั่งในหน้า Supply Chain
+// supply_params เก็บที่ระดับ "รหัสลูก" (สี/เบอร์) — หน้านี้ให้กรอกที่ระดับรหัสแม่ แล้วเขียนลงลูกทุกตัวให้อัตโนมัติ
+// การเลือก: ติ๊กช่องหน้าแถวเอง แล้วใช้แถบด้านบนสั่งทีเดียว (ไม่มีการเปลี่ยนค่าให้เองโดยไม่ได้เลือก)
 // ============================================================================
-let supplyParams = {}      // child_sku -> row จาก supply_params
-let supplyLoaded = false
+let supplyParams = {}, supplyLoaded = false
+let spSel = new Set()
+let spModeFilter = ''
 
 const SP_DEFAULTS = { lead_time_days: 60, moq: 0, pack_size: 1, review_days: 30, min_stock: 0, plan_mode: 'plan' }
+const SP_MODES = { plan: ['วางแผนปกติ', 'plan'], watch: ['ดูเฉย ๆ', 'watch'], hidden: ['ซ่อน', 'hidden'] }
 const spNum = v => { const n = parseFloat(String(v ?? '').replace(/,/g, '')); return isNaN(n) ? null : n }
 
 async function fetchSupplyParams() {
@@ -579,12 +670,9 @@ async function fetchSupplyParams() {
   return map
 }
 
-// ค่าที่จะแสดงต่อสินค้า 1 ตัว = เอาจากรหัสลูกตัวแรกที่เคยตั้งค่าไว้
-function spOf(p) {
-  for (const k of (p.kids || [])) if (supplyParams[k]) return supplyParams[k]
-  return null
-}
-function spIsSet(p) { const r = spOf(p); return !!r }
+function spOf(p) { for (const k of (p.kids || [])) if (supplyParams[k]) return supplyParams[k]; return null }
+function spMode(p) { const r = spOf(p); return (r && r.plan_mode) || 'plan' }
+function spIsSet(p) { return !!spOf(p) }
 
 function spVisibleList() {
   const q = (document.getElementById('spSearch').value || '').trim().toLowerCase()
@@ -592,188 +680,231 @@ function spVisibleList() {
   const activeOnly = document.getElementById('spActiveOnly').checked
   return allProducts.filter(p => {
     if (activeOnly && (p.status === 'Discontinued' || p.status === 'GWP')) return false
-    if (q && !(String(p.parent_sku||'').toLowerCase().includes(q) || String(p.product_name||'').toLowerCase().includes(q))) return false
+    if (spModeFilter && spMode(p) !== spModeFilter) return false
     if (unsetOnly && spIsSet(p)) return false
+    if (q && !(String(p.parent_sku || '').toLowerCase().includes(q) || String(p.product_name || '').toLowerCase().includes(q))) return false
     return true
   })
 }
 
 function renderSupplyKPIs() {
   const list = allProducts.filter(p => p.status !== 'Discontinued' && p.status !== 'GWP')
-  const noLt = list.filter(p => !spOf(p)).length
-  const all = allProducts
-  const noCost = all.filter(p => { const r = spOf(p); return r && (r.plan_mode === 'watch' || r.plan_mode === 'hidden') }).length
-  const done = list.filter(p => { const r = spOf(p); return r && r.supplier }).length
   document.getElementById('spTotal').textContent = list.length.toLocaleString()
-  document.getElementById('spNoLt').textContent = noLt.toLocaleString()
-  document.getElementById('spNoCost').textContent = noCost.toLocaleString()
-  document.getElementById('spDone').textContent = done.toLocaleString()
+  document.getElementById('spNoLt').textContent = list.filter(p => !spIsSet(p)).length.toLocaleString()
+  document.getElementById('spWatch').textContent = allProducts.filter(p => spMode(p) === 'watch').length.toLocaleString()
+  document.getElementById('spHidden').textContent = allProducts.filter(p => spMode(p) === 'hidden').length.toLocaleString()
+}
+
+function renderSelBar() {
+  const n = spSel.size
+  document.getElementById('spActionBar').classList.toggle('on', n > 0)
+  document.getElementById('spSelCount').textContent = n
+  document.getElementById('spNumCount').textContent = n
+  if (!n) document.getElementById('spNumBar').classList.remove('on')
+  const list = spVisibleList()
+  const all = list.length > 0 && list.every(p => spSel.has(p.parent_sku))
+  const some = list.some(p => spSel.has(p.parent_sku))
+  const cb = document.getElementById('spSelAll')
+  cb.checked = all; cb.indeterminate = !all && some
 }
 
 function renderSupplyTable() {
   const list = spVisibleList()
   const tbody = document.getElementById('spBody')
-  if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="10">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'; return }
-  tbody.innerHTML = list.map(p => {
-    const r = spOf(p) || {}
-    const unset = !spOf(p)
-    const kidCount = (p.kids || []).length
-    const v = (x, d) => (x === null || x === undefined || x === '') ? '' : x
-    return `
-    <tr data-sku="${p.parent_sku}" class="${unset ? 'sp-unset' : ''}">
-      <td><span class="sku-cell">${p.parent_sku}</span>${kidCount > 1 ? `<div class="kid-count">${kidCount} สี/เบอร์</div>` : ''}</td>
-      <td>${(p.product_name || '').replace(/</g,'&lt;')}</td>
-      <td><select class="sp-input sp-mode ${'mode-' + (r.plan_mode || 'plan')}" style="width:125px;text-align:left;">
-        <option value="plan"${(r.plan_mode || 'plan') === 'plan' ? ' selected' : ''}>วางแผนปกติ</option>
-        <option value="watch"${r.plan_mode === 'watch' ? ' selected' : ''}>ดูเฉย ๆ</option>
-        <option value="hidden"${r.plan_mode === 'hidden' ? ' selected' : ''}>ซ่อน</option>
-      </select></td>
-      <td><input class="sp-input sp-lt" type="number" value="${v(r.lead_time_days)}" placeholder="${SP_DEFAULTS.lead_time_days}"></td>
-      <td><input class="sp-input sp-moq" type="number" value="${v(r.moq)}" placeholder="${SP_DEFAULTS.moq}"></td>
-      <td><input class="sp-input sp-pack" type="number" value="${v(r.pack_size)}" placeholder="${SP_DEFAULTS.pack_size}"></td>
-      <td><input class="sp-input wide sp-supplier" type="text" value="${String(r.supplier || '').replace(/"/g,'&quot;')}" placeholder="—"></td>
-      <td><input class="sp-input sp-review" type="number" value="${v(r.review_days)}" placeholder="${SP_DEFAULTS.review_days}"></td>
-      <td><input class="sp-input sp-min" type="number" value="${v(r.min_stock)}" placeholder="${SP_DEFAULTS.min_stock}"></td>
-      <td><button class="btn-row-save">บันทึก</button><span class="row-saved-flash" style="display:none;">✓ บันทึกแล้ว</span></td>
-    </tr>`
-  }).join('')
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="sp-empty">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'
+  } else {
+    tbody.innerHTML = list.map(p => {
+      const r = spOf(p) || {}
+      const mode = spMode(p)
+      const unset = !spIsSet(p)
+      const sel = spSel.has(p.parent_sku)
+      const kids = (p.kids || []).length
+      const v = x => (x === null || x === undefined || x === '') ? '' : x
+      return `
+      <tr data-sku="${p.parent_sku}" class="${sel ? 'sel ' : ''}${unset ? 'unset ' : ''}mode-${mode}">
+        <td class="sp-cb"><input type="checkbox" class="sp-rowcb"${sel ? ' checked' : ''}></td>
+        <td class="sp-col-name">
+          <div class="sp-sku">${p.parent_sku}</div>
+          <div class="sp-name">${(p.product_name || '').replace(/</g, '&lt;')}${kids > 1 ? ` <span class="sp-kids">${kids} สี/เบอร์</span>` : ''}</div>
+        </td>
+        <td class="sp-col-mode"><span class="sp-badge ${mode}">${SP_MODES[mode][0]}</span></td>
+        <td class="sp-n"><input class="sp-in sp-lt" type="number" value="${v(r.lead_time_days)}" placeholder="${SP_DEFAULTS.lead_time_days}"></td>
+        <td class="sp-n"><input class="sp-in sp-moq" type="number" value="${v(r.moq)}" placeholder="${SP_DEFAULTS.moq}"></td>
+        <td class="sp-n"><input class="sp-in sp-pack" type="number" value="${v(r.pack_size)}" placeholder="${SP_DEFAULTS.pack_size}"></td>
+        <td class="sp-n"><input class="sp-in sp-review" type="number" value="${v(r.review_days)}" placeholder="${SP_DEFAULTS.review_days}"></td>
+        <td class="sp-n"><input class="sp-in sp-min" type="number" value="${v(r.min_stock)}" placeholder="${SP_DEFAULTS.min_stock}"></td>
+        <td class="sp-col-sup"><input class="sp-in wide sp-supplier" type="text" value="${String(r.supplier || '').replace(/"/g, '&quot;')}" placeholder="—"></td>
+        <td class="sp-col-act"><button class="sp-save">บันทึก</button></td>
+      </tr>`
+    }).join('')
+  }
+  const nSel = spSel.size
+  document.getElementById('spFoot').textContent =
+    `แสดง ${list.length.toLocaleString()} รายการ` + (nSel ? ` · เลือกอยู่ ${nSel}` : '') +
+    ' · ติ๊กช่องหน้าแถวเพื่อเลือก แล้วใช้แถบด้านบนสั่งทีเดียวหลายรายการ · แก้ตัวเลขในตารางแล้วกดบันทึกทีละแถวได้'
+  renderSelBar()
 }
 
-// บันทึก 1 สินค้า → เขียนลงรหัสลูกทุกตัวใต้สินค้านั้น
-async function saveSupplyRow(p, vals) {
+// เขียนค่าลงรหัสลูกทุกตัวของสินค้านั้น
+function spRowsFor(p, vals) {
   const kids = (p.kids && p.kids.length) ? p.kids : [p.parent_sku]
-  const rows = kids.map(k => ({
-    sku: k,
-    plan_mode: vals.plan_mode || SP_DEFAULTS.plan_mode,
-    lead_time_days: vals.lead_time_days ?? SP_DEFAULTS.lead_time_days,
-    moq: vals.moq ?? SP_DEFAULTS.moq,
-    pack_size: vals.pack_size ?? SP_DEFAULTS.pack_size,
-    supplier: vals.supplier || null,
-    review_days: vals.review_days ?? SP_DEFAULTS.review_days,
-    min_stock: vals.min_stock ?? SP_DEFAULTS.min_stock,
-    is_active: true,
-    updated_at: new Date().toISOString()
-  }))
-  const { error } = await DB.from('supply_params').upsert(rows, { onConflict: 'sku' })
-  if (error) throw error
+  return kids.map(k => {
+    const old = supplyParams[k] || spOf(p) || {}
+    return {
+      sku: k,
+      plan_mode: vals.plan_mode ?? old.plan_mode ?? SP_DEFAULTS.plan_mode,
+      lead_time_days: vals.lead_time_days ?? old.lead_time_days ?? SP_DEFAULTS.lead_time_days,
+      moq: vals.moq ?? old.moq ?? SP_DEFAULTS.moq,
+      pack_size: vals.pack_size ?? old.pack_size ?? SP_DEFAULTS.pack_size,
+      review_days: vals.review_days ?? old.review_days ?? SP_DEFAULTS.review_days,
+      min_stock: vals.min_stock ?? old.min_stock ?? SP_DEFAULTS.min_stock,
+      supplier: (vals.supplier !== undefined ? vals.supplier : old.supplier) || null,
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    }
+  })
+}
+async function spUpsert(rows) {
+  const CHUNK = 400
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const { error } = await DB.from('supply_params').upsert(rows.slice(i, i + CHUNK), { onConflict: 'sku' })
+    if (error) throw error
+  }
   rows.forEach(r => { supplyParams[r.sku] = r })
 }
 
-document.getElementById('spBody').addEventListener('input', e => {
-  const tr = e.target.closest('tr')
-  if (tr && e.target.classList.contains('sp-input')) tr.classList.add('dirty')
+// --- เลือกแถว ---
+document.getElementById('spBody').addEventListener('change', e => {
+  if (!e.target.classList.contains('sp-rowcb')) return
+  const sku = e.target.closest('tr').dataset.sku
+  if (e.target.checked) spSel.add(sku); else spSel.delete(sku)
+  e.target.closest('tr').classList.toggle('sel', e.target.checked)
+  renderSelBar()
+  document.getElementById('spFoot').textContent =
+    `แสดง ${spVisibleList().length.toLocaleString()} รายการ` + (spSel.size ? ` · เลือกอยู่ ${spSel.size}` : '') +
+    ' · ติ๊กช่องหน้าแถวเพื่อเลือก แล้วใช้แถบด้านบนสั่งทีเดียวหลายรายการ · แก้ตัวเลขในตารางแล้วกดบันทึกทีละแถวได้'
 })
+document.getElementById('spSelAll').addEventListener('change', e => {
+  const list = spVisibleList()
+  if (e.target.checked) list.forEach(p => spSel.add(p.parent_sku))
+  else list.forEach(p => spSel.delete(p.parent_sku))
+  renderSupplyTable()
+})
+document.getElementById('spSelClear').addEventListener('click', () => { spSel.clear(); renderSupplyTable() })
 
+// --- บันทึกทีละแถว ---
 document.getElementById('spBody').addEventListener('click', async e => {
-  if (!e.target.classList.contains('btn-row-save')) return
+  if (!e.target.classList.contains('sp-save')) return
   const tr = e.target.closest('tr')
   const p = allProducts.find(x => x.parent_sku === tr.dataset.sku)
   if (!p) return
-  e.target.disabled = true
+  e.target.disabled = true; e.target.textContent = '…'
   try {
-    await saveSupplyRow(p, {
-      plan_mode: tr.querySelector('.sp-mode').value,
+    await spUpsert(spRowsFor(p, {
       lead_time_days: spNum(tr.querySelector('.sp-lt').value),
       moq: spNum(tr.querySelector('.sp-moq').value),
       pack_size: spNum(tr.querySelector('.sp-pack').value),
-      supplier: tr.querySelector('.sp-supplier').value.trim(),
       review_days: spNum(tr.querySelector('.sp-review').value),
-      min_stock: spNum(tr.querySelector('.sp-min').value)
-    })
-    tr.classList.remove('dirty', 'sp-unset')
-    const flash = tr.querySelector('.row-saved-flash')
-    flash.style.display = 'inline'
-    setTimeout(() => { flash.style.display = 'none' }, 2000)
+      min_stock: spNum(tr.querySelector('.sp-min').value),
+      supplier: tr.querySelector('.sp-supplier').value.trim(),
+    }))
+    tr.classList.remove('unset')
+    e.target.textContent = '✓'
+    setTimeout(() => { e.target.textContent = 'บันทึก'; e.target.disabled = false }, 1400)
     renderSupplyKPIs()
-    showToast(`บันทึก ${p.parent_sku} เรียบร้อย (${(p.kids||[]).length || 1} รหัสลูก)`)
+    showToast(`บันทึก ${p.parent_sku} เรียบร้อย`)
   } catch (err) {
+    e.target.textContent = 'บันทึก'; e.target.disabled = false
     showToast(`บันทึกไม่สำเร็จ: ${err.message}`, true)
-  } finally {
-    e.target.disabled = false
   }
 })
 
-// ตั้งค่าทีเดียวหลายตัว
+// --- ตั้งโหมดให้ที่เลือก ---
+document.querySelectorAll('#spActionBar .sp-btn.mode').forEach(btn => btn.addEventListener('click', async () => {
+  const mode = btn.dataset.mode
+  if (!spSel.size) return
+  const targets = allProducts.filter(p => spSel.has(p.parent_sku))
+  btn.disabled = true
+  try {
+    const rows = []
+    targets.forEach(p => rows.push(...spRowsFor(p, { plan_mode: mode })))
+    await spUpsert(rows)
+    renderSupplyKPIs(); renderSupplyTable()
+    showToast(`ตั้ง "${SP_MODES[mode][0]}" ให้ ${targets.length} รายการแล้ว`)
+  } catch (err) {
+    showToast(`บันทึกไม่สำเร็จ: ${err.message}`, true)
+  } finally { btn.disabled = false }
+}))
+
+// --- ตั้งตัวเลขให้ที่เลือก ---
+document.getElementById('spOpenNums').addEventListener('click', () => {
+  document.getElementById('spNumBar').classList.toggle('on')
+})
+document.getElementById('spCloseNums').addEventListener('click', () => {
+  document.getElementById('spNumBar').classList.remove('on')
+})
 document.getElementById('btnBulkApply').addEventListener('click', async () => {
+  if (!spSel.size) { showToast('ยังไม่ได้เลือกรายการ', true); return }
   const lt = spNum(document.getElementById('bkLt').value)
   const moq = spNum(document.getElementById('bkMoq').value)
   const pack = spNum(document.getElementById('bkPack').value)
   const review = spNum(document.getElementById('bkReview').value)
   const supplier = document.getElementById('bkSupplier').value.trim()
-  const mode = document.getElementById('bkMode').value
-  const onlyEmpty = document.getElementById('bkOnlyEmpty').checked
-  if (lt === null && moq === null && pack === null && review === null && !supplier && !mode) {
+  if (lt === null && moq === null && pack === null && review === null && !supplier) {
     showToast('กรอกอย่างน้อย 1 ช่องก่อน', true); return
   }
-  let targets = spVisibleList()
-  if (onlyEmpty) targets = targets.filter(p => !spIsSet(p))
-  if (!targets.length) { showToast('ไม่มีแถวที่เข้าเงื่อนไข', true); return }
-  if (!confirm(`ตั้งค่านี้ให้ ${targets.length} สินค้า?\nช่องที่เว้นว่างจะไม่ถูกแตะต้อง`)) return
-
+  const targets = allProducts.filter(p => spSel.has(p.parent_sku))
   const btn = document.getElementById('btnBulkApply')
-  btn.disabled = true; btn.textContent = 'กำลังบันทึก...'
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก…'
   try {
+    const patch = {}
+    if (lt !== null) patch.lead_time_days = lt
+    if (moq !== null) patch.moq = moq
+    if (pack !== null) patch.pack_size = pack
+    if (review !== null) patch.review_days = review
+    if (supplier) patch.supplier = supplier
     const rows = []
-    targets.forEach(p => {
-      const cur = spOf(p) || {}
-      const kids = (p.kids && p.kids.length) ? p.kids : [p.parent_sku]
-      kids.forEach(k => {
-        const old = supplyParams[k] || cur
-        rows.push({
-          sku: k,
-          plan_mode: mode || old.plan_mode || SP_DEFAULTS.plan_mode,
-          lead_time_days: lt ?? old.lead_time_days ?? SP_DEFAULTS.lead_time_days,
-          moq: moq ?? old.moq ?? SP_DEFAULTS.moq,
-          pack_size: pack ?? old.pack_size ?? SP_DEFAULTS.pack_size,
-          supplier: supplier || old.supplier || null,
-          review_days: review ?? old.review_days ?? SP_DEFAULTS.review_days,
-          min_stock: old.min_stock ?? SP_DEFAULTS.min_stock,
-          is_active: true,
-          updated_at: new Date().toISOString()
-        })
-      })
-    })
-    const CHUNK = 400
-    for (let i = 0; i < rows.length; i += CHUNK) {
-      const { error } = await DB.from('supply_params').upsert(rows.slice(i, i + CHUNK), { onConflict: 'sku' })
-      if (error) throw error
-    }
-    rows.forEach(r => { supplyParams[r.sku] = r })
+    targets.forEach(p => rows.push(...spRowsFor(p, patch)))
+    await spUpsert(rows)
     renderSupplyKPIs(); renderSupplyTable()
-    showToast(`ตั้งค่า ${targets.length} สินค้า (${rows.length} รหัสลูก) เรียบร้อย`)
+    showToast(`ตั้งค่า ${targets.length} รายการเรียบร้อย`)
   } catch (err) {
     showToast(`บันทึกไม่สำเร็จ: ${err.message}`, true)
-  } finally {
-    btn.disabled = false; btn.textContent = 'ใช้กับทุกแถวที่แสดงอยู่'
-  }
+  } finally { btn.disabled = false; btn.textContent = 'ใช้กับที่เลือก' }
 })
 
-// สั่งให้ Supabase คำนวณตัวเลขหน้า Supply Chain ใหม่ทันที (ปกติมันคำนวณเองตี 4 ทุกคืน)
+// --- คำนวณใหม่ทันที ---
 document.getElementById('btnRefreshSupply').addEventListener('click', async e => {
   const btn = e.target
-  btn.disabled = true; btn.textContent = 'กำลังคำนวณ...'
+  btn.disabled = true; btn.textContent = 'กำลังคำนวณ…'
   try {
     const { error } = await DB.rpc('refresh_supply_views')
     if (error) throw error
     showToast('คำนวณใหม่เรียบร้อย — เปิดหน้า Supply Chain ได้เลย')
   } catch (err) {
     showToast(`คำนวณไม่สำเร็จ: ${err.message}`, true)
-  } finally {
-    btn.disabled = false; btn.textContent = '↻ อัปเดตตัวเลข Supply Chain'
-  }
+  } finally { btn.disabled = false; btn.textContent = '↻ อัปเดตตัวเลข Supply Chain' }
 })
 
+// --- ตัวกรอง ---
 document.getElementById('spSearch').addEventListener('input', renderSupplyTable)
-document.getElementById('spUnsetOnly').addEventListener('change', e => {
-  document.getElementById('spUnsetLabel').classList.toggle('on', e.target.checked); renderSupplyTable()
-})
-document.getElementById('spActiveOnly').addEventListener('change', e => {
-  document.getElementById('spActiveLabel').classList.toggle('on', e.target.checked); renderSupplyTable()
-})
-document.getElementById('bkOnlyEmpty').addEventListener('change', e => {
-  document.getElementById('bkOnlyEmptyLabel').classList.toggle('on', e.target.checked)
-})
-document.getElementById('bkOnlyEmptyLabel').classList.add('on')
+document.getElementById('spUnsetOnly').addEventListener('change', renderSupplyTable)
+document.getElementById('spActiveOnly').addEventListener('change', renderSupplyTable)
+document.querySelectorAll('#spModeFilter button').forEach(b => b.addEventListener('click', () => {
+  spModeFilter = b.dataset.m
+  document.querySelectorAll('#spModeFilter button').forEach(x => x.classList.toggle('on', x === b))
+  renderSupplyTable()
+}))
+document.querySelectorAll('.sp-kpi[data-filter]').forEach(card => card.addEventListener('click', () => {
+  const f = card.dataset.filter
+  const unset = document.getElementById('spUnsetOnly')
+  if (f === 'all') { spModeFilter = ''; unset.checked = false }
+  else if (f === 'unset') { spModeFilter = ''; unset.checked = true }
+  else { spModeFilter = f; unset.checked = false }
+  document.querySelectorAll('#spModeFilter button').forEach(x => x.classList.toggle('on', x.dataset.m === spModeFilter))
+  renderSupplyTable()
+}))
 
 async function loadSupplyTab() {
   if (supplyLoaded) return
@@ -782,7 +913,7 @@ async function loadSupplyTab() {
     supplyLoaded = true
     renderSupplyKPIs(); renderSupplyTable()
   } catch (err) {
-    document.getElementById('spBody').innerHTML = `<tr class="empty-row"><td colspan="10">❌ โหลดไม่สำเร็จ: ${err.message} — ถ้าขึ้นว่าไม่พบตาราง supply_params แปลว่ายังไม่ได้รัน 44_inventory_core.sql</td></tr>`
+    document.getElementById('spBody').innerHTML = `<tr><td colspan="10" class="sp-empty">❌ โหลดไม่สำเร็จ: ${err.message}<br><span style="font-size:0.75rem;">ถ้าขึ้นว่าไม่พบคอลัมน์ plan_mode แปลว่ายังไม่ได้รัน 56_supply_plan_mode.sql</span></td></tr>`
   }
 }
 
