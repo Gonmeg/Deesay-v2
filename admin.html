@@ -113,6 +113,9 @@
   input.sp-input:hover { border-color: var(--border2); }
   input.sp-input:focus { border-color: var(--accent); background: var(--surface2); }
   tr.sp-unset { background: rgba(251,146,60,0.05); }
+  select.sp-mode { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; }
+  select.sp-mode.mode-watch { color: var(--orange); border-color: rgba(251,146,60,0.5); }
+  select.sp-mode.mode-hidden { color: var(--muted2); border-color: var(--border2); }
   .kid-count { font-size: 0.7rem; color: var(--muted2); font-family: 'IBM Plex Mono', monospace; }
   @media (max-width: 900px) {
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
@@ -219,8 +222,8 @@
     <div class="kpi-grid g4">
       <div class="kpi-card"><div class="kpi-label">สินค้าที่ต้องตั้งค่า</div><div class="kpi-val" id="spTotal">—</div></div>
       <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่ตั้ง Lead time</div><div class="kpi-val" id="spNoLt">—</div></div>
-      <div class="kpi-card warn"><div class="kpi-label">⚠️ ยังไม่ระบุซัพพลายเออร์</div><div class="kpi-val" id="spNoCost">—</div></div>
-      <div class="kpi-card"><div class="kpi-label">ตั้งค่าครบแล้ว</div><div class="kpi-val" id="spDone">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">ดูเฉย ๆ / ซ่อน</div><div class="kpi-val" id="spNoCost">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">ระบุซัพพลายเออร์แล้ว</div><div class="kpi-val" id="spDone">—</div></div>
     </div>
 
     <div class="toolbar">
@@ -237,9 +240,10 @@
       <label class="f">ต่อแพ็ค<input type="number" id="bkPack" placeholder="1"></label>
       <label class="f">รอบสั่ง (วัน)<input type="number" id="bkReview" placeholder="30"></label>
       <label class="f">ซัพพลายเออร์<input type="text" id="bkSupplier" class="wide" placeholder="ชื่อโรงงาน"></label>
+      <label class="f">การวางแผน<select id="bkMode" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 9px;border-radius:6px;font-size:0.8rem;font-family:inherit;width:125px;"><option value="">— ไม่เปลี่ยน —</option><option value="plan">วางแผนปกติ</option><option value="watch">ดูเฉย ๆ</option><option value="hidden">ซ่อน</option></select></label>
       <label class="chip-toggle" id="bkOnlyEmptyLabel"><input type="checkbox" id="bkOnlyEmpty" checked> เฉพาะแถวที่ยังว่าง</label>
       <button class="btn-small" id="btnBulkApply">ใช้กับทุกแถวที่แสดงอยู่</button>
-      <div class="hint">ช่องไหนเว้นว่าง = ไม่แตะค่าเดิมของช่องนั้น · สต็อกขั้นต่ำต้องกรอกรายตัวในตาราง เพราะแต่ละสินค้าไม่เท่ากัน</div>
+      <div class="hint">ช่องไหนเว้นว่าง = ไม่แตะค่าเดิม · <b>วางแผนปกติ</b> = คำนวณครบ · <b>ดูเฉย ๆ</b> = เห็นสต็อกแต่ไม่คำนวณแผนสั่ง (ของที่ไม่สั่งต่อแล้ว) · <b>ซ่อน</b> = ไม่แสดงในหน้า Supply Chain</div>
     </div>
 
     <div class="card">
@@ -249,6 +253,7 @@
             <tr>
               <th style="width:110px;">SKU</th>
               <th>ชื่อสินค้า</th>
+              <th style="width:135px;">การวางแผน<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">แสดง / คำนวณ</span></th>
               <th style="width:100px;">Lead time<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">สั่งแล้วกี่วันของถึง</span></th>
               <th style="width:95px;">MOQ<br><span style="font-weight:400;text-transform:none;letter-spacing:0;">สั่งขั้นต่ำ</span></th>
               <th style="width:95px;">ต่อแพ็ค</th>
@@ -259,7 +264,7 @@
             </tr>
           </thead>
           <tbody id="spBody">
-            <tr><td colspan="9" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
+            <tr><td colspan="10" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
           </tbody>
         </table>
       </div>
@@ -555,7 +560,7 @@ document.getElementById('btnAddNew').addEventListener('click', async () => {
 let supplyParams = {}      // child_sku -> row จาก supply_params
 let supplyLoaded = false
 
-const SP_DEFAULTS = { lead_time_days: 60, moq: 0, pack_size: 1, review_days: 30, min_stock: 0 }
+const SP_DEFAULTS = { lead_time_days: 60, moq: 0, pack_size: 1, review_days: 30, min_stock: 0, plan_mode: 'plan' }
 const spNum = v => { const n = parseFloat(String(v ?? '').replace(/,/g, '')); return isNaN(n) ? null : n }
 
 async function fetchSupplyParams() {
@@ -596,7 +601,8 @@ function spVisibleList() {
 function renderSupplyKPIs() {
   const list = allProducts.filter(p => p.status !== 'Discontinued' && p.status !== 'GWP')
   const noLt = list.filter(p => !spOf(p)).length
-  const noCost = list.filter(p => { const r = spOf(p); return !r || !r.supplier }).length
+  const all = allProducts
+  const noCost = all.filter(p => { const r = spOf(p); return r && (r.plan_mode === 'watch' || r.plan_mode === 'hidden') }).length
   const done = list.filter(p => { const r = spOf(p); return r && r.supplier }).length
   document.getElementById('spTotal').textContent = list.length.toLocaleString()
   document.getElementById('spNoLt').textContent = noLt.toLocaleString()
@@ -607,7 +613,7 @@ function renderSupplyKPIs() {
 function renderSupplyTable() {
   const list = spVisibleList()
   const tbody = document.getElementById('spBody')
-  if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'; return }
+  if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="10">ไม่พบสินค้าตามเงื่อนไขที่เลือก</td></tr>'; return }
   tbody.innerHTML = list.map(p => {
     const r = spOf(p) || {}
     const unset = !spOf(p)
@@ -617,6 +623,11 @@ function renderSupplyTable() {
     <tr data-sku="${p.parent_sku}" class="${unset ? 'sp-unset' : ''}">
       <td><span class="sku-cell">${p.parent_sku}</span>${kidCount > 1 ? `<div class="kid-count">${kidCount} สี/เบอร์</div>` : ''}</td>
       <td>${(p.product_name || '').replace(/</g,'&lt;')}</td>
+      <td><select class="sp-input sp-mode ${'mode-' + (r.plan_mode || 'plan')}" style="width:125px;text-align:left;">
+        <option value="plan"${(r.plan_mode || 'plan') === 'plan' ? ' selected' : ''}>วางแผนปกติ</option>
+        <option value="watch"${r.plan_mode === 'watch' ? ' selected' : ''}>ดูเฉย ๆ</option>
+        <option value="hidden"${r.plan_mode === 'hidden' ? ' selected' : ''}>ซ่อน</option>
+      </select></td>
       <td><input class="sp-input sp-lt" type="number" value="${v(r.lead_time_days)}" placeholder="${SP_DEFAULTS.lead_time_days}"></td>
       <td><input class="sp-input sp-moq" type="number" value="${v(r.moq)}" placeholder="${SP_DEFAULTS.moq}"></td>
       <td><input class="sp-input sp-pack" type="number" value="${v(r.pack_size)}" placeholder="${SP_DEFAULTS.pack_size}"></td>
@@ -633,6 +644,7 @@ async function saveSupplyRow(p, vals) {
   const kids = (p.kids && p.kids.length) ? p.kids : [p.parent_sku]
   const rows = kids.map(k => ({
     sku: k,
+    plan_mode: vals.plan_mode || SP_DEFAULTS.plan_mode,
     lead_time_days: vals.lead_time_days ?? SP_DEFAULTS.lead_time_days,
     moq: vals.moq ?? SP_DEFAULTS.moq,
     pack_size: vals.pack_size ?? SP_DEFAULTS.pack_size,
@@ -660,6 +672,7 @@ document.getElementById('spBody').addEventListener('click', async e => {
   e.target.disabled = true
   try {
     await saveSupplyRow(p, {
+      plan_mode: tr.querySelector('.sp-mode').value,
       lead_time_days: spNum(tr.querySelector('.sp-lt').value),
       moq: spNum(tr.querySelector('.sp-moq').value),
       pack_size: spNum(tr.querySelector('.sp-pack').value),
@@ -687,8 +700,9 @@ document.getElementById('btnBulkApply').addEventListener('click', async () => {
   const pack = spNum(document.getElementById('bkPack').value)
   const review = spNum(document.getElementById('bkReview').value)
   const supplier = document.getElementById('bkSupplier').value.trim()
+  const mode = document.getElementById('bkMode').value
   const onlyEmpty = document.getElementById('bkOnlyEmpty').checked
-  if (lt === null && moq === null && pack === null && review === null && !supplier) {
+  if (lt === null && moq === null && pack === null && review === null && !supplier && !mode) {
     showToast('กรอกอย่างน้อย 1 ช่องก่อน', true); return
   }
   let targets = spVisibleList()
@@ -707,6 +721,7 @@ document.getElementById('btnBulkApply').addEventListener('click', async () => {
         const old = supplyParams[k] || cur
         rows.push({
           sku: k,
+          plan_mode: mode || old.plan_mode || SP_DEFAULTS.plan_mode,
           lead_time_days: lt ?? old.lead_time_days ?? SP_DEFAULTS.lead_time_days,
           moq: moq ?? old.moq ?? SP_DEFAULTS.moq,
           pack_size: pack ?? old.pack_size ?? SP_DEFAULTS.pack_size,
@@ -767,7 +782,7 @@ async function loadSupplyTab() {
     supplyLoaded = true
     renderSupplyKPIs(); renderSupplyTable()
   } catch (err) {
-    document.getElementById('spBody').innerHTML = `<tr class="empty-row"><td colspan="9">❌ โหลดไม่สำเร็จ: ${err.message} — ถ้าขึ้นว่าไม่พบตาราง supply_params แปลว่ายังไม่ได้รัน 44_inventory_core.sql</td></tr>`
+    document.getElementById('spBody').innerHTML = `<tr class="empty-row"><td colspan="10">❌ โหลดไม่สำเร็จ: ${err.message} — ถ้าขึ้นว่าไม่พบตาราง supply_params แปลว่ายังไม่ได้รัน 44_inventory_core.sql</td></tr>`
   }
 }
 
