@@ -146,13 +146,13 @@
 
       <div class="sup-top">
         <div class="sup-kpis" id="supKpis">
-          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};${f && filt.status === f ? 'border-color:var(--accent);' : ''}"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:20px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
+          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};${f && filt.status === f ? 'border-color:var(--accent);' : ''}"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:17px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
         </div>
         <div class="card sup-abc">
           <div class="section-header"><div class="section-title">ABC × XYZ ${infoIcon('supAbc', ABC_INFO, 'right')}</div><span style="font-size:10.5px;color:var(--text3);">กดช่องเพื่อกรอง</span></div>
-          <div class="sup-abc-grid" style="display:grid;grid-template-columns:82px repeat(3,1fr);gap:8px;font-size:12px;margin-top:6px;">
+          <div class="sup-abc-grid" style="display:grid;grid-template-columns:78px repeat(3,1fr);gap:7px;font-size:12px;margin-top:4px;">
             <div></div>${['X', 'Y', 'Z'].map(x => `<div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.4;">${x}<br>${XYZ_TXT[x]}</div>`).join('')}
-            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:9px;padding:16px 6px;text-align:center;cursor:pointer;transition:border-color .15s;"><b style="display:block;font-size:20px;line-height:1.1;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
+            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:8px;padding:9px 6px;text-align:center;cursor:pointer;transition:border-color .15s;"><b style="display:block;font-size:16px;line-height:1.15;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
           </div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:12px;line-height:1.6;">AX ควรมีของตลอด · AZ ต้องเผื่อมากที่สุด · CZ อย่าตุน — กด &#9432; ข้างหัวข้อเพื่อดูคำอธิบายเต็ม</div>
         </div>
@@ -170,36 +170,38 @@
             <button class="btn btn-ghost" id="supExport">⬇ Export CSV</button>
           </div>
         </div>
-        <div class="table-wrap" id="supTbl" style="max-height:600px;overflow:auto;"></div>
+        <div class="table-wrap" id="supTbl" style="max-height:1080px;overflow:auto;"></div>
         <div id="supFoot" style="font-size:10.5px;color:var(--text3);margin-top:10px;"></div>
       </div>
 
       <div class="card" id="supSkuCard">
-        <div class="section-header"><div class="section-title" id="supSkuTitle">กราฟ SKU</div><span style="font-size:10.5px;color:var(--text3);">กดแถวในตารางเพื่อดู ยอดขาย · ของออก · สต็อก · จุดสั่ง · คาดการณ์ 60 วัน</span></div>
+        <div class="section-header"><div class="section-title" id="supSkuTitle">กราฟ SKU</div><span style="font-size:10.5px;color:var(--text3);">กดแถวในตารางเพื่อดู ยอดขายจริง · สต็อกคงเหลือ · ROP · คาดการณ์ 60 วัน</span></div>
         <div id="supSkuBody"><div class="empty">เลือก SKU จากตารางด้านบน</div></div>
       </div>
       <style>
         /* หน้านี้ใช้ Sarabun ทั้งหมด เว้นรหัสสินค้าที่คงเป็น monospace ให้อ่านรหัสง่าย */
         #page-supply .card-title { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:8px; }
         #page-supply .section-title { font-family:'Sarabun',sans-serif; }
-        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) 420px; gap:18px; align-items:stretch; margin-bottom:22px; }
-        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr; gap:12px; }
-        #page-supply .sup-kpi { display:flex; flex-direction:column; justify-content:flex-start; gap:6px; min-width:0; padding:14px 16px; }
-        #page-supply .sup-kpi .card-title { margin-bottom:2px; font-size:11.5px; }
-        #page-supply .sup-kpi .kpi-value { font-size:20px !important; line-height:1.1; }
-        #page-supply .sup-kpi .kpi-sub { font-size:10.5px; color:var(--text3); margin-top:auto; padding-top:6px; line-height:1.45; }
+        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:14px; align-items:start; margin-bottom:18px; }
+        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+        #page-supply .sup-kpi { min-width:0; padding:11px 13px; border-radius:10px; }
+        #page-supply .sup-kpi .card-title { margin-bottom:3px; font-size:11px; }
+        #page-supply .sup-kpi .kpi-value { font-size:17px !important; line-height:1.1; }
+        #page-supply .sup-kpi .kpi-sub { font-size:10px; color:var(--text3); margin-top:4px; line-height:1.35; }
         #page-supply .sup-abc { align-self:stretch; display:flex; flex-direction:column; }
         #page-supply .sup-abc .sup-abc-grid { flex:1; align-content:center; }
 
         #page-supply table { width:100%; border-collapse:collapse; }
         #page-supply th { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:11.5px; font-weight:600;
-          color:var(--text2); padding:13px 18px; white-space:nowrap; text-align:right; position:sticky; top:0; background:var(--bg2); z-index:3; border-bottom:1px solid var(--border); }
+          color:var(--text2); padding:11px 14px; white-space:nowrap; text-align:right; position:sticky; top:0; background:var(--bg2); z-index:3; border-bottom:1px solid var(--border2); }
         #page-supply th:nth-child(1), #page-supply th:nth-child(2) { text-align:left; }
         #page-supply th[data-k="abc"], #page-supply th[data-k="status"] { text-align:center; }
-        #page-supply td { padding:14px 18px; font-size:12.5px; text-align:right; vertical-align:middle;
+        #page-supply td { padding:12px 14px; font-size:12.5px; text-align:right; vertical-align:middle;
           font-variant-numeric:tabular-nums; white-space:nowrap; border-top:1px solid var(--border); }
-        #page-supply td:first-child, #page-supply th:first-child { padding-left:22px; }
-        #page-supply td:last-child, #page-supply th:last-child { padding-right:22px; }
+        #page-supply td:first-child, #page-supply th:first-child { padding-left:16px; }
+        #page-supply td:last-child, #page-supply th:last-child { padding-right:16px; }
+        #page-supply table { table-layout:auto; }
+        #page-supply th:nth-child(1) { min-width:150px; } #page-supply th:nth-child(2) { min-width:190px; }
         #page-supply tbody tr { transition:background .12s; }
         #page-supply td.t-left { text-align:left; }
         #page-supply td.t-center { text-align:center; }
@@ -325,15 +327,10 @@
     const po = (d.po || []).length ? `<div style="font-size:11px;margin-top:8px;">PO ค้าง: ${d.po.map(x => pill('var(--blue)', `${esc(x.po_no || '(ไม่มีเลข)')} ${fmtN(x.qty)} ชิ้น${x.eta ? ' เข้า ' + dTH(x.eta) : ' ไม่มี ETA'}`)).join(' ')}</div>` : '';
     document.getElementById('supSkuBody').innerHTML = `
       <div style="font-size:13px;margin-bottom:10px;"><b>${esc(r.product_name || d.sku)}</b> <span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(r.parent_sku || '')} · ${esc(d.sku)}</span></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px;">${facts.map(([l, v]) => `<div style="background:var(--bg3);border-radius:8px;padding:8px 10px;"><div style="font-size:10px;color:var(--text3);">${l}</div><div style="font-size:14px;font-weight:600;">${v}</div></div>`).join('')}</div>
-      <div style="font-size:11px;color:var(--text3);">สต็อกตามคลัง: ${locs || '—'}</div>${po}
-      <div class="chart-wrap" style="height:320px;margin-top:14px;"><canvas id="supChart"></canvas></div>
-      <div style="font-size:10.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
-        <span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c8a96e;margin-right:5px;vertical-align:middle;"></i>ยอดขายจริง/วัน</span>
-        <span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fb923c;margin-right:5px;vertical-align:middle;"></i>ของออกจากคลัง/วัน</span>
-        <span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4ade80;margin-right:5px;vertical-align:middle;"></i>สต็อกคงเหลือ</span>
-        <span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4ade80;opacity:.5;margin-right:5px;vertical-align:middle;"></i>คาดการณ์สต็อก 60 วัน (รวม PO ที่รู้ ETA)</span>
-        <span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f87171;margin-right:5px;vertical-align:middle;"></i>จุดสั่ง</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-bottom:14px;">${facts.map(([l, v]) => `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 11px;"><div style="font-size:9.5px;color:var(--text3);letter-spacing:.2px;margin-bottom:3px;">${l}</div><div style="font-size:14px;font-weight:600;line-height:1.2;">${v}</div></div>`).join('')}</div>
+      <div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:7px;flex-wrap:wrap;"><span>สต็อกตามคลัง</span>${locs || '—'}</div>${po}
+      <div class="chart-wrap" style="height:340px;margin-top:16px;"><canvas id="supChart"></canvas></div>
+      <div id="supLegend" style="font-size:10.5px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;"></div>
       </div>`;
     drawChart(d);
   }
@@ -355,20 +352,26 @@
     chart = new Chart(document.getElementById('supChart'), {
       type: 'bar',
       data: { labels: allLabels, datasets: [
-        { type: 'bar', label: 'ยอดขาย/วัน', data: pad(s.map(x => Number(x.sales)), 0, 60), backgroundColor: 'rgba(200,169,110,.75)', yAxisID: 'y', order: 3 },
-        { type: 'bar', label: 'ของออก/วัน', data: pad(s.map(x => Number(x.outflow)), 0, 60), backgroundColor: 'rgba(251,146,60,.5)', yAxisID: 'y', order: 4 },
-        { type: 'line', label: 'สต็อก', data: pad(s.map(x => Number(x.stock)), 0, 60), borderColor: '#4ade80', borderWidth: 2, pointRadius: 0, tension: .2, yAxisID: 'y2', order: 1 },
-        { type: 'line', label: 'คาดการณ์', data: pad([lastStock, ...fut], n - 1, 0), borderColor: 'rgba(74,222,128,.6)', borderDash: [5, 4], borderWidth: 2, pointRadius: 0, yAxisID: 'y2', order: 1 },
-        { type: 'line', label: 'จุดสั่ง', data: allLabels.map(() => Number(p.reorder_point || 0)), borderColor: '#f87171', borderDash: [3, 3], borderWidth: 1, pointRadius: 0, yAxisID: 'y2', order: 2 },
+        { type: 'bar', label: 'ยอดขายจริง/วัน', data: pad(s.map(x => Number(x.sales)), 0, 60), backgroundColor: 'rgba(200,169,110,.75)', yAxisID: 'y', order: 3 },
+        { type: 'line', label: 'สต็อกคงเหลือ', data: pad(s.map(x => Number(x.stock)), 0, 60), borderColor: '#4ade80', borderWidth: 2, pointRadius: 0, tension: .2, yAxisID: 'y2', order: 1 },
+        { type: 'line', label: 'คาดการณ์ 60 วัน', data: pad([lastStock, ...fut], n - 1, 0), borderColor: 'rgba(74,222,128,.6)', borderDash: [5, 4], borderWidth: 2, pointRadius: 0, yAxisID: 'y2', order: 1 },
+        { type: 'line', label: 'ROP (จุดสั่งซ้ำ)', data: allLabels.map(() => Number(p.reorder_point || 0)), borderColor: '#f87171', borderDash: [3, 3], borderWidth: 1, pointRadius: 0, yAxisID: 'y2', order: 2 },
       ] },
       options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { title: it => dTH(it[0].label), label: it => `${it.dataset.label}: ${fmtN(it.raw, it.dataset.label === 'ยอดขาย/วัน' ? 1 : 0)}` } } },
+        plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { title: it => dTH(it[0].label), label: it => `${it.dataset.label}: ${fmtN(it.raw, it.dataset.label === 'ยอดขายจริง/วัน' ? 1 : 0)}` } } },
         scales: {
           x: { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 12, callback: (v, i) => dTH(allLabels[i]) } },
-          y: { position: 'left', beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 } }, title: { display: true, text: 'ชิ้น/วัน', color: tick, font: { family: 'Sarabun', size: 10 } } },
+          y: { position: 'left', beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 } }, title: { display: true, text: 'ยอดขาย (ชิ้น/วัน)', color: tick, font: { family: 'Sarabun', size: 10 } } },
           y2: { position: 'right', beginAtZero: true, grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 } }, title: { display: true, text: 'สต็อก (ชิ้น)', color: tick, font: { family: 'Sarabun', size: 10 } } },
         } }
     });
+    // คำอธิบายสี — ดึงสีจากกราฟจริง ไม่ได้พิมพ์ทับเอง จึงตรงกันเสมอ
+    const lg = document.getElementById('supLegend');
+    if (lg) lg.innerHTML = chart.data.datasets.map(ds => {
+      const col = ds.type === 'bar' ? ds.backgroundColor : ds.borderColor;
+      const dash = ds.borderDash ? 'border-top:2px dashed ' + col + ';height:0;width:14px;' : 'background:' + col + ';width:11px;height:11px;border-radius:2px;';
+      return `<span style="display:inline-flex;align-items:center;gap:6px;"><i style="display:inline-block;${dash}"></i>${ds.label}</span>`;
+    }).join('');
   }
 
   // เรียกจาก dashboard.html ตอนกดเมนู / สลับธีม
