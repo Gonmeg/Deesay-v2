@@ -134,7 +134,6 @@
         `ของพอขายเกิน 180 วัน · ค้าง ${fmtN(sumQ(stuck))} ชิ้น`, 'stuck'],
       ['ไม่มีการขาย', `<span style="color:var(--text3);">${fmtN(noSale.length)} SKU</span>`,
         `90 วันขายไม่ได้เลย · ค้าง ${fmtN(sumQ(noSale))} ชิ้น`, 'nosale'],
-      ['สต็อกรวมที่แสดง', `${fmtN(k.on_hand_total)} ชิ้น`, 'ไม่รวมที่ตั้งเป็นซ่อน', ''],
     ];
     const cellOf = (a, x) => m.find(c => c.abc === a && c.xyz === x) || { n: 0 };
     const locs = locList();
@@ -147,13 +146,13 @@
 
       <div class="sup-top">
         <div class="sup-kpis" id="supKpis">
-          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};${f && filt.status === f ? 'border-color:var(--accent);' : ''}"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:21px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
+          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};${f && filt.status === f ? 'border-color:var(--accent);' : ''}"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:20px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
         </div>
         <div class="card sup-abc">
           <div class="section-header"><div class="section-title">ABC × XYZ ${infoIcon('supAbc', ABC_INFO, 'right')}</div><span style="font-size:10.5px;color:var(--text3);">กดช่องเพื่อกรอง</span></div>
-          <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:6px;font-size:12px;">
+          <div class="sup-abc-grid" style="display:grid;grid-template-columns:82px repeat(3,1fr);gap:8px;font-size:12px;margin-top:6px;">
             <div></div>${['X', 'Y', 'Z'].map(x => `<div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.4;">${x}<br>${XYZ_TXT[x]}</div>`).join('')}
-            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;"><b style="display:block;font-size:16px;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
+            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:9px;padding:16px 6px;text-align:center;cursor:pointer;transition:border-color .15s;"><b style="display:block;font-size:20px;line-height:1.1;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
           </div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:12px;line-height:1.6;">AX ควรมีของตลอด · AZ ต้องเผื่อมากที่สุด · CZ อย่าตุน — กด &#9432; ข้างหัวข้อเพื่อดูคำอธิบายเต็ม</div>
         </div>
@@ -183,28 +182,34 @@
         /* หน้านี้ใช้ Sarabun ทั้งหมด เว้นรหัสสินค้าที่คงเป็น monospace ให้อ่านรหัสง่าย */
         #page-supply .card-title { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:8px; }
         #page-supply .section-title { font-family:'Sarabun',sans-serif; }
-        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; align-items:start; margin-bottom:18px; }
-        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-        #page-supply .sup-kpi { display:flex; flex-direction:column; justify-content:space-between; min-width:0; padding:16px 18px; }
-        #page-supply .sup-kpi .kpi-sub { font-size:11px; color:var(--text3); margin-top:8px; line-height:1.45; }
-        #page-supply .sup-abc { align-self:stretch; }
+        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) 420px; gap:18px; align-items:stretch; margin-bottom:22px; }
+        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr; gap:12px; }
+        #page-supply .sup-kpi { display:flex; flex-direction:column; justify-content:flex-start; gap:6px; min-width:0; padding:14px 16px; }
+        #page-supply .sup-kpi .card-title { margin-bottom:2px; font-size:11.5px; }
+        #page-supply .sup-kpi .kpi-value { font-size:20px !important; line-height:1.1; }
+        #page-supply .sup-kpi .kpi-sub { font-size:10.5px; color:var(--text3); margin-top:auto; padding-top:6px; line-height:1.45; }
+        #page-supply .sup-abc { align-self:stretch; display:flex; flex-direction:column; }
+        #page-supply .sup-abc .sup-abc-grid { flex:1; align-content:center; }
 
         #page-supply table { width:100%; border-collapse:collapse; }
         #page-supply th { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:11.5px; font-weight:600;
-          color:var(--text2); padding:10px 14px; white-space:nowrap; text-align:right; position:sticky; top:0; background:var(--bg2); z-index:3; }
+          color:var(--text2); padding:13px 18px; white-space:nowrap; text-align:right; position:sticky; top:0; background:var(--bg2); z-index:3; border-bottom:1px solid var(--border); }
         #page-supply th:nth-child(1), #page-supply th:nth-child(2) { text-align:left; }
         #page-supply th[data-k="abc"], #page-supply th[data-k="status"] { text-align:center; }
-        #page-supply td { padding:10px 14px; font-size:12.5px; text-align:right; vertical-align:middle;
+        #page-supply td { padding:14px 18px; font-size:12.5px; text-align:right; vertical-align:middle;
           font-variant-numeric:tabular-nums; white-space:nowrap; border-top:1px solid var(--border); }
+        #page-supply td:first-child, #page-supply th:first-child { padding-left:22px; }
+        #page-supply td:last-child, #page-supply th:last-child { padding-right:22px; }
+        #page-supply tbody tr { transition:background .12s; }
         #page-supply td.t-left { text-align:left; }
         #page-supply td.t-center { text-align:center; }
         #page-supply tbody tr:hover td { background:var(--bg3); }
         #page-supply .sup-parent { font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:700; color:var(--accent); }
         #page-supply .sup-skucode { font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; }
-        #page-supply .sup-sub { font-size:10px; color:var(--text3); line-height:1.4; margin-top:2px; font-variant-numeric:normal; }
+        #page-supply .sup-sub { font-size:10px; color:var(--text3); line-height:1.45; margin-top:3px; font-variant-numeric:normal; }
         #page-supply .sup-chip { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600;
           padding:3px 8px; border-radius:6px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); }
-        #page-supply .sup-bar { height:3px; border-radius:2px; background:var(--bg3); margin:4px 0 0 auto; width:56px; overflow:hidden; }
+        #page-supply .sup-bar { height:3px; border-radius:2px; background:var(--bg3); margin:5px 0 0 auto; width:60px; overflow:hidden; }
         #page-supply .sup-bar i { display:block; height:100%; border-radius:2px; }
         #page-supply .sup-dash { color:var(--text3); }
         @media (max-width:1200px){ #page-supply .sup-top { grid-template-columns:1fr; } #page-supply .sup-kpis { grid-template-columns:repeat(3,1fr); } }
