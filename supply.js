@@ -8,15 +8,6 @@
   const daysFrom = d => d ? Math.round((new Date(d + 'T00:00:00').getTime() - Date.now()) / 86400000) : null;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // การหมุนเวียน — พฤติกรรมของสินค้าเอง (ใช้ได้กับทุกตัว รวมที่ไม่สั่งซ้ำแล้ว)
-  const TURN = {
-    no_sale:   ['var(--text3)', 'ไม่มีการขาย'],
-    stuck:     ['#60a5fa',      'ของจม'],
-    slow:      ['var(--orange)','ออกช้า'],
-    normal:    ['var(--text2)', 'ปกติ'],
-    fast:      ['var(--green)', 'ออกเร็ว'],
-    very_fast: ['#c084fc',      'ออกเร็วมาก'],
-  };
   // การสั่งซื้อ — ต้องเปิด PO หรือยัง
   const ORDER = {
     stockout: ['var(--red)',    'ของหมด'],
@@ -47,21 +38,22 @@
   const GLOSSARY = ''
     + T('ตัวเลขตั้งต้น 4 ตัว', '<b>ขายได้อีกกี่วัน</b> = สต็อก ÷ ขาย/วัน<br><b>LT</b> = สั่งแล้วกี่วันของถึง<br><b>เผื่อ</b> = ของกันไว้เผื่อวันคึก<br><b>รอบสั่ง</b> = ประชุมสต็อกทุกกี่วัน (ตั้งไว้ 14 วัน)<br><br>ทุกตัวเลขในตารางมาจาก 4 ตัวนี้ทั้งหมด')
     + T('เส้นตาย กับ เส้นเตือน', '<b>เส้นตาย = LT + เผื่อ</b> — ของเหลือน้อยกว่านี้ แปลว่าสั่งวันนี้ก็ไม่ทัน<br><b>เส้นเตือน = LT + เผื่อ + รอบสั่ง</b> — ต่ำกว่านี้ต้องเปิด PO ในประชุมรอบนี้ ไม่งั้นรอบหน้าจะเลยเส้นตายไปแล้ว<br><br>ตัวอย่าง LT 60 · เผื่อ 10 · รอบสั่ง 14 → เส้นตาย 74 วัน เส้นเตือน 88 วัน')
-    + T('ขายได้อีก / วันหมด', 'ของที่มีจะขายได้อีกกี่วัน และวันที่คาดว่าจะหมด · แถบสีใต้ตัวเลข: <span style="color:var(--red);">แดง</span> = ต่ำกว่าเส้นตาย · <span style="color:var(--orange);">ส้ม</span> = ต่ำกว่าเส้นเตือน · <span style="color:var(--blue);">ฟ้า</span> = เกิน 180 วัน (ของจม)')
+    + T('ขายได้อีก / วันหมด', '<b>= สต็อก ÷ ขาย/วัน</b> · ช่องนี้คือช่องที่บอกว่า<b>ของกองเกินไปไหม</b><br><br><span style="color:var(--red);">แดง</span> = ต่ำกว่าเส้นตาย · <span style="color:var(--orange);">ส้ม</span> = ต่ำกว่าเส้นเตือน · <span style="color:#60a5fa;">ฟ้า</span> = เกิน 180 วัน (ของจม เงินจม เสี่ยงหมดอายุ)<br><br>ของที่ขายวันละ 0 จะเป็นขีด เพราะหารด้วยศูนย์ไม่ได้ — ดูตัวพวกนี้ได้จากการ์ด "ไม่มีการขาย" ด้านบน')
+    + T('ABC-XYZ', 'ช่องนี้ตอบว่า <b>ตัวนี้สำคัญแค่ไหน</b> (A/B/C) และ <b>สั่งของยากไหม</b> (X/Y/Z) — กด &#9432; ที่หัวข้อการ์ด ABC × XYZ ด้านบนเพื่อดูวิธีคิดแบบละเอียด')
     + T('เผื่อ (วัน)', 'ของกันไว้เผื่อวันที่ขายดีเกินคาด คิดเป็นวัน<br><br>ของที่ยอดเหวี่ยงเยอะเผื่อมาก ของที่ขายนิ่งเผื่อน้อย · ตัวทำเงินหลัก (กลุ่ม A) เผื่อมากกว่าตัวขายน้อย (กลุ่ม C)<br><br>เพดานสูงสุด 14 วัน — กันเคสตัวแทนสั่งทีเดียวก้อนใหญ่ ซึ่งทำให้ระบบเข้าใจผิดว่ายอดเหวี่ยงโหดแล้วเผื่อบาน')
     + T('ต้องเปิด PO ภายใน', '<b>= วันที่ของจะหมด − เส้นตาย</b><br><br>วันสุดท้ายที่เปิด PO แล้วของยังมาทัน · เรียงคอลัมน์นี้จากน้อยไปมาก = ได้ลิสต์ PO ของรอบประชุมทันที<br><br><span style="color:var(--red);">แดง</span> = เลยกำหนดแล้ว · <span style="color:var(--orange);">ส้ม</span> = ภายใน 30 วัน')
     + T('แนะสั่ง / ROP', '<b>แนะสั่ง</b> (ตัวใหญ่สีทอง) = สั่งเท่าไร = ของที่ควรมีให้พอขายถึงรอบสั่งหน้า ลบของที่มีอยู่ ลบ PO ค้าง แล้วปัดขึ้นตามแพ็คและ MOQ<br><br><b>ROP</b> (Re-Order Point, ตัวเล็ก) = เมื่อไรต้องสั่ง = สต็อกลดถึงตัวเลขนี้คือต้องสั่งแล้ว<br><br>สั้น ๆ: ROP บอก<b>เมื่อไร</b> · แนะสั่งบอก<b>เท่าไร</b>')
     + T('ขาย/วัน', 'ถ่วงน้ำหนัก 7 วันล่าสุด 50% + 30 วัน 30% + 90 วัน 20% — ให้ของใหม่มีน้ำหนักมากกว่า และ<b>ตัดวันที่มีโปรออก</b> (ต้องกรอกปฏิทินโปรก่อน ตอนนี้ยังไม่มีข้อมูลโปร จึงยังไม่มีการตัด)')
     + T('7 vs 30 วัน', 'ยอด 7 วันล่าสุดเทียบค่าเฉลี่ย 30 วัน — เขียวคือมาแรง แดงคือกำลังตก · ตัวเลขนี้<b>ไม่ได้เข้าสูตร</b> มีไว้เตือนตาเราเอง เพราะระบบไม่ได้มองแนวโน้มขาขึ้น')
     + T('PO ค้าง', 'ของที่สั่งไปแล้วยังไม่เข้าคลัง (จากใบ PO ที่ยังไม่ปิด) วันที่ข้างล่างคือ ETA')
-    + T('การหมุนเวียน — สินค้าตัวนี้หมุนเร็วแค่ไหน', 'คิดจาก <b>รอบต่อปี</b> = 365 ÷ ขายได้อีกกี่วัน (ของในคลังถูกขายหมดแล้วเติมใหม่กี่ครั้งต่อปี) — ไม่เกี่ยวกับการสั่ง จึงใช้ได้กับทุกตัว รวมที่ไม่สั่งซ้ำแล้ว<br><br><span style="color:var(--text3);"><b>ไม่มีการขาย</b></span> — 90 วันขายไม่ได้เลย<br><span style="color:#60a5fa;"><b>ของจม</b></span> — ต่ำกว่า 2 รอบ/ปี (อยู่ในคลังเกิน 180 วัน)<br><span style="color:var(--orange);"><b>ออกช้า</b></span> — 2–4 รอบ (90–180 วัน)<br><b>ปกติ</b> — 4–9 รอบ (40–90 วัน)<br><span style="color:var(--green);"><b>ออกเร็ว</b></span> — 9–18 รอบ (20–40 วัน)<br><span style="color:#c084fc;"><b>ออกเร็วมาก</b></span> — เกิน 18 รอบ (ไม่ถึง 20 วัน)<br><br>เกณฑ์อ้างอิงค่าจริงของวงการความงาม: อีคอมเมิร์ซความงามหมุน 4–9 รอบ/ปี · ร้านเครื่องสำอาง 4–6 รอบ · หมวดที่ช้าที่สุดในวงการ 2.8 รอบ<br><br>⚠️ <b>ออกเร็วมากไม่ได้แปลว่าดีเสมอ</b> — อาจหมุนเร็วเพราะของขาดบ่อยจนเสียยอด ต้องดูคู่กับช่องการสั่งซื้อ ถ้าขึ้น "สายแล้ว" ด้วยคือหมุนเร็วเพราะของไม่พอ')
     + T('การสั่งซื้อ — ต้องเปิด PO หรือยัง', '<span style="color:var(--red);"><b>ของหมด</b></span> — สต็อก 0 แต่ยังขายอยู่ เสียยอดทุกวัน<br><span style="color:var(--red);"><b>สายแล้ว</b></span> — ขายได้อีก < เส้นตาย สั่งวันนี้ก็ไม่ทัน ต้องเร่งโรงงาน<br><span style="color:var(--orange);"><b>สั่งรอบนี้</b></span> — ขายได้อีก < เส้นเตือน ต้องเปิด PO ในประชุมวันนี้<br><span style="color:#fbbf24;"><b>สั่งเดือนนี้</b></span> — วันเปิด PO อยู่ใน 30 วันข้างหน้า เตรียมตัวไว้<br><span style="color:var(--green);"><b>ยังไม่ต้องสั่ง</b></span> — ไม่ต้องทำอะไร<br><br>ตัวที่ตั้งเป็น "ไม่สั่งซ้ำแล้ว" ช่องนี้เป็นขีด แต่ช่องการหมุนเวียนยังทำงานปกติ<br><br>ถ้ามี PO ค้างอยู่จะมีตัวหนังสือเล็กกำกับใต้ป้าย — <b>แต่ไม่ทับสถานะ</b> เพราะสั่งไปแล้วไม่ได้แปลว่าสั่งพอ')
     + T('ไม่สั่งซ้ำแล้ว', 'สินค้าที่ตั้งไว้ในหน้า Admin ว่าจะไม่สั่งผลิตอีก — ยังดูการเคลื่อนไหวได้ครบ แต่ช่อง เผื่อ / ต้องเปิด PO / แนะสั่ง / LT เป็นขีด และไม่ถูกนับในการ์ดเตือน<br><br>ที่ตั้งเป็น <b>ซ่อน</b> จะไม่แสดงเลย กดปุ่ม 👁 เพื่อดูชั่วคราวได้')
     + T('ข้อจำกัดที่ต้องรู้', '1. LT ยังเป็นค่ากลาง 60 วันเกือบทุกตัว (ตัวที่มี * ) — LT อยู่ในทุกสูตร ถ้าไม่ตรงความจริง ตัวเลขทั้งแถวจะเพี้ยน<br>2. ระบบไม่มองแนวโน้มขาขึ้น-ขาลง และไม่มองฤดูกาล<br>3. สินค้าใหม่ที่ขายมายังไม่ถึง 90 วันจะถูกประเมินต่ำกว่าจริง<br>4. ยอดส่งตัวแทนถูกนับรวมกับยอดขายปลีก');
   const ABC_INFO = ''
-    + T('ABC — แบ่งตามความสำคัญของยอดขาย', 'เรียงสินค้าตามยอดขาย 90 วันจากมากไปน้อยแล้วไล่สะสม<br><b>A</b> = กลุ่มที่รวมกันได้ 80% แรกของยอดขาย (ตัวทำเงิน ห้ามขาด)<br><b>B</b> = 15% ถัดมา<br><b>C</b> = 5% สุดท้าย (ตัวหางยาว สั่งเท่าที่จำเป็น)')
-    + T('XYZ — แบ่งตามความคาดเดาได้', 'ดูว่ายอดขายรายสัปดาห์ 12 สัปดาห์แกว่งแค่ไหน<br><b>X</b> = ขายสม่ำเสมอ ทำนายง่าย<br><b>Y</b> = แกว่งปานกลาง<br><b>Z</b> = แกว่งมาก เดายาก (มักเป็นของที่ขายทีละล็อตใหญ่นาน ๆ ที)')
-    + T('เอาไปใช้ยังไง', '<b>AX</b> = ตัวหลักที่คาดเดาได้ → ต้องมีของตลอด ไม่ต้องเผื่อเยอะ<br><b>AZ</b> = ตัวหลักแต่เดายาก → ต้องเผื่อ safety stock มากที่สุด<br><b>CZ</b> = ขายน้อยและเดายาก → อย่าตุน สั่งตามออเดอร์');
+    + T('ABC — ตัวนี้ทำเงินให้ร้านแค่ไหน', 'วิธีคิด: เอายอดขาย 90 วันของทุกตัวมาเรียงจากมากไปน้อย แล้วไล่บวกสะสม<br>• ตัวที่บวกกันได้ <b>80% แรก</b> ของยอดทั้งร้าน = <b>A</b><br>• ถัดมาจนถึง 95% = <b>B</b><br>• 5% สุดท้าย = <b>C</b><br><br>ตัวอย่าง ร้านขายได้ 100 บาท: ตัวที่ 1 ได้ 45 (สะสม 45%) → A · ตัวที่ 2 ได้ 25 (สะสม 70%) → A · ตัวที่ 3 ได้ 10 (สะสม 80%) → A · ตัวที่ 4 ได้ 8 (สะสม 88%) → B<br><br>อ่านว่า <b>A</b> = ตัวทำเงินหลัก ขาดไม่ได้ · <b>B</b> = ตัวรอง ขาดแล้วเจ็บบ้าง · <b>C</b> = ตัวหางยาว ขาดก็แทบไม่รู้สึก<br><br>⚠️ วัดจาก<b>เงิน</b> ไม่ใช่จำนวนชิ้น — ของแพงขายน้อยชิ้นอาจเป็น A ส่วนของถูกขายเยอะชิ้นอาจเป็น C')
+    + T('XYZ — สั่งของยากแค่ไหน', 'วิธีคิด: เอายอดขายรายสัปดาห์ 12 สัปดาห์ล่าสุด ดูว่าแต่ละสัปดาห์ห่างจากค่าเฉลี่ยแค่ไหน แล้วเทียบเป็น %<br>• แกว่งน้อยกว่า 50% ของค่าเฉลี่ย = <b>X</b><br>• แกว่ง 50–100% = <b>Y</b><br>• แกว่งเกิน 100% = <b>Z</b><br><br>ตัวอย่าง ทั้งคู่ขายเฉลี่ยสัปดาห์ละ 100 ชิ้นเท่ากัน<br>ตัวแรก 95, 105, 98, 102 → <b>X</b> ทำนายง่าย<br>ตัวที่สอง 10, 300, 50, 240 → <b>Z</b> เดายาก (มักเป็นตัวที่ขายตัวแทนเป็นก้อน)<br><br>Z ต้องเผื่อของกันเหนียวมากกว่า X เพราะไม่รู้สัปดาห์หน้าจะขาย 10 หรือ 300')
+    + T('อ่านคู่กัน — ส่วนที่ใช้จริง', '<b>AX</b> = ตัวทำเงินหลัก ขายนิ่ง → ของต้องมีตลอด แต่ไม่ต้องเผื่อเยอะ เพราะเดาถูก<br><b>AZ</b> = ตัวทำเงินหลักแต่เดายาก → <b>ตัวที่ต้องระวังที่สุด</b> ขาดแล้วเจ็บหนัก ต้องเผื่อมากสุด<br><b>CX</b> = ตัวเล็ก ขายนิ่ง → สั่งน้อย ๆ สม่ำเสมอ ไม่ต้องคิดมาก<br><b>CZ</b> = ตัวเล็ก เดายาก → <b>อย่าตุน</b> สั่งตามออเดอร์ เพราะขาดก็ไม่เจ็บ แต่ตุนแล้วจมแน่')
+    + T('ทำไมตารางไม่มีช่อง "ออกเร็ว / ออกช้า"', 'เพราะจะซ้ำกับช่องที่มีอยู่แล้ว และเคยทำให้อ่านผิด<br><br>ถ้าวัดจาก<b>ของที่เหลือ</b> ยิ่งของใกล้หมดยิ่งดูออกเร็ว — สินค้าที่ยอดกำลังตกแต่ของร่อยหรอจะขึ้นว่า "ออกเร็ว" ทั้งที่ขายแย่ลง<br>ถ้าวัดจาก<b>ยอดขาย</b> ก็คือ ABC ที่มีอยู่แล้ว<br><br>ตารางนี้จึงตอบด้วย 3 ช่องที่ไม่ซ้ำกัน: <b>ABC-XYZ</b> = ทำเงินแค่ไหน เดายากไหม · <b>ขายได้อีกกี่วัน</b> = ของกองเกินไหม · <b>การสั่งซื้อ</b> = ต้องสั่งหรือยัง');
 
   let DATA = null, rows = [], filt = { status: '', abc: '', xyz: '', q: '' },
       sort = { key: 'parent_sku', dir: 1 }, showLoc = false, showHidden = false,
@@ -88,7 +80,8 @@
     if (!filt.status) return true;
     if (filt.status === 'need') return ['stockout', 'late', 'reorder'].includes(r.order_status);
     if (filt.status === 'hot') return r.plan_mode === 'plan' && r.trend_7_vs_30 > 0.3 && ['stockout', 'late', 'reorder'].includes(r.order_status);
-    if (filt.status.indexOf('t:') === 0) return r.turn_status === filt.status.slice(2);
+    if (filt.status === 'stuck') return r.cover_days != null && r.cover_days > 180;
+    if (filt.status === 'nosale') return (r.avg_day || 0) === 0 && (r.on_hand || 0) > 0;
     return r.order_status === filt.status;
   }
   function filtered() {
@@ -127,8 +120,8 @@
     const nLate = cnt(P, r => r.order_status === 'late');
     const nSoon = cnt(P, r => r.order_status === 'soon');
     const nHot = cnt(P, r => r.trend_7_vs_30 > 0.3 && ['stockout', 'late', 'reorder'].includes(r.order_status));
-    const stuck = V.filter(r => r.turn_status === 'stuck');
-    const noSale = V.filter(r => r.turn_status === 'no_sale');
+    const stuck = V.filter(r => r.cover_days != null && r.cover_days > 180);
+    const noSale = V.filter(r => (r.avg_day || 0) === 0 && (r.on_hand || 0) > 0);
     const sumQ = arr => arr.reduce((s2, r) => s2 + (+r.on_hand || 0), 0);
     const kpis = [
       ['ต้องเปิด PO รอบนี้', `<span style="color:${nNeed ? 'var(--red)' : 'var(--green)'};">${fmtN(nNeed)} SKU</span>`,
@@ -138,9 +131,9 @@
       ['ยอดพุ่งแต่ของไม่พอ', `<span style="color:${nHot ? 'var(--orange)' : 'var(--text)'};">${fmtN(nHot)} SKU</span>`,
         'ยอดโตเกิน 30% และถึงคิวต้องสั่งแล้ว', 'hot'],
       ['ของจม', `<span style="color:#60a5fa;">${fmtN(stuck.length)} SKU</span>`,
-        `หมุนไม่ถึง 2 รอบ/ปี · ค้าง ${fmtN(sumQ(stuck))} ชิ้น`, 't:stuck'],
+        `ของพอขายเกิน 180 วัน · ค้าง ${fmtN(sumQ(stuck))} ชิ้น`, 'stuck'],
       ['ไม่มีการขาย', `<span style="color:var(--text3);">${fmtN(noSale.length)} SKU</span>`,
-        `90 วันขายไม่ได้เลย · ค้าง ${fmtN(sumQ(noSale))} ชิ้น`, 't:no_sale'],
+        `90 วันขายไม่ได้เลย · ค้าง ${fmtN(sumQ(noSale))} ชิ้น`, 'nosale'],
       ['สต็อกรวมที่แสดง', `${fmtN(k.on_hand_total)} ชิ้น`, 'ไม่รวมที่ตั้งเป็นซ่อน', ''],
     ];
     const cellOf = (a, x) => m.find(c => c.abc === a && c.xyz === x) || { n: 0 };
@@ -171,7 +164,7 @@
           <div class="section-title">สต็อกสินค้า ${infoIcon('supGloss', GLOSSARY)}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
             <input type="text" class="ls-input" id="supQ" placeholder="🔎 Parent SKU / SKU / ชื่อสินค้า" value="${esc(filt.q)}" style="width:210px;padding:6px 10px;font-size:12px;">
-            <select class="ls-input" id="supStatus" style="width:170px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุกสถานะ</option><optgroup label="การสั่งซื้อ"><option value="need">ต้องเปิด PO รอบนี้</option><option value="hot">ยอดพุ่งแต่ของไม่พอ</option>${Object.entries(ORDER).map(([k2, v]) => `<option value="${k2}">${v[1]}</option>`).join('')}</optgroup><optgroup label="การหมุนเวียน">${Object.entries(TURN).map(([k2, v]) => `<option value="t:${k2}">${v[1]}</option>`).join('')}</optgroup></select>
+            <select class="ls-input" id="supStatus" style="width:170px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">ทุกสถานะ</option><optgroup label="การสั่งซื้อ"><option value="need">ต้องเปิด PO รอบนี้</option><option value="hot">ยอดพุ่งแต่ของไม่พอ</option>${Object.entries(ORDER).map(([k2, v]) => `<option value="${k2}">${v[1]}</option>`).join('')}</optgroup><optgroup label="สภาพสต็อก"><option value="stuck">ของจม (เกิน 180 วัน)</option><option value="nosale">ไม่มีการขาย</option></optgroup></select>
             <button class="btn btn-ghost" id="supLocToggle" style="${showLoc ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}">🏭 แยกคลัง</button>
             <button class="btn btn-ghost" id="supHiddenToggle" style="${showHidden ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}" title="สินค้าที่ตั้งเป็น ซ่อน ในหน้า Admin">👁 ที่ซ่อนไว้${d.hidden_count ? ' (' + fmtN(d.hidden_count) + ')' : ''}</button>
             <button class="btn btn-ghost" id="supClear">✕ ล้าง</button>
@@ -235,8 +228,8 @@
     const c = [['parent_sku', 'Parent SKU'], ['sku', 'SKU'], ['abc', 'ABC·XYZ'], ['on_hand', 'สต็อกรวม']];
     if (showLoc) locList().forEach(l => c.push(['loc:' + l.location, l.location]));
     return c.concat([['on_order', 'PO ค้าง'], ['avg_day', 'ขาย/วัน'], ['trend_7_vs_30', '7 vs 30 วัน'],
-      ['cover_days', 'ขายได้อีก / วันหมด'], ['turn_status', 'การหมุนเวียน'],
-      ['po_due_date', 'ต้องเปิด PO ภายใน'], ['suggested_qty', 'แนะสั่ง / ROP'], ['order_status', 'การสั่งซื้อ']]);
+      ['cover_days', 'ขายได้อีก / วันหมด'], ['po_due_date', 'ต้องเปิด PO ภายใน'],
+      ['suggested_qty', 'แนะสั่ง / ROP'], ['order_status', 'การสั่งซื้อ']]);
   }
 
   function renderTable() {
@@ -245,7 +238,6 @@
     let lastParent = null;
     const body = list.length ? list.map(r => {
       const planned = r.plan_mode === 'plan';
-      const [tc, tt] = TURN[r.turn_status] || ['var(--text3)', r.turn_status || '—'];
       const [oc, ot] = ORDER[r.order_status] || ['var(--text3)', ''];
       const cov = r.cover_days;
       const covCol = cov == null ? 'var(--text3)'
@@ -264,7 +256,7 @@
       return `<tr class="sup-row" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}${newGroup ? 'border-top:2px solid var(--border2);' : ''}">
         <td class="t-left">${sameParent ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span><div class="sup-sub">${esc(r.parent_name || '')}</div>`}</td>
         <td class="t-left"><span class="sup-skucode">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div>${planned ? '' : '<div class="sup-sub" style="color:var(--orange);">ไม่สั่งซ้ำแล้ว</div>'}</td>
-        <td class="t-center"><span class="sup-chip">${r.abc}${r.xyz}</span></td>
+        <td class="t-center"><span class="sup-chip" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span></td>
         <td><b style="font-size:13px;">${fmtN(r.on_hand)}</b></td>
         ${locTds}
         <td>${r.on_order ? fmtN(r.on_order) + (r.next_eta ? `<div class="sup-sub">เข้า ${dTH(r.next_eta)}</div>` : '') : '<span class="sup-dash">—</span>'}</td>
@@ -274,7 +266,6 @@
           <div class="sup-bar"><i style="width:${covPct}%;background:${covCol};"></i></div>
           ${r.stockout_date ? `<div class="sup-sub">หมด ${dTH(r.stockout_date)}</div>` : ''}`}
         </td>
-        <td class="t-center">${pill(tc, tt)}${r.turns_year != null && r.turns_year < 900 ? `<div class="sup-sub">${fmtN(r.turns_year, 1)} รอบ/ปี</div>` : ''}</td>
         <td>${!due ? '<span class="sup-dash">—</span>'
              : `<b style="color:${dueCol};">${dTH(due)}</b><div class="sup-sub">${dueIn < 0 ? 'เลยมา ' + fmtN(-dueIn) + ' วัน' : 'อีก ' + fmtN(dueIn) + ' วัน'}</div>`}</td>
         <td>${!planned ? '<span class="sup-dash">—</span>'
@@ -292,7 +283,7 @@
   function exportCsv() {
     const list = filtered(), locs = locList();
     const cols0 = ['parent_sku', 'sku', 'product_name', 'plan_mode', 'abc', 'xyz', 'on_hand'];
-    const cols1 = ['on_order', 'next_eta', 'avg7', 'avg30', 'avg90', 'avg_day', 'cover_days', 'turns_year', 'turn_status', 'ss_days', 'deadline_days', 'warn_days', 'po_due_date', 'order_status', 'stockout_date', 'stockout_date_with_po', 'safety_stock', 'reorder_point', 'target_stock', 'suggested_qty', 'lt', 'review', 'moq', 'pack', 'supplier'];
+    const cols1 = ['on_order', 'next_eta', 'avg7', 'avg30', 'avg90', 'avg_day', 'cover_days', 'ss_days', 'deadline_days', 'warn_days', 'po_due_date', 'order_status', 'stockout_date', 'stockout_date_with_po', 'safety_stock', 'reorder_point', 'target_stock', 'suggested_qty', 'lt', 'review', 'moq', 'pack', 'supplier'];
     const header = [...cols0, ...locs.map(l => 'คลัง ' + l.location), ...cols1];
     const q = v => v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v;
     const csv = [header.map(q).join(','), ...list.map(r => [
@@ -315,10 +306,9 @@
 
   function renderSku(d) {
     const p = d.plan || {}, r = rows.find(x => x.sku === d.sku) || {};
-    const [c, t] = TURN[r.turn_status] || ['var(--text3)', '—'];
     const [oc2, ot2] = ORDER[r.order_status] || ['var(--text3)', '—'];
     const facts = [
-      ['การหมุนเวียน', pill(c, t)], ['การสั่งซื้อ', r.plan_mode === 'plan' ? pill(oc2, ot2) : '—'], ['สต็อกขายได้', fmtN(p.on_hand) + ' ชิ้น'], ['ขาย/วัน', fmtN(p.avg_day, 1)], ['ขายได้อีก', r.cover_days != null ? fmtN(r.cover_days) + ' วัน' : '—'],
+      ['ABC-XYZ', `${r.abc || '—'}${r.xyz || ''}`], ['การสั่งซื้อ', r.plan_mode === 'plan' ? pill(oc2, ot2) : '—'], ['สต็อกขายได้', fmtN(p.on_hand) + ' ชิ้น'], ['ขาย/วัน', fmtN(p.avg_day, 1)], ['ขายได้อีก', r.cover_days != null ? fmtN(r.cover_days) + ' วัน' : '—'],
       ['คาดว่าหมด', p.stockout_date ? dTH(p.stockout_date) : '—'], ['ROP', fmtN(p.reorder_point)], ['ของเผื่อ', fmtN(p.safety_stock) + (r.ss_days != null ? ` (${fmtN(r.ss_days, 1)} วัน)` : '')], ['แนะสั่ง', p.suggested_qty ? fmtN(p.suggested_qty) + ' ชิ้น' : '—'],
       ['ต้องเปิด PO', r.po_due_date ? dTH(r.po_due_date) : '—'],
       ['lead time', `${p.lt ?? '—'} วัน`], ['PO ค้าง', p.on_order ? `${fmtN(p.on_order)} ชิ้น` : '—'],
