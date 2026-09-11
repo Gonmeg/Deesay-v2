@@ -146,13 +146,13 @@
 
       <div class="sup-top">
         <div class="sup-kpis" id="supKpis">
-          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};${f && filt.status === f ? 'border-color:var(--accent);' : ''}"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:17px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
+          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};${f && filt.status === f ? 'border-color:var(--accent);' : ''}"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:19px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
         </div>
         <div class="card sup-abc">
           <div class="section-header"><div class="section-title">ABC × XYZ ${infoIcon('supAbc', ABC_INFO, 'right')}</div><span style="font-size:10.5px;color:var(--text3);">กดช่องเพื่อกรอง</span></div>
-          <div class="sup-abc-grid" style="display:grid;grid-template-columns:78px repeat(3,1fr);gap:7px;font-size:12px;margin-top:4px;">
+          <div class="sup-abc-grid" style="display:grid;grid-template-columns:92px repeat(3,1fr);gap:9px;font-size:12px;margin-top:6px;">
             <div></div>${['X', 'Y', 'Z'].map(x => `<div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.4;">${x}<br>${XYZ_TXT[x]}</div>`).join('')}
-            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:8px;padding:9px 6px;text-align:center;cursor:pointer;transition:border-color .15s;"><b style="display:block;font-size:16px;line-height:1.15;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
+            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:9px;padding:15px 8px;text-align:center;cursor:pointer;transition:border-color .15s;"><b style="display:block;font-size:19px;line-height:1.15;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
           </div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:12px;line-height:1.6;">AX ควรมีของตลอด · AZ ต้องเผื่อมากที่สุด · CZ อย่าตุน — กด &#9432; ข้างหัวข้อเพื่อดูคำอธิบายเต็ม</div>
         </div>
@@ -182,11 +182,12 @@
         /* หน้านี้ใช้ Sarabun ทั้งหมด เว้นรหัสสินค้าที่คงเป็น monospace ให้อ่านรหัสง่าย */
         #page-supply .card-title { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:8px; }
         #page-supply .section-title { font-family:'Sarabun',sans-serif; }
-        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:14px; align-items:start; margin-bottom:18px; }
-        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-        #page-supply .sup-kpi { min-width:0; padding:11px 13px; border-radius:10px; }
+        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) minmax(420px,42%); gap:16px; align-items:start; margin-bottom:18px; }
+        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+        #page-supply .sup-kpis .sup-kpi:nth-child(5) { grid-column:1 / -1; }
+        #page-supply .sup-kpi { min-width:0; padding:13px 15px; border-radius:10px; }
         #page-supply .sup-kpi .card-title { margin-bottom:3px; font-size:11px; }
-        #page-supply .sup-kpi .kpi-value { font-size:17px !important; line-height:1.1; }
+        #page-supply .sup-kpi .kpi-value { font-size:19px !important; line-height:1.1; }
         #page-supply .sup-kpi .kpi-sub { font-size:10px; color:var(--text3); margin-top:4px; line-height:1.35; }
         #page-supply .sup-abc { align-self:stretch; display:flex; flex-direction:column; }
         #page-supply .sup-abc .sup-abc-grid { flex:1; align-content:center; }
@@ -201,7 +202,11 @@
         #page-supply td:first-child, #page-supply th:first-child { padding-left:16px; }
         #page-supply td:last-child, #page-supply th:last-child { padding-right:16px; }
         #page-supply table { table-layout:auto; }
-        #page-supply th:nth-child(1) { min-width:150px; } #page-supply th:nth-child(2) { min-width:190px; }
+        /* 2 คอลัมน์แรกเป็นข้อความ ให้กว้างคงที่ · คอลัมน์ตัวเลขที่เหลือกว้างเท่ากันหมด */
+        #page-supply th:nth-child(1) { width:158px; }
+        #page-supply th:nth-child(2) { width:210px; }
+        #page-supply th:nth-child(n+3) { width:104px; }
+        #page-supply th:last-child { width:120px; }
         #page-supply tbody tr { transition:background .12s; }
         #page-supply td.t-left { text-align:left; }
         #page-supply td.t-center { text-align:center; }
@@ -214,7 +219,7 @@
         #page-supply .sup-bar { height:3px; border-radius:2px; background:var(--bg3); margin:5px 0 0 auto; width:60px; overflow:hidden; }
         #page-supply .sup-bar i { display:block; height:100%; border-radius:2px; }
         #page-supply .sup-dash { color:var(--text3); }
-        @media (max-width:1200px){ #page-supply .sup-top { grid-template-columns:1fr; } #page-supply .sup-kpis { grid-template-columns:repeat(3,1fr); } }
+        @media (max-width:1200px){ #page-supply .sup-top { grid-template-columns:1fr; } #page-supply .sup-kpis { grid-template-columns:repeat(3,1fr); } #page-supply .sup-kpis .sup-kpi:nth-child(5) { grid-column:auto; } }
         @media (max-width:800px){ #page-supply .sup-kpis { grid-template-columns:repeat(2,1fr); } }
       </style>`;
 
