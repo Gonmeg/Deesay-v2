@@ -309,7 +309,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.11-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.11-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1231,53 +1231,7 @@
       </div>
     </div>
 
-    <div class="page" id="page-ttcontent">
-      <div id="ttc-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-
-      <div class="card" style="margin-bottom:20px;border-color:rgba(200,169,110,0.3);">
-        <div class="section-header">
-          <div class="section-title">🔥 มาแรงตอนนี้ — โพสต์ใน 7 วันล่าสุด เรียงตามความเร็ว (วิว/วัน) <span id="ttcTrendInfoSlot"></span></div>
-        </div>
-        <div class="table-wrap">
-          <table id="tblTtcTrending">
-            <thead><tr><th>คลิป</th><th>โพสต์เมื่อ</th><th>วิวสะสม</th><th>วิว/วัน</th><th>ผู้ติดตามใหม่</th><th>ความเร็ว</th></tr></thead>
-            <tbody id="tbodyTtcTrending"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="section-header">
-        <div class="section-title">คลิปทั้งหมด <span id="ttcScoreInfoSlot"></span></div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <div class="toggle-group">
-            <button class="toggle-btn active" id="ttc-view-grid" onclick="setTtcView('grid',this)">Grid</button>
-            <button class="toggle-btn" id="ttc-view-table" onclick="setTtcView('table',this)">ตาราง</button>
-          </div>
-          <div style="position:relative;">
-            <button class="btn btn-ghost" id="ttcMetricsBtn" onclick="toggleMetricsPanel('ttc')">
-              ⚙ Metrics <span id="ttc-metric-count" style="color:var(--accent);"></span>
-            </button>
-            <div id="ttc-metrics-panel" class="metrics-panel" style="display:none;">
-              <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
-              <div id="ttc-metrics-checks"></div>
-              <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('ttc')">ค่าแนะนำ</button>
-                <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('ttc')">เลือกทั้งหมด</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="ttcGridView" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:8px;"></div>
-      <div id="ttcTableView" class="table-wrap" style="display:none;margin-bottom:8px;max-height:560px;overflow-y:auto;">
-        <table id="tblTtcAll" class="sticky-head-table">
-          <thead id="ttcTableHead"></thead>
-          <tbody id="ttcTableBody"></tbody>
-        </table>
-      </div>
-      <div id="ttcTablePager"></div>
-    </div>
+    <div class="page" id="page-ttcontent"></div>
 
     <div class="page" id="page-ttads">
       <div id="tta-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
@@ -2546,6 +2500,19 @@ function showPage(page, lockCh, el) {
   }
 }
 
+// ผลงานคอนเทนต์ TikTok: โค้ดอยู่ใน ttcontent.js — โหลดครั้งแรกที่กดเมนู
+function loadTtContentPage() {
+  if (window.renderTtContentPage) return window.renderTtContentPage();
+  if (window._ttcLoading) return;
+  window._ttcLoading = true;
+  document.getElementById('page-ttcontent').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
+  const s2 = document.createElement('script');
+  s2.src = 'ttcontent.js?v=20260911a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
+  s2.onload = () => { window._ttcLoading = false; if (window.renderTtContentPage) window.renderTtContentPage(); };
+  s2.onerror = () => { window._ttcLoading = false; document.getElementById('page-ttcontent').innerHTML = '<div class="error-banner" style="display:block;">โหลด ttcontent.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+  document.head.appendChild(s2);
+}
+
 // Supply Chain: โค้ดอยู่ใน supply.js — โหลดครั้งแรกที่กดเมนู ไม่โหลดตอนเปิด dashboard (ไฟล์นี้จึงไม่โตขึ้น)
 function loadSupplyPage() {
   if (window.renderSupplyPage) { window.renderSupplyPage(); return; }
@@ -2565,7 +2532,7 @@ function renderCurrentPage() {
   else if (currentPage === 'fbhub') renderFbHub();
   else if (currentPage === 'fbengage') renderFbEngagePage();
   else if (currentPage === 'tthub') renderTtHub();
-  else if (currentPage === 'ttcontent') renderTtc();
+  else if (currentPage === 'ttcontent') loadTtContentPage();
   else if (currentPage === 'ttads') renderTta();
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'shads') renderShAds();
