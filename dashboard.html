@@ -283,6 +283,7 @@
     <div id="navGroup-tt" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
       <div class="nav-item nav-sub" onclick="showPage('ttcontent',null,this)"><span class="nav-icon">🎬</span> ผลงานคอนเทนต์</div>
+      <div class="nav-item nav-sub" onclick="showPage('ttkeyword',null,this)"><span class="nav-icon">🔎</span> ค้นหาคำบน TikTok</div>
       <div class="nav-item nav-sub" onclick="showPage('ttads',null,this)"><span class="nav-icon">📢</span> TikTok Ads</div>
       <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
       <div class="nav-item nav-sub" onclick="showPage('creatorperf',null,this)"><span class="nav-icon">👤</span> Creator Performance</div>
@@ -309,7 +310,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.11-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.11-e</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1232,6 +1233,7 @@
     </div>
 
     <div class="page" id="page-ttcontent"></div>
+    <div class="page" id="page-ttkeyword"></div>
 
     <div class="page" id="page-ttads">
       <div id="tta-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
@@ -2357,13 +2359,13 @@ function applyFilters() {
 const pageTitles = {
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook',
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
-  tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
+  tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttkeyword: 'ค้นหาคำบน TikTok', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'ยอดขายแยก SKU', skuanalysis: 'วิเคราะห์ SKU', adperf: 'Ad Performance',
   cost: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)', kol: 'KOL / Affiliate — คนที่จ้าง',
   supply: 'Supply Chain — สต็อก / แผนสั่งซื้อ'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','tthub','ttcontent','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
+const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget','supply']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
@@ -2430,8 +2432,8 @@ function showPage(page, lockCh, el) {
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
-  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'ttcontent', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
-  const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbengage', 'ttcontent', 'ttads', 'kol', 'shads', 'supply']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
+  const HIDE_CHANNEL_FILTER = ['fbhub', 'tthub', 'ttcontent', 'ttkeyword', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   const fbePageGroup = document.getElementById('fbePageFilterGroup');
@@ -2507,10 +2509,19 @@ function loadTtContentPage() {
   window._ttcLoading = true;
   document.getElementById('page-ttcontent').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
   const s2 = document.createElement('script');
-  s2.src = 'ttcontent.js?v=20260911b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
+  s2.src = 'ttcontent.js?v=20260911c';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
   s2.onload = () => { window._ttcLoading = false; if (window.renderTtContentPage) window.renderTtContentPage(); };
   s2.onerror = () => { window._ttcLoading = false; document.getElementById('page-ttcontent').innerHTML = '<div class="error-banner" style="display:block;">โหลด ttcontent.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.head.appendChild(s2);
+}
+
+function loadTtKeywordPage() {
+  if (window.renderTtKeywordPage) return window.renderTtKeywordPage();
+  document.getElementById('page-ttkeyword').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
+  const s3 = document.createElement('script');
+  s3.src = 'ttcontent.js?v=20260911c';
+  s3.onload = () => { if (window.renderTtKeywordPage) window.renderTtKeywordPage(); };
+  document.head.appendChild(s3);
 }
 
 // Supply Chain: โค้ดอยู่ใน supply.js — โหลดครั้งแรกที่กดเมนู ไม่โหลดตอนเปิด dashboard (ไฟล์นี้จึงไม่โตขึ้น)
@@ -2533,6 +2544,7 @@ function renderCurrentPage() {
   else if (currentPage === 'fbengage') renderFbEngagePage();
   else if (currentPage === 'tthub') renderTtHub();
   else if (currentPage === 'ttcontent') loadTtContentPage();
+  else if (currentPage === 'ttkeyword') loadTtKeywordPage();
   else if (currentPage === 'ttads') renderTta();
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'shads') renderShAds();
