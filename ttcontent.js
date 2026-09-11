@@ -1,433 +1,360 @@
-// ttcontent.js — หน้า "ผลงานคอนเทนต์ (TikTok)" เวอร์ชันใหม่ ใช้ข้อมูลจาก TikTok API ตรง (เลิกใช้ Windsor)
-// ใช้ของกลางจาก dashboard.html: supaRpc, fmtDateISO, chartTickColor/chartGridColor, Chart.js, CSS
-// RPC: tiktok_content_page(p_days) จาก 66_tiktok_comments_benchmark.sql
-// v1 (2026-09-11)
-(function () {
-  const fmtN = (n, d = 0) => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toLocaleString('th-TH', { maximumFractionDigits: d, minimumFractionDigits: d });
-  const pct = (n, d = 1) => (n === null || n === undefined || isNaN(n)) ? '—' : (Number(n) * 100).toFixed(d) + '%';
-  const dTH = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '—';
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Edge Function: tiktok-organic
+// หน้าที่ตอนนี้: "ตัวสำรวจ" — ต่ออายุ token ให้อัตโนมัติ แล้วยิงถาม TikTok ว่าให้ข้อมูลอะไรเราได้บ้าง
+//                ยังไม่เขียนอะไรลงตารางข้อมูล (นอกจากอัปเดต token) — ดูผลก่อนแล้วค่อยตัดสินใจว่าจะเก็บอะไร
+//
+// deploy แบบปิดการตรวจ JWT (เรียกจากเบราว์เซอร์ได้):
+//   supabase functions deploy tiktok-organic --no-verify-jwt
+//
+// วิธีใช้ (ต่อท้าย URL):
+//   ?mode=token   → เช็คว่า token ยังไม่หมดอายุ และต่ออายุให้ถ้าใกล้หมด
+//   ?mode=account → ข้อมูลบัญชี ผู้ติดตาม คนเข้าดูโปรไฟล์   (/business/get/)
+//   ?mode=videos  → รายชื่อคลิปทั้งหมดของช่อง               (/business/video/list/)
+//   ?mode=sync    → เก็บลงตารางจริง (tiktok_videos / tiktok_account_daily / tiktok_account_profile)
+//   ?mode=all     → สำรวจทั้งหมดโดยไม่เขียนอะไร (ค่าเริ่มต้น)
+//   เพิ่ม &days=30 เพื่อเปลี่ยนช่วงวันที่ (ค่าเริ่มต้น 30 วัน)
+//
+// Secrets ที่ใช้: TIKTOK_APP_ID, TIKTOK_APP_SECRET (ชุดเดียวกับ tiktok-account-auth)
 
-  let DATA = null, days = 30, tab = 'clips', chart = null, q = '', sortKey = 'post_date', sortDir = -1, onlyQuestions = true;
+import { createClient } from "npm:@supabase/supabase-js@2";
 
-  // ===== metric ทั้งหมดที่ TikTok ให้ได้ + ที่คำนวณต่อเอง =====
-  // v = ค่าที่เอาไปเรียง · f = วิธีแสดง
-  const M = {
-    post_date:   { label: 'Date',        tip: 'วันที่โพสต์คลิป',
-                   v: c => c.post_date || '',             f: c => dTH(c.post_date) },
-    video_views: { label: 'Views',       tip: 'ยอดวิวสะสมทั้งหมดของคลิป (รวมทั้งที่มาจากแอดและออร์แกนิก)',
-                   v: c => +c.video_views || 0,           f: c => `<b>${fmtN(c.video_views)}</b>` },
-    views_day:   { label: 'Views/day',   tip: 'ยอดวิวสะสม ÷ จำนวนวันตั้งแต่โพสต์ — ใช้เทียบคลิปใหม่กับคลิปเก่าอย่างยุติธรรม',
-                   v: c => viewsPerDay(c),                f: c => fmtN(viewsPerDay(c)) },
-    likes:       { label: 'Likes',       tip: 'จำนวนคนกดหัวใจ',
-                   v: c => +c.likes || 0,                 f: c => fmtN(c.likes) },
-    comments:    { label: 'Comments',    tip: 'จำนวนคอมเมนต์ใต้คลิป',
-                   v: c => +c.comments || 0,              f: c => fmtN(c.comments) },
-    shares:      { label: 'Shares',      tip: 'จำนวนครั้งที่ถูกแชร์ต่อ',
-                   v: c => +c.shares || 0,                f: c => fmtN(c.shares) },
-    eng_rate:    { label: 'ER%',         tip: 'Engagement Rate = (ไลก์ + คอมเมนต์ + แชร์) ÷ วิว — ค่าเฉลี่ยวงการความงามอยู่ที่ 1.01%',
-                   v: c => engOf(c),                      f: c => pct(engOf(c), 2) },
-    like_rate:   { label: 'Like rate',   tip: 'ไลก์ ÷ วิว — คนดูแล้วชอบมากแค่ไหน',
-                   v: c => rate(c.likes, c.video_views),  f: c => pct(rate(c.likes, c.video_views), 2) },
-    cmt_rate:    { label: 'Comment rate',tip: 'คอมเมนต์ ÷ วิว — คลิปที่ชวนให้คนอยากพิมพ์ตอบ มักเป็นคลิปที่ตั้งคำถามหรือมีดราม่า',
-                   v: c => rate(c.comments, c.video_views), f: c => pct(rate(c.comments, c.video_views), 2) },
-    shr_rate:    { label: 'Share rate',  tip: 'แชร์ ÷ วิว — ตัวชี้วัดที่ดีที่สุดว่าคอนเทนต์มีคุณค่าจริง เพราะคนยอมส่งต่อให้เพื่อน',
-                   v: c => rate(c.shares, c.video_views), f: c => pct(rate(c.shares, c.video_views), 2) },
-    watched:     { label: 'Watched full',tip: '% ของคนที่ดูคลิปจนจบ — คลิปสั้นจะได้ค่าสูงกว่าคลิปยาวโดยธรรมชาติ',
-                   v: c => +c.full_video_watched_rate || 0, f: c => pct(c.full_video_watched_rate, 1) },
-    avg_time:    { label: 'Avg watch (s)',tip: 'เวลาที่คนดูเฉลี่ยกี่วินาทีก่อนเลื่อนผ่าน — ยิ่งสูงยิ่งดี แปลว่าท่อนเปิดดึงคนอยู่',
-                   v: c => +c.average_time_watched || 0,  f: c => fmtN(c.average_time_watched, 1) },
-    total_time:  { label: 'Watch time (h)',tip: 'เวลาที่คนดูคลิปนี้รวมกันทั้งหมด คิดเป็นชั่วโมง',
-                   v: c => (+c.total_time_watched || 0) / 3600, f: c => fmtN((+c.total_time_watched || 0) / 3600, 1) },
-    src_foryou:  { label: 'For You',     tip: 'ยอดวิว % ที่มาจากหน้าฟีด — สูง = อัลกอริทึมดันให้คนใหม่เห็น',
-                   v: c => +c.src_foryou || 0,            f: c => pct(c.src_foryou, 1) },
-    src_search:  { label: 'Search',      tip: 'ยอดวิว % ที่มาจากคนกดค้นหา — สูง = คนตั้งใจหาแบรนด์หรือสินค้าเรา',
-                   v: c => +c.src_search || 0,            f: c => pct(c.src_search, 1) },
-    src_follow:  { label: 'Followers',   tip: 'ยอดวิว % ที่มาจากคนที่ติดตามอยู่แล้ว — สูงแต่ For You ต่ำ = ไม่กระจายออกนอกกลุ่มเดิม',
-                   v: c => +c.src_follow || 0,            f: c => pct(c.src_follow, 1) },
-    src_profile: { label: 'Profile',     tip: 'ยอดวิว % ที่มาจากคนเข้ามาดูในโปรไฟล์เรา',
-                   v: c => +c.src_profile || 0,           f: c => pct(c.src_profile, 1) },
-    src_sound:   { label: 'Sound',       tip: 'ยอดวิว % ที่มาจากคนกดดูผ่านหน้าเสียง/เพลงที่ใช้ในคลิป',
-                   v: c => srcOf(c, 'Sound'),             f: c => pct(srcOf(c, 'Sound'), 1) },
-    src_dm:      { label: 'DM',          tip: 'ยอดวิว % ที่มาจากคนส่งคลิปให้กันทางข้อความ',
-                   v: c => srcOf(c, 'Direct Message'),    f: c => pct(srcOf(c, 'Direct Message'), 1) },
-    src_others:  { label: 'Others',      tip: 'ยอดวิว % จากช่องทางอื่นที่ TikTok ไม่ได้แยกไว้',
-                   v: c => srcOf(c, 'Others'),            f: c => pct(srcOf(c, 'Others'), 1) },
-  };
-  const DEFAULT_COLS = ['post_date', 'video_views', 'likes', 'comments', 'shares', 'eng_rate', 'watched', 'avg_time', 'src_foryou', 'src_search'];
-  const LS = 'ttc_cols_v1';
-  let cols = (() => { try { const x = JSON.parse(localStorage.getItem(LS)); return Array.isArray(x) && x.length ? x.filter(k => M[k]) : [...DEFAULT_COLS]; } catch { return [...DEFAULT_COLS]; } })();
-  const saveCols = () => { try { localStorage.setItem(LS, JSON.stringify(cols)); } catch {} };
+const SB = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  { auth: { persistSession: false } },
+);
 
-  const rate = (a, b) => (+b ? (+a || 0) / +b : null);
-  const engOf = c => rate((+c.likes || 0) + (+c.comments || 0) + (+c.shares || 0), c.video_views);
-  const srcOf = (c, name) => { const x = (c.impression_sources || []).find(s2 => s2.impression_source === name); return x ? +x.percentage : null; };
-  const viewsPerDay = c => { if (!c.post_date) return 0; const d2 = Math.max(1, Math.round((Date.now() - new Date(c.post_date + 'T00:00:00').getTime()) / 86400000)); return Math.round((+c.video_views || 0) / d2); };
+const pick = (...names: string[]) => { for (const n of names) { const v = Deno.env.get(n); if (v) return v; } return ""; };
+const APP_ID = pick("TIKTOK_APP_ID", "TIKTOK_CLIENT_KEY", "TT_APP_ID", "TIKTOK_BUSINESS_APP_ID");
+const APP_SECRET = pick("TIKTOK_APP_SECRET", "TIKTOK_CLIENT_SECRET", "TT_APP_SECRET", "TIKTOK_BUSINESS_APP_SECRET");
 
-  const root = () => document.getElementById('page-ttcontent');
+const BASE = "https://business-api.tiktok.com/open_api/v1.3";
+const REFRESH_URL = `${BASE}/tt_user/oauth2/refresh_token/`;
 
-  // คอมเมนต์ที่เป็น "คำถาม" จริง ๆ (ที่เหลือคือชมเฉย ๆ / อีโมจิ)
-  const QWORDS = ['ไหม', 'มั้ย', 'หรือ', 'ยังไง', 'เท่าไร', 'เท่าไหร่', 'กี่', 'ที่ไหน', 'อะไร', 'เมื่อไร', 'เมื่อไหร่', 'ราคา', 'ส่ง', 'สั่ง', 'ซื้อ', 'มีขาย', 'สอบถาม', '?'];
-  const isQuestion = t => { const x = String(t || ''); return QWORDS.some(w => x.includes(w)); };
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+};
+function json(obj: unknown, status = 200) {
+  const h = new Headers();
+  h.set("content-type", "application/json; charset=utf-8");
+  h.set("cache-control", "no-store");
+  Object.entries(CORS).forEach(([k, v]) => h.set(k, v));
+  return new Response(new TextEncoder().encode(JSON.stringify(obj, null, 2)), { status, headers: h });
+}
 
-  async function load() {
-    if (!root()) return;
-    root().innerHTML = '<div class="card"><div class="empty">กำลังโหลดข้อมูลคอนเทนต์...</div></div>';
-    try {
-      DATA = await supaRpc('tiktok_content_page', { p_days: Number(days) });
-      if (Array.isArray(DATA)) DATA = DATA[0] ?? {};                 // เผื่อ PostgREST ห่อมาเป็น array
-      if (DATA && DATA.tiktok_content_page) DATA = DATA.tiktok_content_page;  // เผื่อห่อด้วยชื่อฟังก์ชัน
-      window._ttcRaw = DATA;
-    } catch (e) {
-      root().innerHTML = `<div class="error-banner" style="display:block;">โหลดไม่สำเร็จ: ${esc(e.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 66_tiktok_comments_benchmark.sql</div>`;
-      return;
-    }
-    render();
-  }
+// ---------- token ----------
+async function getUser() {
+  const { data, error } = await SB.from("tiktok_tt_users").select("*").order("updated_at", { ascending: false }).limit(1);
+  if (error) throw new Error("อ่านตาราง tiktok_tt_users ไม่ได้: " + error.message);
+  if (!data || !data.length) throw new Error("ยังไม่มี token ในตาราง tiktok_tt_users — ต้องกดลิงก์ authorization ก่อน");
+  return data[0];
+}
 
-  function render() {
-    const d = DATA || {}, p = d.profile || {}, t = d.totals || {}, b = d.benchmark || {};
-    const daily = d.daily || [], vids = d.videos || [];
-
-    // ---- ตัวเลขช่วงนี้ ----
-    const newFollow = daily.reduce((s, x) => s + (+x.daily_new_followers || 0), 0);
-    const lostFollow = daily.reduce((s, x) => s + (+x.daily_lost_followers || 0), 0);
-    const profileViews = daily.reduce((s, x) => s + (+x.profile_views || 0), 0);
-    const bioClicks = daily.reduce((s, x) => s + (+x.bio_link_clicks || 0), 0);
-    const engRate = t.views ? ((+t.likes + +t.comments + +t.shares) / +t.views) : null;
-
-    const kpis = [
-      ['ผู้ติดตามตอนนี้', fmtN(p.followers_count), `${days} วันนี้ +${fmtN(newFollow)} · เลิกตาม ${fmtN(lostFollow)}`],
-      ['คลิปในช่วงนี้', fmtN(t.clips), `ยอดวิวรวม ${fmtN(t.views)}`],
-      ['Engagement rate', pct(engRate, 2), b.average_engagement_rate ? `ค่าเฉลี่ยวงการ ${pct(b.average_engagement_rate, 2)}` : ''],
-      ['ดูจนจบเฉลี่ย', pct(t.avg_watched_rate, 1), `ดูเฉลี่ย ${fmtN(t.avg_time, 1)} วินาที`],
-      ['คนเข้าดูโปรไฟล์', fmtN(profileViews), `กดลิงก์ในไบโอ ${fmtN(bioClicks)} ครั้ง`],
-      ['คอมเมนต์ค้างตอบ', `<span style="color:${d.unanswered_count ? 'var(--orange)' : 'var(--green)'};">${fmtN(d.unanswered_count)}</span>`, 'กดแท็บคอมเมนต์เพื่อดู'],
-    ];
-
-    // ---- เทียบกับวงการ ----
-    const cmp = [];
-    if (b.average_engagement_rate != null) {
-      const avgFollowDay = daily.length ? newFollow / daily.length - lostFollow / daily.length : null;
-      cmp.push(['Engagement rate', engRate, b.average_engagement_rate, v => pct(v, 2)]);
-      cmp.push(['ผู้ติดตามโต/วัน', avgFollowDay, b.average_follower_growth, v => fmtN(v, 1) + ' คน']);
-      cmp.push(['จำนวนคลิปทั้งช่อง', p.videos_count, b.average_video_count, v => fmtN(v) + ' คลิป']);
-      cmp.push(['ผู้ติดตาม', p.followers_count, b.average_follower_count, v => fmtN(v) + ' คน']);
-    }
-
-    root().innerHTML = `
-      <div id="ttcDebug" style="display:none;"></div>
-      <div class="ttc-head">
-        <div style="font-size:11.5px;color:var(--text3);">ข้อมูลจาก TikTok API โดยตรง · อัปเดตทุกเช้า 07:30 · แสดง ${days} วันล่าสุด · ข้อมูล ณ ${dTH(d.as_of)}</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <div class="toggle-group">
-            ${[7, 30, 90].map(n => `<button class="toggle-btn ${days === n ? 'active' : ''}" data-days="${n}">${n} วัน</button>`).join('')}
-          </div>
-          <button class="btn btn-ghost" id="ttcRefresh">↻ รีเฟรช</button>
-        </div>
-      </div>
-
-      <div class="ttc-kpis">
-        ${kpis.map(([l, v, s]) => `<div class="card ttc-kpi"><div class="card-title">${l}</div><div class="kpi-value">${v}</div><div class="kpi-sub">${s}</div></div>`).join('')}
-      </div>
-
-      <div class="ttc-grid2">
-        <div class="card">
-          <div class="section-header"><div class="section-title">ยอดวิวมาจากไหน</div><span style="font-size:10.5px;color:var(--text3);">เฉลี่ยทุกคลิปในช่วงนี้</span></div>
-          ${[['หน้าฟีด (For You)', t.foryou, 'var(--accent)'], ['ค้นหา', t.search, '#60a5fa'], ['ผู้ติดตาม', t.follow, '#4ade80'], ['โปรไฟล์', t.profile, '#c084fc']]
-            .map(([l, v, c]) => `<div class="ttc-src"><span>${l}</span><div class="ttc-srcbar"><i style="width:${Math.min(100, (v || 0) * 100)}%;background:${c};"></i></div><b>${pct(v, 1)}</b></div>`).join('')}
-          <div style="font-size:10.5px;color:var(--text3);margin-top:10px;line-height:1.6;">ฟีดเยอะ = อัลกอริทึมดัน ได้คนใหม่ · ค้นหาเยอะ = คนตั้งใจหาแบรนด์เรา · ผู้ติดตามเยอะแต่ฟีดน้อย = ไม่กระจายออกนอกกลุ่มเดิม</div>
-        </div>
-        <div class="card">
-          <div class="section-header"><div class="section-title">เทียบกับวงการความงาม</div><span style="font-size:10.5px;color:var(--text3);">ค่าเฉลี่ยช่องหมวดเดียวกันในไทย</span></div>
-          ${cmp.length ? cmp.map(([l, mine, avg, f]) => {
-            const good = mine != null && avg != null && mine >= avg;
-            return `<div class="ttc-cmp"><span>${l}</span><b style="color:${good ? 'var(--green)' : 'var(--orange)'};">${f(mine)}</b><span class="ttc-cmp-avg">เฉลี่ย ${f(avg)}</span></div>`;
-          }).join('') : '<div class="empty" style="padding:20px;">ยังไม่มีข้อมูลเทียบ</div>'}
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:18px;">
-        <div class="section-header"><div class="section-title">ช่วงเวลาที่คนดูออนไลน์</div><span style="font-size:10.5px;color:var(--text3);">เฉลี่ย 30 วัน · เวลาไทย · ใช้วางแผนเวลาลงคลิปและไลฟ์</span></div>
-        <div class="chart-wrap" style="height:190px;"><canvas id="ttcHours"></canvas></div>
-      </div>
-
-      <div class="tabs-row">
-        ${[['clips', `คลิป (${fmtN(vids.length)})`], ['comments', `คอมเมนต์ค้างตอบ (${fmtN(d.unanswered_count)})`]]
-          .map(([k, l]) => `<button class="toggle-btn ${tab === k ? 'active' : ''}" data-tab="${k}">${l}</button>`).join('')}
-      </div>
-      <div id="ttcTab"></div>
-
-      <style>
-        #page-ttcontent .ttc-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-        #page-ttcontent .ttc-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
-        #page-ttcontent .ttc-kpi { padding:13px 15px; }
-        #page-ttcontent .ttc-kpi .card-title { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:11.5px; font-weight:600; color:var(--text2); margin-bottom:4px; }
-        #page-ttcontent .ttc-kpi .kpi-value { font-size:19px; line-height:1.15; }
-        #page-ttcontent .ttc-kpi .kpi-sub { font-size:10.5px; color:var(--text3); margin-top:5px; display:block; line-height:1.4; }
-        #page-ttcontent .ttc-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
-        #page-ttcontent .ttc-src { display:flex; align-items:center; gap:10px; font-size:12px; margin:9px 0; }
-        #page-ttcontent .ttc-src span:first-child { width:120px; color:var(--text2); }
-        #page-ttcontent .ttc-src b { width:52px; text-align:right; font-variant-numeric:tabular-nums; }
-        #page-ttcontent .ttc-srcbar { flex:1; height:7px; border-radius:4px; background:var(--bg3); overflow:hidden; }
-        #page-ttcontent .ttc-srcbar i { display:block; height:100%; border-radius:4px; }
-        #page-ttcontent .ttc-cmp { display:flex; align-items:center; gap:10px; font-size:12px; margin:11px 0; }
-        #page-ttcontent .ttc-cmp span:first-child { flex:1; color:var(--text2); }
-        #page-ttcontent .ttc-cmp b { font-size:13px; font-variant-numeric:tabular-nums; }
-        #page-ttcontent .ttc-cmp-avg { font-size:10.5px; color:var(--text3); width:110px; text-align:right; }
-        #page-ttcontent .tabs-row { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
-        #page-ttcontent table { width:100%; border-collapse:collapse; }
-        #page-ttcontent th { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:11.5px; font-weight:600;
-          color:var(--text2); padding:11px 12px; white-space:nowrap; text-align:right; position:sticky; top:0; background:var(--bg2); z-index:3; border-bottom:1px solid var(--border2); }
-        #page-ttcontent th:first-child, #page-ttcontent th.t-left { text-align:left; }
-        #page-ttcontent td { padding:11px 12px; font-size:12.5px; text-align:right; border-top:1px solid var(--border); vertical-align:middle; font-variant-numeric:tabular-nums; }
-        #page-ttcontent td.t-left { text-align:left; }
-        #page-ttcontent tbody tr:hover td { background:var(--bg3); }
-        #page-ttcontent .ttc-thumb { width:44px; height:58px; object-fit:cover; border-radius:6px; background:var(--bg3); display:block; }
-        #page-ttcontent .ttc-cap { font-size:11.5px; line-height:1.5; max-width:380px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        #page-ttcontent .ttc-sub { font-size:10px; color:var(--text3); margin-top:3px; }
-        #page-ttcontent .ttc-chip { display:inline-block; font-size:10px; padding:2px 7px; border-radius:99px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); margin-right:4px; }
-        #page-ttcontent .ttc-mpanel { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:14px; }
-        #page-ttcontent .ttc-mtitle { font-size:11.5px; font-weight:600; color:var(--text2); margin-bottom:8px; }
-        #page-ttcontent .ttc-mlist { display:flex; flex-wrap:wrap; gap:7px; }
-        #page-ttcontent .ttc-mchip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; padding:6px 11px; border-radius:7px;
-          background:var(--bg2); border:1px solid var(--border); color:var(--text2); cursor:pointer; user-select:none; }
-        #page-ttcontent .ttc-mchip.on { background:rgba(200,169,110,.14); border-color:rgba(200,169,110,.45); color:var(--text); cursor:grab; }
-        #page-ttcontent .ttc-drag { color:var(--text3); font-size:12px; cursor:grab; }
-        #page-ttcontent .ttc-x { color:var(--text3); font-size:10px; padding:0 2px; }
-        #page-ttcontent .ttc-x:hover { color:var(--red); }
-        @media (max-width:1100px){ #page-ttcontent .ttc-kpis { grid-template-columns:repeat(2,1fr); } #page-ttcontent .ttc-grid2 { grid-template-columns:1fr; } }
-      </style>`;
-
-    // แถบตรวจสอบ — โชว์เฉพาะตอนข้อมูลหลักว่าง จะได้รู้ว่าขาดตรงไหน
-    if (!t.clips || !p.followers_count) {
-      const dbg = document.getElementById('ttcDebug');
-      if (dbg) {
-        dbg.style.display = 'block';
-        dbg.innerHTML = `<div class="error-banner" style="display:block;margin-bottom:12px;">
-          ข้อมูลบางส่วนว่าง — ที่ได้รับมา: ${Object.keys(d || {}).join(', ') || '(ไม่มีเลย)'}
-          <br>clips=${JSON.stringify(t.clips)} · videos=${(d.videos || []).length} · daily=${(d.daily || []).length}
-          · profile=${p && p.followers_count ? 'มี' : 'ไม่มี'} · benchmark=${b && b.average_engagement_rate ? 'มี' : 'ไม่มี'}
-          · unanswered=${d.unanswered_count ?? '—'}
-          <br><span style="font-size:11px;">เปิด Console แล้วพิมพ์ <code>window._ttcRaw</code> เพื่อดูข้อมูลดิบทั้งหมด</span>
-        </div>`;
-      }
-    }
-    drawHours(d.best_hours || []);
-    renderTab();
-
-    root().querySelectorAll('[data-days]').forEach(b2 => b2.onclick = () => { days = +b2.dataset.days; load(); });
-    root().querySelector('#ttcRefresh').onclick = load;
-    root().querySelectorAll('[data-tab]').forEach(b2 => b2.onclick = () => { tab = b2.dataset.tab; render(); });
-  }
-
-  function drawHours(hours) {
-    const el = document.getElementById('ttcHours'); if (!el) return;
-    const byHour = {}; hours.forEach(h => byHour[h.hour] = +h.count);
-    const labels = [...Array(24).keys()];
-    const data = labels.map(h => byHour[h] ?? 0);
-    const max = Math.max(...data, 1);
-    if (chart) chart.destroy();
-    chart = new Chart(el, {
-      type: 'bar',
-      data: { labels: labels.map(h => String(h).padStart(2, '0') + ':00'),
-        datasets: [{ data, backgroundColor: data.map(v => v >= max * 0.92 ? '#c8a96e' : 'rgba(200,169,110,.32)'), borderRadius: 3 }] },
-      options: { responsive: true, maintainAspectRatio: false, animation: false,
-        plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' },
-          callbacks: { label: it => fmtN(it.raw) + ' คน' } } },
-        scales: { x: { grid: { display: false }, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 9 }, maxTicksLimit: 12 } },
-          y: { beginAtZero: true, grid: { color: chartGridColor() }, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 9 }, callback: v => (v / 1000) + 'k' } } } }
-    });
-  }
-
-  function renderTab() {
-    const el = document.getElementById('ttcTab'); if (!el) return;
-    if (tab === 'comments') return renderComments(el);
-    return renderClips(el);
-  }
-
-  function renderClips(el) {
-    const all = (DATA.videos || []).filter(v => !q || String(v.caption || '').toLowerCase().includes(q.toLowerCase()));
-    const sk = M[sortKey] ? sortKey : 'post_date';
-    const rows = [...all].sort((x, y) => {
-      const a2 = M[sk].v(x), b2 = M[sk].v(y);
-      if (typeof a2 === 'number' && typeof b2 === 'number') return (a2 - b2) * sortDir;
-      return String(a2).localeCompare(String(b2)) * sortDir;
-    });
-    el.innerHTML = `
-      <div class="card">
-        <div class="section-header">
-          <div class="section-title">คลิปทั้งหมดในช่วงนี้</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <input type="text" class="ls-input" id="ttcQ" placeholder="🔎 ค้นหาจากแคปชั่น" value="${esc(q)}" style="width:220px;padding:6px 10px;font-size:12px;">
-            <div style="position:relative;">
-              <button class="btn btn-ghost" id="ttcMetricBtn">⚙ Metrics <span style="color:var(--accent);">${cols.length}</span></button>
-              <div id="ttcMetricPanel" class="metrics-panel" style="display:none;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="table-wrap" style="max-height:1000px;overflow:auto;">
-          <table data-no-sort><thead><tr><th class="t-left">คลิป</th>${cols.map(k => `<th data-k="${k}" style="cursor:pointer;" title="${esc(M[k].tip)}">${M[k].label}${sortKey === k ? `<span class="sort-arrow">${sortDir < 0 ? '▼' : '▲'}</span>` : ''}</th>`).join('')}</tr></thead>
-          <tbody>${rows.length ? rows.map(v => `
-            <tr>
-              <td class="t-left">
-                <div style="display:flex;gap:10px;align-items:flex-start;">
-                  <a href="${esc(v.share_url || '#')}" target="_blank" rel="noopener"><img class="ttc-thumb" src="${esc(v.thumbnail_url || '')}" loading="lazy" onerror="this.style.visibility='hidden'"></a>
-                  <div><div class="ttc-cap">${esc(v.caption || '(ไม่มีแคปชั่น)')}</div>
-                  <div class="ttc-sub">${dTH(v.post_date)}</div></div>
-                </div>
-              </td>
-              ${cols.map(k => `<td>${M[k].f(v)}</td>`).join('')}
-            </tr>`).join('') : `<tr><td colspan="${cols.length + 1}" class="empty">ไม่มีคลิปในช่วงนี้</td></tr>`}
-          </tbody></table>
-        </div>
-      </div>`;
-    el.querySelector('#ttcQ').oninput = e => { q = e.target.value; renderTab(); };
-    el.querySelectorAll('th[data-k]').forEach(th => th.onclick = () => {
-      const k = th.dataset.k;
-      if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = -1; }
-      renderTab();
-    });
-    el.querySelector('#ttcMetricBtn').onclick = e => {
-      e.stopPropagation();
-      const panel = el.querySelector('#ttcMetricPanel');
-      if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
-      panel.style.display = 'block';
-      renderMetricPanel(panel);
-    };
-    document.addEventListener('click', ev => {
-      const panel = document.querySelector('#ttcMetricPanel');
-      if (panel && panel.style.display === 'block' && !panel.contains(ev.target) && ev.target.id !== 'ttcMetricBtn') panel.style.display = 'none';
-    });
-  }
-
-  // แผงเลือก Metrics — หน้าตาเดียวกับหน้าอื่นในแดชบอร์ด (ติ๊กเปิด/ปิด · ลาก ⠿ สลับลำดับ · ชี้ที่ชื่อเพื่อดูคำอธิบาย)
-  function renderMetricPanel(panel) {
-    const order = [...cols, ...Object.keys(M).filter(k => !cols.includes(k))];
-    panel.innerHTML = `
-      <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด · ชี้ที่ชื่อเพื่อดูคำอธิบาย</div>
-      <div id="ttcMetricRows">
-        ${order.map(k => {
-          const on = cols.includes(k);
-          return `<div class="metrics-dragrow" data-k="${k}" ${on ? 'draggable="true"' : ''} title="${esc(M[k].tip)}">
-            <span class="drag-handle" style="${on ? '' : 'opacity:.25;'}">⠿</span>
-            <input type="checkbox" ${on ? 'checked' : ''} data-chk="${k}" style="accent-color:var(--accent);cursor:pointer;">
-            <span style="font-size:11.5px;color:${on ? 'var(--text)' : 'var(--text3)'};flex:1;">${M[k].label}</span>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-        <button class="btn btn-ghost" style="flex:1;justify-content:center;" id="ttcMreset">ค่าแนะนำ</button>
-        <button class="btn btn-ghost" style="flex:1;justify-content:center;" id="ttcMall">เลือกทั้งหมด</button>
-      </div>`;
-
-    panel.querySelectorAll('[data-chk]').forEach(cb => cb.onchange = () => {
-      const k = cb.dataset.chk;
-      if (cb.checked) { if (!cols.includes(k)) cols.push(k); }
-      else { if (cols.length <= 1) { cb.checked = true; return; } cols = cols.filter(x => x !== k); }
-      saveCols(); renderTab(); openPanel();
-    });
-    panel.querySelector('#ttcMreset').onclick = () => { cols = [...DEFAULT_COLS]; saveCols(); renderTab(); openPanel(); };
-    panel.querySelector('#ttcMall').onclick = () => { cols = Object.keys(M); saveCols(); renderTab(); openPanel(); };
-
-    let dragK = null;
-    panel.querySelectorAll('.metrics-dragrow[draggable="true"]').forEach(row => {
-      row.ondragstart = e => { dragK = row.dataset.k; e.dataTransfer.effectAllowed = 'move'; };
-      row.ondragover = e => { e.preventDefault(); row.classList.add('drag-over'); };
-      row.ondragleave = () => row.classList.remove('drag-over');
-      row.ondrop = e => {
-        e.preventDefault(); row.classList.remove('drag-over');
-        const to = row.dataset.k;
-        if (!dragK || dragK === to || !cols.includes(to)) return;
-        cols.splice(cols.indexOf(dragK), 1);
-        cols.splice(cols.indexOf(to), 0, dragK);
-        saveCols(); renderTab(); openPanel();
+async function refreshToken(u: any) {
+  // ใช้รูปแบบเดียวกับตอนแลก token ครั้งแรกที่สำเร็จ (client_id / client_secret)
+  const bodies = [
+    { client_id: APP_ID, client_secret: APP_SECRET, grant_type: "refresh_token", refresh_token: u.refresh_token },
+    { app_id: APP_ID, secret: APP_SECRET, grant_type: "refresh_token", refresh_token: u.refresh_token },
+  ];
+  const tried: any[] = [];
+  for (const b of bodies) {
+    const res = await fetch(REFRESH_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
+    const j = await res.json();
+    tried.push({ http: res.status, reply_code: j?.code, reply_message: j?.message });
+    const d = j?.data ?? (j?.access_token ? j : null);
+    if (d?.access_token) {
+      const now = Date.now();
+      const row = {
+        open_id: u.open_id,
+        access_token: d.access_token,
+        refresh_token: d.refresh_token ?? u.refresh_token,
+        scope: Array.isArray(d.scope) ? d.scope.join(",") : (d.scope ?? u.scope),
+        expires_at: d.expires_in ? new Date(now + Number(d.expires_in) * 1000).toISOString() : null,
+        // TikTok ใช้ชื่อ refresh_token_expires_in (ไม่ใช่ refresh_expires_in)
+        refresh_expires_at: (d.refresh_token_expires_in ?? d.refresh_expires_in)
+          ? new Date(now + Number(d.refresh_token_expires_in ?? d.refresh_expires_in) * 1000).toISOString() : null,
+        raw: d,
+        updated_at: new Date().toISOString(),
       };
-    });
+      await SB.from("tiktok_tt_users").upsert(row, { onConflict: "open_id" });
+      return { ok: true, expires_at: row.expires_at, refresh_expires_at: row.refresh_expires_at, tried };
+    }
   }
+  return { ok: false, tried };
+}
 
-  function openPanel() {
-    const panel = document.querySelector('#ttcMetricPanel');
-    if (panel) { panel.style.display = 'block'; renderMetricPanel(panel); }
+async function ensureToken() {
+  let u = await getUser();
+  const left = u.expires_at ? (new Date(u.expires_at).getTime() - Date.now()) / 3600000 : -1;
+  let refreshed: any = null;
+  if (left < 6) {                       // เหลือน้อยกว่า 6 ชั่วโมง → ต่ออายุเลย
+    refreshed = await refreshToken(u);
+    if (refreshed.ok) u = await getUser();
   }
+  return { u, hours_left: Math.round(left * 10) / 10, refreshed };
+}
 
-  function renderComments(el) {
-    let list = DATA.unanswered || [];
-    if (onlyQuestions) list = list.filter(c => isQuestion(c.text));
-    el.innerHTML = `
-      <div class="card">
-        <div class="section-header">
-          <div class="section-title">คอมเมนต์ที่ยังไม่มีใครตอบ</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <label class="chip-toggle ${onlyQuestions ? 'on' : ''}" style="cursor:pointer;font-size:11.5px;"><input type="checkbox" id="ttcOnlyQ" ${onlyQuestions ? 'checked' : ''} style="margin-right:6px;">เฉพาะที่เป็นคำถาม</label>
-            <span style="font-size:10.5px;color:var(--text3);">ทั้งหมด ${fmtN(DATA.unanswered_count)} · แสดง ${fmtN(list.length)}</span>
-          </div>
-        </div>
-        <div class="table-wrap" style="max-height:900px;overflow:auto;">
-          <table data-no-sort><thead><tr><th class="t-left">วันที่</th><th class="t-left">คนเขียน</th><th class="t-left">ข้อความ</th><th>ไลก์</th><th class="t-left">คลิป</th></tr></thead>
-          <tbody>${list.length ? list.map(c => `
-            <tr>
-              <td class="t-left">${dTH(c.comment_date)}</td>
-              <td class="t-left">${esc(c.display_name || c.username || '')}</td>
-              <td class="t-left" style="max-width:420px;white-space:normal;line-height:1.55;">${esc(c.text || '')}</td>
-              <td>${fmtN(c.likes)}</td>
-              <td class="t-left"><a href="${esc(c.share_url || '#')}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;"><div class="ttc-cap" style="max-width:230px;-webkit-line-clamp:1;">${esc(c.caption || 'เปิดคลิป')}</div></a></td>
-            </tr>`).join('') : '<tr><td colspan="5" class="empty">ไม่มีคอมเมนต์ค้างตอบ 🎉</td></tr>'}
-          </tbody></table>
-        </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:10px;line-height:1.6;">"เป็นคำถาม" ดูจากคำอย่าง ไหม / มั้ย / เท่าไร / ราคา / สั่ง / ซื้อ / มีขาย — ที่เหลือมักเป็นคำชมหรืออีโมจิ ซึ่งไม่ต้องรีบตอบ</div>
-      </div>`;
-    el.querySelector('#ttcOnlyQ').onchange = e => { onlyQuestions = e.target.checked; renderTab(); };
-  }
+// ---------- เรียก API ----------
+async function call(path: string, token: string, params: Record<string, string>) {
+  const url = new URL(BASE + path);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), { headers: { "Access-Token": token } });
+  const j = await res.json();
+  return { http: res.status, url: url.toString().replace(/Access-Token[^&]*/, ""), reply: j };
+}
 
-  // ===== หน้าแยก: ค้นหาคำที่คนใช้บน TikTok (ไม่เกี่ยวกับคลิปช่องเรา จึงแยกออกมา) =====
-  function renderKeywordPage() {
-    const el = document.getElementById('page-ttkeyword'); if (!el) return;
-    el.innerHTML = `
-      <style>
-        #page-ttkeyword .kw-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:8px; }
-        #page-ttkeyword .kw-item { display:flex; align-items:center; gap:9px; background:var(--bg3); border:1px solid var(--border);
-          border-radius:8px; padding:9px 11px; font-size:12.5px; }
-        #page-ttkeyword .kw-rank { font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--text3); min-width:18px; }
-        #page-ttkeyword .kw-word { flex:1; color:var(--text); }
-        #page-ttkeyword .kw-again { background:none; border:none; color:var(--text3); cursor:pointer; font-size:12px; padding:2px 4px; border-radius:5px; }
-        #page-ttkeyword .kw-again:hover { color:var(--accent); background:var(--bg2); }
-        #page-ttkeyword .kw-note { font-size:11px; color:var(--text3); line-height:1.7; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
-      </style>
-      <div class="card">
-        <div class="section-header"><div class="section-title">ค้นหาคำที่คนใช้จริงบน TikTok</div><span style="font-size:10.5px;color:var(--text3);">พิมพ์คำที่เกี่ยวกับสินค้า แล้วดูว่าคนค้นคำใกล้เคียงอะไรบ้าง — เอาไปตั้งชื่อคลิปและใส่แฮชแท็ก</span></div>
-        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-          <input type="text" class="ls-input" id="kwInput" placeholder="เช่น แป้ง, กันแดด, ลิป" style="width:260px;padding:9px 13px;font-size:13px;">
-          <button class="btn btn-primary" id="kwGo">ค้นหา</button>
-          <span style="font-size:11px;color:var(--text3);margin-left:4px;">ลัด:</span>
-          ${['แป้ง', 'กันแดด', 'ลิป', 'คุชชั่น', 'รองพื้น', 'เซรั่ม'].map(w => `<button class="btn btn-ghost kw-quick" data-w="${w}">${w}</button>`).join('')}
-        </div>
-        <div id="kwResult" style="font-size:12.5px;color:var(--text3);">พิมพ์คำแล้วกดค้นหา</div>
-      </div>`;
-    const go = async () => {
-      const w = el.querySelector('#kwInput').value.trim(); if (!w) return;
-      const box = el.querySelector('#kwResult');
-      box.innerHTML = 'กำลังค้นหา...';
-      try {
-        const r = await fetch(`${window.SUPABASE_URL}/functions/v1/tiktok-probe?only=keyword&q=${encodeURIComponent(w)}`);
-        const j = await r.json();
-        const words = j?.keyword?.คำทั้งหมด || [];
-        box.innerHTML = words.length
-          ? `<div style="margin-bottom:12px;color:var(--text2);">คนที่ค้นคำว่า "<b>${esc(w)}</b>" มักค้นคำพวกนี้ด้วย — ${words.length} คำ</div>
-             <div class="kw-grid">${words.map((x, i) => `
-               <div class="kw-item"><span class="kw-rank">${i + 1}</span><span class="kw-word">${esc(x)}</span><button class="kw-again" data-w="${esc(x)}" title="ค้นต่อจากคำนี้">↻</button></div>`).join('')}</div>
-             <div class="kw-note">เรียงตามลำดับที่ TikTok ส่งมา ซึ่งปกติคือคำที่เกี่ยวข้องมากที่สุดอยู่บนสุด — <b>แต่ TikTok ไม่ได้ให้ตัวเลขจำนวนครั้งที่คนค้นมาด้วย</b> จึงบอกไม่ได้ว่าคำไหนคนค้นมากกว่ากันเท่าไร<br>กดปุ่ม ↻ ข้างคำเพื่อค้นต่อจากคำนั้น จะได้เห็นคำที่ลึกลงไปอีกชั้น</div>`
-          : `ไม่พบคำที่เกี่ยวข้อง ${esc(j?.keyword?.message || j?.result || '')}`;
-        box.querySelectorAll('.kw-again').forEach(b4 => b4.onclick = () => { el.querySelector('#kwInput').value = b4.dataset.w; go(); });
-      } catch (e) {
-        box.innerHTML = `ค้นหาไม่สำเร็จ: ${esc(e.message)}<br><span style="font-size:11px;">ถ้าขึ้น Failed to fetch แปลว่ายังไม่ได้ deploy tiktok-probe ตัวใหม่ที่เปิดให้เบราว์เซอร์เรียกได้</span>`;
-      }
+// ชื่อช่องที่ TikTok ยอมรับจริง (ได้มาจากข้อความ error รอบแรก)
+const ACCOUNT_FIELDS = ["display_name", "username", "profile_image", "is_business_account", "is_verified",
+  "bio_description", "followers_count", "following_count", "videos_count", "total_likes",
+  "daily_new_followers", "daily_lost_followers", "daily_total_followers", "followers_growth_rate",
+  "profile_views", "video_views", "unique_video_views", "likes", "comments", "shares",
+  "engagement_rate", "completion_rate", "average_views", "average_likes", "average_comments", "average_shares",
+  "audience_countries", "audience_cities", "audience_genders", "audience_ages", "audience_activity",
+  "bio_link_clicks", "profile_deep_link"];
+const VIDEO_FIELDS = ["item_id", "create_time", "thumbnail_url", "share_url", "embed_url", "caption",
+  "video_views", "likes", "comments", "shares", "reach", "full_video_watched_rate",
+  "total_time_watched", "average_time_watched", "impression_sources", "audience_countries"];
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });   // เบราว์เซอร์ถามสิทธิ์ก่อนเรียกจริง
+  const t0 = Date.now();
+  const url = new URL(req.url);
+  const mode = url.searchParams.get("mode") || "all";
+  const days = parseInt(url.searchParams.get("days") || "30");
+
+  try {
+    if (!APP_ID || !APP_SECRET) return json({ result: "ยังไม่ได้ตั้ง secret TIKTOK_APP_ID / TIKTOK_APP_SECRET" }, 500);
+
+    const { u, hours_left, refreshed } = await ensureToken();
+    const token = u.access_token;
+    const bizId = u.open_id;
+
+    const out: any = {
+      token_status: {
+        open_id: bizId,
+        เหลืออีกกี่ชั่วโมง: hours_left,
+        หมดอายุ: u.expires_at,
+        refresh_หมดอายุ: u.refresh_expires_at,
+        ต่ออายุรอบนี้: refreshed ? (refreshed.ok ? "สำเร็จ" : "ไม่สำเร็จ") : "ยังไม่ถึงเวลา",
+        ต่ออายุ_รายละเอียด: refreshed?.tried ?? null,
+      },
     };
-    el.querySelector('#kwGo').onclick = go;
-    el.querySelector('#kwInput').onkeydown = e => { if (e.key === 'Enter') go(); };
-    el.querySelectorAll('.kw-quick').forEach(b3 => b3.onclick = () => { el.querySelector('#kwInput').value = b3.dataset.w; go(); });
-  }
-  window.renderTtKeywordPage = renderKeywordPage;
+    if (mode === "token") return json(out);
 
-  window.renderTtContentPage = function () { if (DATA) render(); else load(); };
-})();
+    const end = new Date(Date.now() - 86400000);                       // เมื่อวาน — TikTok ไม่รับวันนี้
+    // ฝั่งข้อมูลบัญชี TikTok ให้ช่วงละไม่เกิน ~30 วัน (คลิปไม่จำกัด ใช้ days เต็ม)
+    const accDays = Math.min(days, 30);
+    const start = new Date(Date.now() - (accDays + 1) * 86400000);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+    const writing = mode === "sync";
+
+    if (mode === "account" || mode === "all" || writing) {
+      out.account = await call("/business/get/", token, {
+        business_id: bizId,
+        fields: JSON.stringify(ACCOUNT_FIELDS),
+        start_date: fmt(start), end_date: fmt(end),
+      });
+      out.account_range = { start: fmt(start), end: fmt(end) };
+    }
+
+    if (writing) {
+      const d = out.account?.reply?.data;
+      if (d) {
+        await SB.from("tiktok_account_profile").upsert({
+          open_id: bizId, username: d.username, display_name: d.display_name,
+          bio_description: d.bio_description, profile_image: d.profile_image, profile_deep_link: d.profile_deep_link,
+          followers_count: d.followers_count, following_count: d.following_count,
+          videos_count: d.videos_count, total_likes: d.total_likes,
+          audience_ages: d.audience_ages, audience_genders: d.audience_genders,
+          audience_countries: d.audience_countries, audience_cities: d.audience_cities,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "open_id" });
+
+        const rows = (d.metrics ?? [])
+          .filter((m: any) => m.date && (m.followers_count || m.video_views))   // ตัดวันที่ยังไม่มีข้อมูล
+          .map((m: any) => ({
+            stat_date: m.date,
+            followers_count: m.followers_count, daily_new_followers: m.daily_new_followers,
+            daily_lost_followers: m.daily_lost_followers,
+            daily_net_followers: (m.daily_new_followers ?? 0) - (m.daily_lost_followers ?? 0),
+            profile_views: m.profile_views, video_views: m.video_views, unique_video_views: m.unique_video_views,
+            likes: m.likes, comments: m.comments, shares: m.shares, bio_link_clicks: m.bio_link_clicks,
+            audience_activity: m.audience_activity, updated_at: new Date().toISOString(),
+          }));
+        if (rows.length) {
+          const { error } = await SB.from("tiktok_account_daily").upsert(rows, { onConflict: "stat_date" });
+          out.saved_account_daily = error ? "ผิดพลาด: " + error.message : rows.length + " วัน";
+        }
+      }
+      if (!out.saved_account_daily) out.saved_account_daily = "ไม่ได้บันทึก — " + (out.account?.reply?.message ?? "ไม่มีข้อมูลส่งกลับมา");
+      // ไม่ต้องโชว์ข้อมูลดิบก้อนใหญ่ตอนเก็บจริง
+      delete out.account;
+    }
+
+    if (mode === "videos" || mode === "all" || writing) {
+      // ไล่ทีละหน้าจนหมด (หรือจนถึงเพดานกันวน)
+      const maxPages = parseInt(url.searchParams.get("pages") || "80");
+      const cutoff = Math.floor((Date.now() - days * 86400000) / 1000);   // ดึงย้อนหลังแค่ตามช่วงที่ขอ
+      let cursor: string | null = null, pages = 0;
+      const seen = new Set<string>();
+      const all: any[] = []; let last: any = null; const pageLog: any[] = [];
+      while (pages < maxPages) {
+        const params: Record<string, string> = { business_id: bizId, fields: JSON.stringify(VIDEO_FIELDS), max_count: "20" };
+        if (cursor) params.cursor = cursor;
+        const r = await call("/business/video/list/", token, params);
+        last = r; pages++;
+        const d = r.reply?.data;
+        const list = d?.videos ?? d?.list ?? null;
+        const before = all.length;
+        if (Array.isArray(list)) {
+          for (const v of list) { const id = String(v.item_id); if (!seen.has(id)) { seen.add(id); all.push(v); } }
+        }
+        pageLog.push({
+          หน้าที่: pages, ได้มา: Array.isArray(list) ? list.length : null, ใหม่จริง: all.length - before,
+          has_more: d?.has_more ?? null, cursor_ที่ส่งกลับ: d?.cursor ?? null,
+          ช่องใน_data: d ? Object.keys(d) : null, code: r.reply?.code, message: r.reply?.message,
+        });
+        // หน้าที่ไม่มีคลิปเลยก็ต้องเดินต่อ — TikTok เดินทีละช่วงเวลา บางช่วงไม่มีคลิป
+        if (!d?.has_more) break;
+        const next = d?.cursor ?? d?.next_cursor ?? d?.page_cursor ?? null;
+        if (next === null || next === undefined || String(next) === "" || String(next) === cursor) break;
+        cursor = String(next);
+        // cursor เป็นเวลาแบบมิลลิวินาที — ถ้าย้อนเลยช่วงที่ขอแล้วก็หยุด
+        if (Number(cursor) > 1000000000000 && Number(cursor) / 1000 < cutoff) break;
+      }
+      const oldest = all.length ? Math.min(...all.map(v => Number(v.create_time || 0))) : null;
+      out.videos = {
+        reply_code: last?.reply?.code,
+        reply_message: last?.reply?.message,
+        จำนวนคลิปทั้งหมดที่ดึงได้: all.length,
+        จำนวนหน้าที่ไล่: pages,
+        ยังมีต่อไหม: last?.reply?.data?.has_more ?? null,
+        คลิปเก่าสุดที่ได้: oldest ? new Date(oldest * 1000).toISOString().slice(0, 10) : null,
+        ช่องที่ได้มา: all.length ? Object.keys(all[0]) : null,
+        ไล่ทีละหน้า_สรุป: { หน้าที่มีคลิป: pageLog.filter(x => (x.ได้มา ?? 0) > 0).length, หน้าที่ว่าง: pageLog.filter(x => !x.ได้มา).length },
+        ไล่ทีละหน้า_5หน้าสุดท้าย: pageLog.slice(-5),
+        ตัวอย่าง_1_คลิป: all.length ? all[0] : null,
+        คำตอบดิบ_ถ้าไม่สำเร็จ: (!all.length ? last?.reply : undefined),
+      };
+
+      if (writing && all.length) {
+        const srcOf = (v: any, name: string) =>
+          (v.impression_sources ?? []).find((x: any) => x.impression_source === name)?.percentage ?? null;
+        const rows = all.map(v => ({
+          item_id: String(v.item_id),
+          create_time: v.create_time ? new Date(Number(v.create_time) * 1000).toISOString() : null,
+          post_date: v.create_time ? new Date(Number(v.create_time) * 1000).toISOString().slice(0, 10) : null,
+          caption: v.caption ?? null,
+          thumbnail_url: v.thumbnail_url ?? null,
+          share_url: v.share_url ?? null,
+          embed_url: v.embed_url ?? null,
+          video_views: v.video_views ?? 0, likes: v.likes ?? 0, comments: v.comments ?? 0,
+          shares: v.shares ?? 0, reach: v.reach ?? 0,
+          full_video_watched_rate: v.full_video_watched_rate ?? null,
+          average_time_watched: v.average_time_watched ?? null,
+          total_time_watched: v.total_time_watched ?? null,
+          impression_sources: v.impression_sources ?? null,
+          src_foryou: srcOf(v, "For You"), src_search: srcOf(v, "Search"),
+          src_follow: srcOf(v, "Follow"), src_profile: srcOf(v, "Personal Profile"),
+          raw: v, updated_at: new Date().toISOString(),
+        }));
+        let saved = 0;
+        for (let i = 0; i < rows.length; i += 200) {
+          const { error } = await SB.from("tiktok_videos").upsert(rows.slice(i, i + 200), { onConflict: "item_id" });
+          if (error) { out.saved_videos = "ผิดพลาด: " + error.message; saved = -1; break; }
+          saved += rows.slice(i, i + 200).length;
+        }
+        if (saved >= 0) out.saved_videos = saved + " คลิป";
+        // เก็บแล้วไม่ต้องโชว์ก้อนใหญ่
+        delete out.videos.ตัวอย่าง_1_คลิป;
+        delete out.videos.ไล่ทีละหน้า_5หน้าสุดท้าย;
+      }
+    }
+
+    // ---------- คอมเมนต์ของคลิป 30 วันล่าสุด + ค่าเฉลี่ยวงการ (เฉพาะตอนเก็บจริง) ----------
+    if (writing) {
+      // ค่าเฉลี่ยวงการความงาม
+      try {
+        const bEnd = new Date(Date.now() - 86400000), bStart = new Date(Date.now() - 31 * 86400000);
+        const b = await call("/business/benchmark/", token, {
+          business_id: bizId, business_category: "BEAUTY",
+          start_date: bStart.toISOString().slice(0, 10), end_date: bEnd.toISOString().slice(0, 10),
+        });
+        const bd = b.reply?.data;
+        if (bd) {
+          await SB.from("tiktok_benchmark").upsert({
+            stat_date: bEnd.toISOString().slice(0, 10),
+            business_category: bd.business_category ?? "BEAUTY",
+            average_engagement_rate: bd.average_engagement_rate,
+            average_follower_count: bd.average_follower_count,
+            average_follower_growth: bd.average_follower_growth,
+            average_video_views: bd.average_video_views,
+            average_likes: bd.average_likes, average_comments: bd.average_comments,
+            average_shares: bd.average_shares, average_video_count: bd.average_video_count,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "stat_date" });
+          out.saved_benchmark = "1 วัน";
+        } else out.saved_benchmark = "ไม่ได้ — " + (b.reply?.message ?? "");
+      } catch (e) { out.saved_benchmark = "ไม่ได้ — " + String(e); }
+
+      // คอมเมนต์: เฉพาะคลิปที่โพสต์ใน 30 วันล่าสุด และมีคอมเมนต์อย่างน้อย 1
+      const since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+      const { data: recent, error: recErr } = await SB.from("tiktok_videos")
+        .select("item_id, comments, post_date").gte("post_date", since).gt("comments", 0)
+        .order("post_date", { ascending: false }).limit(120);
+      out.comment_scan = {
+        ตั้งแต่วันที่: since,
+        คลิปที่มีคอมเมนต์: recent?.length ?? 0,
+        error: recErr?.message ?? null,
+        ตัวอย่าง: (recent ?? []).slice(0, 3),
+      };
+      let cRows: any[] = [], cClips = 0;
+      for (const v of (recent ?? [])) {
+        let cur: string | null = null, guard = 0;
+        while (guard++ < 10) {
+          const params: Record<string, string> = { business_id: bizId, video_id: String(v.item_id), max_count: "20" };
+          if (cur) params.cursor = cur;
+          const r = await call("/business/comment/list/", token, params);
+          const d = r.reply?.data; const list = d?.comments;
+          if (!Array.isArray(list)) {
+            if (!out.comment_error) out.comment_error = { คลิป: String(v.item_id), code: r.reply?.code, message: r.reply?.message };
+            break;
+          }
+          for (const c of list) {
+            const mine = (c.reply_list ?? []).find((x: any) => x.owner === true);
+            cRows.push({
+              comment_id: String(c.comment_id), video_id: String(c.video_id ?? v.item_id),
+              text: c.text ?? null, display_name: c.display_name ?? null, username: c.username ?? null,
+              profile_image: c.profile_image ?? null, likes: c.likes ?? 0, replies: c.replies ?? 0,
+              pinned: !!c.pinned, is_owner: !!c.owner,
+              answered: !!mine, answered_at: mine?.create_time ? new Date(String(mine.create_time).replace(" ", "T") + "+00:00").toISOString() : null,
+              our_reply: mine?.text ?? null,
+              create_time: c.create_time ? new Date(Number(c.create_time) * 1000).toISOString() : null,
+              comment_date: c.create_time ? new Date(Number(c.create_time) * 1000).toISOString().slice(0, 10) : null,
+              raw: c, updated_at: new Date().toISOString(),
+            });
+          }
+          if (!d?.has_more) break;
+          cur = String(d.cursor ?? ""); if (!cur) break;
+        }
+        cClips++;
+      }
+      if (cRows.length) {
+        let ok = 0;
+        for (let i = 0; i < cRows.length; i += 200) {
+          const { error } = await SB.from("tiktok_comments").upsert(cRows.slice(i, i + 200), { onConflict: "comment_id" });
+          if (error) { out.saved_comments = "ผิดพลาด: " + error.message; ok = -1; break; }
+          ok += cRows.slice(i, i + 200).length;
+        }
+        if (ok >= 0) out.saved_comments = ok + " คอมเมนต์ จาก " + cClips + " คลิป";
+      } else out.saved_comments = "ไม่มีคอมเมนต์ที่ดึงได้ — ดู comment_scan ว่าเจอคลิปกี่คลิป";
+    }
+
+    out.ms = Date.now() - t0;
+    return json(out);
+  } catch (e) {
+    return json({ result: "ไม่สำเร็จ", error: String((e as Error).message ?? e), ms: Date.now() - t0 }, 500);
+  }
+});
