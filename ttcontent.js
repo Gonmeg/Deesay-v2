@@ -13,26 +13,46 @@
   // ===== metric ทั้งหมดที่ TikTok ให้ได้ + ที่คำนวณต่อเอง =====
   // v = ค่าที่เอาไปเรียง · f = วิธีแสดง
   const M = {
-    post_date:   { label: 'วันที่',        v: c => c.post_date || '',             f: c => dTH(c.post_date) },
-    video_views: { label: 'วิว',           v: c => +c.video_views || 0,           f: c => `<b>${fmtN(c.video_views)}</b>` },
-    views_day:   { label: 'วิว/วัน',       v: c => viewsPerDay(c),                f: c => fmtN(viewsPerDay(c)) },
-    likes:       { label: 'ไลก์',          v: c => +c.likes || 0,                 f: c => fmtN(c.likes) },
-    comments:    { label: 'คอมเมนต์',      v: c => +c.comments || 0,              f: c => fmtN(c.comments) },
-    shares:      { label: 'แชร์',          v: c => +c.shares || 0,                f: c => fmtN(c.shares) },
-    eng_rate:    { label: 'ER%',           v: c => engOf(c),                      f: c => pct(engOf(c), 2) },
-    like_rate:   { label: 'ไลก์/วิว',      v: c => rate(c.likes, c.video_views),  f: c => pct(rate(c.likes, c.video_views), 2) },
-    cmt_rate:    { label: 'คอมเมนต์/วิว',  v: c => rate(c.comments, c.video_views), f: c => pct(rate(c.comments, c.video_views), 2) },
-    shr_rate:    { label: 'แชร์/วิว',      v: c => rate(c.shares, c.video_views), f: c => pct(rate(c.shares, c.video_views), 2) },
-    watched:     { label: 'ดูจนจบ',        v: c => +c.full_video_watched_rate || 0, f: c => pct(c.full_video_watched_rate, 1) },
-    avg_time:    { label: 'ดูเฉลี่ย (วิ)', v: c => +c.average_time_watched || 0,  f: c => fmtN(c.average_time_watched, 1) },
-    total_time:  { label: 'เวลาดูรวม (ชม.)', v: c => (+c.total_time_watched || 0) / 3600, f: c => fmtN((+c.total_time_watched || 0) / 3600, 1) },
-    src_foryou:  { label: 'ฟีด',           v: c => +c.src_foryou || 0,            f: c => pct(c.src_foryou, 1) },
-    src_search:  { label: 'ค้นหา',         v: c => +c.src_search || 0,            f: c => pct(c.src_search, 1) },
-    src_follow:  { label: 'ผู้ติดตาม',     v: c => +c.src_follow || 0,            f: c => pct(c.src_follow, 1) },
-    src_profile: { label: 'โปรไฟล์',       v: c => +c.src_profile || 0,           f: c => pct(c.src_profile, 1) },
-    src_sound:   { label: 'เสียง',         v: c => srcOf(c, 'Sound'),             f: c => pct(srcOf(c, 'Sound'), 1) },
-    src_dm:      { label: 'แชร์ทาง DM',    v: c => srcOf(c, 'Direct Message'),    f: c => pct(srcOf(c, 'Direct Message'), 1) },
-    src_others:  { label: 'อื่น ๆ',        v: c => srcOf(c, 'Others'),            f: c => pct(srcOf(c, 'Others'), 1) },
+    post_date:   { label: 'Date',        tip: 'วันที่โพสต์คลิป',
+                   v: c => c.post_date || '',             f: c => dTH(c.post_date) },
+    video_views: { label: 'Views',       tip: 'ยอดวิวสะสมทั้งหมดของคลิป (รวมทั้งที่มาจากแอดและออร์แกนิก)',
+                   v: c => +c.video_views || 0,           f: c => `<b>${fmtN(c.video_views)}</b>` },
+    views_day:   { label: 'Views/day',   tip: 'ยอดวิวสะสม ÷ จำนวนวันตั้งแต่โพสต์ — ใช้เทียบคลิปใหม่กับคลิปเก่าอย่างยุติธรรม',
+                   v: c => viewsPerDay(c),                f: c => fmtN(viewsPerDay(c)) },
+    likes:       { label: 'Likes',       tip: 'จำนวนคนกดหัวใจ',
+                   v: c => +c.likes || 0,                 f: c => fmtN(c.likes) },
+    comments:    { label: 'Comments',    tip: 'จำนวนคอมเมนต์ใต้คลิป',
+                   v: c => +c.comments || 0,              f: c => fmtN(c.comments) },
+    shares:      { label: 'Shares',      tip: 'จำนวนครั้งที่ถูกแชร์ต่อ',
+                   v: c => +c.shares || 0,                f: c => fmtN(c.shares) },
+    eng_rate:    { label: 'ER%',         tip: 'Engagement Rate = (ไลก์ + คอมเมนต์ + แชร์) ÷ วิว — ค่าเฉลี่ยวงการความงามอยู่ที่ 1.01%',
+                   v: c => engOf(c),                      f: c => pct(engOf(c), 2) },
+    like_rate:   { label: 'Like rate',   tip: 'ไลก์ ÷ วิว — คนดูแล้วชอบมากแค่ไหน',
+                   v: c => rate(c.likes, c.video_views),  f: c => pct(rate(c.likes, c.video_views), 2) },
+    cmt_rate:    { label: 'Comment rate',tip: 'คอมเมนต์ ÷ วิว — คลิปที่ชวนให้คนอยากพิมพ์ตอบ มักเป็นคลิปที่ตั้งคำถามหรือมีดราม่า',
+                   v: c => rate(c.comments, c.video_views), f: c => pct(rate(c.comments, c.video_views), 2) },
+    shr_rate:    { label: 'Share rate',  tip: 'แชร์ ÷ วิว — ตัวชี้วัดที่ดีที่สุดว่าคอนเทนต์มีคุณค่าจริง เพราะคนยอมส่งต่อให้เพื่อน',
+                   v: c => rate(c.shares, c.video_views), f: c => pct(rate(c.shares, c.video_views), 2) },
+    watched:     { label: 'Watched full',tip: '% ของคนที่ดูคลิปจนจบ — คลิปสั้นจะได้ค่าสูงกว่าคลิปยาวโดยธรรมชาติ',
+                   v: c => +c.full_video_watched_rate || 0, f: c => pct(c.full_video_watched_rate, 1) },
+    avg_time:    { label: 'Avg watch (s)',tip: 'เวลาที่คนดูเฉลี่ยกี่วินาทีก่อนเลื่อนผ่าน — ยิ่งสูงยิ่งดี แปลว่าท่อนเปิดดึงคนอยู่',
+                   v: c => +c.average_time_watched || 0,  f: c => fmtN(c.average_time_watched, 1) },
+    total_time:  { label: 'Watch time (h)',tip: 'เวลาที่คนดูคลิปนี้รวมกันทั้งหมด คิดเป็นชั่วโมง',
+                   v: c => (+c.total_time_watched || 0) / 3600, f: c => fmtN((+c.total_time_watched || 0) / 3600, 1) },
+    src_foryou:  { label: 'For You',     tip: 'ยอดวิว % ที่มาจากหน้าฟีด — สูง = อัลกอริทึมดันให้คนใหม่เห็น',
+                   v: c => +c.src_foryou || 0,            f: c => pct(c.src_foryou, 1) },
+    src_search:  { label: 'Search',      tip: 'ยอดวิว % ที่มาจากคนกดค้นหา — สูง = คนตั้งใจหาแบรนด์หรือสินค้าเรา',
+                   v: c => +c.src_search || 0,            f: c => pct(c.src_search, 1) },
+    src_follow:  { label: 'Followers',   tip: 'ยอดวิว % ที่มาจากคนที่ติดตามอยู่แล้ว — สูงแต่ For You ต่ำ = ไม่กระจายออกนอกกลุ่มเดิม',
+                   v: c => +c.src_follow || 0,            f: c => pct(c.src_follow, 1) },
+    src_profile: { label: 'Profile',     tip: 'ยอดวิว % ที่มาจากคนเข้ามาดูในโปรไฟล์เรา',
+                   v: c => +c.src_profile || 0,           f: c => pct(c.src_profile, 1) },
+    src_sound:   { label: 'Sound',       tip: 'ยอดวิว % ที่มาจากคนกดดูผ่านหน้าเสียง/เพลงที่ใช้ในคลิป',
+                   v: c => srcOf(c, 'Sound'),             f: c => pct(srcOf(c, 'Sound'), 1) },
+    src_dm:      { label: 'DM',          tip: 'ยอดวิว % ที่มาจากคนส่งคลิปให้กันทางข้อความ',
+                   v: c => srcOf(c, 'Direct Message'),    f: c => pct(srcOf(c, 'Direct Message'), 1) },
+    src_others:  { label: 'Others',      tip: 'ยอดวิว % จากช่องทางอื่นที่ TikTok ไม่ได้แยกไว้',
+                   v: c => srcOf(c, 'Others'),            f: c => pct(srcOf(c, 'Others'), 1) },
   };
   const DEFAULT_COLS = ['post_date', 'video_views', 'likes', 'comments', 'shares', 'eng_rate', 'watched', 'avg_time', 'src_foryou', 'src_search'];
   const LS = 'ttc_cols_v1';
@@ -240,12 +260,14 @@
           <div class="section-title">คลิปทั้งหมดในช่วงนี้</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <input type="text" class="ls-input" id="ttcQ" placeholder="🔎 ค้นหาจากแคปชั่น" value="${esc(q)}" style="width:220px;padding:6px 10px;font-size:12px;">
-            <button class="btn btn-ghost" id="ttcMetricBtn">⚙ เลือกคอลัมน์ <span style="color:var(--accent);">${cols.length}</span></button>
+            <div style="position:relative;">
+              <button class="btn btn-ghost" id="ttcMetricBtn">⚙ Metrics <span style="color:var(--accent);">${cols.length}</span></button>
+              <div id="ttcMetricPanel" class="metrics-panel" style="display:none;"></div>
+            </div>
           </div>
         </div>
-        <div id="ttcMetricPanel" style="display:none;"></div>
         <div class="table-wrap" style="max-height:1000px;overflow:auto;">
-          <table data-no-sort><thead><tr><th class="t-left">คลิป</th>${cols.map(k => `<th data-k="${k}" style="cursor:pointer;">${M[k].label}${sortKey === k ? `<span class="sort-arrow">${sortDir < 0 ? '▼' : '▲'}</span>` : ''}</th>`).join('')}</tr></thead>
+          <table data-no-sort><thead><tr><th class="t-left">คลิป</th>${cols.map(k => `<th data-k="${k}" style="cursor:pointer;" title="${esc(M[k].tip)}">${M[k].label}${sortKey === k ? `<span class="sort-arrow">${sortDir < 0 ? '▼' : '▲'}</span>` : ''}</th>`).join('')}</tr></thead>
           <tbody>${rows.length ? rows.map(v => `
             <tr>
               <td class="t-left">
@@ -266,53 +288,64 @@
       if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = -1; }
       renderTab();
     });
-    el.querySelector('#ttcMetricBtn').onclick = () => {
+    el.querySelector('#ttcMetricBtn').onclick = e => {
+      e.stopPropagation();
       const panel = el.querySelector('#ttcMetricPanel');
       if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
       panel.style.display = 'block';
       renderMetricPanel(panel);
     };
+    document.addEventListener('click', ev => {
+      const panel = document.querySelector('#ttcMetricPanel');
+      if (panel && panel.style.display === 'block' && !panel.contains(ev.target) && ev.target.id !== 'ttcMetricBtn') panel.style.display = 'none';
+    });
   }
 
-  // แผงเลือกคอลัมน์ — ติ๊กเปิด/ปิด และลากสลับลำดับได้
+  // แผงเลือก Metrics — หน้าตาเดียวกับหน้าอื่นในแดชบอร์ด (ติ๊กเปิด/ปิด · ลาก ⠿ สลับลำดับ · ชี้ที่ชื่อเพื่อดูคำอธิบาย)
   function renderMetricPanel(panel) {
-    const off = Object.keys(M).filter(k => !cols.includes(k));
+    const order = [...cols, ...Object.keys(M).filter(k => !cols.includes(k))];
     panel.innerHTML = `
-      <div class="ttc-mpanel">
-        <div class="ttc-mtitle">คอลัมน์ที่แสดง <span style="color:var(--text3);font-weight:400;">— ลากเพื่อสลับลำดับ</span></div>
-        <div id="ttcOn" class="ttc-mlist">${cols.map(k => `
-          <div class="ttc-mchip on" draggable="true" data-k="${k}"><span class="ttc-drag">⠿</span>${M[k].label}<span class="ttc-x" data-off="${k}">✕</span></div>`).join('')}</div>
-        <div class="ttc-mtitle" style="margin-top:14px;">ยังไม่ได้แสดง <span style="color:var(--text3);font-weight:400;">— กดเพื่อเพิ่ม</span></div>
-        <div class="ttc-mlist">${off.length ? off.map(k => `<div class="ttc-mchip" data-add="${k}">+ ${M[k].label}</div>`).join('') : '<span style="font-size:11.5px;color:var(--text3);">แสดงครบทุกคอลัมน์แล้ว</span>'}</div>
-        <div style="margin-top:12px;"><button class="btn btn-ghost" id="ttcMreset">คืนค่าเริ่มต้น</button></div>
+      <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด · ชี้ที่ชื่อเพื่อดูคำอธิบาย</div>
+      <div id="ttcMetricRows">
+        ${order.map(k => {
+          const on = cols.includes(k);
+          return `<div class="metrics-dragrow" data-k="${k}" ${on ? 'draggable="true"' : ''} title="${esc(M[k].tip)}">
+            <span class="drag-handle" style="${on ? '' : 'opacity:.25;'}">⠿</span>
+            <input type="checkbox" ${on ? 'checked' : ''} data-chk="${k}" style="accent-color:var(--accent);cursor:pointer;">
+            <span style="font-size:11.5px;color:${on ? 'var(--text)' : 'var(--text3)'};flex:1;">${M[k].label}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center;" id="ttcMreset">ค่าแนะนำ</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center;" id="ttcMall">เลือกทั้งหมด</button>
       </div>`;
-    panel.querySelectorAll('[data-add]').forEach(b2 => b2.onclick = () => { cols.push(b2.dataset.add); saveCols(); renderTab(); openPanel(); });
-    panel.querySelectorAll('[data-off]').forEach(b2 => b2.onclick = e => {
-      e.stopPropagation();
-      if (cols.length <= 1) return;
-      cols = cols.filter(k => k !== b2.dataset.off); saveCols(); renderTab(); openPanel();
+
+    panel.querySelectorAll('[data-chk]').forEach(cb => cb.onchange = () => {
+      const k = cb.dataset.chk;
+      if (cb.checked) { if (!cols.includes(k)) cols.push(k); }
+      else { if (cols.length <= 1) { cb.checked = true; return; } cols = cols.filter(x => x !== k); }
+      saveCols(); renderTab(); openPanel();
     });
     panel.querySelector('#ttcMreset').onclick = () => { cols = [...DEFAULT_COLS]; saveCols(); renderTab(); openPanel(); };
+    panel.querySelector('#ttcMall').onclick = () => { cols = Object.keys(M); saveCols(); renderTab(); openPanel(); };
 
-    // ลากสลับลำดับ
-    const list = panel.querySelector('#ttcOn');
     let dragK = null;
-    list.querySelectorAll('.ttc-mchip.on').forEach(chip => {
-      chip.ondragstart = e => { dragK = chip.dataset.k; chip.style.opacity = '.4'; e.dataTransfer.effectAllowed = 'move'; };
-      chip.ondragend = () => { chip.style.opacity = ''; };
-      chip.ondragover = e => { e.preventDefault(); chip.style.borderColor = 'var(--accent)'; };
-      chip.ondragleave = () => { chip.style.borderColor = ''; };
-      chip.ondrop = e => {
-        e.preventDefault(); chip.style.borderColor = '';
-        const to = chip.dataset.k;
-        if (!dragK || dragK === to) return;
-        const from = cols.indexOf(dragK);
-        cols.splice(from, 1);
+    panel.querySelectorAll('.metrics-dragrow[draggable="true"]').forEach(row => {
+      row.ondragstart = e => { dragK = row.dataset.k; e.dataTransfer.effectAllowed = 'move'; };
+      row.ondragover = e => { e.preventDefault(); row.classList.add('drag-over'); };
+      row.ondragleave = () => row.classList.remove('drag-over');
+      row.ondrop = e => {
+        e.preventDefault(); row.classList.remove('drag-over');
+        const to = row.dataset.k;
+        if (!dragK || dragK === to || !cols.includes(to)) return;
+        cols.splice(cols.indexOf(dragK), 1);
         cols.splice(cols.indexOf(to), 0, dragK);
         saveCols(); renderTab(); openPanel();
       };
     });
   }
+
   function openPanel() {
     const panel = document.querySelector('#ttcMetricPanel');
     if (panel) { panel.style.display = 'block'; renderMetricPanel(panel); }
@@ -351,6 +384,16 @@
   function renderKeywordPage() {
     const el = document.getElementById('page-ttkeyword'); if (!el) return;
     el.innerHTML = `
+      <style>
+        #page-ttkeyword .kw-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:8px; }
+        #page-ttkeyword .kw-item { display:flex; align-items:center; gap:9px; background:var(--bg3); border:1px solid var(--border);
+          border-radius:8px; padding:9px 11px; font-size:12.5px; }
+        #page-ttkeyword .kw-rank { font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--text3); min-width:18px; }
+        #page-ttkeyword .kw-word { flex:1; color:var(--text); }
+        #page-ttkeyword .kw-again { background:none; border:none; color:var(--text3); cursor:pointer; font-size:12px; padding:2px 4px; border-radius:5px; }
+        #page-ttkeyword .kw-again:hover { color:var(--accent); background:var(--bg2); }
+        #page-ttkeyword .kw-note { font-size:11px; color:var(--text3); line-height:1.7; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
+      </style>
       <div class="card">
         <div class="section-header"><div class="section-title">ค้นหาคำที่คนใช้จริงบน TikTok</div><span style="font-size:10.5px;color:var(--text3);">พิมพ์คำที่เกี่ยวกับสินค้า แล้วดูว่าคนค้นคำใกล้เคียงอะไรบ้าง — เอาไปตั้งชื่อคลิปและใส่แฮชแท็ก</span></div>
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
@@ -370,9 +413,12 @@
         const j = await r.json();
         const words = j?.keyword?.คำทั้งหมด || [];
         box.innerHTML = words.length
-          ? `<div style="margin-bottom:10px;color:var(--text2);">คนที่ค้นคำว่า "<b>${esc(w)}</b>" มักค้นคำพวกนี้ด้วย (${words.length} คำ)</div>` +
-            words.map(x => `<span class="ttc-chip" style="font-size:12.5px;padding:6px 12px;margin:0 7px 7px 0;">${esc(x)}</span>`).join('')
+          ? `<div style="margin-bottom:12px;color:var(--text2);">คนที่ค้นคำว่า "<b>${esc(w)}</b>" มักค้นคำพวกนี้ด้วย — ${words.length} คำ</div>
+             <div class="kw-grid">${words.map((x, i) => `
+               <div class="kw-item"><span class="kw-rank">${i + 1}</span><span class="kw-word">${esc(x)}</span><button class="kw-again" data-w="${esc(x)}" title="ค้นต่อจากคำนี้">↻</button></div>`).join('')}</div>
+             <div class="kw-note">เรียงตามลำดับที่ TikTok ส่งมา ซึ่งปกติคือคำที่เกี่ยวข้องมากที่สุดอยู่บนสุด — <b>แต่ TikTok ไม่ได้ให้ตัวเลขจำนวนครั้งที่คนค้นมาด้วย</b> จึงบอกไม่ได้ว่าคำไหนคนค้นมากกว่ากันเท่าไร<br>กดปุ่ม ↻ ข้างคำเพื่อค้นต่อจากคำนั้น จะได้เห็นคำที่ลึกลงไปอีกชั้น</div>`
           : `ไม่พบคำที่เกี่ยวข้อง ${esc(j?.keyword?.message || j?.result || '')}`;
+        box.querySelectorAll('.kw-again').forEach(b4 => b4.onclick = () => { el.querySelector('#kwInput').value = b4.dataset.w; go(); });
       } catch (e) {
         box.innerHTML = `ค้นหาไม่สำเร็จ: ${esc(e.message)}<br><span style="font-size:11px;">ถ้าขึ้น Failed to fetch แปลว่ายังไม่ได้ deploy tiktok-probe ตัวใหม่ที่เปิดให้เบราว์เซอร์เรียกได้</span>`;
       }
