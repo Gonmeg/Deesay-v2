@@ -20,7 +20,10 @@
     if (!root()) return;
     root().innerHTML = '<div class="card"><div class="empty">กำลังโหลดข้อมูลคอนเทนต์...</div></div>';
     try {
-      DATA = await supaRpc('tiktok_content_page', { p_days: days });
+      DATA = await supaRpc('tiktok_content_page', { p_days: Number(days) });
+      if (Array.isArray(DATA)) DATA = DATA[0] ?? {};                 // เผื่อ PostgREST ห่อมาเป็น array
+      if (DATA && DATA.tiktok_content_page) DATA = DATA.tiktok_content_page;  // เผื่อห่อด้วยชื่อฟังก์ชัน
+      window._ttcRaw = DATA;
     } catch (e) {
       root().innerHTML = `<div class="error-banner" style="display:block;">โหลดไม่สำเร็จ: ${esc(e.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 66_tiktok_comments_benchmark.sql</div>`;
       return;
@@ -59,6 +62,7 @@
     }
 
     root().innerHTML = `
+      <div id="ttcDebug" style="display:none;"></div>
       <div class="ttc-head">
         <div style="font-size:11.5px;color:var(--text3);">ข้อมูลจาก TikTok API โดยตรง · อัปเดตทุกเช้า 07:30 · แสดง ${days} วันล่าสุด · ข้อมูล ณ ${dTH(d.as_of)}</div>
         <div style="display:flex;gap:6px;align-items:center;">
@@ -132,6 +136,20 @@
         @media (max-width:1100px){ #page-ttcontent .ttc-kpis { grid-template-columns:repeat(2,1fr); } #page-ttcontent .ttc-grid2 { grid-template-columns:1fr; } }
       </style>`;
 
+    // แถบตรวจสอบ — โชว์เฉพาะตอนข้อมูลหลักว่าง จะได้รู้ว่าขาดตรงไหน
+    if (!t.clips || !p.followers_count) {
+      const dbg = document.getElementById('ttcDebug');
+      if (dbg) {
+        dbg.style.display = 'block';
+        dbg.innerHTML = `<div class="error-banner" style="display:block;margin-bottom:12px;">
+          ข้อมูลบางส่วนว่าง — ที่ได้รับมา: ${Object.keys(d || {}).join(', ') || '(ไม่มีเลย)'}
+          <br>clips=${JSON.stringify(t.clips)} · videos=${(d.videos || []).length} · daily=${(d.daily || []).length}
+          · profile=${p && p.followers_count ? 'มี' : 'ไม่มี'} · benchmark=${b && b.average_engagement_rate ? 'มี' : 'ไม่มี'}
+          · unanswered=${d.unanswered_count ?? '—'}
+          <br><span style="font-size:11px;">เปิด Console แล้วพิมพ์ <code>window._ttcRaw</code> เพื่อดูข้อมูลดิบทั้งหมด</span>
+        </div>`;
+      }
+    }
     drawHours(d.best_hours || []);
     renderTab();
 
