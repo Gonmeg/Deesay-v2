@@ -230,6 +230,12 @@
   .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
   .sortable-th:hover { color: var(--accent); }
   .sort-arrow { font-size: 9px; margin-left: 3px; color: var(--accent); }
+  /* หัวคอลัมน์ที่กดเรียงได้ (ระบบใส่ให้อัตโนมัติทุกตารางในทุกหน้า) */
+  th.auto-sort { cursor: pointer; user-select: none; position: relative; }
+  th.auto-sort:hover { color: var(--accent2); }
+  th.auto-sort::after { content: '⇅'; font-size: 9px; margin-left: 4px; opacity: .28; }
+  th.auto-sort.asc::after { content: '▲'; opacity: 1; color: var(--accent); }
+  th.auto-sort.desc::after { content: '▼'; opacity: 1; color: var(--accent); }
 
   .funnel-pyramid { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; }
   .funnel-tier { display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 10px 12px; border-radius: 4px; color: #0a0a0f; font-weight: 600; transition: width 0.3s; }
@@ -303,7 +309,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.11-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.11-b</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -9118,6 +9124,87 @@ async function init() {
 }
 
 init();
+
+// ============================================================================
+// เรียงตารางได้ทุกหน้า — กดที่ชื่อคอลัมน์เพื่อเรียง กดซ้ำเพื่อสลับมาก↔น้อย
+// ทำงานกับทุกตารางในแดชบอร์ดโดยไม่ต้องแก้โค้ดแต่ละหน้า
+// ข้ามตารางที่มีระบบเรียงของตัวเองอยู่แล้ว (th ที่มี data-k หรือ class sortable-th)
+// ถ้าตารางไหนไม่อยากให้เรียง ใส่ data-no-sort ที่ <table>
+// ============================================================================
+(function () {
+  const num = txt => {
+    if (!txt) return null;
+    const t = String(txt).replace(/[, ฿%\u0E00-\u0E7F]/g, '').replace(/[▲▼⇅]/g, '').trim();
+    if (t === '' || t === '—' || t === '-' || t === '·') return null;
+    const v = parseFloat(t);
+    return isNaN(v) ? null : v;
+  };
+  const THMON = { 'ม.ค.':0,'ก.พ.':1,'มี.ค.':2,'เม.ย.':3,'พ.ค.':4,'มิ.ย.':5,'ก.ค.':6,'ส.ค.':7,'ก.ย.':8,'ต.ค.':9,'พ.ย.':10,'ธ.ค.':11 };
+  const asDate = txt => {
+    const t = String(txt || '').trim();
+    let m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);            // 2026-09-11
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+    m = t.match(/^(\d{1,2})\s*([ก-๙.]+)/);                   // 11 ก.ย.
+    if (m && THMON[m[2]] !== undefined) return new Date(2000 + (new Date().getFullYear() % 100), THMON[m[2]], +m[1]).getTime();
+    return null;
+  };
+  const cellText = td => (td?.innerText ?? td?.textContent ?? '').trim();
+
+  document.addEventListener('click', function (e) {
+    const th = e.target.closest('th');
+    if (!th) return;
+    const table = th.closest('table');
+    if (!table || table.hasAttribute('data-no-sort')) return;
+    // ตารางที่มีระบบเรียงของตัวเองอยู่แล้ว ปล่อยให้มันทำงานไป
+    if (th.hasAttribute('data-k') || th.classList.contains('sortable-th') || th.onclick) return;
+    const tbody = table.tBodies[0];
+    if (!tbody) return;
+    const rows = [...tbody.rows].filter(r => r.cells.length > 1);   // ข้ามแถว "ไม่มีข้อมูล" ที่ใช้ colspan
+    if (rows.length < 2) return;
+
+    const idx = [...th.parentElement.cells].indexOf(th);
+    if (idx < 0) return;
+
+    const dir = th.classList.contains('asc') ? 'desc' : 'asc';
+    [...th.parentElement.cells].forEach(c => { c.classList.remove('asc', 'desc'); });
+    th.classList.add(dir);
+
+    const sample = rows.slice(0, 12).map(r => cellText(r.cells[idx]));
+    const isNum = sample.filter(x => num(x) !== null).length >= Math.max(1, Math.ceil(sample.filter(x => x && x !== '—').length * 0.6));
+    const isDate = !isNum && sample.filter(x => asDate(x) !== null).length >= Math.ceil(sample.length * 0.6);
+
+    const key = r => {
+      const t = cellText(r.cells[idx]);
+      if (isNum) { const v = num(t); return v === null ? -Infinity : v; }
+      if (isDate) { const v = asDate(t); return v === null ? -Infinity : v; }
+      return t.toLowerCase();
+    };
+    const mul = dir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      const x = key(a), y = key(b);
+      if (typeof x === 'number' && typeof y === 'number') return (x - y) * mul;
+      return String(x).localeCompare(String(y), 'th') * mul;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+  }, true);
+
+  // ใส่เครื่องหมายให้หัวคอลัมน์ที่กดเรียงได้ — ตรวจซ้ำเรื่อย ๆ เพราะตารางถูกสร้างใหม่ตลอด
+  function mark() {
+    document.querySelectorAll('table:not([data-no-sort]) thead th').forEach(th => {
+      if (th.hasAttribute('data-k') || th.classList.contains('sortable-th') || th.onclick) return;
+      const tb = th.closest('table')?.tBodies?.[0];
+      if (!tb || [...tb.rows].filter(r => r.cells.length > 1).length < 2) return;
+      th.classList.add('auto-sort');
+    });
+  }
+  const mo = new MutationObserver(() => { clearTimeout(window._autoSortT); window._autoSortT = setTimeout(mark, 150); });
+  document.addEventListener('DOMContentLoaded', () => {
+    mark();
+    mo.observe(document.body, { childList: true, subtree: true });
+  });
+  window.markSortableHeaders = mark;
+})();
+
 </script>
 </body>
 </html>
