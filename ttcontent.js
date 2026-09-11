@@ -8,7 +8,7 @@
   const dTH = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '—';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  let DATA = null, days = 30, tab = 'clips', chart = null, q = '', sortKey = 'post_date', sortDir = -1, onlyQuestions = true;
+  let DATA = null, days = 30, tab = 'clips', q = '', sortKey = 'post_date', sortDir = -1, onlyQuestions = true;
 
   // ===== metric ทั้งหมดที่ TikTok ให้ได้ + ที่คำนวณต่อเอง =====
   // v = ค่าที่เอาไปเรียง · f = วิธีแสดง
@@ -147,9 +147,24 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:18px;">
-        <div class="section-header"><div class="section-title">ช่วงเวลาที่คนดูออนไลน์</div><span style="font-size:10.5px;color:var(--text3);">เฉลี่ย 30 วัน · เวลาไทย · ใช้วางแผนเวลาลงคลิปและไลฟ์</span></div>
-        <div class="chart-wrap" style="height:190px;"><canvas id="ttcHours"></canvas></div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-header"><div class="section-title">คนเข้ามาที่ช่องเท่าไร</div><span style="font-size:10.5px;color:var(--text3);">เห็นคลิป → กดเข้าช่อง → กดลิงก์ไปซื้อ</span></div>
+        <div class="chart-wrap" style="height:230px;"><canvas id="ttcTraffic"></canvas></div>
+        <div class="ttc-legend" id="lgTraffic"></div>
+      </div>
+
+      <div class="ttc-grid2">
+        <div class="card">
+          <div class="section-header"><div class="section-title">คนมีส่วนร่วมแค่ไหน</div><span style="font-size:10.5px;color:var(--text3);">ไลก์ · คอมเมนต์ · แชร์ ต่อวัน</span></div>
+          <div class="chart-wrap" style="height:210px;"><canvas id="ttcEngage"></canvas></div>
+          <div class="ttc-legend" id="lgEngage"></div>
+        </div>
+        <div class="card">
+          <div class="section-header"><div class="section-title">ผู้ติดตาม</div><span style="font-size:10.5px;color:var(--text3);">ได้มา − เสียไป ต่อวัน</span></div>
+          <div class="chart-wrap" style="height:210px;"><canvas id="ttcFollow"></canvas></div>
+          <div class="ttc-legend" id="lgFollow"></div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">บางวัน TikTok ไม่ส่งตัวเลขคนติดตามใหม่มา (ขึ้นเป็น 0) ทั้งที่ยอดรวมขยับ — เป็นข้อจำกัดฝั่ง TikTok ไม่ใช่ข้อมูลหาย</div>
+        </div>
       </div>
 
       <div class="tabs-row">
@@ -187,6 +202,9 @@
         #page-ttcontent .ttc-cap { font-size:11.5px; line-height:1.5; max-width:380px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
         #page-ttcontent .ttc-sub { font-size:10px; color:var(--text3); margin-top:3px; }
         #page-ttcontent .ttc-chip { display:inline-block; font-size:10px; padding:2px 7px; border-radius:99px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); margin-right:4px; }
+        #page-ttcontent .ttc-legend { display:flex; gap:16px; flex-wrap:wrap; font-size:10.5px; color:var(--text3); margin-top:9px; }
+        #page-ttcontent .ttc-legend span { display:inline-flex; align-items:center; gap:6px; }
+        #page-ttcontent .ttc-legend i { display:inline-block; width:11px; height:11px; border-radius:2px; }
         #page-ttcontent .ttc-hint { background:var(--bg3); border:1px solid var(--border); border-left:3px solid var(--accent);
           border-radius:8px; padding:11px 14px; font-size:11.5px; line-height:1.75; color:var(--text2); margin-bottom:14px; }
         #page-ttcontent .ttc-mpanel { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:14px; }
@@ -215,7 +233,7 @@
         </div>`;
       }
     }
-    drawHours(d.best_hours || []);
+    drawCharts(daily);
     renderTab();
 
     root().querySelectorAll('[data-days]').forEach(b2 => b2.onclick = () => { days = +b2.dataset.days; load(); });
@@ -223,23 +241,73 @@
     root().querySelectorAll('[data-tab]').forEach(b2 => b2.onclick = () => { tab = b2.dataset.tab; render(); });
   }
 
-  function drawHours(hours) {
-    const el = document.getElementById('ttcHours'); if (!el) return;
-    const byHour = {}; hours.forEach(h => byHour[h.hour] = +h.count);
-    const labels = [...Array(24).keys()];
-    const data = labels.map(h => byHour[h] ?? 0);
-    const max = Math.max(...data, 1);
-    if (chart) chart.destroy();
-    chart = new Chart(el, {
-      type: 'bar',
-      data: { labels: labels.map(h => String(h).padStart(2, '0') + ':00'),
-        datasets: [{ data, backgroundColor: data.map(v => v >= max * 0.92 ? '#c8a96e' : 'rgba(200,169,110,.32)'), borderRadius: 3 }] },
-      options: { responsive: true, maintainAspectRatio: false, animation: false,
-        plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' },
-          callbacks: { label: it => fmtN(it.raw) + ' คน' } } },
-        scales: { x: { grid: { display: false }, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 9 }, maxTicksLimit: 12 } },
-          y: { beginAtZero: true, grid: { color: chartGridColor() }, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 9 }, callback: v => (v / 1000) + 'k' } } } }
-    });
+  let charts = {};
+  function mkLegend(id, items) {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = items.map(([c, l, dash]) => `<span><i style="${dash ? `border-top:2px dashed ${c};height:0;width:14px;` : `background:${c};`}"></i>${l}</span>`).join('');
+  }
+  function drawCharts(daily) {
+    const labels = daily.map(x => x.stat_date);
+    const tick = chartTickColor(), grid = chartGridColor();
+    const xAxis = { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, maxTicksLimit: 10, callback: (v, i) => dTH(labels[i]) } };
+    const yA = { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, callback: v => v >= 1000 ? (v / 1000) + 'k' : v } };
+    const common = { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' },
+        callbacks: { title: it => dTH(labels[it[0].dataIndex]), label: it => `${it.dataset.label}: ${fmtN(it.raw)}` } } } };
+
+    // 1) คนเข้ามาที่ช่อง
+    Object.values(charts).forEach(c => { try { c.destroy(); } catch {} });
+    charts = {};
+    const el1 = document.getElementById('ttcTraffic');
+    if (el1) {
+      charts.traffic = new Chart(el1, {
+        type: 'line',
+        data: { labels, datasets: [
+          { label: 'ยอดวิว', data: daily.map(x => +x.video_views || 0), borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,.12)', fill: true, borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y' },
+          { label: 'คนเข้าดูโปรไฟล์', data: daily.map(x => +x.profile_views || 0), borderColor: '#60a5fa', borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y2' },
+          { label: 'กดลิงก์ในไบโอ', data: daily.map(x => +x.bio_link_clicks || 0), borderColor: '#4ade80', borderWidth: 2, pointRadius: 2, tension: .25, yAxisID: 'y2' },
+        ] },
+        options: Object.assign({}, common, { scales: { x: xAxis,
+          y: Object.assign({}, yA, { position: 'left', title: { display: true, text: 'ยอดวิว', color: tick, font: { family: 'Sarabun', size: 9 } } }),
+          y2: Object.assign({}, yA, { position: 'right', grid: { display: false }, title: { display: true, text: 'คนเข้าช่อง / กดลิงก์', color: tick, font: { family: 'Sarabun', size: 9 } } }) } })
+      });
+      mkLegend('lgTraffic', [['#c8a96e', 'ยอดวิว (แกนซ้าย)'], ['#60a5fa', 'คนเข้าดูโปรไฟล์ (แกนขวา)'], ['#4ade80', 'กดลิงก์ในไบโอ (แกนขวา)']]);
+    }
+
+    // 2) การมีส่วนร่วม
+    const el2 = document.getElementById('ttcEngage');
+    if (el2) {
+      charts.engage = new Chart(el2, {
+        type: 'bar',
+        data: { labels, datasets: [
+          { label: 'ไลก์', data: daily.map(x => +x.likes || 0), backgroundColor: 'rgba(200,169,110,.8)', stack: 'e' },
+          { label: 'คอมเมนต์', data: daily.map(x => +x.comments || 0), backgroundColor: 'rgba(96,165,250,.85)', stack: 'e' },
+          { label: 'แชร์', data: daily.map(x => +x.shares || 0), backgroundColor: 'rgba(192,132,252,.85)', stack: 'e' },
+        ] },
+        options: Object.assign({}, common, { scales: { x: Object.assign({}, xAxis, { stacked: true }), y: Object.assign({}, yA, { stacked: true }) } })
+      });
+      mkLegend('lgEngage', [['#c8a96e', 'ไลก์'], ['#60a5fa', 'คอมเมนต์'], ['#c084fc', 'แชร์']]);
+    }
+
+    // 3) ผู้ติดตาม
+    const el3 = document.getElementById('ttcFollow');
+    if (el3) {
+      charts.follow = new Chart(el3, {
+        type: 'bar',
+        data: { labels, datasets: [
+          { label: 'ติดตามใหม่', data: daily.map(x => +x.daily_new_followers || 0), backgroundColor: 'rgba(74,222,128,.8)', yAxisID: 'y' },
+          { label: 'เลิกติดตาม', data: daily.map(x => -(+x.daily_lost_followers || 0)), backgroundColor: 'rgba(248,113,113,.75)', yAxisID: 'y' },
+          { type: 'line', label: 'ผู้ติดตามรวม', data: daily.map(x => +x.followers_count || null), borderColor: '#c8a96e', borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y2' },
+        ] },
+        options: Object.assign({}, common, {
+          plugins: Object.assign({}, common.plugins, { tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' },
+            callbacks: { title: it => dTH(labels[it[0].dataIndex]), label: it => `${it.dataset.label}: ${fmtN(Math.abs(it.raw))}` } } }),
+          scales: { x: xAxis,
+            y: { grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, callback: v => fmtN(Math.abs(v)) } },
+            y2: Object.assign({}, yA, { position: 'right', grid: { display: false }, beginAtZero: false }) } })
+      });
+      mkLegend('lgFollow', [['#4ade80', 'ติดตามใหม่'], ['#f87171', 'เลิกติดตาม'], ['#c8a96e', 'ผู้ติดตามรวม (แกนขวา)']]);
+    }
   }
 
   function renderTab() {
