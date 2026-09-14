@@ -66,6 +66,18 @@
 
   const root = () => document.getElementById('page-ttcontent');
 
+  // อ่านช่วงวันที่จากตัวกรองด้านบนของแดชบอร์ด แล้วแปลงเป็น "ย้อนหลังกี่วัน"
+  function daysFromFilter() {
+    const from = document.getElementById('dateFrom')?.value;
+    if (!from) return 30;
+    const n = Math.ceil((Date.now() - new Date(from + 'T00:00:00').getTime()) / 86400000);
+    return Math.max(1, Math.min(400, n));
+  }
+  function filterLabel() {
+    const from = document.getElementById('dateFrom')?.value, to = document.getElementById('dateTo')?.value;
+    return (from && to) ? `${dTH(from)} – ${dTH(to)}` : `${days} วันล่าสุด`;
+  }
+
   // คอมเมนต์ที่เป็น "คำถาม" จริง ๆ (ที่เหลือคือชมเฉย ๆ / อีโมจิ)
   const QWORDS = ['ไหม', 'มั้ย', 'หรือ', 'ยังไง', 'เท่าไร', 'เท่าไหร่', 'กี่', 'ที่ไหน', 'อะไร', 'เมื่อไร', 'เมื่อไหร่', 'ราคา', 'ส่ง', 'สั่ง', 'ซื้อ', 'มีขาย', 'สอบถาม', '?'];
   const isQuestion = t => { const x = String(t || ''); return QWORDS.some(w => x.includes(w)); };
@@ -73,6 +85,7 @@
   async function load() {
     if (!root()) return;
     root().innerHTML = '<div class="card"><div class="empty">กำลังโหลดข้อมูลคอนเทนต์...</div></div>';
+    days = daysFromFilter();
     try {
       DATA = await supaRpc('tiktok_content_page', { p_days: Number(days) });
       if (Array.isArray(DATA)) DATA = DATA[0] ?? {};                 // เผื่อ PostgREST ห่อมาเป็น array
@@ -88,6 +101,8 @@
   function render() {
     const d = DATA || {}, p = d.profile || {}, t = d.totals || {}, b = d.benchmark || {};
     const daily = d.daily || [], vids = d.videos || [];
+    const lastDay = daily.length ? daily[daily.length - 1].stat_date : null;
+    const lag = lastDay ? Math.round((Date.now() - new Date(lastDay + 'T00:00:00').getTime()) / 86400000) : null;
 
     // ---- ตัวเลขช่วงนี้ ----
     const newFollow = daily.reduce((s, x) => s + (+x.daily_new_followers || 0), 0);
@@ -117,14 +132,10 @@
 
     root().innerHTML = `
       <div id="ttcDebug" style="display:none;"></div>
+      ${lag > 2 ? `<div class="ttc-hint" style="border-left-color:var(--orange);">⚠️ ข้อมูลล่าสุดคือ <b>${dTH(lastDay)}</b> ซึ่งช้ากว่าปกติ — ตามปกติควรมีถึงเมื่อวาน<br>ปกติระบบดึงให้เองทุกเช้า 07:30 — ถ้าค้างหลายวันให้เช็คที่หน้า <b>สถานะระบบ</b> ว่าตัวดึง TikTok ทำงานปกติไหม</div>` : ''}
       <div class="ttc-head">
-        <div style="font-size:11.5px;color:var(--text3);">ข้อมูลจาก TikTok API โดยตรง · อัปเดตทุกเช้า 07:30 · แสดง ${days} วันล่าสุด · ข้อมูล ณ ${dTH(d.as_of)}</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <div class="toggle-group">
-            ${[7, 30, 90].map(n => `<button class="toggle-btn ${days === n ? 'active' : ''}" data-days="${n}">${n} วัน</button>`).join('')}
-          </div>
-          <button class="btn btn-ghost" id="ttcRefresh">↻ รีเฟรช</button>
-        </div>
+        <div style="font-size:11.5px;color:var(--text3);">ข้อมูลจาก TikTok API โดยตรง · ช่วงที่เลือก <b>${filterLabel()}</b> · ข้อมูลล่าสุดถึง <b>${lastDay ? dTH(lastDay) : '—'}</b>${lag > 1 ? ` <span style="color:var(--orange);">(ช้าไป ${lag} วัน)</span>` : ''}</div>
+        <div style="font-size:10.5px;color:var(--text3);">ระบบดึงข้อมูลใหม่ให้เองทุกเช้า 07:30</div>
       </div>
 
       <div class="ttc-kpis">
@@ -236,8 +247,7 @@
     drawCharts(daily);
     renderTab();
 
-    root().querySelectorAll('[data-days]').forEach(b2 => b2.onclick = () => { days = +b2.dataset.days; load(); });
-    root().querySelector('#ttcRefresh').onclick = load;
+
     root().querySelectorAll('[data-tab]').forEach(b2 => b2.onclick = () => { tab = b2.dataset.tab; render(); });
   }
 
@@ -463,8 +473,10 @@
   // ไปถาม TikTok สด ๆ แล้วโหลดหน้าใหม่
   async function pullComments() {
     const btn = document.getElementById('ttcPull');
-    const msg = document.getElementById('ttcPullMsg');
-    btn.disabled = true; btn.textContent = 'กำลังดึง...';
+    const msg = document.getElementById('ttcPullMsg') || (() => {
+      const m = document.createElement('div'); m.id = 'ttcPullMsg'; root().prepend(m); return m;
+    })();
+    btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = 'กำลังดึง...';
     msg.style.display = 'block';
     msg.innerHTML = '<div class="ttc-hint" style="border-color:rgba(200,169,110,.4);">กำลังไปถาม TikTok ว่ามีคอมเมนต์อะไรใหม่ และอันไหนตอบไปแล้วบ้าง — ใช้เวลาประมาณ 1-2 นาที อย่าเพิ่งปิดหน้านี้</div>';
     try {
@@ -472,10 +484,10 @@
       const j = await r.json();
       msg.innerHTML = `<div class="ttc-hint" style="border-color:rgba(74,222,128,.4);color:var(--green);">อัปเดตเรียบร้อย — ${esc(j.saved_comments || 'ดึงคอมเมนต์แล้ว')}</div>`;
       await load();
-      tab = 'comments'; render();
+      render();
     } catch (e) {
       msg.innerHTML = `<div class="ttc-hint" style="border-color:rgba(248,113,113,.4);color:var(--red);">ดึงไม่สำเร็จ: ${esc(e.message)}<br><span style="font-size:11px;">ถ้าขึ้น Failed to fetch แปลว่ายังไม่ได้ deploy tiktok-organic ตัวใหม่ที่เปิดให้เบราว์เซอร์เรียกได้</span></div>`;
-      btn.disabled = false; btn.textContent = '↻ ดึงคอมเมนต์ล่าสุด';
+      btn.disabled = false; btn.textContent = oldTxt;
     }
   }
 
