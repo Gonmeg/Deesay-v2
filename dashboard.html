@@ -317,7 +317,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.14-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.14-i</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -7960,17 +7960,21 @@ function autoPageTable(table) {
   if (!pager) { pager = document.createElement('div'); pager.className = 'auto-pager'; const host = table.closest('.table-wrap') || table; host.insertAdjacentElement('afterend', pager); table._pgEl = pager; }
   const nums = [];
   for (let i = 1; i <= totalPages; i++) { if (i === 1 || i === totalPages || Math.abs(i - cur) <= 2) nums.push(i); else if (nums[nums.length - 1] !== '...') nums.push('...'); }
-  pager.innerHTML = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:12px;">
+  const html = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:12px;">
     <button class="btn btn-ghost" data-p="${cur - 1}" ${cur === 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button>
     ${nums.map(p => p === '...' ? `<span style="color:var(--text3);padding:0 4px;">...</span>` : `<button class="btn ${p === cur ? 'btn-primary' : 'btn-ghost'}" style="min-width:32px;" data-p="${p}">${p}</button>`).join('')}
     <button class="btn btn-ghost" data-p="${cur + 1}" ${cur === totalPages ? 'disabled' : ''}>ถัดไป ›</button>
     <span style="color:var(--text3);margin-left:8px;">แสดง ${start + 1}–${Math.min(start + size, rows.length)} จาก ${rows.length} · หน้า ${cur}/${totalPages}</span>
     ${pgSizeSelectHtml('setPgSize(+this.value)')}</div>`;
+  if (pager._html === html) return;   // ไม่วาดซ้ำถ้าไม่มีอะไรเปลี่ยน
+  pager._html = html; pager.innerHTML = html;
   pager.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { table._pg.page = +b.dataset.p; autoPageTable(table); });
 }
 let _autoPageTimer = null;
 new MutationObserver(muts => {
-  if (!muts.some(m => [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1 || n.nodeType === 3))) return;
+  // ไม่นับการเปลี่ยนแปลงที่ตัวแบ่งหน้าทำเอง (ไม่งั้นจะวนซ้ำ กระพริบ กดไม่ติด)
+  const real = muts.filter(m => !(m.target.closest && m.target.closest('.auto-pager')));
+  if (!real.some(m => [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1 || n.nodeType === 3))) return;
   clearTimeout(_autoPageTimer);
   _autoPageTimer = setTimeout(() => document.querySelectorAll('table').forEach(autoPageTable), 60);
 }).observe(document.body, { childList: true, subtree: true });
