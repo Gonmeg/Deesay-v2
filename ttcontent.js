@@ -127,11 +127,30 @@
       if (Array.isArray(DATA)) DATA = DATA[0] ?? {};                 // เผื่อ PostgREST ห่อมาเป็น array
       if (DATA && DATA.tiktok_content_page) DATA = DATA.tiktok_content_page;  // เผื่อห่อด้วยชื่อฟังก์ชัน
       window._ttcRaw = DATA;
+      await fillMissingCovers();
     } catch (e) {
       root().innerHTML = `<div class="error-banner" style="display:block;">โหลดไม่สำเร็จ: ${esc(e.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 66_tiktok_comments_benchmark.sql</div>`;
       return;
     }
     render();
+  }
+
+  // คลิปที่ยังไม่มีรูป (ลิงก์รูปจาก API หมดอายุก่อนรอบ sync ใหม่) → หยิบรูปสำรองจากตาราง tiktok_ad_covers (เชื่อมด้วยเลขคลิป)
+  async function fillMissingCovers() {
+    try {
+      const vids = (DATA && DATA.videos) || [];
+      const idOf = v => String(v.item_id || v.video_id || (String(v.share_url || '').match(/video\/(\d+)/) || [])[1] || '');
+      const missing = vids.filter(v => !v.thumbnail_url && idOf(v));
+      if (!missing.length) return;
+      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+      const map = {};
+      for (let i = 0; i < missing.length; i += 150) {
+        const ids = missing.slice(i, i + 150).map(idOf).join(',');
+        const rows = await fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ad_covers?select=item_id,cover_url&found=eq.true&item_id=in.(${ids})`, { headers: h }).then(r => r.json());
+        (Array.isArray(rows) ? rows : []).forEach(r => { if (r.cover_url) map[r.item_id] = r.cover_url; });
+      }
+      missing.forEach(v => { const c = map[idOf(v)]; if (c) v.thumbnail_url = c; });
+    } catch {}
   }
 
   function render() {
