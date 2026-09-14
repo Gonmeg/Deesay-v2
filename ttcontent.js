@@ -561,7 +561,7 @@
     const pts = v.map((x, i) => `${(i / (v.length - 1) * w).toFixed(1)},${(h - x / mx * (h - 2) - 1).toFixed(1)}`).join(' ');
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;
   };
-  let HT = { range: '7DAY', rows: null, q: '', showAll: false };
+  let HT = { range: '7DAY', rows: null, q: '' };
 
   function renderKeywordPage() {
     const el = document.getElementById('page-ttkeyword'); if (!el) return;
@@ -579,7 +579,12 @@
         #page-ttkeyword .kw-again { background:none; border:none; color:var(--text3); cursor:pointer; font-size:12px; padding:2px 4px; border-radius:5px; }
         #page-ttkeyword .kw-again:hover { color:var(--accent); background:var(--bg2); }
         #page-ttkeyword .kw-note { font-size:11px; color:var(--text3); line-height:1.7; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
-        #page-ttkeyword .ht-table td, #page-ttkeyword .ht-table th { white-space:nowrap; }
+        #page-ttkeyword .ht-table { table-layout:fixed; }
+        #page-ttkeyword .ht-table td, #page-ttkeyword .ht-table th { white-space:nowrap; padding:9px 10px; font-size:12.5px; vertical-align:middle; }
+        #page-ttkeyword .ht-table th { font-size:11px; color:var(--text3); font-weight:600; }
+        #page-ttkeyword .ht-c { text-align:center; } #page-ttkeyword .ht-r { text-align:right; }
+        #page-ttkeyword .ht-mono { font-family:'IBM Plex Mono',monospace; }
+        #page-ttkeyword .ht-table svg { margin:0 auto; }
         #page-ttkeyword .ht-up { color:#4ade80; } #page-ttkeyword .ht-down { color:#f87171; } #page-ttkeyword .ht-new { color:var(--accent); font-weight:600; }
         #page-ttkeyword .ht-name { font-weight:600; color:var(--text); }
         #page-ttkeyword .btn.active { background:var(--accent); color:#0a0a0f; border-color:var(--accent); }
@@ -637,7 +642,7 @@
     el.querySelectorAll('.kw-quick').forEach(b3 => b3.onclick = () => { el.querySelector('#kwInput').value = b3.dataset.w; go(); });
 
     // ---- ส่วน 2: แฮชแท็ก ----
-    el.querySelectorAll('.ht-range').forEach(b => b.onclick = () => { HT.range = b.dataset.r; HT.rows = null; HT.showAll = false; el.querySelectorAll('.ht-range').forEach(x => x.classList.toggle('active', x.dataset.r === HT.range)); loadHashtags(el); });
+    el.querySelectorAll('.ht-range').forEach(b => b.onclick = () => { HT.range = b.dataset.r; HT.rows = null; el.querySelectorAll('.ht-range').forEach(x => x.classList.toggle('active', x.dataset.r === HT.range)); loadHashtags(el); });
     el.querySelector('#htSearch').oninput = e => { HT.q = e.target.value.trim(); renderHashtags(el); };
     loadHashtags(el);
   }
@@ -663,27 +668,26 @@
     if (!all.length) { body.innerHTML = 'ยังไม่มีข้อมูล — ตัวดึงจะทำงานเองทุกเช้า 06:00 (หรือยังไม่ได้ deploy tiktok-hashtag-sync)'; meta.textContent = ''; return; }
     const q = HT.q.toLowerCase();
     const rows = q ? all.filter(r => String(r.hashtag_name).toLowerCase().includes(q)) : all;
-    const shown = HT.showAll || q ? rows : rows.slice(0, 50);
-    meta.textContent = `ข้อมูลวันที่ ${dTH(all[0].snapshot_date)} · แสดง ${shown.length} จาก ${rows.length}`;
+    const shown = rows;
+    meta.textContent = `ข้อมูลวันที่ ${dTH(all[0].snapshot_date)} · ${rows.length} แฮชแท็ก`;
     const chg = r => r.rank_change === 'NEW' || r.rank_change === null || r.rank_change === undefined ? '<span class="ht-new">ใหม่</span>'
       : Number(r.rank_change) > 0 ? `<span class="ht-up">▲ ${r.rank_change}</span>` : Number(r.rank_change) < 0 ? `<span class="ht-down">▼ ${Math.abs(r.rank_change)}</span>` : '<span style="color:var(--text3);">–</span>';
     body.innerHTML = `
       <div style="overflow-x:auto;"><table class="ht-table" data-no-sort style="width:100%;">
-        <thead><tr><th style="width:44px;">อันดับ</th><th style="width:80px;">เปลี่ยน</th><th class="t-left">แฮชแท็ก</th><th>คลิปในไทย</th><th>ยอดดูในไทย</th><th>ยอดดูรายวัน 30 วัน</th><th>เราใช้แล้ว</th><th>ใช้ล่าสุด</th></tr></thead>
+        <thead><tr><th class="ht-c" style="width:56px;">อันดับ</th><th class="ht-c" style="width:70px;">เปลี่ยน</th><th class="t-left">แฮชแท็ก</th><th class="ht-r" style="width:100px;">คลิปในไทย</th><th class="ht-r" style="width:110px;">ยอดดูในไทย</th><th class="ht-c" style="width:120px;">30 วันล่าสุด</th><th class="ht-r" style="width:150px;">เราใช้แล้ว</th><th class="ht-c" style="width:90px;">ใช้ล่าสุด</th></tr></thead>
         <tbody>${shown.map(r => { const b = brandOf(r.hashtag_name); return `
           <tr>
-            <td style="text-align:center;font-family:'IBM Plex Mono',monospace;">${r.rank_position ?? '—'}</td>
-            <td style="text-align:center;">${chg(r)}</td>
+            <td class="ht-c ht-mono">${r.rank_position ?? '—'}</td>
+            <td class="ht-c">${chg(r)}</td>
             <td class="t-left"><span class="ht-name">#${esc(r.hashtag_name)}</span>${b === 'ours' ? ' <span class="kw-tag ours">แบรนด์เรา</span>' : b === 'other' ? ' <span class="kw-tag">แบรนด์อื่น</span>' : ''}</td>
-            <td style="text-align:right;">${fmtKM(r.posts)}</td>
-            <td style="text-align:right;">${fmtKM(r.views)}</td>
-            <td>${spark(r.trending_history)}</td>
-            <td style="text-align:right;">${r.our_clips_total ? `${r.our_clips_total} คลิป${r.our_clips_30d ? ` <span style="color:var(--text3);">(30 วัน ${r.our_clips_30d})</span>` : ''}` : '<span style="color:var(--text3);">ยังไม่เคย</span>'}</td>
-            <td style="text-align:center;color:var(--text3);">${r.our_last_used ? dTH(r.our_last_used) : '—'}</td>
+            <td class="ht-r ht-mono">${fmtKM(r.posts)}</td>
+            <td class="ht-r ht-mono">${fmtKM(r.views)}</td>
+            <td class="ht-c">${spark(r.trending_history)}</td>
+            <td class="ht-r">${r.our_clips_total ? `<span class="ht-mono">${r.our_clips_total}</span> คลิป${r.our_clips_30d ? ` <span style="color:var(--text3);font-size:11px;">(30 วัน ${r.our_clips_30d})</span>` : ''}` : '<span style="color:var(--text3);">ยังไม่เคย</span>'}</td>
+            <td class="ht-c" style="color:var(--text3);">${r.our_last_used ? dTH(r.our_last_used) : '—'}</td>
           </tr>`; }).join('')}</tbody>
       </table></div>
-      ${!HT.showAll && !q && rows.length > 50 ? `<div style="margin-top:10px;"><button class="btn btn-ghost" id="htMore">แสดงทั้งหมด ${rows.length} แฮชแท็ก</button></div>` : ''}`;
-    const more = body.querySelector('#htMore'); if (more) more.onclick = () => { HT.showAll = true; renderHashtags(el); };
+      `;
   }
   window.renderTtKeywordPage = renderKeywordPage;
 
