@@ -122,15 +122,17 @@ function cronState(j) {
 
 async function load() {
   document.getElementById('content').innerHTML = '<div class="loading">กำลังโหลด...</div>'
-  const [health, unknown] = await Promise.all([
+  const [health, unknown, extra] = await Promise.all([
     DB.rpc('system_health'),
-    DB.rpc('unknown_skus', { p_days: UNKNOWN_SKU_DAYS })
+    DB.rpc('unknown_skus', { p_days: UNKNOWN_SKU_DAYS }),
+    DB.rpc('system_health_extra')
   ])
   if (health.error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(health.error.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 27_system_health_rpc.sql</div>`; return }
-  render(health.data, unknown)
+  render(health.data, unknown, extra)
 }
 
-function render(d, unknown) {
+function render(d, unknown, extra) {
+  const X = (extra && !extra.error) ? (extra.data || {}) : null
   document.getElementById('genAt').textContent = `อัปเดต ${th(d.generated_at)}`
   const banners = [], kpis = []
   const cron = d.cron || [], mv = d.mv || [], sync = d.sync || [], ch = d.channels || []
@@ -162,9 +164,50 @@ function render(d, unknown) {
   if (unkRows.length) banners.push(['bad', `⚠️ มี ${unkRows.length} รหัสสินค้าที่ยังไม่มีในตาราง products — ยอดเงินของออเดอร์ที่มีรหัสพวกนี้ถูกคำนวณผิด (ไปกองที่สินค้าตัวอื่นในออเดอร์เดียวกัน หรือกลายเป็น 0) <b>วิธีแก้: เข้าหน้า Admin เพิ่มรหัสลูกให้ครบ แล้วอัปโหลดเดือนนั้นใหม่</b> — รายละเอียดในตารางด้านล่าง`])
   bad.forEach(j => banners.push(['bad', `⛔ cron "${esc(j.jobname)}" ${cronState(j)[1]}${j.last_msg ? ' — ' + esc(j.last_msg) : ''}`]))
   document.getElementById('banners').innerHTML = banners.map(([c,t]) => `<div class="banner ${c}">${t}</div>`).join('')
+  if (X) {
+    const tk = X.tiktok_token || {}
+    const hrs = tk['เหลืออีกกี่ชั่วโมง']
+    const tkCls = hrs == null ? 'muted' : hrs < 6 ? 'bad' : hrs < 24 ? 'warn' : 'ok'
+    kpis.push(['TikTok token', hrs == null ? '<span class="muted">—</span>' : `<span class="${tkCls}">อีก ${fmt(hrs)} ชม.</span>`,
+      `ต่ออายุอัตโนมัติได้ถึง ${tk['ต่ออายุได้ถึง'] ? String(tk['ต่ออายุได้ถึง']).slice(0,10) : '—'}`])
+    const slow = (X.feeds || []).filter(f => f['สถานะ'] !== 'ปกติ')
+    kpis.push(['ความสดของข้อมูล', slow.length ? `<span class="bad">${slow.length} แหล่งช้า</span>` : '<span class="ok">ทุกแหล่งปกติ</span>',
+      slow.length ? slow.map(f => f['แหล่ง']).join(', ') : `ตรวจ ${(X.feeds || []).length} แหล่ง`])
+    const to = +X.timeouts_24h || 0, he = +X.http_errors_24h || 0
+    kpis.push(['งานที่ถูกตัดกลางคัน', to ? `<span class="bad">${fmt(to)} ครั้ง</span>` : '<span class="ok">0</span>',
+      `24 ชม. · error 4xx/5xx ${fmt(he)} ครั้ง`])
+    if ((X.cron_no_timeout || []).length)
+      banners.push(['warn', `⏱ cron ${X.cron_no_timeout.length} ตัวยังไม่ได้ตั้งเวลารอ — เสี่ยงถูกตัดกลางคันโดยไม่มีใครรู้: ${X.cron_no_timeout.map(c => '<b>' + esc(c.jobname) + '</b>').join(', ')} (รัน 67_cron_timeouts.sql)`])
+    if ((X.rls_on || []).length)
+      banners.push(['bad', `🔒 ตาราง ${X.rls_on.length} ตัวถูกเปิด RLS กลับมาเอง หน้าเว็บจะอ่านข้อมูลไม่ได้: ${X.rls_on.map(t2 => '<b>' + esc(t2) + '</b>').join(', ')}`])
+    slow.forEach(f => banners.push(['warn', `🕒 <b>${esc(f['แหล่ง'])}</b> ข้อมูลล่าสุด ${esc(String(f['ข้อมูลล่าสุด'] || '—'))} (ช้าไป ${f['ช้าไปกี่วัน']} วัน)`]))
+  }
+  document.getElementById('banners').innerHTML = banners.map(([c, t]) => `<div class="banner ${c}">${t}</div>`).join('')
   document.getElementById('kpis').innerHTML = kpis.map(([l,v,s]) => `<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s||''}</div></div>`).join('')
 
   let html = ''
+  // --- ความสดของข้อมูล + สิ่งที่ต้องทำ ---
+  if (X) {
+    html += `<div class="card"><div class="card-head"><h2>🕒 ความสดของข้อมูลแต่ละแหล่ง</h2><span>ข้อมูลล่าสุดถึงวันไหน และดึงเข้าระบบครั้งสุดท้ายเมื่อไร</span></div><div class="tbl-wrap"><table>
+      <thead><tr><th>แหล่ง</th><th>ตาราง</th><th>แถว</th><th>ข้อมูลล่าสุด</th><th>ช้าไป</th><th>ดึงล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
+      (X.feeds || []).map(f => {
+        const ok2 = f['สถานะ'] === 'ปกติ'
+        return `<tr><td><b>${esc(f['แหล่ง'])}</b></td><td class="mono">${esc(f['ตาราง'])}</td><td>${fmt(f['แถว'])}</td>
+          <td class="mono">${esc(String(f['ข้อมูลล่าสุด'] || '—'))}</td>
+          <td class="${f['ช้าไปกี่วัน'] > 2 ? 'bad' : ''}">${f['ช้าไปกี่วัน'] == null ? '—' : f['ช้าไปกี่วัน'] + ' วัน'}</td>
+          <td>${f['ดึงล่าสุด'] ? th(f['ดึงล่าสุด']) : '—'}</td>
+          <td><span class="pill ${ok2 ? 'ok' : 'warn'}">${esc(f['สถานะ'])}</span></td></tr>`
+      }).join('') + `</tbody></table></div></div>`
+
+    const todo = X.todo || {}
+    html += `<div class="card"><div class="card-head"><h2>📝 ของที่รอเราจัดการ</h2><span>ไม่ใช่ระบบพัง แต่เป็นสิ่งที่ต้องกรอก/ตอบเอง</span></div><div class="tbl-wrap"><table>
+      <thead><tr><th>เรื่อง</th><th>ค้างอยู่</th><th>ทำที่ไหน</th></tr></thead><tbody>
+      <tr><td>SKU ที่ยังไม่ตั้ง lead time</td><td class="${todo['SKU ที่ยังไม่ตั้ง lead time'] ? 'warn' : 'ok'}"><b>${fmt(todo['SKU ที่ยังไม่ตั้ง lead time'])}</b></td><td>Admin → แท็บ Supply Chain</td></tr>
+      <tr><td>คอมเมนต์ TikTok ค้างตอบ</td><td class="${todo['คอมเมนต์ค้างตอบ'] ? 'warn' : 'ok'}"><b>${fmt(todo['คอมเมนต์ค้างตอบ'])}</b></td><td>แดชบอร์ด → ผลงานคอนเทนต์ → แท็บคอมเมนต์</td></tr>
+      <tr><td>SKU ที่สมุดสินค้าไม่รู้จัก</td><td class="${todo['SKU ที่สมุดไม่รู้จัก'] ? 'bad' : 'ok'}"><b>${fmt(todo['SKU ที่สมุดไม่รู้จัก'])}</b></td><td>Admin → เพิ่มรหัสลูก</td></tr>
+      </tbody></table></div></div>`
+  }
+
   // --- SKU ที่ระบบไม่รู้จัก ---
   html += `<div class="card"><div class="card-head"><h2>🏷 SKU ที่สมุดสินค้าไม่รู้จัก</h2><span>เทียบ sku_revenue กับตาราง products · ย้อนหลัง ${UNKNOWN_SKU_DAYS} วัน</span></div>`
   if (unkErr) html += `<div class="loading">ยังใช้ไม่ได้ — รัน <b>52_unknown_skus.sql</b> ใน Supabase ก่อน<div class="muted" style="margin-top:6px;font-size:12px;">(${esc(unkErr)})</div></div>`
