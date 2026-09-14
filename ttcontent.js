@@ -648,7 +648,8 @@
     try {
       let rows = await supaRpc('tiktok_hashtag_page', { p_range: HT.range });
       if (rows && rows.tiktok_hashtag_page) rows = rows.tiktok_hashtag_page;
-      HT.rows = Array.isArray(rows) ? rows : [];
+      if (!Array.isArray(rows)) throw new Error((rows && (rows.message || rows.hint || rows.details)) || JSON.stringify(rows).slice(0, 200));
+      HT.rows = rows;
     } catch (e) {
       body.innerHTML = `โหลดไม่สำเร็จ: ${esc(e.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 73_tiktok_hashtag_trends.sql`;
       return;
