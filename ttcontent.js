@@ -1,7 +1,7 @@
 // ttcontent.js — หน้า "ผลงานคอนเทนต์ (TikTok)" เวอร์ชันใหม่ ใช้ข้อมูลจาก TikTok API ตรง (เลิกใช้ Windsor)
 // ใช้ของกลางจาก dashboard.html: supaRpc, fmtDateISO, chartTickColor/chartGridColor, Chart.js, CSS
 // RPC: tiktok_content_page(p_days) จาก 66_tiktok_comments_benchmark.sql
-// v1 (2026-09-11)
+// v1 (2026-09-11) · v2 (2026-09-14) แถบบอกสถานะข้อมูล: แยก "TikTok ยังไม่ส่ง" กับ "ระบบยังไม่ได้ดึง"
 (function () {
   const fmtN = (n, d = 0) => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toLocaleString('th-TH', { maximumFractionDigits: d, minimumFractionDigits: d });
   const pct = (n, d = 1) => (n === null || n === undefined || isNaN(n)) ? '—' : (Number(n) * 100).toFixed(d) + '%';
@@ -9,6 +9,40 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   let DATA = null, days = 30, tab = 'clips', q = '', sortKey = 'post_date', sortDir = -1, onlyQuestions = true;
+  let FRESH = null;   // { lastDay, lastPull } — ข้อมูลช่องล่าสุดถึงวันไหน และระบบดึงครั้งล่าสุดเมื่อไร (ไม่ขึ้นกับตัวกรองวันที่)
+
+  // วันนี้ตามเวลาไทย (YYYY-MM-DD)
+  const todayTH = () => new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+  const dayDiff = (a, b) => Math.round((new Date(a + 'T00:00:00').getTime() - new Date(b + 'T00:00:00').getTime()) / 86400000);
+
+  // อ่าน 2 ค่าเล็ก ๆ จากตาราง tiktok_account_daily ตรง ๆ: วันล่าสุดที่มีข้อมูล + เวลาที่ดึงครั้งสุดท้าย
+  async function loadFreshness() {
+    try {
+      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+      const base = `${window.SUPABASE_URL}/rest/v1/tiktok_account_daily`;
+      const [a, b] = await Promise.all([
+        fetch(`${base}?select=stat_date&order=stat_date.desc&limit=1`, { headers: h }).then(r => r.json()),
+        fetch(`${base}?select=updated_at&order=updated_at.desc&limit=1`, { headers: h }).then(r => r.json()),
+      ]);
+      FRESH = { lastDay: a?.[0]?.stat_date || null, lastPull: b?.[0]?.updated_at || null };
+    } catch { FRESH = null; }
+  }
+
+  // ข้อความบอกสถานะข้อมูล (สั้น ๆ ให้ทุกคนอ่านเข้าใจ) — คืน '' ถ้าทุกอย่างปกติ
+  function freshnessNote() {
+    if (!FRESH || !FRESH.lastDay) return '';
+    const today = todayTH();
+    const gap = dayDiff(today, FRESH.lastDay);                 // 1 = มีถึงเมื่อวาน (ปกติ)
+    const pulledToday = FRESH.lastPull ? new Date(new Date(FRESH.lastPull).getTime() + 7 * 3600000).toISOString().slice(0, 10) === today : false;
+    const pullTxt = FRESH.lastPull ? new Date(FRESH.lastPull).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+    const missing = new Date(new Date(FRESH.lastDay + 'T00:00:00').getTime() + 86400000).toISOString().slice(0, 10);
+    if (gap <= 1) return '';
+    if (pulledToday && gap === 2)
+      return `<div class="ttc-hint" style="border-left-color:var(--text3);">ℹ️ ข้อมูลถึง <b>${dTH(FRESH.lastDay)}</b> — TikTok ยังไม่ส่งตัวเลขของ <b>${dTH(missing)}</b> มา (ระบบดึงแล้วเมื่อ ${pullTxt} แต่ TikTok ยังนับไม่เสร็จ) ปกติจะได้ภายใน 1–2 วัน ไม่ต้องทำอะไร</div>`;
+    if (pulledToday)
+      return `<div class="ttc-hint" style="border-left-color:var(--orange);">⚠️ ข้อมูลถึง <b>${dTH(FRESH.lastDay)}</b> — ระบบดึงแล้ววันนี้ (${pullTxt}) แต่ TikTok ยังไม่ส่งข้อมูลมา ${gap - 1} วันแล้ว ถ้ายังไม่มาพรุ่งนี้ให้แจ้งทีมข้อมูล</div>`;
+    return `<div class="ttc-hint" style="border-left-color:var(--orange);">⚠️ ข้อมูลถึง <b>${dTH(FRESH.lastDay)}</b> — ระบบยังไม่ได้ดึงข้อมูลใหม่วันนี้ (ดึงครั้งล่าสุด ${pullTxt}) ตัวเลขที่เห็นจึงยังเป็นของเดิม — ตรวจได้ที่หน้า <b>สถานะระบบ</b></div>`;
+  }
 
   // ===== metric ทั้งหมดที่ TikTok ให้ได้ + ที่คำนวณต่อเอง =====
   // v = ค่าที่เอาไปเรียง · f = วิธีแสดง
@@ -87,7 +121,9 @@
     root().innerHTML = '<div class="card"><div class="empty">กำลังโหลดข้อมูลคอนเทนต์...</div></div>';
     days = daysFromFilter();
     try {
+      const fresh = loadFreshness();
       DATA = await supaRpc('tiktok_content_page', { p_days: Number(days) });
+      await fresh;
       if (Array.isArray(DATA)) DATA = DATA[0] ?? {};                 // เผื่อ PostgREST ห่อมาเป็น array
       if (DATA && DATA.tiktok_content_page) DATA = DATA.tiktok_content_page;  // เผื่อห่อด้วยชื่อฟังก์ชัน
       window._ttcRaw = DATA;
@@ -132,10 +168,10 @@
 
     root().innerHTML = `
       <div id="ttcDebug" style="display:none;"></div>
-      ${lag > 2 ? `<div class="ttc-hint" style="border-left-color:var(--orange);">⚠️ ข้อมูลล่าสุดคือ <b>${dTH(lastDay)}</b> ซึ่งช้ากว่าปกติ — ตามปกติควรมีถึงเมื่อวาน<br>ปกติระบบดึงให้เองทุกเช้า 07:30 — ถ้าค้างหลายวันให้เช็คที่หน้า <b>สถานะระบบ</b> ว่าตัวดึง TikTok ทำงานปกติไหม</div>` : ''}
+      ${freshnessNote()}
       <div class="ttc-head">
-        <div style="font-size:11.5px;color:var(--text3);">ข้อมูลจาก TikTok API โดยตรง · ช่วงที่เลือก <b>${filterLabel()}</b> · ข้อมูลล่าสุดถึง <b>${lastDay ? dTH(lastDay) : '—'}</b>${lag > 1 ? ` <span style="color:var(--orange);">(ช้าไป ${lag} วัน)</span>` : ''}</div>
-        <div style="font-size:10.5px;color:var(--text3);">ระบบดึงข้อมูลใหม่ให้เองทุกเช้า 07:30</div>
+        <div style="font-size:11.5px;color:var(--text3);">ข้อมูลจาก TikTok API โดยตรง · ช่วงที่เลือก <b>${filterLabel()}</b> · ข้อมูลล่าสุดถึง <b>${(FRESH && FRESH.lastDay) ? dTH(FRESH.lastDay) : (lastDay ? dTH(lastDay) : '—')}</b></div>
+        <div style="font-size:10.5px;color:var(--text3);">ระบบดึงข้อมูลใหม่ให้เองวันละ 2 รอบ 07:30 และ 19:30 · TikTok ปล่อยตัวเลขของแต่ละวันช้า 1–2 วัน</div>
       </div>
 
       <div class="ttc-kpis">
@@ -445,7 +481,7 @@
         </div>
 
         <div class="ttc-hint">
-          <b>ตัวเลขนี้เป็นข้อมูล ณ เวลาที่ระบบดึงมาล่าสุด (ทุกเช้า 07:30)</b> ไม่ได้ถามสดจาก TikTok ตลอดเวลา<br>
+          <b>ตัวเลขนี้เป็นข้อมูล ณ เวลาที่ระบบดึงมาล่าสุด (วันละ 2 รอบ 07:30 และ 19:30)</b> ไม่ได้ถามสดจาก TikTok ตลอดเวลา<br>
           ถ้าเพิ่งเข้าไปตอบคอมเมนต์ในแอปมา ให้กดปุ่ม <b>↻ ดึงคอมเมนต์ล่าสุด</b> รายการที่ตอบไปแล้วจะหายออกจากตารางนี้
         </div>
 
