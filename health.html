@@ -176,6 +176,11 @@ function render(d, unknown, extra) {
     const to = +X.timeouts_24h || 0, he = +X.http_errors_24h || 0
     kpis.push(['งานที่ถูกตัดกลางคัน', to ? `<span class="bad">${fmt(to)} ครั้ง</span>` : '<span class="ok">0</span>',
       `24 ชม. · error 4xx/5xx ${fmt(he)} ครั้ง`])
+    const pages2 = X.fb_pages || []
+    const quiet = pages2.filter(p2 => ['เงียบผิดปกติ', 'ไม่เคยมีโพสต์', 'token หมดอายุแล้ว'].includes(p2['สถานะ']))
+    if (pages2.length) kpis.push(['เพจ Facebook', quiet.length ? `<span class="bad">${quiet.length} / ${pages2.length} เงียบ</span>` : `<span class="ok">${pages2.length} เพจปกติ</span>`,
+      quiet.length ? quiet.map(p2 => p2['ชื่อเพจ']).join(', ') : 'ทุกเพจมีโพสต์เข้ามาใน 3 วัน'])
+    quiet.forEach(p2 => banners.push(['bad', `📘 เพจ <b>${esc(p2['ชื่อเพจ'])}</b> ${p2['โพสต์ล่าสุด'] ? `ไม่มีโพสต์ใหม่มา ${p2['เงียบมากี่วัน']} วัน (ล่าสุด ${th(p2['โพสต์ล่าสุด'])})` : 'ไม่เคยมีโพสต์เข้าระบบเลย'} — ตัวดึงข้ามเพจนี้แบบเงียบ ๆ เมื่อ token เพจหมดอายุ ให้เช็ค page token ในตาราง fb_pages`]))
     if ((X.cron_no_timeout || []).length)
       banners.push(['warn', `⏱ cron ${X.cron_no_timeout.length} ตัวยังไม่ได้ตั้งเวลารอ — เสี่ยงถูกตัดกลางคันโดยไม่มีใครรู้: ${X.cron_no_timeout.map(c => '<b>' + esc(c.jobname) + '</b>').join(', ')} (รัน 67_cron_timeouts.sql)`])
     if ((X.rls_on || []).length)
@@ -198,6 +203,22 @@ function render(d, unknown, extra) {
           <td>${f['ดึงล่าสุด'] ? th(f['ดึงล่าสุด']) : '—'}</td>
           <td><span class="pill ${ok2 ? 'ok' : 'warn'}">${esc(f['สถานะ'])}</span></td></tr>`
       }).join('') + `</tbody></table></div></div>`
+
+    if ((X.fb_pages || []).length) {
+      html += `<div class="card"><div class="card-head"><h2>📘 เพจ Facebook แต่ละเพจ</h2><span>ตัวดึงจะข้ามเพจที่มีปัญหาแบบเงียบ ๆ — ตารางนี้จับตรงนั้น</span></div><div class="tbl-wrap"><table>
+        <thead><tr><th>เพจ</th><th>page_id</th><th>โพสต์ล่าสุด</th><th>เงียบมา</th><th>โพสต์ 30 วัน</th><th>token หมดอายุ</th><th>ดึงล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
+        X.fb_pages.map(p2 => {
+          const st = p2['สถานะ']
+          const cls = st === 'ปกติ' ? 'ok' : st === 'ปิดใช้งาน' ? 'muted' : 'bad'
+          return `<tr><td><b>${esc(p2['ชื่อเพจ'])}</b></td><td class="mono">${esc(p2.page_id)}</td>
+            <td>${p2['โพสต์ล่าสุด'] ? th(p2['โพสต์ล่าสุด']) : '—'}</td>
+            <td class="${p2['เงียบมากี่วัน'] > 3 ? 'bad' : ''}">${p2['เงียบมากี่วัน'] == null ? '—' : p2['เงียบมากี่วัน'] + ' วัน'}</td>
+            <td>${fmt(p2['โพสต์30วัน'])}</td>
+            <td class="${p2['token_เหลือกี่วัน'] != null && p2['token_เหลือกี่วัน'] <= 7 ? 'bad' : p2['token_เหลือกี่วัน'] != null && p2['token_เหลือกี่วัน'] <= 21 ? 'warn' : ''}">${p2['token_หมดอายุ'] ? esc(String(p2['token_หมดอายุ']).slice(0,10)) + (p2['token_เหลือกี่วัน'] != null ? ` <span style="font-size:10px;">(${p2['token_เหลือกี่วัน']} วัน)</span>` : '') : '—'}</td>
+            <td>${p2['ดึงล่าสุด'] ? th(p2['ดึงล่าสุด']) : '—'}</td>
+            <td><span class="pill ${cls}">${esc(st)}</span></td></tr>`
+        }).join('') + `</tbody></table></div></div>`
+    }
 
     const todo = X.todo || {}
     html += `<div class="card"><div class="card-head"><h2>📝 ของที่รอเราจัดการ</h2><span>ไม่ใช่ระบบพัง แต่เป็นสิ่งที่ต้องกรอก/ตอบเอง</span></div><div class="tbl-wrap"><table>
