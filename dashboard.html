@@ -310,7 +310,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.14-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.14-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -3702,6 +3702,7 @@ async function ensureTtaDataForRange(from, to, onFresh) {
   if (ttaLastRange === rangeKey && ttaByClip.length) return;
   const cached = await idbGet('tta:' + rangeKey);
   if (cached && cached.rows && cached.rows.length) {
+    await loadTtaThumbs();
     buildTtaByClip(cached.rows);
     ttaLastRange = rangeKey;
     if (Date.now() - (cached.cachedAt || 0) > TTA_CACHE_MAX_AGE) {
@@ -8154,9 +8155,26 @@ async function fetchTtaData(fromDate, toDate) {
   const ttaRaw = chunks.flat();
   setBgSync(`TikTok Ads ${fmt(ttaRaw.length)} แถว อัปเดตแล้ว`, null);
   window._ttaFailedChunks = [];
+  await loadTtaThumbs();
   buildTtaByClip(ttaRaw);
   // เก็บแคชแถวดิบไว้ใน IndexedDB ตามช่วงวันที่ — เปิดหน้าครั้งถัดไปโชว์ทันทีไม่ต้องรอ Supabase (MV รีเฟรชทุกชั่วโมง)
   idbSet('tta:' + fromDate + '|' + toDate, { rows: ttaRaw, cachedAt: Date.now() });
+}
+// รูปหน้าปกคลิป: มีเฉพาะคลิปของช่อง Deesay เอง (ตาราง tiktok_videos รีเฟรชลิงก์รูปทุกวัน) · คลิป KOL ยังไม่มีแหล่งรูป
+let TTA_THUMBS = null;   // item_id → { thumb, url }
+async function loadTtaThumbs() {
+  if (TTA_THUMBS) return;
+  TTA_THUMBS = {};
+  try {
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const base = `${window.SUPABASE_URL}/rest/v1/tiktok_videos`;
+    const probe = await fetch(`${base}?select=*&limit=1`, { headers }).then(r => r.json());
+    const cols = Array.isArray(probe) && probe[0] ? Object.keys(probe[0]) : [];
+    const idCol = ['item_id','video_id','id'].find(c => cols.includes(c));
+    if (!idCol || !cols.includes('thumbnail_url')) return;
+    const rows = await fetch(`${base}?select=${idCol},thumbnail_url${cols.includes('share_url') ? ',share_url' : ''}&limit=2000`, { headers }).then(r => r.json());
+    (Array.isArray(rows) ? rows : []).forEach(v => { if (v[idCol] && v.thumbnail_url) TTA_THUMBS[String(v[idCol])] = { thumb: v.thumbnail_url, url: v.share_url || null }; });
+  } catch {}
 }
 function buildTtaByClip(ttaRaw) {
   ttaRawRows = ttaRaw;
@@ -8168,7 +8186,7 @@ function buildTtaByClip(ttaRaw) {
     const handle = r.tt_account_name || '(ไม่ทราบชื่อ)';
     if (!byClip[id]) byClip[id] = {
       item_id: id, campaign: r.campaign_name, isDeesay, handle, objective: r.objective || null,
-      caption: r.title || '(ไม่มีชื่อ)', thumbnail: null,
+      caption: r.title || '(ไม่มีชื่อ)', thumbnail: (TTA_THUMBS && TTA_THUMBS[String(id)]) ? TTA_THUMBS[String(id)].thumb : null,
       spend: 0, orders: 0, impressions: 0, clicks: 0, convs: 0,
       likes: 0, follows: 0, profileVisits: 0,
       v25Sum:0, v50Sum:0, v75Sum:0, v100Sum:0, v6sSum:0, v25Cnt:0, v50Cnt:0, v75Cnt:0, v100Cnt:0, v6sCnt:0,
@@ -8332,21 +8350,21 @@ async function fetchTtaDaily(fromDate, toDate) {
   const byDate = {};
   (Array.isArray(rows) ? rows : []).forEach(r => {
     const d = r.stat_date;
-    if (!byDate[d]) byDate[d] = { date: d, normal_spend: 0, gmv_max_total: 0, total_revenue: 0, total_orders: 0 };
+    if (!byDate[d]) byDate[d] = { date: d, Awareness: 0, Consideration: 0, Conversion: 0, total_revenue: 0, total_orders: 0 };
     const amt = parseFloat(r.total_cost) || 0;
-    if (r.objective === 'Product GMV Max' || r.objective === 'LIVE GMV Max') byDate[d].gmv_max_total += amt;
-    else byDate[d].normal_spend += amt;
+    // จัดกลุ่มตาม funnel เดียวกับกล่อง Awareness → Consideration → Conversion ด้านบน (objective ว่าง = GMV Max ยุคแรก → Conversion)
+    byDate[d][objectiveToStage(r.objective) || 'Conversion'] += amt;
     byDate[d].total_revenue += parseFloat(r.total_revenue) || 0;
     byDate[d].total_orders += parseFloat(r.total_orders) || 0;
   });
   ttaDailyData = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date))
-    .map(r => ({ ...r, grand_total: r.normal_spend + r.gmv_max_total }));
+    .map(r => ({ ...r, grand_total: r.Awareness + r.Consideration + r.Conversion }));
   ttaDailyLastRange = rangeKey;
 }
 function exportTtaDailyCsv() {
-  const rows = [['วันที่','อื่นๆ (ไม่ใช่ GMV Max)','GMV Max','รวมทั้งหมด']];
+  const rows = [['วันที่','Awareness','Consideration','Conversion','รวมทั้งหมด']];
   [...ttaDailyData].reverse().forEach(r => {
-    rows.push([r.date, r.normal_spend, r.gmv_max_total, r.grand_total]);
+    rows.push([r.date, r.Awareness, r.Consideration, r.Conversion, r.grand_total]);
   });
   const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -8359,17 +8377,18 @@ function exportTtaDailyCsv() {
 async function renderTtaDaily() {
   if (!ttaDailyData.length) { const from = getDateValue('From'), to = getDateValue('To'); await fetchTtaDaily(from, to); }
   const labels = ttaDailyData.map(r => new Date(r.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
-  const normalArr = ttaDailyData.map(r => parseFloat(r.normal_spend)||0);
-  const gmvArr = ttaDailyData.map(r => parseFloat(r.gmv_max_total)||0);
-  const totalArr = ttaDailyData.map(r => (parseFloat(r.normal_spend)||0) + (parseFloat(r.gmv_max_total)||0));
   if (charts['chartTtaDaily']) charts['chartTtaDaily'].destroy();
   const ctx = document.getElementById('chartTtaDaily');
   if (ctx) {
+    // 3 แท่งซ้อนตาม funnel · maxBarThickness กันแท่งบานเต็มจอเวลาเลือกดูแค่ 1–3 วัน
+    const hex2rgba = (h, a) => `rgba(${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)},${a})`;
+    const ds = ['Awareness','Consideration','Conversion'].map(st => ({
+      type:'bar', label: FUNNEL_STAGE_TH[st], data: ttaDailyData.map(r => parseFloat(r[st])||0),
+      backgroundColor: hex2rgba(FUNNEL_STAGE_COLOR[st], 0.65), borderColor: FUNNEL_STAGE_COLOR[st], borderWidth:1, borderRadius:3, stack:'s',
+      maxBarThickness: 56, categoryPercentage: 0.7, barPercentage: 0.9
+    }));
     charts['chartTtaDaily'] = new Chart(ctx, {
-      data: { labels, datasets: [
-        { type:'bar', label:'อื่นๆ (Awareness/Consideration/Traditional Ads)', data: normalArr, backgroundColor:'rgba(96,165,250,0.65)', borderColor:'#60a5fa', borderWidth:1, borderRadius:3, stack:'s' },
-        { type:'bar', label:'GMV Max', data: gmvArr, backgroundColor:'rgba(200,169,110,0.65)', borderColor:'#c8a96e', borderWidth:1, borderRadius:3, stack:'s' },
-      ]},
+      data: { labels, datasets: ds },
       options: {
         responsive:true, maintainAspectRatio:false,
         interaction: { mode:'index', intersect:false }, // เอาเมาส์วางตรงไหนของแท่งก็ได้ ขึ้น tooltip ทั้ง 2 ค่าพร้อมกัน ไม่ต้องเล็งเฉพาะสี
