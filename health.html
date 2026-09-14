@@ -55,6 +55,7 @@
   .banner { padding:13px 16px; border-radius:var(--radius-sm); margin-bottom:14px; font-size:13px; line-height:1.55; border:1px solid transparent; }
   .banner.warn { background:rgba(251,146,60,.1); border-color:rgba(251,146,60,.3); color:var(--orange); }
   .banner.bad { background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.3); color:var(--danger); }
+  .banner.info { background:var(--bg3); border-color:var(--border); color:var(--text2); }
   .loading { padding:44px; text-align:center; color:var(--muted); font-size:13px; }
 </style>
 </head>
@@ -185,7 +186,28 @@ function render(d, unknown, extra) {
       banners.push(['warn', `⏱ cron ${X.cron_no_timeout.length} ตัวยังไม่ได้ตั้งเวลารอ — เสี่ยงถูกตัดกลางคันโดยไม่มีใครรู้: ${X.cron_no_timeout.map(c => '<b>' + esc(c.jobname) + '</b>').join(', ')} (รัน 67_cron_timeouts.sql)`])
     if ((X.rls_on || []).length)
       banners.push(['bad', `🔒 ตาราง ${X.rls_on.length} ตัวถูกเปิด RLS กลับมาเอง หน้าเว็บจะอ่านข้อมูลไม่ได้: ${X.rls_on.map(t2 => '<b>' + esc(t2) + '</b>').join(', ')}`])
-    slow.forEach(f => banners.push(['warn', `🕒 <b>${esc(f['แหล่ง'])}</b> ข้อมูลล่าสุด ${esc(String(f['ข้อมูลล่าสุด'] || '—'))} (ช้าไป ${f['ช้าไปกี่วัน']} วัน)`]))
+    // --- TikTok สถิติช่อง: แยกให้ชัดว่า "TikTok ยังไม่ส่ง" หรือ "ตัวดึงของเราไม่ได้รัน" ---
+    // วิธีดู: ดึงล่าสุด = วันนี้ แต่ข้อมูลถึงแค่เมื่อวานซืน → TikTok ยังนับไม่เสร็จ (ปกติ) · ดึงล่าสุดไม่ใช่วันนี้ → cron ไม่ทำงาน
+    let ttHandled = false
+    const acc = (X.feeds || []).find(f => f['ตาราง'] === 'tiktok_account_daily')
+    if (acc && acc['ข้อมูลล่าสุด'] && acc['ช้าไปกี่วัน'] != null) {
+      const todayTH = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10)
+      const gap = +acc['ช้าไปกี่วัน']
+      const pulledToday = acc['ดึงล่าสุด'] ? new Date(new Date(acc['ดึงล่าสุด']).getTime() + 7 * 3600000).toISOString().slice(0, 10) === todayTH : false
+      const pullTxt = acc['ดึงล่าสุด'] ? th(acc['ดึงล่าสุด']) : '—'
+      if (gap >= 2 && !pulledToday) {
+        banners.push(['bad', `🎵 <b>ตัวดึง TikTok ไม่ได้รันวันนี้</b> — ดึงครั้งล่าสุด ${pullTxt} ข้อมูลช่องถึงแค่ ${esc(String(acc['ข้อมูลล่าสุด']))} · เช็ค 3 อย่าง: cron <b>tiktok-organic-sync</b> (รอบ 07:30 / 19:30) ในตารางด้านล่าง · "งานที่ถูกตัดกลางคัน" ต้องเป็น 0 · TikTok token ต้องยังไม่หมด — แก้ชั่วคราวได้ด้วยการเปิดลิงก์ <span class="mono">tiktok-organic?mode=sync&amp;days=30</span>`])
+        ttHandled = true
+      } else if (gap === 2 && pulledToday) {
+        banners.push(['info', `🎵 <b>TikTok ยังไม่ส่งตัวเลขของเมื่อวานมา</b> — ระบบดึงแล้ว ${pullTxt} แต่ TikTok ยังนับไม่เสร็จ (ส่งแถวเปล่ามาให้) ปกติปล่อยช้า 1–2 วัน รอบ 19:30 จะลองใหม่เอง ไม่ต้องทำอะไร`])
+        ttHandled = true
+      } else if (gap > 2 && pulledToday) {
+        banners.push(['warn', `🎵 <b>TikTok ไม่ให้ข้อมูลมา ${gap - 1} วันแล้ว</b> ทั้งที่ระบบดึงทุกวัน (ล่าสุด ${pullTxt}) — ตัวดึงของเราปกติ ปัญหาอยู่ฝั่ง TikTok · ลองเปิดลิงก์ <span class="mono">tiktok-organic?mode=account</span> ดูว่าแถววันล่าสุดใน metrics ยังเป็น 0 ทั้งแถวไหม ถ้าใช่คือรอ TikTok ถ้าไม่ใช่ให้แจ้ง`])
+        ttHandled = true
+      }
+    }
+    slow.filter(f => !(ttHandled && f['ตาราง'] === 'tiktok_account_daily'))
+        .forEach(f => banners.push(['warn', `🕒 <b>${esc(f['แหล่ง'])}</b> ข้อมูลล่าสุด ${esc(String(f['ข้อมูลล่าสุด'] || '—'))} (ช้าไป ${f['ช้าไปกี่วัน']} วัน)`]))
   }
   document.getElementById('banners').innerHTML = banners.map(([c, t]) => `<div class="banner ${c}">${t}</div>`).join('')
   document.getElementById('kpis').innerHTML = kpis.map(([l,v,s]) => `<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s||''}</div></div>`).join('')
