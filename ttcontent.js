@@ -547,20 +547,44 @@
   }
 
   // ===== หน้าแยก: ค้นหาคำที่คนใช้บน TikTok (ไม่เกี่ยวกับคลิปช่องเรา จึงแยกออกมา) =====
+  // ===== หน้า "ค้นหาคำบน TikTok" =====
+  // ส่วน 1 คำค้นที่เกี่ยวข้อง (tiktok-probe ?only=keyword — ชุด "คนทั่วไป" is_personalized=false; ตรวจแล้ว 2026-09-14 ว่าไม่เอียงตามบัญชีเรา)
+  // ส่วน 2 แฮชแท็กหมวดบิวตี้มาแรงในไทย (RPC tiktok_hashtag_page — sync ทุกเช้าโดย tiktok-hashtag-sync)
+  const OUR_BRAND = /deesay|ดีเซ้ย์|ดีเซย์|ดีเซ่|fimiq|ฟีมิค/i;
+  // ชื่อแบรนด์อื่นที่เจอบ่อยในคำค้น/แฮชแท็ก (เพิ่มได้ตามที่เจอ)
+  const OTHER_BRANDS = ['สุรีย์พร', 'กระแต', 'เจ้านาง', 'ออร่าริช', 'จุฬาเฮิร์บ', 'คุณโจ้', 'drpong', 'ซองเซเว่น', 'ซีเครท', 'เมอเรซ', 'ศรีจันทร์', 'มิสทีน', 'mistine', 'srichand', 'cathy doll', 'เคที่ดอลล์', 'สิวลี่', '4u2', 'บราวน์', 'browit', 'ingu', 'อิงกุ', 'กิฟฟารีน', 'giffarine', 'นีเวีย', 'nivea', 'vaseline', 'garnier', 'การ์นิเย่', 'loreal', 'ลอรีอัล', 'maybelline', 'เมย์เบลลีน'];
+  const brandOf = w => OUR_BRAND.test(w) ? 'ours' : (OTHER_BRANDS.some(b => String(w).toLowerCase().includes(b.toLowerCase())) ? 'other' : null);
+  const fmtKM = n => (n === null || n === undefined || isNaN(n)) ? '—' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + 'K' : String(Math.round(n));
+  const spark = hist => {
+    const v = (hist || []).map(h => Number(h.views_daily) || 0); if (v.length < 2) return '';
+    const mx = Math.max(...v) || 1, w = 90, h = 22;
+    const pts = v.map((x, i) => `${(i / (v.length - 1) * w).toFixed(1)},${(h - x / mx * (h - 2) - 1).toFixed(1)}`).join(' ');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;
+  };
+  let HT = { range: '7DAY', rows: null, q: '', showAll: false };
+
   function renderKeywordPage() {
     const el = document.getElementById('page-ttkeyword'); if (!el) return;
     el.innerHTML = `
       <style>
-        #page-ttkeyword .kw-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:8px; }
+        #page-ttkeyword .kw-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; }
         #page-ttkeyword .kw-item { display:flex; align-items:center; gap:9px; background:var(--bg3); border:1px solid var(--border);
           border-radius:8px; padding:9px 11px; font-size:12.5px; }
+        #page-ttkeyword .kw-item.kw-ours { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--bg3)); }
+        #page-ttkeyword .kw-item.kw-other { opacity:0.75; }
         #page-ttkeyword .kw-rank { font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--text3); min-width:18px; }
         #page-ttkeyword .kw-word { flex:1; color:var(--text); }
+        #page-ttkeyword .kw-tag { font-size:9.5px; padding:1px 7px; border-radius:10px; background:var(--bg2); color:var(--text3); white-space:nowrap; }
+        #page-ttkeyword .kw-tag.ours { background:var(--accent); color:#0a0a0f; }
         #page-ttkeyword .kw-again { background:none; border:none; color:var(--text3); cursor:pointer; font-size:12px; padding:2px 4px; border-radius:5px; }
         #page-ttkeyword .kw-again:hover { color:var(--accent); background:var(--bg2); }
         #page-ttkeyword .kw-note { font-size:11px; color:var(--text3); line-height:1.7; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
+        #page-ttkeyword .ht-table td, #page-ttkeyword .ht-table th { white-space:nowrap; }
+        #page-ttkeyword .ht-up { color:#4ade80; } #page-ttkeyword .ht-down { color:#f87171; } #page-ttkeyword .ht-new { color:var(--accent); font-weight:600; }
+        #page-ttkeyword .ht-name { font-weight:600; color:var(--text); }
+        #page-ttkeyword .btn.active { background:var(--accent); color:#0a0a0f; border-color:var(--accent); }
       </style>
-      <div class="card">
+      <div class="card" style="margin-bottom:20px;">
         <div class="section-header"><div class="section-title">ค้นหาคำที่คนใช้จริงบน TikTok</div><span style="font-size:10.5px;color:var(--text3);">พิมพ์คำที่เกี่ยวกับสินค้า แล้วดูว่าคนค้นคำใกล้เคียงอะไรบ้าง — เอาไปตั้งชื่อคลิปและใส่แฮชแท็ก</span></div>
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
           <input type="text" class="ls-input" id="kwInput" placeholder="เช่น แป้ง, กันแดด, ลิป" style="width:260px;padding:9px 13px;font-size:13px;">
@@ -569,7 +593,23 @@
           ${['แป้ง', 'กันแดด', 'ลิป', 'คุชชั่น', 'รองพื้น', 'เซรั่ม'].map(w => `<button class="btn btn-ghost kw-quick" data-w="${w}">${w}</button>`).join('')}
         </div>
         <div id="kwResult" style="font-size:12.5px;color:var(--text3);">พิมพ์คำแล้วกดค้นหา</div>
+      </div>
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">แฮชแท็กหมวดบิวตี้ที่กำลังมาแรง (ประเทศไทย) ${typeof metricInfoIcon === 'function' ? '' : ''}</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${[['1DAY', '1 วัน'], ['7DAY', '7 วัน'], ['30DAY', '30 วัน'], ['120DAY', '120 วัน']].map(([k, l]) => `<button class="btn btn-ghost ht-range${k === HT.range ? ' active' : ''}" data-r="${k}">${l}</button>`).join('')}
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">TikTok จัดอันดับ 200 แฮชแท็กหมวดความงามที่คนไทยดูมากที่สุดในช่วงที่เลือก — "อันดับเปลี่ยน" เทียบกับรอบก่อนหน้า (ใหม่ = เพิ่งติดชาร์ต) · "เราใช้แล้ว" นับจากแคปชั่นคลิปของช่องเรา</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+          <input type="text" class="ls-input" id="htSearch" placeholder="กรองแฮชแท็ก เช่น แป้ง, กันแดด" style="width:240px;padding:7px 11px;font-size:12.5px;">
+          <span id="htMeta" style="font-size:11px;color:var(--text3);"></span>
+        </div>
+        <div id="htBody" style="font-size:12.5px;color:var(--text3);">กำลังโหลด...</div>
       </div>`;
+
+    // ---- ส่วน 1: คำค้น ----
     const go = async () => {
       const w = el.querySelector('#kwInput').value.trim(); if (!w) return;
       const box = el.querySelector('#kwResult');
@@ -578,11 +618,14 @@
         const r = await fetch(`${window.SUPABASE_URL}/functions/v1/tiktok-probe?only=keyword&q=${encodeURIComponent(w)}`);
         const j = await r.json();
         const words = j?.keyword?.คำทั้งหมด || [];
+        const n = { ours: 0, other: 0, plain: 0 };
+        words.forEach(x => { const b = brandOf(x); n[b || 'plain']++; });
+        const otherNames = [...new Set(words.filter(x => brandOf(x) === 'other').map(x => OTHER_BRANDS.find(b => x.toLowerCase().includes(b.toLowerCase()))))];
         box.innerHTML = words.length
-          ? `<div style="margin-bottom:12px;color:var(--text2);">คนที่ค้นคำว่า "<b>${esc(w)}</b>" มักค้นคำพวกนี้ด้วย — ${words.length} คำ</div>
-             <div class="kw-grid">${words.map((x, i) => `
-               <div class="kw-item"><span class="kw-rank">${i + 1}</span><span class="kw-word">${esc(x)}</span><button class="kw-again" data-w="${esc(x)}" title="ค้นต่อจากคำนี้">↻</button></div>`).join('')}</div>
-             <div class="kw-note">เรียงตามลำดับที่ TikTok ส่งมา ซึ่งปกติคือคำที่เกี่ยวข้องมากที่สุดอยู่บนสุด — <b>แต่ TikTok ไม่ได้ให้ตัวเลขจำนวนครั้งที่คนค้นมาด้วย</b> จึงบอกไม่ได้ว่าคำไหนคนค้นมากกว่ากันเท่าไร<br>กดปุ่ม ↻ ข้างคำเพื่อค้นต่อจากคำนั้น จะได้เห็นคำที่ลึกลงไปอีกชั้น</div>`
+          ? `<div style="margin-bottom:12px;color:var(--text2);">คนที่ค้นคำว่า "<b>${esc(w)}</b>" มักค้นคำพวกนี้ด้วย — ${words.length} คำ <span style="font-size:11px;color:var(--text3);">(ข้อมูลคนทั่วไปทั้งประเทศ ไม่ปรับตามบัญชีเรา)</span></div>
+             <div class="kw-grid">${words.map((x, i) => { const b = brandOf(x); return `
+               <div class="kw-item${b ? ' kw-' + b : ''}"><span class="kw-rank">${i + 1}</span><span class="kw-word">${esc(x)}</span>${b === 'ours' ? '<span class="kw-tag ours">แบรนด์เรา</span>' : b === 'other' ? '<span class="kw-tag">แบรนด์อื่น</span>' : ''}<button class="kw-again" data-w="${esc(x)}" title="ค้นต่อจากคำนี้">↻</button></div>`; }).join('')}</div>
+             <div class="kw-note"><b>สรุป:</b> คำทั่วไป ${n.plain} · แบรนด์เรา ${n.ours} · แบรนด์อื่น ${n.other}${otherNames.length ? ` (${otherNames.map(esc).join(', ')})` : ''} — คำทั่วไปคือคำที่เอาไปตั้งชื่อคลิป/แฮชแท็กได้เลย<br>เรียงตามลำดับที่ TikTok ส่งมา (เกี่ยวข้องมากอยู่บน) — <b>TikTok ไม่ได้ให้จำนวนครั้งที่คนค้น</b> จึงเทียบปริมาณไม่ได้ และรายการเปลี่ยนไปตามวัน<br>กดปุ่ม ↻ ข้างคำเพื่อค้นต่อจากคำนั้น จะได้เห็นคำที่ลึกลงไปอีกชั้น</div>`
           : `ไม่พบคำที่เกี่ยวข้อง ${esc(j?.keyword?.message || j?.result || '')}`;
         box.querySelectorAll('.kw-again').forEach(b4 => b4.onclick = () => { el.querySelector('#kwInput').value = b4.dataset.w; go(); });
       } catch (e) {
@@ -592,6 +635,54 @@
     el.querySelector('#kwGo').onclick = go;
     el.querySelector('#kwInput').onkeydown = e => { if (e.key === 'Enter') go(); };
     el.querySelectorAll('.kw-quick').forEach(b3 => b3.onclick = () => { el.querySelector('#kwInput').value = b3.dataset.w; go(); });
+
+    // ---- ส่วน 2: แฮชแท็ก ----
+    el.querySelectorAll('.ht-range').forEach(b => b.onclick = () => { HT.range = b.dataset.r; HT.rows = null; HT.showAll = false; el.querySelectorAll('.ht-range').forEach(x => x.classList.toggle('active', x.dataset.r === HT.range)); loadHashtags(el); });
+    el.querySelector('#htSearch').oninput = e => { HT.q = e.target.value.trim(); renderHashtags(el); };
+    loadHashtags(el);
+  }
+
+  async function loadHashtags(el) {
+    const body = el.querySelector('#htBody'); if (!body) return;
+    body.innerHTML = 'กำลังโหลด...';
+    try {
+      let rows = await supaRpc('tiktok_hashtag_page', { p_range: HT.range });
+      if (rows && rows.tiktok_hashtag_page) rows = rows.tiktok_hashtag_page;
+      HT.rows = Array.isArray(rows) ? rows : [];
+    } catch (e) {
+      body.innerHTML = `โหลดไม่สำเร็จ: ${esc(e.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 73_tiktok_hashtag_trends.sql`;
+      return;
+    }
+    renderHashtags(el);
+  }
+
+  function renderHashtags(el) {
+    const body = el.querySelector('#htBody'), meta = el.querySelector('#htMeta'); if (!body || !HT.rows) return;
+    const all = HT.rows;
+    if (!all.length) { body.innerHTML = 'ยังไม่มีข้อมูล — ตัวดึงจะทำงานเองทุกเช้า 06:00 (หรือยังไม่ได้ deploy tiktok-hashtag-sync)'; meta.textContent = ''; return; }
+    const q = HT.q.toLowerCase();
+    const rows = q ? all.filter(r => String(r.hashtag_name).toLowerCase().includes(q)) : all;
+    const shown = HT.showAll || q ? rows : rows.slice(0, 50);
+    meta.textContent = `ข้อมูลวันที่ ${dTH(all[0].snapshot_date)} · แสดง ${shown.length} จาก ${rows.length}`;
+    const chg = r => r.rank_change === 'NEW' || r.rank_change === null || r.rank_change === undefined ? '<span class="ht-new">ใหม่</span>'
+      : Number(r.rank_change) > 0 ? `<span class="ht-up">▲ ${r.rank_change}</span>` : Number(r.rank_change) < 0 ? `<span class="ht-down">▼ ${Math.abs(r.rank_change)}</span>` : '<span style="color:var(--text3);">–</span>';
+    body.innerHTML = `
+      <div style="overflow-x:auto;"><table class="ht-table" data-no-sort style="width:100%;">
+        <thead><tr><th style="width:44px;">อันดับ</th><th style="width:80px;">เปลี่ยน</th><th class="t-left">แฮชแท็ก</th><th>คลิปในไทย</th><th>ยอดดูในไทย</th><th>ยอดดูรายวัน 30 วัน</th><th>เราใช้แล้ว</th><th>ใช้ล่าสุด</th></tr></thead>
+        <tbody>${shown.map(r => { const b = brandOf(r.hashtag_name); return `
+          <tr>
+            <td style="text-align:center;font-family:'IBM Plex Mono',monospace;">${r.rank_position ?? '—'}</td>
+            <td style="text-align:center;">${chg(r)}</td>
+            <td class="t-left"><span class="ht-name">#${esc(r.hashtag_name)}</span>${b === 'ours' ? ' <span class="kw-tag ours">แบรนด์เรา</span>' : b === 'other' ? ' <span class="kw-tag">แบรนด์อื่น</span>' : ''}</td>
+            <td style="text-align:right;">${fmtKM(r.posts)}</td>
+            <td style="text-align:right;">${fmtKM(r.views)}</td>
+            <td>${spark(r.trending_history)}</td>
+            <td style="text-align:right;">${r.our_clips_total ? `${r.our_clips_total} คลิป${r.our_clips_30d ? ` <span style="color:var(--text3);">(30 วัน ${r.our_clips_30d})</span>` : ''}` : '<span style="color:var(--text3);">ยังไม่เคย</span>'}</td>
+            <td style="text-align:center;color:var(--text3);">${r.our_last_used ? dTH(r.our_last_used) : '—'}</td>
+          </tr>`; }).join('')}</tbody>
+      </table></div>
+      ${!HT.showAll && !q && rows.length > 50 ? `<div style="margin-top:10px;"><button class="btn btn-ghost" id="htMore">แสดงทั้งหมด ${rows.length} แฮชแท็ก</button></div>` : ''}`;
+    const more = body.querySelector('#htMore'); if (more) more.onclick = () => { HT.showAll = true; renderHashtags(el); };
   }
   window.renderTtKeywordPage = renderKeywordPage;
 
