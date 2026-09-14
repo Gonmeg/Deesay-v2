@@ -317,7 +317,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.14-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.14-h</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -2513,7 +2513,7 @@ function loadTtContentPage() {
   window._ttcLoading = true;
   document.getElementById('page-ttcontent').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
   const s2 = document.createElement('script');
-  s2.src = 'ttcontent.js?v=20260914g';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
+  s2.src = 'ttcontent.js?v=20260914h';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
   s2.onload = () => { window._ttcLoading = false; if (window.renderTtContentPage) window.renderTtContentPage(); };
   s2.onerror = () => { window._ttcLoading = false; document.getElementById('page-ttcontent').innerHTML = '<div class="error-banner" style="display:block;">โหลด ttcontent.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.head.appendChild(s2);
@@ -2523,7 +2523,7 @@ function loadTtKeywordPage() {
   if (window.renderTtKeywordPage) return window.renderTtKeywordPage();
   document.getElementById('page-ttkeyword').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
   const s3 = document.createElement('script');
-  s3.src = 'ttcontent.js?v=20260914g';
+  s3.src = 'ttcontent.js?v=20260914h';
   s3.onload = () => { if (window.renderTtKeywordPage) window.renderTtKeywordPage(); };
   document.head.appendChild(s3);
 }
@@ -3101,7 +3101,7 @@ function renderFbeCommentSection() {
 
 let fbePostListAll = [];
 let fbePostListPage = 1;
-const FBE_PAGE_SIZE = 15;
+let FBE_PAGE_SIZE = pgSize();   // จำนวนแถวต่อหน้า — ใช้ค่ากลางที่ผู้ใช้เลือก (ตั้งได้ที่ตัวแบ่งหน้า)
 
 function fbeGoToPostListPage(n) {
   fbePostListPage = n;
@@ -3190,7 +3190,7 @@ function fbeRenderPostListPage(pageNum) {
       pagerHtml += `<button class="btn ${p === pageNum ? 'btn-primary' : 'btn-ghost'}" style="min-width:32px;" onclick="fbeGoToPostListPage(${p})">${p}</button>`;
     });
     pagerHtml += `<button class="btn btn-ghost" ${pageNum === totalPages ? 'disabled' : ''} onclick="fbeGoToPostListPage(${pageNum + 1})">ถัดไป ›</button>`;
-    pagerHtml += `<span style="color:var(--text3);margin-left:8px;">หน้า ${pageNum}/${totalPages} · ทั้งหมด ${fmt(fbePostListAll.length)} โพสต์${fbePostListAll.length >= 300 ? ' (สูงสุด 300)' : ''}</span>`;
+    pagerHtml += `<span style="color:var(--text3);margin-left:8px;">หน้า ${pageNum}/${totalPages} · ทั้งหมด ${fmt(fbePostListAll.length)} โพสต์${fbePostListAll.length >= 300 ? ' (สูงสุด 300)' : ''}</span>${pgSizeSelectHtml("setPgSize(+this.value,'fbeGoToPostListPage')")}`;
     pagerHtml += `</div>`;
     pagerEl.innerHTML = pagerHtml;
   });
@@ -3626,7 +3626,7 @@ async function renderCreatorPerf() {
 // canonical source ของส่วนนี้ = mv_tiktok_creative_performance (ยอดที่แอดนับ / GMV Max) — คนละแหล่งกับยอดออเดอร์จริง (orders) ด้านบน จึงไม่เท่ากันโดยธรรมชาติ
 let _cpVideosRev = 0, _cpVideosOrd = 0;
 let cpAdsPage = 1;
-const CP_ADS_PAGE_SIZE = 40;
+let CP_ADS_PAGE_SIZE = pgSize();   // จำนวนแถวต่อหน้า — ใช้ค่ากลางที่ผู้ใช้เลือก (ตั้งได้ที่ตัวแบ่งหน้า)
 let cpAdsSortKey = 'spend', cpAdsSortDir = 'desc';
 let _cpAdsLoadSeq = 0; // กันผลลัพธ์ fetch เก่ามาทับผลใหม่ตอนเปลี่ยนช่วงวันที่/creator เร็วๆ
 
@@ -4346,7 +4346,7 @@ function renderLsCreatorChips() {
 
 // ---- ตารางโปรในไลฟ์: เรียงได้ทุกคอลัมน์ + กรอง + 20 แถว/หน้า ----
 let _lsPromoRows = [], _lsPromoPage = 1, _lsPromoSortCol = 'rev', _lsPromoSortDir = 'desc';
-const LS_PROMO_PAGE_SIZE = 20;
+let LS_PROMO_PAGE_SIZE = pgSize();   // จำนวนแถวต่อหน้า — ใช้ค่ากลางที่ผู้ใช้เลือก (ตั้งได้ที่ตัวแบ่งหน้า)
 function lsPromoSort(col) {
   if (_lsPromoSortCol === col) _lsPromoSortDir = _lsPromoSortDir === 'desc' ? 'asc' : 'desc';
   else { _lsPromoSortCol = col; _lsPromoSortDir = (col === 'promo' || col === 'name') ? 'asc' : 'desc'; }
@@ -7640,6 +7640,8 @@ function fmtK(n) { if (n===null||n===undefined) return '—'; return n>=1000 ? (
 function ttcEsc(s) { return (s||'').replace(/</g,'&lt;'); }
 function ttcEscAttr(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 const KNOWN_DEESAY_HANDLES = ['deesaythailand'];
+// กราฟแท่งทุกหน้า: จำกัดความหนาแท่ง กันแท่งบานเต็มจอเวลาเลือกดูแค่ 1–3 วัน (ตั้งครั้งเดียว มีผลทุกกราฟรวม supply.js / ttcontent.js)
+if (window.Chart && Chart.defaults && Chart.defaults.datasets && Chart.defaults.datasets.bar) Chart.defaults.datasets.bar.maxBarThickness = 56;
 
 const METRIC_INFO = {
   wr: 'สัดส่วนคนที่ดูคลิปจนจบทั้งคลิป (Full Watched Rate) — ยิ่งสูงยิ่งแปลว่าคลิปน่าติดตามตั้งแต่ต้นจนจบ',
@@ -7925,10 +7927,58 @@ function activeCols(page) {
 }
 
 // ===== generic pager (สไตล์เดียวกับ fbePostListPager) =====
+// ===== การแบ่งหน้าตาราง (ใช้ร่วมกันทุกหน้า) =====
+// จำนวนแถวต่อหน้าเป็นค่ากลางค่าเดียว จำไว้ในเครื่อง (localStorage) — เปลี่ยนที่ตัวแบ่งหน้าไหนก็มีผลทุกตาราง
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+function pgSize() { const v = parseInt(localStorage.getItem('tblPageSize') || '20'); return [10, 20, 50, 100].includes(v) ? v : 20; }   // ไม่อ้าง PAGE_SIZE_OPTIONS เพราะถูกเรียกก่อนบรรทัดนั้นทำงาน
+function setPgSize(v, gotoFnName) {
+  localStorage.setItem('tblPageSize', String(v));
+  TTA_PAGE_SIZE = CP_ADS_PAGE_SIZE = LS_PROMO_PAGE_SIZE = TTC_PAGE_SIZE = FBE_PAGE_SIZE = v;
+  if (gotoFnName && typeof window[gotoFnName] === 'function') window[gotoFnName](1);
+  document.querySelectorAll('table').forEach(t => { if (t._pg) { t._pg.page = 1; autoPageTable(t); } });
+}
+function pgSizeSelectHtml(onchangeJs) {
+  return `<label style="margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--text3);">ต่อหน้า
+    <select onchange="${onchangeJs}" style="padding:4px 8px;font-size:12px;">${PAGE_SIZE_OPTIONS.map(n => `<option value="${n}"${n === pgSize() ? ' selected' : ''}>${n}</option>`).join('')}</select></label>`;
+}
+// ตารางที่ไม่มีตัวแบ่งหน้าของตัวเอง → แบ่งหน้าให้อัตโนมัติเมื่อแถวเกินจำนวนต่อหน้า (ซ่อนแถวที่ไม่อยู่ในหน้า) — ข้ามตารางที่มี data-no-page หรือมี ...Pager ของตัวเองอยู่ถัดไป
+function autoPageTable(table) {
+  const tbody = table.tBodies[0]; if (!tbody) return;
+  if (table.hasAttribute('data-no-page')) return;
+  const nextEl = table.nextElementSibling, wrapNext = table.parentElement && table.parentElement.nextElementSibling;
+  if ((nextEl && /Pager$/.test(nextEl.id || '')) || (wrapNext && /Pager$/.test(wrapNext.id || ''))) return;
+  const rows = [...tbody.children].filter(tr => tr.tagName === 'TR');
+  const size = pgSize();
+  let pager = table._pgEl;
+  if (rows.length <= size && !(table._pg && table._pg.page > 1)) { rows.forEach(tr => { if (tr._pgHidden) { tr.style.display = ''; tr._pgHidden = false; } }); if (pager) pager.innerHTML = ''; return; }
+  table._pg = table._pg || { page: 1, n: rows.length };
+  if (table._pg.n !== rows.length) { table._pg.page = 1; table._pg.n = rows.length; }
+  const totalPages = Math.max(1, Math.ceil(rows.length / size));
+  if (table._pg.page > totalPages) table._pg.page = totalPages;
+  const cur = table._pg.page, start = (cur - 1) * size;
+  rows.forEach((tr, i) => { const hide = i < start || i >= start + size; if (hide) { tr.style.display = 'none'; tr._pgHidden = true; } else if (tr._pgHidden) { tr.style.display = ''; tr._pgHidden = false; } });
+  if (!pager) { pager = document.createElement('div'); pager.className = 'auto-pager'; const host = table.closest('.table-wrap') || table; host.insertAdjacentElement('afterend', pager); table._pgEl = pager; }
+  const nums = [];
+  for (let i = 1; i <= totalPages; i++) { if (i === 1 || i === totalPages || Math.abs(i - cur) <= 2) nums.push(i); else if (nums[nums.length - 1] !== '...') nums.push('...'); }
+  pager.innerHTML = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:12px;">
+    <button class="btn btn-ghost" data-p="${cur - 1}" ${cur === 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button>
+    ${nums.map(p => p === '...' ? `<span style="color:var(--text3);padding:0 4px;">...</span>` : `<button class="btn ${p === cur ? 'btn-primary' : 'btn-ghost'}" style="min-width:32px;" data-p="${p}">${p}</button>`).join('')}
+    <button class="btn btn-ghost" data-p="${cur + 1}" ${cur === totalPages ? 'disabled' : ''}>ถัดไป ›</button>
+    <span style="color:var(--text3);margin-left:8px;">แสดง ${start + 1}–${Math.min(start + size, rows.length)} จาก ${rows.length} · หน้า ${cur}/${totalPages}</span>
+    ${pgSizeSelectHtml('setPgSize(+this.value)')}</div>`;
+  pager.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { table._pg.page = +b.dataset.p; autoPageTable(table); });
+}
+let _autoPageTimer = null;
+new MutationObserver(muts => {
+  if (!muts.some(m => [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1 || n.nodeType === 3))) return;
+  clearTimeout(_autoPageTimer);
+  _autoPageTimer = setTimeout(() => document.querySelectorAll('table').forEach(autoPageTable), 60);
+}).observe(document.body, { childList: true, subtree: true });
+
 function renderPagerHtml(containerId, curPage, totalPages, gotoFnName) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  if (totalPages <= 1 && pgSize() === 20) { el.innerHTML = ''; return; }
   let html = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:14px;font-size:12px;">`;
   html += `<button class="btn btn-ghost" ${curPage===1?'disabled':''} onclick="${gotoFnName}(${curPage-1})">‹ ก่อนหน้า</button>`;
   const nums = [];
@@ -7938,14 +7988,14 @@ function renderPagerHtml(containerId, curPage, totalPages, gotoFnName) {
     html += `<button class="btn ${p===curPage?'btn-primary':'btn-ghost'}" style="min-width:32px;" onclick="${gotoFnName}(${p})">${p}</button>`;
   });
   html += `<button class="btn btn-ghost" ${curPage===totalPages?'disabled':''} onclick="${gotoFnName}(${curPage+1})">ถัดไป ›</button>`;
-  html += `<span style="color:var(--text3);margin-left:8px;">หน้า ${curPage}/${totalPages}</span></div>`;
+  html += `<span style="color:var(--text3);margin-left:8px;">หน้า ${curPage}/${totalPages}</span>${pgSizeSelectHtml(`setPgSize(+this.value,'${gotoFnName}')`)}</div>`;
   el.innerHTML = html;
 }
 
 // ===== FETCH: TikTok Content (organic + boosted flag) =====
 let ttcData = [];
 let ttcPage = 1;
-const TTC_PAGE_SIZE = 40;
+let TTC_PAGE_SIZE = pgSize();   // จำนวนแถวต่อหน้า — ใช้ค่ากลางที่ผู้ใช้เลือก (ตั้งได้ที่ตัวแบ่งหน้า)
 async function fetchTtcData() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const [organicRes, adsRes] = await Promise.all([
@@ -8122,7 +8172,7 @@ let ttaByClip = [];
 let ttaRawRows = []; // แถวดิบก่อนรวมเป็นคลิป — ใช้คำนวณ funnel แยกตาม (วันที่+objective) จริง เพราะคลิปเดียวกันอาจถูกยิงคนละ objective กันคนละวันได้
 let ttaPage = 1;
 let ttaLastRange = null; // เก็บช่วงวันที่ที่ fetch ล่าสุด กันดึงซ้ำถ้าช่วงเดิม
-const TTA_PAGE_SIZE = 40;
+let TTA_PAGE_SIZE = pgSize();   // จำนวนแถวต่อหน้า — ใช้ค่ากลางที่ผู้ใช้เลือก (ตั้งได้ที่ตัวแบ่งหน้า)
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
