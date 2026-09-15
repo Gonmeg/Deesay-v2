@@ -1,4 +1,4 @@
-// fbads.js — หน้า "Facebook Ads" (Meta Marketing API → fb_ads_daily) — โหลดครั้งแรกที่กดเมนู (เหมือน supply.js) · v20260915c: กราฟเงิน (สลับ ยอด / ROAS&%) · กราฟ traffic เลือก 2 เส้น · funnel · ตารางรายวัน (⚙ Metrics) · ตัดวงกลมที่วางแอด · ต้อง RPC v2 (SQL 87)
+// fbads.js — หน้า "Facebook Ads" (Meta Marketing API → fb_ads_daily) — โหลดครั้งแรกที่กดเมนู (เหมือน supply.js) · v20260915d: กราฟเงินแกนเดียว · เส้นทึบ · legend สีจริง · funnel ใหม่ · กราฟเงิน (สลับ ยอด / ROAS&%) · กราฟ traffic เลือก 2 เส้น · funnel · ตารางรายวัน (⚙ Metrics) · ตัดวงกลมที่วางแอด · ต้อง RPC v2 (SQL 87)
 // ข้อมูล: RPC fb_ads_page(p_from, p_to) ครั้งเดียว · ยอดขายจริง = ออเดอร์ Facebook ของเรา (mv_sales_daily) ไม่ใช่ที่ Meta นับ
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, thShort, ttcEsc, ttcEscAttr, exportTable, fbeInfoIcon, COLORS, getDateValue, chartTickColor/chartGridColor, setBgSync
 (function () {
@@ -53,6 +53,9 @@
   const grid = () => (typeof isLightTheme === 'function' && isLightTheme()) ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.06)';
   const axis = (color, cb, title) => ({ ticks: { color: color || chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: cb, maxTicksLimit: 6 }, grid: { color: grid(), drawBorder: false }, border: { display: false }, title: title ? { display: true, text: title, color: color || chartTickColor(), font: { family: 'Sarabun', size: 10 } } : undefined });
   const xaxis = () => ({ ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 14, maxRotation: 0 }, grid: { display: false }, border: { display: false } });
+  // legend: ใช้สีเส้นจริง (ไม่ใช่สีพื้นจางๆ) + สัญลักษณ์เป็นเส้น
+  const legendOpts = () => ({ position: 'top', align: 'end', labels: { color: (typeof chartLegendColor === 'function' ? chartLegendColor() : chartTickColor()), font: { family: 'Sarabun', size: 11 }, boxWidth: 28, boxHeight: 3, usePointStyle: false,
+    generateLabels: chart => Chart.defaults.plugins.legend.labels.generateLabels(chart).map(l => { const ds = chart.data.datasets[l.datasetIndex]; l.fillStyle = ds.borderColor; l.strokeStyle = ds.borderColor; l.lineWidth = 0; return l; }) } });
   const line = (label, data, color, opts) => Object.assign({ label, data, borderColor: color, backgroundColor: color, borderWidth: 1.8, tension: 0.35, pointRadius: 0, pointHoverRadius: 4, fill: false }, opts || {});
   const ORDER = ['spend','impressions','reach','frequency','cpm','clicks','link_clicks','ctr','cpc','post_engagement','er','cpe','reactions','comments','shares','saves','video_3s','thruplay','cpv','msg_started','cost_per_msg','purchases','purchase_value','cpa','roas_meta','days','period'];
   function registerMetrics() {
@@ -199,17 +202,17 @@
     const daily = _data?.daily || []; const labels = daily.map(r => thShort(r.d));
     if (_moneyMode === 'money') {
       makeChart('chartFbaDaily', 'line', labels, [
-        line('ยอดขายจริง Facebook', daily.map(r => +r.revenue), '#4ade80', { fill: true, backgroundColor: 'rgba(74,222,128,0.10)', yAxisID: 'y' }),
-        line('ค่าแอด', daily.map(r => +r.spend), '#f87171', { yAxisID: 'y1' })
-      ], { options: { interaction: { mode: 'index', intersect: false } }, legend: { position: 'top', align: 'end' },
-        scales: { x: xaxis(), y: Object.assign(axis('#4ade80', v => fmtB(v), 'ยอดขาย'), { position: 'left' }), y1: Object.assign(axis('#f87171', v => fmtB(v), 'ค่าแอด'), { position: 'right', grid: { drawOnChartArea: false } }) },
+        line('ยอดขายจริง Facebook', daily.map(r => +r.revenue), '#22c55e', { fill: true, backgroundColor: 'rgba(34,197,94,0.10)', yAxisID: 'y', borderWidth: 2 }),
+        line('ค่าแอด', daily.map(r => +r.spend), '#ef4444', { fill: true, backgroundColor: 'rgba(239,68,68,0.10)', yAxisID: 'y', borderWidth: 2 })
+      ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
+        scales: { x: xaxis(), y: Object.assign(axis(undefined, v => fmtB(v), 'บาท'), { position: 'left', beginAtZero: true }) },   // แกนเดียว สเกลเดียวกัน จะได้เห็นจริงว่าค่าแอดเล็กกว่ายอดขายแค่ไหน
         tooltip: { callbacks: { label: it => `${it.dataset.label}: ฿${fmt(it.raw)}`, footer: items => { const r = daily[items[0].dataIndex]; return +r.spend ? `ROAS ${(r.revenue / r.spend).toFixed(2)}x · ค่าแอด ${r.revenue ? (r.spend / r.revenue * 100).toFixed(1) : '—'}% ของยอด` : ''; } } } });
     } else {
       makeChart('chartFbaDaily', 'line', labels, [
-        line('ROAS', daily.map(r => +r.spend ? +(r.revenue / r.spend).toFixed(2) : null), '#c8a96e', { yAxisID: 'y', spanGaps: true }),
-        line('% ค่าแอดต่อยอด', daily.map(r => +r.revenue ? +(r.spend / r.revenue * 100).toFixed(1) : null), '#f87171', { yAxisID: 'y1', borderDash: [5, 4], spanGaps: true })
-      ], { options: { interaction: { mode: 'index', intersect: false } }, legend: { position: 'top', align: 'end' },
-        scales: { x: xaxis(), y: Object.assign(axis('#c8a96e', v => v + 'x', 'ROAS'), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#f87171', v => v + '%', '% ค่าแอด'), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
+        line('ROAS', daily.map(r => +r.spend ? +(r.revenue / r.spend).toFixed(2) : null), '#d4a017', { yAxisID: 'y', spanGaps: true, borderWidth: 2 }),
+        line('% ค่าแอดต่อยอด', daily.map(r => +r.revenue ? +(r.spend / r.revenue * 100).toFixed(1) : null), '#ef4444', { yAxisID: 'y1', spanGaps: true, borderWidth: 2 })
+      ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
+        scales: { x: xaxis(), y: Object.assign(axis('#d4a017', v => v + 'x', 'ROAS'), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#ef4444', v => v + '%', '% ค่าแอด'), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
         tooltip: { callbacks: { label: it => `${it.dataset.label}: ${it.raw == null ? '—' : it.dataset.label === 'ROAS' ? it.raw + 'x' : it.raw + '%'}`, footer: items => { const r = daily[items[0].dataIndex]; return `ยอด ฿${fmt(r.revenue)} · ค่าแอด ฿${fmt(r.spend)}`; } } } });
     }
   }
@@ -220,29 +223,31 @@
     const fmtv = (k, v) => v == null ? '—' : isMoney(k) ? '฿' + fmt(v) : isPct(k) ? (v * (k === 'acos' ? 1 : 100)).toFixed(2) + '%' : k === 'roas' ? v.toFixed(2) + 'x' : k === 'frequency' ? v.toFixed(2) : fmt(v);
     const tick = k => v => isMoney(k) ? fmtB(v) : isPct(k) ? (v * (k === 'acos' ? 1 : 100)).toFixed(1) + '%' : k === 'roas' ? v + 'x' : fmtB(v);
     makeChart('chartFbaTraffic', 'line', labels, [
-      line(mlabel(kl), daily.map(r => mv(kl, r)), '#f472b6', { fill: true, backgroundColor: 'rgba(244,114,182,0.10)', yAxisID: 'y' }),
-      line(mlabel(kr), daily.map(r => mv(kr, r)), '#60a5fa', { yAxisID: 'y1', borderDash: [5, 4] })
-    ], { options: { interaction: { mode: 'index', intersect: false } }, legend: { position: 'top', align: 'end' },
-      scales: { x: xaxis(), y: Object.assign(axis('#f472b6', tick(kl)), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#60a5fa', tick(kr)), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
+      line(mlabel(kl), daily.map(r => mv(kl, r)), '#ec4899', { fill: true, backgroundColor: 'rgba(236,72,153,0.10)', yAxisID: 'y', borderWidth: 2 }),
+      line(mlabel(kr), daily.map(r => mv(kr, r)), '#2563eb', { yAxisID: 'y1', borderWidth: 2 })
+    ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
+      scales: { x: xaxis(), y: Object.assign(axis('#ec4899', tick(kl), mlabel(kl)), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#2563eb', tick(kr), mlabel(kr)), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
       tooltip: { callbacks: { label: it => `${it.dataset.label}: ${fmtv(it.datasetIndex === 0 ? kl : kr, it.raw)}` } } });
   }
   function renderFunnel(T, rev) {
     const steps = [
-      { k: 'impressions', label: 'เห็นแอด (Impressions)', v: T.impressions },
-      { k: 'link_clicks', label: 'คลิกลิงก์', v: T.link_clicks },
-      { k: 'msg_started', label: 'ทักแชท', v: T.msg_started },
-      { k: 'purchases', label: 'ซื้อ (Meta นับ)', v: T.purchases }
+      { label: 'เห็นแอด', sub: 'Impressions', v: T.impressions, color: '#60a5fa' },
+      { label: 'คลิกลิงก์', sub: 'Link clicks', v: T.link_clicks, color: '#818cf8' },
+      { label: 'ทักแชท', sub: 'Messaging started', v: T.msg_started, color: '#c084fc' },
+      { label: 'ซื้อ (Meta นับ)', sub: 'Purchases (pixel)', v: T.purchases, color: '#f472b6' }
     ];
     const max = steps[0].v || 1;
-    document.getElementById('fba-funnel').innerHTML = steps.map((st, i) => {
-      const prev = i ? steps[i - 1].v : null; const rate = prev ? (st.v / prev * 100) : null;
-      const w = Math.max(6, Math.sqrt(st.v / max) * 100);
-      const cost = st.v ? T.spend / st.v : null;
-      return `<div style="display:flex;align-items:center;gap:10px;margin:6px 0;">
-        <div style="width:150px;font-size:11.5px;color:var(--text2);">${st.label}</div>
-        <div style="flex:1;"><div style="height:26px;width:${w.toFixed(1)}%;min-width:40px;border-radius:6px;background:linear-gradient(90deg,#60a5fa,#a78bfa);display:flex;align-items:center;padding:0 8px;color:#fff;font-size:11.5px;font-weight:700;white-space:nowrap;">${fmt(st.v)}</div></div>
-        <div style="width:150px;font-size:10.5px;color:var(--text3);text-align:right;">${rate !== null ? `<b style="color:var(--text2);">${rate < 1 ? rate.toFixed(2) : rate.toFixed(1)}%</b> จากขั้นก่อน · ` : ''}${cost !== null ? '฿' + fmt(cost) + '/ครั้ง' : ''}</div></div>`;
-    }).join('') + `<div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">ยอดขายจริง Facebook ในช่วงนี้ ฿${fmtB(rev)} · ทัก 1 ครั้ง ≈ ฿${T.msg_started ? fmt(rev / T.msg_started) : '—'} ยอดขาย (คิดจากยอดทั้งช่องทาง) · ขั้น "ซื้อ" นับได้เฉพาะที่ pixel เห็น ต่ำกว่าจริง</div>`;
+    document.getElementById('fba-funnel').innerHTML = `<div style="display:grid;grid-template-columns:130px 1fr 110px 150px;gap:6px 12px;align-items:center;">` +
+      steps.map((st, i) => {
+        const prev = i ? steps[i - 1].v : null; const rate = prev ? (st.v / prev * 100) : null;
+        const w = Math.max(3, Math.sqrt(st.v / max) * 100);
+        const cost = st.v ? T.spend / st.v : null;
+        return `<div><div style="font-size:12px;font-weight:600;color:var(--text);">${st.label}</div><div style="font-size:10px;color:var(--text3);">${st.sub}</div></div>
+          <div style="height:22px;background:var(--bg3);border-radius:6px;overflow:hidden;"><div style="height:100%;width:${w.toFixed(1)}%;background:${st.color};border-radius:6px;"></div></div>
+          <div style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text);">${fmt(st.v)}</div>
+          <div style="font-size:10.5px;color:var(--text3);line-height:1.3;">${rate !== null ? `<b style="color:var(--text2);">${rate < 1 ? rate.toFixed(2) : rate.toFixed(1)}%</b> จากขั้นก่อน<br>` : '&nbsp;<br>'}${cost !== null ? '฿' + fmt(cost) + ' ต่อครั้ง' : ''}</div>`;
+      }).join('') + `</div>
+      <div style="font-size:10.5px;color:var(--text3);margin-top:10px;line-height:1.6;border-top:1px solid var(--border);padding-top:8px;">ยอดขายจริง Facebook ในช่วงนี้ ฿${fmtB(rev)} · ทัก 1 ครั้ง ≈ ฿${T.msg_started ? fmt(rev / T.msg_started) : '—'} ยอดขาย (คิดจากยอดทั้งช่องทาง) · ขั้น "ซื้อ" นับได้เฉพาะที่ pixel เห็น ต่ำกว่าจริง</div>`;
   }
   function renderDailyTable() {
     const ks = cols('fbaDaily'); const daily = (_data?.daily || []).slice().sort((a, b) => b.d.localeCompare(a.d));
