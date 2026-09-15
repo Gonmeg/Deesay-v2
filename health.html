@@ -121,6 +121,62 @@ function cronState(j) {
   return ['ok', 'ปกติ']
 }
 
+
+// แปลง schedule (UTC) เป็นภาษาคน เวลาไทย
+function thaiSched(sched) {
+  const p = (sched || '').trim().split(/\s+/); if (p.length < 5) return sched || ''
+  const [min, hour] = p
+  const pad = n => String(n).padStart(2, '0')
+  if (min.startsWith('*/') && hour === '*') return `ทุก ${min.slice(2)} นาที`
+  if (hour === '*') return `ทุกชั่วโมง นาทีที่ ${pad(min)}`
+  if (hour.startsWith('*/')) return `ทุก ${hour.slice(2)} ชม. นาทีที่ ${pad(min)}`
+  if (/^\d+(,\d+)*$/.test(hour) && /^\d+$/.test(min)) return hour.split(',').map(h => `${pad((parseInt(h) + 7) % 24)}:${pad(min)}`).join(' / ') + ' ทุกวัน'
+  return sched
+}
+// ชื่อ job → ทำอะไร (ภาษาคน) — ใช้บอกว่าข้อมูลอะไรพร้อมกี่โมง
+const JOB_DESC = {
+  'shopee-orders-sync': 'ดึงออเดอร์ Shopee (API) ที่มีการเปลี่ยนแปลง → orders / sku_revenue',
+  'shopee-ads-sync-daily': 'ค่าแอด Shopee (Product/Shop Ads) รายวัน → shopee_ads_daily',
+  'shopee-ads-backfill': 'ค่าแอด Shopee ย้อนหลังที่ยังขาด',
+  'shopee-ads-campaign-sync': 'ค่าแอด Shopee รายแคมเปญ',
+  'shopee-ads-balance': 'ยอดเงินคงเหลือ Shopee Ads',
+  'shopee-refresh-token': 'ต่ออายุ token Shopee',
+  'sync-shopee-cpas': 'CPAS จากชีท MKT Tracking → shopee_cpas_daily',
+  'refresh-mv-shopee-ads': 'รีเฟรชสรุปค่าแอด Shopee',
+  'tiktok-campaign-objectives-sync-daily': 'ค่าแอด TikTok ตาม objective (รอบเที่ยง)',
+  'tiktok-campaign-objectives-sync-daily-morning': 'ค่าแอด TikTok ตาม objective (รอบเช้า — ให้ยอดเมื่อวานครบก่อนชีท 10:00)',
+  'tiktok-gmv-max-live-summary-sync-daily': 'GMV Max LIVE รายวัน (รอบเที่ยง)',
+  'tiktok-gmv-max-live-summary-sync-daily-morning': 'GMV Max LIVE รายวัน (รอบเช้า)',
+  'tiktok-creative-insight-sync-daily': 'ผลแอดรายคลิป (รอบเที่ยง)',
+  'tiktok-creative-insight-sync-daily-morning': 'ผลแอดรายคลิป (รอบเช้า)',
+  'tiktok-gmv-max-creative-sync-daily': 'GMV Max รายคลิป (รอบเที่ยง)',
+  'tiktok-gmv-max-creative-sync-daily-morning': 'GMV Max รายคลิป (รอบเช้า)',
+  'tiktok-creative-attributes-sync-frequent': 'ชื่อ/แคปชันของคลิปที่ยิงแอด',
+  'fill-tiktok-creative-attributes': 'เติมชื่อคลิปที่ยังว่างจาก tiktok_videos / ปกคลิป',
+  'tiktok-ad-covers-sync': 'ปกคลิปที่ยิงแอด (ทีละชุด identity)',
+  'tiktok-organic-sync': 'คลิป/ยอดวิว TikTok ของช่องเรา (organic)',
+  'tiktok-hashtag-sync': 'คำค้น/แฮชแท็ก TikTok',
+  'tiktok-creator-info-refresh-daily': 'ข้อมูล creator TikTok',
+  'refresh-mv-tiktok-creative-performance': 'รีเฟรชสรุปผลแอดรายคลิป TikTok',
+  'refresh-mv-tiktok-objective-summary': 'รีเฟรชสรุปค่าแอด TikTok ตาม objective (ตัวที่ชีท/หน้าเว็บอ่าน)',
+  'refresh-mv-tta-precompute': 'รีเฟรชสรุปค่าแอด TikTok ต่อ creator/handle',
+  'ingest-facebook-posts-daily': 'โพสต์ Facebook ทุกเพจ',
+  'ingest-facebook-reels-daily': 'Reels Facebook',
+  'ingest-page-stats-daily': 'ยอดผู้ติดตาม/สถิติเพจ',
+  'refresh-facebook-thumbnails-daily': 'รูปปกโพสต์ Facebook ที่หมดอายุ',
+  'sync-kol-posts': 'โพสต์ KOL จากชีททีม KOL → kol_posts',
+  'sync-inventory-log': 'log น้องแพ็ค (ของเข้า-ออก) → inventory_movements',
+  'refresh-supply-views': 'คำนวณสต็อก / forecast / แผนเติมสต็อก',
+  'refresh-mv-sales-daily': 'รีเฟรชยอดขายรายวัน',
+  'refresh-mv-sku-daily': 'รีเฟรชยอดขายราย SKU',
+  'refresh-mv-creator-daily': 'รีเฟรชยอดขายต่อ creator',
+  'refresh-mv-customer-daily': 'รีเฟรชลูกค้ารายวัน',
+  'refresh-mv-free-sample': 'รีเฟรชของแถม/ตัวอย่าง',
+  'refresh-unknown-skus': 'หา SKU ที่สมุดสินค้าไม่รู้จัก',
+  'auto-disable-rls': 'ปิด RLS ที่เปิดเองอัตโนมัติ',
+  'housekeeping-purge-logs': 'ลบ log cron เก่า'
+}
+
 async function load() {
   document.getElementById('content').innerHTML = '<div class="loading">กำลังโหลด...</div>'
   const [health, unknown, extra] = await Promise.all([
@@ -263,10 +319,20 @@ function render(d, unknown, extra) {
       `</tbody></table></div>`
   html += `</div>`
 
+  // --- ตารางเวลาประจำวัน (เฉพาะ job ที่รันเป็นเวลาแน่นอน เรียงตามเวลาไทย) ---
+  const daily = cron.filter(j => j.active && /^\d+ \d+(,\d+)* \* \* \*$/.test((j.schedule||'').trim()))
+    .flatMap(j => j.schedule.trim().split(/\s+/)[1].split(',').map(h => ({ j, t: ((parseInt(h) + 7) % 24) * 60 + parseInt(j.schedule.trim().split(/\s+/)[0]) })))
+    .sort((a, b) => a.t - b.t)
+  html += `<div class="card"><div class="card-head"><h2>📅 ลำดับรอบประจำวัน (เวลาไทย)</h2><span>อะไรดึงกี่โมง — ตัวรายชั่วโมง/ทุกกี่นาที ดูในตาราง Cron ด้านล่าง · ชีท MKT Tracking เติมค่าแอดเองตอน 10:00–11:00 หลังรอบเช้า TikTok 08:10–08:45</span></div><div class="tbl-wrap"><table>
+    <thead><tr><th>เวลาไทย</th><th>งาน</th><th>ทำอะไร</th><th>รอบล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
+    daily.map(({ j, t }) => { const [c, st] = cronState(j); return `<tr><td class="mono"><b>${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}</b></td><td>${esc(j.jobname)}</td><td style="font-size:11.5px;">${esc(JOB_DESC[j.jobname] || j.target || '')}</td><td>${th(j.last_start)}</td><td><span class="pill ${c}">${st}</span></td></tr>` }).join('') +
+    `</tbody></table></div></div>`
+
   // --- cron ---
   html += `<div class="card"><div class="card-head"><h2>⏱ Cron jobs (${cron.length})</h2><span>สถานะจากรอบรันล่าสุด · เวลาไทย</span></div><div class="tbl-wrap"><table>
-    <thead><tr><th>#</th><th>งาน</th><th>ประเภท</th><th>เป้าหมาย</th><th>ตาราง (UTC)</th><th>รันล่าสุด</th><th>ใช้เวลา</th><th>24 ชม.</th><th>สถานะ</th></tr></thead><tbody>` +
+    <thead><tr><th>#</th><th>งาน</th><th>ทำอะไร</th><th>เวลาไทย</th><th>ประเภท</th><th>เป้าหมาย</th><th>ตาราง (UTC)</th><th>รันล่าสุด</th><th>ใช้เวลา</th><th>24 ชม.</th><th>สถานะ</th></tr></thead><tbody>` +
     cron.map(j => { const [c, t] = cronState(j); return `<tr><td class="mono">${j.jobid}</td><td><b>${esc(j.jobname||'(ไม่มีชื่อ)')}</b>${j.last_msg && c!=='ok' ? `<div class="muted" style="font-size:11px;">${esc(j.last_msg)}</div>` : ''}</td>
+      <td style="font-size:11.5px;">${esc(JOB_DESC[j.jobname] || '')}</td><td style="white-space:nowrap;">${esc(thaiSched(j.schedule))}</td>
       <td>${{mv:'รีเฟรช MV',edge:'Edge Function',sql:'SQL'}[j.kind]||j.kind}</td><td class="mono">${esc(j.target||'')}</td><td class="mono">${esc(j.schedule)}</td>
       <td>${th(j.last_start)}<div class="muted" style="font-size:11px;">${ago(j.last_start)}</div></td><td>${j.last_ms != null ? (j.last_ms >= 1000 ? (j.last_ms/1000).toFixed(1)+' วิ' : j.last_ms+' ms') : '—'}</td>
       <td>${fmt(j.runs_24h)} รัน${j.fails_24h ? ` <span class="bad">/ ล้ม ${j.fails_24h}</span>` : ''}</td><td><span class="pill ${c}">${t}</span></td></tr>` }).join('') +
