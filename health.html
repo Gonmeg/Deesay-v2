@@ -217,6 +217,16 @@ function render(d, unknown, extra) {
   kpis.push(['Facebook Page Token', `<span class="${tokCls}">อีก ${dl} วัน</span>`, `หมด ${tokenExp}${expKey ? '' : ' (ค่าที่ตั้งไว้ในหน้านี้)'} · ${pages.length} เพจ`])
   if (dl <= 21) banners.push(['warn', `🔑 Facebook Page Access Token จะหมดอายุ ${tokenExp} (อีก ${dl} วัน) — ต่ออายุผ่าน Graph API Explorer ตั้งแต่ 1 วันก่อนหมด แล้วอัปเดตในตาราง fb_pages ทั้ง ${pages.length || 3} เพจ ไม่งั้นการดึงโพสต์/Reels/Page stats จะหยุด`])
   if (d.fb_thumbs) { const t = d.fb_thumbs; kpis.push(['Thumbnail FB รีเฟรชแล้ว', `${fmt(t.refreshed)} / ${fmt(t.total)}`, t.total ? `${Math.round(t.refreshed/t.total*100)}% · ล่าสุด ${ago(t.last)}` : '']) }
+  // token Meta Ads (meta_token_status — meta-ads-sync เช็คทุกรอบ)
+  try {
+    const { data: mt } = await DB.from('meta_token_status').select('*').eq('id', 1)
+    const t = Array.isArray(mt) ? mt[0] : null
+    if (t) {
+      if (t.error || t.is_valid === false) banners.push(['bad', `📢 <b>token Meta Ads ใช้ไม่ได้</b> — ${esc(t.error || 'is_valid=false')} · ตัวดึงค่าแอด Facebook หยุดจนกว่าจะใส่ token ใหม่ใน secret META_ADS_TOKEN`])
+      else if (t.days_left != null && t.days_left <= 14) banners.push([t.days_left <= 3 ? 'bad' : 'warn', `📢 <b>token Meta Ads จะหมดใน ${t.days_left} วัน</b> (${th(t.expires_at)}) — ต่ออายุ/สร้าง System User token แล้วใส่ใน secret META_ADS_TOKEN`])
+      else if (t.expires_at) banners.push(['info', `📢 token Meta Ads (${esc(t.token_type||'')} ${esc(t.user_name||'')}) หมด ${th(t.expires_at)} · เหลือ ${t.days_left} วัน · เช็คล่าสุด ${ago(t.checked_at)}`])
+    }
+  } catch (e) { console.warn('meta_token_status', e) }
   // แถบเตือน SKU ที่ไม่รู้จัก (สำคัญกว่า cron เลยขึ้นก่อน)
   if (unkRows.length) banners.push(['bad', `⚠️ มี ${unkRows.length} รหัสสินค้าที่ยังไม่มีในตาราง products — ยอดเงินของออเดอร์ที่มีรหัสพวกนี้ถูกคำนวณผิด (ไปกองที่สินค้าตัวอื่นในออเดอร์เดียวกัน หรือกลายเป็น 0) <b>วิธีแก้: เข้าหน้า Admin เพิ่มรหัสลูกให้ครบ แล้วอัปโหลดเดือนนั้นใหม่</b> — รายละเอียดในตารางด้านล่าง`])
   bad.forEach(j => banners.push(['bad', `⛔ cron "${esc(j.jobname)}" ${cronState(j)[1]}${j.last_msg ? ' — ' + esc(j.last_msg) : ''}`]))
