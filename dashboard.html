@@ -322,7 +322,7 @@
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.15-f</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.15-g</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1057,9 +1057,13 @@
     </div>
     <div class="page" id="page-adperf">
       <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:8px;">
-        📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ (ตรงกับหน้าอื่นๆ) · ค่าโฆษณาดึงจาก Google Sheets แยกราย sub-channel — ใช้ filter วันที่จากแถบด้านบน
+        📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ · ค่าโฆษณา Facebook / TikTok / Shopee / Modern Trade ดึงจาก API ของแต่ละแพลตฟอร์ม (ตรงกับหน้า Ads ของแต่ละช่อง) · Lazada ยังมาจากชีท MKT Tracking — ใช้ filter วันที่จากแถบด้านบน
       </div>
       <div id="adp-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:16px;"></div>
+      <div class="card" id="adp-compare-card" style="margin-bottom:16px;display:none;">
+        <div class="section-header"><div class="section-title">เทียบค่าแอด: ชีท MKT Tracking vs ระบบ (API) รายเดือน</div><span style="font-size:10.5px;color:var(--text3);">ไว้เช็คช่วงเปลี่ยนแหล่ง — ถ้าต่างมากแปลว่าชีทมีแอดจากบัญชีที่ระบบยังไม่เห็น (เช่น outsource/เอเจนซี่) หรือชีทกรอกไม่ครบ</span></div>
+        <div class="table-wrap"><table data-no-page><thead><tr><th>ช่องทาง</th><th>เดือน</th><th>ชีท</th><th>ระบบ</th><th>ต่าง</th><th>%</th></tr></thead><tbody id="adp-compare-body"></tbody></table></div>
+      </div>
       <div class="grid-4" style="margin-bottom:20px;">
         <div class="card"><div class="card-title">ยอดขาย GMV</div><div class="kpi-value" id="adp-gmv" style="color:var(--blue);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
         <div class="card"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" id="adp-ads" style="color:var(--red);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
@@ -5859,43 +5863,60 @@ let adRawData = [];   // ค่าแอดที่ map แล้ว: {channel,
 let adUnmapped = [];  // เก็บ "Channel||SubChannel" ที่หาไม่เจอใน mapping ไว้เตือน Meg
 let adView = 'month';
 
+// ค่าแอดรายวัน: อ่านจากระบบ (view v_ad_spend_daily — Facebook/TikTok/Shopee/CPAS/Modern Trade จาก API) + Lazada จากชีทเหมือนเดิม (ยังไม่มี API)
+// รูปแบบแถวเหมือนเดิม {channel, subChannel, tag, date, ads} หน้าอื่นไม่ต้องแก้ · adSheetData เก็บของชีททั้งหมดไว้เทียบ (ตารางเทียบในหน้า Ad Performance)
+let adSheetData = [];
+const AD_CHANNELS_FROM_SYSTEM = ['Facebook', 'TikTok', 'Shopee', 'Modern Trade'];
+async function fetchAdSheetRows() {
+  const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(GSHEET_ADS_TAB)}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  const unmappedSet = new Set();
+  const rows = json.table.rows.map(r => {
+    const rawCh = (r.c[0]?.v || '').toString().trim();
+    const rawSub = (r.c[1]?.v || '').toString().trim();
+    const date = r.c[2]?.v ? formatGDate(r.c[2].v) : '';
+    const ads = parseFloat(r.c[3]?.v) || 0;
+    if (!date) return null;
+    const yr = parseInt(date.substring(0,4));
+    const curYr = new Date().getFullYear();
+    if (isNaN(yr) || yr < 2020 || yr > curYr + 1) return null;
+    const mapKey = rawCh + '||' + rawSub;
+    const mapped = AD_SHEET_MAPPING[mapKey];
+    if (mapped) return { channel: mapped.channel, subChannel: mapped.subChannel, tag: mapped.tag || null, date, ads, source: 'sheet' };
+    const canonicalCh = AD_CHANNEL_NORMALIZE[rawCh];
+    unmappedSet.add(mapKey);
+    if (canonicalCh) return { channel: canonicalCh, subChannel: null, tag: null, date, ads, source: 'sheet' };
+    return null;
+  }).filter(Boolean);
+  adUnmapped = [...unmappedSet];
+  return rows;
+}
+async function fetchAdSystemRows() {
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const out = [];
+  for (let off = 0; ; off += 1000) {
+    const res = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/v_ad_spend_daily?select=channel,sub_channel,tag,date,ads,source&date=gte.2025-01-01&order=date.asc&limit=1000&offset=${off}`, headers);
+    const rows = await res.json();
+    if (!Array.isArray(rows)) throw new Error(rows?.message || 'v_ad_spend_daily ไม่ตอบ (รัน SQL 89 หรือยัง)');
+    out.push(...rows.map(r => ({ channel: r.channel, subChannel: r.sub_channel, tag: r.tag, date: r.date, ads: parseFloat(r.ads) || 0, source: r.source })));
+    if (rows.length < 1000) break;
+  }
+  return out;
+}
 async function fetchAdData() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(GSHEET_ADS_TAB)}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    const unmappedSet = new Set();
-    adRawData = json.table.rows.map(r => {
-      const rawCh = (r.c[0]?.v || '').toString().trim();
-      const rawSub = (r.c[1]?.v || '').toString().trim();
-      const date = r.c[2]?.v ? formatGDate(r.c[2].v) : '';
-      const ads = parseFloat(r.c[3]?.v) || 0;
-      if (!date) return null;
-      // กรองวันที่ผิดปกติทิ้ง (เช่น 1899-12-30 = ค่า default ของ Excel/Sheets ตอนเซลล์ว่าง, 2343-07-16 = พิมพ์ปี พ.ศ. ผิดเป็น ค.ศ.)
-      const yr = parseInt(date.substring(0,4));
-      const curYr = new Date().getFullYear();
-      if (isNaN(yr) || yr < 2020 || yr > curYr + 1) return null;
-      const mapKey = rawCh + '||' + rawSub;
-      const mapped = AD_SHEET_MAPPING[mapKey];
-      if (mapped) return { channel: mapped.channel, subChannel: mapped.subChannel, tag: mapped.tag || null, date, ads };
-      // ไม่เจอใน mapping — ถ้ายัง identify channel หลักได้ ให้รวมในยอดรวม channel นั้นไปก่อน (ไม่ทิ้งเงิน) แค่ไม่โผล่แยกราย sub-channel
-      const canonicalCh = AD_CHANNEL_NORMALIZE[rawCh];
-      unmappedSet.add(mapKey);
-      if (canonicalCh) return { channel: canonicalCh, subChannel: null, tag: null, date, ads };
-      return null; // channel ไม่รู้จักเลยจริงๆ ถึงจะตัดทิ้ง
-    }).filter(Boolean);
-    adUnmapped = [...unmappedSet];
+    const [sys, sheet] = await Promise.all([fetchAdSystemRows(), fetchAdSheetRows().catch(e => { console.warn('ชีท Ads อ่านไม่ได้:', e); return []; })]);
+    adSheetData = sheet;
+    adRawData = sys.concat(sheet.filter(r => !AD_CHANNELS_FROM_SYSTEM.includes(r.channel)));   // ชีทเหลือแค่ Lazada
     const warnEl = document.getElementById('adp-unmapped-warning');
     if (warnEl) {
-      if (adUnmapped.length) {
-        warnEl.style.display = 'block';
-        warnEl.textContent = `⚠️ พบ Channel/Sub Channel ใหม่ในชีต Ads ที่ยังไม่ได้ map ${adUnmapped.length} รายการ: ${adUnmapped.join(', ')} — ยอดถูกรวมในยอดรวม channel แล้ว (ถ้า identify ได้) แต่ยังแยกดูรายเพจ/ร้านไม่ได้ จนกว่าจะเพิ่ม mapping`;
-      } else {
-        warnEl.style.display = 'none';
-      }
+      const laz = adUnmapped.filter(k => k.toLowerCase().startsWith('lazada'));
+      if (laz.length) { warnEl.style.display = 'block'; warnEl.textContent = `⚠️ พบ Sub Channel ใหม่ของ Lazada ในชีต Ads ที่ยังไม่ได้ map: ${laz.join(', ')} — ยอดถูกรวมในยอด Lazada แล้ว แต่ยังแยกร้านไม่ได้`; }
+      else warnEl.style.display = 'none';
     }
-  } catch(e) { console.error('Ad fetch error:', e); showError('โหลดข้อมูลค่าแอดจาก Google Sheet ไม่สำเร็จ: ' + e.message); adRawData = []; }
+  } catch(e) { console.error('Ad fetch error:', e); showError('โหลดข้อมูลค่าแอดไม่สำเร็จ: ' + e.message); adRawData = []; }
 }
 
 function formatGDate(v) {
@@ -5915,26 +5936,14 @@ let mtAdsDaily = []; // [{date, ads}] รวมแล้วรายวัน
 let mtAdsFetched = false;
 
 async function fetchMTAdsData() {
+  // (2026-09-15) เปลี่ยนแหล่ง: ค่าแอด Modern Trade = บัญชี Meta "Deesay Modern Trade" ใน v_ad_spend_daily (channel 'Modern Trade') — ไม่อ่านชีท gid เดิมแล้ว
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&gid=${MT_ADS_GID}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    if (adRawData.length === 0) await fetchAdData();
     const byDay = {};
-    json.table.rows.forEach(r => {
-      const page = (r.c[20]?.v || '').toString(); // คอลัม U
-      if (!page.startsWith('Deesay Modern Trade')) return; // กันแถวบล็อกอื่นที่อาจอยู่แถวเดียวกัน
-      const dateRaw = r.c[21]?.v; // คอลัม V
-      const date = dateRaw ? formatGDate(dateRaw) : '';
-      const ads = parseFloat(r.c[23]?.v) || 0; // คอลัม X
-      if (!date) return;
-      const yr = parseInt(date.substring(0,4));
-      if (isNaN(yr) || yr < 2020 || yr > new Date().getFullYear() + 1) return;
-      byDay[date] = (byDay[date] || 0) + ads;
-    });
-    mtAdsDaily = Object.entries(byDay).map(([date, ads]) => ({ date, ads })).sort((a,b) => a.date.localeCompare(b.date));
+    adRawData.filter(r => r.channel === 'Modern Trade').forEach(r => { byDay[r.date] = (byDay[r.date] || 0) + r.ads; });
+    mtAdsDaily = Object.entries(byDay).map(([date, ads]) => ({ date, ads })).sort((a, b) => a.date.localeCompare(b.date));
     mtAdsFetched = true;
-  } catch(e) { console.error('MT Ads fetch error:', e); showError('โหลดข้อมูลค่าแอด Modern Trade ไม่สำเร็จ: ' + e.message); mtAdsDaily = []; mtAdsFetched = true; }
+  } catch (e) { console.error('MT ads error:', e); mtAdsDaily = []; mtAdsFetched = true; }
 }
 
 // กรองตามช่วงวันที่จาก filter บนสุด (เหมือนหน้าอื่นๆ) — ไม่ใช้ filter channel/sub_channel ของแถบบนเพราะหน้านี้ต้องเห็นทุกช่องทางพร้อมกันเสมอ
@@ -6159,12 +6168,29 @@ function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) 
   makeAdChart(chartId, labels, gmvArr, adsArr, pctArr);
 }
 
+// ตารางเทียบ ชีท vs ระบบ ต่อช่องทางต่อเดือน (เฉพาะช่องทางที่ระบบเป็นแหล่งหลักแล้ว)
+function renderAdpCompare() {
+  const card = document.getElementById('adp-compare-card'), body = document.getElementById('adp-compare-body');
+  if (!card || !body) return;
+  const from = getDateValue('From') || '2026-01-01', to = getDateValue('To') || '2099-12-31';
+  const key = r => r.channel + '|' + r.date.slice(0, 7);
+  const agg = (rows, ch) => rows.filter(r => AD_CHANNELS_FROM_SYSTEM.includes(r.channel) && r.date >= from && r.date <= to).reduce((m, r) => { m[key(r)] = (m[key(r)] || 0) + r.ads; return m; }, {});
+  const sheet = agg(adSheetData), sys = agg(adRawData.filter(r => r.source !== 'sheet'));
+  const keys = [...new Set([...Object.keys(sheet), ...Object.keys(sys)])].sort();
+  if (!keys.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  body.innerHTML = keys.map(k => { const [ch, m] = k.split('|'); const a = sheet[k] || 0, b = sys[k] || 0, d = b - a, p = a ? d / a * 100 : null;
+    const col = p === null ? 'var(--text3)' : Math.abs(p) <= 3 ? 'var(--green)' : Math.abs(p) <= 15 ? 'var(--accent)' : 'var(--red)';
+    return `<tr><td><b>${ch}</b></td><td class="mono">${m}</td><td>฿${fmt(a)}</td><td>฿${fmt(b)}</td><td style="color:${col};font-weight:600;">${d >= 0 ? '+' : ''}฿${fmt(d)}</td><td style="color:${col};">${p === null ? '—' : (p >= 0 ? '+' : '') + p.toFixed(1) + '%'}</td></tr>`; }).join('');
+}
+
 async function renderAdpAll() {
   if (adRawData.length === 0) {
     const sEl = document.getElementById('adp-summary');
     if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่าแอดจาก Google Sheets...';
     fetchAdData().then(()=>renderAdpAll()); return;
   }
+  renderAdpCompare();
   { const f = getDateValue('From'), t = getDateValue('To'); const seq = (renderAdpAll._seq = (renderAdpAll._seq || 0) + 1);
     try { await ensureSalesSummary(f, t, () => { if (currentPage === 'adperf' && seq === renderAdpAll._seq) renderAdpAll(); }); } catch (e) { showError('โหลดยอดขายไม่สำเร็จ: ' + e.message); return; }
     if (seq !== renderAdpAll._seq) return; }
