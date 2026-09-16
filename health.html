@@ -332,7 +332,7 @@ async function render(d, unknown, extra) {
   // --- แหล่งข้อมูลของแต่ละหน้า (คงที่ — แก้ตรงนี้เมื่อเปลี่ยนแหล่ง) ---
   const PAGE_SOURCES = [
     ['ภาพรวมยอดขาย / แยก Channel / SKU', 'orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · Shopee ออเดอร์จาก API ทุก 10 นาที', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
-    ['สินค้า — อะไรขึ้น อะไรลง (Momentum)', 'RPC sku_momentum บน mv_sku_daily (ตัด Cancel/Return) เทียบช่วงก่อน + เฉลี่ย 3 ช่วง + 12 สัปดาห์', 'mv_sku_daily รีเฟรชรายชั่วโมง'],
+    ['แนวโน้มสินค้า (Momentum)', 'RPC sku_momentum บน mv_sku_daily (ตัด Cancel/Return) เทียบช่วงก่อน + เฉลี่ย 3 ช่วง + 12 สัปดาห์', 'mv_sku_daily รีเฟรชรายชั่วโมง'],
     ['เจาะสินค้า', 'RPC sku_summary (mv_sku_daily) + sku_fb_customers (orders) + promotions', 'รายชั่วโมง'],
     ['ภาพรวม Facebook (แยกเพจ)', 'ยอดขาย: orders · ค่าแอด: Meta API (fb_ads_daily → v_ad_spend_daily map เพจ)', 'meta-ads-sync 08:00/20:00'],
     ['Facebook Engagement / โพสต์', 'Facebook Graph API (social_posts, fb_pages)', 'ingest-facebook-* 07:xx'],
