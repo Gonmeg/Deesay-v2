@@ -320,7 +320,7 @@
 </div><!-- end shell-main -->
 
 <div class="shell-sidebar"><div class="sidebar-heading">🧰 เครื่องมือ</div>
-  <div class="promo-sync-card">
+  <div class="promo-sync-card" style="display:none;">
     <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
     <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
     <button class="btn-sync" id="btnSyncPromotions" style="margin-top:10px;">🔄 Sync Promotions</button>
@@ -388,8 +388,9 @@
     </div>
     <div id="attrResult" style="margin-top:8px;"></div>
   </div>
-  <div class="history-card">
-    <div class="history-title">ประวัติการอัพโหลด</div>
+  <div class="sidebar-heading" style="margin-top:22px;">🕘 ประวัติการอัปโหลด</div>
+      <div class="history-card">
+    <div class="history-title">30 วันล่าสุด</div>
     <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
     <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
   </div>
@@ -751,6 +752,16 @@ document.getElementById('costFileInput').addEventListener('change', function() {
   document.getElementById('costDropMain').innerHTML = `<strong style="color:#10b981">${f.name}</strong>`
 })
 
+// ชื่อสินค้าในไฟล์บัญชี → parent_sku (ใช้เมื่อไฟล์ไม่มีแถวรหัส) — อ่านจากตาราง cost_name_map (SQL 93) + ชื่อสินค้าใน products
+const costNorm = s => String(s||'').toLowerCase().replace(/[\s\-_.]/g,'').replace(/[\u0E48-\u0E4E]/g,'').replace(/(ml|g|กรัม|มล)$/,'')
+async function loadCostNameMap() {
+  const [{ data: maps }, { data: prods }] = await Promise.all([DB.from('cost_name_map').select('acct_name, parent_sku'), DB.from('products').select('parent_sku, product_name')])
+  const exact = {}, mapNorm = {}, byNorm = {}
+  ;(maps||[]).forEach(m => { if (m.parent_sku) { exact[m.acct_name.trim()] = m.parent_sku; mapNorm[costNorm(m.acct_name)] = m.parent_sku } })
+  ;(prods||[]).forEach(p => { if (p.product_name && p.parent_sku && !byNorm[costNorm(p.product_name)]) byNorm[costNorm(p.product_name)] = p.parent_sku })
+  const skuSet = new Set((prods||[]).map(p => p.parent_sku))
+  return name => { const t = String(name||'').trim(), n = costNorm(t), up = t.toUpperCase(); if (skuSet.has(up)) return up; return exact[t] || mapNorm[n] || byNorm[n] || null }
+}
 async function parseCostFile() {
   const monthVal = document.getElementById('costMonth').value
   const file = document.getElementById('costFileInput').files[0]
@@ -797,16 +808,25 @@ async function parseCostFile() {
         _costParsed.push({ month: monthDate, parent_sku: sku, cost_category: cat, amount: Math.abs(amt) })
       })
     } else {
-      // Format ใหม่: row0=[null,null,Parent SKU,SKU1,...], row1=[เลขบัญชี,ชื่อบัญชี,รวม,ชื่อ1,...]
-      // data เริ่ม row2
-      const skuRow = raw[0] // Parent SKU อยู่ตั้งแต่ index 3 เป็นต้นไป
-      const skuCols = [] // { colIdx, sku }
-      skuRow.forEach((v, i) => {
-        if (i < 3) return
-        const sku = String(v||'').trim().toUpperCase()
-        if (sku && sku !== 'PARENT SKU') skuCols.push({ colIdx:i, sku })
-      })
-      raw.slice(2).forEach(row => {
+      // Format ใหม่ มี 2 แบบ:
+      //  (ก) row0=[null,null,Parent SKU,SKU1,...], row1=[เลขบัญชี,ชื่อบัญชี,รวม,ชื่อ1,...] → data เริ่ม row2
+      //  (ข) ไม่มีแถวรหัส: row0=[เลขที่บัญชี,ชื่อบัญชี,สินค้า,ชื่อสินค้า1,...] → data เริ่ม row1 · จับคู่ชื่อสินค้า → SKU ด้วย products + COST_NAME_ALIAS
+      const hasSkuRow = String(raw[0][2]||'').trim().toUpperCase() === 'PARENT SKU' || String(raw[1]?.[1]||'').includes('ชื่อบัญชี')
+      const skuCols = [] // { colIdx, sku, name }
+      const unmatchedNames = []
+      if (hasSkuRow) {
+        raw[0].forEach((v, i) => { if (i < 3) return; const sku = String(v||'').trim().toUpperCase(); if (sku && sku !== 'PARENT SKU') skuCols.push({ colIdx:i, sku }) })
+      } else {
+        const nameToSku = await loadCostNameMap()
+        raw[0].forEach((v, i) => { if (i < 3) return; const name = String(v||'').trim(); if (!name) return
+          const sku = nameToSku(name); if (sku) skuCols.push({ colIdx:i, sku, name }); else unmatchedNames.push(name) })
+        if (unmatchedNames.length) {
+          // ถ้าคอลัมน์ที่จับคู่ไม่ได้มีตัวเลขอยู่จริง → หยุด ไม่ให้อัปโหลดผิด
+          const withValue = unmatchedNames.filter(n => { const ci = raw[0].findIndex(x => String(x||'').trim() === n); return raw.slice(1).some(r => (parseFloat(String(r[ci]||'').replace(/,/g,'')) || 0) !== 0) })
+          if (withValue.length) throw new Error(`จับคู่ชื่อสินค้ากับ SKU ไม่ได้ ${withValue.length} ตัว (มีตัวเลขอยู่): ${withValue.join(' · ')} — เพิ่มแถวในตาราง cost_name_map (Supabase) ให้ชื่อนี้ชี้ไปที่รหัส SKU แล้วกด Preview ใหม่`)
+        }
+      }
+      raw.slice(hasSkuRow ? 2 : 1).forEach(row => {
         const cat = String(row[1]||'').trim()
         if (!cat || cat === 'ชื่อบัญชี') return
         skuCols.forEach(({ colIdx, sku }) => {
