@@ -1,4 +1,4 @@
-// fbads.js — หน้า "Facebook Ads" (Meta Marketing API → fb_ads_daily) — โหลดครั้งแรกที่กดเมนู (เหมือน supply.js) · v20260916c: ส่วน PR แยก + แก้ตัวเลือก traffic · แบ่งก้อน Conversion/PR/CPAS/MT (fb_page_map) · ROAS ใช้ Conversion · ตัวกรองก้อน · tooltip ใหม่ · funnel เต็มพื้นที่ · กราฟเงินแกนเดียว · เส้นทึบ · legend สีจริง · funnel ใหม่ · กราฟเงิน (สลับ ยอด / ROAS&%) · กราฟ traffic เลือก 2 เส้น · funnel · ตารางรายวัน (⚙ Metrics) · ตัดวงกลมที่วางแอด · ต้อง RPC v2 (SQL 87)
+// fbads.js — หน้า "Facebook Ads" (Meta Marketing API → fb_ads_daily) — โหลดครั้งแรกที่กดเมนู (เหมือน supply.js) · v20260916d: PR ย้ายขึ้นก่อนตารางแอด + metric picker + กราฟเลือก metric · ตารางรายวันเลือก Conversion/รวม · แอดสูงสุด 3,000 · ส่วน PR แยก + แก้ตัวเลือก traffic · แบ่งก้อน Conversion/PR/CPAS/MT (fb_page_map) · ROAS ใช้ Conversion · ตัวกรองก้อน · tooltip ใหม่ · funnel เต็มพื้นที่ · กราฟเงินแกนเดียว · เส้นทึบ · legend สีจริง · funnel ใหม่ · กราฟเงิน (สลับ ยอด / ROAS&%) · กราฟ traffic เลือก 2 เส้น · funnel · ตารางรายวัน (⚙ Metrics) · ตัดวงกลมที่วางแอด · ต้อง RPC v2 (SQL 87)
 // ข้อมูล: RPC fb_ads_page(p_from, p_to) ครั้งเดียว · ยอดขายจริง = ออเดอร์ Facebook ของเรา (mv_sales_daily) ไม่ใช่ที่ Meta นับ
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, thShort, ttcEsc, ttcEscAttr, exportTable, fbeInfoIcon, COLORS, getDateValue, chartTickColor/chartGridColor, setBgSync
 (function () {
@@ -76,9 +76,13 @@
       ORDER.filter(k => k !== 'days' && k !== 'period').forEach(k => { dmeta[k] = { label: M[k].label, default: ['spend','impressions','reach','cpm','link_clicks','ctr','msg_started','cost_per_msg','purchases'].includes(k) }; });
       METRIC_CONFIGS.fbaDaily = { order: ['revenue','spend_conv','spend','roas','acos', ...ORDER.filter(k => k !== 'spend' && k !== 'days' && k !== 'period')], meta: dmeta };
       metricState.fbaDaily = { order: [...METRIC_CONFIGS.fbaDaily.order], active: {} }; Object.keys(dmeta).forEach(k => { metricState.fbaDaily.active[k] = !!dmeta[k].default; });
+      const prOrder = ['spend','impressions','reach','frequency','cpm','post_engagement','er','cpe','reactions','comments','shares','saves','link_clicks','ctr','cpc','video_3s','thruplay','cpv','msg_started','cost_per_msg'];
+      const prMeta = {}; prOrder.forEach(k => { prMeta[k] = { label: M[k].label, default: ['spend','impressions','reach','cpm','post_engagement','er','link_clicks','msg_started'].includes(k) }; });
+      METRIC_CONFIGS.fbaPr = { order: prOrder, meta: prMeta };
+      metricState.fbaPr = { order: [...prOrder], active: {} }; prOrder.forEach(k => { metricState.fbaPr.active[k] = !!prMeta[k].default; });
       ['fbaCamp', 'fbaAds'].forEach(pg => { metricState[pg] = { order: [...METRIC_CONFIGS[pg].order], active: {} }; ORDER.forEach(k => { metricState[pg].active[k] = !!M[k].default; }); });
       const _rr = window.rerenderPage;
-      window.rerenderPage = p => { if (p === 'fbaCamp') renderCampaigns(); else if (p === 'fbaAds') renderAds(); else if (p === 'fbaDaily') renderDailyTable(); else if (typeof _rr === 'function') _rr(p); };
+      window.rerenderPage = p => { if (p === 'fbaCamp') renderCampaigns(); else if (p === 'fbaAds') renderAds(); else if (p === 'fbaDaily') renderDailyTable(); else if (p === 'fbaPr') renderPr(); else if (typeof _rr === 'function') _rr(p); };
     }
     return true;
   }
@@ -110,15 +114,9 @@
           <div class="card"><div class="section-header"><div class="section-title">Funnel — เห็น → คลิก → ทัก → ซื้อ</div></div><div id="fba-funnel"></div></div>
           <div class="card"><div class="section-header"><div class="section-title">แยกตาม objective</div></div><div class="table-wrap"><table id="tblFbaObjective" data-no-page><thead><tr><th>objective</th><th>แคมเปญ</th><th>ค่าแอด</th><th>% งบ</th><th>ทักแชท</th><th>฿/ทัก</th><th>ซื้อ (Meta นับ)</th></tr></thead><tbody id="tbodyFbaObjective"></tbody></table></div></div>
         </div>
-        <div class="card" style="margin-bottom:20px;border-left:3px solid #a78bfa;">
-          <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">PR / KOL — ใช้ต่อวันเท่าไร ได้อะไรกลับมา <span style="font-size:11px;font-weight:400;color:var(--text3);">(ไม่นับใน ROAS)</span></div></div>
-          <div id="fba-pr-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
-          <div class="chart-wrap" style="height:220px;"><canvas id="chartFbaPr"></canvas></div>
-          <div class="table-wrap" style="margin-top:12px;overflow-x:auto;"><table id="tblFbaPr" data-no-page><thead><tr><th>เพจ / KOL ที่ยิงให้</th><th>แอด</th><th>ค่าแอด</th><th>% ของ PR</th><th>คนเห็น (Impr.)</th><th>Reach</th><th>CPM</th><th>มีส่วนร่วม</th><th>ER</th><th>คลิกลิงก์</th><th>ทักแชท</th></tr></thead><tbody id="tbodyFbaPr"></tbody></table></div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">PR = แอดที่ไม่ได้ยิงให้เพจขาย (boost โพสต์ KOL, บัญชี PR, เพจอื่น) วัดผลด้วยการเห็น/มีส่วนร่วม ไม่ใช่ยอดขาย · เพจ = เพจของโพสต์ที่แอดใช้ (ถ้าไม่มีชื่อ ใช้ชื่อ KOL จากชื่อแอด)</div>
-        </div>
-        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">รายงานรายวัน (รวมทุกแอด) <span id="fba-daily-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">รายงานรายวัน <span id="fba-daily-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;">
+            <select class="ls-input" id="fbaDailyMode" style="width:210px;padding:6px 10px;font-size:12px;" title="metric ทุกตัวในตารางจะเปลี่ยนตามที่เลือก"><option value="conv">เฉพาะ Conversion (เพจขาย)</option><option value="all">รวมทุกประเภท (รวม PR/CPAS/MT)</option></select>
             <div style="position:relative;"><button class="btn btn-ghost" id="fbaDailyMetricsBtn" onclick="toggleMetricsPanel('fbaDaily')">⚙ Metrics <span id="fbaDaily-metric-count" style="color:var(--accent);"></span></button>
               <div id="fbaDaily-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaDaily-metrics-checks"></div>
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaDaily')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaDaily')">เลือกทั้งหมด</button></div></div></div>
@@ -134,6 +132,18 @@
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaCamp')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaCamp')">เลือกทั้งหมด</button></div></div></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaCampaign')">⬇ Export CSV</button></div></div>
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaCampaign"><thead id="theadFbaCampaign"></thead><tbody id="tbodyFbaCampaign"></tbody></table></div></div>
+        <div class="card" style="margin-bottom:20px;border-left:3px solid #a78bfa;">
+          <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">PR / KOL — ใช้ต่อวันเท่าไร ได้อะไรกลับมา <span style="font-size:11px;font-weight:400;color:var(--text3);">(ไม่นับใน ROAS)</span></div>
+            <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:11px;color:var(--text3);">กราฟ:</span><select class="ls-input" id="fbaPrMetric" style="width:190px;padding:5px 8px;font-size:12px;"></select>
+              <div style="position:relative;"><button class="btn btn-ghost" id="fbaPrMetricsBtn" onclick="toggleMetricsPanel('fbaPr')">⚙ Metrics <span id="fbaPr-metric-count" style="color:var(--accent);"></span></button>
+                <div id="fbaPr-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaPr-metrics-checks"></div>
+                  <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaPr')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaPr')">เลือกทั้งหมด</button></div></div></div>
+              <button class="btn btn-ghost" onclick="exportTable('tblFbaPr')">⬇ Export CSV</button></div></div>
+          <div id="fba-pr-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
+          <div class="chart-wrap" style="height:220px;"><canvas id="chartFbaPr"></canvas></div>
+          <div class="table-wrap" style="margin-top:12px;overflow-x:auto;"><table id="tblFbaPr"><thead id="theadFbaPr"></thead><tbody id="tbodyFbaPr"></tbody></table></div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">PR = แอดที่ไม่ได้ยิงให้เพจขาย (boost โพสต์ KOL, บัญชี PR, เพจอื่น) วัดผลด้วยการเห็น/มีส่วนร่วม ไม่ใช่ยอดขาย · เพจ = เพจของโพสต์ที่แอดใช้ (ถ้าไม่มีชื่อเพจ ใช้ชื่อ KOL จากชื่อแอด) · เลือกคอลัมน์ได้ที่ ⚙ Metrics</div>
+        </div>
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">แอด / โพสต์ที่ยิง <span id="fba-ads-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;"><input type="text" class="ls-input" id="fbaAdsSearch" placeholder="🔎 ชื่อแอด / แคมเปญ / KOL" style="width:220px;padding:6px 10px;font-size:12px;">
             <div style="position:relative;"><button class="btn btn-ghost" id="fbaAdsMetricsBtn" onclick="toggleMetricsPanel('fbaAds')">⚙ Metrics <span id="fbaAds-metric-count" style="color:var(--accent);"></span></button>
@@ -143,6 +153,9 @@
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaAds"><thead id="theadFbaAds"></thead><tbody id="tbodyFbaAds"></tbody></table></div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">ER = มีส่วนร่วม ÷ Impressions · ความถี่ = Impressions ÷ Reach (คนเดิมเห็นกี่ครั้ง) · โพสต์ที่ยิงคือโพสต์จริงบนเพจ (ของเราหรือของ KOL) คลิกรูปเพื่อเปิด · "KOL" มาจากท้ายชื่อแอดที่ทีมตั้ง (…_KOLs_สินค้า_ชื่อKOL) · ปุ่ม ⚙ Metrics เลือก/เรียงคอลัมน์ได้ บันทึกเป็น preset ได้</div></div>`;
       document.getElementById('fbaAdsSearch').oninput = () => renderAds();
+      document.getElementById('fbaDailyMode').onchange = () => renderDailyTable();
+      const prOpts = ['spend','impressions','reach','post_engagement','er','link_clicks','msg_started','cpm','cpe','thruplay'];
+      const prSel = document.getElementById('fbaPrMetric'); prSel.innerHTML = prOpts.map(k => `<option value="${k}">${M[k].label}</option>`).join(''); prSel.value = 'reach'; prSel.onchange = () => renderPr();
       document.querySelectorAll('#fbaMoneyMode .toggle-btn').forEach(bt => bt.onclick = () => { document.querySelectorAll('#fbaMoneyMode .toggle-btn').forEach(x => x.classList.remove('active')); bt.classList.add('active'); _moneyMode = bt.dataset.m; renderMoneyChart(); });
       const trafOpts = TRAF_KEYS.map(k => `<option value="${k}">${mlabel(k)}</option>`).join('');
       const tl = document.getElementById('fbaTrafL'), tr = document.getElementById('fbaTrafR'); tl.innerHTML = trafOpts; tr.innerHTML = trafOpts; tl.value = 'msg_started'; tr.value = 'cost_per_msg';
@@ -274,28 +287,46 @@
   }
   function renderPr() {
     const d = _data; if (!d) return;
+    const prAds = (d.ads || []).filter(a => a.bucket === 'PR');
+    const sum = (rows, k) => rows.reduce((s, r) => s + (+r[k] || 0), 0);
+    const T = { spend: sum(prAds, 'spend'), impressions: sum(prAds, 'impressions'), reach: sum(prAds, 'reach'), post_engagement: sum(prAds, 'post_engagement'), msg_started: sum(prAds, 'msg_started'), link_clicks: sum(prAds, 'link_clicks') };
     const pr = (d.daily_bucket || []).filter(r => r.bucket === 'PR');
-    const T = pr.reduce((s, r) => ({ spend: s.spend + +r.spend, impressions: s.impressions + +r.impressions, reach: s.reach + +r.reach, eng: s.eng + +r.post_engagement, msg: s.msg + +r.msg_started, clicks: s.clicks + +r.link_clicks }), { spend: 0, impressions: 0, reach: 0, eng: 0, msg: 0, clicks: 0 });
-    const days = pr.filter(r => +r.spend > 0).length || 1;
+    const days = pr.filter(r => +r.spend > 0).length || Math.max(1, new Set(prAds.map(a => a.first_date)).size);
     const k = (t, v, sub) => `<div class="card" style="flex:1;min-width:120px;padding:10px 12px;"><div class="card-title">${t}</div><div class="kpi-value" style="font-size:20px;">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">${sub}</div>` : ''}</div>`;
-    document.getElementById('fba-pr-kpis').innerHTML = k('ค่าแอด PR รวม', '฿' + fmtB(T.spend), `เฉลี่ย ฿${fmt(Math.round(T.spend / days))} / วันที่ยิง`) + k('คนเห็น (Impressions)', fmt(T.impressions), `CPM ฿${T.impressions ? (T.spend / T.impressions * 1000).toFixed(0) : '—'}`) + k('Reach', fmt(T.reach), T.reach ? `ความถี่ ${(T.impressions / T.reach).toFixed(2)}` : '') + k('มีส่วนร่วม', fmt(T.eng), `ER ${pct(T.eng, T.impressions)} · ฿${T.eng ? fmt(T.spend / T.eng) : '—'}/ครั้ง`) + k('ทักแชท', fmt(T.msg), `฿${T.msg ? fmt(T.spend / T.msg) : '—'}/ทัก · คลิกลิงก์ ${fmt(T.clicks)}`);
+    document.getElementById('fba-pr-kpis').innerHTML = k('ค่าแอด PR รวม', '฿' + fmtB(T.spend), `เฉลี่ย ฿${fmt(Math.round(T.spend / days))} / วันที่ยิง · ${fmt(prAds.length)} แอด`) + k('คนเห็น (Impressions)', fmt(T.impressions), `CPM ฿${T.impressions ? (T.spend / T.impressions * 1000).toFixed(0) : '—'}`) + k('Reach', fmt(T.reach), T.reach ? `ความถี่ ${(T.impressions / T.reach).toFixed(2)}` : '') + k('มีส่วนร่วม', fmt(T.post_engagement), `ER ${pct(T.post_engagement, T.impressions)} · ฿${T.post_engagement ? fmt(T.spend / T.post_engagement) : '—'}/ครั้ง`) + k('ทักแชท', fmt(T.msg_started), `฿${T.msg_started ? fmt(T.spend / T.msg_started) : '—'}/ทัก · คลิกลิงก์ ${fmt(T.link_clicks)}`);
+    // กราฟ: ค่าแอด PR รายวัน + metric ที่เลือก
+    const mk = document.getElementById('fbaPrMetric')?.value || 'reach';
     const labels = pr.map(r => thShort(r.d));
+    const isMoneyK = ['cpm','cpe','cost_per_msg','cpc','cpv'].includes(mk);
     makeChart('chartFbaPr', 'line', labels, [
       line('ค่าแอด PR', pr.map(r => +r.spend), '#a78bfa', { fill: true, backgroundColor: 'rgba(167,139,250,0.10)', yAxisID: 'y', borderWidth: 2 }),
-      line('Reach', pr.map(r => +r.reach), '#2563eb', { yAxisID: 'y1', borderWidth: 1.6 })
+      line(M[mk].label, pr.map(r => M[mk].val(r)), '#2563eb', { yAxisID: 'y1', borderWidth: 1.6 })
     ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
-      scales: { x: xaxis(), y: Object.assign(axis('#a78bfa', v => fmtB(v), 'ค่าแอด'), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#2563eb', v => fmtB(v), 'Reach'), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
-      tooltip: tooltipOpts({ label: it => `${it.dataset.label}: ${it.datasetIndex === 0 ? '฿' + fmt(it.raw) : fmt(it.raw)}` }) });
+      scales: { x: xaxis(), y: Object.assign(axis('#a78bfa', v => fmtB(v), 'ค่าแอด'), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#2563eb', v => isMoneyK ? fmtB(v) : (mk === 'er' || mk === 'ctr') ? (v * 100).toFixed(1) + '%' : fmtB(v), M[mk].label), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
+      tooltip: tooltipOpts({ label: it => `${it.dataset.label}: ${it.datasetIndex === 0 || isMoneyK ? '฿' + fmt(it.raw) : (mk === 'er' || mk === 'ctr') ? (it.raw * 100).toFixed(2) + '%' : fmt(it.raw)}` }) });
+    if (!pr.length) document.getElementById('chartFbaPr').parentElement.setAttribute('title', 'กราฟรายวันต้องรัน SQL 95 ตัวล่าสุด (daily_bucket)');
+    // ตารางรายเพจ/KOL — metric เลือกได้
     const byPage = {};
-    (d.ads || []).filter(a => a.bucket === 'PR').forEach(a => { const key = a.page_name || (a.kol_hint ? 'KOL: ' + a.kol_hint : (a.page_id ? 'เพจ ' + a.page_id : a.account || '—')); const o = byPage[key] = byPage[key] || { ads: 0, spend: 0, impressions: 0, reach: 0, eng: 0, clicks: 0, msg: 0, page_id: a.page_id }; o.ads++; o.spend += +a.spend; o.impressions += +a.impressions; o.reach += +a.reach; o.eng += +a.post_engagement; o.clicks += +a.link_clicks; o.msg += +a.msg_started; });
-    const rows = Object.entries(byPage).sort((a, b) => b[1].spend - a[1].spend);
-    document.getElementById('tbodyFbaPr').innerHTML = rows.map(([name, o]) => `<tr><td>${o.page_id ? `<a href="https://www.facebook.com/${ttcEscAttr(o.page_id)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;">${ttcEsc(name)} ↗</a>` : ttcEsc(name)}</td><td>${fmt(o.ads)}</td><td style="font-weight:600;">฿${fmt(o.spend)}</td><td>${pct(o.spend, T.spend)}</td><td>${fmt(o.impressions)}</td><td>${fmt(o.reach)}</td><td>฿${o.impressions ? (o.spend / o.impressions * 1000).toFixed(0) : '—'}</td><td>${fmt(o.eng)}</td><td>${pct(o.eng, o.impressions)}</td><td>${fmt(o.clicks)}</td><td>${fmt(o.msg)}</td></tr>`).join('') || '<tr><td colspan="11" class="empty">ไม่มีแอด PR ในช่วงนี้</td></tr>';
+    prAds.forEach(a => { const key = a.page_name || (a.kol_hint ? 'KOL: ' + a.kol_hint : (a.page_id ? 'เพจ ' + a.page_id : a.account || '—')); const o = byPage[key] = byPage[key] || { name: key, page_id: a.page_id, ads: 0 }; o.ads++; ORDER.forEach(k => { if (!['frequency','cpm','ctr','cpc','er','cpe','cpv','cost_per_msg','cpa','roas_meta','days','period'].includes(k)) o[k] = (o[k] || 0) + (+a[k] || 0); }); });
+    const ks = cols('fbaPr');
+    const rows = Object.values(byPage).sort((a, b) => b.spend - a.spend);
+    document.getElementById('theadFbaPr').innerHTML = `<tr><th>เพจ / KOL ที่ยิงให้</th><th>แอด</th><th>% ของ PR</th>${ks.map(k => `<th>${M[k].label}</th>`).join('')}</tr>`;
+    document.getElementById('tbodyFbaPr').innerHTML = rows.map(o => `<tr><td>${o.page_id ? `<a href="https://www.facebook.com/${ttcEscAttr(o.page_id)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;">${ttcEsc(o.name)} ↗</a>` : ttcEsc(o.name)}</td><td>${fmt(o.ads)}</td><td>${pct(o.spend, T.spend)}</td>${ks.map(k => `<td${k === 'spend' ? ' style="font-weight:600;"' : ''}>${M[k].fmt(o)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${3 + ks.length}" class="empty">ไม่มีแอด PR ในช่วงนี้</td></tr>`;
   }
   function renderDailyTable() {
-    const ks = cols('fbaDaily'); const daily = (_data?.daily || []).slice().sort((a, b) => b.d.localeCompare(a.d));
+    const ks = cols('fbaDaily');
+    const mode = document.getElementById('fbaDailyMode')?.value || 'conv';
+    let daily = (_data?.daily || []).slice();
+    if (mode === 'conv') {
+      // ใช้ตัวเลขของแอด Conversion เท่านั้น (จาก daily_bucket) + ยอดขายจริงจาก daily
+      const conv = {}; (_data?.daily_bucket || []).filter(r => r.bucket === 'Conversion').forEach(r => { conv[r.d] = r; });
+      daily = daily.map(r => { const c = conv[r.d] || {}; const o = { ...r, spend: +c.spend || 0, spend_conv: +c.spend || 0 }; ['impressions','reach','clicks','link_clicks','post_engagement','reactions','comments','shares','saves','video_3s','thruplay','msg_started','purchases','purchase_value','ads'].forEach(k => { o[k] = +c[k] || 0; }); return o; });
+      document.getElementById('fba-daily-count').textContent = '';
+    }
+    daily.sort((a, b) => b.d.localeCompare(a.d));
     const all = R; const F = k => (R[k] ? R[k].fmt : M[k].fmt);
     document.getElementById('theadFbaDaily').innerHTML = `<tr><th>วันที่</th>${ks.map(k => `<th>${mlabel(k)}</th>`).join('')}</tr>`;
-    document.getElementById('fba-daily-count').textContent = `(${fmt(daily.length)} วัน)`;
+    document.getElementById('fba-daily-count').textContent = `(${fmt(daily.length)} วัน · ${mode === 'conv' ? 'เฉพาะ Conversion' : 'รวมทุกประเภท'})`;
     const tot = daily.reduce((t, r) => { Object.keys(r).forEach(k => { if (k !== 'd' && typeof r[k] !== 'object') t[k] = (t[k] || 0) + (+r[k] || 0); }); return t; }, {});
     document.getElementById('tbodyFbaDaily').innerHTML = daily.map(r => `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;">${thShort(r.d)}</td>${ks.map(k => `<td${k === 'spend' || k === 'revenue' ? ' style="font-weight:600;"' : ''}>${F(k)(r)}</td>`).join('')}</tr>`).join('')
       + (daily.length ? `<tr style="font-weight:700;background:var(--bg3);"><td>รวม</td>${ks.map(k => `<td>${F(k)(tot)}</td>`).join('')}</tr>` : `<tr><td colspan="${1 + ks.length}" class="empty">ไม่มีข้อมูล</td></tr>`);
