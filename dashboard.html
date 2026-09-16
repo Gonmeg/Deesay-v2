@@ -326,7 +326,7 @@
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-i</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -837,7 +837,7 @@
         <div class="card"><div class="card-title">จำนวนชิ้นรวม</div><div class="kpi-value" id="skurev-total-qty">—</div><div class="kpi-sub"><span id="skurev-qty-cmp" class="badge-up">—</span> vs ช่วงก่อน</div></div>
       </div>
       <div class="card" style="margin-bottom:16px;padding:10px 16px;font-size:10.5px;color:var(--text3);line-height:1.6;">
-        <b>อะไรขึ้น อะไรลง</b> — เทียบช่วงวันที่ที่เลือก กับ <b>ช่วงเทียบ</b> (เลือกได้: วันเดียวกันของเดือนก่อน เช่น 1–16 ก.ย. vs 1–16 ส.ค. · หรือช่วงก่อนหน้าติดกัน 16–31 ส.ค.) และ <b>เฉลี่ย 3 ช่วง</b> แบบเดียวกัน · ป้าย: 🔺 Upturn ≥ +15% · 🔻 Downturn ≤ −15% · ➖ ทรงตัว · 🆕 ใหม่ (ช่วงก่อนไม่มียอด) · 💤 หยุดขาย (ช่วงนี้ไม่มียอด) · "ช่องทางที่ลากลง" = ช่องที่ยอดหายไปมากสุดเทียบช่วงก่อน · คลิกแถวเพื่อเจาะสินค้านั้น
+        <b>อะไรขึ้น อะไรลง</b> — เทียบช่วงวันที่ที่เลือก กับ <b>ช่วงเทียบ</b> (เลือกได้: วันเดียวกันของเดือนก่อน เช่น 1–16 ก.ย. vs 1–16 ส.ค. · หรือช่วงก่อนหน้าติดกัน 16–31 ส.ค.) และ <b>เฉลี่ย 3 ช่วง</b> แบบเดียวกัน · ป้ายสถานะคิดจาก % vs ช่วงเทียบ: 🔺 Upturn ≥ +15% · 🔻 Downturn ≤ −15% · ➖ ทรงตัว · 🆕 ใหม่ · 💤 หยุดขาย (กด ⓘ ที่หัวคอลัมน์ดูรายละเอียด) · คลิกแถวเพื่อเจาะสินค้านั้น
       </div>
       <div id="momentum-cards" class="grid-2" style="margin-bottom:20px;"></div>
       <div class="card" style="margin-bottom:20px;">
@@ -856,18 +856,15 @@
               <th class="sortable-th" onclick="momentumSort('rev_cur')">ยอดขาย <span class="sort-ind" id="mms-rev_cur"></span></th>
               <th class="sortable-th" onclick="momentumSort('qty_cur')">ชิ้น <span class="sort-ind" id="mms-qty_cur"></span></th>
               <th>ราคา/ชิ้น</th><th>สัดส่วน</th>
-              <th class="sortable-th" onclick="momentumSort('chg')">vs ช่วงก่อน <span class="sort-ind" id="mms-chg"></span></th>
-              <th class="sortable-th" onclick="momentumSort('chg3')">vs เฉลี่ย 3 ช่วง <span class="sort-ind" id="mms-chg3"></span></th>
-              <th>12 สัปดาห์</th><th class="sortable-th" onclick="momentumSort('rank')">สถานะ <span class="sort-ind" id="mms-rank"></span></th><th>ช่องทางที่ลากลง / ดันขึ้น</th></tr></thead>
+              <th class="sortable-th" onclick="momentumSort('chg')">vs ช่วงเทียบ <span class="sort-ind" id="mms-chg"></span> <span id="mm-info-chg"></span></th>
+              <th class="sortable-th" onclick="momentumSort('chg3')">vs เฉลี่ย 3 ช่วง <span class="sort-ind" id="mms-chg3"></span> <span id="mm-info-chg3"></span></th>
+              <th>12 สัปดาห์ <span id="mm-info-wk"></span></th><th class="sortable-th" onclick="momentumSort('rank')">สถานะ <span class="sort-ind" id="mms-rank"></span> <span id="mm-info-st"></span></th><th>เปลี่ยนแปลงแต่ละช่องทาง <span id="mm-info-ch"></span></th></tr></thead>
             <tbody id="tbodySkuRev"><tr><td colspan="12"><span class="skeleton" style="display:inline-block;width:60%;height:14px;border-radius:4px;"></span></td></tr></tbody>
           </table>
         </div>
       </div>
       
-<div class="grid-2" style="margin-bottom:20px;">
-        <div class="card"><div class="card-title">สัดส่วนจำนวนชิ้นแยก SKU</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartSkuRevBar"></canvas></div></div>
-        <div class="card"><div class="card-title">สัดส่วนยอดขาย (฿) แยก SKU</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartSkuRevPie"></canvas></div></div>
-      </div>
+
       
       <div class="card ai-summary-card" style="margin-top:20px;">
         <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">สรุปยอดขายแยก SKU</span>
@@ -5579,13 +5576,18 @@ function renderMomentumTable() {
   rows.sort((a, b) => (_mmSortDir === 'asc' ? 1 : -1) * (v(a) - v(b)));
   document.querySelectorAll('[id^="mms-"]').forEach(el => el.textContent = ''); const ind = document.getElementById('mms-' + _mmSortKey); if (ind) ind.textContent = _mmSortDir === 'asc' ? '▲' : '▼';
   document.getElementById('momentum-count').textContent = `(${fmt(rows.length)} SKU · เทียบกับ ${thShort(_momentum.prev_from)} – ${thShort(_momentum.prev_to)})`;
+  // ⓘ อธิบายคอลัมน์ (ครั้งเดียว)
+  { const M = _momentum; const mode = M.mode === 'month' ? 'วันเดียวกันของเดือนก่อน' : 'ช่วงก่อนหน้าติดกัน';
+    const put = (id, html) => { const el = document.getElementById(id); if (el && !el.innerHTML) el.innerHTML = html; };
+    put('mm-info-chg', fbeInfoIcon('mmi-chg', `<b>vs ช่วงเทียบ</b> = ยอดช่วงที่เลือก เทียบกับ <b>${thShort(M.prev_from)} – ${thShort(M.prev_to)}</b> (${mode} — เปลี่ยนได้ที่แถบบน "เทียบกับ")<br>% = (ช่วงนี้ − ช่วงเทียบ) ÷ ช่วงเทียบ`));
+    put('mm-info-chg3', fbeInfoIcon('mmi-chg3', `<b>vs เฉลี่ย 3 ช่วง</b> = เทียบกับค่าเฉลี่ยของ 3 ช่วงเทียบย้อนหลังแบบเดียวกัน<br>ตอนนี้ (${mode}) = เฉลี่ยของช่วงเดียวกันใน 3 เดือนก่อน — ช่วยตัดความบังเอิญของเดือนเดียว (เช่น เดือนก่อนมีลอตตัวแทน) ถ้าเทียบเดือนก่อนลงแต่เทียบเฉลี่ยยังขึ้น = เดือนก่อนแค่สูงผิดปกติ`));
+    put('mm-info-wk', fbeInfoIcon('mmi-wk', '<b>เส้น 12 สัปดาห์</b> = ยอดขายรายสัปดาห์ 12 สัปดาห์ล่าสุด นับถอยจากวันสิ้นสุดที่เลือก (ซ้าย = เก่า ขวา = ล่าสุด) ไว้ดูรูปทรง: ค่อยๆ ลง / พุ่งครั้งเดียว / แกว่ง — สีตามสถานะ'));
+    put('mm-info-st', fbeInfoIcon('mmi-st', `<b>เกณฑ์สถานะ (คิดจาก % vs ช่วงเทียบ)</b><br>🔺 Upturn = ขึ้น ≥ +${MOMENTUM_UP}%<br>🔻 Downturn = ลง ≤ ${MOMENTUM_DOWN}%<br>➖ ทรงตัว = อยู่ระหว่าง ${MOMENTUM_DOWN}% ถึง +${MOMENTUM_UP}%<br>🆕 ใหม่ = ช่วงเทียบไม่มียอดเลย<br>💤 หยุดขาย = ช่วงนี้ไม่มียอด แต่ช่วงเทียบมี<br><br>บรรทัดเล็กใต้ Downturn: "ลงทุกช่องทาง" = ทุกช่องลดหมด → มักเป็นเรื่องตัวสินค้า/ฤดูกาล · "ลงเฉพาะบางช่องทาง" = มีช่องที่ขึ้นด้วย → มักเป็นเรื่องช่องนั้น (แอด/ราคา/ของหมด)<br>เกณฑ์ ±${MOMENTUM_UP}% เป็นค่าชั่วคราว ปรับได้`));
+    put('mm-info-ch', fbeInfoIcon('mmi-ch', '<b>เปลี่ยนแปลงแต่ละช่องทาง</b> = ยอดของสินค้านี้ในแต่ละช่องทาง ช่วงนี้ − ช่วงเทียบ (บาท) เรียงจากหายมากสุดไปเพิ่มมากสุด · เห็นครบทุกช่องที่มียอดในช่วงใดช่วงหนึ่ง')); }
   // สัดส่วน (วงกลม 2 อัน) + ข้อมูลให้ปุ่ม "วิเคราะห์ใหม่" — จากชุดเดียวกัน
   { const sorted = rows0.slice().sort((a, b) => b.rev_cur - a.rev_cur).map(r => [r.sku, { rev: +r.rev_cur, qty: +r.qty_cur }]);
     window._skuSorted = sorted; window._skuTotalRev = +_momentum.total_cur || 1; window._skuAllSKUs = sorted.map(([k]) => k);
-    const byQty = sorted.slice().sort((a, b) => b[1].qty - a[1].qty); const t8q = byQty.slice(0, 8), oq = byQty.slice(8).reduce((s, [, v]) => s + v.qty, 0);
-    makeChart('chartSkuRevBar', 'doughnut', [...t8q.map(([k]) => k), ...(oq > 0 ? ['อื่นๆ'] : [])], [{ data: [...t8q.map(([, v]) => v.qty), ...(oq > 0 ? [oq] : [])], backgroundColor: [...COLORS, '#4a4a6a'], borderWidth: 0 }]);
-    const t8r = sorted.slice(0, 8), orv = sorted.slice(8).reduce((s, [, v]) => s + v.rev, 0);
-    makeChart('chartSkuRevPie', 'doughnut', [...t8r.map(([k]) => k), ...(orv > 0 ? ['อื่นๆ'] : [])], [{ data: [...t8r.map(([, v]) => v.rev), ...(orv > 0 ? [orv] : [])], backgroundColor: [...COLORS, '#4a4a6a'], borderWidth: 0 }]); }
+  }
   // KPI 4 ใบบนสุด — ใช้ตัวเลขรายวันชุดเดียวกับตาราง (เดิมคิดจากตารางรายเดือน ทำให้ % เพี้ยนเมื่อเลือกช่วงไม่เต็มเดือน)
   { const M = _momentum; const tc = +M.total_cur || 0, tp = +M.total_prev || 0, qc = +M.qty_cur || 0, qp = +M.qty_prev || 0;
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -5608,12 +5610,12 @@ function renderMomentumTable() {
       <td>${pctCell(r.chg3, r.rev_avg3 > 0)}<div style="font-size:9.5px;color:var(--text3);">เฉลี่ย ฿${fmtB(r.rev_avg3)}</div></td>
       <td>${sparkline(r.weekly, r.st.key === 'down' ? '#ef4444' : r.st.key === 'up' ? '#22c55e' : '#c8a96e')}</td>
       <td style="white-space:nowrap;color:${r.st.color};font-weight:600;">${r.st.label}${r.allDown ? '<div style="font-size:9.5px;color:var(--text3);font-weight:400;">ลงทุกช่องทาง → ตัวสินค้า/ฤดูกาล</div>' : (r.st.key === 'down' && r.drag ? '<div style="font-size:9.5px;color:var(--text3);font-weight:400;">ลงเฉพาะบางช่องทาง</div>' : '')}</td>
-      <td>${chTag(r.drag, false)}${r.drag && r.lift ? '<br>' : ''}${chTag(r.lift, true)}</td>
+      <td style="font-size:10.5px;line-height:1.5;white-space:nowrap;">${(r.channels || []).map(c => ({ ...c, diff: (+c.cur || 0) - (+c.prev || 0) })).sort((a, b) => a.diff - b.diff).map(c => `<div><span style="color:${c.diff > 0 ? 'var(--green)' : c.diff < 0 ? 'var(--red)' : 'var(--text3)'};font-weight:600;">${c.diff > 0 ? '▲' : c.diff < 0 ? '▼' : '—'}</span> ${ttcEsc(c.channel)} <span style="color:${c.diff > 0 ? 'var(--green)' : c.diff < 0 ? 'var(--red)' : 'var(--text3)'};">${c.diff > 0 ? '+' : c.diff < 0 ? '−' : ''}฿${fmtB(Math.abs(c.diff))}</span> <span style="color:var(--text3);">(฿${fmtB(c.prev)} → ฿${fmtB(c.cur)})</span></div>`).join('') || '—'}</td>
     </tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
   const withBase = rows0.filter(r => r.rev_prev > 0 && r.rev_cur > 0);
   const ups = withBase.filter(r => r.chg >= MOMENTUM_UP).sort((a, b) => (b.rev_cur - b.rev_prev) - (a.rev_cur - a.rev_prev));
   const downs = withBase.filter(r => r.chg <= MOMENTUM_DOWN).sort((a, b) => (a.rev_cur - a.rev_prev) - (b.rev_cur - b.rev_prev));
-  const li = (r, up) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')"><span><b>${ttcEsc(skuToName(r.sku))}</b> <span style="font-size:10px;color:var(--text3);">${ttcEsc(r.sku)}</span></span><span style="white-space:nowrap;color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '+' : '−'}฿${fmtB(Math.abs(r.rev_cur - r.rev_prev))} (${up ? '▲' : '▼'}${Math.abs(r.chg).toFixed(0)}%)</span></div>`;
+  const li = (r, up) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(skuToName(r.sku))} <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${ttcEsc(r.sku)}</span></span><span style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '+' : '−'}฿${fmtB(Math.abs(r.rev_cur - r.rev_prev))} <span style="font-weight:400;color:var(--text3);">(${up ? '▲' : '▼'}${Math.abs(r.chg).toFixed(0)}%)</span></span></div>`;
   const chAgg = {}; rows0.forEach(r => (r.channels || []).forEach(c => { chAgg[c.channel] = chAgg[c.channel] || { cur: 0, prev: 0 }; chAgg[c.channel].cur += +c.cur || 0; chAgg[c.channel].prev += +c.prev || 0; }));
   const chLine = Object.entries(chAgg).map(([k, v]) => ({ k, diff: v.cur - v.prev, pct: v.prev ? (v.cur - v.prev) / v.prev * 100 : null })).sort((a, b) => a.diff - b.diff);
   const totChg = _momentum.total_prev ? (_momentum.total_cur - _momentum.total_prev) / _momentum.total_prev * 100 : null;
