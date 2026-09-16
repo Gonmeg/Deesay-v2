@@ -329,6 +329,28 @@ function render(d, unknown, extra) {
       `</tbody></table></div>`
   html += `</div>`
 
+  // --- แหล่งข้อมูลของแต่ละหน้า (คงที่ — แก้ตรงนี้เมื่อเปลี่ยนแหล่ง) ---
+  const PAGE_SOURCES = [
+    ['ภาพรวมยอดขาย / แยก Channel / SKU', 'orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · Shopee ออเดอร์จาก API ทุก 10 นาที', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
+    ['ภาพรวม Facebook (แยกเพจ)', 'ยอดขาย: orders · ค่าแอด: Meta API (fb_ads_daily → v_ad_spend_daily map เพจ)', 'meta-ads-sync 08:00/20:00'],
+    ['Facebook Engagement / โพสต์', 'Facebook Graph API (social_posts, fb_pages)', 'ingest-facebook-* 07:xx'],
+    ['Facebook Ads', 'Meta Marketing API 10 บัญชี (fb_ads_daily, fb_ads, fb_ad_campaigns) · ยอดขายจริงจาก orders', 'meta-ads-sync 08:00/20:00 · token หมด 14 พ.ย.'],
+    ['ภาพรวม TikTok / TikTok Ads', 'TikTok Ads API (mv_tiktok_creative_performance, mv_tiktok_objective_summary) · ยอดขายจาก orders', 'tiktok-*-sync 08:xx + 12:xx · MV รีเฟรชรายชั่วโมง'],
+    ['ผลงานคอนเทนต์ TikTok / ค้นหาคำ', 'TikTok Accounts API (tiktok_videos) + ปกคลิปจาก Ads API', 'tiktok-organic-sync 07:30/19:30 · covers ทุก 15 นาที'],
+    ['Creator Performance', 'orders (creator_handle) + TikTok Ads API + kol_posts', 'mv_creator_daily รายชั่วโมง'],
+    ['ภาพรวม Shopee / Shopee Ads', 'Shopee Open API (shopee_ads_daily) + Cowork offapi (shopee_ads_manual: Brand/Live/Meta ในแอป/เหรียญ) + CPAS: shopee_cpas_daily (ยังจากชีท 11:30) และ Meta บัญชี CPAS', 'shopee-ads-sync-daily 08:10 · manual ตอนเช้าโดย Cowork'],
+    ['ภาพรวม Lazada', 'ยอดขาย: orders · ค่าแอด: ชีท MKT Tracking แท็บ Ads (ยังไม่มี API)', 'Cowork skill lazada-ads'],
+    ['ภาพรวม Modern Trade', 'ยอดขาย: orders (MT) · ค่าแอด awareness: Meta API บัญชี Modern Trade', 'meta-ads-sync'],
+    ['Ad Performance', 'ยอดขาย: orders · ค่าแอด: v_ad_spend_daily (Facebook/TikTok/Shopee/MT จาก API) + Lazada จากชีท', '—'],
+    ['MKT Tracking (ต้นทุน/กำไร)', 'ยอดขาย: orders · ค่าแอดต่อ SKU: ชีท Ads by SKU (ยังชีท) · ต้นทุนสินค้า: products', '—'],
+    ['KOL / Affiliate', 'ค่าจ้าง: ชีททีม KOL (kol_posts 03:30) · TikTok: ออเดอร์จริง + Ads API · Facebook: ค่าแอด/ยอดจากชีท (จะย้ายไป fb_ads)', 'sync-kol-posts 03:30'],
+    ['Supply Chain', 'log น้องแพ็ค (inventory_movements 03:30) + sku_revenue + supply_params (Admin)', 'refresh-supply-views 04:00'],
+    ['ชีท MKT Tracking (ขากลับ)', 'Apps Script เติม Mall K/Q/T/Y/AM + Data TT L/R/U จาก v_ads_sheet_daily', 'ทุกวัน 10:00–11:00']
+  ]
+  html += `<div class="card"><div class="card-head"><h2>🗺️ แหล่งข้อมูลของแต่ละหน้า</h2><span>ไว้ดูว่าหน้าไหนพึ่งอะไร — ถ้าตัวดึงข้างล่างล้ม หน้าไหนกระทบ · แก้รายการนี้ใน health.html เมื่อเปลี่ยนแหล่ง</span></div><div class="tbl-wrap"><table>
+    <thead><tr><th>หน้า</th><th>ข้อมูลมาจาก</th><th>อัปเดตโดย</th></tr></thead><tbody>` +
+    PAGE_SOURCES.map(([p, src, upd]) => `<tr><td><b>${esc(p)}</b></td><td style="font-size:11.5px;">${esc(src)}</td><td style="font-size:11px;color:var(--text3);">${esc(upd)}</td></tr>`).join('') + `</tbody></table></div></div>`
+
   // --- ตารางเวลาประจำวัน (เฉพาะ job ที่รันเป็นเวลาแน่นอน เรียงตามเวลาไทย) ---
   const daily = cron.filter(j => j.active && /^\d+ \d+(,\d+)* \* \* \*$/.test((j.schedule||'').trim()))
     .flatMap(j => j.schedule.trim().split(/\s+/)[1].split(',').map(h => ({ j, t: ((parseInt(h) + 7) % 24) * 60 + parseInt(j.schedule.trim().split(/\s+/)[0]) })))
