@@ -326,7 +326,7 @@
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-l</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-m</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -415,6 +415,10 @@
       <div class="filter-group mm-filter" id="momentumModeGroup" style="display:none;">
         <span class="filter-label">เทียบกับ</span>
         <select id="momentumMode" onchange="_momentumKey=null;loadMomentum()"><option value="month">วันเดียวกันของเดือนก่อน</option><option value="adjacent">ช่วงก่อนหน้าติดกัน (ยาวเท่ากัน)</option></select>
+      </div>
+      <div class="filter-group fba-filter" id="fbaBucketFilterGroup" style="display:none;">
+        <span class="filter-label">ก้อน</span>
+        <select id="fbaFilterBucket" onchange="window.fbaApplyFilters && fbaApplyFilters()"><option value="">ทุกก้อน</option></select>
       </div>
       <div class="filter-group fba-filter" id="fbaAccountFilterGroup" style="display:none;">
         <span class="filter-label">บัญชีโฆษณา</span>
@@ -1056,7 +1060,7 @@
     </div>
     <div class="page" id="page-adperf">
       <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:8px;">
-        📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ · ค่าโฆษณา Facebook / TikTok / Shopee / Modern Trade ดึงจาก API ของแต่ละแพลตฟอร์ม (ตรงกับหน้า Ads ของแต่ละช่อง) · Lazada ยังมาจากชีท MKT Tracking — ใช้ filter วันที่จากแถบด้านบน
+        📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ · ค่าโฆษณา Facebook = เฉพาะ Conversion (แอดที่ยิงให้เพจขาย) — PR/KOL แยกออก, CPAS ไปอยู่ Shopee · TikTok / Shopee / Modern Trade จาก API · Lazada ยังมาจากชีท — ใช้ filter วันที่จากแถบด้านบน
       </div>
       <div id="adp-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:16px;"></div>
 
@@ -2540,7 +2544,7 @@ function loadFbAdsPage() {
   if (window._fbadsLoading) return;
   window._fbadsLoading = true;
   const s = document.createElement('script');
-  s.src = 'fbads.js?v=20260916a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
+  s.src = 'fbads.js?v=20260916b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
   s.onload = () => { window._fbadsLoading = false; window.renderFbAdsPage(); };
   s.onerror = () => { window._fbadsLoading = false; document.getElementById('page-fbads').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbads.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -5908,7 +5912,7 @@ let adView = 'month';
 // ค่าแอดรายวัน: อ่านจากระบบ (view v_ad_spend_daily — Facebook/TikTok/Shopee/CPAS/Modern Trade จาก API) + Lazada จากชีทเหมือนเดิม (ยังไม่มี API)
 // รูปแบบแถวเหมือนเดิม {channel, subChannel, tag, date, ads} หน้าอื่นไม่ต้องแก้ · adSheetData เก็บของชีททั้งหมดไว้เทียบ (ตารางเทียบในหน้า Ad Performance)
 let adSheetData = [];
-const AD_CHANNELS_FROM_SYSTEM = ['Facebook', 'TikTok', 'Shopee', 'Modern Trade'];
+const AD_CHANNELS_FROM_SYSTEM = ['Facebook', 'Facebook PR', 'TikTok', 'Shopee', 'Modern Trade'];
 async function fetchAdSheetRows() {
   const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(GSHEET_ADS_TAB)}`;
   const res = await fetch(url);
@@ -6106,7 +6110,7 @@ function cancelReturnCardHtml(hub, channel, from, to, totalRev) {
   </div>`;
 }
 const ADS_SOURCE_INFO = {
-  fb: 'ค่าโฆษณา Facebook ดึงจาก Meta Marketing API (ตาราง fb_ads_daily) ทุกบัญชีโฆษณา:\n• แยกเพจ: Deesay Thailand, Deesay Cosmetics, แป้งแก้มบุ๋ม, ลิปสักปาก, กันแดดฟิลเตอร์, Deesay Makeup (บัญชี P. ของแต่ละเพจ)\n• รวมไม่แยกเพจ: PR, KOL (boost โพสต์ KOL)\n• อัปเดต 08:00 / 20:00 · เท่ากับ Ads Manager\n• (เดิมok OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
+  fb: 'ค่าโฆษณา Facebook = เฉพาะก้อน Conversion จาก Meta API: แอดที่ยิงให้เพจขาย (Deesay Thailand, Deesay Cosmetics, แป้งแก้มบุ๋ม, ลิปสักปาก, กันแดดฟิลเตอร์, Deesay Makeup) แยกตามเพจของโพสต์\n• ไม่รวม PR/KOL (boost โพสต์ KOL, บัญชี PR) · CPAS ไปอยู่ Shopee · Modern Trade แยกช่อง\n• อัปเดต 08:00 / 20:00\n• (เดิมok OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
   tt: 'ค่าโฆษณา TikTok ดึงจาก TikTok Ads API (mv_tiktok_objective_summary) ทุก objective รวม GMV Max Product/LIVE, Brand, Video views, Traditional\n• ตรงกับหน้า TikTok Ads · อัปเดต 08:xx และ 12:xx',
   sh: 'ค่าโฆษณา Shopee ดึงจาก Shopee Open API (Product/Shop Ads ร้าน Mall) + Brand/Live/Meta ในแอป/เหรียญ ที่ Cowork อ่านจาก Seller Centre + CPAS จากบัญชี Meta "Deesay Shopee CPAS"\n• ร้าน 24hr ยังไม่เชื่อม API',
   lz: 'ค่าโฆษณา Lazada รวมมาจาก:\n• Lazada Mall\n• Lazada 24hr',
