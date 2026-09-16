@@ -188,7 +188,7 @@ async function load() {
   render(health.data, unknown, extra)
 }
 
-function render(d, unknown, extra) {
+async function render(d, unknown, extra) {
   const X = (extra && !extra.error) ? (extra.data || {}) : null
   document.getElementById('genAt').textContent = `อัปเดต ${th(d.generated_at)}`
   const banners = [], kpis = []
