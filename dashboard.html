@@ -326,7 +326,7 @@
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-s</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-t</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -3273,7 +3273,7 @@ async function fetchShopeeAdsTotal(from, to) {
     const [r1, r2, r3] = await Promise.all([
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_daily?select=stat_date,expense&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_manual?select=stat_date,brand_ads,live_ads,meta_ads,coins,other_ads&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers })]);
+      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_meta_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers })]);
     const d = r1.ok ? await r1.json() : [], m = r2.ok ? await r2.json() : [], c = r3.ok ? await r3.json() : [];
     const days = new Set(); let total = 0;
     d.forEach(r => { total += +r.expense || 0; days.add(r.stat_date); });
@@ -6106,9 +6106,9 @@ function cancelReturnCardHtml(hub, channel, from, to, totalRev) {
   </div>`;
 }
 const ADS_SOURCE_INFO = {
-  fb: 'ค่าโฆษณา Facebook = เฉพาะก้อน Conversion จาก Meta API: แอดที่ยิงให้เพจขาย (Deesay Thailand, Deesay Cosmetics, แป้งแก้มบุ๋ม, ลิปสักปาก, กันแดดฟิลเตอร์, Deesay Makeup) แยกตามเพจของโพสต์\n• ไม่รวม PR/KOL (boost โพสต์ KOL, บัญชี PR) · CPAS ไปอยู่ Shopee · Modern Trade แยกช่อง\n• อัปเดต 08:00 / 20:00\n• (เดิมok OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
+  fb: 'ค่าโฆษณา Facebook = เฉพาะประเภท Conversion จาก Meta API (ตรงกับหน้า Facebook Ads): แอดที่ยิงให้เพจขาย (Deesay Thailand, Deesay Cosmetics, แป้งแก้มบุ๋ม, ลิปสักปาก, กันแดดฟิลเตอร์, Deesay Makeup) แยกตามเพจของโพสต์\n• ไม่รวม PR (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade awareness) — ดูที่หน้า Facebook Ads ส่วน PR\n• CPAS ไปอยู่กับ Shopee\n• อัปเดต 08:00 / 20:00',
   tt: 'ค่าโฆษณา TikTok ดึงจาก TikTok Ads API (mv_tiktok_objective_summary) ทุก objective รวม GMV Max Product/LIVE, Brand, Video views, Traditional\n• ตรงกับหน้า TikTok Ads · อัปเดต 08:xx และ 12:xx',
-  sh: 'ค่าโฆษณา Shopee ดึงจาก Shopee Open API (Product/Shop Ads ร้าน Mall) + Brand/Live/Meta ในแอป/เหรียญ ที่ Cowork อ่านจาก Seller Centre + CPAS จากบัญชี Meta "Deesay Shopee CPAS"\n• ร้าน 24hr ยังไม่เชื่อม API',
+  sh: 'ค่าโฆษณา Shopee ประกอบด้วย:\n• Product/Shop Ads — Shopee Open API (ร้าน Mall) 08:10\n• Brand Ads · Live Ads · Meta Ads ในแอป · เหรียญ — Cowork อ่านจาก Seller Centre ตอนเช้า\n• CPAS — บัญชี Meta "Deesay Shopee CPAS" (Meta API 08:00/20:00) — ไม่ใช้ค่าจากชีทแล้ว\n• ร้าน 24hr ยังไม่เชื่อม API',
   lz: 'ค่าโฆษณา Lazada รวมมาจาก:\n• Lazada Mall\n• Lazada 24hr',
   mt: 'ค่าโฆษณา Modern Trade (Awareness) ดึงจาก Meta API บัญชี "Deesay Modern Trade"\n• แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง',
 };
@@ -8863,14 +8863,14 @@ async function renderShAds() {
       fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_campaign_summary`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) }),
       fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_product_daily`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) }),
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_manual?select=*&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers })]);
+      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_meta_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers })]);
     if (!r1.ok) throw new Error('shopee_ads_daily: ' + await r1.text());
     if (!r2.ok) throw new Error('shopee_ads_campaign_summary: ' + await r2.text());
     daily = await r1.json(); camps = await r2.json();
     // แยกค่าแอดทั้งร้านเป็น Product Ads (รายแคมเปญ) กับ "แอดอื่นๆ" (Shop/Brand/Live/Shop GMV Max — API ไม่แยกรายแคมเปญให้)
     const prod = {}; if (r3.ok) (await r3.json()).forEach(p => { prod[p.stat_date] = p; });
     _shAdsManual = {}; if (r5.ok) (await r5.json()).forEach(m => { _shAdsManual[m.stat_date] = m; });
-    // CPAS on Meta (แอด Meta ที่ยิงเข้าร้าน Shopee ผ่าน Collaborative Ads) — sync จากชีทรายวัน ตาราง shopee_cpas_daily
+    // CPAS on Meta (แอด Meta ที่ยิงเข้าร้าน Shopee ผ่าน Collaborative Ads) — (2026-09-16) จาก Meta API บัญชี Deesay Shopee CPAS ผ่าน view shopee_cpas_meta_daily (ไม่ใช้ชีทแล้ว)
     _shAdsCpas = {}; if (r6.ok) (await r6.json()).forEach(c => { _shAdsCpas[c.stat_date] = c; });
     await salesReady;
     // ยอดขายจริงรายวันของ Shopee (ยอดสุทธิตามสูตรบัญชี รวมแถวคืนเงินติดลบ) — เก็บทั้งช่วงไว้ทำ KPI แม้วันนั้นยังไม่มีข้อมูลแอด
