@@ -271,7 +271,6 @@
   <div class="logo">
     <div class="logo-text">DEESAY</div>
     <div class="logo-sub">Dashboard</div>
-    <a href="index.html" style="display:block;margin-top:10px;font-size:11px;color:var(--text2);text-decoration:none;">← หน้าแรก (Upload / Admin)</a>
   </div>
   <nav class="nav">
     <div class="nav-item active" onclick="showPage('overview',null,this)"><span class="nav-icon">📊</span> ภาพรวมยอดขาย</div>
@@ -320,9 +319,14 @@
     <div class="nav-item" onclick="showPage('adperf',null,this)"><span class="nav-icon">📈</span> Ad Performance</div>
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
+    <div class="nav-group-label" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ระบบ</div>
+    <a class="nav-item nav-sub" href="upload.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">📤</span> อัปโหลดข้อมูล</a>
+    <a class="nav-item nav-sub" href="admin.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">⚙️</span> ตั้งค่า (Admin)</a>
+    <a class="nav-item nav-sub" href="health.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🩺</span> สุขภาพระบบ (Health)</a>
+    <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.15-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-a</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1060,10 +1064,7 @@
         📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ · ค่าโฆษณา Facebook / TikTok / Shopee / Modern Trade ดึงจาก API ของแต่ละแพลตฟอร์ม (ตรงกับหน้า Ads ของแต่ละช่อง) · Lazada ยังมาจากชีท MKT Tracking — ใช้ filter วันที่จากแถบด้านบน
       </div>
       <div id="adp-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:16px;"></div>
-      <div class="card" id="adp-compare-card" style="margin-bottom:16px;display:none;">
-        <div class="section-header"><div class="section-title">เทียบค่าแอด: ชีท MKT Tracking vs ระบบ (API) รายเดือน</div><span style="font-size:10.5px;color:var(--text3);">ไว้เช็คช่วงเปลี่ยนแหล่ง — ถ้าต่างมากแปลว่าชีทมีแอดจากบัญชีที่ระบบยังไม่เห็น (เช่น outsource/เอเจนซี่) หรือชีทกรอกไม่ครบ</span></div>
-        <div class="table-wrap"><table data-no-page><thead><tr><th>ช่องทาง</th><th>เดือน</th><th>ชีท</th><th>ระบบ</th><th>ต่าง</th><th>%</th></tr></thead><tbody id="adp-compare-body"></tbody></table></div>
-      </div>
+
       <div class="grid-4" style="margin-bottom:20px;">
         <div class="card"><div class="card-title">ยอดขาย GMV</div><div class="kpi-value" id="adp-gmv" style="color:var(--blue);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
         <div class="card"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" id="adp-ads" style="color:var(--red);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
@@ -2543,7 +2544,7 @@ function loadFbAdsPage() {
   if (window._fbadsLoading) return;
   window._fbadsLoading = true;
   const s = document.createElement('script');
-  s.src = 'fbads.js?v=20260915e'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
+  s.src = 'fbads.js?v=20260916a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
   s.onload = () => { window._fbadsLoading = false; window.renderFbAdsPage(); };
   s.onerror = () => { window._fbadsLoading = false; document.getElementById('page-fbads').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbads.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -2581,16 +2582,25 @@ function makeChart(id, type, labels, datasets, extra) {
   if (charts[id]) charts[id].destroy();
   const ctx = document.getElementById(id);
   if (!ctx) return;
+  // สไตล์กลางทุกกราฟ (2026-09-16 ตามหน้า Facebook Ads): เส้นตารางจาง แกน x ไม่มีเส้น legend เป็นแถบสีของเส้นจริง tooltip กล่องสะอาด
   const baseScales = type === 'pie' || type === 'doughnut' ? {} : {
-    x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
-    y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } }
+    x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
+    y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } }
   };
+  const light = isLightTheme();
   const options = {
     responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 12 }, ...((extra && extra.legend) || {}) },
-      tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, ...((extra && extra.tooltip) || {}) }
+      legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 22, boxHeight: 3,
+        generateLabels: chart => Chart.defaults.plugins.legend.labels.generateLabels(chart).map(l => { const ds = chart.data.datasets[l.datasetIndex]; if (ds && ds.borderColor && typeof ds.borderColor === 'string' && (ds.type === 'line' || (!ds.type && type === 'line'))) { l.fillStyle = ds.borderColor; l.strokeStyle = ds.borderColor; l.lineWidth = 0; } return l; }) },
+        ...((extra && extra.legend) || {}) },
+      tooltip: { backgroundColor: light ? 'rgba(255,255,255,0.97)' : 'rgba(22,22,32,0.96)', titleColor: light ? '#1a1a2e' : '#f0f0f5', bodyColor: light ? '#3a3a55' : '#c8c8d8', footerColor: light ? '#6b6b85' : '#9090a8',
+        borderColor: light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.12)', borderWidth: 1, padding: 10, cornerRadius: 8, caretSize: 6,
+        titleFont: { family: 'Sarabun', size: 12, weight: '700' }, bodyFont: { family: 'Sarabun', size: 12 }, footerFont: { family: 'Sarabun', size: 11 },
+        usePointStyle: true, boxWidth: 8, boxHeight: 8, boxPadding: 5, titleMarginBottom: 6, bodySpacing: 4, footerMarginTop: 6,
+        ...((extra && extra.tooltip) || {}) }
     },
+    elements: type === 'line' ? { line: { tension: 0.35, borderWidth: 2 }, point: { radius: 0, hoverRadius: 4, hitRadius: 8 } } : {},
     scales: { ...baseScales, ...((extra && extra.scales) || {}) },
     ...((extra && extra.options) || {})
   };
@@ -2603,7 +2613,7 @@ const COLORS = ['#c8a96e','#60a5fa','#4ade80','#f472b6','#fb923c','#a78bfa','#34
 function isLightTheme() { return document.body.classList.contains('light-theme'); }
 function chartTickColor() { return isLightTheme() ? '#4a4a6a' : '#5a5a72'; }
 function chartLegendColor() { return isLightTheme() ? '#1a1a2e' : '#9090a8'; }
-function chartGridColor() { return isLightTheme() ? 'rgba(0,0,0,0.08)' : 'rgba(42,42,58,0.5)'; }
+function chartGridColor() { return isLightTheme() ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.06)'; }
 
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-theme')
@@ -5830,7 +5840,7 @@ function renderSkuAnalysisTrend() {
 
 // ===== AD PERFORMANCE =====
 // GMV มาจากตาราง orders จริง (ตรงกับหน้าอื่นๆ ทั้งหมด) — ไม่ใช้ gmv จาก Google Sheet อีกต่อไป
-// ค่าโฆษณา (Ads) ยังคงดึงจาก Google Sheet แต่เปลี่ยนมาใช้แท็บ "Ads" ที่แยกราย sub-channel/เพจละเอียดกว่าเดิม (แท็บ "summary" เดิมเป็นแค่ยอดรวม)
+// ค่าโฆษณา (Ads) (2026-09-16) ดึงจากระบบ view v_ad_spend_daily (Facebook/TikTok/Shopee/MT จาก API) · ชีทแท็บ "Ads" ใช้เฉพาะ Lazada
 const GSHEET_ID = '110H7f5cbnAZZFWGlZGlHbxEgDMLFvqquk5-n_Cl9e2I';
 const GSHEET_ADS_TAB = 'Ads';
 
@@ -6064,11 +6074,11 @@ function cancelReturnCardHtml(hub, channel, from, to, totalRev) {
   </div>`;
 }
 const ADS_SOURCE_INFO = {
-  fb: 'ค่าโฆษณา Facebook รวมมาจาก:\n• 7 เพจหลัก: Deesay Thailand-บริษัท, Deesay Cosmetics-Thailand, แป้งแก้มบุ๋ม เพจดีเซ้ย์หลัก, ลิปสักปาก ดีเซ้ย์, ดีเซ้ย์ ศูนย์ค้าส่งเครื่องสำอาง, กันแดดฟิลเตอร์-เพจบริษัท, Deesay Makeup\n• Facebook OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
-  tt: 'ค่าโฆษณา TikTok รวมมาจาก:\n• Sub-channel เดียว: Deesay Thailand',
-  sh: 'ค่าโฆษณา Shopee รวมมาจาก:\n• Shopee Mall (ปกติ)\n• Shopee Mall CPAS\n• Shopee 24hr',
+  fb: 'ค่าโฆษณา Facebook ดึงจาก Meta Marketing API (ตาราง fb_ads_daily) ทุกบัญชีโฆษณา:\n• แยกเพจ: Deesay Thailand, Deesay Cosmetics, แป้งแก้มบุ๋ม, ลิปสักปาก, กันแดดฟิลเตอร์, Deesay Makeup (บัญชี P. ของแต่ละเพจ)\n• รวมไม่แยกเพจ: PR, KOL (boost โพสต์ KOL)\n• อัปเดต 08:00 / 20:00 · เท่ากับ Ads Manager\n• (เดิมok OS (ทีม outsource ที่ยิงแอดให้เพจ Deesay Thailand-บริษัทโดยเฉพาะ) — รวมเข้ายอดเพจนี้แล้ว\n• Facebook AWA (Awareness) — นับรวมเฉพาะยอดรวม ไม่แยกแสดงรายเพจ',
+  tt: 'ค่าโฆษณา TikTok ดึงจาก TikTok Ads API (mv_tiktok_objective_summary) ทุก objective รวม GMV Max Product/LIVE, Brand, Video views, Traditional\n• ตรงกับหน้า TikTok Ads · อัปเดต 08:xx และ 12:xx',
+  sh: 'ค่าโฆษณา Shopee ดึงจาก Shopee Open API (Product/Shop Ads ร้าน Mall) + Brand/Live/Meta ในแอป/เหรียญ ที่ Cowork อ่านจาก Seller Centre + CPAS จากบัญชี Meta "Deesay Shopee CPAS"\n• ร้าน 24hr ยังไม่เชื่อม API',
   lz: 'ค่าโฆษณา Lazada รวมมาจาก:\n• Lazada Mall\n• Lazada 24hr',
-  mt: 'ค่าโฆษณา Modern Trade (Awareness) รวมมาจาก:\n• แคมเปญ "Deesay Modern Trade" ในชีตเดียวกัน (ข้อมูลดิบรายชั่วโมง รวมเป็นรายวันแล้ว)\n• แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง',
+  mt: 'ค่าโฆษณา Modern Trade (Awareness) ดึงจาก Meta API บัญชี "Deesay Modern Trade"\n• แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง',
 };
 
 function toggleAdsPopover(hub, popoverId) {
@@ -6077,8 +6087,7 @@ function toggleAdsPopover(hub, popoverId) {
   const isOpen = el.style.display === 'block';
   document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
   if (!isOpen) {
-    const sheetUrl = hub === 'mt' ? ADS_SOURCE_SHEET_URL_MT : ADS_SOURCE_SHEET_URL;
-    el.innerHTML = ADS_SOURCE_INFO[hub].replace(/\n/g,'<br>') + `<br><br><a href="${sheetUrl}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">📄 เปิด Google Sheet ต้นทาง ↗</a>`;
+    el.innerHTML = ADS_SOURCE_INFO[hub].replace(/\n/g,'<br>') + (hub === 'lz' ? `<br><br><a href="${ADS_SOURCE_SHEET_URL}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">📄 เปิด Google Sheet ต้นทาง ↗</a>` : '<br><br><span style="color:var(--text3);">แหล่งข้อมูล: ระบบ (API) — ดูสถานะการดึงที่ health.html</span>');
     el.style.display = 'block';
   }
 }
@@ -6168,29 +6177,12 @@ function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) 
   makeAdChart(chartId, labels, gmvArr, adsArr, pctArr);
 }
 
-// ตารางเทียบ ชีท vs ระบบ ต่อช่องทางต่อเดือน (เฉพาะช่องทางที่ระบบเป็นแหล่งหลักแล้ว)
-function renderAdpCompare() {
-  const card = document.getElementById('adp-compare-card'), body = document.getElementById('adp-compare-body');
-  if (!card || !body) return;
-  const from = getDateValue('From') || '2026-01-01', to = getDateValue('To') || '2099-12-31';
-  const key = r => r.channel + '|' + r.date.slice(0, 7);
-  const agg = (rows, ch) => rows.filter(r => AD_CHANNELS_FROM_SYSTEM.includes(r.channel) && r.date >= from && r.date <= to).reduce((m, r) => { m[key(r)] = (m[key(r)] || 0) + r.ads; return m; }, {});
-  const sheet = agg(adSheetData), sys = agg(adRawData.filter(r => r.source !== 'sheet'));
-  const keys = [...new Set([...Object.keys(sheet), ...Object.keys(sys)])].sort();
-  if (!keys.length) { card.style.display = 'none'; return; }
-  card.style.display = 'block';
-  body.innerHTML = keys.map(k => { const [ch, m] = k.split('|'); const a = sheet[k] || 0, b = sys[k] || 0, d = b - a, p = a ? d / a * 100 : null;
-    const col = p === null ? 'var(--text3)' : Math.abs(p) <= 3 ? 'var(--green)' : Math.abs(p) <= 15 ? 'var(--accent)' : 'var(--red)';
-    return `<tr><td><b>${ch}</b></td><td class="mono">${m}</td><td>฿${fmt(a)}</td><td>฿${fmt(b)}</td><td style="color:${col};font-weight:600;">${d >= 0 ? '+' : ''}฿${fmt(d)}</td><td style="color:${col};">${p === null ? '—' : (p >= 0 ? '+' : '') + p.toFixed(1) + '%'}</td></tr>`; }).join('');
-}
-
 async function renderAdpAll() {
   if (adRawData.length === 0) {
     const sEl = document.getElementById('adp-summary');
-    if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่าแอดจาก Google Sheets...';
+    if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่าแอด...';
     fetchAdData().then(()=>renderAdpAll()); return;
   }
-  renderAdpCompare();
   { const f = getDateValue('From'), t = getDateValue('To'); const seq = (renderAdpAll._seq = (renderAdpAll._seq || 0) + 1);
     try { await ensureSalesSummary(f, t, () => { if (currentPage === 'adperf' && seq === renderAdpAll._seq) renderAdpAll(); }); } catch (e) { showError('โหลดยอดขายไม่สำเร็จ: ' + e.message); return; }
     if (seq !== renderAdpAll._seq) return; }
@@ -6236,7 +6228,7 @@ function renderAdpSummary() {
       lines.push(`• ช่องทาง GMV สูงสุด: ${bestG.k} (฿${fmtB(bestG.gmv)})`);
       lines.push(`• ช่องทาง ROAS ดีสุด: ${bestR.k} (${bestR.roas.toFixed(2)}x)`);
     }
-    if (adUnmapped.length) lines.push(`• ⚠️ มี ${adUnmapped.length} sub-channel ในชีต Ads ที่ยังไม่ได้ map เข้าระบบ (ดูรายละเอียดในแบนเนอร์ด้านบน)`);
+    if (adUnmapped.filter(k => k.toLowerCase().startsWith('lazada')).length) lines.push(`• ⚠️ มี sub-channel ของ Lazada ในชีต Ads ที่ยังไม่ได้ map (ดูแบนเนอร์ด้านบน)`);
     el.textContent=lines.join('\n');
   },300);
 }
