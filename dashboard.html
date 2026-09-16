@@ -313,7 +313,7 @@
     <div id="navGroup-mt" style="display:none;">
       <div class="nav-item nav-sub" onclick="showPage('mthub',null,this)"><span class="nav-icon">🏬</span> ภาพรวม Modern Trade</div>
     </div>
-    <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">💰</span> สินค้า — อะไรขึ้น อะไรลง</div>
+    <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">📈</span> แนวโน้มสินค้า</div>
     <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">📊</span> MKT Tracking</div>
     <div class="nav-item" onclick="showPage('skuanalysis',null,this)"><span class="nav-icon">🔬</span> เจาะสินค้า</div>
     <div class="nav-item" onclick="showPage('adperf',null,this)"><span class="nav-icon">📈</span> Ad Performance</div>
@@ -326,7 +326,7 @@
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.16-f</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -831,18 +831,19 @@
       <div class="grid-4" id="skurev-kpis">
         <div class="card"><div class="card-title">ยอดขายรวม (SKU)</div><div class="kpi-value" id="skurev-total-rev">—</div><div class="kpi-sub"><span id="skurev-rev-cmp" class="badge-up">—</span> vs ช่วงก่อน</div></div>
         <div class="card"><div class="card-title">จำนวนชิ้นรวม</div><div class="kpi-value" id="skurev-total-qty">—</div><div class="kpi-sub"><span id="skurev-qty-cmp" class="badge-up">—</span> vs ช่วงก่อน</div></div>
-        <div class="card"><div class="card-title">ราคาเฉลี่ย/ชิ้น</div><div class="kpi-value" id="skurev-avg-price">—</div><div class="kpi-sub">เฉลี่ยต่อหน่วย</div></div>
+        <div class="card"><div class="card-title">ราคาเฉลี่ย/ชิ้น</div><div class="kpi-value" id="skurev-avg-price">—</div><div class="kpi-sub">ยอด ÷ ชิ้น (ไม่รวมตัวแทน/MT) — ไม่ใช่ AOV</div></div>
         <div class="card" style="border:1px dashed rgba(200,169,110,0.3);background:rgba(200,169,110,0.03);"><div class="card-title">Gross Profit</div><div class="kpi-value" style="color:var(--text3);font-size:18px;">รอข้อมูลต้นทุน</div><div class="kpi-sub" style="color:var(--text3);">เพิ่มต้นทุนเพื่อคำนวณ</div></div>
       </div>
       
       <div class="card" style="margin-bottom:16px;padding:10px 16px;font-size:10.5px;color:var(--text3);line-height:1.6;">
-        <b>อะไรขึ้น อะไรลง</b> — เทียบช่วงวันที่ที่เลือก กับ <b>ช่วงก่อนหน้าที่ยาวเท่ากัน</b> และ <b>เฉลี่ย 3 ช่วงก่อน</b> · ป้าย: 🔺 Upturn ≥ +15% · 🔻 Downturn ≤ −15% · ➖ ทรงตัว · 🆕 ใหม่ (ช่วงก่อนไม่มียอด) · 💤 หยุดขาย (ช่วงนี้ไม่มียอด) · "ช่องทางที่ลากลง" = ช่องที่ยอดหายไปมากสุดเทียบช่วงก่อน · คลิกแถวเพื่อเจาะสินค้านั้น
+        <b>อะไรขึ้น อะไรลง</b> — เทียบช่วงวันที่ที่เลือก กับ <b>ช่วงเทียบ</b> (เลือกได้: วันเดียวกันของเดือนก่อน เช่น 1–16 ก.ย. vs 1–16 ส.ค. · หรือช่วงก่อนหน้าติดกัน 16–31 ส.ค.) และ <b>เฉลี่ย 3 ช่วง</b> แบบเดียวกัน · ป้าย: 🔺 Upturn ≥ +15% · 🔻 Downturn ≤ −15% · ➖ ทรงตัว · 🆕 ใหม่ (ช่วงก่อนไม่มียอด) · 💤 หยุดขาย (ช่วงนี้ไม่มียอด) · "ช่องทางที่ลากลง" = ช่องที่ยอดหายไปมากสุดเทียบช่วงก่อน · คลิกแถวเพื่อเจาะสินค้านั้น
       </div>
       <div id="momentum-cards" class="grid-2" style="margin-bottom:20px;"></div>
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header" style="flex-wrap:wrap;gap:8px;">
           <div class="section-title">ทุกสินค้า — ช่วงนี้ vs ช่วงก่อน <span id="momentum-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select class="ls-input" id="momentumMode" onchange="_momentumKey=null;loadMomentum()" style="width:230px;padding:6px 10px;font-size:12px;" title="เทียบกับช่วงไหน"><option value="month">เทียบ: วันเดียวกันของเดือนก่อน</option><option value="adjacent">เทียบ: ช่วงก่อนหน้าติดกัน (ยาวเท่ากัน)</option></select>
             <select class="ls-input" id="momentumStatusFilter" onchange="renderMomentumTable()" style="width:150px;padding:6px 10px;font-size:12px;"><option value="">ทุกสถานะ</option><option value="up">🔺 Upturn</option><option value="down">🔻 Downturn</option><option value="flat">➖ ทรงตัว</option><option value="new">🆕 ใหม่</option><option value="dead">💤 หยุดขาย</option></select>
             <input type="text" id="skurevSearch" placeholder="ค้นหา SKU หรือชื่อสินค้า..." onkeyup="renderMomentumTable()" style="width:200px;">
             <button class="btn btn-ghost" onclick="exportTable('tblSkuRev')">⬇ Export CSV</button>
@@ -2373,7 +2374,7 @@ const pageTitles = {
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttkeyword: 'ค้นหาคำบน TikTok', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
-  skurev: 'สินค้า — อะไรขึ้น อะไรลง (Momentum)', skuanalysis: 'เจาะสินค้า', adperf: 'Ad Performance',
+  skurev: 'แนวโน้มสินค้า — อะไรขึ้น อะไรลง', skuanalysis: 'เจาะสินค้า', adperf: 'Ad Performance',
   cost: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)', fbads: 'Facebook Ads (Meta)', kol: 'KOL / Affiliate — คนที่จ้าง',
   supply: 'Supply Chain — สต็อก / แผนสั่งซื้อ'
 };
@@ -5624,10 +5625,11 @@ function pctCell(chg, hasBase) {
 async function loadMomentum() {
   const ch = document.getElementById('filterChannel').value || null, sub = document.getElementById('filterSubChannel').value || null;
   const from = getDateValue('From'), to = getDateValue('To');
-  const key = [from, to, ch, sub].join('|');
+  const mode = document.getElementById('momentumMode')?.value || 'month';
+  const key = [from, to, ch, sub, mode].join('|');
   if (_momentumKey === key && _momentum) { renderMomentumTable(); return; }
   try {
-    const d = await supaRpc('sku_momentum', { p_from: from, p_to: to, p_channel: ch, p_sub: sub });
+    const d = await supaRpc('sku_momentum', { p_from: from, p_to: to, p_channel: ch, p_sub: sub, p_mode: mode });
     _momentum = d; _momentumKey = key;
   } catch (e) {
     document.getElementById('tbodySkuRev').innerHTML = `<tr><td colspan="12" class="empty">โหลด momentum ไม่สำเร็จ: ${ttcEsc(e.message)} — รัน SQL 92 หรือยัง?</td></tr>`; return;
@@ -5657,11 +5659,12 @@ function renderMomentumTable() {
   const v = r => _mmSortKey === 'rank' ? r.rank : +r[_mmSortKey] || 0;
   rows.sort((a, b) => (_mmSortDir === 'asc' ? 1 : -1) * (v(a) - v(b)));
   document.querySelectorAll('[id^="mms-"]').forEach(el => el.textContent = ''); const ind = document.getElementById('mms-' + _mmSortKey); if (ind) ind.textContent = _mmSortDir === 'asc' ? '▲' : '▼';
-  document.getElementById('momentum-count').textContent = `(${fmt(rows.length)} SKU · เทียบช่วงก่อน ${fmt(_momentum.period_days)} วัน)`;
+  document.getElementById('momentum-count').textContent = `(${fmt(rows.length)} SKU · เทียบกับ ${thShort(_momentum.prev_from)} – ${thShort(_momentum.prev_to)})`;
   // KPI 4 ใบบนสุด — ใช้ตัวเลขรายวันชุดเดียวกับตาราง (เดิมคิดจากตารางรายเดือน ทำให้ % เพี้ยนเมื่อเลือกช่วงไม่เต็มเดือน)
   { const M = _momentum; const tc = +M.total_cur || 0, tp = +M.total_prev || 0, qc = +M.qty_cur || 0, qp = +M.qty_prev || 0;
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('skurev-total-rev', fmtB(tc)); set('skurev-total-qty', fmt(qc) + ' ชิ้น'); set('skurev-avg-price', qc ? '฿' + fmt(Math.round(tc / qc)) : '—');
+    set('skurev-total-rev', fmtB(tc)); set('skurev-total-qty', fmt(qc) + ' ชิ้น');
+    const rr = +M.rev_cur_retail || 0, qr = +M.qty_cur_retail || 0; set('skurev-avg-price', qr ? '฿' + fmt(Math.round(rr / qr)) : '—');
     const rC = cmpBadge(tc, tp), qC = cmpBadge(qc, qp);
     const rEl = document.getElementById('skurev-rev-cmp'); if (rEl) { rEl.textContent = rC.text; rEl.className = rC.cls; }
     const qEl = document.getElementById('skurev-qty-cmp'); if (qEl) { qEl.textContent = qC.text; qEl.className = qC.cls; } }
@@ -5691,7 +5694,7 @@ function renderMomentumTable() {
   document.getElementById('momentum-cards').innerHTML = `
     <div class="card"><div class="section-header"><div class="section-title">🔺 ขึ้น (เรียงตามบาทที่เพิ่ม)</div><span style="font-size:11px;color:var(--text3);">${fmt(ups.length)} SKU</span></div><div style="max-height:320px;overflow-y:auto;">${ups.map(r => li(r, true)).join('') || '<div class="empty">ไม่มี</div>'}</div></div>
     <div class="card"><div class="section-header"><div class="section-title">🔻 ลง (เรียงตามบาทที่หาย)</div><span style="font-size:11px;color:var(--text3);">${fmt(downs.length)} SKU</span></div><div style="max-height:320px;overflow-y:auto;">${downs.map(r => li(r, false)).join('') || '<div class="empty">ไม่มี</div>'}</div></div>
-    <div class="card" style="grid-column:span 2;"><div class="section-header"><div class="section-title">ช่องทาง — ยอดรวมทุกสินค้าเปลี่ยนไปเท่าไรในแต่ละช่องทาง (เทียบช่วงก่อน)</div><span style="font-size:11px;color:var(--text3);">รวม ${totChg === null ? '—' : (totChg >= 0 ? '▲' : '▼') + Math.abs(totChg).toFixed(1) + '%'} vs ช่วงก่อน</span></div>
+    <div class="card" style="grid-column:span 2;"><div class="section-header"><div class="section-title">ยอดรวมที่เปลี่ยน มาจากช่องทางไหน (ทุกสินค้า เทียบช่วงเทียบ)</div><span style="font-size:11px;color:var(--text3);">รวม ${totChg === null ? '—' : (totChg >= 0 ? '▲' : '▼') + Math.abs(totChg).toFixed(1) + '%'} vs ช่วงก่อน</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">${chLine.map(c => `<div style="flex:1;min-width:140px;background:var(--bg3);border-radius:8px;padding:10px 12px;"><div style="font-size:11px;color:var(--text3);">${ttcEsc(c.k)}</div><div style="font-size:15px;font-weight:700;color:${c.diff >= 0 ? 'var(--green)' : 'var(--red)'};">${c.diff >= 0 ? '+' : '−'}฿${fmtB(Math.abs(c.diff))}</div><div style="font-size:10px;color:var(--text3);">${c.pct === null ? 'ใหม่' : (c.pct >= 0 ? '▲' : '▼') + Math.abs(c.pct).toFixed(1) + '%'}</div></div>`).join('')}</div></div>`;
 }
 function openSkuAnalysis(sku) {
