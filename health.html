@@ -334,7 +334,7 @@ async function render(d, unknown, extra) {
     ['ภาพรวมยอดขาย / แยก Channel / SKU', 'orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · Shopee ออเดอร์จาก API ทุก 10 นาที', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
     ['แนวโน้มสินค้า (Momentum)', 'RPC sku_momentum บน mv_sku_daily (ตัด Cancel/Return) เทียบช่วงก่อน + เฉลี่ย 3 ช่วง + 12 สัปดาห์', 'mv_sku_daily รีเฟรชรายชั่วโมง'],
     ['เจาะสินค้า', 'RPC sku_summary (mv_sku_daily) + sku_fb_customers (orders) + promotions', 'รายชั่วโมง'],
-    ['ภาพรวม Facebook (แยกเพจ)', 'ยอดขาย: orders · ค่าแอด: Meta API (fb_ads_daily → v_ad_spend_daily map เพจ)', 'meta-ads-sync 08:00/20:00'],
+    ['ภาพรวม Facebook (แยกเพจ)', 'ยอดขาย: orders · ค่าแอด: Meta API เฉพาะก้อน Conversion (แอดที่ยิงให้เพจขายใน fb_page_map) — PR/KOL แยก, CPAS → Shopee, MT แยก', 'meta-ads-sync 08:00/20:00'],
     ['Facebook Engagement / โพสต์', 'Facebook Graph API (social_posts, fb_pages)', 'ingest-facebook-* 07:xx'],
     ['Facebook Ads', 'Meta Marketing API 10 บัญชี (fb_ads_daily, fb_ads, fb_ad_campaigns) · ยอดขายจริงจาก orders', 'meta-ads-sync 08:00/20:00 · token หมด 14 พ.ย.'],
     ['ภาพรวม TikTok / TikTok Ads', 'TikTok Ads API (mv_tiktok_creative_performance, mv_tiktok_objective_summary) · ยอดขายจาก orders', 'tiktok-*-sync 08:xx + 12:xx · MV รีเฟรชรายชั่วโมง'],
