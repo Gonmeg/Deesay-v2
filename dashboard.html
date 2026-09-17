@@ -326,7 +326,7 @@
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.17-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.17-b</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -3728,9 +3728,9 @@ async function ensureTtaDataForRange(from, to, onFresh) {
   const rangeKey = from + '|' + to;
   if (ttaLastRange === rangeKey && ttaByClip.length) return;
   const cached = await idbGet('tta:' + rangeKey);
-  if (cached && cached.rows && cached.rows.length) {
+  if (cached && (cached.rollup || (cached.rows && cached.rows.length))) {
     await loadTtaThumbs();
-    buildTtaByClip(cached.rows);
+    if (cached.rollup) applyTtaRollup(cached.rollup); else buildTtaByClip(cached.rows);
     ttaLastRange = rangeKey;
     if (Date.now() - (cached.cachedAt || 0) > TTA_CACHE_MAX_AGE) {
       fetchTtaData(from, to).then(() => { if (ttaLastRange === rangeKey && typeof onFresh === 'function') onFresh(); })
@@ -8017,6 +8017,25 @@ async function fetchTtaData(fromDate, toDate) {
   // เลยถอยกลับมาเรียงคิวทีละคำขอก่อน (ช้ากว่าแต่นิ่งกว่า) จนกว่าจะแก้เรื่องโควตาเสร็จ ค่อยกลับไปทำให้เร็วขึ้นอีกครั้ง
   // ลด egress: ดึงเฉพาะคอลัมน์ที่ buildTtaByClip / funnel ใช้จริง (ไม่ใช่ select=*) — ถ้า MV ไม่มีคอลัมน์ไหน (400) ค่อยถอยไป select=* อัตโนมัติ
   const TTA_COLS = 'stat_date,item_id,tt_account_name,campaign_name,objective,title,cost,spend,orders,gross_revenue,impressions,product_impressions,clicks,product_clicks,video_view_rate_2s,video_view_rate_6s,video_view_rate_p25,video_view_rate_p50,video_view_rate_p75,video_view_rate_p100,likes,comments,shares,follows,profile_visits';
+  // (2026-09-17) ทางหลัก: RPC tta_clip_rollup รวมยอดต่อคลิปที่ Supabase (สรุปรายเดือนล่วงหน้า + ส่วนหัว/ท้ายเดือน) คำขอเดียว
+  // ตรวจแล้วตัวเลขทุกช่องตรงกับการรวมแถวดิบแบบเดิม · ถ้า RPC ใช้ไม่ได้ (ยังไม่ติดตั้ง/หมดเวลา) ถอยไปดึงแถวดิบแบบเดิมด้านล่าง
+  try {
+    setBgSync('รวมยอด TikTok Ads (Supabase)...', 20);
+    const rpcRes = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/tta_clip_rollup`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_from: fromDate || '2026-01-01', p_to: toDate || fmtDateISO(new Date()) }) });
+    if (rpcRes.ok) {
+      const rollup = await rpcRes.json();
+      if (rollup && Array.isArray(rollup.clips) && Array.isArray(rollup.cols)) {
+        await loadTtaThumbs();
+        applyTtaRollup(rollup);
+        window._ttaFailedChunks = [];
+        setBgSync(`TikTok Ads ${fmt(rollup.clips.length)} คลิป อัปเดตแล้ว`, null);
+        idbSet('tta:' + fromDate + '|' + toDate, { rollup, cachedAt: Date.now() });
+        return;
+      }
+    }
+    console.warn('tta_clip_rollup ใช้ไม่ได้ → ดึงแถวดิบแบบเดิม', rpcRes.status);
+  } catch (e) { console.warn('tta_clip_rollup error → ดึงแถวดิบแบบเดิม', e.message); }
   let ttaSelect = TTA_COLS;
   try {
     const probe = await fetch(`${window.SUPABASE_URL}/rest/v1/mv_tiktok_creative_performance?select=${TTA_COLS}&limit=1`, { headers });
@@ -8074,6 +8093,12 @@ async function loadTtaThumbs() {
       if (rows.length < 1000) break;
     }
   } catch {}
+}
+// ผลจาก RPC tta_clip_rollup → ttaByClip (รูปเดียวกับ rpcClipToObj) + แถว funnel ต่อ objective (ให้ renderTtaFunnel ใช้ได้เหมือนเดิม)
+function applyTtaRollup(rollup) {
+  const cols = rollup.cols;
+  ttaByClip = rollup.clips.map(a => { const r = {}; cols.forEach((k, i) => { r[k] = a[i]; }); return rpcClipToObj(r); });
+  ttaRawRows = (rollup.funnel || []).map(f => ({ objective: f.objective || null, cost: +f.spend || 0, spend: 0 }));
 }
 function buildTtaByClip(ttaRaw) {
   ttaRawRows = ttaRaw;
