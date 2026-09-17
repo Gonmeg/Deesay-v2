@@ -1361,6 +1361,9 @@ const REVENUE_FIELDS = {
   Shopee: [
     { key:'rev_subtotal', label:'ราคาขายสุทธิ', required:true, keywords:['ราคาขายสุทธิ','net sales price'] },
     { key:'rev_platform', label:'ส่วนลดจาก Shopee', required:false, keywords:['ส่วนลดจาก shopee','ส่วนลดแพลตฟอร์ม','shopee discount'] },
+    // ยอดระดับออเดอร์ (ไฟล์ Shopee ซ้ำค่าเดิมทุกแถวสินค้าของออเดอร์เดียวกัน) → นับครั้งเดียวต่อออเดอร์ · เทียบบัญชี ส.ค. 69 แล้วตรง 1,708,666
+    { key:'rev_seller_voucher', label:'โค้ดส่วนลดชำระโดยผู้ขาย (หัก · ต่อออเดอร์)', required:false, keywords:['โค้ดส่วนลดชำระโดยผู้ขาย','seller voucher'] },
+    { key:'rev_buyer_shipping', label:'ค่าจัดส่งที่ชำระโดยผู้ซื้อ (บวก · ต่อออเดอร์)', required:false, keywords:['ค่าจัดส่งที่ชำระโดยผู้ซื้อ','buyer paid shipping fee'] },
   ],
   Lazada: [
     { key:'rev_subtotal', label:'unitPrice', required:true, keywords:['unitPrice','unit price','ราคาต่อหน่วย'] },
@@ -2014,6 +2017,9 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     const rawSku = gs('sku_promotion'), qtyMul = gs('qty_multiplier')
     if (sub && !chMap[sub]) newSubChannels.add(sub)
     const revenue = calcRevenue(channel, mappings, row)
+    // Shopee: สูตรบัญชี = Σ(ราคาขายสุทธิ + ส่วนลดจาก Shopee) ทุกแถว − โค้ดส่วนลดชำระโดยผู้ขาย + ค่าจัดส่งที่ชำระโดยผู้ซื้อ (สองตัวหลังครั้งเดียวต่อออเดอร์ — ใช้ตอนรวมแถวด้านล่าง)
+    const numOf = k => { if (!mappings[k]) return 0; const v = row[mappings[k]]; return v === null || v === undefined || v === '' ? 0 : (parseFloat(String(v).replace(/,/g, '')) || 0) }
+    const order_adj = channel === 'Shopee' ? numOf('rev_buyer_shipping') - numOf('rev_seller_voucher') : 0
     const revenueRaw = (() => { const v = mappings['rev_subtotal'] ? row[mappings['rev_subtotal']] : null; if (!v) return 0; return parseFloat(String(v).replace(/,/g,''))||0 })()
     const delivery_date = mappings['delivery_date'] ? parseDate(g('delivery_date')) : null
     let cancel_return_type = mappings['cancel_return_type'] ? (gs('cancel_return_type') || null) : null
@@ -2033,7 +2039,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       else if (lazStatus === 'Package Returned') cancel_return_type = 'Return/Refund'
       else cancel_return_type = 'None'
     }
-    return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null }
+    return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null, order_adj }
   }).filter(r => r.order_id && r.date)
 
   const CRT_SEVERITY = { 'Cancel': 2, 'Return/Refund': 2, 'None': 0 }
@@ -2043,15 +2049,15 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
   }
   const orderGroups = new Map()
   rawProcessed.forEach(r => {
-    if (!orderGroups.has(r.order_id)) orderGroups.set(r.order_id, { ...r, _skuParts:[r.sku_promotion_part], _rawParts:[r.sku_promotion_raw], _revenueSum:r.revenue, _revenueRawSum:r.revenue_raw })
-    else { const g = orderGroups.get(r.order_id); if(r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part); if(r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw); g._revenueSum+=r.revenue; g._revenueRawSum+=r.revenue_raw; g.cancel_return_type = worseCancelReturnType(g.cancel_return_type, r.cancel_return_type) }
+    if (!orderGroups.has(r.order_id)) orderGroups.set(r.order_id, { ...r, _skuParts:[r.sku_promotion_part], _rawParts:[r.sku_promotion_raw], _revenueSum:r.revenue, _revenueRawSum:r.revenue_raw, _orderAdj:r.order_adj||0 })
+    else { const g = orderGroups.get(r.order_id); if(r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part); if(r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw); g._revenueSum+=r.revenue; g._revenueRawSum+=r.revenue_raw; if (!g._orderAdj && r.order_adj) g._orderAdj = r.order_adj; g.cancel_return_type = worseCancelReturnType(g.cancel_return_type, r.cancel_return_type) }
   })
 
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
     const _composite = mergeSkus(allSkus)
     const _parentStr = promoParentStr(_composite), _childStr = promoChildStr(_composite)
-    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:_parentStr, sku_promotion_child:(_childStr && _childStr !== _parentStr) ? _childStr : null, sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round(g._revenueSum*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
+    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:_parentStr, sku_promotion_child:(_childStr && _childStr !== _parentStr) ? _childStr : null, sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round((g._revenueSum + (g._orderAdj||0))*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
