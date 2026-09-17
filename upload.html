@@ -2174,6 +2174,8 @@ async function calcSkuRevenue(orders) {
       const rsp = rspMap[t.parent] || 0
       let allocated = 0
       if (totalRsp > 0 && rsp > 0) allocated = order.revenue * ((rsp * byParent[t.parent]) / totalRsp) * t.rev_ratio
+      // ออเดอร์ที่ทุกสินค้า RSP = 0 (เช่นของแถมที่เผลอขาย) แต่มียอดขาย → แบ่งตามจำนวนชิ้น ยอด SKU จะได้ไม่หาย
+      else if (totalRsp === 0 && order.revenue) { const totalQty = Object.values(byParent).reduce((a, q) => a + q, 0) || 1; allocated = order.revenue * (byParent[t.parent] / totalQty) * t.rev_ratio }
       skuRows.push({date:order.date,channel:order.channel,sub_channel:order.sub_channel,order_id:order.order_id,parent_sku:t.parent,child_sku:t.child,product_name:nameMap[t.parent]||t.parent,qty:t.qty,revenue_share:Math.round(allocated*100)/100,settled_date:order.settled_date,settled:order.settled?'True':'False'})
     })
   }
