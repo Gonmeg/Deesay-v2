@@ -1932,9 +1932,14 @@ async function handleConfirm() {
   try {
     const dedupMap = new Map(); processed.forEach(r => { if (!dedupMap.has(r.order_id)) dedupMap.set(r.order_id, r) })
     const deduped = [...dedupMap.values()]
+    // อัปไฟล์ทับของเดิม: ช่องที่ไฟล์นี้ไม่มี (ไม่ได้จับคู่คอลัมน์) จะไม่ถูกส่งไป → ข้อมูลเดิมในระบบไม่ถูกล้างเป็นค่าว่าง (เช่น Order Channel / Creator Handle ในไฟล์เก่า)
+    // และสถานะรับเงินเดิมไม่ถูกรีเซ็ต (ยกเว้น Facebook ที่ตั้งว่าได้เงินแล้วตามเดิม) — ออเดอร์ใหม่ได้ค่าเริ่มต้นของตารางเหมือนเดิม (settled = false)
+    const dropKeys = ['order_channel','creator_handle','province','district','postcode','customer_name','phone','payment_method','order_status','delivery_date'].filter(k => !mappings[k])
+    if (channel !== 'Facebook') dropKeys.push('settled', 'settled_date')
+    const upsertRows = dropKeys.length ? deduped.map(r => { const o = { ...r }; dropKeys.forEach(k => delete o[k]); return o }) : deduped
     const BATCH = 500; let done = 0
     for (let i = 0; i < deduped.length; i += BATCH) {
-      const { error } = await withRetry(() => DB.from('orders').upsert(deduped.slice(i, i + BATCH), { onConflict: 'order_id' }))
+      const { error } = await withRetry(() => DB.from('orders').upsert(upsertRows.slice(i, i + BATCH), { onConflict: 'order_id' }))
       if (error) throw error
       done += Math.min(BATCH, deduped.length - i); pf.style.width = Math.round(done / deduped.length * 100) + '%'
     }
