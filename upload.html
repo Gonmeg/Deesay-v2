@@ -2096,10 +2096,15 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
   }
   const orderGroups = new Map()
   rawProcessed.forEach(r => {
-    if (!orderGroups.has(r.order_id)) orderGroups.set(r.order_id, { ...r, _skuParts:[r.sku_promotion_part], _rawParts:[r.sku_promotion_raw], _revenueSum:r.revenue, _revenueRawSum:r.revenue_raw, _orderAdj:r.order_adj||0 })
-    else { const g = orderGroups.get(r.order_id); if(r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part); if(r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw); g._revenueSum+=r.revenue; g._revenueRawSum+=r.revenue_raw; if (!g._orderAdj && r.order_adj) g._orderAdj = r.order_adj; g.cancel_return_type = worseCancelReturnType(g.cancel_return_type, r.cancel_return_type) }
+    if (!orderGroups.has(r.order_id)) orderGroups.set(r.order_id, { ...r, _skuParts:[r.sku_promotion_part], _rawParts:[r.sku_promotion_raw], _revenueSum:r.revenue, _revenueRawSum:r.revenue_raw, _orderAdj:r.order_adj||0, _revNormal:(!r.cancel_return_type||r.cancel_return_type==='None'?r.revenue:0), _hasNormal:(!r.cancel_return_type||r.cancel_return_type==='None') })
+    else { const g = orderGroups.get(r.order_id); if(r.sku_promotion_part) g._skuParts.push(r.sku_promotion_part); if(r.sku_promotion_raw) g._rawParts.push(r.sku_promotion_raw); g._revenueSum+=r.revenue; g._revenueRawSum+=r.revenue_raw; if (!g._orderAdj && r.order_adj) g._orderAdj = r.order_adj; if (!r.cancel_return_type||r.cancel_return_type==='None') { g._revNormal+=r.revenue; g._hasNormal=true } g.cancel_return_type = worseCancelReturnType(g.cancel_return_type, r.cancel_return_type) }
   })
 
+  // TikTok / Lazada: ไฟล์เป็น 1 แถวต่อสินค้า — ออเดอร์ที่ยกเลิก/คืน "บางชิ้น" บัญชีนับเฉพาะชิ้นที่ไม่ได้ยกเลิก/คืน
+  // (เดิมทั้งออเดอร์ถูกตัดทิ้ง) → นับเป็นออเดอร์ปกติด้วยยอดเฉพาะชิ้นที่ขายจริง · เทียบบัญชี TikTok ก.ค. 69 ตรง 4,740,617.76
+  if (channel === 'TikTok' || channel === 'Lazada') orderGroups.forEach(g => {
+    if (g._hasNormal && g.cancel_return_type && g.cancel_return_type !== 'None') { g.cancel_return_type = channel === 'Lazada' ? 'None' : null; g._revenueSum = g._revNormal }
+  })
   const processed = [...orderGroups.values()].map(g => {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
     const _composite = mergeSkus(allSkus)
