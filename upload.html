@@ -1389,9 +1389,7 @@ function calcRevenue(channel, m, row) {
     case 'TikTok': return getNum('rev_subtotal') - getNum('rev_discount')
     case 'Shopee': return getNum('rev_subtotal') + getNum('rev_platform')
     case 'Lazada': {
-      const paidRaw = mappings['rev_paid'] ? row[mappings['rev_paid']] : null;
-      const paid = parseFloat(paidRaw || 0);
-      if (paid === 0) return 0; // ของแถม (paidPrice=0) → revenue = 0
+      // (2026-09-17) เลิกตั้งยอด 0 เมื่อ paidPrice = 0 — เทียบบัญชี ม.ค. 69 แล้ว ออเดอร์ที่โค้ดแพลตฟอร์มจ่ายเต็ม บัญชียังนับ unitPrice − ส่วนลดผู้ขาย
       return getNum('rev_subtotal') - Math.abs(getNum('rev_discount')); // ไฟล์ Lazada ส่วนลดเป็นเลขติดลบ → หักแบบไม่สนเครื่องหมาย (เทียบบัญชี ส.ค. 69 ตรง)
     }
     default: return getNum('rev_subtotal')
@@ -2088,7 +2086,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       // หมายเหตุ: มี residual เล็กน้อย (<1%/เดือน) จากเคส cross-month return ที่ยอมรับไว้แล้ว (ดู session notes)
       const lazStatus = mappings['lazada_status'] ? gs('lazada_status') : ''
       if (lazStatus === 'canceled') cancel_return_type = 'Cancel'
-      else if (lazStatus === 'Package Returned') cancel_return_type = 'Return/Refund'
+      else if (lazStatus === 'Package Returned' || lazStatus === 'returned' || lazStatus === 'In Transit: Returning to seller') cancel_return_type = 'Return/Refund' // (2026-09-17) เทียบบัญชี เม.ย.–ก.ค. 69: returned / กำลังตีกลับ บัญชีนับเป็นตีกลับด้วย
       else cancel_return_type = 'None'
     }
     return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null, order_adj }
