@@ -1316,6 +1316,9 @@ const SETTLEMENT_FIELDS = {
     { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['วันที่โอนชำระเงินสำเร็จ'] },
     { key:'order_created_date', label:'วันที่สั่งซื้อ', required:false, keywords:['วันที่ทำการสั่งซื้อ'] },
     { key:'settle_amount', label:'จำนวนเงินทั้งหมดที่โอนแล้ว', required:false, keywords:['จำนวนเงินทั้งหมดที่โอนแล้ว'] },
+    // คืนเงิน → shopee_refunds (หักยอดขายเฉพาะที่คืนเงินภายในเดือนเดียวกับวันสั่งซื้อ — กฎบัญชี)
+    { key:'settle_refund', label:'จำนวนเงินที่ทำการคืนให้ผู้ซื้อ', required:false, keywords:['จำนวนเงินที่ทำการคืนให้ผู้ซื้อ'] },
+    { key:'settle_return_id', label:'รหัสคืนสินค้า', required:false, keywords:['รหัสคืนสินค้า'] },
   ],
   TikTok: [
     { key:'settle_order_id', label:'Related order ID', required:true, keywords:['related order id'] },
@@ -1389,7 +1392,7 @@ function calcRevenue(channel, m, row) {
       const paidRaw = mappings['rev_paid'] ? row[mappings['rev_paid']] : null;
       const paid = parseFloat(paidRaw || 0);
       if (paid === 0) return 0; // ของแถม (paidPrice=0) → revenue = 0
-      return getNum('rev_subtotal') - getNum('rev_discount');
+      return getNum('rev_subtotal') - Math.abs(getNum('rev_discount')); // ไฟล์ Lazada ส่วนลดเป็นเลขติดลบ → หักแบบไม่สนเครื่องหมาย (เทียบบัญชี ส.ค. 69 ตรง)
     }
     default: return getNum('rev_subtotal')
   }
@@ -1785,6 +1788,29 @@ async function handleConfirm() {
       }
       const notMatched = deduped.length - matchedCount - failedRows.length
 
+      // Shopee: บันทึกยอดคืนเงินจริงลง shopee_refunds (ลบของเดิมของออเดอร์ในไฟล์นี้ก่อน แล้วใส่ใหม่ — อัปไฟล์ซ้ำได้ไม่ซ้อน)
+      if (channel === 'Shopee') {
+        const refundMap = new Map()
+        processed.filter(r => r.refund_amount > 0 && r.settled_date).forEach(r => {
+          const rid = r.return_id || (r.order_id + '|' + r.settled_date)
+          const cur = refundMap.get(rid)
+          if (cur) cur.refund_amount += r.refund_amount
+          else refundMap.set(rid, { return_id: rid, order_id: r.order_id, refund_amount: r.refund_amount, refund_date: r.settled_date, order_created_date: r.order_created_date || null, uploaded_at: new Date().toISOString() })
+        })
+        const refundRows = [...refundMap.values()]
+        if (refundRows.length) {
+          const ids = [...new Set(refundRows.map(x => x.order_id))]
+          for (let i = 0; i < ids.length; i += 200) {
+            const { error: delRf } = await withRetry(() => DB.from('shopee_refunds').delete().in('order_id', ids.slice(i, i + 200)))
+            if (delRf) throw new Error('ลบยอดคืนเงินเดิมไม่สำเร็จ: ' + delRf.message)
+          }
+          for (let i = 0; i < refundRows.length; i += 500) {
+            const { error: insRf } = await withRetry(() => DB.from('shopee_refunds').insert(refundRows.slice(i, i + 500)))
+            if (insRf) throw new Error('บันทึกยอดคืนเงินไม่สำเร็จ: ' + insRf.message)
+          }
+        }
+      }
+
       // เช็คว่ามีออเดอร์ในช่วงวันที่ที่ไฟล์นี้ครอบคลุม ที่ยัง settled=NULL ค้างอยู่ไหม (ตกหล่นจากเหตุการณ์อื่นมาก่อน)
       // เพราะกฎ "ไม่เจอในไฟล์รับเงิน = false" ไม่เคยถูกบังคับใช้จริงเลย ต้องมากวาดตรงนี้แทน
       const settledDatesAll = deduped.map(r => r.settled_date).filter(Boolean).sort()
@@ -1883,6 +1909,24 @@ async function handleConfirm() {
       logUpload({ upload_type:'settlement', channel, sub_channel:null, file_name:(fileInput.files[0]?.name||null), total_rows:processed.length, success_count:0, not_matched_count:null, total_revenue:null, status:'error', error_message:e.message })
     }
     return
+  }
+
+  // Facebook: เทียบยอดที่คำนวณกับคอลัมน์ "รวมทั้งสิ้น" ในไฟล์ — กันจับคู่คอลัมน์ผิดแล้วหักส่วนลด/บวกค่าส่งซ้ำ (เคย 8–10 ส.ค. 69)
+  if (channel === 'Facebook' && uploadMode !== 'settlement') {
+    const totalCol = rawHeaders.find(h => String(h).trim() === 'รวมทั้งสิ้น')
+    if (totalCol) {
+      let bad = 0, badDiff = 0
+      rawData.forEach(row => {
+        const v = row[totalCol]; if (v === null || v === undefined || v === '') return
+        const fileTotal = parseFloat(String(v).replace(/,/g, '')) || 0
+        const d = calcRevenue(channel, mappings, row) - fileTotal
+        if (Math.abs(d) > 1) { bad++; badDiff += d }
+      })
+      if (bad > 0 && !confirm(`⚠️ มี ${bad.toLocaleString()} แถวที่ยอดคำนวณไม่เท่ากับคอลัมน์ "รวมทั้งสิ้น" ในไฟล์ (ต่างรวม ${Math.round(badDiff).toLocaleString()} บาท)\n\nมักเกิดจากช่อง "ยอดรวมสินค้า" จับคอลัมน์ผิด ทำให้หักส่วนลดหรือบวกค่าส่งซ้ำ\n\nกด "ยกเลิก" เพื่อกลับไปแก้การจับคู่คอลัมน์ · กด "ตกลง" ถ้าตรวจแล้วว่าถูก`)) {
+        btn.disabled = false; back.disabled = false; btn.textContent = '✓ ยืนยัน Upload'; pt.style.display = 'none'
+        return
+      }
+    }
   }
 
   try {
@@ -1997,7 +2041,10 @@ function processSettlementRows(rows, mappings) {
     const orderId = orderIdRaw !== null && orderIdRaw !== undefined ? String(orderIdRaw).trim() : ''
     const createdRaw = mappings['order_created_date'] ? row[mappings['order_created_date']] : null
     const amountRaw = mappings['settle_amount'] ? row[mappings['settle_amount']] : null
-    return { order_id: orderId, settled_date: parseDate(dateRaw), order_created_date: parseDate(createdRaw), settle_amount: parseFloat(amountRaw || 0) }
+    const refundRaw = mappings['settle_refund'] ? row[mappings['settle_refund']] : null
+    const returnIdRaw = mappings['settle_return_id'] ? row[mappings['settle_return_id']] : null
+    return { order_id: orderId, settled_date: parseDate(dateRaw), order_created_date: parseDate(createdRaw), settle_amount: parseFloat(amountRaw || 0),
+      refund_amount: Math.abs(parseFloat(String(refundRaw ?? '0').replace(/,/g, '')) || 0), return_id: returnIdRaw !== null && returnIdRaw !== undefined ? String(returnIdRaw).trim() : '' }
   }).filter(r => r.order_id)
 }
 
