@@ -552,7 +552,7 @@
   // ส่วน 2 แฮชแท็กหมวดบิวตี้มาแรงในไทย (RPC tiktok_hashtag_page — sync ทุกเช้าโดย tiktok-hashtag-sync)
   const OUR_BRAND = /deesay|ดีเซ้ย์|ดีเซย์|ดีเซ่|fimiq|ฟีมิค/i;
   // ชื่อแบรนด์อื่นที่เจอบ่อยในคำค้น/แฮชแท็ก (เพิ่มได้ตามที่เจอ)
-  const OTHER_BRANDS = ['สุรีย์พร', 'กระแต', 'เจ้านาง', 'ออร่าริช', 'จุฬาเฮิร์บ', 'คุณโจ้', 'drpong', 'ซองเซเว่น', 'ซีเครท', 'เมอเรซ', 'ศรีจันทร์', 'มิสทีน', 'mistine', 'srichand', 'cathy doll', 'เคที่ดอลล์', 'สิวลี่', '4u2', 'บราวน์', 'browit', 'ingu', 'อิงกุ', 'กิฟฟารีน', 'giffarine', 'นีเวีย', 'nivea', 'vaseline', 'garnier', 'การ์นิเย่', 'loreal', 'ลอรีอัล', 'maybelline', 'เมย์เบลลีน'];
+  const OTHER_BRANDS = ['สุรีย์พร', 'กระแต', 'เจ้านาง', 'ออร่าริช', 'จุฬาเฮิร์บ', 'คุณโจ้', 'drpong', 'ซองเซเว่น', 'ซีเครท', 'เมอเรซ', 'ศรีจันทร์', 'มิสทีน', 'mistine', 'srichand', 'cathy doll', 'เคที่ดอลล์', 'สิวลี่', '4u2', 'บราวน์', 'browit', 'ingu', 'อิงกุ', 'กิฟฟารีน', 'giffarine', 'นีเวีย', 'nivea', 'vaseline', 'garnier', 'การ์นิเย่', 'loreal', 'ลอรีอัล', 'maybelline', 'เมย์เบลลีน', 'canmake', 'carslan'];
   const brandOf = w => OUR_BRAND.test(w) ? 'ours' : (OTHER_BRANDS.some(b => String(w).toLowerCase().includes(b.toLowerCase())) ? 'other' : null);
   const fmtKM = n => (n === null || n === undefined || isNaN(n)) ? '—' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + 'K' : String(Math.round(n));
   const spark = hist => {
