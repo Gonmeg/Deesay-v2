@@ -254,6 +254,16 @@
   .zoom-thumb { cursor: zoom-in; }
   #thumbPreview { display:none; position:fixed; z-index:9999; pointer-events:none; width:340px; border-radius:10px; overflow:hidden; background:var(--bg2); border:1px solid var(--border); box-shadow:0 12px 32px rgba(0,0,0,0.45); }
   #thumbPreview img { display:block; width:100%; height:auto; }
+
+/* (2026-09-19) ปุ่ม ! อธิบายหัวคอลัมน์ + จัดตารางหน้า MKT Tracking / TikTok Ads ให้อ่านง่าย */
+.mkt-info { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%;
+  border:1px solid var(--border); color:var(--text3); font-size:9.5px; font-weight:700; cursor:help; line-height:1; vertical-align:middle; }
+.mkt-info:hover { color:#60a5fa; border-color:#60a5fa; }
+#tblMktRoi th, #tblTtProduct th { white-space:nowrap; vertical-align:bottom; }
+#tblMktRoi td:not(:first-child), #tblTtProduct td:not(:first-child) { text-align:right; font-variant-numeric:tabular-nums; }
+#tblMktRoi th:not(:first-child), #tblTtProduct th:not(:first-child) { text-align:right; }
+#tblMktRoi td:first-child, #tblTtProduct td:first-child { min-width:200px; }
+#tblMktRoi tbody tr:hover, #tblTtProduct tbody tr:hover { background:rgba(96,165,250,0.06); }
 </style>
 </head>
 <body>
@@ -326,7 +336,7 @@
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.18-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.19-a</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1270,6 +1280,29 @@
     <div class="page" id="page-ttads">
       <div id="tta-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
+      <!-- (2026-09-19) GMV Max รายสินค้า — ตัวเลขจาก TikTok ตรงๆ ไม่มีการปันส่วนใดๆ -->
+      <div class="card" id="ttProductCard" style="margin-bottom:20px;overflow:hidden;">
+        <div class="section-header">
+          <div class="section-title">GMV Max รายสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เฉพาะแคมเปญแบบยิงสินค้า — ไม่รวมไลฟ์และแอด awareness)</span></div>
+          <button class="btn btn-ghost" onclick="exportTtProduct()">⬇ Export CSV</button>
+        </div>
+        <div id="ttProductSummary" style="font-size:11px;color:var(--text3);padding:0 14px 10px;"></div>
+        <div style="overflow-x:auto;">
+          <table id="tblTtProduct">
+            <thead><tr>
+              <th class="sortable-th" onclick="ttProductSort('name')">สินค้า <span class="sort-ind" id="tps-name"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('ads')">ค่าแอด <span class="sort-ind" id="tps-ads"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('gmv')">ยอดขาย (GMV) <span class="sort-ind" id="tps-gmv"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('orders')">ออเดอร์ <span class="sort-ind" id="tps-orders"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('roi')">ROI <span class="mkt-info" onclick="event.stopPropagation();alert('ยอดขาย ÷ ค่าแอด — ตัวเลขจาก TikTok ตรงๆ')">!</span> <span class="sort-ind" id="tps-roi"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('cpo')">ต้นทุนต่อออเดอร์ <span class="sort-ind" id="tps-cpo"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('share')">สัดส่วนค่าแอด <span class="sort-ind" id="tps-share"></span></th>
+            </tr></thead>
+            <tbody id="tbodyTtProduct"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
           <div class="section-title">ค่าแอด TikTok — สัดส่วนตาม Objective และรายวัน</div>
@@ -1821,21 +1854,24 @@
             <thead><tr>
               <th class="sortable-th" onclick="mktRoiSort('name')">สินค้า <span class="sort-ind" id="mrs-name"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('revenue')">ยอดขาย <span class="sort-ind" id="mrs-revenue"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('qty')">จำนวนชิ้น <span class="sort-ind" id="mrs-qty"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('free_qty')">รีวิวฟรี <span class="mkt-info" onclick="event.stopPropagation();alert('จำนวนชิ้นที่ส่งฟรีเพื่อรีวิว/เป็นตัวอย่าง — ไม่นับเป็นยอดขาย')">!</span> <span class="sort-ind" id="mrs-free_qty"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('kol_conversion')">ค่ารีวิว KOL<br><span style="font-size:9.5px;color:var(--text3);font-weight:400;">Conversion</span> <span class="sort-ind" id="mrs-kol_conversion"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('kol_pr')">ค่ารีวิว KOL<br><span style="font-size:9.5px;color:var(--text3);font-weight:400;">PR</span> <span class="sort-ind" id="mrs-kol_pr"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('other_direct')">ตลาดตรงอื่น<br><span style="font-size:9.5px;color:var(--text3);font-weight:400;">ออกกอง/ไลฟ์/โปร</span> <span class="sort-ind" id="mrs-other_direct"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('ads_allocated')">ค่าแอด (ปันส่วน) <span class="sort-ind" id="mrs-ads_allocated"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('other_direct')">ค่าการตลาดอื่นๆ<br><span style="font-size:9.5px;color:var(--text3);font-weight:400;">ออกกอง/ไลฟ์/โปร</span> <span class="sort-ind" id="mrs-other_direct"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('ads_direct')">ค่าแอด (ตรง) <span class="mkt-info" onclick="event.stopPropagation();alert('ค่าแอดที่ยิงสินค้านี้โดยตรง = TikTok GMV Max แบบยิงสินค้า + Shopee โฆษณาสินค้า (1 แคมเปญ = 1 สินค้า)\n\nใช้ตัดสินใจรายสินค้าได้ เพราะถ้าหยุดสินค้านี้ ค่าแอดก้อนนี้หายตามจริง')">!</span> <span class="sort-ind" id="mrs-ads_direct"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('ads_allocated')">ค่าแอด (ปันส่วน) <span class="mkt-info" onclick="event.stopPropagation();alert('ค่าแอดที่ยิงทีเดียวได้หลายสินค้า — แอดเพจ Facebook, TikTok ไลฟ์/awareness, Shopee Shop GMV Max, Brand/Live\n\nวิธีหาร: เอาค่าแอดของช่องทางนั้นในเดือนนั้น หารตามสัดส่วนยอดขายของสินค้าในช่องทางเดียวกัน (ไลฟ์ TikTok หารตามยอดขายจากไลฟ์)\n\nใช้ดูภาพรวมได้ แต่ห้ามใช้ตัดสินหยุดสินค้าตัวเดียว เพราะหยุดไปค่าแอดเพจก็ไม่ได้หายตาม')">!</span> <span class="sort-ind" id="mrs-ads_allocated"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('mkt_total')">ค่าการตลาดรวม <span class="sort-ind" id="mrs-mkt_total"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('mer')">MER <span class="sort-ind" id="mrs-mer"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('mkt_pct')">% ตลาดต่อยอด <span class="sort-ind" id="mrs-mkt_pct"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('mkt_pct')">% Budget <span class="mkt-info" onclick="event.stopPropagation();alert('ค่าการตลาดรวม ÷ ยอดขาย — จ่ายค่าการตลาดคิดเป็นกี่ % ของยอดขาย')">!</span> <span class="sort-ind" id="mrs-mkt_pct"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('mer')">ROI <span class="mkt-info" onclick="event.stopPropagation();alert('ยอดขาย ÷ ค่าการตลาดรวม — ลงการตลาด 1 บาท ได้ยอดขายกี่บาท (เดิมเรียก MER ตัวเดียวกัน)')">!</span> <span class="sort-ind" id="mrs-mer"></span></th>
             </tr></thead>
             <tbody id="tbodyMktRoi"></tbody>
           </table>
         </div>
         <div style="font-size:10.5px;color:var(--text3);padding:10px 14px;line-height:1.7;">
-          <b>MER</b> = ยอดขาย ÷ ค่าการตลาดรวม (ลงตลาด 1 บาท ได้ยอดขายกี่บาท) · <b>% ตลาดต่อยอด</b> = ค่าการตลาดรวม ÷ ยอดขาย<br>
+          <b>ROI</b> = ยอดขาย ÷ ค่าการตลาดรวม (ลงตลาด 1 บาท ได้ยอดขายกี่บาท) · <b>% Budget</b> = ค่าการตลาดรวม ÷ ยอดขาย · กดปุ่ม <b>!</b> ที่หัวคอลัมน์เพื่อดูคำอธิบาย<br>
           <b>ค่าตลาดตรง</b> = ค่าใช้จ่ายรายสินค้าจากบัญชี (ค่ารีวิว KOL แยก Conversion/PR · ออกกอง · ไลฟ์ · ส่งเสริมการขาย) — ตัดหมวดที่ไม่ใช่การตลาดออกแล้ว เช่น ซื้อสินค้าเข้า<br>
-          <b>ค่าแอด (ปันส่วน)</b> = ค่าแอด Facebook / TikTok / Shopee / Modern Trade ของเดือนนั้น หารตามสัดส่วนยอดขายของสินค้าในช่องทางนั้น (Lazada ไม่นับค่าแอด) · ใช้ดูภาพรวม ไม่ควรใช้ตัดสินสินค้าตัวเดียวเพราะหยุดสินค้านี้ค่าแอดเพจก็ไม่ได้หายไป
+          <b>ค่าแอด</b> แยกเป็น <b>ตรง</b> (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับ <b>ปันส่วน</b> (แอดเพจ/ไลฟ์/awareness/Shop GMV Max) · รวมกันเท่ากับค่าแอดจริงของเดือนนั้นเสมอ · Lazada ไม่นับค่าแอด (กำลังเลิกยิง)
         </div>
       </div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
@@ -2590,7 +2626,7 @@ function renderCurrentPage() {
   else if (currentPage === 'tthub') renderTtHub();
   else if (currentPage === 'ttcontent') loadTtContentPage();
   else if (currentPage === 'ttkeyword') loadTtKeywordPage();
-  else if (currentPage === 'ttads') renderTta();
+  else if (currentPage === 'ttads') { renderTta(); renderTtProduct(); }
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'shads') renderShAds();
   else if (currentPage === 'lzhub') renderLzHub();
@@ -6971,6 +7007,72 @@ function sortIcon(col) {
   return _costSortDir === 'desc' ? '▼' : '▲';
 }
 
+// ===== GMV Max รายสินค้า (หน้า TikTok Ads) — v_tiktok_product_ads_daily =====
+// ตัวเลขดึงจาก TikTok ตรงๆ ต่อรหัสสินค้าต่อวัน ไม่มีการปันส่วน (คนละชุดกับหน้า MKT Tracking)
+let _ttProductRows = [], _ttProductSortCol = 'ads', _ttProductSortDir = 'desc', _ttProductRange = '';
+function ttProductSort(col) {
+  if (_ttProductSortCol === col) _ttProductSortDir = _ttProductSortDir === 'desc' ? 'asc' : 'desc';
+  else { _ttProductSortCol = col; _ttProductSortDir = col === 'name' ? 'asc' : 'desc'; }
+  renderTtProductTable();
+}
+async function renderTtProduct() {
+  const tb = document.getElementById('tbodyTtProduct'); if (!tb) return;
+  const from = document.getElementById('dateFrom')?.value, to = document.getElementById('dateTo')?.value;
+  if (!from || !to) return;
+  const key = from + '|' + to;
+  if (_ttProductRange === key && _ttProductRows.length) { renderTtProductTable(); return; }
+  try {
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const url = `${window.SUPABASE_URL}/rest/v1/v_tiktok_product_ads_daily?select=stat_date,parent_sku,product_name,ads,gross_revenue,orders&stat_date=gte.${from}&stat_date=lte.${to}&limit=20000`;
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error('v_tiktok_product_ads_daily ' + res.status);
+    const rows = await res.json();
+    const by = {};
+    rows.forEach(x => {
+      const k = x.parent_sku || '(ไม่รู้จักสินค้า)';
+      if (!by[k]) by[k] = { sku: k, name: x.product_name || k, ads: 0, gmv: 0, orders: 0 };
+      by[k].ads += +x.ads || 0; by[k].gmv += +x.gross_revenue || 0; by[k].orders += +x.orders || 0;
+    });
+    _ttProductRows = Object.values(by).map(a => ({ ...a,
+      roi: a.ads > 0 ? a.gmv / a.ads : null,
+      cpo: a.orders > 0 ? a.ads / a.orders : null }));
+    _ttProductRange = key;
+    renderTtProductTable();
+  } catch (e) {
+    tb.innerHTML = `<tr><td colspan="7" class="empty">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</td></tr>`;
+    console.warn('renderTtProduct', e.message);
+  }
+}
+function renderTtProductTable() {
+  const total = _ttProductRows.reduce((t, a) => ({ ads: t.ads + a.ads, gmv: t.gmv + a.gmv, orders: t.orders + a.orders }), { ads: 0, gmv: 0, orders: 0 });
+  const rows = [..._ttProductRows].map(a => ({ ...a, share: total.ads > 0 ? a.ads / total.ads * 100 : 0 })).sort((a, b) => {
+    const av = _ttProductSortCol === 'name' ? a.name : (a[_ttProductSortCol] ?? -Infinity);
+    const bv = _ttProductSortCol === 'name' ? b.name : (b[_ttProductSortCol] ?? -Infinity);
+    const c = typeof av === 'string' ? String(av).localeCompare(String(bv), 'th') : av - bv;
+    return _ttProductSortDir === 'asc' ? c : -c;
+  });
+  document.querySelectorAll('[id^="tps-"]').forEach(el => { el.textContent = ''; });
+  const ind = document.getElementById('tps-' + _ttProductSortCol); if (ind) ind.textContent = _ttProductSortDir === 'asc' ? '▲' : '▼';
+  document.getElementById('ttProductSummary').innerHTML =
+    `รวม ${fmt(rows.length)} สินค้า · ค่าแอด ฿${fmt(Math.round(total.ads))} · ยอดขาย ฿${fmt(Math.round(total.gmv))} · ${fmt(Math.round(total.orders))} ออเดอร์ · ROI รวม ${total.ads > 0 ? (total.gmv / total.ads).toFixed(2) + 'x' : '—'}`;
+  document.getElementById('tbodyTtProduct').innerHTML = rows.map(a => `<tr>
+      <td><b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span></td>
+      <td style="font-weight:600;">฿${fmt(Math.round(a.ads))}</td>
+      <td>฿${fmt(Math.round(a.gmv))}</td>
+      <td>${fmt(Math.round(a.orders))}</td>
+      <td style="font-weight:700;font-family:'IBM Plex Mono',monospace;">${a.roi !== null ? a.roi.toFixed(2) + 'x' : '—'}</td>
+      <td>${a.cpo !== null ? '฿' + fmt(Math.round(a.cpo)) : '—'}</td>
+      <td style="min-width:110px;">${a.share.toFixed(1)}%
+        <div style="height:4px;border-radius:2px;background:var(--border);margin-top:3px;"><div style="height:4px;border-radius:2px;width:${Math.min(100, a.share).toFixed(0)}%;background:#22c55e;"></div></div></td>
+    </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
+}
+function exportTtProduct() {
+  const head = ['สินค้า', 'SKU', 'ค่าแอด', 'ยอดขาย GMV', 'ออเดอร์', 'ROI', 'ต้นทุนต่อออเดอร์'];
+  const lines = [head.join(',')].concat(_ttProductRows.map(a => [a.name, a.sku, Math.round(a.ads), Math.round(a.gmv), Math.round(a.orders), a.roi !== null ? a.roi.toFixed(2) : '', a.cpo !== null ? Math.round(a.cpo) : ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')));
+  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tiktok-gmvmax-by-product.csv'; a.click();
+}
+
 // ===== ROI การตลาดต่อสินค้า (mv_product_marketing_monthly) =====
 let _mktRoiSpan = 1, _mktRoiRows = [], _mktRoiSortCol = 'revenue', _mktRoiSortDir = 'desc';
 function setMktRoiSpan(n) { _mktRoiSpan = n; renderMktRoi(); }
@@ -6994,24 +7096,25 @@ async function renderMktRoi() {
   document.getElementById('mktRoiBtn3').classList.toggle('btn-primary', _mktRoiSpan === 3);
   try {
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-    const url = `${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,product_name,revenue,kol_conversion,kol_pr,other_direct,ads_allocated,mkt_total&month=gte.${r.from}&month=lte.${r.to}&limit=2000`;
+    const url = `${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,product_name,revenue,qty,free_qty,kol_conversion,kol_pr,other_direct,ads_direct,ads_allocated,mkt_total&month=gte.${r.from}&month=lte.${r.to}&limit=2000`;
     const res = await fetch(url, { headers });
     if (!res.ok) throw new Error('mv_product_marketing_monthly ' + res.status);
     const rows = await res.json();
     const by = {};
     rows.forEach(x => {
       const k = x.parent_sku;
-      if (!by[k]) by[k] = { sku: k, name: x.product_name || k, revenue: 0, kol_conversion: 0, kol_pr: 0, other_direct: 0, ads_allocated: 0, mkt_total: 0 };
+      if (!by[k]) by[k] = { sku: k, name: x.product_name || k, revenue: 0, qty: 0, free_qty: 0, kol_conversion: 0, kol_pr: 0, other_direct: 0, ads_direct: 0, ads_allocated: 0, mkt_total: 0 };
       const a = by[k];
-      a.revenue += +x.revenue || 0; a.kol_conversion += +x.kol_conversion || 0; a.kol_pr += +x.kol_pr || 0;
-      a.other_direct += +x.other_direct || 0; a.ads_allocated += +x.ads_allocated || 0; a.mkt_total += +x.mkt_total || 0;
+      a.revenue += +x.revenue || 0; a.qty += +x.qty || 0; a.free_qty += +x.free_qty || 0;
+      a.kol_conversion += +x.kol_conversion || 0; a.kol_pr += +x.kol_pr || 0;
+      a.other_direct += +x.other_direct || 0; a.ads_direct += +x.ads_direct || 0; a.ads_allocated += +x.ads_allocated || 0; a.mkt_total += +x.mkt_total || 0;
     });
     _mktRoiRows = Object.values(by).map(a => ({ ...a,
       mer: a.mkt_total > 0 ? a.revenue / a.mkt_total : null,
       mkt_pct: a.revenue > 0 ? a.mkt_total / a.revenue * 100 : null }));
     renderMktRoiTable();
   } catch (e) {
-    tb.innerHTML = `<tr><td colspan="9" class="empty">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="12" class="empty">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</td></tr>`;
     console.warn('renderMktRoi', e.message);
   }
 }
@@ -7024,30 +7127,34 @@ function renderMktRoiTable() {
   });
   document.querySelectorAll('[id^="mrs-"]').forEach(el => { el.textContent = ''; });
   const ind = document.getElementById('mrs-' + _mktRoiSortCol); if (ind) ind.textContent = _mktRoiSortDir === 'asc' ? '▲' : '▼';
-  const T = rows.reduce((t, a) => ({ revenue: t.revenue + a.revenue, mkt: t.mkt + a.mkt_total, kolc: t.kolc + a.kol_conversion, kolp: t.kolp + a.kol_pr }), { revenue: 0, mkt: 0, kolc: 0, kolp: 0 });
+  const T = rows.reduce((t, a) => ({ revenue: t.revenue + a.revenue, mkt: t.mkt + a.mkt_total, kolc: t.kolc + a.kol_conversion, kolp: t.kolp + a.kol_pr,
+    dir: t.dir + a.ads_direct, alloc: t.alloc + a.ads_allocated }), { revenue: 0, mkt: 0, kolc: 0, kolp: 0, dir: 0, alloc: 0 });
   const maxPct = Math.max(...rows.map(a => a.mkt_pct || 0), 1);
   document.getElementById('mktRoiKpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(T.revenue)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดรวม</div><div class="kpi-value">฿${fmtB(T.mkt)}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmtB(T.kolc)} · KOL PR ฿${fmtB(T.kolp)}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">MER รวม</div><div class="kpi-value">${T.mkt > 0 ? (T.revenue / T.mkt).toFixed(2) + 'x' : '—'}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">% ตลาดต่อยอด</div><div class="kpi-value">${T.revenue > 0 ? (T.mkt / T.revenue * 100).toFixed(1) + '%' : '—'}</div></div>`;
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmtB(T.dir + T.alloc)}</div><div style="font-size:10.5px;color:var(--text3);">ตรง ฿${fmtB(T.dir)} · ปันส่วน ฿${fmtB(T.alloc)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ROI</div><div class="kpi-value">${T.mkt > 0 ? (T.revenue / T.mkt).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">% Budget ${T.revenue > 0 ? (T.mkt / T.revenue * 100).toFixed(1) + '%' : '—'}</div></div>`;
   const money = v => v ? '฿' + fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
   document.getElementById('tbodyMktRoi').innerHTML = rows.map(a => `<tr>
       <td><b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span></td>
       <td style="font-weight:600;">฿${fmt(Math.round(a.revenue))}</td>
+      <td>${a.qty ? fmt(Math.round(a.qty)) : '<span style="color:var(--text3);">—</span>'}</td>
+      <td>${a.free_qty ? fmt(Math.round(a.free_qty)) : '<span style="color:var(--text3);">—</span>'}</td>
       <td>${money(a.kol_conversion)}</td>
       <td>${money(a.kol_pr)}</td>
       <td>${money(a.other_direct)}</td>
+      <td>${money(a.ads_direct)}</td>
       <td>${money(a.ads_allocated)}</td>
       <td style="font-weight:600;">฿${fmt(Math.round(a.mkt_total))}</td>
-      <td style="font-weight:700;font-family:'IBM Plex Mono',monospace;">${a.mer !== null ? a.mer.toFixed(2) + 'x' : '—'}</td>
       <td style="min-width:120px;">${a.mkt_pct !== null ? `${a.mkt_pct.toFixed(1)}%
         <div style="height:4px;border-radius:2px;background:var(--border);margin-top:3px;"><div style="height:4px;border-radius:2px;width:${Math.min(100, a.mkt_pct / maxPct * 100).toFixed(0)}%;background:#60a5fa;"></div></div>` : '—'}</td>
-    </tr>`).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูลในเดือนที่เลือก</td></tr>';
+      <td style="font-weight:700;font-family:'IBM Plex Mono',monospace;">${a.mer !== null ? a.mer.toFixed(2) + 'x' : '—'}</td>
+    </tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูลในเดือนที่เลือก</td></tr>';
 }
 function exportMktRoi() {
-  const head = ['สินค้า', 'SKU', 'ยอดขาย', 'ค่ารีวิว KOL Conversion', 'ค่ารีวิว KOL PR', 'ตลาดตรงอื่น', 'ค่าแอดปันส่วน', 'ค่าการตลาดรวม', 'MER', '% ตลาดต่อยอด'];
-  const lines = [head.join(',')].concat(_mktRoiRows.map(a => [a.name, a.sku, Math.round(a.revenue), Math.round(a.kol_conversion), Math.round(a.kol_pr), Math.round(a.other_direct), Math.round(a.ads_allocated), Math.round(a.mkt_total), a.mer !== null ? a.mer.toFixed(2) : '', a.mkt_pct !== null ? a.mkt_pct.toFixed(1) : ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')));
+  const head = ['สินค้า', 'SKU', 'ยอดขาย', 'จำนวนชิ้น', 'รีวิวฟรี', 'ค่ารีวิว KOL Conversion', 'ค่ารีวิว KOL PR', 'ค่าการตลาดอื่นๆ', 'ค่าแอดตรง', 'ค่าแอดปันส่วน', 'ค่าการตลาดรวม', '% Budget', 'ROI'];
+  const lines = [head.join(',')].concat(_mktRoiRows.map(a => [a.name, a.sku, Math.round(a.revenue), Math.round(a.qty), Math.round(a.free_qty), Math.round(a.kol_conversion), Math.round(a.kol_pr), Math.round(a.other_direct), Math.round(a.ads_direct), Math.round(a.ads_allocated), Math.round(a.mkt_total), a.mkt_pct !== null ? a.mkt_pct.toFixed(1) : '', a.mer !== null ? a.mer.toFixed(2) : ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')));
   const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `mkt-roi-per-product.csv`; a.click();
 }
