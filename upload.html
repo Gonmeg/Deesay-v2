@@ -340,10 +340,8 @@
     </div>
   </div>
   <div class="promo-sync-card" style="margin-top:12px;">
-    <div class="history-title">ซิงค์ยอดขาย ตัวแทน / MT</div>
-    <div class="history-sub" id="dealerSyncLast">ยังไม่เคย sync</div>
-    <button class="btn-sync" id="btnSyncDealer" style="margin-top:10px;">🔄 Sync ตัวแทน / MT</button>
-    <div class="promo-sync-result" id="dealerSyncResult" style="margin-top:8px;"></div>
+    <div class="history-title">ยอดขาย ตัวแทน / MT — อัตโนมัติแล้ว</div>
+    <div class="history-sub">ระบบซิงค์จากชีท "ยอด" เองทุกวัน 03:45 และ 13:45 น. ไม่ต้องกดปุ่มอีก (ดูสถานะได้ที่หน้า health)</div>
   </div>
   <div class="promo-sync-card" style="margin-top:12px;border:1px solid rgba(239,68,68,0.25);">
     <div class="history-title" style="color:#f87171;">⚠️ ลบข้อมูลตามช่องทาง/เดือน</div>
@@ -740,7 +738,7 @@ async function syncDealerOrders() {
     btn.disabled = false; btn.textContent = '🔄 Sync ตัวแทน / MT'
   }
 }
-document.getElementById('btnSyncDealer').addEventListener('click', syncDealerOrders)
+document.getElementById('btnSyncDealer')?.addEventListener('click', syncDealerOrders)   // ปุ่มถูกถอดออกแล้ว — ซิงค์อัตโนมัติผ่าน Edge Function sync-dealer-orders
 
 // ===== COST UPLOAD =====
 let _costParsed = []
@@ -2173,7 +2171,7 @@ async function calcSkuRevenue(orders) {
     rows.forEach(t => {
       const rsp = rspMap[t.parent] || 0
       let allocated = 0
-      if (totalRsp > 0 && rsp > 0) allocated = order.revenue * ((rsp * byParent[t.parent]) / totalRsp) * t.rev_ratio
+      if (totalRsp !== 0 && rsp > 0) allocated = order.revenue * ((rsp * byParent[t.parent]) / totalRsp) * t.rev_ratio   // totalRsp ติดลบได้ (ออเดอร์คืนทั้งใบ)
       // ออเดอร์ที่ทุกสินค้า RSP = 0 (เช่นของแถมที่เผลอขาย) แต่มียอดขาย → แบ่งตามจำนวนชิ้น ยอด SKU จะได้ไม่หาย
       else if (totalRsp === 0 && order.revenue) { const totalQty = Object.values(byParent).reduce((a, q) => a + q, 0) || 1; allocated = order.revenue * (byParent[t.parent] / totalQty) * t.rev_ratio }
       skuRows.push({date:order.date,channel:order.channel,sub_channel:order.sub_channel,order_id:order.order_id,parent_sku:t.parent,child_sku:t.child,product_name:nameMap[t.parent]||t.parent,qty:t.qty,revenue_share:Math.round(allocated*100)/100,settled_date:order.settled_date,settled:order.settled?'True':'False'})
@@ -2258,10 +2256,10 @@ async function processDealerRows(rows, mappings) {
 // rev_ratio = สัดส่วนที่ใช้แบ่งเงินของแม่ตัวนั้นลงแต่ละสี (รวมกันได้ 1 เสมอ → ยอดรวมไม่เปลี่ยน)
 function buildChildRows(o, m) {
   const parentTokens = String(o.sku_promotion || '').split('+').map(t => t.trim())
-    .map(t => { const x = t.match(/^(.+?)x(\d+)$/i); return x ? { sku: x[1], qty: parseInt(x[2]) } : null }).filter(Boolean)
+    .map(t => { const x = t.match(/^(.+?)x(-?\d+)$/i); return x ? { sku: x[1], qty: parseInt(x[2]) } : null }).filter(Boolean)   // รับจำนวนติดลบ (ออเดอร์คืน/ตีกลับของตัวแทน-MT) — เดิมข้ามทิ้ง ทำให้ยอดราย SKU ไม่เท่ายอดขาย
   if (!parentTokens.length) return []
   const childTokens = String(o.sku_promotion_child || '').split('+').map(t => t.trim())
-    .map(t => { const x = t.match(/^(.+?)x(\d+)$/i); return x ? { sku: x[1], qty: parseInt(x[2]) } : null }).filter(Boolean)
+    .map(t => { const x = t.match(/^(.+?)x(-?\d+)$/i); return x ? { sku: x[1], qty: parseInt(x[2]) } : null }).filter(Boolean)
   if (!childTokens.length) return parentTokens.map(t => ({ parent: t.sku, child: null, qty: t.qty, rev_ratio: 1 }))
 
   const parentOf = {}
@@ -2274,8 +2272,8 @@ function buildChildRows(o, m) {
     grouped[par].push(t)
   })
   Object.entries(grouped).forEach(([par, list]) => {
-    const total = list.reduce((a, b) => a + b.qty, 0) || 1
-    list.forEach(t => out.push({ parent: par, child: t.sku, qty: t.qty, rev_ratio: t.qty / total }))
+    const total = list.reduce((a, b) => a + Math.abs(b.qty), 0) || 1
+    list.forEach(t => out.push({ parent: par, child: t.sku, qty: t.qty, rev_ratio: Math.abs(t.qty) / total }))
   })
   // แม่ที่ไม่มีสีในสตริงลูก (เช่นสินค้าไม่มีสี) ใส่กลับเข้าไปด้วย
   parentTokens.forEach(t => { if (!grouped[t.sku]) out.push({ parent: t.sku, child: null, qty: t.qty, rev_ratio: 1 }) })
