@@ -180,11 +180,13 @@ const JOB_DESC = {
 
 async function load() {
   document.getElementById('content').innerHTML = '<div class="loading">กำลังโหลด...</div>'
-  const [health, unknown, extra] = await Promise.all([
+  const [health, unknown, extra, adsHealth] = await Promise.all([
     DB.rpc('system_health'),
     DB.rpc('unknown_skus', { p_days: UNKNOWN_SKU_DAYS }),
-    DB.rpc('system_health_extra')
+    DB.rpc('system_health_extra'),
+    DB.from('v_ads_health_summary').select('*')   // (2026-09-19) ตรวจค่าแอดหายรายวัน
   ])
+  window._adsHealth = adsHealth
   if (health.error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(health.error.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 27_system_health_rpc.sql</div>`; return }
   render(health.data, unknown, extra)
 }
@@ -329,6 +331,27 @@ async function render(d, unknown, extra) {
         <td class="mono">${esc(String(r.first_date||'').slice(0,10))}</td><td class="mono">${esc(String(r.last_date||'').slice(0,10))}</td></tr>`).join('') +
       `</tbody></table></div>`
   html += `</div>`
+
+  // --- ตรวจค่าแอดหายรายวัน (35 วันล่าสุด) — กันเคสแบบ LIVE GMV Max ที่หายเงียบ ม.ค.–ส.ค. 69 ---
+  const ah = window._adsHealth
+  const ahRows = (ah && !ah.error && Array.isArray(ah.data)) ? ah.data : []
+  const ahBad = ahRows.filter(r => (r.bad_days || 0) > 0)
+  html += `<div class="card"><div class="card-head"><h2>💸 ค่าแอดครบทุกวันไหม <span style="font-weight:400;color:#8b93a7;font-size:13px;">(35 วันล่าสุด)</span></h2></div>`
+  if (ah && ah.error) html += `<div class="banner bad">อ่าน v_ads_health_summary ไม่ได้: ${esc(ah.error.message)}</div>`
+  else if (!ahRows.length) html += `<div class="banner">ยังไม่มีข้อมูลตรวจค่าแอด</div>`
+  else {
+    if (ahBad.length) html += `<div class="banner bad">มีวันที่ค่าแอดหาย: ${ahBad.map(r => `${esc(r.source)} ${r.bad_days} วัน (ล่าสุด ${esc(r.latest_bad_day || '-')})`).join(' · ')}</div>`
+    else html += `<div class="banner ok">ครบทุกแหล่ง ไม่มีวันไหนขาด</div>`
+    html += `<div class="tbl-wrap"><table><thead><tr><th>แหล่งค่าแอด</th><th>วันที่ขาด</th><th>วันล่าสุดที่ขาด</th><th>ยอด 35 วัน</th></tr></thead><tbody>` +
+      ahRows.slice().sort((a, b) => (b.bad_days || 0) - (a.bad_days || 0) || String(a.source).localeCompare(String(b.source)))
+        .map(r => `<tr><td><b>${esc(r.source)}</b></td>` +
+          `<td style="color:${(r.bad_days || 0) > 0 ? '#f87171' : '#4ade80'};font-weight:600;">${r.bad_days || 0}</td>` +
+          `<td style="font-size:11.5px;">${esc(r.latest_bad_day || '—')}</td>` +
+          `<td>฿${Number(r.total_35d || 0).toLocaleString()}</td></tr>`).join('') +
+      `</tbody></table></div>`
+  }
+  html += `<div style="font-size:11px;color:#8b93a7;margin-top:8px;">ถ้าแถวไหนขึ้นวันที่ขาด: TikTok LIVE/GMV Max → cron tiktok-gmv-max-* · Facebook → meta-ads-sync · Shopee Brand/Live/Meta → สั่ง Cowork "รัน shopee ads offapi" (ตามเก็บย้อนหลัง 14 วันให้เอง)</div></div>`
+
 
   // --- แหล่งข้อมูลของแต่ละหน้า (คงที่ — แก้ตรงนี้เมื่อเปลี่ยนแหล่ง) ---
   const PAGE_SOURCES = [
