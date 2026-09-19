@@ -1280,29 +1280,6 @@
     <div class="page" id="page-ttads">
       <div id="tta-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
-      <!-- (2026-09-19) GMV Max รายสินค้า — ตัวเลขจาก TikTok ตรงๆ ไม่มีการปันส่วนใดๆ -->
-      <div class="card" id="ttProductCard" style="margin-bottom:20px;overflow:hidden;">
-        <div class="section-header">
-          <div class="section-title">GMV Max รายสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เฉพาะแคมเปญแบบยิงสินค้า — ไม่รวมไลฟ์และแอด awareness)</span></div>
-          <button class="btn btn-ghost" onclick="exportTtProduct()">⬇ Export CSV</button>
-        </div>
-        <div id="ttProductSummary" style="font-size:11px;color:var(--text3);padding:0 14px 10px;"></div>
-        <div style="overflow-x:auto;">
-          <table id="tblTtProduct">
-            <thead><tr>
-              <th class="sortable-th" onclick="ttProductSort('name')">สินค้า <span class="sort-ind" id="tps-name"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('ads')">ค่าแอด <span class="sort-ind" id="tps-ads"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('gmv')">ยอดขาย (GMV) <span class="sort-ind" id="tps-gmv"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('orders')">ออเดอร์ <span class="sort-ind" id="tps-orders"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('roi')">ROI <span class="mkt-info" onclick="event.stopPropagation();alert('ยอดขาย ÷ ค่าแอด — ตัวเลขจาก TikTok ตรงๆ')">!</span> <span class="sort-ind" id="tps-roi"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('cpo')">ต้นทุนต่อออเดอร์ <span class="sort-ind" id="tps-cpo"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('share')">สัดส่วนค่าแอด <span class="sort-ind" id="tps-share"></span></th>
-            </tr></thead>
-            <tbody id="tbodyTtProduct"></tbody>
-          </table>
-        </div>
-      </div>
-
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
           <div class="section-title">ค่าแอด TikTok — สัดส่วนตาม Objective และรายวัน</div>
@@ -1385,6 +1362,39 @@
         </table>
       </div>
       <div id="ttaTablePager"></div>
+      </div>
+
+      <!-- (2026-09-19) GMV Max รายสินค้า — ตัวเลขจาก TikTok ตรงๆ ไม่มีการปันส่วน · อยู่ล่างสุดของหน้า -->
+      <div class="card" id="ttProductCard" style="margin-bottom:20px;overflow:hidden;">
+        <div class="section-header">
+          <div class="section-title">GMV Max รายสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เฉพาะแคมเปญแบบยิงสินค้า — ไม่รวมไลฟ์และแอด awareness)</span></div>
+          <button class="btn btn-ghost" onclick="exportTtProduct()">⬇ Export CSV</button>
+        </div>
+        <div id="ttProductSummary" style="font-size:11px;color:var(--text3);padding:0 2px 10px;"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+          <div style="font-size:12px;color:var(--text2);font-weight:600;">แนวโน้มค่าแอดรายสินค้า</div>
+          <div class="ads-info-wrap" style="position:relative;display:inline-block;">
+            <button class="btn btn-ghost" onclick="event.stopPropagation();toggleTip('ttProductPicker')">เลือกสินค้า <span id="ttProductPickerCount" style="color:var(--text3);"></span> ▾</button>
+            <div id="ttProductPicker" class="ads-info-popover" style="display:none;position:absolute;top:32px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px;width:280px;max-height:320px;overflow-y:auto;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);"></div>
+          </div>
+        </div>
+        <div class="chart-wrap chart-wrap-lg" style="margin-bottom:14px;"><canvas id="chartTtProduct"></canvas></div>
+
+        <div style="overflow-x:auto;">
+          <table id="tblTtProduct">
+            <thead><tr>
+              <th class="sortable-th" onclick="ttProductSort('name')">สินค้า <span class="sort-ind" id="tps-name"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('ads')">ค่าแอด <span class="sort-ind" id="tps-ads"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('gmv')">ยอดขาย (GMV) <span class="sort-ind" id="tps-gmv"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('orders')">ออเดอร์ <span class="sort-ind" id="tps-orders"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('roi')">ROI <span class="sort-ind" id="tps-roi"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('cpo')">ต้นทุนต่อออเดอร์ <span class="sort-ind" id="tps-cpo"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('share')">สัดส่วนค่าแอด <span class="sort-ind" id="tps-share"></span></th>
+            </tr></thead>
+            <tbody id="tbodyTtProduct"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1855,15 +1865,15 @@
               <th class="sortable-th" onclick="mktRoiSort('name')">สินค้า <span class="sort-ind" id="mrs-name"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('revenue')">ยอดขาย <span class="sort-ind" id="mrs-revenue"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('qty')">จำนวนชิ้น <span class="sort-ind" id="mrs-qty"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('free_qty')">รีวิวฟรี <span class="mkt-info" onclick="event.stopPropagation();alert('จำนวนชิ้นที่ส่งฟรีเพื่อรีวิว/เป็นตัวอย่าง — ไม่นับเป็นยอดขาย')">!</span> <span class="sort-ind" id="mrs-free_qty"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('free_qty')">รีวิวฟรี <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="event.stopPropagation();toggleTip('tip-mkt-2')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tip-mkt-2" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">จำนวนชิ้นที่ส่งฟรีเพื่อรีวิว/เป็นตัวอย่าง — ไม่นับเป็นยอดขาย</div></span> <span class="sort-ind" id="mrs-free_qty"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('kol_conversion')">ค่ารีวิว KOL<br><span style="font-size:9.5px;color:var(--text3);font-weight:400;">Conversion</span> <span class="sort-ind" id="mrs-kol_conversion"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('kol_pr')">ค่ารีวิว KOL<br><span style="font-size:9.5px;color:var(--text3);font-weight:400;">PR</span> <span class="sort-ind" id="mrs-kol_pr"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('other_direct')">ค่าการตลาดอื่นๆ<br><span style="font-size:9.5px;color:var(--text3);font-weight:400;">ออกกอง/ไลฟ์/โปร</span> <span class="sort-ind" id="mrs-other_direct"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('ads_direct')">ค่าแอด (ตรง) <span class="mkt-info" onclick="event.stopPropagation();alert('ค่าแอดที่ยิงสินค้านี้โดยตรง = TikTok GMV Max แบบยิงสินค้า + Shopee โฆษณาสินค้า (1 แคมเปญ = 1 สินค้า)\n\nใช้ตัดสินใจรายสินค้าได้ เพราะถ้าหยุดสินค้านี้ ค่าแอดก้อนนี้หายตามจริง')">!</span> <span class="sort-ind" id="mrs-ads_direct"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('ads_allocated')">ค่าแอด (ปันส่วน) <span class="mkt-info" onclick="event.stopPropagation();alert('ค่าแอดที่ยิงทีเดียวได้หลายสินค้า — แอดเพจ Facebook, TikTok ไลฟ์/awareness, Shopee Shop GMV Max, Brand/Live\n\nวิธีหาร: เอาค่าแอดของช่องทางนั้นในเดือนนั้น หารตามสัดส่วนยอดขายของสินค้าในช่องทางเดียวกัน (ไลฟ์ TikTok หารตามยอดขายจากไลฟ์)\n\nใช้ดูภาพรวมได้ แต่ห้ามใช้ตัดสินหยุดสินค้าตัวเดียว เพราะหยุดไปค่าแอดเพจก็ไม่ได้หายตาม')">!</span> <span class="sort-ind" id="mrs-ads_allocated"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('ads_direct')">ค่าแอด (ตรง) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="event.stopPropagation();toggleTip('tip-mkt-3')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tip-mkt-3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ค่าแอดที่ยิงสินค้านี้โดยตรง = TikTok GMV Max แบบยิงสินค้า + Shopee โฆษณาสินค้า (1 แคมเปญ = 1 สินค้า)<br><br>ใช้ตัดสินใจรายสินค้าได้ เพราะถ้าหยุดสินค้านี้ ค่าแอดก้อนนี้หายตามจริง</div></span> <span class="sort-ind" id="mrs-ads_direct"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('ads_allocated')">ค่าแอด (ปันส่วน) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="event.stopPropagation();toggleTip('tip-mkt-4')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tip-mkt-4" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ค่าแอดที่ยิงทีเดียวได้หลายสินค้า — แอดเพจ Facebook, TikTok ไลฟ์/awareness, Shopee Shop GMV Max, Brand/Live<br><br>วิธีหาร: เอาค่าแอดของช่องทางนั้นในเดือนนั้น หารตามสัดส่วนยอดขายของสินค้าในช่องทางเดียวกัน (ไลฟ์ TikTok หารตามยอดขายจากไลฟ์)<br><br>ใช้ดูภาพรวมได้ แต่ห้ามใช้ตัดสินหยุดสินค้าตัวเดียว เพราะหยุดไปค่าแอดเพจก็ไม่ได้หายตาม</div></span> <span class="sort-ind" id="mrs-ads_allocated"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('mkt_total')">ค่าการตลาดรวม <span class="sort-ind" id="mrs-mkt_total"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('mkt_pct')">% Budget <span class="mkt-info" onclick="event.stopPropagation();alert('ค่าการตลาดรวม ÷ ยอดขาย — จ่ายค่าการตลาดคิดเป็นกี่ % ของยอดขาย')">!</span> <span class="sort-ind" id="mrs-mkt_pct"></span></th>
-              <th class="sortable-th" onclick="mktRoiSort('mer')">ROI <span class="mkt-info" onclick="event.stopPropagation();alert('ยอดขาย ÷ ค่าการตลาดรวม — ลงการตลาด 1 บาท ได้ยอดขายกี่บาท (เดิมเรียก MER ตัวเดียวกัน)')">!</span> <span class="sort-ind" id="mrs-mer"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('mkt_pct')">% Budget <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="event.stopPropagation();toggleTip('tip-mkt-5')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tip-mkt-5" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ค่าการตลาดรวม ÷ ยอดขาย — จ่ายค่าการตลาดคิดเป็นกี่ % ของยอดขาย</div></span> <span class="sort-ind" id="mrs-mkt_pct"></span></th>
+              <th class="sortable-th" onclick="mktRoiSort('mer')">ROI <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="event.stopPropagation();toggleTip('tip-mkt-6')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tip-mkt-6" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ยอดขาย ÷ ค่าการตลาดรวม — ลงการตลาด 1 บาท ได้ยอดขายกี่บาท (เดิมเรียก MER ตัวเดียวกัน)</div></span> <span class="sort-ind" id="mrs-mer"></span></th>
             </tr></thead>
             <tbody id="tbodyMktRoi"></tbody>
           </table>
@@ -6184,6 +6194,12 @@ const ADS_SOURCE_INFO = {
   mt: 'ค่าโฆษณา Modern Trade (Awareness) ดึงจาก Meta API บัญชี "Deesay Modern Trade"\n• แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง',
 };
 
+function toggleTip(id) {
+  const el = document.getElementById(id); if (!el) return;
+  const open = el.style.display === 'block';
+  document.querySelectorAll('.ads-info-popover').forEach(p => p.style.display = 'none');
+  el.style.display = open ? 'none' : 'block';
+}
 function toggleAdsPopover(hub, popoverId) {
   const el = document.getElementById(popoverId || (hub + 'hub-ads-popover'));
   if (!el) return;
@@ -7007,9 +7023,13 @@ function sortIcon(col) {
   return _costSortDir === 'desc' ? '▼' : '▲';
 }
 
-// ===== GMV Max รายสินค้า (หน้า TikTok Ads) — v_tiktok_product_ads_daily =====
-// ตัวเลขดึงจาก TikTok ตรงๆ ต่อรหัสสินค้าต่อวัน ไม่มีการปันส่วน (คนละชุดกับหน้า MKT Tracking)
-let _ttProductRows = [], _ttProductSortCol = 'ads', _ttProductSortDir = 'desc', _ttProductRange = '';
+// ===== GMV Max รายสินค้า (หน้า TikTok Ads) — RPC tta_product_rollup =====
+// ตัวเลขจาก TikTok ตรงๆ ต่อรหัสสินค้า ไม่มีการปันส่วน (คนละชุดกับหน้า MKT Tracking)
+// ใช้ RPC สรุปฝั่งฐานข้อมูล ส่งกลับ ~7KB แทนแถวดิบเกือบหมื่นแถว → หน้าโหลดเร็ว
+let _ttProductRows = [], _ttProductSeries = {}, _ttProductLabels = [], _ttProductGrain = 'month';
+let _ttProductSortCol = 'ads', _ttProductSortDir = 'desc', _ttProductRange = '', _ttProductPicked = null;
+const TTP_COLORS = ['#60a5fa', '#f472b6', '#4ade80', '#fbbf24', '#a78bfa', '#38bdf8', '#fb923c', '#34d399', '#f87171', '#c084fc'];
+
 function ttProductSort(col) {
   if (_ttProductSortCol === col) _ttProductSortDir = _ttProductSortDir === 'desc' ? 'asc' : 'desc';
   else { _ttProductSortCol = col; _ttProductSortDir = col === 'name' ? 'asc' : 'desc'; }
@@ -7021,31 +7041,80 @@ async function renderTtProduct() {
   if (!from || !to) return;
   const key = from + '|' + to;
   if (_ttProductRange === key && _ttProductRows.length) { renderTtProductTable(); return; }
+  tb.innerHTML = '<tr><td colspan="7" class="empty">กำลังโหลด...</td></tr>';
   try {
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-    const url = `${window.SUPABASE_URL}/rest/v1/v_tiktok_product_ads_daily?select=stat_date,parent_sku,product_name,ads,gross_revenue,orders&stat_date=gte.${from}&stat_date=lte.${to}&limit=20000`;
-    const res = await fetch(url, { headers });
-    if (!res.ok) throw new Error('v_tiktok_product_ads_daily ' + res.status);
-    const rows = await res.json();
-    const by = {};
-    rows.forEach(x => {
-      const k = x.parent_sku || '(ไม่รู้จักสินค้า)';
-      if (!by[k]) by[k] = { sku: k, name: x.product_name || k, ads: 0, gmv: 0, orders: 0 };
-      by[k].ads += +x.ads || 0; by[k].gmv += +x.gross_revenue || 0; by[k].orders += +x.orders || 0;
-    });
-    _ttProductRows = Object.values(by).map(a => ({ ...a,
-      roi: a.ads > 0 ? a.gmv / a.ads : null,
-      cpo: a.orders > 0 ? a.ads / a.orders : null }));
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/tta_product_rollup`, {
+      method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) });
+    if (!res.ok) throw new Error('tta_product_rollup ' + res.status);
+    const d = await res.json();
+    _ttProductGrain = d.grain || 'month';
+    _ttProductLabels = d.labels || [];
+    _ttProductSeries = d.series || {};
+    _ttProductRows = (d.products || []).map(a => ({
+      sku: a[0], name: a[1], ads: +a[2] || 0, gmv: +a[3] || 0, orders: +a[4] || 0,
+      roi: (+a[2] > 0) ? (+a[3] / +a[2]) : null, cpo: (+a[4] > 0) ? (+a[2] / +a[4]) : null }));
     _ttProductRange = key;
+    _ttProductPicked = null;                 // ช่วงใหม่ → กลับไปใช้ค่าเริ่มต้น 5 อันดับแรก
     renderTtProductTable();
+    renderTtProductChart();
   } catch (e) {
     tb.innerHTML = `<tr><td colspan="7" class="empty">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</td></tr>`;
     console.warn('renderTtProduct', e.message);
   }
 }
+function ttProductPickedList() {
+  if (_ttProductPicked) return _ttProductPicked;
+  return _ttProductRows.slice(0, 5).map(a => a.sku);   // ค่าเริ่มต้น: 5 สินค้าที่ใช้ค่าแอดมากสุด
+}
+function ttProductTogglePick(sku) {
+  const cur = new Set(ttProductPickedList());
+  if (cur.has(sku)) cur.delete(sku); else cur.add(sku);
+  _ttProductPicked = [..._ttProductRows.map(a => a.sku)].filter(x => cur.has(x));
+  renderTtProductPicker(); renderTtProductChart();
+}
+function ttProductPickTop(n) {
+  _ttProductPicked = _ttProductRows.slice(0, n).map(a => a.sku);
+  renderTtProductPicker(); renderTtProductChart();
+}
+function renderTtProductPicker() {
+  const box = document.getElementById('ttProductPicker'); if (!box) return;
+  const picked = new Set(ttProductPickedList());
+  document.getElementById('ttProductPickerCount').textContent = `(${picked.size})`;
+  box.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="event.stopPropagation();ttProductPickTop(5)">5 อันดับแรก</button>
+      <button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="event.stopPropagation();ttProductPickTop(10)">10 อันดับแรก</button>
+    </div>` +
+    _ttProductRows.map(a => `<label style="display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:6px;cursor:pointer;font-size:11.5px;" onmouseover="this.style.background='rgba(96,165,250,0.08)'" onmouseout="this.style.background='none'">
+        <input type="checkbox" ${picked.has(a.sku) ? 'checked' : ''} onclick="event.stopPropagation();ttProductTogglePick('${ttcEscAttr(a.sku)}')" style="cursor:pointer;">
+        <span style="flex:1;">${ttcEsc(a.name)}</span>
+        <span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:10px;">฿${fmtB(a.ads)}</span>
+      </label>`).join('');
+}
+function renderTtProductChart() {
+  const cv = document.getElementById('chartTtProduct'); if (!cv) return;
+  renderTtProductPicker();
+  const picked = ttProductPickedList();
+  const labels = _ttProductLabels.map(d => _ttProductGrain === 'day'
+    ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+    : new Date(d).toLocaleDateString('th-TH', { month: 'short', year: '2-digit' }));
+  const datasets = picked.map((sku, i) => {
+    const row = _ttProductRows.find(a => a.sku === sku);
+    const map = Object.fromEntries((_ttProductSeries[sku] || []).map(x => [x[0], +x[1] || 0]));
+    const color = TTP_COLORS[i % TTP_COLORS.length];
+    return { label: row ? row.name : sku, data: _ttProductLabels.map(d => map[d] || 0),
+      borderColor: color, backgroundColor: color + '22', borderWidth: 2, pointRadius: _ttProductGrain === 'day' ? 0 : 3,
+      pointHoverRadius: 4, tension: 0.35, fill: false };
+  });
+  // ใช้ helper กลางของเว็บ ให้หน้าตาเหมือนกราฟอื่นทุกหน้า
+  makeChart('chartTtProduct', 'line', labels, datasets, {
+    legend: { position: 'bottom' },
+    tooltip: { callbacks: { label: c => `${c.dataset.label}: ฿${fmt(Math.round(c.parsed.y))}` } }
+  });
+}
 function renderTtProductTable() {
   const total = _ttProductRows.reduce((t, a) => ({ ads: t.ads + a.ads, gmv: t.gmv + a.gmv, orders: t.orders + a.orders }), { ads: 0, gmv: 0, orders: 0 });
-  const rows = [..._ttProductRows].map(a => ({ ...a, share: total.ads > 0 ? a.ads / total.ads * 100 : 0 })).sort((a, b) => {
+  const rows = _ttProductRows.map(a => ({ ...a, share: total.ads > 0 ? a.ads / total.ads * 100 : 0 })).sort((a, b) => {
     const av = _ttProductSortCol === 'name' ? a.name : (a[_ttProductSortCol] ?? -Infinity);
     const bv = _ttProductSortCol === 'name' ? b.name : (b[_ttProductSortCol] ?? -Infinity);
     const c = typeof av === 'string' ? String(av).localeCompare(String(bv), 'th') : av - bv;
