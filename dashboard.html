@@ -3757,7 +3757,7 @@ function rpcClipToObj(r) {
   const days = Number(r.days) || 1, fd = Number(r.funnel_days) || 0, ed = Number(r.engagement_days) || 0;
   const spend = +r.spend || 0, orders = +r.orders || 0, pv = +r.gross_revenue || 0, impr = +r.impressions || 0, clk = +r.clicks || 0;
   const handle = r.handle || '(ไม่ทราบชื่อ)';
-  return { item_id: r.item_id, handle, isDeesay: KNOWN_DEESAY_HANDLES.includes(normalizeHandle(handle)), campaign: r.campaign_name, objective: r.objective || null,
+  return { item_id: r.item_id, clipCount: +r.clip_count || 1, handle, isDeesay: KNOWN_DEESAY_HANDLES.includes(normalizeHandle(handle)), campaign: r.campaign_name, objective: r.objective || null,
     caption: r.title || '(ไม่มีชื่อ)', thumbnail: (TTA_THUMBS && TTA_THUMBS[String(r.item_id)]) ? TTA_THUMBS[String(r.item_id)].thumb : null, spend, orders, purchaseValue: pv, impressions: impr, clicks: clk, convs: 0,
     ctr: impr ? clk / impr * 100 : 0, cpo: orders ? spend / orders : null, roas: spend ? pv / spend : null,
     likes: +r.likes || 0, paidcomments: +r.comments || 0, paidshares: +r.shares || 0, follows: +r.follows || 0, profileVisits: +r.profile_visits || 0,
@@ -8388,9 +8388,16 @@ async function loadTtaThumbs() {
   } catch {}
 }
 // ผลจาก RPC tta_clip_rollup → ttaByClip (รูปเดียวกับ rpcClipToObj) + แถว funnel ต่อ objective (ให้ renderTtaFunnel ใช้ได้เหมือนเดิม)
+// จำนวนคลิปจริง (แถว "รวมคลิปย่อย" 1 แถว = หลายคลิป จึงนับตาม clipCount ไม่ใช่จำนวนแถว)
+function ttaClipTotal(deesayOnly) {
+  return ttaByClip.reduce((n, c) => (deesayOnly && !c.isDeesay) ? n : n + (c.clipCount || 1), 0);
+}
 function applyTtaRollup(rollup) {
   const cols = rollup.cols;
   ttaByClip = rollup.clips.map(a => { const r = {}; cols.forEach((k, i) => { r[k] = a[i]; }); return rpcClipToObj(r); });
+  // (2026-09-20) แถว "รวมคลิปย่อย" 1 แถวแทนหลายคลิป → เก็บจำนวนคลิปจริงไว้นับใน KPI
+  window._ttaTotalClips = +rollup.total_clips || ttaByClip.reduce((n, c) => n + (c.clipCount || 1), 0);
+  window._ttaMinSpend = +rollup.min_spend || 0;
   ttaRawRows = (rollup.funnel || []).map(f => ({ objective: f.objective || null, cost: +f.spend || 0, spend: 0 }));
 }
 function buildTtaByClip(ttaRaw) {
@@ -8499,7 +8506,7 @@ async function renderTta() {
   const roasTip = 'ยอดขายจริงทั้งระบบ ÷ ค่าแอดจริงทั้งระบบ (ไม่ใช่แค่ที่แจกแจงลงคลิปได้)';
   const cpoTip = 'ค่าแอดจริงทั้งระบบ ÷ จำนวนออเดอร์จริงทั้งระบบ';
   document.getElementById('tta-kpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${ttaByClip.length}</div><div class="kpi-sub"><span style="color:var(--blue);">${deesayCount} Deesay</span> / <span style="color:#a78bfa;">${ttaByClip.length-deesayCount} affi-KOL</span></div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${fmt(ttaClipTotal())}</div><div class="kpi-sub"><span style="color:var(--blue);">${fmt(ttaClipTotal(true))} Deesay</span> / <span style="color:#a78bfa;">${fmt(ttaClipTotal() - ttaClipTotal(true))} affi-KOL</span></div></div>
     <div class="card" style="flex:1;min-width:160px;position:relative;"><div class="card-title">ค่าแอดรวม (ยอดจริงทั้งระบบ) ${fbeInfoIcon('tta-kpi-spend', spendTip)}</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ยอดขาย TikTok Shop ${fbeInfoIcon('tta-kpi-rev', revTip)}</div><div class="kpi-value" style="color:var(--green);">฿${fmt(totalPurchaseValue)}</div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ROAS รวม ${fbeInfoIcon('tta-kpi-roas', roasTip)}</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
