@@ -253,6 +253,35 @@
   #tab-products td { padding: 8px 12px; }
   #tab-products tbody tr:hover { background: var(--surface2); }
   @media (max-width: 1200px) { #kpiGrid { grid-template-columns: repeat(3, 1fr) !important; } }
+  /* (2026-09-21) รหัสสี/เบอร์: ชิปอ่านอย่างเดียว + หน้าต่างจัดการ */
+  .kid.ro { cursor: pointer; padding: 2px 8px; }
+  .kid.more { background: var(--surface2); color: var(--muted); padding: 2px 8px; cursor: pointer; }
+  .kid-manage { font-size: 0.7rem; color: var(--muted); background: none; border: 1px solid var(--border2); padding: 2px 9px; border-radius: 99px; cursor: pointer; font-family: inherit; }
+  .kid-manage:hover { color: var(--accent2); border-color: var(--accent); }
+  .km-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .km-overlay.on { display: flex; }
+  .km-box { width: min(460px, 92vw); background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.35); padding: 20px 22px; }
+  .km-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .km-label { font-size: 0.7rem; color: var(--muted2); letter-spacing: .5px; }
+  .km-title { font-size: 1rem; font-weight: 600; margin-top: 2px; }
+  .km-x { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+  .km-x:hover { background: var(--surface2); color: var(--text); }
+  .km-list { display: flex; flex-direction: column; gap: 6px; max-height: 46vh; overflow-y: auto; margin-bottom: 14px; }
+  .km-row { display: flex; align-items: center; gap: 6px; }
+  .km-code { flex: 1; font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600; color: var(--accent2);
+    background: var(--surface2); border: 1px solid transparent; border-radius: 8px; padding: 8px 10px; outline: none; }
+  .km-code:focus { border-color: var(--accent); background: var(--bg); }
+  .km-btn { font-family: inherit; font-size: 0.72rem; padding: 7px 11px; border-radius: 7px; cursor: pointer; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+  .km-btn.save:hover { color: var(--success); border-color: var(--success); }
+  .km-btn.del:hover { color: var(--danger); border-color: var(--danger); }
+  .km-empty, .km-note { font-size: 0.78rem; color: var(--muted); padding: 6px 2px; }
+  .km-addbar { display: flex; gap: 8px; }
+  .km-addbar input { flex: 1; font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; background: var(--surface2); border: 1px solid var(--border2); color: var(--text);
+    border-radius: 8px; padding: 9px 11px; outline: none; }
+  .km-addbar input:focus { border-color: var(--accent); }
+  .km-hint { font-size: 0.7rem; color: var(--muted2); margin-top: 8px; }
+  body.light-theme .km-overlay { background: rgba(20,20,40,.25); }
+  body.light-theme .side { background: #ffffff; }
 </style>
 </head>
 <body>
@@ -281,6 +310,7 @@
   <a class="side-item" href="index.html"><span class="ico">🏠</span>หน้าแรก</a>
 
   <div class="side-foot">
+    <button class="btn-ghost" id="themeBtnSide">☀️ โหมดสว่าง</button>
     <button class="btn-ghost" id="logoutBtnSide">ออกจากระบบ</button>
   </div>
 </aside>
@@ -443,6 +473,21 @@
 </main>
 
 <div class="toast" id="toast"></div>
+
+<div class="km-overlay" id="kidModal">
+  <div class="km-box" role="dialog" aria-modal="true">
+    <div class="km-head">
+      <div><div class="km-label">รหัสสี / เบอร์</div><div class="km-title" id="kmTitle"></div></div>
+      <button class="km-x" id="kmClose" title="ปิด (Esc)">✕</button>
+    </div>
+    <div class="km-list" id="kmList"></div>
+    <div class="km-addbar">
+      <input id="kmAdd" spellcheck="false">
+      <button class="btn-primary" id="kmAddBtn">+ เพิ่ม</button>
+    </div>
+    <div class="km-hint">เพิ่มทีละหลายรหัสได้ คั่นด้วย , หรือเว้นวรรค · รหัสต้องตรงกับที่ใช้ในไฟล์ออเดอร์</div>
+  </div>
+</div>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
@@ -619,12 +664,13 @@ document.getElementById('tblBody').addEventListener('click', async e => {
 
 // ===== รหัสลูก (สี/เบอร์): แสดง / เพิ่ม / เปลี่ยนชื่อ / ลบ — child_sku คือ primary key จริงของตาราง products =====
 function kidsHtml(p) {
+  // (2026-09-21) ในตารางแสดงแบบอ่านอย่างเดียว — เพิ่ม/แก้/ลบ ทำในหน้าต่าง "จัดการรหัสสี/เบอร์"
   const kids = (p.kids || []).filter(k => k !== p.parent_sku).sort()
-  const hasSelf = (p.kids || []).includes(p.parent_sku)
-  let h = kids.map(k => `<span class="kid" data-kid="${k}"><span class="kid-txt" title="คลิกเพื่อแก้รหัส">${k}</span><button class="kid-del" title="ลบรหัสลูกนี้">×</button></span>`).join('')
-  if (hasSelf && kids.length) h += `<span class="kid self" data-kid="${p.parent_sku}"><span class="kid-txt" title="แถวแม่ตัวเอง — ถ้ามีรหัสลูกครบแล้วลบทิ้งได้">${p.parent_sku}</span><button class="kid-del" title="ลบแถวแม่ตัวเอง">×</button></span>`
+  const MAX = 4
+  let h = kids.slice(0, MAX).map(k => `<span class="kid ro">${k}</span>`).join('')
+  if (kids.length > MAX) h += `<span class="kid more">+${kids.length - MAX}</span>`
   if (!kids.length) h += `<span class="kid-none">ไม่มีสี/เบอร์</span>`
-  h += `<button class="kid-addbtn" title="เพิ่มรหัสลูก เช่น ${p.parent_sku}04">+ เพิ่ม</button>`
+  h += `<button class="kid-manage" title="จัดการรหัสสี/เบอร์">✎ ${kids.length ? 'จัดการ' : 'เพิ่ม'}</button>`
   return h
 }
 // ช่องพิมพ์ + ปุ่ม ✓ บันทึก / ✕ ยกเลิก (Enter/Esc ใช้ได้เหมือนกัน)
@@ -660,28 +706,53 @@ async function kidDelete(p, kid) {
   if (error) { showToast(`ลบไม่สำเร็จ: ${error.message}`, true); return false }
   p.kids = p.kids.filter(k => k !== kid); showToast(`ลบ ${kid} แล้ว`); return true
 }
-document.getElementById('tblBody').addEventListener('click', async e => {
+document.getElementById('tblBody').addEventListener('click', e => {
+  if (!e.target.closest('.kid-manage, .kid')) return
   const tr = e.target.closest('tr'); if (!tr) return
-  const p = allProducts.find(x => x.parent_sku === tr.dataset.sku); if (!p) return
-  const cell = tr.querySelector('.kids')
-  // + เพิ่ม → เปิดช่องพิมพ์
-  if (e.target.classList.contains('kid-addbtn')) {
-    const ed = kidEditor(`${p.parent_sku}0?`, '', async v => { await kidAdd(p, v); cell.innerHTML = kidsHtml(p) }, () => { cell.innerHTML = kidsHtml(p) })
-    e.target.replaceWith(ed.wrap); ed.input.focus()
-    return
-  }
-  // × → ลบ
-  if (e.target.classList.contains('kid-del')) {
-    const kid = e.target.closest('.kid').dataset.kid
-    await kidDelete(p, kid); cell.innerHTML = kidsHtml(p); return
-  }
-  // คลิกที่รหัส → แก้ชื่อรหัส
-  if (e.target.classList.contains('kid-txt')) {
-    const chip = e.target.closest('.kid'), oldKid = chip.dataset.kid
-    const ed = kidEditor(oldKid, oldKid, async v => { await kidRename(p, oldKid, v); cell.innerHTML = kidsHtml(p) }, () => { cell.innerHTML = kidsHtml(p) })
-    chip.replaceWith(ed.wrap); ed.input.focus(); ed.input.select()
-  }
+  const p = allProducts.find(x => x.parent_sku === tr.dataset.sku); if (p) openKidModal(p, tr.querySelector('.kids'))
 })
+
+// ===== หน้าต่างจัดการรหัสสี/เบอร์ =====
+function openKidModal(p, cell) {
+  const ov = document.getElementById('kidModal')
+  const render = () => {
+    const kids = (p.kids || []).filter(k => k !== p.parent_sku).sort()
+    const hasSelf = (p.kids || []).includes(p.parent_sku)
+    document.getElementById('kmTitle').textContent = `${p.parent_sku} · ${p.product_name || ''}`
+    document.getElementById('kmList').innerHTML = (kids.length ? kids.map(k => `
+      <div class="km-row" data-kid="${k}">
+        <input class="km-code" value="${k}" spellcheck="false">
+        <button class="km-btn save" title="บันทึกรหัสที่แก้">บันทึก</button>
+        <button class="km-btn del" title="ลบรหัสนี้">ลบ</button>
+      </div>`).join('') : '<div class="km-empty">ยังไม่มีรหัสสี/เบอร์ — สินค้านี้ใช้รหัสแม่อย่างเดียว</div>')
+      + (hasSelf && kids.length ? `<div class="km-note">มีแถวรหัสแม่ <b>${p.parent_sku}</b> อยู่ด้วย (ใช้กับไฟล์ที่ไม่ระบุสี)</div>` : '')
+    if (cell) cell.innerHTML = kidsHtml(p)
+  }
+  render()
+  ov.classList.add('on')
+  const addIn = document.getElementById('kmAdd'); addIn.value = ''; addIn.placeholder = `เช่น ${p.parent_sku}04, ${p.parent_sku}05`
+  setTimeout(() => addIn.focus(), 50)
+  document.getElementById('kmList').onclick = async ev => {
+    const row = ev.target.closest('.km-row'); if (!row) return
+    const oldKid = row.dataset.kid
+    if (ev.target.classList.contains('del')) { if (await kidDelete(p, oldKid)) render() }
+    if (ev.target.classList.contains('save')) {
+      const v = row.querySelector('.km-code').value.trim().toUpperCase()
+      if (v && v !== oldKid && await kidRename(p, oldKid, v)) render()
+    }
+  }
+  document.getElementById('kmAddBtn').onclick = async () => {
+    const codes = addIn.value.split(/[\s,]+/).map(x => x.trim().toUpperCase()).filter(Boolean)
+    if (!codes.length) { addIn.focus(); return }
+    for (const c of codes) await kidAdd(p, c)
+    addIn.value = ''; render()
+  }
+  addIn.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); document.getElementById('kmAddBtn').click() } }
+}
+function closeKidModal() { document.getElementById('kidModal').classList.remove('on') }
+document.getElementById('kmClose').addEventListener('click', closeKidModal)
+document.getElementById('kidModal').addEventListener('click', e => { if (e.target.id === 'kidModal') closeKidModal() })
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeKidModal() })
 
 document.getElementById('searchInput').addEventListener('input', renderTable)
 document.getElementById('statusFilter').addEventListener('change', renderTable)
@@ -1044,6 +1115,13 @@ init()
       const addBtn = document.getElementById('btnShowNewRow'); if (addBtn) addBtn.style.display = t === 'products' ? '' : 'none';
     }));
     document.getElementById('logoutBtnSide')?.addEventListener('click', () => document.getElementById('logoutBtn')?.click());
+    // ธีมเดียวกับหน้า Dashboard (เก็บที่ localStorage 'deesay_theme')
+    const tb = document.getElementById('themeBtnSide');
+    const applyTheme = light => { document.body.classList.toggle('light-theme', light); if (tb) tb.textContent = light ? '🌙 โหมดมืด' : '☀️ โหมดสว่าง'; };
+    let light = false; try { light = localStorage.getItem('deesay_theme') === 'light'; } catch (e) {}
+    applyTheme(light);
+    tb?.addEventListener('click', () => { light = !document.body.classList.contains('light-theme'); applyTheme(light); try { localStorage.setItem('deesay_theme', light ? 'light' : 'dark'); } catch (e) {} });
+    window.addEventListener('storage', e => { if (e.key === 'deesay_theme') applyTheme(e.newValue === 'light'); });
   })();
 </script>
 </body>
