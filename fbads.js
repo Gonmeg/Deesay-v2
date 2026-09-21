@@ -103,6 +103,7 @@
           <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ค่าแอด vs ยอดขายจริง Facebook รายวัน</div>
             <div class="toggle-group" id="fbaMoneyMode"><button class="toggle-btn active" data-m="money">ยอด (บาท)</button><button class="toggle-btn" data-m="ratio">ROAS & % ค่าแอดต่อยอด</button></div></div>
           <div class="chart-wrap" style="height:280px;"><canvas id="chartFbaDaily"></canvas></div>
+          <div id="fbaDailyTailNote" style="font-size:10.5px;color:#f59e0b;margin-top:4px;"></div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:6px;">ROAS = ยอดขายจริง ÷ ค่าแอด · % ค่าแอดต่อยอด = ค่าแอด ÷ ยอดขายจริง × 100 (ยิ่งต่ำยิ่งดี) · ยอดขายจริงคือทั้งช่องทาง Facebook ไม่แยกตามบัญชีโฆษณา</div>
         </div>
         <div class="grid-2" style="margin-bottom:20px;">
@@ -231,8 +232,18 @@
     renderCampaigns(); renderAds();
   }
 
+  // (2026-09-21) วันท้ายที่มีค่าแอดแต่ยอดขายยังไม่อัปโหลด → ตัดออกจากกราฟ ไม่ให้ ROAS / % ค่าแอด พุ่งผิดปกติ
+  //   แสดงถึง "วันล่าสุดที่มีข้อมูลครบทั้ง 2 ฝั่ง" แล้วบอกใต้กราฟ
+  function completeDaily(daily) {
+    let last = daily.length - 1;
+    while (last >= 0 && !(+daily[last].revenue > 0)) last--;
+    return { rows: daily.slice(0, last + 1), cut: daily.length - 1 - last, lastDate: last >= 0 ? daily[last].d : null };
+  }
   function renderMoneyChart() {
-    const daily = _data?.daily || []; const labels = daily.map(r => thShort(r.d));
+    const cd = completeDaily(_data?.daily || []);
+    const daily = cd.rows; const labels = daily.map(r => thShort(r.d));
+    const note = document.getElementById('fbaDailyTailNote');
+    if (note) note.textContent = cd.cut > 0 ? `แสดงถึง ${thShort(cd.lastDate)} — ${cd.cut} วันล่าสุดยอดขาย Facebook ยังไม่ได้อัปโหลด จึงยังไม่นำมาเทียบ` : '';
     if (_moneyMode === 'money') {
       makeChart('chartFbaDaily', 'line', labels, [
         line('ยอดขายจริง Facebook', daily.map(r => +r.revenue), '#22c55e', { fill: true, backgroundColor: 'rgba(34,197,94,0.10)', yAxisID: 'y', borderWidth: 2 }),
