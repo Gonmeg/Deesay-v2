@@ -293,57 +293,69 @@
     return out;
   }
   function planCells(r) {
-    if (r.plan_mode !== 'plan') return '<td><span class="sup-dash">—</span></td><td><span class="sup-dash">—</span></td>';
+    if (r.plan_mode !== 'plan') return '<td class="t-center"><span class="sup-dash">—</span></td>'.repeat(3);
     const c = planCalc(r), pl = c.pl || {};
     const stamp = pl.updated_at ? new Date(pl.updated_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-    return `<td class="sup-plan" onclick="event.stopPropagation()">
-        <div class="sup-plan-box${pl.plan_qty ? ' on' : ''}">
-          <input type="number" min="0" class="sup-plan-qty" data-sku="${esc(r.sku)}" value="${pl.plan_qty || ''}" placeholder="จำนวน">
-          <span class="sup-plan-sep">ชิ้น · ถึง</span>
-          <input type="date" class="sup-plan-date" data-sku="${esc(r.sku)}" value="${pl.arrive_date || ''}" title="ของพร้อมส่งวันที่ — ไม่ใส่ = นับต่อจากวันที่ของเดิมหมด">
-        </div>
-        ${stamp ? `<div class="sup-sub" style="text-align:left;margin-top:3px;">กรอกเมื่อ ${stamp}</div>` : ''}
+    return `<td class="t-center sup-plan" onclick="event.stopPropagation()">
+        <input type="text" inputmode="numeric" class="sup-in sup-plan-qty${pl.plan_qty ? ' on' : ''}" data-sku="${esc(r.sku)}"
+          value="${pl.plan_qty ? Number(pl.plan_qty).toLocaleString() : ''}" placeholder="0">
+        ${stamp ? `<div class="sup-sub">กรอก ${stamp}</div>` : ''}
       </td>
-      <td style="text-align:left;min-width:150px;">
-        <span class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</span>
-        ${c.newEnd ? `<div style="margin-top:3px;font-size:12px;">ขายได้ถึง <b style="color:var(--accent2);">${dTH(iso(c.newEnd))}</b></div>` : ''}
+      <td class="t-center sup-plan" onclick="event.stopPropagation()">
+        <input type="date" class="sup-in sup-plan-date${pl.arrive_date ? ' on' : ''}" data-sku="${esc(r.sku)}" value="${pl.arrive_date || ''}"
+          title="ไม่ใส่ = นับต่อจากวันที่ของเดิมหมด">
+        <div class="sup-sub">${pl.arrive_date ? '' : 'ไม่ใส่ = ต่อจากวันหมด'}</div>
+      </td>
+      <td class="t-center">
+        <div class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</div>
+        ${c.newEnd ? `<div class="sup-sub" style="font-size:11.5px;">ขายได้ถึง <b style="color:var(--accent2);">${dTH(iso(c.newEnd))}</b></div>` : ''}
       </td>`;
   }
-  // สไตล์ช่องกรอก (ใส่ครั้งเดียว)
   (function () {
-    if (document.getElementById('supPlanCss')) return;
+    const old = document.getElementById('supPlanCss'); if (old) old.remove();
     const st = document.createElement('style'); st.id = 'supPlanCss';
     st.textContent = `
-      .sup-plan-box { display:inline-flex; align-items:center; gap:6px; padding:3px 6px; border:1px solid var(--border); border-radius:8px; background:var(--bg2); }
-      .sup-plan-box.on { border-color: rgba(212,160,23,.55); background: rgba(212,160,23,.06); }
-      .sup-plan-box:focus-within { border-color: var(--accent); }
-      .sup-plan-box input { border:none; background:transparent; color:var(--text); font-family:inherit; outline:none; }
-      .sup-plan-qty { width:70px; text-align:right; font-weight:600; font-size:12.5px; font-variant-numeric:tabular-nums; }
-      .sup-plan-qty::placeholder { font-weight:400; color:var(--text3); }
-      .sup-plan-date { width:118px; font-size:11.5px; color:var(--text2); }
-      .sup-plan-sep { font-size:11px; color:var(--text3); white-space:nowrap; }
-      .sup-meet { font-size:11.5px; font-weight:600; white-space:nowrap; }`;
+      #supTbl th[data-k="plan_qty"], #supTbl th[data-k="plan_date"], #supTbl th[data-k="plan_end"],
+      #supTbl th[data-k="po_due_date"], #supTbl th[data-k="cover_days"] { text-align:center; }
+      .sup-in { font-family:inherit; border:1px solid var(--border); border-radius:8px; background:var(--bg2); color:var(--text);
+        outline:none; transition:border-color .15s, background .15s; }
+      .sup-in:hover { border-color: var(--border2, var(--text3)); }
+      .sup-in:focus { border-color: var(--accent); background: var(--bg); }
+      .sup-in.on { border-color: rgba(212,160,23,.55); background: rgba(212,160,23,.07); }
+      .sup-plan-qty { width:96px; padding:6px 10px; text-align:center; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+      .sup-plan-qty::placeholder { color:var(--text3); font-weight:400; }
+      .sup-plan-date { width:132px; padding:5px 8px; font-size:12px; text-align:center; color:var(--text2); }
+      .sup-meet { font-size:12px; font-weight:600; white-space:nowrap; }
+      td.sup-plan .sup-sub { margin-top:3px; }`;
     document.head.appendChild(st);
   })();
   function bindPlanInputs() {
-    const handler = async el => {
-      const sku = el.dataset.sku;
-      const td = el.closest('td');
-      const qty = parseInt(td.querySelector('.sup-plan-qty').value) || 0;
-      const arr = td.querySelector('.sup-plan-date').value || null;
+    const save = async el => {
+      const tr = el.closest('tr'); const sku = el.dataset.sku;
+      const qEl = tr.querySelector('.sup-plan-qty'), dEl = tr.querySelector('.sup-plan-date');
+      const qty = parseInt(String(qEl.value).replace(/[^\d]/g, '')) || 0;
+      const arr = dEl.value || null;
       el.style.borderColor = '#fbbf24';
-      try { await savePlan(sku, qty, arr); el.style.borderColor = '#22c55e'; renderTable(); }
+      try { await savePlan(sku, qty, arr); renderTable(); }
       catch (e) { el.style.borderColor = 'var(--red)'; alert(e.message); }
     };
-    document.querySelectorAll('.sup-plan-qty, .sup-plan-date').forEach(el => { el.onchange = () => handler(el); el.onclick = ev => ev.stopPropagation(); });
+    document.querySelectorAll('.sup-plan-qty').forEach(el => {
+      el.onclick = ev => ev.stopPropagation();
+      el.onfocus = () => { el.value = String(el.value).replace(/[^\d]/g, ''); el.select(); };   // แก้เลขสะดวก ไม่มีคอมม่า
+      el.oninput = () => { el.value = el.value.replace(/[^\d]/g, ''); };
+      el.onkeydown = ev => { if (ev.key === 'Enter') el.blur(); };
+      el.onchange = () => save(el);
+    });
+    document.querySelectorAll('.sup-plan-date').forEach(el => { el.onclick = ev => ev.stopPropagation(); el.onchange = () => save(el); });
   }
+
 
   function cols() {
     const c = [['parent_sku', 'Parent SKU'], ['sku', 'SKU'], ['abc', 'ABC·XYZ'], ['on_hand', 'สต็อกรวม']];
     if (showLoc) locList().forEach(l => c.push(['loc:' + l.location, l.location]));
     return c.concat([['on_order', 'PO ค้าง'], ['avg_day', 'ขาย/วัน'], ['trend_7_vs_30', '7 vs 30 วัน'],
       ['cover_days', 'ขายได้อีก / วันหมด'], ['po_due_date', 'ต้องสั่งภายใน'],
-      ['plan_qty', 'แผนสั่ง'], ['plan_end', 'ถ้าสั่งตามนี้']]);
+      ['plan_qty', 'จะสั่ง (ชิ้น)'], ['plan_date', 'ของพร้อมส่ง'], ['plan_end', 'ถ้าสั่งตามนี้']]);
   }
 
   function renderTable() {
