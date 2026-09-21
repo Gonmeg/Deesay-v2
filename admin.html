@@ -191,6 +191,38 @@
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     .kpi-grid.g4 { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* ===== (2026-09-21) Layout ใหม่: เมนูซ้าย + เนื้อหาเต็มจอ ===== */
+  body { display: flex; }
+  nav { display: none !important; }
+  .side { width: 232px; flex: 0 0 232px; height: 100vh; position: sticky; top: 0; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 22px 14px 16px; }
+  .side-logo { font-size: 1.05rem; font-weight: 700; letter-spacing: 3px; color: var(--accent); padding: 0 10px; }
+  .side-logo small { display: block; font-size: 0.62rem; letter-spacing: 3px; color: var(--muted2); font-weight: 500; margin-top: 2px; }
+  .side-sec { font-size: 0.64rem; letter-spacing: 1.5px; color: var(--muted2); text-transform: uppercase; margin: 26px 10px 8px; }
+  .side-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 0.86rem; color: var(--muted);
+    text-decoration: none; cursor: pointer; border: none; background: none; width: 100%; font-family: inherit; text-align: left; }
+  .side-item:hover { background: var(--surface2); color: var(--text); }
+  .side-item.active { background: rgba(200,169,110,.14); color: var(--accent2); font-weight: 600; }
+  .side-item .ico { width: 18px; text-align: center; }
+  .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
+  .side-foot .btn-ghost { width: 100%; padding: 8px 12px; text-align: left; }
+  main { flex: 1; min-width: 0; display: block; padding: 28px 36px 48px; }
+  .shell { max-width: none; }
+  .tabs { display: none !important; }
+  .page-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .page-header h1 { font-size: 1.35rem; }
+  .sp-tablewrap { max-height: calc(100vh - 330px); }
+  .sp-table td { padding: 11px 14px; }
+  .sp-table th { padding: 12px 14px; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    .side { width: 100%; flex: none; height: auto; position: static; flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 12px; }
+    .side-sec, .side-logo small { display: none; }
+    .side-item { width: auto; }
+    .side-foot { margin-top: 0; flex-direction: row; }
+    main { padding: 18px 14px 40px; }
+  }
 </style>
 </head>
 <body>
@@ -206,6 +238,24 @@
   </div>
 </nav>
 
+<aside class="side">
+  <div class="side-logo">DEESAY<small>ADMIN</small></div>
+
+  <div class="side-sec">จัดการข้อมูล</div>
+  <button class="side-item active" data-tab="products"><span class="ico">📦</span>สินค้า (Master Data)</button>
+  <button class="side-item" data-tab="supply"><span class="ico">🚚</span>Supply Chain</button>
+
+  <div class="side-sec">ไปหน้าอื่น</div>
+  <a class="side-item" href="dashboard.html"><span class="ico">📊</span>Dashboard</a>
+  <a class="side-item" href="upload.html"><span class="ico">⬆️</span>Upload</a>
+  <a class="side-item" href="health.html"><span class="ico">🩺</span>สถานะระบบ</a>
+  <a class="side-item" href="index.html"><span class="ico">🏠</span>หน้าแรก</a>
+
+  <div class="side-foot">
+    <button class="btn-ghost" id="logoutBtnSide">ออกจากระบบ</button>
+  </div>
+</aside>
+
 <main>
 <div class="shell">
 
@@ -219,7 +269,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="products">📦 สินค้า (Master Data)</button>
-    <button class="tab-btn" data-tab="supply">🚚 Supply Chain (lead time / MOQ / ซัพพลายเออร์)</button>
+    <button class="tab-btn" data-tab="supply">🚚 Supply Chain</button>
   </div>
 
   <div id="tab-products" class="tabpane">
@@ -327,10 +377,6 @@
     <div class="sp-numbar" id="spNumBar">
       <span class="sp-numbar-title">ตั้งตัวเลขให้ <b id="spNumCount">0</b> รายการที่เลือก</span>
       <label>Lead time<input type="number" id="bkLt" placeholder="60"></label>
-      <label>MOQ<input type="number" id="bkMoq" placeholder="0"></label>
-      <label>ต่อแพ็ค<input type="number" id="bkPack" placeholder="1"></label>
-      <label>รอบสั่ง<input type="number" id="bkReview" placeholder="30"></label>
-      <label class="wide">ซัพพลายเออร์<input type="text" id="bkSupplier" placeholder="ชื่อโรงงาน"></label>
       <button class="sp-btn primary" id="btnBulkApply">ใช้กับที่เลือก</button>
       <button class="sp-btn ghost" id="spCloseNums">ปิด</button>
       <div class="sp-numbar-hint">ช่องไหนเว้นว่าง = ไม่แตะค่าเดิมของช่องนั้น</div>
@@ -344,16 +390,12 @@
             <th class="sp-col-name">สินค้า</th>
             <th class="sp-col-mode">การวางแผน</th>
             <th class="sp-n">Lead time<span>วันกว่าของจะถึง</span></th>
-            <th class="sp-n">MOQ<span>สั่งขั้นต่ำ</span></th>
-            <th class="sp-n">ต่อแพ็ค</th>
-            <th class="sp-n">รอบสั่ง<span>กี่วันสั่งที</span></th>
-            <th class="sp-n">สต็อกขั้นต่ำ</th>
-            <th class="sp-col-sup">ซัพพลายเออร์</th>
+            <th style="width:100%;"></th>
             <th class="sp-col-act"></th>
           </tr>
         </thead>
         <tbody id="spBody">
-          <tr><td colspan="10" class="sp-empty">กำลังโหลดข้อมูล…</td></tr>
+          <tr><td colspan="6" class="sp-empty">กำลังโหลดข้อมูล…</td></tr>
         </tbody>
       </table>
     </div>
@@ -730,11 +772,7 @@ function renderSupplyTable() {
         </td>
         <td class="sp-col-mode"><span class="sp-badge ${mode}">${SP_MODES[mode][0]}</span></td>
         <td class="sp-n"><input class="sp-in sp-lt" type="number" value="${v(r.lead_time_days)}" placeholder="${SP_DEFAULTS.lead_time_days}"></td>
-        <td class="sp-n"><input class="sp-in sp-moq" type="number" value="${v(r.moq)}" placeholder="${SP_DEFAULTS.moq}"></td>
-        <td class="sp-n"><input class="sp-in sp-pack" type="number" value="${v(r.pack_size)}" placeholder="${SP_DEFAULTS.pack_size}"></td>
-        <td class="sp-n"><input class="sp-in sp-review" type="number" value="${v(r.review_days)}" placeholder="${SP_DEFAULTS.review_days}"></td>
-        <td class="sp-n"><input class="sp-in sp-min" type="number" value="${v(r.min_stock)}" placeholder="${SP_DEFAULTS.min_stock}"></td>
-        <td class="sp-col-sup"><input class="sp-in wide sp-supplier" type="text" value="${String(r.supplier || '').replace(/"/g, '&quot;')}" placeholder="—"></td>
+        <td></td>
         <td class="sp-col-act"><button class="sp-save">บันทึก</button></td>
       </tr>`
     }).join('')
@@ -803,11 +841,6 @@ document.getElementById('spBody').addEventListener('click', async e => {
   try {
     await spUpsert(spRowsFor(p, {
       lead_time_days: spNum(tr.querySelector('.sp-lt').value),
-      moq: spNum(tr.querySelector('.sp-moq').value),
-      pack_size: spNum(tr.querySelector('.sp-pack').value),
-      review_days: spNum(tr.querySelector('.sp-review').value),
-      min_stock: spNum(tr.querySelector('.sp-min').value),
-      supplier: tr.querySelector('.sp-supplier').value.trim(),
     }))
     tr.classList.remove('unset')
     e.target.textContent = '✓'
@@ -847,23 +880,13 @@ document.getElementById('spCloseNums').addEventListener('click', () => {
 document.getElementById('btnBulkApply').addEventListener('click', async () => {
   if (!spSel.size) { showToast('ยังไม่ได้เลือกรายการ', true); return }
   const lt = spNum(document.getElementById('bkLt').value)
-  const moq = spNum(document.getElementById('bkMoq').value)
-  const pack = spNum(document.getElementById('bkPack').value)
-  const review = spNum(document.getElementById('bkReview').value)
-  const supplier = document.getElementById('bkSupplier').value.trim()
-  if (lt === null && moq === null && pack === null && review === null && !supplier) {
-    showToast('กรอกอย่างน้อย 1 ช่องก่อน', true); return
-  }
+  if (lt === null) { showToast('กรอก Lead time ก่อน', true); return }
   const targets = allProducts.filter(p => spSel.has(p.parent_sku))
   const btn = document.getElementById('btnBulkApply')
   btn.disabled = true; btn.textContent = 'กำลังบันทึก…'
   try {
     const patch = {}
     if (lt !== null) patch.lead_time_days = lt
-    if (moq !== null) patch.moq = moq
-    if (pack !== null) patch.pack_size = pack
-    if (review !== null) patch.review_days = review
-    if (supplier) patch.supplier = supplier
     const rows = []
     targets.forEach(p => rows.push(...spRowsFor(p, patch)))
     await spUpsert(rows)
@@ -939,6 +962,25 @@ async function init() {
   }
 }
 init()
+</script>
+<script>
+  // เมนูซ้ายกดแล้วไปกดปุ่มแท็บเดิม (ซ่อนไว้) — logic การสลับแท็บเดิมทำงานต่อได้ทั้งหมด
+  (function () {
+    const HEAD = {
+      products: ['📦 สินค้า (Master Data)', 'แก้ไขชื่อสินค้า RSP และสถานะสินค้า — ใช้แยกยอดขายรายสินค้าทั้งระบบ'],
+      supply: ['🚚 Supply Chain', 'ตั้ง Lead time และเลือกว่าสินค้าไหนต้องวางแผนสั่งของ — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard']
+    };
+    document.querySelectorAll('.side-item[data-tab]').forEach(el => el.addEventListener('click', () => {
+      const t = el.dataset.tab;
+      document.querySelector(`.tab-btn[data-tab="${t}"]`)?.click();
+      document.querySelectorAll('.side-item[data-tab]').forEach(x => x.classList.toggle('active', x === el));
+      const h = document.querySelector('.page-header h1'), pp = document.querySelector('.page-header p');
+      if (h && HEAD[t]) h.textContent = HEAD[t][0];
+      if (pp && HEAD[t]) pp.textContent = HEAD[t][1];
+      const addBtn = document.getElementById('btnShowNewRow'); if (addBtn) addBtn.style.display = t === 'products' ? '' : 'none';
+    }));
+    document.getElementById('logoutBtnSide')?.addEventListener('click', () => document.getElementById('logoutBtn')?.click());
+  })();
 </script>
 </body>
 </html>
