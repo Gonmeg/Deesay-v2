@@ -110,7 +110,7 @@
     if (salesAge > 3) banners.push(['var(--orange)', `⚠️ ยอดขายล่าสุดคือ ${dTH(d.sales_last)} (${salesAge} วันก่อน) — ค่าเฉลี่ยขาย/วันจะต่ำกว่าจริงจนกว่าจะอัปโหลดออเดอร์`]);
     const urgent = rows.filter(r => r.plan_mode === 'plan' && (r.order_status === 'stockout' || r.order_status === 'late'));
     if (urgent.length) banners.push(['var(--red)', `⛔ ${urgent.length} SKU ขาดแล้วหรือสั่งไม่ทันแล้ว: ${urgent.slice(0, 8).map(r => `<b>${esc(r.sku)}</b>${r.cover_days != null ? ` (${r.cover_days} วัน)` : ''}`).join(', ')}${urgent.length > 8 ? ` และอีก ${urgent.length - 8}` : ''}`]);
-    if (k.no_params > 0) banners.push(['var(--accent)', `🛠 ${k.no_params} SKU ยังไม่ได้ตั้ง lead time / MOQ — ใช้ค่ากลาง 60 วันไปก่อน (ตั้งค่าได้ที่หน้า Admin → แท็บ Supply Chain)`]);
+    if (k.no_params > 0) banners.push(['var(--accent)', `🛠 ${k.no_params} SKU ยังไม่ได้ตั้ง lead time — ใช้ค่ากลาง 60 วันไปก่อน (ตั้งได้ที่หน้า Admin → Supply Chain)`]);
 
     const P = rows.filter(r => r.plan_mode === 'plan');
     const V = rows.filter(r => r.plan_mode !== 'hidden');
@@ -296,19 +296,35 @@
     if (r.plan_mode !== 'plan') return '<td><span class="sup-dash">—</span></td><td><span class="sup-dash">—</span></td>';
     const c = planCalc(r), pl = c.pl || {};
     const stamp = pl.updated_at ? new Date(pl.updated_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-    return `<td class="sup-plan" onclick="event.stopPropagation()" style="min-width:150px;">
-        <input type="number" min="0" class="sup-plan-qty" data-sku="${esc(r.sku)}" value="${pl.plan_qty || ''}" placeholder="จะสั่ง (ชิ้น)"
-          style="width:110px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);font-family:inherit;text-align:right;">
-        <input type="date" class="sup-plan-date" data-sku="${esc(r.sku)}" value="${pl.arrive_date || ''}" title="ของพร้อมส่งวันที่ (ไม่ใส่ = นับต่อจากวันที่ของเดิมหมด)"
-          style="width:130px;margin-top:4px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text2);font-family:inherit;font-size:11px;">
-        ${stamp ? `<div class="sup-sub">กรอกเมื่อ ${stamp}</div>` : ''}
+    return `<td class="sup-plan" onclick="event.stopPropagation()">
+        <div class="sup-plan-box${pl.plan_qty ? ' on' : ''}">
+          <input type="number" min="0" class="sup-plan-qty" data-sku="${esc(r.sku)}" value="${pl.plan_qty || ''}" placeholder="จำนวน">
+          <span class="sup-plan-sep">ชิ้น · ถึง</span>
+          <input type="date" class="sup-plan-date" data-sku="${esc(r.sku)}" value="${pl.arrive_date || ''}" title="ของพร้อมส่งวันที่ — ไม่ใส่ = นับต่อจากวันที่ของเดิมหมด">
+        </div>
+        ${stamp ? `<div class="sup-sub" style="text-align:left;margin-top:3px;">กรอกเมื่อ ${stamp}</div>` : ''}
       </td>
-      <td style="min-width:130px;">
-        <span style="color:${c.meet[2]};font-weight:600;font-size:11.5px;">${c.meet[0]} ${c.meet[1]}</span>
-        ${c.newEnd ? `<div style="margin-top:3px;"><b style="color:var(--accent2);">ขายได้ถึง ${dTH(iso(c.newEnd))}</b></div>` : ''}
-        ${c.orderBy ? `<div class="sup-sub">ต้องสั่งภายใน ${dTH(iso(c.orderBy))}</div>` : ''}
+      <td style="text-align:left;min-width:150px;">
+        <span class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</span>
+        ${c.newEnd ? `<div style="margin-top:3px;font-size:12px;">ขายได้ถึง <b style="color:var(--accent2);">${dTH(iso(c.newEnd))}</b></div>` : ''}
       </td>`;
   }
+  // สไตล์ช่องกรอก (ใส่ครั้งเดียว)
+  (function () {
+    if (document.getElementById('supPlanCss')) return;
+    const st = document.createElement('style'); st.id = 'supPlanCss';
+    st.textContent = `
+      .sup-plan-box { display:inline-flex; align-items:center; gap:6px; padding:3px 6px; border:1px solid var(--border); border-radius:8px; background:var(--bg2); }
+      .sup-plan-box.on { border-color: rgba(212,160,23,.55); background: rgba(212,160,23,.06); }
+      .sup-plan-box:focus-within { border-color: var(--accent); }
+      .sup-plan-box input { border:none; background:transparent; color:var(--text); font-family:inherit; outline:none; }
+      .sup-plan-qty { width:70px; text-align:right; font-weight:600; font-size:12.5px; font-variant-numeric:tabular-nums; }
+      .sup-plan-qty::placeholder { font-weight:400; color:var(--text3); }
+      .sup-plan-date { width:118px; font-size:11.5px; color:var(--text2); }
+      .sup-plan-sep { font-size:11px; color:var(--text3); white-space:nowrap; }
+      .sup-meet { font-size:11.5px; font-weight:600; white-space:nowrap; }`;
+    document.head.appendChild(st);
+  })();
   function bindPlanInputs() {
     const handler = async el => {
       const sku = el.dataset.sku;
@@ -326,8 +342,8 @@
     const c = [['parent_sku', 'Parent SKU'], ['sku', 'SKU'], ['abc', 'ABC·XYZ'], ['on_hand', 'สต็อกรวม']];
     if (showLoc) locList().forEach(l => c.push(['loc:' + l.location, l.location]));
     return c.concat([['on_order', 'PO ค้าง'], ['avg_day', 'ขาย/วัน'], ['trend_7_vs_30', '7 vs 30 วัน'],
-      ['cover_days', 'ขายได้อีก / วันหมด'], ['po_due_date', 'ต้องเปิด PO ภายใน'],
-      ['suggested_qty', 'แนะสั่ง / ROP'], ['plan_qty', 'จะสั่ง / ของพร้อมส่ง'], ['plan_end', 'ถ้าสั่งตามนี้'], ['order_status', 'การสั่งซื้อ']]);
+      ['cover_days', 'ขายได้อีก / วันหมด'], ['po_due_date', 'ต้องสั่งภายใน'],
+      ['plan_qty', 'แผนสั่ง'], ['plan_end', 'ถ้าสั่งตามนี้']]);
   }
 
   function renderTable() {
@@ -366,11 +382,9 @@
         </td>
         <td>${!due ? '<span class="sup-dash">—</span>'
              : `<b style="color:${dueCol};">${dTH(due)}</b><div class="sup-sub">${dueIn < 0 ? 'เลยมา ' + fmtN(-dueIn) + ' วัน' : 'อีก ' + fmtN(dueIn) + ' วัน'}</div>`}</td>
-        <td>${!planned ? '<span class="sup-dash">—</span>'
-             : (r.suggested_qty ? `<b style="font-size:13px;color:var(--accent2);">${fmtN(r.suggested_qty)}</b>` : '<span class="sup-dash">—</span>')
-               + (r.reorder_point != null ? `<div class="sup-sub">ROP ${fmtN(r.reorder_point)}</div>` : '')}</td>
+
         ${planCells(r)}
-        <td class="t-center">${!planned ? '<span class="sup-dash">—</span>' : pill(oc, ot) + (r.has_po ? '<div class="sup-sub">มี PO ค้าง</div>' : '') + (planned && !r.has_params ? '<div class="sup-sub">LT ' + r.lt + ' วัน*</div>' : '<div class="sup-sub">LT ' + r.lt + ' วัน</div>')}</td></tr>`;
+</tr>`;
     }).join('') : `<tr><td colspan="${COLS.length}" class="empty">ไม่มี SKU ตรงตัวกรอง</td></tr>`;
     document.getElementById('supTbl').innerHTML = `<table class="sticky-head-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
     const nWatch = list.filter(r => r.plan_mode === 'watch').length;
