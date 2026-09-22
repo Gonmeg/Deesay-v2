@@ -4,7 +4,14 @@
 // v2 (2026-09-09): เพิ่มคอลัมน์รหัสแม่ + เรียงตามรหัสแม่ · สต็อกแยกรายคลัง (ปุ่มสลับ) · ตัดเรื่องเงิน/ต้นทุนออกทั้งหมด · เพิ่ม ⓘ อธิบายศัพท์ · หัวตารางเป็น Sarabun
 (function () {
   const fmtN = (n, d = 0) => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toLocaleString('th-TH', { maximumFractionDigits: d, minimumFractionDigits: d });
-  const dTH = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '—';
+  const dTH = d => {
+    if (!d) return '—';
+    const x = new Date(d + 'T00:00:00'); if (isNaN(x)) return '—';
+    const sameYear = x.getFullYear() === new Date().getFullYear();
+    return x.toLocaleDateString('th-TH', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: '2-digit' });
+  };
+  // จำนวนวันยาวๆ อ่านยาก → บอกเป็นปี/เดือนเพิ่ม (เช่น 5,175 วัน ≈ 14 ปี)
+  const daysHuman = n => n >= 730 ? `≈ ${Math.round(n / 365)} ปี` : n >= 120 ? `≈ ${Math.round(n / 30)} เดือน` : '';
   const daysFrom = d => d ? Math.round((new Date(d + 'T00:00:00').getTime() - Date.now()) / 86400000) : null;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -348,7 +355,12 @@
       .sup-plan-qty::placeholder { color:var(--text3); font-weight:400; }
       .sup-plan-date { width:132px; padding:5px 8px; font-size:12px; text-align:center; color:var(--text2); }
       .sup-meet { font-size:12px; font-weight:600; white-space:nowrap; }
-      td.sup-plan .sup-sub { margin-top:3px; }`;
+      td.sup-plan .sup-sub { margin-top:3px; }
+      tr.sup-noplan td { opacity:.55; }
+      tr.sup-noplan td:nth-child(-n+2) { opacity:1; }
+      tr.sup-noplan:hover td { opacity:1; }
+      .sup-noplan-pill { display:inline-block; font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:99px;
+        background:var(--bg3, rgba(128,128,128,.12)); color:var(--text3); border:1px dashed var(--border2, var(--border)); white-space:nowrap; }`;
     document.head.appendChild(st);
   })();
   function bindPlanInputs() {
@@ -407,16 +419,16 @@
       const dueIn = due ? daysFrom(due) : null;
       const dueCol = dueIn == null ? 'var(--text3)' : dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text2)';
       const locTds = showLoc ? locs.map(l => { const q = (r.by_loc || {})[l.location] || 0; return `<td class="${q ? '' : 'sup-dash'}" style="font-size:11.5px;">${q ? fmtN(q) : '·'}</td>`; }).join('') : '';
-      return `<tr class="sup-row" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}${newGroup ? 'border-top:2px solid var(--border2);' : ''}">
+      return `<tr class="sup-row${planned ? '' : ' sup-noplan'}" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}${newGroup ? 'border-top:2px solid var(--border2);' : ''}">
         <td class="t-left">${sameParent ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span><div class="sup-sub">${esc(r.parent_name || '')}</div>`}</td>
-        <td class="t-left"><span class="sup-skucode">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div>${planned ? '' : '<div class="sup-sub" style="color:var(--orange);">ไม่สั่งซ้ำแล้ว</div>'}</td>
+        <td class="t-left"><span class="sup-skucode">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div>${planned ? '' : '<div style="margin-top:3px;"><span class="sup-noplan-pill">⏸ ไม่สั่งซ้ำ · ดูการขายอย่างเดียว</span></div>'}</td>
         <td class="t-center"><span class="sup-chip" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span></td>
         <td><b style="font-size:13px;">${fmtN(_stk)}</b>${_hold ? `<div class="sup-sub">คลัง ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
         ${locTds}
         <td>${_wip ? fmtN(_wip) + (_nextWip ? `<div class="sup-sub">เสร็จ ${dTH(_nextWip)}</div>` : '') : '<span class="sup-dash">—</span>'}</td>
         <td>${fmtN(r.avg_day, 1)}</td>
         <td style="color:${tr == null ? 'var(--text3)' : tr > 0.2 ? 'var(--green)' : tr < -0.2 ? 'var(--red)' : 'var(--text2)'};">${tr == null ? '—' : (tr > 0 ? '+' : '') + fmtN(tr * 100) + '%'}</td>
-        <td>${cov == null ? '<span class="sup-dash">—</span>' : `<b style="color:${covCol};">${fmtN(cov)}</b> <span class="sup-sub" style="display:inline;">วัน</span>
+        <td>${cov == null ? '<span class="sup-dash">—</span>' : `<b style="color:${covCol};">${fmtN(cov)}</b> <span class="sup-sub" style="display:inline;">วัน</span>${daysHuman(cov) ? `<span class="sup-sub" style="display:inline;margin-left:4px;">(${daysHuman(cov)})</span>` : ''}
           <div class="sup-bar"><i style="width:${covPct}%;background:${covCol};"></i></div>
           ${_soDate ? `<div class="sup-sub">หมด ${dTH(_soDate)}</div>` : ''}`}
         </td>
