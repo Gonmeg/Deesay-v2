@@ -238,14 +238,17 @@
 
   // ===== (2026-09-21) แผนสั่งของที่กรอกเอง: จะสั่งกี่ชิ้น + ของพร้อมส่งวันที่ → ขายได้ถึงวันไหน =====
   // ไม่กรอกวันที่ของถึง = นับต่อจากวันที่ของเดิมหมด · กรอกวันที่ = นับจากวันที่ของถึง บวกของที่ยังเหลือตอนนั้น
-  let PLANS = {}, REVIEW_DAYS = 14;
+  let PLANS = {}, REVIEW_DAYS = 14, OPEN_PO = {};
   const H = () => ({ apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' });
   async function loadPlans() {
     try {
-      const [p, st] = await Promise.all([
+      const [p, st, po] = await Promise.all([
         fetch(`${window.SUPABASE_URL}/rest/v1/supply_order_plans?select=*`, { headers: H() }).then(r => r.ok ? r.json() : []),
-        fetch(`${window.SUPABASE_URL}/rest/v1/supply_settings?key=eq.review_days&select=value`, { headers: H() }).then(r => r.ok ? r.json() : [])
+        fetch(`${window.SUPABASE_URL}/rest/v1/supply_settings?key=eq.review_days&select=value`, { headers: H() }).then(r => r.ok ? r.json() : []),
+        fetch(`${window.SUPABASE_URL}/rest/v1/purchase_orders?status=neq.closed&select=sku,po_no,qty_ordered,qty_received,qty_wip,qty_hold_factory,eta,note&order=eta.asc`, { headers: H() }).then(r => r.ok ? r.json() : [])
       ]);
+      OPEN_PO = {};
+      (po || []).forEach(x => { const q = (+x.qty_ordered || 0) - (+x.qty_received || 0); if (q > 0 && x.eta) (OPEN_PO[x.sku] = OPEN_PO[x.sku] || []).push({ ...x, q }); });
       PLANS = Object.fromEntries((p || []).map(x => [x.sku, x]));
       if (st && st[0]) REVIEW_DAYS = +st[0].value || 14;
     } catch (e) { console.warn('loadPlans', e.message); }
@@ -264,31 +267,42 @@
   const DAY = 864e5;
   const toD = s => new Date(s + 'T00:00:00');
   const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  // ไล่ตามเวลา: ขายลดลงทุกวัน · ของเข้าตามวันที่ → คืนวันที่ของหมด และวันขาดของระหว่างทาง
+  function runOut(stock, avg, today, events) {
+    let s = stock, t = today, gap = 0;
+    for (const ev of events) {
+      const days = Math.max(0, Math.round((ev.d - t) / DAY));
+      const need = avg * days;
+      if (need > s) gap += Math.round((need - s) / avg);   // ของหมดก่อนก้อนนี้จะเข้า
+      s = Math.max(0, s - need) + ev.q; if (ev.d > t) t = ev.d;
+    }
+    return { end: new Date(t.getTime() + Math.floor(s / avg) * DAY), gap };
+  }
   function planCalc(r) {
     const pl = PLANS[r.sku]; const avg = +r.avg_day || 0; const today = toD(iso(new Date()));
     const stock = Math.max(0, +r.on_hand || 0);
-    const oldEnd = avg > 0 ? new Date(today.getTime() + Math.floor(stock / avg) * DAY) : null;
     const lt = +r.lt || 60;
-    const orderBy = oldEnd ? new Date(oldEnd.getTime() - lt * DAY) : null;
-    const out = { pl, oldEnd, orderBy, newEnd: null, gapDays: 0 };
-    if (pl && pl.plan_qty > 0 && avg > 0) {
-      if (pl.arrive_date) {
-        const arr = toD(pl.arrive_date);
-        const daysToArr = Math.max(0, Math.round((arr - today) / DAY));
-        const remain = Math.max(0, stock - avg * daysToArr);
-        out.gapDays = oldEnd && arr > oldEnd ? Math.round((arr - oldEnd) / DAY) : 0;
-        out.newEnd = new Date(arr.getTime() + Math.floor((remain + pl.plan_qty) / avg) * DAY);
-      } else {
-        const base = oldEnd && oldEnd > today ? oldEnd : today;
-        out.newEnd = new Date(base.getTime() + Math.floor(pl.plan_qty / avg) * DAY);
+    const pos = (OPEN_PO[r.sku] || []).map(x => ({ d: toD(x.eta), q: x.q, po: x })).sort((a, b) => a.d - b.d);
+    const out = { pl, pos, poQty: pos.reduce((s, x) => s + x.q, 0), oldEnd: null, withPoEnd: null, orderBy: null, newEnd: null, gapDays: 0 };
+    if (avg <= 0) { out.meet = ['🟢', 'ยังไม่ต้อง', 'var(--text3)']; return out; }
+    out.oldEnd = new Date(today.getTime() + Math.floor(stock / avg) * DAY);
+    const base = runOut(stock, avg, today, pos);            // สต็อก + PO ที่เปิดแล้ว
+    out.withPoEnd = base.end; out.gapDays = base.gap;
+    out.orderBy = new Date(base.end.getTime() - lt * DAY);  // ก้อนถัดไปต้องสั่งภายใน (นับหลัง PO ที่มีแล้ว)
+    if (pl && pl.plan_qty > 0) {
+      if (pl.arrive_date) {                                  // กรอกวันที่ของถึง → แทรกตามวันที่
+        const r2 = runOut(stock, avg, today, [...pos, { d: toD(pl.arrive_date), q: +pl.plan_qty }].sort((a, b) => a.d - b.d));
+        out.newEnd = r2.end; out.gapDays = r2.gap;
+      } else {                                               // ไม่กรอก → ต่อท้ายหลังของเดิม + PO หมด
+        const b0 = base.end > today ? base.end : today;
+        out.newEnd = new Date(b0.getTime() + Math.floor(pl.plan_qty / avg) * DAY);
       }
     }
-    // สถานะตามรอบประชุม
     const meetNext = new Date(today.getTime() + REVIEW_DAYS * DAY);
-    if (out.gapDays > 0) out.meet = ['⚫', 'ของขาด ' + out.gapDays + ' วัน', 'var(--text)'];
+    if (out.gapDays > 0) out.meet = ['⚫', 'ของขาด ~' + out.gapDays + ' วัน', 'var(--text)'];
     else if (pl && pl.plan_qty > 0) out.meet = ['✅', 'มีแผนแล้ว', 'var(--green)'];
-    else if (orderBy && orderBy < meetNext) out.meet = ['🔴', 'ต้องตัดสินใจรอบนี้', 'var(--red)'];
-    else if (orderBy && orderBy < new Date(meetNext.getTime() + REVIEW_DAYS * DAY)) out.meet = ['🟡', 'รอบหน้า', 'var(--orange)'];
+    else if (out.orderBy < meetNext) out.meet = ['🔴', 'ต้องตัดสินใจรอบนี้', 'var(--red)'];
+    else if (out.orderBy < new Date(meetNext.getTime() + REVIEW_DAYS * DAY)) out.meet = ['🟡', 'รอบหน้า', 'var(--orange)'];
     else out.meet = ['🟢', 'ยังไม่ต้อง', 'var(--text3)'];
     return out;
   }
@@ -308,7 +322,8 @@
       </td>
       <td class="t-center">
         <div class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</div>
-        ${c.newEnd ? `<div class="sup-sub" style="font-size:11.5px;">ขายได้ถึง <b style="color:var(--accent2);">${dTH(iso(c.newEnd))}</b></div>` : ''}
+        ${c.newEnd ? `<div class="sup-sub" style="font-size:11.5px;">ขายได้ถึง <b style="color:var(--accent2);">${dTH(iso(c.newEnd))}</b></div>`
+          : (c.poQty ? `<div class="sup-sub" style="font-size:11px;">รวม PO แล้วพอถึง ${dTH(iso(c.withPoEnd))}</div>` : '')}
       </td>`;
   }
   (function () {
@@ -375,7 +390,9 @@
       const sameParent = sort.key === 'parent_sku' && r.parent_sku === lastParent;
       const newGroup = sort.key === 'parent_sku' && !sameParent;
       lastParent = r.parent_sku;
-      const due = planned ? r.po_due_show : null;
+      // ต้องสั่งภายใน = วันที่ของ (สต็อก + PO ที่เปิดแล้ว) จะหมด − Lead time
+      const _pc = planned && r.plan_mode === 'plan' ? planCalc(r) : null;
+      const due = planned ? ((_pc && _pc.orderBy) ? iso(_pc.orderBy) : r.po_due_show) : null;
       const dueIn = due ? daysFrom(due) : null;
       const dueCol = dueIn == null ? 'var(--text3)' : dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text2)';
       const locTds = showLoc ? locs.map(l => { const q = (r.by_loc || {})[l.location] || 0; return `<td class="${q ? '' : 'sup-dash'}" style="font-size:11.5px;">${q ? fmtN(q) : '·'}</td>`; }).join('') : '';
