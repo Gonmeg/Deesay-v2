@@ -425,7 +425,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.23-a</span><br>
+    <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
+    <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -2012,6 +2014,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <script src="config.js"></script>
+<script src="auth.js"></script>
 <script>
 // ===== STATE =====
 let allData = [];
@@ -2601,11 +2604,12 @@ function toggleNavGroup(key) {
 }
 
 function showPage(page, lockCh, el) {
+  if (window.Auth && Auth.perm && !Auth.canPage(page)) { alert('คุณยังไม่มีสิทธิ์ดูหน้านี้ — แจ้งเมฆถ้าต้องใช้'); return; }   // ด่านสิทธิ์รายหน้า
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   if (el) el.classList.add('active');
-  else { const idx = pageOrder.indexOf(page); if (idx >= 0) document.querySelectorAll('.nav-item')[idx]?.classList.add('active'); }
+  else { document.querySelector(`.nav-item[onclick*="'${page}'"]`)?.classList.add('active'); }
   document.getElementById('pageTitle').textContent = pageTitles[page];
   currentPage = page;
 
@@ -9741,7 +9745,28 @@ async function init() {
   }
 }
 
-init();
+// ===== ด่านล็อกอิน + เมนูตามสิทธิ์ (auth.js) =====
+function applyPermissions(p) {
+  document.getElementById('authUser').textContent = (p.name ? p.name + ' · ' : '') + p.email;
+  // เมนูหน้า: ลบรายการที่ไม่มีสิทธิ์
+  document.querySelectorAll('.nav-item[onclick^="showPage("]').forEach(el => {
+    const id = (el.getAttribute('onclick').match(/showPage\('([^']+)'/) || [])[1];
+    if (id && !Auth.canPage(id)) el.remove();
+  });
+  // กลุ่ม (Facebook/TikTok/…) ที่ไม่เหลือหน้าเลย → ซ่อนหัวกลุ่ม
+  document.querySelectorAll('[id^="navGroup-"]').forEach(g => {
+    if (!g.querySelector('.nav-item')) { g.style.display = 'none'; const key = g.id.replace('navGroup-', ''); document.getElementById('navGroupLabel-' + key)?.remove(); }
+  });
+  // เมนูระบบ
+  const sys = { 'upload.html': p.is_admin || p.can_upload, 'admin.html': p.is_admin || p.can_admin, 'health.html': p.is_admin };
+  document.querySelectorAll('a.nav-item[href]').forEach(a => { const h = a.getAttribute('href'); if (h in sys && !sys[h]) a.remove(); });
+}
+Auth.require('dashboard').then(p => {
+  applyPermissions(p);
+  const r = init();
+  // ถ้าไม่มีสิทธิ์หน้าภาพรวม → เปิดหน้าแรกที่มีสิทธิ์แทน
+  if (!Auth.canPage('overview')) { const first = pageOrder.find(id => Auth.canPage(id)); if (first) Promise.resolve(r).then(() => showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`))); }
+});
 
 // ============================================================================
 // เรียงตารางได้ทุกหน้า — กดที่ชื่อคอลัมน์เพื่อเรียง กดซ้ำเพื่อสลับมาก↔น้อย
