@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | Deesay</title>
 <script src="config.js"></script>
+<script src="auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -492,13 +493,9 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-if (sessionStorage.getItem('auth') !== 'true') {
-  window.location.href = 'login.html?redirect=admin.html'
-}
+await Auth.require('admin')   // ต้องล็อกอินและมีสิทธิ์จัดการสินค้า
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  sessionStorage.removeItem('auth'); window.location.href = 'index.html'
-})
+document.getElementById('logoutBtn').addEventListener('click', () => Auth.signOut())
 
 const DB = createClient(
   window.SUPABASE_URL || 'https://plfdizmjdmhyjqraohfv.supabase.co',
