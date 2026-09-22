@@ -266,7 +266,7 @@
   }
   const DAY = 864e5;
   const toD = s => new Date(s + 'T00:00:00');
-  const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  const iso = d => (d instanceof Date && !isNaN(d)) ? new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : null;
   // ไล่ตามเวลา: ขายลดลงทุกวัน · ของเข้าตามวันที่ → คืนวันที่ของหมด และวันขาดของระหว่างทาง
   function runOut(stock, avg, today, events) {
     let s = stock, t = today, gap = 0;
@@ -323,7 +323,7 @@
       <td class="t-center">
         <div class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</div>
         ${c.newEnd ? `<div class="sup-sub" style="font-size:11.5px;">ขายได้ถึง <b style="color:var(--accent2);">${dTH(iso(c.newEnd))}</b></div>`
-          : (c.poQty ? `<div class="sup-sub" style="font-size:11px;">รวม PO แล้วพอถึง ${dTH(iso(c.withPoEnd))}</div>` : '')}
+          : (c.poQty && c.withPoEnd ? `<div class="sup-sub" style="font-size:11px;">รวม PO แล้วพอถึง ${dTH(iso(c.withPoEnd))}</div>` : '')}
       </td>`;
   }
   (function () {
