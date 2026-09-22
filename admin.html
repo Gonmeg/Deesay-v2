@@ -491,7 +491,8 @@
 </div>
 
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+await Auth.ready
+const createClient = () => Auth.client   // ใช้ client ตัวเดียวกับ auth.js — ถ้ามี 2 ตัวจะแย่งกันต่ออายุ token แล้วเด้งไปหน้า login วนไปมา
 
 await Auth.require('admin')   // ต้องล็อกอินและมีสิทธิ์จัดการสินค้า
 
