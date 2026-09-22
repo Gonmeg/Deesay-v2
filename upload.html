@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="config.js"></script>
+  <script src="auth.js"></script>
   <style>
     /* ===== Upload — โฉมใหม่ 2026-09-16 (คลาส/ id เดิมทั้งหมด ไม่แตะ JS) ===== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -399,9 +400,7 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-if (sessionStorage.getItem('auth') !== 'true') {
-  window.location.href = 'login.html?redirect=upload.html'
-}
+await Auth.require('upload')   // ต้องล็อกอินและมีสิทธิ์อัปโหลด (ถ้าไม่ผ่านจะเด้งออกก่อนถึงบรรทัดถัดไป)
 
 const DB = createClient(
   window.SUPABASE_URL || 'https://plfdizmjdmhyjqraohfv.supabase.co',
@@ -1492,7 +1491,7 @@ function setUploadMode(mode) {
   fileInput.value = ''; selectedFiles = []; renderFileRows(); goStep(1)
 }
 
-document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem('auth'); window.location.href = 'index.html' })
+document.getElementById('logoutBtn').addEventListener('click', () => Auth.signOut())
 
 function applyThemeFromStorage() {
   const themeBtn = document.getElementById('themeToggleBtn')
