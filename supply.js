@@ -273,7 +273,9 @@
       (po || []).forEach(x => {
         const q = (+x.qty_ordered || 0) - (+x.qty_received || 0); if (q <= 0) return;
         if (+x.qty_hold_factory > 0 && !(+x.qty_wip > 0)) { HOLD[x.sku] = (HOLD[x.sku] || 0) + q; return; }   // ผลิตเสร็จแล้ว ฝากโรงงาน
-        if (x.eta) (OPEN_PO[x.sku] = OPEN_PO[x.sku] || []).push({ ...x, q });                                  // WIP กำลังผลิต
+        // WIP: มีวันผลิตเสร็จจริงจากจัดซื้อ = dated · ไม่มี (ระบบเดาจากวันเปิด PO + LT หรือ CALL-OFF) = nodate → นับต่อจากวันที่ของหมด
+        const dated = String(x.note || '').includes('กำลังผลิต · วันที่คาดว่าจะผลิตเสร็จในชีท');
+        if (x.eta) (OPEN_PO[x.sku] = OPEN_PO[x.sku] || []).push({ ...x, q, nodate: !dated });
       });
       PLANS = Object.fromEntries((p || []).map(x => [x.sku, x]));
       if (st && st[0]) REVIEW_DAYS = +st[0].value || 14;
@@ -308,17 +310,22 @@
     const pl = PLANS[r.sku]; const avg = +r.avg_day || 0; const today = toD(iso(new Date()));
     const stock = stockAll(r);
     const lt = +r.lt || 60;
-    const pos = (OPEN_PO[r.sku] || []).map(x => ({ d: toD(x.eta), q: x.q, po: x })).sort((a, b) => a.d - b.d);
-    const out = { pl, pos, poQty: pos.reduce((s, x) => s + x.q, 0), oldEnd: null, withPoEnd: null, orderBy: null, newEnd: null, gapDays: 0 };
+    const allPo = OPEN_PO[r.sku] || [];
+    const pos = allPo.filter(x => !x.nodate).map(x => ({ d: toD(x.eta), q: x.q, po: x })).sort((a, b) => a.d - b.d);
+    const nodateQty = allPo.filter(x => x.nodate).reduce((t, x) => t + x.q, 0);
+    const out = { pl, pos, poQty: pos.reduce((s, x) => s + x.q, 0) + nodateQty, nodateQty, needBy: null, oldEnd: null, withPoEnd: null, orderBy: null, newEnd: null, gapDays: 0 };
     if (avg <= 0) { out.meet = ['🟢', 'OK', 'var(--text3)']; return out; }
     out.oldEnd = new Date(today.getTime() + Math.floor(stock / avg) * DAY);
-    const base = runOut(stock, avg, today, pos);            // สต็อก + PO ที่เปิดแล้ว
+    const base0 = runOut(stock, avg, today, pos);           // สต็อก + WIP ที่มีวันเสร็จจริง
+    out.needBy = nodateQty > 0 ? base0.end : null;          // WIP ที่ไม่มีวันจริง ต้องได้ของก่อนวันนี้
+    // WIP ที่ไม่มีวันจริง → ถือว่าเข้าพอดีตอนของหมด แล้วขายต่อ
+    const base = { end: new Date(Math.max(base0.end, today) + Math.floor(nodateQty / avg) * DAY), gap: base0.gap };
     out.withPoEnd = base.end; out.gapDays = base.gap;
     out.orderBy = new Date(base.end.getTime() - lt * DAY);  // ก้อนถัดไปต้องสั่งภายใน (นับหลัง PO ที่มีแล้ว)
     if (pl && pl.plan_qty > 0) {
       if (pl.arrive_date) {                                  // กรอกวันที่ของถึง → แทรกตามวันที่
         const r2 = runOut(stock, avg, today, [...pos, { d: toD(pl.arrive_date), q: +pl.plan_qty }].sort((a, b) => a.d - b.d));
-        out.newEnd = r2.end; out.gapDays = r2.gap;
+        out.newEnd = new Date(Math.max(r2.end, today) + Math.floor(nodateQty / avg) * DAY); out.gapDays = r2.gap;
       } else {                                               // ไม่กรอก → ต่อท้ายหลังของเดิม + PO หมด
         const b0 = base.end > today ? base.end : today;
         out.newEnd = new Date(b0.getTime() + Math.floor(pl.plan_qty / avg) * DAY);
@@ -419,8 +426,10 @@
       const _soDate = _avg > 0 ? iso(new Date(toD(iso(new Date())).getTime() + cov * DAY)) : r.stockout_date;
       const _wipList = OPEN_PO[r.sku] || [];
       const _callQty = _wipList.filter(x => String(x.note || '').includes('call-off')).reduce((t, x) => t + x.q, 0);
-      const _prodList = _wipList.filter(x => !String(x.note || '').includes('call-off'));
+      const _prodList = _wipList.filter(x => !String(x.note || '').includes('call-off') && !x.nodate);
       const _nextWip = _prodList.map(x => x.eta).sort()[0];
+      const _nodateNoCall = _wipList.filter(x => x.nodate && !String(x.note || '').includes('call-off')).reduce((t, x) => t + x.q, 0);
+      const _needBy = (_nodateNoCall || _callQty) && planned && r.plan_mode === 'plan' ? (planCalc(r).needBy) : null;
       const covCol = cov == null ? 'var(--text3)'
         : (planned && cov < r.deadline_days) ? 'var(--red)'
         : (planned && cov < r.warn_days) ? 'var(--orange)'
@@ -443,7 +452,8 @@
         <td><b style="font-size:13px;">${fmtN(_stk)}</b>${_hold ? `<div class="sup-sub">WH ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
         ${locTds}
         <td>${!_wip ? '<span class="sup-dash">—</span>' : fmtN(_wip)
-          + (_wip - _callQty > 0 && _nextWip ? `<div class="sup-sub">ETA ${dTH(_nextWip)}</div>` : '')
+          + (_nextWip ? `<div class="sup-sub">ETA ${dTH(_nextWip)}</div>` : '')
+          + (_needBy ? `<div class="sup-sub" title="ยังไม่มีวันผลิตเสร็จจริงในไฟล์ PO — ระบบนับว่าเข้าพอดีวันที่ของเดิมหมด ต้องได้ของก่อนวันนี้ถึงจะไม่ขาด">Need by <b>${dTH(iso(_needBy))}</b></div>` : '')
           + (_callQty ? `<div class="sup-sub"><span class="sup-calloff" title="ยอดคงเหลือ PO ที่ยังไม่ได้เรียกผลิต — ถ้าเรียกวันนี้ได้ของในราว 30 วัน (ไม่ต้องเปิด PO ใหม่)">CALL-OFF ${_callQty !== _wip ? fmtN(_callQty) : ''}</span></div>` : '')}</td>
         <td>${fmtN(r.avg_day, 1)}</td>
         <td style="color:${tr == null ? 'var(--text3)' : tr > 0.2 ? 'var(--green)' : tr < -0.2 ? 'var(--red)' : 'var(--text2)'};">${tr == null ? '—' : (tr > 0 ? '+' : '') + fmtN(tr * 100) + '%'}</td>
