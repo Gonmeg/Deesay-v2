@@ -238,7 +238,10 @@
 
   // ===== (2026-09-21) แผนสั่งของที่กรอกเอง: จะสั่งกี่ชิ้น + ของพร้อมส่งวันที่ → ขายได้ถึงวันไหน =====
   // ไม่กรอกวันที่ของถึง = นับต่อจากวันที่ของเดิมหมด · กรอกวันที่ = นับจากวันที่ของถึง บวกของที่ยังเหลือตอนนั้น
-  let PLANS = {}, REVIEW_DAYS = 14, OPEN_PO = {};
+  let PLANS = {}, REVIEW_DAYS = 14, OPEN_PO = {}, HOLD = {};
+  // สต็อกที่มีจริง = ในคลังทุกที่ + Hold ที่โรงงาน (ผลิตเสร็จแล้ว เรียกเข้าได้ใน 2–3 วัน)
+  const stockAll = r => Math.max(0, +r.on_hand || 0) + (HOLD[r.sku] || 0);
+  const wipQty = sku => (OPEN_PO[sku] || []).reduce((t, x) => t + x.q, 0);
   const H = () => ({ apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' });
   async function loadPlans() {
     try {
@@ -247,8 +250,12 @@
         fetch(`${window.SUPABASE_URL}/rest/v1/supply_settings?key=eq.review_days&select=value`, { headers: H() }).then(r => r.ok ? r.json() : []),
         fetch(`${window.SUPABASE_URL}/rest/v1/purchase_orders?status=neq.closed&select=sku,po_no,qty_ordered,qty_received,qty_wip,qty_hold_factory,eta,note&order=eta.asc`, { headers: H() }).then(r => r.ok ? r.json() : [])
       ]);
-      OPEN_PO = {};
-      (po || []).forEach(x => { const q = (+x.qty_ordered || 0) - (+x.qty_received || 0); if (q > 0 && x.eta) (OPEN_PO[x.sku] = OPEN_PO[x.sku] || []).push({ ...x, q }); });
+      OPEN_PO = {}; HOLD = {};
+      (po || []).forEach(x => {
+        const q = (+x.qty_ordered || 0) - (+x.qty_received || 0); if (q <= 0) return;
+        if (+x.qty_hold_factory > 0 && !(+x.qty_wip > 0)) { HOLD[x.sku] = (HOLD[x.sku] || 0) + q; return; }   // ผลิตเสร็จแล้ว ฝากโรงงาน
+        if (x.eta) (OPEN_PO[x.sku] = OPEN_PO[x.sku] || []).push({ ...x, q });                                  // WIP กำลังผลิต
+      });
       PLANS = Object.fromEntries((p || []).map(x => [x.sku, x]));
       if (st && st[0]) REVIEW_DAYS = +st[0].value || 14;
     } catch (e) { console.warn('loadPlans', e.message); }
@@ -280,7 +287,7 @@
   }
   function planCalc(r) {
     const pl = PLANS[r.sku]; const avg = +r.avg_day || 0; const today = toD(iso(new Date()));
-    const stock = Math.max(0, +r.on_hand || 0);
+    const stock = stockAll(r);
     const lt = +r.lt || 60;
     const pos = (OPEN_PO[r.sku] || []).map(x => ({ d: toD(x.eta), q: x.q, po: x })).sort((a, b) => a.d - b.d);
     const out = { pl, pos, poQty: pos.reduce((s, x) => s + x.q, 0), oldEnd: null, withPoEnd: null, orderBy: null, newEnd: null, gapDays: 0 };
@@ -323,7 +330,7 @@
       <td class="t-center">
         <div class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</div>
         ${c.newEnd ? `<div class="sup-sub" style="font-size:11.5px;">ขายได้ถึง <b style="color:var(--accent2);">${dTH(iso(c.newEnd))}</b></div>`
-          : (c.poQty && c.withPoEnd ? `<div class="sup-sub" style="font-size:11px;">รวม PO แล้วพอถึง ${dTH(iso(c.withPoEnd))}</div>` : '')}
+          : (c.poQty && c.withPoEnd ? `<div class="sup-sub" style="font-size:11px;">รวม WIP แล้วพอถึง ${dTH(iso(c.withPoEnd))}</div>` : '')}
       </td>`;
   }
   (function () {
@@ -368,7 +375,7 @@
   function cols() {
     const c = [['parent_sku', 'Parent SKU'], ['sku', 'SKU'], ['abc', 'ABC·XYZ'], ['on_hand', 'สต็อกรวม']];
     if (showLoc) locList().forEach(l => c.push(['loc:' + l.location, l.location]));
-    return c.concat([['on_order', 'PO ค้าง'], ['avg_day', 'ขาย/วัน'], ['trend_7_vs_30', '7 vs 30 วัน'],
+    return c.concat([['on_order', 'WIP กำลังผลิต'], ['avg_day', 'ขาย/วัน'], ['trend_7_vs_30', '7 vs 30 วัน'],
       ['cover_days', 'ขายได้อีก / วันหมด'], ['po_due_date', 'ต้องสั่งภายใน'],
       ['plan_qty', 'จะสั่ง (ชิ้น)'], ['plan_date', 'ของพร้อมส่ง'], ['plan_end', 'ถ้าสั่งตามนี้']]);
   }
@@ -380,7 +387,11 @@
     const body = list.length ? list.map(r => {
       const planned = r.plan_mode === 'plan';
       const [oc, ot] = ORDER[r.order_status] || ['var(--text3)', ''];
-      const cov = r.cover_days;
+      const _stk = stockAll(r), _hold = HOLD[r.sku] || 0, _wip = wipQty(r.sku);
+      const _avg = +r.avg_day || 0;
+      const cov = _avg > 0 ? Math.floor(_stk / _avg) : r.cover_days;
+      const _soDate = _avg > 0 ? iso(new Date(toD(iso(new Date())).getTime() + cov * DAY)) : r.stockout_date;
+      const _nextWip = (OPEN_PO[r.sku] || []).map(x => x.eta).sort()[0];
       const covCol = cov == null ? 'var(--text3)'
         : (planned && cov < r.deadline_days) ? 'var(--red)'
         : (planned && cov < r.warn_days) ? 'var(--orange)'
@@ -400,14 +411,14 @@
         <td class="t-left">${sameParent ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span><div class="sup-sub">${esc(r.parent_name || '')}</div>`}</td>
         <td class="t-left"><span class="sup-skucode">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div>${planned ? '' : '<div class="sup-sub" style="color:var(--orange);">ไม่สั่งซ้ำแล้ว</div>'}</td>
         <td class="t-center"><span class="sup-chip" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span></td>
-        <td><b style="font-size:13px;">${fmtN(r.on_hand)}</b></td>
+        <td><b style="font-size:13px;">${fmtN(_stk)}</b>${_hold ? `<div class="sup-sub">คลัง ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
         ${locTds}
-        <td>${r.on_order ? fmtN(r.on_order) + (r.next_eta ? `<div class="sup-sub">เข้า ${dTH(r.next_eta)}</div>` : '') : '<span class="sup-dash">—</span>'}</td>
+        <td>${_wip ? fmtN(_wip) + (_nextWip ? `<div class="sup-sub">เสร็จ ${dTH(_nextWip)}</div>` : '') : '<span class="sup-dash">—</span>'}</td>
         <td>${fmtN(r.avg_day, 1)}</td>
         <td style="color:${tr == null ? 'var(--text3)' : tr > 0.2 ? 'var(--green)' : tr < -0.2 ? 'var(--red)' : 'var(--text2)'};">${tr == null ? '—' : (tr > 0 ? '+' : '') + fmtN(tr * 100) + '%'}</td>
         <td>${cov == null ? '<span class="sup-dash">—</span>' : `<b style="color:${covCol};">${fmtN(cov)}</b> <span class="sup-sub" style="display:inline;">วัน</span>
           <div class="sup-bar"><i style="width:${covPct}%;background:${covCol};"></i></div>
-          ${r.stockout_date ? `<div class="sup-sub">หมด ${dTH(r.stockout_date)}</div>` : ''}`}
+          ${_soDate ? `<div class="sup-sub">หมด ${dTH(_soDate)}</div>` : ''}`}
         </td>
         <td>${!due ? '<span class="sup-dash">—</span>'
              : `<b style="color:${dueCol};">${dTH(due)}</b><div class="sup-sub">${dueIn < 0 ? 'เลยมา ' + fmtN(-dueIn) + ' วัน' : 'อีก ' + fmtN(dueIn) + ' วัน'}</div>`}</td>
