@@ -93,7 +93,7 @@
     if (/Invalid login credentials/i.test(s)) return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     if (/already registered|already been registered/i.test(s)) return 'อีเมลนี้สมัครไว้แล้ว — กด "เข้าสู่ระบบ" แทน';
     if (/Password should be at least/i.test(s)) return 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัว';
-    if (/Email not confirmed/i.test(s)) return 'อีเมลนี้ยังไม่ได้ยืนยัน — แจ้งเมฆ';
+    if (/Email not confirmed/i.test(s)) return 'อีเมลนี้ยังรอการยืนยัน';
     if (/rate limit/i.test(s)) return 'ลองบ่อยเกินไป รอสักครู่แล้วลองใหม่';
     return 'ไม่สำเร็จ: ' + s;
   };
