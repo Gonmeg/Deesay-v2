@@ -291,8 +291,15 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 .mkt-tbl th.c-left, .mkt-tbl td.c-left { text-align:left !important; }
 .mkt-tbl th { font-size:11px; line-height:1.35; white-space:normal !important; }
 .mkt-tbl th small { font-size:10px; color:var(--text3); font-weight:400; }
-.mkt-tbl th:nth-child(1) { width:23%; } .mkt-tbl th:nth-child(2) { width:10%; } .mkt-tbl th:nth-child(3) { width:11%; }
-.mkt-tbl th:nth-child(4) { width:28%; } .mkt-tbl th:nth-child(5) { width:19%; } .mkt-tbl th:nth-child(6) { width:9%; }
+.mkt-tbl th:nth-child(1) { width:19%; } .mkt-tbl th:nth-child(2) { width:8%; } .mkt-tbl th:nth-child(3) { width:9%; }
+.mkt-tbl th.mkt-cat { width:8%; } .mkt-tbl th:nth-child(9) { width:18%; } .mkt-tbl th:nth-child(10) { width:6%; }
+.mkt-tbl th.mkt-cat small { display:block; margin-top:2px; }
+.mkt-tbl th.mkt-cat, .mkt-tbl td.mkt-catv { background: rgba(148,163,184,0.05); }
+.mkt-catv span { display:inline-block; min-width:52px; padding:3px 6px; border-radius:5px; font-weight:600; }
+.mkt-catv .mkt-na { color:var(--text3); font-weight:400; min-width:0; padding:0; }
+.mkt-hl1 { background:rgba(234,88,12,.14); color:#c2410c; }
+.mkt-hl2 { background:rgba(220,38,38,.16); color:#b91c1c; }
+.mkt-legend .mkt-hl1, .mkt-legend .mkt-hl2 { padding:1px 6px; border-radius:4px; font-weight:600; }
 .mkt-tbl td { font-size:12.5px; font-variant-numeric:tabular-nums; }
 .mkt-tbl tr.mkt-roi-row { cursor:pointer; }
 .mkt-tbl tr.mkt-roi-row:hover > td { background:rgba(96,165,250,0.05); }
@@ -417,7 +424,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-e</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1952,7 +1959,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               <th class="sortable-th c-left" onclick="mktRoiSort('name')">สินค้า <span class="sort-ind" id="mrs-name"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('revenue')">ยอดขาย <span class="sort-ind" id="mrs-revenue"></span></th>
               <th class="sortable-th" onclick="mktRoiSort('mkt_pct')">ค่าการตลาด<br><small>% ของยอดขาย</small> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-pct')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-pct" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ค่าการตลาดรวม ÷ ยอดขาย<br>เขียว = ต่ำกว่าค่าเฉลี่ยบริษัท · ส้ม = สูงกว่าไม่เกิน 1.5 เท่า · แดง = สูงกว่า 1.5 เท่า</div></span><span class="sort-ind" id="mrs-mkt_pct"></span></th>
-              <th class="c-left mkt-mix-th">ส่วนประกอบต้นทุน <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-mix')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-mix" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">แถบยาวตาม % ของยอดขาย (ทุกสินค้าสเกลเดียวกัน)<br>5 หมวด: KOL Conversion · KOL PR · การตลาดอื่นๆ (ออกกอง/ไลฟ์/โปร) · แอดตรง (TikTok GMV Max + Shopee โฆษณาสินค้า) · แอดปันส่วน (แอดเพจ/ไลฟ์/awareness)<br>ชี้เมาส์ที่สีเพื่อดูตัวเลข</div></span></th>
+              <th class="mkt-cat">KOL<br>Conversion<small id="mkavg-kol_conversion"></small></th>
+              <th class="mkt-cat">KOL<br>PR<small id="mkavg-kol_pr"></small></th>
+              <th class="mkt-cat">การตลาด<br>อื่นๆ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-oth')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-oth" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ค่าออกกอง · ไลฟ์ · โปรโมชั่น จากบัญชี</div></span><small id="mkavg-other_direct"></small></th>
+              <th class="mkt-cat">แอด<br>ยิงสินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-adp')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-adp" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">แอดที่เลือกสินค้าตัวนี้โดยตรง<br>• TikTok GMV Max แบบยิงสินค้า<br>• Shopee โฆษณาสินค้า</div></span><small id="mkavg-ads_direct"></small></th>
+              <th class="mkt-cat">แอด<br>ทั่วไป <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-adg')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-adg" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">แอดที่ยิงหลายสินค้าพร้อมกัน<br>• แอดเพจ Facebook<br>• TikTok ไลฟ์ / awareness<br>• Shopee Shop GMV Max · Brand · Live<br>แบ่งให้แต่ละสินค้าตามสัดส่วนยอดขายในช่องทางนั้น</div></span><small id="mkavg-ads_allocated"></small></th>
               <th class="c-left">หมวดที่เกินเฉลี่ย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-bloat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-bloat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">เทียบค่าใช้จ่ายแต่ละหมวดของสินค้านี้ (เป็น % ของยอดขาย) กับค่าเฉลี่ยทั้งบริษัท แล้วบอกหมวดที่ใช้เกินมากที่สุด<br>ตัวอย่าง: แป้งดำจ่าย KOL Conversion 6.8% ของยอดขาย บริษัทเฉลี่ย 4.0% → ใช้เกินราว ฿452K<br>— = ไม่มีหมวดไหนเกินเฉลี่ยชัดเจน</div></span></th>
               <th class="sortable-th" onclick="mktRoiSort('mer')">ROI <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-roi')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-roi" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ยอดขาย ÷ ค่าการตลาดรวม — ลง 1 บาทได้ยอดขายกี่บาท</div></span><span class="sort-ind" id="mrs-mer"></span></th>
             </tr></thead>
@@ -1962,7 +1973,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <div style="font-size:10.5px;color:var(--text3);padding:10px 14px;line-height:1.7;">
           <b>ROI</b> = ยอดขาย ÷ ค่าการตลาดรวม (ลงตลาด 1 บาท ได้ยอดขายกี่บาท) · <b>% Budget</b> = ค่าการตลาดรวม ÷ ยอดขาย · กดปุ่ม <b>!</b> ที่หัวคอลัมน์เพื่อดูคำอธิบาย<br>
           <b>ค่าตลาดตรง</b> = ค่าใช้จ่ายรายสินค้าจากบัญชี (ค่ารีวิว KOL แยก Conversion/PR · ออกกอง · ไลฟ์ · ส่งเสริมการขาย) — ตัดหมวดที่ไม่ใช่การตลาดออกแล้ว เช่น ซื้อสินค้าเข้า<br>
-          <b>ค่าแอด</b> แยกเป็น <b>ตรง</b> (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับ <b>ปันส่วน</b> (แอดเพจ/ไลฟ์/awareness/Shop GMV Max) · รวมกันเท่ากับค่าแอดจริงของเดือนนั้นเสมอ · Lazada ไม่นับค่าแอด (กำลังเลิกยิง)
+          <b>ค่าแอด</b> แยกเป็น <b>แอดยิงสินค้า</b> (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับ <b>แอดทั่วไป</b> (แอดเพจ/ไลฟ์/awareness/Shop GMV Max) · รวมกันเท่ากับค่าแอดจริงของเดือนนั้นเสมอ · Lazada ไม่นับค่าแอด (กำลังเลิกยิง)
         </div>
       </div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;display:none;" data-retired="2026-09-22 แทนด้วยตาราง ROI การตลาดต่อสินค้า">
@@ -2956,7 +2967,7 @@ async function renderChannel() {
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
       <td>${k}</td><td>${v.ch}</td>
       <td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
 // ===== FACEBOOK HUB =====
@@ -2991,7 +3002,7 @@ async function renderFbHub() {
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
         <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
         <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-      </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
     document.getElementById('fbSubChannelBars').innerHTML = sorted.length ? sorted.slice(0,8).map(([k,v],i) => {
       const pct = totalRev ? (v.rev/totalRev*100) : 0;
@@ -3495,7 +3506,7 @@ async function renderShHub() {
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
         <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
         <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-      </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
     // ยอดขายรายเดือนจาก sales_summary (กราฟ "ยอดขาย vs ค่าโฆษณา" เดิมย้ายไปหน้า Shopee Ads แล้ว ไม่ให้ซ้ำ)
     const months = Object.keys(H.byMonth).sort();
@@ -3546,7 +3557,7 @@ async function renderLzHub() {
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
         <td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
         <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-      </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
     renderAdpChannel('chartLzAds', null, 'lz', hubAdView.lz);
     renderPromotion('Lz', 'Lazada');
@@ -3597,7 +3608,7 @@ async function renderMtHub() {
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
       <td>${mtStoreName(k)}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
       <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
   if (!mtAdsFetched) { fetchMTAdsData().then(renderMtAdsChart); } else { renderMtAdsChart(); }
   renderMtTopSkuTable();
@@ -3645,7 +3656,7 @@ async function renderMtTopSkuTable() {
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
       <td>${skuToName(sku)}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.qty)}</td>
       <td>${(v.rev/totalSkuRev*100).toFixed(1)}%</td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
 // ===== CREATOR PERFORMANCE (TikTok) =====
@@ -7344,7 +7355,7 @@ function renderMktRoiTable() {
   document.getElementById('mktTopKpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(T.revenue)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดรวม</div><div class="kpi-value">฿${fmtB(T.mkt)}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmtB(T.kolc)} · KOL PR ฿${fmtB(T.kolp)}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmtB(T.dir + T.alloc)}</div><div style="font-size:10.5px;color:var(--text3);">ตรง ฿${fmtB(T.dir)} · ปันส่วน ฿${fmtB(T.alloc)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmtB(T.dir + T.alloc)}</div><div style="font-size:10.5px;color:var(--text3);">ยิงสินค้า ฿${fmtB(T.dir)} · ทั่วไป ฿${fmtB(T.alloc)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ROI</div><div class="kpi-value">${T.mkt > 0 ? (T.revenue / T.mkt).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">% Budget ${T.revenue > 0 ? (T.mkt / T.revenue * 100).toFixed(1) + '%' : '—'}</div></div>`;
   const money = v => v ? '฿' + fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
   // ROI แอดตามช่องทาง (ทั้งบริษัท) — ใช้ค่าแอดของช่องทางนั้นเท่านั้น ไม่รวมค่ารีวิว KOL
@@ -7387,9 +7398,9 @@ function renderMktRoiTable() {
     if (tab === 'cost') {
       const A = _mktRoiRows.find(x => x.sku === sku) || {};
       const rv = A.revenue || 0;
-      const CT = [['kol_conversion', 'KOL Conversion'], ['kol_pr', 'KOL PR'], ['other_direct', 'การตลาดอื่นๆ (ออกกอง/ไลฟ์/โปร)'], ['ads_direct', 'แอดตรง'], ['ads_allocated', 'แอดปันส่วน']];
+      const CT = [['kol_conversion', 'KOL Conversion'], ['kol_pr', 'KOL PR'], ['other_direct', 'การตลาดอื่นๆ (ออกกอง/ไลฟ์/โปร)'], ['ads_direct', 'แอดยิงสินค้า'], ['ads_allocated', 'แอดทั่วไป']];
       const allRev = _mktRoiRows.reduce((t, x) => t + x.revenue, 0) || 1;
-      return `<tr class="mkt-ch-sub-row"><td colspan="6"><div class="mkt-ch-panel2">${tabs}
+      return `<tr class="mkt-ch-sub-row"><td colspan="10"><div class="mkt-ch-panel2">${tabs}
         <div class="mkt-cost-grid mkt-ch-head"><div>หมวด</div><div>จ่ายไป</div><div>% ยอดขาย</div><div>เฉลี่ยบริษัท</div><div></div></div>
         ${CT.map(([k, l]) => { const v = A[k] || 0, pp = rv > 0 ? v / rv * 100 : 0, av = _mktRoiRows.reduce((t, x) => t + (x[k] || 0), 0) / allRev * 100;
           return `<div class="mkt-cost-grid"><div class="mkt-ch-cn">${l}</div><div>${v ? '฿' + fmt(Math.round(v)) : '—'}</div><div>${pp.toFixed(1)}%</div><div>${av.toFixed(1)}%</div>
@@ -7400,7 +7411,7 @@ function renderMktRoiTable() {
     if (tab === 'mo') {
       const ms = (_mktRoiMonthly[sku] || []).slice().sort((a, b) => a.m.localeCompare(b.m));
       let prev = null;
-      return `<tr class="mkt-ch-sub-row"><td colspan="6"><div class="mkt-ch-panel2">${tabs}
+      return `<tr class="mkt-ch-sub-row"><td colspan="10"><div class="mkt-ch-panel2">${tabs}
         <div class="mkt-mo-grid mkt-ch-head"><div>เดือน</div><div>ยอดขาย</div><div>ค่าการตลาดรวม</div><div>% Budget</div><div>ROI</div></div>
         ${ms.map(x => { const roi = x.mkt > 0 ? x.revenue / x.mkt : null;
           const arrow = (roi != null && prev != null) ? (roi > prev * 1.05 ? '<span class="mkt-up">▲</span>' : roi < prev * 0.95 ? '<span class="mkt-dn">▼</span>' : '') : '';
@@ -7411,26 +7422,27 @@ function renderMktRoiTable() {
             <div class="mkt-ch-roi2">${roi != null ? roi.toFixed(2) + 'x' : '—'} ${arrow}</div></div>`; }).join('')}
       </div></td></tr>`;
     }
-    return `<tr class="mkt-ch-sub-row"><td colspan="6"><div class="mkt-ch-panel2">${tabs}
+    return `<tr class="mkt-ch-sub-row"><td colspan="10"><div class="mkt-ch-panel2">${tabs}
       <div class="mkt-ch-grid mkt-ch-head"><div>ช่องทาง</div><div>ยอดขาย</div><div>สัดส่วนยอดขาย</div><div>ค่าแอด</div><div>ROI แอด</div></div>
       ${list.map(([ch, v]) => { const pct = v.revenue / totRev * 100; return `<div class="mkt-ch-grid">
         <div class="mkt-ch-cn">${ch}</div>
         <div>฿${fmt(Math.round(v.revenue))}</div>
         <div class="mkt-ch-share"><span class="mkt-ch-bar"><i style="width:${Math.max(2, pct).toFixed(0)}%"></i></span><span>${pct.toFixed(0)}%</span></div>
-        <div>${v.ads ? '฿' + fmt(Math.round(v.ads)) + (v.direct ? `<em>ตรง ฿${fmtB(v.direct)}</em>` : '') : '<span class="mkt-ch-na">—</span>'}</div>
+        <div>${v.ads ? '฿' + fmt(Math.round(v.ads)) + (v.direct ? `<em>ยิงสินค้า ฿${fmtB(v.direct)}</em>` : '') : '<span class="mkt-ch-na">—</span>'}</div>
         <div class="mkt-ch-roi2">${v.ads > 0 ? (v.revenue / v.ads).toFixed(2) + 'x' : '<span class="mkt-ch-na">—</span>'}${best === ch ? '<span class="mkt-ch-best">คุ้มสุด</span>' : ''}</div>
       </div>`; }).join('')}
     </div></td></tr>`;
   };
   // ===== ส่วนประกอบต้นทุน 5 หมวด (% ของยอดขาย) เทียบค่าเฉลี่ยบริษัท =====
   const CATS = [['kol_conversion', 'KOL Conversion', '#7c3aed'], ['kol_pr', 'KOL PR', '#c4b5fd'], ['other_direct', 'การตลาดอื่นๆ', '#94a3b8'],
-                ['ads_direct', 'แอดตรง', '#2563eb'], ['ads_allocated', 'แอดปันส่วน', '#93c5fd']];
+                ['ads_direct', 'แอดยิงสินค้า', '#2563eb'], ['ads_allocated', 'แอดทั่วไป', '#93c5fd']];
   const AVG = {}; CATS.forEach(([k]) => { AVG[k] = T.revenue > 0 ? rows.reduce((t, a) => t + (a[k] || 0), 0) / T.revenue : 0; });
   const avgTot = T.revenue > 0 ? T.mkt / T.revenue : 0;
   const scaleMax = Math.max(0.5, ...rows.filter(a => a.revenue > 0).map(a => a.mkt_total / a.revenue));   // สเกลเดียวกันทุกแถว
   const pctOf = (a, k) => a.revenue > 0 ? (a[k] || 0) / a.revenue : 0;
-  document.getElementById('mktLegend').innerHTML = CATS.map(([, l, c]) => `<span><i style="background:${c}"></i>${l} <b>${(AVG[CATS.find(x => x[1] === l)[0]] * 100).toFixed(1)}%</b></span>`).join('')
-    + `<span class="mkt-legend-avg">ค่าเฉลี่ยบริษัท รวม <b>${(avgTot * 100).toFixed(1)}%</b> ของยอดขาย</span>`;
+  CATS.forEach(([k]) => { const el = document.getElementById('mkavg-' + k); if (el) el.textContent = `เฉลี่ย ${(AVG[k] * 100).toFixed(1)}%`; });
+  document.getElementById('mktLegend').innerHTML = `ตัวเลข = % ของยอดขาย · <span class="mkt-hl1">ส้ม</span> = สูงกว่าค่าเฉลี่ยบริษัท · <span class="mkt-hl2">แดง</span> = สูงกว่า 1.5 เท่า
+    <span class="mkt-legend-avg">ค่าเฉลี่ยบริษัท รวม <b>${(avgTot * 100).toFixed(1)}%</b> ของยอดขาย</span>`;
   const bloat = a => {
     if (!(a.revenue > 0)) return null;
     let best = null;
@@ -7445,14 +7457,16 @@ function renderMktRoiTable() {
       <td class="c-left"><span class="mkt-caret">${_mktRoiOpen.has(a.sku) ? '▾' : '▸'}</span><b>${ttcEsc(a.name)}</b> <span class="mkt-sku">${ttcEsc(a.sku)}</span></td>
       <td>฿${fmtB(a.revenue)}</td>
       <td>${p != null ? `<b style="color:${pctCol(p)}">${(p * 100).toFixed(1)}%</b><div class="mkt-sub">฿${fmtB(a.mkt_total)}</div>` : '—'}</td>
-      <td class="c-left"><div class="mkt-mix"><div class="mkt-mix-bar">${segs}</div></div></td>
+      ${CATS.map(([k]) => { const v = pctOf(a, k), av = AVG[k];
+          const cls = v > av * 1.5 && (a[k] || 0) - av * a.revenue > a.revenue * 0.01 ? 'mkt-hl2' : v > av && (a[k] || 0) > 0 ? 'mkt-hl1' : '';
+          return `<td class="mkt-catv"><span class="${cls}" title="฿${fmt(Math.round(a[k] || 0))}">${v > 0 ? (v * 100).toFixed(1) + '%' : '<span class="mkt-na">—</span>'}</span></td>`; }).join('')}
       <td class="c-left">${b ? `<span class="mkt-bloat"><i style="background:${CATS.find(x => x[0] === b.k)[2]}"></i>${b.l}</span><div class="mkt-sub">ใช้ ${(b.pct * 100).toFixed(1)}% ของยอดขาย (บริษัทเฉลี่ย ${(b.avg * 100).toFixed(1)}%) · เกิน ฿${fmtB(b.over)}</div>` : '<span class="mkt-ok">—</span>'}</td>
       <td><b class="mkt-roi-v">${a.mer !== null ? a.mer.toFixed(2) + 'x' : '—'}</b></td>
     </tr>${_mktRoiOpen.has(a.sku) ? chRows(a.sku) : ''}`;
-  }).join('') || '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+  }).join('') || '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 function exportMktRoi() {
-  const head = ['สินค้า', 'SKU', 'ยอดขาย', 'จำนวนชิ้น', 'รีวิวฟรี', 'ค่ารีวิว KOL Conversion', 'ค่ารีวิว KOL PR', 'ค่าการตลาดอื่นๆ', 'ค่าแอดตรง', 'ค่าแอดปันส่วน', 'ค่าการตลาดรวม', '% Budget', 'ROI'];
+  const head = ['สินค้า', 'SKU', 'ยอดขาย', 'จำนวนชิ้น', 'รีวิวฟรี', 'ค่ารีวิว KOL Conversion', 'ค่ารีวิว KOL PR', 'ค่าการตลาดอื่นๆ', 'แอดยิงสินค้า', 'แอดทั่วไป', 'ค่าการตลาดรวม', '% Budget', 'ROI'];
   const lines = [head.join(',')].concat(_mktRoiRows.map(a => [a.name, a.sku, Math.round(a.revenue), Math.round(a.qty), Math.round(a.free_qty), Math.round(a.kol_conversion), Math.round(a.kol_pr), Math.round(a.other_direct), Math.round(a.ads_direct), Math.round(a.ads_allocated), Math.round(a.mkt_total), a.mkt_pct !== null ? a.mkt_pct.toFixed(1) : '', a.mer !== null ? a.mer.toFixed(2) : ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')));
   const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `mkt-roi-per-product.csv`; a.click();
