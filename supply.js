@@ -166,7 +166,7 @@
     root().innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
         <div style="font-size:11.5px;color:var(--text3);">สต็อกจาก log ทีมแพ็ค · ความต้องการจากยอดขายจริง · คำนวณใหม่ทุกคืน 04:00 · แผน ณ <b>${dTH(d.as_of)}</b> · log ล่าสุด ${dTH(d.ledger_last)} · ยอดขายล่าสุด ${dTH(d.sales_last)}</div>
-        <button class="btn btn-ghost" id="supRefresh">↻ รีเฟรช</button>
+        <button class="btn btn-ghost" id="supRefresh" title="ดึง log ทีมแพ็ค + ไฟล์ PO ของจัดซื้อใหม่ทันที แล้วคำนวณใหม่ทั้งหน้า (ใช้เวลาราว 15 วินาที)">↻ รีเฟรช (ดึงข้อมูลล่าสุด)</button>
       </div>
       ${banners.map(([c, t]) => `<div style="padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:12px;color:${c};background:color-mix(in srgb, ${c} 10%, transparent);border:1px solid color-mix(in srgb, ${c} 30%, transparent);">${t}</div>`).join('')}
 
@@ -209,8 +209,8 @@
         #page-supply .card-title { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:8px; }
         #page-supply .section-title { font-family:'Sarabun',sans-serif; }
         #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) minmax(420px,42%); gap:16px; align-items:start; margin-bottom:18px; }
-        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-        #page-supply .sup-kpis .sup-kpi:nth-child(5) { grid-column:1 / -1; }
+        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; align-content:start; }
+
         #page-supply .sup-kpi { min-width:0; padding:13px 15px; border-radius:10px; }
         #page-supply .sup-kpi .card-title { margin-bottom:3px; font-size:11px; }
         #page-supply .sup-kpi .kpi-value { font-size:19px !important; line-height:1.1; }
@@ -250,7 +250,18 @@
       </style>`;
 
     renderTable();
-    document.getElementById('supRefresh').onclick = () => { DATA = null; load(); };
+    document.getElementById('supRefresh').onclick = async () => {
+      const btn = document.getElementById('supRefresh');
+      btn.disabled = true; btn.textContent = '⏳ กำลังดึงสต็อก + ไฟล์ PO ล่าสุด…';
+      try {
+        const r = await supaRpc('supply_sync_now', {});
+        if (!(r && r.skipped)) {
+          await new Promise(res => setTimeout(res, 12000));        // รอ Edge Function อ่านชีทเสร็จ
+          await supaRpc('refresh_supply_views', {}).catch(() => {});
+        }
+      } catch (e) { console.warn('supply_sync_now', e.message); }
+      DATA = null; load();
+    };
     document.getElementById('supQ').oninput = e => { filt.q = e.target.value; renderTable(); };
     const st = document.getElementById('supStatus'); st.value = filt.status; st.onchange = e => { filt.status = e.target.value; renderAll(); };
     document.getElementById('supClear').onclick = () => { filt = { status: '', abc: '', xyz: '', q: '' }; renderAll(); };
@@ -393,7 +404,12 @@
       const qty = parseInt(String(qEl.value).replace(/[^\d]/g, '')) || 0;
       const arr = null;
       el.style.borderColor = '#fbbf24';
-      try { await savePlan(sku, qty, arr); renderTable(); }
+      try {
+        await savePlan(sku, qty, arr);
+        const y = window.scrollY, tb = document.getElementById('supTbl'), ty = tb ? tb.scrollTop : 0;
+        renderAll();
+        window.scrollTo(0, y); const tb2 = document.getElementById('supTbl'); if (tb2) tb2.scrollTop = ty;
+      }
       catch (e) { el.style.borderColor = 'var(--red)'; alert(e.message); }
     };
     document.querySelectorAll('.sup-plan-qty').forEach(el => {
