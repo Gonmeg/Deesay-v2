@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="config.js"></script>
+<script src="auth.js"></script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -83,8 +84,8 @@
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-if (sessionStorage.getItem('auth') !== 'true') window.location.href = 'login.html?redirect=health.html'
-document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('auth'); window.location.href = 'index.html' }
+await Auth.require('health')   // เมฆเท่านั้น
+document.getElementById('logoutBtn').onclick = () => Auth.signOut()
 if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme')
 document.getElementById('themeBtn').onclick = () => { document.body.classList.toggle('light-theme'); localStorage.setItem('deesay_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark') }
 const DB = createClient(window.SUPABASE_URL || 'https://plfdizmjdmhyjqraohfv.supabase.co', window.SUPABASE_ANON_KEY)
