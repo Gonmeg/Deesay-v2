@@ -211,6 +211,24 @@
   main { flex: 1; min-width: 0; display: block; padding: 28px 36px 48px; }
   .shell { max-width: none; }
   .tabs { display: none !important; }
+  /* ===== แท็บ สิทธิ์ผู้ใช้ ===== */
+  .pm-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; font-weight: 600; border-bottom: 1px solid var(--border); }
+  .pm-sub { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+  .pm-count { font-size: 0.7rem; background: rgba(248,113,113,0.18); color: var(--danger); padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .pm-count:empty { display: none; }
+  .pm-badge { display: inline-block; font-size: 0.68rem; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .pm-admin { background: rgba(200,169,110,0.16); color: var(--accent2); }
+  .pm-on { background: rgba(74,222,128,0.16); color: var(--success); } .pm-off { background: rgba(107,122,153,0.2); color: var(--muted); }
+  .pm-warn { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .pm-name { width: 140px; }
+  .pm-btn { font-size: 0.74rem; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--border2); background: none; color: var(--muted); cursor: pointer; font-family: inherit; margin-right: 4px; white-space: nowrap; }
+  .pm-btn:hover { color: var(--text); border-color: var(--muted); } .pm-btn.danger:hover { color: var(--danger); border-color: var(--danger); } .pm-btn.gold { color: var(--accent2); border-color: rgba(200,169,110,0.4); }
+  .pm-detail td { background: var(--surface2); padding: 12px 14px 14px; }
+  .pm-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 18px; margin-top: 10px; }
+  .pm-group b { display: block; font-size: 0.7rem; color: var(--muted2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .pm-chk { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 2px 0; cursor: pointer; }
+  .pm-chk input { accent-color: var(--accent); }
+  .pm-empty { text-align: center; color: var(--muted); padding: 18px !important; }
   .page-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
   .page-header h1 { font-size: 1.35rem; }
   .sp-tablewrap { max-height: calc(100vh - 330px); }
@@ -303,6 +321,7 @@
 
   <div class="side-sec">จัดการข้อมูล</div>
   <button class="side-item active" data-tab="products"><span class="ico">📦</span>สินค้า & Supply Chain</button>
+  <button class="side-item" data-tab="perms" id="sidePerms" style="display:none;"><span class="ico">🔐</span>สิทธิ์ผู้ใช้</button>
 
   <div class="side-sec">ไปหน้าอื่น</div>
   <a class="side-item" href="dashboard.html"><span class="ico">📊</span>Dashboard</a>
@@ -330,6 +349,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="products">📦 สินค้า (Master Data)</button>
     <button class="tab-btn" data-tab="supply">🚚 Supply Chain</button>
+    <button class="tab-btn" data-tab="perms">🔐 สิทธิ์ผู้ใช้</button>
   </div>
 
   <div id="tab-products" class="tabpane">
@@ -469,6 +489,23 @@
     </div>
     <div class="sp-foot" id="spFoot"></div>
   </div><!-- /tab-supply -->
+
+  <div id="tab-perms" class="tabpane" style="display:none;">
+    <div class="card" style="margin-bottom:18px;">
+      <div class="pm-head">🔔 คำขอรีเซ็ตรหัสผ่าน <span class="pm-count" id="pmReqCount"></span><span class="pm-sub">คนที่กด "ลืมรหัสผ่าน" ในหน้า login — ตั้งรหัสใหม่แล้วแจ้งเขาเอง</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>อีเมล</th><th>ขอเมื่อ</th><th>บัญชี</th><th></th></tr></thead>
+        <tbody id="pmReqBody"><tr><td colspan="4" class="pm-empty">กำลังโหลด…</td></tr></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="pm-head">👥 ผู้ใช้ทั้งหมด <span class="pm-sub">ทุกช่องบันทึกทันทีที่ติ๊ก · คนสมัครใหม่จะยังไม่มีหน้าไหนจนกว่าจะติ๊กให้</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>ชื่อ</th><th>อีเมล</th><th>หน้า Dashboard</th><th>อัปโหลดไฟล์</th><th>จัดการสินค้า</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody id="pmUserBody"><tr><td colspan="7" class="pm-empty">กำลังโหลด…</td></tr></tbody>
+      </table></div>
+    </div>
+  </div><!-- /tab-perms -->
 
 </div>
 </main>
@@ -1063,6 +1100,147 @@ async function loadSupplyTab() {
   }
 }
 
+// ===== แท็บ สิทธิ์ผู้ใช้ (เมฆเท่านั้น) =====
+if (Auth.perm?.is_admin) document.getElementById('sidePerms').style.display = ''
+const PAGES = window.DEESAY_PAGES || [], STAFF_PAGES = window.DEESAY_STAFF_PAGES || []
+let pmUsers = []
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const thDate = d => d ? new Date(d).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'
+const hasAll = u => u.is_admin || (u.pages || []).includes('*')
+const pageCount = u => hasAll(u) ? 'ทุกหน้า' : `${(u.pages || []).filter(p => PAGES.some(x => x.id === p)).length}/${PAGES.length} หน้า`
+
+async function authAdmin(action, user_id, extra = {}) {
+  const res = await fetch(`${window.SUPABASE_URL}/functions/v1/auth-admin`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + Auth.token() },
+    body: JSON.stringify({ action, user_id, ...extra })
+  })
+  const j = await res.json().catch(() => ({}))
+  if (!res.ok || !j.ok) throw new Error(j.error || `HTTP ${res.status}`)
+  return j
+}
+
+async function loadPermsTab() {
+  try {
+    const [users, reqs] = await Promise.all([Auth.rpc('admin_list_users'), Auth.rpc('admin_list_reset_requests')])
+    pmUsers = users || []
+    renderPmRequests(reqs || [])
+    renderPmUsers()
+  } catch (e) { showToast('โหลดรายชื่อไม่สำเร็จ: ' + e.message, true) }
+}
+
+function renderPmRequests(reqs) {
+  const pending = reqs.filter(r => r.status === 'pending')
+  document.getElementById('pmReqCount').textContent = pending.length ? String(pending.length) : ''
+  const tb = document.getElementById('pmReqBody')
+  if (!pending.length) { tb.innerHTML = '<tr><td colspan="4" class="pm-empty">ไม่มีคำขอค้าง</td></tr>'; return }
+  tb.innerHTML = pending.map(r => {
+    const u = pmUsers.find(x => (x.email || '').toLowerCase() === r.email)
+    return `<tr data-req="${r.id}">
+      <td>${esc(r.email)}</td><td>${thDate(r.requested_at)}</td>
+      <td>${u ? `<span class="pm-badge pm-on">มีบัญชี</span>` : `<span class="pm-badge pm-warn">ไม่พบบัญชีนี้</span>`}</td>
+      <td>${u ? `<button class="pm-btn gold" data-act="req-reset" data-uid="${u.user_id}">🔑 ตั้งรหัสใหม่</button>` : ''}<button class="pm-btn" data-act="req-close">ปิดคำขอ</button></td>
+    </tr>`
+  }).join('')
+}
+
+function renderPmUsers() {
+  const tb = document.getElementById('pmUserBody')
+  if (!pmUsers.length) { tb.innerHTML = '<tr><td colspan="7" class="pm-empty">ยังไม่มีใครสมัคร</td></tr>'; return }
+  tb.innerHTML = pmUsers.map(u => {
+    const me = u.user_id === Auth.perm.user_id, adm = u.is_admin, dis = adm ? 'disabled' : ''
+    return `<tr data-uid="${u.user_id}">
+      <td><input class="row-input pm-name" data-f="name" value="${esc(u.display_name)}" placeholder="ชื่อ">${adm ? ' <span class="pm-badge pm-admin">แอดมิน</span>' : ''}</td>
+      <td>${esc(u.email)}${me ? ' <span class="pm-sub">(คุณ)</span>' : ''}</td>
+      <td>${pageCount(u)} ${adm ? '' : `<button class="pm-btn" data-act="toggle-pages">แก้</button>`}</td>
+      <td><input type="checkbox" data-f="can_upload" ${u.can_upload || adm ? 'checked' : ''} ${dis}></td>
+      <td><input type="checkbox" data-f="can_admin" ${u.can_admin || adm ? 'checked' : ''} ${dis}></td>
+      <td>${u.is_active ? '<span class="pm-badge pm-on">ใช้งานได้</span>' : '<span class="pm-badge pm-off">ปิดอยู่</span>'}</td>
+      <td><button class="pm-btn gold" data-act="reset">🔑 ตั้งรหัสใหม่</button>${me ? '' : `<button class="pm-btn" data-act="toggle-active">${u.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button><button class="pm-btn danger" data-act="delete">ลบ</button>`}</td>
+    </tr>`
+  }).join('')
+}
+
+function pmDetailRow(u) {
+  const groups = [...new Set(PAGES.map(p => p.group))]
+  const on = id => hasAll(u) || (u.pages || []).includes(id)
+  return `<tr class="pm-detail" data-detail="${u.user_id}"><td colspan="7">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <span class="pm-sub">ทางลัด:</span>
+      <button class="pm-btn" data-act="preset" data-preset="all">ทุกหน้า</button>
+      <button class="pm-btn" data-act="preset" data-preset="staff">ให้แบบพนักงานทั่วไป</button>
+      <button class="pm-btn" data-act="preset" data-preset="none">ไม่ให้เลย</button>
+      <button class="pm-btn" data-act="toggle-pages" style="margin-left:auto;">ปิด</button>
+    </div>
+    <div class="pm-groups">${groups.map(g => `<div class="pm-group"><b>${esc(g)}</b>${PAGES.filter(p => p.group === g).map(p =>
+      `<label class="pm-chk"><input type="checkbox" data-page="${p.id}" ${on(p.id) ? 'checked' : ''}>${esc(p.name)}</label>`).join('')}</div>`).join('')}</div>
+  </td></tr>`
+}
+
+async function pmSave(uid, patch, okMsg) {
+  try {
+    const u = await Auth.rpc('admin_set_permissions', { p_user_id: uid, p_pages: patch.pages ?? null, p_can_upload: patch.can_upload ?? null, p_can_admin: patch.can_admin ?? null, p_is_active: patch.is_active ?? null, p_display_name: patch.display_name ?? null })
+    const i = pmUsers.findIndex(x => x.user_id === uid); if (i >= 0) pmUsers[i] = u
+    showToast(okMsg || 'บันทึกแล้ว')
+    return u
+  } catch (e) { showToast('บันทึกไม่สำเร็จ: ' + e.message, true); throw e }
+}
+
+async function pmResetPassword(uid, reqId) {
+  const u = pmUsers.find(x => x.user_id === uid); if (!u) return
+  const pw = prompt(`ตั้งรหัสผ่านใหม่ให้ ${u.display_name || u.email}\n(อย่างน้อย 6 ตัว — ตั้งเสร็จแจ้งรหัสให้เขาเอง)`)
+  if (pw === null) return
+  if (pw.length < 6) { showToast('รหัสผ่านต้องยาวอย่างน้อย 6 ตัว', true); return }
+  try {
+    await authAdmin('set_password', uid, { password: pw })
+    if (reqId) await Auth.rpc('admin_close_reset_request', { p_id: reqId, p_status: 'done' })
+    showToast(`ตั้งรหัสให้ ${u.display_name || u.email} แล้ว — อย่าลืมแจ้งรหัสใหม่ให้เขา`)
+    if (reqId) loadPermsTab()
+  } catch (e) { showToast('ตั้งรหัสไม่สำเร็จ: ' + e.message, true) }
+}
+
+document.getElementById('tab-perms').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-act]'); if (!btn) return
+  const act = btn.dataset.act
+  const reqRow = btn.closest('tr[data-req]')
+  if (act === 'req-reset') return pmResetPassword(btn.dataset.uid, Number(reqRow.dataset.req))
+  if (act === 'req-close') { try { await Auth.rpc('admin_close_reset_request', { p_id: Number(reqRow.dataset.req), p_status: 'dismissed' }); loadPermsTab() } catch (err) { showToast(err.message, true) } return }
+  const row = btn.closest('tr[data-uid], tr[data-detail]'); const uid = row.dataset.uid || row.dataset.detail
+  const u = pmUsers.find(x => x.user_id === uid); if (!u) return
+  if (act === 'toggle-pages') {
+    const ex = document.querySelector(`tr[data-detail="${uid}"]`)
+    if (ex) ex.remove(); else document.querySelector(`tr[data-uid="${uid}"]`).insertAdjacentHTML('afterend', pmDetailRow(u))
+    return
+  }
+  if (act === 'preset') {
+    const pages = btn.dataset.preset === 'all' ? ['*'] : btn.dataset.preset === 'staff' ? [...STAFF_PAGES] : []
+    await pmSave(uid, { pages }, 'บันทึกหน้าแล้ว'); renderPmUsers()
+    document.querySelector(`tr[data-uid="${uid}"]`).insertAdjacentHTML('afterend', pmDetailRow(pmUsers.find(x => x.user_id === uid)))
+    return
+  }
+  if (act === 'reset') return pmResetPassword(uid)
+  if (act === 'toggle-active') {
+    if (u.is_active && !confirm(`ปิดใช้งาน ${u.display_name || u.email}? เขาจะเข้าหน้าไหนไม่ได้เลยจนกว่าจะเปิดใหม่`)) return
+    await pmSave(uid, { is_active: !u.is_active }); renderPmUsers(); return
+  }
+  if (act === 'delete') {
+    if (!confirm(`ลบบัญชี ${u.display_name || u.email} ทิ้งถาวร? (ถ้าแค่ไม่ให้เข้า ใช้ "ปิดใช้งาน" แทน)`)) return
+    try { await authAdmin('delete_user', uid); showToast('ลบบัญชีแล้ว'); loadPermsTab() } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message, true) }
+  }
+})
+document.getElementById('tab-perms').addEventListener('change', async e => {
+  const el = e.target
+  const row = el.closest('tr[data-uid], tr[data-detail]'); if (!row) return
+  const uid = row.dataset.uid || row.dataset.detail
+  if (el.dataset.page) {           // ติ๊กหน้าในตารางย่อย
+    const pages = [...row.querySelectorAll('input[data-page]:checked')].map(x => x.dataset.page)
+    await pmSave(uid, { pages }, 'บันทึกหน้าแล้ว')
+    const main = document.querySelector(`tr[data-uid="${uid}"] td:nth-child(3)`); if (main) main.firstChild.textContent = pageCount(pmUsers.find(x => x.user_id === uid)) + ' '
+    return
+  }
+  if (el.dataset.f === 'can_upload' || el.dataset.f === 'can_admin') await pmSave(uid, { [el.dataset.f]: el.checked })
+  if (el.dataset.f === 'name') await pmSave(uid, { display_name: el.value.trim() }, 'บันทึกชื่อแล้ว')
+})
+
 // ===== สลับแท็บ =====
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1070,8 +1248,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn))
     document.getElementById('tab-products').style.display = tab === 'products' ? '' : 'none'
     document.getElementById('tab-supply').style.display = tab === 'supply' ? '' : 'none'
+    document.getElementById('tab-perms').style.display = tab === 'perms' ? '' : 'none'
     document.getElementById('btnShowNewRow').style.display = tab === 'products' ? '' : 'none'
     if (tab === 'supply') loadSupplyTab()
+    if (tab === 'perms') loadPermsTab()
   })
 })
 
@@ -1101,7 +1281,8 @@ init()
   (function () {
     const HEAD = {
       products: ['📦 สินค้า & Supply Chain', 'ชื่อ · รหัสสี/เบอร์ · ราคา · สถานะ · การวางแผนสั่งของ · Lead time — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard'],
-      supply: ['🚚 Supply Chain', 'ตั้ง Lead time และเลือกว่าสินค้าไหนต้องวางแผนสั่งของ — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard']
+      supply: ['🚚 Supply Chain', 'ตั้ง Lead time และเลือกว่าสินค้าไหนต้องวางแผนสั่งของ — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard'],
+      perms: ['🔐 สิทธิ์ผู้ใช้', 'ติ๊กว่าใครเห็นหน้าไหน อัปโหลดได้ไหม จัดการสินค้าได้ไหม · ตั้งรหัสผ่านใหม่ให้คนที่ลืม · ปิด/ลบบัญชี']
     };
     document.querySelectorAll('.side-item[data-tab]').forEach(el => el.addEventListener('click', () => {
       const t = el.dataset.tab;
