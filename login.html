@@ -1,148 +1,131 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | Deesay</title>
-  <script src="config.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: #f1f5f9;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 40px;
-      width: 100%;
-      max-width: 400px;
-    }
-
-    .logo {
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      margin-bottom: 8px;
-    }
-
-    .subtitle {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #94a3b8;
-      margin-bottom: 32px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: #94a3b8;
-      margin-bottom: 6px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 16px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      color: #f1f5f9;
-      font-size: 0.95rem;
-      margin-bottom: 20px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input:focus { border-color: #6366f1; }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #6366f1;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button:hover { background: #4f46e5; }
-
-    .error {
-      background: #450a0a;
-      border: 1px solid #991b1b;
-      color: #fca5a5;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      margin-bottom: 20px;
-      display: none;
-    }
-
-    .back {
-      display: block;
-      text-align: center;
-      margin-top: 20px;
-      color: #94a3b8;
-      font-size: 0.85rem;
-      text-decoration: none;
-    }
-
-    .back:hover { color: #f1f5f9; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ | Deesay</title>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0f; --bg2: #111118; --bg3: #1a1a24; --border: #2a2a3a; --accent: #c8a96e; --accent2: #e8c98e;
+    --text: #e8e8f0; --text2: #9090a8; --text3: #5a5a72; --green: #4ade80; --red: #f87171;
+  }
+  body.light-theme {
+    --bg: #f5f5f7; --bg2: #ffffff; --bg3: #ebebef; --border: #d8d8e0; --accent: #b8892e; --accent2: #a07020;
+    --text: #1a1a2e; --text2: #4a4a6a; --text3: #7a7a96; --green: #16a34a; --red: #dc2626;
+  }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 36px 40px; width: 100%; max-width: 400px; }
+  .logo { text-align: center; font-size: 22px; font-weight: 700; letter-spacing: 3px; color: var(--accent); }
+  .logo-sub { text-align: center; font-size: 10px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; margin-top: 2px; margin-bottom: 26px; }
+  .modes { display: flex; background: var(--bg3); border-radius: 8px; padding: 3px; margin-bottom: 22px; }
+  .modes button { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text2); font-family: inherit; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
+  .modes button.active { background: var(--bg2); color: var(--text); border: 1px solid var(--border); }
+  label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  input { width: 100%; padding: 11px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; margin-bottom: 16px; outline: none; }
+  input:focus { border-color: var(--accent); }
+  .btn { width: 100%; padding: 12px; background: var(--accent); color: #0a0a0f; border: none; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn:hover { background: var(--accent2); } .btn:disabled { opacity: .6; cursor: wait; }
+  .msg { display: none; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+  .msg.err { display: block; background: rgba(248,113,113,.12); border: 1px solid var(--red); color: var(--red); }
+  .msg.ok { display: block; background: rgba(74,222,128,.12); border: 1px solid var(--green); color: var(--green); }
+  .hint { font-size: 12px; color: var(--text3); text-align: center; margin-top: 18px; line-height: 1.6; }
+  .hint a { color: var(--text2); text-decoration: none; }
+  #fName, #fPass2 { display: none; }
+  #fPass { display: block; }
+</style>
 </head>
 <body>
+<div class="card">
+  <div class="logo">DEESAY</div>
+  <div class="logo-sub">Dashboard</div>
 
-  <div class="card">
-    <div class="logo">DEESAY</div>
-    <div class="subtitle">กรอกรหัสผ่านเพื่อเข้าใช้งาน</div>
-
-    <div class="error" id="errorMsg">รหัสผ่านไม่ถูกต้อง</div>
-
-    <label>รหัสผ่าน</label>
-    <input type="password" id="password" placeholder="••••••••">
-
-    <button onclick="handleLogin()">เข้าสู่ระบบ</button>
-
-    <a href="index.html" class="back">← กลับหน้าแรก</a>
+  <div class="modes">
+    <button id="mLogin" class="active" onclick="setMode('login')">เข้าสู่ระบบ</button>
+    <button id="mSignup" onclick="setMode('signup')">สมัครใช้งาน</button>
+    <button id="mForgot" onclick="setMode('forgot')">ลืมรหัสผ่าน</button>
   </div>
 
-  <script>
-    // ถ้า login อยู่แล้วข้ามไปเลย
-    if (sessionStorage.getItem('auth') === 'true') {
-      const redirect = new URLSearchParams(window.location.search).get('redirect')
-      window.location.href = redirect || 'upload.html'
-    }
+  <div class="msg" id="msg"></div>
 
-    function handleLogin() {
-      const password = document.getElementById('password').value
-      const errorMsg = document.getElementById('errorMsg')
+  <div id="fName"><label>ชื่อที่ให้แสดง</label><input id="name" placeholder="เช่น นายเอ" autocomplete="name"></div>
+  <label>อีเมลบริษัท</label>
+  <input id="email" type="email" placeholder="you@company.com" autocomplete="username">
+  <div id="fPass"><label>รหัสผ่าน</label>
+  <input id="password" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+  <div id="fPass2"><label>ยืนยันรหัสผ่านอีกครั้ง</label>
+  <input id="password2" type="password" placeholder="พิมพ์รหัสผ่านเดิมซ้ำ" autocomplete="new-password"></div>
 
-      if (password === SYSTEM_PASSWORD) {
-        sessionStorage.setItem('auth', 'true')
-        const redirect = new URLSearchParams(window.location.search).get('redirect')
-        window.location.href = redirect || 'upload.html'
-      } else {
-        errorMsg.style.display = 'block'
-        document.getElementById('password').value = ''
+  <button class="btn" id="btnGo" onclick="go()">เข้าสู่ระบบ</button>
+
+  <div class="hint" id="hint"><a href="index.html">← กลับหน้าแรก</a></div>
+</div>
+
+<script>
+  try { if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
+  let mode = 'login';
+  const $ = id => document.getElementById(id);
+  const redirectTo = () => { const r = new URLSearchParams(location.search).get('redirect'); return (r && !r.startsWith('http') && !r.startsWith('//')) ? r : 'dashboard.html'; };
+  const show = (kind, text) => { const m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; };
+
+  function setMode(m) {
+    mode = m; $('msg').className = 'msg';
+    ['login', 'signup', 'forgot'].forEach(k => $('m' + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', m === k));
+    $('fName').style.display = m === 'signup' ? 'block' : 'none';
+    $('fPass').style.display = m === 'forgot' ? 'none' : 'block';
+    $('fPass2').style.display = m === 'signup' ? 'block' : 'none';
+    $('btnGo').textContent = m === 'signup' ? 'สมัครใช้งาน' : m === 'forgot' ? 'ส่งคำขอรีเซ็ตรหัสผ่าน' : 'เข้าสู่ระบบ';
+    $('password').autocomplete = m === 'signup' ? 'new-password' : 'current-password';
+    $('hint').innerHTML = (m === 'signup' ? 'สมัครแล้วจะยังเข้าหน้าไหนไม่ได้ จนกว่าเมฆจะเปิดสิทธิ์ให้<br>'
+      : m === 'forgot' ? 'กรอกอีเมลที่สมัครไว้ — คำขอจะไปถึงเมฆ แล้วเมฆจะตั้งรหัสใหม่ให้และแจ้งกลับ<br>' : '')
+      + '<a href="index.html">← กลับหน้าแรก</a>';
+  }
+
+  const thMsg = e => {
+    const s = (e || '').toString();
+    if (/Invalid login credentials/i.test(s)) return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+    if (/already registered|already been registered/i.test(s)) return 'อีเมลนี้สมัครไว้แล้ว — กด "เข้าสู่ระบบ" แทน';
+    if (/Password should be at least/i.test(s)) return 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัว';
+    if (/Email not confirmed/i.test(s)) return 'อีเมลนี้ยังไม่ได้ยืนยัน — แจ้งเมฆ';
+    if (/rate limit/i.test(s)) return 'ลองบ่อยเกินไป รอสักครู่แล้วลองใหม่';
+    return 'ไม่สำเร็จ: ' + s;
+  };
+
+  async function go() {
+    const email = $('email').value.trim(), password = $('password').value, name = $('name').value.trim();
+    if (!email) return show('err', 'กรอกอีเมลก่อน');
+    if (mode !== 'forgot' && !password) return show('err', 'กรอกรหัสผ่านก่อน');
+    if (mode === 'signup' && password.length < 6) return show('err', 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัว');
+    if (mode === 'signup' && password !== $('password2').value) return show('err', 'รหัสผ่านสองช่องไม่ตรงกัน — พิมพ์ใหม่อีกครั้ง');
+    $('btnGo').disabled = true; $('msg').className = 'msg';
+    try {
+      const sb = await Auth.ready;
+      if (mode === 'forgot') {
+        const { data, error } = await sb.rpc('request_password_reset', { p_email: email });
+        if (error) throw error;
+        if (!data?.ok) throw new Error(data?.error || 'ส่งคำขอไม่สำเร็จ');
+        show('ok', 'ส่งคำขอถึงเมฆแล้ว — รอเมฆตั้งรหัสใหม่ให้และแจ้งกลับ');
+        return;
       }
-    }
+      if (mode === 'signup') {
+        const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name: name || email.split('@')[0] } } });
+        if (error) throw error;
+        if (!data.session) { show('ok', 'สมัครแล้ว — ระบบส่งอีเมลยืนยันไปให้ กดลิงก์ในอีเมลก่อนแล้วค่อยเข้าสู่ระบบ'); setMode('login'); return; }
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      }
+      location.replace(redirectTo());
+    } catch (e) { show('err', thMsg(e.message || e)); }
+    finally { $('btnGo').disabled = false; }
+  }
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter') handleLogin()
-    })
-  </script>
-
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  // ล็อกอินค้างอยู่แล้ว → ข้ามไปเลย
+  Auth.ready.then(sb => sb.auth.getSession()).then(({ data }) => { if (data.session) location.replace(redirectTo()); }).catch(() => {});
+</script>
 </body>
 </html>
