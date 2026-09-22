@@ -255,6 +255,26 @@
   #thumbPreview { display:none; position:fixed; z-index:9999; pointer-events:none; width:340px; border-radius:10px; overflow:hidden; background:var(--bg2); border:1px solid var(--border); box-shadow:0 12px 32px rgba(0,0,0,0.45); }
   #thumbPreview img { display:block; width:100%; height:auto; }
 
+/* (2026-09-22) ROI ต่อสินค้า — ขยายดูรายช่องทาง + การ์ด ROI แอดตามช่องทาง */
+.mkt-caret { display:inline-block; width:14px; color:var(--text3); font-size:11px; }
+tr.mkt-roi-row.open > td { background: rgba(96,165,250,0.06); }
+tr.mkt-ch-sub-row > td { padding: 0 14px 14px 32px !important; background: rgba(96,165,250,0.03); text-align:left !important; }
+.mkt-ch-tbl { width:auto; min-width:640px; margin-top:4px; }
+.mkt-ch-tbl th, .mkt-ch-tbl td { padding:6px 14px !important; font-size:11.5px; text-align:right !important; white-space:nowrap; border-bottom:1px solid var(--border); }
+.mkt-ch-tbl th:first-child, .mkt-ch-tbl td:first-child { text-align:left !important; font-weight:600; }
+.mkt-ch-tbl th { color:var(--text3); font-weight:500; }
+.mkt-ch-bar { display:inline-block; width:70px; height:5px; border-radius:3px; background:var(--border); margin-right:6px; vertical-align:middle; }
+.mkt-ch-bar i { display:block; height:5px; border-radius:3px; background:#60a5fa; }
+.mkt-ch-dir { display:block; font-size:10px; color:var(--text3); }
+.mkt-ch-best { font-size:9.5px; font-weight:700; color:#16a34a; background:rgba(34,197,94,.12); padding:1px 6px; border-radius:4px; margin-left:4px; }
+#mktRoiChCards { padding: 0 14px 12px; }
+.mkt-ch-title { font-size:11px; color:var(--text2); font-weight:600; margin-bottom:6px; }
+.mkt-ch-title span { font-weight:400; color:var(--text3); margin-left:6px; }
+.mkt-ch-row { display:flex; gap:10px; flex-wrap:wrap; }
+.mkt-ch-card { flex:1; min-width:140px; border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+.mkt-ch-name { font-size:11px; color:var(--text3); }
+.mkt-ch-roi { font-size:18px; font-weight:700; font-family:'IBM Plex Mono',monospace; margin-top:2px; }
+.mkt-ch-sub { font-size:10.5px; color:var(--text3); margin-top:2px; }
 /* (2026-09-19) ปุ่ม ! อธิบายหัวคอลัมน์ + จัดตารางหน้า MKT Tracking / TikTok Ads ให้อ่านง่าย */
 .mkt-info { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%;
   border:1px solid var(--border); color:var(--text3); font-size:9.5px; font-weight:700; cursor:help; line-height:1; vertical-align:middle; }
@@ -336,7 +356,7 @@
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.21-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-a</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1884,7 +1904,7 @@
           <b>ค่าแอด</b> แยกเป็น <b>ตรง</b> (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับ <b>ปันส่วน</b> (แอดเพจ/ไลฟ์/awareness/Shop GMV Max) · รวมกันเท่ากับค่าแอดจริงของเดือนนั้นเสมอ · Lazada ไม่นับค่าแอด (กำลังเลิกยิง)
         </div>
       </div>
-      <div class="card" style="margin-bottom:20px;overflow:hidden;">
+      <div class="card" style="margin-bottom:20px;overflow:hidden;display:none;" data-retired="2026-09-22 แทนด้วยตาราง ROI การตลาดต่อสินค้า">
         <div class="section-header">
           <div class="section-title">MKT Tracking รายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
           <button class="btn btn-ghost" onclick="exportCostByMonth()">⬇ Export CSV</button>
@@ -2648,7 +2668,7 @@ function renderCurrentPage() {
   else if (currentPage === 'tthub') renderTtHub();
   else if (currentPage === 'ttcontent') loadTtContentPage();
   else if (currentPage === 'ttkeyword') loadTtKeywordPage();
-  else if (currentPage === 'ttads') { renderTta(); renderTtProduct(); }
+  else if (currentPage === 'ttads') { if (!TT_HANDLE_MAP) loadTtHandleMap().then(() => { if (currentPage === 'ttads') renderTta(); }); renderTta(); renderTtProduct(); }
   else if (currentPage === 'shhub') renderShHub();
   else if (currentPage === 'shads') renderShAds();
   else if (currentPage === 'lzhub') renderLzHub();
@@ -7167,7 +7187,7 @@ function exportTtProduct() {
 }
 
 // ===== ROI การตลาดต่อสินค้า (mv_product_marketing_monthly) =====
-let _mktRoiSpan = 1, _mktRoiRows = [], _mktRoiSortCol = 'revenue', _mktRoiSortDir = 'desc';
+let _mktRoiSpan = 1, _mktRoiRows = [], _mktRoiSortCol = 'revenue', _mktRoiSortDir = 'desc', _mktRoiCh = {}, _mktRoiOpen = new Set();
 function setMktRoiSpan(n) { _mktRoiSpan = n; renderMktRoi(); }
 function mktRoiSort(col) {
   if (_mktRoiSortCol === col) _mktRoiSortDir = _mktRoiSortDir === 'desc' ? 'asc' : 'desc';
@@ -7190,9 +7210,16 @@ async function renderMktRoi() {
   try {
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
     const url = `${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,product_name,revenue,qty,free_qty,kol_conversion,kol_pr,other_direct,ads_direct,ads_allocated,mkt_total&month=gte.${r.from}&month=lte.${r.to}&limit=2000`;
-    const res = await fetch(url, { headers });
+    const urlCh = `${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=channel,parent_sku,revenue,ads_direct,ads_allocated&month=gte.${r.from}&month=lte.${r.to}&limit=5000`;
+    const [res, resCh] = await Promise.all([fetch(url, { headers }), fetch(urlCh, { headers })]);
     if (!res.ok) throw new Error('mv_product_marketing_monthly ' + res.status);
     const rows = await res.json();
+    _mktRoiCh = {};   // parent_sku → channel → {revenue, ads}
+    (resCh.ok ? await resCh.json() : []).forEach(x => {
+      const m = (_mktRoiCh[x.parent_sku] = _mktRoiCh[x.parent_sku] || {});
+      const c = (m[x.channel] = m[x.channel] || { revenue: 0, ads: 0, direct: 0 });
+      c.revenue += +x.revenue || 0; c.ads += (+x.ads_direct || 0) + (+x.ads_allocated || 0); c.direct += +x.ads_direct || 0;
+    });
     const by = {};
     rows.forEach(x => {
       const k = x.parent_sku;
@@ -7211,6 +7238,7 @@ async function renderMktRoi() {
     console.warn('renderMktRoi', e.message);
   }
 }
+function toggleMktRoiRow(sku) { if (_mktRoiOpen.has(sku)) _mktRoiOpen.delete(sku); else _mktRoiOpen.add(sku); renderMktRoiTable(); }
 function renderMktRoiTable() {
   const rows = [..._mktRoiRows].sort((a, b) => {
     const av = _mktRoiSortCol === 'name' ? a.name : (a[_mktRoiSortCol] ?? -Infinity);
@@ -7229,8 +7257,32 @@ function renderMktRoiTable() {
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmtB(T.dir + T.alloc)}</div><div style="font-size:10.5px;color:var(--text3);">ตรง ฿${fmtB(T.dir)} · ปันส่วน ฿${fmtB(T.alloc)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ROI</div><div class="kpi-value">${T.mkt > 0 ? (T.revenue / T.mkt).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">% Budget ${T.revenue > 0 ? (T.mkt / T.revenue * 100).toFixed(1) + '%' : '—'}</div></div>`;
   const money = v => v ? '฿' + fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
-  document.getElementById('tbodyMktRoi').innerHTML = rows.map(a => `<tr>
-      <td><b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span></td>
+  // ROI แอดตามช่องทาง (ทั้งบริษัท) — ใช้ค่าแอดของช่องทางนั้นเท่านั้น ไม่รวมค่ารีวิว KOL
+  const CH_ORDER = ['Facebook', 'TikTok', 'Shopee', 'Lazada', 'Modern Trade', 'ตัวแทน'];
+  const chTot = {};
+  Object.values(_mktRoiCh).forEach(m => Object.entries(m).forEach(([ch, v]) => {
+    const t = (chTot[ch] = chTot[ch] || { revenue: 0, ads: 0 }); t.revenue += v.revenue; t.ads += v.ads; }));
+  const chCards = CH_ORDER.filter(ch => chTot[ch] && chTot[ch].ads > 0).map(ch => {
+    const t = chTot[ch], roi = t.revenue / t.ads;
+    return `<div class="mkt-ch-card"><div class="mkt-ch-name">${ch}</div><div class="mkt-ch-roi">${roi.toFixed(2)}x</div>
+      <div class="mkt-ch-sub">ยอดขาย ฿${fmtB(t.revenue)} · แอด ฿${fmtB(t.ads)}</div></div>`; }).join('');
+  let chBox = document.getElementById('mktRoiChCards');
+  if (!chBox) { chBox = document.createElement('div'); chBox.id = 'mktRoiChCards'; document.getElementById('mktRoiKpis').after(chBox); }
+  chBox.innerHTML = chCards ? `<div class="mkt-ch-title">ROI ค่าแอดตามช่องทาง <span>ยอดขายช่องทาง ÷ ค่าแอดช่องทาง (ไม่รวมค่ารีวิว KOL)</span></div><div class="mkt-ch-row">${chCards}</div>` : '';
+  const chRows = sku => {
+    const m = _mktRoiCh[sku] || {}; const totRev = Object.values(m).reduce((t, v) => t + v.revenue, 0) || 1;
+    const list = Object.entries(m).filter(([, v]) => v.revenue || v.ads)
+      .sort((a, b) => (CH_ORDER.indexOf(a[0]) + 99 * (CH_ORDER.indexOf(a[0]) < 0)) - (CH_ORDER.indexOf(b[0]) + 99 * (CH_ORDER.indexOf(b[0]) < 0)));
+    const best = list.filter(([, v]) => v.ads > 0).map(([ch, v]) => [ch, v.revenue / v.ads]).sort((a, b) => b[1] - a[1])[0];
+    return `<tr class="mkt-ch-sub-row"><td colspan="12"><table class="mkt-ch-tbl"><thead><tr><th>ช่องทาง</th><th>ยอดขาย</th><th>สัดส่วน</th><th>ค่าแอด (ตรง+ปันส่วน)</th><th>ROI แอด</th></tr></thead><tbody>`
+      + list.map(([ch, v]) => `<tr><td>${ch}</td><td>฿${fmt(Math.round(v.revenue))}</td>
+          <td><div class="mkt-ch-bar"><i style="width:${Math.max(2, v.revenue / totRev * 100).toFixed(0)}%"></i></div>${(v.revenue / totRev * 100).toFixed(0)}%</td>
+          <td>${v.ads ? '฿' + fmt(Math.round(v.ads)) + (v.direct ? `<span class="mkt-ch-dir">ตรง ฿${fmtB(v.direct)}</span>` : '') : '<span style="color:var(--text3);">—</span>'}</td>
+          <td style="font-weight:700;font-family:'IBM Plex Mono',monospace;">${v.ads > 0 ? (v.revenue / v.ads).toFixed(2) + 'x' + (best && best[0] === ch && list.filter(([, x]) => x.ads > 0).length > 1 ? ' <span class="mkt-ch-best">คุ้มสุด</span>' : '') : '—'}</td></tr>`).join('')
+      + `</tbody></table></td></tr>`;
+  };
+  document.getElementById('tbodyMktRoi').innerHTML = rows.map(a => `<tr class="mkt-roi-row${_mktRoiOpen.has(a.sku) ? ' open' : ''}" data-sku="${ttcEscAttr(a.sku)}" onclick="toggleMktRoiRow(this.dataset.sku)" style="cursor:pointer;">
+      <td><span class="mkt-caret">${_mktRoiOpen.has(a.sku) ? '▾' : '▸'}</span><b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span></td>
       <td style="font-weight:600;">฿${fmt(Math.round(a.revenue))}</td>
       <td>${a.qty ? fmt(Math.round(a.qty)) : '<span style="color:var(--text3);">—</span>'}</td>
       <td>${a.free_qty ? fmt(Math.round(a.free_qty)) : '<span style="color:var(--text3);">—</span>'}</td>
@@ -7243,7 +7295,7 @@ function renderMktRoiTable() {
       <td style="min-width:120px;">${a.mkt_pct !== null ? `${a.mkt_pct.toFixed(1)}%
         <div style="height:4px;border-radius:2px;background:var(--border);margin-top:3px;"><div style="height:4px;border-radius:2px;width:${Math.min(100, a.mkt_pct / maxPct * 100).toFixed(0)}%;background:#60a5fa;"></div></div>` : '—'}</td>
       <td style="font-weight:700;font-family:'IBM Plex Mono',monospace;">${a.mer !== null ? a.mer.toFixed(2) + 'x' : '—'}</td>
-    </tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูลในเดือนที่เลือก</td></tr>';
+    </tr>${_mktRoiOpen.has(a.sku) ? chRows(a.sku) : ''}`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูลในเดือนที่เลือก</td></tr>';
 }
 function exportMktRoi() {
   const head = ['สินค้า', 'SKU', 'ยอดขาย', 'จำนวนชิ้น', 'รีวิวฟรี', 'ค่ารีวิว KOL Conversion', 'ค่ารีวิว KOL PR', 'ค่าการตลาดอื่นๆ', 'ค่าแอดตรง', 'ค่าแอดปันส่วน', 'ค่าการตลาดรวม', '% Budget', 'ROI'];
@@ -8412,6 +8464,25 @@ async function loadTtaThumbs() {
   } catch {}
 }
 // ผลจาก RPC tta_clip_rollup → ttaByClip (รูปเดียวกับ rpcClipToObj) + แถว funnel ต่อ objective (ให้ renderTtaFunnel ใช้ได้เหมือนเดิม)
+// ===== (2026-09-22) ชื่อ creator 2 แบบ: @username จริง (จาก oEmbed) ตัวหลัก + ชื่อที่แสดงตัวเล็ก =====
+let TT_HANDLE_MAP = null;
+async function loadTtHandleMap() {
+  if (TT_HANDLE_MAP) return TT_HANDLE_MAP;
+  try {
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_tt_handle_map?select=ads_name,handle&limit=10000`, { headers });
+    const rows = res.ok ? await res.json() : [];
+    TT_HANDLE_MAP = Object.fromEntries(rows.map(r => [String(r.ads_name).trim().toLowerCase(), r.handle]));
+  } catch (e) { TT_HANDLE_MAP = {}; }
+  return TT_HANDLE_MAP;
+}
+function ttHandleHtml(name, big) {
+  const n = String(name || '').trim();
+  const u = TT_HANDLE_MAP && TT_HANDLE_MAP[n.toLowerCase()];
+  const same = u && u.toLowerCase() === n.replace(/\s+/g, '').replace(/^@/, '').toLowerCase();
+  if (!u || same) return `<span style="font-weight:600;${big ? 'font-size:12px;' : ''}">@${ttcEsc(u || n)}</span>`;
+  return `<span style="font-weight:600;${big ? 'font-size:12px;' : ''}">@${ttcEsc(u)}</span><div style="font-size:10px;color:var(--text3);font-weight:400;line-height:1.3;">${ttcEsc(n)}</div>`;
+}
 // จำนวนคลิปจริง (แถว "รวมคลิปย่อย" 1 แถว = หลายคลิป จึงนับตาม clipCount ไม่ใช่จำนวนแถว)
 function ttaClipTotal(deesayOnly) {
   return ttaByClip.reduce((n, c) => (deesayOnly && !c.isDeesay) ? n : n + (c.clipCount || 1), 0);
@@ -8701,7 +8772,7 @@ function renderTtaCreatorSummary() {
   document.getElementById('ttaCreatorSummary').innerHTML = arr.length ? arr.map(c => `
     <div class="creator-card" style="border-left-color:${c.isDeesay?'var(--blue)':'#a78bfa'};">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:12px;font-weight:600;">@${ttcEsc(c.handle)}</span>
+        <span>${ttHandleHtml(c.handle, true)}</span>
         <span style="font-size:9px;font-weight:700;color:${c.isDeesay?'var(--blue)':'#a78bfa'};">${c.isDeesay?'🏠 Deesay':'🎭 KOL'}</span>
       </div>
       <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">${c.clips} คลิป · ฿${fmt(c.spend)} ค่าแอด · ฿${fmt(c.purchaseValue)} ยอดขาย</div>
@@ -8726,7 +8797,7 @@ function ttaCellHtml(c, k) {
         ${c.thumbnail ? `<img src="${c.thumbnail}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : '🎬'}
       </div><span title="${ttcEscAttr(c.caption)}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span></div>`;
     case 'source': return c.isDeesay ? '<span style="color:var(--blue);font-weight:700;font-size:10.5px;">🏠 Deesay</span>' : '<span style="color:#a78bfa;font-weight:700;font-size:10.5px;">🎭 KOL</span>';
-    case 'handle': return `@${ttcEsc(c.handle)}`;
+    case 'handle': return ttHandleHtml(c.handle);
     case 'date': return (c.dateMin && c.dateMax)
       ? `<span style="color:var(--text2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;">${new Date(c.dateMin).toLocaleDateString('th-TH',{day:'numeric',month:'short'})} – ${new Date(c.dateMax).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`
       : '—';
@@ -9006,8 +9077,9 @@ function kolBuildData() {
       c.tiktokUnmatched = !o && !posts.some(p => p.handle === c.handle && p.clip) && !(clipsByHandle[c.handle] || []).length;
       if (o) { c.liveRev = o.live; c.liveOrd = o.liveOrd; c.videoOrd = o.videoOrd; }
     }
-    c.boost = kolBoost.byKey[kolBoostKey(c.handle)] || 0;   // ค่า boost จาก Meta (ไม่รวมใน cost/ROAS)
-    kolFinish(c); c.platforms = [...c.platforms]; c.products = [...c.products]; c.verdict = kolVerdict(c); c.verdictRank = c.verdict.rank; return c;
+    c.boost = kolBoost.byKey[kolBoostKey(c.handle)] || 0;   // ค่า boost จาก Meta
+    kolFinish(c);
+    c.cost += c.boost;   // (2026-09-22) boost นับใน "จ่ายรวม" แต่ไม่นับใน ROAS — เป็นคอนเทนต์ที่ไม่ได้ยิงเพื่อยอดขาย (ROAS คิดไว้แล้วใน kolFinish) c.platforms = [...c.platforms]; c.products = [...c.products]; c.verdict = kolVerdict(c); c.verdictRank = c.verdict.rank; return c;
   });
   const creatorsFiltered = fVerdict ? creators.filter(c => c.verdict.key === fVerdict) : creators;
   const postsFiltered = fVerdict ? posts.filter(p => creatorsFiltered.some(c => c.handle === p.handle)) : posts;
@@ -9181,7 +9253,7 @@ function renderKolCreatorTable() {
     </tr>`;
   }).join('') || '<tr><td colspan="14" class="empty">ไม่มี creator ตามเงื่อนไข</td></tr>';
   document.getElementById('kol-creator-foot').innerHTML = `${fmt(rows.length)} คน · คลิกหัวคอลัมน์เพื่อเรียง · คลิกแถวเพื่อดูรายโพสต์ · โพสต์ (ยิงแอด) = โพสต์ทั้งหมด (คลิปที่ยิงแอด) · จ่ายรวม = ค่าจ้าง + ค่าแอด · ROAS = ยอดขาย ÷ จ่ายรวม · ER มีเฉพาะคลิปที่ยิงแอด · <b>ที่มา</b>: <span style="color:var(--green);">ออเดอร์จริง</span> = ยอดขายจากระบบออเดอร์ · <span style="color:#60a5fa;">ระบบแอด</span> = ค่าแอด/ER จากระบบแอด TikTok · <span style="color:#a78bfa;">ชีททีม KOL</span> = ตัวเลขที่ทีมกรอก`
-    + `<div style="margin-top:4px;"><b>boost (Meta)</b> = ค่าแอด boost โพสต์ KOL จากบัญชี Meta "KOL (boost โพสต์ KOL)" รวมต่อ KOL ต่อเดือน (ช่วงนี้ ฿${fmt(Math.round(kolBoost.total))}) — คนละก้อนกับค่าแอดในชีท (แอดขาย) จึงยังไม่รวมใน "จ่ายรวม" และ ROAS`
+    + `<div style="margin-top:4px;"><b>boost (Meta)</b> = ค่าแอด boost โพสต์ KOL จากบัญชี Meta "KOL (boost โพสต์ KOL)" รวมต่อ KOL ต่อเดือน (ช่วงนี้ ฿${fmt(Math.round(kolBoost.total))}) — คนละก้อนกับค่าแอดในชีท (แอดขาย) · <b>รวมอยู่ใน "จ่ายรวม" แล้ว แต่ไม่นับใน ROAS</b> เพราะเป็นคอนเทนต์ที่ไม่ได้ยิงเพื่อยอดขาย`
     + (kolBoost.unmatchedTotal ? ` · <span style="color:#f59e0b;">มีค่า boost ฿${fmt(Math.round(kolBoost.unmatchedTotal))} ของชื่อ KOL ที่ไม่มีในชีท (${kolBoost.unmatched.slice(0, 5).map(x => ttcEsc(x[0]) + ' ฿' + fmt(Math.round(x[1]))).join(' · ')}${kolBoost.unmatched.length > 5 ? ' …' : ''})</span>` : '')
     + `</div>`;
 }
