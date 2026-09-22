@@ -255,26 +255,50 @@
   #thumbPreview { display:none; position:fixed; z-index:9999; pointer-events:none; width:340px; border-radius:10px; overflow:hidden; background:var(--bg2); border:1px solid var(--border); box-shadow:0 12px 32px rgba(0,0,0,0.45); }
   #thumbPreview img { display:block; width:100%; height:auto; }
 
-/* (2026-09-22) ROI ต่อสินค้า — ขยายดูรายช่องทาง + การ์ด ROI แอดตามช่องทาง */
-.mkt-caret { display:inline-block; width:14px; color:var(--text3); font-size:11px; }
-tr.mkt-roi-row.open > td { background: rgba(96,165,250,0.06); }
-tr.mkt-ch-sub-row > td { padding: 0 14px 14px 32px !important; background: rgba(96,165,250,0.03); text-align:left !important; }
-.mkt-ch-tbl { width:auto; min-width:640px; margin-top:4px; }
-.mkt-ch-tbl th, .mkt-ch-tbl td { padding:6px 14px !important; font-size:11.5px; text-align:right !important; white-space:nowrap; border-bottom:1px solid var(--border); }
-.mkt-ch-tbl th:first-child, .mkt-ch-tbl td:first-child { text-align:left !important; font-weight:600; }
-.mkt-ch-tbl th { color:var(--text3); font-weight:500; }
-.mkt-ch-bar { display:inline-block; width:70px; height:5px; border-radius:3px; background:var(--border); margin-right:6px; vertical-align:middle; }
-.mkt-ch-bar i { display:block; height:5px; border-radius:3px; background:#60a5fa; }
-.mkt-ch-dir { display:block; font-size:10px; color:var(--text3); }
-.mkt-ch-best { font-size:9.5px; font-weight:700; color:#16a34a; background:rgba(34,197,94,.12); padding:1px 6px; border-radius:4px; margin-left:4px; }
-#mktRoiChCards { padding: 0 14px 12px; }
-.mkt-ch-title { font-size:11px; color:var(--text2); font-weight:600; margin-bottom:6px; }
-.mkt-ch-title span { font-weight:400; color:var(--text3); margin-left:6px; }
-.mkt-ch-row { display:flex; gap:10px; flex-wrap:wrap; }
-.mkt-ch-card { flex:1; min-width:140px; border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+/* (2026-09-22) MKT Tracking — การ์ดบนสุด + ROI ตามช่องทาง + แถวขยายรายช่องทาง */
+.mkt-top-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:12px; }
+.mkt-top-kpis > .card { margin:0 !important; min-width:0 !important; }
+.mkt-ch-panel { margin-bottom:20px; padding:14px 16px; }
+.mkt-ch-title { font-size:12px; color:var(--text2); font-weight:600; margin-bottom:10px; }
+.mkt-ch-title span { font-weight:400; color:var(--text3); margin-left:6px; font-size:11px; }
+.mkt-ch-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:0; }
+.mkt-ch-card { padding:2px 16px; border-left:1px solid var(--border); }
+.mkt-ch-card:first-child { border-left:none; padding-left:0; }
 .mkt-ch-name { font-size:11px; color:var(--text3); }
-.mkt-ch-roi { font-size:18px; font-weight:700; font-family:'IBM Plex Mono',monospace; margin-top:2px; }
+.mkt-ch-roi { font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; margin-top:2px; }
+.mkt-ch-roi small { font-size:12px; margin-left:1px; color:var(--text3); }
 .mkt-ch-sub { font-size:10.5px; color:var(--text3); margin-top:2px; }
+.mkt-caret { display:inline-block; width:14px; color:var(--text3); font-size:10px; }
+tr.mkt-roi-row.open > td { background: rgba(96,165,250,0.06); border-bottom-color: transparent; }
+tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(96,165,250,0.06); text-align:left !important; }
+.mkt-ch-panel2 { background:var(--bg2, var(--card)); border:1px solid var(--border); border-radius:10px; padding:6px 16px 8px; max-width:760px; }
+.mkt-ch-grid { display:grid; grid-template-columns: 130px 130px 190px 150px 1fr; align-items:center; gap:12px; padding:8px 0;
+  border-bottom:1px solid var(--border); font-size:12.5px; font-variant-numeric:tabular-nums; }
+.mkt-ch-grid:last-child { border-bottom:none; }
+.mkt-ch-grid > div:nth-child(2), .mkt-ch-grid > div:nth-child(4) { text-align:right; }
+.mkt-ch-head { font-size:11px; color:var(--text3); font-weight:500; padding:6px 0; }
+.mkt-ch-cn { font-weight:600; color:var(--text); }
+.mkt-ch-share { display:flex; align-items:center; gap:8px; color:var(--text2); }
+.mkt-ch-bar { flex:0 0 110px; height:6px; border-radius:3px; background:var(--border); overflow:hidden; }
+.mkt-ch-bar i { display:block; height:6px; border-radius:3px; background:#60a5fa; }
+.mkt-ch-grid em { display:block; font-style:normal; font-size:10.5px; color:var(--text3); }
+.mkt-ch-roi2 { font-weight:700; font-family:'IBM Plex Mono',monospace; display:flex; align-items:center; gap:8px; }
+.mkt-ch-na { color:var(--text3); font-weight:400; }
+.mkt-ch-best { font-family:'Sarabun',sans-serif; font-size:10px; font-weight:700; color:#16a34a; background:rgba(34,197,94,.12); padding:2px 7px; border-radius:4px; }
+@media (max-width: 1100px) { .mkt-top-kpis { grid-template-columns:repeat(2,1fr); } }
+.mkt-trend { margin-bottom:12px; padding:14px 16px; }
+.mkt-period { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-right:8px; }
+.mkt-period button { font-family:inherit; font-size:12px; padding:6px 12px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-left:1px solid var(--border); }
+.mkt-period button:first-child { border-left:none; }
+.mkt-period button.on { background:var(--accent, #c9a14a); color:#fff; font-weight:600; }
+.mkt-tabs { display:inline-flex; gap:4px; margin:4px 0 6px; }
+.mkt-tabs button { font-family:inherit; font-size:11.5px; padding:4px 12px; border-radius:99px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; }
+.mkt-tabs button.on { background:#60a5fa; border-color:#60a5fa; color:#fff; font-weight:600; }
+.mkt-mo-grid { display:grid; grid-template-columns: 90px 140px 150px 100px 1fr; align-items:center; gap:12px; padding:7px 0;
+  border-bottom:1px solid var(--border); font-size:12.5px; font-variant-numeric:tabular-nums; }
+.mkt-mo-grid:last-child { border-bottom:none; }
+.mkt-mo-grid > div:nth-child(2), .mkt-mo-grid > div:nth-child(3), .mkt-mo-grid > div:nth-child(4) { text-align:right; }
+.mkt-up { color:#16a34a; font-size:10px; } .mkt-dn { color:#ef4444; font-size:10px; }
 /* (2026-09-19) ปุ่ม ! อธิบายหัวคอลัมน์ + จัดตารางหน้า MKT Tracking / TikTok Ads ให้อ่านง่าย */
 .mkt-info { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%;
   border:1px solid var(--border); color:var(--text3); font-size:9.5px; font-weight:700; cursor:help; line-height:1; vertical-align:middle; }
@@ -356,7 +380,7 @@ tr.mkt-ch-sub-row > td { padding: 0 14px 14px 32px !important; background: rgba(
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-c</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -1866,19 +1890,24 @@ tr.mkt-ch-sub-row > td { padding: 0 14px 14px 32px !important; background: rgba(
 
     <div class="page" id="page-cost">
       <div id="cost-ads-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:12px;"></div>
-      <div class="grid-4" id="costKPIs" style="margin-bottom:20px;"></div>
+      <div class="grid-4" id="costKPIs" style="margin-bottom:20px;display:none;" data-retired="2026-09-22 ใช้ mktTopKpis แทน (ยอดจากแหล่งเดียวกับทั้งเว็บ)"></div>
+      <div class="mkt-top-kpis" id="mktTopKpis"></div>
+      <div id="mktTopCh"></div>
 
       <!-- (2026-09-18) ROI การตลาดต่อสินค้า — ระบบคำนวณเองจากยอดขายจริง + ค่าใช้จ่ายรายสินค้าของบัญชี + ค่าแอดต่อช่องทาง (mv_product_marketing_monthly) -->
       <div class="card" id="mktRoiCard" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
           <div class="section-title">ROI การตลาดต่อสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(ระบบคำนวณ — ยอดขายจริง ÷ ค่าการตลาดทั้งหมด)</span></div>
           <div style="display:flex;gap:6px;align-items:center;">
-            <button class="btn btn-ghost" id="mktRoiBtn1" onclick="setMktRoiSpan(1)">เดือนที่เลือก</button>
-            <button class="btn btn-ghost" id="mktRoiBtn3" onclick="setMktRoiSpan(3)">ย้อนหลัง 3 เดือน</button>
+            <div class="mkt-period" id="mktPeriod">
+              <button data-k="ytd" onclick="mktSetPeriod('ytd')">ปีนี้</button><button data-k="3m" onclick="mktSetPeriod('3m')">3 เดือนล่าสุด</button><button data-k="month" onclick="mktSetPeriod('month')">เดือนล่าสุด</button><button data-k="prev" onclick="mktSetPeriod('prev')">เดือนที่แล้ว</button>
+            </div>
+            <button class="btn btn-ghost" id="mktRoiBtn1" style="display:none;" onclick="setMktRoiSpan(1)">เดือนที่เลือก</button>
+            <button class="btn btn-ghost" id="mktRoiBtn3" style="display:none;" onclick="setMktRoiSpan(3)">ย้อนหลัง 3 เดือน</button>
             <button class="btn btn-ghost" onclick="exportMktRoi()">⬇ Export CSV</button>
           </div>
         </div>
-        <div class="grid-4" id="mktRoiKpis" style="padding:0 14px 12px;"></div>
+        <div class="grid-4" id="mktRoiKpis" style="display:none;"></div>
         <div style="overflow-x:auto;">
           <table id="tblMktRoi">
             <thead><tr>
@@ -2515,6 +2544,7 @@ function onMonthFilterChange() {
     selectedMonthTo = to || from || null;
   }
   selectedMonth = selectedMonthFrom;
+  document.querySelectorAll('#mktPeriod button').forEach(b => b.classList.remove('on'));
   // ไม่ render ทันที — รอกด "ค้นหา" เหมือนตัวกรองอื่นทั้งหมดในเว็บ
 }
 
@@ -2577,6 +2607,10 @@ function showPage(page, lockCh, el) {
     setDefaultDateFilter();
   }
 
+  // (2026-09-22) MKT Tracking ดูทุกช่องทางรวม (แยกช่องทางดูในหน้า) → ซ่อน Channel / Sub-channel
+  { const hideCh = page === 'cost';
+    const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
+    if (cg) cg.style.display = hideCh ? 'none' : ''; if (sg) sg.style.display = hideCh ? 'none' : ''; }
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
   const noDateFilter = NO_DATE_FILTER_PAGES.includes(page);
@@ -2591,6 +2625,7 @@ function showPage(page, lockCh, el) {
   if (page === 'adperf') {
     renderAdpAll();
   } else if (page === 'cost') {
+    if (!window._mktPeriodInit) { window._mktPeriodInit = true; setTimeout(() => mktSetPeriod('ytd'), 0); }
     renderCostPage();
   } else if (page === 'livesearch') {
     populateLiveSearchFilters();
@@ -7187,8 +7222,27 @@ function exportTtProduct() {
 }
 
 // ===== ROI การตลาดต่อสินค้า (mv_product_marketing_monthly) =====
-let _mktRoiSpan = 1, _mktRoiRows = [], _mktRoiSortCol = 'revenue', _mktRoiSortDir = 'desc', _mktRoiCh = {}, _mktRoiOpen = new Set();
+let _mktRoiSpan = 1, _mktRoiRows = [], _mktRoiSortCol = 'revenue', _mktRoiSortDir = 'desc', _mktRoiCh = {}, _mktRoiOpen = new Set(), _mktRoiMonthly = {}, _mktRoiMonthTot = {}, _mktRoiTab = {};
 function setMktRoiSpan(n) { _mktRoiSpan = n; renderMktRoi(); }
+// ช่วงด่วนของหน้า MKT Tracking — ตั้งเดือนเริ่ม/สิ้นสุดในตัวกรองด้านบนแล้วโหลดใหม่
+function mktSetPeriod(kind) {
+  const selFrom = document.getElementById('filterMonthFrom'), selTo = document.getElementById('filterMonthTo');
+  if (!selFrom || !selTo) return;
+  const months = [...selTo.options].map(o => o.value).filter(Boolean).sort();
+  if (!months.length) return;
+  const latest = months[months.length - 1], [ly, lm] = latest.split('-').map(Number);
+  const ym = (y, m) => { const d = new Date(y, m - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+  let f = latest, t = latest;
+  if (kind === 'ytd') { f = `${ly}-01`; }
+  else if (kind === '3m') { f = ym(ly, lm - 2); }
+  else if (kind === 'prev') { f = t = ym(ly, lm - 1); }
+  if (!months.includes(f)) f = months.find(m => m >= f) || months[0];
+  selFrom.value = f; selTo.value = t;
+  window._mktPeriod = kind;
+  onMonthFilterChange();                  // ตั้งค่าเดือนที่เลือก
+  if (currentPage === 'cost') renderCostPage();   // ปุ่มช่วงด่วน = โหลดใหม่ทันที ไม่ต้องกดค้นหา
+  document.querySelectorAll('#mktPeriod button').forEach(b => b.classList.toggle('on', b.dataset.k === kind));
+}
 function mktRoiSort(col) {
   if (_mktRoiSortCol === col) _mktRoiSortDir = _mktRoiSortDir === 'desc' ? 'asc' : 'desc';
   else { _mktRoiSortCol = col; _mktRoiSortDir = col === 'name' ? 'asc' : 'desc'; }
@@ -7197,7 +7251,7 @@ function mktRoiSort(col) {
 function mktRoiMonths() {
   const to = selectedMonthTo || selectedMonthFrom;
   if (!to) return null;
-  if (_mktRoiSpan === 1) return { from: (selectedMonthFrom || to) + '-01', to: to + '-01' };
+  return { from: (selectedMonthFrom || to) + '-01', to: to + '-01' };   // (2026-09-22) ใช้ช่วงเดือนจากตัวกรองด้านบนเสมอ
   const [y, m] = to.split('-').map(Number);
   const d = new Date(y, m - 1 - 2, 1);   // ย้อนหลัง 3 เดือนรวมเดือนที่เลือก
   return { from: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`, to: to + '-01' };
@@ -7221,6 +7275,12 @@ async function renderMktRoi() {
       c.revenue += +x.revenue || 0; c.ads += (+x.ads_direct || 0) + (+x.ads_allocated || 0); c.direct += +x.ads_direct || 0;
     });
     const by = {};
+    _mktRoiMonthly = {}; _mktRoiMonthTot = {};
+    rows.forEach(x => {
+      const mm = String(x.month).slice(0, 7);
+      (_mktRoiMonthly[x.parent_sku] = _mktRoiMonthly[x.parent_sku] || []).push({ m: mm, revenue: +x.revenue || 0, mkt: +x.mkt_total || 0 });
+      const T0 = (_mktRoiMonthTot[mm] = _mktRoiMonthTot[mm] || { revenue: 0, mkt: 0 }); T0.revenue += +x.revenue || 0; T0.mkt += +x.mkt_total || 0;
+    });
     rows.forEach(x => {
       const k = x.parent_sku;
       if (!by[k]) by[k] = { sku: k, name: x.product_name || k, revenue: 0, qty: 0, free_qty: 0, kol_conversion: 0, kol_pr: 0, other_direct: 0, ads_direct: 0, ads_allocated: 0, mkt_total: 0 };
@@ -7251,7 +7311,7 @@ function renderMktRoiTable() {
   const T = rows.reduce((t, a) => ({ revenue: t.revenue + a.revenue, mkt: t.mkt + a.mkt_total, kolc: t.kolc + a.kol_conversion, kolp: t.kolp + a.kol_pr,
     dir: t.dir + a.ads_direct, alloc: t.alloc + a.ads_allocated }), { revenue: 0, mkt: 0, kolc: 0, kolp: 0, dir: 0, alloc: 0 });
   const maxPct = Math.max(...rows.map(a => a.mkt_pct || 0), 1);
-  document.getElementById('mktRoiKpis').innerHTML = `
+  document.getElementById('mktTopKpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(T.revenue)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดรวม</div><div class="kpi-value">฿${fmtB(T.mkt)}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmtB(T.kolc)} · KOL PR ฿${fmtB(T.kolp)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmtB(T.dir + T.alloc)}</div><div style="font-size:10.5px;color:var(--text3);">ตรง ฿${fmtB(T.dir)} · ปันส่วน ฿${fmtB(T.alloc)}</div></div>
@@ -7264,22 +7324,59 @@ function renderMktRoiTable() {
     const t = (chTot[ch] = chTot[ch] || { revenue: 0, ads: 0 }); t.revenue += v.revenue; t.ads += v.ads; }));
   const chCards = CH_ORDER.filter(ch => chTot[ch] && chTot[ch].ads > 0).map(ch => {
     const t = chTot[ch], roi = t.revenue / t.ads;
-    return `<div class="mkt-ch-card"><div class="mkt-ch-name">${ch}</div><div class="mkt-ch-roi">${roi.toFixed(2)}x</div>
-      <div class="mkt-ch-sub">ยอดขาย ฿${fmtB(t.revenue)} · แอด ฿${fmtB(t.ads)}</div></div>`; }).join('');
-  let chBox = document.getElementById('mktRoiChCards');
-  if (!chBox) { chBox = document.createElement('div'); chBox.id = 'mktRoiChCards'; document.getElementById('mktRoiKpis').after(chBox); }
-  chBox.innerHTML = chCards ? `<div class="mkt-ch-title">ROI ค่าแอดตามช่องทาง <span>ยอดขายช่องทาง ÷ ค่าแอดช่องทาง (ไม่รวมค่ารีวิว KOL)</span></div><div class="mkt-ch-row">${chCards}</div>` : '';
+    return `<div class="mkt-ch-card"><div class="mkt-ch-name">${ch}</div><div class="mkt-ch-roi">${roi.toFixed(2)}<small>x</small></div>
+      <div class="mkt-ch-sub">ขาย ฿${fmtB(t.revenue)} · แอด ฿${fmtB(t.ads)}</div></div>`; }).join('');
+  // แนวโน้มรายเดือน: แท่ง = ยอดขาย / ค่าการตลาด · เส้น = ROI
+  { const ms = Object.keys(_mktRoiMonthTot).sort();
+    let box = document.getElementById('mktTrendBox');
+    if (!box) { box = document.createElement('div'); box.id = 'mktTrendBox'; box.className = 'card mkt-trend';
+      box.innerHTML = '<div class="mkt-ch-title">แนวโน้มรายเดือน <span>แท่ง = ยอดขาย / ค่าการตลาดรวม · เส้น = ROI</span></div><div class="chart-wrap" style="height:230px;"><canvas id="chartMktTrend"></canvas></div>';
+      document.getElementById('mktTopKpis').after(box); }
+    box.style.display = ms.length > 1 ? '' : 'none';
+    if (ms.length > 1) makeChart('chartMktTrend', 'bar',
+      ms.map(m => new Date(m + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })),
+      [{ type: 'bar', label: 'ยอดขาย', data: ms.map(m => _mktRoiMonthTot[m].revenue), backgroundColor: 'rgba(96,165,250,0.65)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 40 },
+       { type: 'bar', label: 'ค่าการตลาดรวม', data: ms.map(m => _mktRoiMonthTot[m].mkt), backgroundColor: 'rgba(248,113,113,0.55)', borderColor: '#f87171', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 40 },
+       { type: 'line', label: 'ROI', data: ms.map(m => _mktRoiMonthTot[m].mkt > 0 ? +(_mktRoiMonthTot[m].revenue / _mktRoiMonthTot[m].mkt).toFixed(2) : null), borderColor: '#22c55e', backgroundColor: '#22c55e', borderWidth: 2, pointRadius: 3, tension: 0.35, yAxisID: 'y2' }],
+      { legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: c => c.dataset.yAxisID === 'y2' ? `ROI: ${c.raw}x` : `${c.dataset.label}: ฿${fmt(Math.round(+c.raw || 0))}` } },
+        scales: { y2: { position: 'right', ticks: { color: '#22c55e', callback: v => v + 'x', maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } } } });
+  }
+  document.getElementById('mktTopCh').innerHTML = chCards ? `<div class="card mkt-ch-panel"><div class="mkt-ch-title">ROI ค่าแอดตามช่องทาง <span>ยอดขายช่องทาง ÷ ค่าแอดช่องทาง · ไม่รวมค่ารีวิว KOL</span></div><div class="mkt-ch-row">${chCards}</div></div>` : '';
   const chRows = sku => {
     const m = _mktRoiCh[sku] || {}; const totRev = Object.values(m).reduce((t, v) => t + v.revenue, 0) || 1;
-    const list = Object.entries(m).filter(([, v]) => v.revenue || v.ads)
-      .sort((a, b) => (CH_ORDER.indexOf(a[0]) + 99 * (CH_ORDER.indexOf(a[0]) < 0)) - (CH_ORDER.indexOf(b[0]) + 99 * (CH_ORDER.indexOf(b[0]) < 0)));
-    const best = list.filter(([, v]) => v.ads > 0).map(([ch, v]) => [ch, v.revenue / v.ads]).sort((a, b) => b[1] - a[1])[0];
-    return `<tr class="mkt-ch-sub-row"><td colspan="12"><table class="mkt-ch-tbl"><thead><tr><th>ช่องทาง</th><th>ยอดขาย</th><th>สัดส่วน</th><th>ค่าแอด (ตรง+ปันส่วน)</th><th>ROI แอด</th></tr></thead><tbody>`
-      + list.map(([ch, v]) => `<tr><td>${ch}</td><td>฿${fmt(Math.round(v.revenue))}</td>
-          <td><div class="mkt-ch-bar"><i style="width:${Math.max(2, v.revenue / totRev * 100).toFixed(0)}%"></i></div>${(v.revenue / totRev * 100).toFixed(0)}%</td>
-          <td>${v.ads ? '฿' + fmt(Math.round(v.ads)) + (v.direct ? `<span class="mkt-ch-dir">ตรง ฿${fmtB(v.direct)}</span>` : '') : '<span style="color:var(--text3);">—</span>'}</td>
-          <td style="font-weight:700;font-family:'IBM Plex Mono',monospace;">${v.ads > 0 ? (v.revenue / v.ads).toFixed(2) + 'x' + (best && best[0] === ch && list.filter(([, x]) => x.ads > 0).length > 1 ? ' <span class="mkt-ch-best">คุ้มสุด</span>' : '') : '—'}</td></tr>`).join('')
-      + `</tbody></table></td></tr>`;
+    const ord = ch => { const i = CH_ORDER.indexOf(ch); return i < 0 ? 99 : i; };
+    const list = Object.entries(m).filter(([, v]) => v.revenue || v.ads).sort((a, b) => ord(a[0]) - ord(b[0]));
+    const withAds = list.filter(([, v]) => v.ads > 0);
+    const best = withAds.length > 1 ? withAds.map(([ch, v]) => [ch, v.revenue / v.ads]).sort((a, b) => b[1] - a[1])[0][0] : null;
+    const tab = _mktRoiTab[sku] || 'ch';
+    const tabs = `<div class="mkt-tabs" onclick="event.stopPropagation()">
+        <button class="${tab === 'ch' ? 'on' : ''}" onclick="event.stopPropagation();_mktRoiTab['${ttcEscAttr(sku)}']='ch';renderMktRoiTable()">ตามช่องทาง</button>
+        <button class="${tab === 'mo' ? 'on' : ''}" onclick="event.stopPropagation();_mktRoiTab['${ttcEscAttr(sku)}']='mo';renderMktRoiTable()">ตามเดือน</button></div>`;
+    if (tab === 'mo') {
+      const ms = (_mktRoiMonthly[sku] || []).slice().sort((a, b) => a.m.localeCompare(b.m));
+      let prev = null;
+      return `<tr class="mkt-ch-sub-row"><td colspan="12"><div class="mkt-ch-panel2">${tabs}
+        <div class="mkt-mo-grid mkt-ch-head"><div>เดือน</div><div>ยอดขาย</div><div>ค่าการตลาดรวม</div><div>% Budget</div><div>ROI</div></div>
+        ${ms.map(x => { const roi = x.mkt > 0 ? x.revenue / x.mkt : null;
+          const arrow = (roi != null && prev != null) ? (roi > prev * 1.05 ? '<span class="mkt-up">▲</span>' : roi < prev * 0.95 ? '<span class="mkt-dn">▼</span>' : '') : '';
+          prev = roi ?? prev;
+          return `<div class="mkt-mo-grid"><div class="mkt-ch-cn">${new Date(x.m + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })}</div>
+            <div>฿${fmt(Math.round(x.revenue))}</div><div>฿${fmt(Math.round(x.mkt))}</div>
+            <div>${x.revenue > 0 ? (x.mkt / x.revenue * 100).toFixed(1) + '%' : '—'}</div>
+            <div class="mkt-ch-roi2">${roi != null ? roi.toFixed(2) + 'x' : '—'} ${arrow}</div></div>`; }).join('')}
+      </div></td></tr>`;
+    }
+    return `<tr class="mkt-ch-sub-row"><td colspan="12"><div class="mkt-ch-panel2">${tabs}
+      <div class="mkt-ch-grid mkt-ch-head"><div>ช่องทาง</div><div>ยอดขาย</div><div>สัดส่วนยอดขาย</div><div>ค่าแอด</div><div>ROI แอด</div></div>
+      ${list.map(([ch, v]) => { const pct = v.revenue / totRev * 100; return `<div class="mkt-ch-grid">
+        <div class="mkt-ch-cn">${ch}</div>
+        <div>฿${fmt(Math.round(v.revenue))}</div>
+        <div class="mkt-ch-share"><span class="mkt-ch-bar"><i style="width:${Math.max(2, pct).toFixed(0)}%"></i></span><span>${pct.toFixed(0)}%</span></div>
+        <div>${v.ads ? '฿' + fmt(Math.round(v.ads)) + (v.direct ? `<em>ตรง ฿${fmtB(v.direct)}</em>` : '') : '<span class="mkt-ch-na">—</span>'}</div>
+        <div class="mkt-ch-roi2">${v.ads > 0 ? (v.revenue / v.ads).toFixed(2) + 'x' : '<span class="mkt-ch-na">—</span>'}${best === ch ? '<span class="mkt-ch-best">คุ้มสุด</span>' : ''}</div>
+      </div>`; }).join('')}
+    </div></td></tr>`;
   };
   document.getElementById('tbodyMktRoi').innerHTML = rows.map(a => `<tr class="mkt-roi-row${_mktRoiOpen.has(a.sku) ? ' open' : ''}" data-sku="${ttcEscAttr(a.sku)}" onclick="toggleMktRoiRow(this.dataset.sku)" style="cursor:pointer;">
       <td><span class="mkt-caret">${_mktRoiOpen.has(a.sku) ? '▾' : '▸'}</span><b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span></td>
