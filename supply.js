@@ -323,7 +323,7 @@
     out.withPoEnd = base.end; out.gapDays = base.gap;
     out.orderBy = new Date(base.end.getTime() - lt * DAY);  // ก้อนถัดไปต้องสั่งภายใน (นับหลัง PO ที่มีแล้ว)
     if (pl && pl.plan_qty > 0) {
-      if (pl.arrive_date) {                                  // กรอกวันที่ของถึง → แทรกตามวันที่
+      if (false && pl.arrive_date) {                         // (ปิดแล้ว 2026-09-22) ไม่ใช้วันที่ของ forecast — นับต่อท้ายเสมอ
         const r2 = runOut(stock, avg, today, [...pos, { d: toD(pl.arrive_date), q: +pl.plan_qty }].sort((a, b) => a.d - b.d));
         out.newEnd = new Date(Math.max(r2.end, today) + Math.floor(nodateQty / avg) * DAY); out.gapDays = r2.gap;
       } else {                                               // ไม่กรอก → ต่อท้ายหลังของเดิม + PO หมด
@@ -340,18 +340,13 @@
     return out;
   }
   function planCells(r) {
-    if (r.plan_mode !== 'plan') return '<td class="t-center"><span class="sup-dash">—</span></td>'.repeat(3);
+    if (r.plan_mode !== 'plan') return '<td class="t-center"><span class="sup-dash">—</span></td>'.repeat(2);
     const c = planCalc(r), pl = c.pl || {};
     const stamp = pl.updated_at ? new Date(pl.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
     return `<td class="t-center sup-plan" onclick="event.stopPropagation()">
         <input type="text" inputmode="numeric" class="sup-in sup-plan-qty${pl.plan_qty ? ' on' : ''}" data-sku="${esc(r.sku)}"
           value="${pl.plan_qty ? Number(pl.plan_qty).toLocaleString() : ''}" placeholder="0">
         ${stamp ? `<div class="sup-sub">Saved ${stamp}</div>` : ''}
-      </td>
-      <td class="t-center sup-plan" onclick="event.stopPropagation()">
-        <input type="date" class="sup-in sup-plan-date${pl.arrive_date ? ' on' : ''}" data-sku="${esc(r.sku)}" value="${pl.arrive_date || ''}"
-          title="Leave blank = arrives right after current stock runs out">
-        <div class="sup-sub">${pl.arrive_date ? '' : 'blank = after stock-out'}</div>
       </td>
       <td class="t-center">
         <div class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</div>
@@ -387,9 +382,9 @@
   function bindPlanInputs() {
     const save = async el => {
       const tr = el.closest('tr'); const sku = el.dataset.sku;
-      const qEl = tr.querySelector('.sup-plan-qty'), dEl = tr.querySelector('.sup-plan-date');
+      const qEl = tr.querySelector('.sup-plan-qty');
       const qty = parseInt(String(qEl.value).replace(/[^\d]/g, '')) || 0;
-      const arr = dEl.value || null;
+      const arr = null;
       el.style.borderColor = '#fbbf24';
       try { await savePlan(sku, qty, arr); renderTable(); }
       catch (e) { el.style.borderColor = 'var(--red)'; alert(e.message); }
@@ -405,17 +400,39 @@
   }
 
 
+  // ===== ⓘ คำอธิบายหัวคอลัมน์ (กดดู · ใช้กล่องแบบเดียวกับทั้งเว็บ) =====
+  const COL_TIPS = {
+    parent_sku: 'รหัสสินค้าหลัก (รวมทุกสี/เบอร์)',
+    sku: 'รหัสสี/เบอร์ · ป้าย NO REORDER = ไม่สั่งผลิตซ้ำแล้ว แต่ยังขายอยู่',
+    abc: 'A = ยอดขายหลัก 80% · B = รอง 15% · C = น้อย 5%<br>X = ขายสม่ำเสมอ · Y = แกว่งปานกลาง · Z = แกว่งมาก',
+    on_hand: 'ของที่มีจริงตอนนี้ = ในคลังทุกที่ + Hold ที่โรงงาน (ผลิตเสร็จแล้ว เรียกเข้าได้ใน 2–3 วัน)',
+    on_order: 'WIP = เปิด PO แล้วแต่ยังผลิตไม่เสร็จ<br>ETA = วันผลิตเสร็จที่จัดซื้อลงไว้<br>Need by = ยังไม่มีวันจริง ต้องได้ของก่อนวันนี้ถึงจะไม่ขาด<br>CALL-OFF = ยอดคงเหลือ PO รอเรียกผลิต',
+    avg_day: 'ขายเฉลี่ยต่อวัน ใช้คำนวณวันหมด<br>ถ่วงน้ำหนัก: 7 วันล่าสุด 50% · 30 วัน 30% · 90 วัน 20% (ไม่นับวันโปร)',
+    trend_7_vs_30: 'ขายเฉลี่ย 7 วันล่าสุด เทียบ 30 วันล่าสุด<br>บวก = ช่วงนี้ขายเร็วขึ้น ของจะหมดเร็วกว่าที่เห็น<br>ลบ = ขายช้าลง ของจะอยู่ได้นานกว่าที่เห็น',
+    cover_days: 'ของที่มีตอนนี้พอขายได้อีกกี่วัน (ยังไม่นับ WIP) · Out = วันที่คาดว่าจะหมด',
+    po_due_date: 'วันสุดท้ายที่ต้องเปิด PO ก้อนถัดไป = วันที่ของ (รวม WIP) หมด − Lead time',
+    plan_qty: 'จำนวนที่จะสั่งเพิ่ม (forecast) — กรอกแล้วบันทึกทันที ช่อง Status จะคำนวณใหม่ว่าขายได้ถึงเมื่อไร',
+    plan_end: 'Order now = ต้องตัดสินใจประชุมรอบนี้ · Next review = รอบหน้า · OK = ยังไม่ต้อง · Planned = กรอกจำนวนแล้ว · Stockout risk = ของหมดก่อน WIP จะเข้า<br>Until = ถ้าสั่งตามจำนวนที่กรอก ขายได้ถึงวันไหน (นับต่อจากของเดิม + WIP)'
+  };
+  function colTip(k) {
+    const t = COL_TIPS[k]; if (!t) return '';
+    const id = 'suptip-' + k;
+    return ` <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()">`
+      + `<span onclick="event.stopPropagation();toggleTip('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span>`
+      + `<div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;position:absolute;top:18px;${['plan_end','plan_qty','po_due_date'].includes(k) ? 'right:0;' : 'left:0;'}background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">${t}</div></span>`;
+  }
+
   function cols() {
     const c = [['parent_sku', 'Parent SKU'], ['sku', 'SKU'], ['abc', 'ABC-XYZ'], ['on_hand', 'On hand']];
     if (showLoc) locList().forEach(l => c.push(['loc:' + l.location, l.location]));
     return c.concat([['on_order', 'WIP'], ['avg_day', 'Avg/day'], ['trend_7_vs_30', 'Trend'],
       ['cover_days', 'Days of cover'], ['po_due_date', 'Order by'],
-      ['plan_qty', 'Order qty'], ['plan_date', 'ETA'], ['plan_end', 'Status']]);
+      ['plan_qty', 'Order qty'], ['plan_end', 'Status']]);
   }
 
   function renderTable() {
     const list = filtered(), COLS = cols(), locs = locList();
-    const head = COLS.map(([k, l]) => `<th class="sortable-th" data-k="${esc(k)}"${k.indexOf('loc:') === 0 ? ' style="font-size:10.5px;"' : ''}>${esc(l)}${sort.key === k ? `<span class="sort-arrow">${sort.dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('');
+    const head = COLS.map(([k, l]) => `<th class="sortable-th" data-k="${esc(k)}"${k.indexOf('loc:') === 0 ? ' style="font-size:10.5px;"' : ''}>${esc(l)}${colTip(k)}${sort.key === k ? `<span class="sort-arrow">${sort.dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('');
     let lastParent = null;
     const body = list.length ? list.map(r => {
       const planned = r.plan_mode === 'plan';
