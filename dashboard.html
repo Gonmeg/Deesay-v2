@@ -425,7 +425,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-f</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.22-g</span><br>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
     <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
     <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
@@ -5724,6 +5724,21 @@ function momentumStatus(r) {
   if (chg <= MOMENTUM_DOWN) return { key: 'down', label: '🔻 Downturn', color: 'var(--red)', rank: 2 };
   return { key: 'flat', label: '➖ ทรงตัว', color: 'var(--text2)', rank: 4 };
 }
+// (2026-09-22) บรรทัดอธิบายใต้สถานะ — นับจากช่องทางจริง บอกว่าลง/ขึ้นกี่ช่องทาง และช่องไหนดึงมากสุด
+function momentumWhy(r) {
+  const chs = (r.channels || []).map(c => ({ ch: c.channel || c.ch || c.name, diff: (+c.cur || 0) - (+c.prev || 0), prev: +c.prev || 0 }))
+    .filter(c => c.prev > 0 || c.diff !== 0);
+  if (!chs.length || r.st.key === 'new' || r.st.key === 'dead') return '';
+  const dn = chs.filter(c => c.diff < 0), up = chs.filter(c => c.diff > 0);
+  const worst = dn.slice().sort((a, b) => a.diff - b.diff)[0], best = up.slice().sort((a, b) => b.diff - a.diff)[0];
+  const n = chs.length, sub = t => `<div style="font-size:10px;color:var(--text3);font-weight:400;line-height:1.45;white-space:normal;max-width:190px;">${t}</div>`;
+  if (r.st.key === 'down') return sub(`ลง ${dn.length} จาก ${n} ช่องทาง${worst ? ` · ลงมากสุด ${worst.ch} −฿${fmtB(-worst.diff)}` : ''}${dn.length === n ? '<br>ลงทุกช่องทาง → น่าจะเป็นที่ตัวสินค้า/ฤดูกาล' : ''}`);
+  if (r.st.key === 'up') return sub(`ขึ้น ${up.length} จาก ${n} ช่องทาง${best ? ` · ขึ้นมากสุด ${best.ch} +฿${fmtB(best.diff)}` : ''}`);
+  // ทรงตัว: ยอดรวมไม่เปลี่ยนมาก แต่ข้างในอาจมีช่องทางชดเชยกัน
+  if (dn.length > up.length && best) return sub(`ยอดรวมทรงตัว เพราะ ${best.ch} +฿${fmtB(best.diff)} ชดเชยอีก ${dn.length} ช่องทางที่ลง`);
+  if (up.length > dn.length && worst) return sub(`ยอดรวมทรงตัว เพราะ ${worst.ch} −฿${fmtB(-worst.diff)} กินส่วนที่ ${up.length} ช่องทางขึ้น`);
+  return '';
+}
 function sparkline(arr, color) {
   const v = (arr || []).map(Number); if (!v.length) return '';
   const max = Math.max(...v, 1), w = 84, h = 22, step = w / Math.max(v.length - 1, 1);
@@ -5786,7 +5801,7 @@ function renderMomentumTable() {
     put('mm-info-chg', fbeInfoIcon('mmi-chg', `<b>vs ช่วงเทียบ</b><br>ช่วงที่เลือก (${cur}) ขายได้มากหรือน้อยกว่า <b>${prv}</b> กี่ %<br>เช่น ▼8.6% = ช่วงนี้ขายได้น้อยกว่าช่วงเทียบ 8.6%<br><span style="color:var(--text3);">เปลี่ยนช่วงเทียบได้ที่แถบบน "เทียบกับ"</span>`));
     put('mm-info-chg3', fbeInfoIcon('mmi-chg3', `<b>vs เฉลี่ย 3 ช่วง</b><br>ช่วงที่เลือก (${cur}) ขายได้มากหรือน้อยกว่า <b>ค่าเฉลี่ยของ 3 ช่วงเทียบ</b> กี่ %<br>= (${three}) เอามารวมกันหาร 3<br><span style="color:var(--text3);">3 ช่วงนี้เปลี่ยนตามช่วงวันที่และ "เทียบกับ" ที่เลือกด้านบน</span><br><br>ไว้ดูว่าที่ขึ้น/ลง เป็นแค่ "ช่วงเทียบพิเศษ" หรือ "เปลี่ยนจริง":<br>• vs ช่วงเทียบ ▼ แต่ vs เฉลี่ย ▲ → ช่วงเทียบแค่สูงผิดปกติ (เช่น ตัวแทนสั่งลอต) ยังไม่ต้องกังวล<br>• ▼ ทั้งคู่ → ลงจริง ต้องดู`));
     put('mm-info-wk', fbeInfoIcon('mmi-wk', '<b>12 สัปดาห์</b><br>ยอดขายรายสัปดาห์ 12 สัปดาห์ล่าสุด (ซ้าย = เก่า ขวา = ล่าสุด) ไว้ดูรูปทรงว่า ค่อยๆ ลง / พุ่งครั้งเดียว / แกว่ง · สีเส้นตามสถานะ'));
-    put('mm-info-st', fbeInfoIcon('mmi-st', `<b>สถานะ</b> ดูจาก % ในช่อง "vs ช่วงเทียบ":<br>🔺 Upturn = ขึ้นเกิน ${MOMENTUM_UP}%<br>🔻 Downturn = ลงเกิน ${Math.abs(MOMENTUM_DOWN)}%<br>➖ ทรงตัว = อยู่ระหว่างนั้น<br>🆕 ใหม่ = ช่วงเทียบไม่มียอด<br>💤 หยุดขาย = ช่วงนี้ไม่มียอด<br><br>ใต้ Downturn: "ลงทุกช่องทาง" → มักเป็นเรื่องตัวสินค้า/ฤดูกาล · "ลงเฉพาะบางช่องทาง" → มักเป็นเรื่องช่องนั้น (แอด/ราคา/ของหมด)`));
+    put('mm-info-st', fbeInfoIcon('mmi-st', `<b>สถานะ</b> ดูจาก % ในช่อง "vs ช่วงเทียบ":<br>🔺 Upturn = ขึ้นเกิน ${MOMENTUM_UP}%<br>🔻 Downturn = ลงเกิน ${Math.abs(MOMENTUM_DOWN)}%<br>➖ ทรงตัว = อยู่ระหว่างนั้น<br>🆕 ใหม่ = ช่วงเทียบไม่มียอด<br>💤 หยุดขาย = ช่วงนี้ไม่มียอด<br><br>บรรทัดเล็กใต้สถานะ = ลง/ขึ้นกี่ช่องทาง และช่องไหนเปลี่ยนมากสุด (บาท)<br>• ลงทุกช่องทาง → มักเป็นเรื่องตัวสินค้า/ฤดูกาล<br>• ลงแค่บางช่อง → มักเป็นเรื่องช่องนั้น (แอด/ราคา/ของหมด)<br>• ทรงตัวแต่ช่องทางแดงเยอะ → มีช่องหนึ่งโตมาชดเชย ควรดูช่องที่ลง`));
     put('mm-info-ch', fbeInfoIcon('mmi-ch', '<b>เปลี่ยนแปลงแต่ละช่องทาง</b><br>สินค้านี้ในแต่ละช่องทาง ขึ้นหรือลงกี่ % vs ช่วงเทียบ (เรียงจากหายมากสุด) · เอาเมาส์วางเห็นตัวเลขบาท')); }
   // สัดส่วน (วงกลม 2 อัน) + ข้อมูลให้ปุ่ม "วิเคราะห์ใหม่" — จากชุดเดียวกัน
   { const sorted = rows0.slice().sort((a, b) => b.rev_cur - a.rev_cur).map(r => [r.sku, { rev: +r.rev_cur, qty: +r.qty_cur }]);
@@ -5813,7 +5828,7 @@ function renderMomentumTable() {
       <td>${pctCell(r.chg, r.rev_prev > 0)}<div style="font-size:9.5px;color:var(--text3);">ก่อน ฿${fmtB(r.rev_prev)}</div></td>
       <td>${pctCell(r.chg3, r.rev_avg3 > 0)}<div style="font-size:9.5px;color:var(--text3);">เฉลี่ย ฿${fmtB(r.rev_avg3)}</div></td>
       <td>${sparkline(r.weekly, r.st.key === 'down' ? '#ef4444' : r.st.key === 'up' ? '#22c55e' : '#c8a96e')}</td>
-      <td style="white-space:nowrap;color:${r.st.color};font-weight:600;">${r.st.label}${r.allDown ? '<div style="font-size:9.5px;color:var(--text3);font-weight:400;">ลงทุกช่องทาง → ตัวสินค้า/ฤดูกาล</div>' : (r.st.key === 'down' && r.drag ? '<div style="font-size:9.5px;color:var(--text3);font-weight:400;">ลงเฉพาะบางช่องทาง</div>' : '')}</td>
+      <td style="white-space:nowrap;color:${r.st.color};font-weight:600;">${r.st.label}${momentumWhy(r)}</td>
       <td style="font-size:11px;line-height:1.55;white-space:nowrap;">${(r.channels || []).map(c => ({ ...c, diff: (+c.cur || 0) - (+c.prev || 0), pct: +c.prev > 0 ? ((+c.cur || 0) - (+c.prev || 0)) / +c.prev * 100 : null })).sort((a, b) => a.diff - b.diff).map(c => { const col = c.diff > 0 ? 'var(--green)' : c.diff < 0 ? 'var(--red)' : 'var(--text3)'; const pctTxt = c.pct === null ? (c.cur > 0 ? 'ใหม่' : '—') : (c.pct >= 0 ? '+' : '−') + Math.abs(c.pct).toFixed(0) + '%'; return `<div title="ก่อน ฿${fmt(Math.round(c.prev))} → ตอนนี้ ฿${fmt(Math.round(c.cur))} (${c.diff >= 0 ? '+' : '−'}฿${fmt(Math.round(Math.abs(c.diff)))})"><span style="color:${col};font-weight:700;display:inline-block;width:12px;">${c.diff > 0 ? '▲' : c.diff < 0 ? '▼' : '—'}</span> ${ttcEsc(c.channel)} <span style="color:${col};font-weight:600;">${pctTxt}</span></div>`; }).join('') || '—'}</td>
     </tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
   const withBase = rows0.filter(r => r.rev_prev > 0 && r.rev_cur > 0);
