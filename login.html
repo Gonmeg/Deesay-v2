@@ -27,6 +27,9 @@
   label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
   input { width: 100%; padding: 11px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; margin-bottom: 16px; outline: none; }
   input:focus { border-color: var(--accent); }
+  .pw { position: relative; } .pw input { padding-right: 44px; }
+  .eye { position: absolute; right: 6px; top: 4px; height: 36px; width: 36px; border: none; background: transparent; color: var(--text2); font-size: 16px; cursor: pointer; border-radius: 6px; }
+  .eye:hover { color: var(--text); background: var(--bg2); }
   .btn { width: 100%; padding: 12px; background: var(--accent); color: #0a0a0f; border: none; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
   .btn:hover { background: var(--accent2); } .btn:disabled { opacity: .6; cursor: wait; }
   .msg { display: none; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
@@ -55,9 +58,9 @@
   <label>อีเมลบริษัท</label>
   <input id="email" type="email" placeholder="you@company.com" autocomplete="username">
   <div id="fPass"><label>รหัสผ่าน</label>
-  <input id="password" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+  <div class="pw"><input id="password" type="password" placeholder="••••••••" autocomplete="current-password"><button type="button" class="eye" onclick="togglePw('password',this)" title="ดู/ซ่อนรหัสผ่าน">👁</button></div></div>
   <div id="fPass2"><label>ยืนยันรหัสผ่านอีกครั้ง</label>
-  <input id="password2" type="password" placeholder="พิมพ์รหัสผ่านเดิมซ้ำ" autocomplete="new-password"></div>
+  <div class="pw"><input id="password2" type="password" placeholder="พิมพ์รหัสผ่านเดิมซ้ำ" autocomplete="new-password"><button type="button" class="eye" onclick="togglePw('password2',this)" title="ดู/ซ่อนรหัสผ่าน">👁</button></div></div>
 
   <button class="btn" id="btnGo" onclick="go()">เข้าสู่ระบบ</button>
 
@@ -67,6 +70,7 @@
 <script>
   try { if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
   let mode = 'login';
+  function togglePw(id, btn) { const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁'; }
   const $ = id => document.getElementById(id);
   const redirectTo = () => { const r = new URLSearchParams(location.search).get('redirect'); return (r && !r.startsWith('http') && !r.startsWith('//')) ? r : 'dashboard.html'; };
   const show = (kind, text) => { const m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; };
