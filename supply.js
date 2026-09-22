@@ -177,7 +177,7 @@
             <button class="btn btn-ghost" id="supExport">⬇ Export CSV</button>
           </div>
         </div>
-        <div class="table-wrap" id="supTbl" style="max-height:1080px;overflow:auto;"></div>
+        <div class="table-wrap" id="supTbl" style="max-height:calc(100vh - 160px);overflow:auto;"></div>
         <div id="supFoot" style="font-size:10.5px;color:var(--text3);margin-top:10px;"></div>
       </div>
 
@@ -356,11 +356,11 @@
       .sup-plan-date { width:132px; padding:5px 8px; font-size:12px; text-align:center; color:var(--text2); }
       .sup-meet { font-size:12px; font-weight:600; white-space:nowrap; }
       td.sup-plan .sup-sub { margin-top:3px; }
-      tr.sup-noplan td { opacity:.55; }
-      tr.sup-noplan td:nth-child(-n+2) { opacity:1; }
-      tr.sup-noplan:hover td { opacity:1; }
-      .sup-noplan-pill { display:inline-block; font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:99px;
-        background:var(--bg3, rgba(128,128,128,.12)); color:var(--text3); border:1px dashed var(--border2, var(--border)); white-space:nowrap; }`;
+      .sup-noplan-pill { display:inline-block; vertical-align:1px; margin-left:6px; font-size:10px; font-weight:600; letter-spacing:.2px;
+        padding:1px 7px; border-radius:4px; background:rgba(148,163,184,.16); color:#64748b; white-space:nowrap; }
+      body:not(.light-theme) .sup-noplan-pill { color:#94a3b8; background:rgba(148,163,184,.14); }
+      /* หัวตารางค้างไว้ด้านบนเวลาเลื่อน (แบบ Google Sheets / Excel) */
+      #supTbl thead th { position:sticky; top:0; z-index:3; background:var(--bg2); box-shadow:0 1px 0 var(--border); }`;
     document.head.appendChild(st);
   })();
   function bindPlanInputs() {
@@ -421,7 +421,7 @@
       const locTds = showLoc ? locs.map(l => { const q = (r.by_loc || {})[l.location] || 0; return `<td class="${q ? '' : 'sup-dash'}" style="font-size:11.5px;">${q ? fmtN(q) : '·'}</td>`; }).join('') : '';
       return `<tr class="sup-row${planned ? '' : ' sup-noplan'}" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}${newGroup ? 'border-top:2px solid var(--border2);' : ''}">
         <td class="t-left">${sameParent ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span><div class="sup-sub">${esc(r.parent_name || '')}</div>`}</td>
-        <td class="t-left"><span class="sup-skucode">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div>${planned ? '' : '<div style="margin-top:3px;"><span class="sup-noplan-pill">⏸ ไม่สั่งซ้ำ · ดูการขายอย่างเดียว</span></div>'}</td>
+        <td class="t-left"><span class="sup-skucode">${esc(r.sku)}</span>${planned ? '' : '<span class="sup-noplan-pill" title="ไม่สั่งผลิตซ้ำ (ตั้งในหน้า Admin) — ยังขายอยู่ ดูยอดขายและวันหมดได้ตามปกติ">NO REORDER</span>'}<div class="sup-sub">${esc(r.product_name)}</div></td>
         <td class="t-center"><span class="sup-chip" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span></td>
         <td><b style="font-size:13px;">${fmtN(_stk)}</b>${_hold ? `<div class="sup-sub">คลัง ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
         ${locTds}
