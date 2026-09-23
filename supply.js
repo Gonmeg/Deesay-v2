@@ -63,7 +63,7 @@
     + T('ทำไมตารางไม่มีช่อง "ออกเร็ว / ออกช้า"', 'เพราะจะซ้ำกับช่องที่มีอยู่แล้ว และเคยทำให้อ่านผิด<br><br>ถ้าวัดจาก<b>ของที่เหลือ</b> ยิ่งของใกล้หมดยิ่งดูออกเร็ว — สินค้าที่ยอดกำลังตกแต่ของร่อยหรอจะขึ้นว่า "ออกเร็ว" ทั้งที่ขายแย่ลง<br>ถ้าวัดจาก<b>ยอดขาย</b> ก็คือ ABC ที่มีอยู่แล้ว<br><br>ตารางนี้จึงตอบด้วย 3 ช่องที่ไม่ซ้ำกัน: <b>ABC-XYZ</b> = ทำเงินแค่ไหน เดายากไหม · <b>ขายได้อีกกี่วัน</b> = ของกองเกินไหม · <b>การสั่งซื้อ</b> = ต้องสั่งหรือยัง');
 
   let DATA = null, rows = [], filt = { status: '', abc: '', xyz: '', q: '' },
-      sort = { key: 'parent_sku', dir: 1 }, showLoc = false, showHidden = false,
+      sort = { key: 'parent_sku', dir: 1 }, showLoc = false, showHidden = false, collapseAll = false, collapsed = new Set(),
       selSku = null, chart = null, lastSeries = null, seq = 0;
 
   function root() { return document.getElementById('page-supply'); }
@@ -190,6 +190,7 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
             <input type="text" class="ls-input" id="supQ" placeholder="🔎 Parent SKU / SKU / ชื่อสินค้า" value="${esc(filt.q)}" style="width:210px;padding:6px 10px;font-size:12px;">
             <select class="ls-input" id="supStatus" style="width:170px;flex:0 0 auto;padding:6px 10px;font-size:12px;"><option value="">All status</option><optgroup label="Status"><option value="order_now">🔴 Order now</option><option value="risk">⚫ Stockout risk</option><option value="next_review">🟡 Next review</option><option value="planned">✅ Planned</option><option value="ok">🟢 OK</option></optgroup><optgroup label="Stock"><option value="stuck">Overstock (&gt;180 d)</option><option value="nosale">No sales (90 d)</option></optgroup></select>
+            <button class="btn btn-ghost" id="supGroupToggle" style="${collapseAll ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}" title="ย่อแถวสี/เบอร์ เหลือแถวสรุปของ Parent (กดที่แถวสรุปเพื่อขยายทีละกลุ่ม)">▤ ย่อเหลือ Parent</button>
             <button class="btn btn-ghost" id="supLocToggle" style="${showLoc ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}">🏭 แยกคลัง</button>
             <button class="btn btn-ghost" id="supHiddenToggle" style="${showHidden ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}" title="สินค้าที่ตั้งเป็น ซ่อน ในหน้า Admin">👁 ที่ซ่อนไว้${d.hidden_count ? ' (' + fmtN(d.hidden_count) + ')' : ''}</button>
             <button class="btn btn-ghost" id="supClear">✕ ล้าง</button>
@@ -245,6 +246,13 @@
         #page-supply .sup-bar { height:3px; border-radius:2px; background:var(--bg3); margin:5px 0 0 auto; width:60px; overflow:hidden; }
         #page-supply .sup-bar i { display:block; height:100%; border-radius:2px; }
         #page-supply .sup-dash { color:var(--text3); }
+        #page-supply .sup-lt { font-size:12.5px; } #page-supply .sup-lt.def { color:var(--text3); }
+        #page-supply tr.sup-group td { background:color-mix(in srgb, var(--accent) 7%, var(--bg2)); border-top:2px solid var(--border2); font-weight:600; cursor:pointer; }
+        #page-supply tr.sup-group:hover td { background:color-mix(in srgb, var(--accent) 13%, var(--bg2)); }
+        #page-supply tr.sup-group .sup-parent { font-size:12.5px; }
+        #page-supply tr.sup-group .sup-sub { font-weight:400; }
+        #page-supply .sup-caret { display:inline-block; width:12px; color:var(--accent); font-size:10px; margin-right:4px; }
+        #page-supply .sup-group-pill { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; background:color-mix(in srgb, var(--accent) 18%, transparent); color:var(--accent); }
         @media (max-width:1200px){ #page-supply .sup-top { grid-template-columns:1fr; } #page-supply .sup-kpis { grid-template-columns:repeat(3,1fr); } #page-supply .sup-kpis .sup-kpi:nth-child(5) { grid-column:auto; } }
         @media (max-width:800px){ #page-supply .sup-kpis { grid-template-columns:repeat(2,1fr); } }
       </style>`;
@@ -267,6 +275,7 @@
     document.getElementById('supClear').onclick = () => { filt = { status: '', abc: '', xyz: '', q: '' }; renderAll(); };
     document.getElementById('supExport').onclick = exportCsv;
     document.getElementById('supLocToggle').onclick = () => { showLoc = !showLoc; renderAll(); };
+    document.getElementById('supGroupToggle').onclick = () => { collapseAll = !collapseAll; collapsed = new Set(); if (sort.key !== 'parent_sku') { sort.key = 'parent_sku'; sort.dir = 1; } renderAll(); };
     document.getElementById('supHiddenToggle').onclick = () => { showHidden = !showHidden; renderAll(); };
     document.querySelectorAll('#supKpis .card[data-f]').forEach(el => { const f = el.dataset.f; if (!f) return; el.onclick = () => { filt.status = filt.status === f ? '' : f; renderAll(); }; });
     document.querySelectorAll('.sup-cell').forEach(el => el.onclick = () => { const a = el.dataset.a, x = el.dataset.x; if (filt.abc === a && filt.xyz === x) { filt.abc = ''; filt.xyz = ''; } else { filt.abc = a; filt.xyz = x; } renderAll(); });
@@ -428,6 +437,7 @@
     parent_sku: 'รหัสสินค้าหลัก (รวมทุกสี/เบอร์)',
     sku: 'รหัสสี/เบอร์ · ป้าย NO REORDER = ไม่สั่งผลิตซ้ำแล้ว แต่ยังขายอยู่',
     abc: 'A = ยอดขายหลัก 80% · B = รอง 15% · C = น้อย 5%<br>X = ขายสม่ำเสมอ · Y = แกว่งปานกลาง · Z = แกว่งมาก',
+    lt: 'Lead time = สั่งผลิตวันนี้ ได้ของอีกกี่วัน (ตั้งในหน้า Admin)<br>ตัวจางๆ = ยังไม่ได้ตั้ง ใช้ค่ากลาง 60 วัน<br>ใช้คำนวณ "Order by" = วันของหมด − Lead time',
     on_hand: 'ของที่มีจริงตอนนี้ = ในคลังทุกที่ + Hold ที่โรงงาน (ผลิตเสร็จแล้ว เรียกเข้าได้ใน 2–3 วัน)',
     on_order: 'WIP = เปิด PO แล้วแต่ยังผลิตไม่เสร็จ<br>ETA = วันผลิตเสร็จที่จัดซื้อลงไว้<br>Need by = ยังไม่มีวันจริง ต้องได้ของก่อนวันนี้ถึงจะไม่ขาด<br>CALL-OFF = ยอดคงเหลือ PO รอเรียกผลิต',
     avg_day: 'ขายเฉลี่ยต่อวัน ใช้คำนวณวันหมด<br>ถ่วงน้ำหนัก: 7 วันล่าสุด 50% · 30 วัน 30% · 90 วัน 20% (ไม่นับวันโปร)',
@@ -446,15 +456,47 @@
   }
 
   function cols() {
-    const c = [['parent_sku', 'Parent SKU'], ['sku', 'SKU'], ['abc', 'ABC-XYZ'], ['on_hand', 'On hand']];
+    const c = [['parent_sku', 'Parent SKU'], ['sku', 'SKU'], ['abc', 'ABC-XYZ'], ['lt', 'Lead time'], ['on_hand', 'On hand']];
     if (showLoc) locList().forEach(l => c.push(['loc:' + l.location, l.location]));
     return c.concat([['on_order', 'WIP'], ['avg_day', 'Avg/day'], ['trend_7_vs_30', 'Trend'],
       ['cover_days', 'Days of cover'], ['po_due_date', 'Order by'],
       ['plan_qty', 'Order qty'], ['plan_end', 'Status']]);
   }
 
+  // แถวสรุปของ Parent ที่มีสี/เบอร์ ≥ 2 (แสดงเมื่อเรียงตาม Parent SKU) — ตัวเลขวางตรงคอลัมน์เดียวกับแถวลูก
+  function groupRow(parent, rs, COLS, locs) {
+    const stk = rs.reduce((t, r) => t + stockAll(r), 0), wip = rs.reduce((t, r) => t + wipQty(r.sku), 0), avg = rs.reduce((t, r) => t + (+r.avg_day || 0), 0);
+    const cov = avg > 0 ? Math.floor(stk / avg) : null;
+    const so = avg > 0 ? iso(new Date(toD(iso(new Date())).getTime() + cov * DAY)) : null;
+    const lts = [...new Set(rs.map(r => +r.lt || 60))].sort((a, b) => a - b);
+    const ltTxt = lts.length === 1 ? `${lts[0]} d` : `${lts[0]}–${lts[lts.length - 1]} d`;
+    const dues = rs.filter(r => r.plan_mode === 'plan').map(r => { const c = planCalc(r); return c.orderBy ? iso(c.orderBy) : r.po_due_show; }).filter(Boolean).sort();
+    const due = dues[0] || null, dueIn = due ? daysFrom(due) : null;
+    const dueCol = dueIn == null ? 'var(--text3)' : dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text2)';
+    const covCol = cov == null ? 'var(--text3)' : cov > 180 ? '#60a5fa' : 'var(--text)';
+    const isCol = collapseAll ? !collapsed.has(parent) : collapsed.has(parent);   // collapseAll = ย่อทุกกลุ่ม แล้ว collapsed เก็บกลุ่มที่ "ขยาย" แทน
+    const locTds = showLoc ? locs.map(l => { const q = rs.reduce((t, r) => t + ((r.by_loc || {})[l.location] || 0), 0); return `<td class="${q ? '' : 'sup-dash'}" style="font-size:11.5px;">${q ? fmtN(q) : '·'}</td>`; }).join('') : '';
+    return `<tr class="sup-group" data-parent="${esc(parent)}" title="กดเพื่อ${isCol ? 'ขยาย' : 'ย่อ'}สี/เบอร์ของ ${esc(parent)}">
+      <td class="t-left"><span class="sup-caret">${isCol ? '▸' : '▾'}</span><span class="sup-parent">${esc(parent)}</span><div class="sup-sub">${esc(rs[0].parent_name || '')}</div></td>
+      <td class="t-left"><span class="sup-group-pill">รวม ${rs.length} SKU</span></td>
+      <td class="t-center"><span class="sup-dash">—</span></td>
+      <td><span class="sup-lt ${rs.every(r => r.has_params === false) ? 'def' : ''}">${ltTxt}</span></td>
+      <td><b style="font-size:13px;">${fmtN(stk)}</b></td>
+      ${locTds}
+      <td>${wip ? fmtN(wip) : '<span class="sup-dash">—</span>'}</td>
+      <td>${fmtN(avg, 1)}</td>
+      <td><span class="sup-dash">—</span></td>
+      <td>${cov == null ? '<span class="sup-dash">—</span>' : `<b style="color:${covCol};">${fmtN(cov)}</b> <span class="sup-sub" style="display:inline;">d</span>${daysHuman(cov) ? `<span class="sup-sub" style="display:inline;margin-left:4px;">(${daysHuman(cov)})</span>` : ''}${so ? `<div class="sup-sub">Out ${dTH(so)}</div>` : ''}`}</td>
+      <td>${!due ? '<span class="sup-dash">—</span>' : `<b style="color:${dueCol};">${dTH(due)}</b><div class="sup-sub">${dueIn < 0 ? fmtN(-dueIn) + ' d late' : 'in ' + fmtN(dueIn) + ' d'} · เร็วสุดในกลุ่ม</div>`}</td>
+      <td></td><td></td>
+    </tr>`;
+  }
+
   function renderTable() {
     const list = filtered(), COLS = cols(), locs = locList();
+    const grouping = sort.key === 'parent_sku';
+    const groupSize = {}; if (grouping) list.forEach(r => { groupSize[r.parent_sku] = (groupSize[r.parent_sku] || 0) + 1; });
+    const isCollapsed = p => grouping && groupSize[p] >= 2 && (collapseAll ? !collapsed.has(p) : collapsed.has(p));
     const head = COLS.map(([k, l]) => `<th class="sortable-th" data-k="${esc(k)}"${k.indexOf('loc:') === 0 ? ' style="font-size:10.5px;"' : ''}>${esc(l)}${colTip(k)}${sort.key === k ? `<span class="sort-arrow">${sort.dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('');
     let lastParent = null;
     const body = list.length ? list.map(r => {
@@ -476,19 +518,25 @@
         : cov > 180 ? '#60a5fa' : 'var(--text)';
       const covPct = cov == null ? 0 : Math.max(4, Math.min(100, Math.round(cov / 200 * 100)));
       const tr = r.trend_7_vs_30;
-      const sameParent = sort.key === 'parent_sku' && r.parent_sku === lastParent;
-      const newGroup = sort.key === 'parent_sku' && !sameParent;
+      const sameParent0 = sort.key === 'parent_sku' && r.parent_sku === lastParent;
+      const newGroup0 = sort.key === 'parent_sku' && !sameParent0;
+      const grouped = grouping && groupSize[r.parent_sku] >= 2;
+      const groupHead = grouped && newGroup0 ? groupRow(r.parent_sku, list.filter(x => x.parent_sku === r.parent_sku), COLS, locs) : '';
       lastParent = r.parent_sku;
+      if (isCollapsed(r.parent_sku)) return groupHead;
+      const sameParent = sameParent0 || grouped;   // ลูกในกลุ่มไม่พิมพ์ชื่อ parent ซ้ำ (อยู่ที่แถวสรุปแล้ว)
+      const newGroup = newGroup0 && !grouped;
       // ต้องสั่งภายใน = วันที่ของ (สต็อก + PO ที่เปิดแล้ว) จะหมด − Lead time
       const _pc = planned && r.plan_mode === 'plan' ? planCalc(r) : null;
       const due = planned ? ((_pc && _pc.orderBy) ? iso(_pc.orderBy) : r.po_due_show) : null;
       const dueIn = due ? daysFrom(due) : null;
       const dueCol = dueIn == null ? 'var(--text3)' : dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text2)';
       const locTds = showLoc ? locs.map(l => { const q = (r.by_loc || {})[l.location] || 0; return `<td class="${q ? '' : 'sup-dash'}" style="font-size:11.5px;">${q ? fmtN(q) : '·'}</td>`; }).join('') : '';
-      return `<tr class="sup-row${planned ? '' : ' sup-noplan'}" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}${newGroup ? 'border-top:2px solid var(--border2);' : ''}">
+      return groupHead + `<tr class="sup-row${planned ? '' : ' sup-noplan'}" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}${newGroup ? 'border-top:2px solid var(--border2);' : ''}">
         <td class="t-left">${sameParent ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span><div class="sup-sub">${esc(r.parent_name || '')}</div>`}</td>
         <td class="t-left"><span class="sup-skucode">${esc(r.sku)}</span>${planned ? '' : '<span class="sup-noplan-pill" title="ไม่สั่งผลิตซ้ำ (ตั้งในหน้า Admin) — ยังขายอยู่ ดูยอดขายและวันหมดได้ตามปกติ">NO REORDER</span>'}<div class="sup-sub">${esc(r.product_name)}</div></td>
         <td class="t-center"><span class="sup-chip" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span></td>
+        <td><span class="sup-lt ${r.has_params === false ? 'def' : ''}" title="${r.has_params === false ? 'ยังไม่ได้ตั้ง Lead time ในหน้า Admin — ใช้ค่ากลาง 60 วัน' : 'Lead time ' + (+r.lt || 60) + ' วัน'}">${+r.lt || 60} d</span></td>
         <td><b style="font-size:13px;">${fmtN(_stk)}</b>${_hold ? `<div class="sup-sub">WH ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
         ${locTds}
         <td>${!_wip ? '<span class="sup-dash">—</span>' : fmtN(_wip)
@@ -514,12 +562,13 @@
     document.getElementById('supFoot').textContent = `${fmtN(list.length)} SKU${nWatch ? ` · ${fmtN(nWatch)} ตัวตั้งเป็น "ไม่สั่งซ้ำแล้ว" (ยังดูการหมุนเวียนได้ แต่ไม่มีสถานะการสั่ง)` : ''} · เรียงตาม Parent SKU · LT* = ยังใช้ค่ากลาง 60 วัน · คลิกหัวคอลัมน์เพื่อเรียงใหม่`;
     document.querySelectorAll('#supTbl th[data-k]').forEach(th => th.onclick = () => { const k = th.dataset.k; if (sort.key === k) sort.dir = -sort.dir; else { sort.key = k; sort.dir = ['parent_sku', 'sku', 'abc', 'xyz', 'status', 'po_due_date'].indexOf(k) >= 0 ? 1 : -1; } renderTable(); });
     bindPlanInputs();
+    document.querySelectorAll('.sup-group').forEach(tr => tr.onclick = () => { const p = tr.dataset.parent; if (collapsed.has(p)) collapsed.delete(p); else collapsed.add(p); renderTable(); });
     document.querySelectorAll('.sup-row').forEach(tr => tr.onclick = () => { selSku = tr.dataset.sku; document.querySelectorAll('.sup-row').forEach(x => x.style.background = x.dataset.sku === selSku ? 'var(--bg3)' : ''); loadSku(selSku); document.getElementById('supSkuCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }
 
   function exportCsv() {
     const list = filtered(), locs = locList();
-    const cols0 = ['parent_sku', 'sku', 'product_name', 'plan_mode', 'abc', 'xyz', 'on_hand'];
+    const cols0 = ['parent_sku', 'sku', 'product_name', 'plan_mode', 'abc', 'xyz', 'lt', 'on_hand'];
     const cols1 = ['on_order', 'next_eta', 'avg7', 'avg30', 'avg90', 'avg_day', 'cover_days', 'ss_days', 'deadline_days', 'warn_days', 'po_due_date', 'order_status', 'stockout_date', 'stockout_date_with_po', 'safety_stock', 'reorder_point', 'target_stock', 'suggested_qty', 'lt', 'review', 'moq', 'pack', 'supplier'];
     const header = [...cols0, ...locs.map(l => 'คลัง ' + l.location), ...cols1];
     const q = v => v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v;
