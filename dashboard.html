@@ -228,6 +228,9 @@
 
   .sticky-head-table thead th { position: sticky; top: 0; background: var(--bg2); z-index: 5; box-shadow: 0 1px 0 var(--border); }
   .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+  /* จอแคบ (MacBook 13–14") — ย่อทั้งหน้าอัตโนมัติให้ตารางพอดีจอ ไม่ต้องกดซูมเอง · จอ 1,920 px ไม่กระทบ */
+  @media (max-width: 1500px) { body { zoom: 0.9; } }
+  @media (max-width: 1300px) { body { zoom: 0.82; } }
   /* ===== มีอะไรใหม่ (release notes) ===== */
   .wn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; box-shadow: 0 0 0 3px rgba(200,169,110,0.25); }
   .wn-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -471,7 +474,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.23-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.23-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
