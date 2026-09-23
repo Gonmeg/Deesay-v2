@@ -83,8 +83,8 @@
     $('fPass2').style.display = m === 'signup' ? 'block' : 'none';
     $('btnGo').textContent = m === 'signup' ? 'สมัครใช้งาน' : m === 'forgot' ? 'ส่งคำขอรีเซ็ตรหัสผ่าน' : 'เข้าสู่ระบบ';
     $('password').autocomplete = m === 'signup' ? 'new-password' : 'current-password';
-    $('hint').innerHTML = (m === 'signup' ? 'สมัครแล้วจะยังเข้าหน้าไหนไม่ได้ จนกว่าเมฆจะเปิดสิทธิ์ให้<br>'
-      : m === 'forgot' ? 'กรอกอีเมลที่สมัครไว้ — คำขอจะไปถึงเมฆ แล้วเมฆจะตั้งรหัสใหม่ให้และแจ้งกลับ<br>' : '')
+    $('hint').innerHTML = (m === 'signup' ? 'สมัครแล้วต้องรอเปิดสิทธิ์ใช้งานก่อน จึงจะเข้าดูได้<br>'
+      : m === 'forgot' ? 'กรอกอีเมลที่สมัครไว้ — ผู้ดูแลระบบจะตั้งรหัสใหม่ให้และแจ้งกลับ<br>' : '')
       + '<a href="index.html">← กลับหน้าแรก</a>';
   }
 
@@ -111,7 +111,7 @@
         const { data, error } = await sb.rpc('request_password_reset', { p_email: email });
         if (error) throw error;
         if (!data?.ok) throw new Error(data?.error || 'ส่งคำขอไม่สำเร็จ');
-        show('ok', 'ส่งคำขอถึงเมฆแล้ว — รอเมฆตั้งรหัสใหม่ให้และแจ้งกลับ');
+        show('ok', 'ส่งคำขอแล้ว — รอผู้ดูแลระบบตั้งรหัสใหม่ให้และแจ้งกลับ');
         return;
       }
       if (mode === 'signup') {
