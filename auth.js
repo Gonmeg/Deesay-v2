@@ -92,14 +92,14 @@ window.Auth = (function () {
     catch (e) { return showBlocked('เชื่อมต่อไม่ได้', 'อ่านสิทธิ์ผู้ใช้ไม่สำเร็จ: ' + e.message); }
     if (!perm.logged_in) return goLogin();
     perm.pages = perm.pages || [];
-    if (!perm.is_active) return showBlocked('บัญชีถูกปิดใช้งาน', 'ติดต่อเมฆถ้าต้องการใช้งานต่อ');
+    if (!perm.is_active) return showBlocked('บัญชีถูกปิดใช้งาน', 'ติดต่อผู้ดูแลระบบถ้าต้องการใช้งานต่อ');
     const ok = where === 'upload' ? (perm.is_admin || perm.can_upload)
              : where === 'admin'  ? (perm.is_admin || perm.can_admin)
              : where === 'health' ? perm.is_admin
              : (perm.is_admin || perm.pages.length > 0);
-    if (!ok) return showBlocked('รอเมฆเปิดสิทธิ์', where === 'dashboard'
-      ? 'สมัครเรียบร้อยแล้ว แต่ยังไม่ได้เปิดหน้าไหนให้ — แจ้งเมฆให้เปิดสิทธิ์ แล้วกด "ลองใหม่"'
-      : 'บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าหน้านี้ — แจ้งเมฆถ้าต้องใช้');
+    if (!ok) return showBlocked('รอเปิดสิทธิ์ใช้งาน', where === 'dashboard'
+      ? 'สมัครเรียบร้อยแล้ว — รอผู้ดูแลระบบเปิดสิทธิ์ให้ แล้วกด "ลองใหม่"'
+      : 'บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าหน้านี้ — ติดต่อผู้ดูแลระบบถ้าต้องใช้');
     return perm;
   }
 
