@@ -229,6 +229,14 @@
   .pm-chk { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 2px 0; cursor: pointer; }
   .pm-chk input { accent-color: var(--accent); }
   .pm-empty { text-align: center; color: var(--muted); padding: 18px !important; }
+  /* ===== แท็บ แอด Facebook ===== */
+  .fa-input { width: 100%; padding: 5px 8px; font-size: 0.82rem; }
+  .fa-num { width: 60px; }
+  .fa-code { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; font-weight: 600; }
+  .fa-sub { font-size: 0.72rem; color: var(--muted); }
+  .fa-tag { display: inline-block; font-size: 0.68rem; padding: 2px 7px; border-radius: 99px; font-weight: 600; }
+  .fa-map { background: rgba(200,169,110,0.16); color: var(--accent2); } .fa-sheet { background: rgba(96,165,250,0.15); color: #60a5fa; } .fa-house { background: rgba(107,122,153,0.18); color: var(--muted); }
+  .fa-filter { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .page-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
   .page-header h1 { font-size: 1.35rem; }
   .sp-tablewrap { max-height: calc(100vh - 330px); }
@@ -321,6 +329,7 @@
 
   <div class="side-sec">จัดการข้อมูล</div>
   <button class="side-item active" data-tab="products"><span class="ico">📦</span>สินค้า & Supply Chain</button>
+  <button class="side-item" data-tab="fbads"><span class="ico">📣</span>แอด Facebook</button>
   <button class="side-item" data-tab="perms" id="sidePerms" style="display:none;"><span class="ico">🔐</span>สิทธิ์ผู้ใช้</button>
 
   <div class="side-sec">ไปหน้าอื่น</div>
@@ -349,6 +358,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="products">📦 สินค้า (Master Data)</button>
     <button class="tab-btn" data-tab="supply">🚚 Supply Chain</button>
+    <button class="tab-btn" data-tab="fbads">📣 แอด Facebook</button>
     <button class="tab-btn" data-tab="perms">🔐 สิทธิ์ผู้ใช้</button>
   </div>
 
@@ -506,6 +516,35 @@
       </table></div>
     </div>
   </div><!-- /tab-perms -->
+
+  <div id="tab-fbads" class="tabpane" style="display:none;">
+    <div class="card" style="margin-bottom:18px;">
+      <div class="pm-head">🏷 คำในชื่อแคมเปญ → สินค้า <span class="pm-sub">ระบบอ่านชื่อแคมเปญใน Meta แล้วเทียบกับคำในตารางนี้ · เจอหลายคำ = ใช้แถวที่ "ลำดับ" น้อยสุด · SKU หลายตัวคั่นด้วย , = เฉลี่ยในกลุ่ม · บันทึกทันที</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>คำที่ต้องมีในชื่อแคมเปญ</th><th>สินค้า (Parent SKU)</th><th>ลำดับ</th><th>ใช้งาน</th><th>หมายเหตุ</th><th></th></tr></thead>
+        <tbody id="faRuleBody"><tr><td colspan="6" class="pm-empty">กำลังโหลด…</td></tr></tbody>
+        <tfoot><tr><td><input class="row-input fa-input" id="faNewKw" placeholder="เช่น ลิปดูโอ้"></td><td><input class="row-input fa-input" id="faNewSku" list="faSkuList" placeholder="เช่น LIPDUO"></td><td><input class="row-input fa-input fa-num" id="faNewSort" value="10"></td><td></td><td><input class="row-input fa-input" id="faNewNote" placeholder=""></td><td><button class="pm-btn gold" data-act="rule-add">+ เพิ่มกฎ</button></td></tr></tfoot>
+      </table></div>
+      <datalist id="faSkuList"></datalist>
+      <div style="padding:10px 14px 14px;">
+        <div class="fa-sub" style="margin-bottom:6px;">แคมเปญ 90 วันล่าสุดที่ยังไม่ตรงกฎไหนเลย (เรียงตามค่าแอด) — ถ้าเป็นสินค้าเดี่ยว เพิ่มกฎด้านบนได้เลย · ถ้าเป็นโปรรวม/ทุกสินค้า ปล่อยไว้ ระบบจะเฉลี่ยตามยอดขาย</div>
+        <div class="tbl-wrap" style="max-height:260px;overflow:auto;"><table><thead><tr><th>แคมเปญ</th><th>บัญชี</th><th>ค่าแอด 90 วัน</th><th>แอด</th></tr></thead><tbody id="faUnmatchedBody"><tr><td colspan="4" class="pm-empty">กำลังโหลด…</td></tr></tbody></table></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="pm-head">👤 รหัสแอด → KOL <span class="pm-sub">รหัส = เดือน+เลขในชื่อแอดที่ทีมแอดตั้ง (Sep26_129) · กรอกแค่ลิงก์ Facebook ของ KOL · เว้นว่าง = โพสต์ของเพจเราเอง · ลบลิงก์ = ยกเลิก</span></div>
+      <div class="fa-filter" style="padding:10px 14px 0;">
+        <select class="row-input fa-input" id="faKolFilter" style="width:180px;"><option value="unmapped">ยังไม่ได้จับคู่</option><option value="all">ทั้งหมด</option><option value="mapped">จับคู่แล้ว</option></select>
+        <input class="row-input fa-input" id="faKolQ" placeholder="🔎 รหัส / ชื่อ / เพจ" style="width:220px;">
+        <select class="row-input fa-input" id="faKolSort" style="width:170px;"><option value="last">ล่าสุดก่อน</option><option value="spend">ค่าแอดมากก่อน</option><option value="code">ตามรหัส</option></select>
+        <span class="fa-sub" id="faKolCount"></span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>รหัส</th><th>ยิงล่าสุด</th><th>ค่าแอดรวม</th><th>แอด</th><th>เพจที่ยิง</th><th>ชื่อจากชีท</th><th>ลิงก์ Facebook ของ KOL</th><th>แสดงเป็น</th></tr></thead>
+        <tbody id="faKolBody"><tr><td colspan="8" class="pm-empty">กำลังโหลด…</td></tr></tbody>
+      </table></div>
+    </div>
+  </div><!-- /tab-fbads -->
 
 </div>
 </main>
@@ -1100,6 +1139,111 @@ async function loadSupplyTab() {
   }
 }
 
+// ===== แท็บ แอด Facebook: กฎชื่อแคมเปญ → สินค้า · รหัสแอด → KOL =====
+let faRules = [], faKol = [], faLoaded = false
+const faEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const faMoney = v => '฿' + Math.round(+v || 0).toLocaleString('th-TH')
+const faDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'
+const faSkuName = sku => { const p = allProducts.find(x => x.parent_sku === sku); return p ? p.product_name : '' }
+async function loadFbAdsTab() {
+  try {
+    const [r1, r2, r3] = await Promise.all([
+      DB.from('fb_campaign_product_rules').select('*').order('sort_order').order('id'),
+      DB.from('v_fb_kol_codes').select('*'),
+      DB.from('v_fb_campaigns_unmatched').select('*').limit(60)])
+    if (r1.error) throw r1.error; if (r2.error) throw r2.error; if (r3.error) throw r3.error
+    faRules = r1.data || []; faKol = r2.data || []
+    const skus = [...new Set(allProducts.map(p => p.parent_sku).filter(Boolean))].sort()
+    document.getElementById('faSkuList').innerHTML = skus.map(sk => `<option value="${faEsc(sk)}">${faEsc(faSkuName(sk))}</option>`).join('')
+    renderFaRules()
+    document.getElementById('faUnmatchedBody').innerHTML = (r3.data || []).length ? r3.data.map(c => `<tr><td>${faEsc(c.campaign)}</td><td class="fa-sub">${faEsc(c.account || '')}</td><td>${faMoney(c.spend_90d)}</td><td>${c.ads}</td></tr>`).join('') : '<tr><td colspan="4" class="pm-empty">ทุกแคมเปญที่มีค่าแอด 90 วันตรงกฎแล้ว 🎉</td></tr>'
+    renderFaKol(); faLoaded = true
+  } catch (e) { showToast('โหลดแท็บแอด Facebook ไม่สำเร็จ: ' + e.message, true) }
+}
+function renderFaRules() {
+  const tb = document.getElementById('faRuleBody')
+  tb.innerHTML = faRules.length ? faRules.map(r => `<tr data-rid="${r.id}">
+    <td><input class="row-input fa-input" data-f="keyword" value="${faEsc(r.keyword)}"></td>
+    <td><input class="row-input fa-input" data-f="skus" list="faSkuList" value="${faEsc((r.parent_skus || []).join(', '))}" title="${faEsc((r.parent_skus || []).map(faSkuName).join(' / '))}"><div class="fa-sub">${(r.parent_skus || []).length > 1 ? `กลุ่ม ${r.parent_skus.length} SKU — เฉลี่ยตามยอดขาย` : faEsc(faSkuName((r.parent_skus || [])[0]) || '')}</div></td>
+    <td><input class="row-input fa-input fa-num" data-f="sort_order" value="${r.sort_order}"></td>
+    <td><input type="checkbox" data-f="is_active" ${r.is_active ? 'checked' : ''}></td>
+    <td><input class="row-input fa-input" data-f="note" value="${faEsc(r.note || '')}"></td>
+    <td><button class="pm-btn danger" data-act="rule-del">ลบ</button></td></tr>`).join('') : '<tr><td colspan="6" class="pm-empty">ยังไม่มีกฎ</td></tr>'
+}
+const faParseSkus = v => [...new Set(String(v || '').split(/[,\s/]+/).map(x => x.trim().toUpperCase()).filter(Boolean))]
+async function faSaveRule(id, patch) {
+  const { data, error } = await DB.from('fb_campaign_product_rules').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id).select().single()
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, true); return }
+  const i = faRules.findIndex(r => r.id === id); if (i >= 0) faRules[i] = data
+  showToast('บันทึกกฎแล้ว')
+}
+function renderFaKol() {
+  const f = document.getElementById('faKolFilter').value, q = document.getElementById('faKolQ').value.trim().toLowerCase(), so = document.getElementById('faKolSort').value
+  let rows = faKol.filter(r => f === 'all' ? true : f === 'mapped' ? !!r.fb_link || !!r.display_name : !(r.fb_link || r.display_name))
+  if (q) rows = rows.filter(r => [r.code, r.page_name, r.sheet_name, r.mapped_name].some(v => (v || '').toLowerCase().includes(q)))
+  rows.sort((a, b) => so === 'spend' ? b.spend - a.spend : so === 'code' ? String(a.code).localeCompare(String(b.code)) : String(b.last_date || '').localeCompare(String(a.last_date || '')))
+  document.getElementById('faKolCount').textContent = `${rows.length} รหัส · จับคู่แล้ว ${faKol.filter(r => r.fb_link || r.display_name).length}/${faKol.length}`
+  document.getElementById('faKolBody').innerHTML = rows.length ? rows.slice(0, 400).map(r => `<tr data-code="${faEsc(r.code)}">
+    <td class="fa-code">${faEsc(r.code)}</td><td class="fa-sub">${faDate(r.last_date)}</td><td>${faMoney(r.spend)}</td><td>${r.ads}</td>
+    <td class="fa-sub">${faEsc(r.page_name || '—')}</td>
+    <td>${r.sheet_name ? `<span class="fa-tag fa-sheet" title="จากชีท รวม KOL คอลัมน์ ad name">${faEsc(r.sheet_name)}</span>` : '<span class="fa-sub">—</span>'}</td>
+    <td><input class="row-input fa-input" data-f="fb_link" value="${faEsc(r.fb_link || '')}" placeholder="https://www.facebook.com/…" style="min-width:240px;"></td>
+    <td>${r.mapped_name ? `<span class="fa-tag fa-map">${faEsc(r.mapped_name)}</span>` : r.sheet_name ? `<span class="fa-tag fa-sheet">${faEsc(r.sheet_name)}</span>` : '<span class="fa-tag fa-house">เพจเราเอง</span>'}</td>
+  </tr>`).join('') + (rows.length > 400 ? '<tr><td colspan="8" class="pm-empty">แสดง 400 รายการแรก — ใช้ช่องค้นหา</td></tr>' : '') : '<tr><td colspan="8" class="pm-empty">ไม่มีรายการ</td></tr>'
+}
+document.getElementById('tab-fbads').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-act]'); if (!btn) return
+  if (btn.dataset.act === 'rule-add') {
+    const keyword = document.getElementById('faNewKw').value.trim(), skus = faParseSkus(document.getElementById('faNewSku').value), sort_order = +document.getElementById('faNewSort').value || 100, note = document.getElementById('faNewNote').value.trim() || null
+    if (!keyword || !skus.length) { showToast('กรอกคำและ SKU ก่อน', true); return }
+    const bad = skus.filter(sk => !allProducts.some(p => p.parent_sku === sk)); if (bad.length && !confirm(`ไม่พบ SKU ${bad.join(', ')} ในตารางสินค้า — บันทึกต่อไหม?`)) return
+    const { data, error } = await DB.from('fb_campaign_product_rules').insert({ keyword, parent_skus: skus, sort_order, note }).select().single()
+    if (error) { showToast('เพิ่มไม่สำเร็จ: ' + error.message, true); return }
+    faRules.push(data); faRules.sort((a, b) => a.sort_order - b.sort_order || a.id - b.id); renderFaRules()
+    document.getElementById('faNewKw').value = ''; document.getElementById('faNewSku').value = ''; document.getElementById('faNewNote').value = ''
+    showToast('เพิ่มกฎแล้ว — หน้า Facebook Ads / MKT Tracking ใช้ทันที')
+    DB.from('v_fb_campaigns_unmatched').select('*').limit(60).then(r => { if (!r.error) document.getElementById('faUnmatchedBody').innerHTML = (r.data || []).map(c => `<tr><td>${faEsc(c.campaign)}</td><td class="fa-sub">${faEsc(c.account || '')}</td><td>${faMoney(c.spend_90d)}</td><td>${c.ads}</td></tr>`).join('') || '<tr><td colspan="4" class="pm-empty">ทุกแคมเปญที่มีค่าแอด 90 วันตรงกฎแล้ว 🎉</td></tr>' })
+    return
+  }
+  if (btn.dataset.act === 'rule-del') {
+    const id = +btn.closest('tr').dataset.rid; const r = faRules.find(x => x.id === id)
+    if (!confirm(`ลบกฎ "${r?.keyword}"?`)) return
+    const { error } = await DB.from('fb_campaign_product_rules').delete().eq('id', id)
+    if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, true); return }
+    faRules = faRules.filter(x => x.id !== id); renderFaRules(); showToast('ลบกฎแล้ว')
+  }
+})
+document.getElementById('tab-fbads').addEventListener('change', async e => {
+  const el = e.target
+  const rr = el.closest('tr[data-rid]')
+  if (rr) {
+    const id = +rr.dataset.rid, f = el.dataset.f
+    if (f === 'keyword') return faSaveRule(id, { keyword: el.value.trim() })
+    if (f === 'skus') { const skus = faParseSkus(el.value); if (!skus.length) { showToast('ต้องมี SKU อย่างน้อย 1 ตัว', true); return } await faSaveRule(id, { parent_skus: skus }); renderFaRules(); return }
+    if (f === 'sort_order') return faSaveRule(id, { sort_order: +el.value || 100 })
+    if (f === 'is_active') return faSaveRule(id, { is_active: el.checked })
+    if (f === 'note') return faSaveRule(id, { note: el.value.trim() || null })
+    return
+  }
+  if (['faKolFilter', 'faKolSort'].includes(el.id)) return renderFaKol()
+  const kr = el.closest('tr[data-code]')
+  if (kr && el.dataset.f === 'fb_link') {
+    const code = kr.dataset.code, link = el.value.trim()
+    const row = faKol.find(x => x.code === code)
+    try {
+      if (!link) { const { error } = await DB.from('fb_kol_map').delete().eq('code', code); if (error) throw error; Object.assign(row, { fb_link: null, display_name: null, mapped_name: null, source: null }); showToast(`${code}: ยกเลิกแล้ว = เพจเราเอง`) }
+      else {
+        if (!/facebook\.com\//i.test(link)) { showToast('ใส่ลิงก์ facebook.com', true); return }
+        const { error } = await DB.from('fb_kol_map').upsert({ code, fb_link: link, display_name: null, source: 'admin', updated_at: new Date().toISOString() }, { onConflict: 'code' }); if (error) throw error
+        const name = link.replace(/^https?:\/\/(www\.|m\.)?facebook\.com\//i, '').replace(/[/?#].*$/, '')
+        Object.assign(row, { fb_link: link, display_name: null, mapped_name: name || link, source: 'admin' }); showToast(`${code} → ${name || link} (แอดทุกตัวที่ใช้รหัสนี้ขึ้นชื่อทันที)`)
+      }
+      renderFaKol()
+    } catch (err) { showToast('บันทึกไม่สำเร็จ: ' + err.message, true) }
+  }
+})
+document.getElementById('faKolQ').addEventListener('input', () => renderFaKol())
+
 // ===== แท็บ สิทธิ์ผู้ใช้ (เมฆเท่านั้น) =====
 if (Auth.perm?.is_admin) document.getElementById('sidePerms').style.display = ''
 const PAGES = window.DEESAY_PAGES || [], STAFF_PAGES = window.DEESAY_STAFF_PAGES || []
@@ -1249,9 +1393,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById('tab-products').style.display = tab === 'products' ? '' : 'none'
     document.getElementById('tab-supply').style.display = tab === 'supply' ? '' : 'none'
     document.getElementById('tab-perms').style.display = tab === 'perms' ? '' : 'none'
+    document.getElementById('tab-fbads').style.display = tab === 'fbads' ? '' : 'none'
     document.getElementById('btnShowNewRow').style.display = tab === 'products' ? '' : 'none'
     if (tab === 'supply') loadSupplyTab()
     if (tab === 'perms') loadPermsTab()
+    if (tab === 'fbads') loadFbAdsTab()
   })
 })
 
@@ -1282,6 +1428,7 @@ init()
     const HEAD = {
       products: ['📦 สินค้า & Supply Chain', 'ชื่อ · รหัสสี/เบอร์ · ราคา · สถานะ · การวางแผนสั่งของ · Lead time — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard'],
       supply: ['🚚 Supply Chain', 'ตั้ง Lead time และเลือกว่าสินค้าไหนต้องวางแผนสั่งของ — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard'],
+      fbads: ['📣 แอด Facebook', 'กฎอ่านชื่อแคมเปญ → สินค้า (ต้นทุนแอดต่อสินค้าในหน้า Facebook Ads / MKT Tracking) · จับคู่รหัสแอด → KOL ด้วยลิงก์ Facebook'],
       perms: ['🔐 สิทธิ์ผู้ใช้', 'ติ๊กว่าใครเห็นหน้าไหน อัปโหลดได้ไหม จัดการสินค้าได้ไหม · ตั้งรหัสผ่านใหม่ให้คนที่ลืม · ปิด/ลบบัญชี']
     };
     document.querySelectorAll('.side-item[data-tab]').forEach(el => el.addEventListener('click', () => {
