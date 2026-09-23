@@ -228,6 +228,51 @@
 
   .sticky-head-table thead th { position: sticky; top: 0; background: var(--bg2); z-index: 5; box-shadow: 0 1px 0 var(--border); }
   .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+  /* ===== มีอะไรใหม่ (release notes) ===== */
+  .wn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; box-shadow: 0 0 0 3px rgba(200,169,110,0.25); }
+  .wn-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .wn-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 560px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
+  .wn-head { padding: 18px 22px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .wn-head .t { font-size: 15px; font-weight: 700; color: var(--text); } .wn-head .s { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-left: auto; }
+  .wn-body { padding: 6px 22px 10px; overflow-y: auto; }
+  .wn-note { padding: 14px 0; border-bottom: 1px solid var(--border); } .wn-note:last-child { border-bottom: none; }
+  .wn-note .d { font-size: 10.5px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; letter-spacing: .5px; }
+  .wn-note .h { font-size: 14px; font-weight: 700; color: var(--text); margin: 3px 0 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .wn-note .h .new { font-size: 10px; background: rgba(200,169,110,0.18); color: var(--accent); padding: 1px 7px; border-radius: 99px; font-weight: 700; }
+  .wn-note ul { margin: 0; padding-left: 18px; color: var(--text2); font-size: 13px; line-height: 1.65; }
+  .wn-note ul li { margin: 2px 0; }
+  .wn-foot { padding: 12px 22px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .wn-foot .btn-primary { background: var(--accent); color: #0a0a0f; border: none; font-weight: 700; }
+  /* ===== Creator Performance — มุมมองสินค้า ===== */
+  .cp-seg { display: inline-flex; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+  .cp-seg button { border: none; background: transparent; color: var(--text2); font-family: 'Sarabun', sans-serif; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+  .cp-seg button.on { background: var(--bg2); color: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+  .cpp-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 1100px) { .cpp-kpis { grid-template-columns: repeat(2, 1fr); } }
+  .cpp-kpi-sub { font-size: 11px; color: var(--text3); margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .cpp-delta { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 99px; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+  .cpp-delta.up { background: rgba(74,222,128,0.14); color: #4ade80; } .cpp-delta.down { background: rgba(248,113,113,0.14); color: #f87171; }
+  .cpp-delta.new { background: rgba(200,169,110,0.16); color: var(--accent); } .cpp-delta.flat { background: var(--bg3); color: var(--text3); }
+  body.light-theme .cpp-delta.up { color: #16a34a; } body.light-theme .cpp-delta.down { color: #dc2626; }
+  .cpp-bar { position: relative; height: 8px; width: 90px; background: rgba(200,169,110,0.35); border-radius: 99px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 8px; }
+  .cpp-bar > span { position: absolute; left: 0; top: 0; bottom: 0; background: #2a78d6; border-radius: 99px; }
+  .cpp-conc { font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .cpp-conc.hi { color: #fb923c; } .cpp-conc.lo { color: #4ade80; } body.light-theme .cpp-conc.lo { color: #16a34a; }
+  .cpp-row { cursor: pointer; } .cpp-row:hover td { background: var(--bg3); }
+  .cpp-sku { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); }
+  .cpp-handle { color: var(--text); font-weight: 600; } .cpp-handle:hover { color: var(--accent); }
+  .cpp-heat th, .cpp-heat td { padding: 6px 8px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; white-space: nowrap; }
+  .cpp-heat th:first-child, .cpp-heat td:first-child { text-align: left; position: sticky; left: 0; background: var(--bg2); z-index: 2; font-family: 'Sarabun', sans-serif; font-size: 12px; min-width: 170px; }
+  .cpp-heat th { color: var(--text3); font-size: 10px; letter-spacing: 0; }
+  .cpp-heat td.cell { border-radius: 4px; color: var(--text2); transition: transform .1s; }
+  .cpp-heat td.cell.hot { color: #fff; font-weight: 600; }
+  .cpp-heat td.cell.zero { color: var(--text3); opacity: .35; }
+  .cpp-heat tr:hover td.cell { outline: 1px solid var(--border); }
+  .cpp-detail-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .cpp-detail-title { font-size: 18px; font-weight: 700; color: var(--text); } .cpp-detail-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .cpp-legend { font-size: 10.5px; color: var(--text3); display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .cpp-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+  .cpp-empty { text-align: center; color: var(--text3); padding: 30px 0; font-size: 13px; }
   .sortable-th:hover { color: var(--accent); }
   .sort-arrow { font-size: 9px; margin-left: 3px; color: var(--accent); }
   /* หัวคอลัมน์ที่กดเรียงได้ (ระบบใส่ให้อัตโนมัติทุกตารางในทุกหน้า) */
@@ -419,13 +464,14 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL / Affiliate</div>
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
     <div class="nav-group-label" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ระบบ</div>
+    <div class="nav-item nav-sub" onclick="openWhatsNew(false)" id="navWhatsNew"><span class="nav-icon">🆕</span> มีอะไรใหม่ <span class="wn-dot" id="wnDot" style="display:none;"></span></div>
     <a class="nav-item nav-sub" href="upload.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">📤</span> อัปโหลดข้อมูล</a>
     <a class="nav-item nav-sub" href="admin.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">⚙️</span> ตั้งค่า (Admin)</a>
     <a class="nav-item nav-sub" href="health.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🩺</span> สุขภาพระบบ (Health)</a>
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.23-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.23-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -452,7 +498,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <div class="filters">
       <!-- ค้นหา creator: โชว์เฉพาะหน้า Creator Performance (ควบคุมใน showPage) -->
       <div class="filter-group" id="cpCreatorFilterGroup" style="display:none;position:relative;padding:0;background:transparent;border:none;gap:6px;">
-        <div style="position:relative;">
+        <div class="cp-seg" id="cpViewSeg"><button class="on" data-v="creator" onclick="setCpView('creator')">👤 ครีเอเตอร์</button><button data-v="product" onclick="setCpView('product')">📦 สินค้า</button></div>
+        <div style="position:relative;" id="cpCreatorSearchWrap">
           <input type="text" class="ls-input" style="width:210px;padding:6px 10px;font-size:12px;" id="cpCreatorSearch" placeholder="🔎 ค้นหา creator..." oninput="debouncedFilterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
           <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;min-width:260px;right:auto;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
         </div>
@@ -1688,6 +1735,79 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           </div>
         </div>
       </div>
+
+      <!-- มุมมองสินค้า (สลับด้วยปุ่ม ครีเอเตอร์ | สินค้า บน topbar) -->
+      <div id="cp-product-view" style="display:none;">
+        <div id="cpp-kpis" class="cpp-kpis"></div>
+        <div id="cpp-overview">
+          <div class="card" style="margin-bottom:20px;">
+            <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+              <div class="section-title">สินค้าที่ขายผ่าน creator <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('cpp-info-sku')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="cpp-info-sku" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">ยอดขาย TikTok แยกตามสินค้า เฉพาะออเดอร์ที่มาจาก creator (ไม่รวมร้านขายเอง deesaythailand)<br><br><b>สัดส่วน creator</b> = ยอดผ่าน creator ÷ ยอด TikTok ทั้งหมดของสินค้านั้น — บอกว่าสินค้าไหน "พึ่ง creator" แค่ไหน<br><br><b>กระจุก top 5</b> = creator 5 อันดับแรกกินกี่ % ของยอด creator — สูงมาก = ยอดแขวนอยู่กับไม่กี่คน (เสี่ยงถ้าคนนั้นหยุด)<br><br>เทียบช่วงก่อน = ช่วงเวลายาวเท่ากันก่อนหน้า · ยอดก่อนหักยกเลิก · คลิกแถวเพื่อเจาะสินค้า</div></span></div>
+              <button class="btn btn-ghost" onclick="exportTable('tblCppSku')">⬇ Export CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table id="tblCppSku">
+                <thead><tr>
+                  <th>#</th><th>SKU</th><th>ชื่อสินค้า</th>
+                  <th class="sortable-th" onclick="cppSortBy('creator_rev')">ยอดผ่าน creator <span class="sort-ind" id="cpps-creator_rev"></span></th>
+                  <th>เทียบช่วงก่อน</th>
+                  <th class="sortable-th" onclick="cppSortBy('creator_qty')">ชิ้น <span class="sort-ind" id="cpps-creator_qty"></span></th>
+                  <th class="sortable-th" onclick="cppSortBy('share')">สัดส่วน creator <span class="sort-ind" id="cpps-share"></span></th>
+                  <th class="sortable-th" onclick="cppSortBy('n_creators')">creator ที่ขายได้ <span class="sort-ind" id="cpps-n_creators"></span></th>
+                  <th>Top creator</th>
+                  <th class="sortable-th" onclick="cppSortBy('conc')">กระจุก top 5 <span class="sort-ind" id="cpps-conc"></span></th>
+                </tr></thead>
+                <tbody id="tbodyCppSku"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+              <div class="section-title">ใครถนัดขายอะไร — creator 15 อันดับแรก × สินค้า</div>
+              <div class="cpp-legend"><span><i style="background:rgba(42,120,214,0.15);"></i>น้อย</span><span><i style="background:rgba(42,120,214,0.55);"></i>กลาง</span><span><i style="background:#2a78d6;"></i>สูง</span><span>· คลิกชื่อ creator เพื่อดูมุมครีเอเตอร์ · คลิกหัวคอลัมน์เพื่อเจาะสินค้า</span></div>
+            </div>
+            <div class="table-wrap"><table class="cpp-heat" id="tblCppHeat"><thead id="theadCppHeat"></thead><tbody id="tbodyCppHeat"></tbody></table></div>
+          </div>
+        </div>
+
+        <div id="cpp-detail" style="display:none;">
+          <div class="cpp-detail-head">
+            <button class="btn btn-ghost" onclick="cppSelectSku(null)">← ทุกสินค้า</button>
+            <div><div class="cpp-detail-title" id="cpp-detail-title"></div><div class="cpp-detail-sub" id="cpp-detail-sub"></div></div>
+          </div>
+          <div class="card" style="margin-bottom:20px;">
+            <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+              <div class="section-title" id="cpp-chart-title">ยอดขายผ่าน creator vs ร้านขายเอง</div>
+              <div class="cpp-legend"><span><i style="background:#2a78d6;"></i>ผ่าน creator</span><span><i style="background:rgba(200,169,110,0.85);"></i>ร้านขายเอง (deesaythailand)</span></div>
+            </div>
+            <div class="chart-wrap" style="height:300px;"><canvas id="chartCppSku"></canvas></div>
+          </div>
+          <div class="card" style="margin-bottom:20px;">
+            <div class="section-header">
+              <div class="section-title" id="cpp-creators-title">creator ที่ขายสินค้านี้</div>
+              <button class="btn btn-ghost" onclick="exportTable('tblCppCreators')">⬇ Export CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table id="tblCppCreators">
+                <thead><tr><th>#</th><th>Creator</th><th>ยอดขาย</th><th>ชิ้น</th><th>% ของยอด creator</th><th>เทียบช่วงก่อน</th><th>ขายครั้งแรก</th><th>ขายล่าสุด</th><th>สถานะ</th></tr></thead>
+                <tbody id="tbodyCppCreators"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-header" style="flex-wrap:wrap;gap:8px;">
+              <div class="section-title">น่าส่งของให้ลอง — creator ที่ขายตัวอื่นได้ แต่ยังไม่เคยขายสินค้านี้ <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('cpp-info-cand')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="cpp-info-cand" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">creator ที่มียอดขายสินค้าอื่นในช่วงที่เลือก แต่ไม่เคยมียอดของสินค้านี้เลยตั้งแต่มีข้อมูล — เรียงตามยอดรวม 30 อันดับแรก ใช้เป็นลิสต์ส่ง sample ให้ทีม KOL ได้เลย</div></span></div>
+              <button class="btn btn-ghost" onclick="exportTable('tblCppCand')">⬇ Export CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table id="tblCppCand">
+                <thead><tr><th>#</th><th>Creator</th><th>ยอดรวมช่วงนี้ (สินค้าอื่น)</th><th>ขายดีสุดคือ</th><th>ยอดตัวนั้น</th><th>ขายกี่ SKU</th><th></th></tr></thead>
+                <tbody id="tbodyCppCand"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="page" id="page-shhub">
@@ -2013,6 +2133,13 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   </div>
 </div>
 
+<div id="wnOverlay" class="wn-overlay" style="display:none;" onclick="if(event.target===this)closeWhatsNew()">
+  <div class="wn-box">
+    <div class="wn-head"><span style="font-size:18px;">🆕</span><span class="t" id="wnTitle">มีอะไรใหม่</span><span class="s" id="wnVer"></span></div>
+    <div class="wn-body" id="wnBody"></div>
+    <div class="wn-foot"><button class="btn btn-ghost" id="wnGoBtn" onclick="wnGo()" style="display:none;">ไปดูเลย →</button><button class="btn btn-primary" onclick="closeWhatsNew()">รับทราบ</button></div>
+  </div>
+</div>
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script>
@@ -3697,6 +3824,148 @@ function clearCpCreator() {
   renderCreatorPerf();
 }
 
+// ===== Creator Performance — มุมมองสินค้า (RPC creator_product_page บน mv_creator_sku_daily) =====
+let cpView = 'creator', cppSelectedSku = null, cppData = null, cppSort = { key: 'creator_rev', dir: -1 };
+const cppCache = {};
+function setCpView(v) {
+  cpView = v;
+  document.querySelectorAll('#cpViewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.getElementById('cpCreatorSearchWrap').style.display = v === 'creator' ? '' : 'none';
+  document.getElementById('cpClearBtn').style.display = v === 'creator' && cpSelectedCreator ? 'inline-block' : 'none';
+  document.getElementById('cp-content').style.display = v === 'creator' ? '' : 'none';
+  document.getElementById('cp-product-view').style.display = v === 'product' ? '' : 'none';
+  renderCreatorPerf();
+}
+function cppSelectSku(sku) { cppSelectedSku = sku; renderCpProductView(); if (sku) document.getElementById('cpp-detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function cppGoCreator(handle) { setCpView('creator'); selectCpCreator(handle); }
+function cppSortBy(key) { cppSort = cppSort.key === key ? { key, dir: -cppSort.dir } : { key, dir: -1 }; renderCppSkuTable(); }
+const cppDelta = (cur, prev) => {
+  if (!prev) return cur > 0 ? '<span class="cpp-delta new">ใหม่</span>' : '<span class="cpp-delta flat">—</span>';
+  const p = (cur - prev) / prev * 100;
+  if (Math.abs(p) < 1) return '<span class="cpp-delta flat">≈ เท่าเดิม</span>';
+  return `<span class="cpp-delta ${p > 0 ? 'up' : 'down'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p) >= 1000 ? '>999' : Math.abs(p).toFixed(0)}%</span>`;
+};
+const cppDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—';
+const cppShareBar = (share) => `<span class="cpp-bar"><span style="width:${Math.min(100, share * 100).toFixed(0)}%"></span></span><span class="cpp-conc" style="color:var(--text2);">${(share * 100).toFixed(0)}%</span>`;
+const cppHandleLink = h => `<a class="cpp-handle" href="javascript:void(0)" onclick="cppGoCreator('${h.replace(/'/g, "\\'")}')" title="ดูมุมครีเอเตอร์ของ ${h}">${h}</a>`;
+
+async function renderCpProductView() {
+  const from = getDateValue('From'), to = getDateValue('To');
+  const key = `${from}|${to}|${cppSelectedSku || ''}`;
+  const seq = (renderCpProductView._seq = (renderCpProductView._seq || 0) + 1);
+  if (!cppCache[key]) {
+    document.getElementById('cpp-kpis').innerHTML = [1, 2, 3, 4].map(() => `<div class="card"><div class="card-title">กำลังโหลด…</div><div class="kpi-value" style="opacity:.3;">—</div></div>`).join('');
+    try { cppCache[key] = await supaRpc('creator_product_page', { p_from: from, p_to: to, p_sku: cppSelectedSku }); }
+    catch (e) { showError('โหลดมุมมองสินค้าไม่สำเร็จ: ' + e.message); return; }
+  }
+  if (seq !== renderCpProductView._seq || currentPage !== 'creatorperf' || cpView !== 'product') return;
+  cppData = cppCache[key];
+  document.getElementById('cpp-overview').style.display = cppSelectedSku ? 'none' : '';
+  document.getElementById('cpp-detail').style.display = cppSelectedSku ? '' : 'none';
+  renderCppKpis(); 
+  if (cppSelectedSku) renderCppDetail(); else { renderCppSkuTable(); renderCppHeatmap(); }
+}
+
+function renderCppKpis() {
+  const k = cppData.kpi || {}, skus = cppData.skus || [];
+  const total = (+k.creator_rev || 0) + (+k.shop_rev || 0), pTotal = (+k.prev_creator_rev || 0) + (+k.prev_shop_rev || 0);
+  const share = total ? k.creator_rev / total : 0, pShare = pTotal ? k.prev_creator_rev / pTotal : 0;
+  const row = cppSelectedSku ? skus.find(x => x.sku === cppSelectedSku) : null;
+  const cards = row ? [
+    ['ยอดผ่าน creator', '฿' + fmt(row.creator_rev), `${cppDelta(+row.creator_rev, +row.prev_creator_rev)} <span>เทียบ ${cppDate(k.prev_from)}–${cppDate(k.prev_to)}</span>`],
+    ['สัดส่วน creator ของสินค้านี้', (row.creator_rev + row.shop_rev ? row.creator_rev / (row.creator_rev + row.shop_rev) * 100 : 0).toFixed(0) + '%', `<span>ร้านขายเอง ฿${fmt(row.shop_rev)}</span>`],
+    ['creator ที่ขายได้', fmt(row.n_creators) + ' คน', `<span>top: ${row.top_handle || '—'} ${row.creator_rev ? '(' + (row.top_rev / row.creator_rev * 100).toFixed(0) + '%)' : ''}</span>`],
+    ['ชิ้นที่ขายผ่าน creator', fmt(row.creator_qty), `<span>เฉลี่ย ฿${fmt(row.creator_qty ? row.creator_rev / row.creator_qty : 0)}/ชิ้น</span>`],
+  ] : [
+    ['ยอดผ่าน creator', '฿' + fmt(k.creator_rev), `${cppDelta(+k.creator_rev, +k.prev_creator_rev)} <span>เทียบ ${cppDate(k.prev_from)}–${cppDate(k.prev_to)}</span>`],
+    ['สัดส่วน creator ของ TikTok', (share * 100).toFixed(0) + '%', `<span>ช่วงก่อน ${(pShare * 100).toFixed(0)}% · ร้านขายเอง ฿${fmt(k.shop_rev)}</span>`],
+    ['สินค้าที่ creator ขายได้', fmt(k.sku_count) + ' SKU', `<span>จาก ${skus.length} SKU ที่มียอด TikTok</span>`],
+    ['creator ที่ขายได้', fmt(k.creator_count) + ' คน', `<span>เฉลี่ย ฿${fmt(k.creator_count ? k.creator_rev / k.creator_count : 0)}/คน</span>`],
+  ];
+  document.getElementById('cpp-kpis').innerHTML = cards.map(([t, v, sub]) => `<div class="card"><div class="card-title">${t}</div><div class="kpi-value">${v}</div><div class="cpp-kpi-sub">${sub}</div></div>`).join('');
+}
+
+function renderCppSkuTable() {
+  const rows = (cppData.skus || []).map(r => {
+    const tot = +r.creator_rev + +r.shop_rev;
+    return { ...r, creator_rev: +r.creator_rev, creator_qty: +r.creator_qty, shop_rev: +r.shop_rev, n_creators: +r.n_creators,
+      share: tot ? r.creator_rev / tot : 0, conc: r.creator_rev ? r.top5_rev / r.creator_rev : 0, top_share: r.creator_rev ? r.top_rev / r.creator_rev : 0 };
+  }).filter(r => r.creator_rev > 0 || r.shop_rev > 0);
+  rows.sort((a, b) => (a[cppSort.key] - b[cppSort.key]) * cppSort.dir);
+  document.querySelectorAll('[id^="cpps-"]').forEach(el => el.textContent = el.id === 'cpps-' + cppSort.key ? (cppSort.dir < 0 ? '▼' : '▲') : '');
+  document.getElementById('tbodyCppSku').innerHTML = rows.length ? rows.map((r, i) => `
+    <tr class="cpp-row" onclick="cppSelectSku('${r.sku}')" title="คลิกเพื่อเจาะ ${r.sku}">
+      <td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>
+      <td class="cpp-sku">${r.sku}</td><td>${skuToName(r.sku)}</td>
+      <td style="font-weight:600;">฿${fmt(r.creator_rev)}</td>
+      <td>${cppDelta(r.creator_rev, +r.prev_creator_rev)}</td>
+      <td>${fmt(r.creator_qty)}</td>
+      <td>${cppShareBar(r.share)}</td>
+      <td>${fmt(r.n_creators)}</td>
+      <td>${r.top_handle ? `${cppHandleLink(r.top_handle)} <span class="cpp-conc" style="color:var(--text3);">${(r.top_share * 100).toFixed(0)}%</span>` : '—'}</td>
+      <td><span class="cpp-conc ${r.conc >= 0.8 ? 'hi' : r.conc < 0.5 ? 'lo' : ''}">${(r.conc * 100).toFixed(0)}%${r.conc >= 0.8 ? ' พึ่งไม่กี่คน' : r.conc < 0.5 ? ' กระจายดี' : ''}</span></td>
+    </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>';
+}
+
+function renderCppHeatmap() {
+  const heat = cppData.heatmap || [];
+  const cols = (cppData.skus || []).filter(r => +r.creator_rev > 0).map(r => r.sku);
+  if (!heat.length || !cols.length) { document.getElementById('theadCppHeat').innerHTML = ''; document.getElementById('tbodyCppHeat').innerHTML = '<tr><td class="cpp-empty">ไม่มีข้อมูล</td></tr>'; return; }
+  const max = Math.max(1, ...heat.flatMap(h => Object.values(h.cells || {}).map(Number)));
+  document.getElementById('theadCppHeat').innerHTML = `<tr><th>Creator · ยอดรวม</th>${cols.map(c => `<th title="${skuToName(c)}" style="cursor:pointer;" onclick="cppSelectSku('${c}')">${c}</th>`).join('')}</tr>`;
+  document.getElementById('tbodyCppHeat').innerHTML = heat.map(h => `<tr>
+    <td>${cppHandleLink(h.handle)} <span class="cpp-conc" style="color:var(--text3);">฿${fmtB(+h.total)}</span></td>
+    ${cols.map(c => { const v = +(h.cells || {})[c] || 0; const t = Math.sqrt(v / max);
+      return v ? `<td class="cell ${t > 0.55 ? 'hot' : ''}" style="background:rgba(42,120,214,${(0.10 + 0.85 * t).toFixed(2)});" title="${h.handle} · ${skuToName(c)}: ฿${fmt(v)}">${fmtB(v)}</td>` : '<td class="cell zero">·</td>'; }).join('')}
+  </tr>`).join('');
+}
+
+function renderCppDetail() {
+  const sku = cppSelectedSku, from = getDateValue('From'), to = getDateValue('To');
+  document.getElementById('cpp-detail-title').textContent = `${skuToName(sku)}`;
+  document.getElementById('cpp-detail-sub').innerHTML = `<span class="cpp-sku">${sku}</span> · ${cppDate(from)} – ${cppDate(to)} · ยอด TikTok ก่อนหักยกเลิก`;
+  // กราฟ: ช่วงอยู่ในเดือนเดียว → รายวัน · หลายเดือน → รายเดือน (กฎเดียวกับทุกหน้า)
+  const daily = cppData.daily || [];
+  const single = from.slice(0, 7) === to.slice(0, 7);
+  const buckets = {};
+  daily.forEach(r => { const k = single ? r.d : r.d.slice(0, 7); const b = buckets[k] = buckets[k] || { c: 0, s: 0 }; b.c += +r.c; b.s += +r.s; });
+  const keys = Object.keys(buckets).sort();
+  const labels = keys.map(k => single ? new Date(k + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : MONTHS_TH[parseInt(k.slice(5, 7)) - 1] + ' ' + k.slice(2, 4));
+  document.getElementById('cpp-chart-title').textContent = `ยอดขายผ่าน creator vs ร้านขายเอง — ${single ? 'รายวัน' : 'รายเดือน'}`;
+  makeChart('chartCppSku', 'bar', labels, [
+    { label: 'ผ่าน creator', data: keys.map(k => buckets[k].c), backgroundColor: '#2a78d6', stack: 'rev', borderRadius: 3, order: 1 },
+    { label: 'ร้านขายเอง', data: keys.map(k => buckets[k].s), backgroundColor: 'rgba(200,169,110,0.85)', stack: 'rev', borderRadius: 3, order: 2 },
+  ], { scales: { x: { stacked: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
+                 y: { stacked: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },
+       tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ฿${fmt(c.parsed.y)}`, footer: items => { const t = items.reduce((s, x) => s + x.parsed.y, 0); const cr = items.find(x => x.dataset.label === 'ผ่าน creator')?.parsed.y || 0; return `รวม ฿${fmt(t)} · creator ${t ? (cr / t * 100).toFixed(0) : 0}%`; } } } });
+  // creator ที่ขายสินค้านี้
+  const cr = cppData.creators || [], crTotal = cr.reduce((s, r) => s + +r.rev, 0);
+  const toD = new Date(to + 'T00:00:00');
+  document.getElementById('cpp-creators-title').textContent = `creator ที่ขายสินค้านี้ · ${cr.length} คน`;
+  document.getElementById('tbodyCppCreators').innerHTML = cr.length ? cr.map((r, i) => {
+    const gap = Math.round((toD - new Date(r.last_date + 'T00:00:00')) / 86400000);
+    const st = gap <= 7 ? '<span class="cpp-delta up">ยังขายอยู่</span>' : `<span class="cpp-delta flat">เงียบ ${gap} วัน</span>`;
+    const isNew = r.first_date >= from;
+    return `<tr>
+      <td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>
+      <td>${cppHandleLink(r.handle)}${isNew ? ' <span class="cpp-delta new">เริ่มขายช่วงนี้</span>' : ''}</td>
+      <td style="font-weight:600;">฿${fmt(r.rev)}</td><td>${fmt(r.qty)}</td>
+      <td>${cppShareBar(crTotal ? r.rev / crTotal : 0)}</td>
+      <td>${cppDelta(+r.rev, +r.prev_rev)}</td>
+      <td>${cppDate(r.first_date)}</td><td>${cppDate(r.last_date)}</td><td>${st}</td>
+    </tr>`; }).join('') : '<tr><td colspan="9" class="empty">ยังไม่มี creator ขายสินค้านี้ในช่วงที่เลือก</td></tr>';
+  // น่าส่งของให้ลอง
+  const cand = cppData.candidates || [];
+  document.getElementById('tbodyCppCand').innerHTML = cand.length ? cand.map((r, i) => `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${cppHandleLink(r.handle)}</td>
+      <td style="font-weight:600;">฿${fmt(r.total)}</td>
+      <td><span class="cpp-sku">${r.top_sku}</span> ${skuToName(r.top_sku)}</td>
+      <td>฿${fmt(r.top_sku_rev)}</td><td>${fmt(r.n_skus)}</td>
+      <td><a href="https://www.tiktok.com/@${encodeURIComponent(r.handle)}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding:2px 8px;font-size:11px;">TikTok ↗</a></td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">ไม่มี — creator ที่ขายได้ในช่วงนี้เคยขายสินค้านี้แล้วทุกคน</td></tr>';
+}
+
 function renderCpTopCreatorTables(dAllTypes) {
   // dAllTypes = แถวสรุปจาก creator_summary (creator_handle × order_channel) — เฟส 3
   function buildCreatorTable(rows, tbodyId) {
@@ -3768,6 +4037,7 @@ function renderCpTrendingCreators(to) {
 }
 
 async function renderCreatorPerf() {
+  if (cpView === 'product') return renderCpProductView();   // มุมมองสินค้า (สลับจาก topbar)
   const overviewEl = document.getElementById('cp-overview-section');
   if (overviewEl) overviewEl.style.display = cpSelectedCreator ? 'none' : 'block';
 
@@ -9761,8 +10031,44 @@ function applyPermissions(p) {
   const sys = { 'upload.html': p.is_admin || p.can_upload, 'admin.html': p.is_admin || p.can_admin, 'health.html': p.is_admin };
   document.querySelectorAll('a.nav-item[href]').forEach(a => { const h = a.getAttribute('href'); if (h in sys && !sys[h]) a.remove(); });
 }
+// ===== มีอะไรใหม่ — release_notes ใน Supabase, จำต่อบัญชีว่าเห็นถึงข่าวไหนแล้ว (เด้งครั้งเดียวต่อคน) =====
+let _wn = { notes: [], seen_id: 0, latestMajor: null };
+async function loadWhatsNew() {
+  try {
+    const r = await Auth.rpc('release_notes_for_me');
+    _wn.notes = r.notes || []; _wn.seen_id = +r.seen_id || 0;
+    _wn.latestMajor = _wn.notes.find(n => n.is_major) || null;
+    const unseen = _wn.latestMajor && _wn.latestMajor.id > _wn.seen_id;
+    document.getElementById('wnDot').style.display = unseen ? '' : 'none';
+    if (unseen) openWhatsNew(true);
+  } catch (e) { console.warn('release notes', e.message); }
+}
+function openWhatsNew(autoPop) {
+  if (!_wn.notes.length) { if (!autoPop) alert('ยังไม่มีบันทึกอัปเดต'); return; }
+  const list = autoPop ? _wn.notes.filter(n => n.id > _wn.seen_id && n.is_major) : _wn.notes;
+  const top = list[0];
+  document.getElementById('wnTitle').textContent = autoPop ? 'มีอะไรใหม่ในเว็บ' : 'บันทึกอัปเดต';
+  document.getElementById('wnVer').textContent = top?.version || '';
+  document.getElementById('wnBody').innerHTML = list.map(n => `<div class="wn-note">
+      <div class="d">${new Date(n.released_on + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}${n.version ? ' · ' + n.version : ''}</div>
+      <div class="h">${n.title}${n.id > _wn.seen_id ? '<span class="new">ใหม่</span>' : ''}</div>
+      <ul>${(n.items || []).map(i => `<li>${i}</li>`).join('')}</ul>
+    </div>`).join('');
+  const go = document.getElementById('wnGoBtn');
+  const canGo = top?.page && Auth.canPage(top.page) && document.querySelector(`.nav-item[onclick*="'${top.page}'"]`);
+  go.style.display = canGo ? '' : 'none'; go.dataset.page = canGo ? top.page : '';
+  document.getElementById('wnOverlay').style.display = 'flex';
+}
+function closeWhatsNew() {
+  document.getElementById('wnOverlay').style.display = 'none';
+  const maxId = Math.max(0, ..._wn.notes.map(n => +n.id));
+  if (maxId > _wn.seen_id) { _wn.seen_id = maxId; document.getElementById('wnDot').style.display = 'none'; Auth.rpc('mark_release_seen', { p_id: maxId }).catch(() => {}); }
+}
+function wnGo() { const pg = document.getElementById('wnGoBtn').dataset.page; closeWhatsNew(); if (pg) showPage(pg, null, document.querySelector(`.nav-item[onclick*="'${pg}'"]`)); }
+
 Auth.require('dashboard').then(p => {
   applyPermissions(p);
+  loadWhatsNew();
   const r = init();
   // ถ้าไม่มีสิทธิ์หน้าภาพรวม → เปิดหน้าแรกที่มีสิทธิ์แทน
   if (!Auth.canPage('overview')) { const first = pageOrder.find(id => Auth.canPage(id)); if (first) Promise.resolve(r).then(() => showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`))); }
