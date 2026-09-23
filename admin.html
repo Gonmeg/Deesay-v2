@@ -249,7 +249,20 @@
   .fa-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fa-thumb:hover { outline: 2px solid var(--accent); }
   .fa-kw { font-weight: 600; }
-  .fa-th-tip { cursor: help; border-bottom: 1px dotted var(--muted); }
+  #tab-fbads, #tab-fbads input, #tab-fbads select, #tab-fbads button { font-family: 'Sarabun', sans-serif; }
+  #tab-fbads .fa-code, #tab-fbads .fa-sku, #tab-fbads select.fa-skusel { font-family: 'IBM Plex Mono', monospace; }
+  .fa-info { position: relative; display: inline-block; margin-left: 4px; }
+  .fa-info > span { cursor: pointer; color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+  .fa-info > span:hover { color: var(--accent2); }
+  .fa-pop { display: none; position: absolute; top: 20px; left: 0; z-index: 60; width: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; line-height: 1.6; font-weight: 400; color: var(--text); white-space: normal; text-transform: none; letter-spacing: normal; box-shadow: 0 4px 16px rgba(0,0,0,0.3); text-align: left; }
+  .fa-pop.right { left: auto; right: 0; }
+  .fa-pager { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 12px 14px 4px; font-size: 0.8rem; }
+  .fa-pager .pg { min-width: 32px; padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border2); background: none; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.78rem; }
+  .fa-pager .pg:hover:not(:disabled) { color: var(--text); border-color: var(--muted); } .fa-pager .pg.on { background: var(--accent); color: #0a0a0f; border-color: var(--accent); font-weight: 700; } .fa-pager .pg:disabled { opacity: .4; cursor: default; }
+  .fa-pager .info { color: var(--muted); margin-left: 8px; } .fa-pager label { margin-left: auto; display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .fa-pager select { padding: 4px 8px; font-size: 0.78rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); }
+  select.fa-skusel { width: 100%; padding: 5px 8px; font-size: 0.78rem; background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--text); cursor: pointer; }
+  select.fa-skusel:hover { border-color: var(--border); } select.fa-skusel:focus { border-color: var(--accent); background: var(--surface); outline: none; }
   .page-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
   .page-header h1 { font-size: 1.35rem; }
   .sp-tablewrap { max-height: calc(100vh - 330px); }
@@ -535,15 +548,16 @@
       <div class="pm-head">🏷 คำในชื่อแคมเปญ → สินค้า <span class="pm-sub">ระบบอ่านชื่อแคมเปญใน Meta แล้วเทียบกับคำในตารางนี้ · เจอหลายคำ = ใช้แถวที่ "ลำดับ" น้อยสุด · SKU หลายตัวคั่นด้วย , = เฉลี่ยในกลุ่ม · บันทึกทันที</span></div>
       <div class="tbl-wrap"><table>
         <colgroup><col style="width:22%"><col style="width:16%"><col style="width:26%"><col style="width:7%"><col style="width:7%"><col style="width:16%"><col style="width:6%"></colgroup>
-        <thead><tr><th>ถ้าชื่อแคมเปญมีคำว่า…</th><th>SKU</th><th>สินค้า</th><th class="t-center"><span class="fa-th-tip" title="เจอหลายคำในชื่อเดียวกัน → ใช้แถวที่เลขน้อยกว่า (คำเฉพาะ 10 · คำกว้าง 90)">ลำดับ</span></th><th class="t-center">ใช้</th><th>หมายเหตุ</th><th></th></tr></thead>
+        <thead><tr><th>ถ้าชื่อแคมเปญมีคำว่า… <span class="fa-info"><span onclick="faInfo('fa-i-kw')">ⓘ</span><div id="fa-i-kw" class="fa-pop">ระบบดูว่าชื่อแคมเปญใน Meta มีคำนี้อยู่ไหม (ไม่สนตัวพิมพ์เล็ก/ใหญ่) เช่น "ลิปฟิกซ์" จะตรงกับ Broad_ลิปฟิกซ์, INT_ลิปฟิกซ์_30+ ทุกตัว</div></span></th><th>SKU</th><th>สินค้า</th><th class="t-center">ใช้ก่อน <span class="fa-info"><span onclick="faInfo('fa-i-sort')">ⓘ</span><div id="fa-i-sort" class="fa-pop right">ถ้าชื่อแคมเปญเดียวมีคำที่ตรงหลายแถว ระบบใช้แถวที่เลขน้อยกว่า<br><br>ตัวอย่าง: "Broad_กันแดดโทนอัพ" ตรงทั้ง "โทนอัพ" (10) และ "กันแดด" (90) → ใช้โทนอัพ<br><br>คำเฉพาะเจาะจงให้เลขน้อย · คำกว้างๆ ให้เลขมาก</div></span></th><th class="t-center">ใช้</th><th>หมายเหตุ</th><th></th></tr></thead>
         <tbody id="faRuleBody"><tr><td colspan="7" class="pm-empty">กำลังโหลด…</td></tr></tbody>
-        <tfoot><tr style="background:var(--surface2);"><td><input class="row-input fa-input" id="faNewKw" placeholder="+ พิมพ์คำใหม่ เช่น ลิปดูโอ้" style="border-color:var(--border);"></td><td><input class="row-input fa-input" id="faNewSku" list="faSkuList" placeholder="LIPDUO" style="border-color:var(--border);"></td><td class="fa-sub" id="faNewSkuName">หลายตัวคั่นด้วย , = เฉลี่ยในกลุ่ม</td><td class="t-center"><input class="row-input fa-input fa-num" id="faNewSort" value="10" style="border-color:var(--border);"></td><td></td><td><input class="row-input fa-input" id="faNewNote" placeholder="หมายเหตุ" style="border-color:var(--border);"></td><td><button class="pm-btn gold" data-act="rule-add">เพิ่ม</button></td></tr></tfoot>
+        <tfoot><tr style="background:var(--surface2);"><td><input class="row-input fa-input" id="faNewKw" placeholder="+ พิมพ์คำใหม่ เช่น ลิปดูโอ้" style="border-color:var(--border);"></td><td><select class="fa-skusel" id="faNewSku" style="border-color:var(--border);"><option value="">เลือกสินค้า…</option></select></td><td><input class="row-input fa-input" id="faNewSkuGroup" placeholder="หรือพิมพ์หลาย SKU คั่นด้วย , = เฉลี่ยในกลุ่ม" style="border-color:var(--border);"></td><td class="t-center"><input class="row-input fa-input fa-num" id="faNewSort" value="10" style="border-color:var(--border);"></td><td></td><td><input class="row-input fa-input" id="faNewNote" placeholder="หมายเหตุ" style="border-color:var(--border);"></td><td><button class="pm-btn gold" data-act="rule-add">เพิ่ม</button></td></tr></tfoot>
       </table></div>
       <datalist id="faSkuList"></datalist>
       <div style="padding:10px 14px 14px;">
         <div style="font-weight:600;font-size:0.85rem;margin-bottom:2px;">ชื่อแคมเปญที่ยังอ่านไม่ออกว่าสินค้าอะไร <span class="fa-sub" id="faUnmatchedCount"></span></div>
         <div class="fa-sub" style="margin-bottom:8px;">90 วันล่าสุด เรียงตามค่าแอด · ถ้าเป็นสินค้าเดี่ยว → เพิ่มคำในตารางบน · ถ้าเป็นโปรรวม/ทุกสินค้า → ปล่อยไว้ ระบบเฉลี่ยตามยอดขายให้เอง</div>
-        <div class="tbl-wrap" style="max-height:280px;overflow:auto;"><table><colgroup><col style="width:52%"><col style="width:22%"><col style="width:14%"><col style="width:12%"></colgroup><thead><tr><th>ชื่อแคมเปญ</th><th>บัญชี</th><th>ค่าแอด 90 วัน</th><th class="t-center"><span class="fa-th-tip" title="ทีมแอดมัก duplicate แคมเปญชื่อเดียวกันหลายตัว — รวมให้แล้ว">กี่แคมเปญ</span></th></tr></thead><tbody id="faUnmatchedBody"><tr><td colspan="4" class="pm-empty">กำลังโหลด…</td></tr></tbody></table></div>
+        <div class="tbl-wrap"><table><colgroup><col style="width:52%"><col style="width:22%"><col style="width:14%"><col style="width:12%"></colgroup><thead><tr><th>ชื่อแคมเปญ</th><th>บัญชี</th><th>ค่าแอด 90 วัน</th><th class="t-center">กี่แคมเปญ <span class="fa-info"><span onclick="faInfo('fa-i-nc')">ⓘ</span><div id="fa-i-nc" class="fa-pop right">ทีมแอดมัก duplicate แคมเปญชื่อเดียวกันหลายตัว — รวมชื่อเดียวกันไว้บรรทัดเดียว ตัวเลขนี้คือมีกี่ตัวใน Ads Manager</div></span></th></tr></thead><tbody id="faUnmatchedBody"><tr><td colspan="4" class="pm-empty">กำลังโหลด…</td></tr></tbody></table></div>
+        <div id="faUnmatchedPager"></div>
       </div>
     </div>
     <div class="card">
@@ -556,9 +570,10 @@
       </div>
       <div class="tbl-wrap"><table>
         <colgroup><col style="width:60px"><col style="width:13%"><col style="width:17%"><col style="width:12%"><col style="width:12%"><col style="width:26%"><col style="width:14%"></colgroup>
-        <thead><tr><th><span class="fa-th-tip" title="รูปปกของแอดที่ใช้เงินมากสุดในรหัสนี้ · คลิกเพื่อเปิดโพสต์ที่ยิง">โพสต์</span></th><th>รหัส · ยิงล่าสุด</th><th>เพจที่ยิง</th><th><span class="fa-th-tip" title="ค่าแอดรวมทุกแอดที่ใช้รหัสนี้ (รวมตัวที่ - Copy) · จำนวนแอด = กี่ตัวใน Ads Manager">ค่าแอด · จำนวนแอด</span></th><th>ชื่อจากชีท</th><th>ลิงก์ Facebook ของ KOL</th><th>แสดงเป็น</th></tr></thead>
+        <thead><tr><th>โพสต์ <span class="fa-info"><span onclick="faInfo('fa-i-post')">ⓘ</span><div id="fa-i-post" class="fa-pop">รูปปกของแอดที่ใช้เงินมากสุดในรหัสนี้ · คลิกรูปหรือ "โพสต์ ↗" เพื่อเปิดโพสต์บน Facebook ดูว่างานของใคร</div></span></th><th>รหัส · ยิงล่าสุด</th><th>เพจที่ยิง</th><th>ค่าแอดรวม <span class="fa-info"><span onclick="faInfo('fa-i-spend')">ⓘ</span><div id="fa-i-spend" class="fa-pop">รวมทุกแอดที่ใช้รหัสนี้<br><br>"ใน 5 แอด" = ทีมแอดเอาคลิปเดียวกันไปตั้งเป็นแอด 5 ตัวใน Ads Manager (คนละกลุ่มเป้าหมาย / duplicate " - Copy") — ค่าแอดคือผลรวมทั้ง 5 ตัว</div></span></th><th>ชื่อจากชีท <span class="fa-info"><span onclick="faInfo('fa-i-sheet')">ⓘ</span><div id="fa-i-sheet" class="fa-pop">ชื่อ KOL ที่ทีมกรอกไว้ในชีท "รวม KOL" คอลัมน์ ad name — ถ้ามีแล้ว ถือว่าจับคู่แล้ว ไม่ต้องใส่ลิงก์ซ้ำ (ใส่ได้ถ้าอยากให้คลิกไปหน้า Facebook เขา)</div></span></th><th>ลิงก์ Facebook ของ KOL</th><th>แสดงเป็น</th></tr></thead>
         <tbody id="faKolBody"><tr><td colspan="7" class="pm-empty">กำลังโหลด…</td></tr></tbody>
       </table></div>
+      <div id="faKolPager"></div>
     </div>
   </div><!-- /tab-fbads -->
 
@@ -1156,7 +1171,21 @@ async function loadSupplyTab() {
 }
 
 // ===== แท็บ แอด Facebook: กฎชื่อแคมเปญ → สินค้า · รหัสแอด → KOL =====
-let faRules = [], faKol = [], faLoaded = false
+let faRules = [], faKol = [], faLoaded = false, faUnmatched = []
+const faPg = { un: { page: 1, size: 25 }, kol: { page: 1, size: 50 } }
+function faInfo(id) { const el = document.getElementById(id); const open = el.style.display === 'block'; document.querySelectorAll('.fa-pop').forEach(p => p.style.display = 'none'); el.style.display = open ? 'none' : 'block' }
+document.addEventListener('click', e => { if (!e.target.closest('.fa-info')) document.querySelectorAll('.fa-pop').forEach(p => p.style.display = 'none') })
+// ตัวแบ่งหน้า — หน้าตาเดียวกับ dashboard
+function faPager(hostId, total, st, rerender) {
+  const host = document.getElementById(hostId); const pages = Math.max(1, Math.ceil(total / st.size)); if (st.page > pages) st.page = pages
+  if (total <= 25 && st.size >= 25 && st.page === 1) { host.innerHTML = ''; return }
+  const cur = st.page, start = (cur - 1) * st.size, nums = []
+  for (let i = 1; i <= pages; i++) { if (i === 1 || i === pages || Math.abs(i - cur) <= 2) nums.push(i); else if (nums[nums.length - 1] !== '…') nums.push('…') }
+  host.innerHTML = `<div class="fa-pager"><button class="pg" data-p="${cur - 1}" ${cur === 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button>${nums.map(p => p === '…' ? '<span class="info">…</span>' : `<button class="pg ${p === cur ? 'on' : ''}" data-p="${p}">${p}</button>`).join('')}<button class="pg" data-p="${cur + 1}" ${cur === pages ? 'disabled' : ''}>ถัดไป ›</button><span class="info">แสดง ${start + 1}–${Math.min(start + st.size, total)} จาก ${total} · หน้า ${cur}/${pages}</span><label>ต่อหน้า <select>${[25, 50, 100, 200].map(n => `<option value="${n}" ${n === st.size ? 'selected' : ''}>${n}</option>`).join('')}</select></label></div>`
+  host.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { st.page = +b.dataset.p; rerender() })
+  host.querySelector('select').onchange = e => { st.size = +e.target.value; st.page = 1; rerender() }
+}
+const faSkuOptions = (sel) => { const list = allProducts.filter(p => p.parent_sku).reduce((m, p) => { if (!m.has(p.parent_sku)) m.set(p.parent_sku, p); return m }, new Map()); const arr = [...list.values()].sort((a, b) => (a.status === 'Discontinued') - (b.status === 'Discontinued') || String(a.parent_sku).localeCompare(String(b.parent_sku))); return arr.map(p => `<option value="${faEsc(p.parent_sku)}" ${p.parent_sku === sel ? 'selected' : ''}>${faEsc(p.parent_sku)} — ${faEsc(p.product_name || '')}${p.status === 'Discontinued' ? ' (เลิกขาย)' : ''}</option>`).join('') }
 const faEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const faMoney = v => '฿' + Math.round(+v || 0).toLocaleString('th-TH')
 const faDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'
@@ -1166,13 +1195,12 @@ async function loadFbAdsTab() {
     const [r1, r2, r3] = await Promise.all([
       DB.from('fb_campaign_product_rules').select('*').order('sort_order').order('id'),
       DB.from('v_fb_kol_codes').select('*'),
-      DB.from('v_fb_campaigns_unmatched').select('*').limit(60)])
+      DB.from('v_fb_campaigns_unmatched').select('*')])
     if (r1.error) throw r1.error; if (r2.error) throw r2.error; if (r3.error) throw r3.error
     faRules = r1.data || []; faKol = r2.data || []
-    const skus = [...new Set(allProducts.map(p => p.parent_sku).filter(Boolean))].sort()
-    document.getElementById('faSkuList').innerHTML = skus.map(sk => `<option value="${faEsc(sk)}">${faEsc(faSkuName(sk))}</option>`).join('')
+    document.getElementById('faNewSku').innerHTML = '<option value="">เลือกสินค้า…</option>' + faSkuOptions('')
     renderFaRules()
-    document.getElementById('faUnmatchedBody').innerHTML = faUnmatchedHtml(r3.data || [])
+    faUnmatched = r3.data || []; renderFaUnmatched()
     renderFaKol(); faLoaded = true
   } catch (e) { showToast('โหลดแท็บแอด Facebook ไม่สำเร็จ: ' + e.message, true) }
 }
@@ -1182,15 +1210,20 @@ function renderFaRules() {
   const rows = faRules.slice().sort((a, b) => ((a.parent_skus || []).length > 1) - ((b.parent_skus || []).length > 1) || String((a.parent_skus || [])[0] || '').localeCompare(String((b.parent_skus || [])[0] || '')) || a.sort_order - b.sort_order || String(a.keyword).localeCompare(String(b.keyword), 'th'))
   tb.innerHTML = rows.length ? rows.map(r => { const sk = r.parent_skus || []; const grp = sk.length > 1; return `<tr data-rid="${r.id}" style="${r.is_active ? '' : 'opacity:.45;'}">
     <td><input class="row-input fa-input fa-kw" data-f="keyword" value="${faEsc(r.keyword)}"></td>
-    <td><input class="row-input fa-input" data-f="skus" list="faSkuList" value="${faEsc(sk.join(', '))}" style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;"></td>
+    <td>${grp ? `<input class="row-input fa-input fa-sku" data-f="skus" value="${faEsc(sk.join(', '))}" title="แก้รายชื่อ SKU ในกลุ่ม คั่นด้วย ,">` : `<select class="fa-skusel" data-f="skus">${faSkuOptions(sk[0])}${allProducts.some(p => p.parent_sku === sk[0]) ? '' : `<option value="${faEsc(sk[0])}" selected>${faEsc(sk[0])} (ไม่พบในตารางสินค้า)</option>`}</select>`}</td>
     <td>${grp ? `<span class="fa-group">กลุ่ม ${sk.length} SKU · เฉลี่ยตามยอดขาย</span><div class="fa-sub" style="white-space:normal;">${faEsc(sk.map(faSkuName).filter(Boolean).join(' · '))}</div>` : `<span style="font-size:0.85rem;">${faEsc(faSkuName(sk[0]) || '<ไม่พบ SKU นี้ในตารางสินค้า>')}</span>`}</td>
     <td class="t-center"><input class="row-input fa-input fa-num" data-f="sort_order" value="${r.sort_order}"></td>
     <td class="t-center"><input type="checkbox" data-f="is_active" ${r.is_active ? 'checked' : ''}></td>
     <td><input class="row-input fa-input fa-sub" data-f="note" value="${faEsc(r.note || '')}" placeholder="—"></td>
     <td class="t-center"><button class="pm-btn danger" data-act="rule-del" title="ลบกฎ">✕</button></td></tr>` }).join('') : '<tr><td colspan="7" class="pm-empty">ยังไม่มีกฎ</td></tr>'
 }
-const faUnmatchedHtml = list => { document.getElementById('faUnmatchedCount').textContent = list.length ? `(${list.length} ชื่อ · ฿${Math.round(list.reduce((s, c) => s + +c.spend_90d, 0)).toLocaleString('th-TH')})` : ''
-  return list.length ? list.map(c => `<tr><td style="white-space:normal;">${faEsc(c.campaign)}</td><td class="fa-sub">${faEsc(c.account || '')}</td><td>${faMoney(c.spend_90d)}</td><td class="t-center fa-sub">${c.campaigns}</td></tr>`).join('') : '<tr><td colspan="4" class="pm-empty">ทุกแคมเปญที่มีค่าแอด 90 วันตรงกฎแล้ว 🎉</td></tr>' }
+function renderFaUnmatched() {
+  const list = faUnmatched, st = faPg.un
+  document.getElementById('faUnmatchedCount').textContent = list.length ? `(${list.length} ชื่อ · ฿${Math.round(list.reduce((s, c) => s + +c.spend_90d, 0)).toLocaleString('th-TH')})` : ''
+  const start = (st.page - 1) * st.size, page = list.slice(start, start + st.size)
+  document.getElementById('faUnmatchedBody').innerHTML = page.length ? page.map(c => `<tr><td style="white-space:normal;">${faEsc(c.campaign)}</td><td class="fa-sub">${faEsc(c.account || '')}</td><td>${faMoney(c.spend_90d)}</td><td class="t-center fa-sub">${c.campaigns}</td></tr>`).join('') : '<tr><td colspan="4" class="pm-empty">ทุกแคมเปญที่มีค่าแอด 90 วันตรงกฎแล้ว 🎉</td></tr>'
+  faPager('faUnmatchedPager', list.length, st, renderFaUnmatched)
+}
 const faParseSkus = v => [...new Set(String(v || '').split(/[,\s/]+/).map(x => x.trim().toUpperCase()).filter(Boolean))]
 async function faSaveRule(id, patch) {
   const { data, error } = await DB.from('fb_campaign_product_rules').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id).select().single()
@@ -1200,33 +1233,36 @@ async function faSaveRule(id, patch) {
 }
 function renderFaKol() {
   const f = document.getElementById('faKolFilter').value, q = document.getElementById('faKolQ').value.trim().toLowerCase(), so = document.getElementById('faKolSort').value
-  let rows = faKol.filter(r => f === 'all' ? true : f === 'mapped' ? !!r.fb_link || !!r.display_name : !(r.fb_link || r.display_name))
+  const isMapped = r => !!(r.mapped_name || r.sheet_name)
+  let rows = faKol.filter(r => f === 'all' ? true : f === 'mapped' ? isMapped(r) : !isMapped(r))
   if (q) rows = rows.filter(r => [r.code, r.page_name, r.sheet_name, r.mapped_name].some(v => (v || '').toLowerCase().includes(q)))
   rows.sort((a, b) => so === 'spend' ? b.spend - a.spend : so === 'code' ? String(a.code).localeCompare(String(b.code)) : String(b.last_date || '').localeCompare(String(a.last_date || '')))
-  document.getElementById('faKolCount').textContent = `${rows.length} รหัส · จับคู่แล้ว ${faKol.filter(r => r.fb_link || r.display_name).length}/${faKol.length}`
+  document.getElementById('faKolCount').textContent = `${rows.length} รหัส · จับคู่แล้ว ${faKol.filter(isMapped).length}/${faKol.length}`
+  const st = faPg.kol; const start = (st.page - 1) * st.size; const pageRows = rows.slice(start, start + st.size)
   const TYPE_ICO = { video: '🎬', photo: '🖼', album: '🗂', link: '🔗' }
-  document.getElementById('faKolBody').innerHTML = rows.length ? rows.slice(0, 400).map(r => { const post = r.post_id ? `https://www.facebook.com/${r.post_id}` : null; return `<tr data-code="${faEsc(r.code)}">
+  document.getElementById('faKolBody').innerHTML = pageRows.length ? pageRows.map(r => { const post = r.post_id ? `https://www.facebook.com/${r.post_id}` : null; return `<tr data-code="${faEsc(r.code)}">
     <td>${post ? `<a class="fa-thumb" href="${faEsc(post)}" target="_blank" rel="noopener" title="เปิดโพสต์ที่ยิง (${faEsc(r.ad_name || '')})">` : '<span class="fa-thumb">'}${r.thumbnail_url ? `<img src="${faEsc(r.thumbnail_url)}" alt="" onerror="this.outerHTML='📘'">` : (TYPE_ICO[r.creative_type] || '📘')}${post ? '</a>' : '</span>'}</td>
     <td><div class="fa-code">${faEsc(r.code)}</div><div class="fa-sub">${faDate(r.last_date)}${post ? ` · <a href="${faEsc(post)}" target="_blank" rel="noopener" style="color:var(--accent2);">โพสต์ ↗</a>` : ''}</div></td>
     <td class="fa-sub" style="white-space:normal;">${faEsc(r.page_name || '—')}</td>
-    <td><div>${faMoney(r.spend)}</div><div class="fa-sub">${r.ads} แอด</div></td>
+    <td><div>${faMoney(r.spend)}</div><div class="fa-sub">ใน ${r.ads} แอด</div></td>
     <td>${r.sheet_name ? `<span class="fa-tag fa-sheet" title="จากชีท รวม KOL คอลัมน์ ad name">${faEsc(r.sheet_name)}</span>` : '<span class="fa-sub">—</span>'}</td>
     <td><input class="row-input fa-input" data-f="fb_link" value="${faEsc(r.fb_link || '')}" placeholder="วางลิงก์ facebook.com/… ของ KOL"></td>
     <td>${r.mapped_name ? `<span class="fa-tag fa-map">${faEsc(r.mapped_name)}</span>` : r.sheet_name ? `<span class="fa-tag fa-sheet">${faEsc(r.sheet_name)}</span>` : '<span class="fa-tag fa-house">เพจเราเอง</span>'}</td>
-  </tr>` }).join('') + (rows.length > 400 ? '<tr><td colspan="7" class="pm-empty">แสดง 400 รายการแรก — ใช้ช่องค้นหา</td></tr>' : '') : '<tr><td colspan="7" class="pm-empty">ไม่มีรายการ</td></tr>'
+  </tr>` }).join('') : '<tr><td colspan="7" class="pm-empty">ไม่มีรายการ</td></tr>'
+  faPager('faKolPager', rows.length, st, renderFaKol)
 }
 document.getElementById('tab-fbads').addEventListener('click', async e => {
   const btn = e.target.closest('button[data-act]'); if (!btn) return
   if (btn.dataset.act === 'rule-add') {
-    const keyword = document.getElementById('faNewKw').value.trim(), skus = faParseSkus(document.getElementById('faNewSku').value), sort_order = +document.getElementById('faNewSort').value || 100, note = document.getElementById('faNewNote').value.trim() || null
+    const keyword = document.getElementById('faNewKw').value.trim(), grpTxt = document.getElementById('faNewSkuGroup').value.trim(), skus = grpTxt ? faParseSkus(grpTxt) : faParseSkus(document.getElementById('faNewSku').value), sort_order = +document.getElementById('faNewSort').value || 100, note = document.getElementById('faNewNote').value.trim() || null
     if (!keyword || !skus.length) { showToast('กรอกคำและ SKU ก่อน', true); return }
     const bad = skus.filter(sk => !allProducts.some(p => p.parent_sku === sk)); if (bad.length && !confirm(`ไม่พบ SKU ${bad.join(', ')} ในตารางสินค้า — บันทึกต่อไหม?`)) return
     const { data, error } = await DB.from('fb_campaign_product_rules').insert({ keyword, parent_skus: skus, sort_order, note }).select().single()
     if (error) { showToast('เพิ่มไม่สำเร็จ: ' + error.message, true); return }
     faRules.push(data); faRules.sort((a, b) => a.sort_order - b.sort_order || a.id - b.id); renderFaRules()
-    document.getElementById('faNewKw').value = ''; document.getElementById('faNewSku').value = ''; document.getElementById('faNewNote').value = ''
+    document.getElementById('faNewKw').value = ''; document.getElementById('faNewSku').value = ''; document.getElementById('faNewSkuGroup').value = ''; document.getElementById('faNewNote').value = ''
     showToast('เพิ่มกฎแล้ว — หน้า Facebook Ads / MKT Tracking ใช้ทันที')
-    DB.from('v_fb_campaigns_unmatched').select('*').limit(60).then(r => { if (!r.error) document.getElementById('faUnmatchedBody').innerHTML = faUnmatchedHtml(r.data || []) })
+    DB.from('v_fb_campaigns_unmatched').select('*').then(r => { if (!r.error) { faUnmatched = r.data || []; faPg.un.page = 1; renderFaUnmatched() } })
     return
   }
   if (btn.dataset.act === 'rule-del') {
@@ -1249,7 +1285,7 @@ document.getElementById('tab-fbads').addEventListener('change', async e => {
     if (f === 'note') return faSaveRule(id, { note: el.value.trim() || null })
     return
   }
-  if (['faKolFilter', 'faKolSort'].includes(el.id)) return renderFaKol()
+  if (['faKolFilter', 'faKolSort'].includes(el.id)) { faPg.kol.page = 1; return renderFaKol() }
   const kr = el.closest('tr[data-code]')
   if (kr && el.dataset.f === 'fb_link') {
     const code = kr.dataset.code, link = el.value.trim()
@@ -1266,8 +1302,8 @@ document.getElementById('tab-fbads').addEventListener('change', async e => {
     } catch (err) { showToast('บันทึกไม่สำเร็จ: ' + err.message, true) }
   }
 })
-document.getElementById('faKolQ').addEventListener('input', () => renderFaKol())
-document.getElementById('faNewSku').addEventListener('input', e => { const sk = faParseSkus(e.target.value); document.getElementById('faNewSkuName').textContent = sk.length > 1 ? `กลุ่ม ${sk.length} SKU · เฉลี่ยตามยอดขาย` : sk.length ? (faSkuName(sk[0]) || 'ไม่พบ SKU นี้') : 'หลายตัวคั่นด้วย , = เฉลี่ยในกลุ่ม' })
+document.getElementById('faKolQ').addEventListener('input', () => { faPg.kol.page = 1; renderFaKol() })
+
 
 // ===== แท็บ สิทธิ์ผู้ใช้ (เมฆเท่านั้น) =====
 if (Auth.perm?.is_admin) document.getElementById('sidePerms').style.display = ''
