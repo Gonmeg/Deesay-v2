@@ -2604,7 +2604,7 @@ function toggleNavGroup(key) {
 }
 
 function showPage(page, lockCh, el) {
-  if (window.Auth && Auth.perm && !Auth.canPage(page)) { alert('คุณยังไม่มีสิทธิ์ดูหน้านี้ — แจ้งเมฆถ้าต้องใช้'); return; }   // ด่านสิทธิ์รายหน้า
+  if (window.Auth && Auth.perm && !Auth.canPage(page)) { alert('คุณยังไม่มีสิทธิ์ดูหน้านี้ — ติดต่อผู้ดูแลระบบถ้าต้องใช้'); return; }   // ด่านสิทธิ์รายหน้า
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
