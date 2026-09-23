@@ -8,6 +8,10 @@
   const obj = o => OBJ_TH[o] || o || '—';
   const money = n => n ? '฿' + fmt(n) : '—';
   const pct = (a, b) => b ? (a / b * 100).toFixed(2) + '%' : '—';
+  const TYPE_TH = { video: '🎬 วิดีโอ', photo: '🖼 ภาพ', album: '🗂 อัลบั้ม', link: '🔗 ลิงก์', unknown: '— ยังไม่ทราบ' };
+  const typeTh = t => TYPE_TH[t || 'unknown'] || t;
+  const skuName = sku => (typeof skuToName === 'function' ? skuToName(sku) : sku);
+  const productLabel = a => !a.parent_skus ? '' : a.parent_skus.length === 1 ? skuName(a.parent_skus[0]) : `กลุ่ม: ${a.product_keyword} (${a.parent_skus.length} SKU)`;
   const per = (spend, n) => n ? '฿' + fmt(spend / n) : '—';
   const roasCell = (rev, spend) => { if (!spend) return '<span style="color:var(--text3);">—</span>'; const r = rev / spend; const col = r >= 2 ? 'var(--green)' : r >= 1 ? 'var(--accent)' : 'var(--red)'; return `<span style="color:${col};font-weight:700;">${r.toFixed(2)}x</span>`; };
   const postUrl = p => p ? `https://www.facebook.com/${p}` : '';
@@ -144,8 +148,15 @@
           <div class="table-wrap" style="margin-top:12px;overflow-x:auto;"><table id="tblFbaPr"><thead id="theadFbaPr"></thead><tbody id="tbodyFbaPr"></tbody></table></div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">PR = แอดที่ไม่ได้ยิงให้เพจขาย (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade awareness) วัดผลด้วยการเห็น/มีส่วนร่วม ไม่ใช่ยอดขาย · เพจ = เพจของโพสต์ที่แอดใช้ (ถ้าไม่มีชื่อเพจ ใช้ชื่อ KOL จากชื่อแอด) · เลือกคอลัมน์ได้ที่ ⚙ Metrics</div>
         </div>
+        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ประเภทแอดไหนคุ้ม — วิดีโอ / ภาพ / อัลบั้ม <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('fba-info-type')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fba-info-type" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">ประเภทมาจากชิ้นงานที่ Meta บอก: วิดีโอ / ภาพเดี่ยว / อัลบั้ม (หลายรูปเลื่อนดู) / ลิงก์<br><br>แอดที่สร้างจากโพสต์เดิมบนเพจ Meta บอกได้แค่ "วิดีโอ" หรือ "ภาพ" — อัลบั้มจากโพสต์เดิมจึงอาจขึ้นเป็นภาพ · "ยังไม่ทราบ" = แอดเก่าที่ระบบยังไม่ได้อ่านประเภท (ทยอยเติมเอง)<br><br>ทุกแอดในช่วง ไม่ใช่แค่ 1,500 ตัวที่แสดงในตารางล่าง</div></span></div>
+            <button class="btn btn-ghost" onclick="exportTable('tblFbaType')">⬇ Export CSV</button></div>
+          <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaType" data-no-page><thead><tr><th>ประเภท</th><th>แอด</th><th>ค่าแอด</th><th>% งบ</th><th>Impressions</th><th>CPM</th><th>คลิกลิงก์</th><th>CTR</th><th>ทักแชท</th><th>฿/ทัก</th><th>ซื้อ (Meta นับ)</th><th>฿/ซื้อ</th><th>ROAS (Meta)</th><th>ดูจบ (ThruPlay)</th></tr></thead><tbody id="tbodyFbaType"></tbody></table></div></div>
+        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ค่าแอดต่อสินค้า — อ่านจากชื่อแคมเปญ <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('fba-info-product')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fba-info-product" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">ระบบอ่านชื่อแคมเปญ (เช่น Broad_ลิปฟิกซ์) เทียบกับกฎ "คำ → สินค้า" ในหน้า Admin › แอด Facebook<br><br>กลุ่ม = คำที่ครอบหลายสินค้า (เช่น "กันแดด") ในหน้า MKT Tracking จะเฉลี่ยตามยอดขายในกลุ่ม · ไม่ระบุสินค้า = ชื่อแคมเปญไม่มีคำที่รู้จัก (เช่น Broad_รวม, CPAS) → MKT Tracking เฉลี่ยตามยอดขายทุกสินค้า<br><br>ทีมแอดตั้งชื่อแคมเปญให้มีชื่อสินค้าเสมอ ตัวเลขตรงนี้จะแม่นขึ้นเอง</div></span></div>
+            <button class="btn btn-ghost" onclick="exportTable('tblFbaProduct')">⬇ Export CSV</button></div>
+          <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaProduct" data-no-page><thead><tr><th>สินค้า</th><th>แคมเปญ</th><th>แอด</th><th>ค่าแอด</th><th>% งบ</th><th>Impressions</th><th>คลิกลิงก์</th><th>ทักแชท</th><th>฿/ทัก</th><th>ซื้อ (Meta นับ)</th><th>฿/ซื้อ</th><th>ROAS (Meta)</th></tr></thead><tbody id="tbodyFbaProduct"></tbody></table></div></div>
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">แอด / โพสต์ที่ยิง <span id="fba-ads-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
-          <div style="display:flex;gap:8px;align-items:center;"><select class="ls-input" id="fbaAdsBucket" style="width:190px;padding:6px 10px;font-size:12px;"><option value="">ทุกประเภทแอด</option><option value="Conversion">Conversion — เพจขาย</option><option value="PR">PR — เพจอื่น / KOL</option><option value="CPAS">CPAS — เข้า Shopee</option></select><input type="text" class="ls-input" id="fbaAdsSearch" placeholder="🔎 ชื่อแอด / แคมเปญ / KOL" style="width:220px;padding:6px 10px;font-size:12px;">
+          <div style="display:flex;gap:8px;align-items:center;"><select class="ls-input" id="fbaAdsBucket" style="width:190px;padding:6px 10px;font-size:12px;"><option value="">ทุกประเภทแอด</option><option value="Conversion">Conversion — เพจขาย</option><option value="PR">PR — เพจอื่น / KOL</option><option value="CPAS">CPAS — เข้า Shopee</option></select>
+            <select class="ls-input" id="fbaAdsType" style="width:130px;padding:6px 10px;font-size:12px;"><option value="">ทุกชิ้นงาน</option><option value="video">🎬 วิดีโอ</option><option value="photo">🖼 ภาพ</option><option value="album">🗂 อัลบั้ม</option><option value="link">🔗 ลิงก์</option><option value="unknown">ยังไม่ทราบ</option></select><input type="text" class="ls-input" id="fbaAdsSearch" placeholder="🔎 ชื่อแอด / แคมเปญ / KOL" style="width:220px;padding:6px 10px;font-size:12px;">
             <div style="position:relative;"><button class="btn btn-ghost" id="fbaAdsMetricsBtn" onclick="toggleMetricsPanel('fbaAds')">⚙ Metrics <span id="fbaAds-metric-count" style="color:var(--accent);"></span></button>
               <div id="fbaAds-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaAds-metrics-checks"></div>
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaAds')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaAds')">เลือกทั้งหมด</button></div></div></div>
@@ -154,6 +165,7 @@
           <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">ER = มีส่วนร่วม ÷ Impressions · ความถี่ = Impressions ÷ Reach (คนเดิมเห็นกี่ครั้ง) · โพสต์ที่ยิงคือโพสต์จริงบนเพจ (ของเราหรือของ KOL) คลิกรูปเพื่อเปิด · "KOL" มาจากท้ายชื่อแอดที่ทีมตั้ง (…_KOLs_สินค้า_ชื่อKOL) · ปุ่ม ⚙ Metrics เลือก/เรียงคอลัมน์ได้ บันทึกเป็น preset ได้</div></div>`;
       document.getElementById('fbaAdsSearch').oninput = () => renderAds();
       document.getElementById('fbaAdsBucket').onchange = () => renderAds();
+      document.getElementById('fbaAdsType').onchange = () => renderAds();
       const prOpts = ['spend','impressions','reach','post_engagement','er','link_clicks','msg_started','cpm','cpe','thruplay'];
       const prSel = document.getElementById('fbaPrMetric'); prSel.innerHTML = prOpts.map(k => `<option value="${k}">${M[k].label}</option>`).join(''); prSel.value = 'reach'; prSel.onchange = () => renderPr();
       document.querySelectorAll('#fbaMoneyMode .toggle-btn').forEach(bt => bt.onclick = () => { document.querySelectorAll('#fbaMoneyMode .toggle-btn').forEach(x => x.classList.remove('active')); bt.classList.add('active'); _moneyMode = bt.dataset.m; renderMoneyChart(); });
@@ -229,7 +241,7 @@
     document.getElementById('tbodyFbaObjective').innerHTML = (d.by_objective || []).map(o => `<tr><td><b>${ttcEsc(obj(o.objective))}</b><div class="muted" style="font-size:10px;color:var(--text3);">${ttcEsc(o.objective)}</div></td><td>${fmt(o.campaigns)}</td><td>฿${fmt(o.spend)}</td><td>${pct(o.spend, totalSpend)}</td><td>${fmt(o.msg_started)}</td><td>${per(o.spend, o.msg_started)}</td><td>${fmt(o.purchases)}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
     // บัญชี
     document.getElementById('tbodyFbaAccount').innerHTML = (d.by_account || []).map(a => `<tr><td><b>${ttcEsc(a.name || a.account_id)}</b></td><td>${fmt(a.ads)}</td><td style="font-weight:600;">฿${fmt(a.spend)}</td><td>${pct(a.spend, totalSpend)}</td><td>${fmt(a.impressions)}</td><td>${fmt(a.reach)}</td><td>฿${a.impressions ? (a.spend / a.impressions * 1000).toFixed(0) : '—'}</td><td>${fmt(a.link_clicks)}</td><td>${per(a.spend, a.link_clicks)}</td><td>${fmt(a.msg_started)}</td><td>${per(a.spend, a.msg_started)}</td><td>${fmt(a.purchases)}</td></tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
-    renderCampaigns(); renderAds();
+    renderCampaigns(); renderTypeProduct(); renderAds();
   }
 
   // (2026-09-21) วันท้ายที่มีค่าแอดแต่ยอดขายยังไม่อัปโหลด → ตัดออกจากกราฟ ไม่ให้ ROAS / % ค่าแอด พุ่งผิดปกติ
@@ -316,7 +328,7 @@
     if (!pr.length) { const c = document.getElementById('chartFbaPr'); if (c) c.parentElement.innerHTML = '<div class="empty" style="padding:30px;">ยังไม่มีข้อมูลรายวันต่อประเภท — รัน SQL 95 ตัวล่าสุด (daily_bucket) แล้วรีเฟรช</div>'; }
     // ตารางรายเพจ/KOL — metric เลือกได้
     const byPage = {};
-    prAds.forEach(a => { const key = a.page_name || (a.kol_hint ? 'KOL: ' + a.kol_hint : (a.page_id ? 'เพจ ' + a.page_id : a.account || '—')); const o = byPage[key] = byPage[key] || { name: key, page_id: a.page_id, ads: 0 }; o.ads++; ORDER.forEach(k => { if (!['frequency','cpm','ctr','cpc','er','cpe','cpv','cost_per_msg','cpa','roas_meta','days','period'].includes(k)) o[k] = (o[k] || 0) + (+a[k] || 0); }); });
+    prAds.forEach(a => { const key = a.page_name || (a.kol_name ? 'KOL: ' + a.kol_name : (a.page_id ? 'เพจ ' + a.page_id : a.account || '—')); const o = byPage[key] = byPage[key] || { name: key, page_id: a.page_id, ads: 0 }; o.ads++; ORDER.forEach(k => { if (!['frequency','cpm','ctr','cpc','er','cpe','cpv','cost_per_msg','cpa','roas_meta','days','period'].includes(k)) o[k] = (o[k] || 0) + (+a[k] || 0); }); });
     const ks = cols('fbaPr');
     const rows = Object.values(byPage).sort((a, b) => b.spend - a.spend);
     document.getElementById('theadFbaPr').innerHTML = `<tr><th>เพจ / KOL ที่ยิงให้</th><th>แอด</th><th>% ของ PR</th>${ks.map(k => `<th>${M[k].label}</th>`).join('')}</tr>`;
@@ -357,14 +369,43 @@
     document.getElementById('tbodyFbaCampaign').innerHTML = rows.map(c => `<tr><td><b>${ttcEsc(c.name || c.campaign_id)}</b></td><td style="font-size:11px;color:var(--text3);">${ttcEsc(c.account || '')}</td><td style="font-size:11px;">${ttcEsc(obj(c.objective))}</td><td>${st(c.effective_status)}</td><td>${fmt(c.ads)}</td>${ks.map(k => `<td${k === 'spend' ? ' style="font-weight:600;"' : ''}>${M[k].fmt(c)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${5 + ks.length}" class="empty">ไม่มีข้อมูล</td></tr>`;
   }
 
+  // ตารางสรุป: ประเภทชิ้นงาน + สินค้า (จาก RPC by_type / by_product — ทุกแอดในช่วง)
+  function renderTypeProduct() {
+    const d = _data; if (!d) return;
+    const money = v => '฿' + fmt(Math.round(v)), ratio = (a, b) => b ? '฿' + fmt(Math.round(a / b)) : '—', roas = (v, s) => s ? (v / s).toFixed(2) + 'x' : '—';
+    const types = (d.by_type || []).slice().sort((a, b) => b.spend - a.spend), tSum = types.reduce((s, r) => s + +r.spend, 0);
+    const order = { video: 1, photo: 2, album: 3, link: 4, unknown: 9 };
+    types.sort((a, b) => (order[a.creative_type] || 5) - (order[b.creative_type] || 5));
+    document.getElementById('tbodyFbaType').innerHTML = types.length ? types.map(r => `<tr>
+      <td><b>${typeTh(r.creative_type)}</b></td><td>${fmt(r.ads)}</td><td style="font-weight:600;">${money(r.spend)}</td><td>${pct(r.spend, tSum)}</td>
+      <td>${fmt(r.impressions)}</td><td>${r.impressions ? '฿' + (r.spend / r.impressions * 1000).toFixed(0) : '—'}</td>
+      <td>${fmt(r.link_clicks)}</td><td>${r.impressions ? (r.link_clicks / r.impressions * 100).toFixed(2) + '%' : '—'}</td>
+      <td>${fmt(r.msg_started)}</td><td>${ratio(r.spend, r.msg_started)}</td>
+      <td>${fmt(r.purchases)}</td><td>${ratio(r.spend, r.purchases)}</td><td>${roas(r.purchase_value, r.spend)}</td>
+      <td>${r.creative_type === 'video' ? fmt(r.thruplay) : '<span style="color:var(--text3);">—</span>'}</td></tr>`).join('')
+      + `<tr style="font-weight:700;background:var(--bg3);"><td>รวม</td><td>${fmt(types.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(tSum)}</td><td>100%</td><td colspan="10"></td></tr>`
+      : '<tr><td colspan="14" class="empty">ไม่มีข้อมูล</td></tr>';
+    const prods = (d.by_product || []).slice().sort((a, b) => b.spend - a.spend), pSum = prods.reduce((s, r) => s + +r.spend, 0);
+    const known = prods.filter(r => r.parent_sku).reduce((s, r) => s + +r.spend, 0);
+    document.getElementById('tbodyFbaProduct').innerHTML = prods.length ? prods.map(r => `<tr>
+      <td>${r.parent_sku ? `<b>${ttcEsc(skuName(r.parent_sku))}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${ttcEsc(r.parent_sku)}</span>` : `<span style="color:var(--text3);">${ttcEsc(r.product)}</span>`}</td>
+      <td>${fmt(r.campaigns)}</td><td>${fmt(r.ads)}</td><td style="font-weight:600;">${money(r.spend)}</td><td>${pct(r.spend, pSum)}</td>
+      <td>${fmt(r.impressions)}</td><td>${fmt(r.link_clicks)}</td><td>${fmt(r.msg_started)}</td><td>${ratio(r.spend, r.msg_started)}</td>
+      <td>${fmt(r.purchases)}</td><td>${ratio(r.spend, r.purchases)}</td><td>${roas(r.purchase_value, r.spend)}</td></tr>`).join('')
+      + `<tr style="font-weight:700;background:var(--bg3);"><td>รวม <span style="font-weight:400;color:var(--text3);font-size:10.5px;">· ระบุสินค้าได้ ${pct(known, pSum)} ของงบ</span></td><td>${fmt(prods.reduce((s, r) => s + +r.campaigns, 0))}</td><td>${fmt(prods.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(pSum)}</td><td>100%</td><td colspan="7"></td></tr>`
+      : '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
+  }
+
   function renderAds() {
     const ks = cols('fbaAds');
     if (!M[_adsSortKey]) _adsSortKey = 'spend';
     const q = (document.getElementById('fbaAdsSearch')?.value || '').toLowerCase().trim();
     let rows = filteredAds();
-    if (q) rows = rows.filter(a => (a.name || '').toLowerCase().includes(q) || (a.campaign || '').toLowerCase().includes(q) || (a.kol_hint || '').toLowerCase().includes(q));
+    if (q) rows = rows.filter(a => (a.name || '').toLowerCase().includes(q) || (a.campaign || '').toLowerCase().includes(q) || (a.kol_name || '').toLowerCase().includes(q) || productLabel(a).toLowerCase().includes(q));
+    const tf = document.getElementById('fbaAdsType')?.value || '';
+    if (tf) rows = rows.filter(a => (a.creative_type || 'unknown') === tf);
     rows = sortRows(rows, _adsSortKey, _adsSortDir);
-    document.getElementById('theadFbaAds').innerHTML = `<tr><th>โพสต์</th><th>แอด</th><th>แคมเปญ</th><th>บัญชี</th>${ks.map(k => `<th class="sortable-th" data-k="${k}">${M[k].label} <span class="sort-ind"></span></th>`).join('')}</tr>`;
+    document.getElementById('theadFbaAds').innerHTML = `<tr><th>โพสต์</th><th>แอด</th><th>ชิ้นงาน</th><th>สินค้า</th><th>แคมเปญ</th><th>บัญชี</th>${ks.map(k => `<th class="sortable-th" data-k="${k}">${M[k].label} <span class="sort-ind"></span></th>`).join('')}</tr>`;
     bindSort('tblFbaAds', k => { if (_adsSortKey === k) _adsSortDir = _adsSortDir === 'desc' ? 'asc' : 'desc'; else { _adsSortKey = k; _adsSortDir = 'desc'; } renderAds(); });
     sortInd('tblFbaAds', _adsSortKey, _adsSortDir);
     document.getElementById('fba-ads-count').textContent = `(${fmt(rows.length)})`;
@@ -372,12 +413,14 @@
       const link = postUrl(a.post_id);
       const thumb = a.thumbnail_url ? `<img src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<span title=&quot;รูปปกโหลดไม่ได้ (Meta ยังไม่ส่งรูปใหม่)&quot;>📘</span>'">` : '📘';
       return `<tr><td><div style="display:flex;align-items:center;gap:8px;"><a ${link ? `href="${ttcEscAttr(link)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${thumb}</a>
-        <div style="font-size:10.5px;color:var(--text3);line-height:1.3;"><div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:${a.bucket === 'Conversion' ? 'rgba(34,197,94,0.15)' : a.bucket === 'CPAS' ? 'rgba(96,165,250,0.15)' : 'rgba(167,139,250,0.15)'};color:${a.bucket === 'Conversion' ? 'var(--green)' : a.bucket === 'CPAS' ? '#60a5fa' : '#a78bfa'};">${ttcEsc(a.bucket || '—')}</div>${a.page_name ? `<div style="color:var(--text2);">${ttcEsc(a.page_name)}</div>` : ''}${a.kol_hint ? `<div style="color:var(--text2);font-weight:600;">KOL: ${ttcEsc(a.kol_hint)}</div>` : ''}${a.instagram_url ? `<a href="${ttcEscAttr(a.instagram_url)}" target="_blank" rel="noopener" style="color:var(--accent);" title="โพสต์เดียวกันฝั่ง Instagram (Meta ยิงคู่กัน)">IG ↗</a>` : ''}</div></div></td>
+        <div style="font-size:10.5px;color:var(--text3);line-height:1.3;"><div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:${a.bucket === 'Conversion' ? 'rgba(34,197,94,0.15)' : a.bucket === 'CPAS' ? 'rgba(96,165,250,0.15)' : 'rgba(167,139,250,0.15)'};color:${a.bucket === 'Conversion' ? 'var(--green)' : a.bucket === 'CPAS' ? '#60a5fa' : '#a78bfa'};">${ttcEsc(a.bucket || '—')}</div>${a.page_name ? `<div style="color:var(--text2);">${ttcEsc(a.page_name)}</div>` : ''}${a.kol_name ? `<div style="color:var(--accent);font-weight:600;" title="${a.kol_source === 'map' ? 'จับคู่ในหน้า Admin › แอด Facebook' : 'จับคู่จากคอลัมน์ ad name ในชีท KOL'} (รหัส ${ttcEscAttr(a.kol_code || '')})">KOL: ${a.kol_link ? `<a href="${ttcEscAttr(a.kol_link)}" target="_blank" rel="noopener" style="color:inherit;">${ttcEsc(a.kol_name)} ↗</a>` : ttcEsc(a.kol_name)}</div>` : ''}${a.instagram_url ? `<a href="${ttcEscAttr(a.instagram_url)}" target="_blank" rel="noopener" style="color:var(--accent);" title="โพสต์เดียวกันฝั่ง Instagram (Meta ยิงคู่กัน)">IG ↗</a>` : ''}</div></div></td>
         <td style="font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ttcEscAttr(a.name || '')}">${ttcEsc(a.name || a.ad_id)}</td>
+        <td style="font-size:11px;white-space:nowrap;color:${a.creative_type ? 'var(--text)' : 'var(--text3)'};">${typeTh(a.creative_type)}</td>
+        <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${a.parent_skus ? 'var(--text)' : 'var(--text3)'};" title="${ttcEscAttr(a.parent_skus ? productLabel(a) + ' — คำที่เจอ: ' + (a.product_keyword || '') : 'ชื่อแคมเปญไม่มีคำที่รู้จัก — ตั้งกฎเพิ่มได้ใน Admin › แอด Facebook')}">${a.parent_skus ? ttcEsc(productLabel(a)) : '—'}</td>
         <td style="font-size:11px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ttcEscAttr(a.campaign || '')}">${ttcEsc(a.campaign || '')}</td>
         <td style="font-size:11px;color:var(--text3);">${ttcEsc(a.account || '')}</td>
         ${ks.map(k => `<td${k === 'spend' ? ' style="font-weight:600;"' : ''}>${M[k].fmt(a)}</td>`).join('')}</tr>`;
-    }).join('') || `<tr><td colspan="${4 + ks.length}" class="empty">ไม่มีแอดตามเงื่อนไข</td></tr>`;
+    }).join('') || `<tr><td colspan="${6 + ks.length}" class="empty">ไม่มีแอดตามเงื่อนไข</td></tr>`;
   }
 
   window.renderFbAdsPage = load;
