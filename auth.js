@@ -88,8 +88,13 @@ window.Auth = (function () {
     session = data.session;
     if (!session) return goLogin();
     client.auth.onAuthStateChange((ev, s) => { session = s; if (ev === 'SIGNED_OUT' || !s) goLogin(); });
-    try { perm = await rpc('my_permissions'); }
-    catch (e) { return showBlocked('เชื่อมต่อไม่ได้', 'อ่านสิทธิ์ผู้ใช้ไม่สำเร็จ: ' + e.message); }
+    // อ่านสิทธิ์ — ถ้าเซิร์ฟเวอร์สะดุดชั่วคราว (เช่น กำลังโหลด schema ใหม่) ลองซ้ำเองก่อน ไม่เด้งคนออก
+    let lastErr = null;
+    for (const wait of [0, 1500, 3000, 5000, 8000]) {
+      if (wait) await new Promise(r => setTimeout(r, wait));
+      try { perm = await rpc('my_permissions'); lastErr = null; break; } catch (e) { lastErr = e; }
+    }
+    if (lastErr) { setTimeout(() => location.reload(), 15000); return showBlocked('เชื่อมต่อไม่ได้ชั่วคราว', 'เซิร์ฟเวอร์ตอบช้า จะลองใหม่ให้เองใน 15 วินาที — หรือกด "ลองใหม่" ได้เลย<br><span style="font-size:11px;opacity:.7;">' + lastErr.message + '</span>'); }
     if (!perm.logged_in) return goLogin();
     perm.pages = perm.pages || [];
     if (!perm.is_active) return showBlocked('บัญชีถูกปิดใช้งาน', 'ติดต่อผู้ดูแลระบบถ้าต้องการใช้งานต่อ');
