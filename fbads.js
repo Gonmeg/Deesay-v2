@@ -2,7 +2,6 @@
 // ข้อมูล: RPC fb_ads_page(p_from, p_to) ครั้งเดียว · ยอดขายจริง = ออเดอร์ Facebook ของเรา (mv_sales_daily) ไม่ใช่ที่ Meta นับ
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, thShort, ttcEsc, ttcEscAttr, exportTable, fbeInfoIcon, COLORS, getDateValue, chartTickColor/chartGridColor, setBgSync
 (function () {
-  let _adsGroup = true;   // รวมแอดที่ใช้โพสต์เดียวกันเป็นแถวเดียว (ค่าเริ่มต้น)
   let _data = null, _seq = 0, _sortKey = 'spend', _sortDir = 'desc', _adsSortKey = 'spend', _adsSortDir = 'desc', _filterAccount = '', _filterObjective = '', _filterBucket = '';
   const BUCKET_TH = { Conversion: 'Conversion — ยิงให้เพจขาย', PR: 'PR — เพจอื่น / KOL / awareness', CPAS: 'CPAS — ยิงเข้า Shopee' };
   const OBJ_TH = { OUTCOME_SALES: 'ยอดขาย', OUTCOME_ENGAGEMENT: 'การมีส่วนร่วม', OUTCOME_TRAFFIC: 'คลิกเข้าเว็บ', OUTCOME_LEADS: 'ลูกค้าเป้าหมาย', OUTCOME_AWARENESS: 'การรับรู้', OUTCOME_APP_PROMOTION: 'แอป', MESSAGES: 'ข้อความ', CONVERSIONS: 'คอนเวอร์ชัน', LINK_CLICKS: 'คลิกลิงก์', POST_ENGAGEMENT: 'การมีส่วนร่วม', REACH: 'การเข้าถึง', VIDEO_VIEWS: 'ยอดวิว' };
@@ -157,7 +156,7 @@
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaProduct" data-no-page><thead><tr><th>สินค้า</th><th>แคมเปญ</th><th>แอด</th><th>ค่าแอด</th><th>% งบ</th><th>Impressions</th><th>คลิกลิงก์</th><th>ทักแชท</th><th>฿/ทัก</th><th>ซื้อ (Meta นับ)</th><th>฿/ซื้อ</th><th>ROAS (Meta)</th></tr></thead><tbody id="tbodyFbaProduct"></tbody></table></div></div>
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">แอด / โพสต์ที่ยิง <span id="fba-ads-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;"><select class="ls-input" id="fbaAdsBucket" style="width:190px;padding:6px 10px;font-size:12px;"><option value="">ทุกประเภทแอด</option><option value="Conversion">Conversion — เพจขาย</option><option value="PR">PR — เพจอื่น / KOL</option><option value="CPAS">CPAS — เข้า Shopee</option></select>
-            <div class="cp-seg" id="fbaAdsGroupSeg" title="รวมตามโพสต์ = แอดทุกตัวที่ใช้โพสต์/คลิปเดียวกัน (ต่างกลุ่มเป้าหมาย, duplicate) รวมเป็นแถวเดียว วัดผลทั้งก้อน"><button class="on" data-g="1">รวมตามโพสต์</button><button data-g="0">แยกรายแอด</button></div>
+            <select class="ls-input" id="fbaAdsKol" style="width:120px;padding:6px 10px;font-size:12px;" title="กรองตาม KOL · เลือก in-house + เรียงค่าแอด = ลิสต์โพสต์ที่ยังไม่ได้ระบุ KOL"><option value="">ทุก KOL</option><option value="kol">มี KOL</option><option value="house">in-house</option><option value="review">⚠️ ต้องตรวจ</option></select>
             <select class="ls-input" id="fbaAdsType" style="width:130px;padding:6px 10px;font-size:12px;"><option value="">ทุกชิ้นงาน</option><option value="video">🎬 วิดีโอ</option><option value="photo">🖼 ภาพ</option><option value="album">🗂 อัลบั้ม</option><option value="link">🔗 ลิงก์</option><option value="unknown">ยังไม่ทราบ</option></select><input type="text" class="ls-input" id="fbaAdsSearch" placeholder="🔎 ชื่อแอด / แคมเปญ / KOL" style="width:220px;padding:6px 10px;font-size:12px;">
             <div style="position:relative;"><button class="btn btn-ghost" id="fbaAdsMetricsBtn" onclick="toggleMetricsPanel('fbaAds')">⚙ Metrics <span id="fbaAds-metric-count" style="color:var(--accent);"></span></button>
               <div id="fbaAds-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaAds-metrics-checks"></div>
@@ -168,7 +167,7 @@
       document.getElementById('fbaAdsSearch').oninput = () => renderAds();
       document.getElementById('fbaAdsBucket').onchange = () => renderAds();
       document.getElementById('fbaAdsType').onchange = () => renderAds();
-      document.querySelectorAll('#fbaAdsGroupSeg button').forEach(b => b.onclick = () => { _adsGroup = b.dataset.g === '1'; document.querySelectorAll('#fbaAdsGroupSeg button').forEach(x => x.classList.toggle('on', x === b)); renderAds(); });
+      document.getElementById('fbaAdsKol').onchange = () => renderAds();
       const prOpts = ['spend','impressions','reach','post_engagement','er','link_clicks','msg_started','cpm','cpe','thruplay'];
       const prSel = document.getElementById('fbaPrMetric'); prSel.innerHTML = prOpts.map(k => `<option value="${k}">${M[k].label}</option>`).join(''); prSel.value = 'reach'; prSel.onchange = () => renderPr();
       document.querySelectorAll('#fbaMoneyMode .toggle-btn').forEach(bt => bt.onclick = () => { document.querySelectorAll('#fbaMoneyMode .toggle-btn').forEach(x => x.classList.remove('active')); bt.classList.add('active'); _moneyMode = bt.dataset.m; renderMoneyChart(); });
@@ -187,7 +186,7 @@
     const from = getDateValue('From'), to = getDateValue('To');
     document.getElementById('fba-kpis').innerHTML = Array.from({ length: 5 }, () => `<div class="card" style="flex:1;min-width:150px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
     try {
-      const d = await supaRpc('fb_ads_page', { p_from: from, p_to: to });
+      const [d] = await Promise.all([supaRpc('fb_ads_page', { p_from: from, p_to: to }), loadKolReview()]);
       if (seq !== _seq) return;
       _data = d;
       // ตัวกรอง
@@ -331,11 +330,11 @@
     if (!pr.length) { const c = document.getElementById('chartFbaPr'); if (c) c.parentElement.innerHTML = '<div class="empty" style="padding:30px;">ยังไม่มีข้อมูลรายวันต่อประเภท — รัน SQL 95 ตัวล่าสุด (daily_bucket) แล้วรีเฟรช</div>'; }
     // ตารางรายเพจ/KOL — metric เลือกได้
     const byPage = {};
-    prAds.forEach(a => { const key = a.page_name || (a.kol_name ? 'KOL: ' + a.kol_name : (a.page_id ? 'เพจ ' + a.page_id : a.account || '—')); const o = byPage[key] = byPage[key] || { name: key, page_id: a.page_id, ads: 0 }; o.ads++; ORDER.forEach(k => { if (!['frequency','cpm','ctr','cpc','er','cpe','cpv','cost_per_msg','cpa','roas_meta','days','period'].includes(k)) o[k] = (o[k] || 0) + (+a[k] || 0); }); });
+    prAds.forEach(a => { const key = a.page_name || (a.kol_name ? a.kol_name : (a.page_id ? 'เพจ ' + a.page_id : a.account || '—')); const o = byPage[key] = byPage[key] || { name: key, page_id: a.page_id, own: !!a.own_page, link: a.own_page ? null : a.kol_link, named: !!a.page_name, ads: 0 }; o.ads++; ORDER.forEach(k => { if (!['frequency','cpm','ctr','cpc','er','cpe','cpv','cost_per_msg','cpa','roas_meta','days','period'].includes(k)) o[k] = (o[k] || 0) + (+a[k] || 0); }); });
     const ks = cols('fbaPr');
     const rows = Object.values(byPage).sort((a, b) => b.spend - a.spend);
     document.getElementById('theadFbaPr').innerHTML = `<tr><th>เพจ / KOL ที่ยิงให้</th><th>แอด</th><th>% ของ PR</th>${ks.map(k => `<th>${M[k].label}</th>`).join('')}</tr>`;
-    document.getElementById('tbodyFbaPr').innerHTML = rows.map(o => `<tr><td>${o.page_id ? `<a href="https://www.facebook.com/${ttcEscAttr(o.page_id)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;">${ttcEsc(o.name)} ↗</a>` : ttcEsc(o.name)}</td><td>${fmt(o.ads)}</td><td>${pct(o.spend, T.spend)}</td>${ks.map(k => `<td${k === 'spend' ? ' style="font-weight:600;"' : ''}>${M[k].fmt(o)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${3 + ks.length}" class="empty">ไม่มีแอด PR ในช่วงนี้</td></tr>`;
+    document.getElementById('tbodyFbaPr').innerHTML = rows.map(o => `<tr><td>${o.page_id ? `<a href="${ttcEscAttr(o.link || ('https://www.facebook.com/' + o.page_id))}" target="_blank" rel="noopener" style="color:${o.named ? 'var(--text)' : 'var(--text3)'};text-decoration:none;">${ttcEsc(o.name)} ↗</a>` : ttcEsc(o.name)}${o.page_id && !o.own ? warnIcon(o.page_id, o.name) + PEN('page', o.page_id, o.link && !/facebook\.com\/\d+$/.test(o.link) ? o.link : '', o.name) : ''}</td><td>${fmt(o.ads)}</td><td>${pct(o.spend, T.spend)}</td>${ks.map(k => `<td${k === 'spend' ? ' style="font-weight:600;"' : ''}>${M[k].fmt(o)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${3 + ks.length}" class="empty">ไม่มีแอด PR ในช่วงนี้</td></tr>`;
   }
   function renderDailyTable() {
     const ks = cols('fbaDaily');
@@ -399,6 +398,67 @@
       : '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
   }
 
+  // ===== KOL: แสดง + ✏️ แก้ลิงก์เพจ (เฉพาะคนที่มีสิทธิ์จัดการสินค้า/แอดมิน) =====
+  const canEditKol = () => !!(window.Auth && Auth.perm && Auth.perm.is_active && (Auth.perm.is_admin || Auth.perm.can_admin));
+  const PEN = (kind, key, cur, label) => canEditKol() && key ? ` <button class="fba-pen" data-kind="${kind}" data-key="${ttcEscAttr(key)}" data-cur="${ttcEscAttr(cur || '')}" data-label="${ttcEscAttr(label || '')}" title="แก้ลิงก์เพจ KOL" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;">✏️</button>` : '';
+  function kolCell(a) {
+    const nm = a.kol_name || (!a.own_page && a.page_id ? 'เพจ KOL (ไม่ทราบชื่อ)' : '');
+    const name = nm ? `<a href="${ttcEscAttr(a.kol_link || ('https://www.facebook.com/' + (a.page_id || '')))}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;text-decoration:none;" title="เปิดเพจ KOL">${ttcEsc(nm)}</a>`
+                    : `<span style="color:var(--text3);" title="ไม่ได้ระบุ KOL = โพสต์ของเพจเราเอง">in-house</span>`;
+    return name + (needsReview(a) ? warnIcon(a.page_id, a.kol_name) : '') + (needsReview(a) ? PEN('page', a.page_id, '', a.kol_name) : (a.post_id ? PEN('post', a.post_id, a.kol_source === 'post' ? a.kol_link : '', a.name) : ''));
+  }
+  function kolModal() {
+    let m = document.getElementById('fbaKolModal'); if (m) return m;
+    m = document.createElement('div'); m.id = 'fbaKolModal';
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9500;display:none;align-items:center;justify-content:center;padding:20px;';
+    m.innerHTML = `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:100%;max-width:420px;padding:20px 22px;font-family:'Sarabun',sans-serif;">
+      <div style="font-size:15px;font-weight:700;color:var(--text);">ใครเป็นเจ้าของโพสต์นี้</div>
+      <div id="fbaKolSub" style="font-size:12px;color:var(--text3);margin:2px 0 14px;"></div>
+      <label style="font-size:12px;color:var(--text2);">ลิงก์เพจ Facebook ของ KOL</label>
+      <input id="fbaKolInput" class="ls-input" placeholder="https://www.facebook.com/…" style="width:100%;margin:6px 0 4px;padding:9px 12px;font-size:13px;">
+      <div id="fbaKolErr" style="font-size:12px;color:var(--red);min-height:18px;"></div>
+      <div id="fbaKolHint" style="font-size:11.5px;color:var(--text3);margin-bottom:14px;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost" id="fbaKolCancel">ยกเลิก</button><button class="btn btn-ghost" id="fbaKolClear">ล้าง (in-house)</button><button class="btn btn-primary" id="fbaKolSave">บันทึก</button></div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click', e => { if (e.target === m) m.style.display = 'none'; });
+    document.getElementById('fbaKolCancel').onclick = () => m.style.display = 'none';
+    document.getElementById('fbaKolInput').oninput = () => document.getElementById('fbaKolErr').textContent = '';
+    const save = async link => {
+      const kind = m.dataset.kind, key = m.dataset.key;
+      if (link && !/facebook\.com\/[^\s/?#]+/i.test(link)) { document.getElementById('fbaKolErr').textContent = 'วางลิงก์ facebook.com/ชื่อเพจ ก่อน'; return; }
+      const btn = document.getElementById('fbaKolSave'); btn.disabled = true;
+      try { await Auth.rpc('fb_set_kol_link', { p_kind: kind, p_key: key, p_link: link || null }); m.style.display = 'none'; _cacheBust(); load(); }
+      catch (e) { document.getElementById('fbaKolErr').textContent = 'บันทึกไม่สำเร็จ: ' + e.message; }
+      finally { btn.disabled = false; }
+    };
+    document.getElementById('fbaKolSave').onclick = () => save(document.getElementById('fbaKolInput').value.trim());
+    document.getElementById('fbaKolClear').onclick = () => save('');
+    return m;
+  }
+  function openKolModal(btn) {
+    const m = kolModal(); m.dataset.kind = btn.dataset.kind; m.dataset.key = btn.dataset.key;
+    document.getElementById('fbaKolSub').textContent = btn.dataset.kind === 'page' ? `เพจที่โพสต์ถูก boost · ${btn.dataset.label || btn.dataset.key}` : (btn.dataset.label || '');
+    document.getElementById('fbaKolHint').textContent = btn.dataset.kind === 'page' ? 'ใช้กับทุกแอดที่ boost โพสต์จากเพจนี้' : 'มีผลกับทุกแอดที่ใช้โพสต์นี้ · เว้นว่าง = โพสต์ของเพจเราเอง (in-house)';
+    document.getElementById('fbaKolClear').style.display = btn.dataset.kind === 'page' ? 'none' : '';
+    const inp = document.getElementById('fbaKolInput'); inp.value = btn.dataset.cur || ''; document.getElementById('fbaKolErr').textContent = '';
+    m.style.display = 'flex'; setTimeout(() => inp.focus(), 30);
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('.fba-pen'); if (b) { e.preventDefault(); openKolModal(b); } });
+  function _cacheBust() { _data = null; }
+  // เพจ KOL ที่ชื่อในแอดขัดกัน (fb_kol_pages.needs_review) → ⚠️ ให้คนเปิดดูแล้วยืนยัน
+  let _review = {};
+  async function loadKolReview() {
+    try {
+      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+      const r = await fetch(`${window.SUPABASE_URL}/rest/v1/fb_kol_pages?needs_review=eq.true&select=page_id,page_name,alt_names`, { headers: h });
+      const rows = r.ok ? await r.json() : []; _review = {}; (rows || []).forEach(x => { _review[x.page_id] = x; });
+    } catch (e) { _review = {}; }
+  }
+  const needsReview = a => a.kol_source === 'page' && !!_review[a.page_id];
+  const warnIcon = (pageId, name) => { const r = _review[pageId]; if (!r) return ''; const all = [name, ...(r.alt_names || [])].filter((v, i, x) => v && x.indexOf(v) === i).join(' / ');
+    return ` <span title="ยังไม่ชัวร์ — ทีมแอดตั้งชื่อแอดของเพจนี้ไม่ตรงกัน: ${ttcEscAttr(all)}\nกดชื่อเพื่อเปิดเพจดูว่าใคร แล้วกด ✏️ ใส่ลิงก์ที่ถูกเพื่อยืนยัน" style="cursor:help;font-size:12px;">⚠️</span>`; };
+
   // รวมแอดที่ใช้โพสต์เดียวกัน (post_id) เป็นแถวเดียว — ตัวเลขดิบบวกกัน แล้วให้สูตร CPM/CTR/ER คำนวณจากผลรวม · reach เป็นผลรวม (คนซ้ำข้ามแอดนับซ้ำ) จึงเป็นค่าประมาณ
   const SUM_KEYS = ['spend','impressions','reach','clicks','link_clicks','post_engagement','reactions','comments','shares','saves','video_3s','thruplay','msg_started','purchases','purchase_value','revenue'];
   function groupAdsByPost(list) {
@@ -414,7 +474,7 @@
       if (a.campaign && !o._camps.includes(a.campaign)) o._camps.push(a.campaign);
       (a.parent_skus || []).forEach(x => o._skus.add(x));
       if (+a.spend > o._top) { o._top = +a.spend; o.name = a.name; o.campaign = a.campaign; o.account = a.account; o.thumbnail_url = a.thumbnail_url || o.thumbnail_url; o.creative_type = a.creative_type || o.creative_type; o.bucket = a.bucket; o.product_keyword = a.product_keyword || o.product_keyword; }
-      if (a.kol_name && !o.kol_name) { o.kol_name = a.kol_name; o.kol_link = a.kol_link; o.kol_source = a.kol_source; o.kol_code = a.kol_code; }
+      if (a.kol_name && (!o.kol_name || (a.kol_source === 'post' && o.kol_source !== 'post'))) { o.kol_name = a.kol_name; o.kol_link = a.kol_link; o.kol_source = a.kol_source; o.kol_code = a.kol_code; }
     });
     return [...g.values()].map(o => { o._nCamp = o._camps.length; o.parent_skus = o._skus.size ? [...o._skus] : null; delete o._skus; return o; });
   }
@@ -427,9 +487,11 @@
     if (q) rows = rows.filter(a => (a.name || '').toLowerCase().includes(q) || (a.campaign || '').toLowerCase().includes(q) || (a.kol_name || '').toLowerCase().includes(q) || productLabel(a).toLowerCase().includes(q));
     const tf = document.getElementById('fbaAdsType')?.value || '';
     if (tf) rows = rows.filter(a => (a.creative_type || 'unknown') === tf);
-    if (_adsGroup) rows = groupAdsByPost(rows);
+    rows = groupAdsByPost(rows);
+    const kf = document.getElementById('fbaAdsKol')?.value || '';
+    if (kf) rows = rows.filter(a => kf === 'review' ? needsReview(a) : kf === 'kol' ? !!(a.kol_name || !a.own_page) : !(a.kol_name || !a.own_page));
     rows = sortRows(rows, _adsSortKey, _adsSortDir);
-    document.getElementById('theadFbaAds').innerHTML = `<tr><th>โพสต์</th><th>KOL</th><th>แอด</th><th>ชิ้นงาน</th><th>สินค้า</th><th>แคมเปญ</th>${ks.map(k => `<th class="sortable-th" data-k="${k}">${M[k].label} <span class="sort-ind"></span></th>`).join('')}</tr>`;
+    document.getElementById('theadFbaAds').innerHTML = `<tr><th>โพสต์</th><th>KOL</th><th>แอด</th><th>ชิ้นงาน</th><th>สินค้า</th>${ks.map(k => `<th class="sortable-th" data-k="${k}">${M[k].label} <span class="sort-ind"></span></th>`).join('')}</tr>`;
     bindSort('tblFbaAds', k => { if (_adsSortKey === k) _adsSortDir = _adsSortDir === 'desc' ? 'asc' : 'desc'; else { _adsSortKey = k; _adsSortDir = 'desc'; } renderAds(); });
     sortInd('tblFbaAds', _adsSortKey, _adsSortDir);
     document.getElementById('fba-ads-count').textContent = `(${fmt(rows.length)})`;
@@ -437,14 +499,13 @@
       const link = postUrl(a.post_id);
       const thumb = a.thumbnail_url ? `<img src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<span title=&quot;รูปปกโหลดไม่ได้ (Meta ยังไม่ส่งรูปใหม่)&quot;>📘</span>'">` : '📘';
       return `<tr><td><div style="display:flex;align-items:center;gap:8px;"><a ${link ? `href="${ttcEscAttr(link)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${thumb}</a>
-        <div style="font-size:10.5px;color:var(--text3);line-height:1.3;"><div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:${a.bucket === 'Conversion' ? 'rgba(34,197,94,0.15)' : a.bucket === 'CPAS' ? 'rgba(96,165,250,0.15)' : 'rgba(167,139,250,0.15)'};color:${a.bucket === 'Conversion' ? 'var(--green)' : a.bucket === 'CPAS' ? '#60a5fa' : '#a78bfa'};">${ttcEsc(a.bucket || '—')}</div>${a.page_name ? `<div style="color:var(--text2);">${ttcEsc(a.page_name)}</div>` : ''}${a.instagram_url ? `<a href="${ttcEscAttr(a.instagram_url)}" target="_blank" rel="noopener" style="color:var(--accent);" title="โพสต์เดียวกันฝั่ง Instagram (Meta ยิงคู่กัน)">IG ↗</a>` : ''}</div></div></td>
-        <td style="font-size:11.5px;white-space:nowrap;">${a.kol_name ? `<span style="color:var(--accent);font-weight:600;" title="${a.kol_source === 'map' ? 'จับคู่ในหน้า Admin › แอด Facebook' : 'จับคู่จากคอลัมน์ ad name ในชีท KOL'} (รหัส ${ttcEscAttr(a.kol_code || '')})">${a.kol_link ? `<a href="${ttcEscAttr(a.kol_link)}" target="_blank" rel="noopener" style="color:inherit;">${ttcEsc(a.kol_name)} ↗</a>` : ttcEsc(a.kol_name)}</span>` : `<span style="color:var(--text3);" title="ไม่ได้จับคู่กับ KOL — โพสต์ของเพจเราเอง${a.kol_code ? ' (รหัส ' + ttcEscAttr(a.kol_code) + ' จับคู่ได้ใน Admin › แอด Facebook)' : ''}">in-house</span>`}</td>
-        <td style="font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ttcEscAttr(a.name || '')}${a._n > 1 ? ' — รวม ' + a._n + ' แอด' : ''}">${ttcEsc(a.name || a.ad_id)}${a._n > 1 ? `<div style="font-size:10px;color:var(--accent);">รวม ${a._n} แอด${a._nCamp > 1 ? ` · ${a._nCamp} แคมเปญ` : ''}</div>` : ''}</td>
+        <div style="font-size:10.5px;color:var(--text3);line-height:1.3;"><div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:${a.bucket === 'Conversion' ? 'rgba(34,197,94,0.15)' : a.bucket === 'CPAS' ? 'rgba(96,165,250,0.15)' : 'rgba(167,139,250,0.15)'};color:${a.bucket === 'Conversion' ? 'var(--green)' : a.bucket === 'CPAS' ? '#60a5fa' : '#a78bfa'};">${ttcEsc(a.bucket || '—')}</div>${a.page_name ? `<div style="color:var(--text2);">${ttcEsc(a.page_name)}</div>` : ''}</div></div></td>
+        <td style="font-size:11.5px;white-space:nowrap;">${kolCell(a)}</td>
+        <td style="font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ttcEscAttr(a.name || '')}${a._n > 1 ? ' — รวม ' + a._n + ' แอด' : ''} · คลิกเพื่อเปิดโพสต์">${link ? `<a href="${ttcEscAttr(link)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;">${ttcEsc(a.name || a.ad_id)}</a>` : ttcEsc(a.name || a.ad_id)}${a._n > 1 ? `<div style="font-size:10px;color:var(--accent);">รวม ${a._n} แอด${a._nCamp > 1 ? ` · ${a._nCamp} แคมเปญ` : ''}</div>` : ''}</td>
         <td style="font-size:11px;white-space:nowrap;color:${a.creative_type ? 'var(--text)' : 'var(--text3)'};">${typeTh(a.creative_type)}</td>
         <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${a.parent_skus ? 'var(--text)' : 'var(--text3)'};" title="${ttcEscAttr(a.parent_skus ? productLabel(a) + ' — คำที่เจอ: ' + (a.product_keyword || '') : 'ชื่อแคมเปญไม่มีคำที่รู้จัก — ตั้งกฎเพิ่มได้ใน Admin › แอด Facebook')}">${a.parent_skus ? ttcEsc(productLabel(a)) : '—'}</td>
-        <td style="font-size:11px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ttcEscAttr(a._camps ? a._camps.join('\n') : (a.campaign || ''))}${a.account ? ' · บัญชี ' + ttcEscAttr(a.account) : ''}">${ttcEsc(a.campaign || '')}${a._nCamp > 1 ? ` <span style="color:var(--accent);">+${a._nCamp - 1}</span>` : ''}</td>
         ${ks.map(k => `<td${k === 'spend' ? ' style="font-weight:600;"' : ''}>${M[k].fmt(a)}</td>`).join('')}</tr>`;
-    }).join('') || `<tr><td colspan="${6 + ks.length}" class="empty">ไม่มีแอดตามเงื่อนไข</td></tr>`;
+    }).join('') || `<tr><td colspan="${5 + ks.length}" class="empty">ไม่มีแอดตามเงื่อนไข</td></tr>`;
   }
 
   window.renderFbAdsPage = load;
