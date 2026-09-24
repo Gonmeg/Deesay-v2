@@ -474,7 +474,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2101,6 +2101,40 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <b>ค่าแอด</b> แยกเป็น <b>แอดยิงสินค้า</b> (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับ <b>แอดทั่วไป</b> (แอดเพจ/ไลฟ์/awareness/Shop GMV Max) · รวมกันเท่ากับค่าแอดจริงของเดือนนั้นเสมอ · Lazada ไม่นับค่าแอด (กำลังเลิกยิง)
         </div>
       </div>
+      <!-- (2026-09-24) กำไรขั้นบันไดต่อสินค้า — ค่าใช้จ่ายทั้งบริษัทจากงบแยกช่องทางของบัญชี แจกลงสินค้า (mv_product_pl_monthly / mv_product_cost_alloc) -->
+      <div class="card" id="plCard" style="margin-bottom:20px;overflow:hidden;">
+        <div class="section-header">
+          <div class="section-title">กำไรขั้นบันไดต่อสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(ยอดขาย หักค่าใช้จ่ายทุกก้อนจากบัญชี + ค่าแอด · ยังไม่หักต้นทุนสินค้า)</span> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">หักค่าใช้จ่ายทีละชั้น จากที่ผูกกับสินค้าชัดที่สุด ไปถึงค่าใช้จ่ายกลาง<br><br><b>CM1</b> = ยอดขาย − การตลาดตรง (ค่ารีวิว KOL, ค่าที่บัญชีผูกสินค้า, พรีเซนเตอร์) − ค่าแอด<br><b>CM2</b> = CM1 − ค่าช่องทาง (ค่าธรรมเนียม/คอม/ขนส่ง/ไลฟ์/โปรร้าน) แจกตามยอดขายของสินค้าในช่องทางนั้น<br><b>CM3</b> = CM2 − ค่าแบรนด์ (Rebranding, พรีเซนเตอร์อื่น, แผนกการตลาด) แจกตามยอดขายรวม<br><b>สุทธิ</b> = CM3 − ค่าบริหาร (เงินเดือน ค่าเช่า ฯลฯ)<br><br>ตัดสินใจเรื่องสินค้าดูที่ <b>CM1–CM2</b> — ค่าแบรนด์/ค่าบริหารไม่ได้หายไปถ้าเลิกขายสินค้าตัวไหน</div></span></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select class="ls-input" id="plFrom" style="padding:6px 10px;font-size:12px;" onchange="renderPl()"></select>
+            <span style="color:var(--text3);font-size:12px;">ถึง</span>
+            <select class="ls-input" id="plTo" style="padding:6px 10px;font-size:12px;" onchange="renderPl()"></select>
+            <button class="btn btn-ghost" onclick="exportPl()">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div id="plNote" style="font-size:11.5px;color:var(--text2);margin:-4px 0 12px;"></div>
+        <div id="plKpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
+        <div style="overflow-x:auto;">
+          <table id="tblPl" class="mkt-tbl" data-no-sort>
+            <thead><tr>
+              <th class="sortable-th c-left" onclick="plSort('name')">สินค้า <span class="sort-ind" id="pls-name"></span></th>
+              <th class="sortable-th" onclick="plSort('rev')">ยอดขาย <span class="sort-ind" id="pls-rev"></span></th>
+              <th class="sortable-th" onclick="plSort('dir')">การตลาดตรง <span class="sort-ind" id="pls-dir"></span></th>
+              <th class="sortable-th" onclick="plSort('ads')">ค่าแอด <span class="sort-ind" id="pls-ads"></span></th>
+              <th class="sortable-th" onclick="plSort('cm1p')" style="background:rgba(99,102,241,0.08);">CM1 <span class="sort-ind" id="pls-cm1p"></span></th>
+              <th class="sortable-th" onclick="plSort('ch')">ค่าช่องทาง <span class="sort-ind" id="pls-ch"></span></th>
+              <th class="sortable-th" onclick="plSort('cm2p')" style="background:rgba(99,102,241,0.08);">CM2 <span class="sort-ind" id="pls-cm2p"></span></th>
+              <th class="sortable-th" onclick="plSort('br')">ค่าแบรนด์ <span class="sort-ind" id="pls-br"></span></th>
+              <th class="sortable-th" onclick="plSort('cm3p')" style="background:rgba(99,102,241,0.08);">CM3 <span class="sort-ind" id="pls-cm3p"></span></th>
+              <th class="sortable-th" onclick="plSort('oh')">ค่าบริหาร <span class="sort-ind" id="pls-oh"></span></th>
+              <th class="sortable-th" onclick="plSort('netp')" style="background:rgba(99,102,241,0.08);">สุทธิ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-net')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-net" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ก่อนหักต้นทุนสินค้า (ยังไม่มีข้อมูลทุนสินค้าในระบบ) — ใช้เทียบสินค้ากันเองได้ แต่ยังไม่ใช่กำไรจริง</div></span> <span class="sort-ind" id="pls-netp"></span></th>
+            </tr></thead>
+            <tbody id="tbodyPl"><tr><td colspan="11" class="empty">กำลังโหลด…</td></tr></tbody>
+          </table>
+        </div>
+        <div style="font-size:11px;color:var(--text3);padding:10px 14px 4px;line-height:1.7;">กดแถวสินค้าเพื่อดูว่าแต่ละชั้นหักอะไรไปบ้าง · ตัวเลขใหญ่ = % ของยอดขาย · สีแดง = ติดลบ</div>
+      </div>
+
       </div>
 
   </div>
@@ -7407,6 +7441,100 @@ function mktRoiMonths() {
   const y = new Date().getFullYear();
   return { from: `${y}-01-01`, to: `${y}-12-01` };
 }
+
+// ===== กำไรขั้นบันไดต่อสินค้า (mv_product_pl_monthly) =====
+let _plRows = null, _plMonths = [], _plSortCol = 'rev', _plSortDir = 'desc', _plOpen = new Set(), _plView = [];
+const PL_TH_M = m => MONTHS_TH[parseInt(m.slice(5, 7)) - 1] + ' ' + (parseInt(m.slice(0, 4)) + 543 - 2500);
+async function loadPl() {
+  if (_plRows) return _plRows;
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_pl_monthly?select=*&month=gte.2026-01-01&order=month.asc,parent_sku.asc`, h);
+  _plRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7) }));
+  _plMonths = [...new Set(_plRows.filter(r => +r.channel_cost || +r.overhead_cost).map(r => r.month))].sort();
+  const opts = _plMonths.map(m => `<option value="${m}">${PL_TH_M(m)}</option>`).join('');
+  const f = document.getElementById('plFrom'), t = document.getElementById('plTo');
+  f.innerHTML = opts; t.innerHTML = opts; f.value = _plMonths[0] || ''; t.value = _plMonths[_plMonths.length - 1] || '';
+  return _plRows;
+}
+function plSort(c) { if (_plSortCol === c) _plSortDir = _plSortDir === 'asc' ? 'desc' : 'asc'; else { _plSortCol = c; _plSortDir = c === 'name' ? 'asc' : 'desc'; } renderPlTable(); }
+async function renderPl() {
+  const tb = document.getElementById('tbodyPl'); if (!tb) return;
+  try { await loadPl(); } catch (e) { tb.innerHTML = `<tr><td colspan="11" class="empty">โหลดไม่สำเร็จ: ${e.message}</td></tr>`; return; }
+  const from = document.getElementById('plFrom').value, to = document.getElementById('plTo').value;
+  const by = {};
+  _plRows.filter(r => r.month >= from && r.month <= to).forEach(r => {
+    const o = (by[r.parent_sku] = by[r.parent_sku] || { sku: r.parent_sku, name: r.product_name || r.parent_sku, rev: 0, kc: 0, kp: 0, od: 0, pres: 0, ad: 0, aa: 0, ch: 0, br: 0, oh: 0 });
+    o.rev += +r.revenue || 0; o.kc += +r.kol_conversion || 0; o.kp += +r.kol_pr || 0; o.od += +r.other_direct || 0; o.pres += +r.presenter_direct || 0;
+    o.ad += +r.ads_direct || 0; o.aa += +r.ads_allocated || 0; o.ch += +r.channel_cost || 0; o.br += +r.brand_cost || 0; o.oh += +r.overhead_cost || 0;
+  });
+  _plView = Object.values(by).filter(o => o.rev > 0 || o.kc + o.kp + o.od + o.ad + o.aa + o.ch > 0).map(o => {
+    o.dir = o.kc + o.kp + o.od + o.pres; o.ads = o.ad + o.aa;
+    o.cm1 = o.rev - o.dir - o.ads; o.cm2 = o.cm1 - o.ch; o.cm3 = o.cm2 - o.br; o.net = o.cm3 - o.oh;
+    const p = v => o.rev > 0 ? v / o.rev * 100 : -Infinity;
+    o.cm1p = p(o.cm1); o.cm2p = p(o.cm2); o.cm3p = p(o.cm3); o.netp = p(o.net);
+    return o;
+  });
+  const up = (_mktUnified && _mktUnified.uploads) || {};
+  document.getElementById('plNote').innerHTML = `📄 ค่าใช้จ่ายจากงบแยกช่องทางของบัญชี: ${_plMonths.length ? PL_TH_M(_plMonths[0]) + ' – ' + PL_TH_M(_plMonths[_plMonths.length - 1]) : '—'} · ค่าแอดใช้ยอดจริงจาก Meta / TikTok / Shopee
+    <br><span style="color:var(--orange);">ยังไม่รวม: ต้นทุนสินค้า · ค่าส่งเสริมการขายแพลตฟอร์ม (รอบัญชีแยกค่าคอมแพลตฟอร์มกับส่วนลด)</span>`;
+  renderPlTable();
+}
+function renderPlTable() {
+  const rows = [..._plView].sort((a, b) => {
+    const av = a[_plSortCol], bv = b[_plSortCol];
+    const c = typeof av === 'string' ? av.localeCompare(bv, 'th') : av - bv;
+    return _plSortDir === 'asc' ? c : -c;
+  });
+  document.querySelectorAll('[id^="pls-"]').forEach(el => el.textContent = '');
+  const ind = document.getElementById('pls-' + _plSortCol); if (ind) ind.textContent = _plSortDir === 'asc' ? '▲' : '▼';
+  const T = rows.reduce((t, o) => { ['rev', 'dir', 'ads', 'ch', 'br', 'oh', 'cm1', 'cm2', 'cm3', 'net'].forEach(k => t[k] = (t[k] || 0) + o[k]); return t; }, {});
+  const pc = (v, base) => base > 0 ? (v / base * 100).toFixed(1) + '%' : '—';
+  const kc = (label, v, sub) => `<div class="card" style="flex:1;min-width:130px;padding:12px 14px;"><div class="card-title">${label}</div><div class="kpi-value" style="font-size:20px;${v < 0 ? 'color:var(--red);' : ''}">${sub}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmtB(v)}</div></div>`;
+  document.getElementById('plKpis').innerHTML =
+    `<div class="card" style="flex:1;min-width:130px;padding:12px 14px;"><div class="card-title">ยอดขาย</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(T.rev || 0)}</div></div>`
+    + kc('CM1 หลังการตลาดตรง+แอด', T.cm1 || 0, pc(T.cm1, T.rev)) + kc('CM2 หลังค่าช่องทาง', T.cm2 || 0, pc(T.cm2, T.rev))
+    + kc('CM3 หลังค่าแบรนด์', T.cm3 || 0, pc(T.cm3, T.rev)) + kc('สุทธิ หลังค่าบริหาร', T.net || 0, pc(T.net, T.rev));
+  const money = (v, rev) => v ? `<div>฿${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, rev)}</div>` : '<span style="color:var(--text3);">—</span>';
+  const cm = (v, p) => `<div style="font-weight:700;font-size:13px;${v < 0 ? 'color:var(--red);' : ''}">${isFinite(p) ? p.toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(v))}</div>`;
+  const bg = 'background:rgba(99,102,241,0.05);';
+  document.getElementById('tbodyPl').innerHTML = rows.map(o => `
+    <tr style="cursor:pointer;" onclick="plToggle('${o.sku}')">
+      <td class="c-left"><span style="color:var(--text3);font-size:10px;">${_plOpen.has(o.sku) ? '▼' : '▶'}</span> <b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
+      <td>฿${fmt(Math.round(o.rev))}</td><td>${money(o.dir, o.rev)}</td><td>${money(o.ads, o.rev)}</td>
+      <td style="${bg}">${cm(o.cm1, o.cm1p)}</td><td>${money(o.ch, o.rev)}</td><td style="${bg}">${cm(o.cm2, o.cm2p)}</td>
+      <td>${money(o.br, o.rev)}</td><td style="${bg}">${cm(o.cm3, o.cm3p)}</td><td>${money(o.oh, o.rev)}</td><td style="${bg}">${cm(o.net, o.netp)}</td>
+    </tr>${_plOpen.has(o.sku) ? `<tr><td colspan="11" style="padding:0;"><div id="pld-${o.sku}" style="padding:12px 20px;background:var(--bg2);">กำลังโหลด…</div></td></tr>` : ''}`).join('')
+    || '<tr><td colspan="11" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>';
+  _plOpen.forEach(sku => plDetail(sku));
+}
+function plToggle(sku) { _plOpen.has(sku) ? _plOpen.delete(sku) : _plOpen.add(sku); renderPlTable(); }
+async function plDetail(sku) {
+  const el = document.getElementById('pld-' + sku); if (!el) return;
+  const o = _plView.find(x => x.sku === sku); if (!o) return;
+  const from = document.getElementById('plFrom').value, to = document.getElementById('plTo').value;
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  let rows = [];
+  try { rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_cost_alloc?select=tier,account_group,channel,amount&parent_sku=eq.${encodeURIComponent(sku)}&month=gte.${from}-01&month=lte.${to}-01&order=tier.asc,account_group.asc,channel.asc,month.asc`, h); }
+  catch (e) { el.textContent = 'โหลดไม่สำเร็จ: ' + e.message; return; }
+  const sum = (tier, key) => { const m = {}; rows.filter(r => r.tier === tier).forEach(r => { m[r[key]] = (m[r[key]] || 0) + (+r.amount || 0); }); return Object.entries(m).filter(([, v]) => Math.abs(v) >= 1).sort((a, b) => b[1] - a[1]); };
+  const line = (k, v) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dashed var(--border);"><span>${k}</span><span style="white-space:nowrap;">฿${fmt(Math.round(v))} <span style="color:var(--text3);font-size:10.5px;">${o.rev > 0 ? (v / o.rev * 100).toFixed(1) + '%' : ''}</span></span></div>`;
+  const list = (arr, max) => { const top = arr.slice(0, max), rest = arr.slice(max).reduce((t, [, v]) => t + v, 0); return top.map(([k, v]) => line(k, v)).join('') + (rest ? line(`อื่นๆ (${arr.length - max} รายการ)`, rest) : ''); };
+  const col = (title, total, body) => `<div style="flex:1;min-width:230px;"><div style="font-weight:700;margin-bottom:6px;">${title} <span style="font-weight:400;color:var(--text3);">฿${fmt(Math.round(total))}</span></div><div style="font-size:12px;">${body || '<span style="color:var(--text3);">—</span>'}</div></div>`;
+  const direct = [['ค่ารีวิว KOL-Conversion', o.kc], ['ค่ารีวิว KOL-PR', o.kp], ['ค่าใช้จ่ายที่บัญชีผูกสินค้า', o.od], ['พรีเซนเตอร์ (แก้มบุ๋ม)', o.pres], ['แอดยิงสินค้า (API)', o.ad], ['แอดทั่วไป เฉลี่ยตามยอดขาย (API)', o.aa]].filter(([, v]) => Math.abs(v) >= 1);
+  el.innerHTML = `<div style="display:flex;gap:24px;flex-wrap:wrap;">
+    ${col('① การตลาดตรง + แอด', o.dir + o.ads, direct.map(([k, v]) => line(k, v)).join(''))}
+    ${col('② ค่าช่องทาง', o.ch, list(sum('channel', 'account_group'), 8) + '<div style="margin-top:8px;color:var(--text3);font-size:11px;">แยกตามช่องทาง</div>' + list(sum('channel', 'channel'), 6))}
+    ${col('③ ค่าแบรนด์ (ปันส่วน)', o.br, list(sum('brand', 'account_group'), 8))}
+    ${col('④ ค่าบริหาร (ปันส่วน)', o.oh, list(sum('overhead', 'account_group'), 6))}
+  </div>`;
+}
+function exportPl() {
+  const head = ['SKU', 'สินค้า', 'ยอดขาย', 'ค่ารีวิว KOL-Conversion', 'ค่ารีวิว KOL-PR', 'ค่าใช้จ่ายผูกสินค้า', 'พรีเซนเตอร์', 'แอดยิงสินค้า', 'แอดทั่วไป', 'CM1', 'ค่าช่องทาง', 'CM2', 'ค่าแบรนด์', 'CM3', 'ค่าบริหาร', 'สุทธิ'];
+  const lines = [head.join(',')].concat(_plView.map(o => [o.sku, `"${o.name}"`, o.rev, o.kc, o.kp, o.od, o.pres, o.ad, o.aa, o.cm1, o.ch, o.cm2, o.br, o.cm3, o.oh, o.net].map(v => typeof v === 'number' ? v.toFixed(2) : v).join(',')));
+  const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `กำไรขั้นบันได_${document.getElementById('plFrom').value}_${document.getElementById('plTo').value}.csv`; a.click();
+}
+
 function mktNoteRange() { const d = new Date(Date.now() + 7 * 3600 * 1000); return [d.getUTCFullYear() + '-01', d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0')]; }
 async function renderMktRoi() {
   const tb = document.getElementById('tbodyMktRoi'); if (!tb) return;
@@ -7587,6 +7715,7 @@ function exportMktRoi() {
 async function renderCostPage() {
   // (2026-09-24) หน้า MKT Tracking เหลือตาราง ROI การตลาดต่อสินค้าอย่างเดียว — ตารางรายเดือน/รายละเอียดเก่า (ค่าแอดจาก Google Sheet) ลบออกแล้ว
   renderMktRoi();
+  renderPl();
 }
 
 const IDB_NAME = 'deesay_dashboard_cache', IDB_STORE = 'snapshot', CACHE_KEY = 'dashboard_snapshot_v2'
