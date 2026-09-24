@@ -474,7 +474,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.23-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -4364,31 +4364,47 @@ async function ensureFilterOptions() {
   _filterOptions = o;
   return o;
 }
+// ===== โหลดทั้งประวัติแบบ "เก็บของเก่าไว้ ดึงใหม่แค่ช่วงล่าสุด" =====
+// ข้อมูลเก่ากว่าต้นเดือนก่อนไม่เปลี่ยนแล้ว (ปิดเดือนแทนที่แค่เดือนก่อนหน้า) → เก็บในเครื่อง ดึงใหม่ตั้งแต่วันที่ 1 ของเดือนก่อนเท่านั้น
+// ใช้ของในเครื่องตรงๆ ถ้าอายุ < 1 ชม. · ดึงเต็มใหม่ทุก 7 วัน (กันพลาด)
+async function incrementalHistory(cacheKey, makeUrl, keyCols, label, mapRows) {
+  const now = Date.now(), cached = await idbGet(cacheKey);
+  if (cached && cached.rows && now - (cached.cachedAt || 0) < 60 * 60 * 1000) return cached.rows;
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const d = new Date(now + 7 * 3600 * 1000); const since = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1)).toISOString().slice(0, 10);
+  const useInc = cached && cached.rows && cached.fullAt && now - cached.fullAt < 7 * 24 * 3600 * 1000;
+  setBgSync(`${label}${useInc ? ' (เฉพาะตั้งแต่ ' + since + ')' : ''}...`, 10);
+  let rows = await fetchKeyset(makeUrl(useInc ? since : null), headers, keyCols, 1000, n => setBgSync(`${label} (${fmt(n)} แถว)...`, Math.min(90, 10 + n / 1000)));
+  if (mapRows) rows = mapRows(rows);
+  const all = useInc ? cached.rows.filter(r => r.date < since).concat(rows) : rows;
+  idbSet(cacheKey, { rows: all, cachedAt: now, fullAt: useInc ? cached.fullAt : now });
+  setBgSync(`${label} ${fmt(all.length)} แถว พร้อมแล้ว`, null);
+  return all;
+}
+
 // sku_revenue แบบเต็ม: โหลดเฉพาะเมื่อหน้า "ค้นหา Live" ต้องการ (ไม่โหลดตอนเปิด dashboard แล้ว)
 let _skuAllLoading = null;
 async function ensureSkuAllLazy() {
   if (skuRevenueAll.length) return;
-  if (!_skuAllLoading) _skuAllLoading = (async () => { setBgSync('โหลดรายการ SKU ต่อออเดอร์ (สำหรับค้นหา Live)...', 20); skuRevenueAll = await fetchSkuAll(); setBgSync(`SKU ${fmt(skuRevenueAll.length)} แถว พร้อมแล้ว`, null); })();
+  if (!_skuAllLoading) _skuAllLoading = (async () => {
+    skuRevenueAll = await incrementalHistory('sku_all_v2',
+      since => `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc,parent_sku.asc${since ? '&date=gte.' + since : ''}`,
+      ['date', 'order_id', 'parent_sku'], 'โหลดรายการ SKU ต่อออเดอร์');
+  })();
   await _skuAllLoading;
 }
 // ===== เฟส 4 (แบบ A): ไม่โหลด orders ทั้งก้อนตอนเปิด — หน้า CRM 3 หน้าโหลดออเดอร์ Facebook อย่างเดียวเมื่อเปิดใช้ =====
 let fbOrders = [];           // ออเดอร์ Facebook ทั้งประวัติ (ตัด excluded sub-channel แล้ว) — ต้องทั้งประวัติเพื่อรู้ลูกค้าใหม่/เก่า
 let _fbOrdersLoaded = false, _fbOrdersLoading = null;
-const FB_ORDERS_CACHE_KEY = 'fb_orders_v1';
+const FB_ORDERS_CACHE_KEY = 'fb_orders_v2';
 async function ensureFbOrders() {
   if (_fbOrdersLoaded) return;
   if (_fbOrdersLoading) return _fbOrdersLoading;
   _fbOrdersLoading = (async () => {
-    const cached = await idbGet(FB_ORDERS_CACHE_KEY);
-    if (cached && cached.rows && Date.now() - (cached.cachedAt || 0) < 60 * 60 * 1000) { fbOrders = cached.rows; _fbOrdersLoaded = true; _fbCustomerCache = null; return; }
-    setBgSync('โหลดออเดอร์ Facebook (สำหรับ CRM)...', 10);
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-    const baseUrl = `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,revenue,sku_promotion,cancel_return_type&channel=eq.Facebook&order=date.asc,order_id.asc`;
-    const rows = await fetchKeyset(baseUrl, headers, ['date', 'order_id'], 1000, (n) => setBgSync(`โหลดออเดอร์ Facebook (${fmt(n)} แถว)...`, Math.min(90, 10 + n / 1000)));
-    fbOrders = rows.filter(r => !isExcludedRow(r));
+    fbOrders = await incrementalHistory(FB_ORDERS_CACHE_KEY,
+      since => `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,revenue,sku_promotion,cancel_return_type&channel=eq.Facebook&order=date.asc,order_id.asc${since ? '&date=gte.' + since : ''}`,
+      ['date', 'order_id'], 'โหลดออเดอร์ Facebook (สำหรับ CRM)', rows => rows.filter(r => !isExcludedRow(r)));
     _fbOrdersLoaded = true; _fbCustomerCache = null;
-    setBgSync(`ออเดอร์ Facebook ${fmt(fbOrders.length)} แถว พร้อมแล้ว`, null);
-    idbSet(FB_ORDERS_CACHE_KEY, { rows: fbOrders, cachedAt: Date.now() });
   })();
   try { await _fbOrdersLoading; } finally { _fbOrdersLoading = null; }
 }
