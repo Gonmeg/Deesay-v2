@@ -474,7 +474,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-d</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2059,8 +2059,6 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <div class="page" id="page-fbads"><div class="card"><div class="empty">กำลังโหลด...</div></div></div>
 
     <div class="page" id="page-cost">
-      <div id="cost-ads-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:12px;"></div>
-      <div class="grid-4" id="costKPIs" style="margin-bottom:20px;display:none;" data-retired="2026-09-22 ใช้ mktTopKpis แทน (ยอดจากแหล่งเดียวกับทั้งเว็บ)"></div>
       <div class="mkt-top-kpis" id="mktTopKpis"></div>
       <div id="mktTopCh"></div>
 
@@ -2077,6 +2075,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <button class="btn btn-ghost" onclick="exportMktRoi()">⬇ Export CSV</button>
           </div>
         </div>
+        <div id="mktAcctNote" style="font-size:11.5px;color:var(--text2);margin:-4px 0 12px;"></div>
         <div class="grid-4" id="mktRoiKpis" style="display:none;"></div>
         <div style="overflow-x:auto;">
           <div class="mkt-legend" id="mktLegend"></div>
@@ -2102,36 +2101,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <b>ค่าแอด</b> แยกเป็น <b>แอดยิงสินค้า</b> (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับ <b>แอดทั่วไป</b> (แอดเพจ/ไลฟ์/awareness/Shop GMV Max) · รวมกันเท่ากับค่าแอดจริงของเดือนนั้นเสมอ · Lazada ไม่นับค่าแอด (กำลังเลิกยิง)
         </div>
       </div>
-      <div class="card" style="margin-bottom:20px;overflow:hidden;display:none;" data-retired="2026-09-22 แทนด้วยตาราง ROI การตลาดต่อสินค้า">
-        <div class="section-header">
-          <div class="section-title">MKT Tracking รายเดือนแยก SKU <span style="font-size:11px;color:var(--text3);font-weight:400;">(คลิกชื่อสินค้าเพื่อดู breakdown)</span></div>
-          <button class="btn btn-ghost" onclick="exportCostByMonth()">⬇ Export CSV</button>
-        </div>
-        <div style="overflow-x:auto;">
-          <table id="tblCostOverview" style="border-collapse:separate;border-spacing:0;">
-            <colgroup id="costOverviewCols"></colgroup>
-            <thead id="costOverviewHead"></thead>
-            <tbody id="costOverviewBody"></tbody>
-          </table>
-        </div>
       </div>
-      <div class="card" id="costDeepCard" style="display:none;overflow:hidden;">
-        <div class="section-header">
-          <div class="section-title" id="costDeepTitle">รายละเอียด MKT Tracking</div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-ghost" onclick="exportTable('tblCostDeep')">⬇ Export</button>
-            <button class="btn btn-ghost" onclick="document.getElementById('costDeepCard').style.display='none'">✕ ปิด</button>
-          </div>
-        </div>
-        <div style="overflow-x:auto;max-height:480px;overflow-y:auto;">
-          <table id="tblCostDeep" style="border-collapse:separate;border-spacing:0;">
-            <colgroup id="costDeepCols"></colgroup>
-            <thead id="costDeepHead"></thead>
-            <tbody id="costDeepBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
   </div>
 </div>
@@ -2415,6 +2385,62 @@ async function fetchKeyset(baseUrl, headers, keyCols, pageSize = 1000, onProgres
     cursorFilter = '&' + buildKeysetFilter(keyCols, rows[rows.length - 1]);
   }
   return all;
+}
+
+// ดึงทุกแถว — Supabase ตัดทุกคำขอไว้ที่ 1,000 แถวเสมอ (ใส่ limit มากกว่านั้นก็ได้แค่ 1,000 แบบเงียบๆ) จึงต้องดึงเป็นหน้าๆ
+// url ต้องมี order= ที่เรียงแน่นอน (ไม่ซ้ำ) เพื่อไม่ให้แถวหาย/ซ้ำระหว่างหน้า
+async function fetchAllRows(url, headers) {
+  const base = url.replace(/&limit=\d+/g, '');
+  let all = [], off = 0;
+  while (true) {
+    const res = await fetchWithRetry(`${base}&limit=1000&offset=${off}`, headers);
+    const rows = await res.json();
+    if (!Array.isArray(rows)) throw new Error(rows && rows.message ? rows.message : 'API error');
+    all = all.concat(rows);
+    if (rows.length < 1000) break;
+    off += 1000;
+  }
+  return all;
+}
+
+// ===== ข้อมูลต้นทุนการตลาดต่อสินค้า — แหล่งเดียวกันทั้งหน้า MKT Tracking (ตาราง ROI + ตารางรายเดือน + รายละเอียด) =====
+// mv_product_marketing_monthly: ยอดขาย ชิ้น ค่าใช้จ่ายจากไฟล์บัญชี (เฉพาะหมวดที่นับเป็นการตลาด) · mv_product_channel_monthly: ค่าแอดต่อช่องทาง (ยิงสินค้า + เฉลี่ย)
+let _mktUnified = null, _mktUnifiedLoading = null;
+async function loadMktUnified() {
+  if (_mktUnified) return _mktUnified;
+  if (_mktUnifiedLoading) return _mktUnifiedLoading;
+  _mktUnifiedLoading = (async () => {
+    const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const [pm, pc, up] = await Promise.all([
+      fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,revenue,qty,kol_conversion,kol_pr,other_direct&order=month.asc,parent_sku.asc`, h),
+      fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=month,channel,parent_sku,ads_direct,ads_allocated&order=month.asc,channel.asc,parent_sku.asc`, h),
+      fetchAllRows(`${window.SUPABASE_URL}/rest/v1/product_costs?select=month,created_at&order=month.asc,id.asc`, h),
+    ]);
+    const uploads = {};   // 'YYYY-MM' → วันที่อัปไฟล์บัญชีล่าสุดของเดือนนั้น
+    up.forEach(r => { const m = String(r.month).slice(0, 7); if (!uploads[m] || r.created_at > uploads[m]) uploads[m] = r.created_at; });
+    _mktUnified = {
+      pm: pm.map(r => ({ month: String(r.month).slice(0, 7), sku: r.parent_sku, rev: +r.revenue || 0, qty: +r.qty || 0, conv: +r.kol_conversion || 0, pr: +r.kol_pr || 0, other: +r.other_direct || 0 })),
+      pc: pc.map(r => ({ month: String(r.month).slice(0, 7), channel: r.channel, sku: r.parent_sku, ads: (+r.ads_direct || 0) + (+r.ads_allocated || 0) })).filter(r => r.ads),
+      uploads,
+    };
+    return _mktUnified;
+  })();
+  try { return await _mktUnifiedLoading; } finally { _mktUnifiedLoading = null; }
+}
+// โน้ต "ต้นทุนจากไฟล์บัญชี ณ วันไหน" — ใช้หัวตาราง ROI และตารางรายเดือน
+function mktAcctNoteHtml(fromM, toM) {
+  const up = (_mktUnified && _mktUnified.uploads) || {}; const ms = Object.keys(up).sort();
+  if (!ms.length) return 'ยังไม่มีการอัปไฟล์ต้นทุนจากบัญชี';
+  const thM = m => MONTHS_TH[parseInt(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
+  const thD = d => new Date(d).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const last = ms[ms.length - 1];
+  const inRange = ms.filter(m => (!fromM || m >= fromM) && (!toM || m <= toM));
+  const missing = [];
+  if (fromM && toM) { let d = new Date(fromM + '-01T00:00:00'); const end = new Date(toM + '-01T00:00:00'); while (d <= end) { const m = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); if (!up[m]) missing.push(m); d.setMonth(d.getMonth() + 1); } }
+  const detail = inRange.map(m => `${thM(m)} — อัปเมื่อ ${thD(up[m])}`).join('<br>');
+  return `📄 ต้นทุนจากไฟล์บัญชี: มีถึง <b>${thM(last)}</b> (อัปล่าสุด ${thD(up[last])})`
+    + (missing.length ? ` · <span style="color:var(--orange);">ยังไม่มีไฟล์บัญชี: ${missing.map(thM).join(', ')} — เดือนนี้มีแค่ค่าแอด</span>` : '')
+    + (detail ? ` <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="cursor:pointer;color:var(--text3);">ⓘ</span><div class="ads-info-popover" style="display:none;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.7;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);">วันที่อัปไฟล์บัญชีของแต่ละเดือนในช่วงนี้<br>${detail}</div></span>` : '');
 }
 
 async function fetchAll() {
@@ -3233,10 +3259,10 @@ async function renderFbEngagePage() {
   const pageFilter = fbeSelectedPageId ? `&page_id=eq.${fbeSelectedPageId}` : '';
 
   const [engRes, cntRes, postsInRangeRes, allCommentTags, countRes] = await Promise.all([
-    fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_engagement?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_post_count?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc`, { headers }),
+    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_engagement?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc,page_id.asc`, headers).then(rows => ({ ok: true, json: async () => rows })),
+    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_fb_daily_post_count?select=*&post_date=gte.${dateFrom}&post_date=lte.${dateTo}${pageFilter}&order=post_date.asc,page_id.asc,post_type.asc`, headers).then(rows => ({ ok: true, json: async () => rows })),
     // ดึง post_id ของโพสต์ที่ "ตีพิมพ์" อยู่ในช่วงวันที่เลือก (ใช้กรองคอมเมนต์ตามวันที่โพสต์ ไม่ใช่วันที่คอมเมนต์)
-    fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id&posted_at=gte.${dateFrom}&posted_at=lte.${dateTo}T23:59:59${pageFilter}&limit=5000`, { headers }),
+    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id&posted_at=gte.${dateFrom}&posted_at=lte.${dateTo}T23:59:59${pageFilter}&order=post_id.asc`, headers).then(rows => ({ ok: true, json: async () => rows })),
     // ดึงคอมเมนต์ทั้งหมด (ไม่กรองวันที่คอมเมนต์ — จะกรองตาม post_id ที่ได้จากข้างบนแทนในโค้ด)
     // ใช้ fetchKeyset แทนขอ limit=10000 ตรงๆ เพราะ Supabase ตัดจำนวนแถวต่อคำขอไว้ที่ 1,000 แถวเสมอ (ยืนยันแล้วจากที่เจอคอมเมนต์หายไปเกือบ 4,000 แถว)
     fetchKeyset(`${window.SUPABASE_URL}/rest/v1/v_comment_tags?select=*${pageFilter}&order=comment_id.asc`, headers, ['comment_id']),
@@ -3476,7 +3502,7 @@ function fbeRenderPostListPage(pageNum) {
 
   Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/social_posts?select=post_id,page_id,caption,permalink_url,post_type,posted_at,thumbnail_url&post_id=in.(${idFilter})`, { headers }).then(r => r.json()),
-    fetch(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,reactions_total,shares_count&post_id=in.(${idFilter})&order=snapshot_date.desc`, { headers }).then(r => r.json()),
+    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/social_post_metrics_daily?select=post_id,snapshot_date,reactions_total,shares_count&post_id=in.(${idFilter})&order=snapshot_date.desc,post_id.asc`, headers),
   ]).then(([postsMeta, metricsRaw]) => {
     const metaById = {}; (Array.isArray(postsMeta) ? postsMeta : []).forEach(p => metaById[p.post_id] = p);
     // เอา snapshot ล่าสุดของแต่ละโพสต์ (ผลมาเรียง desc แล้ว หยิบตัวแรกที่เจอต่อ post_id พอ)
@@ -5896,48 +5922,6 @@ function exportTable(tableId) {
 }
 
 // Export MKT Tracking แบบแยกรายเดือน — 1 แถว = 1 SKU ของ 1 เดือน ไล่ตามเดือนที่ filter ไว้
-function exportCostByMonth() {
-  const months = window._costMonths || [];
-  const adsChannels = window._costAdsChannelsCache || [];
-  const revByMonthSku = window._costRevByMonthSku || {};
-  const qtyByMonthSku = window._costQtyByMonthSku || {};
-  const costByMonthCatSku = window._costByMonthCatSku || {};
-  const adsByMonthSkuChannel = window._adsByMonthSkuChannel || {};
-
-  if (!months.length) { alert('ไม่มีข้อมูลให้ export (เลือกช่วงเดือนก่อน)'); return; }
-
-  const header = ['เดือน', 'SKU', 'ชื่อสินค้า', 'ยอดขาย', 'จำนวนชิ้น', 'ค่าการตลาดอื่นๆ', 'ค่ารีวิว-PR', 'ค่ารีวิว-Conversion',
-    ...adsChannels.map(ch => `Ads ${ch}`), 'รวมการตลาด', '% Budget', 'ROI'];
-  const rows = [header];
-
-  months.forEach(m => {
-    // รวมทุก SKU ที่มีข้อมูลในเดือนนี้ ไม่ว่าจะเป็นยอดขาย ต้นทุน หรือค่าแอด
-    const skuSet = new Set([
-      ...Object.keys(revByMonthSku[m] || {}),
-      ...Object.keys(costByMonthCatSku[m] || {}),
-      ...adsChannels.flatMap(ch => Object.keys((adsByMonthSkuChannel[m] || {})[ch] || {})),
-    ]);
-    [...skuSet].sort().forEach(sku => {
-      const rev = (revByMonthSku[m] || {})[sku] || 0;
-      const qty = (qtyByMonthSku[m] || {})[sku] || 0;
-      const cats = (costByMonthCatSku[m] || {})[sku] || {};
-      const marketingOther = cats['ค่าการตลาดอื่นๆ'] || 0;
-      const prAmt = cats['ค่ารีวิวสินค้า-PR'] || 0;
-      const convAmt = cats['ค่ารีวิวสินค้า-Conversion'] || 0;
-      const adsVals = adsChannels.map(ch => ((adsByMonthSkuChannel[m] || {})[ch] || {})[sku] || 0);
-      const adsSum = adsVals.reduce((a, b) => a + b, 0);
-      const totalMkt = marketingOther + prAmt + convAmt + adsSum;
-      const pctBudget = rev > 0 ? (totalMkt / rev * 100).toFixed(1) : '';
-      const roi = totalMkt > 0 ? (rev / totalMkt).toFixed(2) : '';
-      const mLabel = (() => { const [, mo] = m.split('-'); return `${MONTHS_TH[parseInt(mo) - 1]} ${m.split('-')[0]}`; })();
-      rows.push([mLabel, sku, skuToName(sku), Math.round(rev), Math.round(qty), Math.round(marketingOther), Math.round(prAmt), Math.round(convAmt),
-        ...adsVals.map(v => Math.round(v)), Math.round(totalMkt), pctBudget, roi]);
-    });
-  });
-
-  downloadCSV(rows, `MKT_Tracking_รายเดือน_${months[0]}_ถึง_${months[months.length - 1]}.csv`);
-}
-
 function downloadCSV(rows, filename) {
   const csv = '\uFEFF' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
   const a = document.createElement('a');
@@ -7274,189 +7258,6 @@ async function refreshDashboardData() {
 }
 
 // ===== COST PAGE =====
-let _costData = [];
-
-async function fetchProductCosts() {
-  if (_costData.length) return _costData;
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const res = await fetch(`${window.SUPABASE_URL}/rest/v1/product_costs?select=month,parent_sku,cost_category,amount&order=month.asc&limit=5000`, { headers });
-  if (!res.ok) throw new Error('product_costs API error: ' + res.status);
-  _costData = await res.json();
-  return _costData;
-}
-
-// ===== ค่าแอดแยกราย SKU (จาก Google Sheet คนละไฟล์กับ Ad Performance) =====
-// Sheet นี้เก็บชื่อสินค้าเป็น "ชื่อสินค้า" (ภาษาไทย) ไม่ใช่ SKU โค้ด ต้อง map ผ่าน productsMap แบบย้อนกลับ
-const ADS_BY_SKU_SHEET_ID = '1OYHECWiGUf60Chju_7ohP9O-rQpZe1C4m91LKwhJsqQ';
-const ADS_BY_SKU_TAB = 'Ads';
-let _adsBySkuData = null;   // [{month, parent_sku, channel, amount}]
-let _adsBySkuUnmapped = []; // ชื่อสินค้าที่หา parent_sku ไม่เจอ (แจ้งเตือน ไม่ทิ้งเงียบๆ)
-let _adsBySkuAggRows = [];  // แถว "รวม"/"รวมกันแดด" เก็บแยกไว้ ใช้กระจายสัดส่วนทีหลัง: [{channel, month, type:'total'|'sunscreen', amount}]
-
-// ช่องทางที่ไม่ต้องแสดง/ไม่ต้องนับในหน้านี้เลย (ตัดออกตั้งแต่ต้นทาง — ไม่ใช่แค่ซ่อนคอลัมน์)
-const ADS_BY_SKU_EXCLUDE_CHANNELS = new Set(['Shopee']);
-
-// 5 SKU กันแดดที่ใช้กระจายยอด "รวมกันแดด" — ชื่อต้องตรงกับ product_name ในระบบเป๊ะ
-const SUNSCREEN_PRODUCT_NAMES = [
-  'กันแดดเดลี่เดย์ 15 ml',
-  'กันแดดเดลี่เดย์ 50 ml',
-  'กันแดดไดฟูกุ 50 ml',
-  'กันแดดไดฟูกุซอง 5 ml',
-  'กันแดดไดฟูกุหลอด 15 ml',
-];
-
-function nameToSkuMap() {
-  // สร้าง map ย้อนกลับ product_name -> parent_sku จาก productsMap (parent_sku -> product_name) ทุกครั้งที่เรียก
-  // เผื่อ productsMap โหลดช้ากว่า/มาทีหลัง ไม่ cache ค้างไว้ตอน productsMap ยังว่าง
-  const m = {};
-  Object.entries(productsMap).forEach(([sku, name]) => { if (name && !m[name]) m[name] = sku; });
-  return m;
-}
-
-// รายการ parent_sku ของ 5 สินค้ากันแดด (map จากชื่อจริงในระบบ) — เรียกใหม่ทุกครั้งเผื่อ productsMap เพิ่งโหลดเสร็จ
-function getSunscreenSkus() {
-  const n2s = nameToSkuMap();
-  const found = [], missing = [];
-  SUNSCREEN_PRODUCT_NAMES.forEach(name => { const sku = n2s[name]; if (sku) found.push(sku); else missing.push(name); });
-  return { skus: found, missing };
-}
-
-async function fetchAdsBySku() {
-  if (_adsBySkuData) return _adsBySkuData;
-  try {
-    const url = `https://docs.google.com/spreadsheets/d/${ADS_BY_SKU_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(ADS_BY_SKU_TAB)}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    const n2s = nameToSkuMap();
-    const unmappedSet = new Set();
-    const aggRows = [];
-    _adsBySkuData = json.table.rows.map(r => {
-      const chRaw = (r.c[0]?.v || '').toString().trim();
-      const channel = AD_CHANNEL_NORMALIZE[chRaw] || chRaw; // Facebook/Tiktok/Shopee/Lazada -> ชื่อมาตรฐาน (Tiktok -> TikTok)
-      if (ADS_BY_SKU_EXCLUDE_CHANNELS.has(channel)) return null; // ตัด Shopee ทิ้งตั้งแต่ต้นทาง ทั้งแถวสินค้าปกติและแถวรวม
-      let month = (r.c[1]?.v || '').toString().trim(); // ปกติมาเป็น "YYYY-MM" อยู่แล้วในชีตนี้
-      if (month.startsWith('Date(')) { // เผื่อ Google Sheets ตีความคอลัมน์นี้เป็นวันที่จริงแทนข้อความ
-        const p = month.replace('Date(','').replace(')','').split(',');
-        month = `${p[0]}-${String(parseInt(p[1])+1).padStart(2,'0')}`;
-      }
-      const product = (r.c[2]?.v || '').toString().trim();
-      const amount = parseFloat(r.c[3]?.v) || 0;
-      if (!month || !product) return null;
-      const monthNorm = month.length===7 ? month : month.substring(0,7);
-      // แถว "รวม" / "รวมกันแดด" เป็นแถวสรุปยอดรวมที่ยังไม่ระบุสินค้า — เก็บแยกไว้กระจายสัดส่วนทีหลัง (ไม่ทิ้งอีกต่อไป)
-      if (product.startsWith('รวมกันแดด')) { aggRows.push({ channel, month: monthNorm, type: 'sunscreen', amount }); return null; }
-      if (product.startsWith('รวม')) { aggRows.push({ channel, month: monthNorm, type: 'total', amount }); return null; }
-      const sku = n2s[product];
-      if (!sku) { unmappedSet.add(`${channel}: ${product}`); return null; }
-      return { channel, month: monthNorm, parent_sku: sku, amount };
-    }).filter(Boolean);
-    _adsBySkuUnmapped = [...unmappedSet];
-    _adsBySkuAggRows = aggRows;
-  } catch(e) { console.error('fetchAdsBySku error:', e); showError('โหลดข้อมูลค่าแอดต่อ SKU ไม่สำเร็จ: ' + e.message); _adsBySkuData = []; _adsBySkuUnmapped = []; _adsBySkuAggRows = []; }
-  return _adsBySkuData;
-}
-
-// กระจายยอด "รวม"/"รวมกันแดด" เข้า adsBySkuChannel ตามสัดส่วนยอดขายของแต่ละเดือน (แยกเดือนต่อเดือน ไม่ปนกัน)
-// revByMonthSku: { 'YYYY-MM': { parent_sku: revenue } } — ยอดขายรวมทุกช่องทางของ SKU นั้นในเดือนนั้น
-// คืนค่า array ของคำเตือน (เดือน/ช่องทางที่กระจายไม่ได้เพราะไม่มียอดขายเป็นตัวหาร)
-function applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to, adsByMonthSkuChannel) {
-  const warnings = [];
-  const { skus: sunscreenSkus, missing: sunscreenMissing } = getSunscreenSkus();
-  if (sunscreenMissing.length) {
-    warnings.push(`หาชื่อสินค้ากันแดดในระบบไม่เจอ ${sunscreenMissing.length} รายการ (map ไม่ได้): ${sunscreenMissing.join(', ')}`);
-  }
-
-  _adsBySkuAggRows.forEach(row => {
-    if ((from && row.month < from) || (to && row.month > to)) return; // นอกช่วง filter ข้ามไป
-    if (row.amount === 0) return;
-
-    const revThisMonth = revByMonthSku[row.month] || {};
-    let candidateSkus;
-    if (row.type === 'sunscreen') {
-      candidateSkus = sunscreenSkus.filter(sku => (revThisMonth[sku] || 0) > 0);
-    } else {
-      candidateSkus = Object.keys(revThisMonth).filter(sku => (revThisMonth[sku] || 0) > 0);
-    }
-
-    const denom = candidateSkus.reduce((s, sku) => s + (revThisMonth[sku] || 0), 0);
-    if (denom <= 0) {
-      warnings.push(`เดือน ${row.month} ช่องทาง ${row.channel}: ยอด "${row.type==='sunscreen'?'รวมกันแดด':'รวม'}" ฿${Math.round(row.amount).toLocaleString()} กระจายไม่ได้ (ไม่มียอดขายในกลุ่มสินค้าที่เกี่ยวข้องเดือนนั้น)`);
-      return;
-    }
-
-    if (!adsBySkuChannel[row.channel]) adsBySkuChannel[row.channel] = {};
-    if (adsByMonthSkuChannel) {
-      if (!adsByMonthSkuChannel[row.month]) adsByMonthSkuChannel[row.month] = {};
-      if (!adsByMonthSkuChannel[row.month][row.channel]) adsByMonthSkuChannel[row.month][row.channel] = {};
-    }
-    candidateSkus.forEach(sku => {
-      const share = (revThisMonth[sku] || 0) / denom;
-      const distributed = row.amount * share;
-      adsBySkuChannel[row.channel][sku] = (adsBySkuChannel[row.channel][sku] || 0) + distributed;
-      if (adsByMonthSkuChannel) {
-        adsByMonthSkuChannel[row.month][row.channel][sku] = (adsByMonthSkuChannel[row.month][row.channel][sku] || 0) + distributed;
-      }
-    });
-  });
-
-  return warnings;
-}
-
-// จัดกลุ่มหัวข้อต้นทุนตามที่ Meg ยืนยัน:
-// - ตัดทิ้งไม่เอามาคิดเลย: ซื้อสินค้าเข้า, ค่าใช้จ่ายอื่นๆในการซื้อสินค้า
-// - รวม typo สะกดผิดเข้ากับชื่อที่ถูกต้อง
-// - แยกคอลัมน์เฉพาะ: ค่ารีวิวสินค้า-PR, ค่ารีวิวสินค้า-Conversion
-// - ที่เหลือทั้งหมดรวมเป็นคอลัมน์เดียว "ค่าการตลาดอื่นๆ"
-const COST_CATEGORY_EXCLUDE = new Set(['ซื้อสินค้าเข้า', 'ค่าใช้จ่ายอื่นๆในการซื้อสินค้า']);
-const COST_CATEGORY_RENAME = { 'ค่ารีิวิวสินค้า-PR': 'ค่ารีวิวสินค้า-PR', 'ค่าบริกการด้านการตลาด': 'ค่าบริการด้านการตลาด' };
-const COST_CATEGORY_KEEP_SEPARATE = new Set(['ค่ารีวิวสินค้า-PR', 'ค่ารีวิวสินค้า-Conversion']);
-const COST_CATEGORY_ROLLUP_NAME = 'ค่าการตลาดอื่นๆ';
-function normalizeCostCategory(raw) {
-  const renamed = COST_CATEGORY_RENAME[raw] || raw;
-  if (COST_CATEGORY_KEEP_SEPARATE.has(renamed)) return renamed;
-  return COST_CATEGORY_ROLLUP_NAME;
-}
-
-// ลำดับคอลัมน์ Ads ที่อยากให้แสดง (Facebook/TikTok/Shopee ก่อนเสมอ แล้วค่อยเติมช่องทางอื่นที่เจอเพิ่มต่อท้าย)
-const ADS_COLUMN_ORDER = ['Facebook', 'TikTok', 'Shopee', 'Lazada'];
-
-// ลำดับหัวข้อ cost_category คงที่ตามที่ Meg กำหนด (ไม่ sort ตามยอดอีกต่อไป)
-// ลำดับหัวข้อ cost_category คงที่ตามที่ Meg กำหนด (ไม่ sort ตามยอดอีกต่อไป)
-const FIXED_CAT_ORDER = ['ค่าการตลาดอื่นๆ', 'ค่ารีวิวสินค้า-PR', 'ค่ารีวิวสินค้า-Conversion'];
-
-// state การเรียงลำดับตาราง Cost Overview — คลิกหัวคอลัมน์ไหนก็ได้เพื่อเรียง มาก→น้อย / น้อย→มาก สลับกัน
-let _costSortCol = 'totalMkt';
-let _costSortDir = 'desc'; // 'asc' | 'desc'
-
-const COST_COL_DEFS = [
-  { key:'sku',            label:'SKU',                 type:'string', align:'left' },
-  { key:'name',           label:'ชื่อสินค้า',           type:'string', align:'left' },
-  { key:'rev',            label:'ยอดขาย',              type:'number', align:'right', color:'var(--green)' },
-  { key:'qty',            label:'จำนวนชิ้น',           type:'number', align:'right' },
-  { key:'marketingOther', label:'ค่าการตลาดอื่นๆ',      type:'number', align:'right', small:true },
-  { key:'prAmt',          label:'ค่ารีวิว-PR',          type:'number', align:'right', small:true },
-  { key:'convAmt',        label:'ค่ารีวิว-Conversion',  type:'number', align:'right', small:true },
-  // คอลัมน์ Ads แต่ละ channel จะถูกแทรกเข้ามาตรงนี้แบบ dynamic ตอน render (ads_Facebook, ads_TikTok, ads_Shopee, ...)
-  { key:'totalMkt',       label:'รวมการตลาด',          type:'number', align:'right', color:'var(--red)' },
-  { key:'pctBudget',      label:'% Budget',            type:'number', align:'right' },
-  { key:'roi',            label:'ROI',                 type:'number', align:'right', color:'var(--green)', suffix:'x' },
-];
-
-function setCostSort(col) {
-  if (_costSortCol === col) { _costSortDir = _costSortDir === 'desc' ? 'asc' : 'desc'; }
-  else { _costSortCol = col; _costSortDir = col === 'sku' || col === 'name' ? 'asc' : 'desc'; }
-  renderCostTableBody();
-}
-
-function sortIcon(col) {
-  if (_costSortCol !== col) return '<span style="opacity:0.25;">⇅</span>';
-  return _costSortDir === 'desc' ? '▼' : '▲';
-}
-
-// ===== GMV Max รายสินค้า (หน้า TikTok Ads) — RPC tta_product_rollup =====
-// ตัวเลขจาก TikTok ตรงๆ ต่อรหัสสินค้า ไม่มีการปันส่วน (คนละชุดกับหน้า MKT Tracking)
-// ใช้ RPC สรุปฝั่งฐานข้อมูล ส่งกลับ ~7KB แทนแถวดิบเกือบหมื่นแถว → หน้าโหลดเร็ว
 let _ttProductRows = [], _ttProductSeries = {}, _ttProductLabels = [], _ttProductGrain = 'month';
 let _ttProductSortCol = 'ads', _ttProductSortDir = 'desc', _ttProductRange = '', _ttProductPicked = null;
 const TTP_COLORS = ['#60a5fa', '#f472b6', '#4ade80', '#fbbf24', '#a78bfa', '#38bdf8', '#fb923c', '#34d399', '#f87171', '#c084fc'];
@@ -7606,20 +7407,21 @@ function mktRoiMonths() {
   const y = new Date().getFullYear();
   return { from: `${y}-01-01`, to: `${y}-12-01` };
 }
+function mktNoteRange() { const d = new Date(Date.now() + 7 * 3600 * 1000); return [d.getUTCFullYear() + '-01', d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0')]; }
 async function renderMktRoi() {
   const tb = document.getElementById('tbodyMktRoi'); if (!tb) return;
   const r = mktRoiMonths(); if (!r) return;
+  loadMktUnified().then(() => { const el = document.getElementById('mktAcctNote'); if (el) el.innerHTML = mktAcctNoteHtml(...mktNoteRange()); if (typeof renderMktRoiTable === 'function' && Object.keys(_mktRoiTab || {}).length) renderMktRoiTable(); }).catch(() => {});
   document.getElementById('mktRoiBtn1').classList.toggle('btn-primary', _mktRoiSpan === 1);
   document.getElementById('mktRoiBtn3').classList.toggle('btn-primary', _mktRoiSpan === 3);
   try {
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-    const url = `${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,product_name,revenue,qty,free_qty,kol_conversion,kol_pr,other_direct,ads_direct,ads_allocated,mkt_total&month=gte.${r.from}&month=lte.${r.to}&limit=2000`;
-    const urlCh = `${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=channel,parent_sku,revenue,ads_direct,ads_allocated&month=gte.${r.from}&month=lte.${r.to}&limit=5000`;
-    const [res, resCh] = await Promise.all([fetch(url, { headers }), fetch(urlCh, { headers })]);
-    if (!res.ok) throw new Error('mv_product_marketing_monthly ' + res.status);
-    const rows = await res.json();
+    // (2026-09-24) ดึงครบทุกแถว — เดิมใส่ limit=5000 แต่ Supabase ส่งแค่ 1,000 แถว ตาราง "ตามช่องทาง" เลยขาด (ยอดแยกช่องทางไม่เท่ายอดรวม)
+    const url = `${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,product_name,revenue,qty,free_qty,kol_conversion,kol_pr,other_direct,ads_direct,ads_allocated,mkt_total&month=gte.${r.from}&month=lte.${r.to}&order=month.asc,parent_sku.asc`;
+    const urlCh = `${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=channel,parent_sku,revenue,ads_direct,ads_allocated&month=gte.${r.from}&month=lte.${r.to}&order=month.asc,channel.asc,parent_sku.asc`;
+    const [rows, rowsCh] = await Promise.all([fetchAllRows(url, headers), fetchAllRows(urlCh, headers)]);
     _mktRoiCh = {};   // parent_sku → channel → {revenue, ads}
-    (resCh.ok ? await resCh.json() : []).forEach(x => {
+    rowsCh.forEach(x => {
       const m = (_mktRoiCh[x.parent_sku] = _mktRoiCh[x.parent_sku] || {});
       const c = (m[x.channel] = m[x.channel] || { revenue: 0, ads: 0, direct: 0 });
       c.revenue += +x.revenue || 0; c.ads += (+x.ads_direct || 0) + (+x.ads_allocated || 0); c.direct += +x.ads_direct || 0;
@@ -7715,6 +7517,7 @@ function renderMktRoiTable() {
           return `<div class="mkt-cost-grid"><div class="mkt-ch-cn">${l}</div><div>${v ? '฿' + fmt(Math.round(v)) : '—'}</div><div>${pp.toFixed(1)}%</div><div>${av.toFixed(1)}%</div>
             <div>${pp > av * 1.5 && v > rv * 0.01 ? '<span class="mkt-dn">▲ สูงกว่าเฉลี่ย</span>' : pp < av * 0.5 ? '<span class="mkt-up">ต่ำกว่าเฉลี่ย</span>' : ''}</div></div>`; }).join('')}
         <div class="mkt-cost-grid mkt-cost-tot"><div>รวม</div><div>฿${fmt(Math.round(A.mkt_total || 0))}</div><div>${rv > 0 ? (A.mkt_total / rv * 100).toFixed(1) : '—'}%</div><div>${(_mktRoiRows.reduce((t, x) => t + x.mkt_total, 0) / allRev * 100).toFixed(1)}%</div><div></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;">KOL Conversion / KOL PR / การตลาดอื่นๆ มาจากไฟล์บัญชีที่อัป · แอด มาจาก Meta / TikTok / Shopee อัตโนมัติ${_mktUnified ? ' · ' + mktAcctNoteHtml(...mktNoteRange()) : ''}</div>
       </div></td></tr>`;
     }
     if (tab === 'mo') {
@@ -7782,425 +7585,10 @@ function exportMktRoi() {
 }
 
 async function renderCostPage() {
-  renderMktRoi();   // ตาราง ROI การตลาดต่อสินค้า (ไม่ต้องรอชีท)
-  try {
-    const [costsRaw, adsBySkuRaw] = await Promise.all([fetchProductCosts(), fetchAdsBySku()]);
-    const from = selectedMonthFrom, to = selectedMonthTo || selectedMonthFrom;
-    const costs = costsRaw.filter(r => !COST_CATEGORY_EXCLUDE.has(r.cost_category)); // ตัด "ซื้อสินค้าเข้า" และ "ค่าใช้จ่ายอื่นๆในการซื้อสินค้า" ทิ้งตั้งแต่ต้น
-    const filtered = costs.filter(r => {
-      const m = String(r.month).substring(0,7);
-      return (!from || m >= from) && (!to || m <= to);
-    });
-    const adsFiltered = adsBySkuRaw.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
-
-    const warnEl = document.getElementById('cost-ads-unmapped-warning');
-
-    const skuMV = (window._skuParentMonthlyCache||[]).filter(r => {
-      const m = String(r.date).substring(0,7);
-      return (!from || m >= from) && (!to || m <= to);
-    });
-    const revBySKU = {}, qtyBySKU = {};
-    const revByMonthSku = {}, qtyByMonthSku = {}; // { 'YYYY-MM': { parent_sku: value } } ใช้ทั้งกระจายยอดรวม และ export รายเดือน
-    skuMV.forEach(r => {
-      revBySKU[r.parent_sku] = (revBySKU[r.parent_sku]||0) + (parseFloat(r.total_revenue)||0);
-      qtyBySKU[r.parent_sku] = (qtyBySKU[r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
-      const m = String(r.date).substring(0,7);
-      if (!revByMonthSku[m]) revByMonthSku[m] = {};
-      if (!qtyByMonthSku[m]) qtyByMonthSku[m] = {};
-      revByMonthSku[m][r.parent_sku] = (revByMonthSku[m][r.parent_sku]||0) + (parseFloat(r.total_revenue)||0);
-      qtyByMonthSku[m][r.parent_sku] = (qtyByMonthSku[m][r.parent_sku]||0) + (parseFloat(r.total_qty)||0);
-    });
-
-    // จำนวนตัวอย่าง/รีวิวฟรี (ทุกช่องทาง) แยกต่างหาก ไม่รวมใน qtyBySKU — เฟส 3: RPC free_sample_by_sku ตามช่วงเดือน
-    const freeSampleQtyBySKU = {};
-    try {
-      const fsFrom = (from || '2020-01') + '-01';
-      const fsToD = new Date((to || from) + '-01T00:00:00'); fsToD.setMonth(fsToD.getMonth() + 1); fsToD.setDate(0);
-      const fsTo = fmtDateISO(fsToD);
-      (await supaRpc('free_sample_by_sku', { p_from: fsFrom, p_to: fsTo }, true)).forEach(r => { freeSampleQtyBySKU[r.parent_sku] = (freeSampleQtyBySKU[r.parent_sku]||0) + (parseFloat(r.qty)||0); });
-    } catch (e) { console.warn('free_sample_by_sku', e.message); }
-
-    const costByCatSku = {}, costByMonthSku = {}, costByMonthCatSku = {};
-    filtered.forEach(r => {
-      const m = String(r.month).substring(0,7), amt = parseFloat(r.amount)||0;
-      const cat = normalizeCostCategory(r.cost_category);
-      if (!costByCatSku[r.parent_sku]) costByCatSku[r.parent_sku] = {};
-      costByCatSku[r.parent_sku][cat] = (costByCatSku[r.parent_sku][cat]||0) + amt;
-      if (!costByMonthSku[r.parent_sku]) costByMonthSku[r.parent_sku] = {};
-      costByMonthSku[r.parent_sku][m] = (costByMonthSku[r.parent_sku][m]||0) + amt;
-      if (!costByMonthCatSku[m]) costByMonthCatSku[m] = {};
-      if (!costByMonthCatSku[m][r.parent_sku]) costByMonthCatSku[m][r.parent_sku] = {};
-      costByMonthCatSku[m][r.parent_sku][cat] = (costByMonthCatSku[m][r.parent_sku][cat]||0) + amt;
-    });
-
-    // ค่าแอดแยก SKU แยกราย channel (Facebook/TikTok/...) — Shopee ถูกตัดออกตั้งแต่ตอน fetchAdsBySku แล้ว
-    const adsBySkuChannel = {}; // { channel: { sku: amount } } — ยอดรวมทั้งช่วง ใช้กับตารางหลัก
-    const adsByMonthSkuChannel = {}; // { 'YYYY-MM': { channel: { sku: amount } } } — แยกรายเดือน ใช้กับ export
-    adsFiltered.forEach(r => {
-      if (!adsBySkuChannel[r.channel]) adsBySkuChannel[r.channel] = {};
-      adsBySkuChannel[r.channel][r.parent_sku] = (adsBySkuChannel[r.channel][r.parent_sku]||0) + r.amount;
-      if (!adsByMonthSkuChannel[r.month]) adsByMonthSkuChannel[r.month] = {};
-      if (!adsByMonthSkuChannel[r.month][r.channel]) adsByMonthSkuChannel[r.month][r.channel] = {};
-      adsByMonthSkuChannel[r.month][r.channel][r.parent_sku] = (adsByMonthSkuChannel[r.month][r.channel][r.parent_sku]||0) + r.amount;
-    });
-
-    // กระจายยอด "รวม"/"รวมกันแดด" เข้าทั้ง adsBySkuChannel (รวม) และ adsByMonthSkuChannel (รายเดือน) ตามสัดส่วนยอดขายรายเดือน
-    const aggDistributionWarnings = applyAggregateAdsDistribution(adsBySkuChannel, revByMonthSku, from, to, adsByMonthSkuChannel);
-
-    // รวมคำเตือนทั้ง 2 แบบ: ชื่อสินค้า map ไม่เจอ + เดือน/ช่องทางที่กระจายยอด รวม/รวมกันแดด ไม่ได้
-    if (warnEl) {
-      const msgs = [];
-      if (_adsBySkuUnmapped.length) {
-        msgs.push(`พบชื่อสินค้าในชีตค่าแอด ${_adsBySkuUnmapped.length} รายการ ที่ map เข้ากับ SKU ในระบบไม่ได้ (ชื่อไม่ตรงกับ products table เป๊ะ): ${_adsBySkuUnmapped.join(', ')} — ค่าแอดของรายการนี้ยังไม่ถูกนับรวม`);
-      }
-      if (aggDistributionWarnings.length) {
-        msgs.push(...aggDistributionWarnings);
-      }
-      if (msgs.length) {
-        warnEl.style.display = 'block';
-        warnEl.innerHTML = msgs.map(m => `⚠️ ${m}`).join('<br>');
-      } else {
-        warnEl.style.display = 'none';
-      }
-    }
-
-    const adsChannelsFound = Object.keys(adsBySkuChannel);
-    const adsChannels = [
-      ...ADS_COLUMN_ORDER.filter(c => adsChannelsFound.includes(c)),
-      ...adsChannelsFound.filter(c => !ADS_COLUMN_ORDER.includes(c)).sort(),
-    ];
-    const totalAdsByChannel = {};
-    adsChannels.forEach(ch => { totalAdsByChannel[ch] = Object.values(adsBySkuChannel[ch]||{}).reduce((a,b)=>a+b,0); });
-    const totalAdsAll = Object.values(totalAdsByChannel).reduce((a,b)=>a+b,0);
-
-    const allSkuSet = new Set([...Object.keys(costByCatSku), ...Object.values(adsBySkuChannel).flatMap(o=>Object.keys(o))]);
-
-    // สร้างแถวข้อมูลดิบทั้งหมดเก็บไว้ใน cache กลาง ให้ renderCostTableBody() หยิบไปเรียงลำดับ/แสดงผลได้โดยไม่ต้องคำนวณใหม่
-    const rows = [...allSkuSet].map(sku => {
-      const rev = revBySKU[sku]||0, qty = qtyBySKU[sku]||0;
-      const marketingOther = costByCatSku[sku]?.['ค่าการตลาดอื่นๆ']||0;
-      const prAmt = costByCatSku[sku]?.['ค่ารีวิวสินค้า-PR']||0;
-      const convAmt = costByCatSku[sku]?.['ค่ารีวิวสินค้า-Conversion']||0;
-      const adsVals = {}; let adsSum = 0;
-      adsChannels.forEach(ch => { const v = adsBySkuChannel[ch]?.[sku]||0; adsVals[ch]=v; adsSum+=v; });
-      const totalMkt = marketingOther + prAmt + convAmt + adsSum;
-      const pctBudget = rev>0 ? (totalMkt/rev*100) : null;
-      const roi = totalMkt>0 ? (rev/totalMkt) : null;
-      return { sku, name: skuToName(sku), rev, qty, freeSampleQty: freeSampleQtyBySKU[sku]||0, marketingOther, prAmt, convAmt, adsVals, totalMkt, pctBudget, roi };
-    });
-
-    const totalRev = Object.values(revBySKU).reduce((a,b)=>a+b,0);
-    const totalQty = Object.values(qtyBySKU).reduce((a,b)=>a+b,0);
-    const totalMarketingAll = rows.reduce((s,r)=>s+r.totalMkt,0);
-    const pctBudgetAll = totalRev>0?(totalMarketingAll/totalRev*100).toFixed(1):'—';
-    const roiAll = totalMarketingAll>0?(totalRev/totalMarketingAll).toFixed(2):'—';
-
-    document.getElementById('costKPIs').innerHTML = `
-      <div class="card"><div class="card-title">รวมการตลาด</div><div class="kpi-value" style="color:var(--red);">฿${fmtB(totalMarketingAll)}</div><div class="kpi-sub">ค่าการตลาดอื่นๆ + รีวิว + Ads ทุกช่องทาง</div></div>
-      <div class="card"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div><div class="kpi-sub">รับรู้รายได้ทั้งหมด (ตัด Cancel/Return แล้ว)</div></div>
-      <div class="card"><div class="card-title">% Budget</div><div class="kpi-value" style="color:${parseFloat(pctBudgetAll)>30?'var(--red)':parseFloat(pctBudgetAll)>15?'var(--orange)':'var(--green)'};">${pctBudgetAll}%</div><div class="kpi-sub">รวมการตลาด ÷ ยอดขาย</div></div>
-      <div class="card"><div class="card-title">ROI</div><div class="kpi-value" style="color:var(--green);">${roiAll}x</div><div class="kpi-sub">ยอดขาย ÷ รวมการตลาด</div></div>`;
-
-    // ใช้ทุกเดือนในช่วงที่เลือกจริง (เหมือนตารางหลัก) — เดิมเอาแค่เดือนที่มีข้อมูลต้นทุน/ค่าแอด
-    // ทำให้เดือนที่มียอดขายแต่ไม่มีค่าการตลาดเลยสักบาทหายไปจาก popup รายละเอียด (ยอดรวม popup ต่ำกว่าตารางหลัก)
-    const months = getMonthsInRange(from ? from + '-01' : null, to ? to + '-01' : null);
-    const mLabels = months.map(m=>{const[,mo]=m.split('-');return MONTHS_TH[parseInt(mo)-1];});
-
-    window._costByMonthSku = costByMonthSku;
-    window._costByCatSku = costByCatSku;
-    window._costRevBySKU = revBySKU;
-    window._costQtyBySKU = qtyBySKU;
-    window._costMonths = months;
-    window._costMLabels = mLabels;
-    window._costAdsBySkuChannel = adsBySkuChannel;
-    window._costCats = FIXED_CAT_ORDER;
-    window._costRowsCache = rows;
-    window._costAdsChannelsCache = adsChannels;
-    // เก็บข้อมูลแยกรายเดือนไว้ใช้ตอน export CSV แบบแยกเดือน (ไม่ใช้แสดงในตารางหลักซึ่งยังคงรวมทั้งช่วงเหมือนเดิม)
-    window._costRevByMonthSku = revByMonthSku;
-    window._costQtyByMonthSku = qtyByMonthSku;
-    window._costByMonthCatSku = costByMonthCatSku;
-    window._adsByMonthSkuChannel = adsByMonthSkuChannel;
-    const totalFreeSampleQty = rows.reduce((s,r)=>s+r.freeSampleQty,0);
-    window._costTotalsCache = { totalRev, totalQty, totalMarketingAll, totalAdsByChannel, pctBudgetAll, roiAll, totalFreeSampleQty };
-
-    renderCostTableBody();
-  } catch(e) {
-    console.error(e);
-    document.getElementById('costKPIs').innerHTML = `<div style="color:var(--red);padding:12px;">❌ ${e.message}</div>`;
-  }
+  // (2026-09-24) หน้า MKT Tracking เหลือตาราง ROI การตลาดต่อสินค้าอย่างเดียว — ตารางรายเดือน/รายละเอียดเก่า (ค่าแอดจาก Google Sheet) ลบออกแล้ว
+  renderMktRoi();
 }
 
-const MKT_CHART_COLORS = {
-  profit: '#1baf7a',
-  Facebook: '#2a78d6',
-  TikTok: '#e34948',
-  Shopee: '#eb6834',
-  Lazada: '#4a3aa7',
-  convAmt: '#eda100',
-  prAmt: '#e87ba4',
-  marketingOther: '#898787',
-};
-const MKT_CHART_LABELS = {
-  profit: 'กำไรคงเหลือ',
-  convAmt: 'ค่ารีวิว-Conversion',
-  prAmt: 'ค่ารีวิว-PR',
-  marketingOther: 'ค่าการตลาดอื่นๆ',
-};
-
-function renderMktSkuBreakdownChart() {
-  const allRows = window._costRowsCache || [];
-  const adsChannels = window._costAdsChannelsCache || [];
-  const TOP_N = 15;
-  const sorted = [...allRows].sort((a,b) => b.rev - a.rev).filter(r => r.rev > 0);
-  const rows = sorted.slice(0, TOP_N);
-
-  const wrap = document.getElementById('mktSkuChartWrap');
-  if (wrap) wrap.style.height = Math.max(200, rows.length * 38 + 40) + 'px';
-
-  const datasets = [];
-  datasets.push({
-    label: MKT_CHART_LABELS.profit,
-    data: rows.map(r => (r.rev - r.totalMkt) / 1e6),
-    backgroundColor: MKT_CHART_COLORS.profit,
-  });
-  adsChannels.forEach(ch => {
-    datasets.push({
-      label: `Ads ${ch}`,
-      data: rows.map(r => (r.adsVals[ch]||0) / 1e6),
-      backgroundColor: MKT_CHART_COLORS[ch] || '#888888',
-    });
-  });
-  ['convAmt','prAmt','marketingOther'].forEach(key => {
-    datasets.push({
-      label: MKT_CHART_LABELS[key],
-      data: rows.map(r => (r[key]||0) / 1e6),
-      backgroundColor: MKT_CHART_COLORS[key],
-    });
-  });
-
-  if (window._mktSkuChart) window._mktSkuChart.destroy();
-  window._mktSkuChart = new Chart(document.getElementById('chartMktSkuBreakdown'), {
-    type: 'bar',
-    data: { labels: rows.map(r => `${r.sku} (${r.name})`), datasets },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ฿${c.raw.toFixed(2)}M` } }
-      },
-      scales: {
-        x: { stacked: true, ticks: { callback: v => '฿'+v+'M', color: '#898781' }, grid: { color: 'rgba(136,136,136,0.15)' } },
-        y: { stacked: true, grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } } }
-      }
-    }
-  });
-
-  const legendEl = document.getElementById('mktSkuChartLegend');
-  if (legendEl) {
-    legendEl.innerHTML = datasets.map(d => `<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${d.backgroundColor};display:inline-block;"></span>${d.label}</span>`).join('');
-  }
-  const noteEl = document.getElementById('mktSkuChartNote');
-  if (noteEl) {
-    noteEl.textContent = sorted.length > TOP_N ? `แสดง Top ${TOP_N} จาก ${sorted.length} SKU ทั้งหมด (เรียงตามยอดขาย)` : '';
-  }
-}
-
-function renderCostTableBody() {
-  const rows = window._costRowsCache || [];
-  const adsChannels = window._costAdsChannelsCache || [];
-  const totals = window._costTotalsCache || {};
-
-  const getVal = (row, col) => {
-    if (col.startsWith('ads_')) return row.adsVals[col.substring(4)] || 0;
-    return row[col];
-  };
-  const sorted = [...rows].sort((a,b) => {
-    let va = getVal(a, _costSortCol), vb = getVal(b, _costSortCol);
-    if (va === null) va = _costSortDir === 'desc' ? -Infinity : Infinity;
-    if (vb === null) vb = _costSortDir === 'desc' ? -Infinity : Infinity;
-    let cmp;
-    if (typeof va === 'string') cmp = va.localeCompare(vb, 'th');
-    else cmp = va - vb;
-    return _costSortDir === 'desc' ? -cmp : cmp;
-  });
-
-  const thStyle = (col, extra='') => `cursor:pointer;user-select:none;white-space:nowrap;${extra}`;
-
-  document.getElementById('costOverviewHead').innerHTML = `<tr>
-    <th style="${thStyle('sku','text-align:left;')}" onclick="setCostSort('sku')">SKU ${sortIcon('sku')}</th>
-    <th style="${thStyle('name','text-align:left;')}" onclick="setCostSort('name')">ชื่อสินค้า ${sortIcon('name')}</th>
-    <th style="${thStyle('rev','text-align:right;color:var(--green);')}" onclick="setCostSort('rev')">ยอดขาย ${sortIcon('rev')}</th>
-    <th style="${thStyle('qty','text-align:right;')}" onclick="setCostSort('qty')">จำนวนชิ้น ${sortIcon('qty')}</th>
-    <th title="รวมจาก 2 ช่องทาง: TikTok (ออเดอร์ยอดขาย=0 บาท ไม่ใช่ยกเลิก/คืน) + Facebook (sub-channel รีวิว ฟีมิคส์) — ไม่นับเป็นจำนวนชิ้นขายจริง" style="${thStyle('freeSampleQty','text-align:right;color:#a78bfa;font-size:10px;')}" onclick="setCostSort('freeSampleQty')">รีวิวฟรี ⓘ ${sortIcon('freeSampleQty')}</th>
-    <th style="${thStyle('marketingOther','text-align:right;font-size:10px;')}" onclick="setCostSort('marketingOther')">ค่าการตลาดอื่นๆ ${sortIcon('marketingOther')}</th>
-    <th style="${thStyle('prAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('prAmt')">ค่ารีวิว-PR ${sortIcon('prAmt')}</th>
-    <th style="${thStyle('convAmt','text-align:right;font-size:10px;')}" onclick="setCostSort('convAmt')">ค่ารีวิว-Conversion ${sortIcon('convAmt')}</th>
-    ${adsChannels.map(ch=>`<th style="${thStyle('ads_'+ch,'text-align:right;color:var(--blue);')}" onclick="setCostSort('ads_${ch}')">Ads ${ch} ${sortIcon('ads_'+ch)}</th>`).join('')}
-    <th style="${thStyle('totalMkt','text-align:right;color:var(--red);')}" onclick="setCostSort('totalMkt')">รวมการตลาด ${sortIcon('totalMkt')}</th>
-    <th style="${thStyle('pctBudget','text-align:right;')}" onclick="setCostSort('pctBudget')">% Budget ${sortIcon('pctBudget')}</th>
-    <th style="${thStyle('roi','text-align:right;color:var(--green);')}" onclick="setCostSort('roi')">ROI ${sortIcon('roi')}</th>
-  </tr>`;
-
-  document.getElementById('costOverviewBody').innerHTML = sorted.map(r => {
-    const pctCol = r.pctBudget===null?'var(--muted)':r.pctBudget>30?'var(--red)':r.pctBudget>15?'var(--orange)':'var(--green)';
-    return `<tr style="cursor:pointer;" onclick="renderCostDeep('${r.sku}')">
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;">${r.sku}</td>
-      <td style="color:var(--text);font-weight:600;white-space:nowrap;">${r.name} <span style="font-size:10px;color:var(--text3);">🔍</span></td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(r.rev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${fmt(Math.round(r.qty))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a78bfa;">${r.freeSampleQty>0?fmt(Math.round(r.freeSampleQty)):''}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.marketingOther>0?'฿'+fmt(Math.round(r.marketingOther)):''}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.prAmt>0?'฿'+fmt(Math.round(r.prAmt)):''}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.convAmt>0?'฿'+fmt(Math.round(r.convAmt)):''}</td>
-      ${adsChannels.map(ch=>{const a=r.adsVals[ch]||0;return `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blue);">${a>0?'฿'+fmt(Math.round(a)):''}</td>`;}).join('')}
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(r.totalMkt))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${pctCol};">${r.pctBudget===null?'—':r.pctBudget.toFixed(1)+'%'}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--green);">${r.roi===null?'—':r.roi.toFixed(2)+'x'}</td>
-    </tr>`;
-  }).join('') + `<tr style="border-top:2px solid var(--border);">
-    <td colspan="2" style="font-weight:700;">รวมทั้งหมด</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">฿${fmt(Math.round(totals.totalRev||0))}</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;">${fmt(Math.round(totals.totalQty||0))}</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#a78bfa;">${fmt(Math.round(totals.totalFreeSampleQty||0))}</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(rows.reduce((s,r)=>s+r.marketingOther,0)))}</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(rows.reduce((s,r)=>s+r.prAmt,0)))}</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(rows.reduce((s,r)=>s+r.convAmt,0)))}</td>
-    ${adsChannels.map(ch=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue);">฿${fmt(Math.round(totals.totalAdsByChannel?.[ch]||0))}</td>`).join('')}
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(totals.totalMarketingAll||0))}</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;">${totals.pctBudgetAll}%</td>
-    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">${totals.roiAll}x</td>
-  </tr>`;
-}
-
-function renderCostDeep(sku) {
-  const months = window._costMonths||[];
-  const mLabels = window._costMLabels||[];
-  const adsChannels = window._costAdsChannelsCache || [];
-
-  // ต้นทุน/ค่าการตลาดรายเดือน — normalize ชื่อหมวด + ตัด "ซื้อสินค้าเข้า"/"ค่าใช้จ่ายอื่นๆในการซื้อสินค้า" ทิ้ง เหมือนตารางหลักเป๊ะ
-  const costRows = _costData.filter(r => r.parent_sku===sku && !COST_CATEGORY_EXCLUDE.has(r.cost_category));
-  const costByMonthCat = {};
-  costRows.forEach(r=>{
-    const m=String(r.month).substring(0,7);
-    const cat = normalizeCostCategory(r.cost_category);
-    if(!costByMonthCat[m])costByMonthCat[m]={};
-    costByMonthCat[m][cat]=(costByMonthCat[m][cat]||0)+(parseFloat(r.amount)||0);
-  });
-
-  // ค่าแอดรายเดือนแยก channel ของ SKU นี้ (ใช้ข้อมูลที่ fetchAdsBySku โหลดไว้แล้วในตัวแปร _adsBySkuData)
-  const adsByMonthChannel = {};
-  (_adsBySkuData||[]).filter(r=>r.parent_sku===sku).forEach(r=>{
-    if(!adsByMonthChannel[r.month]) adsByMonthChannel[r.month]={};
-    adsByMonthChannel[r.month][r.channel]=(adsByMonthChannel[r.month][r.channel]||0)+r.amount;
-  });
-
-  const revByMonth = {}, qtyByMonth = {};
-  (window._skuParentMonthlyCache||[]).filter(r=>r.parent_sku===sku).forEach(r=>{
-    const m=String(r.date).substring(0,7);
-    revByMonth[m]=(revByMonth[m]||0)+(parseFloat(r.total_revenue)||0);
-    qtyByMonth[m]=(qtyByMonth[m]||0)+(parseFloat(r.total_qty)||0);
-  });
-
-  document.getElementById('costDeepCard').style.display='block';
-  document.getElementById('costDeepTitle').textContent=`รายละเอียด MKT Tracking — ${skuToName(sku)} (${sku})`;
-  const chartEl = document.getElementById('chartCostDeep');
-  if(chartEl) chartEl.parentElement.style.display='none';
-
-  document.getElementById('costDeepHead').innerHTML=`<tr>
-    <th style="text-align:left;white-space:nowrap;">เดือน</th>
-    <th style="text-align:right;color:var(--green);white-space:nowrap;">ยอดขาย</th>
-    <th style="text-align:right;white-space:nowrap;">จำนวนชิ้น</th>
-    <th style="text-align:right;white-space:nowrap;font-size:10px;">ค่าการตลาดอื่นๆ</th>
-    <th style="text-align:right;white-space:nowrap;font-size:10px;">ค่ารีวิว-PR</th>
-    <th style="text-align:right;white-space:nowrap;font-size:10px;">ค่ารีวิว-Conversion</th>
-    ${adsChannels.map(ch=>`<th style="text-align:right;color:var(--blue);white-space:nowrap;">Ads ${ch}</th>`).join('')}
-    <th style="text-align:right;color:var(--red);white-space:nowrap;">รวมการตลาด</th>
-    <th style="text-align:right;white-space:nowrap;">% Budget</th>
-    <th style="text-align:right;color:var(--green);white-space:nowrap;">ROI</th>
-  </tr>`;
-
-  document.getElementById('costDeepBody').innerHTML = months.map((m,i)=>{
-    const marketingOther = costByMonthCat[m]?.['ค่าการตลาดอื่นๆ']||0;
-    const prAmt = costByMonthCat[m]?.['ค่ารีวิวสินค้า-PR']||0;
-    const convAmt = costByMonthCat[m]?.['ค่ารีวิวสินค้า-Conversion']||0;
-    const adsVals = adsChannels.map(ch=>adsByMonthChannel[m]?.[ch]||0);
-    const adsSum = adsVals.reduce((a,b)=>a+b,0);
-    const totalMkt = marketingOther+prAmt+convAmt+adsSum;
-    const rev = revByMonth[m]||0, qty = qtyByMonth[m]||0;
-    const pctBudget = rev>0?(totalMkt/rev*100):null;
-    const roi = totalMkt>0?(rev/totalMkt):null;
-    const pctCol = pctBudget===null?'var(--muted)':pctBudget>30?'var(--red)':pctBudget>15?'var(--orange)':'var(--green)';
-    return `<tr>
-      <td style="font-weight:600;white-space:nowrap;">${mLabels[i]}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">฿${fmt(Math.round(rev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${fmt(Math.round(qty))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${marketingOther>0?'฿'+fmt(Math.round(marketingOther)):''}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${prAmt>0?'฿'+fmt(Math.round(prAmt)):''}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;">${convAmt>0?'฿'+fmt(Math.round(convAmt)):''}</td>
-      ${adsVals.map(a=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blue);">${a>0?'฿'+fmt(Math.round(a)):''}</td>`).join('')}
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--red);">฿${fmt(Math.round(totalMkt))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:${pctCol};">${pctBudget===null?'—':pctBudget.toFixed(1)+'%'}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--green);">${roi===null?'—':roi.toFixed(2)+'x'}</td>
-    </tr>`;
-  }).join('') + (() => {
-    const totRev = months.reduce((s,m)=>s+(revByMonth[m]||0),0);
-    const totQty = months.reduce((s,m)=>s+(qtyByMonth[m]||0),0);
-    const totOther = months.reduce((s,m)=>s+(costByMonthCat[m]?.['ค่าการตลาดอื่นๆ']||0),0);
-    const totPR = months.reduce((s,m)=>s+(costByMonthCat[m]?.['ค่ารีวิวสินค้า-PR']||0),0);
-    const totConv = months.reduce((s,m)=>s+(costByMonthCat[m]?.['ค่ารีวิวสินค้า-Conversion']||0),0);
-    const totAdsVals = adsChannels.map(ch=>months.reduce((s,m)=>s+(adsByMonthChannel[m]?.[ch]||0),0));
-    const totAdsSum = totAdsVals.reduce((a,b)=>a+b,0);
-    const totMkt = totOther+totPR+totConv+totAdsSum;
-    const totPct = totRev>0?(totMkt/totRev*100).toFixed(1):'—';
-    const totRoi = totMkt>0?(totRev/totMkt).toFixed(2):'—';
-    return `<tr style="border-top:2px solid var(--border);">
-      <td style="font-weight:700;">รวม</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">฿${fmt(Math.round(totRev))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;">${fmt(Math.round(totQty))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(totOther))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(totPR))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;">฿${fmt(Math.round(totConv))}</td>
-      ${totAdsVals.map(v=>`<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--blue);">฿${fmt(Math.round(v))}</td>`).join('')}
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--red);">฿${fmt(Math.round(totMkt))}</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;">${totPct}%</td>
-      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">${totRoi}x</td>
-    </tr>`;
-  })();
-  document.getElementById('costDeepCard').scrollIntoView({behavior:'smooth'});
-}
-
-
-function fixCostStickyPositions(tableId, frozenCols) {
-  const table = document.getElementById(tableId);
-  if (!table) return;
-  const rows = table.querySelectorAll('tr');
-  if (!rows.length) return;
-  const firstRow = rows[0];
-  const cells = firstRow.querySelectorAll('th, td');
-  const widths = [];
-  for (let i = 0; i < frozenCols && i < cells.length; i++) {
-    widths.push(cells[i].getBoundingClientRect().width);
-  }
-  const lefts = [0];
-  for (let i = 1; i < frozenCols; i++) {
-    lefts.push(lefts[i-1] + widths[i-1]);
-  }
-  rows.forEach(row => {
-    const cs = row.querySelectorAll('th, td');
-    let colIdx = 0; // logical column index — accounts for colSpan (e.g. the "รวมทั้งหมด" total row merges 2 columns into 1 cell)
-    for (let i = 0; i < cs.length && colIdx < frozenCols; i++) {
-      const span = cs[i].colSpan || 1;
-      cs[i].style.left = lefts[colIdx] + 'px';
-      colIdx += span;
-      if (colIdx >= frozenCols) {
-        cs[i].style.borderRight = '2px solid var(--border)';
-      }
-    }
-  });
-}
-
-// ===== แคชข้อมูลไว้ในเบราว์เซอร์ (IndexedDB) — เปิดหน้าครั้งถัดไปเห็นข้อมูลทันที ไม่ต้องรอโหลดใหม่ทั้งหมด =====
 const IDB_NAME = 'deesay_dashboard_cache', IDB_STORE = 'snapshot', CACHE_KEY = 'dashboard_snapshot_v2'
 function idbOpen() {
   return new Promise((resolve, reject) => {
@@ -8681,10 +8069,10 @@ async function fetchTtcData() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const [organicRes, adsRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_organic_raw?select=*&order=video_create_datetime.desc&limit=2000`, { headers }),
-    fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=item_id,spend,gmv_max_orders,is_deesay_own_channel&is_deesay_own_channel=eq.true&limit=5000`, { headers })
+    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=item_id,spend,gmv_max_orders,is_deesay_own_channel&is_deesay_own_channel=eq.true&order=item_id.asc`, headers)
   ]);
   const organic = await organicRes.json();
-  const adsRows = await adsRes.json();
+  const adsRows = adsRes;
   const adByClip = {};
   (Array.isArray(adsRows) ? adsRows : []).forEach(r => {
     if (!adByClip[r.item_id]) adByClip[r.item_id] = { spend: 0, orders: 0 };
@@ -8926,7 +8314,7 @@ async function loadTtaThumbs() {
     const cols = Array.isArray(probe) && probe[0] ? Object.keys(probe[0]) : [];
     const idCol = ['item_id','video_id','id'].find(c => cols.includes(c));
     if (idCol && cols.includes('thumbnail_url')) {
-      const rows = await fetch(`${base}?select=${idCol},thumbnail_url${cols.includes('share_url') ? ',share_url' : ''}&limit=2000`, { headers }).then(r => r.json());
+      const rows = await fetchAllRows(`${base}?select=${idCol},thumbnail_url${cols.includes('share_url') ? ',share_url' : ''}&order=${idCol}.asc`, headers);
       (Array.isArray(rows) ? rows : []).forEach(v => { if (v[idCol] && v.thumbnail_url) TTA_THUMBS[String(v[idCol])] = { thumb: v.thumbnail_url, url: v.share_url || null }; });
     }
   } catch {}
@@ -8947,8 +8335,7 @@ async function loadTtHandleMap() {
   if (TT_HANDLE_MAP) return TT_HANDLE_MAP;
   try {
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_tt_handle_map?select=ads_name,handle&limit=10000`, { headers });
-    const rows = res.ok ? await res.json() : [];
+    const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_tt_handle_map?select=ads_name,handle&order=ads_name.asc,handle.asc`, headers);
     TT_HANDLE_MAP = Object.fromEntries(rows.map(r => [String(r.ads_name).trim().toLowerCase(), r.handle]));
   } catch (e) { TT_HANDLE_MAP = {}; }
   return TT_HANDLE_MAP;
@@ -9439,9 +8826,7 @@ async function ensureKolBoost(from, to) {
     setBgSync('ค่า boost โพสต์ KOL (Meta)...', 45);
     const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
     const mFrom = from.slice(0, 7) + '-01', mTo = to.slice(0, 7) + '-01';
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/v_kol_boost_monthly?select=kol_key,kol_name_in_ad,month,spend,in_kol_sheet&month=gte.${mFrom}&month=lte.${mTo}`, { headers });
-    if (!res.ok) throw new Error('v_kol_boost_monthly ' + res.status);
-    const rows = await res.json();
+    const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_kol_boost_monthly?select=kol_key,kol_name_in_ad,month,spend,in_kol_sheet&month=gte.${mFrom}&month=lte.${mTo}&order=month.asc,kol_key.asc,kol_name_in_ad.asc`, headers);
     const by = {}; let total = 0; const un = {};
     rows.forEach(r => {
       const sp = parseFloat(r.spend) || 0; total += sp;
