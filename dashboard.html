@@ -474,7 +474,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-f</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2109,11 +2109,18 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <select class="ls-input" id="plFrom" style="padding:6px 10px;font-size:12px;" onchange="renderPl()"></select>
             <span style="color:var(--text3);font-size:12px;">ถึง</span>
             <select class="ls-input" id="plTo" style="padding:6px 10px;font-size:12px;" onchange="renderPl()"></select>
-            <button class="btn btn-ghost" onclick="exportPl()">⬇ Export CSV</button>
+            <button class="btn btn-ghost" style="white-space:nowrap;padding:6px 12px;font-size:12px;" onclick="exportPl()">⬇ Export CSV</button>
           </div>
         </div>
         <div id="plNote" style="font-size:11.5px;color:var(--text2);margin:-4px 0 12px;"></div>
-        <div id="plKpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
+        <div id="plKpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;font-size:11.5px;line-height:1.6;">
+          <div style="background:var(--bg2);border-radius:8px;padding:8px 10px;"><b style="color:var(--text);">CM1 = ยอดขาย − การตลาดตรง − ค่าแอด</b><br><span style="color:var(--text2);">เงินที่เหลือหลังจ่ายค่าการตลาดที่ใช้กับสินค้านี้โดยตรง — ตอบว่า<b>ตัวสินค้าเอง</b>คุ้มค่าการตลาดไหม</span></div>
+          <div style="background:var(--bg2);border-radius:8px;padding:8px 10px;"><b style="color:var(--text);">CM2 = CM1 − ค่าช่องทาง</b><br><span style="color:var(--text2);">หักค่าที่เกิดจากการขายในแต่ละช่องทาง (ค่าธรรมเนียม คอม ขนส่ง ไลฟ์ โปรร้าน) — ตอบว่า<b>ขายแล้วยังเหลือไหม</b></span></div>
+          <div style="background:var(--bg2);border-radius:8px;padding:8px 10px;"><b style="color:var(--text);">CM3 = CM2 − ค่าแบรนด์</b><br><span style="color:var(--text2);">หักค่าการตลาดกลางของทั้งแบรนด์ (Rebranding พรีเซนเตอร์ ทีมการตลาด) ที่ปันส่วนมา</span></div>
+          <div style="background:var(--bg2);border-radius:8px;padding:8px 10px;"><b style="color:var(--text);">สุทธิ = CM3 − ค่าบริหาร</b><br><span style="color:var(--text2);">หักเงินเดือน ค่าเช่า ค่าสำนักงานที่ปันส่วนมา · ยังไม่หักต้นทุนสินค้า</span></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin:-6px 0 12px;">ตัดสินใจเรื่องสินค้า (เพิ่ม/ลดงบ/เลิกขาย) ดูที่ <b>CM1–CM2</b> · CM3 และสุทธิไว้ดูภาพรวม เพราะค่าแบรนด์/ค่าบริหารไม่ได้ลดลงถ้าเลิกขายสินค้าตัวไหน</div>
         <div style="overflow-x:auto;">
           <table id="tblPl" class="mkt-tbl" data-no-sort>
             <thead><tr>
@@ -7489,9 +7496,9 @@ function renderPlTable() {
   const ind = document.getElementById('pls-' + _plSortCol); if (ind) ind.textContent = _plSortDir === 'asc' ? '▲' : '▼';
   const T = rows.reduce((t, o) => { ['rev', 'dir', 'ads', 'ch', 'br', 'oh', 'cm1', 'cm2', 'cm3', 'net'].forEach(k => t[k] = (t[k] || 0) + o[k]); return t; }, {});
   const pc = (v, base) => base > 0 ? (v / base * 100).toFixed(1) + '%' : '—';
-  const kc = (label, v, sub) => `<div class="card" style="flex:1;min-width:130px;padding:12px 14px;"><div class="card-title">${label}</div><div class="kpi-value" style="font-size:20px;${v < 0 ? 'color:var(--red);' : ''}">${sub}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmtB(v)}</div></div>`;
+  const kc = (label, v, sub) => `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">${label}</div><div class="kpi-value" style="font-size:20px;${v < 0 ? 'color:var(--red);' : ''}">${sub}</div><div style="font-size:11.5px;color:var(--text2);">฿${fmt(Math.round(v))}</div></div>`;
   document.getElementById('plKpis').innerHTML =
-    `<div class="card" style="flex:1;min-width:130px;padding:12px 14px;"><div class="card-title">ยอดขาย</div><div class="kpi-value" style="font-size:20px;">฿${fmtB(T.rev || 0)}</div></div>`
+    `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">ยอดขาย</div><div class="kpi-value" style="font-size:20px;">฿${fmt(Math.round(T.rev || 0))}</div></div>`
     + kc('CM1 หลังการตลาดตรง+แอด', T.cm1 || 0, pc(T.cm1, T.rev)) + kc('CM2 หลังค่าช่องทาง', T.cm2 || 0, pc(T.cm2, T.rev))
     + kc('CM3 หลังค่าแบรนด์', T.cm3 || 0, pc(T.cm3, T.rev)) + kc('สุทธิ หลังค่าบริหาร', T.net || 0, pc(T.net, T.rev));
   const money = (v, rev) => v ? `<div>฿${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, rev)}</div>` : '<span style="color:var(--text3);">—</span>';
@@ -7519,13 +7526,13 @@ async function plDetail(sku) {
   const sum = (tier, key) => { const m = {}; rows.filter(r => r.tier === tier).forEach(r => { m[r[key]] = (m[r[key]] || 0) + (+r.amount || 0); }); return Object.entries(m).filter(([, v]) => Math.abs(v) >= 1).sort((a, b) => b[1] - a[1]); };
   const line = (k, v) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dashed var(--border);"><span>${k}</span><span style="white-space:nowrap;">฿${fmt(Math.round(v))} <span style="color:var(--text3);font-size:10.5px;">${o.rev > 0 ? (v / o.rev * 100).toFixed(1) + '%' : ''}</span></span></div>`;
   const list = (arr, max) => { const top = arr.slice(0, max), rest = arr.slice(max).reduce((t, [, v]) => t + v, 0); return top.map(([k, v]) => line(k, v)).join('') + (rest ? line(`อื่นๆ (${arr.length - max} รายการ)`, rest) : ''); };
-  const col = (title, total, body) => `<div style="flex:1;min-width:230px;"><div style="font-weight:700;margin-bottom:6px;">${title} <span style="font-weight:400;color:var(--text3);">฿${fmt(Math.round(total))}</span></div><div style="font-size:12px;">${body || '<span style="color:var(--text3);">—</span>'}</div></div>`;
+  const col = (title, total, how, body) => `<div style="flex:1;min-width:230px;"><div style="font-weight:700;">${title} <span style="font-weight:400;color:var(--text3);">฿${fmt(Math.round(total))}</span></div><div style="font-size:11px;color:var(--text3);margin:2px 0 6px;line-height:1.5;">${how}</div><div style="font-size:12px;">${body || '<span style="color:var(--text3);">—</span>'}</div></div>`;
   const direct = [['ค่ารีวิว KOL-Conversion', o.kc], ['ค่ารีวิว KOL-PR', o.kp], ['ค่าใช้จ่ายที่บัญชีผูกสินค้า', o.od], ['พรีเซนเตอร์ (แก้มบุ๋ม)', o.pres], ['แอดยิงสินค้า (API)', o.ad], ['แอดทั่วไป เฉลี่ยตามยอดขาย (API)', o.aa]].filter(([, v]) => Math.abs(v) >= 1);
   el.innerHTML = `<div style="display:flex;gap:24px;flex-wrap:wrap;">
-    ${col('① การตลาดตรง + แอด', o.dir + o.ads, direct.map(([k, v]) => line(k, v)).join(''))}
-    ${col('② ค่าช่องทาง', o.ch, list(sum('channel', 'account_group'), 8) + '<div style="margin-top:8px;color:var(--text3);font-size:11px;">แยกตามช่องทาง</div>' + list(sum('channel', 'channel'), 6))}
-    ${col('③ ค่าแบรนด์ (ปันส่วน)', o.br, list(sum('brand', 'account_group'), 8))}
-    ${col('④ ค่าบริหาร (ปันส่วน)', o.oh, list(sum('overhead', 'account_group'), 6))}
+    ${col('① การตลาดตรง + แอด → CM1', o.dir + o.ads, 'ผูกกับสินค้านี้ตรงๆ: ค่าที่บัญชีลงเป็นสินค้านี้ + แอดที่ยิงสินค้านี้ + แอดทั่วไปแบ่งตามยอดขาย', direct.map(([k, v]) => line(k, v)).join(''))}
+    ${col('② ค่าช่องทาง → CM2', o.ch, 'ค่าที่บัญชีลงไว้ที่ช่องทาง/ร้าน แบ่งให้สินค้าตาม<b>ยอดขายของสินค้านี้ในช่องทางนั้น</b> (ขายที่ไหนเยอะ ก็รับค่าช่องทางนั้นเยอะ)', list(sum('channel', 'account_group'), 8) + '<div style="margin-top:8px;color:var(--text3);font-size:11px;">ก้อนเดียวกัน แยกตามช่องทางที่มา</div>' + list(sum('channel', 'channel'), 6))}
+    ${col('③ ค่าแบรนด์ → CM3', o.br, 'ค่าการตลาดกลางที่ไม่ได้ลงสินค้าหรือช่องทางไหน แบ่งตาม<b>สัดส่วนยอดขายรวม</b>ของสินค้านี้ในเดือนนั้น', list(sum('brand', 'account_group'), 8))}
+    ${col('④ ค่าบริหาร → สุทธิ', o.oh, 'ค่าใช้จ่ายบริหารทั้งบริษัท แบ่งตาม<b>สัดส่วนยอดขายรวม</b>ของสินค้านี้ในเดือนนั้น', list(sum('overhead', 'account_group'), 6))}
   </div>`;
 }
 function exportPl() {
@@ -7592,9 +7599,9 @@ function renderMktRoiTable() {
     dir: t.dir + a.ads_direct, alloc: t.alloc + a.ads_allocated }), { revenue: 0, mkt: 0, kolc: 0, kolp: 0, dir: 0, alloc: 0 });
   const maxPct = Math.max(...rows.map(a => a.mkt_pct || 0), 1);
   document.getElementById('mktTopKpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(T.revenue)}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดรวม</div><div class="kpi-value">฿${fmtB(T.mkt)}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmtB(T.kolc)} · KOL PR ฿${fmtB(T.kolp)}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmtB(T.dir + T.alloc)}</div><div style="font-size:10.5px;color:var(--text3);">ยิงสินค้า ฿${fmtB(T.dir)} · ทั่วไป ฿${fmtB(T.alloc)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.revenue))}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดรวม</div><div class="kpi-value">฿${fmt(Math.round(T.mkt))}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmt(Math.round(T.kolc))} · KOL PR ฿${fmt(Math.round(T.kolp))}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmt(Math.round(T.dir + T.alloc))}</div><div style="font-size:10.5px;color:var(--text3);">ยิงสินค้า ฿${fmt(Math.round(T.dir))} · ทั่วไป ฿${fmt(Math.round(T.alloc))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ROI</div><div class="kpi-value">${T.mkt > 0 ? (T.revenue / T.mkt).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">% Budget ${T.revenue > 0 ? (T.mkt / T.revenue * 100).toFixed(1) + '%' : '—'}</div></div>`;
   const money = v => v ? '฿' + fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
   // ROI แอดตามช่องทาง (ทั้งบริษัท) — ใช้ค่าแอดของช่องทางนั้นเท่านั้น ไม่รวมค่ารีวิว KOL
