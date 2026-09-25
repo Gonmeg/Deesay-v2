@@ -411,7 +411,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #mlKpis { grid-template-columns:repeat(5, minmax(0,1fr)); }
   #tblPl th, #tblMl th { white-space:nowrap; font-size:11.5px; }
   /* กล่องแจกแจงยอด (กดที่ตัวเลข) */
-  .bd { max-width:780px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'Sarabun',sans-serif; }
+  .bd { text-align:left; max-width:780px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'Sarabun',sans-serif; }
   .bd-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; }
   .bd-title { font-weight:700; font-size:13.5px; color:var(--text); }
   .bd-total { font-weight:700; font-size:16px; color:var(--text); white-space:nowrap; } .bd-total span { font-size:11px; font-weight:400; color:var(--text3); margin-left:6px; }
@@ -519,7 +519,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7617,9 +7617,9 @@ function bdRender(o) {
   const row = (g, i) => `<div class="bd-row"><div class="bd-dot" style="background:${BD_COLORS[i % BD_COLORS.length]};"></div><div class="bd-lbl">${plLbl(g.label)}</div>
       <div class="bd-bar"><div style="width:${tot > 0 ? Math.max(0, Math.min(100, g.amount / tot * 100)) : 0}%;background:${BD_COLORS[i % BD_COLORS.length]};"></div></div>
       <div class="bd-amt">฿${fmt(Math.round(g.amount))}</div><div class="bd-pct">${pct(g.amount, tot)}</div></div>`
-    + (g.children || []).filter(c => Math.abs(c.amount) >= 0.5).sort((a, b) => b.amount - a.amount).map(c => `<div class="bd-row sub"><div></div><div class="bd-lbl">${plLbl(c.label)}</div>
+    + (g.children || []).filter(c => Math.abs(c.amount) >= 0.5).sort((a, b) => g.fixed ? 0 : b.amount - a.amount).map(c => `<div class="bd-row sub"><div></div><div class="bd-lbl">${plLbl(c.label)}</div>
       <div class="bd-bar"><div style="width:${g.amount > 0 ? Math.max(0, Math.min(100, c.amount / g.amount * 100)) : 0}%;background:${BD_COLORS[i % BD_COLORS.length]};opacity:.55;"></div></div>
-      <div class="bd-amt">฿${fmt(Math.round(c.amount))}</div><div class="bd-pct">${pct(c.amount, g.amount)}</div></div>`).join('');
+      <div class="bd-amt">฿${fmt(Math.round(c.amount))}</div><div class="bd-pct"></div></div>`).join('');
   return `<div class="bd"><div class="bd-head"><div class="bd-title">${o.title} ${o.tip ? plTip(o.tipId || ('tip-bd-' + Math.random().toString(36).slice(2, 8)), o.tip) : ''}</div>
       <div class="bd-total">฿${fmt(Math.round(tot))}${rev ? `<span>${pct(tot, rev)} ของยอดขาย</span>` : ''}</div></div>
       <div class="bd-stack">${stack}</div>${gs.map(row).join('')}${o.note ? `<div class="bd-note">${o.note}</div>` : ''}</div>`;
@@ -7646,7 +7646,7 @@ function renderPlTop() {
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.rev))}</div><div style="font-size:10.5px;color:var(--text3);">${PM(from)} – ${PM(to)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดตรง (ไม่รวม Ads)</div><div class="kpi-value">฿${fmt(Math.round(mkt))}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmt(Math.round(T.kc))} · KOL PR ฿${fmt(Math.round(T.kp))} · อื่นๆ ฿${fmt(Math.round(T.oth))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads</div><div class="kpi-value">฿${fmt(Math.round(ads))}</div><div style="font-size:10.5px;color:var(--text3);">Product Ads ฿${fmt(Math.round(T.ad))} · Shared Ads ฿${fmt(Math.round(T.aa))}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">MER ${plTip('tip-bi-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขาย ÷ (ค่าการตลาดตรง + ค่า Ads)<br>ลงการตลาด 1 บาท ได้ยอดขายกี่บาท<br><br>ไม่ใช่ ROI (กำไร ÷ ต้นทุน) เพราะยังไม่หักทุนสินค้า — ถ้าอยากดูว่าเหลือเงินเท่าไร ดูที่ CM')}</div><div class="kpi-value">${all > 0 ? (T.rev / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ค่าการตลาดตรง + Ads = ${T.rev > 0 ? (all / T.rev * 100).toFixed(1) + '%' : '—'} ของยอดขาย</div></div>`;
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">MER ${plTip('tip-bi-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขาย ÷ (ค่าการตลาดตรง + ค่า Ads)<br>ลงการตลาด 1 บาท ได้ยอดขายกี่บาท')}</div><div class="kpi-value">${all > 0 ? (T.rev / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ค่าการตลาดตรง + Ads = ${T.rev > 0 ? (all / T.rev * 100).toFixed(1) + '%' : '—'} ของยอดขาย</div></div>`;
   const ms = Object.keys(byM).sort();
   let box = document.getElementById('mktTrendBox');
   if (!box) { box = document.createElement('div'); box.id = 'mktTrendBox'; box.className = 'card mkt-trend'; document.getElementById('mktTopKpis').after(box); }
@@ -7713,7 +7713,7 @@ async function plDetail(sku) {
     const g = bdFrom(group(lines.filter(r => r.layer === 'cm1'), 'cost_category')); if (o.pres >= 0.5) g.push({ label: 'Presenter (K.แก้มบุ๋ม)', amount: o.pres });
     el.innerHTML = bdRender({ title: `ค่าการตลาดตรง · ${o.name}`, total: o.dir, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่บัญชีลงเป็นสินค้านี้โดยตรง (ตามหมวดบัญชี) + ค่า Presenter ที่ผูกสินค้า' });
   } else if (metric === 'ads') {
-    const g = plChAgg(sku).filter(x => x.ads >= 0.5).map(x => ({ label: x.ch, amount: x.ads, children: [{ label: 'Product Ads', amount: x.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: x.aa }] }));
+    const g = plChAgg(sku).filter(x => x.ads >= 0.5).map(x => ({ label: x.ch, amount: x.ads, fixed: true, children: [{ label: 'Product Ads', amount: x.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: x.aa }] }));
     el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups: g, tipId: tid, tip: 'ยอดใช้จ่ายจริงจาก Meta / TikTok / Shopee / Lazada<br><b>Product Ads</b> = แอดที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = แอดที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
   } else if (metric === 'ch') {
     const g = bdFrom(group(rows.filter(r => r.layer === 'cm2'), 'account_group')).map(x => ({ ...x, children: bdFrom(group(rows.filter(r => r.layer === 'cm2' && r.account_group === x.label && r.tier === 'channel'), 'channel')) }));
@@ -7784,7 +7784,7 @@ async function renderMktLive() {
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า KOL</div><div class="kpi-value">฿${fmt(Math.round(T.kol || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Conversion ฿${fmt(Math.round(T.kc || 0))} · PR ฿${fmt(Math.round(T.kp || 0))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads</div><div class="kpi-value">฿${fmt(Math.round(T.ads || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Product Ads ฿${fmt(Math.round(T.ad || 0))} · Shared Ads ฿${fmt(Math.round(T.aa || 0))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">CM1 ${plTip('tip-ml-cm1', '<b>CM1 · Contribution Margin 1</b><br>ยอดขาย − ค่า KOL − ค่า Ads<br>เงินที่เหลือหลังจ่ายค่าการตลาดที่ใช้กับสินค้า')}</div><div class="kpi-value">${T.rev > 0 ? (T.cm1 / T.rev * 100).toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(T.cm1 || 0))}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">MER ${plTip('tip-ml-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขาย ÷ (ค่า KOL + ค่า Ads)<br>ลงการตลาด 1 บาท ได้ยอดขายกี่บาท<br><br>ไม่ใช่ ROI (กำไร ÷ ต้นทุน) เพราะยังไม่หักทุนสินค้า — ถ้าอยากดูว่าเหลือเงินเท่าไร ดูที่ CM1')}</div><div class="kpi-value">${all > 0 ? (T.rev / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ค่า KOL + Ads = ${T.rev > 0 ? (all / T.rev * 100).toFixed(1) + '%' : '—'} ของยอดขาย</div></div>`;
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">MER ${plTip('tip-ml-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขาย ÷ (ค่า KOL + ค่า Ads)<br>ลงการตลาด 1 บาท ได้ยอดขายกี่บาท')}</div><div class="kpi-value">${all > 0 ? (T.rev / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ค่า KOL + Ads = ${T.rev > 0 ? (all / T.rev * 100).toFixed(1) + '%' : '—'} ของยอดขาย</div></div>`;
   const ms = Object.keys(byM).sort();
   if (ms.length > 1) makeChart('chartMlTrend', 'bar', ms.map(PL_TH_M),
     [{ type: 'bar', label: 'ยอดขาย', data: ms.map(m => byM[m].rev), backgroundColor: 'rgba(96,165,250,0.65)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 40 },
@@ -7831,7 +7831,7 @@ function mlDetail(sku) {
     el.innerHTML = bdRender({ title: `ค่า KOL · ${o.name}`, total: o.kol, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'จากชีทเบิกเงิน KOL ตามเดือนที่เกิดค่าใช้จ่าย<br>บรรทัดย่อย = ช่องทางที่ KOL ลงงาน · งานที่ลงหลายช่องทางแบ่งยอดเท่าๆ กันให้แต่ละช่องทาง' });
   } else {
     const chs = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { const c = (chs[r.channel] = chs[r.channel] || { ad: 0, aa: 0 }); c.ad += +r.ads_direct || 0; c.aa += +r.ads_allocated || 0; });
-    const groups = Object.entries(chs).map(([c, v]) => ({ label: c, amount: v.ad + v.aa, children: [{ label: 'Product Ads', amount: v.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: v.aa }] }));
+    const groups = Object.entries(chs).map(([c, v]) => ({ label: c, amount: v.ad + v.aa, fixed: true, children: [{ label: 'Product Ads', amount: v.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: v.aa }] }));
     el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'ยอดใช้จ่ายจริง<br><b>Product Ads</b> = แอดที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = แอดที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
   }
 }
