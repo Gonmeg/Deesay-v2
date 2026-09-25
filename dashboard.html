@@ -412,6 +412,15 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblPl th, #tblMl th { white-space:nowrap; font-size:11.5px; }
   #page-kol .card-title, #page-kol .kpi-value, #page-kol th, #page-kol .mkt-tbl td { font-family:'Sarabun',sans-serif !important; letter-spacing:normal !important; text-transform:none !important; }
   #page-kol .card-title { font-size:12px; color:var(--text2); font-weight:600; } #tblKj th { white-space:nowrap; font-size:11.5px; }
+  #tblKj th { white-space:nowrap; } #tblKj td.pl-amt { cursor:pointer; } #tblKj td.pl-amt:hover > span:first-child { text-decoration:underline dotted; } #tblKj td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
+  #tblKj tr.pl-detail > td, #tblKj tr.pl-detail:hover > td { background:transparent !important; }
+  .kj-cal { width:100%; border-collapse:separate; border-spacing:3px; font-family:'Sarabun',sans-serif; }
+  .kj-cal th { font-size:11.5px; color:var(--text2); font-weight:600; padding:6px 4px; text-align:center; white-space:nowrap; }
+  .kj-cal td { text-align:center; padding:8px 4px; border-radius:7px; font-size:12px; min-width:78px; background:var(--h, transparent); cursor:default; }
+  .kj-cal td.has { cursor:pointer; } .kj-cal td.has:hover { outline:2px solid var(--accent); }
+  .kj-cal td.nm { text-align:left; white-space:nowrap; min-width:180px; background:none; } .kj-cal td .v { font-weight:700; } .kj-cal td .n { font-size:10.5px; color:var(--text3); }
+  .kj-cal td.future { background:repeating-linear-gradient(45deg, transparent 0 6px, var(--border) 6px 7px); }
+  .kj-cal tr.tot td { border-top:1px solid var(--border); font-weight:700; }
   .kj-tag { display:inline-block; padding:1px 7px; border-radius:10px; font-size:10.5px; } .kj-ok { background:rgba(34,197,94,.14); color:#16a34a; } .kj-no { background:rgba(148,163,184,.18); color:var(--text3); }
   /* กล่องแจกแจงยอด (กดที่ตัวเลข) */
   .bd { text-align:left; max-width:780px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'Sarabun',sans-serif; }
@@ -522,7 +531,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-f</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1155,14 +1164,16 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <div class="section-header" style="flex-wrap:wrap;gap:8px;">
           <div class="section-title">งาน KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-kj-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-kj-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ข้อมูลจากชีทเบิกเงิน KOL (1 แถว = 1 งาน) ตามเดือนที่เกิดค่าใช้จ่าย<br><br><b>ค่า Ads</b> = แอดที่ยิงงานนั้น · Facebook จับจากชื่อแอด (_KOLs_ชื่อ KOL) หรือที่ทีม KOL ผูกไว้ · TikTok จับจากเลขคลิปในลิงก์โพสต์<br><b>ยอดขายที่ผูกได้</b> = Facebook: ยอดซื้อที่ Meta นับจากแอด · TikTok: ยอดขาย affiliate ของ creator ภายใน 30 วันหลังโพสต์ (ไม่นับซ้ำ)<br><br>โพสต์ที่ไม่ได้ยิงแอด/ไม่ใช่ affiliate จะไม่มียอดขายผูก — ไม่ได้แปลว่าขายไม่ได้</div></span></div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <div class="pl-seg" id="kjViewSeg"><button class="on" data-v="job" onclick="kjSetView('job')">ตามงาน</button><button data-v="kol" onclick="kjSetView('kol')">ตาม KOL</button><button data-v="sku" onclick="kjSetView('sku')">ตามสินค้า</button></div>
+            <div class="pl-seg" id="kjViewSeg"><button class="on" data-v="job" onclick="kjSetView('job')">ตามงาน</button><button data-v="kol" onclick="kjSetView('kol')">ตาม KOL</button><button data-v="sku" onclick="kjSetView('sku')">ตามสินค้า</button><button data-v="cal" onclick="kjSetView('cal')">📅 ปฏิทินงบ</button></div>
+            <div class="pl-seg" id="kjCalSeg" style="display:none;"><button class="on" data-m="amount" onclick="kjSetCal('amount')">ค่าจ้าง</button><button data-m="spend" onclick="kjSetCal('spend')">ค่าจ้าง + Ads</button><button data-m="sales" onclick="kjSetCal('sales')">ยอดขาย</button><button data-m="mer" onclick="kjSetCal('mer')">MER</button></div>
             <select class="ls-input" id="kjPlat" style="width:auto;padding:6px 10px;font-size:12px;" onchange="renderKolTable()"><option value="">ทุกช่องทาง</option><option>TikTok</option><option>Facebook</option><option value="other">อื่นๆ</option></select>
             <select class="ls-input" id="kjType" style="width:auto;padding:6px 10px;font-size:12px;" onchange="renderKolTable()"><option value="">Conversion + PR</option><option>Conversion</option><option>PR</option></select>
             <input class="ls-input" id="kjSearch" placeholder="ค้นหาชื่อ KOL…" style="width:170px;padding:6px 10px;font-size:12px;" oninput="renderKolTable()">
             <button class="btn btn-ghost" style="white-space:nowrap;padding:6px 12px;font-size:12px;" onclick="exportKol()">⬇ Export CSV</button>
           </div>
         </div>
-        <div style="overflow-x:auto;"><table id="tblKj" class="mkt-tbl" data-no-sort><thead id="theadKj"></thead><tbody id="tbodyKj"><tr><td class="empty">กำลังโหลด…</td></tr></tbody></table></div>
+        <div id="kjCal" style="display:none;overflow-x:auto;"></div>
+        <div id="kjTableWrap" style="overflow-x:auto;"><table id="tblKj" class="mkt-tbl" data-no-sort><thead id="theadKj"></thead><tbody id="tbodyKj"><tr><td class="empty">กำลังโหลด…</td></tr></tbody></table></div>
       </div>
     </div>
     <div class="page" id="page-adperf">
@@ -7759,7 +7770,70 @@ function exportMl() {
 
 
 // ===== หน้า KOL (ใหม่) — ชีทเบิกเงิน KOL + จับคู่ Ads / ยอดขาย (mv_kol_jobs) =====
-let _kjRows = null, _kjNames = {}, _kjView = 'job', _kjSortCol = 'amount', _kjSortDir = 'desc', _kjList = [];
+let _kjRows = null, _kjNames = {}, _kjView = 'job', _kjSortCol = 'amount', _kjSortDir = 'desc', _kjList = [], _kjOpen = new Map(), _kjFiltered = [], _kjCalMetric = 'amount';
+// เซลล์ตัวเลขที่กดได้ → แจกแจงว่ามาจากไหน (ยอดรวมเท่าตัวเลขที่กด)
+function kjCell(o, m) { const v = o[m]; if (!v) return '<td><span style="color:var(--text3);">—</span></td>'; const on = _kjOpen.get(o.key) === m;
+  return `<td class="pl-amt${on ? ' on' : ''}" onclick="kjToggle('${String(o.key).replace(/'/g, "\\'")}','${m}')" title="กดเพื่อดูว่ามาจากไหน"><span>฿${fmt(Math.round(v))}</span></td>`; }
+function kjToggle(key, m) { if (_kjOpen.get(key) === m) _kjOpen.delete(key); else _kjOpen.set(key, m); renderKolTable(); }
+function kjAfterRows(cols) {
+  // แทรกแถวรายละเอียดใต้แถวที่เปิดอยู่
+  const tb = document.getElementById('tbodyKj'); const trs = [...tb.children];
+  _kjList.forEach((o, i) => { const m = _kjOpen.get(o.key); if (!m || !trs[i]) return;
+    const tr = document.createElement('tr'); tr.className = 'pl-detail'; tr.innerHTML = `<td colspan="${cols}" style="padding:0;"><div style="padding:12px 20px;background:var(--bg2);">${kjBreakdown(o, m)}</div></td>`; trs[i].after(tr); });
+}
+function kjBreakdown(o, m) {
+  const jobs = o.jobs || [], childKey = _kjView === 'kol' ? 'sku' : _kjView === 'sku' ? 'kol' : null;
+  const childName = r => childKey === 'sku' ? (_kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—') : (r.kol_name || r.kol_handle || '—');
+  const add = (map, k, v) => { if (v) map[k] = (map[k] || 0) + v; };
+  const G = {};   // กลุ่ม → { amount, kids{} }
+  const put = (g, r, v) => { if (!v) return; const x = (G[g] = G[g] || { amount: 0, kids: {} }); x.amount += v; if (childKey) add(x.kids, childName(r), v); };
+  jobs.forEach(r => {
+    if (m === 'ads') { put('Facebook Ads', r, +r.fb_ads_spend || 0); put('TikTok Ads', r, +r.tt_ads_spend || 0); }
+    else if (m === 'sales') { put('Facebook · ยอดซื้อจาก Ads (Meta)', r, +r.fb_ads_value || 0); put('TikTok · ยอดขาย affiliate', r, +r.creator_sales || 0); }
+    else { const pl = kjPlat(r.platform) === 'other' ? 'ช่องทางอื่น' : kjPlat(r.platform); const t = /^conv/i.test(r.kol_type || '') ? 'Conversion' : /^pr/i.test(r.kol_type || '') ? 'PR' : 'อื่นๆ';
+      const x = (G[pl] = G[pl] || { amount: 0, kids: {} }); x.amount += +r.amount || 0; add(x.kids, t, +r.amount || 0); }
+  });
+  const groups = Object.entries(G).map(([label, x]) => ({ label, amount: x.amount, children: bdTop(bdFrom(Object.entries(x.kids)), 8) }));
+  const title = { amount: 'ค่าจ้าง KOL', ads: 'ค่า Ads ที่ยิงงาน KOL', sales: 'ยอดขายที่ผูกได้' }[m] + ' · ' + (o.name || o.kol || '');
+  const tip = { amount: 'แยกตามช่องทางที่ลงงาน แล้วย่อยเป็น Conversion / PR', ads: 'Facebook = แอดที่ชื่อตรงกับ KOL/รหัส content · TikTok = แอดที่ยิงคลิปของงานนี้ (รวม GMV Max)' + (childKey ? '<br>บรรทัดย่อย = ' + (childKey === 'sku' ? 'สินค้า' : 'KOL') : ''), sales: 'Facebook = ยอดซื้อที่ Meta นับจากแอดของงาน · TikTok = ยอดขาย affiliate ของครีเอเตอร์ภายใน 30 วันหลังโพสต์' + (childKey ? '<br>บรรทัดย่อย = ' + (childKey === 'sku' ? 'สินค้า' : 'KOL') : '') }[m];
+  return bdRender({ title, total: o[m], groups, tipId: 'tip-kjbd-' + String(o.key).replace(/[^a-zA-Z0-9]/g, '') + m, tip });
+}
+function kjSetCal(m) { _kjCalMetric = m; document.querySelectorAll('#kjCalSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); renderKolCal(); }
+// 📅 ปฏิทินงบ: สินค้า × เดือน (ทั้งปี) — ใช้ตัวกรองช่องทาง / ประเภท / ค้นหาชื่อ แต่ไม่ใช้ช่วงเดือน
+function renderKolCal() {
+  const el = document.getElementById('kjCal'); if (!el) return;
+  const plat = document.getElementById('kjPlat').value, typ = document.getElementById('kjType').value, q = (document.getElementById('kjSearch').value || '').trim().toLowerCase();
+  const rows = _kjRows.filter(r => r.month && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || '')) && (!q || `${r.kol_name || ''} ${r.kol_handle || ''}`.toLowerCase().includes(q)));
+  const year = (rows.map(r => r.month).sort().pop() || new Date().toISOString()).slice(0, 4);
+  const months = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`), nowM = new Date().toISOString().slice(0, 7);
+  const cell = {}, skuT = {}, mT = {};
+  const acc = (o, r) => { o.amount += +r.amount || 0; o.ads += +r.ads_spend || 0; o.sales += (+r.fb_ads_value || 0) + (+r.creator_sales || 0); o.n++; (o.jobs = o.jobs || []).push(r); };
+  const blank = () => ({ amount: 0, ads: 0, sales: 0, n: 0 });
+  rows.filter(r => r.month.startsWith(year)).forEach(r => { const k = r.parent_sku || r.product_code || '—';
+    acc((cell[k + '|' + r.month] = cell[k + '|' + r.month] || blank()), r); acc((skuT[k] = skuT[k] || blank()), r); acc((mT[r.month] = mT[r.month] || blank()), r); });
+  const val = o => !o ? 0 : _kjCalMetric === 'spend' ? o.amount + o.ads : _kjCalMetric === 'mer' ? ((o.amount + o.ads) > 0 && o.sales > 0 ? o.sales / (o.amount + o.ads) : 0) : o[_kjCalMetric];
+  const maxV = Math.max(1, ...Object.values(cell).map(val));
+  const shade = v => { if (!v) return 'transparent'; if (_kjCalMetric === 'mer') return v >= 3 ? 'rgba(34,197,94,0.32)' : v >= 1.5 ? 'rgba(34,197,94,0.16)' : v >= 1 ? 'rgba(234,179,8,0.20)' : 'rgba(239,68,68,0.22)'; return `rgba(201,161,74,${(0.10 + 0.55 * Math.min(1, v / maxV)).toFixed(2)})`; };
+  const show = v => !v ? '' : _kjCalMetric === 'mer' ? v.toFixed(2) + 'x' : '฿' + fmt(Math.round(v));
+  const skus = Object.keys(skuT).sort((a, b) => val(skuT[b]) - val(skuT[a]) || skuT[b].amount - skuT[a].amount);
+  const td = (o, key, m) => { const v = val(o), fut = m > nowM;
+    return `<td class="${o && o.n ? 'has' : ''}${fut && !(o && o.n) ? ' future' : ''}" style="--h:${shade(v)};" ${o && o.n ? `onclick="kjCalPick('${key}')"` : ''} title="${o && o.n ? `${o.n} งาน · ค่าจ้าง ฿${fmt(Math.round(o.amount))} · Ads ฿${fmt(Math.round(o.ads))} · ยอดขาย ฿${fmt(Math.round(o.sales))}` : fut ? 'เดือนข้างหน้า — ช่องสำหรับวางแผน' : ''}">${o && o.n ? `<div class="v">${show(v)}</div><div class="n">${o.n} งาน</div>` : ''}</td>`; };
+  _kjCalCells = cell;
+  el.innerHTML = `<div style="font-size:11.5px;color:var(--text2);margin:0 0 8px;">ปี ${+year + 543} · แต่ละช่อง = ${({ amount: 'ค่าจ้าง KOL', spend: 'ค่าจ้าง + ค่า Ads', sales: 'ยอดขายที่ผูกได้', mer: 'MER' })[_kjCalMetric]} ของสินค้านั้นในเดือนนั้น (เดือนที่เกิดค่าใช้จ่าย) · สีเข้ม = มาก · ช่องลายเส้น = เดือนข้างหน้า · กดช่องเพื่อดูว่ามีงานอะไรบ้าง
+      ${plTip('tip-kjcal', 'ใช้ดูว่าแต่ละเดือนลงงบ KOL กับสินค้าตัวไหนไปเท่าไร เพื่อวางแผนเดือนถัดไป<br>ตัวกรองช่องทาง / Conversion-PR / ค้นชื่อ ใช้กับปฏิทินด้วย (ไม่ใช้ช่วงเดือนด้านบน เพราะแสดงทั้งปี)')}</div>
+    <table class="kj-cal"><thead><tr><th style="text-align:left;">สินค้า</th>${months.map(m => `<th>${MONTHS_TH[+m.slice(5) - 1]}</th>`).join('')}<th>รวมทั้งปี</th></tr></thead><tbody>
+      ${skus.map(k => `<tr><td class="nm"><b>${_kjNames[k] || k}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${k}</span></td>${months.map(m => td(cell[k + '|' + m], k + '|' + m, m)).join('')}<td style="--h:transparent;"><div class="v">${show(val(skuT[k]))}</div><div class="n">${skuT[k].n} งาน</div></td></tr>`).join('')}
+      <tr class="tot"><td class="nm">รวมทุกสินค้า</td>${months.map(m => `<td style="--h:transparent;">${mT[m] ? `<div class="v">${show(val(mT[m]))}</div><div class="n">${mT[m].n} งาน</div>` : (m > nowM ? '<div class="n">วางแผน</div>' : '')}</td>`).join('')}<td style="--h:transparent;"><div class="v">${show(val(Object.values(mT).reduce((t, o) => { t.amount += o.amount; t.ads += o.ads; t.sales += o.sales; t.n += o.n; return t; }, blank())))}</div></td></tr>
+    </tbody></table><div id="kjCalPick" style="margin-top:12px;"></div>`;
+}
+let _kjCalCells = {};
+function kjCalPick(key) {
+  const o = _kjCalCells[key], box = document.getElementById('kjCalPick'); if (!o || !box) return;
+  const [sku, m] = key.split('|');
+  const g = {}; o.jobs.forEach(r => { const k = r.kol_name || r.kol_handle || '—'; const x = (g[k] = g[k] || { label: k, amount: 0, children: [] }); x.amount += +r.amount || 0; x.children.push({ label: `${/^conv/i.test(r.kol_type || '') ? 'Conversion' : 'PR'} · ${r.platform || '—'}${r.post_date ? ' · โพสต์ ' + new Date(r.post_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : ''}`, amount: +r.amount || 0 }); });
+  box.innerHTML = bdRender({ title: `งาน KOL · ${_kjNames[sku] || sku} · ${PL_TH_M(m)}`, total: o.amount, groups: Object.values(g), note: `ค่า Ads ที่ยิงงานเหล่านี้ ฿${fmt(Math.round(o.ads))} · ยอดขายที่ผูกได้ ฿${fmt(Math.round(o.sales))}` });
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 async function renderKolPage() {
   const tb = document.getElementById('tbodyKj'); if (!tb) return;
   try {
@@ -7774,7 +7848,7 @@ async function renderKolPage() {
   renderKolTable();
 }
 function kjPlat(p) { p = String(p || ''); return /tiktok/i.test(p) ? 'TikTok' : /facebook/i.test(p) ? 'Facebook' : 'other'; }
-function kjSetView(v) { _kjView = v; _kjSortCol = 'amount'; _kjSortDir = 'desc'; document.querySelectorAll('#kjViewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); renderKolTable(); }
+function kjSetView(v) { _kjView = v; _kjSortCol = 'amount'; _kjSortDir = 'desc'; _kjOpen = new Map(); document.getElementById('kjCalSeg').style.display = v === 'cal' ? '' : 'none'; document.querySelectorAll('#kjViewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); renderKolTable(); }
 function kjSort(c) { if (_kjSortCol === c) _kjSortDir = _kjSortDir === 'asc' ? 'desc' : 'asc'; else { _kjSortCol = c; _kjSortDir = ['name', 'kol', 'sku', 'plat', 'type', 'date'].includes(c) ? 'asc' : 'desc'; } renderKolTable(); }
 function renderKolTable() {
   if (!_kjRows) return;
@@ -7784,6 +7858,9 @@ function renderKolTable() {
   const rows = _kjRows.filter(r => r.month >= from && r.month <= to && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || ''))
     && (!q || `${r.kol_name || ''} ${r.kol_handle || ''} ${r.tt_handle || ''}`.toLowerCase().includes(q)));
   const val = r => ({ amount: +r.amount || 0, ads: +r.ads_spend || 0, sales: (+r.fb_ads_value || 0) + (+r.creator_sales || 0) });
+  _kjFiltered = rows;
+  if (_kjView === 'cal') { document.getElementById('kjTableWrap').style.display = 'none'; document.getElementById('kjCal').style.display = ''; }
+  else { document.getElementById('kjTableWrap').style.display = ''; document.getElementById('kjCal').style.display = 'none'; }
   const T = rows.reduce((t, r) => { const v = val(r); t.amount += v.amount; t.ads += v.ads; t.sales += v.sales; t.n++; if (r.match_status === 'matched') t.m++; if (/^conv/i.test(r.kol_type || '')) t.conv += v.amount; else t.pr += v.amount; return t; }, { amount: 0, ads: 0, sales: 0, n: 0, m: 0, conv: 0, pr: 0 });
   const PM = PL_TH_M;
   document.getElementById('kjNote').textContent = `${from === to ? PM(from) : PM(from) + ' – ' + PM(to)} · ตามเดือนที่เกิดค่าใช้จ่าย (ชีทเบิกเงิน KOL)`;
@@ -7792,16 +7869,17 @@ function renderKolTable() {
     <div class="card"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmt(Math.round(T.amount))}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(T.n)} งาน · Conversion ฿${fmt(Math.round(T.conv))} · PR ฿${fmt(Math.round(T.pr))}</div></div>
     <div class="card"><div class="card-title">ค่า Ads ที่ยิงงาน KOL</div><div class="kpi-value">฿${fmt(Math.round(T.ads))}</div><div style="font-size:10.5px;color:var(--text3);">${T.amount > 0 ? (T.ads / T.amount * 100).toFixed(0) + '% ของค่าจ้าง' : ''}</div></div>
     <div class="card"><div class="card-title">ยอดขายที่ผูกได้</div><div class="kpi-value">฿${fmt(Math.round(T.sales))}</div><div style="font-size:10.5px;color:var(--text3);">Facebook จาก Ads · TikTok จาก affiliate</div></div>
-    <div class="card"><div class="card-title">MER งาน KOL</div><div class="kpi-value">${all > 0 ? (T.sales / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ยอดขายที่ผูกได้ ÷ (ค่าจ้าง + Ads)</div></div>
+    <div class="card"><div class="card-title">MER งาน KOL ${plTip('tip-kj-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท')}</div><div class="kpi-value">${all > 0 ? (T.sales / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ยอดขายที่ผูกได้ ÷ (ค่าจ้าง + Ads)</div></div>
     <div class="card"><div class="card-title">จับคู่ได้</div><div class="kpi-value">${T.n ? (T.m / T.n * 100).toFixed(0) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(T.m)} จาก ${fmt(T.n)} งาน (Facebook / TikTok)</div></div>`;
   // รวมตามมุมมอง
   let list;
-  if (_kjView === 'job') list = rows.map(r => ({ ...r, ...val(r), kol: r.kol_name || r.kol_handle || '—', sku: _kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—', plat: r.platform || '—', type: r.kol_type || '—', date: r.post_date || '' }));
+  if (_kjView === 'cal') { renderKolCal(); return; }
+  if (_kjView === 'job') list = rows.map(r => ({ ...r, ...val(r), key: 'r' + r.row_no, jobs: [r], kol: r.kol_name || r.kol_handle || '—', sku: _kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—', plat: r.platform || '—', type: r.kol_type || '—', date: r.post_date || '' }));
   else {
     const by = {};
     rows.forEach(r => { const k = _kjView === 'kol' ? (r.kol_name || r.kol_handle || '—') : (r.parent_sku || r.product_code || '—');
-      const o = (by[k] = by[k] || { key: k, name: _kjView === 'kol' ? k : (_kjNames[k] || k), n: 0, amount: 0, ads: 0, sales: 0, plats: new Set() });
-      const v = val(r); o.n++; o.amount += v.amount; o.ads += v.ads; o.sales += v.sales; o.plats.add(kjPlat(r.platform)); });
+      const o = (by[k] = by[k] || { key: k, name: _kjView === 'kol' ? k : (_kjNames[k] || k), n: 0, amount: 0, ads: 0, sales: 0, plats: new Set(), jobs: [] });
+      const v = val(r); o.n++; o.jobs.push(r); o.amount += v.amount; o.ads += v.ads; o.sales += v.sales; o.plats.add(kjPlat(r.platform)); });
     list = Object.values(by).map(o => ({ ...o, plat: [...o.plats].map(p => p === 'other' ? 'อื่นๆ' : p).join(', ') }));
   }
   list.forEach(o => { o.mer = (o.amount + o.ads) > 0 ? o.sales / (o.amount + o.ads) : 0; });
@@ -7811,19 +7889,21 @@ function renderKolTable() {
   const money = v => v ? `฿${fmt(Math.round(v))}` : '<span style="color:var(--text3);">—</span>';
   const mer = o => o.sales > 0 ? `<b>${o.mer.toFixed(2)}x</b>` : '<span style="color:var(--text3);">—</span>';
   if (_kjView === 'job') {
-    document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1)}${th('plat', 'ช่องทาง', 1)}${th('sku', 'สินค้า', 1)}${th('type', 'ประเภท')}${th('date', 'วันโพสต์')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER')}<th>สถานะ</th></tr>`;
+    document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1)}${th('plat', 'ช่องทาง', 1)}${th('sku', 'สินค้า', 1)}${th('type', 'ประเภท')}${th('date', 'วันโพสต์')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER ' + plTip('tip-kjh-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}<th>สถานะ</th></tr>`;
     document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr>
       <td class="c-left"><b>${o.kol}</b>${o.tt_handle ? ` <span style="color:var(--text3);font-size:10.5px;">@${o.tt_handle}</span>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}</td>
       <td class="c-left" style="font-size:11.5px;">${o.plat}</td><td class="c-left" style="font-size:11.5px;">${o.sku}</td><td>${o.type}</td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</td>
-      <td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td>
+      ${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td>
       <td>${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">จับคู่แล้ว</span>' : o.match_status === 'unmatched' ? '<span class="kj-tag kj-no">ยังไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูลช่องทางนี้</span>'}</td></tr>`).join('')
       || '<tr><td colspan="10" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
+    kjAfterRows(10);
   } else {
     const lbl = _kjView === 'kol' ? 'KOL' : 'สินค้า';
-    document.getElementById('theadKj').innerHTML = `<tr>${th('name', lbl, 1)}${th('plat', 'ช่องทาง', 1)}${th('n', 'งาน')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER')}</tr>`;
-    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left"><b>${o.name}</b></td><td class="c-left" style="font-size:11.5px;">${o.plat}</td><td>${fmt(o.n)}</td><td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td></tr>`).join('')
+    document.getElementById('theadKj').innerHTML = `<tr>${th('name', lbl, 1)}${th('plat', 'ช่องทาง', 1)}${th('n', 'งาน')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER ' + plTip('tip-kjh-mer2', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}</tr>`;
+    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left"><b>${o.name}</b></td><td class="c-left" style="font-size:11.5px;">${o.plat}</td><td>${fmt(o.n)}</td>${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td></tr>`).join('')
       || '<tr><td colspan="7" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
+    kjAfterRows(7);
   }
 }
 function exportKol() {
