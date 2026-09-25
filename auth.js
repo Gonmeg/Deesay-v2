@@ -32,7 +32,7 @@ window.DEESAY_PAGES = [
   { id: 'mktlive',      name: 'MKT Tracking',          group: 'สินค้า / การตลาด' },
   { id: 'skuanalysis',  name: 'เจาะสินค้า',             group: 'สินค้า / การตลาด' },
   { id: 'adperf',       name: 'Ad Performance',        group: 'สินค้า / การตลาด' },
-  { id: 'kol',          name: 'KOL / Affiliate',       group: 'สินค้า / การตลาด' },
+  { id: 'kol',          name: 'KOL',                   group: 'สินค้า / การตลาด' },
   { id: 'supply',       name: 'Supply Chain',          group: 'สินค้า / การตลาด' },
 ];
 // ปุ่มลัด "ให้แบบพนักงานทั่วไป" ใน admin.html = หน้าชุดนี้ (แก้ได้ตามใจ)
