@@ -519,7 +519,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-d</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2105,11 +2105,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
     <!-- (2026-09-25) MKT Tracking แบบวันต่อวัน — CM1 เท่านั้น: ค่า KOL จากชีทเบิกเงิน + ค่า Ads จริง (ไม่ใช้ไฟล์บัญชี) -->
     <div class="page" id="page-mktlive">
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
-        <span style="font-size:12px;color:var(--text2);">ช่วงเวลา</span>
-        <select class="ls-input" id="mlPeriod" style="padding:6px 10px;font-size:12px;width:auto;min-width:170px;" onchange="renderMktLive()"></select>
-        <span id="mlNote" style="font-size:11px;color:var(--text3);"></span>
-      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><span id="mlNote" style="font-size:11.5px;color:var(--text2);"></span></div>
       <div class="mkt-top-kpis" id="mlKpis"></div>
       <div class="card mkt-trend" id="mlTrendBox"><div class="mkt-ch-title">แนวโน้มรายเดือน <span>แท่ง = ยอดขาย / ค่า KOL + Ads · เส้น = MER</span></div><div class="chart-wrap" style="height:230px;"><canvas id="chartMlTrend"></canvas></div></div>
       <div id="mlCh"></div>
@@ -2814,8 +2810,8 @@ const pageTitles = {
   cost: 'Business Insight', mktlive: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)', fbads: 'Facebook Ads (Meta)', kol: 'KOL / Affiliate — คนที่จ้าง',
   supply: 'Supply Chain — สต็อก / แผนสั่งซื้อ'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
-const MONTH_ONLY_PAGES = ['cost']; // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
+const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
+const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget','supply']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -2922,17 +2918,16 @@ function showPage(page, lockCh, el) {
   }
 
   // (2026-09-22) MKT Tracking ดูทุกช่องทางรวม (แยกช่องทางดูในหน้า) → ซ่อน Channel / Sub-channel
-  { const tsb = document.getElementById('topSearchBtn'); if (tsb) tsb.style.display = page === 'cost' ? 'none' : '';
-  }
-  { const hideCh = page === 'cost';
+  // (2026-09-25) Business Insight / MKT Tracking ใช้ตัวเลือกเดือนด้านบน + ปุ่มค้นหา · ไม่มี Channel / Sub-channel (แยกช่องทางดูในหน้า)
+  { const hideCh = page === 'cost' || page === 'mktlive';
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (cg) cg.style.display = hideCh ? 'none' : ''; if (sg) sg.style.display = hideCh ? 'none' : ''; }
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
   const noDateFilter = NO_DATE_FILTER_PAGES.includes(page);
   document.getElementById('dateRangeGroup').style.display = (isMonthOnly || noDateFilter) ? 'none' : 'flex';
-  document.getElementById('monthFilterGroup').style.display = (isMonthOnly && page !== 'cost') ? 'flex' : 'none';   // MKT Tracking สะสมทั้งปี ไม่ต้องเลือกเดือน
-  if (isMonthOnly) {
+  document.getElementById('monthFilterGroup').style.display = isMonthOnly ? 'flex' : 'none';
+  if (isMonthOnly && page !== 'cost' && page !== 'mktlive') {   // สองหน้านี้เติมรายการเดือนของตัวเอง (topMonthsFor)
     const selFrom = document.getElementById('filterMonthFrom');
     const selTo = document.getElementById('filterMonthTo');
     if (selFrom && selFrom.options.length <= 1) populateMonthFilter();
@@ -7585,6 +7580,7 @@ function plSort(c) { if (_plSortCol === c) _plSortDir = _plSortDir === 'asc' ? '
 async function renderPl() {
   const tb = document.getElementById('tbodyPl'); if (!tb) return;
   try { await Promise.all([loadPl(), loadPlCh()]); } catch (e) { tb.innerHTML = `<tr><td colspan="11" class="empty">โหลดไม่สำเร็จ: ${e.message}</td></tr>`; return; }
+  { const [a, b] = topMonthsFor('cost', _plMonths); document.getElementById('plFrom').value = a; document.getElementById('plTo').value = b; }
   const from = document.getElementById('plFrom').value, to = document.getElementById('plTo').value;
   const by = {};
   _plRows.filter(r => r.month >= from && r.month <= to).forEach(r => {
@@ -7607,6 +7603,17 @@ async function renderPl() {
   if (_plMode === 'mx') { renderPlKpisOnly(); renderPlMatrix(); } else renderPlTable();
 }
 
+// ตัวเลือกเดือนด้านบน (ตั้งแต่ – ถึง) สำหรับ Business Insight / MKT Tracking — ค่าเริ่มต้น = สะสมตั้งแต่เดือนแรกถึงเดือนล่าสุด
+function topMonthsFor(page, months) {
+  const f = document.getElementById('filterMonthFrom'), t = document.getElementById('filterMonthTo'); if (!f || !t || !months.length) return [months[0], months[months.length - 1]];
+  if (f.dataset.page !== page || f.dataset.sig !== months.join(',')) {
+    const opts = months.slice().reverse().map(m => `<option value="${m}">${PL_TH_M(m)}</option>`).join('');
+    f.innerHTML = opts; t.innerHTML = opts; f.value = months[0]; t.value = months[months.length - 1];
+    f.dataset.page = page; f.dataset.sig = months.join(',');
+  }
+  let a = f.value || months[0], b = t.value || months[months.length - 1]; if (b < a) { b = a; t.value = a; }
+  return [a, b];
+}
 // กล่องแจกแจงยอด (ใช้ทั้ง Business Insight และ MKT Tracking) — groups: [{label, amount, children:[{label, amount}]}]
 const BD_COLORS = ['#c9a14a', '#60a5fa', '#34d399', '#a78bfa', '#f59e0b', '#f472b6', '#2dd4bf', '#94a3b8', '#fb7185', '#84cc16'];
 function bdRender(o) {
@@ -7641,7 +7648,7 @@ function renderPlTop() {
   });
   const mkt = T.kc + T.kp + T.oth, ads = T.ad + T.aa, all = mkt + ads;
   const PM = m => PL_TH_M(m);
-  document.getElementById('plPeriodNote').textContent = _plMonths.length ? `ยอดสะสม ${PM(from)} – ${PM(to)} · อัปเดตตามข้อมูลบัญชีล่าสุด` : '';
+  document.getElementById('plPeriodNote').textContent = _plMonths.length ? `${from === to ? PM(from) : 'ยอดสะสม ' + PM(from) + ' – ' + PM(to)} · ข้อมูลบัญชีมีถึง ${PM(_plMonths[_plMonths.length - 1])}` : '';
   document.getElementById('mktTopKpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.rev))}</div><div style="font-size:10.5px;color:var(--text3);">${PM(from)} – ${PM(to)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดตรง (ไม่รวม Ads)</div><div class="kpi-value">฿${fmt(Math.round(mkt))}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmt(Math.round(T.kc))} · KOL PR ฿${fmt(Math.round(T.kp))} · อื่นๆ ฿${fmt(Math.round(T.oth))}</div></div>
@@ -7753,14 +7760,8 @@ async function loadMl() {
   _mlRows = a.map(r => ({ ...r, month: String(r.month).slice(0, 7) }));
   _mlCh = b.map(r => ({ ...r, month: String(r.month).slice(0, 7) }));
   _mlKol = c.map(r => ({ ...r, month: String(r.cost_month || '').slice(0, 7) }));
-  const ms = [...new Set(_mlRows.map(r => r.month))].sort();
-  const sel = document.getElementById('mlPeriod');
-  sel.innerHTML = `<option value="ytd">สะสมทั้งปี</option>` + ms.slice().reverse().map(m => `<option value="${m}">${PL_TH_M(m)}</option>`).join('');
 }
-function mlRange() {
-  const v = document.getElementById('mlPeriod').value, ms = [...new Set(_mlRows.map(r => r.month))].sort();
-  return v === 'ytd' ? [ms[0], ms[ms.length - 1]] : [v, v];
-}
+function mlRange() { return topMonthsFor('mktlive', [...new Set(_mlRows.map(r => r.month))].sort()); }
 function mlSort(c) { if (_mlSortCol === c) _mlSortDir = _mlSortDir === 'asc' ? 'desc' : 'asc'; else { _mlSortCol = c; _mlSortDir = c === 'name' ? 'asc' : 'desc'; } renderMlTable(); }
 async function renderMktLive() {
   const tb = document.getElementById('tbodyMl'); if (!tb) return;
@@ -7777,7 +7778,7 @@ async function renderMktLive() {
     o.cm1p = o.rev > 0 ? o.cm1 / o.rev * 100 : -Infinity; o.roi = (o.kol + o.ads) > 0 ? o.rev / (o.kol + o.ads) : 0; return o; });
   const T = _mlView.reduce((t, o) => { ['rev', 'kc', 'kp', 'ko', 'ad', 'aa', 'kol', 'ads', 'cm1'].forEach(k => t[k] = (t[k] || 0) + o[k]); return t; }, {});
   const last = Object.keys(byM).sort().pop();
-  document.getElementById('mlNote').textContent = `ข้อมูลถึงปัจจุบัน (${last ? PL_TH_M(last) : '—'}) · ค่า KOL ตามเดือนที่เกิดค่าใช้จ่ายในชีทเบิกเงิน · ค่า Ads ยอดจริง`;
+  document.getElementById('mlNote').textContent = `${from === to ? PL_TH_M(from) : 'ยอดสะสม ' + PL_TH_M(from) + ' – ' + PL_TH_M(to)} · ข้อมูลถึงปัจจุบัน · ค่า KOL ตามเดือนที่เกิดค่าใช้จ่ายในชีทเบิกเงิน · ค่า Ads ยอดจริง`;
   const all = (T.kol || 0) + (T.ads || 0);
   document.getElementById('mlKpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.rev || 0))}</div><div style="font-size:10.5px;color:var(--text3);">${PL_TH_M(from)}${from !== to ? ' – ' + PL_TH_M(to) : ''}</div></div>
@@ -7839,7 +7840,7 @@ function exportMl() {
   const head = ['SKU', 'สินค้า', 'ยอดขาย', 'KOL Conversion', 'KOL PR', 'KOL อื่นๆ', 'Product Ads', 'Shared Ads', 'CM1', 'MER'];
   const lines = [head.join(',')].concat(_mlView.map(o => [o.sku, `"${o.name}"`, o.rev, o.kc, o.kp, o.ko, o.ad, o.aa, o.cm1, o.roi].map(v => typeof v === 'number' ? v.toFixed(2) : v).join(',')));
   const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `MKT_Tracking_${document.getElementById('mlPeriod').value}.csv`; a.click();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `MKT_Tracking_${mlRange().join('_')}.csv`; a.click();
 }
 
 function mktNoteRange() { const d = new Date(Date.now() + 7 * 3600 * 1000); return [d.getUTCFullYear() + '-01', d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0')]; }
