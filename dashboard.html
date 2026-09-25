@@ -415,7 +415,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblKj th { white-space:nowrap; } #tblKj td.pl-amt { cursor:pointer; } #tblKj td.pl-amt:hover > span:first-child { text-decoration:underline dotted; } #tblKj td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
   #tblKj tr.pl-detail > td, #tblKj tr.pl-detail:hover > td { background:transparent !important; }
   .kj-ic { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 4px; border-radius:5px; font:700 10.5px/1 Arial, sans-serif; margin-right:3px; vertical-align:middle; }
-  #tblKj td { overflow:hidden; text-overflow:ellipsis; }
+  #tblKj td { overflow:hidden; text-overflow:ellipsis; } #tblKj td.kj-icons { white-space:nowrap; overflow:visible; text-overflow:clip; }
   .kj-cal { width:100%; border-collapse:separate; border-spacing:3px; font-family:'Sarabun',sans-serif; }
   .kj-cal th { font-size:11.5px; color:var(--text2); font-weight:600; padding:6px 4px; text-align:center; white-space:nowrap; }
   .kj-cal td { text-align:center; padding:8px 4px; border-radius:7px; font-size:12px; min-width:78px; background:var(--h, transparent); cursor:default; }
@@ -533,7 +533,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-i</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2045,7 +2045,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <colgroup><col style="width:28%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:15%"><col style="width:15%"></colgroup>
             <thead><tr>
               <th class="sortable-th c-left" onclick="mlSort('name')">สินค้า <span class="sort-ind" id="mls-name"></span></th>
-              <th class="sortable-th" onclick="mlSort('rev')">ยอดขาย <span class="sort-ind" id="mls-rev"></span></th>
+              <th class="sortable-th" onclick="mlSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่า KOL/ค่า Ads ที่ไม่รวม VAT</div></span> <span class="sort-ind" id="mls-rev"></span></th>
               <th class="sortable-th" onclick="mlSort('kol')">ค่า KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-kol')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-kol" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่ารีวิว KOL จากชีทเบิกเงิน ตามเดือนที่เกิดค่าใช้จ่าย<br>👆 กดที่ตัวเลขเพื่อดูแยก Conversion/PR และช่องทางที่ลงงาน</div></span> <span class="sort-ind" id="mls-kol"></span></th>
               <th class="sortable-th" onclick="mlSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = แอดที่ไม่ผูกสินค้า ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="mls-ads"></span></th>
               <th class="sortable-th pl-cm" onclick="mlSort('cm1p')">CM1 <span class="sort-ind" id="mls-cm1p"></span></th>
@@ -2119,7 +2119,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <colgroup><col style="width:17%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"></colgroup>
             <thead><tr>
               <th class="sortable-th c-left" onclick="plSort('name')">สินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-row')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-row" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">กดชื่อสินค้า = ดูผลแยกตามช่องทาง<br>กดตัวเลขค่าใช้จ่าย = ดูว่าก้อนนั้นประกอบด้วยอะไร (ยอดรวมเท่าตัวเลขที่กด)<br>ตัวเลขใหญ่ในช่อง CM = % ของยอดขาย · สีแดง = ติดลบ</div></span> <span class="sort-ind" id="pls-name"></span></th>
-              <th class="sortable-th" onclick="plSort('rev')">ยอดขาย <span class="sort-ind" id="pls-rev"></span></th>
+              <th class="sortable-th" onclick="plSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-plh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-plh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่าใช้จ่ายที่บัญชีลงแบบไม่รวม VAT</div></span> <span class="sort-ind" id="pls-rev"></span></th>
               <th class="sortable-th" onclick="plSort('dir')">ค่าการตลาดตรง <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-dir')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-dir" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b>: ค่ารีวิว KOL · Presenter ที่ผูกสินค้า · ค่าที่บัญชีลงเป็นสินค้านี้<br>👆 กดที่ตัวเลขเพื่อดูว่าประกอบด้วยอะไร</div></span> <span class="sort-ind" id="pls-dir"></span></th>
               <th class="sortable-th" onclick="plSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดใช้จ่ายจริงจาก Meta / TikTok / Shopee / Lazada<br><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = แอดที่ไม่ผูกสินค้า (awareness เพจ Live Promotion Shop Ads) ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="pls-ads"></span></th>
               <th class="sortable-th pl-cm" onclick="plSort('cm1p')">CM1 <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm1')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm1" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM1 · Contribution Margin 1</b><br>เหลือหลังค่าการตลาดตรง + Ads<br><br>ขายได้ 100 บาท หักค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b> (ค่ารีวิว KOL, Presenter, ค่าที่บัญชีลงเป็นสินค้านี้) และ<b>ค่า Ads ทั้งหมด</b> (ยิงสินค้า + ทั่วไป/awareness ที่ปันตามยอดขายในช่องทาง) เหลือเท่าไร</div></span> <span class="sort-ind" id="pls-cm1p"></span></th>
@@ -7443,6 +7443,8 @@ function mktRoiMonths() {
 }
 
 // ===== กำไรขั้นบันไดต่อสินค้า (mv_product_pl_monthly) =====
+const VAT_DIV = 1.07;   // (2026-09-25) Business Insight / MKT Tracking / KOL แสดงยอดขายถอด VAT 7% (ค่าใช้จ่ายบัญชี/ค่าจ้างเป็นยอดไม่รวม VAT)
+const VAT_TIP = 'ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่าใช้จ่ายที่บัญชีลงแบบไม่รวม VAT — หน้ายอดขายอื่นยังเป็นยอดรวม VAT';
 let _plRows = null, _plMonths = [], _plSortCol = 'rev', _plSortDir = 'desc', _plOpen = new Map(), _plView = [], _plLineCache = {};
 let _plChRows = null, _plMode = 'prod', _plMetric = 'cm2', _plTab = {}, _plAllocCache = {};
 // คำทับศัพท์ → ใช้ภาษาอังกฤษ (ชื่อหมวดที่มาจากบัญชี/ระบบ)
@@ -7453,7 +7455,7 @@ async function loadPlCh() {
   if (_plChRows) return _plChRows;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_pl_monthly?select=*&order=month.asc,parent_sku.asc,channel.asc`, h);
-  _plChRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7) }));
+  _plChRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));
   return _plChRows;
 }
 function plChAgg(filterSku) {
@@ -7497,7 +7499,7 @@ async function loadPl() {
   if (_plRows) return _plRows;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_pl_monthly?select=*&month=gte.2026-01-01&order=month.asc,parent_sku.asc`, h);
-  _plRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7) }));
+  _plRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));   // ยอดขายถอด VAT ให้เทียบกับค่าใช้จ่ายบัญชี
   _plMonths = [...new Set(_plRows.filter(r => +r.channel_cost || +r.overhead_cost).map(r => r.month))].sort();
   const opts = _plMonths.map(m => `<option value="${m}">${PL_TH_M(m)}</option>`).join('');
   const f = document.getElementById('plFrom'), t = document.getElementById('plTo');
@@ -7587,7 +7589,7 @@ function renderPlTop() {
   const PM = m => PL_TH_M(m);
   document.getElementById('plPeriodNote').textContent = _plMonths.length ? `${from === to ? PM(from) : 'ยอดสะสม ' + PM(from) + ' – ' + PM(to)} · ข้อมูลบัญชีมีถึง ${PM(_plMonths[_plMonths.length - 1])}` : '';
   document.getElementById('mktTopKpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.rev))}</div><div style="font-size:10.5px;color:var(--text3);">${PM(from)} – ${PM(to)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย (ถอด VAT) ${plTip('tip-pl-vat2', VAT_TIP)}</div><div class="kpi-value">฿${fmt(Math.round(T.rev))}</div><div style="font-size:10.5px;color:var(--text3);">${PM(from)} – ${PM(to)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดตรง (ไม่รวม Ads)</div><div class="kpi-value">฿${fmt(Math.round(mkt))}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmt(Math.round(T.kc))} · KOL PR ฿${fmt(Math.round(T.kp))} · อื่นๆ ฿${fmt(Math.round(T.oth))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads</div><div class="kpi-value">฿${fmt(Math.round(ads))}</div><div style="font-size:10.5px;color:var(--text3);">Product Ads ฿${fmt(Math.round(T.ad))} · Shared Ads ฿${fmt(Math.round(T.aa))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">MER ${plTip('tip-bi-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขาย ÷ (ค่าการตลาดตรง + ค่า Ads)<br>ลงการตลาด 1 บาท ได้ยอดขายกี่บาท')}</div><div class="kpi-value">${all > 0 ? (T.rev / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ค่าการตลาดตรง + Ads = ${T.rev > 0 ? (all / T.rev * 100).toFixed(1) + '%' : '—'} ของยอดขาย</div></div>`;
@@ -7620,7 +7622,7 @@ function renderPlTable() {
   const pc = (v, base) => base > 0 ? (v / base * 100).toFixed(1) + '%' : '—';
   const kc = (label, v, sub, tk) => `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">${label} ${plTip('tip-plk-' + tk, PL_TIPS[tk])}</div><div class="kpi-value" style="font-size:20px;${v < 0 ? 'color:var(--red);' : ''}">${sub}</div><div style="font-size:11.5px;color:var(--text2);">฿${fmt(Math.round(v))}</div></div>`;
   document.getElementById('plKpis').innerHTML =
-    `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">ยอดขาย</div><div class="kpi-value" style="font-size:20px;">฿${fmt(Math.round(T.rev || 0))}</div></div>`
+    `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">ยอดขาย (ถอด VAT) ${plTip('tip-pl-vat1', VAT_TIP)}</div><div class="kpi-value" style="font-size:20px;">฿${fmt(Math.round(T.rev || 0))}</div></div>`
     + kc('CM1 หลังค่าการตลาดตรง + Ads', T.cm1 || 0, pc(T.cm1, T.rev), 'cm1') + kc('CM2 หลังค่า Platform', T.cm2 || 0, pc(T.cm2, T.rev), 'cm2')
     + kc('CM3 หลังการตลาดอื่น (ปัน)', T.cm3 || 0, pc(T.cm3, T.rev), 'cm3') + kc('สุทธิ หลังค่าบริหาร', T.net || 0, pc(T.net, T.rev), 'net');
   const money = (v, rev) => v ? `<div>฿${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, rev)}</div>` : '<span style="color:var(--text3);">—</span>';
@@ -7694,8 +7696,8 @@ async function loadMl() {
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_mkt_live_monthly?select=*&order=month.asc,parent_sku.asc`, h),
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=month,parent_sku,channel,revenue,ads_direct,ads_allocated&month=gte.2026-01-01&order=month.asc,parent_sku.asc,channel.asc`, h),
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/kol_cost_sheet?select=cost_month,parent_sku,kol_type,kol_name,platform,amount&order=cost_month.asc,row_no.asc`, h)]);
-  _mlRows = a.map(r => ({ ...r, month: String(r.month).slice(0, 7) }));
-  _mlCh = b.map(r => ({ ...r, month: String(r.month).slice(0, 7) }));
+  _mlRows = a.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));   // ยอดขายถอด VAT
+  _mlCh = b.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));
   _mlKol = c.map(r => ({ ...r, month: String(r.cost_month || '').slice(0, 7) }));
 }
 function mlRange() { return topMonthsFor('mktlive', [...new Set(_mlRows.map(r => r.month))].sort()); }
@@ -7718,7 +7720,7 @@ async function renderMktLive() {
   document.getElementById('mlNote').textContent = `${from === to ? PL_TH_M(from) : 'ยอดสะสม ' + PL_TH_M(from) + ' – ' + PL_TH_M(to)} · ข้อมูลถึงปัจจุบัน · ค่า KOL ตามเดือนที่เกิดค่าใช้จ่ายในชีทเบิกเงิน · ค่า Ads ยอดจริง`;
   const all = (T.kol || 0) + (T.ads || 0);
   document.getElementById('mlKpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.rev || 0))}</div><div style="font-size:10.5px;color:var(--text3);">${PL_TH_M(from)}${from !== to ? ' – ' + PL_TH_M(to) : ''}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย (ถอด VAT) ${plTip('tip-ml-vat', VAT_TIP)}</div><div class="kpi-value">฿${fmt(Math.round(T.rev || 0))}</div><div style="font-size:10.5px;color:var(--text3);">${PL_TH_M(from)}${from !== to ? ' – ' + PL_TH_M(to) : ''}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า KOL</div><div class="kpi-value">฿${fmt(Math.round(T.kol || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Conversion ฿${fmt(Math.round(T.kc || 0))} · PR ฿${fmt(Math.round(T.kp || 0))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads</div><div class="kpi-value">฿${fmt(Math.round(T.ads || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Product Ads ฿${fmt(Math.round(T.ad || 0))} · Shared Ads ฿${fmt(Math.round(T.aa || 0))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">CM1 ${plTip('tip-ml-cm1', '<b>CM1 · Contribution Margin 1</b><br>ยอดขาย − ค่า KOL − ค่า Ads<br>เงินที่เหลือหลังจ่ายค่าการตลาดที่ใช้กับสินค้า')}</div><div class="kpi-value">${T.rev > 0 ? (T.cm1 / T.rev * 100).toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(T.cm1 || 0))}</div></div>
@@ -7785,17 +7787,25 @@ function exportMl() {
 let _kjRows = null, _kjNames = {}, _kjView = 'job', _kjSortCol = 'amount', _kjSortDir = 'desc', _kjList = [], _kjOpen = new Map(), _kjFiltered = [], _kjCalMetric = 'amount';
 // เซลล์ตัวเลขที่กดได้ → แจกแจงว่ามาจากไหน (ยอดรวมเท่าตัวเลขที่กด)
 // ชื่อที่แสดง = ชื่อช่อง/บัญชี (TikTok @handle จากลิงก์ → ชื่อบัญชีในชีท) ถ้าไม่มีค่อยใช้ชื่อจริง
+const KJ_PRODUCT_WORD = /แป้ง|กันแดด|โทนอัพ|ลิป|ไดฟูกุ|daifuku|คุชชั่น|เบส|โมจิ|รองพื้น|บลัช|deesay|ดีเซ้ย์|ดีเซย์|body ?sun|cushion|\d+\s*(ml|g)\b/i;
+function kjHandleFromLink(u) {
+  const t = String(u || ''); let m = t.match(/tiktok\.com\/@([A-Za-z0-9._]+)/i); if (m) return '@' + m[1].toLowerCase();
+  m = t.match(/instagram\.com\/([A-Za-z0-9._]+)/i); if (m && !/^(p|reel|stories)$/i.test(m[1])) return '@' + m[1].toLowerCase();
+  m = t.match(/facebook\.com\/(?:profile\.php\?id=\d+|([A-Za-z0-9.\-]+))/i); if (m && m[1] && !/^(share|groups|permalink\.php|photo|watch|reel|story\.php)$/i.test(m[1])) return m[1];
+  return '';
+}
 function kjDisplay(r) {
-  if (r.tt_handle && !/^\d{3}\s*-/.test(r.tt_handle) && !/[ก-๙]/.test(r.tt_handle)) return '@' + r.tt_handle;
+  if (r.tt_handle && /^[a-z0-9._]{2,}$/i.test(r.tt_handle)) return '@' + r.tt_handle;
+  const fromLink = kjHandleFromLink(r.channel_link); if (fromLink) return fromLink;
   const h = String(r.kol_handle || '').trim();
-  if (h && h !== '-' && !/^\d{3}\s*-/.test(h) && !/^https?:/i.test(h)) return h;
+  if (h && h !== '-' && h.length > 1 && !/^\d{3}\s*-/.test(h) && !/^https?:/i.test(h) && !KJ_PRODUCT_WORD.test(h)) return h;
   return r.kol_name || '—';
 }
 // ไอคอนช่องทาง (แทนตัวหนังสือยาวๆ)
-const KJ_ICON = { TikTok: ['TT', '#111', '#fff'], Facebook: ['f', '#1877f2', '#fff'], Instagram: ['IG', '#d6249f', '#fff'], Lemon8: ['L8', '#f5d000', '#111'], Twitter: ['X', '#000', '#fff'], Youtube: ['YT', '#ff0000', '#fff'] };
+const KJ_ICON = { TikTok: ['T', '#111', '#fff'], Facebook: ['f', '#1877f2', '#fff'], Instagram: ['IG', '#d6249f', '#fff'], Lemon8: ['L8', '#f5d000', '#111'], Twitter: ['X', '#000', '#fff'], Youtube: ['YT', '#ff0000', '#fff'] };
 function kjIcons(p) {
   const list = [...new Set(String(p || '').split(',').map(x => x.trim()).filter(Boolean).map(x => Object.keys(KJ_ICON).find(k => k.toLowerCase() === x.toLowerCase()) || 'อื่นๆ'))];
-  return list.map(k => { const c = KJ_ICON[k]; return c ? `<span class="kj-ic" title="${k}" style="background:${c[1]};color:${c[2]};">${c[0]}</span>` : `<span class="kj-ic" title="${p}" style="background:var(--border);color:var(--text2);">…</span>`; }).join('');
+  return list.filter(k => KJ_ICON[k]).map(k => { const c = KJ_ICON[k]; return `<span class="kj-ic" title="${k}" style="background:${c[1]};color:${c[2]};">${c[0]}</span>`; }).join('') || '<span style="color:var(--text3);">—</span>';
 }
 function kjCell(o, m) { const v = o[m]; if (!v) return '<td><span style="color:var(--text3);">—</span></td>'; const on = _kjOpen.get(o.key) === m;
   return `<td class="pl-amt${on ? ' on' : ''}" onclick="kjToggle('${String(o.key).replace(/'/g, "\\'")}','${m}')" title="กดเพื่อดูว่ามาจากไหน"><span>฿${fmt(Math.round(v))}</span></td>`; }
@@ -7866,7 +7876,8 @@ async function renderKolPage() {
       const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
       const [a, b] = await Promise.all([fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_kol_jobs?select=*&order=row_no.asc`, h),
         fetchAllRows(`${window.SUPABASE_URL}/rest/v1/products?select=parent_sku,product_name`, h)]);
-      _kjRows = a.map(r => ({ ...r, month: String(r.cost_month || '').slice(0, 7) }));
+      _kjRows = a.map(r => ({ ...r, month: String(r.cost_month || '').slice(0, 7),   // ยอดขายถอด VAT ให้เทียบกับค่าจ้าง (ex.VAT)
+        sales: (+r.sales || 0) / VAT_DIV, fb_ads_value: (+r.fb_ads_value || 0) / VAT_DIV, tt_gmvmax_rev: (+r.tt_gmvmax_rev || 0) / VAT_DIV, tt_ads_value: (+r.tt_ads_value || 0) / VAT_DIV }));
       b.forEach(p => { if (p.parent_sku && p.product_name && !_kjNames[p.parent_sku]) _kjNames[p.parent_sku] = p.product_name; });
     }
   } catch (e) { tb.innerHTML = `<tr><td class="empty">โหลดไม่สำเร็จ: ${e.message}</td></tr>`; return; }
@@ -7897,7 +7908,7 @@ function renderKolTable() {
   document.getElementById('kjKpis').innerHTML = `
     <div class="card"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmt(Math.round(T.amount))}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(T.n)} งาน · Conversion ฿${fmt(Math.round(T.conv))} · PR ฿${fmt(Math.round(T.pr))}</div></div>
     <div class="card"><div class="card-title">ค่า Ads ที่ยิงงาน KOL</div><div class="kpi-value">฿${fmt(Math.round(T.ads))}</div><div style="font-size:10.5px;color:var(--text3);">${T.amount > 0 ? (T.ads / T.amount * 100).toFixed(0) + '% ของค่าจ้าง' : ''}</div></div>
-    <div class="card"><div class="card-title">ยอดขายที่ผูกได้</div><div class="kpi-value">฿${fmt(Math.round(T.sales))}</div><div style="font-size:10.5px;color:var(--text3);">เฉพาะยอดจากแอดของคลิป/โพสต์นั้น</div></div>
+    <div class="card"><div class="card-title">ยอดขายที่ผูกได้ (ถอด VAT) ${plTip('tip-kj-vat', VAT_TIP.replace('ค่าใช้จ่ายที่บัญชีลงแบบไม่รวม VAT', 'ค่าจ้าง KOL (ex.VAT)'))}</div><div class="kpi-value">฿${fmt(Math.round(T.sales))}</div><div style="font-size:10.5px;color:var(--text3);">เฉพาะยอดจากแอดของคลิป/โพสต์นั้น</div></div>
     <div class="card"><div class="card-title">MER งาน KOL ${plTip('tip-kj-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท')}</div><div class="kpi-value">${all > 0 ? (T.sales / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ยอดขายที่ผูกได้ ÷ (ค่าจ้าง + Ads)</div></div>
     <div class="card"><div class="card-title">เจอแอดของงาน</div><div class="kpi-value">${fmt(T.m)} <span style="font-size:13px;color:var(--text3);">/ ${fmt(T.n)} งาน</span></div><div style="font-size:10.5px;color:var(--text3);">ไม่ได้ยิงแอด ${fmt(T.na)} · หาไม่เจอ ${fmt(T.nf)} · ช่องทางอื่น ${fmt(T.n - T.m - T.na - T.nf)}</div></div>`;
   // รวมตามมุมมอง
@@ -7909,7 +7920,7 @@ function renderKolTable() {
     rows.forEach(r => { const k = _kjView === 'kol' ? kjDisplay(r) : (r.parent_sku || r.product_code || '—');
       const o = (by[k] = by[k] || { key: k, name: _kjView === 'kol' ? k : (_kjNames[k] || k), n: 0, amount: 0, ads: 0, sales: 0, plats: new Set(), jobs: [] });
       const v = val(r); o.n++; o.jobs.push(r); o.amount += v.amount; o.ads += v.ads; o.sales += v.sales; o.plats.add(kjPlat(r.platform)); });
-    list = Object.values(by).map(o => ({ ...o, plat: [...new Set(o.jobs.map(j => j.platform || ''))].join(',') }));
+    list = Object.values(by).map(o => ({ ...o, plat: [...new Set(o.jobs.map(j => j.platform || ''))].join(','), chLink: (o.jobs.find(j => j.channel_link) || {}).channel_link || '' }));
   }
   list.forEach(o => { o.mer = (o.amount + o.ads) > 0 ? o.sales / (o.amount + o.ads) : 0; });
   list.sort((a, b) => { const av = a[_kjSortCol], bv = b[_kjSortCol]; const c = typeof av === 'string' ? String(av).localeCompare(String(bv), 'th') : (av || 0) - (bv || 0); return _kjSortDir === 'asc' ? c : -c; });
@@ -7918,21 +7929,21 @@ function renderKolTable() {
   const money = v => v ? `฿${fmt(Math.round(v))}` : '<span style="color:var(--text3);">—</span>';
   const mer = o => o.sales > 0 ? `<b>${o.mer.toFixed(2)}x</b>` : '<span style="color:var(--text3);">—</span>';
   if (_kjView === 'job') {
-    document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1)}${th('plat', 'ช่องทาง', 1)}${th('sku', 'สินค้า', 1)}${th('type', 'ประเภท')}${th('date', 'วันโพสต์')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER ' + plTip('tip-kjh-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}<th>สถานะ</th></tr>`;
+    document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1)}${th('plat', 'ช่องทาง', 1)}${th('sku', 'สินค้า', 1)}${th('type', 'ประเภท')}${th('date', 'วันโพสต์')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้ ' + plTip('tip-kjh-vat' + _kjView, 'ถอด VAT 7% แล้ว (÷ 1.07) เทียบกับค่าจ้าง ex.VAT', 'right'))}${th('mer', 'MER ' + plTip('tip-kjh-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}<th>สถานะ</th></tr>`;
     document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr>
-      <td class="c-left"><b>${o.kol}</b>${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}${o.realName && o.realName !== o.kol ? `<div style="color:var(--text3);font-size:10.5px;">${o.realName}</div>` : ''}</td>
-      <td class="c-left" style="white-space:nowrap;">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;">${o.sku}</td><td>${o.type}</td>
+      <td class="c-left"><b>${o.kol}</b>${o.channel_link ? ` <a href="${o.channel_link}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;font-size:11px;">👤</a>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}${o.realName && o.realName !== o.kol ? `<div style="color:var(--text3);font-size:10.5px;">${o.realName}</div>` : ''}</td>
+      <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;">${o.sku}</td><td>${o.type}</td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</td>
       <td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td>
       <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอแอด</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิงแอด</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูลแอด</span>'}<div style="font-size:10px;color:var(--text3);white-space:normal;max-width:190px;">${o.match_note || ''}</div></td></tr>`).join('')
       || '<tr><td colspan="10" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
 
   } else {
-    const lbl = _kjView === 'kol' ? 'KOL' : 'สินค้า';
-    document.getElementById('theadKj').innerHTML = `<tr>${th('name', lbl, 1)}${th('plat', 'ช่องทาง', 1)}${th('n', 'งาน')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER ' + plTip('tip-kjh-mer2', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}</tr>`;
-    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left"><b>${o.name}</b></td><td class="c-left" style="white-space:nowrap;">${kjIcons(o.plat)}</td><td>${fmt(o.n)}</td>${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td></tr>`).join('')
-      || '<tr><td colspan="7" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
-    kjAfterRows(7);
+    const lbl = _kjView === 'kol' ? 'KOL' : 'สินค้า', showPlat = _kjView === 'kol';
+    document.getElementById('theadKj').innerHTML = `<tr>${th('name', lbl, 1)}${showPlat ? th('plat', 'ช่องทาง', 1) : ''}${th('n', 'งาน')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้ ' + plTip('tip-kjh-vat' + _kjView, 'ถอด VAT 7% แล้ว (÷ 1.07) เทียบกับค่าจ้าง ex.VAT', 'right'))}${th('mer', 'MER ' + plTip('tip-kjh-mer2', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}</tr>`;
+    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left"><b>${o.name}</b>${showPlat && o.chLink ? ` <a href="${o.chLink}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;">🔗</a>` : ''}</td>${showPlat ? `<td class="c-left kj-icons">${kjIcons(o.plat)}</td>` : ''}<td>${fmt(o.n)}</td>${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td></tr>`).join('')
+      || `<tr><td colspan="${showPlat ? 7 : 6}" class="empty">ไม่มีงานในช่วงนี้</td></tr>`;
+    kjAfterRows(showPlat ? 7 : 6);
   }
 }
 function exportKol() {
