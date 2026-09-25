@@ -398,6 +398,24 @@
 </div><!-- end shell -->
 </main>
 <script type="module">
+// (2026-09-25) Shopee เพิ่มแท็บ "Advance Fulfilment" ไว้หน้าแรกของไฟล์ออเดอร์ → เดิมระบบอ่านแท็บแรกเสมอ เลยจับคอลัมน์ไม่ได้
+// เลือกแท็บที่เป็นข้อมูลออเดอร์จริง: ชื่อ "orders" ก่อน · ไม่งั้นแท็บที่หัวตารางมีคอลัมน์เลขออเดอร์ · สุดท้ายแท็บที่ข้อมูลเยอะสุด
+function pickOrderSheet(wb) {
+  const names = wb.SheetNames || [];
+  const byName = names.find(n => /^orders?$/i.test(String(n).trim()));
+  if (byName) return wb.Sheets[byName];
+  const KEY = /หมายเลขคำสั่งซื้อ|เลขที่คำสั่งซื้อ|order\s*id|order\s*number|orderNumber|หมายเลขออเดอร์/i;
+  let best = null, bestScore = -1;
+  names.forEach(n => {
+    const ws = wb.Sheets[n]; if (!ws || !ws['!ref']) return;
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    const head = (XLSX.utils.sheet_to_json(ws, { header: 1, range: 0, defval: '' })[0] || []).join('|');
+    const score = (KEY.test(head) ? 1e6 : 0) + (range.e.r + 1) * (range.e.c + 1);
+    if (score > bestScore) { bestScore = score; best = ws; }
+  });
+  return best || wb.Sheets[names[0]];
+}
+
 await Auth.ready
 const createClient = () => Auth.client   // ใช้ client ตัวเดียวกับ auth.js — ถ้ามี 2 ตัวจะแย่งกันต่ออายุ token แล้วเด้งไปหน้า login วนไปมา
 
@@ -775,7 +793,7 @@ async function parseCostFile() {
       reader.onload = e => {
         try {
           const wb = XLSX.read(new Uint8Array(e.target.result), { type:'array', cellDates:true })
-          const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'', header:1 })
+          const json = XLSX.utils.sheet_to_json(pickOrderSheet(wb), { defval:'', header:1 })
           res(json)
         } catch(err) { rej(err) }
       }
@@ -1978,7 +1996,7 @@ function readExcel(file) {
       try {
         const data = new Uint8Array(e.target.result)
         const wb = XLSX.read(data, { type: 'array', cellDates: true })
-        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
+        const json = XLSX.utils.sheet_to_json(pickOrderSheet(wb), { defval: '' })
         if (!json.length) throw new Error('ไฟล์ว่างเปล่า')
         const headers = Object.keys(json[0])
         const rows = json.filter((row, idx) => {
