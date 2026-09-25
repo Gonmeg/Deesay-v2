@@ -495,7 +495,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-o</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.24-p</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2081,12 +2081,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
     <div class="page" id="page-cost">
       <!-- (2026-09-25) ช่วงเวลาเดียวทั้งหน้า — การ์ดบน กราฟ ROI ช่องทาง และตารางกำไรขั้นบันได ใช้ข้อมูลชุดเดียวกัน ยอดจึงเท่ากันเสมอ -->
-      <div id="plPeriodBar" style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
-        <span style="font-size:12px;color:var(--text2);">ช่วงเวลา</span>
-        <select class="ls-input" id="plFrom" style="padding:6px 10px;font-size:12px;" onchange="renderPl()"></select>
-        <span style="color:var(--text3);font-size:12px;">ถึง</span>
-        <select class="ls-input" id="plTo" style="padding:6px 10px;font-size:12px;" onchange="renderPl()"></select>
-        <span id="plPeriodNote" style="font-size:11px;color:var(--text3);"></span>
+      <!-- (2026-09-25) เมฆ: หน้านี้ดูยอดสะสมทั้งปีเสมอ ไม่ต้องมีตัวกรองวันที่ — ระบบใช้ ม.ค. ถึงเดือนล่าสุดที่มีข้อมูลบัญชี (ตัวเลือกซ่อนไว้ให้โค้ดใช้) -->
+      <div id="plPeriodBar" style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <select id="plFrom" hidden style="display:none;"></select><select id="plTo" hidden style="display:none;"></select>
+        <span id="plPeriodNote" style="font-size:11.5px;color:var(--text2);"></span>
       </div>
       <div class="mkt-top-kpis" id="mktTopKpis"></div>
       <div id="mktTopCh"></div>
@@ -7567,7 +7565,7 @@ function renderPlTop() {
   });
   const mkt = T.kc + T.kp + T.oth, ads = T.ad + T.aa, all = mkt + ads;
   const PM = m => PL_TH_M(m);
-  document.getElementById('plPeriodNote').textContent = _plMonths.length ? `มีข้อมูลบัญชีถึง ${PM(_plMonths[_plMonths.length - 1])}` : '';
+  document.getElementById('plPeriodNote').textContent = _plMonths.length ? `ยอดสะสม ${PM(from)} – ${PM(to)} · อัปเดตตามข้อมูลบัญชีล่าสุด` : '';
   document.getElementById('mktTopKpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.rev))}</div><div style="font-size:10.5px;color:var(--text3);">${PM(from)} – ${PM(to)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาด (ไม่รวม Ads)</div><div class="kpi-value">฿${fmt(Math.round(mkt))}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmt(Math.round(T.kc))} · KOL PR ฿${fmt(Math.round(T.kp))} · อื่นๆ ฿${fmt(Math.round(T.oth))}</div></div>
@@ -7652,7 +7650,7 @@ async function plDetail(sku) {
     return;
   }
   el.innerHTML = tabs + `<div style="display:flex;gap:24px;flex-wrap:wrap;">
-    ${col('① ค่าการตลาด + Ads → CM1', o.dir + o.ads, 'ค่าการตลาดทุกอย่างของสินค้านี้<br>• ส่วนที่บัญชีลงเป็นสินค้านี้ → ใช้ตรงๆ<br>• ส่วนที่บัญชีลงไว้ที่ช่องทาง → แบ่งตามยอดขายของสินค้านี้ในช่องทางนั้น<br>• ส่วนที่บัญชีเฉลี่ย → แบ่งตามยอดขายรวม<br>• ค่า Ads → ยอดจริงจาก Meta / TikTok / Shopee / Lazada', direct.map(([k, v]) => line(k, v)).join('') + list(sum('cm1', 'account_group'), 8) + '<div style="margin-top:8px;color:var(--text3);font-size:11px;">ค่า Ads</div>' + adsLines.map(([k, v]) => line(k, v)).join('') + (adsByCh ? '<div style="margin-top:8px;color:var(--text3);font-size:11px;">ค่า Ads แยกตามช่องทาง</div>' + adsByCh : ''))}
+    ${col('① ค่าการตลาด + Ads → CM1', o.dir + o.ads, 'ค่าการตลาดทุกอย่างของสินค้านี้<br>• ส่วนที่บัญชีลงเป็นสินค้านี้ → ใช้ตรงๆ<br>• ส่วนที่บัญชีลงไว้ที่ช่องทาง → แบ่งตามยอดขายของสินค้านี้ในช่องทางนั้น<br>• ส่วนที่บัญชีเฉลี่ย → แบ่งตามยอดขายรวม<br>• ค่า Ads → ยอดจริงจาก Meta / TikTok / Shopee / Lazada', direct.map(([k, v]) => line(k, v)).join('') + list(sum('cm1', 'account_group'), 8) + '<div style="margin-top:8px;color:var(--text3);font-size:11px;">ค่า Ads</div>' + adsLines.map(([k, v]) => line(k, v)).join('') + (adsByCh ? '<div style="margin-top:8px;color:var(--text3);font-size:11px;">ค่า Ads ก้อนเดียวกัน แยกตามช่องทาง</div>' + adsByCh : ''))}
     ${col('② ค่าขายตามช่องทาง → CM2', o.ch, 'ค่าที่จ่ายเพราะขายผ่านช่องทาง (ค่าธรรมเนียม/บริการ Platform, Commission, ค่าส่ง, Live) แบ่งตาม<b>ยอดขายของสินค้านี้ในช่องทางนั้น</b>', (o.o2 >= 1 ? line('ค่าที่บัญชีลงเป็นสินค้านี้', o.o2) : '') + list(sum('cm2', 'account_group'), 8) + '<div style="margin-top:8px;color:var(--text3);font-size:11px;">ก้อนเดียวกัน แยกตามช่องทางที่มา</div>' + list(sum('cm2', 'channel', 'channel'), 6))}
     ${col('③ ค่าการตลาดส่วนกลาง → CM3', o.br, 'ค่าการตลาดที่ไม่ขึ้นกับสินค้าหรือยอดขาย (Rebranding, ที่ปรึกษาการตลาด, ค่ารับรอง, ค่าเดินทาง) แบ่งตาม<b>สัดส่วนยอดขายรวม</b>', (o.o3 >= 1 ? line('ค่าที่บัญชีลงเป็นสินค้านี้', o.o3) : '') + list(sum('cm3', 'account_group'), 8))}
     ${col('④ ค่าบริหาร → สุทธิ', o.oh, 'ค่าใช้จ่ายบริหารทั้งบริษัท แบ่งตาม<b>สัดส่วนยอดขายรวม</b>ของสินค้านี้ในเดือนนั้น', list(sum('overhead', 'account_group'), 6))}
