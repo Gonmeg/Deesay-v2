@@ -414,6 +414,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #page-kol .card-title { font-size:12px; color:var(--text2); font-weight:600; } #tblKj th { white-space:nowrap; font-size:11.5px; }
   #tblKj th { white-space:nowrap; } #tblKj td.pl-amt { cursor:pointer; } #tblKj td.pl-amt:hover > span:first-child { text-decoration:underline dotted; } #tblKj td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
   #tblKj tr.pl-detail > td, #tblKj tr.pl-detail:hover > td { background:transparent !important; }
+  .kj-ic { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 4px; border-radius:5px; font:700 10.5px/1 Arial, sans-serif; margin-right:3px; vertical-align:middle; }
+  #tblKj td { overflow:hidden; text-overflow:ellipsis; }
   .kj-cal { width:100%; border-collapse:separate; border-spacing:3px; font-family:'Sarabun',sans-serif; }
   .kj-cal th { font-size:11.5px; color:var(--text2); font-weight:600; padding:6px 4px; text-align:center; white-space:nowrap; }
   .kj-cal td { text-align:center; padding:8px 4px; border-radius:7px; font-size:12px; min-width:78px; background:var(--h, transparent); cursor:default; }
@@ -531,7 +533,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-h</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2737,7 +2739,7 @@ const pageTitles = {
   supply: 'Supply Chain — สต็อก / แผนสั่งซื้อ'
 };
 const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
-const MONTH_ONLY_PAGES = ['cost', 'mktlive', 'kol']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
+const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget','supply']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
@@ -2817,7 +2819,7 @@ function showPage(page, lockCh, el) {
   if (cpGroup) cpGroup.style.display = (page === 'creatorperf') ? 'flex' : 'none';
   // หน้า KOL มีตัวเลือก ปี/เดือน ของตัวเอง (นับตามวันโพสต์) — ซ่อนช่วงวันที่ + ปุ่มค้นหาด้านบน
   const dateGroup = document.getElementById('dateRangeGroup'), topSearch = document.getElementById('topSearchBtn');
-  if (dateGroup) dateGroup.style.display = (page === 'kol') ? 'none' : '';
+  // (2026-09-25) หน้า KOL ใช้ช่วงวันที่ปกติด้านบน (กรองตามวันโพสต์)
   if (topSearch) topSearch.style.display = (page === 'supply') ? 'none' : '';
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
@@ -7542,16 +7544,25 @@ function topMonthsFor(page, months) {
 }
 // กล่องแจกแจงยอด (ใช้ทั้ง Business Insight และ MKT Tracking) — groups: [{label, amount, children:[{label, amount}]}]
 const BD_COLORS = ['#c9a14a', '#60a5fa', '#34d399', '#a78bfa', '#f59e0b', '#f472b6', '#2dd4bf', '#94a3b8', '#fb7185', '#84cc16'];
+// สีประจำช่องทาง/แหล่งที่มา — ใช้สีเดียวกันทุกกล่อง ไม่ขึ้นกับลำดับยอด
+function bdColor(label, i) {
+  const t = String(label || '');
+  if (/GMV Max/i.test(t)) return '#14b8a6'; if (/TikTok Ads ปกติ|แอดปกติ/.test(t)) return '#f472b6'; if (/TikTok/i.test(t)) return '#14b8a6';
+  if (/Facebook|Meta/i.test(t)) return '#3b82f6'; if (/Shopee/i.test(t)) return '#f97316'; if (/Lazada/i.test(t)) return '#8b5cf6';
+  if (/Modern Trade|^MT/i.test(t)) return '#f59e0b'; if (/ตัวแทน/.test(t)) return '#64748b'; if (/Conversion/i.test(t)) return '#c9a14a'; if (/^PR|KOL PR/.test(t)) return '#a78bfa';
+  return BD_COLORS[i % BD_COLORS.length];
+}
 function bdRender(o) {
   const tot = o.total || 0, rev = o.rev || 0;
   const gs = (o.groups || []).filter(g => Math.abs(g.amount) >= 0.5).sort((a, b) => b.amount - a.amount);
+  gs.forEach((g, i) => { g._c = g.color || bdColor(g.label, i); });
   const pct = (v, b) => b ? (v / b * 100).toFixed(1) + '%' : '';
-  const stack = gs.map((g, i) => `<div title="${plLbl(g.label)} ฿${fmt(Math.round(g.amount))}" style="width:${tot > 0 ? Math.max(0, g.amount / tot * 100) : 0}%;background:${BD_COLORS[i % BD_COLORS.length]};"></div>`).join('');
-  const row = (g, i) => `<div class="bd-row"><div class="bd-dot" style="background:${BD_COLORS[i % BD_COLORS.length]};"></div><div class="bd-lbl">${plLbl(g.label)}</div>
-      <div class="bd-bar"><div style="width:${tot > 0 ? Math.max(0, Math.min(100, g.amount / tot * 100)) : 0}%;background:${BD_COLORS[i % BD_COLORS.length]};"></div></div>
+  const stack = gs.map((g, i) => `<div title="${plLbl(g.label)} ฿${fmt(Math.round(g.amount))}" style="width:${tot > 0 ? Math.max(0, g.amount / tot * 100) : 0}%;background:${g._c};"></div>`).join('');
+  const row = (g, i) => `<div class="bd-row"><div class="bd-dot" style="background:${g._c};"></div><div class="bd-lbl">${plLbl(g.label)}</div>
+      <div class="bd-bar"><div style="width:${tot > 0 ? Math.max(0, Math.min(100, g.amount / tot * 100)) : 0}%;background:${g._c};"></div></div>
       <div class="bd-amt">฿${fmt(Math.round(g.amount))}</div><div class="bd-pct">${pct(g.amount, tot)}</div></div>`
     + (g.children || []).filter(c => Math.abs(c.amount) >= 0.5).sort((a, b) => g.fixed ? 0 : b.amount - a.amount).map(c => `<div class="bd-row sub"><div></div><div class="bd-lbl">${plLbl(c.label)}</div>
-      <div class="bd-bar"><div style="width:${g.amount > 0 ? Math.max(0, Math.min(100, c.amount / g.amount * 100)) : 0}%;background:${BD_COLORS[i % BD_COLORS.length]};opacity:.55;"></div></div>
+      <div class="bd-bar"><div style="width:${g.amount > 0 ? Math.max(0, Math.min(100, c.amount / g.amount * 100)) : 0}%;background:${g._c};opacity:.55;"></div></div>
       <div class="bd-amt">฿${fmt(Math.round(c.amount))}</div><div class="bd-pct"></div></div>`).join('');
   return `<div class="bd"><div class="bd-head"><div class="bd-title">${o.title} ${o.tip ? plTip(o.tipId || ('tip-bd-' + Math.random().toString(36).slice(2, 8)), o.tip) : ''}</div>
       <div class="bd-total">฿${fmt(Math.round(tot))}${rev ? `<span>${pct(tot, rev)} ของยอดขาย</span>` : ''}</div></div>
@@ -7773,6 +7784,19 @@ function exportMl() {
 // ===== หน้า KOL (ใหม่) — ชีทเบิกเงิน KOL + จับคู่ Ads / ยอดขาย (mv_kol_jobs) =====
 let _kjRows = null, _kjNames = {}, _kjView = 'job', _kjSortCol = 'amount', _kjSortDir = 'desc', _kjList = [], _kjOpen = new Map(), _kjFiltered = [], _kjCalMetric = 'amount';
 // เซลล์ตัวเลขที่กดได้ → แจกแจงว่ามาจากไหน (ยอดรวมเท่าตัวเลขที่กด)
+// ชื่อที่แสดง = ชื่อช่อง/บัญชี (TikTok @handle จากลิงก์ → ชื่อบัญชีในชีท) ถ้าไม่มีค่อยใช้ชื่อจริง
+function kjDisplay(r) {
+  if (r.tt_handle && !/^\d{3}\s*-/.test(r.tt_handle) && !/[ก-๙]/.test(r.tt_handle)) return '@' + r.tt_handle;
+  const h = String(r.kol_handle || '').trim();
+  if (h && h !== '-' && !/^\d{3}\s*-/.test(h) && !/^https?:/i.test(h)) return h;
+  return r.kol_name || '—';
+}
+// ไอคอนช่องทาง (แทนตัวหนังสือยาวๆ)
+const KJ_ICON = { TikTok: ['TT', '#111', '#fff'], Facebook: ['f', '#1877f2', '#fff'], Instagram: ['IG', '#d6249f', '#fff'], Lemon8: ['L8', '#f5d000', '#111'], Twitter: ['X', '#000', '#fff'], Youtube: ['YT', '#ff0000', '#fff'] };
+function kjIcons(p) {
+  const list = [...new Set(String(p || '').split(',').map(x => x.trim()).filter(Boolean).map(x => Object.keys(KJ_ICON).find(k => k.toLowerCase() === x.toLowerCase()) || 'อื่นๆ'))];
+  return list.map(k => { const c = KJ_ICON[k]; return c ? `<span class="kj-ic" title="${k}" style="background:${c[1]};color:${c[2]};">${c[0]}</span>` : `<span class="kj-ic" title="${p}" style="background:var(--border);color:var(--text2);">…</span>`; }).join('');
+}
 function kjCell(o, m) { const v = o[m]; if (!v) return '<td><span style="color:var(--text3);">—</span></td>'; const on = _kjOpen.get(o.key) === m;
   return `<td class="pl-amt${on ? ' on' : ''}" onclick="kjToggle('${String(o.key).replace(/'/g, "\\'")}','${m}')" title="กดเพื่อดูว่ามาจากไหน"><span>฿${fmt(Math.round(v))}</span></td>`; }
 function kjToggle(key, m) { if (_kjOpen.get(key) === m) _kjOpen.delete(key); else _kjOpen.set(key, m); renderKolTable(); }
@@ -7784,13 +7808,13 @@ function kjAfterRows(cols) {
 }
 function kjBreakdown(o, m) {
   const jobs = o.jobs || [], childKey = _kjView === 'kol' ? 'sku' : _kjView === 'sku' ? 'kol' : null;
-  const childName = r => childKey === 'sku' ? (_kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—') : (r.kol_name || r.kol_handle || '—');
+  const childName = r => childKey === 'sku' ? (_kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—') : kjDisplay(r);
   const add = (map, k, v) => { if (v) map[k] = (map[k] || 0) + v; };
   const G = {};   // กลุ่ม → { amount, kids{} }
   const put = (g, r, v) => { if (!v) return; const x = (G[g] = G[g] || { amount: 0, kids: {} }); x.amount += v; if (childKey) add(x.kids, childName(r), v); };
   jobs.forEach(r => {
-    if (m === 'ads') { put('Facebook Ads (แอดที่ยิงโพสต์นี้)', r, +r.fb_ads_spend || 0); put('TikTok GMV Max (ยิงคลิปนี้)', r, +r.tt_gmvmax_cost || 0); put('TikTok Ads ปกติ (ยิงคลิปนี้)', r, +r.tt_ads_spend || 0); }
-    else if (m === 'sales') { put('Facebook · ยอดซื้อจากแอดของโพสต์ (Meta)', r, +r.fb_ads_value || 0); put('TikTok · ยอดขายจาก GMV Max ของคลิปนี้', r, +r.tt_gmvmax_rev || 0); put('TikTok · ยอดขายจากแอดปกติของคลิปนี้', r, +r.tt_ads_value || 0); }
+    if (m === 'ads') { put('Facebook Ads', r, +r.fb_ads_spend || 0); put('TikTok GMV Max', r, +r.tt_gmvmax_cost || 0); put('TikTok Ads ปกติ', r, +r.tt_ads_spend || 0); }
+    else if (m === 'sales') { put('Facebook Ads · ยอดซื้อที่ Meta นับ', r, +r.fb_ads_value || 0); put('TikTok GMV Max · ยอดขายของคลิป', r, +r.tt_gmvmax_rev || 0); put('TikTok Ads ปกติ · ยอดขายของคลิป', r, +r.tt_ads_value || 0); }
     else { const pl = kjPlat(r.platform) === 'other' ? 'ช่องทางอื่น' : kjPlat(r.platform); const t = /^conv/i.test(r.kol_type || '') ? 'Conversion' : /^pr/i.test(r.kol_type || '') ? 'PR' : 'อื่นๆ';
       const x = (G[pl] = G[pl] || { amount: 0, kids: {} }); x.amount += +r.amount || 0; add(x.kids, t, +r.amount || 0); }
   });
@@ -7831,7 +7855,7 @@ let _kjCalCells = {};
 function kjCalPick(key) {
   const o = _kjCalCells[key], box = document.getElementById('kjCalPick'); if (!o || !box) return;
   const [sku, m] = key.split('|');
-  const g = {}; o.jobs.forEach(r => { const k = r.kol_name || r.kol_handle || '—'; const x = (g[k] = g[k] || { label: k, amount: 0, children: [] }); x.amount += +r.amount || 0; x.children.push({ label: `${/^conv/i.test(r.kol_type || '') ? 'Conversion' : 'PR'} · ${r.platform || '—'}${r.post_date ? ' · โพสต์ ' + new Date(r.post_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : ''}`, amount: +r.amount || 0 }); });
+  const g = {}; o.jobs.forEach(r => { const k = kjDisplay(r); const x = (g[k] = g[k] || { label: k, amount: 0, children: [] }); x.amount += +r.amount || 0; x.children.push({ label: `${/^conv/i.test(r.kol_type || '') ? 'Conversion' : 'PR'} · ${r.platform || '—'}${r.post_date ? ' · โพสต์ ' + new Date(r.post_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : ''}`, amount: +r.amount || 0 }); });
   box.innerHTML = bdRender({ title: `งาน KOL · ${_kjNames[sku] || sku} · ${PL_TH_M(m)}`, total: o.amount, groups: Object.values(g), note: `ค่า Ads ที่ยิงงานเหล่านี้ ฿${fmt(Math.round(o.ads))} · ยอดขายที่ผูกได้ ฿${fmt(Math.round(o.sales))}` });
   box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -7853,11 +7877,13 @@ function kjSetView(v) { _kjView = v; _kjSortCol = 'amount'; _kjSortDir = 'desc';
 function kjSort(c) { if (_kjSortCol === c) _kjSortDir = _kjSortDir === 'asc' ? 'desc' : 'asc'; else { _kjSortCol = c; _kjSortDir = ['name', 'kol', 'sku', 'plat', 'type', 'date'].includes(c) ? 'asc' : 'desc'; } renderKolTable(); }
 function renderKolTable() {
   if (!_kjRows) return;
-  const months = [...new Set(_kjRows.map(r => r.month).filter(Boolean))].sort();
-  const [from, to] = topMonthsFor('kol', months);
+  // ช่วงวันที่ด้านบน (ตั้งแต่–ถึง) กรองตาม "วันโพสต์" — งานที่ไม่มีวันโพสต์ใช้วันที่ 1 ของเดือนที่เกิดค่าใช้จ่าย
+  const dFrom = getDateValue('From') || '2000-01-01', dTo = getDateValue('To') || '2999-12-31';
+  const from = dFrom.slice(0, 7), to = dTo.slice(0, 7);
+  const kjDay = r => r.post_date || (r.cost_month ? String(r.cost_month).slice(0, 10) : '');
   const plat = document.getElementById('kjPlat').value, typ = document.getElementById('kjType').value, q = (document.getElementById('kjSearch').value || '').trim().toLowerCase();
   const st = (document.getElementById('kjStatus') || {}).value || '';
-  const rows = _kjRows.filter(r => r.month >= from && r.month <= to && (!st || r.match_status === st) && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || ''))
+  const rows = _kjRows.filter(r => kjDay(r) >= dFrom && kjDay(r) <= dTo && (!st || r.match_status === st) && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || ''))
     && (!q || `${r.kol_name || ''} ${r.kol_handle || ''} ${r.tt_handle || ''}`.toLowerCase().includes(q)));
   const val = r => ({ amount: +r.amount || 0, ads: +r.ads_spend || 0, sales: +r.sales || 0 });
   _kjFiltered = rows;
@@ -7865,7 +7891,8 @@ function renderKolTable() {
   else { document.getElementById('kjTableWrap').style.display = ''; document.getElementById('kjCal').style.display = 'none'; }
   const T = rows.reduce((t, r) => { const v = val(r); t.amount += v.amount; t.ads += v.ads; t.sales += v.sales; t.n++; if (r.match_status === 'matched') t.m++; if (r.match_status === 'no_ads') t.na++; if (r.match_status === 'not_found') t.nf++; if (/^conv/i.test(r.kol_type || '')) t.conv += v.amount; else t.pr += v.amount; return t; }, { amount: 0, ads: 0, sales: 0, n: 0, m: 0, na: 0, nf: 0, conv: 0, pr: 0 });
   const PM = PL_TH_M;
-  document.getElementById('kjNote').textContent = `${from === to ? PM(from) : PM(from) + ' – ' + PM(to)} · ตามเดือนที่เกิดค่าใช้จ่าย (ชีทเบิกเงิน KOL)`;
+  const fd = d => new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+  document.getElementById('kjNote').textContent = `${fd(dFrom)} – ${fd(dTo)} · ตามวันโพสต์ (งานที่ไม่มีวันโพสต์ใช้เดือนที่เกิดค่าใช้จ่าย) · ข้อมูลจากชีทเบิกเงิน KOL`;
   const all = T.amount + T.ads;
   document.getElementById('kjKpis').innerHTML = `
     <div class="card"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmt(Math.round(T.amount))}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(T.n)} งาน · Conversion ฿${fmt(Math.round(T.conv))} · PR ฿${fmt(Math.round(T.pr))}</div></div>
@@ -7876,13 +7903,13 @@ function renderKolTable() {
   // รวมตามมุมมอง
   let list;
   if (_kjView === 'cal') { renderKolCal(); return; }
-  if (_kjView === 'job') list = rows.map(r => ({ ...r, ...val(r), key: 'r' + r.row_no, jobs: [r], kol: r.kol_name || r.kol_handle || '—', sku: _kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—', plat: r.platform || '—', type: r.kol_type || '—', date: r.post_date || '' }));
+  if (_kjView === 'job') list = rows.map(r => ({ ...r, ...val(r), key: 'r' + r.row_no, jobs: [r], kol: kjDisplay(r), realName: r.kol_name || '', sku: _kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—', plat: r.platform || '—', type: r.kol_type || '—', date: r.post_date || '' }));
   else {
     const by = {};
-    rows.forEach(r => { const k = _kjView === 'kol' ? (r.kol_name || r.kol_handle || '—') : (r.parent_sku || r.product_code || '—');
+    rows.forEach(r => { const k = _kjView === 'kol' ? kjDisplay(r) : (r.parent_sku || r.product_code || '—');
       const o = (by[k] = by[k] || { key: k, name: _kjView === 'kol' ? k : (_kjNames[k] || k), n: 0, amount: 0, ads: 0, sales: 0, plats: new Set(), jobs: [] });
       const v = val(r); o.n++; o.jobs.push(r); o.amount += v.amount; o.ads += v.ads; o.sales += v.sales; o.plats.add(kjPlat(r.platform)); });
-    list = Object.values(by).map(o => ({ ...o, plat: [...o.plats].map(p => p === 'other' ? 'อื่นๆ' : p).join(', ') }));
+    list = Object.values(by).map(o => ({ ...o, plat: [...new Set(o.jobs.map(j => j.platform || ''))].join(',') }));
   }
   list.forEach(o => { o.mer = (o.amount + o.ads) > 0 ? o.sales / (o.amount + o.ads) : 0; });
   list.sort((a, b) => { const av = a[_kjSortCol], bv = b[_kjSortCol]; const c = typeof av === 'string' ? String(av).localeCompare(String(bv), 'th') : (av || 0) - (bv || 0); return _kjSortDir === 'asc' ? c : -c; });
@@ -7893,17 +7920,17 @@ function renderKolTable() {
   if (_kjView === 'job') {
     document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1)}${th('plat', 'ช่องทาง', 1)}${th('sku', 'สินค้า', 1)}${th('type', 'ประเภท')}${th('date', 'วันโพสต์')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER ' + plTip('tip-kjh-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}<th>สถานะ</th></tr>`;
     document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr>
-      <td class="c-left"><b>${o.kol}</b>${o.tt_handle ? ` <span style="color:var(--text3);font-size:10.5px;">@${o.tt_handle}</span>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}</td>
-      <td class="c-left" style="font-size:11.5px;">${o.plat}</td><td class="c-left" style="font-size:11.5px;">${o.sku}</td><td>${o.type}</td>
+      <td class="c-left"><b>${o.kol}</b>${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}${o.realName && o.realName !== o.kol ? `<div style="color:var(--text3);font-size:10.5px;">${o.realName}</div>` : ''}</td>
+      <td class="c-left" style="white-space:nowrap;">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;">${o.sku}</td><td>${o.type}</td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</td>
-      ${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td>
+      <td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td>
       <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอแอด</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิงแอด</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูลแอด</span>'}<div style="font-size:10px;color:var(--text3);white-space:normal;max-width:190px;">${o.match_note || ''}</div></td></tr>`).join('')
       || '<tr><td colspan="10" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
-    kjAfterRows(10);
+
   } else {
     const lbl = _kjView === 'kol' ? 'KOL' : 'สินค้า';
     document.getElementById('theadKj').innerHTML = `<tr>${th('name', lbl, 1)}${th('plat', 'ช่องทาง', 1)}${th('n', 'งาน')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้')}${th('mer', 'MER ' + plTip('tip-kjh-mer2', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}</tr>`;
-    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left"><b>${o.name}</b></td><td class="c-left" style="font-size:11.5px;">${o.plat}</td><td>${fmt(o.n)}</td>${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td></tr>`).join('')
+    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left"><b>${o.name}</b></td><td class="c-left" style="white-space:nowrap;">${kjIcons(o.plat)}</td><td>${fmt(o.n)}</td>${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td></tr>`).join('')
       || '<tr><td colspan="7" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
     kjAfterRows(7);
   }
