@@ -75,16 +75,20 @@
     if (!METRIC_CONFIGS.fbaCamp) {
       const meta = {}; ORDER.forEach(k => { meta[k] = { label: M[k].label, default: M[k].default }; });
       METRIC_CONFIGS.fbaCamp = { order: [...ORDER], meta };
-      METRIC_CONFIGS.fbaAds = { order: ORDER.filter(k => k !== 'days').concat(['days']), meta };
+      // (2026-09-28) ตาราง "แอด / โพสต์ที่ยิง" ค่าเริ่มต้นของทุกคน: ค่าแอด · ทักแชท · ฿ ต่อการทัก · ซื้อ · มูลค่าซื้อ · ฿ ต่อการซื้อ · ROAS (Meta นับ)
+      const ADS_DEF = ['spend','msg_started','cost_per_msg','purchases','purchase_value','cpa','roas_meta'];
+      const adsMeta = {}; ORDER.forEach(k => { adsMeta[k] = { label: M[k].label, default: ADS_DEF.includes(k) }; });
+      METRIC_CONFIGS.fbaAds = { order: ADS_DEF.concat(ORDER.filter(k => !ADS_DEF.includes(k) && k !== 'days'), ['days']), meta: adsMeta };
       const dmeta = { revenue: { label: R.revenue.label, default: true }, spend_conv: { label: R.spend_conv.label, default: true }, roas: { label: R.roas.label, default: true }, acos: { label: R.acos.label, default: true } };
-      ORDER.filter(k => k !== 'spend' && k !== 'days' && k !== 'period').forEach(k => { dmeta[k] = { label: M[k].label, default: ['impressions','reach','cpm','link_clicks','ctr','msg_started','cost_per_msg','purchases'].includes(k) }; });
+      ORDER.filter(k => k !== 'spend' && k !== 'days' && k !== 'period').forEach(k => { dmeta[k] = { label: M[k].label, default: ['impressions','reach','cpm','link_clicks','ctr','msg_started','cost_per_msg'].includes(k) }; });   // (2026-09-28) ค่าเริ่มต้นตามที่เมฆกำหนด
       METRIC_CONFIGS.fbaDaily = { order: ['revenue','spend_conv','roas','acos', ...ORDER.filter(k => k !== 'spend' && k !== 'days' && k !== 'period')], meta: dmeta };
       metricState.fbaDaily = { order: [...METRIC_CONFIGS.fbaDaily.order], active: {} }; Object.keys(dmeta).forEach(k => { metricState.fbaDaily.active[k] = !!dmeta[k].default; });
       const prOrder = ['spend','impressions','reach','frequency','cpm','post_engagement','er','cpe','reactions','comments','shares','saves','link_clicks','ctr','cpc','video_3s','thruplay','cpv','msg_started','cost_per_msg'];
       const prMeta = {}; prOrder.forEach(k => { prMeta[k] = { label: M[k].label, default: ['spend','impressions','reach','cpm','post_engagement','er','link_clicks','msg_started'].includes(k) }; });
       METRIC_CONFIGS.fbaPr = { order: prOrder, meta: prMeta };
       metricState.fbaPr = { order: [...prOrder], active: {} }; prOrder.forEach(k => { metricState.fbaPr.active[k] = !!prMeta[k].default; });
-      ['fbaCamp', 'fbaAds'].forEach(pg => { metricState[pg] = { order: [...METRIC_CONFIGS[pg].order], active: {} }; ORDER.forEach(k => { metricState[pg].active[k] = !!M[k].default; }); });
+      ['fbaCamp', 'fbaAds'].forEach(pg => { metricState[pg] = { order: [...METRIC_CONFIGS[pg].order], active: {} }; ORDER.forEach(k => { metricState[pg].active[k] = !!METRIC_CONFIGS[pg].meta[k].default; }); });
+      if (typeof window.applyMetricPrefs === 'function') window.applyMetricPrefs(['fbaCamp', 'fbaAds', 'fbaDaily', 'fbaPr']);   // ใช้คอลัมน์ที่ผู้ใช้บันทึกไว้
       const _rr = window.rerenderPage;
       window.rerenderPage = p => { if (p === 'fbaCamp') renderCampaigns(); else if (p === 'fbaAds') renderAds(); else if (p === 'fbaDaily') renderDailyTable(); else if (p === 'fbaPr') renderPr(); else if (typeof _rr === 'function') _rr(p); };
     }
