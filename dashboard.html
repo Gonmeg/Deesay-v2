@@ -533,7 +533,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.28-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.28-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1406,9 +1406,21 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         </div>
       </div>
 
+      <!-- (2026-09-28) รายงานรายวันแบบหน้า Facebook: ค่าแอด TikTok ทั้งหมด เทียบ ยอดขายจริง TikTok -->
+      <div class="card" style="margin-bottom:20px;"><div class="section-header">
+          <div class="section-title">รายงานรายวัน — ค่าแอดเทียบยอดขายจริง TikTok <span id="tta-dr-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-dr')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-dr" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>ยอดขายจริง TikTok</b> = ยอดขายทั้งร้าน TikTok จากออเดอร์ที่อัปโหลด (วันที่ยังไม่อัปขึ้น —)<br><b>ค่าแอด</b> = ค่าแอด TikTok ทั้งหมดของวันนั้น (ตัวเดียวกับทุกหน้า)<br><b>ROAS</b> = ยอดขายจริง ÷ ค่าแอด<br><b>ยอดขายจากแอดคลิป</b> = ยอดที่ TikTok นับให้แอดที่ยิงคลิป (GMV Max) — ไม่รวม Live GMV Max</div></span></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="position:relative;"><button class="btn btn-ghost" id="ttaDailyRepMetricsBtn" onclick="toggleMetricsPanel('ttaDailyRep')">⚙ Metrics <span id="ttaDailyRep-metric-count" style="color:var(--accent);"></span></button>
+              <div id="ttaDailyRep-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaDailyRep-metrics-checks"></div>
+                <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('ttaDailyRep')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('ttaDailyRep')">เลือกทั้งหมด</button></div></div></div>
+            <button class="btn btn-ghost" onclick="exportTable('tblTtaDailyRep')">⬇ Export CSV</button>
+          </div></div>
+        <div class="table-wrap" style="overflow-x:auto;"><table id="tblTtaDailyRep"><thead id="theadTtaDailyRep"></thead><tbody id="tbodyTtaDailyRep"><tr><td class="empty">กำลังโหลด…</td></tr></tbody></table></div>
+      </div>
+
       <!-- (2026-09-28) สรุปตาม Creator: เปลี่ยนจากการ์ด Top 10 เป็นตารางแบบหน้า Facebook Ads (ทุกคน · เรียง/เลือกคอลัมน์ได้) -->
       <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;">
-          <div class="section-title">Creator ที่ยิงแอด <span id="tta-creator-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+          <div class="section-title">Creator ที่ยิงแอด <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-creator')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-creator" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>1 แถว = 1 creator</b> — รวมทุกคลิปของคนเดียวกันที่ยิงแอดในช่วงวันที่เลือก<br>ใช้ดูว่า <b>ใคร</b>คุ้มค่าแอด (ค่าแอดรวม ยอดขายรวม ROAS ของคนนั้น)<br><br>ต่างจาก "รายละเอียดคลิปทั้งหมด" ที่แยกทีละคลิป</div></span> <span id="tta-creator-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <select class="ls-input" id="ttaCreatorSrc" style="width:130px;padding:6px 10px;font-size:12px;" onchange="_ttaCrShow=50;renderTtaCreatorSummary()"><option value="">ทุกแหล่ง</option><option value="deesay">🏠 Deesay</option><option value="kol">🎭 KOL</option></select>
             <input type="text" class="ls-input" id="ttaCreatorSearch" placeholder="🔎 ค้นหา creator เช่น @beam_reviews" oninput="debouncedTtaCreatorAndTable()" style="width:220px;padding:6px 10px;font-size:12px;">
@@ -1453,7 +1465,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
       <div class="card" style="margin-bottom:20px;">
       <div class="section-header">
-        <div class="section-title">รายละเอียดคลิปทั้งหมด</div>
+        <div class="section-title">รายละเอียดคลิปทั้งหมด <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-clips')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-clips" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>1 แถว = 1 คลิป</b> ที่ยิงแอด พร้อมแคมเปญ วัตถุประสงค์ และช่วงวันที่ยิง<br>ใช้ดูว่า <b>คลิปไหน</b>คุ้ม และดูตัวชี้วัดของคลิป (% ดูจบ ไลค์ ฯลฯ)<br><br>ต่างจาก "Creator ที่ยิงแอด" ที่รวมทุกคลิปของคนเดียวกันเป็นแถวเดียว</div></span></div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div class="toggle-group" id="ttaSourceFilter">
             <button class="toggle-btn active" data-src="all" onclick="setTtaSourceFilter('all',this)">ทั้งหมด</button>
@@ -8409,6 +8421,12 @@ const METRIC_CONFIGS = {
     }
   }
 };
+METRIC_CONFIGS.ttaDailyRep = {
+  order: ['sales','spend','roas','acos','gmv_ads','roas_ads','ad_orders','cpo','impressions','cpm','clicks','ctr','orders'],
+  meta: { sales:{label:'ยอดขายจริง TikTok',default:true}, spend:{label:'ค่าแอด TikTok',default:true}, roas:{label:'ROAS (ยอดจริง/ค่าแอด)',default:true}, acos:{label:'% ค่าแอดต่อยอดขาย',default:true},
+    gmv_ads:{label:'ยอดขายจากแอดคลิป (TikTok นับ)',default:true}, roas_ads:{label:'ROAS แอดคลิป (TikTok นับ)'}, ad_orders:{label:'orders จากแอดคลิป',default:true}, cpo:{label:'฿ ต่อ order (แอดคลิป)'},
+    impressions:{label:'Impressions',default:true}, cpm:{label:'CPM (฿ ต่อ 1,000 เห็น)',default:true}, clicks:{label:'คลิก',default:true}, ctr:{label:'CTR',default:true}, orders:{label:'ออเดอร์จริง TikTok'} }
+};
 METRIC_CONFIGS.ttaCreator = {
   order: ['clips','spend','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','convs','likes','follows'],
   meta: { clips:{label:'จำนวนคลิป',default:true}, spend:{label:'ค่าแอด',default:true}, purchaseValue:{label:'ยอดขาย (TikTok Shop)',default:true}, roas:{label:'ROAS',default:true},
@@ -8435,9 +8453,10 @@ const metricState = {
   ttc: { order: [...METRIC_CONFIGS.ttc.order], active: {} },
   tta: { order: [...METRIC_CONFIGS.tta.order], active: {} },
   ttaCampaign: { order: [...METRIC_CONFIGS.ttaCampaign.order], active: {} },
-  ttaCreator: { order: [...METRIC_CONFIGS.ttaCreator.order], active: {} }
+  ttaCreator: { order: [...METRIC_CONFIGS.ttaCreator.order], active: {} },
+  ttaDailyRep: { order: [...METRIC_CONFIGS.ttaDailyRep.order], active: {} }
 };
-['ttc','tta','ttaCampaign','shads','ttaCreator'].forEach(page => {
+['ttc','tta','ttaCampaign','shads','ttaCreator','ttaDailyRep'].forEach(page => {
   METRIC_CONFIGS[page].order.forEach(k => {
     const m = METRIC_CONFIGS[page].meta[k];
     metricState[page].active[k] = !!(m.always || m.default);
@@ -8614,6 +8633,7 @@ function rerenderPage(page) {
   else if (page === 'tta') { ttaPage = 1; renderTtaTable(); }
   else if (page === 'ttaCampaign') { renderTtaCampaignTable(); }
   else if (page === 'ttaCreator') { renderTtaCreatorSummary(); }
+  else if (page === 'ttaDailyRep') { renderTtaDailyReport(); }
   else if (page === 'shads') { renderShAdsTable(); }
 }
 function activeCols(page) {
@@ -9105,6 +9125,35 @@ async function renderTta() {
   renderTtaCampaignTable();
   renderTtaTable();
   renderTtaDaily();
+  renderTtaDailyReport();
+}
+let _ttaDr = { key: '', rows: [] }, _ttaDrSort = 'date', _ttaDrDir = 'desc';
+async function renderTtaDailyReport() {
+  const tb = document.getElementById('tbodyTtaDailyRep'); if (!tb) return;
+  const from = getDateValue('From'), to = getDateValue('To'), key = from + '|' + to;
+  if (_ttaDr.key !== key) {
+    try { const d = await Auth.rpc('tta_daily_report', { p_from: from, p_to: to }); _ttaDr = { key, rows: Array.isArray(d) ? d : [] }; }
+    catch (e) { tb.innerHTML = `<tr><td class="empty">โหลดไม่สำเร็จ: ${e.message || e}</td></tr>`; return; }
+  }
+  const ks = activeCols('ttaDailyRep'), M = METRIC_CONFIGS.ttaDailyRep.meta;
+  const v = (r, k) => ({ sales: +r.sales, spend: +r.spend, roas: +r.spend && +r.sales ? r.sales / r.spend : 0, acos: +r.sales ? r.spend / r.sales * 100 : 0, gmv_ads: +r.gmv_ads,
+    roas_ads: +r.spend ? r.gmv_ads / r.spend : 0, ad_orders: +r.ad_orders, cpo: +r.ad_orders ? r.spend / r.ad_orders : 0, impressions: +r.impressions, cpm: +r.impressions ? r.spend / r.impressions * 1000 : 0,
+    clicks: +r.clicks, ctr: +r.impressions ? r.clicks / r.impressions * 100 : 0, orders: +r.orders })[k];
+  const roasCol = x => x >= 2 ? 'var(--green)' : x >= 1 ? 'var(--accent)' : 'var(--red)';
+  const F = { sales: r => +r.sales ? '฿' + fmt(Math.round(r.sales)) : '—', spend: r => '฿' + fmt(Math.round(r.spend)),
+    roas: r => +r.sales && +r.spend ? `<span style="color:${roasCol(r.sales / r.spend)};font-weight:700;">${(r.sales / r.spend).toFixed(2)}x</span>` : '—',
+    acos: r => +r.sales ? (r.spend / r.sales * 100).toFixed(1) + '%' : '—', gmv_ads: r => +r.gmv_ads ? '฿' + fmt(Math.round(r.gmv_ads)) : '—',
+    roas_ads: r => +r.spend && +r.gmv_ads ? (r.gmv_ads / r.spend).toFixed(2) + 'x' : '—', ad_orders: r => fmt(Math.round(+r.ad_orders)), cpo: r => +r.ad_orders ? '฿' + fmt(Math.round(r.spend / r.ad_orders)) : '—',
+    impressions: r => fmt(Math.round(+r.impressions)), cpm: r => +r.impressions ? '฿' + fmt(Math.round(r.spend / r.impressions * 1000)) : '—', clicks: r => fmt(Math.round(+r.clicks)),
+    ctr: r => +r.impressions ? (r.clicks / r.impressions * 100).toFixed(2) + '%' : '—', orders: r => +r.orders ? fmt(Math.round(r.orders)) : '—' };
+  const rows = [..._ttaDr.rows].sort((a, b) => _ttaDrSort === 'date' ? (_ttaDrDir === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)) : ((v(a, _ttaDrSort) || 0) - (v(b, _ttaDrSort) || 0)) * (_ttaDrDir === 'desc' ? -1 : 1));
+  const ind = k => _ttaDrSort === k ? (_ttaDrDir === 'desc' ? '▼' : '▲') : '';
+  document.getElementById('theadTtaDailyRep').innerHTML = `<tr><th class="sortable-th" data-k="date" style="cursor:pointer;">วันที่ <span class="sort-ind">${ind('date')}</span></th>${ks.map(k => `<th class="sortable-th" data-k="${k}" style="cursor:pointer;">${M[k].label} <span class="sort-ind">${ind(k)}</span></th>`).join('')}</tr>`;
+  document.querySelectorAll('#theadTtaDailyRep th.sortable-th').forEach(th => th.onclick = () => { const k = th.dataset.k; if (_ttaDrSort === k) _ttaDrDir = _ttaDrDir === 'desc' ? 'asc' : 'desc'; else { _ttaDrSort = k; _ttaDrDir = 'desc'; } renderTtaDailyReport(); });
+  document.getElementById('tta-dr-count').textContent = `(${fmt(rows.length)} วัน)`;
+  tb.innerHTML = rows.map(r => `<tr><td style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${new Date(r.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}</td>${ks.map(k => `<td>${F[k](r)}</td>`).join('')}</tr>`).join('')
+    || `<tr><td colspan="${ks.length + 1}" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>`;
+  updateMetricCount('ttaDailyRep');
 }
 
 function renderTtaCampaignTable() {
@@ -9241,6 +9290,8 @@ async function renderTtaDaily() {
 }
 
 let _ttaCrSort = 'spend', _ttaCrDir = 'desc', _ttaCrShow = 50;
+// รูปที่เก็บในระบบเอง = ถาวร (2) · ลิงก์ TikTok ที่ยังไม่หมดอายุ (1) · หมดอายุแล้ว (0 — โหลดไม่ขึ้น)
+function ttThumbQuality(u) { const t = String(u || ''); if (t.includes('/object/public/tt-covers/')) return 2; const m = t.match(/x-expires=(\d+)/); return !m || +m[1] * 1000 > Date.now() ? 1 : 0; }
 function renderTtaCreatorSummary() {
   const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase().trim();
   const src = document.getElementById('ttaCreatorSrc')?.value || '';
@@ -9250,7 +9301,7 @@ function renderTtaCreatorSummary() {
     if (c.isDeesay) o.isDeesay = true;   // handle เดียวกันเจอเป็น Deesay ครั้งเดียว ถือว่าเป็น Deesay
     o.clips += (c.clipCount || 1); o.spend += c.spend || 0; o.orders += c.orders || 0; o.purchaseValue += c.purchaseValue || 0;
     o.impressions += c.impressions || 0; o.clicks += c.clicks || 0; o.convs += c.convs || 0; o.likes += c.likes || 0; o.follows += c.follows || 0;
-    if (c.thumbnail && (!o.top || (c.spend || 0) > o.top.spend)) o.top = { thumb: c.thumbnail, spend: c.spend || 0 };
+    if (c.thumbnail) { const q2 = ttThumbQuality(c.thumbnail); if (!o.top || q2 > o.top.q || (q2 === o.top.q && (c.spend || 0) > o.top.spend)) o.top = { thumb: c.thumbnail, spend: c.spend || 0, q: q2 }; }
   });
   let arr = Object.values(by).map(o => ({ ...o, roas: o.spend ? o.purchaseValue / o.spend : 0, cpo: o.orders ? o.spend / o.orders : 0, ctr: o.impressions ? o.clicks / o.impressions * 100 : 0 }));
   if (q) arr = arr.filter(c => String(c.handle).toLowerCase().includes(q) || String((TT_HANDLE_MAP || {})[String(c.handle).toLowerCase()] || '').toLowerCase().includes(q));
