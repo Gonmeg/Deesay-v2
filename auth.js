@@ -8,6 +8,7 @@
 
 // รายชื่อหน้าใน dashboard.html (ใช้ทั้งกรองเมนูซ้าย และตารางติ๊กสิทธิ์ใน admin.html) — เพิ่มหน้าใหม่ที่นี่ที่เดียว
 window.DEESAY_PAGES = [
+  { id: 'home',         name: 'หน้าแรก (สรุปประจำวัน)', group: 'ยอดขาย' },
   { id: 'overview',     name: 'ภาพรวมยอดขาย',        group: 'ยอดขาย' },
   { id: 'channel',      name: 'แยกตาม Channel',       group: 'ยอดขาย' },
   { id: 'fbhub',        name: 'ภาพรวม Facebook',       group: 'Facebook' },
