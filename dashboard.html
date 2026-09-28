@@ -533,7 +533,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.25-i</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.28-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1406,13 +1406,21 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:20px;">
-        <input type="text" id="ttaCreatorSearch" placeholder="🔍 ค้นหา creator เช่น @beam_reviews หรือ deesaythailand..."
-          oninput="debouncedTtaCreatorAndTable()" style="width:100%;">
+      <!-- (2026-09-28) สรุปตาม Creator: เปลี่ยนจากการ์ด Top 10 เป็นตารางแบบหน้า Facebook Ads (ทุกคน · เรียง/เลือกคอลัมน์ได้) -->
+      <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;">
+          <div class="section-title">Creator ที่ยิงแอด <span id="tta-creator-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select class="ls-input" id="ttaCreatorSrc" style="width:130px;padding:6px 10px;font-size:12px;" onchange="_ttaCrShow=50;renderTtaCreatorSummary()"><option value="">ทุกแหล่ง</option><option value="deesay">🏠 Deesay</option><option value="kol">🎭 KOL</option></select>
+            <input type="text" class="ls-input" id="ttaCreatorSearch" placeholder="🔎 ค้นหา creator เช่น @beam_reviews" oninput="debouncedTtaCreatorAndTable()" style="width:220px;padding:6px 10px;font-size:12px;">
+            <div style="position:relative;"><button class="btn btn-ghost" id="ttaCreatorMetricsBtn" onclick="toggleMetricsPanel('ttaCreator')">⚙ Metrics <span id="ttaCreator-metric-count" style="color:var(--accent);"></span></button>
+              <div id="ttaCreator-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaCreator-metrics-checks"></div>
+                <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('ttaCreator')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('ttaCreator')">เลือกทั้งหมด</button></div></div></div>
+            <button class="btn btn-ghost" onclick="exportTable('tblTtaCreator')">⬇ Export CSV</button>
+          </div></div>
+        <div class="table-wrap" style="overflow-x:auto;"><table id="tblTtaCreator"><thead id="theadTtaCreator"></thead><tbody id="tbodyTtaCreator"></tbody></table></div>
+        <div id="ttaCreatorMore" style="text-align:center;margin-top:10px;"></div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">รวมทุกคลิปของ creator ในช่วงวันที่เลือก · รูป = คลิปที่ใช้ค่าแอดมากสุดของคนนั้น (คลิกเพื่อเปิดช่อง TikTok) · ยอดขาย / orders = ที่ TikTok นับให้แอด (GMV Max) · ปุ่ม ⚙ Metrics เลือก/เรียงคอลัมน์ได้ บันทึกเป็นของแต่ละคน</div>
       </div>
-
-      <div class="section-title" style="margin-bottom:10px;" id="ttaCreatorSummaryTitle">📈 สรุปตาม Creator (Top 10)</div>
-      <div id="ttaCreatorSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:22px;"></div>
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
@@ -4447,7 +4455,8 @@ let _skuAllLoading = null;
 async function ensureSkuAllLazy() {
   if (skuRevenueAll.length) return;
   if (!_skuAllLoading) _skuAllLoading = (async () => {
-    skuRevenueAll = await incrementalHistory('sku_all_v2',
+    skuRevenueAll = await incrementalHistory('sku_all_v3',   // v3 (2026-09-25): ยอดรายสินค้าถูกคิดใหม่ย้อนหลัง (ของแถม RSP 0) → ให้ทุกเครื่องโหลดใหม่ทั้งชุด 1 ครั้ง
+     
       since => `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc,parent_sku.asc${since ? '&date=gte.' + since : ''}`,
       ['date', 'order_id', 'parent_sku'], 'โหลดรายการ SKU ต่อออเดอร์');
   })();
@@ -8400,6 +8409,12 @@ const METRIC_CONFIGS = {
     }
   }
 };
+METRIC_CONFIGS.ttaCreator = {
+  order: ['clips','spend','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','convs','likes','follows'],
+  meta: { clips:{label:'จำนวนคลิป',default:true}, spend:{label:'ค่าแอด',default:true}, purchaseValue:{label:'ยอดขาย (TikTok Shop)',default:true}, roas:{label:'ROAS',default:true},
+    orders:{label:'GMV Max orders',default:true}, cpo:{label:'CPO',default:true}, impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'}, convs:{label:'conversions'},
+    likes:{label:'ไลค์ (จากแอด)'}, follows:{label:'ผู้ติดตามใหม่ (จากแอด)'} }
+};
 METRIC_CONFIGS.shads = {
   // ทุก field ที่ Shopee Ads API (get_product_campaign_daily_performance) ส่งมา — broad = รวมสินค้าอื่นที่ซื้อหลังคลิกแอด (ค่าหลักของ Shopee) · direct = เฉพาะสินค้าที่โฆษณา
   order: ['campaign','status','budget','roas_target','expense','broad_gmv','roas','broad_order','broad_items','cpo','direct_gmv','direct_order','direct_items','direct_roas','impression','clicks','ctr','cr','direct_cr','cpc','cpdc','broad_cir','direct_cir','active_days','last_active'],
@@ -8419,9 +8434,10 @@ const metricState = {
   shads: { order: [...METRIC_CONFIGS.shads.order], active: {} },
   ttc: { order: [...METRIC_CONFIGS.ttc.order], active: {} },
   tta: { order: [...METRIC_CONFIGS.tta.order], active: {} },
-  ttaCampaign: { order: [...METRIC_CONFIGS.ttaCampaign.order], active: {} }
+  ttaCampaign: { order: [...METRIC_CONFIGS.ttaCampaign.order], active: {} },
+  ttaCreator: { order: [...METRIC_CONFIGS.ttaCreator.order], active: {} }
 };
-['ttc','tta','ttaCampaign','shads'].forEach(page => {
+['ttc','tta','ttaCampaign','shads','ttaCreator'].forEach(page => {
   METRIC_CONFIGS[page].order.forEach(k => {
     const m = METRIC_CONFIGS[page].meta[k];
     metricState[page].active[k] = !!(m.always || m.default);
@@ -8440,7 +8456,60 @@ document.addEventListener('click', (e) => {
   }
 });
 
+
+// ===== (2026-09-28) คอลัมน์ ⚙ Metrics + preset บันทึกแยกตามผู้ใช้ (ตาราง user_ui_prefs) · ค่าเริ่มต้นกลางของทุกคน (ui_default_prefs — admin ตั้ง) =====
+const UIPrefs = { user: {}, defaults: {}, ready: null, _timers: {} };
+UIPrefs.ready = (async () => {
+  try {
+    await Auth.ready; const c = Auth.client; if (!c) return;
+    const [u, d] = await Promise.all([c.from('user_ui_prefs').select('key,value'), c.from('ui_default_prefs').select('key,value')]);
+    (u.data || []).forEach(r => UIPrefs.user[r.key] = r.value); (d.data || []).forEach(r => UIPrefs.defaults[r.key] = r.value);
+    // ย้าย preset เก่าที่เคยเก็บในเครื่อง (localStorage) ขึ้นไปผูกกับผู้ใช้ 1 ครั้ง
+    Object.keys(localStorage).filter(k => k.startsWith('deesay_metric_presets_')).forEach(k => {
+      const pg = k.replace('deesay_metric_presets_', ''); if (UIPrefs.user['presets:' + pg]) return;
+      try { const v = JSON.parse(localStorage.getItem(k) || '{}'); if (Object.keys(v).length) uiPrefSave('presets:' + pg, v, true); } catch (e) {}
+    });
+  } catch (e) { console.warn('โหลดค่าที่บันทึกไว้ไม่ได้', e); }
+  applyMetricPrefs();
+})();
+function uiPrefSave(key, value, now) {
+  UIPrefs.user[key] = value;
+  clearTimeout(UIPrefs._timers[key]);
+  const run = async () => { try { await Auth.ready; await Auth.client.from('user_ui_prefs').upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' }); } catch (e) { console.warn('บันทึกค่าไม่ได้', e); } };
+  if (now) run(); else UIPrefs._timers[key] = setTimeout(run, 700);
+}
+async function uiPrefDelete(key) { delete UIPrefs.user[key]; try { await Auth.client.from('user_ui_prefs').delete().eq('key', key); } catch (e) {} }
+function _applyStateFrom(page, v) {
+  const cfg = METRIC_CONFIGS[page], st = metricState[page]; if (!cfg || !st || !v || !Array.isArray(v.order)) return false;
+  const known = cfg.order, order = v.order.filter(k => known.includes(k)).concat(known.filter(k => !v.order.includes(k)));
+  st.order = order; known.forEach(k => { const m = cfg.meta[k]; st.active[k] = m.always ? true : (v.active && k in v.active ? !!v.active[k] : !!m.default); });
+  return true;
+}
+// ใช้ค่าที่บันทึกไว้ (ของตัวเองก่อน → ค่าเริ่มต้นกลาง) กับทุกตารางที่ลงทะเบียนแล้ว · เรียกซ้ำได้ (ทำครั้งเดียวต่อตาราง)
+function applyMetricPrefs(pages) {
+  (pages || Object.keys(metricState)).forEach(pg => {
+    const st = metricState[pg]; if (!st || st._prefApplied) return;
+    const v = UIPrefs.user['metrics:' + pg] || UIPrefs.defaults['metrics:' + pg];
+    if (v && _applyStateFrom(pg, v)) { st._prefApplied = true; try { updateMetricCount(pg); rerenderPage(pg); } catch (e) {} }
+    else if (UIPrefs.ready && Object.keys(UIPrefs.user).length + Object.keys(UIPrefs.defaults).length >= 0) st._prefApplied = !!v;
+  });
+}
+window.applyMetricPrefs = applyMetricPrefs;
+function saveMetricState(page) { const st = metricState[page]; if (!st) return; st._prefApplied = true; uiPrefSave('metrics:' + page, { order: [...st.order], active: { ...st.active } }); }
+async function setMetricDefaultForAll(page) {
+  if (!confirm('ใช้คอลัมน์ชุดนี้เป็น "ค่าเริ่มต้น" ของทุกคนใช่ไหม?\n(คนที่เคยเลือกคอลัมน์เองไว้แล้ว ยังเห็นแบบที่ตัวเองเลือก)')) return;
+  const st = metricState[page]; const v = { order: [...st.order], active: { ...st.active } };
+  try { await Auth.rpc('set_ui_default_pref', { p_key: 'metrics:' + page, p_value: v }); UIPrefs.defaults['metrics:' + page] = v; alert('ตั้งเป็นค่าเริ่มต้นของทุกคนแล้ว'); }
+  catch (e) { alert('ตั้งไม่สำเร็จ: ' + (e.message || e)); }
+}
+async function resetMetricsToDefault(page) {
+  await uiPrefDelete('metrics:' + page);
+  const v = UIPrefs.defaults['metrics:' + page];
+  if (!(v && _applyStateFrom(page, v))) { resetMetrics(page); return; }
+  renderMetricsChecks(page); rerenderPage(page);
+}
 function getMetricPresets(page) {
+  if (UIPrefs.user['presets:' + page]) return { ...UIPrefs.user['presets:' + page] };
   try { return JSON.parse(localStorage.getItem('deesay_metric_presets_' + page) || '{}'); } catch (e) { return {}; }
 }
 function saveMetricPreset(page) {
@@ -8448,7 +8517,7 @@ function saveMetricPreset(page) {
   if (!name) return;
   const presets = getMetricPresets(page);
   presets[name] = { order: [...metricState[page].order], active: { ...metricState[page].active } };
-  localStorage.setItem('deesay_metric_presets_' + page, JSON.stringify(presets));
+  uiPrefSave('presets:' + page, presets, true);   // เก็บผูกกับผู้ใช้ (ไม่ปนกับคนอื่นที่ใช้เครื่องเดียวกัน)
   renderMetricsChecks(page);
 }
 function loadMetricPreset(page, name) {
@@ -8458,13 +8527,14 @@ function loadMetricPreset(page, name) {
   if (!p) return;
   metricState[page].order = [...p.order];
   metricState[page].active = { ...p.active };
+  saveMetricState(page);
   renderMetricsChecks(page); rerenderPage(page);
 }
 function deleteMetricPreset(page, name) {
   if (!name || !confirm(`ลบ preset "${name}" ใช่ไหม?`)) return;
   const presets = getMetricPresets(page);
   delete presets[name];
-  localStorage.setItem('deesay_metric_presets_' + page, JSON.stringify(presets));
+  uiPrefSave('presets:' + page, presets, true);
   renderMetricsChecks(page);
 }
 
@@ -8482,6 +8552,11 @@ function renderMetricsChecks(page) {
       </select>
       <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="saveMetricPreset('${page}')" title="บันทึกชุดที่เลือกตอนนี้เป็น preset ใหม่">💾</button>
       ${presetNames.length ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="deleteMetricPreset('${page}', document.getElementById('${page}-preset-select').value)" title="ลบ preset ที่เลือกอยู่ในช่องด้านซ้าย">🗑</button>` : ''}
+    </div>
+    <div style="display:flex;gap:6px;margin:-4px 0 10px;flex-wrap:wrap;font-size:10.5px;color:var(--text3);align-items:center;">
+      <span>บันทึกอัตโนมัติ เฉพาะบัญชีของคุณ</span>
+      <button class="btn btn-ghost" style="padding:2px 8px;font-size:10.5px;" onclick="resetMetricsToDefault('${page}')" title="กลับไปใช้ค่าเริ่มต้น">↺ ค่าเริ่มต้น</button>
+      ${Auth.perm && (Auth.perm.is_admin || Auth.perm.can_admin) ? `<button class="btn btn-ghost" style="padding:2px 8px;font-size:10.5px;" onclick="setMetricDefaultForAll('${page}')" title="ใช้คอลัมน์ชุดนี้เป็นค่าเริ่มต้นของทุกคน">📌 ตั้งเป็นค่าเริ่มต้นทุกคน</button>` : ''}
     </div>`;
   container.innerHTML = presetHtml + st.order.map((k, idx) => {
     const m = cfg.meta[k];
@@ -8494,6 +8569,7 @@ function renderMetricsChecks(page) {
   container.querySelectorAll('input[type=checkbox]').forEach(cb => {
     cb.addEventListener('change', function () {
       metricState[this.dataset.page].active[this.dataset.key] = this.checked;
+      saveMetricState(this.dataset.page);
       updateMetricCount(this.dataset.page);
       rerenderPage(this.dataset.page);
     });
@@ -8509,6 +8585,7 @@ function renderMetricsChecks(page) {
       if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
       const moved = metricState[p].order.splice(dragSrcIdx, 1)[0];
       metricState[p].order.splice(targetIdx, 0, moved);
+      saveMetricState(p);
       renderMetricsChecks(p); rerenderPage(p);
     });
   });
@@ -8529,12 +8606,14 @@ function resetMetrics(page) {
 }
 function allMetrics(page) {
   metricState[page].order.forEach(k => metricState[page].active[k] = true);
+  saveMetricState(page);
   renderMetricsChecks(page); rerenderPage(page);
 }
 function rerenderPage(page) {
   if (page === 'ttc') { ttcPage = 1; renderTtcCurrentView(); }
   else if (page === 'tta') { ttaPage = 1; renderTtaTable(); }
   else if (page === 'ttaCampaign') { renderTtaCampaignTable(); }
+  else if (page === 'ttaCreator') { renderTtaCreatorSummary(); }
   else if (page === 'shads') { renderShAdsTable(); }
 }
 function activeCols(page) {
@@ -9161,41 +9240,45 @@ async function renderTtaDaily() {
   }
 }
 
+let _ttaCrSort = 'spend', _ttaCrDir = 'desc', _ttaCrShow = 50;
 function renderTtaCreatorSummary() {
-  const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase();
-  const byHandle = {};
+  const q = (document.getElementById('ttaCreatorSearch')?.value || '').toLowerCase().trim();
+  const src = document.getElementById('ttaCreatorSrc')?.value || '';
+  const by = {};
   ttaByClip.forEach(c => {
-    if (!byHandle[c.handle]) byHandle[c.handle] = { isDeesay: c.isDeesay, clips: 0, spend: 0, orders: 0, purchaseValue: 0 };
-    // ป้องกัน handle เดียวกันมีค่า isDeesay ขัดแย้งกันระหว่างคลิป — ถ้าเจอ true ครั้งเดียวถือว่าเป็น Deesay ทั้งหมด
-    if (c.isDeesay) byHandle[c.handle].isDeesay = true;
-    byHandle[c.handle].clips += (c.clipCount || 1);
-    byHandle[c.handle].spend += c.spend;
-    byHandle[c.handle].orders += c.orders;
-    byHandle[c.handle].purchaseValue += c.purchaseValue;
+    const o = (by[c.handle] = by[c.handle] || { handle: c.handle, isDeesay: false, clips: 0, spend: 0, orders: 0, purchaseValue: 0, impressions: 0, clicks: 0, convs: 0, likes: 0, follows: 0, top: null });
+    if (c.isDeesay) o.isDeesay = true;   // handle เดียวกันเจอเป็น Deesay ครั้งเดียว ถือว่าเป็น Deesay
+    o.clips += (c.clipCount || 1); o.spend += c.spend || 0; o.orders += c.orders || 0; o.purchaseValue += c.purchaseValue || 0;
+    o.impressions += c.impressions || 0; o.clicks += c.clicks || 0; o.convs += c.convs || 0; o.likes += c.likes || 0; o.follows += c.follows || 0;
+    if (c.thumbnail && (!o.top || (c.spend || 0) > o.top.spend)) o.top = { thumb: c.thumbnail, spend: c.spend || 0 };
   });
-  let arr = Object.entries(byHandle).map(([handle, v]) => ({
-    handle, isDeesay: v.isDeesay, clips: v.clips, spend: v.spend, orders: v.orders, purchaseValue: v.purchaseValue,
-    cpo: v.orders ? (v.spend/v.orders) : null,
-    roas: v.spend ? (v.purchaseValue/v.spend) : null
-  })).sort((a,b) => b.spend - a.spend);
-  if (q) arr = arr.filter(c => c.handle.toLowerCase().includes(q));
-  const totalCreatorCount = arr.length;
-  arr = arr.slice(0, 10);
-  const titleEl = document.getElementById('ttaCreatorSummaryTitle');
-  if (titleEl) titleEl.textContent = `📈 สรุปตาม Creator (Top 10 จากทั้งหมด ${totalCreatorCount} คนในช่วงที่เลือก)`;
-  document.getElementById('ttaCreatorSummary').innerHTML = arr.length ? arr.map(c => `
-    <div class="creator-card" style="border-left-color:${c.isDeesay?'var(--blue)':'#a78bfa'};">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span>${ttHandleHtml(c.handle, true)}</span>
-        <span style="font-size:9px;font-weight:700;color:${c.isDeesay?'var(--blue)':'#a78bfa'};">${c.isDeesay?'🏠 Deesay':'🎭 KOL'}</span>
-      </div>
-      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">${c.clips} คลิป · ฿${fmt(c.spend)} ค่าแอด · ฿${fmt(c.purchaseValue)} ยอดขาย</div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'IBM Plex Mono',monospace;">
-        <span style="color:var(--green);">${fmt(c.orders)} orders</span>
-        <span style="color:var(--accent);">ROAS ${c.roas!==null?c.roas.toFixed(2)+'x':'—'}</span>
-      </div>
-      <div style="text-align:right;font-size:10px;color:var(--text3);margin-top:3px;font-family:'IBM Plex Mono',monospace;">CPO ${c.cpo!==null?'฿'+Math.round(c.cpo):'—'}</div>
-    </div>`).join('') : '<div class="empty" style="grid-column:1/-1;">ไม่พบ creator ที่ค้นหา</div>';
+  let arr = Object.values(by).map(o => ({ ...o, roas: o.spend ? o.purchaseValue / o.spend : 0, cpo: o.orders ? o.spend / o.orders : 0, ctr: o.impressions ? o.clicks / o.impressions * 100 : 0 }));
+  if (q) arr = arr.filter(c => String(c.handle).toLowerCase().includes(q) || String((TT_HANDLE_MAP || {})[String(c.handle).toLowerCase()] || '').toLowerCase().includes(q));
+  if (src) arr = arr.filter(c => src === 'deesay' ? c.isDeesay : !c.isDeesay);
+  const dir = _ttaCrDir === 'asc' ? 1 : -1;
+  arr.sort((a, b) => ((a[_ttaCrSort] || 0) - (b[_ttaCrSort] || 0)) * dir || (b.spend - a.spend));
+  const ks = activeCols('ttaCreator');
+  const F = {
+    clips: c => fmt(c.clips), spend: c => '฿' + fmt(Math.round(c.spend)), purchaseValue: c => c.purchaseValue ? '฿' + fmt(Math.round(c.purchaseValue)) : '—',
+    roas: c => { if (!c.spend || !c.purchaseValue) return '—'; const r = c.roas, col = r >= 2 ? 'var(--green)' : r >= 1 ? 'var(--accent)' : 'var(--red)'; return `<span style="color:${col};font-weight:700;">${r.toFixed(2)}x</span>`; },
+    orders: c => fmt(c.orders), cpo: c => c.orders ? '฿' + fmt(Math.round(c.cpo)) : '—', impressions: c => fmt(c.impressions), clicks: c => fmt(c.clicks),
+    ctr: c => c.impressions ? c.ctr.toFixed(2) + '%' : '—', convs: c => fmt(c.convs), likes: c => fmt(c.likes), follows: c => fmt(c.follows)
+  };
+  document.getElementById('theadTtaCreator').innerHTML = `<tr><th>Creator</th>${ks.map(k => `<th class="sortable-th" data-k="${k}" style="cursor:pointer;">${METRIC_CONFIGS.ttaCreator.meta[k].label} <span class="sort-ind">${_ttaCrSort === k ? (_ttaCrDir === 'desc' ? '▼' : '▲') : ''}</span></th>`).join('')}</tr>`;
+  document.querySelectorAll('#theadTtaCreator th.sortable-th').forEach(th => th.onclick = () => { const k = th.dataset.k; if (_ttaCrSort === k) _ttaCrDir = _ttaCrDir === 'desc' ? 'asc' : 'desc'; else { _ttaCrSort = k; _ttaCrDir = 'desc'; } renderTtaCreatorSummary(); });
+  document.getElementById('tta-creator-count').textContent = `(${fmt(arr.length)} คน)`;
+  const show = arr.slice(0, _ttaCrShow);
+  document.getElementById('tbodyTtaCreator').innerHTML = show.map(c => {
+    const slug = String(c.handle || '').replace(/^@/, '').replace(/\s+/g, '');
+    const link = slug && slug !== '(ไม่ทราบชื่อ)' ? `https://www.tiktok.com/@${encodeURIComponent((TT_HANDLE_MAP || {})[String(c.handle).toLowerCase()] || slug)}` : '';
+    const thumb = c.top && c.top.thumb ? `<img src="${ttcEscAttr(c.top.thumb)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='🎵'">` : '🎵';
+    const tag = c.isDeesay ? `<div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:rgba(96,165,250,0.15);color:#60a5fa;">🏠 Deesay</div>` : `<div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:rgba(167,139,250,0.15);color:#a78bfa;">🎭 KOL</div>`;
+    return `<tr><td><div style="display:flex;align-items:center;gap:8px;"><a ${link ? `href="${ttcEscAttr(link)}" target="_blank" rel="noopener" title="เปิดช่อง TikTok"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${thumb}</a>
+      <div style="font-size:10.5px;color:var(--text3);line-height:1.35;">${tag}<div>${ttHandleHtml(c.handle, false)}</div></div></div></td>
+      ${ks.map(k => `<td>${F[k] ? F[k](c) : '—'}</td>`).join('')}</tr>`;
+  }).join('') || `<tr><td colspan="${ks.length + 1}" class="empty">ไม่พบ creator ที่ค้นหา</td></tr>`;
+  document.getElementById('ttaCreatorMore').innerHTML = arr.length > _ttaCrShow ? `<button class="btn btn-ghost" onclick="_ttaCrShow+=50;renderTtaCreatorSummary()">แสดงเพิ่ม 50 คน (แสดงอยู่ ${fmt(_ttaCrShow)} จาก ${fmt(arr.length)})</button>` : '';
+  updateMetricCount('ttaCreator');
 }
 
 const OUT_OF_RANGE_HTML = '<span style="color:var(--text3);font-style:italic;font-size:10px;" title="คลิปนี้เก่ากว่าช่วงวันที่ที่ระบบเก็บข้อมูลส่วนนี้ไว้ (ไม่ใช่ค่า 0 จริง แค่ยังไม่มีข้อมูลให้แสดง)">นอกช่วงเก็บ</span>';
