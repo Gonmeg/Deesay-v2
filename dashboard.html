@@ -424,6 +424,35 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .kj-cal td.future { background:repeating-linear-gradient(45deg, transparent 0 6px, var(--border) 6px 7px); }
   .kj-cal tr.tot td { border-top:1px solid var(--border); font-weight:700; }
   .kj-tag { display:inline-block; padding:1px 7px; border-radius:10px; font-size:10.5px; } .kj-ok { background:rgba(34,197,94,.14); color:#16a34a; } .kj-no { background:rgba(148,163,184,.18); color:var(--text3); }
+  /* ===== หน้าแรก (สรุปประจำวัน) ===== */
+  #page-home { font-family:'Sarabun',sans-serif; }
+  .hm-top { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .hm-date { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-.2px; } .hm-date small { display:block; font-size:12.5px; font-weight:500; color:var(--text3); letter-spacing:0; margin-top:2px; }
+  .hm-nav button { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer; color:var(--text2); font-family:'Sarabun',sans-serif; font-size:12.5px; }
+  .hm-nav button:hover { border-color:var(--accent); color:var(--text); }
+  .hm-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+  .hm-kpi { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
+  .hm-kpi .l { font-size:12.5px; color:var(--text2); font-weight:600; } .hm-kpi .v { font-size:28px; font-weight:800; color:var(--text); line-height:1.15; margin-top:4px; letter-spacing:-.5px; }
+  .hm-kpi .s { font-size:11.5px; color:var(--text3); margin-top:5px; }
+  .hm-chip { display:inline-block; font-size:11px; font-weight:700; padding:1px 7px; border-radius:10px; white-space:nowrap; }
+  .hm-up { background:rgba(34,197,94,.14); color:var(--green); } .hm-down { background:rgba(239,68,68,.12); color:var(--red); } .hm-flat { background:var(--bg3); color:var(--text3); }
+  .hm-sec { font-size:14.5px; font-weight:800; color:var(--text); margin:4px 0 10px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .hm-sec a, .hm-more { font-size:12px; font-weight:600; color:var(--accent); cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .hm-ch { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+  .hm-card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:14px 16px 14px 18px; position:relative; overflow:hidden; }
+  .hm-card .bar { position:absolute; left:0; top:0; bottom:0; width:4px; }
+  .hm-card .nm { font-size:13.5px; font-weight:700; color:var(--text2); } .hm-card .big { font-size:24px; font-weight:800; color:var(--text); margin:2px 0 6px; letter-spacing:-.4px; }
+  .hm-card .row { display:flex; justify-content:space-between; font-size:12.5px; color:var(--text2); padding:4px 0; border-top:1px dashed var(--border); } .hm-card .row b { color:var(--text); }
+  .hm-card.stale { opacity:.75; }
+  .hm-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+  .hm-list .it { display:flex; gap:10px; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); font-size:12.5px; }
+  .hm-list .it:last-child { border-bottom:none; }
+  .hm-list .th { width:38px; height:38px; border-radius:7px; background:var(--bg3); flex:0 0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .hm-list .th img { width:100%; height:100%; object-fit:cover; }
+  .hm-list .tx { flex:1; min-width:0; } .hm-list .tx div:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); font-weight:600; }
+  .hm-list .tx div:last-child { font-size:11.5px; color:var(--text3); } .hm-list .rt { text-align:right; white-space:nowrap; font-weight:700; }
+  .hm-sub { font-size:12px; font-weight:700; color:var(--text3); margin:10px 0 2px; }
+  @media (max-width:1100px) { .hm-kpis { grid-template-columns:repeat(2,1fr); } .hm-ch { grid-template-columns:repeat(2,1fr); } .hm-2 { grid-template-columns:1fr; } }
   /* กล่องแจกแจงยอด (กดที่ตัวเลข) */
   .bd { text-align:left; max-width:780px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'Sarabun',sans-serif; }
   .bd-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; }
@@ -478,6 +507,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <div class="logo-sub">Dashboard</div>
   </div>
   <nav class="nav">
+    <div class="nav-item" onclick="showPage('home',null,this)"><span class="nav-icon">🏠</span> หน้าแรก</div>
     <div class="nav-item active" onclick="showPage('overview',null,this)"><span class="nav-icon">📊</span> ภาพรวมยอดขาย</div>
     <div class="nav-item" onclick="showPage('channel',null,this)"><span class="nav-icon">📡</span> แยกตาม Channel</div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('fb')" id="navGroupLabel-fb">
@@ -533,7 +563,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.28-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.28-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2051,6 +2081,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <!-- Facebook Ads (Meta Marketing API) — โค้ดอยู่ใน fbads.js โหลดตอนกดเมนู -->
     <div class="page" id="page-fbads"><div class="card"><div class="empty">กำลังโหลด...</div></div></div>
 
+    <!-- (2026-09-28) หน้าแรก: สรุปเหตุการณ์ประจำวันจากทุกหน้า (home_brief) -->
+    <div class="page" id="page-home"><div id="homeBody"><div class="empty" style="padding:40px;">กำลังโหลดสรุป…</div></div></div>
+
     <!-- (2026-09-25) MKT Tracking แบบวันต่อวัน — CM1 เท่านั้น: ค่า KOL จากชีทเบิกเงิน + ค่า Ads จริง (ไม่ใช้ไฟล์บัญชี) -->
     <div class="page" id="page-mktlive">
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><span id="mlNote" style="font-size:11.5px;color:var(--text2);"></span></div>
@@ -2755,12 +2788,12 @@ const pageTitles = {
   tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttkeyword: 'ค้นหาคำบน TikTok', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'แนวโน้มสินค้า — อะไรขึ้น อะไรลง', skuanalysis: 'เจาะสินค้า', adperf: 'Ad Performance',
-  cost: 'Business Insight', mktlive: 'MKT Tracking', fbengage: 'Engagement รายวัน (Facebook)', fbads: 'Facebook Ads (Meta)', kol: 'KOL',
+  cost: 'Business Insight', mktlive: 'MKT Tracking', home: 'หน้าแรก — สรุปประจำวัน', fbengage: 'Engagement รายวัน (Facebook)', fbads: 'Facebook Ads (Meta)', kol: 'KOL',
   supply: 'Supply Chain — สต็อก / แผนสั่งซื้อ'
 };
-const pageOrder = ['overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
+const pageOrder = ['home','overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
-const NO_DATE_FILTER_PAGES = ['promotarget','supply']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
+const NO_DATE_FILTER_PAGES = ['promotarget','supply','home']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -2867,7 +2900,7 @@ function showPage(page, lockCh, el) {
 
   // (2026-09-22) MKT Tracking ดูทุกช่องทางรวม (แยกช่องทางดูในหน้า) → ซ่อน Channel / Sub-channel
   // (2026-09-25) Business Insight / MKT Tracking ใช้ตัวเลือกเดือนด้านบน + ปุ่มค้นหา · ไม่มี Channel / Sub-channel (แยกช่องทางดูในหน้า)
-  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
+  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
@@ -2972,6 +3005,7 @@ function renderCurrentPage() {
   else if (currentPage === 'neverbought') renderNeverBoughtPage();
   else if (currentPage === 'cost') renderCostPage();
   else if (currentPage === 'mktlive') renderMktLive();
+  else if (currentPage === 'home') renderHome();
   else if (currentPage === 'skurev') renderSkuRev();
   else if (currentPage === 'creatorperf') renderCreatorPerf();
   else if (currentPage === 'kol') renderKolPage();
@@ -7708,6 +7742,70 @@ function exportPl() {
 }
 
 
+// ===== หน้าแรก — สรุปประจำวัน (RPC home_brief) =====
+let _homeDate = null;
+const HM_CH = { Facebook: ['#1877f2', 'fbhub'], TikTok: ['#111111', 'tthub'], Shopee: ['#f97316', 'shhub'], Lazada: ['#8b5cf6', 'lzhub'], 'Modern Trade': ['#f59e0b', 'mthub'], 'ตัวแทน': ['#64748b', 'channel'] };
+function homeGo(page) { const el = document.querySelector(`.nav-item[onclick*="'${page}'"]`); if (el || Auth.canPage(page)) showPage(page, null, el); }
+function homeShift(n) { if (!_homeDate) return; const d = new Date(_homeDate + 'T00:00:00'); d.setDate(d.getDate() + n); _homeDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; renderHome(); }
+async function renderHome() {
+  const el = document.getElementById('homeBody'); if (!el) return;
+  let b; try { b = await Auth.rpc('home_brief', _homeDate ? { p_date: _homeDate } : {}); } catch (e) { el.innerHTML = `<div class="empty">โหลดสรุปไม่สำเร็จ: ${e.message || e}</div>`; return; }
+  _homeDate = b.date;
+  const d = new Date(b.date + 'T00:00:00'), money = v => '฿' + fmt(Math.round(+v || 0)), pct = (a, b2) => b2 ? (a - b2) / b2 * 100 : null;
+  const chip = (p, inv) => p === null || !isFinite(p) ? '<span class="hm-chip hm-flat">—</span>' : `<span class="hm-chip ${Math.abs(p) < 3 ? 'hm-flat' : ((p > 0) !== !!inv ? 'hm-up' : 'hm-down')}">${p > 0 ? '▲' : p < 0 ? '▼' : ''} ${Math.abs(p).toFixed(0)}%</span>`;
+  const ch = b.channels || [];
+  const T = ch.reduce((t, c) => { t.rev += +c.rev_d; t.avg += +c.rev_avg7; t.ads += +c.ads_d; t.ads7 += +c.ads_avg7; t.mtd += +c.mtd; t.mtdp += +c.mtd_prev; t.ord += +c.orders_d; return t; }, { rev: 0, avg: 0, ads: 0, ads7: 0, mtd: 0, mtdp: 0, ord: 0 });
+  const roas = T.ads ? T.rev / T.ads : 0;
+  const thDay = d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const stale = ch.filter(c => !c.last_sales_date || c.last_sales_date < b.date).map(c => c.channel);
+  const roasTxt = r => r ? `<span style="color:${r >= 3 ? 'var(--green)' : r >= 1.5 ? 'var(--accent)' : 'var(--red)'};">${r.toFixed(2)}x</span>` : '—';
+  const esc = t => String(t || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, ic = tt ? '🎵' : '📣', title = tt ? (x.title || x.item_id) : x.name;
+    return `<div class="it"><div class="th">${img ? `<img src="${esc(img)}" onerror="this.parentNode.textContent='${ic}'">` : ic}</div>
+      <div class="tx"><div title="${esc(title)}">${esc(title)}</div><div>${tt ? '@' + esc(x.acc || '—') + ' · ' : ''}ค่าแอด ${money(x.spend)} · ยอด ${money(tt ? x.rev : x.pv)}${!tt && +x.msg ? ' · ทัก ' + fmt(x.msg) : ''}</div></div>
+      <div class="rt">${roasTxt(+x.roas)}</div></div>`; };
+  const adBlock = (best, worst, tt) => `<div class="hm-sub">👍 ROAS ดีสุด</div>${(best || []).map(x => adItem(x, tt)).join('') || '<div class="it" style="color:var(--text3);">ไม่มีแอดที่มียอดขาย</div>'}
+      <div class="hm-sub">👎 ใช้เงินแต่ ROAS ต่ำ (ค่าแอด ≥ ฿1,000)</div>${(worst || []).map(x => adItem(x, tt)).join('') || '<div class="it" style="color:var(--text3);">ไม่มี</div>'}`;
+  const stLbl = { stockout: ['หมดแล้ว', 'var(--red)'], late: ['ของเข้าไม่ทัน', 'var(--orange)'], reorder: ['ถึงจุดสั่ง', 'var(--accent)'] };
+  const dShort = v => new Date(v + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  el.innerHTML = `
+    <div class="hm-top"><div class="hm-date">สรุปประจำวัน<small>${thDay}${stale.length ? ` · <span style="color:var(--orange);">ยังไม่อัปยอดวันนี้: ${stale.join(', ')}</span>` : ''}</small></div>
+      <div class="hm-nav" style="display:flex;gap:6px;"><button onclick="homeShift(-1)">‹ วันก่อน</button><button onclick="_homeDate=null;renderHome()">วันล่าสุด</button><button onclick="homeShift(1)">วันถัดไป ›</button></div></div>
+    <div class="hm-kpis">
+      <div class="hm-kpi"><div class="l">ยอดขายรวม</div><div class="v">${money(T.rev)}</div><div class="s">${chip(pct(T.rev, T.avg))} เทียบเฉลี่ย 7 วันก่อน · ${fmt(T.ord)} ออเดอร์</div></div>
+      <div class="hm-kpi"><div class="l">ค่าแอดรวม</div><div class="v">${money(T.ads)}</div><div class="s">${chip(pct(T.ads, T.ads7), true)} เทียบเฉลี่ย 7 วันก่อน</div></div>
+      <div class="hm-kpi"><div class="l">ROAS รวม</div><div class="v">${roas ? roas.toFixed(2) + 'x' : '—'}</div><div class="s">ยอดขาย ÷ ค่าแอด ทุกช่องทาง</div></div>
+      <div class="hm-kpi"><div class="l">ยอดขายสะสมเดือนนี้</div><div class="v">${money(T.mtd)}</div><div class="s">${chip(pct(T.mtd, T.mtdp))} เทียบเดือนก่อนช่วงวันเดียวกัน</div></div>
+    </div>
+    <div class="hm-sec">ยอดขาย & ค่าแอด แยกช่องทาง <a onclick="homeGo('channel')">ดูรายละเอียด →</a></div>
+    <div class="hm-ch">${ch.map(c => { const col = (HM_CH[c.channel] || ['#94a3b8', 'channel']); const r = +c.ads_d ? c.rev_d / c.ads_d : 0; const st = !c.last_sales_date || c.last_sales_date < b.date;
+      return `<div class="hm-card${st ? ' stale' : ''}"><div class="bar" style="background:${col[0]};"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><div class="nm">${c.channel}</div>${st ? `<span class="hm-chip hm-flat">ยอดล่าสุด ${c.last_sales_date ? dShort(c.last_sales_date) : '—'}</span>` : chip(pct(+c.rev_d, +c.rev_avg7))}</div>
+        <div class="big">${st ? '<span style="color:var(--text3);font-size:15px;">ยังไม่อัปยอด</span>' : money(c.rev_d)}</div>
+        <div class="row"><span>ออเดอร์</span><b>${fmt(+c.orders_d)}</b></div>
+        <div class="row"><span>ค่าแอด</span><b>${+c.ads_d ? money(c.ads_d) : '—'}</b></div>
+        <div class="row"><span>ROAS</span><b>${!st && r ? roasTxt(r) : '—'}</b></div>
+        <div class="row"><span>สะสมเดือนนี้</span><b>${money(c.mtd)} ${chip(pct(+c.mtd, +c.mtd_prev))}</b></div>
+        <div style="text-align:right;margin-top:6px;"><span class="hm-more" onclick="homeGo('${col[1]}')">ดูรายละเอียด →</span></div></div>`; }).join('')}</div>
+    <div class="hm-2">
+      <div class="hm-card"><div class="hm-sec">📣 Facebook Ads <a onclick="homeGo('fbads')">ดูทั้งหมด →</a></div><div class="hm-list">${adBlock(b.fb_best, b.fb_worst, false)}</div></div>
+      <div class="hm-card"><div class="hm-sec">🎵 TikTok Ads <a onclick="homeGo('ttads')">ดูทั้งหมด →</a></div><div class="hm-list">${adBlock(b.tt_best, b.tt_worst, true)}</div></div>
+    </div>
+    <div class="hm-2">
+      <div class="hm-card"><div class="hm-sec">🏆 สินค้าขายดี <a onclick="homeGo('skuanalysis')">ดูทั้งหมด →</a></div><div class="hm-list">
+        ${(b.top_products || []).map((x, i) => `<div class="it"><div class="th" style="font-weight:800;color:var(--accent);">${i + 1}</div><div class="tx"><div>${esc(x.product_name || x.parent_sku)}</div><div>${fmt(Math.round(+x.qty_d || 0))} ชิ้น · เฉลี่ย 7 วัน ${money(x.avg7)}</div></div><div class="rt">${money(x.rev_d)} ${chip(pct(+x.rev_d, +x.avg7))}</div></div>`).join('') || '<div class="it" style="color:var(--text3);">ยังไม่มียอด</div>'}
+        <div class="hm-sub">⚡ ขยับแรงเทียบเฉลี่ย 7 วัน</div>
+        ${(b.movers || []).map(x => `<div class="it"><div class="tx"><div>${esc(x.product_name || x.parent_sku)}</div><div>เฉลี่ย ${money(x.avg7)} → ${money(x.rev_d)}</div></div><div class="rt">${chip(+x.chg * 100)}</div></div>`).join('') || '<div class="it" style="color:var(--text3);">—</div>'}
+      </div></div>
+      <div class="hm-card"><div class="hm-sec">📦 สต็อกต้องระวัง <a onclick="homeGo('supply')">ไป Supply Chain →</a></div><div class="hm-list">
+        ${(b.stock || []).map(x => { const l = stLbl[x.order_status] || ['', 'var(--text3)']; return `<div class="it"><div class="tx"><div>${esc(x.product_name || x.parent_sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${esc(x.sku)}</span></div>
+          <div>คงเหลือ ${fmt(Math.round(+x.on_hand))} ชิ้น · ขายวันละ ~${(+x.avg_day).toFixed(1)}${x.next_eta ? ' · ของเข้า ' + dShort(x.next_eta) : x.has_po ? '' : ' · ยังไม่มี PO'}</div></div>
+          <div class="rt"><span class="hm-chip" style="background:var(--bg3);color:${l[1]};">${l[0]}</span><div style="font-size:11px;color:var(--text3);font-weight:500;">${+x.on_hand > 0 ? 'พอขาย ~' + Math.floor(+x.cover_days) + ' วัน' : 'ของหมด'}</div></div></div>`; }).join('') || '<div class="it" style="color:var(--green);">✓ ไม่มีสินค้าที่ต้องระวัง</div>'}
+      </div></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin:-6px 0 10px;">ยอดขายเป็นยอดรวม VAT ตามหน้ายอดขาย · ค่าแอดจากทุกแหล่ง (Meta / TikTok / Shopee / Lazada) · Ads ดี/แย่ คัดเฉพาะแอดที่ใช้เงิน ≥ ฿300 ในวันนั้น</div>`;
+}
+
 // ===== MKT Tracking แบบวันต่อวัน (mv_mkt_live_monthly) — ค่า KOL จากชีทเบิกเงิน + ค่า Ads จริง · CM1 เท่านั้น =====
 let _mlRows = null, _mlCh = null, _mlKol = null, _mlView = [], _mlSortCol = 'rev', _mlSortDir = 'desc', _mlOpen = new Map();
 async function loadMl() {
@@ -7935,7 +8033,29 @@ function renderKolTable() {
   // รวมตามมุมมอง
   let list;
   if (_kjView === 'cal') { renderKolCal(); return; }
-  if (_kjView === 'job') list = rows.map(r => ({ ...r, ...val(r), key: 'r' + r.row_no, jobs: [r], kol: kjDisplay(r), realName: r.kol_name || '', sku: _kjNames[r.parent_sku] || r.parent_sku || r.product_code || '—', plat: r.platform || '—', type: r.kol_type || '—', date: r.post_date || '' }));
+  // (2026-09-28) งานเดียวที่ชีทแตกเป็นหลายแถว (ฟอร์มเดียวกัน = เวลาส่ง + รหัส content + ลิงก์โพสต์เดียวกัน เช่น จ่ายเป็นงวด/แบ่งหลายสินค้า) → รวมเป็น 1 แถว
+  //   ค่า Ads / ยอดขายของคลิปถูกแบ่งเท่าๆ กันต่อแถวอยู่แล้ว รวมกลับได้ยอดของคลิปพอดี (ไม่นับซ้ำ)
+  if (_kjView === 'job') {
+    const g = {};
+    rows.forEach(r => { const k = r.post_link || r.content_code ? `${r.submitted_at || ''}|${r.content_code || ''}|${r.post_link || ''}|${r.kol_name || ''}` : 'r' + r.row_no;
+      (g[k] = g[k] || []).push(r); });
+    // คลิปเดียวกันที่ถูกใส่ในหลายฟอร์ม (คนละงาน) → เตือน เพราะค่า Ads/ยอดขายของคลิปถูกแบ่งเท่าๆ กันระหว่างงานเหล่านั้น
+    const fkey = x => `${x.submitted_at || ''}|${x.content_code || ''}|${x.kol_name || ''}`;
+    const vidForms = {}; (_kjRows || []).forEach(x => { if (x.video_id) (vidForms[x.video_id] = vidForms[x.video_id] || new Set()).add(fkey(x)); });
+    // จำแนกเคสคลิปซ้ำ: รหัสงานต่างกัน → ลิงก์อาจผิด · รหัสงานเดียวกัน เดือน+ยอดเท่ากัน → อาจเบิกซ้ำ · รหัสเดิมเปลี่ยนเดือน → จ่ายเพิ่มคลิปเดิม?
+    const codeBase = c => String(c || '').toLowerCase().replace(/_[a-z]{3}\d{0,2}$/, '');
+    const dupKind = r => { const others = (_kjRows || []).filter(x => x.video_id && x.video_id === r.video_id && fkey(x) !== fkey(r)); if (!others.length) return '';
+      if (others.some(x => codeBase(x.content_code) !== codeBase(r.content_code))) return 'link';
+      if (others.some(x => x.month === r.month && Math.abs((+x.amount || 0) - (+r.amount || 0)) < 1)) return 'dup';
+      return 'extra'; };
+    list = Object.entries(g).map(([k, js]) => {
+      const r = js[0], t = js.reduce((a, x) => { const v = val(x); a.amount += v.amount; a.ads += v.ads; a.sales += v.sales; return a; }, { amount: 0, ads: 0, sales: 0 });
+      const skus = [...new Set(js.map(x => _kjNames[x.parent_sku] || x.parent_sku || x.product_code || '—'))];
+      const months = [...new Set(js.map(x => x.month).filter(Boolean))].sort();
+      return { ...r, ...t, key: 'j' + r.row_no, jobs: js, n: js.length, kol: kjDisplay(r), realName: r.kol_name || '', sku: skus.join(', '), months,
+        plat: r.platform || '—', type: r.kol_type || '—', date: r.post_date || '', shared: r.video_id && vidForms[r.video_id] ? vidForms[r.video_id].size - 1 : 0, dupKind: dupKind(r) };
+    });
+  }
   else {
     const by = {};
     rows.forEach(r => { const k = _kjView === 'kol' ? kjDisplay(r) : (r.parent_sku || r.product_code || '—');
@@ -7953,10 +8073,11 @@ function renderKolTable() {
     document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1)}${th('plat', 'ช่องทาง', 1)}${th('sku', 'สินค้า', 1)}${th('type', 'ประเภท')}${th('date', 'วันโพสต์')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้ ' + plTip('tip-kjh-vat' + _kjView, 'ถอด VAT 7% แล้ว (÷ 1.07) เทียบกับค่าจ้าง ex.VAT', 'right'))}${th('mer', 'MER ' + plTip('tip-kjh-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท', 'right'))}<th>สถานะ</th></tr>`;
     document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr>
       <td class="c-left"><b>${o.kol}</b>${o.channel_link ? ` <a href="${o.channel_link}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;font-size:11px;">👤</a>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}${o.realName && o.realName !== o.kol ? `<div style="color:var(--text3);font-size:10.5px;">${o.realName}</div>` : ''}</td>
-      <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;">${o.sku}</td><td>${o.type}</td>
+      <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${o.sku}${o.n > 1 ? `<div style="font-size:10px;color:var(--accent);" title="ชีทเบิกเงินแตกงานนี้เป็น ${o.n} แถว (ฟอร์มเดียวกัน) — รวมเป็นงานเดียว ค่าจ้างรวมทุกงวด ค่า Ads/ยอดขายของคลิปนับครั้งเดียว">รวม ${o.n} แถวในชีท · ${o.months.map(m => PL_TH_M(m)).join(', ')}</div>` : ''}</td><td>${o.type}</td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</td>
       <td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td>
-      <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอแอด</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิงแอด</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูลแอด</span>'}<div style="font-size:10px;color:var(--text3);white-space:normal;max-width:190px;">${o.match_note || ''}</div></td></tr>`).join('')
+      <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอแอด</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิงแอด</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูลแอด</span>'}<div style="font-size:10px;color:var(--text3);white-space:normal;max-width:190px;">${o.match_note || ''}</div>${o.shared ? (() => { const K = { link: ['⚠️ ลิงก์อาจผิด', 'var(--orange)', 'รหัสงานต่างกัน แต่ลิงก์เปิดแล้วเป็นคลิปเดียวกับงานอื่น — ถ้าเป็นคลิปใหม่ ให้แก้ลิงก์ในชีท'], dup: ['⛔ อาจเบิกซ้ำ', 'var(--red)', 'รหัสงานเดียวกัน เดือนเดียวกัน ยอดเท่ากัน และเป็นคลิปเดียวกัน — เช็คว่าจ้าง 2 ครั้งจริง หรือกรอกเบิกซ้ำ'], extra: ['⚠️ จ่ายเพิ่มคลิปเดิม?', 'var(--orange)', 'รหัสงานเดิม เปลี่ยนเดือน — ถ้าเป็นการจ่ายเพิ่มสำหรับคลิปเดิม ไม่ต้องแก้'] }[o.dupKind] || ['⚠️ คลิปเดียวกับอีก ' + o.shared + ' งาน', 'var(--orange)', ''];
+        return `<div style="font-size:10px;color:${K[1]};white-space:normal;max-width:190px;font-weight:700;" title="${K[2]} · ค่า Ads และยอดขายของคลิปถูกแบ่งเท่าๆ กันระหว่างงาน (ไม่นับซ้ำ)">${K[0]}</div>`; })() : ''}</td></tr>`).join('')
       || '<tr><td colspan="10" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
 
   } else {
@@ -10158,8 +10279,10 @@ Auth.require('dashboard').then(p => {
   applyPermissions(p);
   loadWhatsNew();
   const r = init();
+  // (2026-09-28) เปิดมาเจอ "หน้าแรก" (สรุปประจำวัน) ก่อน ถ้ามีสิทธิ์
+  if (Auth.canPage('home')) { Promise.resolve(r).then(() => showPage('home', null, document.querySelector(`.nav-item[onclick*="'home'"]`))); }
   // ถ้าไม่มีสิทธิ์หน้าภาพรวม → เปิดหน้าแรกที่มีสิทธิ์แทน
-  if (!Auth.canPage('overview')) { const first = pageOrder.find(id => Auth.canPage(id)); if (first) Promise.resolve(r).then(() => showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`))); }
+  else if (!Auth.canPage('overview')) { const first = pageOrder.find(id => Auth.canPage(id)); if (first) Promise.resolve(r).then(() => showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`))); }
 });
 
 // ============================================================================
