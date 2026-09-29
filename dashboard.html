@@ -452,6 +452,22 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .hm-list .tx { flex:1; min-width:0; } .hm-list .tx div:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); font-weight:600; }
   .hm-list .tx div:last-child { font-size:11.5px; color:var(--text3); } .hm-list .rt { text-align:right; white-space:nowrap; font-weight:700; }
   .hm-sub { font-size:12px; font-weight:700; color:var(--text3); margin:10px 0 2px; }
+  .st-lv { display:flex; gap:10px; align-items:flex-start; margin:4px 0 6px; font-size:13px; color:var(--text); }
+  .st-lv small { display:block; font-size:11.5px; color:var(--text3); font-weight:400; margin-top:1px; }
+  .st-badge { flex:0 0 22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#fff; }
+  .st-b1 { background:#dc2626; } .st-b2 { background:#f59e0b; }
+  .st-it { display:flex; gap:12px; align-items:center; padding:10px 0 10px 32px; border-bottom:1px solid var(--border); }
+  .st-it:last-of-type { border-bottom:none; }
+  .st-main { flex:1; min-width:0; }
+  .st-nm { font-size:13.5px; font-weight:700; color:var(--text); } .st-nm span { font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:400; color:var(--text3); margin-left:4px; }
+  .st-facts { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px; color:var(--text2); margin-top:3px; } .st-facts b { color:var(--text); }
+  .st-verdict { font-size:12px; color:var(--text2); margin-top:4px; line-height:1.6; }
+  .st-bad { color:var(--red); font-weight:700; } .st-warn { color:var(--orange); font-weight:700; } .st-ok { color:var(--green); font-weight:700; }
+  .st-src { display:inline-block; background:var(--bg3); border-radius:6px; padding:1px 7px; margin:2px 4px 0 0; font-size:11.5px; }
+  .st-days { flex:0 0 64px; text-align:center; border-radius:10px; padding:6px 0; line-height:1.05; }
+  .st-days b { display:block; font-size:22px; font-weight:800; } .st-days small { font-size:10.5px; }
+  .st-days.red { background:rgba(239,68,68,.12); color:var(--red); } .st-days.orange { background:rgba(245,158,11,.14); color:var(--orange); }
+  .st-none { padding:8px 0 8px 32px; font-size:12.5px; color:var(--green); }
   @media (max-width:1100px) { .hm-kpis { grid-template-columns:repeat(2,1fr); } .hm-ch { grid-template-columns:repeat(2,1fr); } .hm-2 { grid-template-columns:1fr; } }
   /* กล่องแจกแจงยอด (กดที่ตัวเลข) */
   .bd { text-align:left; max-width:780px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'Sarabun',sans-serif; }
@@ -563,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.28-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.29-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7800,16 +7816,27 @@ async function renderHome() {
         <div class="hm-sub">⚡ ขยับแรงเทียบเฉลี่ย 7 วัน</div>
         ${(b.movers || []).map(x => `<div class="it"><div class="tx"><div>${esc(x.product_name || x.parent_sku)}</div><div>เฉลี่ย ${money(x.avg7)} → ${money(x.rev_d)}</div></div><div class="rt">${chip(+x.chg * 100)}</div></div>`).join('') || '<div class="it" style="color:var(--text3);">—</div>'}
       </div></div>` : ''}
-      ${true ? `<div class="hm-card"><div class="hm-sec">📦 สต็อกต้องระวัง ${can('supply') ? `<a onclick="homeGo('supply')">ไป Supply Chain →</a>` : ''}</div><div class="hm-list">
-        <div class="hm-sub" style="margin-top:0;">ระดับ 1 · ทั้งบริษัท — ของทุกคลัง + ผลิตเสร็จฝากโรงงาน พอขายไม่ถึง 30 วัน</div>
-        ${(b.stock_l1 || []).map(x => { const cv = +x.cover_total, col = cv < 14 ? 'var(--red)' : 'var(--orange)'; return `<div class="it"><div class="tx"><div>${esc(x.product_name || x.parent_sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${esc(x.sku)}</span></div>
-          <div>คลังเรา ${fmt(Math.round(+x.on_hand))}${+x.fg ? ' + ฝากโรงงาน ' + fmt(Math.round(+x.fg)) : ''} ชิ้น · ขายวันละ ~${(+x.avg_day).toFixed(1)}${+x.wip ? ' · กำลังผลิต ' + fmt(Math.round(+x.wip)) + (x.wip_eta ? ' เข้า ' + dShort(x.wip_eta) : '') : ' · ยังไม่มี PO ค้าง'}${x.lt ? ' · ผลิต ~' + x.lt + ' วัน' : ''}</div></div>
-          <div class="rt"><span class="hm-chip" style="background:var(--bg3);color:${col};">${cv <= 0 ? 'หมดแล้ว' : 'พอขาย ~' + Math.floor(cv) + ' วัน'}</span></div></div>`; }).join('') || '<div class="it" style="color:var(--green);">✓ ทุกตัวพอขายเกิน 30 วัน</div>'}
-        <div class="hm-sub">ระดับ 2 · คลัง 01 - 111/53 (รวมคลังย่อยตามช่องทาง) — พอขายไม่ถึง 7 วัน ควรเรียกของจากคลังอื่น</div>
-        ${(b.stock_l2 || []).map(x => { const cv = +x.cover01, sites = (x.sites || []).map(z => `${esc(z.site)} ${fmt(Math.round(+z.qty))}`).join(' · '); return `<div class="it"><div class="tx"><div>${esc(x.product_name || x.parent_sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${esc(x.sku)}</span></div>
-          <div>ที่ 111/53 เหลือ ${fmt(Math.round(+x.s01))} ชิ้น · ขายวันละ ~${(+x.avg_day).toFixed(1)} · ${sites ? '<b style="color:var(--text2);">เรียกได้จาก</b> ' + sites : '<span style="color:var(--red);">คลังอื่นไม่มีของ</span>'}</div></div>
-          <div class="rt"><span class="hm-chip" style="background:var(--bg3);color:${cv < 3 ? 'var(--red)' : 'var(--orange)'};">${cv <= 0 ? 'หมดที่ 111/53' : 'พอ ~' + cv.toFixed(0) + ' วัน'}</span></div></div>`; }).join('') || '<div class="it" style="color:var(--green);">✓ คลัง 111/53 พอขายทุกตัว</div>'}
-      </div></div>` : ''}
+      ${true ? `<div class="hm-card"><div class="hm-sec">📦 สต็อกต้องระวัง ${can('supply') ? `<a onclick="homeGo('supply')">ไป Supply Chain →</a>` : ''}</div>
+        <div class="st-lv"><span class="st-badge st-b1">1</span><div><b>ทั้งบริษัท — ต้องสั่งผลิต / ตามของ</b><small>นับของทุกคลัง + ผลิตเสร็จฝากโรงงาน · แสดงตัวที่พอขายไม่ถึง 30 วัน</small></div></div>
+        ${(b.stock_l1 || []).map(x => { const cv = Math.max(0, +x.cover_total || 0), today = new Date(), lt = +x.lt || 0;
+            const outDay = new Date(today.getTime() + cv * 86400000);
+            const eta = x.wip_eta ? new Date(x.wip_eta + 'T00:00:00') : null;
+            const gap = eta ? Math.round((eta - outDay) / 86400000) : (lt ? Math.round(lt - cv) : null);
+            const verdict = eta
+              ? (gap > 0 ? `<span class="st-bad">ขาดของ ~${gap} วัน</span> ก่อนของล็อตใหม่เข้า ${dShort(x.wip_eta)}` : `<span class="st-ok">ทัน</span> ของล็อตใหม่เข้า ${dShort(x.wip_eta)} ก่อนหมด`)
+              : (gap > 0 ? `<span class="st-bad">ยังไม่มี PO</span> · สั่งวันนี้ ผลิต ~${lt} วัน → ขาดของ ~${gap} วัน` : `<span class="st-warn">ยังไม่มี PO</span> · ผลิต ~${lt || '?'} วัน ควรสั่งเร็วๆ นี้`);
+            return `<div class="st-it"><div class="st-main"><div class="st-nm">${esc(x.product_name || x.parent_sku)} <span>${esc(x.sku)}</span></div>
+              <div class="st-facts"><span>มี <b>${fmt(Math.round(+x.on_hand))}</b>${+x.fg ? ` + ฝากโรงงาน <b>${fmt(Math.round(+x.fg))}</b>` : ''}</span><span>ขายวันละ ~<b>${(+x.avg_day).toFixed(0)}</b></span>${+x.wip ? `<span>กำลังผลิต <b>${fmt(Math.round(+x.wip))}</b></span>` : ''}</div>
+              <div class="st-verdict">${verdict}</div></div>
+              <div class="st-days ${cv < 14 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="st-none">✓ ทุกตัวพอขายเกิน 30 วัน</div>'}
+        <div class="st-lv" style="margin-top:14px;"><span class="st-badge st-b2">2</span><div><b>คลังหน้า — เรียกของจากคลังอื่น</b><small>คลัง 111/53 + 44/1 (อยู่ติดกัน นับเป็นที่เดียว รวมคลังย่อยตามช่องทาง) · แสดงตัวที่พอขายไม่ถึง 7 วัน</small></div></div>
+        ${(b.stock_l2 || []).map(x => { const cv = Math.max(0, +x.cover01 || 0), ad = +x.avg_day || 0, sites = x.sites || [];
+            const src = sites.length ? sites.map(z => `<span class="st-src">🚚 ${esc(String(z.site).replace(/^\d+\s*-\s*/, ''))} <b>${fmt(Math.round(+z.qty))}</b> ชิ้น${ad ? ` (~${Math.floor(+z.qty / ad)} วัน)` : ''}</span>`).join('') : '<span class="st-bad">คลังอื่นไม่มีของ — ดูระดับ 1</span>';
+            return `<div class="st-it"><div class="st-main"><div class="st-nm">${esc(x.product_name || x.parent_sku)} <span>${esc(x.sku)}</span></div>
+              <div class="st-facts"><span>คลังหน้ามี <b>${fmt(Math.round(+x.s01))}</b></span><span>ขายวันละ ~<b>${ad.toFixed(0)}</b></span></div>
+              <div class="st-verdict">เรียกของจาก ${src}</div></div>
+              <div class="st-days ${cv < 3 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="st-none">✓ คลังหน้าพอขายทุกตัว</div>'}
+      </div>` : ''}
 
     </div>
     <div style="font-size:11px;color:var(--text3);margin:-6px 0 10px;">ยอดขายเป็นยอดรวม VAT ตามหน้ายอดขาย · ค่าแอดจากทุกแหล่ง (Meta / TikTok / Shopee / Lazada) · Ads ดี/แย่ คัดเฉพาะแอดที่ใช้เงิน ≥ ฿300 ในวันนั้น</div>`;
