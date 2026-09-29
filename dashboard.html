@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.29-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.29-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7822,20 +7822,27 @@ async function renderHome() {
             const outDay = new Date(today.getTime() + cv * 86400000);
             const eta = x.wip_eta ? new Date(x.wip_eta + 'T00:00:00') : null;
             const gap = eta ? Math.round((eta - outDay) / 86400000) : (lt ? Math.round(lt - cv) : null);
-            const verdict = eta
+            const verdict = x.plan_mode === 'watch' && !eta
+              ? `<span style="color:var(--text3);">ไม่มีแผนสั่งต่อ — ขายจนหมด</span>`
+              : eta
               ? (gap > 0 ? `<span class="st-bad">ขาดของ ~${gap} วัน</span> ก่อนของล็อตใหม่เข้า ${dShort(x.wip_eta)}` : `<span class="st-ok">ทัน</span> ของล็อตใหม่เข้า ${dShort(x.wip_eta)} ก่อนหมด`)
               : (gap > 0 ? `<span class="st-bad">ยังไม่มี PO</span> · สั่งวันนี้ ผลิต ~${lt} วัน → ขาดของ ~${gap} วัน` : `<span class="st-warn">ยังไม่มี PO</span> · ผลิต ~${lt || '?'} วัน ควรสั่งเร็วๆ นี้`);
             return `<div class="st-it"><div class="st-main"><div class="st-nm">${esc(x.product_name || x.parent_sku)} <span>${esc(x.sku)}</span></div>
               <div class="st-facts"><span>มี <b>${fmt(Math.round(+x.on_hand))}</b>${+x.fg ? ` + ฝากโรงงาน <b>${fmt(Math.round(+x.fg))}</b>` : ''}</span><span>ขายวันละ ~<b>${(+x.avg_day).toFixed(0)}</b></span>${+x.wip ? `<span>กำลังผลิต <b>${fmt(Math.round(+x.wip))}</b></span>` : ''}</div>
               <div class="st-verdict">${verdict}</div></div>
               <div class="st-days ${cv < 14 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="st-none">✓ ทุกตัวพอขายเกิน 30 วัน</div>'}
-        <div class="st-lv" style="margin-top:14px;"><span class="st-badge st-b2">2</span><div><b>คลังหน้า — เรียกของจากคลังอื่น</b><small>คลัง 111/53 + 44/1 (อยู่ติดกัน นับเป็นที่เดียว รวมคลังย่อยตามช่องทาง) · แสดงตัวที่พอขายไม่ถึง 7 วัน</small></div></div>
-        ${(b.stock_l2 || []).map(x => { const cv = Math.max(0, +x.cover01 || 0), ad = +x.avg_day || 0, sites = x.sites || [];
-            const src = sites.length ? sites.map(z => `<span class="st-src">🚚 ${esc(String(z.site).replace(/^\d+\s*-\s*/, ''))} <b>${fmt(Math.round(+z.qty))}</b> ชิ้น${ad ? ` (~${Math.floor(+z.qty / ad)} วัน)` : ''}</span>`).join('') : '<span class="st-bad">คลังอื่นไม่มีของ — ดูระดับ 1</span>';
+        <div class="st-lv" style="margin-top:14px;"><span class="st-badge st-b2">2</span><div><b>คลัง 111/53 + 44/1 — เรียกของจากที่อื่น</b><small>แสดงตัวที่พอขายไม่ถึง 7 วัน</small></div></div>
+        ${(b.stock_l2 || []).map(x => { const cv = Math.max(0, +x.cover01 || 0), ad = +x.avg_day || 0, fgq = +x.fg || 0, sites = x.sites || [];
+            const days = q => ad ? ` · ขายได้อีก ~${Math.floor(q / ad)} วัน` : '';
+            // เรียกจากโรงงานก่อน (ของผลิตเสร็จฝากไว้) · โรงงานไม่มีค่อยเรียกจากคลังอื่น
+            const src = fgq > 0
+              ? `<span class="st-src">🏭 โรงงาน (ผลิตเสร็จฝากไว้) <b>${fmt(Math.round(fgq))}</b> ชิ้น${days(fgq)}</span>`
+              : sites.length ? sites.map(z => `<span class="st-src">🚚 ${esc(String(z.site).replace(/^\d+\s*-\s*/, ''))} <b>${fmt(Math.round(+z.qty))}</b> ชิ้น${days(+z.qty)}</span>`).join('')
+              : '<span class="st-bad">โรงงานและคลังอื่นไม่มีของ — ดูระดับ 1</span>';
             return `<div class="st-it"><div class="st-main"><div class="st-nm">${esc(x.product_name || x.parent_sku)} <span>${esc(x.sku)}</span></div>
-              <div class="st-facts"><span>คลังหน้ามี <b>${fmt(Math.round(+x.s01))}</b></span><span>ขายวันละ ~<b>${ad.toFixed(0)}</b></span></div>
+              <div class="st-facts"><span>ที่ 111/53 + 44/1 มี <b>${fmt(Math.round(+x.s01))}</b></span><span>ขายวันละ ~<b>${ad.toFixed(0)}</b></span></div>
               <div class="st-verdict">เรียกของจาก ${src}</div></div>
-              <div class="st-days ${cv < 3 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="st-none">✓ คลังหน้าพอขายทุกตัว</div>'}
+              <div class="st-days ${cv < 3 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="st-none">✓ คลัง 111/53 + 44/1 พอขายทุกตัว</div>'}
       </div>` : ''}
 
     </div>
