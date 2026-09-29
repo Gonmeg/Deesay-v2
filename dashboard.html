@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.29-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.29-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2864,6 +2864,8 @@ function toggleNavGroup(key) {
 
 function showPage(page, lockCh, el) {
   if (window.Auth && Auth.perm && !Auth.canPage(page)) { alert('คุณยังไม่มีสิทธิ์ดูหน้านี้ — ติดต่อผู้ดูแลระบบถ้าต้องใช้'); return; }   // ด่านสิทธิ์รายหน้า
+  // (2026-09-29) เปิดมาที่หน้าแรกแล้วกดไปหน้าอื่นก่อนข้อมูลก้อนหลักโหลดเสร็จ → โชว์ตัวโหลดไว้ก่อน
+  if (page !== 'home' && !window._initDone) document.getElementById('loadingOverlay')?.classList.remove('hidden');
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
@@ -7765,6 +7767,7 @@ function homeGo(page) { const el = document.querySelector(`.nav-item[onclick*="'
 function homeShift(n) { if (!_homeDate) return; const d = new Date(_homeDate + 'T00:00:00'); d.setDate(d.getDate() + n); _homeDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; renderHome(); }
 async function renderHome() {
   const el = document.getElementById('homeBody'); if (!el) return;
+  document.getElementById('loadingOverlay')?.classList.add('hidden');   // หน้าแรกไม่ต้องรอข้อมูลก้อนใหญ่ของหน้าภาพรวม
   let b; try { b = await Auth.rpc('home_brief', _homeDate ? { p_date: _homeDate } : {}); } catch (e) { el.innerHTML = `<div class="empty">โหลดสรุปไม่สำเร็จ: ${e.message || e}</div>`; return; }
   _homeDate = b.date;
   const d = new Date(b.date + 'T00:00:00'), money = v => '฿' + fmt(Math.round(+v || 0)), pct = (a, b2) => b2 ? (a - b2) / b2 * 100 : null;
@@ -10240,6 +10243,7 @@ async function init() {
       applySnapshot(cached)
       restoreSavedChannelFilter()
       renderOverview()
+      window._initDone = true
       document.getElementById('loadingOverlay').classList.add('hidden')
       updateCacheStatus('cached', cached.cachedAt)
       usedCache = true
@@ -10249,7 +10253,8 @@ async function init() {
     const fresh = await fetchFreshSnapshot()
     applySnapshot(fresh)
     restoreSavedChannelFilter()
-    if (usedCache) renderCurrentPage(); else renderOverview()
+    window._initDone = true
+    if (usedCache) renderCurrentPage(); else if (currentPage === 'overview') renderOverview(); else { renderOverview(); renderCurrentPage(); }
     document.getElementById('loadingOverlay').classList.add('hidden')
     updateCacheStatus('fresh')
     idbSet(CACHE_KEY, fresh) // เก็บแคชไว้ใช้รอบถัดไป (ไม่ต้องรอให้เสร็จ)
@@ -10321,11 +10326,11 @@ function wnGo() { const pg = document.getElementById('wnGoBtn').dataset.page; cl
 Auth.require('dashboard').then(p => {
   applyPermissions(p);
   loadWhatsNew();
+  // (2026-09-29) ทุกคนเปิดมาเจอ "หน้าแรก" ทันที — ไม่ต้องรอข้อมูลหน้าภาพรวมโหลดเสร็จ (หน้าแรกดึงข้อมูลของตัวเอง)
+  if (Auth.canPage('home')) showPage('home', null, document.querySelector(`.nav-item[onclick*="'home'"]`));
   const r = init();
-  // (2026-09-28) เปิดมาเจอ "หน้าแรก" (สรุปประจำวัน) ก่อน ถ้ามีสิทธิ์
-  if (Auth.canPage('home')) { Promise.resolve(r).then(() => showPage('home', null, document.querySelector(`.nav-item[onclick*="'home'"]`))); }
   // ถ้าไม่มีสิทธิ์หน้าภาพรวม → เปิดหน้าแรกที่มีสิทธิ์แทน
-  else if (!Auth.canPage('overview')) { const first = pageOrder.find(id => Auth.canPage(id)); if (first) Promise.resolve(r).then(() => showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`))); }
+  if (!Auth.canPage('home') && !Auth.canPage('overview')) { const first = pageOrder.find(id => Auth.canPage(id)); if (first) Promise.resolve(r).then(() => showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`))); }
 });
 
 // ============================================================================
