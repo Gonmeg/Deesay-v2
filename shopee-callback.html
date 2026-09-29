@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>กำลังเชื่อมร้าน Shopee…</title>
+<!-- (2026-09-29) หน้ารับรหัสจาก Shopee (แอปลงทะเบียน Redirect URL Domain = https://gonmeg.github.io)
+     Shopee ส่ง ?code=..&shop_id=.. มาที่นี่ → ส่งต่อไป Edge Function shopee-auth เพื่อแลก token และบันทึกร้าน
+     หน้านี้ไม่เก็บ/ไม่แสดงรหัสใดๆ -->
+<style>body{font-family:'Sarabun',system-ui,sans-serif;max-width:520px;margin:80px auto;padding:0 20px;color:#333;line-height:1.7;text-align:center}</style>
+</head>
+<body>
+<h2>กำลังเชื่อมร้าน Shopee…</h2>
+<p id="msg">รอสักครู่ ระบบกำลังส่งต่อ</p>
+<script>
+(function () {
+  var q = window.location.search;
+  if (!/[?&]code=/.test(q)) { document.getElementById('msg').textContent = 'ไม่พบรหัสจาก Shopee — กรุณาเริ่มใหม่จากลิงก์เชื่อมร้าน'; return; }
+  window.location.replace('https://plfdizmjdmhyjqraohfv.supabase.co/functions/v1/shopee-auth' + q);
+})();
+</script>
+</body>
+</html>
