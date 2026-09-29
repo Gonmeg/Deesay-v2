@@ -188,11 +188,11 @@
         </div>
         <div class="card sup-abc">
           <div class="section-header"><div class="section-title">ABC × XYZ ${infoIcon('supAbc', ABC_INFO, 'right')}</div><span style="font-size:10.5px;color:var(--text3);">กดช่องเพื่อกรอง</span></div>
-          <div class="sup-abc-grid" style="display:grid;grid-template-columns:92px repeat(3,1fr);gap:9px;font-size:12px;margin-top:6px;">
+          <div class="sup-abc-grid" style="display:grid;grid-template-columns:92px repeat(3,1fr);gap:7px;font-size:12px;margin-top:2px;">
             <div></div>${['X', 'Y', 'Z'].map(x => `<div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.4;">${x}<br>${XYZ_TXT[x]}</div>`).join('')}
-            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:9px;padding:15px 8px;text-align:center;cursor:pointer;transition:border-color .15s;"><b style="display:block;font-size:19px;line-height:1.15;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
+            ${['A', 'B', 'C'].map(a => `<div style="font-size:10px;color:var(--text3);line-height:1.4;align-self:center;">${a}<br>${ABC_TXT[a]}</div>` + ['X', 'Y', 'Z'].map(x => { const c = cellOf(a, x); const on = filt.abc === a && filt.xyz === x; return `<div class="sup-cell" data-a="${a}" data-x="${x}" style="background:var(--bg3);border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};border-radius:9px;padding:8px 8px;text-align:center;cursor:pointer;transition:border-color .15s;"><b style="display:block;font-size:19px;line-height:1.15;">${fmtN(c.n)}</b><span style="font-size:10px;color:var(--text3);">SKU</span></div>`; }).join('')).join('')}
           </div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:12px;line-height:1.6;">AX ควรมีของตลอด · AZ ต้องเผื่อมากที่สุด · CZ อย่าตุน — กด &#9432; ข้างหัวข้อเพื่อดูคำอธิบายเต็ม</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">AX ควรมีของตลอด · AZ ต้องเผื่อมากที่สุด · CZ อย่าตุน — กด &#9432; ข้างหัวข้อเพื่อดูคำอธิบายเต็ม</div>
         </div>
       </div>
 
@@ -231,13 +231,13 @@
         /* หน้านี้ใช้ Sarabun ทั้งหมด เว้นรหัสสินค้าที่คงเป็น monospace ให้อ่านรหัสง่าย */
         #page-supply .card-title { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:8px; }
         #page-supply .section-title { font-family:'Sarabun',sans-serif; }
-        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) minmax(400px,38%); gap:16px; align-items:start; margin-bottom:20px; }
-        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; align-content:start; }
+        #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) minmax(400px,38%); gap:16px; align-items:stretch; margin-bottom:20px; }
+        #page-supply .sup-kpis { display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:1fr 1fr; gap:10px; }
         #page-supply > .card { margin-bottom:20px; }   /* เว้นระยะการ์ดเท่าหน้าอื่น */
 
-        #page-supply .sup-kpi { min-width:0; padding:13px 15px; border-radius:10px; }
+        #page-supply .sup-kpi { min-width:0; padding:14px 16px; border-radius:10px; display:flex; flex-direction:column; justify-content:space-between; gap:6px; }
         #page-supply .sup-kpi .card-title { margin-bottom:3px; font-size:11px; }
-        #page-supply .sup-kpi .kpi-value { font-size:19px !important; line-height:1.1; }
+        #page-supply .sup-kpi .kpi-value { font-size:24px !important; line-height:1.1; }
         #page-supply .sup-kpi .kpi-sub { font-size:10px; color:var(--text3); margin-top:4px; line-height:1.35; }
         #page-supply .sup-abc { align-self:stretch; display:flex; flex-direction:column; }
         #page-supply .sup-abc .sup-abc-grid { flex:1; align-content:center; }
@@ -310,19 +310,31 @@
         #page-supply .sup-pname { font-size:12px; font-weight:600; color:var(--text); font-family:'Sarabun',sans-serif; }
         #page-supply tr.sup-noplan td { color:var(--text3); }
         #page-supply tr.sup-noplan td b { color:var(--text2) !important; }
-        #page-supply table.sup-loc { table-layout:fixed; min-width:1120px; }
-        #page-supply table.sup-loc th { text-align:right; width:auto; padding:9px 12px; }
-        #page-supply table.sup-loc th:first-child { width:20%; }
-        #page-supply table.sup-loc tr.sl-grp th { height:28px; padding:0 12px; font-size:10.5px; font-weight:500; color:var(--text3); text-align:center; border-bottom:0; }
-        #page-supply table.sup-loc thead tr:nth-child(2) th { top:28px; }
-        #page-supply table.sup-loc th.sl-chh { color:var(--cc); box-shadow:inset 0 3px 0 var(--cc); }
-        #page-supply table.sup-loc td { padding:9px 12px; vertical-align:top; }
-        #page-supply table.sup-loc td.sl-ch { background:color-mix(in srgb, var(--cc) 6%, transparent); }
-        #page-supply table.sup-loc .sl-sep { border-left:1px solid var(--border2); }
-        #page-supply .sl-q { font-size:12.5px; font-weight:600; }
-        #page-supply .sl-d { display:inline-block; margin-top:3px; font-size:10.5px; line-height:1.6; padding:0 6px; border-radius:4px; background:var(--bg3); color:var(--text2); white-space:nowrap; }
-        #page-supply .sl-d.red { background:color-mix(in srgb, var(--red) 15%, transparent); color:var(--red); font-weight:600; }
-        #page-supply table.sup-loc tr.sl-par td { background:var(--bg3); padding:7px 16px; border-top:1px solid var(--border2); }
+        /* (2026-09-29) ตารางสต็อกแยกคลัง: หัว 2 ชั้น · ตัวเลขอยู่กลางคอลัมน์ · เส้นคั่นระหว่างกลุ่ม */
+        #page-supply table.sup-loc { table-layout:fixed; min-width:1120px; --sl-line:color-mix(in srgb, var(--text3) 45%, transparent); }
+        #page-supply table.sup-loc th { padding:8px 10px; font-size:11.5px; color:var(--text2); }
+        #page-supply table.sup-loc th.sl-prod { width:20%; text-align:left; vertical-align:bottom; }
+        #page-supply table.sup-loc th.sl-c, #page-supply table.sup-loc td.sl-c { text-align:center; }
+        #page-supply table.sup-loc tr.sl-grp th { height:34px; }
+        #page-supply table.sup-loc tr.sl-grp th[rowspan] { vertical-align:bottom; }
+        #page-supply table.sup-loc tr.sl-names th { top:34px; }
+        #page-supply table.sup-loc th.sl-g { text-align:center; font-size:12px; font-weight:700; color:var(--text); letter-spacing:.2px; }
+        #page-supply table.sup-loc th.sl-g-ch { background:color-mix(in srgb, var(--accent) 12%, var(--bg2)); box-shadow:inset 1px 0 0 var(--sl-line), inset 0 -2px 0 var(--accent); }
+        #page-supply table.sup-loc th.sl-g-st { background:var(--bg3); box-shadow:inset 1px 0 0 var(--sl-line), inset 0 -2px 0 var(--text3); }
+        #page-supply table.sup-loc th.sl-sep:not(.sl-g) { box-shadow:inset 1px 0 0 var(--sl-line); }
+        #page-supply table.sup-loc tr.sl-names th { box-shadow:inset 0 -1px 0 var(--sl-line); }
+        #page-supply table.sup-loc tr.sl-names th.sl-sep { box-shadow:inset 1px 0 0 var(--sl-line), inset 0 -1px 0 var(--sl-line); }
+        #page-supply table.sup-loc tr.sl-grp th[rowspan] { box-shadow:inset 0 -1px 0 var(--sl-line); }
+        #page-supply table.sup-loc tr.sl-grp th[rowspan].sl-sep { box-shadow:inset 1px 0 0 var(--sl-line), inset 0 -1px 0 var(--sl-line); }
+        #page-supply table.sup-loc td.sl-sep { border-left:1px solid var(--sl-line); }
+        #page-supply .sl-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:1px; }
+        #page-supply table.sup-loc td { padding:10px 10px; vertical-align:top; }
+        #page-supply .sl-q { font-size:13px; font-weight:600; line-height:1.3; }
+        #page-supply .sl-q.sl-tot { font-weight:700; }
+        #page-supply .sl-empty { color:var(--text3); opacity:.45; }
+        #page-supply .sl-d { display:inline-block; margin-top:4px; font-size:10.5px; line-height:1.6; padding:0 7px; border-radius:99px; background:var(--bg3); color:var(--text2); white-space:nowrap; }
+        #page-supply .sl-d.red { background:color-mix(in srgb, var(--red) 15%, transparent); color:var(--red); font-weight:700; }
+        #page-supply table.sup-loc tr.sl-par td { background:var(--bg3); padding:7px 16px; border-top:1px solid var(--sl-line); }
         @media (max-width:1200px){ #page-supply .sup-top { grid-template-columns:1fr; } #page-supply .sup-kpis { grid-template-columns:repeat(4,1fr); } }
         @media (max-width:800px){ #page-supply .sup-kpis { grid-template-columns:repeat(2,1fr); } }
       </style>`;
@@ -591,7 +603,7 @@
     const grouping = sort.key === 'parent_sku';
     const groupSize = {}; if (grouping) list.forEach(r => { groupSize[r.parent_sku] = (groupSize[r.parent_sku] || 0) + 1; });
     const isCollapsed = p => grouping && groupSize[p] >= 2 && (collapseAll ? !collapsed.has(p) : collapsed.has(p));
-    const head = COLS.map(([k, l]) => `<th class="sortable-th" data-k="${esc(k)}">${esc(l)}${colTip(k)}${sort.key === k ? `<span class="sort-arrow">${sort.dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('');
+    const head = COLS.map(([k, l]) => `<th data-k="${esc(k)}">${esc(l)}${colTip(k)}</th>`).join('');   // (2026-09-29) หน้านี้ไม่ให้กดเรียง — เรียงตาม Parent SKU เสมอ
     let lastParent = null;
     const today0 = toD(iso(new Date()));
     const body = list.length ? list.map(r => {
@@ -646,9 +658,8 @@
     }).join('') : `<tr><td colspan="${COLS.length}" class="empty">ไม่มี SKU ตรงตัวกรอง</td></tr>`;
     { const host = document.getElementById('supTbl'); let n = host.nextElementSibling;
       while (n && n.classList && n.classList.contains('auto-pager')) { const x = n.nextElementSibling; n.remove(); n = x; } }
-    document.getElementById('supTbl').innerHTML = `<table class="sticky-head-table sup-main" data-no-page><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
-    document.getElementById('supFoot').textContent = `${fmtN(list.length)} SKU · as of ${dY(DATA.as_of)} · กดหัวคอลัมน์เพื่อเรียง · กดแถวเพื่อดูกราฟ`;
-    document.querySelectorAll('#supTbl th[data-k]').forEach(th => th.onclick = () => { const k = th.dataset.k; if (sort.key === k) sort.dir = -sort.dir; else { sort.key = k; sort.dir = ['parent_sku', 'plan_end', 'po_due_date', 'cover_days', 'lt'].indexOf(k) >= 0 ? 1 : -1; } renderTable(); });
+    document.getElementById('supTbl').innerHTML = `<table class="sticky-head-table sup-main" data-no-page data-no-sort><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    document.getElementById('supFoot').textContent = `${fmtN(list.length)} SKU · as of ${dY(DATA.as_of)} · กดแถวเพื่อดูกราฟ`;
     bindPlanInputs();
     document.querySelectorAll('.sup-group').forEach(tr => tr.onclick = () => { const p = tr.dataset.parent; if (collapsed.has(p)) collapsed.delete(p); else collapsed.add(p); renderTable(); });
     document.querySelectorAll('.sup-row').forEach(tr => tr.onclick = () => { selSku = tr.dataset.sku; document.querySelectorAll('.sup-row').forEach(x => x.style.background = x.dataset.sku === selSku ? 'var(--bg3)' : ''); loadSku(selSku); document.getElementById('supSkuCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
@@ -677,13 +688,14 @@
     list.sort((a, b) => String(a.parent_sku).localeCompare(String(b.parent_sku)) || String(a.sku).localeCompare(String(b.sku)));
     const chs = CH_LOCS.filter(l => locs.includes(l));
     const nCol = 3 + chs.length + other.length;
-    const cellCh = (r, l) => {
+    const EMPTY = '<span class="sl-empty">–</span>';
+    const cellCh = (r, l, i) => {
       const qn = (r.by_loc || {})[l] || 0, used = ((LOC_USE || {})[r.sku] || {})[l] || 0, c = locCover(r, l);
       const chip = used > 0 ? (qn <= 0 || c === 0 ? '<span class="sl-d red">out</span>' : `<span class="sl-d${c < LOC_LOW ? ' red' : ''}">${covTxt(c)}</span>`) : '';
-      const q = qn ? fmtN(qn) : used > 0 ? '<span style="color:var(--red);">0</span>' : '<span class="sup-dash">·</span>';
-      return `<td class="sl-ch" style="--cc:${CH_COL[l] || 'var(--accent)'};"><div class="sl-q">${q}</div>${chip}</td>`;
+      const q = qn ? `<div class="sl-q">${fmtN(qn)}</div>` : used > 0 ? '<div class="sl-q" style="color:var(--red);">0</div>' : EMPTY;
+      return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${q}${chip}</td>`;
     };
-    const cellSt = (r, l, i) => { const qn = (r.by_loc || {})[l] || 0; return `<td class="${i === 0 ? 'sl-sep' : ''}">${qn ? fmtN(qn) : '<span class="sup-dash">·</span>'}</td>`; };
+    const cellSt = (r, l, i) => { const qn = (r.by_loc || {})[l] || 0; return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${qn ? `<div class="sl-q">${fmtN(qn)}</div>` : EMPTY}</td>`; };
     const gSize = {}; list.forEach(r => { gSize[r.parent_sku] = (gSize[r.parent_sku] || 0) + 1; });
     let last = null;
     const body = list.map(r => {
@@ -692,16 +704,20 @@
       last = r.parent_sku;
       const hold = HOLD[r.sku] || 0;
       return sep + `<tr class="${grouped ? 'sup-child' : ''}"><td class="t-left">${grouped ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span> `}<span class="sup-skucode">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div></td>
-        ${chs.map(l => cellCh(r, l)).join('')}
+        ${chs.map((l, i) => cellCh(r, l, i)).join('')}
         ${other.map((l, i) => cellSt(r, l, i)).join('')}
-        <td class="sl-sep">${hold ? fmtN(hold) : '<span class="sup-dash">·</span>'}</td>
-        <td><b>${fmtN(stockAll(r))}</b></td></tr>`;
+        <td class="sl-c sl-sep">${hold ? `<div class="sl-q">${fmtN(hold)}</div>` : EMPTY}</td>
+        <td class="sl-c"><div class="sl-q sl-tot">${fmtN(stockAll(r))}</div></td></tr>`;
     }).join('') || `<tr><td colspan="${nCol}" class="empty">ไม่มีรายการ</td></tr>`;
-    const chHead = chs.map(l => `<th class="sl-chh" style="--cc:${CH_COL[l] || 'var(--accent)'};">${esc(LOC_LABEL[l] || l)}</th>`).join('');
-    const otHead = other.map((l, i) => `<th class="${i === 0 ? 'sl-sep' : ''}">${esc(LOC_LABEL[l] || l)}</th>`).join('');
-    host.innerHTML = `<table class="sticky-head-table sup-loc" data-no-page><thead>
-        <tr class="sl-grp"><th></th><th colspan="${chs.length}">Channel stock · 111/53</th><th colspan="${other.length}" class="sl-sep">Storage</th><th colspan="2" class="sl-sep"></th></tr>
-        <tr><th style="text-align:left;">Product</th>${chHead}${otHead}<th class="sl-sep">Factory Hold</th><th>Total</th></tr></thead><tbody>${body}</tbody></table>`;
+    const chHead = chs.map((l, i) => `<th class="sl-c${i === 0 ? ' sl-sep' : ''}"><span class="sl-dot" style="background:${CH_COL[l] || 'var(--accent)'};"></span>${esc(LOC_LABEL[l] || l)}</th>`).join('');
+    const otHead = other.map((l, i) => `<th class="sl-c${i === 0 ? ' sl-sep' : ''}">${esc(LOC_LABEL[l] || l)}</th>`).join('');
+    const colg = `<colgroup><col style="width:20%;">${`<col style="width:${(80 / (nCol - 1)).toFixed(3)}%;">`.repeat(nCol - 1)}</colgroup>`;   // คอลัมน์ตัวเลขกว้างเท่ากันทุกช่อง
+    host.innerHTML = `<table class="sticky-head-table sup-loc" data-no-page data-no-sort>${colg}<thead>
+        <tr class="sl-grp"><th rowspan="2" class="sl-prod">Product</th>
+          <th colspan="${chs.length}" class="sl-g sl-g-ch sl-sep">Channel stock · 111/53</th>
+          <th colspan="${other.length}" class="sl-g sl-g-st sl-sep">Storage</th>
+          <th rowspan="2" class="sl-c sl-sep">Factory Hold</th><th rowspan="2" class="sl-c">Total</th></tr>
+        <tr class="sl-names">${chHead}${otHead}</tr></thead><tbody>${body}</tbody></table>`;
   }
 
   function exportCsv() {
