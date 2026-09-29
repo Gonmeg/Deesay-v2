@@ -81,7 +81,8 @@ window.Auth = (function () {
     return data;
   }
 
-  function canPage(id) { return !!perm && perm.is_active && (perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
+  // (2026-09-28) 'home' (หน้าแรก) เปิดให้ทุกคนที่ใช้งานได้เสมอ — ในหน้าจะโชว์เฉพาะส่วนของหน้าที่คนนั้นมีสิทธิ์
+  function canPage(id) { return !!perm && perm.is_active && (id === 'home' || perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
 
   // ด่านหลัก — where = 'dashboard' | 'upload' | 'admin' | 'health'
   async function require(where) {
