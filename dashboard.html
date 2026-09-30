@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-q</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-r</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -671,6 +671,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="filter-group mm-filter" id="momentumModeGroup" style="display:none;">
         <span class="filter-label">เทียบกับ</span>
         <select id="momentumMode" onchange="_momentumKey=null;loadMomentum()"><option value="month">วันเดียวกันของเดือนก่อน</option><option value="adjacent">ช่วงก่อนหน้าติดกัน (ยาวเท่ากัน)</option></select>
+      </div>
+      <div class="filter-group" id="skdFilterGroup" style="display:none;">
+        <span class="filter-label">สินค้า</span>
+        <select id="filterSkd" style="min-width:220px;"><option value="">— เลือกสินค้า —</option></select>
       </div>
       <div class="filter-group fba-filter" id="fbaAccountFilterGroup" style="display:none;">
         <span class="filter-label">เพจ</span>
@@ -1870,7 +1874,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         </div>
         <div class="card">
           <div class="section-header"><div class="section-title" id="ttlMtSide">ยอดขายแยกห้าง</div><button class="btn btn-ghost" onclick="exportTable('tblMtSide')">⬇ Export CSV</button></div>
-          <div class="table-wrap"><table id="tblMtSide" data-page-size="8"><thead id="theadMtSide"></thead><tbody id="tbodyMtSide"><tr><td class="empty">กำลังโหลด...</td></tr></tbody></table></div>
+          <div class="table-wrap"><table id="tblMtSide" data-page-size="10"><thead id="theadMtSide"></thead><tbody id="tbodyMtSide"><tr><td class="empty">กำลังโหลด...</td></tr></tbody></table></div>
         </div>
       </div>
       <div class="grid-2" id="mtBottomGrid" style="margin-bottom:20px;">
@@ -2843,6 +2847,8 @@ function showPage(page, lockCh, el) {
   const HIDE_SUBCHANNEL_FILTER = ['fbads', 'fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
+  { const g = document.getElementById('skdFilterGroup'); if (g) g.style.display = page === 'skuanalysis' ? 'flex' : 'none';   // (2026-09-30) เจาะสินค้า: เลือกสินค้าที่แถบด้านบน
+    const sel = document.getElementById('filterSkd'); if (sel && page === 'skuanalysis' && window._skdSku && [...sel.options].some(o => o.value === window._skdSku)) sel.value = window._skdSku; }
   const fbePageGroup = document.getElementById('fbePageFilterGroup');
   if (fbePageGroup) fbePageGroup.style.display = (page === 'fbengage') ? 'flex' : 'none';
   document.querySelectorAll('.fba-filter').forEach(el => { el.style.display = (page === 'fbads') ? 'flex' : 'none'; });
@@ -2891,7 +2897,7 @@ function showPage(page, lockCh, el) {
 
   // (2026-09-22) MKT Tracking ดูทุกช่องทางรวม (แยกช่องทางดูในหน้า) → ซ่อน Channel / Sub-channel
   // (2026-09-25) Business Insight / MKT Tracking ใช้ตัวเลือกเดือนด้านบน + ปุ่มค้นหา · ไม่มี Channel / Sub-channel (แยกช่องทางดูในหน้า)
-  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
+  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
@@ -2982,7 +2988,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20260930c';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20260930d';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -3961,7 +3967,7 @@ async function renderMtHub() {
       return `<tr style="cursor:pointer;" onclick="mtGo('${ret}')" title="ดูหน้า ${ret}"><td><span class="mt-dot" style="background:${MT_COLORS[ret]};"></span>${ret}</td><td class="num">${money(sv)}</td><td class="num">${fmt(Math.round(sum(rr, 'qty')))}</td><td class="num">${nb ? fmt(nb) : '—'}</td><td class="num">${pct(sv)}</td><td class="num">${last ? PL_TH_M(last) : '—'}</td></tr>`; }).join('');
   }
 
-  // สาขาขายดี — ทุกห้าง: การ์ดล่างซ้าย · ห้างเดียว: ตารางขวาบน (8 แถว/หน้า ให้สูงพอดีกับกราฟ)
+  // สาขาขายดี — ทุกห้าง: การ์ดล่างซ้าย · ห้างเดียว: ตารางขวาบน (10 แถว/หน้า)
   const byBr = {}; rows.forEach(r => { const k = brKey(r); const b = (byBr[k] = byBr[k] || { branch: brName(r), retailer: r.retailer, sales: 0, qty: 0, mon: new Set(), last: 0 });
     b.sales += r.sales; b.qty += r.qty; b.mon.add(r.month); if (r.month === months[months.length - 1]) b.last += r.sales; });
   const brs = Object.values(byBr).sort((a, b) => b.sales - a.sales);
