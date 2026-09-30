@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-h</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2708,6 +2708,7 @@ function getSelectedMVPrevMonth() {
 function onChannelChange() {
   const ch = document.getElementById('filterChannel').value;
   const subSel = document.getElementById('filterSubChannel');
+  if (subSel && subSel.dataset.mt) return;   // (2026-09-30) หน้า Modern Trade ใช้ช่องนี้เลือกห้าง — ไม่เขียนทับด้วยรหัส MT-xxx
   if (ch) {
     const subs = _filterOptions ? (_filterOptions.subs[ch] || []) : [...new Set(allData.filter(r => r.channel === ch).map(r => r.sub_channel).filter(Boolean))].sort();
     subSel.innerHTML = '<option value="">ทั้งหมด</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -3902,6 +3903,7 @@ async function loadMtSellout() {
 }
 async function renderMtHub() {
   { const sel = document.getElementById('filterSubChannel'); if (sel && sel.dataset.mt) _mtRetailer = sel.value || ''; }   // ห้างที่เลือกในช่องด้านบน (กดค้นหา)
+  { const M = { 'MT-EVE': 'Eveandboy', 'MT-KONVY': 'Konvy', 'MT-WATSONS': 'Watsons', 'MT-CJ': 'CJ' }; if (M[_mtRetailer]) _mtRetailer = M[_mtRetailer]; }   // กันค่ารหัสเก่าค้าง
   const R = _mtRetailer;
   { const t = document.getElementById('pageTitle'); if (t) t.textContent = R ? `Modern Trade — ${R}` : pageTitles.mthub; }
   document.getElementById('mtAdsCard').style.display = R ? 'none' : '';
@@ -10551,6 +10553,130 @@ Auth.require('dashboard').then(p => {
   window.markSortableHeaders = mark;
 })();
 
+
+</script>
+<script>
+// ===== (2026-09-30) Dropdown ทุกอันในเว็บ ใช้หน้าตาเดียวกับตัวกรองสถานะหน้า Supply Chain ===== (แยก script ไว้ ทำงานได้แม้สคริปต์หลักมีข้อผิดพลาด)
+//   ครอบ <select> เดิมด้วยปุ่ม + เมนูลอย — select เดิมยังอยู่ (ซ่อนไว้) โค้ดเดิมที่อ่าน .value / onchange ทำงานเหมือนเดิม
+//   ตัวเลือกเกิน 12 รายการมีช่องค้นหาในเมนู · ข้าม select ที่เลือกได้หลายค่า หรืออยู่ใน [data-no-ux]
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `
+    select.ux-native { position:absolute !important; opacity:0 !important; pointer-events:none !important; width:1px !important; height:1px !important; min-width:0 !important; padding:0 !important; border:0 !important; }
+    .ux-dd-btn { display:inline-flex; align-items:center; gap:8px; min-width:110px; max-width:100%; padding:6px 10px 6px 12px; font-family:'Sarabun',sans-serif; font-size:12.5px; line-height:1.4;
+      color:var(--text); background:var(--bg2); border:1px solid var(--border); border-radius:8px; cursor:pointer; text-align:left; transition:border-color .15s; vertical-align:middle; }
+    .ux-dd-btn:hover, .ux-dd-btn.open { border-color:var(--accent); }
+    .ux-dd-btn:disabled { opacity:.45; cursor:not-allowed; border-color:var(--border); }
+    .filter-group .ux-dd-btn { border-color:transparent; background:transparent; padding:0 2px 0 4px; min-width:90px; }
+    .filter-group .ux-dd-btn:hover, .filter-group .ux-dd-btn.open { border-color:transparent; color:var(--accent); }
+    .filter-group:has(.ux-dd-btn.open) { border-color:var(--accent); }
+    .ux-dd-btn .ux-t { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ux-dd-btn .ux-c { color:var(--text3); font-size:10px; transition:transform .15s; }
+    .ux-dd-btn.open .ux-c { transform:rotate(180deg); }
+    .ux-dd-menu { position:fixed; z-index:9999; padding:6px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,.28);
+      max-height:340px; overflow-y:auto; font-family:'Sarabun',sans-serif; }
+    .ux-dd-menu .ux-q { width:100%; box-sizing:border-box; margin:0 0 6px; padding:6px 10px; font-family:inherit; font-size:12.5px; color:var(--text); background:var(--bg); border:1px solid var(--border); border-radius:8px; outline:none; }
+    .ux-dd-menu .ux-q:focus { border-color:var(--accent); }
+    .ux-dd-menu .ux-g { font-size:10.5px; font-weight:600; color:var(--text3); padding:6px 10px 3px; }
+    .ux-dd-menu .ux-s { height:1px; background:var(--border); margin:5px 4px; }
+    .ux-dd-menu .ux-i { display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:8px; font-size:12.5px; color:var(--text); cursor:pointer; white-space:nowrap; }
+    .ux-dd-menu .ux-i:hover, .ux-dd-menu .ux-i.hl { background:var(--bg3); }
+    .ux-dd-menu .ux-i.on { background:color-mix(in srgb, var(--accent) 14%, transparent); color:var(--accent); font-weight:600; }
+    .ux-dd-menu .ux-i.dis { opacity:.45; cursor:default; }
+    .ux-dd-menu .ux-i .ux-k { margin-left:auto; padding-left:14px; font-size:11px; color:var(--accent); visibility:hidden; }
+    .ux-dd-menu .ux-i.on .ux-k { visibility:visible; }
+    .ux-dd-menu .ux-none { padding:8px 10px; font-size:12px; color:var(--text3); }`;
+  document.head.appendChild(st);
+
+  let menu = null, openSel = null;
+  const labelOf = sel => { const o = sel.options[sel.selectedIndex]; return o ? o.textContent.trim() : ''; };
+  const sigOf = sel => [sel.value, sel.options.length, labelOf(sel), sel.disabled, sel.style.display, sel.title].join('|');
+  function sync(sel) {
+    const b = sel._uxBtn; if (!b) return;
+    b.querySelector('.ux-t').textContent = labelOf(sel) || '—';
+    b.disabled = sel.disabled; b.title = sel.title || '';
+    b.style.display = sel.style.display === 'none' ? 'none' : '';
+    sel._uxSig = sigOf(sel);
+  }
+  function enhance(sel) {
+    if (sel.dataset.ux || sel.multiple || sel.size > 1 || sel.closest('[data-no-ux]')) return;
+    sel.dataset.ux = '1';
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ux-dd-btn';
+    b.innerHTML = '<span class="ux-t"></span><span class="ux-c">▾</span>';
+    const w = sel.offsetWidth; if (w > 60) b.style.minWidth = w + 'px';
+    if (sel.style.width) b.style.width = sel.style.width;
+    if (sel.style.flex) b.style.flex = sel.style.flex;
+    sel.after(b); sel.classList.add('ux-native');
+    sel._uxBtn = b; b._uxSel = sel;
+    b.addEventListener('click', e => { e.stopPropagation(); openSel === sel ? close() : open(sel); });
+    b.addEventListener('keydown', e => { if (['ArrowDown', 'Enter', ' '].includes(e.key)) { e.preventDefault(); open(sel); } });
+    sync(sel);
+  }
+  function close() {
+    if (menu) { menu.remove(); menu = null; }
+    if (openSel && openSel._uxBtn) openSel._uxBtn.classList.remove('open');
+    openSel = null;
+  }
+  function choose(sel, val) {
+    const changed = sel.value !== val;
+    sel.value = val; close(); sync(sel);
+    if (changed) { sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    sel._uxBtn && sel._uxBtn.focus();
+  }
+  function open(sel) {
+    close();
+    const b = sel._uxBtn; if (!b || b.disabled) return;
+    openSel = sel; b.classList.add('open');
+    menu = document.createElement('div'); menu.className = 'ux-dd-menu';
+    const many = sel.options.length > 12;
+    const render = q => {
+      const qq = (q || '').trim().toLowerCase(); let html = '', first = true, n = 0;
+      const item = o => { if (qq && !o.textContent.toLowerCase().includes(qq)) return '';
+        n++; return `<div class="ux-i${o.selected ? ' on' : ''}${o.disabled ? ' dis' : ''}" data-v="${encodeURIComponent(o.value)}">${o.textContent.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}<span class="ux-k">✓</span></div>`; };
+      [...sel.children].forEach(ch => {
+        if (ch.tagName === 'OPTGROUP') {
+          const inner = [...ch.children].map(item).join('');
+          if (inner) { html += (first ? '' : '<div class="ux-s"></div>') + `<div class="ux-g">${ch.label}</div>` + inner; first = false; }
+        } else if (ch.tagName === 'OPTION') { const it = item(ch); if (it) { html += it; first = false; } }
+      });
+      return n ? html : '<div class="ux-none">ไม่พบรายการ</div>';
+    };
+    menu.innerHTML = (many ? '<input class="ux-q" placeholder="ค้นหา…">' : '') + '<div class="ux-l">' + render('') + '</div>';
+    document.body.appendChild(menu);
+    const list = menu.querySelector('.ux-l'), q = menu.querySelector('.ux-q');
+    const r = b.getBoundingClientRect();
+    menu.style.minWidth = Math.max(r.width, 160) + 'px';
+    const mh = menu.offsetHeight, mw = menu.offsetWidth;
+    let top = r.bottom + 6; if (top + mh > window.innerHeight - 8 && r.top - 6 - mh > 8) top = r.top - 6 - mh;
+    let left = r.left; if (left + mw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - 8 - mw);
+    menu.style.top = top + 'px'; menu.style.left = left + 'px';
+    const on = list.querySelector('.ux-i.on'); if (on) on.scrollIntoView({ block: 'nearest' });
+    let hl = -1;
+    const items = () => [...list.querySelectorAll('.ux-i:not(.dis)')];
+    const setHl = i => { const it = items(); it.forEach(x => x.classList.remove('hl')); if (!it.length) return; hl = (i + it.length) % it.length; it[hl].classList.add('hl'); it[hl].scrollIntoView({ block: 'nearest' }); };
+    menu.addEventListener('mousedown', e => e.stopPropagation());
+    menu.addEventListener('click', e => { const it = e.target.closest('.ux-i'); if (!it || it.classList.contains('dis')) return; choose(sel, decodeURIComponent(it.dataset.v)); });
+    menu.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setHl(hl + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setHl(hl - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); const it = items()[hl]; if (it) choose(sel, decodeURIComponent(it.dataset.v)); }
+      else if (e.key === 'Escape') { close(); b.focus(); }
+    });
+    if (q) { q.addEventListener('input', () => { list.innerHTML = render(q.value); hl = -1; }); q.focus(); }
+    else { menu.tabIndex = -1; menu.focus({ preventScroll: true }); setHl(Math.max(0, items().findIndex(x => x.classList.contains('on')))); }
+  }
+  document.addEventListener('mousedown', () => close());
+  window.addEventListener('resize', () => close());
+  document.addEventListener('scroll', e => { if (menu && !menu.contains(e.target)) close(); }, true);
+  let scheduled = false;
+  const scan = () => { scheduled = false; document.querySelectorAll('select:not([data-ux])').forEach(enhance); };
+  const mo = new MutationObserver(() => { if (!scheduled) { scheduled = true; requestAnimationFrame(scan); } });
+  const start = () => { scan(); mo.observe(document.body, { childList: true, subtree: true }); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  // ค่า/ตัวเลือกที่โค้ดเปลี่ยนเองโดยไม่ยิง event → อัปเดตป้ายบนปุ่มให้ตรงเสมอ
+  setInterval(() => { document.querySelectorAll('select[data-ux]').forEach(sel => { if (sel._uxBtn && sel._uxSig !== sigOf(sel)) sync(sel); }); }, 300);
+})();
 </script>
 </body>
 </html>
