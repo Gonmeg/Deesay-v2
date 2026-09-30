@@ -1,4 +1,5 @@
-// skudeep.js — หน้า "เจาะสินค้า" (v20260930c: กราฟสลับ ยอดขาย / จำนวนชิ้น · tooltip แยกค่าแอดออกจากรายการช่องทาง · ตัวแทน / MT ไม่คิดราคาเฉลี่ย) (v20260930b: ยอดรวมใน tooltip กราฟ · สี/เบอร์รวมเท่ายอดขาย · บอกเดือนที่นับค่าแอด/KOL · ยอดถอด VAT ให้เทียบ MKT Tracking) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
+// skudeep.js — หน้า "เจาะสินค้า" (v20260930d: เลือกสินค้าที่แถบตัวกรองด้านบน (กดค้นหา) · ตัดเส้นค่าแอดในกราฟ · โปรไม่นับตัวแทน/MT + บอกช่องทาง · ตัดราคาต่อชิ้น / กำไรขั้นบันได · โหลดแบบ skeleton เหมือนหน้าอื่น)
+// (v20260930c: กราฟสลับ ยอดขาย / จำนวนชิ้น · tooltip แยกค่าแอดออกจากรายการช่องทาง · ตัวแทน / MT ไม่คิดราคาเฉลี่ย) (v20260930b: ยอดรวมใน tooltip กราฟ · สี/เบอร์รวมเท่ายอดขาย · บอกเดือนที่นับค่าแอด/KOL · ยอดถอด VAT ให้เทียบ MKT Tracking) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
 // ข้อมูล: RPC sku_deep(p_sku, p_from, p_to) ครั้งเดียว (ยอดขาย ช่องทาง ร้าน/เพจ โปร ค่าแอด KOL สี/เบอร์ สต็อก กำไร แอด Facebook คลิป TikTok ลูกค้า)
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, ttcEsc, ttcEscAttr, getDateValue, effGrain, PL_TH_M, VAT_DIV, mtStoreName, fbeInfoIcon, exportTable, thShort, showPage, chartTickColor, chartGridColor
 (function () {
@@ -46,6 +47,19 @@
       #page-skuanalysis .skd-pl { display:grid; grid-template-columns:150px 1fr 120px 60px; gap:10px; align-items:center; font-size:12.5px; padding:6px 0; border-bottom:1px solid var(--border); }
       #page-skuanalysis .skd-pl .bar { height:8px; border-radius:4px; background:var(--bg3); overflow:hidden; }
       #page-skuanalysis .skd-pl .bar div { height:100%; border-radius:4px; }
+      #page-skuanalysis .skd-minis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+      #page-skuanalysis .skd-mini, #page-skuanalysis .skd-tile { background:var(--bg3); border-radius:8px; padding:9px 12px; }
+      #page-skuanalysis .skd-mini .l, #page-skuanalysis .skd-tile .l { font-size:11px; color:var(--text3); }
+      #page-skuanalysis .skd-mini .v { font-size:15px; font-weight:700; margin-top:2px; }
+      #page-skuanalysis .skd-cust { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:28px; align-items:start; }
+      #page-skuanalysis .skd-tiles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+      #page-skuanalysis .skd-tile .v { font-size:22px; font-weight:700; margin-top:4px; }
+      #page-skuanalysis .skd-tile .s { font-size:10.5px; color:var(--text3); margin-top:2px; }
+      #page-skuanalysis .skd-prov { display:grid; grid-template-columns:150px 1fr 70px; gap:10px; align-items:center; font-size:12.5px; padding:5px 0; }
+      #page-skuanalysis .skd-prov .b { height:8px; border-radius:4px; background:var(--bg3); overflow:hidden; }
+      #page-skuanalysis .skd-prov .b div { height:100%; border-radius:4px; background:#1877f2; }
+      #page-skuanalysis .skd-prov .c { text-align:right; font-weight:600; }
+      @media (max-width:1100px) { #page-skuanalysis .skd-cust { grid-template-columns:1fr; } }
       @media (max-width:1100px) { #page-skuanalysis .skd-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } #page-skuanalysis .skd-2 { grid-template-columns:1fr; } }`;
     document.head.appendChild(st);
   }
@@ -60,48 +74,52 @@
   }
   const nameOf = sku => ((_prods || []).find(p => p.sku === sku) || {}).name || (typeof skuToName === 'function' ? skuToName(sku) : sku);
 
+  // ตัวเลือกสินค้าอยู่ที่แถบตัวกรองด้านบน (select#filterSkd) — กดค้นหาแล้วใช้ทั้งหน้า เหมือนตัวกรองอื่น
+  function fillSelect() {
+    const sel = document.getElementById('filterSkd'); if (!sel || !_prods) return;
+    const cur = window._skdSku || sel.value;
+    const opt = p => `<option value="${escA(p.sku)}">${esc(p.sku)} · ${esc(p.name)}</option>`;
+    const topSet = new Set(_top.map(r => r.parent_sku));
+    const top = _top.map(r => _prods.find(p => p.sku === r.parent_sku) || { sku: r.parent_sku, name: nameOf(r.parent_sku) });
+    sel.innerHTML = '<option value="">— เลือกสินค้า —</option>' + (top.length ? `<optgroup label="ขายดีในช่วงนี้">${top.map(opt).join('')}</optgroup>` : '')
+      + `<optgroup label="สินค้าทั้งหมด">${_prods.filter(p => !topSet.has(p.sku)).map(opt).join('')}</optgroup>`;
+    sel.value = cur && [...sel.options].some(o => o.value === cur) ? cur : '';
+  }
   function shell() {
     const el = document.getElementById('page-skuanalysis');
-    if (el.dataset.skd) return el;
-    el.dataset.skd = '1';
-    el.innerHTML = `<div class="card skd-card"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-        <div style="font-size:13px;font-weight:600;white-space:nowrap;">เลือกสินค้า</div>
-        <div class="skd-pick"><input type="text" id="skdSearch" placeholder="พิมพ์รหัสหรือชื่อสินค้า เช่น DSP, แป้ง" autocomplete="off" style="width:100%;padding:8px 12px;">
-          <div id="skdList" class="skd-list" style="display:none;"></div></div>
-        <div id="skdTop" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
-        <div class="skd-note">ใช้ช่วงวันที่ด้านบน · ขายดี 8 อันดับในช่วงนี้แสดงเป็นปุ่มลัด</div></div>
-      <div id="skdBody"></div>`;
-    const inp = el.querySelector('#skdSearch'), list = el.querySelector('#skdList');
-    const draw = () => { const q = inp.value.trim().toLowerCase();
-      const hit = (_prods || []).filter(p => !q || p.sku.toLowerCase().includes(q) || String(p.name).toLowerCase().includes(q)).slice(0, 60);
-      list.innerHTML = hit.map(p => `<div data-s="${escA(p.sku)}"><b style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${esc(p.sku)}</b> ${esc(p.name)}</div>`).join('') || '<div style="color:var(--text3);cursor:default;">ไม่พบสินค้า</div>';
-      list.style.display = 'block'; };
-    inp.addEventListener('input', draw); inp.addEventListener('focus', () => { loadProducts().then(draw); });
-    inp.addEventListener('blur', () => setTimeout(() => { list.style.display = 'none'; }, 180));
-    list.addEventListener('mousedown', e => { const d = e.target.closest('[data-s]'); if (d) { inp.value = ''; list.style.display = 'none'; window.skdPick(d.dataset.s); } });
+    if (!el.dataset.skd) { el.dataset.skd = '1'; el.innerHTML = '<div id="skdBody"></div>'; }
     return el;
   }
 
-  window.skdPick = sku => { window._skdSku = sku; try { localStorage.setItem('skdSku', sku); } catch (e) {} _open.clear(); render(); };
+  window.skdPick = sku => { window._skdSku = sku; try { localStorage.setItem('skdSku', sku); } catch (e) {} _open.clear(); const sel = document.getElementById('filterSkd'); if (sel) sel.value = sku; render(); };
   window.skdMode = m => { _mode = m; document.querySelectorAll('#skdModeSeg button').forEach(b => b.classList.toggle('active', b.dataset.m === m)); renderChart(); };
   window.skdToggle = ch => { if (_open.has(ch)) _open.delete(ch); else _open.add(ch); renderChannels(); };
 
   window.renderSkuDeepPage = async function () {
-    css(); shell(); loadProducts().catch(() => {});
+    css(); shell(); skeleton();
+    const sel = document.getElementById('filterSkd');
+    if (sel && sel.value) window._skdSku = sel.value;   // ค่าที่เลือกในแถบด้านบน (กดค้นหา)
     const from = getDateValue('From'), to = getDateValue('To');
-    try { _top = await supaRpc('sku_top', { p_from: from, p_to: to, p_channel: null, p_sub: null }, true); } catch (e) { _top = []; }
-    _top = (_top || []).filter(r => r.parent_sku).sort((a, b) => (+b.revenue || 0) - (+a.revenue || 0)).slice(0, 8);
+    const [, top] = await Promise.all([loadProducts().catch(() => []), supaRpc('sku_top', { p_from: from, p_to: to, p_channel: null, p_sub: null }, true).catch(() => [])]);
+    _top = (Array.isArray(top) ? top : []).filter(r => r.parent_sku).sort((a, b) => (+b.revenue || 0) - (+a.revenue || 0)).slice(0, 8);
     if (!window._skdSku) { try { window._skdSku = localStorage.getItem('skdSku') || ''; } catch (e) {} }
     if (!window._skdSku && _top.length) window._skdSku = _top[0].parent_sku;
-    render();
+    try { localStorage.setItem('skdSku', window._skdSku || ''); } catch (e) {}
+    fillSelect(); render();
   };
+  // โหลดแบบเดียวกับหน้าอื่น: การ์ด skeleton ก่อนข้อมูลมา
+  function skeleton() {
+    const body = document.getElementById('skdBody'); if (!body) return;
+    const sk = w => `<span class="skeleton" style="display:inline-block;width:${w};height:22px;border-radius:4px;"></span>`;
+    body.innerHTML = `<div style="margin:0 0 16px;">${sk('260px')}</div><div class="skd-kpis">${Array.from({ length: 8 }, () => `<div class="card"><div class="card-title">&nbsp;</div><div class="kpi-value">${sk('70%')}</div></div>`).join('')}</div>
+      <div class="card skd-card"><div class="chart-wrap chart-wrap-lg" style="display:flex;align-items:center;justify-content:center;">${sk('60%')}</div></div>`;
+  }
 
   async function render() {
     const sku = window._skdSku, body = document.getElementById('skdBody'); if (!body) return;
-    document.getElementById('skdTop').innerHTML = _top.map(r => `<button class="skd-chip${r.parent_sku === sku ? ' on' : ''}" onclick="skdPick('${escA(r.parent_sku)}')">${esc(r.parent_sku)}</button>`).join('');
-    if (!sku) { body.innerHTML = '<div class="card"><div class="empty">เลือกสินค้าเพื่อดูข้อมูล</div></div>'; return; }
+    if (!sku) { body.innerHTML = '<div class="card"><div class="empty">เลือกสินค้าที่ช่อง "สินค้า" ด้านบน แล้วกดค้นหา</div></div>'; return; }
     const from = getDateValue('From'), to = getDateValue('To'), seq = ++_seq;
-    body.innerHTML = `<div class="card"><div style="font-size:12.5px;color:var(--text3);">กำลังโหลดข้อมูล ${esc(sku)}...</div></div>`;
+    skeleton();
     let d;
     try { d = await supaRpc('sku_deep', { p_sku: sku, p_from: from, p_to: to }); }
     catch (e) { body.innerHTML = `<div class="card"><div style="color:var(--red);font-size:12px;">โหลดไม่สำเร็จ: ${esc(e.message)}</div></div>`; return; }
@@ -157,8 +175,7 @@
       <div class="skd-2">${fbAdsCard(d)}${ttCard(d)}</div>
       <div class="skd-2">${kolCard(d)}${promoCard(d)}</div>
       ${kidsCard(d)}
-      <div class="skd-2">${plCard(d)}${custCard(d)}</div>
-      ${priceCard(d)}`;
+      ${custCard(d)}`;
     renderChart(); renderChannels();
   }
 
@@ -171,7 +188,7 @@
     const tk = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
     const scales = { x: { stacked: true, ticks: { ...tk, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
       y: { stacked: true, ticks: { ...tk, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } };
-    const withAds = g !== 'day' && !qm;
+    const withAds = false;   // (v20260930d) ไม่แสดงค่าแอดในกราฟ — ดูค่าแอด / ROAS ที่การ์ดด้านบนและตารางช่องทาง
     if (withAds) {
       const adsM = {}; (d.ads_month || []).forEach(r => { adsM[r.m] = (adsM[r.m] || 0) + (+r.ad || 0) + (+r.aa || 0); });
       ds.push({ type: 'line', label: 'ค่าแอด', data: keys.map(k => adsM[k] || 0), borderColor: '#c8a96e', backgroundColor: '#c8a96e', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y1', order: -1 });
@@ -180,8 +197,8 @@
     const unit = v => qm ? `${fmt(Math.round(v))} ชิ้น` : `฿${fmt(Math.round(v))}`;
     document.getElementById('skdChartTtl').textContent = (qm ? 'จำนวนชิ้น' : 'ยอดขาย') + (g === 'day' ? 'รายวันแยกช่องทาง' : 'รายเดือนแยกช่องทาง') + (withAds ? ' + ค่าแอด' : '');
     document.getElementById('skdChartNote').textContent = g === 'day'
-      ? 'ช่วงไม่เกิน 1 เดือนแสดงรายวัน · ค่าแอดรายสินค้ามีเป็นรายเดือน จึงไม่แสดงเส้นค่าแอดในมุมมองรายวัน · Modern Trade ลงวันที่ 1 ของเดือน'
-      : qm ? 'แท่ง = จำนวนชิ้นที่ขายได้ แยกช่องทาง' : 'แท่ง = ยอดขาย (แกนซ้าย) · เส้น = ค่าแอดของสินค้านี้ (แกนขวา) — ค่าแอดไม่ได้รวมอยู่ในยอดขาย';
+      ? 'ช่วงไม่เกิน 1 เดือนแสดงรายวัน · Modern Trade ลงวันที่ 1 ของเดือน'
+      : qm ? 'จำนวนชิ้นที่ขายได้ แยกช่องทาง · Modern Trade ลงวันที่ 1 ของเดือน' : 'ยอดขายแยกช่องทาง (รวม VAT) · Modern Trade ลงวันที่ 1 ของเดือน';
     makeChart('chartSkd', 'bar', keys.map(k => g === 'day' ? k.slice(8, 10) + '/' + k.slice(5, 7) : PL_TH_M(k)), ds, { scales,
       tooltip: {
         filter: it => it.dataset.yAxisID === 'y',   // รายการในกล่อง = ช่องทางเท่านั้น (ค่าแอดแยกไปบรรทัดล่าง)
@@ -220,7 +237,8 @@
 
   function ttCard(d) {
     const p = d.tt_product || {}, c = d.tt_clips || [];
-    const head = +p.cost ? `<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;margin-bottom:10px;"><div>ค่าแอด GMV Max <b>${money(p.cost)}</b></div><div>ยอดขายจากแอด <b>${money(p.rev)}</b></div><div>ออเดอร์ <b>${fmt(Math.round(+p.orders || 0))}</b></div><div>ROI <b>${roas(p.rev, p.cost)}</b></div></div>` : '';
+    const box = (l, v) => `<div class="skd-mini"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+    const head = +p.cost ? `<div class="skd-minis">${box('ค่าแอด GMV Max', money(p.cost))}${box('ยอดขายจากแอด', money(p.rev))}${box('ออเดอร์', fmt(Math.round(+p.orders || 0)))}${box('ROI', roas(p.rev, p.cost))}</div>` : '';
     const rows = c.map(x => { const img = x.cover_url ? `<img src="${escA(x.cover_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='🎵'">` : '🎵';
       const url = x.item_id ? `https://www.tiktok.com/@${encodeURIComponent(x.tt_account_name || 'tiktok')}/video/${x.item_id}` : '';
       return `<tr><td><div style="display:flex;gap:8px;align-items:center;min-width:200px;"><a class="skd-thumb" ${url ? `href="${escA(url)}" target="_blank" rel="noopener"` : ''}>${img}</a><div style="min-width:0;"><div style="font-size:11.5px;font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.title)}">${esc(x.title || x.item_id)}</div><div style="font-size:10.5px;color:var(--text3);">@${esc(x.tt_account_name || '—')}</div></div></div></td>
@@ -236,9 +254,12 @@
   }
 
   function promoCard(d) {
-    const p = d.promos || [], tot = p.reduce((t, r) => t + (+r.rev || 0), 0);
-    const rows = p.map((x, i) => `<tr><td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.promo)}">${esc(x.promo)}</td><td class="num">${n0(x.ord)}</td><td class="num">${n0(x.qty)}</td><td class="num"><b>${money(x.rev)}</b></td></tr>`).join('');
-    return card('ขายในโปร / เซ็ตไหน', `<div class="table-wrap"><table id="tblSkdPromo"><thead><tr><th>#</th><th>เซ็ต / โปร</th><th class="num">ออเดอร์</th><th class="num">ชิ้น</th><th class="num">ยอดขาย</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีข้อมูลโปร</td></tr>'}</tbody></table></div><div class="skd-note">25 อันดับ · ยอดขายของสินค้านี้ในแต่ละเซ็ต (แกะจากโปรแล้ว) · ช่องทางที่ไม่มีชื่อเซ็ตไม่แสดง</div>`);
+    const p = d.promos || [];
+    const chips = ch => Object.entries(ch || {}).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<span title="${escA(c)} ฿${fmt(v)}" style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--bg3);color:var(--text2);white-space:nowrap;"><i style="width:7px;height:7px;border-radius:50%;background:${CH_COL[c] || '#94a3b8'};display:inline-block;"></i>${esc(c)}</span>`).join(' ');
+    const rows = p.map((x, i) => `<tr><td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>
+      <td><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.promo)}">${esc(x.promo)}</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${chips(x.ch)}</div></td>
+      <td class="num">${n0(x.ord)}</td><td class="num">${n0(x.qty)}</td><td class="num"><b>${money(x.rev)}</b></td></tr>`).join('');
+    return card('ขายในโปร / เซ็ตไหน', `<div class="table-wrap"><table id="tblSkdPromo"><thead><tr><th>#</th><th>เซ็ต / โปร · ขายที่ช่องทาง</th><th class="num">ออเดอร์</th><th class="num">ชิ้น</th><th class="num">ยอดขาย</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีข้อมูลโปร</td></tr>'}</tbody></table></div><div class="skd-note">25 อันดับ · ยอดขายของสินค้านี้ในแต่ละเซ็ต (แกะจากโปรแล้ว) · ไม่นับตัวแทน / Modern Trade · ป้ายสี = ช่องทางที่ขายเซ็ตนั้น เรียงจากยอดมากไปน้อย (วางเมาส์ดูยอด)</div>`);
   }
 
   function kidsCard(d) {
@@ -269,10 +290,14 @@
   }
 
   function custCard(d) {
-    const c = d.customers || {}; const b = +c.buyers || 0, r = +c.repeat || 0;
-    const prov = (c.provinces || []).map(x => `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border);"><span>${esc(x.province)}</span><b>${fmt(x.n)} คน</b></div>`).join('');
-    return card('ลูกค้า Facebook ที่ซื้อสินค้านี้', b ? `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px;"><div><div class="card-title">ลูกค้า</div><div class="kpi-value">${fmt(b)}</div></div><div><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(+c.orders || 0)}</div></div><div><div class="card-title">ซื้อซ้ำในช่วงนี้</div><div class="kpi-value">${fmt(r)}</div><div class="kpi-sub" style="display:block;">${pct(r, b)} ของลูกค้า</div></div></div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">จังหวัดที่ซื้อมากสุด</div>${prov}` : '<div class="empty">ไม่มีออเดอร์ Facebook ของสินค้านี้ในช่วงนี้</div>', '');
+    const c = d.customers || {}; const b = +c.buyers || 0, r = +c.repeat || 0, prov = c.provinces || [], mx = Math.max(1, ...prov.map(x => +x.n || 0));
+    if (!b) return card('ลูกค้า Facebook ที่ซื้อสินค้านี้', '<div class="empty">ไม่มีออเดอร์ Facebook ของสินค้านี้ในช่วงนี้</div>');
+    const tile = (l, v, sub) => `<div class="skd-tile"><div class="l">${l}</div><div class="v">${v}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
+    const bars = prov.map(x => `<div class="skd-prov"><div class="n">${esc(x.province)}</div><div class="b"><div style="width:${(+x.n || 0) / mx * 100}%;"></div></div><div class="c">${fmt(x.n)} คน</div></div>`).join('');
+    return card('ลูกค้า Facebook ที่ซื้อสินค้านี้', `<div class="skd-cust">
+      <div class="skd-tiles">${tile('ลูกค้า', fmt(b), 'เบอร์โทรไม่ซ้ำ')}${tile('ออเดอร์', fmt(+c.orders || 0), `เฉลี่ย ${(((+c.orders || 0) / b) || 0).toFixed(2)} ออเดอร์ / คน`)}${tile('ซื้อซ้ำในช่วงนี้', fmt(r), `${pct(r, b)} ของลูกค้า`)}</div>
+      <div><div style="font-size:11.5px;color:var(--text3);margin-bottom:8px;">จังหวัดที่มีลูกค้ามากสุด</div>${bars}</div></div>
+      <div class="skd-note">นับจากออเดอร์ Facebook ในระบบ (ไม่รวมยกเลิก / ตีกลับ) · ซื้อซ้ำ = คนเดียวกันซื้อสินค้านี้ 2 ออเดอร์ขึ้นไปในช่วงที่เลือก</div>`);
   }
 
   function priceCard(d) {
