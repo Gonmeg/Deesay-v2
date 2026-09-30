@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -731,11 +731,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">ยอดขายรายเดือน</div>
+          <div class="card-title" id="ttlMonthlyRevenue">ยอดขายรายเดือน</div>
           <div class="chart-wrap"><canvas id="chartMonthlyRevenue"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-title">ออเดอร์รายเดือน</div>
+          <div class="card-title" id="ttlMonthlyOrders">ออเดอร์รายเดือน</div>
           <div class="chart-wrap"><canvas id="chartMonthlyOrders"></canvas></div>
         </div>
       </div>
@@ -759,7 +759,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <div class="page" id="page-channel">
       <div id="ch-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2">
-        <div class="card"><div class="card-title">ยอดขายรายเดือนแยก Channel</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartChannelRevenue"></canvas></div></div>
+        <div class="card"><div class="card-title" id="ttlChannelRevenue">ยอดขายรายเดือนแยก Channel</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartChannelRevenue"></canvas></div></div>
         <div class="card"><div class="card-title">สัดส่วนยอดขายแยก Channel</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartChannelPie"></canvas></div></div>
       </div>
       <div class="card">
@@ -1037,7 +1037,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         </div>
       </div>
       <div class="grid-2">
-        <div class="card"><div class="card-title">เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ (รายเดือน)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRMTrend"></canvas></div></div>
+        <div class="card"><div class="card-title" id="ttlCRMTrend">เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ (รายเดือน)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRMTrend"></canvas></div></div>
         <div class="card">
           <div class="card-title">แบ่งกลุ่มตามจำนวนซื้อ</div>
           <div id="crmGroups" class="crm-groups-compact" style="max-height:300px;overflow-y:auto;padding-right:4px;"></div>
@@ -1682,7 +1682,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <div style="font-size:10.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap;">
               <span><span style="display:inline-block;width:14px;height:3px;background:#2a78d6;vertical-align:middle;border-radius:2px;"></span> ยอดขาย (ออเดอร์จริง)</span>
               <span><span style="display:inline-block;width:10px;height:10px;background:rgba(96,165,250,0.55);vertical-align:middle;border-radius:2px;"></span> ค่าแอด</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(167,139,250,0.75);vertical-align:middle;border-radius:2px;"></span> ค่าจ้าง KOL (วันโพสต์)</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(167,139,250,0.75);vertical-align:middle;border-radius:2px;"></span> ค่าจ้าง KOL (เดือนที่จ่าย)</span>
               <span><span style="display:inline-block;color:#a78bfa;font-size:12px;vertical-align:middle;">▼</span> วันที่มีโพสต์ — ชี้ดูรายละเอียด</span>
             </div>
           </div>
@@ -1856,7 +1856,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
-          <div class="section-header"><div class="section-title">ยอดขายรายเดือน (Shopee)</div><div style="font-size:10.5px;color:var(--text3);">ค่า Ads และ ROAS ดูที่หน้า Shopee Ads</div></div>
+          <div class="section-header"><div class="section-title" id="ttlShMonthly">ยอดขายรายเดือน (Shopee)</div><div style="font-size:10.5px;color:var(--text3);">ค่า Ads และ ROAS ดูที่หน้า Shopee Ads</div></div>
           <div class="chart-wrap chart-wrap-lg"><canvas id="chartShMonthly"></canvas></div>
         </div>
         <div class="card">
@@ -1914,7 +1914,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div id="mthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
-          <div class="section-header"><div class="section-title">ยอดขายรายเดือน</div></div>
+          <div class="section-header"><div class="section-title" id="ttlMtRevenue">ยอดขายรายเดือน</div></div>
           <div class="chart-wrap chart-wrap-lg"><canvas id="chartMtRevenue"></canvas></div>
         </div>
         <div class="card">
@@ -2761,16 +2761,43 @@ function restoreSavedChannelFilter() {
   if (saved.sub && [...subSel.options].some(o => o.value === saved.sub)) subSel.value = saved.sub;
 }
 
-// (2026-09-21) กฎทั้งเว็บ: ช่วงที่เลือกอยู่ในเดือนเดียว (เดือนนี้/เดือนที่แล้ว/เลือกเอง) → กราฟทุกหน้าเป็น "รายวัน" อัตโนมัติ
-//   ข้ามเดือน → "รายเดือน" · ผู้ใช้กดสลับเองได้เหมือนเดิม
+// (2026-09-30) กฎทั้งเว็บ (บังคับ): ช่วงที่เลือกไม่เกิน 1 เดือน (อยู่ในเดือนเดียว หรือยาวไม่เกิน 31 วัน) → กราฟทุกหน้าเป็น "รายวัน" เสมอ
+//   ปุ่ม รายเดือน/รายปี กดไม่ได้ในช่วงนั้น · ช่วงยาวกว่า 1 เดือน → เริ่มที่ "รายเดือน" ผู้ใช้กดสลับเองได้
+//   (ยกเว้นหน้าที่ข้อมูลมีแค่รายเดือน: Business Insight / MKT Tracking / งบ KOL)
+function isShortRange(from, to) {
+  if (from === undefined) { try { from = getDateValue('From'); to = getDateValue('To'); } catch (e) { return false; } }
+  if (!from || !to) return false;
+  if (from.slice(0, 7) === to.slice(0, 7)) return true;
+  return (new Date(to + 'T00:00:00') - new Date(from + 'T00:00:00')) / 864e5 < 31;
+}
+const effGrain = v => isShortRange() ? 'day' : (v || 'month');
+const grainKeyOf = (date, g) => g === 'day' ? date : date.slice(0, 7);
+const grainDayLabel = d => new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+// ปุ่มสลับ รายปี/รายเดือน/รายวัน ทุกหน้า: ช่วงสั้น → ล็อกไว้ที่รายวัน
+function syncGrainButtons() {
+  const short = isShortRange();
+  let prefixes = ['mthub', 'adp', 'shads'];
+  try { prefixes = prefixes.concat(Object.values(HUB_AD_CONFIG).map(c => c.prefix)); } catch (e) {}
+  prefixes.forEach(pf => {
+    ['yr', 'mo'].forEach(k => {
+      const b = document.getElementById(`${pf}-${k}`); if (!b) return;
+      b.disabled = short; b.style.opacity = short ? '.4' : ''; b.style.cursor = short ? 'not-allowed' : '';
+      b.title = short ? 'ช่วงที่เลือกไม่เกิน 1 เดือน — แสดงรายวันเสมอ' : '';
+      if (short) b.classList.remove('active');
+    });
+    if (short) document.getElementById(`${pf}-dy`)?.classList.add('active');
+  });
+}
 function autoGrainForRange(from, to) {
   if (!from || !to) return;
-  const single = from.slice(0, 7) === to.slice(0, 7);
+  const single = isShortRange(from, to);
   const v = single ? 'day' : 'month', key = single ? 'dy' : 'mo';
   const mark = prefix => ['yr', 'mo', 'dy'].forEach(k => document.getElementById(`${prefix}-${k}`)?.classList.toggle('active', k === key));
   try { Object.keys(hubAdView).forEach(h => { hubAdView[h] = v; if (HUB_AD_CONFIG[h]) mark(HUB_AD_CONFIG[h].prefix); }); } catch (e) {}
   try { mtAdsView = v; mark('mthub'); } catch (e) {}
   try { adView = v; mark('adp'); } catch (e) {}
+  try { _shAdsView = v; mark('shads'); } catch (e) {}
+  syncGrainButtons();
 }
 function applyFilters() {
   const from = getDateValue('From');
@@ -3146,16 +3173,19 @@ async function renderOverview() {
   document.getElementById('kpi-unsettled-orders').textContent = `${fmt(unsettledOrders)} ออเดอร์ที่ถูกยกเลิก/คืน`;
   document.getElementById('kpi-unsettled-pct').textContent = unsettledPct + '%';
 
-  // Monthly
+  // Monthly (ช่วงไม่เกิน 1 เดือน → รายวัน)
+  const gOv = effGrain('month');
   const monthly = {};
   mvInRange.forEach(r => {
-    const m = r.date ? r.date.substring(0, 7) : 'unknown';
+    const m = r.date ? grainKeyOf(r.date, gOv) : 'unknown';
     if (!monthly[m]) monthly[m] = { rev: 0, ord: 0 };
     monthly[m].rev += parseFloat(r.net_revenue) || 0;
     monthly[m].ord += parseInt(r.net_orders) || 0;
   });
   const months = Object.keys(monthly).sort();
-  const monthLabels = months.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  const monthLabels = months.map(m => { if (gOv === 'day') return grainDayLabel(m); const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  { const t1 = document.getElementById('ttlMonthlyRevenue'), t2 = document.getElementById('ttlMonthlyOrders');
+    if (t1) t1.textContent = gOv === 'day' ? 'ยอดขายรายวัน' : 'ยอดขายรายเดือน'; if (t2) t2.textContent = gOv === 'day' ? 'ออเดอร์รายวัน' : 'ออเดอร์รายเดือน'; }
   makeChart('chartMonthlyRevenue', 'bar', monthLabels, [{ label: 'ยอดขาย', data: months.map(m => monthly[m].rev), backgroundColor: 'rgba(200,169,110,0.7)', borderColor: '#c8a96e', borderWidth: 1, borderRadius: 4 }]);
   makeChart('chartMonthlyOrders', 'bar', monthLabels, [{ label: 'ออเดอร์', data: months.map(m => monthly[m].ord), backgroundColor: 'rgba(96,165,250,0.7)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 4 }]);
 
@@ -3196,15 +3226,17 @@ async function renderChannel() {
       <div class="kpi-sub">${fmt(v.ord)} ออเดอร์ · ${totalRev ? ((v.rev/totalRev)*100).toFixed(1) : 0}%</div>
     </div>`).join('');
 
+  const gCh = effGrain('month');   // ช่วงไม่เกิน 1 เดือน → รายวัน
   const monthly = {};
   d.forEach(r => {
-    const m = r.date ? r.date.substring(0,7) : 'unknown';
+    const m = r.date ? grainKeyOf(r.date, gCh) : 'unknown';
     const ch = r.channel || 'ไม่ระบุ';
     if (!monthly[m]) monthly[m] = {};
     monthly[m][ch] = (monthly[m][ch] || 0) + (parseFloat(r.net_revenue) || 0);
   });
   const months = Object.keys(monthly).sort();
-  const monthLabels = months.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  const monthLabels = months.map(m => { if (gCh === 'day') return grainDayLabel(m); const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  { const t = document.getElementById('ttlChannelRevenue'); if (t) t.textContent = gCh === 'day' ? 'ยอดขายรายวันแยก Channel' : 'ยอดขายรายเดือนแยก Channel'; }
   const barDatasets = channels.map(([ch], i) => ({
     label: ch, data: months.map(m => monthly[m]?.[ch] || 0),
     backgroundColor: COLORS[i%COLORS.length] + 'cc', borderColor: COLORS[i%COLORS.length], borderWidth: 1, borderRadius: 3,
@@ -3776,9 +3808,11 @@ async function renderShHub() {
       </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
     // ยอดขายรายเดือนจาก sales_summary (กราฟ "ยอดขาย vs ค่าโฆษณา" เดิมย้ายไปหน้า Shopee Ads แล้ว ไม่ให้ซ้ำ)
-    const months = Object.keys(H.byMonth).sort();
-    makeChart('chartShMonthly', 'bar', months.map(m => new Date(m + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })),
-      [{ label: 'ยอดขาย', data: months.map(m => H.byMonth[m]), backgroundColor: 'rgba(238,77,45,0.7)' }],
+    const gSh = effGrain('month'), bySh = gSh === 'day' ? H.byDay : H.byMonth;   // ช่วงไม่เกิน 1 เดือน → รายวัน
+    const months = Object.keys(bySh).sort();
+    { const t = document.getElementById('ttlShMonthly'); if (t) t.textContent = gSh === 'day' ? 'ยอดขายรายวัน (Shopee)' : 'ยอดขายรายเดือน (Shopee)'; }
+    makeChart('chartShMonthly', 'bar', months.map(m => gSh === 'day' ? grainDayLabel(m) : new Date(m + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })),
+      [{ label: 'ยอดขาย', data: months.map(m => bySh[m]), backgroundColor: 'rgba(238,77,45,0.7)' }],
       { tooltip: { callbacks: { label: it => `ยอดขาย: ฿${fmt(it.raw)}` } } });
     renderPromotion('Sh', 'Shopee');
 
@@ -3864,9 +3898,11 @@ async function renderMtHub() {
   `;
 
   // ยอดขายรายเดือน
-  const byMonth = H.byMonth;
+  const gMt = effGrain('month');   // ช่วงไม่เกิน 1 เดือน → รายวัน
+  const byMonth = gMt === 'day' ? H.byDay : H.byMonth;
   const months = Object.keys(byMonth).sort();
-  makeChart('chartMtRevenue', 'bar', months, [{ label: 'ยอดขาย', data: months.map(m => byMonth[m]), backgroundColor: '#2a78d6', borderRadius: 4 }]);
+  { const t = document.getElementById('ttlMtRevenue'); if (t) t.textContent = gMt === 'day' ? 'ยอดขายรายวัน' : 'ยอดขายรายเดือน'; }
+  makeChart('chartMtRevenue', 'bar', gMt === 'day' ? months.map(grainDayLabel) : months, [{ label: 'ยอดขาย', data: months.map(m => byMonth[m]), backgroundColor: '#2a78d6', borderRadius: 4 }]);
 
   // ยอดขายแยกตามร้าน (sub_channel) — ใช้ชื่อร้านจริงแทน MT-xxx
   const sortedStores = H.sortedSub;
@@ -3886,10 +3922,11 @@ function renderMtAdsChart() {
   const from = getDateValue('From'), to = getDateValue('To');
   const adsInRange = mtAdsDaily.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
   let labels, data;
-  if (mtAdsView === 'day') {
+  const mtV = effGrain(mtAdsView); syncGrainButtons();
+  if (mtV === 'day') {
     labels = adsInRange.map(r => r.date);
     data = adsInRange.map(r => r.ads);
-  } else if (mtAdsView === 'year') {
+  } else if (mtV === 'year') {
     const byYear = {};
     adsInRange.forEach(r => { const y = r.date.substring(0,4); byYear[y] = (byYear[y]||0) + r.ads; });
     labels = Object.keys(byYear).sort();
@@ -3900,7 +3937,7 @@ function renderMtAdsChart() {
     labels = Object.keys(byM).sort();
     data = labels.map(m => byM[m]);
   }
-  makeChart('chartMtAds', 'line', labels, [{ label: 'ค่าโฆษณา Awareness', data, borderColor: '#eda100', backgroundColor: 'rgba(237,161,0,0.1)', borderWidth: 2, pointRadius: mtAdsView==='day' && labels.length>60 ? 0 : 3, fill: true, tension: 0.3 }]);
+  makeChart('chartMtAds', 'line', labels, [{ label: 'ค่าโฆษณา Awareness', data, borderColor: '#eda100', backgroundColor: 'rgba(237,161,0,0.1)', borderWidth: 2, pointRadius: mtV==='day' && labels.length>60 ? 0 : 3, fill: true, tension: 0.3 }]);
 }
 
 // Top SKU (Modern Trade) — เลือกกรองตามร้านได้ (default = ทั้งหมด)
@@ -4061,7 +4098,7 @@ function renderCppDetail() {
   document.getElementById('cpp-detail-sub').innerHTML = `<span class="cpp-sku">${sku}</span> · ${cppDate(from)} – ${cppDate(to)} · ยอด TikTok ก่อนหักยกเลิก`;
   // กราฟ: ช่วงอยู่ในเดือนเดียว → รายวัน · หลายเดือน → รายเดือน (กฎเดียวกับทุกหน้า)
   const daily = cppData.daily || [];
-  const single = from.slice(0, 7) === to.slice(0, 7);
+  const single = isShortRange(from, to);
   const buckets = {};
   daily.forEach(r => { const k = single ? r.d : r.d.slice(0, 7); const b = buckets[k] = buckets[k] || { c: 0, s: 0 }; b.c += +r.c; b.s += +r.s; });
   const keys = Object.keys(buckets).sort();
@@ -4404,7 +4441,7 @@ function hubAgg(channel) {
   const rows = salesRows(from, to, channel, subF);
   const prev = getPrevPeriodRange(from, to);
   const prevRows = prev.from ? salesRows(prev.from, prev.to, channel, subF) : [];
-  const A = { from, to, totalRev: 0, totalOrd: 0, cancelRev: 0, cancelOrd: 0, freeSampleOrd: 0, prevRev: 0, prevOrd: 0, bySub: {}, byOC: {}, byMonth: {} };
+  const A = { from, to, totalRev: 0, totalOrd: 0, cancelRev: 0, cancelOrd: 0, freeSampleOrd: 0, prevRev: 0, prevOrd: 0, bySub: {}, byOC: {}, byMonth: {}, byDay: {} };
   rows.forEach(r => {
     const rev = parseFloat(r.net_revenue) || 0, ord = parseInt(r.net_orders) || 0;
     A.totalRev += rev; A.totalOrd += ord;
@@ -4413,7 +4450,7 @@ function hubAgg(channel) {
     const s = r.sub_channel || 'ไม่ระบุ';
     (A.bySub[s] = A.bySub[s] || { rev: 0, ord: 0 }); A.bySub[s].rev += rev; A.bySub[s].ord += ord;
     if (r.order_channel !== null && r.order_channel !== undefined) { const oc = r.order_channel || 'ไม่ระบุ'; (A.byOC[oc] = A.byOC[oc] || { rev: 0, ord: 0 }); A.byOC[oc].rev += rev; A.byOC[oc].ord += ord; }
-    if (r.date) { const m = r.date.substring(0, 7); A.byMonth[m] = (A.byMonth[m] || 0) + rev; }
+    if (r.date) { const m = r.date.substring(0, 7); A.byMonth[m] = (A.byMonth[m] || 0) + rev; A.byDay[r.date] = (A.byDay[r.date] || 0) + rev; }
   });
   prevRows.forEach(r => { A.prevRev += parseFloat(r.net_revenue) || 0; A.prevOrd += parseInt(r.net_orders) || 0; });
   A.sortedSub = Object.entries(A.bySub).sort((a, b) => b[1].rev - a[1].rev);
@@ -4569,7 +4606,7 @@ async function fetchUniqueCustomers(from, to, ch, sub) {
   return typeof r === 'number' ? r : (Array.isArray(r) ? r[0] : r);
 }
 
-// ===== ค่าจ้าง KOL (kol_posts — sync จาก Google Sheet ทีม KOL ทุกคืน) =====
+// ===== ค่าจ้าง KOL — (2026-09-30) ใช้ชีทเบิกเงิน KOL (mv_kol_jobs) แหล่งเดียวกับหน้า KOL / MKT Tracking นับตามเดือนที่ทำจ่าย (เดิมใช้ชีททีม KOL kol_posts) =====
 let kolPosts = [];          // แถวทั้งหมด (ตารางเล็ก ~1–2 พันแถว โหลดครั้งเดียวต่อ session)
 let _kolPostsLoaded = false;
 let kolProductMap = {};     // product_text -> { parent_sku, group_label } (ตาราง kol_product_map)
@@ -4606,29 +4643,27 @@ function applyKolPosts(raw, mapRows) {
 }
 async function fetchKolPosts() {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  const url = `${window.SUPABASE_URL}/rest/v1/kol_posts?select=content_name,post_date,platform,kol_name,kol_handle,products,tier,budget,post_link,item_id,sheet_ad_spend,sheet_revenue&order=post_date.asc,content_name.asc&limit=1000`;
-  setBgSync('โหลดค่าจ้าง KOL (Google Sheet)...', 30);
-  // PostgREST ส่งได้สูงสุด 1,000 แถว/คำขอ (ไม่สนค่า limit ที่ใส่) — ดึงเป็นหน้าๆ ด้วย offset จนหมด (ตารางเล็ก 2–3 หน้า)
-  const raw = [];
+  const url = `${window.SUPABASE_URL}/rest/v1/mv_kol_jobs?select=row_no,kol_name,kol_handle,tt_handle,platform,post_link,post_date,content_code,cost_month,parent_sku,product_code,kol_type,amount,video_id&order=row_no.asc`;
+  setBgSync('โหลดค่าจ้าง KOL (ชีทเบิกเงิน KOL)...', 30);
+  const rows = [];
   for (let off = 0; ; off += 1000) {
-    const res = await fetch(`${url}&offset=${off}`, { headers });
-    if (!res.ok) throw new Error('kol_posts ' + res.status);
+    const res = await fetch(`${url}&offset=${off}&limit=1000`, { headers });
+    if (!res.ok) throw new Error('mv_kol_jobs ' + res.status);
     const page = await res.json();
-    raw.push(...page);
-    setBgSync(`โหลดค่าจ้าง KOL (${fmt(raw.length)} โพสต์)...`, Math.min(90, 30 + off / 20));
+    rows.push(...page);
     if (page.length < 1000) break;
   }
-  let mapRows = [];
-  try { // ตาราง map เล็กมาก — ถ้ายังไม่ได้สร้างก็ทำงานต่อได้ (ทุกสินค้าจะขึ้นเป็น "ยังไม่ได้ map")
-    const r2 = await fetch(`${window.SUPABASE_URL}/rest/v1/kol_product_map?select=product_text,parent_sku,group_label,spread_skus&limit=1000`, { headers });
-    if (r2.ok) mapRows = await r2.json();
-  } catch (e) { console.warn('kol_product_map', e.message); }
-  setBgSync(`ค่าจ้าง KOL ${fmt(raw.length)} โพสต์ อัปเดตแล้ว`, null);
-  applyKolPosts(raw, mapRows);
-  idbSet(KOL_CACHE_KEY, { rows: raw, mapRows, cachedAt: Date.now() });
+  // แปลงเป็นรูปเดียวกับ kol_posts เดิม · budget = ค่าจ้าง (ex.VAT) · cost_month = เดือนที่ทำจ่าย (คอลัมน์ AB)
+  const raw = rows.map(r => ({ content_name: r.content_code || '', post_date: r.post_date || null, cost_month: r.cost_month ? String(r.cost_month).slice(0, 10) : null,
+    platform: r.platform || '', kol_name: r.kol_name || '', kol_handle: r.tt_handle || r.kol_handle || '',
+    products: String(r.product_code || '').replace(/^\d{3}\s*[-.:]?\s*/, '') || r.parent_sku || '', tier: r.kol_type || '',
+    budget: +r.amount || 0, post_link: r.post_link || null, item_id: r.video_id || null, sheet_ad_spend: 0, sheet_revenue: 0 }));
+  setBgSync(`ค่าจ้าง KOL ${fmt(raw.length)} งาน อัปเดตแล้ว`, null);
+  applyKolPosts(raw, []);
+  idbSet(KOL_CACHE_KEY, { rows: raw, mapRows: [], cachedAt: Date.now() });
 }
 // แคชใน IndexedDB (key มี version — เปลี่ยนโครงข้อมูลเมื่อไรบั๊มเลขแล้วแคชเก่าถูกทิ้งเอง) ตารางเล็ก ดึงใหม่เบื้องหลังถ้าเก่ากว่า 15 นาที
-const KOL_CACHE_KEY = 'kol_posts_v4'; // v4: เพิ่ม sheet_ad_spend / sheet_revenue (Facebook)
+const KOL_CACHE_KEY = 'kol_jobs_v1'; // (2026-09-30) เปลี่ยนแหล่งเป็นชีทเบิกเงิน KOL (mv_kol_jobs) — แคชเก่าจากชีททีม KOL ถูกทิ้งเอง
 async function ensureKolPosts(onFresh) {
   if (_kolPostsLoaded) return;
   const cached = await idbGet(KOL_CACHE_KEY);
@@ -4643,14 +4678,18 @@ async function ensureKolPosts(onFresh) {
 }
 function thShort(d) { return d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'; }
 
-// โพสต์ TikTok ที่จ้างในช่วงวันที่ (นับด้วย post_date) พร้อม handle ที่ resolve แล้ว:
-// ถ้าเลขคลิปตรงกับคลิปในระบบ Ads → ใช้ชื่อช่องจาก Ads (แม่นกว่าที่ทีม KOL พิมพ์) ไม่งั้นใช้ชื่อจาก sheet
+// งาน KOL TikTok ในช่วงที่เลือก — (2026-09-30) นับตาม "เดือนที่ทำจ่าย" เหมือนหน้า KOL / MKT Tracking (ช่วงไม่เต็มเดือน = นับทั้งเดือน)
+// ถ้าเลขคลิปตรงกับคลิปในระบบ Ads → ใช้ชื่อช่องจาก Ads ไม่งั้นใช้ชื่อช่องจากลิงก์โพสต์ในชีท
+// feeDay = วันที่วางแท่งค่าจ้างในกราฟ: วันโพสต์ถ้าอยู่ในช่วง ไม่งั้นวันแรกของเดือนที่จ่าย (ตัดให้อยู่ในช่วง)
 function kolPostsInRange(from, to) {
   const clipById = {};
   cpTta.kolClips.forEach(c => { clipById[c.item_id] = c; });
-  return kolPosts.filter(p => p.isTikTok && p.post_date && p.post_date >= from && p.post_date <= to).map(p => {
+  const mf = from.slice(0, 7), mt = to.slice(0, 7);
+  return kolPosts.filter(p => p.isTikTok && p.cost_month && p.cost_month.slice(0, 7) >= mf && p.cost_month.slice(0, 7) <= mt).map(p => {
     const clip = p.item_id ? clipById[p.item_id] : null;
-    return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle };
+    const postInRange = !!(p.post_date && p.post_date >= from && p.post_date <= to);
+    const feeDay = postInRange ? p.post_date : (p.cost_month < from ? from : p.cost_month > to ? to : p.cost_month);
+    return { ...p, clip, handle: clip ? cpNormHandle(clip.handle) : p.kol_handle, postInRange, feeDay };
   });
 }
 
@@ -4669,8 +4708,8 @@ function renderCpTrendChart() {
   const feeByDay = {}, postsByDay = {};
   if (_kolPostsLoaded) {
     kolPostsInRange(from, to).filter(p => !target || p.handle === target).forEach(p => {
-      feeByDay[p.post_date] = (feeByDay[p.post_date] || 0) + p.budget;
-      (postsByDay[p.post_date] = postsByDay[p.post_date] || []).push(p);
+      feeByDay[p.feeDay] = (feeByDay[p.feeDay] || 0) + p.budget;
+      if (p.postInRange) (postsByDay[p.post_date] = postsByDay[p.post_date] || []).push(p);
     });
   }
   const adByDay = cpTta.rangeKey ? cpDailyAdSpend(from, to, target) : {};
@@ -4726,7 +4765,7 @@ function fillCpCostKpis(fee, spend, rev, subtitle) {
   const roiCol = roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--accent)' : 'var(--red)';
   const roiTag = roi === null ? 'ยังไม่มีต้นทุน' : roi >= 3 ? 'คุ้มมาก' : roi >= 1 ? 'คุ้ม' : 'ยังไม่คุ้ม';
   roiEl.style.border = `1px solid ${roiCol}`;
-  roiEl.innerHTML = `<div class="card-title">ROAS ${fbeInfoIcon('cp-info-roi', 'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม (ลง 1 บาท ได้ยอดกลับกี่บาท) · ROI = (ยอดขาย − ต้นทุน) ÷ ต้นทุน = ROAS − 1<br><br>ต้นทุนรวม = ค่าจ้าง KOL (ตามวันโพสต์ในช่วงที่เลือก) + ค่าแอดที่ boost คลิป (ตามวันยิง)<br>ยอดขายไม่รวม LIVE เพราะต้นทุนตรงนี้เป็นของคลิปเท่านั้น<br><br>ยังไม่หักต้นทุนสินค้า — เขียว ≥ 3x (คุ้มมาก) · ทอง 1–3x (คุ้ม) · แดง < 1x (ยังไม่คุ้ม)<br>รายละเอียดคนที่จ้างดูที่หน้า KOL / Affiliate')}</div><div class="kpi-value" style="color:${roiCol};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:11px;color:${roiCol};margin-top:4px;font-weight:600;">${roiTag}${roi !== null ? ` <span style="color:var(--text3);font-weight:400;">· ${kolRoiPct(roi)}</span>` : ''}</div>`;
+  roiEl.innerHTML = `<div class="card-title">ROAS ${fbeInfoIcon('cp-info-roi', 'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม (ลง 1 บาท ได้ยอดกลับกี่บาท) · ROI = (ยอดขาย − ต้นทุน) ÷ ต้นทุน = ROAS − 1<br><br>ต้นทุนรวม = ค่าจ้าง KOL TikTok จากชีทเบิกเงิน KOL (ตามเดือนที่ทำจ่าย ตรงกับหน้า KOL เมื่อเลือกช่องทาง TikTok) + ค่าแอดที่ boost คลิป (ตามวันยิง)<br>ยอดขายไม่รวม LIVE เพราะต้นทุนตรงนี้เป็นของคลิปเท่านั้น<br><br>ยังไม่หักต้นทุนสินค้า — เขียว ≥ 3x (คุ้มมาก) · ทอง 1–3x (คุ้ม) · แดง < 1x (ยังไม่คุ้ม)<br>รายละเอียดคนที่จ้างดูที่หน้า KOL')}</div><div class="kpi-value" style="color:${roiCol};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:11px;color:${roiCol};margin-top:4px;font-weight:600;">${roiTag}${roi !== null ? ` <span style="color:var(--text3);font-weight:400;">· ${kolRoiPct(roi)}</span>` : ''}</div>`;
   costEl.innerHTML = `<div class="card-title">ต้นทุนรวม</div><div class="kpi-value">฿${fmtB(total)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;"><span style="color:#a78bfa;">●</span> ค่าจ้าง ฿${fmtB(fee)} · <span style="color:#60a5fa;">●</span> ค่าแอด ฿${fmtB(spend)}</div>`;
 }
 
@@ -5625,7 +5664,11 @@ function renderCRMTrendChart() {
   });
 
   const from = getDateValue('From'), to = getDateValue('To');
-  const monthsToShow = getMonthsInRange(from, to);
+  // (2026-09-30) ช่วงไม่เกิน 1 เดือน → รายวัน (ลูกค้าใหม่ = ซื้อครั้งแรกวันนั้น · ลูกค้าเก่า = เคยซื้อก่อนวันนั้น)
+  const gCrm = effGrain('month');
+  const monthsToShow = gCrm === 'day'
+    ? (() => { const out = []; for (let t = new Date(from + 'T00:00:00'); t <= new Date(to + 'T00:00:00'); t.setDate(t.getDate() + 1)) out.push(`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`); return out; })()
+    : getMonthsInRange(from, to);
 
   const newByMonth = {}, returningByMonth = {};
   monthsToShow.forEach(m => { newByMonth[m] = new Set(); returningByMonth[m] = new Set(); });
@@ -5633,14 +5676,16 @@ function renderCRMTrendChart() {
   base.forEach(r => {
     const phone = r.phone || '';
     if (!phone || phone.length < 5 || !r.date) return;
-    const month = r.date.substring(0, 7);
+    const month = grainKeyOf(r.date, gCrm);
     if (!(month in newByMonth)) return;
     if (firstPurchaseByPhone[phone] === undefined) return;
-    if (firstPurchaseByPhone[phone].substring(0, 7) === month) newByMonth[month].add(phone);
-    else if (firstPurchaseByPhone[phone].substring(0, 7) < month) returningByMonth[month].add(phone);
+    const first = grainKeyOf(firstPurchaseByPhone[phone], gCrm);
+    if (first === month) newByMonth[month].add(phone);
+    else if (first < month) returningByMonth[month].add(phone);
   });
 
-  const monthLabels = monthsToShow.map(m => { const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
+  { const t = document.getElementById('ttlCRMTrend'); if (t) t.textContent = `เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ (${gCrm === 'day' ? 'รายวัน' : 'รายเดือน'})`; }
+  const monthLabels = monthsToShow.map(m => { if (gCrm === 'day') return grainDayLabel(m); const [y, mo] = m.split('-'); return MONTHS_TH[parseInt(mo)-1] + ' ' + y; });
   const newCounts = monthsToShow.map(m => newByMonth[m].size);
   const returningCounts = monthsToShow.map(m => returningByMonth[m].size);
   const returningPct = monthsToShow.map((m, i) => {
@@ -6634,6 +6679,7 @@ function makeAdChart(id, labels, gmvArr, adsArr, pctArr, opts = {}) {
 }
 
 function setAdpView(v, btn) {
+  if (isShortRange() && v !== 'day') return;   // ช่วงไม่เกิน 1 เดือน → รายวันเสมอ
   adView=v;
   document.querySelectorAll('#page-adperf .toggle-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -6645,6 +6691,7 @@ function setAdpView(v, btn) {
 const hubAdView = { fb: 'month', tt: 'month', sh: 'month', lz: 'month' };
 let mtAdsView = 'month';
 function setMtAdsView(v, btn) {
+  if (isShortRange() && v !== 'day') return;
   mtAdsView = v;
   document.querySelectorAll('#mthub-yr, #mthub-mo, #mthub-dy').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -6740,6 +6787,7 @@ const HUB_AD_CONFIG = {
   lz: { prefix: 'lzhub', chartId: 'chartLzAds' },
 };
 function setHubAdView(hub, v, btn) {
+  if (isShortRange() && v !== 'day') return;
   hubAdView[hub] = v;
   const cfg = HUB_AD_CONFIG[hub];
   document.querySelectorAll(`#${cfg.prefix}-yr, #${cfg.prefix}-mo, #${cfg.prefix}-dy`).forEach(b=>b.classList.remove('active'));
@@ -6777,7 +6825,7 @@ function populateFbSelect() {
 }
 
 function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) {
-  const view = viewOverride || adView;
+  const view = effGrain(viewOverride || adView); syncGrainButtons();   // ช่วงไม่เกิน 1 เดือน → รายวันเสมอ
   const {ads, orders} = getAdDateFiltered();
   let adsF, ordF;
   if (ch === 'fb') {
@@ -8055,13 +8103,14 @@ function kjSetView(v) { _kjView = v; _kjSortCol = 'amount'; _kjSortDir = 'desc';
 function kjSort(c) { if (_kjSortCol === c) _kjSortDir = _kjSortDir === 'asc' ? 'desc' : 'asc'; else { _kjSortCol = c; _kjSortDir = ['name', 'kol', 'sku', 'plat', 'type', 'date'].includes(c) ? 'asc' : 'desc'; } renderKolTable(); }
 function renderKolTable() {
   if (!_kjRows) return;
-  // ช่วงวันที่ด้านบน (ตั้งแต่–ถึง) กรองตาม "วันโพสต์" — งานที่ไม่มีวันโพสต์ใช้วันที่ 1 ของเดือนที่เกิดค่าใช้จ่าย
+  // (2026-09-30) ช่วงวันที่ด้านบน กรองตาม "เดือนที่ทำจ่าย" (คอลัมน์ AB ชีทเบิกเงิน KOL) — ต้องตรงกับบัญชีทำจ่าย และหน้า MKT Tracking
+  //   เลือกช่วงไม่เต็มเดือน = นับทั้งเดือนนั้น (ค่าจ้างมีแค่ระดับเดือน)
   const dFrom = getDateValue('From') || '2000-01-01', dTo = getDateValue('To') || '2999-12-31';
   const from = dFrom.slice(0, 7), to = dTo.slice(0, 7);
-  const kjDay = r => r.post_date || (r.cost_month ? String(r.cost_month).slice(0, 10) : '');
+  const kjMonth = r => r.cost_month ? String(r.cost_month).slice(0, 7) : '';
   const plat = document.getElementById('kjPlat').value, typ = document.getElementById('kjType').value, q = (document.getElementById('kjSearch').value || '').trim().toLowerCase();
   const st = (document.getElementById('kjStatus') || {}).value || '';
-  const rows = _kjRows.filter(r => kjDay(r) >= dFrom && kjDay(r) <= dTo && (!st || r.match_status === st) && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || ''))
+  const rows = _kjRows.filter(r => kjMonth(r) >= from && kjMonth(r) <= to && (!st || r.match_status === st) && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || ''))
     && (!q || `${r.kol_name || ''} ${r.kol_handle || ''} ${r.tt_handle || ''}`.toLowerCase().includes(q)));
   const val = r => ({ amount: +r.amount || 0, ads: +r.ads_spend || 0, sales: +r.sales || 0 });
   _kjFiltered = rows;
@@ -8070,7 +8119,7 @@ function renderKolTable() {
   const T = rows.reduce((t, r) => { const v = val(r); t.amount += v.amount; t.ads += v.ads; t.sales += v.sales; t.n++; if (r.match_status === 'matched') t.m++; if (r.match_status === 'no_ads') t.na++; if (r.match_status === 'not_found') t.nf++; if (/^conv/i.test(r.kol_type || '')) t.conv += v.amount; else t.pr += v.amount; return t; }, { amount: 0, ads: 0, sales: 0, n: 0, m: 0, na: 0, nf: 0, conv: 0, pr: 0 });
   const PM = PL_TH_M;
   const fd = d => new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
-  document.getElementById('kjNote').textContent = `${fd(dFrom)} – ${fd(dTo)} · ตามวันโพสต์ (งานที่ไม่มีวันโพสต์ใช้เดือนที่เกิดค่าใช้จ่าย) · ข้อมูลจากชีทเบิกเงิน KOL`;
+  document.getElementById('kjNote').textContent = `${from === to ? PM(from) : PM(from) + ' – ' + PM(to)} · ตามเดือนที่ทำจ่าย (ตรงกับบัญชีทำจ่าย และหน้า MKT Tracking) · ข้อมูลจากชีทเบิกเงิน KOL`;
   const all = T.amount + T.ads;
   document.getElementById('kjKpis').innerHTML = `
     <div class="card"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmt(Math.round(T.amount))}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(T.n)} งาน · Conversion ฿${fmt(Math.round(T.conv))} · PR ฿${fmt(Math.round(T.pr))}</div></div>
@@ -8122,7 +8171,7 @@ function renderKolTable() {
     document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr>
       <td class="c-left"><b>${o.kol}</b>${o.channel_link ? ` <a href="${o.channel_link}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;font-size:11px;">👤</a>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}${o.realName && o.realName !== o.kol ? `<div style="color:var(--text3);font-size:10.5px;">${o.realName}</div>` : ''}</td>
       <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${o.sku}${o.n > 1 ? `<div style="font-size:10px;color:var(--accent);" title="ชีทเบิกเงินแตกงานนี้เป็น ${o.n} แถว (ฟอร์มเดียวกัน) — รวมเป็นงานเดียว ค่าจ้างรวมทุกงวด ค่า Ads/ยอดขายของคลิปนับครั้งเดียว">รวม ${o.n} แถวในชีท · ${o.months.map(m => PL_TH_M(m)).join(', ')}</div>` : ''}</td><td>${o.type}</td>
-      <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</td>
+      <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}${o.months && o.months.length ? `<div style="font-size:10.5px;color:var(--text3);">จ่าย ${o.months.map(PM).join(', ')}</div>` : ''}</td>
       <td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td>
       <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอแอด</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิงแอด</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูลแอด</span>'}<div style="font-size:10px;color:var(--text3);white-space:normal;max-width:190px;">${o.match_note || ''}</div>${o.shared ? (() => { const K = { link: ['⚠️ ลิงก์อาจผิด', 'var(--orange)', 'รหัสงานต่างกัน แต่ลิงก์เปิดแล้วเป็นคลิปเดียวกับงานอื่น — ถ้าเป็นคลิปใหม่ ให้แก้ลิงก์ในชีท'], dup: ['⛔ อาจเบิกซ้ำ', 'var(--red)', 'รหัสงานเดียวกัน เดือนเดียวกัน ยอดเท่ากัน และเป็นคลิปเดียวกัน — เช็คว่าจ้าง 2 ครั้งจริง หรือกรอกเบิกซ้ำ'], extra: ['⚠️ จ่ายเพิ่มคลิปเดิม?', 'var(--orange)', 'รหัสงานเดิม เปลี่ยนเดือน — ถ้าเป็นการจ่ายเพิ่มสำหรับคลิปเดิม ไม่ต้องแก้'] }[o.dupKind] || ['⚠️ คลิปเดียวกับอีก ' + o.shared + ' งาน', 'var(--orange)', ''];
         return `<div style="font-size:10px;color:${K[1]};white-space:normal;max-width:190px;font-weight:700;" title="${K[2]} · ค่า Ads และยอดขายของคลิปถูกแบ่งเท่าๆ กันระหว่างงาน (ไม่นับซ้ำ)">${K[0]}</div>`; })() : ''}</td></tr>`).join('')
@@ -9407,7 +9456,7 @@ function exportTtaDailyCsv() {
 async function renderTtaDaily() {
   if (!ttaDailyData.length) { const from = getDateValue('From'), to = getDateValue('To'); await fetchTtaDaily(from, to); }
   // (2026-09-21) ช่วงอยู่ในเดือนเดียว → รายวัน · ข้ามเดือน → รวมเป็นรายเดือน (เหมือนกราฟหน้าอื่น)
-  const monthly = ttaDailyData.length && ttaDailyData[0].date.slice(0, 7) !== ttaDailyData[ttaDailyData.length - 1].date.slice(0, 7);
+  const monthly = !isShortRange() && ttaDailyData.length && ttaDailyData[0].date.slice(0, 7) !== ttaDailyData[ttaDailyData.length - 1].date.slice(0, 7);   // (2026-09-30) ไม่เกิน 1 เดือน → รายวันเสมอ
   let series = ttaDailyData;
   if (monthly) {
     const byM = {};
@@ -10035,7 +10084,7 @@ function renderKolDetail(handle, D) {
   }).join('');
 }
 // ===================== SHOPEE ADS PAGE (Shopee Open API) =====================
-// อ่านตรงจากตาราง shopee_ads_daily (≤ 1 แถว/วัน) และ RPC shopee_ads_campaign_summary (≤ ~100 แถว) — ทั้งคู่เล็ก
+// อ่านตรงจากตาราง shopee_ads_daily (1 แถว/วัน/ร้าน — รวมทุกร้านต่อวันด้านล่าง) และ RPC shopee_ads_campaign_summary (≤ ~100 แถว) — ทั้งคู่เล็ก
 let _shAdsRows = [], _shAdsSortCol = 'expense', _shAdsSortDir = 'desc', _shAdsSeq = 0;
 function shAdsSort(col) { if (_shAdsSortCol === col) _shAdsSortDir = _shAdsSortDir === 'desc' ? 'asc' : 'desc'; else { _shAdsSortCol = col; _shAdsSortDir = col === 'ad_name' ? 'asc' : 'desc'; } renderShAdsTable(); }
 function shAdsRoasColor(roas, target) { if (roas === null) return 'var(--text3)'; const t = target || 8; return roas >= t ? 'var(--green)' : roas >= 1 ? 'var(--accent)' : 'var(--red)'; }
@@ -10068,7 +10117,11 @@ async function renderShAds() {
     _shAdsRealByDate = {}; salesRows(from, to, 'Shopee').forEach(s => { _shAdsRealByDate[s.date] = (_shAdsRealByDate[s.date] || 0) + (parseFloat(s.net_revenue) || 0); });
     // ทุกวันในช่วงที่มีข้อมูลแอดอย่างน้อย 1 แหล่ง (API หรือ Cowork)
     const dates = new Set(daily.map(r => r.stat_date)); Object.keys(_shAdsManual).forEach(d => dates.add(d)); Object.keys(_shAdsCpas).forEach(d => dates.add(d));
-    const byDate = {}; daily.forEach(r => { byDate[r.stat_date] = r; });
+    // (2026-09-30) ตั้งแต่มีร้าน Shopee 24hr ตารางนี้มี 2 แถว/วัน (Mall + 24hr) — รวมทุกร้านต่อวัน (เดิมเขียนทับกัน เหลือร้านเดียวแบบสุ่ม ทำให้ค่าแอดต่ำกว่าหน้าภาพรวม Shopee)
+    const byDate = {}; daily.forEach(r => {
+      const b = byDate[r.stat_date]; if (!b) { byDate[r.stat_date] = { ...r }; return; }
+      ['expense', 'broad_gmv', 'direct_gmv', 'broad_order', 'direct_order', 'impression', 'clicks', 'broad_item_sold'].forEach(k => { b[k] = (+b[k] || 0) + (+r[k] || 0); });
+      if (r.synced_at && (!b.synced_at || r.synced_at > b.synced_at)) b.synced_at = r.synced_at; });
     daily = [...dates].sort().map(d => byDate[d] || { stat_date: d, expense: 0, broad_gmv: 0, direct_gmv: 0, broad_order: 0, direct_order: 0, impression: 0, clicks: 0, broad_item_sold: 0, _noapi: true });
     daily.forEach(r => { const m = _shAdsManual[r.stat_date];
       r.meta_ads = m ? +m.meta_ads || 0 : 0; r.coins = m ? +m.coins || 0 : 0; r.manual_other = m ? +m.other_ads || 0 : 0;
@@ -10173,22 +10226,23 @@ const SHADS_DAILY_METRICS = {
 function shAdsSeries(key) { const m = SHADS_DAILY_METRICS[key]; return _shAdsDaily.map(r => m.calc ? m.calc(r) : (r[key] === null || r[key] === undefined ? null : +r[key] || 0)); }
 // กราฟคงที่: แท่งคู่ ยอดขายจริง (บัญชี) กับ ค่า Ads รวม + เส้น % ค่า Ads ต่อยอดขาย (แกนขวา) — สลับ รายเดือน/รายวัน ได้เหมือนหน้าอื่น
 let _shAdsView = 'month';
-function setShAdsView(v, btn) { _shAdsView = v; document.querySelectorAll('#shads-mo, #shads-dy').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShAdsChart(); }
+function setShAdsView(v, btn) { if (isShortRange() && v !== 'day') return; _shAdsView = v; document.querySelectorAll('#shads-mo, #shads-dy').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShAdsChart(); }
 function shAdsChartRows() {
   // รวมทุกวันที่มีอย่างน้อยยอดขายหรือค่าแอด (ยอดขายมีทุกวัน แม้วันนั้นยังไม่มีข้อมูลแอด → แท่งส้มว่าง)
   const ads = {}; _shAdsDaily.forEach(r => { ads[r.stat_date] = +r.total_all || 0; });
   const dates = new Set([...Object.keys(_shAdsRealByDate), ...Object.keys(ads)]);
   const rows = [...dates].sort().map(d => ({ key: d, rev: _shAdsRealByDate[d] || 0, ads: ads[d] || 0 }));
-  if (_shAdsView === 'day') return rows.map(r => ({ label: thShort(r.key), rev: r.rev, ads: r.ads }));
+  if (effGrain(_shAdsView) === 'day') return rows.map(r => ({ label: thShort(r.key), rev: r.rev, ads: r.ads }));   // ช่วงไม่เกิน 1 เดือน → รายวันเสมอ
   const by = {}; rows.forEach(r => { const m = r.key.slice(0, 7); (by[m] = by[m] || { key: m, rev: 0, ads: 0 }); by[m].rev += r.rev; by[m].ads += r.ads; });
   return Object.values(by).sort((a, b) => a.key.localeCompare(b.key)).map(r => ({ label: new Date(r.key + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' }), rev: r.rev, ads: r.ads }));
 }
 function renderShAdsChart() {
+  syncGrainButtons();
   const rows = shAdsChartRows();
   const ds = [
     { label: 'ยอดขายจริง (บัญชี)', data: rows.map(r => r.rev), backgroundColor: 'rgba(167,139,250,0.75)', yAxisID: 'y', order: 2, _fmt: v => '฿' + fmt(v) },
     { label: 'ค่า Ads รวม', data: rows.map(r => r.ads), backgroundColor: 'rgba(238,77,45,0.75)', yAxisID: 'y', order: 2, _fmt: v => '฿' + fmt(v) },
-    { label: '% ค่า Ads ต่อยอดขาย', data: rows.map(r => r.rev > 0 && r.ads > 0 ? r.ads / r.rev * 100 : null), type: 'line', borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3, pointRadius: _shAdsView === 'day' ? 0 : 3, borderWidth: 2, yAxisID: 'y2', order: 0, _fmt: v => v.toFixed(1) + '%' }];
+    { label: '% ค่า Ads ต่อยอดขาย', data: rows.map(r => r.rev > 0 && r.ads > 0 ? r.ads / r.rev * 100 : null), type: 'line', borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3, pointRadius: effGrain(_shAdsView) === 'day' ? 0 : 3, borderWidth: 2, yAxisID: 'y2', order: 0, _fmt: v => v.toFixed(1) + '%' }];
   makeChart('chartShAdsDaily', 'bar', rows.map(r => r.label), ds, {
     scales: { x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 16 }, grid: { color: chartGridColor() } },
       y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } },
