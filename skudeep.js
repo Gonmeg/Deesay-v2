@@ -1,11 +1,12 @@
-// skudeep.js — หน้า "เจาะสินค้า" (v20260930b: ยอดรวมใน tooltip กราฟ · สี/เบอร์รวมเท่ายอดขาย · บอกเดือนที่นับค่าแอด/KOL · ยอดถอด VAT ให้เทียบ MKT Tracking) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
+// skudeep.js — หน้า "เจาะสินค้า" (v20260930c: กราฟสลับ ยอดขาย / จำนวนชิ้น · tooltip แยกค่าแอดออกจากรายการช่องทาง · ตัวแทน / MT ไม่คิดราคาเฉลี่ย) (v20260930b: ยอดรวมใน tooltip กราฟ · สี/เบอร์รวมเท่ายอดขาย · บอกเดือนที่นับค่าแอด/KOL · ยอดถอด VAT ให้เทียบ MKT Tracking) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
 // ข้อมูล: RPC sku_deep(p_sku, p_from, p_to) ครั้งเดียว (ยอดขาย ช่องทาง ร้าน/เพจ โปร ค่าแอด KOL สี/เบอร์ สต็อก กำไร แอด Facebook คลิป TikTok ลูกค้า)
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, ttcEsc, ttcEscAttr, getDateValue, effGrain, PL_TH_M, VAT_DIV, mtStoreName, fbeInfoIcon, exportTable, thShort, showPage, chartTickColor, chartGridColor
 (function () {
   const CH_COL = { TikTok: '#fe2c55', Facebook: '#1877f2', Shopee: '#f97316', Lazada: '#8b5cf6', 'Modern Trade': '#f59e0b', 'ตัวแทน': '#64748b' };
   const CH_ORDER = ['TikTok', 'Facebook', 'Shopee', 'Lazada', 'Modern Trade', 'ตัวแทน'];
   const ST = { late: '🔴 Order now', stockout: '⚫ Stockout risk', reorder: '🟡 Next review', ok: '🟢 OK', no_need: 'No reorder', inactive: 'Inactive' };
-  let _prods = null, _data = null, _seq = 0, _top = [];
+  let _prods = null, _data = null, _seq = 0, _top = [], _mode = 'rev';
+  const BULK = ['ตัวแทน', 'Modern Trade'];   // สั่งเป็นก้อน — ไม่คิดราคาเฉลี่ย / AOV (กฎเดียวกับทุกหน้า)
   const _open = new Set();
   const esc = s => ttcEsc(s == null ? '' : String(s)), escA = s => ttcEscAttr(s == null ? '' : String(s));
   const money = v => '฿' + fmt(Math.round(+v || 0));
@@ -82,6 +83,7 @@
   }
 
   window.skdPick = sku => { window._skdSku = sku; try { localStorage.setItem('skdSku', sku); } catch (e) {} _open.clear(); render(); };
+  window.skdMode = m => { _mode = m; document.querySelectorAll('#skdModeSeg button').forEach(b => b.classList.toggle('active', b.dataset.m === m)); renderChart(); };
   window.skdToggle = ch => { if (_open.has(ch)) _open.delete(ch); else _open.add(ch); renderChannels(); };
 
   window.renderSkuDeepPage = async function () {
@@ -140,7 +142,7 @@
         <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
       <div class="skd-kpis">
         ${kpi('ยอดขาย ' + info, money(rev), `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
-        ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', qty ? `ราคาเฉลี่ย ฿${fmt(Math.round(rev / qty))} / ชิ้น` : '')}
+        ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', (() => { const r = daily.filter(x => !BULK.includes(x.channel)); const q = r.reduce((t, x) => t + (+x.qty || 0), 0), v = r.reduce((t, x) => t + (+x.rev || 0), 0); return q ? `ราคาเฉลี่ย ฿${fmt(Math.round(v / q))} / ชิ้น (ไม่รวมตัวแทน / MT)` : ''; })())}
         ${kpi('ค่าแอด', m0(ads), `${pct(ads, rev)} ของยอดขาย · นับ ${mLbl}`)}
         ${kpi('ค่า KOL', m0(kol), `${fmt((d.kol || []).length)} งาน · จ่าย ${mLbl}`)}
         ${kpi('ROAS แอด', roas(rev, ads), 'ยอดขาย ÷ ค่าแอด')}
@@ -148,8 +150,10 @@
         ${kpi('สต็อกคงเหลือ', fmt(Math.round(onHand)) + ' ชิ้น', kids.some(r => +r.on_order) ? `ของเข้า ${fmt(Math.round(kids.reduce((t, r) => t + (+r.on_order || 0), 0)))} ชิ้น` : 'ไม่มี PO ค้าง')}
         ${kpi('ขายเฉลี่ย / วัน', avgDay ? fmt(Math.round(avgDay)) + ' ชิ้น' : '—', cover != null ? `พอขาย ~${fmt(cover)} วัน` : '')}
       </div>
-      ${card(`<span id="skdChartTtl">ยอดขาย</span>`, `<div class="chart-wrap chart-wrap-lg"><canvas id="chartSkd"></canvas></div><div class="skd-note" id="skdChartNote"></div>`)}
-      ${card('ยอดขายตามช่องทาง', `<div class="table-wrap"><table id="tblSkdCh" data-no-sort data-no-page><thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ชิ้น</th><th class="num">ออเดอร์</th><th class="num">ราคา / ชิ้น</th><th class="num">ค่าแอด</th><th class="num">ROAS</th></tr></thead><tbody id="tbodySkdCh"></tbody></table></div><div class="skd-note">กดแถวช่องทางเพื่อดูร้าน / เพจ / ห้าง · ค่าแอดรายช่องทาง = ยิงสินค้านี้ตรงๆ + ส่วนแบ่งแอดทั่วไปของช่องทาง (ชุดเดียวกับ MKT Tracking)</div>`)}
+      <div class="card skd-card"><div class="section-header"><div class="section-title" id="skdChartTtl">ยอดขาย</div>
+        <div class="toggle-group" id="skdModeSeg"><button class="toggle-btn${_mode === 'rev' ? ' active' : ''}" data-m="rev" onclick="skdMode('rev')">ยอดขาย</button><button class="toggle-btn${_mode === 'qty' ? ' active' : ''}" data-m="qty" onclick="skdMode('qty')">จำนวนชิ้น</button></div></div>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="chartSkd"></canvas></div><div class="skd-note" id="skdChartNote"></div></div>
+      ${card('ยอดขายตามช่องทาง', `<div class="table-wrap"><table id="tblSkdCh" data-no-sort data-no-page><thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ชิ้น</th><th class="num">ออเดอร์</th><th class="num">ราคา / ชิ้น</th><th class="num">ค่าแอด</th><th class="num">ROAS</th></tr></thead><tbody id="tbodySkdCh"></tbody></table></div><div class="skd-note">กดแถวช่องทางเพื่อดูร้าน / เพจ / ห้าง · ตัวแทน / Modern Trade ไม่คิดราคาต่อชิ้น (สั่งเป็นก้อน) · ค่าแอดรายช่องทาง = ยิงสินค้านี้ตรงๆ + ส่วนแบ่งแอดทั่วไปของช่องทาง (ชุดเดียวกับ MKT Tracking)</div>`)}
       <div class="skd-2">${fbAdsCard(d)}${ttCard(d)}</div>
       <div class="skd-2">${kolCard(d)}${promoCard(d)}</div>
       ${kidsCard(d)}
@@ -159,24 +163,34 @@
   }
 
   function renderChart() {
-    const d = _data, daily = d.daily || [];
+    const d = _data, daily = d.daily || [], qm = _mode === 'qty', fld = qm ? 'qty' : 'rev';
     const g = effGrain('month'), key = r => g === 'day' ? String(r.d).slice(0, 10) : String(r.d).slice(0, 7);
     const keys = [...new Set(daily.map(key))].sort();
     const chs = CH_ORDER.filter(c => daily.some(r => r.channel === c)).concat([...new Set(daily.map(r => r.channel))].filter(c => !CH_ORDER.includes(c)));
-    const ds = chs.map(c => ({ label: c, data: keys.map(k => daily.filter(r => r.channel === c && key(r) === k).reduce((t, r) => t + (+r.rev || 0), 0)), backgroundColor: CH_COL[c] || '#94a3b8', stack: 's', borderRadius: 2, maxBarThickness: 44, yAxisID: 'y' }));
+    const ds = chs.map(c => ({ label: c, data: keys.map(k => daily.filter(r => r.channel === c && key(r) === k).reduce((t, r) => t + (+r[fld] || 0), 0)), backgroundColor: CH_COL[c] || '#94a3b8', stack: 's', borderRadius: 2, maxBarThickness: 44, yAxisID: 'y' }));
     const tk = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
     const scales = { x: { stacked: true, ticks: { ...tk, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
       y: { stacked: true, ticks: { ...tk, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } };
-    if (g !== 'day') {
+    const withAds = g !== 'day' && !qm;
+    if (withAds) {
       const adsM = {}; (d.ads_month || []).forEach(r => { adsM[r.m] = (adsM[r.m] || 0) + (+r.ad || 0) + (+r.aa || 0); });
       ds.push({ type: 'line', label: 'ค่าแอด', data: keys.map(k => adsM[k] || 0), borderColor: '#c8a96e', backgroundColor: '#c8a96e', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y1', order: -1 });
       scales.y1 = { position: 'right', beginAtZero: true, ticks: { ...tk, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } };
     }
-    document.getElementById('skdChartTtl').textContent = g === 'day' ? 'ยอดขายรายวันแยกช่องทาง' : 'ยอดขายรายเดือนแยกช่องทาง + ค่าแอด';
-    document.getElementById('skdChartNote').textContent = g === 'day' ? 'ช่วงไม่เกิน 1 เดือนแสดงรายวัน · ค่าแอดรายสินค้ามีเป็นรายเดือน จึงไม่แสดงเส้นค่าแอดในมุมมองรายวัน · Modern Trade ลงวันที่ 1 ของเดือน' : 'แท่ง = ยอดขาย (แกนซ้าย) · เส้น = ค่าแอดของสินค้านี้ (แกนขวา)';
+    const unit = v => qm ? `${fmt(Math.round(v))} ชิ้น` : `฿${fmt(Math.round(v))}`;
+    document.getElementById('skdChartTtl').textContent = (qm ? 'จำนวนชิ้น' : 'ยอดขาย') + (g === 'day' ? 'รายวันแยกช่องทาง' : 'รายเดือนแยกช่องทาง') + (withAds ? ' + ค่าแอด' : '');
+    document.getElementById('skdChartNote').textContent = g === 'day'
+      ? 'ช่วงไม่เกิน 1 เดือนแสดงรายวัน · ค่าแอดรายสินค้ามีเป็นรายเดือน จึงไม่แสดงเส้นค่าแอดในมุมมองรายวัน · Modern Trade ลงวันที่ 1 ของเดือน'
+      : qm ? 'แท่ง = จำนวนชิ้นที่ขายได้ แยกช่องทาง' : 'แท่ง = ยอดขาย (แกนซ้าย) · เส้น = ค่าแอดของสินค้านี้ (แกนขวา) — ค่าแอดไม่ได้รวมอยู่ในยอดขาย';
     makeChart('chartSkd', 'bar', keys.map(k => g === 'day' ? k.slice(8, 10) + '/' + k.slice(5, 7) : PL_TH_M(k)), ds, { scales,
-      tooltip: { callbacks: { label: it => `${it.dataset.label}: ฿${fmt(Math.round(it.raw || 0))}`,
-        footer: items => { const t = items.filter(i => i.dataset.yAxisID === 'y').reduce((a, i) => a + (+i.raw || 0), 0); return `ยอดขายรวม ฿${fmt(Math.round(t))}`; } } } });
+      tooltip: {
+        filter: it => it.dataset.yAxisID === 'y',   // รายการในกล่อง = ช่องทางเท่านั้น (ค่าแอดแยกไปบรรทัดล่าง)
+        callbacks: { label: it => `${it.dataset.label}: ${unit(it.raw || 0)}`,
+          footer: items => { if (!items.length) return '';
+            const t = items.reduce((a, i) => a + (+i.raw || 0), 0), lines = [`${qm ? 'จำนวนรวม' : 'ยอดขายรวม'} ${unit(t)}`];
+            const adsDs = items[0].chart.data.datasets.find(x => x.yAxisID === 'y1');
+            if (adsDs) { const a = +adsDs.data[items[0].dataIndex] || 0; lines.push(`ค่าแอดเดือนนี้ ฿${fmt(Math.round(a))}${a > 0 ? ` · ROAS ${(t / a).toFixed(2)}x` : ''} (แยกจากยอดขาย)`); }
+            return lines; } } } });
   }
 
   function renderChannels() {
@@ -189,8 +203,8 @@
       const a = adsBy[c] || 0, open = _open.has(c);
       const main = `<tr class="skd-ch" onclick="skdToggle('${escA(c)}')"><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${CH_COL[c] || '#94a3b8'};margin-right:7px;"></span><b>${esc(c)}</b> <span style="color:var(--text3);font-size:10px;">${open ? '▾' : '▸'}</span></td>
         <td class="num"><b>${money(o.rev)}</b></td><td class="num">${pct(o.rev, tot)}</td><td class="num">${n0(o.qty)}</td><td class="num">${c === 'Modern Trade' ? dash : n0(o.ord)}</td>
-        <td class="num">${o.qty ? money(o.rev / o.qty) : dash}</td><td class="num">${m0(a)}</td><td class="num">${a ? roas(o.rev, a) : dash}</td></tr>`;
-      const sub = open ? o.subs.sort((x, y) => (+y.rev || 0) - (+x.rev || 0)).map(s => `<tr class="skd-sub"><td>${esc(subName(c, s.sub))}</td><td class="num">${money(s.rev)}</td><td class="num">${pct(+s.rev, o.rev)}</td><td class="num">${n0(s.qty)}</td><td class="num">${c === 'Modern Trade' ? dash : n0(s.ord)}</td><td class="num">${+s.qty ? money(s.rev / s.qty) : dash}</td><td></td><td></td></tr>`).join('') : '';
+        <td class="num">${o.qty && !BULK.includes(c) ? money(o.rev / o.qty) : dash}</td><td class="num">${m0(a)}</td><td class="num">${a ? roas(o.rev, a) : dash}</td></tr>`;
+      const sub = open ? o.subs.sort((x, y) => (+y.rev || 0) - (+x.rev || 0)).map(s => `<tr class="skd-sub"><td>${esc(subName(c, s.sub))}</td><td class="num">${money(s.rev)}</td><td class="num">${pct(+s.rev, o.rev)}</td><td class="num">${n0(s.qty)}</td><td class="num">${c === 'Modern Trade' ? dash : n0(s.ord)}</td><td class="num">${+s.qty && !BULK.includes(c) ? money(s.rev / s.qty) : dash}</td><td></td><td></td></tr>`).join('') : '';
       return main + sub;
     }).join('') + (rows.length ? `<tr><td><b>รวม</b></td><td class="num"><b>${money(tot)}</b></td><td class="num">100%</td><td class="num"><b>${n0(rows.reduce((t, [, o]) => t + o.qty, 0))}</b></td><td></td><td></td><td class="num"><b>${m0(Object.values(adsBy).reduce((t, v) => t + v, 0))}</b></td><td></td></tr>` : '<tr><td colspan="8" class="empty">ไม่มียอดขายในช่วงนี้</td></tr>');
   }
@@ -265,8 +279,8 @@
     const daily = d.daily || [];
     const ms = [...new Set(daily.map(r => String(r.d).slice(0, 7)))].sort();
     if (ms.length < 2) return '';
-    const chs = CH_ORDER.filter(c => daily.some(r => r.channel === c && +r.qty > 0));
+    const chs = CH_ORDER.filter(c => !BULK.includes(c) && daily.some(r => r.channel === c && +r.qty > 0));   // ตัวแทน / MT สั่งเป็นก้อน ไม่คิดราคาเฉลี่ย
     const cell = (c, m) => { const rr = daily.filter(r => r.channel === c && String(r.d).slice(0, 7) === m); const q = rr.reduce((t, r) => t + (+r.qty || 0), 0), v = rr.reduce((t, r) => t + (+r.rev || 0), 0); return q > 0 ? money(v / q) : dash; };
-    return card('ราคาขายจริงต่อชิ้น', `<div class="table-wrap" style="overflow-x:auto;"><table id="tblSkdPrice" data-no-sort><thead><tr><th>ช่องทาง</th>${ms.map(m => `<th class="num">${PL_TH_M(m)}</th>`).join('')}</tr></thead><tbody>${chs.map(c => `<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${CH_COL[c]};margin-right:7px;"></span>${esc(c)}</td>${ms.map(m => `<td class="num">${cell(c, m)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="skd-note">ยอดขาย ÷ จำนวนชิ้น ต่อเดือน (หลังแกะจากโปร) — ใช้ดูว่าราคาจริงลดลงเพราะโปรหรือไม่</div>`);
+    return card('ราคาขายจริงต่อชิ้น', `<div class="table-wrap" style="overflow-x:auto;"><table id="tblSkdPrice" data-no-sort><thead><tr><th>ช่องทาง</th>${ms.map(m => `<th class="num">${PL_TH_M(m)}</th>`).join('')}</tr></thead><tbody>${chs.map(c => `<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${CH_COL[c]};margin-right:7px;"></span>${esc(c)}</td>${ms.map(m => `<td class="num">${cell(c, m)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="skd-note">ยอดขาย ÷ จำนวนชิ้น ต่อเดือน (หลังแกะจากโปร) — ใช้ดูว่าราคาจริงลดลงเพราะโปรหรือไม่ · ไม่รวมตัวแทน / Modern Trade (สั่งเป็นก้อน)</div>`);
   }
 })();
