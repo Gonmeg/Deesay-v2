@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-i</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-j</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3026,7 +3026,7 @@ function loadSupplyPage() {
   if (window._supplyLoading) return;
   window._supplyLoading = true;
   const s = document.createElement('script');
-  s.src = 'supply.js?v=20260930b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
+  s.src = 'supply.js?v=20260930c'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
   s.onload = () => { window._supplyLoading = false; window.renderSupplyPage(); };
   s.onerror = () => { window._supplyLoading = false; document.getElementById('page-supply').innerHTML = '<div class="error-banner" style="display:block;">โหลด supply.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -7959,7 +7959,9 @@ async function renderHome() {
   const T = ch.reduce((t, c) => { t.rev += +c.rev_d; t.avg += +c.rev_avg7; t.ads += +c.ads_d; t.ads7 += +c.ads_avg7; t.mtd += +c.mtd; t.mtdp += +c.mtd_prev; t.ord += +c.orders_d; return t; }, { rev: 0, avg: 0, ads: 0, ads7: 0, mtd: 0, mtdp: 0, ord: 0 });
   const roas = T.ads ? T.rev / T.ads : 0;
   const thDay = d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const stale = ch.filter(c => !c.last_sales_date || c.last_sales_date < b.date).map(c => c.channel);
+  // (2026-09-30) Modern Trade (ห้างส่งยอดรายเดือน) และตัวแทน (สั่งเป็นก้อน) ดูรายวันไม่ได้ความหมาย → การ์ดโชว์ยอดสะสมเดือนนี้แทน และไม่นับเป็น "ยังไม่อัปยอด"
+  const HM_CUM = ['Modern Trade', 'ตัวแทน'];
+  const stale = ch.filter(c => !HM_CUM.includes(c.channel) && (!c.last_sales_date || c.last_sales_date < b.date)).map(c => c.channel);
   const roasTxt = r => r ? `<span style="color:${r >= 3 ? 'var(--green)' : r >= 1.5 ? 'var(--accent)' : 'var(--red)'};">${r.toFixed(2)}x</span>` : '—';
   const esc = t => String(t || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, ic = tt ? '🎵' : '📣', title = tt ? (x.title || x.item_id) : x.name;
@@ -7984,6 +7986,13 @@ async function renderHome() {
     </div>` : ''}
     ${ch.some(chVisible) ? `<div class="hm-sec">ยอดขาย & ค่าแอด แยกช่องทาง ${can('channel') ? `<a onclick="homeGo('channel')">ดูรายละเอียด →</a>` : ''}</div>
     <div class="hm-ch">${ch.filter(chVisible).map(c => { const col = (HM_CH[c.channel] || ['#94a3b8', 'channel']); const r = +c.ads_d ? c.rev_d / c.ads_d : 0; const st = !c.last_sales_date || c.last_sales_date < b.date;
+      if (HM_CUM.includes(c.channel)) return `<div class="hm-card"><div class="bar" style="background:${col[0]};"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><div class="nm">${c.channel} <span style="font-size:11px;font-weight:400;color:var(--text3);">· ยอดสะสมเดือนนี้</span></div>${chip(pct(+c.mtd, +c.mtd_prev))}</div>
+        <div class="big">${money(c.mtd)}</div>
+        <div class="row"><span>เดือนก่อน (ช่วงเดียวกัน)</span><b>${money(c.mtd_prev)}</b></div>
+        <div class="row"><span>ยอดล่าสุด</span><b>${c.last_sales_date ? dShort(c.last_sales_date) : '—'}</b></div>
+        <div class="row"><span>${c.channel === 'Modern Trade' ? 'ที่มาของยอด' : 'ลักษณะการสั่ง'}</span><b style="font-weight:400;color:var(--text2);">${c.channel === 'Modern Trade' ? 'ห้างส่งรายงานรายเดือน' : 'สั่งเป็นก้อน ไม่ทุกวัน'}</b></div>
+        ${can(col[1]) ? `<div style="text-align:right;margin-top:6px;"><span class="hm-more" onclick="homeGo('${col[1]}')">ดูรายละเอียด →</span></div>` : ''}</div>`;
       return `<div class="hm-card${st ? ' stale' : ''}"><div class="bar" style="background:${col[0]};"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;"><div class="nm">${c.channel}</div>${st ? `<span class="hm-chip hm-flat">ยอดล่าสุด ${c.last_sales_date ? dShort(c.last_sales_date) : '—'}</span>` : chip(pct(+c.rev_d, +c.rev_avg7))}</div>
         <div class="big">${st ? '<span style="color:var(--text3);font-size:15px;">ยังไม่อัปยอด</span>' : money(c.rev_d)}</div>
