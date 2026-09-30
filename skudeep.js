@@ -1,4 +1,4 @@
-// skudeep.js — หน้า "เจาะสินค้า" (v20260930a) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
+// skudeep.js — หน้า "เจาะสินค้า" (v20260930b: ยอดรวมใน tooltip กราฟ · สี/เบอร์รวมเท่ายอดขาย · บอกเดือนที่นับค่าแอด/KOL · ยอดถอด VAT ให้เทียบ MKT Tracking) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
 // ข้อมูล: RPC sku_deep(p_sku, p_from, p_to) ครั้งเดียว (ยอดขาย ช่องทาง ร้าน/เพจ โปร ค่าแอด KOL สี/เบอร์ สต็อก กำไร แอด Facebook คลิป TikTok ลูกค้า)
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, ttcEsc, ttcEscAttr, getDateValue, effGrain, PL_TH_M, VAT_DIV, mtStoreName, fbeInfoIcon, exportTable, thShort, showPage, chartTickColor, chartGridColor
 (function () {
@@ -127,16 +127,22 @@
     const badges = (abc ? `<span class="skd-badge${abc === 'A' ? ' g' : ''}">สินค้ากลุ่ม ${abc}</span>` : '')
       + (trend != null ? `<span class="skd-badge ${trend <= -15 ? 'r' : trend >= 15 ? 'g' : ''}">${PL_TH_M(full[full.length - 1])} ${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend).toFixed(0)}% เทียบเฉลี่ย 3 เดือนก่อน</span>` : '')
       + (cover != null ? `<span class="skd-badge ${cover < minLt ? 'r' : cover > 180 ? 'o' : 'g'}">สต็อกพอขาย ~${fmt(cover)} วัน</span>` : '');
-    const info = fbeInfoIcon('skd-info-kpi', 'ยอดขาย / ชิ้น = ยอดจริงทุกช่องทาง (รวม VAT) ชุดเดียวกับหน้าอื่น · Modern Trade = ยอดที่ห้างขายออก<br>ค่าแอด / ค่า KOL = เก็บเป็นรายเดือน จึงนับทั้งเดือนที่อยู่ในช่วงที่เลือก<br>ROAS แอด = ยอดขาย ÷ ค่าแอด · MER = ยอดขาย ÷ (ค่าแอด + ค่า KOL)<br>สต็อก = ของในคลังทุกสี/เบอร์ ณ วันนี้ (จาก Supply Chain)');
+    const info = fbeInfoIcon('skd-info-kpi', 'ยอดขาย / ชิ้น = ยอดจริงทุกช่องทาง (รวม VAT) ชุดเดียวกับหน้าภาพรวม / แนวโน้มสินค้า · Modern Trade = ยอดที่ห้างขายออก<br>หน้า MKT Tracking / Business Insight แสดงยอดถอด VAT (÷ 1.07) — ดูตัวเลขถอด VAT ใต้การ์ดนี้<br>ค่าแอด / ค่า KOL = เก็บเป็นรายเดือน จึงนับทั้งเดือนที่อยู่ในช่วงที่เลือก<br>ROAS แอด = ยอดขาย ÷ ค่าแอด · MER = ยอดขาย ÷ (ค่าแอด + ค่า KOL)<br>สต็อก = ของในคลังทุกสี/เบอร์ ณ วันนี้ (จาก Supply Chain)');
     const kpi = (t, v, sub) => `<div class="card"><div class="card-title">${t}</div><div class="kpi-value">${v}</div>${sub ? `<div class="kpi-sub" style="display:block;">${sub}</div>` : ''}</div>`;
+    // ค่าแอด / KOL เก็บเป็นรายเดือน → นับทั้งเดือนที่อยู่ในช่วง (แบบเดียวกับหน้า KOL / MKT Tracking)
+    const dFrom = String(d.from).slice(0, 10), dTo = String(d.to).slice(0, 10);
+    const mFrom = dFrom.slice(0, 7), mTo = dTo.slice(0, 7), mLbl = mFrom === mTo ? PL_TH_M(mFrom) : `${PL_TH_M(mFrom)} – ${PL_TH_M(mTo)}`;
+    const lastDay = m => { const [y, mm] = m.split('-').map(Number); return `${m}-${String(new Date(y, mm, 0).getDate()).padStart(2, '0')}`; };
+    const partial = dFrom !== `${mFrom}-01` || dTo !== lastDay(mTo);
+    const warn = partial && (ads || kol) ? `<div style="font-size:11.5px;color:var(--orange);margin:-6px 0 14px;">⚠ ช่วงวันที่ไม่ครบเดือน — ค่าแอด / ค่า KOL นับทั้งเดือน ${mLbl} แต่ยอดขายนับตามวันที่ ROAS / MER จึงอาจเพี้ยน · เลือกวันที่ 1 ถึงสิ้นเดือนเพื่อให้ตรงกับหน้า MKT Tracking</div>` : '';
     body.innerHTML = `
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 14px;"><div style="font-size:18px;font-weight:700;">${esc(d.name || nameOf(d.sku))}</div>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
       <div class="skd-kpis">
-        ${kpi('ยอดขาย ' + info, money(rev), `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์`)}
+        ${kpi('ยอดขาย ' + info, money(rev), `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
         ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', qty ? `ราคาเฉลี่ย ฿${fmt(Math.round(rev / qty))} / ชิ้น` : '')}
-        ${kpi('ค่าแอด', m0(ads), pct(ads, rev) + ' ของยอดขาย')}
-        ${kpi('ค่า KOL', m0(kol), `${fmt((d.kol || []).length)} งาน`)}
+        ${kpi('ค่าแอด', m0(ads), `${pct(ads, rev)} ของยอดขาย · นับ ${mLbl}`)}
+        ${kpi('ค่า KOL', m0(kol), `${fmt((d.kol || []).length)} งาน · จ่าย ${mLbl}`)}
         ${kpi('ROAS แอด', roas(rev, ads), 'ยอดขาย ÷ ค่าแอด')}
         ${kpi('MER', roas(rev, ads + kol), 'ยอดขาย ÷ (แอด + KOL)')}
         ${kpi('สต็อกคงเหลือ', fmt(Math.round(onHand)) + ' ชิ้น', kids.some(r => +r.on_order) ? `ของเข้า ${fmt(Math.round(kids.reduce((t, r) => t + (+r.on_order || 0), 0)))} ชิ้น` : 'ไม่มี PO ค้าง')}
@@ -169,7 +175,8 @@
     document.getElementById('skdChartTtl').textContent = g === 'day' ? 'ยอดขายรายวันแยกช่องทาง' : 'ยอดขายรายเดือนแยกช่องทาง + ค่าแอด';
     document.getElementById('skdChartNote').textContent = g === 'day' ? 'ช่วงไม่เกิน 1 เดือนแสดงรายวัน · ค่าแอดรายสินค้ามีเป็นรายเดือน จึงไม่แสดงเส้นค่าแอดในมุมมองรายวัน · Modern Trade ลงวันที่ 1 ของเดือน' : 'แท่ง = ยอดขาย (แกนซ้าย) · เส้น = ค่าแอดของสินค้านี้ (แกนขวา)';
     makeChart('chartSkd', 'bar', keys.map(k => g === 'day' ? k.slice(8, 10) + '/' + k.slice(5, 7) : PL_TH_M(k)), ds, { scales,
-      tooltip: { callbacks: { label: it => `${it.dataset.label}: ฿${fmt(Math.round(it.raw || 0))}` } } });
+      tooltip: { callbacks: { label: it => `${it.dataset.label}: ฿${fmt(Math.round(it.raw || 0))}`,
+        footer: items => { const t = items.filter(i => i.dataset.yAxisID === 'y').reduce((a, i) => a + (+i.raw || 0), 0); return `ยอดขายรวม ฿${fmt(Math.round(t))}`; } } } });
   }
 
   function renderChannels() {
@@ -221,7 +228,10 @@
   }
 
   function kidsCard(d) {
-    const k = d.children || [];
+    // ยอดราย สี/เบอร์ ใช้สัดส่วนจากของที่ขายจริงราย สี/เบอร์ แล้วปรับให้รวมเท่ากับยอดขาย / ชิ้นของสินค้า (ตัวเลขชุดเดียวกับการ์ดด้านบน)
+    const daily = d.daily || [], R = daily.reduce((t, r) => t + (+r.rev || 0), 0), Q = daily.reduce((t, r) => t + (+r.qty || 0), 0);
+    const k0 = d.children || [], sr = k0.reduce((t, r) => t + (+r.rev || 0), 0), sq = k0.reduce((t, r) => t + (+r.qty || 0), 0);
+    const k = k0.map(r => ({ ...r, rev: sr > 0 ? (+r.rev || 0) / sr * R : 0, qty: sq > 0 ? (+r.qty || 0) / sq * Q : 0 }));
     const rows = k.map(x => `<tr><td><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;">${esc(x.sku)}</span><div style="font-size:10.5px;color:var(--text3);">${esc(x.name || '')}</div></td>
       <td class="num">${n0(x.qty)}</td><td class="num">${m0(x.rev)}</td><td class="num"><b>${n0(x.on_hand)}</b></td><td class="num">${+x.avg_day ? (+x.avg_day).toFixed(1) : dash}</td>
       <td class="num">${+x.avg_day > 0 ? fmt(Math.floor(Math.max(+x.on_hand || 0, 0) / x.avg_day)) + ' วัน' : dash}</td>
@@ -230,7 +240,7 @@
     const sumOH = k.reduce((t, r) => t + (+r.on_hand || 0), 0);
     return card(`สี / เบอร์ และสต็อก <a onclick="showPage('supply')" style="font-size:11px;font-weight:400;margin-left:8px;cursor:pointer;color:var(--accent);">ดูแผนสั่งของใน Supply Chain →</a>`,
       `<div class="table-wrap"><table id="tblSkdKids"><thead><tr><th>SKU</th><th class="num">ขาย (ชิ้น)</th><th class="num">ยอดขาย</th><th class="num">คงเหลือ</th><th class="num">ขาย / วัน</th><th class="num">พอขาย</th><th class="num">ของเข้า</th><th>สถานะ</th></tr></thead><tbody>${rows || '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>'}</tbody>${k.length > 1 ? `<tfoot><tr><td><b>รวม</b></td><td class="num"><b>${n0(k.reduce((t, r) => t + (+r.qty || 0), 0))}</b></td><td class="num"><b>${m0(k.reduce((t, r) => t + (+r.rev || 0), 0))}</b></td><td class="num"><b>${n0(sumOH)}</b></td><td></td><td></td><td></td><td></td></tr></tfoot>` : ''}</table></div>
-      <div class="skd-note">ขาย / ยอดขายราย สี/เบอร์ = ยอดจริงแตกลงสี/เบอร์ (สินค้าที่ขายเป็นก้อนแม่ แบ่งตามสัดส่วนของที่ออกจากคลัง) · คงเหลือ / สถานะ ณ วันนี้ จาก Supply Chain</div>`);
+      <div class="skd-note">ขาย / ยอดขายราย สี/เบอร์ = แบ่งยอดของสินค้าตามสัดส่วนที่ขายจริงของแต่ละสี/เบอร์ รวมกันเท่ากับการ์ดยอดขาย / จำนวนขายด้านบนเสมอ · คงเหลือ / สถานะ ณ วันนี้ จาก Supply Chain</div>`);
   }
 
   function plCard(d) {
