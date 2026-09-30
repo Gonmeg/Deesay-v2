@@ -562,7 +562,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <span>Modern Trade</span><span class="nav-group-chevron" id="navGroupChevron-mt">▸</span>
     </div>
     <div id="navGroup-mt" style="display:none;">
-      <div class="nav-item nav-sub" onclick="showPage('mthub',null,this)"><span class="nav-icon">🏬</span> ภาพรวม Modern Trade</div>
+      <div class="nav-item nav-sub" data-mt="" onclick="_mtRetailer='';showPage('mthub',null,this)"><span class="nav-icon">🏬</span> ภาพรวม Modern Trade</div>
+      <div class="nav-item nav-sub" data-mt="Eveandboy" onclick="_mtRetailer='Eveandboy';showPage('mthub',null,this)"><span class="nav-icon">🏪</span> Eveandboy</div>
+      <div class="nav-item nav-sub" data-mt="Konvy" onclick="_mtRetailer='Konvy';showPage('mthub',null,this)"><span class="nav-icon">🏪</span> Konvy</div>
+      <div class="nav-item nav-sub" data-mt="Watsons" onclick="_mtRetailer='Watsons';showPage('mthub',null,this)"><span class="nav-icon">🏪</span> Watsons</div>
+      <div class="nav-item nav-sub" data-mt="CJ" onclick="_mtRetailer='CJ';showPage('mthub',null,this)"><span class="nav-icon">🏪</span> CJ</div>
     </div>
     <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">📈</span> แนวโน้มสินค้า</div>
     <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">💼</span> Business Insight</div>
@@ -579,7 +583,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-f</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1911,27 +1915,41 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-mthub">
-      <div id="mthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <!-- (2026-09-30) ยอดขาย MT จากไฟล์รายงานร้าน (mt_sellout) · แท็บด้านบน = หน้าแยกแต่ละห้าง (เหมือนเมนูย่อยด้านซ้าย) -->
+      <style>
+        .mt-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+        .mt-tab { font-family:inherit; font-size:12.5px; padding:6px 14px; border-radius:99px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); cursor:pointer; }
+        .mt-tab:hover { border-color:var(--accent); }
+        .mt-tab.on { border-color:var(--accent); color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); font-weight:600; }
+        .mt-tab i { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:1px; }
+        #page-mthub .mt-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
+        #page-mthub .mt-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:1px; }
+        #page-mthub td.num, #page-mthub th.num { text-align:right; }
+        @media (max-width:900px){ #page-mthub .mt-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+      </style>
+      <div class="mt-tabs" id="mtTabs"></div>
+      <div class="mt-kpis" id="mthub-kpis"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
-          <div class="section-header"><div class="section-title" id="ttlMtRevenue">ยอดขายรายเดือน</div></div>
+          <div class="section-header"><div class="section-title" id="ttlMtRevenue">ยอดขายรายเดือน</div><div style="font-size:10.5px;color:var(--text3);">ห้างส่งยอดเป็นรายเดือน จึงแสดงรายเดือนเสมอ</div></div>
           <div class="chart-wrap chart-wrap-lg"><canvas id="chartMtRevenue"></canvas></div>
         </div>
         <div class="card">
-          <div class="section-header">
-            <div class="section-title">ยอดขายแยกตามร้าน</div>
-            <button class="btn btn-ghost" onclick="exportTable('tblMtSubChannel')">⬇ Export CSV</button>
-          </div>
-          <div class="table-wrap">
-            <table id="tblMtSubChannel">
-              <thead><tr><th>#</th><th>ร้านค้า</th><th>ยอดขาย</th><th>บิล</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyMtSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
-            </table>
-          </div>
+          <div class="section-header"><div class="section-title" id="ttlMtSide">ยอดขายแยกห้าง</div><button class="btn btn-ghost" onclick="exportTable('tblMtSide')">⬇ Export CSV</button></div>
+          <div class="table-wrap"><table id="tblMtSide"><thead id="theadMtSide"></thead><tbody id="tbodyMtSide"><tr><td class="empty">กำลังโหลด...</td></tr></tbody></table></div>
         </div>
       </div>
-
-      <div class="card" style="margin-bottom:20px;">
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="section-header"><div class="section-title">สาขาขายดี</div><button class="btn btn-ghost" onclick="exportTable('tblMtBranch')">⬇ Export CSV</button></div>
+          <div class="table-wrap"><table id="tblMtBranch"><thead id="theadMtBranch"></thead><tbody id="tbodyMtBranch"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="section-header"><div class="section-title" id="ttlMtProd">สินค้า × ห้าง</div><button class="btn btn-ghost" onclick="exportTable('tblMtProd')">⬇ Export CSV</button></div>
+          <div class="table-wrap" style="overflow-x:auto;"><table id="tblMtProd"><thead id="theadMtProd"></thead><tbody id="tbodyMtProd"></tbody></table></div>
+        </div>
+      </div>
+      <div class="card" id="mtAdsCard" style="margin-bottom:20px;">
         <div class="section-header">
           <div class="card-title">ค่าโฆษณา (Awareness) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('mt')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="mthub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
           <div class="toggle-group">
@@ -1943,27 +1961,6 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <div class="chart-wrap chart-wrap-lg"><canvas id="chartMtAds"></canvas></div>
       </div>
 
-      <div class="card">
-        <div class="section-header">
-          <div class="section-title">Top SKU (Modern Trade)</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <select id="mtTopSkuStoreFilter" onchange="renderMtTopSkuTable()" style="font-size:12.5px;">
-              <option value="">ร้านค้า: ทั้งหมด</option>
-              <option value="MT-EVE">Eveandboy</option>
-              <option value="MT-KONVY">Konvy</option>
-              <option value="MT-WATSONS">Watsons</option>
-              <option value="MT-CJ">CJ</option>
-            </select>
-            <button class="btn btn-ghost" onclick="exportTable('tblMtTopSKU')">⬇ Export CSV</button>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table id="tblMtTopSKU">
-            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย</th><th>ชิ้น</th><th>สัดส่วน %</th></tr></thead>
-            <tbody id="tbodyMtTopSKU"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <!-- ===================== SHOPEE ADS (จาก Shopee Open API: shopee_ads_daily + shopee_ads_campaign_daily) ===================== -->
@@ -3886,35 +3883,115 @@ let _lsAllCreators = [];
 const MT_STORE_NAMES = { 'MT-EVE': 'Eveandboy', 'MT-KONVY': 'Konvy', 'MT-WATSONS': 'Watsons', 'MT-CJ': 'CJ' };
 function mtStoreName(sub) { return MT_STORE_NAMES[sub] || sub || 'ไม่ระบุ'; }
 
+// ===== (2026-09-30) Modern Trade — ยอดขายจากไฟล์รายงานร้าน (mt_sellout) แหล่งเดียวกับทุกหน้า (ภาพรวม / แยก Channel / สินค้า / MKT Tracking) =====
+//   ยอดขาย = ยอดที่ห้างขายออก คิดที่ราคาที่ห้างจ่ายเรา (รวม VAT) · ห้างส่งเป็นรายเดือน → ลงวันที่ 1 ของเดือน · Business Insight ยังใช้ใบกำกับขายเข้า (ตรงงบ)
+let _mtRetailer = '', _mtRows = null, _mtRowsAt = 0, _mtLoading = null;
+const MT_RETAILERS = ['Eveandboy', 'Konvy', 'Watsons', 'CJ'];
+const MT_COLORS = { Eveandboy: '#D4537E', Konvy: '#1D9E75', Watsons: '#378ADD', CJ: '#BA7517' };
+function mtGo(r) { _mtRetailer = r || ''; showPage('mthub', null, document.querySelector(`.nav-item[data-mt="${r || ''}"]`)); }
+async function loadMtSellout() {
+  if (_mtRows && Date.now() - _mtRowsAt < 10 * 60 * 1000) return _mtRows;
+  if (_mtLoading) return _mtLoading;
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  _mtLoading = fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mt_sellout?select=retailer,month,branch,parent_sku,qty,sales&order=id.asc`, h)
+    .then(rows => { _mtRows = rows.map(r => ({ retailer: r.retailer, month: String(r.month).slice(0, 10), branch: r.branch || '', parent_sku: r.parent_sku || '—', qty: +r.qty || 0, sales: +r.sales || 0 })); _mtRowsAt = Date.now(); return _mtRows; })
+    .finally(() => { _mtLoading = null; });
+  return _mtLoading;
+}
 async function renderMtHub() {
-  if (!(await hubPrepare('mthub'))) return;
-  const H = hubAgg('Modern Trade');   // เฟส 2: จาก sales_summary (v_orders_clean)
-  const totalRev = H.totalRev;
-  const activeStores = Object.keys(H.bySub).length;
+  const R = _mtRetailer;
+  { const t = document.getElementById('pageTitle'); if (t) t.textContent = R ? `Modern Trade — ${R}` : pageTitles.mthub; }
+  document.querySelectorAll('.nav-item[data-mt]').forEach(el => el.classList.toggle('active', el.dataset.mt === R));
+  document.getElementById('mtTabs').innerHTML = ['', ...MT_RETAILERS].map(r =>
+    `<button class="mt-tab${r === R ? ' on' : ''}" onclick="mtGo('${r}')">${r ? `<i style="background:${MT_COLORS[r]};"></i>${r}` : 'ทุกห้าง'}</button>`).join('');
+  document.getElementById('mtAdsCard').style.display = R ? 'none' : '';
+  const kpiEl = document.getElementById('mthub-kpis');
+  let all;
+  try { all = await loadMtSellout(); }
+  catch (e) { kpiEl.innerHTML = `<div class="card" style="grid-column:1/-1;"><div style="color:var(--red);font-size:12px;">โหลดยอด Modern Trade ไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`; return; }
+  if (currentPage !== 'mthub' || R !== _mtRetailer) return;
+  const from = getDateValue('From') || '2000-01-01', to = getDateValue('To') || '2999-12-31';
+  const inRange = all.filter(r => r.month >= from && r.month <= to);   // ยอดทั้งเดือนลงวันที่ 1 (ตรงกับหน้าภาพรวม)
+  const rows = R ? inRange.filter(r => r.retailer === R) : inRange;
+  const money = v => '฿' + fmt(Math.round(v));
+  const sum = (arr, k) => arr.reduce((t, r) => t + r[k], 0);
+  const tSales = sum(rows, 'sales'), tQty = sum(rows, 'qty');
+  const lastOf = ret => all.filter(r => r.retailer === ret).reduce((m, r) => r.month > m ? r.month : m, '');
+  const months = [...new Set(rows.map(r => r.month))].sort();
+  const brKey = r => r.retailer + '|' + r.branch;
+  const branchSet = new Set(rows.filter(r => r.branch).map(brKey));
+  const src = fbeInfoIcon('mt-info-src', '<b>ยอดขาย Modern Trade</b> มาจากไฟล์รายงานยอดขายของห้าง (แท็บ Watsons / Eveandboy / Konvy / CJ) = ยอดที่ห้างขายออกได้จริง คิดที่ราคาที่ห้างจ่ายเรา รวม VAT<br><br>ห้างส่งเป็นยอดรายเดือน ระบบลงไว้ที่วันที่ 1 ของเดือนนั้น — เลือกช่วงวันที่ให้ครอบวันที่ 1 ถึงจะเห็นยอดเดือนนั้น (ตรงกับหน้าภาพรวมยอดขาย)<br><br>ทุกหน้าใช้ยอดชุดนี้ ยกเว้น Business Insight ที่ยังใช้ใบกำกับขายเข้าให้ตรงงบ · ดึงไฟล์ใหม่ทุกวัน 09:30 และ 17:30');
 
-  document.getElementById('mthub-kpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmtB(totalRev)}</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ร้านค้าที่ Active</div><div class="kpi-value">${fmt(activeStores)}</div></div>
-  `;
+  // KPI
+  let kpis;
+  if (!R) {
+    const byRet = {}; rows.forEach(r => { byRet[r.retailer] = (byRet[r.retailer] || 0) + r.sales; });
+    const top = Object.entries(byRet).sort((a, b) => b[1] - a[1])[0];
+    const brBy = ret => new Set(rows.filter(r => r.retailer === ret && r.branch).map(r => r.branch)).size;
+    kpis = [
+      [`ยอดขาย ${src}`, money(tSales), 'จากรายงานห้าง ทุกห้างรวมกัน'],
+      ['จำนวนที่ขายออก', fmt(Math.round(tQty)) + ' ชิ้น', 'ทุกห้าง'],
+      ['สาขาที่มียอด', fmt(branchSet.size), MT_RETAILERS.filter(x => brBy(x)).map(x => `${x} ${fmt(brBy(x))}`).join(' · ') || '—'],
+      ['ห้างที่ยอดสูงสุด', top ? top[0] : '—', top && tSales ? `${(top[1] / tSales * 100).toFixed(0)}% ของยอด Modern Trade` : '']
+    ];
+  } else {
+    const last = lastOf(R);
+    kpis = [
+      [`ยอดขาย ${src}`, money(tSales), months.length ? `เฉลี่ย ${money(tSales / months.length)} / เดือน` : ''],
+      ['จำนวนที่ขายออก', fmt(Math.round(tQty)) + ' ชิ้น', months.length ? `เฉลี่ย ${fmt(Math.round(tQty / months.length))} ชิ้น / เดือน` : ''],
+      ['สาขาที่มียอด', branchSet.size ? fmt(branchSet.size) : 'ไม่แยกสาขา', branchSet.size ? 'สาขาที่ขายได้ในช่วงที่เลือก' : 'ห้างส่งเป็นยอดรวม'],
+      ['ข้อมูลล่าสุด', last ? PL_TH_M(last) : '—', 'อัปเดตจากไฟล์ทุกวัน 09:30 / 17:30']
+    ];
+  }
+  kpiEl.innerHTML = kpis.map(([l, v, sub]) => `<div class="card"><div class="card-title">${l}</div><div class="kpi-value">${v}</div><div class="kpi-sub" style="display:block;">${sub}</div></div>`).join('');
 
-  // ยอดขายรายเดือน
-  const gMt = effGrain('month');   // ช่วงไม่เกิน 1 เดือน → รายวัน
-  const byMonth = gMt === 'day' ? H.byDay : H.byMonth;
-  const months = Object.keys(byMonth).sort();
-  { const t = document.getElementById('ttlMtRevenue'); if (t) t.textContent = gMt === 'day' ? 'ยอดขายรายวัน' : 'ยอดขายรายเดือน'; }
-  makeChart('chartMtRevenue', 'bar', gMt === 'day' ? months.map(grainDayLabel) : months, [{ label: 'ยอดขาย', data: months.map(m => byMonth[m]), backgroundColor: '#2a78d6', borderRadius: 4 }]);
+  // กราฟรายเดือน (ทุกห้าง = ซ้อนตามห้าง)
+  const rets = R ? [R] : MT_RETAILERS;
+  const ds = rets.map(ret => ({ label: ret, data: months.map(m => rows.filter(r => r.month === m && r.retailer === ret).reduce((t, r) => t + r.sales, 0)),
+    backgroundColor: MT_COLORS[ret], borderRadius: 3, stack: 'mt' }));
+  const tk = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
+  makeChart('chartMtRevenue', 'bar', months.map(PL_TH_M), ds, {
+    scales: { x: { stacked: true, ticks: { ...tk, maxRotation: 0 }, grid: { display: false }, border: { display: false } },
+      y: { stacked: true, ticks: { ...tk, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },
+    legend: { display: !R },
+    tooltip: { callbacks: { label: it => `${it.dataset.label}: ฿${fmt(Math.round(it.raw || 0))}` } } });
 
-  // ยอดขายแยกตามร้าน (sub_channel) — ใช้ชื่อร้านจริงแทน MT-xxx
-  const sortedStores = H.sortedSub;
-  document.getElementById('tbodyMtSubChannel').innerHTML = sortedStores.length ? sortedStores.map(([k,v],i) => `
-    <tr>
-      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td>${mtStoreName(k)}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
-      <td>฿${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-    </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
+  // ตารางขวาบน: ทุกห้าง = แยกห้าง · ห้างเดียว = สินค้าขายดี
+  const byProd = {}; rows.forEach(r => { const p = (byProd[r.parent_sku] = byProd[r.parent_sku] || { sales: 0, qty: 0, ret: {}, mon: {} });
+    p.sales += r.sales; p.qty += r.qty; p.ret[r.retailer] = (p.ret[r.retailer] || 0) + r.sales; p.mon[r.month] = (p.mon[r.month] || 0) + r.sales; });
+  const prods = Object.entries(byProd).sort((a, b) => b[1].sales - a[1].sales);
+  const pct = v => tSales ? (v / tSales * 100).toFixed(1) + '%' : '—';
+  const rank = i => `<td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>`;
+  const prodCell = sku => `<td>${ttcEsc(skuToName(sku))} <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${ttcEsc(sku)}</span></td>`;
+  if (!R) {
+    document.getElementById('ttlMtSide').textContent = 'ยอดขายแยกห้าง';
+    document.getElementById('theadMtSide').innerHTML = '<tr><th>ห้าง</th><th class="num">ยอดขาย</th><th class="num">ชิ้น</th><th class="num">สาขา</th><th class="num">สัดส่วน</th><th class="num">ข้อมูลถึง</th></tr>';
+    document.getElementById('tbodyMtSide').innerHTML = MT_RETAILERS.map(ret => { const rr = rows.filter(r => r.retailer === ret), sv = sum(rr, 'sales'), last = lastOf(ret);
+      const nb = new Set(rr.filter(r => r.branch).map(r => r.branch)).size;
+      return `<tr style="cursor:pointer;" onclick="mtGo('${ret}')" title="ดูหน้า ${ret}"><td><span class="mt-dot" style="background:${MT_COLORS[ret]};"></span>${ret}</td><td class="num">${money(sv)}</td><td class="num">${fmt(Math.round(sum(rr, 'qty')))}</td><td class="num">${nb ? fmt(nb) : '—'}</td><td class="num">${pct(sv)}</td><td class="num">${last ? PL_TH_M(last) : '—'}</td></tr>`; }).join('');
+  } else {
+    document.getElementById('ttlMtSide').textContent = `สินค้าขายดี — ${R}`;
+    document.getElementById('theadMtSide').innerHTML = '<tr><th>#</th><th>สินค้า</th><th class="num">ยอดขาย</th><th class="num">ชิ้น</th><th class="num">สัดส่วน</th></tr>';
+    document.getElementById('tbodyMtSide').innerHTML = prods.length ? prods.map(([sku, v], i) => `<tr>${rank(i)}${prodCell(sku)}<td class="num">${money(v.sales)}</td><td class="num">${fmt(Math.round(v.qty))}</td><td class="num">${pct(v.sales)}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="empty">ไม่มียอดในช่วงที่เลือก</td></tr>';
+  }
 
-  if (!mtAdsFetched) { fetchMTAdsData().then(renderMtAdsChart); } else { renderMtAdsChart(); }
-  renderMtTopSkuTable();
+  // สาขาขายดี
+  const byBr = {}; rows.filter(r => r.branch).forEach(r => { const k = brKey(r); const b = (byBr[k] = byBr[k] || { branch: r.branch, retailer: r.retailer, sales: 0, qty: 0, mon: new Set(), last: 0 });
+    b.sales += r.sales; b.qty += r.qty; b.mon.add(r.month); if (r.month === months[months.length - 1]) b.last += r.sales; });
+  const brs = Object.values(byBr).sort((a, b) => b.sales - a.sales);
+  document.getElementById('theadMtBranch').innerHTML = `<tr><th>#</th><th>สาขา</th>${R ? '' : '<th>ห้าง</th>'}<th class="num">ยอดขาย</th><th class="num">ชิ้น</th><th class="num">เดือนที่มียอด</th>${R && months.length ? `<th class="num">${PL_TH_M(months[months.length - 1])}</th>` : ''}</tr>`;
+  document.getElementById('tbodyMtBranch').innerHTML = brs.length ? brs.map((b, i) => `<tr>${rank(i)}<td>${ttcEsc(b.branch)}</td>${R ? '' : `<td><span class="mt-dot" style="background:${MT_COLORS[b.retailer]};"></span>${b.retailer}</td>`}<td class="num">${money(b.sales)}</td><td class="num">${fmt(Math.round(b.qty))}</td><td class="num">${b.mon.size}</td>${R && months.length ? `<td class="num">${b.last ? money(b.last) : '<span style="color:var(--text3);">—</span>'}</td>` : ''}</tr>`).join('')
+    : `<tr><td colspan="7" class="empty">${R ? `${R} ส่งรายงานเป็นยอดรวม ไม่มีแยกสาขา` : 'ไม่มียอดในช่วงที่เลือก'}</td></tr>`;
+
+  // สินค้า × ห้าง (ทุกห้าง) / สินค้า × เดือน (ห้างเดียว)
+  const cols = R ? months : MT_RETAILERS;
+  document.getElementById('ttlMtProd').textContent = R ? `สินค้า × เดือน — ${R}` : 'สินค้า × ห้าง';
+  document.getElementById('theadMtProd').innerHTML = `<tr><th>สินค้า</th><th class="num">รวม</th>${cols.map(c => `<th class="num">${R ? PL_TH_M(c) : `<span class="mt-dot" style="background:${MT_COLORS[c]};"></span>${c}`}</th>`).join('')}</tr>`;
+  document.getElementById('tbodyMtProd').innerHTML = prods.length ? prods.map(([sku, v]) => `<tr>${prodCell(sku)}<td class="num"><b>${money(v.sales)}</b></td>${cols.map(c => { const x = R ? v.mon[c] : v.ret[c]; return `<td class="num">${x ? money(x) : '<span style="color:var(--text3);">—</span>'}</td>`; }).join('')}</tr>`).join('')
+    : `<tr><td colspan="${2 + cols.length}" class="empty">ไม่มียอดในช่วงที่เลือก</td></tr>`;
+
+  if (!R) { if (!mtAdsFetched) { fetchMTAdsData().then(renderMtAdsChart); } else { renderMtAdsChart(); } }
 }
 
 // ค่าโฆษณา Awareness (แยกจากยอดขาย ไม่คำนวณ ROI) — รองรับมุมมอง ปี/เดือน/วัน เหมือนกราฟ ads ช่องทางอื่น
