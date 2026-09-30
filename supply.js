@@ -177,8 +177,8 @@
     const locs = locList();
     root().innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-        <div style="font-size:11.5px;color:var(--text3);">สต็อกจาก log ทีมแพ็ค · ความต้องการจากยอดขายจริง · คำนวณใหม่ทุกคืน 04:00 · แผน ณ <b>${dTH(d.as_of)}</b> · log ล่าสุด ${dTH(d.ledger_last)} · ยอดขายล่าสุด ${dTH(d.sales_last)}</div>
-        <button class="btn btn-ghost" id="supRefresh" title="ดึง log ทีมแพ็ค + ไฟล์ PO ของจัดซื้อใหม่ทันที แล้วคำนวณใหม่ทั้งหน้า (ใช้เวลาราว 15 วินาที)">↻ รีเฟรช (ดึงข้อมูลล่าสุด)</button>
+        <div style="font-size:11.5px;color:var(--text3);">สต็อกจาก log ทีมแพ็ค · ความต้องการจากยอดขายจริง · คำนวณใหม่ทุกคืน 04:00 · แผน ณ <b>${dTH(d.as_of)}</b> · log ล่าสุด ${dTH(d.ledger_last)} · ยอดขายล่าสุด ${dTH(d.sales_last)} · ไฟล์ PO ดึงล่าสุด <b>${PO_SYNCED ? new Date(PO_SYNCED).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</b></div>
+        <button class="btn btn-ghost" id="supRefresh" title="ดึง log ทีมแพ็ค + ไฟล์ PO ของจัดซื้อใหม่ทันที แล้วคำนวณใหม่ทั้งหน้า (ราว 10–60 วินาที)">↻ รีเฟรช (ดึงข้อมูลล่าสุด)</button>
       </div>
       ${banners.map(([c, t]) => `<div style="padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:12px;color:${c};background:color-mix(in srgb, ${c} 10%, transparent);border:1px solid color-mix(in srgb, ${c} 30%, transparent);">${t}</div>`).join('')}
 
@@ -351,15 +351,26 @@
     document.getElementById('supLocLow').onclick = () => { locOnlyLow = !locOnlyLow; renderAll(); };
     document.getElementById('supRefresh').onclick = async () => {
       const btn = document.getElementById('supRefresh');
-      btn.disabled = true; btn.textContent = '⏳ กำลังดึงสต็อก + ไฟล์ PO ล่าสุด…';
+      const t0 = Date.now();
+      btn.disabled = true;
+      const tick = () => { btn.textContent = `⏳ กำลังดึงไฟล์ PO + log ทีมแพ็ค… ${Math.round((Date.now() - t0) / 1000)} วิ`; };
+      tick(); const iv = setInterval(tick, 1000);
+      let done = false;
       try {
         const r = await supaRpc('supply_sync_now', {});
-        if (!(r && r.skipped)) {
-          await new Promise(res => setTimeout(res, 12000));        // รอ Edge Function อ่านชีทเสร็จ
-          await supaRpc('refresh_supply_views', {}).catch(() => {});
+        // (2026-09-30) รอจนแถว PO จากชีทถูกเขียนใหม่จริง (ปกติ 10–60 วิ แล้วแต่คิวของระบบ) สูงสุด 3 นาที
+        const since = new Date((r && r.skipped && r.last_run ? new Date(r.last_run).getTime() : t0) - 5000);
+        for (let i = 0; i < 60 && !done; i++) {
+          await new Promise(res => setTimeout(res, 3000));
+          const x = await fetch(`${window.SUPABASE_URL}/rest/v1/purchase_orders?note=like.sheet:*&select=created_at&order=created_at.desc&limit=1`, { headers: H() })
+            .then(q => q.ok ? q.json() : []).catch(() => []);
+          if (x[0] && new Date(x[0].created_at) >= since) done = true;
         }
+        if (done) await new Promise(res => setTimeout(res, 2500));   // รอคำนวณตัวเลขใหม่ต่อจาก sync
       } catch (e) { console.warn('supply_sync_now', e.message); }
-      DATA = null; LOC_USE = null; load();
+      clearInterval(iv);
+      DATA = null; LOC_USE = null; await load();
+      if (!done) alert('ดึงไฟล์ PO ยังไม่เสร็จภายใน 3 นาที — ลองกดรีเฟรชอีกครั้งภายหลัง (ระบบดึงให้เองทุกวัน 03:40 และ 13:40)');
     };
     document.getElementById('supQ').oninput = e => { filt.q = e.target.value; renderTable(); };
     document.getElementById('supClear').onclick = () => { filt = { status: '', abc: '', xyz: '', q: '' }; renderAll(); };
@@ -373,7 +384,7 @@
 
   // ===== (2026-09-21) แผนสั่งของที่กรอกเอง: จะสั่งกี่ชิ้น + ของพร้อมส่งวันที่ → ขายได้ถึงวันไหน =====
   // ไม่กรอกวันที่ของถึง = นับต่อจากวันที่ของเดิมหมด · กรอกวันที่ = นับจากวันที่ของถึง บวกของที่ยังเหลือตอนนั้น
-  let PLANS = {}, REVIEW_DAYS = 14, OPEN_PO = {}, HOLD = {};
+  let PLANS = {}, REVIEW_DAYS = 14, OPEN_PO = {}, HOLD = {}, PO_SYNCED = null;
   // สต็อกที่มีจริง = ในคลังทุกที่ + Hold ที่โรงงาน (ผลิตเสร็จแล้ว เรียกเข้าได้ใน 2–3 วัน)
   const stockAll = r => Math.max(0, +r.on_hand || 0) + (HOLD[r.sku] || 0);
   const wipQty = sku => (OPEN_PO[sku] || []).reduce((t, x) => t + x.q, 0);
@@ -383,10 +394,11 @@
       const [p, st, po] = await Promise.all([
         fetch(`${window.SUPABASE_URL}/rest/v1/supply_order_plans?select=*`, { headers: H() }).then(r => r.ok ? r.json() : []),
         fetch(`${window.SUPABASE_URL}/rest/v1/supply_settings?key=eq.review_days&select=value`, { headers: H() }).then(r => r.ok ? r.json() : []),
-        fetch(`${window.SUPABASE_URL}/rest/v1/purchase_orders?status=neq.closed&select=sku,po_no,qty_ordered,qty_received,qty_wip,qty_hold_factory,eta,note&order=eta.asc`, { headers: H() }).then(r => r.ok ? r.json() : [])
+        fetch(`${window.SUPABASE_URL}/rest/v1/purchase_orders?status=neq.closed&select=sku,po_no,qty_ordered,qty_received,qty_wip,qty_hold_factory,eta,note,created_at&order=eta.asc`, { headers: H() }).then(r => r.ok ? r.json() : [])
       ]);
-      OPEN_PO = {}; HOLD = {};
+      OPEN_PO = {}; HOLD = {}; PO_SYNCED = null;
       (po || []).forEach(x => {
+        if (String(x.note || '').indexOf('sheet:') === 0 && x.created_at && (!PO_SYNCED || x.created_at > PO_SYNCED)) PO_SYNCED = x.created_at;
         const q = (+x.qty_ordered || 0) - (+x.qty_received || 0); if (q <= 0) return;
         if (+x.qty_hold_factory > 0 && !(+x.qty_wip > 0)) { HOLD[x.sku] = (HOLD[x.sku] || 0) + q; return; }   // ผลิตเสร็จแล้ว ฝากโรงงาน
         // WIP: มีวันผลิตเสร็จจริงจากจัดซื้อ = dated · ไม่มี (ระบบเดาจากวันเปิด PO + LT หรือ CALL-OFF) = nodate → นับต่อจากวันที่ของหมด
