@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-i</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1292,6 +1292,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div class="kpi-sub" id="adp-sub-lz" style="margin-bottom:10px;">—</div>
           <div class="chart-wrap"><canvas id="adpChartLZ"></canvas></div>
         </div>
+        <div class="card" style="grid-column:1/-1;">
+          <div class="section-header"><div class="section-title">Modern Trade</div><div style="font-size:10.5px;color:var(--text3);">ค่าแอด = แอด Awareness บัญชี Meta Modern Trade · ยอดขาย = ยอดที่ห้างขายออก (ห้างส่งรายเดือน ลงวันที่ 1)</div></div>
+          <div class="kpi-sub" id="adp-sub-mt" style="margin-bottom:10px;">—</div>
+          <div class="chart-wrap"><canvas id="adpChartMT"></canvas></div>
+        </div>
       </div>
       <div class="card ai-summary-card">
         <div class="ai-summary-header"><span class="ai-icon">✦</span><span class="ai-title">สรุป Ad Performance</span>
@@ -1917,24 +1922,33 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         #page-mthub .mt-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:1px; }
         #page-mthub td.num, #page-mthub th.num { text-align:right; }
         @media (max-width:900px){ #page-mthub .mt-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        #page-mthub .mt-colorpop { position:absolute; right:0; top:36px; z-index:60; width:318px; padding:12px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,.28); }
+        #page-mthub .mt-colorpop .row { margin-bottom:10px; }
+        #page-mthub .mt-colorpop .nm { font-size:12px; font-weight:600; color:var(--text); margin-bottom:5px; display:flex; align-items:center; gap:6px; }
+        #page-mthub .mt-colorpop .sw { display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
+        #page-mthub .mt-colorpop .sw i { width:18px; height:18px; border-radius:50%; cursor:pointer; border:2px solid transparent; box-sizing:border-box; }
+        #page-mthub .mt-colorpop .sw i.on { border-color:var(--text); }
+        #page-mthub .mt-colorpop input[type=color] { width:22px; height:22px; padding:0; border:none; background:none; cursor:pointer; }
       </style>
       <div class="mt-kpis" id="mthub-kpis"></div>
       <div class="grid-2" style="margin-bottom:20px;">
         <div class="card">
-          <div class="section-header"><div class="section-title" id="ttlMtRevenue">ยอดขายรายเดือน</div><div style="font-size:10.5px;color:var(--text3);">ห้างส่งยอดเป็นรายเดือน จึงแสดงรายเดือนเสมอ</div></div>
+          <div class="section-header"><div class="section-title" id="ttlMtRevenue">ยอดขายรายเดือน</div>
+            <div style="display:flex;gap:10px;align-items:center;"><span style="font-size:10.5px;color:var(--text3);">ห้างส่งยอดเป็นรายเดือน จึงแสดงรายเดือนเสมอ</span>
+              <span style="position:relative;display:inline-block;"><button class="btn btn-ghost" id="mtColorBtn" onclick="event.stopPropagation();mtColorToggle()" title="เปลี่ยนสีประจำห้าง (ใช้ร่วมกันทั้งทีม)">🎨 สีห้าง</button><div id="mtColorPop" class="mt-colorpop" style="display:none;" onclick="event.stopPropagation()"></div></span></div></div>
           <div class="chart-wrap chart-wrap-lg"><canvas id="chartMtRevenue"></canvas></div>
         </div>
         <div class="card">
           <div class="section-header"><div class="section-title" id="ttlMtSide">ยอดขายแยกห้าง</div><button class="btn btn-ghost" onclick="exportTable('tblMtSide')">⬇ Export CSV</button></div>
-          <div class="table-wrap"><table id="tblMtSide" data-no-page><thead id="theadMtSide"></thead><tbody id="tbodyMtSide"><tr><td class="empty">กำลังโหลด...</td></tr></tbody></table></div>
+          <div class="table-wrap"><table id="tblMtSide" data-page-size="8"><thead id="theadMtSide"></thead><tbody id="tbodyMtSide"><tr><td class="empty">กำลังโหลด...</td></tr></tbody></table></div>
         </div>
       </div>
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
+      <div class="grid-2" id="mtBottomGrid" style="margin-bottom:20px;">
+        <div class="card" id="mtBranchCard">
           <div class="section-header"><div class="section-title">สาขาขายดี</div><button class="btn btn-ghost" onclick="exportTable('tblMtBranch')">⬇ Export CSV</button></div>
           <div class="table-wrap"><table id="tblMtBranch"><thead id="theadMtBranch"></thead><tbody id="tbodyMtBranch"></tbody></table></div>
         </div>
-        <div class="card">
+        <div class="card" id="mtProdCard" style="min-width:0;">
           <div class="section-header"><div class="section-title" id="ttlMtProd">สินค้า × ห้าง</div><button class="btn btn-ghost" onclick="exportTable('tblMtProd')">⬇ Export CSV</button></div>
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblMtProd"><thead id="theadMtProd"></thead><tbody id="tbodyMtProd"></tbody></table></div>
         </div>
@@ -3762,15 +3776,18 @@ async function fetchShopeeAdsTotal(from, to) {
   const key = from + '|' + to; if (_shHubAds.key === key) return _shHubAds;
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
   try {
-    const [r1, r2, r3] = await Promise.all([
+    const [r1, r2, r3, r4] = await Promise.all([
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_daily?select=stat_date,expense&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_manual?select=stat_date,brand_ads,live_ads,meta_ads,coins,other_ads&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_meta_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers })]);
+      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_meta_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
+      fetch(`${window.SUPABASE_URL}/rest/v1/mv_ad_spend_daily?select=date,ads&channel=eq.Shopee&source=eq.shopee_sheet&date=gte.${from}&date=lte.${to}`, { headers })]);
     const d = r1.ok ? await r1.json() : [], m = r2.ok ? await r2.json() : [], c = r3.ok ? await r3.json() : [];
+    const sh = r4.ok ? await r4.json() : [];   // (2026-09-30) ร้าน 24hr จากชีท (ก่อนมี API + Live) — แหล่งเดียวกับ Ad Performance / MKT Tracking
     const days = new Set(); let total = 0;
     d.forEach(r => { total += +r.expense || 0; days.add(r.stat_date); });
     m.forEach(r => { total += (+r.brand_ads || 0) + (+r.live_ads || 0) + (+r.meta_ads || 0) + (+r.coins || 0) + (+r.other_ads || 0); days.add(r.stat_date); });
     c.forEach(r => { total += +r.spend || 0; days.add(r.stat_date); });
+    sh.forEach(r => { total += +r.ads || 0; days.add(r.date); });
     Object.assign(_shHubAds, { key, total, days: days.size });
   } catch (e) { console.warn('shopee ads total', e.message); Object.assign(_shHubAds, { key, total: 0, days: 0 }); }
   return _shHubAds;
@@ -3890,7 +3907,32 @@ function mtStoreName(sub) { return MT_STORE_NAMES[sub] || sub || 'ไม่ร�
 //   ยอดขาย = ยอดที่ห้างขายออก คิดที่ราคาที่ห้างจ่ายเรา (รวม VAT) · ห้างส่งเป็นรายเดือน → ลงวันที่ 1 ของเดือน · Business Insight ยังใช้ใบกำกับขายเข้า (ตรงงบ)
 let _mtRetailer = '', _mtRows = null, _mtRowsAt = 0, _mtLoading = null;
 const MT_RETAILERS = ['Eveandboy', 'Konvy', 'Watsons', 'CJ'];
-const MT_COLORS = { Eveandboy: '#D4537E', Konvy: '#1D9E75', Watsons: '#378ADD', CJ: '#BA7517' };
+const MT_COLORS = { Eveandboy: '#D4537E', Konvy: '#1D9E75', Watsons: '#378ADD', CJ: '#BA7517' };   // ค่าเริ่มต้น — ทีมเปลี่ยนได้ที่ปุ่ม 🎨 สีห้าง (เก็บใน ui_settings.mt_colors)
+const MT_PALETTE = ['#D4537E', '#E1306C', '#F43F5E', '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#BA7517', '#84CC16', '#22C55E',
+  '#1D9E75', '#14B8A6', '#06B6D4', '#0EA5E9', '#378ADD', '#6366F1', '#8B5CF6', '#A855F7', '#EC4899', '#64748B'];
+let _mtColorsLoaded = false;
+async function loadMtColors() {
+  if (_mtColorsLoaded) return; _mtColorsLoaded = true;
+  try { const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const r = await fetch(`${window.SUPABASE_URL}/rest/v1/ui_settings?key=eq.mt_colors&select=value`, { headers: h });
+    const d = r.ok ? await r.json() : []; if (d[0] && d[0].value) Object.assign(MT_COLORS, d[0].value); } catch (e) { console.warn('mt colors', e.message); }
+}
+async function mtSetColor(ret, col) {
+  MT_COLORS[ret] = col; renderMtHub(); mtColorRender();
+  try { await fetch(`${window.SUPABASE_URL}/rest/v1/ui_settings?on_conflict=key`, { method: 'POST',
+      headers: { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ key: 'mt_colors', value: MT_COLORS, updated_at: new Date().toISOString() }) }); }
+  catch (e) { alert('บันทึกสีไม่สำเร็จ: ' + e.message); }
+}
+function mtColorRender() {
+  const pop = document.getElementById('mtColorPop'); if (!pop) return;
+  pop.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">สีประจำห้าง ใช้ในกราฟและตารางทุกหน้าของ Modern Trade · เปลี่ยนแล้วทุกคนเห็นเหมือนกัน</div>'
+    + MT_RETAILERS.map(r => `<div class="row"><div class="nm"><span class="mt-dot" style="background:${MT_COLORS[r]};margin:0;"></span>${r}</div><div class="sw">`
+      + MT_PALETTE.map(c => `<i class="${c.toLowerCase() === String(MT_COLORS[r]).toLowerCase() ? 'on' : ''}" style="background:${c};" title="${c}" onclick="mtSetColor('${r}','${c}')"></i>`).join('')
+      + `<input type="color" value="${MT_COLORS[r]}" title="เลือกสีเอง" onchange="mtSetColor('${r}',this.value)"></div></div>`).join('');
+}
+function mtColorToggle() { const pop = document.getElementById('mtColorPop'); if (!pop) return; const show = pop.style.display === 'none'; if (show) mtColorRender(); pop.style.display = show ? 'block' : 'none'; }
+document.addEventListener('click', () => { const pop = document.getElementById('mtColorPop'); if (pop) pop.style.display = 'none'; });
 function mtGo(r) { _mtRetailer = r || ''; showPage('mthub'); }
 async function loadMtSellout() {
   if (_mtRows && Date.now() - _mtRowsAt < 10 * 60 * 1000) return _mtRows;
@@ -3909,7 +3951,7 @@ async function renderMtHub() {
   document.getElementById('mtAdsCard').style.display = R ? 'none' : '';
   const kpiEl = document.getElementById('mthub-kpis');
   let all;
-  try { all = await loadMtSellout(); }
+  try { await loadMtColors(); all = await loadMtSellout(); }
   catch (e) { kpiEl.innerHTML = `<div class="card" style="grid-column:1/-1;"><div style="color:var(--red);font-size:12px;">โหลดยอด Modern Trade ไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`; return; }
   if (currentPage !== 'mthub' || R !== _mtRetailer) return;
   const from = getDateValue('From') || '2000-01-01', to = getDateValue('To') || '2999-12-31';
@@ -3920,7 +3962,8 @@ async function renderMtHub() {
   const tSales = sum(rows, 'sales'), tQty = sum(rows, 'qty');
   const lastOf = ret => all.filter(r => r.retailer === ret).reduce((m, r) => r.month > m ? r.month : m, '');
   const months = [...new Set(rows.map(r => r.month))].sort();
-  const brKey = r => r.retailer + '|' + r.branch;
+  const brName = r => r.branch || r.retailer;   // ห้างที่ไม่แยกสาขา ใช้ชื่อห้างแทน (รวมเป็นแถวเดียว)
+  const brKey = r => r.retailer + '|' + brName(r);
   const branchSet = new Set(rows.filter(r => r.branch).map(brKey));
   const src = fbeInfoIcon('mt-info-src', '<b>ยอดขาย Modern Trade</b> มาจากไฟล์รายงานยอดขายของห้าง (แท็บ Watsons / Eveandboy / Konvy / CJ) = ยอดที่ห้างขายออกได้จริง คิดที่ราคาที่ห้างจ่ายเรา รวม VAT<br><br>ห้างส่งเป็นยอดรายเดือน ระบบลงไว้ที่วันที่ 1 ของเดือนนั้น — เลือกช่วงวันที่ให้ครอบวันที่ 1 ถึงจะเห็นยอดเดือนนั้น (ตรงกับหน้าภาพรวมยอดขาย)<br><br>ทุกหน้าใช้ยอดชุดนี้ ยกเว้น Business Insight ที่ยังใช้ใบกำกับขายเข้าให้ตรงงบ · ดึงไฟล์ใหม่ทุกวัน 09:30 และ 17:30');
 
@@ -3971,21 +4014,25 @@ async function renderMtHub() {
     document.getElementById('tbodyMtSide').innerHTML = MT_RETAILERS.map(ret => { const rr = rows.filter(r => r.retailer === ret), sv = sum(rr, 'sales'), last = lastOf(ret);
       const nb = new Set(rr.filter(r => r.branch).map(r => r.branch)).size;
       return `<tr style="cursor:pointer;" onclick="mtGo('${ret}')" title="ดูหน้า ${ret}"><td><span class="mt-dot" style="background:${MT_COLORS[ret]};"></span>${ret}</td><td class="num">${money(sv)}</td><td class="num">${fmt(Math.round(sum(rr, 'qty')))}</td><td class="num">${nb ? fmt(nb) : '—'}</td><td class="num">${pct(sv)}</td><td class="num">${last ? PL_TH_M(last) : '—'}</td></tr>`; }).join('');
-  } else {
-    document.getElementById('ttlMtSide').textContent = `สินค้าขายดี — ${R}`;
-    document.getElementById('theadMtSide').innerHTML = '<tr><th>#</th><th>สินค้า</th><th class="num">ยอดขาย</th><th class="num">ชิ้น</th><th class="num">สัดส่วน</th></tr>';
-    document.getElementById('tbodyMtSide').innerHTML = prods.length ? prods.slice(0, 8).map(([sku, v], i) => `<tr>${rank(i)}${prodCell(sku)}<td class="num">${money(v.sales)}</td><td class="num">${fmt(Math.round(v.qty))}</td><td class="num">${pct(v.sales)}</td></tr>`).join('')
-      + (prods.length > 8 ? `<tr><td colspan="5" style="font-size:11px;color:var(--text3);text-align:center;">อีก ${prods.length - 8} สินค้า ดูในตาราง "สินค้า × เดือน" ด้านล่าง</td></tr>` : '')
-      : '<tr><td colspan="5" class="empty">ไม่มียอดในช่วงที่เลือก</td></tr>';
   }
 
-  // สาขาขายดี
-  const byBr = {}; rows.filter(r => r.branch).forEach(r => { const k = brKey(r); const b = (byBr[k] = byBr[k] || { branch: r.branch, retailer: r.retailer, sales: 0, qty: 0, mon: new Set(), last: 0 });
+  // สาขาขายดี — ทุกห้าง: การ์ดล่างซ้าย · ห้างเดียว: ตารางขวาบน (8 แถว/หน้า ให้สูงพอดีกับกราฟ)
+  const byBr = {}; rows.forEach(r => { const k = brKey(r); const b = (byBr[k] = byBr[k] || { branch: brName(r), retailer: r.retailer, sales: 0, qty: 0, mon: new Set(), last: 0 });
     b.sales += r.sales; b.qty += r.qty; b.mon.add(r.month); if (r.month === months[months.length - 1]) b.last += r.sales; });
   const brs = Object.values(byBr).sort((a, b) => b.sales - a.sales);
-  document.getElementById('theadMtBranch').innerHTML = `<tr><th>#</th><th>สาขา</th>${R ? '' : '<th>ห้าง</th>'}<th class="num">ยอดขาย</th><th class="num">ชิ้น</th><th class="num">เดือนที่มียอด</th>${R && months.length ? `<th class="num">${PL_TH_M(months[months.length - 1])}</th>` : ''}</tr>`;
-  document.getElementById('tbodyMtBranch').innerHTML = brs.length ? brs.map((b, i) => `<tr>${rank(i)}<td>${ttcEsc(b.branch)}</td>${R ? '' : `<td><span class="mt-dot" style="background:${MT_COLORS[b.retailer]};"></span>${b.retailer}</td>`}<td class="num">${money(b.sales)}</td><td class="num">${fmt(Math.round(b.qty))}</td><td class="num">${b.mon.size}</td>${R && months.length ? `<td class="num">${b.last ? money(b.last) : '<span style="color:var(--text3);">—</span>'}</td>` : ''}</tr>`).join('')
-    : `<tr><td colspan="7" class="empty">${R ? `${R} ส่งรายงานเป็นยอดรวม ไม่มีแยกสาขา` : 'ไม่มียอดในช่วงที่เลือก'}</td></tr>`;
+  const brHead = `<tr><th>#</th><th>สาขา</th>${R ? '' : '<th>ห้าง</th>'}<th class="num">ยอดขาย</th><th class="num">ชิ้น</th><th class="num">เดือนที่มียอด</th>${R && months.length ? `<th class="num">${PL_TH_M(months[months.length - 1])}</th>` : ''}</tr>`;
+  const brBody = brs.length ? brs.map((b, i) => `<tr>${rank(i)}<td>${ttcEsc(b.branch)}</td>${R ? '' : `<td><span class="mt-dot" style="background:${MT_COLORS[b.retailer]};"></span>${b.retailer}</td>`}<td class="num">${money(b.sales)}</td><td class="num">${fmt(Math.round(b.qty))}</td><td class="num">${b.mon.size}</td>${R && months.length ? `<td class="num">${b.last ? money(b.last) : '<span style="color:var(--text3);">—</span>'}</td>` : ''}</tr>`).join('')
+    : '<tr><td colspan="7" class="empty">ไม่มียอดในช่วงที่เลือก</td></tr>';
+  if (R) {
+    document.getElementById('ttlMtSide').textContent = `สาขาขายดี — ${R}`;
+    document.getElementById('theadMtSide').innerHTML = brHead; document.getElementById('tbodyMtSide').innerHTML = brBody;
+    document.getElementById('mtBranchCard').style.display = 'none';
+    document.getElementById('mtProdCard').style.gridColumn = '1 / -1';
+  } else {
+    document.getElementById('theadMtBranch').innerHTML = brHead; document.getElementById('tbodyMtBranch').innerHTML = brBody;
+    document.getElementById('mtBranchCard').style.display = '';
+    document.getElementById('mtProdCard').style.gridColumn = '';
+  }
 
   // สินค้า × ห้าง (ทุกห้าง) / สินค้า × เดือน (ห้างเดียว)
   const cols = R ? months : MT_RETAILERS;
@@ -6630,7 +6677,7 @@ let adView = 'month';
 // ค่าแอดรายวัน: อ่านจากระบบ (view v_ad_spend_daily — Facebook/TikTok/Shopee/CPAS/Modern Trade จาก API) + Lazada จากชีทเหมือนเดิม (ยังไม่มี API)
 // รูปแบบแถวเหมือนเดิม {channel, subChannel, tag, date, ads} หน้าอื่นไม่ต้องแก้ · adSheetData เก็บของชีททั้งหมดไว้เทียบ (ตารางเทียบในหน้า Ad Performance)
 let adSheetData = [];
-const AD_CHANNELS_FROM_SYSTEM = ['Facebook', 'Facebook PR', 'TikTok', 'Shopee', 'Modern Trade'];
+const AD_CHANNELS_FROM_SYSTEM = ['Facebook', 'Facebook PR', 'TikTok', 'Shopee', 'Modern Trade', 'Lazada'];   // (2026-09-30) Lazada มาจากระบบแล้ว (lazada_ads_daily) — ไม่นับจากชีทเก่าซ้ำ
 async function fetchAdSheetRows() {
   const url = `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(GSHEET_ADS_TAB)}`;
   const res = await fetch(url);
@@ -6915,9 +6962,10 @@ function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) 
   if (ch === 'fb') {
     populateFbSelect();
     const sel = subChannelOverride !== undefined ? (subChannelOverride || 'all') : (document.getElementById('adp-sel-fb')?.value || 'all');
-    if (sel === 'all') { adsF = ads.filter(r=>r.channel==='Facebook'); ordF = orders.filter(r=>r.channel==='Facebook'); }
-    else if (sel === '__other__') { adsF = ads.filter(r=>r.channel==='Facebook' && !r.subChannel); ordF = []; }
-    else { adsF = ads.filter(r=>r.channel==='Facebook' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Facebook' && r.sub_channel===sel); }
+    const isFb = r => r.channel === 'Facebook' || r.channel === 'Facebook PR';   // (2026-09-30) รวมบัญชี PR / boost โพสต์ KOL
+    if (sel === 'all') { adsF = ads.filter(isFb); ordF = orders.filter(r=>r.channel==='Facebook'); }
+    else if (sel === '__other__') { adsF = ads.filter(r=>isFb(r) && !r.subChannel); ordF = []; }
+    else { adsF = ads.filter(r=>isFb(r) && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Facebook' && r.sub_channel===sel); }
   } else if (ch === 'tt') {
     adsF = ads.filter(r=>r.channel==='TikTok'); ordF = orders.filter(r=>r.channel==='TikTok');
   } else if (ch === 'sh') {
@@ -6928,6 +6976,8 @@ function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) 
     const sel = document.getElementById('adp-sel-lz')?.value || 'all';
     if (sel === 'all') { adsF = ads.filter(r=>r.channel==='Lazada'); ordF = orders.filter(r=>r.channel==='Lazada'); }
     else { adsF = ads.filter(r=>r.channel==='Lazada' && r.subChannel===sel); ordF = orders.filter(r=>r.channel==='Lazada' && r.sub_channel===sel); }
+  } else if (ch === 'mt') {
+    adsF = ads.filter(r=>r.channel==='Modern Trade'); ordF = orders.filter(r=>r.channel==='Modern Trade');
   } else { adsF = ads; ordF = orders; }
 
   const a = aggAdGmv(adsF, ordF, view);
@@ -6945,7 +6995,7 @@ function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) 
     }
     document.getElementById(subId).textContent = `GMV ฿${fmtB(tGmv)} · แอด ฿${fmtB(tAds)}${extra} · ROAS ${roas}x`;
   }
-  makeAdChart(chartId, labels, gmvArr, adsArr, pctArr, { daily: view === 'day', salesOnly: !!HUB_SALES_ONLY[ch] });
+  makeAdChart(chartId, labels, gmvArr, adsArr, pctArr, { daily: view === 'day', salesOnly: !!HUB_SALES_ONLY[ch] && !String(chartId).startsWith('adpChart') });
 }
 // หน้าภาพรวม Facebook / TikTok แสดงยอดขายอย่างเดียวแบบหน้า Shopee — ค่าแอดดูที่หน้า Facebook Ads / TikTok Ads
 const HUB_SALES_ONLY = { fb: true, tt: true };
@@ -6976,6 +7026,7 @@ async function renderAdpAll() {
   renderAdpChannel('adpChartTT','adp-sub-tt','tt');
   renderAdpChannel('adpChartSH','adp-sub-sh','sh');
   renderAdpChannel('adpChartLZ','adp-sub-lz','lz');
+  renderAdpChannel('adpChartMT','adp-sub-mt','mt');
   renderAdpSummary();
 }
 
@@ -8964,7 +9015,8 @@ function autoPageTable(table) {
   const nextEl = table.nextElementSibling, wrapNext = table.parentElement && table.parentElement.nextElementSibling;
   if ((nextEl && /Pager$/.test(nextEl.id || '')) || (wrapNext && /Pager$/.test(wrapNext.id || ''))) return;
   const rows = [...tbody.children].filter(tr => tr.tagName === 'TR');
-  const size = pgSize();
+  const fixedSize = +table.getAttribute('data-page-size') || 0;   // (2026-09-30) ตารางที่ต้องสูงพอดีกับการ์ดข้างๆ
+  const size = fixedSize || pgSize();
   let pager = table._pgEl;
   if (rows.length <= size && !(table._pg && table._pg.page > 1)) { rows.forEach(tr => { if (tr._pgHidden) { tr.style.display = ''; tr._pgHidden = false; } }); if (pager) pager.innerHTML = ''; return; }
   table._pg = table._pg || { page: 1, n: rows.length };
@@ -8981,7 +9033,7 @@ function autoPageTable(table) {
     ${nums.map(p => p === '...' ? `<span style="color:var(--text3);padding:0 4px;">...</span>` : `<button class="btn ${p === cur ? 'btn-primary' : 'btn-ghost'}" style="min-width:32px;" data-p="${p}">${p}</button>`).join('')}
     <button class="btn btn-ghost" data-p="${cur + 1}" ${cur === totalPages ? 'disabled' : ''}>ถัดไป ›</button>
     <span style="color:var(--text3);margin-left:8px;">แสดง ${start + 1}–${Math.min(start + size, rows.length)} จาก ${rows.length} · หน้า ${cur}/${totalPages}</span>
-    ${pgSizeSelectHtml('setPgSize(+this.value)')}</div>`;
+    ${fixedSize ? '' : pgSizeSelectHtml('setPgSize(+this.value)')}</div>`;
   if (pager._html === html) return;   // ไม่วาดซ้ำถ้าไม่มีอะไรเปลี่ยน
   pager._html = html; pager.innerHTML = html;
   pager.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { table._pg.page = +b.dataset.p; autoPageTable(table); });
@@ -10182,12 +10234,13 @@ async function renderShAds() {
   // ยอดขายจริงตามบัญชี (sales_summary บน v_orders_clean — แหล่งเดียวกับหน้าภาพรวม Shopee) โหลดขนานกับข้อมูลแอด
   const salesReady = ensureSalesSummary(from, to, () => { if (currentPage === 'shads' && seq === _shAdsSeq) renderShAds(); }).catch(e => console.warn('sales_summary (shads)', e.message));
   try {
-    const [r1, r2, r3, r5, r6] = await Promise.all([
+    const [r1, r2, r3, r5, r6, r7] = await Promise.all([
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_daily?select=stat_date,expense,broad_gmv,direct_gmv,broad_order,direct_order,impression,clicks,broad_item_sold,synced_at&stat_date=gte.${from}&stat_date=lte.${to}&order=stat_date.asc`, { headers }),
       fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_campaign_summary`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) }),
       fetch(`${window.SUPABASE_URL}/rest/v1/rpc/shopee_ads_product_daily`, { method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) }),
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_manual?select=*&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_meta_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers })]);
+      fetch(`${window.SUPABASE_URL}/rest/v1/shopee_cpas_meta_daily?select=stat_date,spend&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
+      fetch(`${window.SUPABASE_URL}/rest/v1/mv_ad_spend_daily?select=date,tag,ads&channel=eq.Shopee&source=eq.shopee_sheet&date=gte.${from}&date=lte.${to}`, { headers })]);
     if (!r1.ok) throw new Error('shopee_ads_daily: ' + await r1.text());
     if (!r2.ok) throw new Error('shopee_ads_campaign_summary: ' + await r2.text());
     daily = await r1.json(); camps = await r2.json();
@@ -10200,16 +10253,20 @@ async function renderShAds() {
     // ยอดขายจริงรายวันของ Shopee (ยอดสุทธิตามสูตรบัญชี รวมแถวคืนเงินติดลบ) — เก็บทั้งช่วงไว้ทำ KPI แม้วันนั้นยังไม่มีข้อมูลแอด
     _shAdsRealByDate = {}; salesRows(from, to, 'Shopee').forEach(s => { _shAdsRealByDate[s.date] = (_shAdsRealByDate[s.date] || 0) + (parseFloat(s.net_revenue) || 0); });
     // ทุกวันในช่วงที่มีข้อมูลแอดอย่างน้อย 1 แหล่ง (API หรือ Cowork)
-    const dates = new Set(daily.map(r => r.stat_date)); Object.keys(_shAdsManual).forEach(d => dates.add(d)); Object.keys(_shAdsCpas).forEach(d => dates.add(d));
+    // (2026-09-30) ร้าน 24hr จากชีท: ค่าแอด CPC วันที่ยังไม่มี API (ม.ค.–มี.ค.) + Live (ส.ค.) — ให้ยอดรวมตรงกับ Ad Performance / MKT Tracking
+    const shSheet = {}; if (r7 && r7.ok) (await r7.json()).forEach(x => { const o = (shSheet[x.date] = shSheet[x.date] || { cpc: 0, live: 0 }); if (x.tag === 'Live') o.live += +x.ads || 0; else o.cpc += +x.ads || 0; });
+    const dates = new Set(daily.map(r => r.stat_date)); Object.keys(_shAdsManual).forEach(d => dates.add(d)); Object.keys(_shAdsCpas).forEach(d => dates.add(d)); Object.keys(shSheet).forEach(d => dates.add(d));
     // (2026-09-30) ตั้งแต่มีร้าน Shopee 24hr ตารางนี้มี 2 แถว/วัน (Mall + 24hr) — รวมทุกร้านต่อวัน (เดิมเขียนทับกัน เหลือร้านเดียวแบบสุ่ม ทำให้ค่าแอดต่ำกว่าหน้าภาพรวม Shopee)
     const byDate = {}; daily.forEach(r => {
       const b = byDate[r.stat_date]; if (!b) { byDate[r.stat_date] = { ...r }; return; }
       ['expense', 'broad_gmv', 'direct_gmv', 'broad_order', 'direct_order', 'impression', 'clicks', 'broad_item_sold'].forEach(k => { b[k] = (+b[k] || 0) + (+r[k] || 0); });
       if (r.synced_at && (!b.synced_at || r.synced_at > b.synced_at)) b.synced_at = r.synced_at; });
     daily = [...dates].sort().map(d => byDate[d] || { stat_date: d, expense: 0, broad_gmv: 0, direct_gmv: 0, broad_order: 0, direct_order: 0, impression: 0, clicks: 0, broad_item_sold: 0, _noapi: true });
+    daily.forEach(r => { const x = shSheet[r.stat_date]; if (x && x.cpc) r.expense = (+r.expense || 0) + x.cpc; });
     daily.forEach(r => { const m = _shAdsManual[r.stat_date];
       r.meta_ads = m ? +m.meta_ads || 0 : 0; r.coins = m ? +m.coins || 0 : 0; r.manual_other = m ? +m.other_ads || 0 : 0;
       r.brand_ads = m && m.brand_ads !== null && m.brand_ads !== undefined ? +m.brand_ads : null; r.live_ads = m && m.live_ads !== null && m.live_ads !== undefined ? +m.live_ads : null;
+      { const x = shSheet[r.stat_date]; if (x && x.live) r.live_ads = (r.live_ads || 0) + x.live; }
       // ค่าแอดรวม = ตัวเลขจริงทุกประเภทที่มีแล้ว (ไม่ประมาณจากเครดิตอีก) — วันที่ Cowork ยังไม่อ่านจะยังไม่ครบ (ตารางทำแถวสีเหลือง)
       const cp = _shAdsCpas[r.stat_date]; r.cpas = cp ? +cp.spend || 0 : null;
       r.total_all = (+r.expense || 0) + (r.brand_ads || 0) + (r.live_ads || 0) + r.meta_ads + r.coins + r.manual_other + (r.cpas || 0);
