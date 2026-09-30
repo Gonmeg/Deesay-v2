@@ -739,7 +739,7 @@ async function syncDealerOrders() {
       })
     })
 
-    const { error: delSKU } = await DB.from('sku_revenue').delete().in('channel', ['ตัวแทน','Modern Trade'])
+    const { error: delSKU } = await DB.from('sku_revenue').delete().in('channel', ['ตัวแทน','Modern Trade']).not('order_id', 'like', 'MTSO-*')   // (2026-09-30) ไม่ลบยอด MT จากไฟล์รายงานร้าน
     if (delSKU) throw delSKU
     for (let i = 0; i < skuRows.length; i += BATCH) {
       const { error } = await withRetry(() => DB.from('sku_revenue').insert(skuRows.slice(i, i + BATCH)))
@@ -1185,7 +1185,7 @@ async function executeBulkDelete(channel, from, to, ordersCount, skuCount) {
   bulkDeleteResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังลบ...</div>'
   try {
     // ลบ sku_revenue ก่อนเสมอ (กัน FK/ข้อมูลกำพร้า)
-    const { error: e1 } = await DB.from('sku_revenue').delete().eq('channel', channel).gte('date', from).lte('date', to)
+    const { error: e1 } = await DB.from('sku_revenue').delete().eq('channel', channel).gte('date', from).lte('date', to).not('order_id', 'like', 'MTSO-*')   // (2026-09-30) ไม่ลบยอด MT จากไฟล์รายงานร้าน
     if (e1) throw e1
     const { error: e2 } = await DB.from('orders').delete().eq('channel', channel).gte('date', from).lte('date', to)
     if (e2) throw e2
@@ -1697,7 +1697,7 @@ async function handleConfirm() {
 
   if (channel === 'ตัวแทน/MT') {
     try {
-      await DB.from('sku_revenue').delete().in('channel', ['ตัวแทน','Modern Trade'])
+      await DB.from('sku_revenue').delete().in('channel', ['ตัวแทน','Modern Trade']).not('order_id', 'like', 'MTSO-*')   // (2026-09-30) ไม่ลบยอด MT จากไฟล์รายงานร้าน
       await DB.from('orders').delete().in('channel', ['ตัวแทน','Modern Trade'])
       const BATCH = 500
       for (let i = 0; i < processed.length; i += BATCH) {
