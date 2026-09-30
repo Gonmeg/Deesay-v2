@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-k</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-m</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -4051,45 +4051,102 @@ async function renderMtHub() {
 }
 
 // ===== (2026-09-30) CPAS on Meta → Shopee — ท้ายหน้า Shopee Ads (ย้ายมาจากหน้า Facebook Ads) · RPC fb_ads_page(p_mode = 'cpas') =====
+//   ตัวเลขทั้งหมดมาจาก Meta Ads Manager ของบัญชี CPAS → Shopee (ซื้อ/ยอดขาย = คอลัมน์ shared items — fb_cpas_daily จาก meta-cpas-sync)
+//   คนละชุดกับตัวเลข CPAS / Meta ที่ Shopee รายงานเองใน Seller Centre — ห้ามปนกัน
+//   เลือกคอลัมน์ได้ที่ ⚙ Metrics (บันทึกแยกตามผู้ใช้ เหมือนตารางอื่น)
+let _shCpas = null;
+const CP_MONEY = v => v ? '฿' + fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
+const CP_NUM = v => v ? fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
+const CP_PER = (a, b) => +b ? '฿' + fmt(Math.round(a / b)) : '<span style="color:var(--text3);">—</span>';
+const CP_ROAS = (v, sp) => { if (!+sp || !+v) return '<span style="color:var(--text3);">—</span>'; const x = v / sp; return `<span style="color:${x >= 3 ? 'var(--green)' : x >= 1 ? 'var(--accent)' : 'var(--red)'};font-weight:700;">${x.toFixed(2)}x</span>`; };
+const CP_M = {
+  spend:          { label: 'ค่าแอด', fmt: r => `<b>${CP_MONEY(+r.spend)}</b>`, val: r => +r.spend },
+  impressions:    { label: 'Impressions', fmt: r => CP_NUM(+r.impressions), val: r => +r.impressions },
+  reach:          { label: 'Reach', fmt: r => CP_NUM(+r.reach), val: r => +r.reach },
+  frequency:      { label: 'ความถี่', fmt: r => +r.reach ? (r.impressions / r.reach).toFixed(2) : '—', val: r => +r.reach ? r.impressions / r.reach : 0 },
+  cpm:            { label: 'CPM', fmt: r => +r.impressions ? '฿' + fmt(Math.round(r.spend / r.impressions * 1000)) : '—', val: r => +r.impressions ? r.spend / r.impressions * 1000 : 0 },
+  link_clicks:    { label: 'คลิกลิงก์', fmt: r => CP_NUM(+r.link_clicks), val: r => +r.link_clicks },
+  ctr:            { label: 'CTR', fmt: r => +r.impressions ? (r.link_clicks / r.impressions * 100).toFixed(2) + '%' : '—', val: r => +r.impressions ? r.link_clicks / r.impressions : 0 },
+  cpc:            { label: '฿ ต่อคลิก', fmt: r => CP_PER(+r.spend, +r.link_clicks), val: r => +r.link_clicks ? r.spend / r.link_clicks : 0 },
+  lpv:            { label: 'เข้าหน้า Shopee', fmt: r => CP_NUM(+r.lpv), val: r => +r.lpv },
+  cost_lpv:       { label: '฿ ต่อการเข้าหน้า Shopee', fmt: r => CP_PER(+r.spend, +r.lpv), val: r => +r.lpv ? r.spend / r.lpv : 0 },
+  vc:             { label: 'ดูสินค้า (Meta)', fmt: r => CP_NUM(+r.vc), val: r => +r.vc },
+  atc:            { label: 'ใส่ตะกร้า (Meta)', fmt: r => CP_NUM(+r.atc), val: r => +r.atc },
+  cost_atc:       { label: '฿ ต่อใส่ตะกร้า', fmt: r => CP_PER(+r.spend, +r.atc), val: r => +r.atc ? r.spend / r.atc : 0 },
+  sh_pur:         { label: 'ซื้อ (Meta)', fmt: r => CP_NUM(+r.sh_pur), val: r => +r.sh_pur },
+  sh_val:         { label: 'ยอดขาย (Meta)', fmt: r => CP_MONEY(+r.sh_val), val: r => +r.sh_val },
+  roas_sh:        { label: 'ROAS (Meta)', fmt: r => CP_ROAS(+r.sh_val, +r.spend), val: r => +r.spend ? r.sh_val / r.spend : 0 },
+  cpa_sh:         { label: '฿ ต่อการซื้อ', fmt: r => CP_PER(+r.spend, +r.sh_pur), val: r => +r.sh_pur ? r.spend / r.sh_pur : 0 },
+  aov_sh:         { label: 'ยอดต่อการซื้อ', fmt: r => CP_PER(+r.sh_val, +r.sh_pur), val: r => +r.sh_pur ? r.sh_val / r.sh_pur : 0 },
+  purchases:      { label: 'ซื้อ (pixel)', fmt: r => CP_NUM(+r.purchases), val: r => +r.purchases },
+  purchase_value: { label: 'มูลค่าซื้อ (pixel)', fmt: r => CP_MONEY(+r.purchase_value), val: r => +r.purchase_value },
+  days:           { label: 'จำนวนวันที่รัน', fmt: r => fmt(+r.days || 0), val: r => +r.days || 0 },
+  period:         { label: 'ช่วงที่รัน', fmt: r => `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;white-space:nowrap;">${thShort(r.first_date)}${r.last_date !== r.first_date ? ' – ' + thShort(r.last_date) : ''}</span>`, val: r => r.first_date || '' }
+};
+const CP_ORDER = ['spend','impressions','reach','frequency','cpm','link_clicks','ctr','cpc','lpv','cost_lpv','vc','atc','cost_atc','sh_pur','sh_val','roas_sh','cpa_sh','aov_sh','purchases','purchase_value','days','period'];
+function shCpasRegister() {
+  if (METRIC_CONFIGS.shCpasCamp) return;
+  const DEF = { shCpasCamp: ['spend','impressions','cpm','link_clicks','ctr','cpc','lpv','cost_lpv','atc','sh_pur','sh_val','roas_sh','period'],
+                shCpasAds:  ['spend','link_clicks','ctr','cpc','lpv','cost_lpv','atc','sh_pur','sh_val','roas_sh','period'] };
+  Object.keys(DEF).forEach(pg => { const def = DEF[pg], meta = {}; CP_ORDER.forEach(k => { meta[k] = { label: CP_M[k].label, default: def.includes(k) }; });
+    METRIC_CONFIGS[pg] = { order: def.concat(CP_ORDER.filter(k => !def.includes(k))), meta };
+    metricState[pg] = { order: [...METRIC_CONFIGS[pg].order], active: {} }; CP_ORDER.forEach(k => { metricState[pg].active[k] = def.includes(k); }); });
+  try { applyMetricPrefs(['shCpasCamp', 'shCpasAds']); } catch (e) { console.warn('cpas prefs', e.message); }
+}
+const cpMetricsBtn = pg => `<div style="position:relative;"><button class="btn btn-ghost" id="${pg}MetricsBtn" onclick="toggleMetricsPanel('${pg}')">⚙ Metrics <span id="${pg}-metric-count" style="color:var(--accent);"></span></button>
+  <div id="${pg}-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="${pg}-metrics-checks"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('${pg}')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('${pg}')">เลือกทั้งหมด</button></div></div></div>`;
+function shCpasTables() {
+  const d = _shCpas; if (!d) return;
+  const cols = pg => activeCols(pg).filter(k => CP_M[k]);
+  const kc = cols('shCpasCamp'), ka = cols('shCpasAds');
+  { const c = document.getElementById('shCpasCamp-metric-count'); if (c) c.textContent = `(${kc.length})`; const c2 = document.getElementById('shCpasAds-metric-count'); if (c2) c2.textContent = `(${ka.length})`; }
+  const th = ks => ks.map(k => `<th>${CP_M[k].label}</th>`).join('');
+  const camps = (d.by_campaign || []).slice().sort((a, b) => +b.spend - +a.spend);
+  document.getElementById('theadShCpasCamp').innerHTML = `<tr><th>แคมเปญ</th><th>แอด</th>${th(kc)}</tr>`;
+  document.getElementById('tbodyShCpasCamp').innerHTML = camps.map(c => `<tr><td><b>${ttcEsc(c.name || c.campaign_id)}</b></td><td>${fmt(c.ads)}</td>${kc.map(k => `<td>${CP_M[k].fmt(c)}</td>`).join('')}</tr>`).join('')
+    || `<tr><td colspan="${2 + kc.length}" class="empty">ไม่มีแอด CPAS ในช่วงที่เลือก</td></tr>`;
+  const ads = (d.ads || []).slice().sort((a, b) => +b.spend - +a.spend);
+  document.getElementById('theadShCpasAds').innerHTML = `<tr><th>แอด</th>${th(ka)}</tr>`;
+  document.getElementById('tbodyShCpasAds').innerHTML = ads.map(a => { const url = a.post_id ? `https://www.facebook.com/${a.post_id}` : '';
+    const img = a.thumbnail_url ? `<img src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
+    return `<tr><td><div style="display:flex;gap:10px;align-items:center;min-width:240px;"><a ${url ? `href="${ttcEscAttr(url)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${img}</a>
+      <div style="min-width:0;"><div style="font-weight:600;font-size:12px;">${url ? `<a href="${ttcEscAttr(url)}" target="_blank" rel="noopener" style="color:inherit;">${ttcEsc(a.name || a.ad_id)}</a>` : ttcEsc(a.name || a.ad_id)}</div><div style="font-size:10.5px;color:var(--text3);">${ttcEsc(a.campaign || '')}</div></div></div></td>
+      ${ka.map(k => `<td>${CP_M[k].fmt(a)}</td>`).join('')}</tr>`; }).join('')
+    || `<tr><td colspan="${1 + ka.length}" class="empty">ไม่มีแอด CPAS ในช่วงที่เลือก</td></tr>`;
+}
 async function renderShCpas(from, to) {
   const el = document.getElementById('shCpasSec'); if (!el) return;
   const seq = (renderShCpas._seq = (renderShCpas._seq || 0) + 1);
-  el.innerHTML = '<div class="card"><div class="section-title">CPAS on Meta → Shopee</div><div style="font-size:12px;color:var(--text3);margin-top:8px;">กำลังโหลด...</div></div>';
+  if (!_shCpas) el.innerHTML = '<div class="card"><div class="section-title">CPAS on Meta → Shopee</div><div style="font-size:12px;color:var(--text3);margin-top:8px;">กำลังโหลด...</div></div>';
   let d;
   try { d = await supaRpc('fb_ads_page', { p_from: from, p_to: to, p_mode: 'cpas' }); }
   catch (e) { el.innerHTML = `<div class="card"><div class="section-title">CPAS on Meta → Shopee</div><div style="color:var(--red);font-size:12px;margin-top:8px;">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`; return; }
   if (seq !== renderShCpas._seq || currentPage !== 'shads') return;
-  const ads = d.ads || [], camps = d.by_campaign || [];
+  _shCpas = d; shCpasRegister();
+  const ads = d.ads || [];
   const S = k => ads.reduce((t, a) => t + (+a[k] || 0), 0);
-  const T = { spend: S('spend'), imp: S('impressions'), reach: S('reach'), lc: S('link_clicks'), pur: S('purchases'), pv: S('purchase_value') };
-  const m = v => v ? '฿' + fmt(Math.round(v)) : '—';
-  const cpm = r => +r.impressions ? '฿' + fmt(Math.round(r.spend / r.impressions * 1000)) : '—';
-  const ctr = r => +r.impressions ? (r.link_clicks / r.impressions * 100).toFixed(2) + '%' : '—';
-  const cpc = r => +r.link_clicks ? '฿' + fmt(Math.round(r.spend / r.link_clicks)) : '—';
-  const roas = r => { if (!+r.spend || !+r.purchase_value) return '<span style="color:var(--text3);">—</span>'; const x = r.purchase_value / r.spend;
-    return `<span style="color:${x >= 2 ? 'var(--green)' : x >= 1 ? 'var(--accent)' : 'var(--red)'};font-weight:700;">${x.toFixed(2)}x</span>`; };
-  const per = r => `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;white-space:nowrap;">${thShort(r.first_date)}${r.last_date !== r.first_date ? ' – ' + thShort(r.last_date) : ''}</span>`;
+  const T = { spend: S('spend'), imp: S('impressions'), lc: S('link_clicks'), lpv: S('lpv'), atc: S('atc'), pur: S('sh_pur'), val: S('sh_val') };
+  const waiting = T.spend > 0 && !T.pur && !T.val;
   const kpi = (t, v, sub) => `<div class="card" style="flex:1;min-width:150px;"><div class="card-title">${t}</div><div class="kpi-value">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:3px;">${sub}</div>` : ''}</div>`;
-  const info = fbeInfoIcon('sh-cpas-info', '<b>CPAS (Collaborative Ads)</b> = แอด Meta บัญชี "CPAS → Shopee" ที่ยิงพาคนไปซื้อในร้าน Shopee<br><br>ค่าแอดชุดนี้<b>รวมอยู่ในค่าแอดรวมของ Shopee ด้านบนแล้ว</b> (ไม่นับในหน้า Facebook Ads)<br><br>ซื้อ / มูลค่าซื้อ = ตัวเลขที่ Meta นับได้ ต่ำกว่ายอดจริงใน Shopee ใช้ดูแนวโน้ม');
-  const campRows = camps.map(c => `<tr><td><b>${ttcEsc(c.name || c.campaign_id)}</b></td><td>${fmt(c.ads)}</td><td style="font-weight:600;">${m(+c.spend)}</td><td>${fmt(c.impressions)}</td><td>${cpm(c)}</td><td>${fmt(c.link_clicks)}</td><td>${ctr(c)}</td><td>${cpc(c)}</td><td>${fmt(c.purchases)}</td><td>${m(+c.purchase_value)}</td><td>${roas(c)}</td><td>${per(c)}</td></tr>`).join('')
-    || '<tr><td colspan="12" class="empty">ไม่มีแอด CPAS ในช่วงที่เลือก</td></tr>';
-  const adRows = ads.map(a => { const url = a.post_id ? `https://www.facebook.com/${a.post_id}` : '';
-    const th = a.thumbnail_url ? `<img src="${ttcEscAttr(a.thumbnail_url)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">` : '<div style="width:40px;height:40px;border-radius:6px;background:var(--bg3);flex-shrink:0;"></div>';
-    return `<tr><td><div style="display:flex;gap:10px;align-items:center;min-width:220px;">${th}<div style="min-width:0;"><div style="font-weight:600;">${url ? `<a href="${url}" target="_blank" rel="noopener" style="color:inherit;">${ttcEsc(a.name || a.ad_id)}</a>` : ttcEsc(a.name || a.ad_id)}</div><div style="font-size:10.5px;color:var(--text3);">${ttcEsc(a.campaign || '')}</div></div></div></td>
-      <td style="font-weight:600;">${m(+a.spend)}</td><td>${fmt(a.impressions)}</td><td>${cpm(a)}</td><td>${fmt(a.link_clicks)}</td><td>${ctr(a)}</td><td>${cpc(a)}</td><td>${fmt(a.purchases)}</td><td>${m(+a.purchase_value)}</td><td>${roas(a)}</td><td>${per(a)}</td></tr>`; }).join('')
-    || '<tr><td colspan="11" class="empty">ไม่มีแอด CPAS ในช่วงที่เลือก</td></tr>';
+  const info = fbeInfoIcon('sh-cpas-info', '<b>CPAS on Meta</b> = แอดบัญชี Meta "CPAS → Shopee" · ค่าแอดชุดนี้<b>รวมอยู่ในค่าแอดรวมของ Shopee ด้านบนแล้ว</b><br><br><b>ตัวเลขทุกตัวในส่วนนี้มาจาก Meta Ads Manager</b> — ซื้อ / ยอดขาย / ใส่ตะกร้า / ดูสินค้า = คอลัมน์ "shared items" ของบัญชีนี้ใน Ads Manager<br><br>เป็น<b>คนละชุด</b>กับตัวเลข CPAS / Meta ที่ Shopee รายงานเองใน Seller Centre — อย่านำมาบวกหรือเทียบแทนกัน<br><br>เลือกคอลัมน์ได้ที่ ⚙ Metrics');
   el.innerHTML = `<div class="section-header" style="margin-bottom:12px;"><div class="section-title" style="font-size:15px;">CPAS on Meta → Shopee ${info}</div></div>
+    ${waiting ? '<div style="font-size:11.5px;color:var(--orange);margin:-4px 0 12px;">ยอดซื้อ / ยอดขายจาก Meta ยังไม่มี — ระบบกำลังรอดึงจาก Meta Ads Manager (ดึงทุกวัน 08:20 และ 20:20)</div>' : ''}
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-      ${kpi('ค่าแอด CPAS', m(T.spend), `${fmt(ads.length)} แอด · ${fmt(camps.length)} แคมเปญ`)}
-      ${kpi('Impressions', fmt(T.imp), `CPM ${T.imp ? '฿' + fmt(Math.round(T.spend / T.imp * 1000)) : '—'} · Reach ${fmt(T.reach)}`)}
-      ${kpi('คลิกลิงก์', fmt(T.lc), `CTR ${T.imp ? (T.lc / T.imp * 100).toFixed(2) + '%' : '—'} · ฿${T.lc ? fmt(Math.round(T.spend / T.lc)) : '—'} ต่อคลิก`)}
-      ${kpi('ซื้อ (Meta นับ)', fmt(T.pur), T.pv ? `มูลค่า ฿${fmt(Math.round(T.pv))}` : '')}
-      ${kpi('ROAS (Meta นับ)', roas({ spend: T.spend, purchase_value: T.pv }), 'มูลค่าซื้อที่ Meta นับ ÷ ค่าแอด')}
+      ${kpi('ค่าแอด CPAS', CP_MONEY(T.spend), `${fmt(ads.length)} แอด · ${fmt((d.by_campaign || []).length)} แคมเปญ`)}
+      ${kpi('คลิกลิงก์', CP_NUM(T.lc), `CTR ${T.imp ? (T.lc / T.imp * 100).toFixed(2) + '%' : '—'} · ${T.lc ? '฿' + fmt(Math.round(T.spend / T.lc)) : '—'} ต่อคลิก`)}
+      ${kpi('เข้าหน้า Shopee', CP_NUM(T.lpv), T.lpv ? `฿${fmt(Math.round(T.spend / T.lpv))} ต่อครั้ง` : '')}
+      ${kpi('ใส่ตะกร้า (Meta)', CP_NUM(T.atc), T.atc ? `฿${fmt(Math.round(T.spend / T.atc))} ต่อครั้ง` : '')}
+      ${kpi('ยอดขาย (Meta)', CP_MONEY(T.val), T.pur ? `ซื้อ ${fmt(T.pur)} ครั้ง · ฿${fmt(Math.round(T.spend / T.pur))} ต่อการซื้อ` : '')}
+      ${kpi('ROAS (Meta)', CP_ROAS(T.val, T.spend), 'ยอดขาย (Meta) ÷ ค่าแอด')}
     </div>
-    <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">CPAS ตามแคมเปญ</div><button class="btn btn-ghost" onclick="exportTable('tblShCpasCamp')">⬇ Export CSV</button></div>
-      <div class="table-wrap"><table id="tblShCpasCamp"><thead><tr><th>แคมเปญ</th><th>แอด</th><th>ค่าแอด</th><th>Impressions</th><th>CPM</th><th>คลิกลิงก์</th><th>CTR</th><th>฿/คลิก</th><th>ซื้อ (Meta)</th><th>มูลค่าซื้อ (Meta)</th><th>ROAS (Meta)</th><th>ช่วงที่รัน</th></tr></thead><tbody>${campRows}</tbody></table></div></div>
-    <div class="card"><div class="section-header"><div class="section-title">CPAS ตามแอด</div><button class="btn btn-ghost" onclick="exportTable('tblShCpasAds')">⬇ Export CSV</button></div>
-      <div class="table-wrap"><table id="tblShCpasAds"><thead><tr><th>แอด</th><th>ค่าแอด</th><th>Impressions</th><th>CPM</th><th>คลิกลิงก์</th><th>CTR</th><th>฿/คลิก</th><th>ซื้อ (Meta)</th><th>มูลค่าซื้อ (Meta)</th><th>ROAS (Meta)</th><th>ช่วงที่รัน</th></tr></thead><tbody>${adRows}</tbody></table></div></div>`;
+    <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">CPAS ตามแคมเปญ</div>
+      <div style="display:flex;gap:8px;align-items:center;">${cpMetricsBtn('shCpasCamp')}<button class="btn btn-ghost" onclick="exportTable('tblShCpasCamp')">⬇ Export CSV</button></div></div>
+      <div class="table-wrap"><table id="tblShCpasCamp"><thead id="theadShCpasCamp"></thead><tbody id="tbodyShCpasCamp"></tbody></table></div></div>
+    <div class="card"><div class="section-header"><div class="section-title">CPAS ตามแอด</div>
+      <div style="display:flex;gap:8px;align-items:center;">${cpMetricsBtn('shCpasAds')}<button class="btn btn-ghost" onclick="exportTable('tblShCpasAds')">⬇ Export CSV</button></div></div>
+      <div class="table-wrap"><table id="tblShCpasAds"><thead id="theadShCpasAds"></thead><tbody id="tbodyShCpasAds"></tbody></table></div></div>`;
+  shCpasTables();
 }
 
 // ค่าโฆษณา Awareness (แยกจากยอดขาย ไม่คำนวณ ROI) — รองรับมุมมอง ปี/เดือน/วัน เหมือนกราฟ ads ช่องทางอื่น
@@ -9041,6 +9098,7 @@ function rerenderPage(page) {
   else if (page === 'ttaCreator') { renderTtaCreatorSummary(); }
   else if (page === 'ttaDailyRep') { renderTtaDailyReport(); }
   else if (page === 'shads') { renderShAdsTable(); }
+  else if (page === 'shCpasCamp' || page === 'shCpasAds') { shCpasTables(); }   // (2026-09-30) CPAS ท้ายหน้า Shopee Ads
 }
 function activeCols(page) {
   return metricState[page].order.filter(k => metricState[page].active[k]);
