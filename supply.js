@@ -328,6 +328,8 @@
         #page-supply table.sup-loc td { padding:10px 10px; vertical-align:top; }
         #page-supply .sl-q { font-size:13px; font-weight:600; line-height:1.3; }
         #page-supply .sl-q.sl-tot { font-weight:700; }
+        #page-supply table.sup-loc td.sl-totc { background:color-mix(in srgb, var(--accent) 6%, transparent); }
+        #page-supply table.sup-loc tr.sl-par td { font-weight:600; }
         #page-supply .sl-empty { color:var(--text3); opacity:.45; }
         #page-supply .sl-d { display:inline-block; margin-top:4px; font-size:10.5px; line-height:1.6; padding:0 7px; border-radius:99px; background:var(--bg3); color:var(--text2); white-space:nowrap; }
         #page-supply .sl-d.red { background:color-mix(in srgb, var(--red) 15%, transparent); color:var(--red); font-weight:700; }
@@ -667,7 +669,7 @@
     }).join('') : `<tr><td colspan="${COLS.length}" class="empty">ไม่มี SKU ตรงตัวกรอง</td></tr>`;
     { const host = document.getElementById('supTbl'); let n = host.nextElementSibling;
       while (n && n.classList && n.classList.contains('auto-pager')) { const x = n.nextElementSibling; n.remove(); n = x; } }
-    document.getElementById('supTbl').innerHTML = `<table class="sticky-head-table sup-main" data-no-page data-no-sort><colgroup><col style="width:17%;">${`<col style="width:${(83 / (COLS.length - 1)).toFixed(3)}%;">`.repeat(COLS.length - 1)}</colgroup><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    document.getElementById('supTbl').innerHTML = `<table class="sticky-head-table sup-main" data-no-page data-no-sort><colgroup><col style="width:15%;"><col style="width:6%;">${`<col style="width:${(79 / (COLS.length - 2)).toFixed(3)}%;">`.repeat(COLS.length - 2)}</colgroup><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
     document.getElementById('supFoot').textContent = `${fmtN(list.length)} SKU · as of ${dY(DATA.as_of)} · กดแถวเพื่อดูกราฟ`;
     bindPlanInputs();
     document.querySelectorAll('.sup-group').forEach(tr => tr.onclick = () => { const p = tr.dataset.parent; if (collapsed.has(p)) collapsed.delete(p); else collapsed.add(p); renderTable(); });
@@ -707,26 +709,33 @@
     };
     const cellSt = (r, l, i) => { const qn = (r.by_loc || {})[l] || 0; return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${qn ? `<div class="sl-q">${fmtN(qn)}</div>` : EMPTY}</td>`; };
     const gSize = {}; list.forEach(r => { gSize[r.parent_sku] = (gSize[r.parent_sku] || 0) + 1; });
+    // (2026-09-30) ยอดรวมของ Parent (ทุกสี/เบอร์) แยกตามคลัง — โชว์ในแถวหัวกลุ่ม
+    const gSum = {}; list.forEach(r => { const g = (gSum[r.parent_sku] = gSum[r.parent_sku] || { loc: {}, hold: 0, total: 0 });
+      locs.forEach(l => { g.loc[l] = (g.loc[l] || 0) + ((r.by_loc || {})[l] || 0); }); g.hold += HOLD[r.sku] || 0; g.total += stockAll(r); });
+    const sumCell = (v, i) => `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${v ? `<div class="sl-q">${fmtN(v)}</div>` : EMPTY}</td>`;
     let last = null;
     const body = list.map(r => {
       const grouped = gSize[r.parent_sku] >= 2;   // หัวกลุ่มเฉพาะ Parent ที่มี ≥ 2 สี/เบอร์ (แบบเดียวกับตารางบน)
-      const sep = grouped && r.parent_sku !== last ? `<tr class="sl-par"><td class="t-left" colspan="${nCol}"><span class="sup-parent">${esc(r.parent_sku)}</span> <span class="sup-pname">${esc(r.parent_name || '')}</span> <span class="sup-sub" style="display:inline;">· ${gSize[r.parent_sku]} SKU</span></td></tr>` : '';
+      const g = gSum[r.parent_sku];
+      const sep = grouped && r.parent_sku !== last ? `<tr class="sl-par"><td class="t-left"><span class="sup-parent">${esc(r.parent_sku)}</span> <span class="sup-pname">${esc(r.parent_name || '')}</span> <span class="sup-sub" style="display:inline;">· ${gSize[r.parent_sku]} SKU</span></td>
+        <td class="sl-c sl-totc"><div class="sl-q sl-tot">${fmtN(g.total)}</div></td>
+        ${chs.map((l, i) => sumCell(g.loc[l], i)).join('')}${other.map((l, i) => sumCell(g.loc[l], i)).join('')}${sumCell(g.hold, 0)}</tr>` : '';
       last = r.parent_sku;
       const hold = HOLD[r.sku] || 0;
       return sep + `<tr class="${grouped ? 'sup-child' : ''}"><td class="t-left"><span class="${grouped ? 'sup-skucode' : 'sup-parent'}">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div></td>
+        <td class="sl-c sl-totc"><div class="sl-q sl-tot">${fmtN(stockAll(r))}</div></td>
         ${chs.map((l, i) => cellCh(r, l, i)).join('')}
         ${other.map((l, i) => cellSt(r, l, i)).join('')}
-        <td class="sl-c sl-sep">${hold ? `<div class="sl-q">${fmtN(hold)}</div>` : EMPTY}</td>
-        <td class="sl-c"><div class="sl-q sl-tot">${fmtN(stockAll(r))}</div></td></tr>`;
+        <td class="sl-c sl-sep">${hold ? `<div class="sl-q">${fmtN(hold)}</div>` : EMPTY}</td></tr>`;
     }).join('') || `<tr><td colspan="${nCol}" class="empty">ไม่มีรายการ</td></tr>`;
     const chHead = chs.map((l, i) => `<th class="sl-c${i === 0 ? ' sl-sep' : ''}"><span class="sl-dot" style="background:${CH_COL[l] || 'var(--accent)'};"></span>${esc(LOC_LABEL[l] || l)}</th>`).join('');
     const otHead = other.map((l, i) => `<th class="sl-c${i === 0 ? ' sl-sep' : ''}">${esc(LOC_LABEL[l] || l)}</th>`).join('');
     const colg = `<colgroup><col style="width:20%;">${`<col style="width:${(80 / (nCol - 1)).toFixed(3)}%;">`.repeat(nCol - 1)}</colgroup>`;   // คอลัมน์ตัวเลขกว้างเท่ากันทุกช่อง
     host.innerHTML = `<table class="sticky-head-table sup-loc" data-no-page data-no-sort>${colg}<thead>
-        <tr class="sl-grp"><th rowspan="2" class="sl-prod">Product</th>
+        <tr class="sl-grp"><th rowspan="2" class="sl-prod">Product</th><th rowspan="2" class="sl-c sl-totc">Total</th>
           <th colspan="${chs.length}" class="sl-g sl-g-ch sl-sep">Channel stock · 111/53</th>
           <th colspan="${other.length}" class="sl-g sl-g-st sl-sep">Storage</th>
-          <th rowspan="2" class="sl-c sl-sep">Factory Hold</th><th rowspan="2" class="sl-c">Total</th></tr>
+          <th rowspan="2" class="sl-c sl-sep">Factory Hold</th></tr>
         <tr class="sl-names">${chHead}${otHead}</tr></thead><tbody>${body}</tbody></table>`;
   }
 
