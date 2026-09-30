@@ -1,4 +1,5 @@
-// skudeep.js — หน้า "เจาะสินค้า" (v20260930d: เลือกสินค้าที่แถบตัวกรองด้านบน (กดค้นหา) · ตัดเส้นค่าแอดในกราฟ · โปรไม่นับตัวแทน/MT + บอกช่องทาง · ตัดราคาต่อชิ้น / กำไรขั้นบันได · โหลดแบบ skeleton เหมือนหน้าอื่น)
+// skudeep.js — หน้า "เจาะสินค้า" (v20260930e: เปิดหน้าใหม่ไม่เลือกสินค้าค้างไว้ · คลิป TikTok เฉพาะคลิปของสินค้านี้ (คลิปสินค้าอื่นสรุปแยก) · KOL แสดงชื่อช่องก่อนชื่อจริง + ลิงก์โพสต์)
+// (v20260930d: เลือกสินค้าที่แถบตัวกรองด้านบน (กดค้นหา) · ตัดเส้นค่าแอดในกราฟ · โปรไม่นับตัวแทน/MT + บอกช่องทาง · ตัดราคาต่อชิ้น / กำไรขั้นบันได · โหลดแบบ skeleton เหมือนหน้าอื่น)
 // (v20260930c: กราฟสลับ ยอดขาย / จำนวนชิ้น · tooltip แยกค่าแอดออกจากรายการช่องทาง · ตัวแทน / MT ไม่คิดราคาเฉลี่ย) (v20260930b: ยอดรวมใน tooltip กราฟ · สี/เบอร์รวมเท่ายอดขาย · บอกเดือนที่นับค่าแอด/KOL · ยอดถอด VAT ให้เทียบ MKT Tracking) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
 // ข้อมูล: RPC sku_deep(p_sku, p_from, p_to) ครั้งเดียว (ยอดขาย ช่องทาง ร้าน/เพจ โปร ค่าแอด KOL สี/เบอร์ สต็อก กำไร แอด Facebook คลิป TikTok ลูกค้า)
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, ttcEsc, ttcEscAttr, getDateValue, effGrain, PL_TH_M, VAT_DIV, mtStoreName, fbeInfoIcon, exportTable, thShort, showPage, chartTickColor, chartGridColor
@@ -102,9 +103,7 @@
     const from = getDateValue('From'), to = getDateValue('To');
     const [, top] = await Promise.all([loadProducts().catch(() => []), supaRpc('sku_top', { p_from: from, p_to: to, p_channel: null, p_sub: null }, true).catch(() => [])]);
     _top = (Array.isArray(top) ? top : []).filter(r => r.parent_sku).sort((a, b) => (+b.revenue || 0) - (+a.revenue || 0)).slice(0, 8);
-    if (!window._skdSku) { try { window._skdSku = localStorage.getItem('skdSku') || ''; } catch (e) {} }
-    if (!window._skdSku && _top.length) window._skdSku = _top[0].parent_sku;
-    try { localStorage.setItem('skdSku', window._skdSku || ''); } catch (e) {}
+    // (v20260930e) ไม่เลือกสินค้าให้เอง — เปิดหน้ามาว่าง รอเลือกที่ช่อง "สินค้า" ด้านบน (ยกเว้นกดมาจากสินค้าในหน้าอื่น)
     fillSelect(); render();
   };
   // โหลดแบบเดียวกับหน้าอื่น: การ์ด skeleton ก่อนข้อมูลมา
@@ -243,14 +242,20 @@
       const url = x.item_id ? `https://www.tiktok.com/@${encodeURIComponent(x.tt_account_name || 'tiktok')}/video/${x.item_id}` : '';
       return `<tr><td><div style="display:flex;gap:8px;align-items:center;min-width:200px;"><a class="skd-thumb" ${url ? `href="${escA(url)}" target="_blank" rel="noopener"` : ''}>${img}</a><div style="min-width:0;"><div style="font-size:11.5px;font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.title)}">${esc(x.title || x.item_id)}</div><div style="font-size:10.5px;color:var(--text3);">@${esc(x.tt_account_name || '—')}</div></div></div></td>
         <td class="num"><b>${money(x.cost)}</b></td><td class="num">${m0(x.rev)}</td><td class="num">${n0(x.orders)}</td><td class="num">${roas(x.rev, x.cost)}</td></tr>`; }).join('');
-    return card('แอด TikTok (GMV Max) ของสินค้านี้', head + `<div class="table-wrap"><table id="tblSkdTt"><thead><tr><th>คลิป</th><th class="num">ค่าแอด</th><th class="num">ยอดขาย</th><th class="num">ออเดอร์</th><th class="num">ROI</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีคลิปที่ยิง GMV Max สินค้านี้</td></tr>'}</tbody></table></div><div class="skd-note">คลิป 15 อันดับตามค่าแอด · ตัวเลขจาก TikTok Ads (GMV Max)</div>`);
+    const o = d.tt_other || {};
+    const other = +o.clips ? `<div class="skd-note" style="font-size:11.5px;color:var(--text2);background:var(--bg3);border-radius:8px;padding:8px 12px;margin-top:10px;">อีก <b>${fmt(o.clips)} คลิป</b> เป็นคลิปของสินค้าอื่น${(o.top || []).length ? ` (${(o.top || []).map(t => esc(t.name || t.main_sku)).join(', ')} ฯลฯ)` : ''} ที่ TikTok GMV Max เอามาขายสินค้านี้ด้วย — ค่าแอด ${money(o.cost)} · ยอดขาย ${money(o.rev)} · ${fmt(Math.round(+o.orders || 0))} ออเดอร์ (รวมอยู่ในตัวเลขด้านบนแล้ว ไม่แสดงในตาราง)</div>` : '';
+    return card('แอด TikTok (GMV Max) ของสินค้านี้', head + `<div class="table-wrap"><table id="tblSkdTt"><thead><tr><th>คลิปของสินค้านี้</th><th class="num">ค่าแอด</th><th class="num">ยอดขาย</th><th class="num">ออเดอร์</th><th class="num">ROI</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีคลิปของสินค้านี้ที่ยิง GMV Max</td></tr>'}</tbody></table></div>${other}<div class="skd-note">คลิป 15 อันดับตามค่าแอด · นับเป็นคลิปของสินค้าที่คลิปนั้นใช้ค่าแอดมากที่สุด · ตัวเลขจาก TikTok Ads (GMV Max)</div>`);
   }
 
   function kolCard(d) {
     const k = d.kol || [];
-    const rows = k.map(x => `<tr><td>${esc(PL_TH_M(String(x.cost_month).slice(0, 7)))}</td><td>${x.post_link ? `<a href="${escA(x.post_link)}" target="_blank" rel="noopener">${esc(x.kol_name || x.kol_handle || '—')}</a>` : esc(x.kol_name || x.kol_handle || '—')}</td><td>${esc(x.plat || x.platform || '')}</td><td>${esc(x.kol_type || '')}</td>
-      <td class="num"><b>${money(x.amount)}</b></td><td class="num">${m0(x.ads_spend)}</td><td class="num">${m0(x.sales)}</td></tr>`).join('');
-    return card('งาน KOL ของสินค้านี้', `<div class="table-wrap"><table id="tblSkdKol"><thead><tr><th>เดือนที่จ่าย</th><th>KOL</th><th>ช่องทาง</th><th>ประเภท</th><th class="num">ค่าจ้าง</th><th class="num">ค่าแอดที่ยิงงาน</th><th class="num">ยอดขายที่ผูกได้</th></tr></thead><tbody>${rows || '<tr><td colspan="7" class="empty">ไม่มีงาน KOL ในช่วงนี้</td></tr>'}</tbody></table></div><div class="skd-note">จากชีทเบิกเงิน KOL (นับตามเดือนที่จ่าย) ชุดเดียวกับหน้า KOL</div>`);
+    const disp = x => { try { return typeof kjDisplay === 'function' ? kjDisplay(x) : (x.kol_name || '—'); } catch (e) { return x.kol_name || '—'; } };
+    const rows = k.map(x => { const ch = disp(x), real = x.kol_name && x.kol_name !== ch ? x.kol_name : '';
+      const chCell = x.channel_link ? `<a href="${escA(x.channel_link)}" target="_blank" rel="noopener" style="font-weight:600;">${esc(ch)}</a>` : `<b>${esc(ch)}</b>`;
+      return `<tr><td>${esc(PL_TH_M(String(x.cost_month).slice(0, 7)))}</td><td>${chCell}${real ? `<div style="font-size:10.5px;color:var(--text3);">${esc(real)}</div>` : ''}</td><td>${esc(x.plat || x.platform || '')}</td><td>${esc(x.kol_type || '')}</td>
+        <td class="num"><b>${money(x.amount)}</b></td><td class="num">${m0(x.ads_spend)}</td><td class="num">${m0(x.sales)}</td>
+        <td>${x.post_link ? `<a href="${escA(x.post_link)}" target="_blank" rel="noopener" style="white-space:nowrap;">ดูโพสต์ ↗</a>` : dash}</td></tr>`; }).join('');
+    return card('งาน KOL ของสินค้านี้', `<div class="table-wrap"><table id="tblSkdKol"><thead><tr><th>เดือนที่จ่าย</th><th>ช่อง / KOL</th><th>ช่องทาง</th><th>ประเภท</th><th class="num">ค่าจ้าง</th><th class="num">ค่าแอดที่ยิงงาน</th><th class="num">ยอดขายที่ผูกได้</th><th>โพสต์</th></tr></thead><tbody>${rows || '<tr><td colspan="8" class="empty">ไม่มีงาน KOL ในช่วงนี้</td></tr>'}</tbody></table></div><div class="skd-note">จากชีทเบิกเงิน KOL (นับตามเดือนที่จ่าย) ชุดเดียวกับหน้า KOL · ชื่อช่อง = ชื่อบัญชีในลิงก์ช่องของ KOL (ไม่มีจึงใช้ชื่อจริง) · กดชื่อช่องเปิดหน้าช่อง</div>`);
   }
 
   function promoCard(d) {
