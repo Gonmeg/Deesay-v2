@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-r</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-s</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3856,7 +3856,7 @@ function mtStoreName(sub) { return MT_STORE_NAMES[sub] || sub || 'ไม่ร�
 
 // ===== (2026-09-30) Modern Trade — ยอดขายจากไฟล์รายงานร้าน (mt_sellout) แหล่งเดียวกับทุกหน้า (ภาพรวม / แยก Channel / สินค้า / MKT Tracking) =====
 //   ยอดขาย = ยอดที่ห้างขายออก คิดที่ราคาที่ห้างจ่ายเรา (รวม VAT) · ห้างส่งเป็นรายเดือน → ลงวันที่ 1 ของเดือน · Business Insight ยังใช้ใบกำกับขายเข้า (ตรงงบ)
-let _mtRetailer = '', _mtRows = null, _mtRowsAt = 0, _mtLoading = null;
+let _mtRetailer = '', _mtRows = null, _mtRowsAt = 0, _mtLoading = null, _mtSyncedAt = '';
 const MT_RETAILERS = ['Eveandboy', 'Konvy', 'Watsons', 'CJ'];
 const MT_COLORS = { Eveandboy: '#D4537E', Konvy: '#1D9E75', Watsons: '#378ADD', CJ: '#BA7517' };   // ค่าเริ่มต้น — ทีมเปลี่ยนได้ที่ปุ่ม 🎨 สีห้าง (เก็บใน ui_settings.mt_colors)
 const MT_PALETTE = ['#D4537E', '#E1306C', '#F43F5E', '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#BA7517', '#84CC16', '#22C55E',
@@ -3889,8 +3889,9 @@ async function loadMtSellout() {
   if (_mtRows && Date.now() - _mtRowsAt < 10 * 60 * 1000) return _mtRows;
   if (_mtLoading) return _mtLoading;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
-  _mtLoading = fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mt_sellout?select=retailer,month,branch,parent_sku,qty,sales&order=id.asc`, h)
-    .then(rows => { _mtRows = rows.map(r => ({ retailer: r.retailer, month: String(r.month).slice(0, 10), branch: r.branch || '', parent_sku: r.parent_sku || '—', qty: +r.qty || 0, sales: +r.sales || 0 })); _mtRowsAt = Date.now(); return _mtRows; })
+  _mtLoading = fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mt_sellout?select=retailer,month,branch,parent_sku,qty,sales,synced_at&order=id.asc`, h)
+    .then(rows => { _mtSyncedAt = rows.reduce((m, r) => r.synced_at > m ? r.synced_at : m, '');
+      _mtRows = rows.map(r => ({ retailer: r.retailer, month: String(r.month).slice(0, 10), branch: r.branch || '', parent_sku: r.parent_sku || '—', qty: +r.qty || 0, sales: +r.sales || 0 })); _mtRowsAt = Date.now(); return _mtRows; })
     .finally(() => { _mtLoading = null; });
   return _mtLoading;
 }
@@ -3939,7 +3940,8 @@ async function renderMtHub() {
       ['ข้อมูลล่าสุด', last ? PL_TH_M(last) : '—', 'อัปเดตจากไฟล์ทุกวัน 09:30 / 17:30']
     ];
   }
-  kpiEl.innerHTML = kpis.map(([l, v, sub]) => `<div class="card"><div class="card-title">${l}</div><div class="kpi-value">${v}</div><div class="kpi-sub" style="display:block;">${sub}</div></div>`).join('');
+  kpiEl.innerHTML = kpis.map(([l, v, sub]) => `<div class="card"><div class="card-title">${l}</div><div class="kpi-value">${v}</div><div class="kpi-sub" style="display:block;">${sub}</div></div>`).join('')
+    + `<div style="grid-column:1/-1;font-size:10.5px;color:var(--text3);margin-top:-8px;">ดึงไฟล์ห้างล่าสุด ${_mtSyncedAt ? new Date(_mtSyncedAt).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'} · ดึงอัตโนมัติ 09:30 / 17:30 · เพิ่งเติมยอดในไฟล์ กด 🔄 รีเฟรชข้อมูล Dashboard เพื่อดึงทันที</div>`;
 
   // กราฟรายเดือน (ทุกห้าง = ซ้อนตามห้าง)
   const rets = R ? [R] : MT_RETAILERS;
@@ -7526,6 +7528,15 @@ async function refreshDashboardData() {
   try {
     const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }
 
+    // (2026-09-30) ดึงไฟล์ยอดขายห้าง (Modern Trade) ล่าสุดก่อน — เดิมไฟล์ห้างดึงแค่ 09:30 / 17:30 กดรีเฟรชแล้วยอดที่เพิ่งเติมไม่มา
+    statusEl.textContent = 'กำลังดึงยอด Modern Trade จากไฟล์ห้าง...'
+    try {
+      const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 120000)
+      const r2 = await fetch(`${window.SUPABASE_URL}/functions/v1/mt-sellout-sync?norefresh=1`, { method: 'POST', headers, body: '{}', signal: c2.signal })   // สรุปยอดรีเฟรชต่อด้านล่าง
+      clearTimeout(t2)
+      if (!r2.ok) console.warn('mt-sellout-sync:', r2.status, await r2.text().catch(() => ''))
+    } catch (e) { console.warn('mt-sellout-sync:', e) }
+    try { _mtRows = null } catch (e) {}
     // (2026-09-16) รอให้ Supabase รีเฟรชสรุป (mv_sales_daily ฯลฯ) เสร็จจริงก่อน — เดิมยิงแล้วรอ 2 วิ ทำให้โหลดได้ของเก่า
     statusEl.textContent = 'กำลังรีเฟรชสรุปยอดในระบบ (อาจใช้ 30–90 วิ)...'
     try {
