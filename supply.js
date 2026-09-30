@@ -214,7 +214,7 @@
 
       <div class="card" id="supLocCard">
         <div class="section-header">
-          <div class="section-title">สต็อกแยกคลัง ${infoIcon('supLocInfo', T('ใช้ทำอะไร', 'ให้เจ้าของแต่ละช่องทางดูว่าคลังย่อยของตัวเองเหลือเท่าไร และพอขายอีกกี่วัน จะได้โยกของระหว่างคลังได้ถูก') + T('ตัวเลข · ป้ายเล็ก', 'ตัวเลข = ของในคลังย่อยนั้น · สีหัวคอลัมน์ = สีประจำช่องทาง<br>ป้ายเล็ก = พอขายอีกกี่วัน = ของ ÷ ของที่ขายออกจากคลังนั้นต่อวัน (เฉลี่ย 30 วันล่าสุด จาก log ทีมแพ็ค)<br><span style="color:var(--red);">ป้ายแดง</span> = ไม่ถึง 14 วัน · out = หมดแล้วแต่ยังมีขายออก') + T('Storage · Factory Hold', 'Storage = คลังเก็บของ ไม่ได้ขายออกโดยตรง ใช้เป็นแหล่งเรียกของมาเติม<br>Factory Hold = ผลิตเสร็จแล้ว ฝากไว้ที่โรงงาน'))}</div>
+          <div class="section-title">สต็อกแยกคลัง ${infoIcon('supLocInfo', T('ใช้ทำอะไร', 'ให้เจ้าของแต่ละช่องทางดูว่าคลังย่อยของตัวเองเหลือเท่าไร และพอขายอีกกี่วัน จะได้โยกของระหว่างคลังได้ถูก') + T('ตัวเลข · ป้ายเล็ก', 'ตัวเลข = ของในคลังย่อยนั้น · สีหัวคอลัมน์ = สีประจำช่องทาง<br>ป้ายเล็ก = พอขายอีกกี่วัน = ของ ÷ ของที่ขายออกจากคลังนั้นต่อวัน (เฉลี่ย 30 วันล่าสุด จาก log ทีมแพ็ค)<br><span style="color:var(--red);">ป้ายแดง</span> = ไม่ถึง 14 วัน · ช่องที่เป็นขีด = ไม่มีของ') + T('Storage · Factory Hold', 'Storage = คลังเก็บของ ไม่ได้ขายออกโดยตรง ใช้เป็นแหล่งเรียกของมาเติม<br>Factory Hold = ผลิตเสร็จแล้ว ฝากไว้ที่โรงงาน'))}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
             <input type="text" class="ls-input" id="supLocQ" placeholder="🔎 Parent SKU / SKU / ชื่อสินค้า" value="${esc(locQ)}" style="width:210px;padding:6px 10px;font-size:12px;">
             <button class="btn btn-ghost" id="supLocLow" style="${locOnlyLow ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}">เฉพาะคลังย่อยที่พอขายไม่ถึง 14 วัน</button>
@@ -297,13 +297,10 @@
         #page-supply .sup-dd .ic { width:16px; text-align:center; font-size:12px; flex:0 0 16px; }
         #page-supply .sup-dd .ic .dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--text3); vertical-align:1px; }
         #page-supply table.sup-main { table-layout:fixed; min-width:1140px; }
-        #page-supply table.sup-main th:nth-child(1) { width:22%; text-align:left; }
-        #page-supply table.sup-main th:nth-child(n+2) { width:auto; }
-        #page-supply table.sup-main th:nth-child(2) { width:68px; text-align:center; }
-        #page-supply table.sup-main th:nth-child(8) { text-align:center; }
-        #page-supply table.sup-main th:nth-child(9) { width:15%; text-align:left; }
+        #page-supply table.sup-main th:first-child { text-align:left; }
+        #page-supply table.sup-main th:not(:first-child), #page-supply table.sup-main td:not(:first-child) { text-align:center; }
         #page-supply table.sup-main td { vertical-align:top; white-space:normal; }
-        #page-supply table.sup-main td:nth-child(8) { text-align:center; }
+        #page-supply table.sup-main .sup-bar { margin:5px auto 0; }
         #page-supply tr.sup-child td:first-child { padding-left:40px; position:relative; }
         #page-supply tr.sup-child td:first-child::before { content:''; position:absolute; left:24px; top:0; bottom:0; border-left:2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
         #page-supply .sup-st { font-size:12.5px; font-weight:600; white-space:nowrap; }
@@ -464,7 +461,7 @@
     const stamp = pl.updated_at ? new Date(pl.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
     return `<td class="t-center sup-plan" onclick="event.stopPropagation()">
         <input type="text" inputmode="numeric" class="sup-in sup-plan-qty${pl.plan_qty ? ' on' : ''}" data-sku="${esc(r.sku)}"
-          value="${pl.plan_qty ? Number(pl.plan_qty).toLocaleString() : ''}" placeholder="0">
+          value="${pl.plan_qty ? Number(pl.plan_qty).toLocaleString() : ''}" placeholder="">
         ${stamp ? `<div class="sup-sub">Saved ${stamp}</div>` : ''}
       </td>
       <td class="t-center">
@@ -593,7 +590,7 @@
         <div class="sup-sub" style="padding-left:16px;">${rs.length} SKU${nAct ? ` · <span style="color:var(--red);font-weight:600;">Action ${nAct}</span>` : ''}</div></td>
       <td class="t-center"><span class="sup-lt">${ltTxt}</span></td>
       <td></td>
-      <td><b style="font-size:13px;">${fmtN(stk)}</b></td>
+      <td>${stk ? `<b style="font-size:13px;">${fmtN(stk)}</b>` : '<span class="sup-dash">—</span>'}</td>
       <td></td><td></td><td></td><td></td><td></td>
     </tr>`;
   }
@@ -642,15 +639,15 @@
       }
       const pc2 = planCells(r).split('</td>');
       return groupHead + `<tr class="sup-row${planned ? '' : ' sup-noplan'}${grouped ? ' sup-child' : ''}" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}">
-        <td class="t-left">${grouped ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span> `}<span class="sup-skucode">${esc(r.sku)}</span>
+        <td class="t-left"><span class="${grouped ? 'sup-skucode' : 'sup-parent'}">${esc(r.sku)}</span>
           <div class="sup-sub">${esc(r.product_name)}${r.abc ? ` · <span title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span>` : ''}</div></td>
         <td class="t-center"><span class="sup-lt${r.has_params === false ? ' def' : ''}"${r.has_params === false ? ' title="ยังไม่ได้ตั้งในหน้า Admin — ใช้ค่ากลาง 60 วัน"' : ''}>${fmtN(_lt)} d</span></td>
         <td>${cov == null ? '<span class="sup-dash">—</span>' : `<b style="color:${covCol};">${covTxt(cov)}</b>
           <div class="sup-bar"><i style="width:${covPct}%;background:${covCol};"></i></div>
           <div class="sup-sub">Out ${dY(_soDate)}</div>`}</td>
-        <td><b style="font-size:13px;">${fmtN(_stk)}</b>${_hold ? `<div class="sup-sub">WH ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
+        <td>${_stk ? `<b style="font-size:13px;">${fmtN(_stk)}</b>` : '<span class="sup-dash">—</span>'}${_hold ? `<div class="sup-sub">WH ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
         <td>${inc}</td>
-        <td>${fmtN(_avg, _avg < 10 ? 1 : 0)}${tr == null ? '' : `<div class="sup-sub" style="color:${tr > 0.2 ? 'var(--green)' : tr < -0.2 ? 'var(--red)' : 'var(--text3)'};">${tr > 0 ? '▲' : tr < 0 ? '▼' : ''} ${fmtN(Math.abs(tr * 100))}%</div>`}</td>
+        <td>${!_avg ? '<span class="sup-dash">—</span>' : fmtN(_avg, _avg < 10 ? 1 : 0)}${tr == null || !_avg ? '' : `<div class="sup-sub" style="color:${tr > 0.2 ? 'var(--green)' : tr < -0.2 ? 'var(--red)' : 'var(--text3)'};">${tr > 0 ? '▲' : tr < 0 ? '▼' : ''} ${fmtN(Math.abs(tr * 100))}%</div>`}</td>
         <td>${!due ? '<span class="sup-dash">—</span>' : `<b style="color:${dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text)'};">${dY(due)}</b><div class="sup-sub"${dueIn < 0 ? ' style="color:var(--red);"' : ''}>${dueIn < 0 ? fmtN(-dueIn) + ' d late' : 'in ' + fmtN(dueIn) + ' d'}</div>`}</td>
         ${pc2[0]}</td>
         <td class="t-left">${statusCell(r)}</td>
@@ -658,7 +655,7 @@
     }).join('') : `<tr><td colspan="${COLS.length}" class="empty">ไม่มี SKU ตรงตัวกรอง</td></tr>`;
     { const host = document.getElementById('supTbl'); let n = host.nextElementSibling;
       while (n && n.classList && n.classList.contains('auto-pager')) { const x = n.nextElementSibling; n.remove(); n = x; } }
-    document.getElementById('supTbl').innerHTML = `<table class="sticky-head-table sup-main" data-no-page data-no-sort><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    document.getElementById('supTbl').innerHTML = `<table class="sticky-head-table sup-main" data-no-page data-no-sort><colgroup><col style="width:17%;">${`<col style="width:${(83 / (COLS.length - 1)).toFixed(3)}%;">`.repeat(COLS.length - 1)}</colgroup><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
     document.getElementById('supFoot').textContent = `${fmtN(list.length)} SKU · as of ${dY(DATA.as_of)} · กดแถวเพื่อดูกราฟ`;
     bindPlanInputs();
     document.querySelectorAll('.sup-group').forEach(tr => tr.onclick = () => { const p = tr.dataset.parent; if (collapsed.has(p)) collapsed.delete(p); else collapsed.add(p); renderTable(); });
@@ -683,7 +680,7 @@
     const q = locQ.trim().toLowerCase();
     let list = rows.filter(r => (showHidden || r.plan_mode !== 'hidden') && (stockAll(r) > 0 || Object.keys((LOC_USE || {})[r.sku] || {}).length)
       && (!q || r.sku.toLowerCase().includes(q) || String(r.parent_sku || '').toLowerCase().includes(q) || String(r.product_name || '').toLowerCase().includes(q)));
-    const low = r => CH_LOCS.some(l => { const c = locCover(r, l); return c != null && c < LOC_LOW; });
+    const low = r => CH_LOCS.some(l => { const c = locCover(r, l); return c != null && ((r.by_loc || {})[l] || 0) > 0 && c < LOC_LOW; });
     if (locOnlyLow) list = list.filter(low);
     list.sort((a, b) => String(a.parent_sku).localeCompare(String(b.parent_sku)) || String(a.sku).localeCompare(String(b.sku)));
     const chs = CH_LOCS.filter(l => locs.includes(l));
@@ -691,8 +688,9 @@
     const EMPTY = '<span class="sl-empty">–</span>';
     const cellCh = (r, l, i) => {
       const qn = (r.by_loc || {})[l] || 0, used = ((LOC_USE || {})[r.sku] || {})[l] || 0, c = locCover(r, l);
-      const chip = used > 0 ? (qn <= 0 || c === 0 ? '<span class="sl-d red">out</span>' : `<span class="sl-d${c < LOC_LOW ? ' red' : ''}">${covTxt(c)}</span>`) : '';
-      const q = qn ? `<div class="sl-q">${fmtN(qn)}</div>` : used > 0 ? '<div class="sl-q" style="color:var(--red);">0</div>' : EMPTY;
+      if (qn <= 0) return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${EMPTY}</td>`;   // 0 = เว้นว่างเหมือนช่องอื่น
+      const chip = used > 0 ? `<span class="sl-d${c < LOC_LOW ? ' red' : ''}">${covTxt(c)}</span>` : '';
+      const q = `<div class="sl-q">${fmtN(qn)}</div>`;
       return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${q}${chip}</td>`;
     };
     const cellSt = (r, l, i) => { const qn = (r.by_loc || {})[l] || 0; return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${qn ? `<div class="sl-q">${fmtN(qn)}</div>` : EMPTY}</td>`; };
@@ -703,7 +701,7 @@
       const sep = grouped && r.parent_sku !== last ? `<tr class="sl-par"><td class="t-left" colspan="${nCol}"><span class="sup-parent">${esc(r.parent_sku)}</span> <span class="sup-pname">${esc(r.parent_name || '')}</span> <span class="sup-sub" style="display:inline;">· ${gSize[r.parent_sku]} SKU</span></td></tr>` : '';
       last = r.parent_sku;
       const hold = HOLD[r.sku] || 0;
-      return sep + `<tr class="${grouped ? 'sup-child' : ''}"><td class="t-left">${grouped ? '' : `<span class="sup-parent">${esc(r.parent_sku)}</span> `}<span class="sup-skucode">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div></td>
+      return sep + `<tr class="${grouped ? 'sup-child' : ''}"><td class="t-left"><span class="${grouped ? 'sup-skucode' : 'sup-parent'}">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div></td>
         ${chs.map((l, i) => cellCh(r, l, i)).join('')}
         ${other.map((l, i) => cellSt(r, l, i)).join('')}
         <td class="sl-c sl-sep">${hold ? `<div class="sl-q">${fmtN(hold)}</div>` : EMPTY}</td>
