@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-s</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-t</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2848,7 +2848,9 @@ function showPage(page, lockCh, el) {
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   { const g = document.getElementById('skdFilterGroup'); if (g) g.style.display = page === 'skuanalysis' ? 'flex' : 'none';   // (2026-09-30) เจาะสินค้า: เลือกสินค้าที่แถบด้านบน
-    const sel = document.getElementById('filterSkd'); if (sel && page === 'skuanalysis' && window._skdSku && [...sel.options].some(o => o.value === window._skdSku)) sel.value = window._skdSku; }
+    if (page === 'skuanalysis') {   // เปิดหน้ามาว่างทุกครั้ง — ยกเว้นกดมาจากสินค้าในหน้าอื่น (openSkuAnalysis)
+      window._skdSku = window._skdSkuNext || ''; window._skdSkuNext = null;
+      const sel = document.getElementById('filterSkd'); if (sel) sel.value = window._skdSku && [...sel.options].some(o => o.value === window._skdSku) ? window._skdSku : ''; } }
   const fbePageGroup = document.getElementById('fbePageFilterGroup');
   if (fbePageGroup) fbePageGroup.style.display = (page === 'fbengage') ? 'flex' : 'none';
   document.querySelectorAll('.fba-filter').forEach(el => { el.style.display = (page === 'fbads') ? 'flex' : 'none'; });
@@ -2988,7 +2990,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20260930d';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20260930e';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -6457,7 +6459,7 @@ function renderMomentumTable() {
       <div style="display:flex;gap:10px;flex-wrap:wrap;">${chLine.map(c => `<div style="flex:1;min-width:140px;background:var(--bg3);border-radius:8px;padding:10px 12px;"><div style="font-size:11px;color:var(--text3);">${ttcEsc(c.k)}</div><div style="font-size:15px;font-weight:700;color:${c.diff >= 0 ? 'var(--green)' : 'var(--red)'};">${c.diff >= 0 ? '+' : '−'}฿${fmt(Math.abs(c.diff))}</div><div style="font-size:10px;color:var(--text3);">${c.pct === null ? 'ใหม่' : (c.pct >= 0 ? '▲' : '▼') + Math.abs(c.pct).toFixed(1) + '%'}</div></div>`).join('')}</div></div>`;
 }
 function openSkuAnalysis(sku) {   // (2026-09-30) เปิดหน้าเจาะสินค้าใหม่ที่สินค้านี้
-  window._skdSku = sku;
+  window._skdSkuNext = sku;
   const nav = document.querySelector('.nav-item[onclick*="skuanalysis"]');
   showPage('skuanalysis', null, nav);
 }
