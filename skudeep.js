@@ -1,4 +1,5 @@
-// skudeep.js — หน้า "เจาะสินค้า" (v20260930e: เปิดหน้าใหม่ไม่เลือกสินค้าค้างไว้ · คลิป TikTok เฉพาะคลิปของสินค้านี้ (คลิปสินค้าอื่นสรุปแยก) · KOL แสดงชื่อช่องก่อนชื่อจริง + ลิงก์โพสต์)
+// skudeep.js — หน้า "เจาะสินค้า" (v20260930f: ตาราง KOL กระชับ — ไอคอนช่องทาง + ชื่อช่อง + ไอคอนเปิดโพสต์ · ประเภทเป็นป้ายใต้ชื่อ)
+// (v20260930e: เปิดหน้าใหม่ไม่เลือกสินค้าค้างไว้ · คลิป TikTok เฉพาะคลิปของสินค้านี้ (คลิปสินค้าอื่นสรุปแยก) · KOL แสดงชื่อช่องก่อนชื่อจริง + ลิงก์โพสต์)
 // (v20260930d: เลือกสินค้าที่แถบตัวกรองด้านบน (กดค้นหา) · ตัดเส้นค่าแอดในกราฟ · โปรไม่นับตัวแทน/MT + บอกช่องทาง · ตัดราคาต่อชิ้น / กำไรขั้นบันได · โหลดแบบ skeleton เหมือนหน้าอื่น)
 // (v20260930c: กราฟสลับ ยอดขาย / จำนวนชิ้น · tooltip แยกค่าแอดออกจากรายการช่องทาง · ตัวแทน / MT ไม่คิดราคาเฉลี่ย) (v20260930b: ยอดรวมใน tooltip กราฟ · สี/เบอร์รวมเท่ายอดขาย · บอกเดือนที่นับค่าแอด/KOL · ยอดถอด VAT ให้เทียบ MKT Tracking) · เลือกสินค้า 1 ตัว แล้วเห็นทุกอย่างของสินค้านั้นในหน้าเดียว
 // ข้อมูล: RPC sku_deep(p_sku, p_from, p_to) ครั้งเดียว (ยอดขาย ช่องทาง ร้าน/เพจ โปร ค่าแอด KOL สี/เบอร์ สต็อก กำไร แอด Facebook คลิป TikTok ลูกค้า)
@@ -250,12 +251,17 @@
   function kolCard(d) {
     const k = d.kol || [];
     const disp = x => { try { return typeof kjDisplay === 'function' ? kjDisplay(x) : (x.kol_name || '—'); } catch (e) { return x.kol_name || '—'; } };
+    const icon = x => { try { return typeof kjIcons === 'function' ? kjIcons(x.platform || x.plat) : ''; } catch (e) { return ''; } };
+    const typeChip = t => { const c = /^conv/i.test(t || '') ? ['rgba(34,197,94,.14)', 'var(--green)', 'Conversion'] : /^pr/i.test(t || '') ? ['rgba(167,139,250,.16)', '#a78bfa', 'PR'] : ['var(--bg3)', 'var(--text3)', t || '—'];
+      return `<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:99px;background:${c[0]};color:${c[1]};">${esc(c[2])}</span>`; };
     const rows = k.map(x => { const ch = disp(x), real = x.kol_name && x.kol_name !== ch ? x.kol_name : '';
-      const chCell = x.channel_link ? `<a href="${escA(x.channel_link)}" target="_blank" rel="noopener" style="font-weight:600;">${esc(ch)}</a>` : `<b>${esc(ch)}</b>`;
-      return `<tr><td>${esc(PL_TH_M(String(x.cost_month).slice(0, 7)))}</td><td>${chCell}${real ? `<div style="font-size:10.5px;color:var(--text3);">${esc(real)}</div>` : ''}</td><td>${esc(x.plat || x.platform || '')}</td><td>${esc(x.kol_type || '')}</td>
-        <td class="num"><b>${money(x.amount)}</b></td><td class="num">${m0(x.ads_spend)}</td><td class="num">${m0(x.sales)}</td>
-        <td>${x.post_link ? `<a href="${escA(x.post_link)}" target="_blank" rel="noopener" style="white-space:nowrap;">ดูโพสต์ ↗</a>` : dash}</td></tr>`; }).join('');
-    return card('งาน KOL ของสินค้านี้', `<div class="table-wrap"><table id="tblSkdKol"><thead><tr><th>เดือนที่จ่าย</th><th>ช่อง / KOL</th><th>ช่องทาง</th><th>ประเภท</th><th class="num">ค่าจ้าง</th><th class="num">ค่าแอดที่ยิงงาน</th><th class="num">ยอดขายที่ผูกได้</th><th>โพสต์</th></tr></thead><tbody>${rows || '<tr><td colspan="8" class="empty">ไม่มีงาน KOL ในช่วงนี้</td></tr>'}</tbody></table></div><div class="skd-note">จากชีทเบิกเงิน KOL (นับตามเดือนที่จ่าย) ชุดเดียวกับหน้า KOL · ชื่อช่อง = ชื่อบัญชีในลิงก์ช่องของ KOL (ไม่มีจึงใช้ชื่อจริง) · กดชื่อช่องเปิดหน้าช่อง</div>`);
+      const name = x.channel_link ? `<a href="${escA(x.channel_link)}" target="_blank" rel="noopener" title="เปิดหน้าช่อง" style="font-weight:600;color:var(--text);">${esc(ch)}</a>` : `<b>${esc(ch)}</b>`;
+      const post = x.post_link ? `<a href="${escA(x.post_link)}" target="_blank" rel="noopener" title="เปิดโพสต์งานนี้" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;background:var(--bg3);color:var(--accent);font-size:11px;text-decoration:none;margin-left:4px;">↗</a>` : '';
+      return `<tr><td style="white-space:nowrap;">${esc(PL_TH_M(String(x.cost_month).slice(0, 7)))}</td>
+        <td><div style="display:flex;align-items:center;gap:2px;min-width:0;">${icon(x)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;">${name}</span>${post}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">${typeChip(x.kol_type)}${real ? `<span style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">${esc(real)}</span>` : ''}</div></td>
+        <td class="num"><b>${money(x.amount)}</b></td><td class="num">${m0(x.ads_spend)}</td><td class="num">${m0(x.sales)}</td></tr>`; }).join('');
+    return card('งาน KOL ของสินค้านี้', `<div class="table-wrap"><table id="tblSkdKol"><thead><tr><th>เดือนที่จ่าย</th><th>ช่อง / KOL</th><th class="num">ค่าจ้าง</th><th class="num">ค่าแอดที่ยิงงาน</th><th class="num">ยอดขายที่ผูกได้</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีงาน KOL ในช่วงนี้</td></tr>'}</tbody></table></div><div class="skd-note">จากชีทเบิกเงิน KOL (นับตามเดือนที่จ่าย) ชุดเดียวกับหน้า KOL · ไอคอนหน้าชื่อ = ช่องทางที่ลงงาน · กดชื่อเปิดหน้าช่อง · ↗ เปิดโพสต์งาน</div>`);
   }
 
   function promoCard(d) {
