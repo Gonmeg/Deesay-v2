@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.01-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.01-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -680,7 +680,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">สินค้า</span><select id="kjProduct" style="min-width:190px;"><option value="">ทุกสินค้า</option></select></div>
       <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">ช่องทาง</span><select id="kjPlat"><option value="">ทั้งหมด</option><option>TikTok</option><option>Facebook</option><option value="other">อื่นๆ</option></select></div>
       <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">ประเภท</span><select id="kjType"><option value="">Conversion + PR</option><option>Conversion</option><option>PR</option></select></div>
-      <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">สถานะ</span><select id="kjStatus"><option value="">ทั้งหมด</option><option value="matched">เจอ Ads</option><option value="no_ads">ไม่ได้ยิง Ads</option><option value="not_found">หาไม่เจอ</option><option value="n/a">ช่องทางอื่น</option></select></div>
+      <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">สถานะ</span><select id="kjStatus"><option value="">ทั้งหมด</option><option value="matched">เจอ Ads</option><option value="no_ads">ไม่ได้ยิง Ads</option><option value="not_found">หาไม่เจอ</option><option value="n/a">ช่องทางอื่น</option><option value="claimed">เบิกแล้ว (งบตามวันโพสต์)</option><option value="unclaimed">ยังไม่เบิก (งบตามวันโพสต์)</option></select></div>
       <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">KOL</span><input id="kjSearch" placeholder="ชื่อ KOL…" style="width:120px;border:none;background:transparent;color:var(--text);font:inherit;font-size:12.5px;outline:none;" onkeydown="if(event.key==='Enter')applyFilters()"></div>
       <div class="filter-group fba-filter" id="fbaAccountFilterGroup" style="display:none;">
         <span class="filter-label">เพจ</span>
@@ -1152,12 +1152,13 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <div class="section-header" style="flex-wrap:wrap;gap:8px;">
           <div class="section-title">งาน KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-kj-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-kj-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ข้อมูลจากชีทเบิกเงิน KOL (1 แถว = 1 งาน) ตามเดือนที่เกิดค่าใช้จ่าย<br><br><b>ค่า Ads และยอดขาย ต้องมาจากคลิป/โพสต์ของงานนั้นเท่านั้น</b><br>• <b>TikTok</b>: เปิดลิงก์โพสต์ในชีทหาเลขคลิป → ค่า Ads และยอดขายที่ TikTok Ads API นับให้คลิปนั้น (GMV Max + Ads ปกติ)<br>• <b>Facebook</b>: Ads ที่ชื่อตรงกับ KOL/รหัส content → ค่า Ads และยอดซื้อที่ Meta Ads API นับให้ Ads นั้น<br><br><b>สถานะ</b>: เจอ Ads · ไม่ได้ยิง Ads (เจอคลิปแต่ไม่มี Ads) · หาไม่เจอ (ไม่มีลิงก์/ลิงก์ผิด) — ชี้ที่สถานะเพื่อดูเหตุผล<br>คลิปเดียวที่เบิกหลายแถว แบ่งตัวเลขเท่าๆ กัน ไม่นับซ้ำ</div></span></div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <div class="pl-seg" id="kjViewSeg"><button class="on" data-v="job" onclick="kjSetView('job')">ตามงาน</button><button data-v="kol" onclick="kjSetView('kol')">ตาม KOL</button><button data-v="sku" onclick="kjSetView('sku')">ตามสินค้า</button><button data-v="cal" onclick="kjSetView('cal')">📅 ปฏิทินงบ</button></div>
+            <div class="pl-seg" id="kjViewSeg"><button class="on" data-v="job" onclick="kjSetView('job')">ตามงาน</button><button data-v="kol" onclick="kjSetView('kol')">ตาม KOL</button><button data-v="sku" onclick="kjSetView('sku')">ตามสินค้า</button><button data-v="cal" onclick="kjSetView('cal')">📅 ปฏิทินงบ</button><button data-v="plan" onclick="kjSetView('plan')">📋 งบตามวันโพสต์</button></div>
             <div class="pl-seg" id="kjCalSeg" style="display:none;"><button class="on" data-m="amount" onclick="kjSetCal('amount')">ค่าจ้าง</button><button data-m="spend" onclick="kjSetCal('spend')">ค่าจ้าง + Ads</button><button data-m="sales" onclick="kjSetCal('sales')">ยอดขาย</button><button data-m="mer" onclick="kjSetCal('mer')">MER</button></div>
             <button class="btn btn-ghost" style="white-space:nowrap;padding:6px 12px;font-size:12px;" onclick="exportKol()">⬇ Export CSV</button>
           </div>
         </div>
         <div id="kjProdSum" style="display:none;background:var(--bg3);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:12.5px;line-height:1.8;"></div>
+        <div id="kjPlanSum" style="display:none;margin:0 0 12px;"></div>
         <div id="kjCal" style="display:none;overflow-x:auto;"></div>
         <div id="kjTableWrap" style="overflow-x:auto;"><table id="tblKj" class="mkt-tbl" data-no-sort><thead id="theadKj"></thead><tbody id="tbodyKj"><tr><td class="empty">กำลังโหลด…</td></tr></tbody></table></div>
       </div>
@@ -8160,8 +8161,56 @@ function kjPickProduct(sku) {   // กดชื่อสินค้าในม
   kjFillProducts(); const sel = document.getElementById('kjProduct'); if (sel) sel.value = sku;
   kjSetView('kol');
 }
+// (2026-10-01) แก้ขัดก่อนใช้ KOL Hub: งานจากชีทงานทีม KOL (แท็บ Conversion + PR) นับงบตามวันโพสต์ · จับคู่ฟอร์มเบิกด้วยรหัส content (v_kol_plan)
+let _kpRows = null, _kpLoading = null;
+function kjLoadPlan() {
+  if (_kpRows) return Promise.resolve(_kpRows);
+  if (_kpLoading) return _kpLoading;
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  _kpLoading = fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_kol_plan?select=content_name,kol_type,post_date,platform,kol_name,products,parent_sku,product_group,tier,budget,post_link,progress,assign,claimed_amount,cost_month&order=post_date.desc.nullslast`, h)
+    .then(r => { _kpRows = r; _kpLoading = null; return r; });
+  return _kpLoading;
+}
+function renderKolPlan() {
+  const tb = document.getElementById('tbodyKj'), sum = document.getElementById('kjPlanSum');
+  document.getElementById('kjTableWrap').style.display = ''; document.getElementById('kjCal').style.display = 'none';
+  const ps = document.getElementById('kjProdSum'); if (ps) ps.style.display = 'none';
+  sum.style.display = '';
+  if (!_kpRows) { tb.innerHTML = '<tr><td class="empty">กำลังโหลด…</td></tr>'; kjLoadPlan().then(() => { if (_kjView === 'plan') renderKolPlan(); }).catch(e => { tb.innerHTML = `<tr><td class="empty">โหลดไม่สำเร็จ: ${e.message}</td></tr>`; }); return; }
+  kjFillProducts();
+  const dFrom = getDateValue('From') || '2000-01-01', dTo = getDateValue('To') || '2999-12-31';
+  const plat = document.getElementById('kjPlat').value, typ = document.getElementById('kjType').value, prod = (document.getElementById('kjProduct') || {}).value || '';
+  const q = (document.getElementById('kjSearch').value || '').trim().toLowerCase(), st = (document.getElementById('kjStatus') || {}).value || '';
+  const rows = _kpRows.filter(r => r.post_date && r.post_date >= dFrom && r.post_date <= dTo && (!plat || kjPlat(r.platform) === plat) && (!typ || r.kol_type === typ)
+    && (!prod || r.parent_sku === prod) && (!q || `${r.kol_name || ''} ${r.content_name || ''}`.toLowerCase().includes(q))
+    && (!st || (st === 'claimed' ? r.claimed_amount != null : st === 'unclaimed' ? r.claimed_amount == null : true)));
+  const money = v => v ? `฿${fmt(Math.round(v))}` : '<span style="color:var(--text3);">—</span>';
+  const T = { n: rows.length, b: 0, cl: 0, cln: 0, un: 0, unn: 0, conv: 0, pr: 0 };
+  rows.forEach(r => { const b = +r.budget || 0; T.b += b; if (r.claimed_amount != null) { T.cl += +r.claimed_amount || 0; T.cln++; } else if (b > 0) { T.un += b; T.unn++; }
+    if (r.kol_type === 'Conversion') T.conv += b; else if (r.kol_type === 'PR') T.pr += b; });
+  const chip = (l, v, sub, col) => `<div style="background:var(--bg3);border-radius:10px;padding:10px 14px;min-width:150px;"><div style="font-size:11px;color:var(--text3);">${l}</div><div style="font-size:18px;font-weight:700;margin-top:2px;${col ? 'color:' + col + ';' : ''}">${v}</div><div style="font-size:10.5px;color:var(--text3);">${sub}</div></div>`;
+  sum.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">${chip('งบตามวันโพสต์', '฿' + fmt(Math.round(T.b)), fmt(T.n) + ' งาน · Conversion ฿' + fmt(Math.round(T.conv)) + ' · PR ฿' + fmt(Math.round(T.pr)))}
+    ${chip('เบิกแล้ว', '฿' + fmt(Math.round(T.cl)), fmt(T.cln) + ' งาน (ยอดตามฟอร์มเบิก)', 'var(--green)')}${chip('ยังไม่เบิก', '฿' + fmt(Math.round(T.un)), fmt(T.unn) + ' งานที่มีงบ (ตามงบที่วางไว้)', 'var(--orange)')}</div>
+    <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">ข้อมูลจากชีทงานทีม KOL (แท็บ Conversion + PR) · ช่วงวันที่ด้านบน = วันโพสต์ · เบิกแล้ว = เจอรหัส content ในฟอร์มเบิก · ตัวกรองสถานะใช้ "เบิกแล้ว / ยังไม่เบิก" · ดึงข้อมูลวันละ 5 รอบ</div>`;
+  const sortVal = { date: r => r.post_date || '', kol: r => r.kol_name || '', budget: r => +r.budget || 0, claim: r => r.claimed_amount == null ? -1 : +r.claimed_amount, type: r => r.kol_type || '' };
+  const col = sortVal[_kjSortCol] ? _kjSortCol : 'date', dir = sortVal[_kjSortCol] ? _kjSortDir : 'desc';
+  rows.sort((a, b) => { const av = sortVal[col](a), bv = sortVal[col](b); const c = typeof av === 'string' ? av.localeCompare(bv, 'th') : av - bv; return dir === 'asc' ? c : -c; });
+  const th = (k, label, left) => `<th class="sortable-th${left ? ' c-left' : ''}" onclick="kjSort('${k}')">${label} <span class="sort-ind">${col === k ? (dir === 'asc' ? '▲' : '▼') : ''}</span></th>`;
+  document.getElementById('theadKj').innerHTML = `<tr>${th('date', 'วันโพสต์', 1)}${th('kol', 'KOL / Content Name', 1)}<th class="c-left">ช่องทาง</th>${th('type', 'ประเภท')}<th class="c-left">สินค้า</th><th class="c-left">Tier</th>${th('budget', 'งบ (ก่อน VAT)')}${th('claim', 'เบิกแล้ว')}<th>สถานะ</th></tr>`;
+  tb.innerHTML = rows.map(r => { const claimed = r.claimed_amount != null, b = +r.budget || 0;
+    const name = r.parent_sku ? (_kjNames[r.parent_sku] || r.parent_sku) : (r.product_group || r.products || '—');
+    return `<tr><td class="c-left">${r.post_date ? new Date(r.post_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</td>
+      <td class="c-left"><b>${r.kol_name || '—'}</b>${r.post_link ? ` <a href="${r.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;font-size:11px;">↗</a>` : ''}<div style="font-size:10.5px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${r.content_name}</div></td>
+      <td class="c-left kj-icons">${kjIcons(r.platform || '')}</td><td>${r.kol_type || '—'}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${name}</td><td class="c-left" style="font-size:11.5px;">${r.tier || '—'}</td>
+      <td>${money(b)}</td><td>${claimed ? money(+r.claimed_amount) : '<span style="color:var(--text3);">—</span>'}</td>
+      <td>${claimed ? '<span class="kj-tag kj-ok">เบิกแล้ว</span>' : b > 0 ? '<span class="kj-tag kj-nf">ยังไม่เบิก</span>' : '<span class="kj-tag">ไม่มีงบ</span>'}</td></tr>`; }).join('')
+    || '<tr><td colspan="9" class="empty">ไม่มีงานที่โพสต์ในช่วงนี้</td></tr>';
+}
+
 function renderKolTable() {
   if (!_kjRows) return;
+  { const ps = document.getElementById('kjPlanSum'); if (ps && _kjView !== 'plan') ps.style.display = 'none'; }
+  if (_kjView === 'plan') { renderKolPlan(); return; }
   // (2026-09-30) ช่วงวันที่ด้านบน กรองตาม "เดือนที่ทำจ่าย" (คอลัมน์ AB ชีทเบิกเงิน KOL) — ต้องตรงกับบัญชีทำจ่าย และหน้า MKT Tracking
   //   เลือกช่วงไม่เต็มเดือน = นับทั้งเดือนนั้น (ค่าจ้างมีแค่ระดับเดือน)
   const dFrom = getDateValue('From') || '2000-01-01', dTo = getDateValue('To') || '2999-12-31';
