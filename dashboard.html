@@ -579,7 +579,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.09.30-u</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.01-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -818,12 +818,12 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
                 <th>ราคาต่อบิล<br>(AOV)</th>
                 <th class="pt-editable-th">อัตราปิด<br>เป้า %</th>
                 <th class="pt-editable-th">ต้นทุน<br>สินค้า %</th>
-                <th class="pt-editable-th">ค่าแอด %<br>เป้า</th>
+                <th class="pt-editable-th">ค่า Ads %<br>เป้า</th>
                 <th class="pt-editable-th">เป้ายอดขาย<br>(ชุด/วัน)</th>
                 <th>เมื่อวาน<br>(ชุด)</th>
                 <th>3 วันล่าสุด<br>(ชุด)</th>
                 <th>7 วันล่าสุด<br>(ชุด)</th>
-                <th>ค่าแอด/ออเดอร์<br>เป้า (บาท)</th>
+                <th>ค่า Ads/ออเดอร์<br>เป้า (บาท)</th>
                 <th>CPL เป้า<br>(บาท)</th>
                 <th>เป้า Lead<br>/วัน (คน)</th>
                 <th>เป้ายอดขาย<br>(บาท/วัน)</th>
@@ -1144,13 +1144,13 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="mkt-top-kpis" id="kjKpis" style="grid-template-columns:repeat(5,minmax(0,1fr));"></div>
       <div class="card" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header" style="flex-wrap:wrap;gap:8px;">
-          <div class="section-title">งาน KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-kj-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-kj-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ข้อมูลจากชีทเบิกเงิน KOL (1 แถว = 1 งาน) ตามเดือนที่เกิดค่าใช้จ่าย<br><br><b>ค่า Ads และยอดขาย ต้องมาจากคลิป/โพสต์ของงานนั้นเท่านั้น</b><br>• <b>TikTok</b>: เปิดลิงก์โพสต์ในชีทหาเลขคลิป → ค่าแอดและยอดขายที่ TikTok Ads API นับให้คลิปนั้น (GMV Max + แอดปกติ)<br>• <b>Facebook</b>: แอดที่ชื่อตรงกับ KOL/รหัส content → ค่าแอดและยอดซื้อที่ Meta Ads API นับให้แอดนั้น<br><br><b>สถานะ</b>: เจอแอด · ไม่ได้ยิงแอด (เจอคลิปแต่ไม่มีแอด) · หาไม่เจอ (ไม่มีลิงก์/ลิงก์ผิด) — ชี้ที่สถานะเพื่อดูเหตุผล<br>คลิปเดียวที่เบิกหลายแถว แบ่งตัวเลขเท่าๆ กัน ไม่นับซ้ำ</div></span></div>
+          <div class="section-title">งาน KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-kj-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-kj-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ข้อมูลจากชีทเบิกเงิน KOL (1 แถว = 1 งาน) ตามเดือนที่เกิดค่าใช้จ่าย<br><br><b>ค่า Ads และยอดขาย ต้องมาจากคลิป/โพสต์ของงานนั้นเท่านั้น</b><br>• <b>TikTok</b>: เปิดลิงก์โพสต์ในชีทหาเลขคลิป → ค่า Ads และยอดขายที่ TikTok Ads API นับให้คลิปนั้น (GMV Max + Ads ปกติ)<br>• <b>Facebook</b>: Ads ที่ชื่อตรงกับ KOL/รหัส content → ค่า Ads และยอดซื้อที่ Meta Ads API นับให้ Ads นั้น<br><br><b>สถานะ</b>: เจอ Ads · ไม่ได้ยิง Ads (เจอคลิปแต่ไม่มี Ads) · หาไม่เจอ (ไม่มีลิงก์/ลิงก์ผิด) — ชี้ที่สถานะเพื่อดูเหตุผล<br>คลิปเดียวที่เบิกหลายแถว แบ่งตัวเลขเท่าๆ กัน ไม่นับซ้ำ</div></span></div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             <div class="pl-seg" id="kjViewSeg"><button class="on" data-v="job" onclick="kjSetView('job')">ตามงาน</button><button data-v="kol" onclick="kjSetView('kol')">ตาม KOL</button><button data-v="sku" onclick="kjSetView('sku')">ตามสินค้า</button><button data-v="cal" onclick="kjSetView('cal')">📅 ปฏิทินงบ</button></div>
             <div class="pl-seg" id="kjCalSeg" style="display:none;"><button class="on" data-m="amount" onclick="kjSetCal('amount')">ค่าจ้าง</button><button data-m="spend" onclick="kjSetCal('spend')">ค่าจ้าง + Ads</button><button data-m="sales" onclick="kjSetCal('sales')">ยอดขาย</button><button data-m="mer" onclick="kjSetCal('mer')">MER</button></div>
             <select class="ls-input" id="kjPlat" style="width:auto;padding:6px 10px;font-size:12px;" onchange="renderKolTable()"><option value="">ทุกช่องทาง</option><option>TikTok</option><option>Facebook</option><option value="other">อื่นๆ</option></select>
             <select class="ls-input" id="kjType" style="width:auto;padding:6px 10px;font-size:12px;" onchange="renderKolTable()"><option value="">Conversion + PR</option><option>Conversion</option><option>PR</option></select>
-            <select class="ls-input" id="kjStatus" style="width:auto;padding:6px 10px;font-size:12px;" onchange="renderKolTable()"><option value="">ทุกสถานะ</option><option value="matched">เจอแอด</option><option value="no_ads">ไม่ได้ยิงแอด</option><option value="not_found">หาไม่เจอ</option><option value="n/a">ช่องทางอื่น</option></select>
+            <select class="ls-input" id="kjStatus" style="width:auto;padding:6px 10px;font-size:12px;" onchange="renderKolTable()"><option value="">ทุกสถานะ</option><option value="matched">เจอ Ads</option><option value="no_ads">ไม่ได้ยิง Ads</option><option value="not_found">หาไม่เจอ</option><option value="n/a">ช่องทางอื่น</option></select>
             <input class="ls-input" id="kjSearch" placeholder="ค้นหาชื่อ KOL…" style="width:170px;padding:6px 10px;font-size:12px;" oninput="renderKolTable()">
             <button class="btn btn-ghost" style="white-space:nowrap;padding:6px 12px;font-size:12px;" onclick="exportKol()">⬇ Export CSV</button>
           </div>
@@ -1161,15 +1161,15 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
     <div class="page" id="page-adperf">
       <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:8px;">
-        📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ · ค่าโฆษณา Facebook = เฉพาะ Conversion (แอดที่ยิงให้เพจขาย) — PR/KOL แยกออก, CPAS ไปอยู่ Shopee · TikTok / Shopee / Modern Trade จาก API · Lazada ยังมาจากชีท — ใช้ filter วันที่จากแถบด้านบน
+        📌 ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ · ค่าโฆษณา Facebook = เฉพาะ Conversion (Ads ที่ยิงให้เพจขาย) — PR/KOL แยกออก, CPAS ไปอยู่ Shopee · TikTok / Shopee / Modern Trade จาก API · Lazada ยังมาจากชีท — ใช้ filter วันที่จากแถบด้านบน
       </div>
       <div id="adp-unmapped-warning" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--orange);margin-bottom:16px;"></div>
 
       <div class="grid-4" style="margin-bottom:20px;">
         <div class="card"><div class="card-title">ยอดขาย GMV</div><div class="kpi-value" id="adp-gmv" style="color:var(--blue);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
-        <div class="card"><div class="card-title">ค่าแอดรวม</div><div class="kpi-value" id="adp-ads" style="color:var(--red);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
-        <div class="card"><div class="card-title">ROAS</div><div class="kpi-value" id="adp-roas" style="color:var(--green);">—</div><div class="kpi-sub">GMV ÷ ค่าแอด</div></div>
-        <div class="card"><div class="card-title">% ค่าแอด / GMV</div><div class="kpi-value" id="adp-pct">—</div><div class="kpi-sub">ค่าแอดต่อยอดขาย</div></div>
+        <div class="card"><div class="card-title">ค่า Ads รวม</div><div class="kpi-value" id="adp-ads" style="color:var(--red);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
+        <div class="card"><div class="card-title">ROAS</div><div class="kpi-value" id="adp-roas" style="color:var(--green);">—</div><div class="kpi-sub">GMV ÷ ค่า Ads</div></div>
+        <div class="card"><div class="card-title">% ค่า Ads / GMV</div><div class="kpi-value" id="adp-pct">—</div><div class="kpi-sub">ค่า Ads ต่อยอดขาย</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
         <span style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">ช่วงเวลา:</span>
@@ -1184,8 +1184,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div class="section-title">ภาพรวมทุกช่องทาง</div>
           <div style="display:flex;gap:14px;align-items:center;font-size:11px;color:var(--text2);">
             <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:rgba(96,165,250,0.65);border-radius:2px;display:inline-block;"></span>GMV</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:rgba(248,113,113,0.55);border-radius:2px;display:inline-block;"></span>ค่าแอด</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:2px;background:#f87171;display:inline-block;"></span>%ค่าแอด (แกนขวา)</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:rgba(248,113,113,0.55);border-radius:2px;display:inline-block;"></span>ค่า Ads</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:2px;background:#f87171;display:inline-block;"></span>%ค่า Ads (แกนขวา)</span>
           </div>
         </div>
         <div class="chart-wrap chart-wrap-lg"><canvas id="adpChartOverall"></canvas></div>
@@ -1227,7 +1227,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div class="chart-wrap"><canvas id="adpChartLZ"></canvas></div>
         </div>
         <div class="card" style="grid-column:1/-1;">
-          <div class="section-header"><div class="section-title">Modern Trade</div><div style="font-size:10.5px;color:var(--text3);">ค่าแอด = แอด Awareness บัญชี Meta Modern Trade · ยอดขาย = ยอดที่ห้างขายออก (ห้างส่งรายเดือน ลงวันที่ 1)</div></div>
+          <div class="section-header"><div class="section-title">Modern Trade</div><div style="font-size:10.5px;color:var(--text3);">ค่า Ads = Ads Awareness บัญชี Meta Modern Trade · ยอดขาย = ยอดที่ห้างขายออก (ห้างส่งรายเดือน ลงวันที่ 1)</div></div>
           <div class="kpi-sub" id="adp-sub-mt" style="margin-bottom:10px;">—</div>
           <div class="chart-wrap"><canvas id="adpChartMT"></canvas></div>
         </div>
@@ -1381,10 +1381,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
-          <div class="section-title">ค่าแอด TikTok — สัดส่วนตาม Objective และรายวัน</div>
+          <div class="section-title">ค่า Ads TikTok — สัดส่วนตาม Objective และรายวัน</div>
           <button class="btn btn-ghost" onclick="exportTtaDailyCsv()">⬇ Export CSV</button>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Awareness → Consideration → Conversion จัดกลุ่มจากวัตถุประสงค์แอดจริงของ TikTok (เฉพาะคลิปที่มีข้อมูล objective) · เอาเมาส์วางที่กราฟเพื่อดูยอดรายวันทุกก้อนพร้อมกัน</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Awareness → Consideration → Conversion จัดกลุ่มจากวัตถุประสงค์ Ads จริงของ TikTok (เฉพาะคลิปที่มีข้อมูล objective) · เอาเมาส์วางที่กราฟเพื่อดูยอดรายวันทุกก้อนพร้อมกัน</div>
         <div class="tta-obj-row">
           <div id="ttaFunnelChart" class="tta-obj-cards"></div>
           <div class="chart-wrap chart-wrap-lg" style="flex:1;min-width:0;"><canvas id="chartTtaDaily"></canvas></div>
@@ -1393,7 +1393,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
       <!-- (2026-09-28) รายงานรายวันแบบหน้า Facebook: ค่าแอด TikTok ทั้งหมด เทียบ ยอดขายจริง TikTok -->
       <div class="card" style="margin-bottom:20px;"><div class="section-header">
-          <div class="section-title">รายงานรายวัน — ค่าแอดเทียบยอดขายจริง TikTok <span id="tta-dr-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-dr')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-dr" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>ยอดขายจริง TikTok</b> = ยอดขายทั้งร้าน TikTok จากออเดอร์ที่อัปโหลด (วันที่ยังไม่อัปขึ้น —)<br><b>ค่าแอด</b> = ค่าแอด TikTok ทั้งหมดของวันนั้น (ตัวเดียวกับทุกหน้า)<br><b>ROAS</b> = ยอดขายจริง ÷ ค่าแอด<br><b>ยอดขายจากแอดคลิป</b> = ยอดที่ TikTok นับให้แอดที่ยิงคลิป (GMV Max) — ไม่รวม Live GMV Max</div></span></div>
+          <div class="section-title">รายงานรายวัน — ค่า Ads เทียบยอดขายจริง TikTok <span id="tta-dr-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-dr')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-dr" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>ยอดขายจริง TikTok</b> = ยอดขายทั้งร้าน TikTok จากออเดอร์ที่อัปโหลด (วันที่ยังไม่อัปขึ้น —)<br><b>ค่า Ads</b> = ค่า Ads TikTok ทั้งหมดของวันนั้น (ตัวเดียวกับทุกหน้า)<br><b>ROAS</b> = ยอดขายจริง ÷ ค่า Ads<br><b>ยอดขายจาก Ads คลิป</b> = ยอดที่ TikTok นับให้ Ads ที่ยิงคลิป (GMV Max) — ไม่รวม Live GMV Max</div></span></div>
           <div style="display:flex;gap:8px;align-items:center;">
             <div style="position:relative;"><button class="btn btn-ghost" id="ttaDailyRepMetricsBtn" onclick="toggleMetricsPanel('ttaDailyRep')">⚙ Metrics <span id="ttaDailyRep-metric-count" style="color:var(--accent);"></span></button>
               <div id="ttaDailyRep-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaDailyRep-metrics-checks"></div>
@@ -1405,7 +1405,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
       <!-- (2026-09-28) สรุปตาม Creator: เปลี่ยนจากการ์ด Top 10 เป็นตารางแบบหน้า Facebook Ads (ทุกคน · เรียง/เลือกคอลัมน์ได้) -->
       <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;">
-          <div class="section-title">Creator ที่ยิงแอด <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-creator')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-creator" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>1 แถว = 1 creator</b> — รวมทุกคลิปของคนเดียวกันที่ยิงแอดในช่วงวันที่เลือก<br>ใช้ดูว่า <b>ใคร</b>คุ้มค่าแอด (ค่าแอดรวม ยอดขายรวม ROAS ของคนนั้น)<br><br>ต่างจาก "รายละเอียดคลิปทั้งหมด" ที่แยกทีละคลิป</div></span> <span id="tta-creator-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+          <div class="section-title">Creator ที่ยิง Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-creator')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-creator" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>1 แถว = 1 creator</b> — รวมทุกคลิปของคนเดียวกันที่ยิง Ads ในช่วงวันที่เลือก<br>ใช้ดูว่า <b>ใคร</b>คุ้มค่า Ads (ค่า Ads รวม ยอดขายรวม ROAS ของคนนั้น)<br><br>ต่างจาก "รายละเอียดคลิปทั้งหมด" ที่แยกทีละคลิป</div></span> <span id="tta-creator-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <select class="ls-input" id="ttaCreatorSrc" style="width:130px;padding:6px 10px;font-size:12px;" onchange="_ttaCrShow=50;renderTtaCreatorSummary()"><option value="">ทุกแหล่ง</option><option value="deesay">🏠 Deesay</option><option value="kol">🎭 KOL</option></select>
             <input type="text" class="ls-input" id="ttaCreatorSearch" placeholder="🔎 ค้นหา creator เช่น @beam_reviews" oninput="debouncedTtaCreatorAndTable()" style="width:220px;padding:6px 10px;font-size:12px;">
@@ -1416,7 +1416,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           </div></div>
         <div class="table-wrap" style="overflow-x:auto;"><table id="tblTtaCreator"><thead id="theadTtaCreator"></thead><tbody id="tbodyTtaCreator"></tbody></table></div>
         <div id="ttaCreatorMore" style="text-align:center;margin-top:10px;"></div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">รวมทุกคลิปของ creator ในช่วงวันที่เลือก · รูป = คลิปที่ใช้ค่าแอดมากสุดของคนนั้น (คลิกเพื่อเปิดช่อง TikTok) · ยอดขาย / orders = ที่ TikTok นับให้แอด (GMV Max) · ปุ่ม ⚙ Metrics เลือก/เรียงคอลัมน์ได้ บันทึกเป็นของแต่ละคน</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">รวมทุกคลิปของ creator ในช่วงวันที่เลือก · รูป = คลิปที่ใช้ค่า Ads มากสุดของคนนั้น (คลิกเพื่อเปิดช่อง TikTok) · ยอดขาย / orders = ที่ TikTok นับให้ Ads (GMV Max) · ปุ่ม ⚙ Metrics เลือก/เรียงคอลัมน์ได้ บันทึกเป็นของแต่ละคน</div>
       </div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -1450,7 +1450,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
       <div class="card" style="margin-bottom:20px;">
       <div class="section-header">
-        <div class="section-title">รายละเอียดคลิปทั้งหมด <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-clips')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-clips" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>1 แถว = 1 คลิป</b> ที่ยิงแอด พร้อมแคมเปญ วัตถุประสงค์ และช่วงวันที่ยิง<br>ใช้ดูว่า <b>คลิปไหน</b>คุ้ม และดูตัวชี้วัดของคลิป (% ดูจบ ไลค์ ฯลฯ)<br><br>ต่างจาก "Creator ที่ยิงแอด" ที่รวมทุกคลิปของคนเดียวกันเป็นแถวเดียว</div></span></div>
+        <div class="section-title">รายละเอียดคลิปทั้งหมด <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-tta-clips')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-tta-clips" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>1 แถว = 1 คลิป</b> ที่ยิง Ads พร้อมแคมเปญ วัตถุประสงค์ และช่วงวันที่ยิง<br>ใช้ดูว่า <b>คลิปไหน</b>คุ้ม และดูตัวชี้วัดของคลิป (% ดูจบ ไลค์ ฯลฯ)<br><br>ต่างจาก "Creator ที่ยิง Ads" ที่รวมทุกคลิปของคนเดียวกันเป็นแถวเดียว</div></span></div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div class="toggle-group" id="ttaSourceFilter">
             <button class="toggle-btn active" data-src="all" onclick="setTtaSourceFilter('all',this)">ทั้งหมด</button>
@@ -1486,13 +1486,13 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <!-- (2026-09-19) GMV Max รายสินค้า — ตัวเลขจาก TikTok ตรงๆ ไม่มีการปันส่วน · อยู่ล่างสุดของหน้า -->
       <div class="card" id="ttProductCard" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
-          <div class="section-title">GMV Max รายสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เฉพาะแคมเปญแบบยิงสินค้า — ไม่รวมไลฟ์และแอด awareness)</span></div>
+          <div class="section-title">GMV Max รายสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เฉพาะแคมเปญแบบยิงสินค้า — ไม่รวมไลฟ์และ Ads awareness)</span></div>
           <button class="btn btn-ghost" onclick="exportTtProduct()">⬇ Export CSV</button>
         </div>
         <div id="ttProductSummary" style="font-size:11px;color:var(--text3);padding:0 2px 10px;"></div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
-          <div style="font-size:12px;color:var(--text2);font-weight:600;">แนวโน้มค่าแอดรายสินค้า <span id="ttProductGrainLabel" style="font-weight:400;color:var(--text3);"></span></div>
+          <div style="font-size:12px;color:var(--text2);font-weight:600;">แนวโน้มค่า Ads รายสินค้า <span id="ttProductGrainLabel" style="font-weight:400;color:var(--text3);"></span></div>
           <div class="ads-info-wrap" style="position:relative;display:inline-block;">
             <button class="btn btn-ghost" onclick="event.stopPropagation();toggleTip('ttProductPicker')">เลือกสินค้า <span id="ttProductPickerCount" style="color:var(--text3);"></span> ▾</button>
             <div id="ttProductPicker" class="ads-info-popover" style="display:none;position:absolute;top:32px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px;width:280px;max-height:320px;overflow-y:auto;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);"></div>
@@ -1504,12 +1504,12 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <table id="tblTtProduct">
             <thead><tr>
               <th class="sortable-th" onclick="ttProductSort('name')">สินค้า <span class="sort-ind" id="tps-name"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('ads')">ค่าแอด <span class="sort-ind" id="tps-ads"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('ads')">ค่า Ads <span class="sort-ind" id="tps-ads"></span></th>
               <th class="sortable-th" onclick="ttProductSort('gmv')">ยอดขาย (GMV) <span class="sort-ind" id="tps-gmv"></span></th>
               <th class="sortable-th" onclick="ttProductSort('orders')">ออเดอร์ <span class="sort-ind" id="tps-orders"></span></th>
               <th class="sortable-th" onclick="ttProductSort('roi')">ROI <span class="sort-ind" id="tps-roi"></span></th>
               <th class="sortable-th" onclick="ttProductSort('cpo')">ต้นทุนต่อออเดอร์ <span class="sort-ind" id="tps-cpo"></span></th>
-              <th class="sortable-th" onclick="ttProductSort('share')">สัดส่วนค่าแอด <span class="sort-ind" id="tps-share"></span></th>
+              <th class="sortable-th" onclick="ttProductSort('share')">สัดส่วนค่า Ads <span class="sort-ind" id="tps-share"></span></th>
             </tr></thead>
             <tbody id="tbodyTtProduct"></tbody>
           </table>
@@ -1620,7 +1620,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <div class="section-title" id="cp-trend-title">ยอดขาย vs ต้นทุน รายวัน</div>
             <div style="font-size:10.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap;">
               <span><span style="display:inline-block;width:14px;height:3px;background:#2a78d6;vertical-align:middle;border-radius:2px;"></span> ยอดขาย (ออเดอร์จริง)</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(96,165,250,0.55);vertical-align:middle;border-radius:2px;"></span> ค่าแอด</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(96,165,250,0.55);vertical-align:middle;border-radius:2px;"></span> ค่า Ads</span>
               <span><span style="display:inline-block;width:10px;height:10px;background:rgba(167,139,250,0.75);vertical-align:middle;border-radius:2px;"></span> ค่าจ้าง KOL (เดือนที่จ่าย)</span>
               <span><span style="display:inline-block;color:#a78bfa;font-size:12px;vertical-align:middle;">▼</span> วันที่มีโพสต์ — ชี้ดูรายละเอียด</span>
             </div>
@@ -1918,7 +1918,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
       <div class="card" style="margin-bottom:20px;padding:12px 16px;">
         <details style="margin-top:10px;" open>
-          <summary style="font-size:12px;font-weight:600;cursor:pointer;">📅 ค่าแอดรายวัน เทียบยอดขายจริง (ช่วงที่เลือก) <span id="shads-log-count" style="font-weight:400;color:var(--text3);"></span></summary>
+          <summary style="font-size:12px;font-weight:600;cursor:pointer;">📅 ค่า Ads รายวัน เทียบยอดขายจริง (ช่วงที่เลือก) <span id="shads-log-count" style="font-weight:400;color:var(--text3);"></span></summary>
           <div class="table-wrap" style="max-height:360px;overflow-y:auto;margin-top:8px;">
             <table id="tblShAdsLog" class="sticky-head-table">
               <thead><tr><th>วันที่</th><th>Product/Shop Ads</th><th>Brand Ads</th><th>Live Ads</th><th>Meta Ads</th><th>เหรียญ</th><th>CPAS on Meta</th><th>อื่นๆ</th><th>ค่า Ads รวม</th><th>ยอดขายจริง <span id="shads-info-real-tbl"></span></th><th>ROAS จริง</th></tr></thead>
@@ -1929,7 +1929,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         </details>
       </div>
       <!-- ส่วนล่าง: Shopee Ads Product Performance (Product/Shop Ads เท่านั้น) -->
-      <div class="section-header" style="margin-bottom:10px;"><div><div class="section-title">Shopee Ads Product Performance</div><div style="font-size:10.5px;color:var(--text3);margin-top:2px;">เฉพาะ Product/Shop Ads — ยอดขายในส่วนนี้คือยอดที่ Shopee นับว่าเกิดจากแอด (attribution) ไม่ใช่ยอดขายตามบัญชี</div></div></div>
+      <div class="section-header" style="margin-bottom:10px;"><div><div class="section-title">Shopee Ads Product Performance</div><div style="font-size:10.5px;color:var(--text3);margin-top:2px;">เฉพาะ Product/Shop Ads — ยอดขายในส่วนนี้คือยอดที่ Shopee นับว่าเกิดจาก Ads (attribution) ไม่ใช่ยอดขายตามบัญชี</div></div></div>
       <div id="shads-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header" style="flex-wrap:wrap;gap:8px;">
@@ -1958,7 +1958,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <tbody id="tbodyShAds"></tbody>
           </table>
         </div>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">ยอดขาย/ออเดอร์ = นับรวมสินค้าอื่นที่ซื้อพร้อมกันหลังคลิกแอด (ค่าเดียวกับหน้า Shopee Ads ใน Seller Centre) · คอลัมน์ "(สินค้าที่ยิง)" = เฉพาะสินค้าที่โฆษณา · ROAS = ยอดขายจากแอด ÷ ค่าแอด · เขียว ≥ ROAS เป้าของแคมเปญ (หรือ ≥ 8x ถ้าไม่มีเป้า) · ทอง 1–เป้า · แดง < 1x · คลิกหัวคอลัมน์เพื่อเรียง</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">ยอดขาย/ออเดอร์ = นับรวมสินค้าอื่นที่ซื้อพร้อมกันหลังคลิก Ads (ค่าเดียวกับหน้า Shopee Ads ใน Seller Centre) · คอลัมน์ "(สินค้าที่ยิง)" = เฉพาะสินค้าที่โฆษณา · ROAS = ยอดขายจาก Ads ÷ ค่า Ads · เขียว ≥ ROAS เป้าของแคมเปญ (หรือ ≥ 8x ถ้าไม่มีเป้า) · ทอง 1–เป้า · แดง < 1x · คลิกหัวคอลัมน์เพื่อเรียง</div>
       </div>
       <!-- (2026-09-30) CPAS on Meta → Shopee (ย้ายมาจากหน้า Facebook Ads) -->
       <div id="shCpasSec" style="margin-top:20px;"></div>
@@ -2053,7 +2053,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               <th class="sortable-th c-left" onclick="mlSort('name')">สินค้า <span class="sort-ind" id="mls-name"></span></th>
               <th class="sortable-th" onclick="mlSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่า KOL/ค่า Ads ที่ไม่รวม VAT</div></span> <span class="sort-ind" id="mls-rev"></span></th>
               <th class="sortable-th" onclick="mlSort('kol')">ค่า KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-kol')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-kol" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่ารีวิว KOL จากชีทเบิกเงิน ตามเดือนที่เกิดค่าใช้จ่าย<br>👆 กดที่ตัวเลขเพื่อดูแยก Conversion/PR และช่องทางที่ลงงาน</div></span> <span class="sort-ind" id="mls-kol"></span></th>
-              <th class="sortable-th" onclick="mlSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = แอดที่ไม่ผูกสินค้า ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="mls-ads"></span></th>
+              <th class="sortable-th" onclick="mlSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = Ads ที่ไม่ผูกสินค้า ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="mls-ads"></span></th>
               <th class="sortable-th pl-cm" onclick="mlSort('cm1p')">CM1 <span class="sort-ind" id="mls-cm1p"></span></th>
               <th class="sortable-th pl-cm" onclick="mlSort('roi')">MER <span class="sort-ind" id="mls-roi"></span></th>
             </tr></thead>
@@ -2076,7 +2076,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <!-- (2026-09-18) ROI การตลาดต่อสินค้า — ระบบคำนวณเองจากยอดขายจริง + ค่าใช้จ่ายรายสินค้าของบัญชี + ค่าแอดต่อช่องทาง (mv_product_marketing_monthly) -->
       <div class="card" id="mktRoiCard" data-hidden="2026-09-24 เมฆให้ซ่อน — ใช้ตารางกำไรขั้นบันไดแทน" hidden style="display:none;margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
-          <div class="section-title">ROI การตลาดต่อสินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-roi-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-roi-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ระบบคำนวณจากยอดขายจริง ÷ ค่าการตลาดทั้งหมด<br><br><b>ROI</b> = ยอดขาย ÷ ค่าการตลาดรวม (ลงตลาด 1 บาท ได้ยอดขายกี่บาท)<br><b>% Budget</b> = ค่าการตลาดรวม ÷ ยอดขาย<br><br><b>ค่าตลาดตรง</b> = ค่าใช้จ่ายรายสินค้าจากบัญชี (ค่ารีวิว KOL แยก Conversion/PR · ออกกอง · ไลฟ์ · ส่งเสริมการขาย) — ตัดหมวดที่ไม่ใช่การตลาดออกแล้ว<br><br><b>ค่าแอด</b> แยกเป็นแอดยิงสินค้า (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับแอดทั่วไป (แอดเพจ/ไลฟ์/awareness/Shop GMV Max) · Lazada ใช้ยอดใช้จ่ายรายวันจากชีท Ads Daily Reports (Cowork) แบ่งตามยอดขายใน Lazada · แอด Modern Trade เป็นแอดสร้างการรับรู้ ไม่นับในตารางนี้ (ไปอยู่ "ค่าช่องทาง" ในตารางกำไรขั้นบันได)</div></span></div>
+          <div class="section-title">ROI การตลาดต่อสินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-roi-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-roi-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ระบบคำนวณจากยอดขายจริง ÷ ค่าการตลาดทั้งหมด<br><br><b>ROI</b> = ยอดขาย ÷ ค่าการตลาดรวม (ลงตลาด 1 บาท ได้ยอดขายกี่บาท)<br><b>% Budget</b> = ค่าการตลาดรวม ÷ ยอดขาย<br><br><b>ค่าตลาดตรง</b> = ค่าใช้จ่ายรายสินค้าจากบัญชี (ค่ารีวิว KOL แยก Conversion/PR · ออกกอง · ไลฟ์ · ส่งเสริมการขาย) — ตัดหมวดที่ไม่ใช่การตลาดออกแล้ว<br><br><b>ค่า Ads</b> แยกเป็น Ads ยิงสินค้า (TikTok GMV Max ยิงสินค้า + Shopee โฆษณาสินค้า) กับ Ads ทั่วไป (Ads เพจ/ไลฟ์/awareness/Shop GMV Max) · Lazada ใช้ยอดใช้จ่ายรายวันจากชีท Ads Daily Reports (Cowork) แบ่งตามยอดขายใน Lazada · Ads Modern Trade เป็น Ads สร้างการรับรู้ ไม่นับในตารางนี้ (ไปอยู่ "ค่าช่องทาง" ในตารางกำไรขั้นบันได)</div></span></div>
           <div style="display:flex;gap:6px;align-items:center;">
             <div class="mkt-period" id="mktPeriod" style="display:none;">
               <button data-k="ytd" onclick="mktSetPeriod('ytd')">ปีนี้</button><button data-k="3m" onclick="mktSetPeriod('3m')">3 เดือนล่าสุด</button><button data-k="month" onclick="mktSetPeriod('month')">เดือนล่าสุด</button><button data-k="prev" onclick="mktSetPeriod('prev')">เดือนที่แล้ว</button>
@@ -2098,8 +2098,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               <th class="mkt-cat">KOL Conversion<small id="mkavg-kol_conversion"></small></th>
               <th class="mkt-cat">KOL PR<small id="mkavg-kol_pr"></small></th>
               <th class="mkt-cat">การตลาดอื่นๆ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-oth')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-oth" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ค่าออกกอง · ไลฟ์ · โปรโมชั่น จากบัญชี</div></span><small id="mkavg-other_direct"></small></th>
-              <th class="mkt-cat">แอดยิงสินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-adp')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-adp" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">แอดที่เลือกสินค้าตัวนี้โดยตรง<br>• TikTok GMV Max แบบยิงสินค้า<br>• Shopee โฆษณาสินค้า</div></span><small id="mkavg-ads_direct"></small></th>
-              <th class="mkt-cat">แอดทั่วไป <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-adg')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-adg" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">แอดที่ยิงหลายสินค้าพร้อมกัน<br>• แอดเพจ Facebook<br>• TikTok ไลฟ์ / awareness<br>• Shopee Shop GMV Max · Brand · Live<br>แบ่งให้แต่ละสินค้าตามสัดส่วนยอดขายในช่องทางนั้น</div></span><small id="mkavg-ads_allocated"></small></th>
+              <th class="mkt-cat">Ads ยิงสินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-adp')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-adp" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">Ads ที่เลือกสินค้าตัวนี้โดยตรง<br>• TikTok GMV Max แบบยิงสินค้า<br>• Shopee โฆษณาสินค้า</div></span><small id="mkavg-ads_direct"></small></th>
+              <th class="mkt-cat">Ads ทั่วไป <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-adg')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-adg" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">Ads ที่ยิงหลายสินค้าพร้อมกัน<br>• Ads เพจ Facebook<br>• TikTok ไลฟ์ / awareness<br>• Shopee Shop GMV Max · Brand · Live<br>แบ่งให้แต่ละสินค้าตามสัดส่วนยอดขายในช่องทางนั้น</div></span><small id="mkavg-ads_allocated"></small></th>
               <th class="c-left">หมวดที่เกินเฉลี่ย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-bloat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-bloat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">เทียบค่าใช้จ่ายแต่ละหมวดของสินค้านี้ (เป็น % ของยอดขาย) กับค่าเฉลี่ยทั้งบริษัท แล้วบอกหมวดที่ใช้เกินมากที่สุด<br>ตัวอย่าง: แป้งดำจ่าย KOL Conversion 6.8% ของยอดขาย บริษัทเฉลี่ย 4.0% → ใช้เกินราว ฿452K<br>— = ไม่มีหมวดไหนเกินเฉลี่ยชัดเจน</div></span></th>
               <th class="sortable-th" onclick="mktRoiSort('mer')">ROI <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mk-roi')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mk-roi" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">ยอดขาย ÷ ค่าการตลาดรวม — ลง 1 บาทได้ยอดขายกี่บาท</div></span><span class="sort-ind" id="mrs-mer"></span></th>
             </tr></thead>
@@ -2127,10 +2127,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               <th class="sortable-th c-left" onclick="plSort('name')">สินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-row')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-row" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">กดชื่อสินค้า = ดูผลแยกตามช่องทาง<br>กดตัวเลขค่าใช้จ่าย = ดูว่าก้อนนั้นประกอบด้วยอะไร (ยอดรวมเท่าตัวเลขที่กด)<br>ตัวเลขใหญ่ในช่อง CM = % ของยอดขาย · สีแดง = ติดลบ</div></span> <span class="sort-ind" id="pls-name"></span></th>
               <th class="sortable-th" onclick="plSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-plh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-plh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่าใช้จ่ายที่บัญชีลงแบบไม่รวม VAT</div></span> <span class="sort-ind" id="pls-rev"></span></th>
               <th class="sortable-th" onclick="plSort('dir')">ค่าการตลาดตรง <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-dir')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-dir" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b>: ค่ารีวิว KOL · Presenter ที่ผูกสินค้า · ค่าที่บัญชีลงเป็นสินค้านี้<br>👆 กดที่ตัวเลขเพื่อดูว่าประกอบด้วยอะไร</div></span> <span class="sort-ind" id="pls-dir"></span></th>
-              <th class="sortable-th" onclick="plSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดใช้จ่ายจริงจาก Meta / TikTok / Shopee / Lazada<br><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = แอดที่ไม่ผูกสินค้า (awareness เพจ Live Promotion Shop Ads) ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="pls-ads"></span></th>
+              <th class="sortable-th" onclick="plSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดใช้จ่ายจริงจาก Meta / TikTok / Shopee / Lazada<br><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = Ads ที่ไม่ผูกสินค้า (awareness เพจ Live Promotion Shop Ads) ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="pls-ads"></span></th>
               <th class="sortable-th pl-cm" onclick="plSort('cm1p')">CM1 <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm1')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm1" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM1 · Contribution Margin 1</b><br>เหลือหลังค่าการตลาดตรง + Ads<br><br>ขายได้ 100 บาท หักค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b> (ค่ารีวิว KOL, Presenter, ค่าที่บัญชีลงเป็นสินค้านี้) และ<b>ค่า Ads ทั้งหมด</b> (ยิงสินค้า + ทั่วไป/awareness ที่ปันตามยอดขายในช่องทาง) เหลือเท่าไร</div></span> <span class="sort-ind" id="pls-cm1p"></span></th>
               <th class="sortable-th" onclick="plSort('ch')">ค่า Platform <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-ch')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-ch" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง: ค่าธรรมเนียม/บริการ Platform · Commission · ค่าส่ง · Live — แบ่งตามยอดขายของสินค้าในช่องทางนั้น<br>👆 กดที่ตัวเลขเพื่อดูรายละเอียด</div></span> <span class="sort-ind" id="pls-ch"></span></th>
-              <th class="sortable-th pl-cm" onclick="plSort('cm2p')">CM2 <span title="ค่าไลฟ์ TikTok ปันให้เฉพาะสินค้าที่ขายในไลฟ์ TikTok — ดูรายละเอียดที่ ⓘ" style="color:var(--orange);font-size:11px;cursor:help;">❗</span> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm2')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm2" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM2 · Contribution Margin 2</b><br>เหลือหลังค่า Platform/ช่องทาง<br><br>จาก CM1 หักค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง (ค่าธรรมเนียม/บริการ Platform, Commission, ค่าส่ง, ค่า Live)</div></span> <span class="sort-ind" id="pls-cm2p"></span></th>
+              <th class="sortable-th pl-cm" onclick="plSort('cm2p')">CM2 <span title="ค่า Live TikTok ปันให้เฉพาะสินค้าที่ขายใน Live TikTok — ดูรายละเอียดที่ ⓘ" style="color:var(--orange);font-size:11px;cursor:help;">❗</span> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm2')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm2" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM2 · Contribution Margin 2</b><br>เหลือหลังค่า Platform/ช่องทาง<br><br>จาก CM1 หักค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง (ค่าธรรมเนียม/บริการ Platform, Commission, ค่าส่ง, ค่า Live)</div></span> <span class="sort-ind" id="pls-cm2p"></span></th>
               <th class="sortable-th" onclick="plSort('br')">การตลาดอื่น (ปัน) <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-br')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-br" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าการตลาดที่ระบุสินค้าไม่ได้ ปันตามสัดส่วนยอดขาย (ถ้าบัญชีลงไว้ที่ช่องทาง ปันตามยอดขายในช่องทางนั้น)<br>👆 กดที่ตัวเลขเพื่อดูรายละเอียด</div></span> <span class="sort-ind" id="pls-br"></span></th>
               <th class="sortable-th pl-cm" onclick="plSort('cm3p')">CM3 <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm3')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM3 · Contribution Margin 3</b><br>เหลือหลังค่าการตลาดอื่น (ปันส่วน)<br><br>จาก CM2 หักค่าการตลาดที่<b>ระบุสินค้าไม่ได้</b> ปันตามสัดส่วนยอดขาย (Presenter คนอื่น, Promotion, Affiliate Campaign, Rebranding, ที่ปรึกษา, ค่ารับรอง, ค่าเดินทาง ฯลฯ)</div></span> <span class="sort-ind" id="pls-cm3p"></span></th>
               <th class="sortable-th" onclick="plSort('oh')">ค่าบริหาร <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-oh')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-oh" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าใช้จ่ายบริหารทั้งบริษัท (เงินเดือน ค่าเช่า ค่าสำนักงาน) แบ่งตามสัดส่วนยอดขายรวม</div></span> <span class="sort-ind" id="pls-oh"></span></th>
@@ -2175,7 +2175,6 @@ let productsMap = {};      // parent_sku -> product_name
 let provinceRegionMap = {}; // province -> region
 let crmRawData = {};
 let crmDetailData = [];
-let selectedAnalysisSKUs = [];
 let skuRevenueAll = [];   // จาก sku_revenue table — ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" (revenue_share ต่อ SKU จริง) แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
 let freeSampleRows = []; // ออเดอร์ที่เป็นตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง — รวมจากหลายช่องทาง (TikTok revenue=0, Facebook รีวิว ฟีมิคส์) ถูกตัดออกจาก skuRevenueAll แล้ว เก็บแยกไว้โชว์ต่างหาก
 let orderIdToPromo = {};  // order_id -> sku_promotion (มาจาก orders) ใช้ label ชื่อโปรในตาราง promotion ของหน้าวิเคราะห์ SKU
@@ -2198,7 +2197,6 @@ const debouncedFilterCrmProductDropdown = debounce(() => filterCrmProductDropdow
 const debouncedOnCrmRecencyChange = debounce(() => onCrmRecencyChange());
 const debouncedFilterNbProductDropdown = debounce(() => filterNbProductDropdown());
 const debouncedFilterSkuDropdown = debounce(() => filterSkuDropdown());
-const debouncedFilterSkuAnalysisDropdown = debounce(() => filterSkuAnalysisDropdown());
 const debouncedFilterFlowSkuDropdown = debounce(() => filterFlowSkuDropdown());
 const debouncedTtaCreatorAndTable = debounce(() => { renderTtaCreatorSummary(); renderTtaTable(); });
 const debouncedRenderTtaCampaignTable = debounce(() => renderTtaCampaignTable());
@@ -2479,7 +2477,7 @@ function mktAcctNoteHtml(fromM, toM) {
   if (fromM && toM) { let d = new Date(fromM + '-01T00:00:00'); const end = new Date(toM + '-01T00:00:00'); while (d <= end) { const m = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); if (!up[m]) missing.push(m); d.setMonth(d.getMonth() + 1); } }
   const detail = inRange.map(m => `${thM(m)} — อัปเมื่อ ${thD(up[m])}`).join('<br>');
   return `📄 ต้นทุนจากไฟล์บัญชี: มีถึง <b>${thM(last)}</b> (อัปล่าสุด ${thD(up[last])})`
-    + (missing.length ? ` · <span style="color:var(--orange);">ยังไม่มีไฟล์บัญชี: ${missing.map(thM).join(', ')} — เดือนนี้มีแค่ค่าแอด</span>` : '')
+    + (missing.length ? ` · <span style="color:var(--orange);">ยังไม่มีไฟล์บัญชี: ${missing.map(thM).join(', ')} — เดือนนี้มีแค่ค่า Ads</span>` : '')
     + (detail ? ` <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="cursor:pointer;color:var(--text3);">ⓘ</span><div class="ads-info-popover" style="display:none;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.7;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);">วันที่อัปไฟล์บัญชีของแต่ละเดือนในช่วงนี้<br>${detail}</div></span>` : '');
 }
 
@@ -2864,11 +2862,13 @@ function showPage(page, lockCh, el) {
   if (lockCh) {
     // หน้าที่เข้าจากเมนูช่องทางเฉพาะ (เช่น Facebook > Promotion/SKU) — ล็อก channel ให้ตรงกับเมนูที่กด
     // sub-channel ยังเลือกได้ตามปกติ เพราะรู้ channel หลักอยู่แล้วไม่ต้องเลือกซ้ำ
-    if (chFilter) { chFilter.value = lockCh; chFilter.disabled = true; chFilter.style.opacity = '0.5'; }
+    if (chFilter) { chFilter.value = lockCh; chFilter.disabled = true; }
+    if (chGroup) chGroup.style.display = 'none';   // (2026-10-01) ช่องทางถูกล็อกตามเมนู → ซ่อน ไม่ทำเป็นสีจาง
     if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
   } else if (HUB_CHANNEL[page] || page === 'skuanalysis' || page === 'adperf' || page === 'livesearch' || page === 'creatorperf') {
-    if (chFilter) { chFilter.value = HUB_CHANNEL[page] || ''; chFilter.disabled = true; chFilter.style.opacity = '0.35'; }
-    if (subGroup) { subGroup.style.opacity = '0.35'; subGroup.style.pointerEvents = 'none'; }
+    if (chFilter) { chFilter.value = HUB_CHANNEL[page] || ''; chFilter.disabled = true; }
+    if (chGroup) chGroup.style.display = 'none';   // (2026-10-01) ตัวกรองที่ใช้ไม่ได้ในหน้านี้ → ซ่อน (เดิมทำเป็นสีจาง)
+    if (subGroup) { subGroup.style.display = 'none'; subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
   } else {
     // หน้าที่ไม่ได้ล็อก channel (เช่น MKT Tracking, ยอดขายแยก SKU) ให้กลับมาเป็น "ทั้งหมด" เสมอ
     // กันปัญหา filter ดูเหมือนค้างที่ channel เดิมจากหน้า Hub ที่เพิ่งออกมาก่อนหน้า (ตัวเลือกเปิดใช้ได้แล้วแต่ค่ายังไม่รีเซ็ต)
@@ -2881,7 +2881,7 @@ function showPage(page, lockCh, el) {
   // (2026-09-30) หน้า Modern Trade: ช่อง Sub-Channel ด้านบนใช้เลือกห้าง (ทั้งหมด / Eveandboy / Konvy / Watsons / CJ) — ออกจากหน้านี้แล้วคืนเป็น Sub-Channel ปกติ
   { const mtSel = document.getElementById('filterSubChannel'), mtLbl = document.querySelector('#subChannelGroup .filter-label');
     if (page === 'mthub' && mtSel) {
-      if (subGroup) { subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
+      if (subGroup) { subGroup.style.display = 'flex'; subGroup.style.opacity = '1'; subGroup.style.pointerEvents = 'auto'; }
       if (mtLbl) mtLbl.textContent = 'ห้าง';
       mtSel.innerHTML = '<option value="">ทั้งหมด</option>' + MT_RETAILERS.map(r => `<option value="${r}">${r}</option>`).join('');
       mtSel.value = _mtRetailer || ''; mtSel.dataset.mt = '1';
@@ -2978,7 +2978,7 @@ function loadFbAdsPage() {
   if (window._fbadsLoading) return;
   window._fbadsLoading = true;
   const s = document.createElement('script');
-  s.src = 'fbads.js?v=20260930b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
+  s.src = 'fbads.js?v=20261001a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
   s.onload = () => { window._fbadsLoading = false; window.renderFbAdsPage(); };
   s.onerror = () => { window._fbadsLoading = false; document.getElementById('page-fbads').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbads.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -2990,11 +2990,33 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20260930f';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20260930g';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
 }
+
+// (2026-10-01) ทุกหน้าใช้หน้าตาตอนโหลดแบบเดียวกัน: ช่อง "กำลังโหลด..." ทุกจุด (รวม supply.js / ttcontent.js / fbads.js) กลายเป็นแถบเทา skeleton อัตโนมัติ
+(function () {
+  const RE = /^\s*(⏳\s*)?กำลังโหลด/;
+  const bar = w => `<span class="skeleton" style="display:block;height:12px;width:${w};margin:6px auto;border-radius:4px;"></span>`;
+  const fix = root => { if (!root || root.nodeType !== 1) return;
+    const list = root.matches('.empty') ? [root] : [...root.querySelectorAll('.empty')];
+    list.forEach(el => { if (el.dataset.ld || !RE.test(el.textContent)) return; el.dataset.ld = '1'; el.setAttribute('aria-label', el.textContent.trim());
+      el.innerHTML = el.tagName === 'TD' ? bar('40%') : bar('55%') + bar('35%'); }); };
+  const start = () => { fix(document.body); new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1 && n.getElementsByTagName('*').length < 60) fix(n); }).observe(document.body, { childList: true, subtree: true }); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  // แจ้งเตือนเป็นกล่องเล็กมุมล่างในหน้าเว็บ (ไม่ใช้กล่องเด้งของเบราว์เซอร์)
+  window.uiToast = function (msg, ms) {
+    let box = document.getElementById('uiToastBox');
+    if (!box) { box = document.createElement('div'); box.id = 'uiToastBox'; box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;'; document.body.appendChild(box); }
+    const t = document.createElement('div');
+    t.style.cssText = "max-width:520px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:10px 16px;font:13px/1.5 'Sarabun',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);white-space:pre-line;pointer-events:auto;";
+    t.textContent = String(msg == null ? '' : msg); box.appendChild(t);
+    setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 320); }, ms || Math.min(9000, 3500 + String(msg || '').length * 40));
+  };
+  window.alert = m => window.uiToast(m);
+})();
 
 function renderCurrentPage() {
   if (currentPage === 'skuanalysis') { loadSkuDeepPage(); return; }
@@ -3792,7 +3814,7 @@ async function renderShHub() {
       const top = sorted[0];
       const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
       const roasNum = parseFloat(roas);
-      const roasNote = isNaN(roasNum) ? '' : (roasNum>=5?` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) อยู่ในเกณฑ์ดีมาก`:roasNum>=3?` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) พอใช้ ลองดูประเภทแอดที่คุ้มน้อยในหน้า Shopee Ads`:` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) ค่อนข้างต่ำ ควรทบทวนงบโฆษณา`);
+      const roasNote = isNaN(roasNum) ? '' : (roasNum>=5?` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) อยู่ในเกณฑ์ดีมาก`:roasNum>=3?` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) พอใช้ ลองดูประเภท Ads ที่คุ้มน้อยในหน้า Shopee Ads`:` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) ค่อนข้างต่ำ ควรทบทวนงบโฆษณา`);
       shInsight = `Sub-channel "${top[0]}" ทำยอดขายสูงสุด ${share}% ของ Shopee ทั้งหมด (฿${fmt(top[1].rev)})${roasNote} — หมายเหตุ: ประเมินจาก ROAS เท่านั้น ยังไม่รวมต้นทุนสินค้า`;
     }
     document.getElementById('shhub-insight').textContent = shInsight;
@@ -4013,7 +4035,7 @@ const CP_NUM = v => v ? fmt(Math.round(v)) : '<span style="color:var(--text3);">
 const CP_PER = (a, b) => +b ? '฿' + fmt(Math.round(a / b)) : '<span style="color:var(--text3);">—</span>';
 const CP_ROAS = (v, sp) => { if (!+sp || !+v) return '<span style="color:var(--text3);">—</span>'; const x = v / sp; return `<span style="color:${x >= 3 ? 'var(--green)' : x >= 1 ? 'var(--accent)' : 'var(--red)'};font-weight:700;">${x.toFixed(2)}x</span>`; };
 const CP_M = {
-  spend:          { label: 'ค่าแอด', fmt: r => `<b>${CP_MONEY(+r.spend)}</b>`, val: r => +r.spend },
+  spend:          { label: 'ค่า Ads', fmt: r => `<b>${CP_MONEY(+r.spend)}</b>`, val: r => +r.spend },
   impressions:    { label: 'Impressions', fmt: r => CP_NUM(+r.impressions), val: r => +r.impressions },
   reach:          { label: 'Reach', fmt: r => CP_NUM(+r.reach), val: r => +r.reach },
   frequency:      { label: 'ความถี่', fmt: r => +r.reach ? (r.impressions / r.reach).toFixed(2) : '—', val: r => +r.reach ? r.impressions / r.reach : 0 },
@@ -4056,17 +4078,17 @@ function shCpasTables() {
   { const c = document.getElementById('shCpasCamp-metric-count'); if (c) c.textContent = `(${kc.length})`; const c2 = document.getElementById('shCpasAds-metric-count'); if (c2) c2.textContent = `(${ka.length})`; }
   const th = ks => ks.map(k => `<th>${CP_M[k].label}</th>`).join('');
   const camps = (d.by_campaign || []).slice().sort((a, b) => +b.spend - +a.spend);
-  document.getElementById('theadShCpasCamp').innerHTML = `<tr><th>แคมเปญ</th><th>แอด</th>${th(kc)}</tr>`;
+  document.getElementById('theadShCpasCamp').innerHTML = `<tr><th>แคมเปญ</th><th>Ads</th>${th(kc)}</tr>`;
   document.getElementById('tbodyShCpasCamp').innerHTML = camps.map(c => `<tr><td><b>${ttcEsc(c.name || c.campaign_id)}</b></td><td>${fmt(c.ads)}</td>${kc.map(k => `<td>${CP_M[k].fmt(c)}</td>`).join('')}</tr>`).join('')
-    || `<tr><td colspan="${2 + kc.length}" class="empty">ไม่มีแอด CPAS ในช่วงที่เลือก</td></tr>`;
+    || `<tr><td colspan="${2 + kc.length}" class="empty">ไม่มี Ads CPAS ในช่วงที่เลือก</td></tr>`;
   const ads = (d.ads || []).slice().sort((a, b) => +b.spend - +a.spend);
-  document.getElementById('theadShCpasAds').innerHTML = `<tr><th>แอด</th>${th(ka)}</tr>`;
+  document.getElementById('theadShCpasAds').innerHTML = `<tr><th>Ads</th>${th(ka)}</tr>`;
   document.getElementById('tbodyShCpasAds').innerHTML = ads.map(a => { const url = a.post_id ? `https://www.facebook.com/${a.post_id}` : '';
     const img = a.thumbnail_url ? `<img src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
     return `<tr><td><div style="display:flex;gap:10px;align-items:center;min-width:240px;"><a ${url ? `href="${ttcEscAttr(url)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${img}</a>
       <div style="min-width:0;"><div style="font-weight:600;font-size:12px;">${url ? `<a href="${ttcEscAttr(url)}" target="_blank" rel="noopener" style="color:inherit;">${ttcEsc(a.name || a.ad_id)}</a>` : ttcEsc(a.name || a.ad_id)}</div><div style="font-size:10.5px;color:var(--text3);">${ttcEsc(a.campaign || '')}</div></div></div></td>
       ${ka.map(k => `<td>${CP_M[k].fmt(a)}</td>`).join('')}</tr>`; }).join('')
-    || `<tr><td colspan="${1 + ka.length}" class="empty">ไม่มีแอด CPAS ในช่วงที่เลือก</td></tr>`;
+    || `<tr><td colspan="${1 + ka.length}" class="empty">ไม่มี Ads CPAS ในช่วงที่เลือก</td></tr>`;
 }
 async function renderShCpas(from, to) {
   const el = document.getElementById('shCpasSec'); if (!el) return;
@@ -4082,21 +4104,21 @@ async function renderShCpas(from, to) {
   const T = { spend: S('spend'), imp: S('impressions'), lc: S('link_clicks'), lpv: S('lpv'), atc: S('atc'), pur: S('sh_pur'), val: S('sh_val') };
   const waiting = T.spend > 0 && !T.pur && !T.val;
   const kpi = (t, v, sub) => `<div class="card" style="flex:1;min-width:150px;"><div class="card-title">${t}</div><div class="kpi-value">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:3px;">${sub}</div>` : ''}</div>`;
-  const info = fbeInfoIcon('sh-cpas-info', '<b>CPAS on Meta</b> = แอดบัญชี Meta "CPAS → Shopee" · ค่าแอดชุดนี้<b>รวมอยู่ในค่าแอดรวมของ Shopee ด้านบนแล้ว</b><br><br><b>ตัวเลขทุกตัวในส่วนนี้มาจาก Meta Ads Manager</b> — ซื้อ / ยอดขาย / ใส่ตะกร้า / ดูสินค้า = คอลัมน์ "shared items" ของบัญชีนี้ใน Ads Manager<br><br>เป็น<b>คนละชุด</b>กับตัวเลข CPAS / Meta ที่ Shopee รายงานเองใน Seller Centre — อย่านำมาบวกหรือเทียบแทนกัน<br><br>เลือกคอลัมน์ได้ที่ ⚙ Metrics');
+  const info = fbeInfoIcon('sh-cpas-info', '<b>CPAS on Meta</b> = Ads บัญชี Meta "CPAS → Shopee" · ค่า Ads ชุดนี้<b>รวมอยู่ในค่า Ads รวมของ Shopee ด้านบนแล้ว</b><br><br><b>ตัวเลขทุกตัวในส่วนนี้มาจาก Meta Ads Manager</b> — ซื้อ / ยอดขาย / ใส่ตะกร้า / ดูสินค้า = คอลัมน์ "shared items" ของบัญชีนี้ใน Ads Manager<br><br>เป็น<b>คนละชุด</b>กับตัวเลข CPAS / Meta ที่ Shopee รายงานเองใน Seller Centre — อย่านำมาบวกหรือเทียบแทนกัน<br><br>เลือกคอลัมน์ได้ที่ ⚙ Metrics');
   el.innerHTML = `<div class="section-header" style="margin-bottom:12px;"><div class="section-title" style="font-size:15px;">CPAS on Meta → Shopee ${info}</div></div>
     ${waiting ? '<div style="font-size:11.5px;color:var(--orange);margin:-4px 0 12px;">ยอดซื้อ / ยอดขายจาก Meta ยังไม่มี — ระบบกำลังรอดึงจาก Meta Ads Manager (ดึงทุกวัน 08:20 และ 20:20)</div>' : ''}
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-      ${kpi('ค่าแอด CPAS', CP_MONEY(T.spend), `${fmt(ads.length)} แอด · ${fmt((d.by_campaign || []).length)} แคมเปญ`)}
+      ${kpi('ค่า Ads CPAS', CP_MONEY(T.spend), `${fmt(ads.length)} Ads · ${fmt((d.by_campaign || []).length)} แคมเปญ`)}
       ${kpi('คลิกลิงก์', CP_NUM(T.lc), `CTR ${T.imp ? (T.lc / T.imp * 100).toFixed(2) + '%' : '—'} · ${T.lc ? '฿' + fmt(Math.round(T.spend / T.lc)) : '—'} ต่อคลิก`)}
       ${kpi('เข้าหน้า Shopee', CP_NUM(T.lpv), T.lpv ? `฿${fmt(Math.round(T.spend / T.lpv))} ต่อครั้ง` : '')}
       ${kpi('ใส่ตะกร้า (Meta)', CP_NUM(T.atc), T.atc ? `฿${fmt(Math.round(T.spend / T.atc))} ต่อครั้ง` : '')}
       ${kpi('ยอดขาย (Meta)', CP_MONEY(T.val), T.pur ? `ซื้อ ${fmt(T.pur)} ครั้ง · ฿${fmt(Math.round(T.spend / T.pur))} ต่อการซื้อ` : '')}
-      ${kpi('ROAS (Meta)', CP_ROAS(T.val, T.spend), 'ยอดขาย (Meta) ÷ ค่าแอด')}
+      ${kpi('ROAS (Meta)', CP_ROAS(T.val, T.spend), 'ยอดขาย (Meta) ÷ ค่า Ads')}
     </div>
     <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">CPAS ตามแคมเปญ</div>
       <div style="display:flex;gap:8px;align-items:center;">${cpMetricsBtn('shCpasCamp')}<button class="btn btn-ghost" onclick="exportTable('tblShCpasCamp')">⬇ Export CSV</button></div></div>
       <div class="table-wrap"><table id="tblShCpasCamp"><thead id="theadShCpasCamp"></thead><tbody id="tbodyShCpasCamp"></tbody></table></div></div>
-    <div class="card"><div class="section-header"><div class="section-title">CPAS ตามแอด</div>
+    <div class="card"><div class="section-header"><div class="section-title">CPAS ตาม Ads</div>
       <div style="display:flex;gap:8px;align-items:center;">${cpMetricsBtn('shCpasAds')}<button class="btn btn-ghost" onclick="exportTable('tblShCpasAds')">⬇ Export CSV</button></div></div>
       <div class="table-wrap"><table id="tblShCpasAds"><thead id="theadShCpasAds"></thead><tbody id="tbodyShCpasAds"></tbody></table></div></div>`;
   shCpasTables();
@@ -4905,7 +4927,7 @@ function renderCpTrendChart() {
   const datasets = [
     { type: 'line', label: 'ยอดขาย (ออเดอร์จริง)', data: days.map(dt => _cpTrendByDay[dt] || 0), yAxisID: 'y', order: 1,
       borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', borderWidth: 2, pointRadius: many ? 0 : 3, pointHoverRadius: 5, fill: true, tension: 0.3 },
-    { type: 'bar', label: 'ค่าแอด', data: days.map(dt => adByDay[dt] || 0), yAxisID: 'y2', order: 3, stack: 'cost',
+    { type: 'bar', label: 'ค่า Ads', data: days.map(dt => adByDay[dt] || 0), yAxisID: 'y2', order: 3, stack: 'cost',
       backgroundColor: 'rgba(96,165,250,0.55)', borderWidth: 0, borderRadius: 2, barPercentage: many ? 1 : 0.7, categoryPercentage: 0.9 },
     { type: 'bar', label: 'ค่าจ้าง KOL', data: days.map(dt => feeByDay[dt] || 0), yAxisID: 'y2', order: 2, stack: 'cost',
       backgroundColor: 'rgba(167,139,250,0.75)', borderWidth: 0, borderRadius: 2, barPercentage: many ? 1 : 0.7, categoryPercentage: 0.9 },
@@ -4920,7 +4942,7 @@ function renderCpTrendChart() {
     scales: {
       x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 14, callback: (v, i) => thD(days[i]) }, grid: { color: chartGridColor() }, stacked: true },
       y: { position: 'left', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() }, title: { display: true, text: 'ยอดขาย', color: chartTickColor(), font: { family: 'Sarabun', size: 10 } } },
-      y2: { position: 'right', stacked: true, beginAtZero: true, ticks: { color: '#a78bfa', font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { drawOnChartArea: false }, title: { display: true, text: 'ต้นทุน (แอด + ค่าจ้าง)', color: '#a78bfa', font: { family: 'Sarabun', size: 10 } } },
+      y2: { position: 'right', stacked: true, beginAtZero: true, ticks: { color: '#a78bfa', font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { drawOnChartArea: false }, title: { display: true, text: 'ต้นทุน (Ads + ค่าจ้าง)', color: '#a78bfa', font: { family: 'Sarabun', size: 10 } } },
       yMark: { display: false, min: 0, max: 1.08 }
     },
     tooltip: {
@@ -4950,8 +4972,8 @@ function fillCpCostKpis(fee, spend, rev, subtitle) {
   const roiCol = roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--accent)' : 'var(--red)';
   const roiTag = roi === null ? 'ยังไม่มีต้นทุน' : roi >= 3 ? 'คุ้มมาก' : roi >= 1 ? 'คุ้ม' : 'ยังไม่คุ้ม';
   roiEl.style.border = `1px solid ${roiCol}`;
-  roiEl.innerHTML = `<div class="card-title">ROAS ${fbeInfoIcon('cp-info-roi', 'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม (ลง 1 บาท ได้ยอดกลับกี่บาท) · ROI = (ยอดขาย − ต้นทุน) ÷ ต้นทุน = ROAS − 1<br><br>ต้นทุนรวม = ค่าจ้าง KOL TikTok จากชีทเบิกเงิน KOL (ตามเดือนที่ทำจ่าย ตรงกับหน้า KOL เมื่อเลือกช่องทาง TikTok) + ค่าแอดที่ boost คลิป (ตามวันยิง)<br>ยอดขายไม่รวม LIVE เพราะต้นทุนตรงนี้เป็นของคลิปเท่านั้น<br><br>ยังไม่หักต้นทุนสินค้า — เขียว ≥ 3x (คุ้มมาก) · ทอง 1–3x (คุ้ม) · แดง < 1x (ยังไม่คุ้ม)<br>รายละเอียดคนที่จ้างดูที่หน้า KOL')}</div><div class="kpi-value" style="color:${roiCol};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:11px;color:${roiCol};margin-top:4px;font-weight:600;">${roiTag}${roi !== null ? ` <span style="color:var(--text3);font-weight:400;">· ${kolRoiPct(roi)}</span>` : ''}</div>`;
-  costEl.innerHTML = `<div class="card-title">ต้นทุนรวม</div><div class="kpi-value">฿${fmt(total)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;"><span style="color:#a78bfa;">●</span> ค่าจ้าง ฿${fmt(fee)} · <span style="color:#60a5fa;">●</span> ค่าแอด ฿${fmt(spend)}</div>`;
+  roiEl.innerHTML = `<div class="card-title">ROAS ${fbeInfoIcon('cp-info-roi', 'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม (ลง 1 บาท ได้ยอดกลับกี่บาท) · ROI = (ยอดขาย − ต้นทุน) ÷ ต้นทุน = ROAS − 1<br><br>ต้นทุนรวม = ค่าจ้าง KOL TikTok จากชีทเบิกเงิน KOL (ตามเดือนที่ทำจ่าย ตรงกับหน้า KOL เมื่อเลือกช่องทาง TikTok) + ค่า Ads ที่ boost คลิป (ตามวันยิง)<br>ยอดขายไม่รวม LIVE เพราะต้นทุนตรงนี้เป็นของคลิปเท่านั้น<br><br>ยังไม่หักต้นทุนสินค้า — เขียว ≥ 3x (คุ้มมาก) · ทอง 1–3x (คุ้ม) · แดง < 1x (ยังไม่คุ้ม)<br>รายละเอียดคนที่จ้างดูที่หน้า KOL')}</div><div class="kpi-value" style="color:${roiCol};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:11px;color:${roiCol};margin-top:4px;font-weight:600;">${roiTag}${roi !== null ? ` <span style="color:var(--text3);font-weight:400;">· ${kolRoiPct(roi)}</span>` : ''}</div>`;
+  costEl.innerHTML = `<div class="card-title">ต้นทุนรวม</div><div class="kpi-value">฿${fmt(total)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;"><span style="color:#a78bfa;">●</span> ค่าจ้าง ฿${fmt(fee)} · <span style="color:#60a5fa;">●</span> ค่า Ads ฿${fmt(spend)}</div>`;
 }
 
 function populateLiveSearchFilters() {
@@ -5137,7 +5159,7 @@ function lsRenderAdsKpi() {
   const roas = ad > 0 ? R.soldAmount / ad : null;
   const cpo = ad > 0 && R.soldOrders ? ad / R.soldOrders : null;
   el.innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;border:1px solid ${lsRoasColor(roas)};"><div class="card-title">ROAS ไลฟ์นี้ ${fbeInfoIcon('ls-info-roas', 'ยอดขายที่ขายได้จริง ÷ ค่า Ads ที่ทีมกรอก (ยิงแอดต่อไลฟ์นี้)<br>เขียว ≥ 3x · ทอง 1–3x · แดง < 1x<br><br>ค่า Ads กรอกเองจาก Ads Manager เพราะ TikTok ให้ค่าแอด LIVE เป็นรายวันไม่แยกช่วงเวลา')}</div><div class="kpi-value" style="color:${lsRoasColor(roas)};">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</div><div class="kpi-sub">${ad > 0 ? `฿${fmt(R.soldAmount)} ÷ ค่า Ads ฿${fmt(ad)}` : 'กรอกค่า Ads ด้านบนเพื่อคำนวณ'}</div></div>
+    <div class="card" style="flex:1;min-width:150px;border:1px solid ${lsRoasColor(roas)};"><div class="card-title">ROAS ไลฟ์นี้ ${fbeInfoIcon('ls-info-roas', 'ยอดขายที่ขายได้จริง ÷ ค่า Ads ที่ทีมกรอก (ยิง Ads ต่อไลฟ์นี้)<br>เขียว ≥ 3x · ทอง 1–3x · แดง < 1x<br><br>ค่า Ads กรอกเองจาก Ads Manager เพราะ TikTok ให้ค่า Ads LIVE เป็นรายวันไม่แยกช่วงเวลา')}</div><div class="kpi-value" style="color:${lsRoasColor(roas)};">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</div><div class="kpi-sub">${ad > 0 ? `฿${fmt(R.soldAmount)} ÷ ค่า Ads ฿${fmt(ad)}` : 'กรอกค่า Ads ด้านบนเพื่อคำนวณ'}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads ต่อออเดอร์</div><div class="kpi-value">${cpo !== null ? '฿' + fmt(cpo) : '—'}</div><div class="kpi-sub">${ad > 0 ? `${fmt(R.soldOrders)} ออเดอร์ที่ขายได้ · Ads = ${R.soldAmount ? (ad / R.soldAmount * 100).toFixed(1) : 0}% ของยอด` : ''}</div></div>`;
 }
 
@@ -6415,7 +6437,7 @@ function renderMomentumTable() {
     put('mm-info-chg', fbeInfoIcon('mmi-chg', `<b>vs ช่วงเทียบ</b><br>ช่วงที่เลือก (${cur}) ขายได้มากหรือน้อยกว่า <b>${prv}</b> กี่ %<br>เช่น ▼8.6% = ช่วงนี้ขายได้น้อยกว่าช่วงเทียบ 8.6%<br><span style="color:var(--text3);">เปลี่ยนช่วงเทียบได้ที่แถบบน "เทียบกับ"</span>`));
     put('mm-info-chg3', fbeInfoIcon('mmi-chg3', `<b>vs เฉลี่ย 3 ช่วง</b><br>ช่วงที่เลือก (${cur}) ขายได้มากหรือน้อยกว่า <b>ค่าเฉลี่ยของ 3 ช่วงเทียบ</b> กี่ %<br>= (${three}) เอามารวมกันหาร 3<br><span style="color:var(--text3);">3 ช่วงนี้เปลี่ยนตามช่วงวันที่และ "เทียบกับ" ที่เลือกด้านบน</span><br><br>ไว้ดูว่าที่ขึ้น/ลง เป็นแค่ "ช่วงเทียบพิเศษ" หรือ "เปลี่ยนจริง":<br>• vs ช่วงเทียบ ▼ แต่ vs เฉลี่ย ▲ → ช่วงเทียบแค่สูงผิดปกติ (เช่น ตัวแทนสั่งลอต) ยังไม่ต้องกังวล<br>• ▼ ทั้งคู่ → ลงจริง ต้องดู`));
     put('mm-info-wk', fbeInfoIcon('mmi-wk', '<b>12 สัปดาห์</b><br>ยอดขายรายสัปดาห์ 12 สัปดาห์ล่าสุด (ซ้าย = เก่า ขวา = ล่าสุด) ไว้ดูรูปทรงว่า ค่อยๆ ลง / พุ่งครั้งเดียว / แกว่ง · สีเส้นตามสถานะ'));
-    put('mm-info-st', fbeInfoIcon('mmi-st', `<b>สถานะ</b> ดูจาก % ในช่อง "vs ช่วงเทียบ":<br>🔺 Upturn = ขึ้นเกิน ${MOMENTUM_UP}%<br>🔻 Downturn = ลงเกิน ${Math.abs(MOMENTUM_DOWN)}%<br>➖ ทรงตัว = อยู่ระหว่างนั้น<br>🆕 ใหม่ = ช่วงเทียบไม่มียอด<br>💤 หยุดขาย = ช่วงนี้ไม่มียอด<br><br>บรรทัดเล็กใต้สถานะ = ลง/ขึ้นกี่ช่องทาง และช่องไหนเปลี่ยนมากสุด (บาท)<br>• ลงทุกช่องทาง → มักเป็นเรื่องตัวสินค้า/ฤดูกาล<br>• ลงแค่บางช่อง → มักเป็นเรื่องช่องนั้น (แอด/ราคา/ของหมด)<br>• ทรงตัวแต่ช่องทางแดงเยอะ → มีช่องหนึ่งโตมาชดเชย ควรดูช่องที่ลง`));
+    put('mm-info-st', fbeInfoIcon('mmi-st', `<b>สถานะ</b> ดูจาก % ในช่อง "vs ช่วงเทียบ":<br>🔺 Upturn = ขึ้นเกิน ${MOMENTUM_UP}%<br>🔻 Downturn = ลงเกิน ${Math.abs(MOMENTUM_DOWN)}%<br>➖ ทรงตัว = อยู่ระหว่างนั้น<br>🆕 ใหม่ = ช่วงเทียบไม่มียอด<br>💤 หยุดขาย = ช่วงนี้ไม่มียอด<br><br>บรรทัดเล็กใต้สถานะ = ลง/ขึ้นกี่ช่องทาง และช่องไหนเปลี่ยนมากสุด (บาท)<br>• ลงทุกช่องทาง → มักเป็นเรื่องตัวสินค้า/ฤดูกาล<br>• ลงแค่บางช่อง → มักเป็นเรื่องช่องนั้น (Ads/ราคา/ของหมด)<br>• ทรงตัวแต่ช่องทางแดงเยอะ → มีช่องหนึ่งโตมาชดเชย ควรดูช่องที่ลง`));
     put('mm-info-ch', fbeInfoIcon('mmi-ch', '<b>เปลี่ยนแปลงแต่ละช่องทาง</b><br>สินค้านี้ในแต่ละช่องทาง ขึ้นหรือลงกี่ % vs ช่วงเทียบ (เรียงจากหายมากสุด) · เอาเมาส์วางเห็นตัวเลขบาท')); }
   // สัดส่วน (วงกลม 2 อัน) + ข้อมูลให้ปุ่ม "วิเคราะห์ใหม่" — จากชุดเดียวกัน
   { const sorted = rows0.slice().sort((a, b) => b.rev_cur - a.rev_cur).map(r => [r.sku, { rev: +r.rev_cur, qty: +r.qty_cur }]);
@@ -6496,199 +6518,6 @@ function exportSkuRevWithChannel() {
   const rows = [header, ...rowsArr.map(r => [r.month, r.sku, skuToName(r.sku), r.channel, Math.round(r.qty), Math.round(r.rev)])];
 
   downloadCSV(rows, 'ยอดขายแยก_SKU_รายเดือน_ช่องทาง.csv');
-}
-
-// ===== SKU ANALYSIS PAGE =====
-function filterSkuAnalysisDropdown() {
-  const q = (document.getElementById('skuAnalysisSearch')?.value || '').toLowerCase();
-  showSkuAnalysisDropdown();
-  const list = document.getElementById('skuAnalysisDropdown');
-  if (!list) return;
-  const allSKUs = Object.keys(productsMap).length ? Object.keys(productsMap) :
-    [...new Set(allData.flatMap(r => (r.sku_promotion||'').split('+').map(s=>s.trim().replace(/x\d+$/i,'').trim()).filter(Boolean)))].sort();
-  const filtered = allSKUs.filter(sku => {
-    const thaiName = skuToName(sku).toLowerCase();
-    return (thaiName.includes(q) || sku.toLowerCase().includes(q)) && !selectedAnalysisSKUs.includes(sku);
-  });
-  list.innerHTML = filtered.slice(0,25).map(sku => `
-    <div onclick="addAnalysisSKU('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-      <div style="font-size:13px;color:var(--text);">${skuToName(sku)}</div>
-      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px;">${sku}</div>
-    </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
-}
-function showSkuAnalysisDropdown() { const l=document.getElementById('skuAnalysisDropdown'); if(l) l.style.display='block'; }
-function hideSkuAnalysisDropdown() { const l=document.getElementById('skuAnalysisDropdown'); if(l) l.style.display='none'; }
-
-function addAnalysisSKU(sku) {
-  if (selectedAnalysisSKUs.length >= 3 || selectedAnalysisSKUs.includes(sku)) return;
-  selectedAnalysisSKUs.push(sku);
-  const inp = document.getElementById('skuAnalysisSearch'); if (inp) inp.value = '';
-  renderAnalysisChips(); filterSkuAnalysisDropdown();
-}
-function removeAnalysisSKU(sku) { selectedAnalysisSKUs = selectedAnalysisSKUs.filter(s => s !== sku); renderAnalysisChips(); }
-function renderAnalysisChips() {
-  const el = document.getElementById('skuAnalysisChips'); if (!el) return;
-  el.innerHTML = selectedAnalysisSKUs.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i]};" onclick="removeAnalysisSKU('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span> ✕</span>`).join('');
-}
-
-// ยอดขาย/จำนวนชิ้นที่ "แกะจากโปรแล้ว" ในช่วงวันที่ปัจจุบัน — ให้หน้าวิเคราะห์ SKU ใช้แหล่งเดียวกับหน้าต้นทุนสินค้า/ยอดขายแยก SKU
-function getFilteredSkuRevenue() {
-  const from = getDateValue('From'), to = getDateValue('To');
-  return skuRevenueAll.filter(r => {
-    if (!r.date) return false;
-    if (from && r.date < from) return false;
-    if (to && r.date > to) return false;
-    if (!shouldIncludeRow(r)) return false;
-    return true;
-  });
-}
-
-function rowHasSKU(r, sku) {
-  const promo = r.sku_promotion || '';
-  return promo.split('+').some(p => p.trim().replace(/x\d+$/i,'').trim().toUpperCase() === sku.toUpperCase());
-}
-function getSKUQty(r, sku) {
-  let qty = 0;
-  (r.sku_promotion||'').split('+').forEach(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); if (m && m[1].trim().toUpperCase() === sku.toUpperCase()) qty += parseInt(m[2])||1; });
-  return qty;
-}
-
-async function runSkuAnalysis() {
-  if (selectedAnalysisSKUs.length === 0) return;
-  document.getElementById('skuAnalysisEmpty').style.display = 'none';
-  document.getElementById('skuAnalysisContent').style.display = 'block';
-  const skus = selectedAnalysisSKUs, isCompare = skus.length > 1;
-  const from = getDateValue('From'), to = getDateValue('To');
-  // เฟส 3: แถวรายวัน×ช่อง×sub×โปร ของ SKU ที่เลือก จาก RPC sku_summary (mv_sku_daily — revenue_share, ตัด Cancel/Return + ตัวอย่างฟรี เหมือนทุกหน้า)
-  const seq = (runSkuAnalysis._seq = (runSkuAnalysis._seq || 0) + 1);
-  document.getElementById('skuAnalysisKPIs').innerHTML = skus.map(() => `<div class="card"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
-  let skuRev = [], custRows = [];
-  try {
-    skuRev = await supaRpc('sku_summary', { p_from: from, p_to: to, p_channel: null, p_skus: skus }, true);
-    custRows = await supaRpc('sku_fb_customers', { p_from: from, p_to: to, p_skus: skus }, true);
-  } catch (e) { showError('โหลดข้อมูล SKU ไม่สำเร็จ: ' + e.message); return; }
-  if (seq !== runSkuAnalysis._seq) return;
-  const chF = document.getElementById('filterChannel').value, subF = document.getElementById('filterSubChannel').value;
-  if (chF) skuRev = skuRev.filter(r => r.channel === chF);
-  if (subF) skuRev = skuRev.filter(r => r.sub_channel === subF);
-
-  document.getElementById('skuAnalysisKPIs').innerHTML = skus.map((sku, i) => {
-    const rows = skuRev.filter(r => r.parent_sku === sku);
-    const rev = rows.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0);
-    const qty = rows.reduce((s,r) => s+(parseFloat(r.qty)||0), 0);
-    const ord = rows.reduce((s,r) => s+(parseInt(r.orders)||0), 0);
-    return `<div class="card" style="border-color:${COLORS[i]}40;">
-      <div class="card-title" style="color:${COLORS[i]};">${skuToName(sku)}</div>
-      <div class="kpi-value">฿${fmt(rev)}</div>
-      <div class="kpi-sub">${fmt(ord)} ออเดอร์ · ${fmt(qty)} ชิ้น · AOV ฿${(() => { const a = rows.filter(r => !isBulkChannel(r.channel)); const ar = a.reduce((s,r) => s+(parseFloat(r.revenue)||0), 0), ao = a.reduce((s,r) => s+(parseInt(r.orders)||0), 0); return fmt(ao?Math.round(ar/ao):0); })()} <span style="color:var(--text3);">(ไม่รวมตัวแทน/MT)</span></div>
-    </div>`;
-  }).join('');
-
-  window._skuAnalysisData = { skus, skuRev, isCompare };
-  renderSkuAnalysisTrend();
-
-  const channelList = [...new Set(skuRev.map(r=>r.channel).filter(Boolean))];
-  makeChart('chartSkuAnalysisChannel', 'bar', channelList, skus.map((sku,i) => ({
-    label: skuToName(sku), data: channelList.map(ch => skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).reduce((s,r)=>s+(parseFloat(r.revenue)||0),0)),
-    backgroundColor: COLORS[i]+'cc', borderColor: COLORS[i], borderWidth:1, borderRadius:4
-  })));
-
-  const totalRevAll = skuRev.filter(r=>skus.includes(r.parent_sku)).reduce((s,r)=>s+(parseFloat(r.revenue)||0),0)||1;
-  let chRows = [];
-  channelList.forEach(ch => {
-    skus.forEach((sku,i) => {
-      const rows = skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch);
-      if (!rows.length) return;
-      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0);
-      const qty = rows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
-      const ord = rows.reduce((s,r)=>s+(parseInt(r.orders)||0),0);
-      chRows.push({ch,sku,rev,ord,qty,i});
-    });
-  });
-  chRows.sort((a,b)=>b.rev-a.rev);
-  const chHead = document.getElementById('skuAnalysisChannelHead');
-  if (chHead) chHead.innerHTML = (isCompare?'<th>Channel</th><th>SKU</th>':'<th>Channel</th>') + '<th>ยอดขาย (฿)</th><th>ออเดอร์</th><th>ชิ้น</th><th>AOV</th><th>ราคา/ชิ้น</th><th>สัดส่วน %</th>';
-  document.getElementById('tbodySkuAnalysisChannel').innerHTML = chRows.map(({ch,sku,rev,ord,qty,i}) => `
-    <tr><td>${ch}</td>${isCompare?`<td style="color:${COLORS[i]};font-family:'IBM Plex Mono',monospace;font-size:11px;">${sku}</td>`:''}
-      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(rev))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(ord)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(qty)} ชิ้น</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${isBulkChannel(ch) ? '<span style="color:var(--text3);" title="สั่งเป็นลอตใหญ่ ไม่คิด AOV">—</span>' : '฿' + fmt(ord?Math.round(rev/ord):0)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(qty?Math.round(rev/qty):0)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${((rev/totalRevAll)*100).toFixed(1)}%</td></tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
-
-  // ตาราง Promotion ที่มี SKU นี้ — ใช้ส่วนแบ่งยอดขายของ SKU นี้เท่านั้น (revenue_share) ไม่ใช่ยอดขายเต็มออเดอร์ของทั้งโปร
-  // label ชื่อโปรผ่าน order_id -> sku_promotion (มาจาก orders) เพราะ sku_revenue ไม่มีคอลัมน์นี้เก็บตรงๆ
-  // ตัวแทน/Modern Trade ไม่มี sku_promotion ที่จับพฤติกรรมจริงได้ (ไม่ใช่โปรที่ลูกค้าเลือกเอง) เลยไม่โชว์ในตารางนี้
-  // (ตารางอื่น/ยอดรวมด้านบนยังนับ ตัวแทน/Modern Trade ครบเหมือนเดิม ไม่กระทบ)
-  const promoChannelList = channelList.filter(ch => ch !== 'ตัวแทน' && ch !== 'Modern Trade');
-  const promoAgg = {};
-  promoChannelList.forEach(ch => {
-    skus.forEach(sku => {
-      skuRev.filter(r=>r.parent_sku===sku&&r.channel===ch).forEach(r => {
-        const promo = r.sku_promotion || '—';
-        const key = ch+'||'+promo;
-        if (!promoAgg[key]) promoAgg[key]={ch,promo,rev:0,qty:0,ord:0};
-        promoAgg[key].rev += parseFloat(r.revenue)||0;
-        promoAgg[key].qty += parseFloat(r.qty)||0;
-        promoAgg[key].ord += parseInt(r.orders)||0;
-      });
-    });
-  });
-  const allPromoRows = Object.values(promoAgg).map(v => ({ch:v.ch, promo:v.promo, rev:v.rev, qty:v.qty, ord:v.ord}));
-  const promoRows = [];
-  promoChannelList.forEach(ch => { allPromoRows.filter(r=>r.ch===ch).sort((a,b)=>b.rev-a.rev).slice(0,5).forEach(r=>promoRows.push(r)); });
-  window._skuPromoRows = promoRows;
-  renderSkuAnalysisPromo();
-
-  // ลูกค้า FB ที่ซื้อ SKU นี้ — เฟส 3: จาก RPC sku_fb_customers คืน (จำนวนครั้ง, จำนวนลูกค้า)
-  const totalCust = custRows.reduce((s,r)=>s+(parseInt(r.customers)||0),0);
-  const repeatCust = custRows.filter(r=>parseInt(r.purchases)>=2).reduce((s,r)=>s+(parseInt(r.customers)||0),0);
-  const maxPurchase = custRows.reduce((m,r)=>Math.max(m,parseInt(r.purchases)||0),0);
-  const avgFreq = totalCust ? (custRows.reduce((s,r)=>s+(parseInt(r.purchases)||0)*(parseInt(r.customers)||0),0)/totalCust).toFixed(1) : 0;
-  document.getElementById('skuAnalysisCRMKPIs').innerHTML=`
-    <div class="card"><div class="card-title">ลูกค้า FB ที่ซื้อ SKU นี้</div><div class="kpi-value">${fmt(totalCust)}</div><div class="kpi-sub">unique เบอร์โทร</div></div>
-    <div class="card"><div class="card-title">ซื้อซ้ำ (2+ ครั้ง)</div><div class="kpi-value">${fmt(repeatCust)}</div><div class="kpi-sub">${fmtPct(repeatCust,totalCust)} ของลูกค้าทั้งหมด</div></div>
-    <div class="card"><div class="card-title">ซื้อเฉลี่ย / คน</div><div class="kpi-value">${avgFreq}</div><div class="kpi-sub">สูงสุด ${fmt(maxPurchase)} ครั้ง</div></div>`;
-  const cgroups={'1':0,'2':0,'3':0,'4':0,'5':0,'6+':0};
-  custRows.forEach(r=>{ const v=parseInt(r.purchases)||0, n=parseInt(r.customers)||0; if(v<=5) cgroups[v+'']+=n; else cgroups['6+']+=n; });
-  makeChart('chartSkuAnalysisCRM','bar',Object.keys(cgroups).map(k=>k+' ครั้ง'), [{label:'จำนวนลูกค้า',data:Object.values(cgroups),backgroundColor:COLORS,borderRadius:4}]);
-}
-
-function renderSkuAnalysisPromo() {
-  const allRows = window._skuPromoRows || [];
-  const mode = document.getElementById('skuPromoSortMode')?.value || 'revenue';
-  const sorted = [...allRows].sort((a,b) => mode==='revenue' ? b.rev-a.rev : mode==='orders' ? b.ord-a.ord : b.qty-a.qty);
-  const totalPromo = sorted.reduce((s,r)=>s+r.rev,0)||1;
-  const chBorder = ['#60a5fa','#f472b6','#fb923c','#a78bfa','#4ade80'];
-  const chList = [...new Set(sorted.map(r=>r.ch))];
-  const chColors = {};
-  chList.forEach((ch,i) => { chColors[ch] = chBorder[i%chBorder.length]; });
-
-  document.getElementById('tbodySkuAnalysisPromo').innerHTML = sorted.map(({ch,promo,rev,ord,qty})=>{
-    const name = promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim())+'x'+m[2] : p; }).join('+');
-    return `<tr style="border-left:3px solid ${chColors[ch]||'transparent'};">
-      <td style="font-weight:600;">${ch}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);" title="${promo.replace(/"/g,'&quot;')}">${promo.length>40?promo.substring(0,40)+'…':promo}</td>
-      <td title="${name.replace(/"/g,'&quot;')}">${name.length>70?name.substring(0,70)+'…':name}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">฿${fmt(Math.round(rev))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(ord)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(qty)} ชิ้น</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${((rev/totalPromo)*100).toFixed(1)}%</td></tr>`;
-  }).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
-}
-
-function renderSkuAnalysisTrend() {
-  const state = window._skuAnalysisData; if (!state) return;
-  const {skus, skuRev} = state;
-  const mode = document.getElementById('skuAnalysisTrendMode')?.value||'revenue';
-  const days = [...new Set(skuRev.map(r=>r.date).filter(Boolean))].sort();
-  const datasets = skus.map((sku,i)=>{
-    const daily={};
-    skuRev.filter(r=>r.parent_sku===sku).forEach(r=>{ if(!r.date)return; if(!daily[r.date])daily[r.date]={rev:0,qty:0}; daily[r.date].rev+=parseFloat(r.revenue)||0; daily[r.date].qty+=parseFloat(r.qty)||0; });
-    return { label:skuToName(sku), data:days.map(day=>daily[day]?.[mode==='revenue'?'rev':'qty']||0), borderColor:COLORS[i], backgroundColor:COLORS[i]+'20', borderWidth:2, pointRadius:days.length>60?0:2, tension:0.3, fill:false };
-  });
-  makeChart('chartSkuAnalysisTrend','line',days,datasets);
 }
 
 // ===== AD PERFORMANCE =====
@@ -6779,7 +6608,7 @@ async function fetchAdData() {
       if (laz.length) { warnEl.style.display = 'block'; warnEl.textContent = `⚠️ พบ Sub Channel ใหม่ของ Lazada ในชีต Ads ที่ยังไม่ได้ map: ${laz.join(', ')} — ยอดถูกรวมในยอด Lazada แล้ว แต่ยังแยกร้านไม่ได้`; }
       else warnEl.style.display = 'none';
     }
-  } catch(e) { console.error('Ad fetch error:', e); showError('โหลดข้อมูลค่าแอดไม่สำเร็จ: ' + e.message); adRawData = []; }
+  } catch(e) { console.error('Ad fetch error:', e); showError('โหลดข้อมูลค่า Ads ไม่สำเร็จ: ' + e.message); adRawData = []; }
 }
 
 function formatGDate(v) {
@@ -6844,20 +6673,20 @@ function makeAdChart(id, labels, gmvArr, adsArr, pctArr, opts = {}) {
   }
   const ds = [{ type: 'bar', label: 'ยอดขาย', data: gmvArr, backgroundColor: 'rgba(96,165,250,0.65)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 56 }];
   if (!opts.salesOnly) {
-    ds.push({ type: 'bar', label: 'ค่าแอด', data: adsArr, backgroundColor: 'rgba(248,113,113,0.55)', borderColor: '#f87171', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 56 });
-    ds.push({ type: 'line', label: '% ค่าแอด', data: pctArr, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)', borderWidth: 2,
+    ds.push({ type: 'bar', label: 'ค่า Ads', data: adsArr, backgroundColor: 'rgba(248,113,113,0.55)', borderColor: '#f87171', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 56 });
+    ds.push({ type: 'line', label: '% ค่า Ads', data: pctArr, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)', borderWidth: 2,
       pointRadius: labels.length > 31 ? 0 : 3, pointBackgroundColor: '#f87171', yAxisID: 'y2', tension: 0.35 });
   }
   makeChart(id, 'bar', labels, ds, {
     legend: { display: !opts.salesOnly, position: 'bottom' },
-    tooltip: { callbacks: { label: c => c.dataset.yAxisID === 'y2' ? `% ค่าแอด: ${(+c.raw || 0).toFixed(1)}%` : `${c.dataset.label}: ฿${fmt(Math.round(+c.raw || 0))}` } },
+    tooltip: { callbacks: { label: c => c.dataset.yAxisID === 'y2' ? `% ค่า Ads: ${(+c.raw || 0).toFixed(1)}%` : `${c.dataset.label}: ฿${fmt(Math.round(+c.raw || 0))}` } },
     scales: opts.salesOnly ? {} : { y2: { position: 'right', ticks: { color: '#f87171', font: { family: 'Sarabun', size: 10, weight: '600' }, callback: v => v.toFixed(0) + '%', maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } } }
   });
   const holder = document.getElementById(id)?.parentElement;
   if (holder) {
     let note = holder.nextElementSibling && holder.nextElementSibling.classList.contains('ad-tail-note') ? holder.nextElementSibling : null;
     if (!note) { note = document.createElement('div'); note.className = 'ad-tail-note'; note.style.cssText = 'font-size:10.5px;color:#f59e0b;margin-top:4px;'; holder.after(note); }
-    note.textContent = cut > 0 ? `แสดงถึง ${labels[labels.length - 1]} — ${cut} วันล่าสุดยอดขายยังไม่ได้อัปโหลด จึงยังไม่นำมาเทียบกับค่าแอด` : '';
+    note.textContent = cut > 0 ? `แสดงถึง ${labels[labels.length - 1]} — ${cut} วันล่าสุดยอดขายยังไม่ได้อัปโหลด จึงยังไม่นำมาเทียบกับค่า Ads` : '';
   }
 }
 
@@ -6937,11 +6766,11 @@ function cancelReturnCardHtml(hub, channel, from, to, totalRev) {
   </div>`;
 }
 const ADS_SOURCE_INFO = {
-  fb: 'ค่าโฆษณา Facebook = เฉพาะประเภท Conversion จาก Meta API (ตรงกับหน้า Facebook Ads): แอดที่ยิงให้เพจขาย (Deesay Thailand, Deesay Cosmetics, แป้งแก้มบุ๋ม, ลิปสักปาก, กันแดดฟิลเตอร์, Deesay Makeup) แยกตามเพจของโพสต์\n• ไม่รวม PR (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade awareness) — ดูที่หน้า Facebook Ads ส่วน PR\n• CPAS ไปอยู่กับ Shopee\n• อัปเดต 08:00 / 20:00',
+  fb: 'ค่าโฆษณา Facebook = เฉพาะประเภท Conversion จาก Meta API (ตรงกับหน้า Facebook Ads): Ads ที่ยิงให้เพจขาย (Deesay Thailand, Deesay Cosmetics, แป้งแก้มบุ๋ม, ลิปสักปาก, กันแดดฟิลเตอร์, Deesay Makeup) แยกตามเพจของโพสต์\n• ไม่รวม PR (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade awareness) — ดูที่หน้า Facebook Ads ส่วน PR\n• CPAS ไปอยู่กับ Shopee\n• อัปเดต 08:00 / 20:00',
   tt: 'ค่าโฆษณา TikTok ดึงจาก TikTok Ads API (mv_tiktok_objective_summary) ทุก objective รวม GMV Max Product/LIVE, Brand, Video views, Traditional\n• ตรงกับหน้า TikTok Ads · อัปเดต 09:50 และ 13:50 (ขึ้นหน้านี้ภายใน 1 ชม.)',
   sh: 'ค่าโฆษณา Shopee ประกอบด้วย:\n• Product/Shop Ads — Shopee Open API (ร้าน Mall) 08:10\n• Brand Ads · Live Ads · Meta Ads ในแอป · เหรียญ — Cowork อ่านจาก Seller Centre ตอนเช้า\n• CPAS — บัญชี Meta "Deesay Shopee CPAS" (Meta API 08:00/20:00) — ไม่ใช้ค่าจากชีทแล้ว\n• ร้าน 24hr ยังไม่เชื่อม API',
   lz: 'ค่าโฆษณา Lazada รวมมาจาก:\n• Lazada Mall\n• Lazada 24hr',
-  mt: 'ค่าโฆษณา Modern Trade (Awareness) ดึงจาก Meta API บัญชี "Deesay Modern Trade"\n• แยกจากยอดขาย ไม่คำนวณ ROI — เป็นแอดสร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง',
+  mt: 'ค่าโฆษณา Modern Trade (Awareness) ดึงจาก Meta API บัญชี "Deesay Modern Trade"\n• แยกจากยอดขาย ไม่คำนวณ ROI — เป็น Ads สร้างการรับรู้แบรนด์ ไม่ผูกกับยอดขายโดยตรง',
 };
 
 function toggleTip(id) {
@@ -7045,7 +6874,7 @@ function renderAdpChannel(chartId, subId, ch, viewOverride, subChannelOverride) 
       const normal = adsF.filter(r=>r.tag!=='CPAS').reduce((s,r)=>s+r.ads,0);
       if (cpas > 0) extra = ` (ปกติ ฿${fmt(normal)} + CPAS ฿${fmt(cpas)})`;
     }
-    document.getElementById(subId).textContent = `GMV ฿${fmt(tGmv)} · แอด ฿${fmt(tAds)}${extra} · ROAS ${roas}x`;
+    document.getElementById(subId).textContent = `GMV ฿${fmt(tGmv)} · Ads ฿${fmt(tAds)}${extra} · ROAS ${roas}x`;
   }
   makeAdChart(chartId, labels, gmvArr, adsArr, pctArr, { daily: view === 'day', salesOnly: !!HUB_SALES_ONLY[ch] && !String(chartId).startsWith('adpChart') });
 }
@@ -7055,7 +6884,7 @@ const HUB_SALES_ONLY = { fb: true, tt: true };
 async function renderAdpAll() {
   if (adRawData.length === 0) {
     const sEl = document.getElementById('adp-summary');
-    if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่าแอด...';
+    if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่า Ads...';
     fetchAdData().then(()=>renderAdpAll()); return;
   }
   { const f = getDateValue('From'), t = getDateValue('To'); const seq = (renderAdpAll._seq = (renderAdpAll._seq || 0) + 1);
@@ -7091,9 +6920,9 @@ function renderAdpSummary() {
     const lines=[];
     const tGmv=orders.reduce((s,r)=>s+(parseFloat(r.revenue)||0),0), tAds=ads.reduce((s,r)=>s+r.ads,0);
     const roas=tAds>0?(tGmv/tAds).toFixed(2):0, adPct=tGmv>0?(tAds/tGmv*100).toFixed(1):0;
-    lines.push(`• GMV ฿${fmt(tGmv)} | ค่าแอด ฿${fmt(tAds)} | ROAS ${roas}x | %ค่าแอด ${adPct}%`);
-    lines.push(parseFloat(roas)>=5?`• 💚 ROAS ${roas}x — ดีมาก`:parseFloat(roas)>=3?`• 🟡 ROAS ${roas}x — พอใช้ ควรเพิ่ม efficiency`:`• 🔴 ROAS ${roas}x — ต่ำ ค่าแอดสูงเกินไป`);
-    lines.push(`• หมายเหตุ: ประเมินจาก ROAS (ยอดขาย ÷ ค่าแอด) เท่านั้น ยังไม่รวมต้นทุนสินค้า — ROAS สูงไม่ได้แปลว่ากำไรเสมอไป`);
+    lines.push(`• GMV ฿${fmt(tGmv)} | ค่า Ads ฿${fmt(tAds)} | ROAS ${roas}x | %ค่า Ads ${adPct}%`);
+    lines.push(parseFloat(roas)>=5?`• 💚 ROAS ${roas}x — ดีมาก`:parseFloat(roas)>=3?`• 🟡 ROAS ${roas}x — พอใช้ ควรเพิ่ม efficiency`:`• 🔴 ROAS ${roas}x — ต่ำ ค่า Ads สูงเกินไป`);
+    lines.push(`• หมายเหตุ: ประเมินจาก ROAS (ยอดขาย ÷ ค่า Ads) เท่านั้น ยังไม่รวมต้นทุนสินค้า — ROAS สูงไม่ได้แปลว่ากำไรเสมอไป`);
     const chMap={};
     ads.forEach(r=>{if(!chMap[r.channel])chMap[r.channel]={gmv:0,ads:0};chMap[r.channel].ads+=r.ads;});
     orders.forEach(r=>{if(!chMap[r.channel])chMap[r.channel]={gmv:0,ads:0};chMap[r.channel].gmv+=(parseFloat(r.revenue)||0);});
@@ -7208,23 +7037,6 @@ function generateSummaryExtra(page) {
     } else lines.push('ไม่มีข้อมูลในช่วงที่เลือก');
   }
 
-  else if (page === 'skuanalysis') {
-    const skus = selectedAnalysisSKUs;
-    if (!skus.length) { el.textContent = 'กรุณาเลือก SKU ก่อน'; return; }
-    const skuRev = getFilteredSkuRevenue(); // ยอดขาย "แกะจากโปรแล้ว" — ให้ตรงกับ KPI การ์ดด้านบน
-    skus.forEach(sku => {
-      const rows = skuRev.filter(r => r.parent_sku === sku);
-      const rev = rows.reduce((s,r)=>s+(parseFloat(r.revenue_share)||0),0);
-      const qty = rows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
-      const ord = new Set(rows.map(r=>r.order_id)).size;
-      const byCh = {};
-      rows.forEach(r=>{ const k=r.channel||'ไม่ระบุ'; if(!byCh[k])byCh[k]={rev:0}; byCh[k].rev+=parseFloat(r.revenue_share)||0; });
-      const topCh = Object.entries(byCh).sort((a,b)=>b[1].rev-a[1].rev)[0];
-      lines.push(`▶ ${skuToName(sku)}`);
-      lines.push(`• ยอดขาย ฿${fmt(rev)} | ${fmt(ord)} ออเดอร์ | ${fmt(qty)} ชิ้น`);
-      if (topCh) lines.push(`• ช่องทางที่ขายดีสุด: ${topCh[0]} (฿${fmt(topCh[1].rev)}, ${rev?((topCh[1].rev/rev)*100).toFixed(1):'0.0'}%)`);
-    });
-  }
 
   setTimeout(() => { el.textContent = lines.join('\n') || 'ไม่มีข้อมูลเพียงพอสำหรับสรุป'; }, 300);
 }
@@ -7707,7 +7519,7 @@ function renderTtProductTable() {
   document.querySelectorAll('[id^="tps-"]').forEach(el => { el.textContent = ''; });
   const ind = document.getElementById('tps-' + _ttProductSortCol); if (ind) ind.textContent = _ttProductSortDir === 'asc' ? '▲' : '▼';
   document.getElementById('ttProductSummary').innerHTML =
-    `รวม ${fmt(rows.length)} สินค้า · ค่าแอด ฿${fmt(Math.round(total.ads))} · ยอดขาย ฿${fmt(Math.round(total.gmv))} · ${fmt(Math.round(total.orders))} ออเดอร์ · ROI รวม ${total.ads > 0 ? (total.gmv / total.ads).toFixed(2) + 'x' : '—'}`;
+    `รวม ${fmt(rows.length)} สินค้า · ค่า Ads ฿${fmt(Math.round(total.ads))} · ยอดขาย ฿${fmt(Math.round(total.gmv))} · ${fmt(Math.round(total.orders))} ออเดอร์ · ROI รวม ${total.ads > 0 ? (total.gmv / total.ads).toFixed(2) + 'x' : '—'}`;
   document.getElementById('tbodyTtProduct').innerHTML = rows.map(a => `<tr>
       <td><b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span></td>
       <td style="font-weight:600;">฿${fmt(Math.round(a.ads))}</td>
@@ -7720,7 +7532,7 @@ function renderTtProductTable() {
     </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
 }
 function exportTtProduct() {
-  const head = ['สินค้า', 'SKU', 'ค่าแอด', 'ยอดขาย GMV', 'ออเดอร์', 'ROI', 'ต้นทุนต่อออเดอร์'];
+  const head = ['สินค้า', 'SKU', 'ค่า Ads', 'ยอดขาย GMV', 'ออเดอร์', 'ROI', 'ต้นทุนต่อออเดอร์'];
   const lines = [head.join(',')].concat(_ttProductRows.map(a => [a.name, a.sku, Math.round(a.ads), Math.round(a.gmv), Math.round(a.orders), a.roi !== null ? a.roi.toFixed(2) : '', a.cpo !== null ? Math.round(a.cpo) : ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')));
   const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tiktok-gmvmax-by-product.csv'; a.click();
@@ -7810,7 +7622,7 @@ function renderPlMatrix() {
     </tbody></table>`;
 }
 const plTip = (id, html, side = 'left') => `<span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;${side}:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">${html}</div></span>`;
-const PL_TIPS = { cm1: `<b>CM1 · Contribution Margin 1</b><br>เหลือหลังค่าการตลาดตรง + Ads<br><br>ขายได้ 100 บาท หักค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b> (ค่ารีวิว KOL, Presenter, ค่าที่บัญชีลงเป็นสินค้านี้) และ<b>ค่า Ads ทั้งหมด</b> (ยิงสินค้า + ทั่วไป/awareness ที่ปันตามยอดขายในช่องทาง) เหลือเท่าไร`, cm2: `<b>CM2 · Contribution Margin 2</b><br>เหลือหลังค่า Platform/ช่องทาง<br><br>จาก CM1 หักค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง (ค่าธรรมเนียม/บริการ Platform, Commission, ค่าส่ง, ค่า Live)<br><br>❗ <b>ค่าไลฟ์ TikTok</b> ปันให้เฉพาะสินค้าที่ขายในไลฟ์ TikTok (ตามยอดขายในไลฟ์) — สินค้าที่ไม่ได้ขายในไลฟ์ไม่ต้องแบก`, cm3: `<b>CM3 · Contribution Margin 3</b><br>เหลือหลังค่าการตลาดอื่น (ปันส่วน)<br><br>จาก CM2 หักค่าการตลาดที่<b>ระบุสินค้าไม่ได้</b> ปันตามสัดส่วนยอดขาย (Presenter คนอื่น, Promotion, Affiliate Campaign, Rebranding, ที่ปรึกษา, ค่ารับรอง, ค่าเดินทาง ฯลฯ)`, net: `<b>สุทธิ · Net Margin (ก่อนหักทุนสินค้า)</b><br>เหลือหลังแบ่งค่าบริหาร<br><br>จาก CM3 แบ่งค่าบริหารบริษัทมาแบกตามยอดขาย (เงินเดือน ค่าเช่า ค่าสำนักงาน)<br>⚠️ ยังไม่ได้หักค่าตัวสินค้า (ทุนสินค้า)` };
+const PL_TIPS = { cm1: `<b>CM1 · Contribution Margin 1</b><br>เหลือหลังค่าการตลาดตรง + Ads<br><br>ขายได้ 100 บาท หักค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b> (ค่ารีวิว KOL, Presenter, ค่าที่บัญชีลงเป็นสินค้านี้) และ<b>ค่า Ads ทั้งหมด</b> (ยิงสินค้า + ทั่วไป/awareness ที่ปันตามยอดขายในช่องทาง) เหลือเท่าไร`, cm2: `<b>CM2 · Contribution Margin 2</b><br>เหลือหลังค่า Platform/ช่องทาง<br><br>จาก CM1 หักค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง (ค่าธรรมเนียม/บริการ Platform, Commission, ค่าส่ง, ค่า Live)<br><br>❗ <b>ค่า Live TikTok</b> ปันให้เฉพาะสินค้าที่ขายใน Live TikTok (ตามยอดขายใน Live) — สินค้าที่ไม่ได้ขายใน Live ไม่ต้องแบก`, cm3: `<b>CM3 · Contribution Margin 3</b><br>เหลือหลังค่าการตลาดอื่น (ปันส่วน)<br><br>จาก CM2 หักค่าการตลาดที่<b>ระบุสินค้าไม่ได้</b> ปันตามสัดส่วนยอดขาย (Presenter คนอื่น, Promotion, Affiliate Campaign, Rebranding, ที่ปรึกษา, ค่ารับรอง, ค่าเดินทาง ฯลฯ)`, net: `<b>สุทธิ · Net Margin (ก่อนหักทุนสินค้า)</b><br>เหลือหลังแบ่งค่าบริหาร<br><br>จาก CM3 แบ่งค่าบริหารบริษัทมาแบกตามยอดขาย (เงินเดือน ค่าเช่า ค่าสำนักงาน)<br>⚠️ ยังไม่ได้หักค่าตัวสินค้า (ทุนสินค้า)` };
 const PL_TH_M = m => MONTHS_TH[parseInt(m.slice(5, 7)) - 1] + ' ' + (parseInt(m.slice(0, 4)) + 543 - 2500);
 async function loadPl() {
   if (_plRows) return _plRows;
@@ -7866,7 +7678,7 @@ const BD_COLORS = ['#c9a14a', '#60a5fa', '#34d399', '#a78bfa', '#f59e0b', '#f472
 // สีประจำช่องทาง/แหล่งที่มา — ใช้สีเดียวกันทุกกล่อง ไม่ขึ้นกับลำดับยอด
 function bdColor(label, i) {
   const t = String(label || '');
-  if (/GMV Max/i.test(t)) return '#14b8a6'; if (/TikTok Ads ปกติ|แอดปกติ/.test(t)) return '#f472b6'; if (/TikTok/i.test(t)) return '#14b8a6';
+  if (/GMV Max/i.test(t)) return '#14b8a6'; if (/TikTok Ads ปกติ|Ads ปกติ/.test(t)) return '#f472b6'; if (/TikTok/i.test(t)) return '#14b8a6';
   if (/Facebook|Meta/i.test(t)) return '#3b82f6'; if (/Shopee/i.test(t)) return '#f97316'; if (/Lazada/i.test(t)) return '#8b5cf6';
   if (/Modern Trade|^MT/i.test(t)) return '#f59e0b'; if (/ตัวแทน/.test(t)) return '#64748b'; if (/Conversion/i.test(t)) return '#c9a14a'; if (/^PR|KOL PR/.test(t)) return '#a78bfa';
   return BD_COLORS[i % BD_COLORS.length];
@@ -7977,12 +7789,12 @@ async function plDetail(sku) {
     el.innerHTML = bdRender({ title: `ค่าการตลาดตรง · ${o.name}`, total: o.dir, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่บัญชีลงเป็นสินค้านี้โดยตรง (ตามหมวดบัญชี) + ค่า Presenter ที่ผูกสินค้า' });
   } else if (metric === 'ads') {
     const g = plChAgg(sku).filter(x => x.ads >= 0.5).map(x => ({ label: x.ch, amount: x.ads, fixed: true, children: [{ label: 'Product Ads', amount: x.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: x.aa }] }));
-    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups: g, tipId: tid, tip: 'ยอดใช้จ่ายจริงจาก Meta / TikTok / Shopee / Lazada<br><b>Product Ads</b> = แอดที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = แอดที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
+    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups: g, tipId: tid, tip: 'ยอดใช้จ่ายจริงจาก Meta / TikTok / Shopee / Lazada<br><b>Product Ads</b> = Ads ที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = Ads ที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
   } else if (metric === 'ch') {
     const g = bdFrom(group(rows.filter(r => r.layer === 'cm2'), 'account_group')).map(x => ({ ...x, children: bdFrom(group(rows.filter(r => r.layer === 'cm2' && r.account_group === x.label && r.tier === 'channel'), 'channel'))
-      .map(c => x.label === 'ค่าไลฟ์' && c.label === 'TikTok' ? { ...c, label: 'TikTok ❗ ปันเฉพาะสินค้าที่ขายในไลฟ์' } : c) }));   // (2026-09-30) ค่าไลฟ์ TikTok ปันตามยอดในไลฟ์
+      .map(c => x.label === 'ค่าไลฟ์' && c.label === 'TikTok' ? { ...c, label: 'TikTok ❗ ปันเฉพาะสินค้าที่ขายใน Live' } : c) }));   // (2026-09-30) ค่าไลฟ์ TikTok ปันตามยอดในไลฟ์
     group(lines.filter(r => r.layer === 'cm2'), 'cost_category').forEach(([k, v]) => g.push({ label: k + ' (บัญชีลงเป็นสินค้านี้)', amount: v }));
-    el.innerHTML = bdRender({ title: `ค่า Platform/ช่องทาง · ${o.name}`, total: o.ch, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง — บัญชีลงไว้ที่ช่องทาง แบ่งให้สินค้าตามยอดขายของสินค้านี้ในช่องทางนั้น (บรรทัดย่อย = มาจากช่องทางไหน)<br><br>❗ <b>ค่าไลฟ์ TikTok</b> ปันให้เฉพาะสินค้าที่ขายในไลฟ์ TikTok ตามยอดขายในไลฟ์ของเดือนนั้น — สินค้าที่ไม่ได้ขายในไลฟ์ไม่ต้องแบก · ค่าไลฟ์ Shopee / ตัวแทน ยังปันตามยอดทั้งช่องทาง (ยังแยกยอดไลฟ์ไม่ได้)' });
+    el.innerHTML = bdRender({ title: `ค่า Platform/ช่องทาง · ${o.name}`, total: o.ch, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง — บัญชีลงไว้ที่ช่องทาง แบ่งให้สินค้าตามยอดขายของสินค้านี้ในช่องทางนั้น (บรรทัดย่อย = มาจากช่องทางไหน)<br><br>❗ <b>ค่า Live TikTok</b> ปันให้เฉพาะสินค้าที่ขายใน Live TikTok ตามยอดขายใน Live ของเดือนนั้น — สินค้าที่ไม่ได้ขายใน Live ไม่ต้องแบก · ค่า Live Shopee / ตัวแทน ยังปันตามยอดทั้งช่องทาง (ยังแยกยอด Live ไม่ได้)' });
   } else if (metric === 'br') {
     el.innerHTML = bdRender({ title: `ค่าการตลาดอื่น (ปันส่วน) · ${o.name}`, total: o.br, rev: o.rev, groups: bdTop(bdFrom(group(rows.filter(r => r.layer === 'cm1' || r.layer === 'cm3'), 'account_group')), 10), tipId: tid, tip: 'ค่าการตลาดที่ระบุสินค้าไม่ได้ — ปันตามสัดส่วนยอดขายของเดือนนั้น (ถ้าบัญชีลงไว้ที่ช่องทาง ปันตามยอดขายในช่องทางนั้น)' });
   } else if (metric === 'oh') {
@@ -8028,10 +7840,10 @@ async function renderHome() {
   const esc = t => String(t || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, ic = tt ? '🎵' : '📣', title = tt ? (x.title || x.item_id) : x.name;
     return `<div class="it"><div class="th">${img ? `<img src="${esc(img)}" onerror="this.parentNode.textContent='${ic}'">` : ic}</div>
-      <div class="tx"><div title="${esc(title)}">${esc(title)}</div><div>${tt ? '@' + esc(x.acc || '—') + ' · ' : ''}ค่าแอด ${money(x.spend)} · ยอด ${money(tt ? x.rev : x.pv)}${!tt && +x.msg ? ' · ทัก ' + fmt(x.msg) : ''}</div></div>
+      <div class="tx"><div title="${esc(title)}">${esc(title)}</div><div>${tt ? '@' + esc(x.acc || '—') + ' · ' : ''}ค่า Ads ${money(x.spend)} · ยอด ${money(tt ? x.rev : x.pv)}${!tt && +x.msg ? ' · ทัก ' + fmt(x.msg) : ''}</div></div>
       <div class="rt">${roasTxt(+x.roas)}</div></div>`; };
-  const adBlock = (best, worst, tt) => `<div class="hm-sub">👍 ROAS ดีสุด</div>${(best || []).map(x => adItem(x, tt)).join('') || '<div class="it" style="color:var(--text3);">ไม่มีแอดที่มียอดขาย</div>'}
-      <div class="hm-sub">👎 ใช้เงินแต่ ROAS ต่ำ (ค่าแอด ≥ ฿1,000)</div>${(worst || []).map(x => adItem(x, tt)).join('') || '<div class="it" style="color:var(--text3);">ไม่มี</div>'}`;
+  const adBlock = (best, worst, tt) => `<div class="hm-sub">👍 ROAS ดีสุด</div>${(best || []).map(x => adItem(x, tt)).join('') || '<div class="it" style="color:var(--text3);">ไม่มี Ads ที่มียอดขาย</div>'}
+      <div class="hm-sub">👎 ใช้เงินแต่ ROAS ต่ำ (ค่า Ads ≥ ฿1,000)</div>${(worst || []).map(x => adItem(x, tt)).join('') || '<div class="it" style="color:var(--text3);">ไม่มี</div>'}`;
   // (2026-09-28) หน้าแรกแสดงทุกส่วนให้ทุกคน · ปุ่ม "ดูรายละเอียด →" โชว์เฉพาะหน้าที่คนนั้นเข้าได้ (กันกดแล้วเข้าไม่ได้)
   const can = pg => { try { return Auth.canPage(pg); } catch (e) { return true; } };
   const canSales = true;
@@ -8042,11 +7854,11 @@ async function renderHome() {
       <div class="hm-nav" style="display:flex;gap:6px;"><button onclick="homeShift(-1)">‹ วันก่อน</button><button onclick="_homeDate=null;renderHome()">วันล่าสุด</button><button onclick="homeShift(1)">วันถัดไป ›</button></div></div>
     ${canSales ? `<div class="hm-kpis">
       <div class="hm-kpi"><div class="l">ยอดขายรวม</div><div class="v">${money(T.rev)}</div><div class="s">${chip(pct(T.rev, T.avg))} เทียบเฉลี่ย 7 วันก่อน · ${fmt(T.ord)} ออเดอร์</div></div>
-      <div class="hm-kpi"><div class="l">ค่าแอดรวม</div><div class="v">${money(T.ads)}</div><div class="s">${chip(pct(T.ads, T.ads7), true)} เทียบเฉลี่ย 7 วันก่อน</div></div>
-      <div class="hm-kpi"><div class="l">ROAS รวม</div><div class="v">${roas ? roas.toFixed(2) + 'x' : '—'}</div><div class="s">ยอดขาย ÷ ค่าแอด ทุกช่องทาง</div></div>
+      <div class="hm-kpi"><div class="l">ค่า Ads รวม</div><div class="v">${money(T.ads)}</div><div class="s">${chip(pct(T.ads, T.ads7), true)} เทียบเฉลี่ย 7 วันก่อน</div></div>
+      <div class="hm-kpi"><div class="l">ROAS รวม</div><div class="v">${roas ? roas.toFixed(2) + 'x' : '—'}</div><div class="s">ยอดขาย ÷ ค่า Ads ทุกช่องทาง</div></div>
       <div class="hm-kpi"><div class="l">ยอดขายสะสมเดือนนี้</div><div class="v">${money(T.mtd)}</div><div class="s">${chip(pct(T.mtd, T.mtdp))} เทียบเดือนก่อนช่วงวันเดียวกัน</div></div>
     </div>` : ''}
-    ${ch.some(chVisible) ? `<div class="hm-sec">ยอดขาย & ค่าแอด แยกช่องทาง ${can('channel') ? `<a onclick="homeGo('channel')">ดูรายละเอียด →</a>` : ''}</div>
+    ${ch.some(chVisible) ? `<div class="hm-sec">ยอดขาย & ค่า Ads แยกช่องทาง ${can('channel') ? `<a onclick="homeGo('channel')">ดูรายละเอียด →</a>` : ''}</div>
     <div class="hm-ch">${ch.filter(chVisible).map(c => { const col = (HM_CH[c.channel] || ['#94a3b8', 'channel']); const r = +c.ads_d ? c.rev_d / c.ads_d : 0; const st = !c.last_sales_date || c.last_sales_date < b.date;
       if (HM_CUM.includes(c.channel)) return `<div class="hm-card"><div class="bar" style="background:${col[0]};"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;"><div class="nm">${c.channel} <span style="font-size:11px;font-weight:400;color:var(--text3);">· ยอดสะสมเดือนนี้</span></div>${chip(pct(+c.mtd, +c.mtd_prev))}</div>
@@ -8059,7 +7871,7 @@ async function renderHome() {
         <div style="display:flex;justify-content:space-between;align-items:center;"><div class="nm">${c.channel}</div>${st ? `<span class="hm-chip hm-flat">ยอดล่าสุด ${c.last_sales_date ? dShort(c.last_sales_date) : '—'}</span>` : chip(pct(+c.rev_d, +c.rev_avg7))}</div>
         <div class="big">${st ? '<span style="color:var(--text3);font-size:15px;">ยังไม่อัปยอด</span>' : money(c.rev_d)}</div>
         <div class="row"><span>ออเดอร์</span><b>${fmt(+c.orders_d)}</b></div>
-        <div class="row"><span>ค่าแอด</span><b>${+c.ads_d ? money(c.ads_d) : '—'}</b></div>
+        <div class="row"><span>ค่า Ads</span><b>${+c.ads_d ? money(c.ads_d) : '—'}</b></div>
         <div class="row"><span>ROAS</span><b>${!st && r ? roasTxt(r) : '—'}</b></div>
         <div class="row"><span>สะสมเดือนนี้</span><b>${money(c.mtd)} ${chip(pct(+c.mtd, +c.mtd_prev))}</b></div>
         ${can(col[1]) ? `<div style="text-align:right;margin-top:6px;"><span class="hm-more" onclick="homeGo('${col[1]}')">ดูรายละเอียด →</span></div>` : ''}</div>`; }).join('')}</div>` : ''}
@@ -8105,7 +7917,7 @@ async function renderHome() {
       </div>` : ''}
 
     </div>
-    <div style="font-size:11px;color:var(--text3);margin:-6px 0 10px;">ยอดขายเป็นยอดรวม VAT ตามหน้ายอดขาย · ค่าแอดจากทุกแหล่ง (Meta / TikTok / Shopee / Lazada) · Ads ดี/แย่ คัดเฉพาะแอดที่ใช้เงิน ≥ ฿300 ในวันนั้น</div>`;
+    <div style="font-size:11px;color:var(--text3);margin:-6px 0 10px;">ยอดขายเป็นยอดรวม VAT ตามหน้ายอดขาย · ค่า Ads จากทุกแหล่ง (Meta / TikTok / Shopee / Lazada) · Ads ดี/แย่ คัดเฉพาะ Ads ที่ใช้เงิน ≥ ฿300 ในวันนั้น</div>`;
 }
 
 // ===== MKT Tracking แบบวันต่อวัน (mv_mkt_live_monthly) — ค่า KOL จากชีทเบิกเงิน + ค่า Ads จริง · CM1 เท่านั้น =====
@@ -8218,7 +8030,7 @@ function mlDetail(sku) {
   } else {
     const chs = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { const c = (chs[r.channel] = chs[r.channel] || { ad: 0, aa: 0 }); c.ad += +r.ads_direct || 0; c.aa += +r.ads_allocated || 0; });
     const groups = Object.entries(chs).map(([c, v]) => ({ label: c, amount: v.ad + v.aa, fixed: true, children: [{ label: 'Product Ads', amount: v.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: v.aa }] }));
-    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'ยอดใช้จ่ายจริง<br><b>Product Ads</b> = แอดที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = แอดที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
+    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'ยอดใช้จ่ายจริง<br><b>Product Ads</b> = Ads ที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = Ads ที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
   }
 }
 function exportMl() {
@@ -8276,7 +8088,7 @@ function kjBreakdown(o, m) {
   });
   const groups = Object.entries(G).map(([label, x]) => ({ label, amount: x.amount, children: bdTop(bdFrom(Object.entries(x.kids)), 8) }));
   const title = { amount: 'ค่าจ้าง KOL', ads: 'ค่า Ads ที่ยิงงาน KOL', sales: 'ยอดขายที่ผูกได้' }[m] + ' · ' + (o.name || o.kol || '');
-  const tip = { amount: 'แยกตามช่องทางที่ลงงาน แล้วย่อยเป็น Conversion / PR', ads: '<b>ที่มา</b><br>• Facebook Ads = Meta Ads API · แอดที่ชื่อตรงกับ KOL/รหัส content ของงานนี้<br>• TikTok = TikTok Ads API · แอดที่ยิงคลิปนี้ (จับจากเลขคลิปในลิงก์โพสต์) ทั้ง GMV Max และแอดปกติ' + (childKey ? '<br>บรรทัดย่อย = ' + (childKey === 'sku' ? 'สินค้า' : 'KOL') : ''), sales: '<b>ที่มา</b><br>• Facebook = ยอดซื้อที่ Meta นับจากแอดที่ยิงโพสต์นี้ (Meta Ads API)<br>• TikTok = ยอดขายที่ TikTok นับให้คลิปนี้ใน GMV Max + แอดปกติ (TikTok Ads API)<br>นับเฉพาะยอดที่มาจากแอดของคลิป/โพสต์นี้เท่านั้น' + (childKey ? '<br>บรรทัดย่อย = ' + (childKey === 'sku' ? 'สินค้า' : 'KOL') : '') }[m];
+  const tip = { amount: 'แยกตามช่องทางที่ลงงาน แล้วย่อยเป็น Conversion / PR', ads: '<b>ที่มา</b><br>• Facebook Ads = Meta Ads API · Ads ที่ชื่อตรงกับ KOL/รหัส content ของงานนี้<br>• TikTok = TikTok Ads API · Ads ที่ยิงคลิปนี้ (จับจากเลขคลิปในลิงก์โพสต์) ทั้ง GMV Max และ Ads ปกติ' + (childKey ? '<br>บรรทัดย่อย = ' + (childKey === 'sku' ? 'สินค้า' : 'KOL') : ''), sales: '<b>ที่มา</b><br>• Facebook = ยอดซื้อที่ Meta นับจาก Ads ที่ยิงโพสต์นี้ (Meta Ads API)<br>• TikTok = ยอดขายที่ TikTok นับให้คลิปนี้ใน GMV Max + Ads ปกติ (TikTok Ads API)<br>นับเฉพาะยอดที่มาจาก Ads ของคลิป/โพสต์นี้เท่านั้น' + (childKey ? '<br>บรรทัดย่อย = ' + (childKey === 'sku' ? 'สินค้า' : 'KOL') : '') }[m];
   return bdRender({ title, total: o[m], groups, tipId: 'tip-kjbd-' + String(o.key).replace(/[^a-zA-Z0-9]/g, '') + m, tip });
 }
 function kjSetCal(m) { _kjCalMetric = m; document.querySelectorAll('#kjCalSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); renderKolCal(); }
@@ -8355,9 +8167,9 @@ function renderKolTable() {
   document.getElementById('kjKpis').innerHTML = `
     <div class="card"><div class="card-title">ค่าจ้าง KOL</div><div class="kpi-value">฿${fmt(Math.round(T.amount))}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(T.n)} งาน · Conversion ฿${fmt(Math.round(T.conv))} · PR ฿${fmt(Math.round(T.pr))}</div></div>
     <div class="card"><div class="card-title">ค่า Ads ที่ยิงงาน KOL</div><div class="kpi-value">฿${fmt(Math.round(T.ads))}</div><div style="font-size:10.5px;color:var(--text3);">${T.amount > 0 ? (T.ads / T.amount * 100).toFixed(0) + '% ของค่าจ้าง' : ''}</div></div>
-    <div class="card"><div class="card-title">ยอดขายที่ผูกได้ (ถอด VAT) ${plTip('tip-kj-vat', VAT_TIP.replace('ค่าใช้จ่ายที่บัญชีลงแบบไม่รวม VAT', 'ค่าจ้าง KOL (ex.VAT)'))}</div><div class="kpi-value">฿${fmt(Math.round(T.sales))}</div><div style="font-size:10.5px;color:var(--text3);">เฉพาะยอดจากแอดของคลิป/โพสต์นั้น</div></div>
+    <div class="card"><div class="card-title">ยอดขายที่ผูกได้ (ถอด VAT) ${plTip('tip-kj-vat', VAT_TIP.replace('ค่าใช้จ่ายที่บัญชีลงแบบไม่รวม VAT', 'ค่าจ้าง KOL (ex.VAT)'))}</div><div class="kpi-value">฿${fmt(Math.round(T.sales))}</div><div style="font-size:10.5px;color:var(--text3);">เฉพาะยอดจาก Ads ของคลิป/โพสต์นั้น</div></div>
     <div class="card"><div class="card-title">MER งาน KOL ${plTip('tip-kj-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขายที่ผูกได้ ÷ (ค่าจ้าง KOL + ค่า Ads)<br>ลงเงิน 1 บาท ได้ยอดขายกี่บาท')}</div><div class="kpi-value">${all > 0 ? (T.sales / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ยอดขายที่ผูกได้ ÷ (ค่าจ้าง + Ads)</div></div>
-    <div class="card"><div class="card-title">เจอแอดของงาน</div><div class="kpi-value">${fmt(T.m)} <span style="font-size:13px;color:var(--text3);">/ ${fmt(T.n)} งาน</span></div><div style="font-size:10.5px;color:var(--text3);">ไม่ได้ยิงแอด ${fmt(T.na)} · หาไม่เจอ ${fmt(T.nf)} · ช่องทางอื่น ${fmt(T.n - T.m - T.na - T.nf)}</div></div>`;
+    <div class="card"><div class="card-title">เจอ Ads ของงาน</div><div class="kpi-value">${fmt(T.m)} <span style="font-size:13px;color:var(--text3);">/ ${fmt(T.n)} งาน</span></div><div style="font-size:10.5px;color:var(--text3);">ไม่ได้ยิง Ads ${fmt(T.na)} · หาไม่เจอ ${fmt(T.nf)} · ช่องทางอื่น ${fmt(T.n - T.m - T.na - T.nf)}</div></div>`;
   // รวมตามมุมมอง
   let list;
   if (_kjView === 'cal') { renderKolCal(); return; }
@@ -8404,7 +8216,7 @@ function renderKolTable() {
       <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${o.sku}${o.n > 1 ? `<div style="font-size:10px;color:var(--accent);" title="ชีทเบิกเงินแตกงานนี้เป็น ${o.n} แถว (ฟอร์มเดียวกัน) — รวมเป็นงานเดียว ค่าจ้างรวมทุกงวด ค่า Ads/ยอดขายของคลิปนับครั้งเดียว">รวม ${o.n} แถวในชีท · ${o.months.map(m => PL_TH_M(m)).join(', ')}</div>` : ''}</td><td>${o.type}</td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}${o.months && o.months.length ? `<div style="font-size:10.5px;color:var(--text3);">จ่าย ${o.months.map(PM).join(', ')}</div>` : ''}</td>
       <td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td>
-      <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอแอด</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิงแอด</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูลแอด</span>'}<div style="font-size:10px;color:var(--text3);white-space:normal;max-width:190px;">${o.match_note || ''}</div>${o.shared ? (() => { const K = { link: ['⚠️ ลิงก์อาจผิด', 'var(--orange)', 'รหัสงานต่างกัน แต่ลิงก์เปิดแล้วเป็นคลิปเดียวกับงานอื่น — ถ้าเป็นคลิปใหม่ ให้แก้ลิงก์ในชีท'], dup: ['⛔ อาจเบิกซ้ำ', 'var(--red)', 'รหัสงานเดียวกัน เดือนเดียวกัน ยอดเท่ากัน และเป็นคลิปเดียวกัน — เช็คว่าจ้าง 2 ครั้งจริง หรือกรอกเบิกซ้ำ'], extra: ['⚠️ จ่ายเพิ่มคลิปเดิม?', 'var(--orange)', 'รหัสงานเดิม เปลี่ยนเดือน — ถ้าเป็นการจ่ายเพิ่มสำหรับคลิปเดิม ไม่ต้องแก้'] }[o.dupKind] || ['⚠️ คลิปเดียวกับอีก ' + o.shared + ' งาน', 'var(--orange)', ''];
+      <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอ Ads</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิง Ads</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูล Ads</span>'}<div style="font-size:10px;color:var(--text3);white-space:normal;max-width:190px;">${o.match_note || ''}</div>${o.shared ? (() => { const K = { link: ['⚠️ ลิงก์อาจผิด', 'var(--orange)', 'รหัสงานต่างกัน แต่ลิงก์เปิดแล้วเป็นคลิปเดียวกับงานอื่น — ถ้าเป็นคลิปใหม่ ให้แก้ลิงก์ในชีท'], dup: ['⛔ อาจเบิกซ้ำ', 'var(--red)', 'รหัสงานเดียวกัน เดือนเดียวกัน ยอดเท่ากัน และเป็นคลิปเดียวกัน — เช็คว่าจ้าง 2 ครั้งจริง หรือกรอกเบิกซ้ำ'], extra: ['⚠️ จ่ายเพิ่มคลิปเดิม?', 'var(--orange)', 'รหัสงานเดิม เปลี่ยนเดือน — ถ้าเป็นการจ่ายเพิ่มสำหรับคลิปเดิม ไม่ต้องแก้'] }[o.dupKind] || ['⚠️ คลิปเดียวกับอีก ' + o.shared + ' งาน', 'var(--orange)', ''];
         return `<div style="font-size:10px;color:${K[1]};white-space:normal;max-width:190px;font-weight:700;" title="${K[2]} · ค่า Ads และยอดขายของคลิปถูกแบ่งเท่าๆ กันระหว่างงาน (ไม่นับซ้ำ)">${K[0]}</div>`; })() : ''}</td></tr>`).join('')
       || '<tr><td colspan="10" class="empty">ไม่มีงานในช่วงนี้</td></tr>';
 
@@ -8486,7 +8298,7 @@ function renderMktRoiTable() {
   document.getElementById('mktTopKpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">฿${fmt(Math.round(T.revenue))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าการตลาดรวม</div><div class="kpi-value">฿${fmt(Math.round(T.mkt))}</div><div style="font-size:10.5px;color:var(--text3);">KOL Conversion ฿${fmt(Math.round(T.kolc))} · KOL PR ฿${fmt(Math.round(T.kolp))}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่าแอด</div><div class="kpi-value">฿${fmt(Math.round(T.dir + T.alloc))}</div><div style="font-size:10.5px;color:var(--text3);">ยิงสินค้า ฿${fmt(Math.round(T.dir))} · ทั่วไป ฿${fmt(Math.round(T.alloc))}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads</div><div class="kpi-value">฿${fmt(Math.round(T.dir + T.alloc))}</div><div style="font-size:10.5px;color:var(--text3);">ยิงสินค้า ฿${fmt(Math.round(T.dir))} · ทั่วไป ฿${fmt(Math.round(T.alloc))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ROI</div><div class="kpi-value">${T.mkt > 0 ? (T.revenue / T.mkt).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">% Budget ${T.revenue > 0 ? (T.mkt / T.revenue * 100).toFixed(1) + '%' : '—'}</div></div>`;
   const money = v => v ? '฿' + fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
   // ROI แอดตามช่องทาง (ทั้งบริษัท) — ใช้ค่าแอดของช่องทางนั้นเท่านั้น ไม่รวมค่ารีวิว KOL
@@ -8497,7 +8309,7 @@ function renderMktRoiTable() {
   const chCards = CH_ORDER.filter(ch => chTot[ch] && chTot[ch].ads > 0).map(ch => {
     const t = chTot[ch], roi = t.revenue / t.ads;
     return `<div class="mkt-ch-card"><div class="mkt-ch-name">${ch}</div><div class="mkt-ch-roi">${roi.toFixed(2)}<small>x</small></div>
-      <div class="mkt-ch-sub">ขาย ฿${fmt(t.revenue)} · แอด ฿${fmt(t.ads)}</div></div>`; }).join('');
+      <div class="mkt-ch-sub">ขาย ฿${fmt(t.revenue)} · Ads ฿${fmt(t.ads)}</div></div>`; }).join('');
   // แนวโน้มรายเดือน: แท่ง = ยอดขาย / ค่าการตลาด · เส้น = ROI
   { const ms = Object.keys(_mktRoiMonthTot).sort();
     let box = document.getElementById('mktTrendBox');
@@ -8514,7 +8326,7 @@ function renderMktRoiTable() {
         tooltip: { callbacks: { label: c => c.dataset.yAxisID === 'y2' ? `MER: ${c.raw}x` : `${c.dataset.label}: ฿${fmt(Math.round(+c.raw || 0))}` } },
         scales: { y2: { position: 'right', ticks: { color: '#22c55e', callback: v => v + 'x', maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } } } });
   }
-  document.getElementById('mktTopCh').innerHTML = chCards ? `<div class="card mkt-ch-panel"><div class="mkt-ch-title">ROI ค่าแอดตามช่องทาง <span>ยอดขายช่องทาง ÷ ค่าแอดช่องทาง · ไม่รวมค่ารีวิว KOL</span></div><div class="mkt-ch-row">${chCards}</div></div>` : '';
+  document.getElementById('mktTopCh').innerHTML = chCards ? `<div class="card mkt-ch-panel"><div class="mkt-ch-title">ROI ค่า Ads ตามช่องทาง <span>ยอดขายช่องทาง ÷ ค่า Ads ช่องทาง · ไม่รวมค่ารีวิว KOL</span></div><div class="mkt-ch-row">${chCards}</div></div>` : '';
   const chRows = sku => {
     const m = _mktRoiCh[sku] || {}; const totRev = Object.values(m).reduce((t, v) => t + v.revenue, 0) || 1;
     const ord = ch => { const i = CH_ORDER.indexOf(ch); return i < 0 ? 99 : i; };
@@ -8529,7 +8341,7 @@ function renderMktRoiTable() {
     if (tab === 'cost') {
       const A = _mktRoiRows.find(x => x.sku === sku) || {};
       const rv = A.revenue || 0;
-      const CT = [['kol_conversion', 'KOL Conversion'], ['kol_pr', 'KOL PR'], ['other_direct', 'การตลาดอื่นๆ (ออกกอง/ไลฟ์/โปร)'], ['ads_direct', 'แอดยิงสินค้า'], ['ads_allocated', 'แอดทั่วไป']];
+      const CT = [['kol_conversion', 'KOL Conversion'], ['kol_pr', 'KOL PR'], ['other_direct', 'การตลาดอื่นๆ (ออกกอง/ไลฟ์/โปร)'], ['ads_direct', 'Ads ยิงสินค้า'], ['ads_allocated', 'Ads ทั่วไป']];
       const allRev = _mktRoiRows.reduce((t, x) => t + x.revenue, 0) || 1;
       return `<tr class="mkt-ch-sub-row"><td colspan="10"><div class="mkt-ch-panel2">${tabs}
         <div class="mkt-cost-grid mkt-ch-head"><div>หมวด</div><div>จ่ายไป</div><div>% ยอดขาย</div><div>เฉลี่ยบริษัท</div><div></div></div>
@@ -8537,7 +8349,7 @@ function renderMktRoiTable() {
           return `<div class="mkt-cost-grid"><div class="mkt-ch-cn">${l}</div><div>${v ? '฿' + fmt(Math.round(v)) : '—'}</div><div>${pp.toFixed(1)}%</div><div>${av.toFixed(1)}%</div>
             <div>${pp > av * 1.5 && v > rv * 0.01 ? '<span class="mkt-dn">▲ สูงกว่าเฉลี่ย</span>' : pp < av * 0.5 ? '<span class="mkt-up">ต่ำกว่าเฉลี่ย</span>' : ''}</div></div>`; }).join('')}
         <div class="mkt-cost-grid mkt-cost-tot"><div>รวม</div><div>฿${fmt(Math.round(A.mkt_total || 0))}</div><div>${rv > 0 ? (A.mkt_total / rv * 100).toFixed(1) : '—'}%</div><div>${(_mktRoiRows.reduce((t, x) => t + x.mkt_total, 0) / allRev * 100).toFixed(1)}%</div><div></div></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:8px;">KOL Conversion / KOL PR / การตลาดอื่นๆ มาจากไฟล์บัญชีที่อัป · แอด มาจาก Meta / TikTok / Shopee อัตโนมัติ${_mktUnified ? ' · ' + mktAcctNoteHtml(...mktNoteRange()) : ''}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;">KOL Conversion / KOL PR / การตลาดอื่นๆ มาจากไฟล์บัญชีที่อัป · Ads มาจาก Meta / TikTok / Shopee อัตโนมัติ${_mktUnified ? ' · ' + mktAcctNoteHtml(...mktNoteRange()) : ''}</div>
       </div></td></tr>`;
     }
     if (tab === 'mo') {
@@ -8555,7 +8367,7 @@ function renderMktRoiTable() {
       </div></td></tr>`;
     }
     return `<tr class="mkt-ch-sub-row"><td colspan="10"><div class="mkt-ch-panel2">${tabs}
-      <div class="mkt-ch-grid mkt-ch-head"><div>ช่องทาง</div><div>ยอดขาย</div><div>สัดส่วนยอดขาย</div><div>ค่าแอด</div><div>ROI แอด</div></div>
+      <div class="mkt-ch-grid mkt-ch-head"><div>ช่องทาง</div><div>ยอดขาย</div><div>สัดส่วนยอดขาย</div><div>ค่า Ads</div><div>ROI Ads</div></div>
       ${list.map(([ch, v]) => { const pct = v.revenue / totRev * 100; return `<div class="mkt-ch-grid">
         <div class="mkt-ch-cn">${ch}</div>
         <div>฿${fmt(Math.round(v.revenue))}</div>
@@ -8567,7 +8379,7 @@ function renderMktRoiTable() {
   };
   // ===== ส่วนประกอบต้นทุน 5 หมวด (% ของยอดขาย) เทียบค่าเฉลี่ยบริษัท =====
   const CATS = [['kol_conversion', 'KOL Conversion', '#7c3aed'], ['kol_pr', 'KOL PR', '#c4b5fd'], ['other_direct', 'การตลาดอื่นๆ', '#94a3b8'],
-                ['ads_direct', 'แอดยิงสินค้า', '#2563eb'], ['ads_allocated', 'แอดทั่วไป', '#93c5fd']];
+                ['ads_direct', 'Ads ยิงสินค้า', '#2563eb'], ['ads_allocated', 'Ads ทั่วไป', '#93c5fd']];
   const AVG = {}; CATS.forEach(([k]) => { AVG[k] = T.revenue > 0 ? rows.reduce((t, a) => t + (a[k] || 0), 0) / T.revenue : 0; });
   const avgTot = T.revenue > 0 ? T.mkt / T.revenue : 0;
   const scaleMax = Math.max(0.5, ...rows.filter(a => a.revenue > 0).map(a => a.mkt_total / a.revenue));   // สเกลเดียวกันทุกแถว
@@ -8753,19 +8565,19 @@ const METRIC_INFO = {
   pv: 'จำนวนคนที่กดเข้าไปดูโปรไฟล์ต่อ หลังจากดูคลิปนี้จบ — บอกได้ว่าคลิปทำให้คนอยากรู้จักแบรนด์เพิ่มไหม',
   duration: 'ความยาวของคลิป (วินาที)',
   avgwatch: 'เวลาเฉลี่ยที่คนดูคลิปนี้จริง (วินาที) ก่อนเลื่อนผ่าน',
-  cpo: 'Cost Per Order = ค่าแอด ÷ จำนวน GMV Max Orders — ยิ่งต่ำยิ่งคุ้ม (คำนวณได้เฉพาะคลิปที่ยิงแอดและมี order เกิดขึ้น)',
-  ctr: 'Click Through Rate = clicks ÷ impressions × 100 — สัดส่วนคนที่เห็นแอดแล้วกดเข้ามาดู',
-  v25: '% ของคนที่ดูแอดนี้ผ่านไปอย่างน้อย 25% ของความยาวคลิป',
-  v50: '% ของคนที่ดูแอดนี้ผ่านไปอย่างน้อย 50% ของความยาวคลิป',
-  v100: '% ของคนที่ดูแอดนี้จนจบทั้งคลิป',
-  paidcomments: 'จำนวนคอมเมนต์ที่เกิดขึ้นจากแอด (นับแยกจากคอมเมนต์ organic)',
-  paidshares: 'จำนวนแชร์ที่เกิดขึ้นจากแอด (นับแยกจากแชร์ organic)',
-  orders: 'จำนวนออเดอร์ที่ TikTok นับว่ามาจากแอดคลิปนี้ (GMV Max Orders) — คลิปที่ตั้งเป้าเป็น "ยอดวิว/การรับรู้" (ไม่ใช่ "ยอดขาย") มักมีค่าเป็น 0 เพราะไม่ได้ตั้งเป้าให้ TikTok นับยอดขายจากคลิปนั้นโดยตรง',
+  cpo: 'Cost Per Order = ค่า Ads ÷ จำนวน GMV Max Orders — ยิ่งต่ำยิ่งคุ้ม (คำนวณได้เฉพาะคลิปที่ยิง Ads และมี order เกิดขึ้น)',
+  ctr: 'Click Through Rate = clicks ÷ impressions × 100 — สัดส่วนคนที่เห็น Ads แล้วกดเข้ามาดู',
+  v25: '% ของคนที่ดู Ads นี้ผ่านไปอย่างน้อย 25% ของความยาวคลิป',
+  v50: '% ของคนที่ดู Ads นี้ผ่านไปอย่างน้อย 50% ของความยาวคลิป',
+  v100: '% ของคนที่ดู Ads นี้จนจบทั้งคลิป',
+  paidcomments: 'จำนวนคอมเมนต์ที่เกิดขึ้นจาก Ads (นับแยกจากคอมเมนต์ organic)',
+  paidshares: 'จำนวนแชร์ที่เกิดขึ้นจาก Ads (นับแยกจากแชร์ organic)',
+  orders: 'จำนวนออเดอร์ที่ TikTok นับว่ามาจาก Ads คลิปนี้ (GMV Max Orders) — คลิปที่ตั้งเป้าเป็น "ยอดวิว/การรับรู้" (ไม่ใช่ "ยอดขาย") มักมีค่าเป็น 0 เพราะไม่ได้ตั้งเป้าให้ TikTok นับยอดขายจากคลิปนั้นโดยตรง',
   objective: 'วัตถุประสงค์ที่ตั้งไว้ตอนสร้างแคมเปญนี้ (Objective) — บอกได้ว่าทำไม order ถึงมีหรือไม่มี: แคมเปญ "ยอดวิว/การรับรู้แบรนด์" มักไม่มี order เพราะไม่ได้ตั้งเป้าขาย ส่วน "GMV Max/Conversion" จะมี order จริง',
-  purchaseValue: 'ยอดขายที่เกิดขึ้นจริงบน TikTok Shop ที่ TikTok นับว่ามาจากแอดคลิปนี้ (Purchase value on TikTok) — field คนละตัวกับ GMV Max Orders เป็นยอดเงินจริง (บาท) ไม่ใช่แค่จำนวนครั้ง',
+  purchaseValue: 'ยอดขายที่เกิดขึ้นจริงบน TikTok Shop ที่ TikTok นับว่ามาจาก Ads คลิปนี้ (Purchase value on TikTok) — field คนละตัวกับ GMV Max Orders เป็นยอดเงินจริง (บาท) ไม่ใช่แค่จำนวนครั้ง',
   score: '<b>ระดับ ER</b> — ป้ายสีบนคลิป บอกว่า engagement rate ของคลิปนั้นอยู่ระดับไหน<br>ER% = (ไลค์ + คอมเมนต์ + แชร์) ÷ ยอดวิว × 100<br><br><b style="color:var(--green);">เขียว</b> = ตั้งแต่ 2.0% ขึ้นไป (ดีกว่าค่าเฉลี่ยของเพจเกือบเท่าตัว)<br><b style="color:#fbbf24;">เหลือง</b> = 1.0–2.0% (ประมาณค่าเฉลี่ย)<br><b style="color:var(--red);">แดง</b> = ต่ำกว่า 1.0%<br><b style="color:var(--text3);">เทา</b> = วิวยังไม่ถึง 1,000 — ตัวเลข ER เชื่อไม่ได้ (คลิป 300 วิว 15 ไลค์ = 5% ทั้งที่แทบไม่มีคนเห็น)<br><br>ใช้เกณฑ์เดิมเสมอ เทียบข้ามเดือนได้ ไม่เปลี่ยนตามช่วงวันที่ที่เลือก',
   trending: '<b>ตารางนี้คืออะไร</b><br>โพสต์ใน 7 วันล่าสุด เอามาเรียง 10 อันดับแรกตามความเร็ว<br><br><b>วิว/วัน</b> = ยอดวิวสะสม ÷ จำนวนวันตั้งแต่วันโพสต์ (โพสต์วันนี้นับเป็น 1 วัน) — ที่ต้องหารด้วยวัน เพราะคลิปเก่ามีเวลาสะสมวิวมากกว่า ถ้าดูวิวดิบ ๆ คลิปเก่าชนะตลอด<br><br><b>ความเร็ว</b> = เอาค่าวิว/วัน มาตีเป็น 3 ระดับ ด้วยเกณฑ์ตายตัว<br>• เร็วมาก = เกิน 20,000 วิว/วัน<br>• ปกติ = 5,000–20,000<br>• ช้า = ต่ำกว่า 5,000',
-  roas: 'Return On Ad Spend = ยอดขาย TikTok Shop ÷ ค่าแอด — คำนวณจากยอดขายรวมหารค่าแอดรวมของคลิปนั้น (แม่นกว่าการเฉลี่ยค่า ROAS รายวัน) ยิ่งสูงยิ่งคุ้ม',
+  roas: 'Return On Ad Spend = ยอดขาย TikTok Shop ÷ ค่า Ads — คำนวณจากยอดขายรวมหารค่า Ads รวมของคลิปนั้น (แม่นกว่าการเฉลี่ยค่า ROAS รายวัน) ยิ่งสูงยิ่งคุ้ม',
 };
 const OBJECTIVE_TH = {
   VIDEO_VIEWS: 'ยอดวิว', BRAND_CONSIDERATION: 'การรับรู้แบรนด์', ENGAGEMENT: 'การมีส่วนร่วม',
@@ -8818,7 +8630,7 @@ function renderTtaFunnel(unattributedGap = 0) {
     const val = stageSpend[stage];
     const widthPct = 22 + (val / maxStage) * 68; // ขั้นต่ำ 22% กันแท่งหายไปเลยตอนค่าน้อยมาก
     const pct = total ? ((val/total)*100).toFixed(1) : '0.0';
-    const tip = FUNNEL_STAGE_TOOLTIP[stage] + (stage === 'Conversion' && unattributedGap > 1 ? `<br><br>รวม ฿${fmt(unattributedGap)} จากค่าแอดที่ระบุคลิปไม่ได้ (GMV Max ส่วนที่ TikTok ไม่ระบุ item_id)` : '');
+    const tip = FUNNEL_STAGE_TOOLTIP[stage] + (stage === 'Conversion' && unattributedGap > 1 ? `<br><br>รวม ฿${fmt(unattributedGap)} จากค่า Ads ที่ระบุคลิปไม่ได้ (GMV Max ส่วนที่ TikTok ไม่ระบุ item_id)` : '');
     return `<div class="tta-obj-card" style="border-left-color:${FUNNEL_STAGE_COLOR[stage]};background:${FUNNEL_STAGE_COLOR[stage]}22;position:relative;">
       <div class="tta-obj-label">${FUNNEL_STAGE_TH[stage]} ${fbeInfoIcon('tta-funnel-info-'+stage, tip)}</div>
       <div class="tta-obj-value">฿${fmt(val)}</div>
@@ -8841,7 +8653,7 @@ const METRIC_CONFIGS = {
       eng:{label:'engagement rate'}, likes:{label:'ไลค์'}, comments:{label:'คอมเมนต์'}, shares:{label:'แชร์'},
       reach:{label:'reach (คนดูไม่ซ้ำ)'}, favorites:{label:'บันทึกเก็บ'}, pv:{label:'profile views'},
       followers:{label:'ผู้ติดตามใหม่',default:true}, duration:{label:'ความยาวคลิป'}, avgwatch:{label:'เวลาดูเฉลี่ย'},
-      adspend:{label:'ค่าแอด'}, cpo:{label:'CPO'},
+      adspend:{label:'ค่า Ads'}, cpo:{label:'CPO'},
       impressions:{label:'impressions'}, clicks:{label:'clicks'}, convs:{label:'conversions'},
       v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v100:{label:'% ดูจบ 100%'}
     }
@@ -8851,20 +8663,20 @@ const METRIC_CONFIGS = {
     meta: {
       clip:{label:'คลิป',always:true}, source:{label:'แหล่งที่มา',always:true}, handle:{label:'ชื่อช่อง',always:true},
       date:{label:'ช่วงวันที่ยิง',default:true},
-      objective:{label:'วัตถุประสงค์แอด',default:true}, campaign:{label:'แคมเปญ',default:true}, spend:{label:'ค่าแอด',default:true},
+      objective:{label:'วัตถุประสงค์ Ads',default:true}, campaign:{label:'แคมเปญ',default:true}, spend:{label:'ค่า Ads',default:true},
       purchaseValue:{label:'ยอดขาย (TikTok Shop)',default:true}, roas:{label:'ROAS',default:true},
       orders:{label:'GMV Max orders',default:true},
       cpo:{label:'CPO'}, impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'},
       convs:{label:'conversions'}, v6s:{label:'% ดูจบ 6 วิ'}, v25:{label:'% ดูจบ 25%'}, v50:{label:'% ดูจบ 50%'}, v75:{label:'% ดูจบ 75%'}, v100:{label:'% ดูจบ 100%'},
-      likes:{label:'ไลค์ (จากแอด)'}, paidcomments:{label:'คอมเมนต์ (จากแอด)'}, paidshares:{label:'แชร์ (จากแอด)'},
-      follows:{label:'ผู้ติดตามใหม่ (จากแอด)'}, profilevisits:{label:'เข้าดูโปรไฟล์ (จากแอด)'}
+      likes:{label:'ไลค์ (จาก Ads)'}, paidcomments:{label:'คอมเมนต์ (จาก Ads)'}, paidshares:{label:'แชร์ (จาก Ads)'},
+      follows:{label:'ผู้ติดตามใหม่ (จาก Ads)'}, profilevisits:{label:'เข้าดูโปรไฟล์ (จาก Ads)'}
     }
   },
   ttaCampaign: {
     order: ['campaign','clips','spend','revenue','roas','orders','cpo'],
     meta: {
       campaign:{label:'แคมเปญ',always:true},
-      clips:{label:'จำนวนคลิป',default:true}, spend:{label:'ค่าแอด',default:true},
+      clips:{label:'จำนวนคลิป',default:true}, spend:{label:'ค่า Ads',default:true},
       revenue:{label:'ยอดขาย',default:true}, roas:{label:'ROAS',default:true},
       orders:{label:'orders',default:true}, cpo:{label:'CPO',default:true}
     }
@@ -8872,15 +8684,15 @@ const METRIC_CONFIGS = {
 };
 METRIC_CONFIGS.ttaDailyRep = {
   order: ['sales','spend','roas','acos','gmv_ads','roas_ads','ad_orders','cpo','impressions','cpm','clicks','ctr','orders'],
-  meta: { sales:{label:'ยอดขายจริง TikTok',default:true}, spend:{label:'ค่าแอด TikTok',default:true}, roas:{label:'ROAS (ยอดจริง/ค่าแอด)',default:true}, acos:{label:'% ค่าแอดต่อยอดขาย',default:true},
-    gmv_ads:{label:'ยอดขายจากแอดคลิป (TikTok นับ)',default:true}, roas_ads:{label:'ROAS แอดคลิป (TikTok นับ)'}, ad_orders:{label:'orders จากแอดคลิป',default:true}, cpo:{label:'฿ ต่อ order (แอดคลิป)'},
+  meta: { sales:{label:'ยอดขายจริง TikTok',default:true}, spend:{label:'ค่า Ads TikTok',default:true}, roas:{label:'ROAS (ยอดจริง/ค่า Ads)',default:true}, acos:{label:'% ค่า Ads ต่อยอดขาย',default:true},
+    gmv_ads:{label:'ยอดขายจาก Ads คลิป (TikTok นับ)',default:true}, roas_ads:{label:'ROAS Ads คลิป (TikTok นับ)'}, ad_orders:{label:'orders จาก Ads คลิป',default:true}, cpo:{label:'฿ ต่อ order (Ads คลิป)'},
     impressions:{label:'Impressions',default:true}, cpm:{label:'CPM (฿ ต่อ 1,000 เห็น)',default:true}, clicks:{label:'คลิก',default:true}, ctr:{label:'CTR',default:true}, orders:{label:'ออเดอร์จริง TikTok'} }
 };
 METRIC_CONFIGS.ttaCreator = {
   order: ['clips','spend','purchaseValue','roas','orders','cpo','impressions','clicks','ctr','convs','likes','follows'],
-  meta: { clips:{label:'จำนวนคลิป',default:true}, spend:{label:'ค่าแอด',default:true}, purchaseValue:{label:'ยอดขาย (TikTok Shop)',default:true}, roas:{label:'ROAS',default:true},
+  meta: { clips:{label:'จำนวนคลิป',default:true}, spend:{label:'ค่า Ads',default:true}, purchaseValue:{label:'ยอดขาย (TikTok Shop)',default:true}, roas:{label:'ROAS',default:true},
     orders:{label:'GMV Max orders',default:true}, cpo:{label:'CPO',default:true}, impressions:{label:'impressions'}, clicks:{label:'clicks'}, ctr:{label:'CTR'}, convs:{label:'conversions'},
-    likes:{label:'ไลค์ (จากแอด)'}, follows:{label:'ผู้ติดตามใหม่ (จากแอด)'} }
+    likes:{label:'ไลค์ (จาก Ads)'}, follows:{label:'ผู้ติดตามใหม่ (จาก Ads)'} }
 };
 METRIC_CONFIGS.shads = {
   // ทุก field ที่ Shopee Ads API (get_product_campaign_daily_performance) ส่งมา — broad = รวมสินค้าอื่นที่ซื้อหลังคลิกแอด (ค่าหลักของ Shopee) · direct = เฉพาะสินค้าที่โฆษณา
@@ -9247,8 +9059,8 @@ async function renderTtc() {
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยอดวิวรวม</div><div class="kpi-value">${fmtK(totalViews)}</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">engagement เฉลี่ย ${metricInfoIcon('eng')}</div><div class="kpi-value">${totalEng.toFixed(1)}%</div></div>
     <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ผู้ติดตามใหม่</div><div class="kpi-value" style="color:var(--green);">+${fmt(totalFollowers)}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยิงแอด / organic</div><div class="kpi-value">${boosted} / ${ttcData.length-boosted}</div></div>
-    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่าแอดคอนเทนต์</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalAdspend)}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ยิง Ads / organic</div><div class="kpi-value">${boosted} / ${ttcData.length-boosted}</div></div>
+    <div class="card" style="flex:1;min-width:130px;"><div class="card-title">ค่า Ads คอนเทนต์</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalAdspend)}</div></div>
   `;
   const slot = document.getElementById('ttcScoreInfoSlot');
   if (slot && !slot.innerHTML) slot.innerHTML = metricInfoIcon('score');
@@ -9311,7 +9123,7 @@ function renderTtcGrid() {
       <div class="ttc-card-cover">
         ${ttcCellHtml(c,'cover')}
         <span class="ttc-badge-score" style="color:${c.scoreColor};border-color:${c.scoreColor};background:${c.scoreColor}22;">${c.scoreLabel}</span>
-        ${c.wasBoosted ? '<span class="ttc-badge-ads">🚀 ยิงแอด</span>' : ''}
+        ${c.wasBoosted ? '<span class="ttc-badge-ads">🚀 ยิง Ads</span>' : ''}
       </div>
       <div class="ttc-card-body">
         <div class="ttc-card-title" title="${ttcEscAttr(c.caption)}">${ttcEsc(c.caption)}</div>
@@ -9559,14 +9371,14 @@ async function renderTta() {
   const namedSpend = ttaByClip.reduce((s,c)=>s+c.spend,0);
   const deesayCount = ttaByClip.filter(c=>c.isDeesay).length;
   const unattributedGap = Math.max(0, totalSpend - namedSpend);
-  const spendTip = 'รวม Product GMV Max + LIVE GMV Max + Traditional Ads (Awareness) ทั้งหมด รวมส่วนที่ TikTok ไม่ระบุคลิปให้ด้วย (ยอดนี้ตรงกับตาราง "ค่าแอดรายวัน" ด้านล่าง)' + (unattributedGap>1 ? ` — ในนี้มี ฿${fmt(unattributedGap)} ที่ระบุคลิปไม่ได้ จึงไม่โผล่ในตารางรายละเอียดคลิป` : '');
+  const spendTip = 'รวม Product GMV Max + LIVE GMV Max + Traditional Ads (Awareness) ทั้งหมด รวมส่วนที่ TikTok ไม่ระบุคลิปให้ด้วย (ยอดนี้ตรงกับตาราง "ค่า Ads รายวัน" ด้านล่าง)' + (unattributedGap>1 ? ` — ในนี้มี ฿${fmt(unattributedGap)} ที่ระบุคลิปไม่ได้ จึงไม่โผล่ในตารางรายละเอียดคลิป` : '');
   const revTip = 'รวมยอดขายจาก Product GMV Max ทุกคลิป (รวมที่ระบุคลิปไม่ได้) + LIVE GMV Max ทั้งหมด';
   const ordersTip = 'รวมออเดอร์จาก Product GMV Max ทุกคลิป (รวมที่ระบุคลิปไม่ได้) + LIVE GMV Max ทั้งหมด';
-  const roasTip = 'ยอดขายจริงทั้งระบบ ÷ ค่าแอดจริงทั้งระบบ (ไม่ใช่แค่ที่แจกแจงลงคลิปได้)';
-  const cpoTip = 'ค่าแอดจริงทั้งระบบ ÷ จำนวนออเดอร์จริงทั้งระบบ';
+  const roasTip = 'ยอดขายจริงทั้งระบบ ÷ ค่า Ads จริงทั้งระบบ (ไม่ใช่แค่ที่แจกแจงลงคลิปได้)';
+  const cpoTip = 'ค่า Ads จริงทั้งระบบ ÷ จำนวนออเดอร์จริงทั้งระบบ';
   document.getElementById('tta-kpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิปที่ยิงแอด</div><div class="kpi-value">${fmt(ttaClipTotal())}</div><div class="kpi-sub"><span style="color:var(--blue);">${fmt(ttaClipTotal(true))} Deesay</span> / <span style="color:#a78bfa;">${fmt(ttaClipTotal() - ttaClipTotal(true))} affi-KOL</span></div></div>
-    <div class="card" style="flex:1;min-width:160px;position:relative;"><div class="card-title">ค่าแอดรวม (ยอดจริงทั้งระบบ) ${fbeInfoIcon('tta-kpi-spend', spendTip)}</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิปที่ยิง Ads</div><div class="kpi-value">${fmt(ttaClipTotal())}</div><div class="kpi-sub"><span style="color:var(--blue);">${fmt(ttaClipTotal(true))} Deesay</span> / <span style="color:#a78bfa;">${fmt(ttaClipTotal() - ttaClipTotal(true))} affi-KOL</span></div></div>
+    <div class="card" style="flex:1;min-width:160px;position:relative;"><div class="card-title">ค่า Ads รวม (ยอดจริงทั้งระบบ) ${fbeInfoIcon('tta-kpi-spend', spendTip)}</div><div class="kpi-value" style="color:var(--accent);">฿${fmt(totalSpend)}</div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ยอดขาย TikTok Shop ${fbeInfoIcon('tta-kpi-rev', revTip)}</div><div class="kpi-value" style="color:var(--green);">฿${fmt(totalPurchaseValue)}</div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ROAS รวม ${fbeInfoIcon('tta-kpi-roas', roasTip)}</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
     <div class="card" style="flex:1;min-width:150px;position:relative;"><div class="card-title">GMV Max Orders ${fbeInfoIcon('tta-kpi-orders', ordersTip)}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div><div class="kpi-sub">CPO เฉลี่ย ${fbeInfoIcon('tta-kpi-cpo', cpoTip)} ฿${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
@@ -9705,7 +9517,7 @@ async function renderTtaDaily() {
     : new Date(r.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
   const ttaTitle = document.querySelector('#page-ttads .section-title');
   if (ttaTitle && ttaTitle.firstChild && ttaTitle.firstChild.nodeType === 3)
-    ttaTitle.firstChild.nodeValue = `ค่าแอด TikTok — สัดส่วนตาม Objective และ${monthly ? 'รายเดือน' : 'รายวัน'}`;
+    ttaTitle.firstChild.nodeValue = `ค่า Ads TikTok — สัดส่วนตาม Objective และ${monthly ? 'รายเดือน' : 'รายวัน'}`;
   if (charts['chartTtaDaily']) charts['chartTtaDaily'].destroy();
   const ctx = document.getElementById('chartTtaDaily');
   if (ctx) {
@@ -9784,7 +9596,7 @@ function renderTtaCreatorSummary() {
 }
 
 const OUT_OF_RANGE_HTML = '<span style="color:var(--text3);font-style:italic;font-size:10px;" title="คลิปนี้เก่ากว่าช่วงวันที่ที่ระบบเก็บข้อมูลส่วนนี้ไว้ (ไม่ใช่ค่า 0 จริง แค่ยังไม่มีข้อมูลให้แสดง)">นอกช่วงเก็บ</span>';
-const PARTIAL_TITLE = 'ระบบมีข้อมูลส่วนนี้แค่บางวันของช่วงที่คลิปนี้ยิงแอดจริง (เพราะตารางต้นทางยัง backfill ไม่ครบ) ตัวเลขนี้จึงเป็นแค่ "บางส่วน" ไม่ใช่ยอดเต็ม — เครื่องหมาย ~ เตือนไว้';
+const PARTIAL_TITLE = 'ระบบมีข้อมูลส่วนนี้แค่บางวันของช่วงที่คลิปนี้ยิง Ads จริง (เพราะตารางต้นทางยัง backfill ไม่ครบ) ตัวเลขนี้จึงเป็นแค่ "บางส่วน" ไม่ใช่ยอดเต็ม — เครื่องหมาย ~ เตือนไว้';
 function partialWrap(html, isPartial) {
   return isPartial ? `<span title="${PARTIAL_TITLE}"><span style="color:var(--accent);">~</span>${html}</span>` : html;
 }
@@ -9891,7 +9703,7 @@ function kolRoasCell(r) { return r === null ? '<span style="color:var(--text3);"
 function kolRoiCell(r) { return r === null ? '<span style="color:var(--text3);">—</span>' : `<span style="color:${kolRoiColor(r)};font-weight:700;">${r - 1 >= 0 ? '+' : ''}${((r - 1) * 100).toFixed(0)}%</span>`; }
 function kolRoiPctText(r) { return r === null ? '—' : `${r - 1 >= 0 ? '+' : ''}${((r - 1) * 100).toFixed(0)}%`; }
 function kolRoasRoiCells(roas) { return `<td>${kolRoasCell(roas)}</td><td>${kolRoiCell(roas)}</td>`; }
-function kolErCell(er) { return er === null ? '<span style="color:var(--text3);" title="ไม่ได้ยิงแอด จึงไม่มีตัวเลข ER">—</span>' : `<span style="color:${er >= KOL_RULES.erGood ? 'var(--green)' : 'var(--text2)'};font-weight:${er >= KOL_RULES.erGood ? 700 : 400};">${er.toFixed(2)}%</span>`; }
+function kolErCell(er) { return er === null ? '<span style="color:var(--text3);" title="ไม่ได้ยิง Ads จึงไม่มีตัวเลข ER">—</span>' : `<span style="color:${er >= KOL_RULES.erGood ? 'var(--green)' : 'var(--text2)'};font-weight:${er >= KOL_RULES.erGood ? 700 : 400};">${er.toFixed(2)}%</span>`; }
 function kolDaysAgo(d) { if (!d) return null; return Math.max(0, Math.round((Date.now() - new Date(d + 'T00:00:00').getTime()) / 86400000)); }
 function kolAgeHtml(d) { const n = kolDaysAgo(d); return n === null ? '—' : `${fmt(n)} วัน`; }
 function kolPlatformBadge(p) {
@@ -9899,7 +9711,7 @@ function kolPlatformBadge(p) {
   return `<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid ${col};color:${col};margin-right:3px;">${ttcEsc(p)}</span>`;
 }
 // ป้ายที่มาของตัวเลข — ไม่ใช้คำว่า API/Cowork บนหน้าจอ
-const KOL_SRC = { orders: 'ออเดอร์จริง', ads: 'ระบบแอด', sheet: 'ชีททีม KOL' };
+const KOL_SRC = { orders: 'ออเดอร์จริง', ads: 'ระบบ Ads', sheet: 'ชีททีม KOL' };
 function kolSrcBadges(set) {
   const col = { orders: 'var(--green)', ads: '#60a5fa', sheet: '#a78bfa' };
   return [...set].map(k => `<span style="display:inline-block;font-size:9.5px;padding:1px 6px;border-radius:4px;background:${col[k]}22;color:${col[k]};margin-right:3px;white-space:nowrap;">${KOL_SRC[k]}</span>`).join('') || '—';
@@ -9909,7 +9721,7 @@ function kolSrcBadges(set) {
 // key: good จ้างต่อ · ok ดูอีกที · try ลองต่อ/เอาคลิปไปยิงแอด · bad หยุด · wait รอผล · unmatched ตรวจชื่อ · nodata รอทีมกรอก · nocost ไม่มีต้นทุน
 const KOL_VERDICTS = {
   good:      { rank: 1, label: '✅ จ้างต่อ',          color: 'var(--green)' },
-  try:       { rank: 2, label: '🟣 ลองต่อ / เอาคลิปไปยิงแอด', color: '#a78bfa' },
+  try:       { rank: 2, label: '🟣 ลองต่อ / เอาคลิปไปยิง Ads', color: '#a78bfa' },
   ok:        { rank: 3, label: '🟡 ดูอีกที',          color: 'var(--accent)' },
   bad:       { rank: 4, label: '❌ หยุด',             color: 'var(--red)' },
   wait:      { rank: 5, label: '⏳ รอผล',             color: 'var(--text2)' },
@@ -9920,16 +9732,16 @@ const KOL_VERDICTS = {
 function kolVerdict(c) {
   const R = KOL_RULES;
   const v = (key, title) => Object.assign({ key, title }, KOL_VERDICTS[key]);
-  if (c.tiktokUnmatched && !c.hasSheetNumbers) return v('unmatched', `ชื่อ "${c.handle}" ไม่ตรงกับชื่อ creator ในระบบออเดอร์ และไม่มีคลิปที่ยิงแอด — แก้ชื่อในชีท หรือใส่เลขคลิป (item_id) แล้วจะเชื่อมได้เอง`);
-  if (!c.isTikTokAny && !c.hasSheetNumbers) return v('nodata', 'แพลตฟอร์มนี้ยังใช้ตัวเลขจากชีททีม KOL — ยังไม่ได้กรอกยอดขาย/ค่าแอด');
-  if (c.cost <= 0) return v('nocost', 'ไม่มีค่าจ้างและไม่มีค่าแอดในช่วงนี้ จึงคิดความคุ้มไม่ได้');
+  if (c.tiktokUnmatched && !c.hasSheetNumbers) return v('unmatched', `ชื่อ "${c.handle}" ไม่ตรงกับชื่อ creator ในระบบออเดอร์ และไม่มีคลิปที่ยิง Ads — แก้ชื่อในชีท หรือใส่เลขคลิป (item_id) แล้วจะเชื่อมได้เอง`);
+  if (!c.isTikTokAny && !c.hasSheetNumbers) return v('nodata', 'แพลตฟอร์มนี้ยังใช้ตัวเลขจากชีททีม KOL — ยังไม่ได้กรอกยอดขาย/ค่า Ads');
+  if (c.cost <= 0) return v('nocost', 'ไม่มีค่าจ้างและไม่มีค่า Ads ในช่วงนี้ จึงคิดความคุ้มไม่ได้');
   const roas = c.roas;
   if (roas >= R.roasGood) return v('good', `ROAS ${roas.toFixed(2)}x ≥ ${R.roasGood} — ลงทุน 1 บาท ได้ยอดกลับมากกว่า ${R.roasGood} บาท`);
   const age = kolDaysAgo(c.last);
   if (age !== null && age < R.waitDays) return v('wait', `โพสต์ล่าสุดอายุ ${age} วัน (< ${R.waitDays} วัน) ยอดยังโตได้ — รอดูอีกที`);
   if (roas >= R.roasBad) return v('ok', `ROAS ${roas.toFixed(2)}x อยู่ระหว่าง ${R.roasBad}–${R.roasGood} — ใกล้เท่าทุน ควรดูสินค้า/รูปแบบคลิปประกอบ`);
-  if (c.er !== null && c.er >= R.erGood) return v('try', `ROAS ${roas.toFixed(2)}x ต่ำ แต่ ER ${c.er.toFixed(2)}% ≥ ${R.erGood}% — คนดูชอบคลิป ลองเอาคลิปไปยิงแอดหรือปรับสินค้าก่อนตัดสินหยุด`);
-  return v('bad', `ROAS ${roas.toFixed(2)}x < ${R.roasBad}${c.er !== null ? ` และ ER ${c.er.toFixed(2)}% ต่ำ` : ' (ไม่มี ER ให้ดูเพราะไม่ได้ยิงแอด)'} — ยอดขายน้อยกว่าเงินที่จ่ายมาก`);
+  if (c.er !== null && c.er >= R.erGood) return v('try', `ROAS ${roas.toFixed(2)}x ต่ำ แต่ ER ${c.er.toFixed(2)}% ≥ ${R.erGood}% — คนดูชอบคลิป ลองเอาคลิปไปยิง Ads หรือปรับสินค้าก่อนตัดสินหยุด`);
+  return v('bad', `ROAS ${roas.toFixed(2)}x < ${R.roasBad}${c.er !== null ? ` และ ER ${c.er.toFixed(2)}% ต่ำ` : ' (ไม่มี ER ให้ดูเพราะไม่ได้ยิง Ads)'} — ยอดขายน้อยกว่าเงินที่จ่ายมาก`);
 }
 
 // ---- ยอดออเดอร์จริงต่อ creator ในช่วง (RPC creator_summary — แหล่งเดียวกับหน้า Creator Performance) ----
@@ -10156,10 +9968,10 @@ async function renderKolPageOld() {
   const unmatchedFee = creators.filter(c => c.verdict.key === 'unmatched' || c.verdict.key === 'nodata').reduce((s, c) => s + c.fee, 0);
   const R = KOL_RULES;
   kpi.innerHTML = `
-    <div class="card" style="flex:1;min-width:170px;border-left:3px solid #a78bfa;"><div class="card-title">จ่ายไปทั้งหมด ${fbeInfoIcon('kol-info-cost', '<b>จ่ายไปทั้งหมด = ค่าจ้าง + ค่าแอด</b><br>ค่าจ้าง = ตัวเลขในชีททีม KOL ตามวันโพสต์ในช่วงที่เลือก<br>ค่าแอด TikTok = เงินที่จ่ายยิงแอดต่อคลิปในช่วงเดียวกัน (เชื่อมด้วยเลขคลิป แล้วค่อยใช้ชื่อช่อง) · แพลตฟอร์มอื่น = คอลัมน์ "ค่าโฆษณา" ในชีท')}</div><div class="kpi-value">฿${fmt(T.cost)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;"><span style="color:#a78bfa;">●</span> ค่าจ้าง ฿${fmt(T.fee)} · <span style="color:#60a5fa;">●</span> ค่าแอด ฿${fmt(T.adSpend)}${extraSpend ? ` (คลิปที่เชื่อมด้วยชื่อช่อง ฿${fmt(extraSpend)})` : ''}</div></div>
-    <div class="card" style="flex:1;min-width:170px;border-left:3px solid var(--green);"><div class="card-title">ยอดขาย ${fbeInfoIcon('kol-info-rev', '<b>TikTok</b> = ยอดออเดอร์จริงที่ซื้อผ่านคลิปของ creator คนนั้นในช่วงที่เลือก (แหล่งเดียวกับหน้า Creator Performance — ไม่รวม LIVE เพราะค่าจ้างเป็นของคลิป)<br><b>แพลตฟอร์มอื่น</b> = ยอดขายที่ทีม KOL กรอกในชีท (ยังไม่มีทางอื่นให้ตรวจ)<br><br>ยอดออเดอร์จริงกับ "ยอดที่แอดนับ" เป็นคนละตัว — หน้านี้ตัดสินจากออเดอร์จริง')}</div><div class="kpi-value" style="color:var(--green);">฿${fmt(T.rev)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatRev) || 'ยังไม่มียอด'}</div></div>
+    <div class="card" style="flex:1;min-width:170px;border-left:3px solid #a78bfa;"><div class="card-title">จ่ายไปทั้งหมด ${fbeInfoIcon('kol-info-cost', '<b>จ่ายไปทั้งหมด = ค่าจ้าง + ค่า Ads</b><br>ค่าจ้าง = ตัวเลขในชีททีม KOL ตามวันโพสต์ในช่วงที่เลือก<br>ค่า Ads TikTok = เงินที่จ่ายยิง Ads ต่อคลิปในช่วงเดียวกัน (เชื่อมด้วยเลขคลิป แล้วค่อยใช้ชื่อช่อง) · แพลตฟอร์มอื่น = คอลัมน์ "ค่าโฆษณา" ในชีท')}</div><div class="kpi-value">฿${fmt(T.cost)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;"><span style="color:#a78bfa;">●</span> ค่าจ้าง ฿${fmt(T.fee)} · <span style="color:#60a5fa;">●</span> ค่า Ads ฿${fmt(T.adSpend)}${extraSpend ? ` (คลิปที่เชื่อมด้วยชื่อช่อง ฿${fmt(extraSpend)})` : ''}</div></div>
+    <div class="card" style="flex:1;min-width:170px;border-left:3px solid var(--green);"><div class="card-title">ยอดขาย ${fbeInfoIcon('kol-info-rev', '<b>TikTok</b> = ยอดออเดอร์จริงที่ซื้อผ่านคลิปของ creator คนนั้นในช่วงที่เลือก (แหล่งเดียวกับหน้า Creator Performance — ไม่รวม LIVE เพราะค่าจ้างเป็นของคลิป)<br><b>แพลตฟอร์มอื่น</b> = ยอดขายที่ทีม KOL กรอกในชีท (ยังไม่มีทางอื่นให้ตรวจ)<br><br>ยอดออเดอร์จริงกับ "ยอดที่ Ads นับ" เป็นคนละตัว — หน้านี้ตัดสินจากออเดอร์จริง')}</div><div class="kpi-value" style="color:var(--green);">฿${fmt(T.rev)}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${platLine(byPlatRev) || 'ยังไม่มียอด'}</div></div>
     <div class="card" style="flex:1;min-width:170px;border:1px solid ${kolRoiColor(T.roas)};"><div class="card-title">ROAS รวม ${fbeInfoIcon('kol-info-roas', '<b>ROAS = ยอดขาย ÷ จ่ายไปทั้งหมด</b> — ลงทุน 1 บาท ได้ยอดขายกลับกี่บาท<br><b>ROI</b> = (ยอดขาย − จ่ายไป) ÷ จ่ายไป × 100 — ตัวเลขเดียวกันคนละสเกล<br><br>เขียว ≥ ' + R.roasGood + 'x · ทอง ' + R.roasBad + '–' + R.roasGood + 'x · แดง < ' + R.roasBad + 'x (เกณฑ์ชั่วคราว ปรับได้)<br>ยังไม่หักต้นทุนสินค้า')}</div><div class="kpi-value" style="font-size:30px;color:${kolRoiColor(T.roas)};">${T.roas !== null ? T.roas.toFixed(2) + 'x' : '—'}</div><div style="font-size:10px;color:var(--text3);margin-top:3px;">${T.roas !== null ? kolRoiPct(T.roas) + ' · ' : ''}${fmt(posts.length)} โพสต์ · ${fmt(creators.length)} creator · ER รวม ${T.er !== null ? T.er.toFixed(2) + '%' : '—'}</div></div>
-    <div class="card" style="flex:1.3;min-width:220px;"><div class="card-title">ผลตัดสิน ${fbeInfoIcon('kol-info-verdict', '<b>ดูจาก 2 แกน</b>: ROAS (ขายได้คุ้มไหม) และ ER (คนดูชอบคลิปไหม)<br><br>✅ จ้างต่อ = ROAS ≥ ' + R.roasGood + '<br>🟡 ดูอีกที = ROAS ' + R.roasBad + '–' + R.roasGood + '<br>🟣 ลองต่อ / เอาคลิปไปยิงแอด = ROAS ต่ำ แต่ ER ≥ ' + R.erGood + '% (ขายน้อยแต่คนดูชอบ — คลิปแบบนี้ยิงแอดต่อได้)<br>❌ หยุด = ROAS < ' + R.roasBad + ' และ ER ต่ำ/ไม่มี<br>⏳ รอผล = โพสต์ล่าสุดยังไม่ถึง ' + R.waitDays + ' วัน<br>🔍 ตรวจชื่อ = ชื่อในชีทไม่ตรงกับระบบออเดอร์ และไม่มีคลิปที่ยิงแอด<br>📝 รอทีมกรอก = แพลตฟอร์มอื่นที่ยังไม่มีตัวเลขในชีท<br><br><b>ER</b> = (ไลค์ + คอมเมนต์ + แชร์) ÷ จำนวนครั้งที่คลิปถูกเห็น × 100 — มีเฉพาะคลิปที่ยิงแอด · เกณฑ์ทั้งหมดเป็นค่าชั่วคราว')}</div><div style="font-size:12.5px;line-height:1.9;margin-top:4px;">${vcLine || '—'}</div>${unmatchedFee ? `<div style="font-size:10px;color:#ef9f27;margin-top:2px;">ค่าจ้าง ฿${fmt(unmatchedFee)} ยังตัดสินไม่ได้ (ตรวจชื่อ / รอทีมกรอก)</div>` : ''}</div>
+    <div class="card" style="flex:1.3;min-width:220px;"><div class="card-title">ผลตัดสิน ${fbeInfoIcon('kol-info-verdict', '<b>ดูจาก 2 แกน</b>: ROAS (ขายได้คุ้มไหม) และ ER (คนดูชอบคลิปไหม)<br><br>✅ จ้างต่อ = ROAS ≥ ' + R.roasGood + '<br>🟡 ดูอีกที = ROAS ' + R.roasBad + '–' + R.roasGood + '<br>🟣 ลองต่อ / เอาคลิปไปยิง Ads = ROAS ต่ำ แต่ ER ≥ ' + R.erGood + '% (ขายน้อยแต่คนดูชอบ — คลิปแบบนี้ยิง Ads ต่อได้)<br>❌ หยุด = ROAS < ' + R.roasBad + ' และ ER ต่ำ/ไม่มี<br>⏳ รอผล = โพสต์ล่าสุดยังไม่ถึง ' + R.waitDays + ' วัน<br>🔍 ตรวจชื่อ = ชื่อในชีทไม่ตรงกับระบบออเดอร์ และไม่มีคลิปที่ยิง Ads<br>📝 รอทีมกรอก = แพลตฟอร์มอื่นที่ยังไม่มีตัวเลขในชีท<br><br><b>ER</b> = (ไลค์ + คอมเมนต์ + แชร์) ÷ จำนวนครั้งที่คลิปถูกเห็น × 100 — มีเฉพาะคลิปที่ยิง Ads · เกณฑ์ทั้งหมดเป็นค่าชั่วคราว')}</div><div style="font-size:12.5px;line-height:1.9;margin-top:4px;">${vcLine || '—'}</div>${unmatchedFee ? `<div style="font-size:10px;color:#ef9f27;margin-top:2px;">ค่าจ้าง ฿${fmt(unmatchedFee)} ยังตัดสินไม่ได้ (ตรวจชื่อ / รอทีมกรอก)</div>` : ''}</div>
   `;
 
   // ---- unmapped products ----
@@ -10238,7 +10050,7 @@ function renderKolCreatorTable() {
       <td>${c.platforms.map(kolPlatformBadge).join('')}</td>
       <td>${fmt(c.posts)} <span style="font-size:10px;color:var(--text3);">(${fmt(c.boosted + c.extraClips)})</span></td>
       <td>฿${fmt(c.fee)}</td>
-      <td>${c.adSpend ? '฿' + fmt(c.adSpend) : '<span style="color:var(--text3);">—</span>'}${c.extraClips ? `<div style="font-size:9.5px;color:var(--text3);" title="คลิปที่ยิงแอดของช่องนี้ที่ไม่ได้ใส่เลขคลิปในชีท — เชื่อมด้วยชื่อช่อง">+${fmt(c.extraClips)} คลิปตามชื่อช่อง</div>` : ''}</td>
+      <td>${c.adSpend ? '฿' + fmt(c.adSpend) : '<span style="color:var(--text3);">—</span>'}${c.extraClips ? `<div style="font-size:9.5px;color:var(--text3);" title="คลิปที่ยิง Ads ของช่องนี้ที่ไม่ได้ใส่เลขคลิปในชีท — เชื่อมด้วยชื่อช่อง">+${fmt(c.extraClips)} คลิปตามชื่อช่อง</div>` : ''}</td>
       <td>${c.boost ? '฿' + fmt(c.boost) : '<span style="color:var(--text3);">—</span>'}</td>
       <td style="font-weight:600;">฿${fmt(c.cost)}</td>
       <td>${c.rev ? '฿' + fmt(c.rev) : '<span style="color:var(--text3);">' + (c.tiktokUnmatched ? '?' : '฿0') + '</span>'}${c.videoOrd ? `<div style="font-size:9.5px;color:var(--text3);">${fmt(c.videoOrd)} ออเดอร์</div>` : ''}${revSub}</td>
@@ -10249,8 +10061,8 @@ function renderKolCreatorTable() {
       <td>${kolSrcBadges(c.src)}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="14" class="empty">ไม่มี creator ตามเงื่อนไข</td></tr>';
-  document.getElementById('kol-creator-foot').innerHTML = `${fmt(rows.length)} คน · คลิกหัวคอลัมน์เพื่อเรียง · คลิกแถวเพื่อดูรายโพสต์ · โพสต์ (ยิงแอด) = โพสต์ทั้งหมด (คลิปที่ยิงแอด) · จ่ายรวม = ค่าจ้าง + ค่าแอด · ROAS = ยอดขาย ÷ จ่ายรวม · ER มีเฉพาะคลิปที่ยิงแอด · <b>ที่มา</b>: <span style="color:var(--green);">ออเดอร์จริง</span> = ยอดขายจากระบบออเดอร์ · <span style="color:#60a5fa;">ระบบแอด</span> = ค่าแอด/ER จากระบบแอด TikTok · <span style="color:#a78bfa;">ชีททีม KOL</span> = ตัวเลขที่ทีมกรอก`
-    + `<div style="margin-top:4px;"><b>boost (Meta)</b> = ค่าแอด boost โพสต์ KOL จากบัญชี Meta "KOL (boost โพสต์ KOL)" รวมต่อ KOL ต่อเดือน (ช่วงนี้ ฿${fmt(Math.round(kolBoost.total))}) — คนละก้อนกับค่าแอดในชีท (แอดขาย) · <b>รวมอยู่ใน "จ่ายรวม" แล้ว แต่ไม่นับใน ROAS</b> เพราะเป็นคอนเทนต์ที่ไม่ได้ยิงเพื่อยอดขาย`
+  document.getElementById('kol-creator-foot').innerHTML = `${fmt(rows.length)} คน · คลิกหัวคอลัมน์เพื่อเรียง · คลิกแถวเพื่อดูรายโพสต์ · โพสต์ (ยิง Ads) = โพสต์ทั้งหมด (คลิปที่ยิง Ads) · จ่ายรวม = ค่าจ้าง + ค่า Ads · ROAS = ยอดขาย ÷ จ่ายรวม · ER มีเฉพาะคลิปที่ยิง Ads · <b>ที่มา</b>: <span style="color:var(--green);">ออเดอร์จริง</span> = ยอดขายจากระบบออเดอร์ · <span style="color:#60a5fa;">ระบบ Ads</span> = ค่า Ads/ER จากระบบ Ads TikTok · <span style="color:#a78bfa;">ชีททีม KOL</span> = ตัวเลขที่ทีมกรอก`
+    + `<div style="margin-top:4px;"><b>boost (Meta)</b> = ค่า Ads boost โพสต์ KOL จากบัญชี Meta "KOL (boost โพสต์ KOL)" รวมต่อ KOL ต่อเดือน (ช่วงนี้ ฿${fmt(Math.round(kolBoost.total))}) — คนละก้อนกับค่า Ads ในชีท (Ads ขาย) · <b>รวมอยู่ใน "จ่ายรวม" แล้ว แต่ไม่นับใน ROAS</b> เพราะเป็นคอนเทนต์ที่ไม่ได้ยิงเพื่อยอดขาย`
     + (kolBoost.unmatchedTotal ? ` · <span style="color:#f59e0b;">มีค่า boost ฿${fmt(Math.round(kolBoost.unmatchedTotal))} ของชื่อ KOL ที่ไม่มีในชีท (${kolBoost.unmatched.slice(0, 5).map(x => ttcEsc(x[0]) + ' ฿' + fmt(Math.round(x[1]))).join(' · ')}${kolBoost.unmatched.length > 5 ? ' …' : ''})</span>` : '')
     + `</div>`;
 }
@@ -10285,21 +10097,21 @@ function renderKolDetail(handle, D) {
   const k = (t, v, sub, col) => `<div class="card" style="flex:1;min-width:120px;padding:10px 12px;"><div class="card-title">${t}</div><div class="kpi-value" style="font-size:20px;${col ? 'color:' + col + ';' : ''}">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">${sub}</div>` : ''}</div>`;
   document.getElementById('kol-detail-kpis').innerHTML =
     k('ค่าจ้าง', '฿' + fmt(c.fee), `${fmt(c.posts)} โพสต์`) +
-    k('ค่าแอด', c.adSpend ? '฿' + fmt(c.adSpend) : '—', `${fmt(c.boosted)} โพสต์ที่ยิงแอด${c.extraClips ? ` + ${fmt(c.extraClips)} คลิปตามชื่อช่อง` : ''}`) +
-    k('ยอดขาย', c.rev ? '฿' + fmt(c.rev) : (c.tiktokUnmatched ? '?' : '฿0'), c.isTikTokAny ? `ออเดอร์จริง ${fmt(c.videoOrd)} ออเดอร์${c.liveRev ? ` · LIVE อีก ฿${fmt(c.liveRev)} (ไม่นับ)` : ''}${c.adRev ? ` · ยอดที่แอดนับ ฿${fmt(c.adRev)}` : ''}` : 'จากชีททีม KOL', 'var(--green)') +
+    k('ค่า Ads', c.adSpend ? '฿' + fmt(c.adSpend) : '—', `${fmt(c.boosted)} โพสต์ที่ยิง Ads${c.extraClips ? ` + ${fmt(c.extraClips)} คลิปตามชื่อช่อง` : ''}`) +
+    k('ยอดขาย', c.rev ? '฿' + fmt(c.rev) : (c.tiktokUnmatched ? '?' : '฿0'), c.isTikTokAny ? `ออเดอร์จริง ${fmt(c.videoOrd)} ออเดอร์${c.liveRev ? ` · LIVE อีก ฿${fmt(c.liveRev)} (ไม่นับ)` : ''}${c.adRev ? ` · ยอดที่ Ads นับ ฿${fmt(c.adRev)}` : ''}` : 'จากชีททีม KOL', 'var(--green)') +
     k('ROAS', c.roas !== null ? c.roas.toFixed(2) + 'x' : '—', c.roas !== null ? `${kolRoiPct(c.roas)} · จ่ายรวม ฿${fmt(c.cost)}` : 'ไม่มีต้นทุน', kolRoiColor(c.roas)) +
-    k('ER', c.er !== null ? c.er.toFixed(2) + '%' : '—', c.er !== null ? `${c.er >= KOL_RULES.erGood ? 'คนดูชอบ ≥ ' + KOL_RULES.erGood + '%' : 'ต่ำกว่า ' + KOL_RULES.erGood + '%'} · จากคลิปที่ยิงแอด` : 'ไม่มีคลิปที่ยิงแอด', c.er !== null && c.er >= KOL_RULES.erGood ? 'var(--green)' : undefined) +
+    k('ER', c.er !== null ? c.er.toFixed(2) + '%' : '—', c.er !== null ? `${c.er >= KOL_RULES.erGood ? 'คนดูชอบ ≥ ' + KOL_RULES.erGood + '%' : 'ต่ำกว่า ' + KOL_RULES.erGood + '%'} · จากคลิปที่ยิง Ads` : 'ไม่มีคลิปที่ยิง Ads', c.er !== null && c.er >= KOL_RULES.erGood ? 'var(--green)' : undefined) +
     k('สินค้าที่รีวิว', fmt(c.products.length), c.products.slice(0, 3).join(', ') + (c.products.length > 3 ? '…' : ''));
   const R = KOL_RULES;
   document.getElementById('tbodyKolDetail').innerHTML = posts.map(p => {
     const link = p.post_link && /^https?:/i.test(p.post_link) ? p.post_link : (p.item_id ? `https://www.tiktok.com/@i/video/${p.item_id}` : '');
     const age = kolDaysAgo(p.post_date);
-    const boostCell = p.boosted ? '<span style="color:var(--green);font-weight:700;font-size:10.5px;">ยิงแอดแล้ว</span>'
-      : (p.isTikTok ? `<span style="color:var(--text3);font-size:10.5px;" title="${p.item_id ? 'เลขคลิปนี้ไม่มีค่าแอดในช่วงที่เลือก' : 'ชีทไม่มีเลขคลิป (item_id) จึงเชื่อมกับระบบแอดไม่ได้'}">${p.item_id ? 'ไม่ได้ยิงแอด' : 'ไม่มีเลขคลิป'}</span>` : (p.sheetAd > 0 ? '<span style="color:var(--green);font-weight:700;font-size:10.5px;">มีค่าแอด (ชีท)</span>' : '<span style="color:var(--text3);font-size:10.5px;">—</span>'));
+    const boostCell = p.boosted ? '<span style="color:var(--green);font-weight:700;font-size:10.5px;">ยิง Ads แล้ว</span>'
+      : (p.isTikTok ? `<span style="color:var(--text3);font-size:10.5px;" title="${p.item_id ? 'เลขคลิปนี้ไม่มีค่า Ads ในช่วงที่เลือก' : 'ชีทไม่มีเลขคลิป (item_id) จึงเชื่อมกับระบบ Ads ไม่ได้'}">${p.item_id ? 'ไม่ได้ยิง Ads' : 'ไม่มีเลขคลิป'}</span>` : (p.sheetAd > 0 ? '<span style="color:var(--green);font-weight:700;font-size:10.5px;">มีค่า Ads (ชีท)</span>' : '<span style="color:var(--text3);font-size:10.5px;">—</span>'));
     // ผลของโพสต์: TikTok ดูจาก ER + ยอดที่แอดนับ (ยอดออเดอร์จริงนับได้ต่อคน) · อื่นๆ ดูจากยอดในชีท
     let res;
     if (age !== null && age < R.waitDays) res = `<span style="color:var(--text2);font-size:10.5px;">⏳ รอผล (${age} วัน)</span>`;
-    else if (p.isTikTok) res = !p.clip ? '<span style="color:var(--text3);font-size:10.5px;">ไม่ได้ยิงแอด</span>' : (p.er !== null && p.er >= R.erGood ? '<span style="color:var(--green);font-size:10.5px;font-weight:600;">คนดูชอบ — ยิงแอดต่อได้</span>' : (p.adSpend > 0 && p.adRev / p.adSpend >= R.roasGood ? '<span style="color:var(--green);font-size:10.5px;font-weight:600;">แอดขายได้</span>' : '<span style="color:var(--text3);font-size:10.5px;">ธรรมดา</span>'));
+    else if (p.isTikTok) res = !p.clip ? '<span style="color:var(--text3);font-size:10.5px;">ไม่ได้ยิง Ads</span>' : (p.er !== null && p.er >= R.erGood ? '<span style="color:var(--green);font-size:10.5px;font-weight:600;">คนดูชอบ — ยิง Ads ต่อได้</span>' : (p.adSpend > 0 && p.adRev / p.adSpend >= R.roasGood ? '<span style="color:var(--green);font-size:10.5px;font-weight:600;">Ads ขายได้</span>' : '<span style="color:var(--text3);font-size:10.5px;">ธรรมดา</span>'));
     else res = (p.sheetRev > 0 || p.sheetAd > 0) ? `<span style="color:${kolRoiColor((p.budget + p.sheetAd) > 0 ? p.sheetRev / (p.budget + p.sheetAd) : null)};font-size:10.5px;font-weight:600;">ROAS ${(p.budget + p.sheetAd) > 0 ? (p.sheetRev / (p.budget + p.sheetAd)).toFixed(2) + 'x' : '—'}</span>` : '<span style="color:var(--text3);font-size:10.5px;">รอทีมกรอก</span>';
     return `<tr>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;">${thShort(p.post_date)}</td>
@@ -10380,10 +10192,10 @@ async function renderShAds() {
   const lastSync = daily.length ? daily[daily.length - 1].synced_at : null;
   document.getElementById('shads-sync-note').textContent = daily.length ? `${fmt(daily.length)} วัน · ข้อมูลล่าสุด ${thShort(daily[daily.length - 1].stat_date)} · อัปเดต ${lastSync ? new Date(lastSync).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}` : 'ยังไม่มีข้อมูลในช่วงนี้';
   kpi.innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;border-left:3px solid #ee4d2d;"><div class="card-title">ค่าแอด Product/Shop</div><div class="kpi-value">฿${fmt(spend)}</div><div class="kpi-sub">เฉลี่ย ฿${fmt(daily.length ? spend / daily.length : 0)}/วัน</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขายที่ Shopee นับว่ามาจากแอด ${fbeInfoIcon('shads-info-gmv', 'ยอดที่เกิดหลังคนคลิกแอด <b>รวมสินค้าอื่นในร้าน</b>ที่ซื้อพร้อมกัน (Shopee เรียก broad — ค่าหลักในหน้า Shopee Ads ของ Seller Centre)<br>บรรทัดเล็ก = เฉพาะ<b>สินค้าที่ยิงแอด</b>เท่านั้น (Shopee เรียก direct)')}</div><div class="kpi-value">฿${fmt(gmv)}</div><div class="kpi-sub">สินค้าที่ยิงเอง ฿${fmt(dgmv)} (${gmv ? Math.round(dgmv / gmv * 100) : 0}%)</div></div>
-    <div class="card" style="flex:1;min-width:150px;border:1px solid ${shAdsRoasColor(roas)};"><div class="card-title">ROAS แอด</div><div class="kpi-value" style="color:${shAdsRoasColor(roas)};">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</div><div class="kpi-sub">ยอดขายที่นับว่ามาจากแอด ÷ ค่าแอด Product/Shop</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ออเดอร์จากแอด</div><div class="kpi-value">${fmt(orders)}</div><div class="kpi-sub">${fmt(items)} ชิ้น · ค่าแอด/ออเดอร์ ฿${fmt(orders ? spend / orders : 0)}</div></div>
+    <div class="card" style="flex:1;min-width:150px;border-left:3px solid #ee4d2d;"><div class="card-title">ค่า Ads Product/Shop</div><div class="kpi-value">฿${fmt(spend)}</div><div class="kpi-sub">เฉลี่ย ฿${fmt(daily.length ? spend / daily.length : 0)}/วัน</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขายที่ Shopee นับว่ามาจาก Ads ${fbeInfoIcon('shads-info-gmv', 'ยอดที่เกิดหลังคนคลิก Ads <b>รวมสินค้าอื่นในร้าน</b>ที่ซื้อพร้อมกัน (Shopee เรียก broad — ค่าหลักในหน้า Shopee Ads ของ Seller Centre)<br>บรรทัดเล็ก = เฉพาะ<b>สินค้าที่ยิง Ads</b>เท่านั้น (Shopee เรียก direct)')}</div><div class="kpi-value">฿${fmt(gmv)}</div><div class="kpi-sub">สินค้าที่ยิงเอง ฿${fmt(dgmv)} (${gmv ? Math.round(dgmv / gmv * 100) : 0}%)</div></div>
+    <div class="card" style="flex:1;min-width:150px;border:1px solid ${shAdsRoasColor(roas)};"><div class="card-title">ROAS Ads</div><div class="kpi-value" style="color:${shAdsRoasColor(roas)};">${roas !== null ? roas.toFixed(2) + 'x' : '—'}</div><div class="kpi-sub">ยอดขายที่นับว่ามาจาก Ads ÷ ค่า Ads Product/Shop</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ออเดอร์จาก Ads</div><div class="kpi-value">${fmt(orders)}</div><div class="kpi-sub">${fmt(items)} ชิ้น · ค่า Ads/ออเดอร์ ฿${fmt(orders ? spend / orders : 0)}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิก / CPC</div><div class="kpi-value">${fmtB(clicks)}</div><div class="kpi-sub">CPC ฿${(clicks ? spend / clicks : 0).toFixed(2)} · CTR ${imp ? (clicks / imp * 100).toFixed(2) : 0}%</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">Impression</div><div class="kpi-value">${fmtB(imp)}</div><div class="kpi-sub">CVR ${clicks ? (orders / clicks * 100).toFixed(1) : 0}%</div></div>
 `;
@@ -10422,10 +10234,10 @@ function renderShAdsTotalCard(daily, apiSpend, apiGmv, from, to) {
     card('Live Ads', `฿${fmt(live)}`, `${total ? Math.round(live / total * 100) : 0}% ของรวม`) +
     card('Meta Ads ผ่าน Shopee', `฿${fmt(meta)}`, `${total ? Math.round(meta / total * 100) : 0}% ของรวม`) +
     card('เหรียญแจกใน Live', `฿${fmt(coins)}`, `${total ? Math.round(coins / total * 100) : 0}% ของรวม · 1 เหรียญ = ฿1`) +
-    card(`CPAS on Meta ${fbeInfoIcon('shads-info-cpas', 'แอด Meta (Facebook/Instagram) แบบ Collaborative Ads ที่ยิงเข้าร้าน Shopee โดยตรง — ค่าใช้จ่ายมาจากฝั่ง Meta ไม่ใช่ Shopee')}`, `฿${fmt(cpas)}`, `${total ? Math.round(cpas / total * 100) : 0}% ของรวม`) +
+    card(`CPAS on Meta ${fbeInfoIcon('shads-info-cpas', 'Ads Meta (Facebook/Instagram) แบบ Collaborative Ads ที่ยิงเข้าร้าน Shopee โดยตรง — ค่าใช้จ่ายมาจากฝั่ง Meta ไม่ใช่ Shopee')}`, `฿${fmt(cpas)}`, `${total ? Math.round(cpas / total * 100) : 0}% ของรวม`) +
     (other ? card('อื่นๆ', `฿${fmt(other)}`, `${total ? Math.round(other / total * 100) : 0}% ของรวม`) : '') +
     card(`ยอดขายจริง (บัญชี) ${fbeInfoIcon('shads-info-real', SHADS_REAL_INFO)}`,
-      `฿${fmt(realTotal)}`, `${fmt(daysInRange)} วัน · Shopee นับว่ามาจากแอด ${realTotal ? Math.round(apiGmv / realTotal * 100) : 0}%`, '', 'border-left:3px solid var(--green);') +
+      `฿${fmt(realTotal)}`, `${fmt(daysInRange)} วัน · Shopee นับว่ามาจาก Ads ${realTotal ? Math.round(apiGmv / realTotal * 100) : 0}%`, '', 'border-left:3px solid var(--green);') +
     card('ROAS จริง', realRoas !== null ? realRoas.toFixed(2) + 'x' : '—', `ยอดขายจริง ÷ ค่า Ads รวม · ค่า Ads ${realTotal ? (total / realTotal * 100).toFixed(1) : '—'}% ของยอดขาย`, '', `border:1px solid ${shAdsRoasColor(realRoas)};`, `color:${shAdsRoasColor(realRoas)};`);
   const tblInfo = document.getElementById('shads-info-real-tbl'); if (tblInfo) tblInfo.innerHTML = fbeInfoIcon('shads-info-real2', SHADS_REAL_INFO);
   renderShAdsLog(daily);
@@ -10452,14 +10264,14 @@ function renderShAdsLog(daily) {
 // ---- กราฟรายวัน: เลือก metric ได้ (แท่ง / เส้น / เส้นแกนขวา) ----
 let _shAdsDaily = [];
 const SHADS_DAILY_METRICS = {
-  total_all:{label:'ค่าแอดรวม (ทุกประเภท)',fmt:v=>'฿'+fmt(v)}, expense:{label:'Product/Shop Ads',fmt:v=>'฿'+fmt(v)}, brand_ads:{label:'Brand Ads',fmt:v=>'฿'+fmt(v)}, live_ads:{label:'Live Ads',fmt:v=>'฿'+fmt(v)}, meta_ads:{label:'Meta Ads (ผ่าน Shopee)',fmt:v=>'฿'+fmt(v)}, coins:{label:'เหรียญ (Live)',fmt:v=>'฿'+fmt(v)}, cpas:{label:'CPAS on Meta',fmt:v=>'฿'+fmt(v)},
-  real_revenue:{label:'ยอดขายจริง (บัญชี)',fmt:v=>'฿'+fmt(v)}, real_roas:{label:'ROAS จริง (ยอดจริง ÷ ค่าแอดรวม)',fmt:v=>v.toFixed(2)+'x',calc:r=>r.total_all>0&&r.real_revenue!==null&&r.real_revenue!==undefined?r.real_revenue/r.total_all:null},
-  broad_gmv:{label:'ยอดขายที่ Shopee นับว่ามาจากแอด',fmt:v=>'฿'+fmt(v)}, direct_gmv:{label:'ยอดขายจากแอด (สินค้าที่ยิง)',fmt:v=>'฿'+fmt(v)},
+  total_all:{label:'ค่า Ads รวม (ทุกประเภท)',fmt:v=>'฿'+fmt(v)}, expense:{label:'Product/Shop Ads',fmt:v=>'฿'+fmt(v)}, brand_ads:{label:'Brand Ads',fmt:v=>'฿'+fmt(v)}, live_ads:{label:'Live Ads',fmt:v=>'฿'+fmt(v)}, meta_ads:{label:'Meta Ads (ผ่าน Shopee)',fmt:v=>'฿'+fmt(v)}, coins:{label:'เหรียญ (Live)',fmt:v=>'฿'+fmt(v)}, cpas:{label:'CPAS on Meta',fmt:v=>'฿'+fmt(v)},
+  real_revenue:{label:'ยอดขายจริง (บัญชี)',fmt:v=>'฿'+fmt(v)}, real_roas:{label:'ROAS จริง (ยอดจริง ÷ ค่า Ads รวม)',fmt:v=>v.toFixed(2)+'x',calc:r=>r.total_all>0&&r.real_revenue!==null&&r.real_revenue!==undefined?r.real_revenue/r.total_all:null},
+  broad_gmv:{label:'ยอดขายที่ Shopee นับว่ามาจาก Ads',fmt:v=>'฿'+fmt(v)}, direct_gmv:{label:'ยอดขายจาก Ads (สินค้าที่ยิง)',fmt:v=>'฿'+fmt(v)},
   broad_order:{label:'ออเดอร์',fmt:v=>fmt(v)}, direct_order:{label:'ออเดอร์ (สินค้าที่ยิง)',fmt:v=>fmt(v)}, broad_item_sold:{label:'ชิ้นที่ขาย',fmt:v=>fmt(v)},
   impression:{label:'Impression',fmt:v=>fmt(v)}, clicks:{label:'คลิก',fmt:v=>fmt(v)},
-  roas:{label:'ROAS แอด (Product/Shop)',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.broad_gmv/r.expense:null}, direct_roas:{label:'ROAS แอด (สินค้าที่ยิง)',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.direct_gmv/r.expense:null},
+  roas:{label:'ROAS Ads (Product/Shop)',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.broad_gmv/r.expense:null}, direct_roas:{label:'ROAS Ads (สินค้าที่ยิง)',fmt:v=>v.toFixed(2)+'x',calc:r=>+r.expense>0?r.direct_gmv/r.expense:null},
   ctr:{label:'CTR %',fmt:v=>v.toFixed(2)+'%',calc:r=>+r.impression?r.clicks/r.impression*100:null}, cvr:{label:'CVR %',fmt:v=>v.toFixed(2)+'%',calc:r=>+r.clicks?r.broad_order/r.clicks*100:null},
-  cpc:{label:'CPC',fmt:v=>'฿'+v.toFixed(2),calc:r=>+r.clicks?r.expense/r.clicks:null}, cpo:{label:'ค่าแอด/ออเดอร์ (Product/Shop)',fmt:v=>'฿'+v.toFixed(0),calc:r=>+r.broad_order?r.expense/r.broad_order:null},
+  cpc:{label:'CPC',fmt:v=>'฿'+v.toFixed(2),calc:r=>+r.clicks?r.expense/r.clicks:null}, cpo:{label:'ค่า Ads/ออเดอร์ (Product/Shop)',fmt:v=>'฿'+v.toFixed(0),calc:r=>+r.broad_order?r.expense/r.broad_order:null},
   none:{label:'— ไม่แสดง —'}
 };
 function shAdsSeries(key) { const m = SHADS_DAILY_METRICS[key]; return _shAdsDaily.map(r => m.calc ? m.calc(r) : (r[key] === null || r[key] === undefined ? null : +r[key] || 0)); }
