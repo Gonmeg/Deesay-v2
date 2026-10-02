@@ -504,6 +504,12 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .pl-tabs button.on { background:var(--accent); border-color:var(--accent); color:#0a0a0f; font-weight:700; }
   #plCard td.pl-cm { background:rgba(99,102,241,0.06); }
   #plCard th.pl-cm { background:rgba(99,102,241,0.12); color:var(--text); }
+  /* (2026-10-02) Data Guard — แถบสถานะข้อมูลของแต่ละหน้า */
+  #dgBanner .dg-ok { font-size: 11px; color: var(--text3); text-align: right; margin: -4px 0 8px; }
+  #dgBanner .dg-bar { border-radius: 8px; padding: 9px 14px; margin: 0 0 14px; font-size: 12.5px; line-height: 1.65; color: var(--text); }
+  #dgBanner .dg-red { background: rgba(239,68,68,.10); border: 1px solid rgba(239,68,68,.40); }
+  #dgBanner .dg-orange { background: rgba(245,158,11,.10); border: 1px solid rgba(245,158,11,.40); }
+  #dgBanner .dg-at { font-size: 10.5px; color: var(--text3); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -579,7 +585,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.02-f</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.02-g</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -700,6 +706,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
   <div class="content">
     <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive"></div>
+    <div id="dgBanner"></div>   <!-- (2026-10-02) Data Guard: สถานะข้อมูลของหน้านี้ -->
 
     <!-- PAGE: OVERVIEW -->
     <div class="page active" id="page-overview">
@@ -3102,6 +3109,7 @@ function toggleTheme() {
   localStorage.setItem('deesay_theme', isLight ? 'light' : 'dark')
   setTimeout(() => {
     if (currentPage === 'adperf') renderAdpAll(); else renderCurrentPage()
+    try { dgShow(currentPage) } catch (e) {}
   }, 50)
 }
 // โหลดธีมที่เคยเลือกไว้ (ถ้ามี)
@@ -7321,6 +7329,48 @@ function renderFlowTable() {
     </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
+// ===== (2026-10-02) Data Guard — ทุกหน้าบอกว่าข้อมูลที่ใช้มาครบไหม (ผลตรวจอัตโนมัติทุกชั่วโมงจาก RPC data_status) =====
+let _dg = null, _dgAt = 0;
+const DG_ADS = ['fb_ads_accounts', 'fb_cpas', 'tt_', 'sh_ads_', 'sh_manual', 'lz_ads'];
+const DG_PAGE = {
+  home: ['orders_', ...DG_ADS], overview: ['orders_', ...DG_ADS], channel: ['orders_', ...DG_ADS], promotarget: ['orders_'], geo: ['orders_'],
+  skurev: ['orders_'], skuanalysis: ['orders_', ...DG_ADS, 'kol_file', 'stock_log'],
+  fbhub: ['orders_Facebook'], crm: ['orders_Facebook'], flow: ['orders_Facebook'], neverbought: ['orders_Facebook'],
+  fbads: ['fb_ads_accounts', 'fb_cpas'],
+  tthub: ['orders_TikTok'], ttads: ['tt_', 'orders_TikTok'], livesearch: ['tt_', 'orders_TikTok'], creatorperf: ['orders_TikTok', 'tt_', 'kol_file', 'eq_kol_tt'],
+  shhub: ['orders_Shopee'], shads: ['sh_ads_', 'sh_manual', 'fb_cpas', 'fb_ads_accounts', 'orders_Shopee'], lzhub: ['orders_Lazada', 'lz_ads'],
+  kol: ['kol_file', 'kol_claims', 'fb_ads_accounts', 'tt_', 'eq_kol_'],
+  mktlive: ['orders_', ...DG_ADS, 'kol_file', 'eq_kol_fee'], cost: ['orders_', ...DG_ADS], adperf: [...DG_ADS],
+  supply: ['stock_log', 'orders_']
+};
+const DG_GLOBAL = ['mv_stale', 'fb_bucket', 'rls'];   // กระทบตัวเลขทุกหน้า
+async function loadDg(force) {
+  if (_dg && !force && Date.now() - _dgAt < 600000) return _dg;
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/data_status`, { method: 'POST', headers: h, body: '{}' });
+  if (!r.ok) throw new Error('data_status ' + r.status);
+  _dg = await r.json(); _dgAt = Date.now(); return _dg;
+}
+function dgShow(page) {
+  const el = document.getElementById('dgBanner'); if (!el) return;
+  const keys = DG_PAGE[page]; if (!keys) { el.innerHTML = ''; return; }
+  loadDg().then(list => {
+    if (currentPage !== page) return;
+    const hit = c => DG_GLOBAL.includes(c.k) || keys.some(k => c.k === k || (k.endsWith('_') && c.k.startsWith(k)));
+    const mine = (list || []).filter(hit), bad = mine.filter(c => c.status !== 'ok');
+    const at = mine.length ? new Date(Math.max(...mine.map(c => +new Date(c.at)))) : null;
+    const atTxt = at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—';
+    if (!bad.length) { el.innerHTML = `<div class="dg-ok">✓ ข้อมูลที่หน้านี้ใช้เข้าครบตามเวลา · ตรวจล่าสุด ${atTxt}</div>`; return; }
+    const red = bad.some(c => c.status === 'fail');
+    el.innerHTML = `<div class="dg-bar ${red ? 'dg-red' : 'dg-orange'}"><b>${red ? '⚠️ ตัวเลขในหน้านี้อาจยังไม่ครบ' : 'ℹ️ ข้อมูลบางส่วนยังไม่เข้า'}</b>`
+      + bad.map(c => `<div>• ${c.title} — ${c.detail || ''}</div>`).join('')
+      + `<div class="dg-at">ระบบตรวจอัตโนมัติทุกชั่วโมง · ล่าสุด ${atTxt}</div></div>`;
+  }).catch(() => { el.innerHTML = ''; });
+}
+{ const _sp = showPage; showPage = function (page) { const r = _sp.apply(this, arguments); try { dgShow(page); } catch (e) {} return r; }; }
+setTimeout(() => { try { dgShow(currentPage); } catch (e) {} }, 2500);   // หน้าแรกที่เปิดตอนโหลด
+setInterval(() => { try { dgShow(currentPage); } catch (e) {} }, 600000);   // อัปเดตทุก 10 นาที
+
 async function refreshDashboardData() {
   // ล้างแคชฝั่ง TikTok Ads + ค่าจ้าง KOL ด้วย (ตารางในหน้า Creator / KOL) ให้โหลดใหม่รอบถัดไป
   _kolPostsLoaded = false; ttaLastRange = null;
@@ -7372,7 +7422,7 @@ async function refreshDashboardData() {
       const r4 = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_kol_views`, { method: 'POST', headers, body: '{}' })
       if (!r4.ok) console.warn('refresh_kol_views:', r4.status, await r4.text().catch(() => ''))
     } catch (e) { console.warn('sync-kol-posts:', e) }
-    try { _kjRows = null; _kjAds = {}; _mlRows = null; _mlKol = null; _mlCh = null } catch (e) {}
+    try { _kjRows = null; _kjAds = {}; _mlRows = null; _mlKol = null; _mlCh = null; _dgAt = 0 } catch (e) {}
     // (2026-09-16) รอให้ Supabase รีเฟรชสรุป (mv_sales_daily ฯลฯ) เสร็จจริงก่อน — เดิมยิงแล้วรอ 2 วิ ทำให้โหลดได้ของเก่า
     statusEl.textContent = 'กำลังรีเฟรชสรุปยอดในระบบ (อาจใช้ 30–90 วิ)...'
     try {
@@ -7432,6 +7482,7 @@ async function refreshDashboardData() {
     if (barWrap) barWrap.style.display = 'none'
     statusEl.innerHTML = '<span style="color:var(--green);">✅ โหลดข้อมูลใหม่แล้ว ' + new Date().toLocaleTimeString('th-TH') + '</span><br><span style="font-size:9px;color:var(--text3);">MV refresh ทำงานใน background — ข้อมูลอัพเดทเต็มภายใน 5 นาที</span>'
     if (currentPage === 'adperf') renderAdpAll(); else renderCurrentPage()
+    try { dgShow(currentPage) } catch (e) {}
   } catch (e) {
     console.error('refreshDashboardData failed:', e)
     statusEl.innerHTML = '<span style="color:var(--red);">❌ ' + (e.message || e) + '</span>'
