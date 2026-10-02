@@ -1,4 +1,5 @@
 // skudeep.js — หน้า "เจาะสินค้า" (v20260930g: คำบนจอใช้ Ads / Live ตามกฎคำยืม)
+// (v20261002a: ปรับคำอธิบาย ⓘ / หมายเหตุให้สั้นลง · หัวตาราง KOL สั้นลง)
 // (v20261001b: ค่า Ads / ยอดขายของงาน KOL นับตามวันที่ใช้เงิน + ยอดขายถอด VAT เท่าหน้า KOL · การ์ดกำไรระบุว่าเป็นตัวเลขบัญชี)
 // (v20261001a: งาน KOL ใช้ไฟล์งานทีม KOL ตามวันโพสต์ (RPC sku_deep อ่าน mv_kol_plan_jobs) · ใต้ค่าจ้างโชว์สถานะเบิกจ่ายจากฟอร์มเบิกเงิน)
 // (v20260930f: ตาราง KOL กระชับ — ไอคอนช่องทาง + ชื่อช่อง + ไอคอนเปิดโพสต์ · ประเภทเป็นป้ายใต้ชื่อ)
@@ -150,7 +151,7 @@
     const badges = (abc ? `<span class="skd-badge${abc === 'A' ? ' g' : ''}">สินค้ากลุ่ม ${abc}</span>` : '')
       + (trend != null ? `<span class="skd-badge ${trend <= -15 ? 'r' : trend >= 15 ? 'g' : ''}">${PL_TH_M(full[full.length - 1])} ${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend).toFixed(0)}% เทียบเฉลี่ย 3 เดือนก่อน</span>` : '')
       + (cover != null ? `<span class="skd-badge ${cover < minLt ? 'r' : cover > 180 ? 'o' : 'g'}">สต็อกพอขาย ~${fmt(cover)} วัน</span>` : '');
-    const info = fbeInfoIcon('skd-info-kpi', 'ยอดขาย / ชิ้น = ยอดจริงทุกช่องทาง (รวม VAT) ชุดเดียวกับหน้าภาพรวม / แนวโน้มสินค้า · Modern Trade = ยอดที่ห้างขายออก<br>หน้า MKT Tracking / Business Insight แสดงยอดถอด VAT (÷ 1.07) — ดูตัวเลขถอด VAT ใต้การ์ดนี้<br>ค่า Ads = เก็บเป็นรายเดือน จึงนับทั้งเดือนที่อยู่ในช่วงที่เลือก<br>ค่า KOL = งบในไฟล์งานทีม KOL ของงานที่โพสต์ในช่วงที่เลือก (ตามวันโพสต์ ชุดเดียวกับหน้า KOL / MKT Tracking)<br>ROAS Ads = ยอดขาย ÷ ค่า Ads · MER = ยอดขาย ÷ (ค่า Ads + ค่า KOL)<br>สต็อก = ของในคลังทุกสี/เบอร์ ณ วันนี้ (จาก Supply Chain)');
+    const info = fbeInfoIcon('skd-info-kpi', 'ยอดขาย / ชิ้น = ยอดจริงทุกช่องทาง รวม VAT (ตัวเลขถอด VAT อยู่ใต้การ์ด) · MT = ยอดที่ห้างขายออก<br>ค่า Ads = นับทั้งเดือนที่อยู่ในช่วง (เก็บเป็นรายเดือน)<br>ค่า KOL = งบไฟล์ทีม KOL ของงานที่โพสต์ในช่วง (ตรงกับหน้า KOL)<br>ROAS = ยอดขาย ÷ ค่า Ads · MER = ยอดขาย ÷ (ค่า Ads + ค่า KOL)<br>สต็อก = คงเหลือทุกสี/เบอร์ วันนี้');
     const kpi = (t, v, sub) => `<div class="card"><div class="card-title">${t}</div><div class="kpi-value">${v}</div>${sub ? `<div class="kpi-sub" style="display:block;">${sub}</div>` : ''}</div>`;
     // ค่าแอด เก็บเป็นรายเดือน → นับทั้งเดือนที่อยู่ในช่วง · ค่า KOL (2026-10-01) = งบไฟล์ทีม KOL ตามวันโพสต์ในช่วง
     const dFrom = String(d.from).slice(0, 10), dTo = String(d.to).slice(0, 10);
@@ -268,7 +269,7 @@
         <td><div style="display:flex;align-items:center;gap:2px;min-width:0;">${icon(x)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;">${name}</span>${post}</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">${typeChip(x.kol_type)}${real ? `<span style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">${esc(real)}</span>` : ''}</div></td>
         <td class="num"><b>${money(x.amount)}</b>${pay(x)}</td><td class="num">${m0(x.ads_spend)}</td><td class="num">${m0((+x.sales || 0) / VAT_DIV)}</td></tr>`; }).join('');
-    return card('งาน KOL ของสินค้านี้', `<div class="table-wrap"><table id="tblSkdKol"><thead><tr><th>วันโพสต์</th><th>ช่อง / KOL</th><th class="num">ค่าจ้าง</th><th class="num">ค่า Ads ที่ยิงงาน</th><th class="num">ยอดขายที่ผูกได้ (ถอด VAT)</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีงาน KOL ในช่วงนี้</td></tr>'}</tbody></table></div><div class="skd-note">จากไฟล์งานทีม KOL ชุดเดียวกับหน้า KOL / MKT Tracking · ค่าจ้าง = งานที่โพสต์ในช่วง · ค่า Ads / ยอดขาย = ที่เกิดในช่วง (ยอดขายถอด VAT) · ใต้ค่าจ้าง = สถานะเบิกจ่ายจากฟอร์มเบิกเงิน (ไม่บวกเข้ายอด) · ไอคอนหน้าชื่อ = ช่องทางที่ลงงาน · กดชื่อเปิดหน้าช่อง · ↗ เปิดโพสต์งาน</div>`);
+    return card('งาน KOL ของสินค้านี้', `<div class="table-wrap"><table id="tblSkdKol"><thead><tr><th>วันโพสต์</th><th>ช่อง / KOL</th><th class="num">ค่าจ้าง</th><th class="num">ค่า Ads</th><th class="num">ยอดขาย (ถอด VAT)</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีงาน KOL ในช่วงนี้</td></tr>'}</tbody></table></div><div class="skd-note">ตรงกับหน้า KOL · ค่าจ้าง = งานที่โพสต์ในช่วง · Ads / ยอดขาย = ที่เกิดในช่วง · ใต้ค่าจ้าง = สถานะเบิกจ่าย · กดชื่อเปิดช่อง · ↗ เปิดโพสต์</div>`);
   }
 
   function promoCard(d) {
