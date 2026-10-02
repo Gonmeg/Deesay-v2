@@ -78,6 +78,7 @@
     <div style="display:flex;gap:8px;align-items:center;"><span id="genAt" style="font-size:12px;color:var(--muted);"></span><button class="btn-ghost" id="refreshBtn">↻ รีเฟรช</button></div>
   </div>
   <div id="banners"></div>
+  <div id="dgChecks"></div>
   <div class="kpi-grid" id="kpis"></div>
   <div id="content"><div class="loading">กำลังโหลด...</div></div>
 </div></main>
@@ -86,6 +87,18 @@
 await Auth.ready
 const createClient = () => Auth.client   // ใช้ client ตัวเดียวกับ auth.js — ถ้ามี 2 ตัวจะแย่งกันต่ออายุ token แล้วเด้งไปหน้า login วนไปมา
 await Auth.require('health')   // เมฆเท่านั้น
+// (2026-10-02) Data Guard — ผลตรวจตัวเลขอัตโนมัติทุกชั่วโมง (RPC data_status)
+;(async () => {
+  try {
+    const { data, error } = await createClient().rpc('data_status'); if (error) throw error;
+    const ord = { fail: 0, warn: 1, ok: 2 }, ic = s => s === 'fail' ? '🔴' : s === 'warn' ? '🟠' : '🟢';
+    const list = (data || []).slice().sort((a, b) => (ord[a.status] - ord[b.status]) || String(a.area).localeCompare(String(b.area)));
+    const nb = list.filter(c => c.status !== 'ok').length, at = list.length ? new Date(Math.max(...list.map(c => +new Date(c.at)))) : null;
+    document.getElementById('dgChecks').innerHTML = `<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:0 0 16px;">
+      <div style="font-weight:700;margin-bottom:6px;">🛡️ ตรวจตัวเลขอัตโนมัติ — ${nb ? nb + ' จุดต้องดู' : 'ปกติทุกจุด'} <span style="font-weight:400;font-size:12px;color:var(--muted);">· ตรวจทุกชั่วโมงที่นาที :50 · ล่าสุด ${at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—'}</span></div>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">${list.map(c => `<tr style="border-top:1px solid var(--border);"><td style="padding:5px 6px;width:22px;">${ic(c.status)}</td><td style="padding:5px 6px;white-space:nowrap;">${c.title}</td><td style="padding:5px 6px;color:var(--muted);">${c.detail || ''}</td><td style="padding:5px 6px;white-space:nowrap;color:var(--muted);font-size:11px;">${c.status !== 'ok' ? 'ตั้งแต่ ' + new Date(c.since).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</td></tr>`).join('')}</table></div>`;
+  } catch (e) { console.warn('data_status', e) }
+})();
 document.getElementById('logoutBtn').onclick = () => Auth.signOut()
 if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme')
 document.getElementById('themeBtn').onclick = () => { document.body.classList.toggle('light-theme'); localStorage.setItem('deesay_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark') }
@@ -166,7 +179,11 @@ const JOB_DESC = {
   'ingest-facebook-reels-daily': 'Reels Facebook',
   'ingest-page-stats-daily': 'ยอดผู้ติดตาม/สถิติเพจ',
   'refresh-facebook-thumbnails-daily': 'รูปปกโพสต์ Facebook ที่หมดอายุ',
-  'sync-kol-posts': 'โพสต์ KOL จากชีททีม KOL → kol_posts', 'kol-cost-sync': 'ฟอร์มเบิกเงิน KOL → kol_cost_sheet (บัญชีลง) + kol_claims (ทุกใบเบิก ใช้เป็นสถานะเบิกจ่าย)', 'refresh-kol-plan': 'สรุปงาน KOL (mv_kol_plan_jobs) + KOL ใน MKT Tracking หลังซิงก์ไฟล์ทีม KOL',
+  'sync-kol-posts': 'โพสต์ KOL จากชีททีม KOL → kol_posts', 'kol-cost-sync': 'ฟอร์มเบิกเงิน KOL → kol_cost_sheet (บัญชีลง) + kol_claims (ทุกใบเบิก ใช้เป็นสถานะเบิกจ่าย)', 'refresh-kol-plan': 'สรุปงาน KOL ทั้งชุด (refresh_kol_views) หลังซิงก์ไฟล์ทีม KOL',
+  'run-data-checks': 'Data Guard: ตรวจข้อมูลครบ / สรุปไม่ค้าง / ตัวเลขข้ามหน้าเท่ากัน (ผลอยู่การ์ดด้านบน) · Ads Facebook ขาด → สั่งดึงซ้ำเอง',
+  'meta-ads-sync-2': 'Ads Facebook บัญชี Deesay Cosmetics (แยกรอบ ไม่ให้หมดเวลา)',
+  'meta-ads-sync-3': 'Ads Facebook บัญชีแป้งแก้มบุ๋ม · ลิปสักปาก · KOL · CPAS',
+  'meta-ads-sync-4': 'Ads Facebook บัญชีที่เหลือ (Makeup, กันแดด, PR, MT, Conversion เดิม)',
   'sync-inventory-log': 'log น้องแพ็ค (ของเข้า-ออก) → inventory_movements',
   'refresh-supply-views': 'คำนวณสต็อก / forecast / แผนเติมสต็อก',
   'refresh-mv-sales-daily': 'รีเฟรชยอดขายรายวัน',
