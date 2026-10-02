@@ -585,7 +585,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.02-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.02-j</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7344,6 +7344,23 @@ const DG_PAGE = {
   supply: ['stock_log', 'orders_']
 };
 const DG_GLOBAL = ['mv_stale', 'fb_bucket', 'rls'];   // กระทบตัวเลขทุกหน้า
+// (2026-10-02) แต่ละหน้าข้อมูลอัปเดตกี่โมง (เวลาที่ตัวเลขขึ้นหน้าเว็บจริง = หลังดึงข้อมูล + คำนวณสรุปเสร็จ) — แก้ตรงนี้ทุกครั้งที่เปลี่ยนรอบเวลา
+const DG_ORD = 'ออเดอร์ทุกชั่วโมงหลังทีมอัปโหลด';
+const DG_SCHED = {
+  home: `${DG_ORD} · Ads Facebook 08:45 / 20:45 · TikTok 09:50 / 13:50 · Shopee 08:15`,
+  overview: `${DG_ORD} · ตัวแทน / MT 03:45, 13:45`, channel: `${DG_ORD} · ตัวแทน / MT 03:45, 13:45`, promotarget: DG_ORD, geo: DG_ORD, skurev: DG_ORD,
+  skuanalysis: `${DG_ORD} · Ads / KOL ตามรอบของแต่ละช่องทาง · สต็อก 04:00`,
+  fbhub: DG_ORD, crm: DG_ORD, flow: DG_ORD, neverbought: DG_ORD, fbengage: 'วันละครั้ง 07:30',
+  fbads: '08:45 / 20:45',
+  tthub: DG_ORD, ttcontent: '07:30 / 19:30', ttkeyword: 'วันละครั้ง 06:00', ttads: '09:50 / 13:50', livesearch: 'Ads 09:50 / 13:50',
+  creatorperf: `${DG_ORD} · Ads 09:50 / 13:50 · ค่าจ้าง KOL 08:40 / 12:40 / 16:40 / 20:40`,
+  shhub: DG_ORD, shads: 'Product / Shop Ads 08:15 · Brand / Live / Meta / เหรียญ ช่วงเช้า · CPAS 08:45 / 20:45',
+  lzhub: `${DG_ORD} · Ads ทุก 2 ชม. (08:15–20:15)`, mthub: 'ไฟล์ห้าง 09:30 / 17:30',
+  kol: 'ไฟล์ทีม KOL 08:40 / 12:40 / 16:40 / 20:40 · Ads Facebook 08:45 / 20:45 · TikTok 09:50 / 13:50',
+  mktlive: `${DG_ORD} · ค่า Ads / KOL ตามรอบของแต่ละช่องทาง`, cost: 'เมื่ออัปโหลดไฟล์บัญชีปิดเดือน',
+  adperf: 'Facebook 08:45 / 20:45 · TikTok 09:50 / 13:50 · Shopee 08:15 · Lazada ทุก 2 ชม.',
+  supply: 'สต็อก 03:30 / 13:30 / 18:30 · แผนสั่งซื้อคำนวณ 04:00'
+};
 async function loadDg(force) {
   if (_dg && !force && Date.now() - _dgAt < 600000) return _dg;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
@@ -7353,144 +7370,80 @@ async function loadDg(force) {
 }
 function dgShow(page) {
   const el = document.getElementById('dgBanner'); if (!el) return;
-  const keys = DG_PAGE[page]; if (!keys) { el.innerHTML = ''; return; }
+  const keys = DG_PAGE[page], sched = DG_SCHED[page];
+  const schedTxt = sched ? `🕐 อัปเดต ${sched}` : '';
+  if (!keys) { el.innerHTML = schedTxt ? `<div class="dg-ok">${schedTxt}</div>` : ''; return; }
   loadDg().then(list => {
     if (currentPage !== page) return;
     const hit = c => DG_GLOBAL.includes(c.k) || keys.some(k => c.k === k || (k.endsWith('_') && c.k.startsWith(k)));
     const mine = (list || []).filter(hit), bad = mine.filter(c => c.status !== 'ok');
     const at = mine.length ? new Date(Math.max(...mine.map(c => +new Date(c.at)))) : null;
     const atTxt = at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—';
-    if (!bad.length) { el.innerHTML = `<div class="dg-ok">✓ ข้อมูลที่หน้านี้ใช้เข้าครบตามเวลา · ตรวจล่าสุด ${atTxt}</div>`; return; }
+    if (!bad.length) { el.innerHTML = `<div class="dg-ok">${schedTxt ? schedTxt + ' · ' : ''}✓ ข้อมูลครบ (ตรวจ ${atTxt})</div>`; return; }
     const red = bad.some(c => c.status === 'fail');
     el.innerHTML = `<div class="dg-bar ${red ? 'dg-red' : 'dg-orange'}"><b>${red ? '⚠️ ตัวเลขในหน้านี้อาจยังไม่ครบ' : 'ℹ️ ข้อมูลบางส่วนยังไม่เข้า'}</b>`
       + bad.map(c => `<div>• ${c.title} — ${c.detail || ''}</div>`).join('')
-      + `<div class="dg-at">ระบบตรวจอัตโนมัติทุกชั่วโมง · ล่าสุด ${atTxt}</div></div>`;
-  }).catch(() => { el.innerHTML = ''; });
+      + `<div class="dg-at">${schedTxt ? schedTxt + ' · ' : ''}ระบบตรวจอัตโนมัติทุกชั่วโมง · ล่าสุด ${atTxt}</div></div>`;
+  }).catch(() => { el.innerHTML = schedTxt ? `<div class="dg-ok">${schedTxt}</div>` : ''; });
 }
 { const _sp = showPage; showPage = function (page) { const r = _sp.apply(this, arguments); try { dgShow(page); } catch (e) {} return r; }; }
 setTimeout(() => { try { dgShow(currentPage); } catch (e) {} }, 2500);   // หน้าแรกที่เปิดตอนโหลด
 setInterval(() => { try { dgShow(currentPage); } catch (e) {} }, 600000);   // อัปเดตทุก 10 นาที
 
 async function refreshDashboardData() {
-  // ล้างแคชฝั่ง TikTok Ads + ค่าจ้าง KOL ด้วย (ตารางในหน้า Creator / KOL) ให้โหลดใหม่รอบถัดไป
-  _kolPostsLoaded = false; ttaLastRange = null;
-  idbSet(KOL_CACHE_KEY, null);
-  if (currentPage === 'kol' || currentPage === 'creatorperf' || currentPage === 'ttads') { const f = getDateValue('From'), t = getDateValue('To'); idbSet('tta:' + f + '|' + t, null); idbSet('cptta:' + f + '|' + t, null); kolOrders.rangeKey = null; }
-  cpTta.rangeKey = null;
-  salesSum.rangeKey = null;
-  cpCreator.rangeKey = null; freeSample.rangeKey = null; _filterOptions = null; _creatorListLoaded = false;
-  _fbOrdersLoaded = false; idbSet(FB_ORDERS_CACHE_KEY, null);
-  { const f = getDateValue('From'), t = getDateValue('To'); idbSet('creator:' + f + '|' + t, null); }
-  { const f = getDateValue('From'), t = getDateValue('To'); const p = getPrevPeriodRange(f, t); idbSet('sales:' + (p.from || f) + '|' + t, null); }
-  const btn = document.getElementById('btnRefreshMV')
-  const statusEl = document.getElementById('refreshMVStatus')
-  const barWrap = document.getElementById('refreshMVBarWrap')
-  const bar = document.getElementById('refreshMVBar')
-  btn.disabled = true
-  btn.textContent = '⏳ กำลังรีเฟรช...'
-  statusEl.textContent = ''
-  if (barWrap) barWrap.style.display = 'block'
-  if (bar) bar.style.width = '0%'
-  let refreshLoaded = 0
-  const refreshTotalSteps = 6
-  const refreshTick = (label) => (r) => {
-    refreshLoaded++
-    const pct = Math.round(refreshLoaded/refreshTotalSteps*100)
-    if (bar) bar.style.width = pct + '%'
-    statusEl.textContent = `โหลด${label}แล้ว (${refreshLoaded}/${refreshTotalSteps}) — ${pct}%`
-    return r
-  }
+  // (2026-10-02) รีเฟรช "ทุกหน้า" ในปุ่มเดียว:
+  //  ① ดึงทุกชีท/ไฟล์ที่ทีมกรอกเอง (ห้าง MT · ออเดอร์ตัวแทน/MT · ทีม KOL · ฟอร์มเบิก · Lazada Ads · Shopee 24hr · Log สต็อก · PO)
+  //  ② คำนวณตารางสรุปทุกตัวของทุกหน้า เรียงตามลำดับที่ต้องใช้กัน (ตัวที่ข้อมูลไม่เปลี่ยนระบบข้ามเอง)
+  //  ③ Data Guard ตรวจตัวเลขทุกหน้า + ล้างแคชฝั่งระบบ — ถ้าข้อมูลจาก API (Ads Facebook / TikTok / Shopee) ขาด ระบบสั่งดึงซ้ำเอง
+  //  ④ ล้างแคชในเครื่องของทุกหน้า แล้วโหลดหน้าใหม่ทั้งหมด กลับมาที่หน้าเดิม
+  // ข้อมูลจาก API ดึงเองตามรอบอยู่แล้ว ไม่ดึงซ้ำทุกครั้งที่กด (ช้าและเปลืองโควตา) — ดึงซ้ำเฉพาะตอนตรวจเจอว่าขาด
+  const btn = document.getElementById('btnRefreshMV'), statusEl = document.getElementById('refreshMVStatus');
+  const barWrap = document.getElementById('refreshMVBarWrap'), bar = document.getElementById('refreshMVBar');
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const setBar = (pct, txt) => { if (bar) bar.style.width = Math.round(pct) + '%'; if (txt) statusEl.textContent = txt; };
+  btn.disabled = true; btn.textContent = '⏳ กำลังรีเฟรชทุกหน้า...'; statusEl.textContent = ''; if (barWrap) barWrap.style.display = 'block'; setBar(0);
   try {
-    const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }
-
-    // (2026-09-30) ดึงไฟล์ยอดขายห้าง (Modern Trade) ล่าสุดก่อน — เดิมไฟล์ห้างดึงแค่ 09:30 / 17:30 กดรีเฟรชแล้วยอดที่เพิ่งเติมไม่มา
-    statusEl.textContent = 'กำลังดึงยอด Modern Trade จากไฟล์ห้าง...'
-    try {
-      const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 120000)
-      const r2 = await fetch(`${window.SUPABASE_URL}/functions/v1/mt-sellout-sync?norefresh=1`, { method: 'POST', headers, body: '{}', signal: c2.signal })   // สรุปยอดรีเฟรชต่อด้านล่าง
-      clearTimeout(t2)
-      if (!r2.ok) console.warn('mt-sellout-sync:', r2.status, await r2.text().catch(() => ''))
-    } catch (e) { console.warn('mt-sellout-sync:', e) }
-    try { _mtRows = null } catch (e) {}
-    // (2026-10-02) ดึงไฟล์งานทีม KOL ล่าสุด (เดิมดึงแค่ 08:25 / 12:25 / 16:25 / 20:25 / 03:25 — แก้ไฟล์แล้วกดรีเฟรชข้อมูลไม่เปลี่ยน)
-    statusEl.textContent = 'กำลังดึงไฟล์งานทีม KOL...'
-    try {
-      const c3 = new AbortController(); const t3 = setTimeout(() => c3.abort(), 120000)
-      const r3 = await fetch(`${window.SUPABASE_URL}/functions/v1/sync-kol-posts`, { method: 'POST', headers, body: '{}', signal: c3.signal })
-      clearTimeout(t3)
-      if (!r3.ok) console.warn('sync-kol-posts:', r3.status, await r3.text().catch(() => ''))
-      const r4 = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_kol_views`, { method: 'POST', headers, body: '{}' })
-      if (!r4.ok) console.warn('refresh_kol_views:', r4.status, await r4.text().catch(() => ''))
-    } catch (e) { console.warn('sync-kol-posts:', e) }
-    try { _kjRows = null; _kjAds = {}; _mlRows = null; _mlKol = null; _mlCh = null; _dgAt = 0 } catch (e) {}
-    // (2026-09-16) รอให้ Supabase รีเฟรชสรุป (mv_sales_daily ฯลฯ) เสร็จจริงก่อน — เดิมยิงแล้วรอ 2 วิ ทำให้โหลดได้ของเก่า
-    statusEl.textContent = 'กำลังรีเฟรชสรุปยอดในระบบ (อาจใช้ 30–90 วิ)...'
-    try {
-      const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 120000)
-      const rr = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_all_views`, { method: 'POST', headers, body: '{}', signal: ctrl.signal })
-      clearTimeout(tm)
-      if (!rr.ok) { const t = await rr.text().catch(() => ''); console.warn('refresh_all_views:', rr.status, t); statusEl.textContent = `รีเฟรชสรุปไม่สำเร็จ (${rr.status}) — โหลดข้อมูลตามที่ระบบมีอยู่` }
-    } catch (e) { console.warn('refresh_all_views:', e); statusEl.textContent = 'รีเฟรชสรุปใช้เวลานานเกิน — โหลดข้อมูลตามที่ระบบมีอยู่ (ลองใหม่อีกครั้งใน 1 นาที)' }
-
-    const [orders, promoMonthly, skuParentMonthly, provinceMonthly, skuRevRows, dailyChannelSummary] = await Promise.all([
-      Promise.resolve([]).then(refreshTick('ออเดอร์')), // เฟส 4: ไม่โหลด orders ทั้งก้อนอีก
-      fetchPromoMonthly().then(refreshTick('โปรโมชั่นรายเดือน')),
-      fetchSkuParentMonthly().then(refreshTick('SKU รายเดือน')),
-      fetchProvinceMonthly().then(refreshTick('ยอดขายรายจังหวัด')),
-      Promise.resolve([]).then(refreshTick('รายการ SKU ต่อออเดอร์')), // เฟส 3: ไม่โหลด sku_revenue 278k แถวอีก (หน้า SKU/creator ใช้ MV+RPC)
-      Promise.resolve([]).then(refreshTick('สรุปยอดรายวัน')) // เฟส 1: หน้าภาพรวมใช้ sales_summary() แล้ว ไม่ต้องโหลด MV 53k แถว
-    ])
-    dailyChannelSummaryAll = dailyChannelSummary;
-    allData = orders.filter(r => !isExcludedRow(r))
-    _fbCustomerCache = null // ข้อมูลใหม่มา ต้องสร้าง cache ลูกค้าใหม่รอบหน้าที่เข้าหน้านี้
-    window._promoMonthlyCache = promoMonthly
-    window._skuParentMonthlyCache = skuParentMonthly
-    window._provinceMonthlyCache = provinceMonthly
-    // ตัวอย่าง/รีวิวที่ส่งฟรี ไม่ใช่ยอดขายจริง — รวม 2 แหล่ง:
-    // (1) TikTok: ออเดอร์ revenue=0 ที่ไม่ใช่ Cancel/Return
-    // (2) Facebook: sub_channel = "รีวิว ฟีมิคส์" ทั้งหมด (ถูกตัดออกจาก allData ไปแล้วโดย isExcludedRow ตั้งแต่ต้น)
-    // ตัดออกจาก "จำนวนชิ้น" ทุกที่ที่ใช้ skuRevenueAll แต่เก็บแยกไว้ต่างหากเพื่อโชว์เป็นตัวเลขของตัวเอง
-    const tiktokFreeSampleOrderIds = new Set(
-      allData.filter(r => r.channel === 'TikTok' && parseFloat(r.revenue) === 0 &&
-        r.cancel_return_type !== 'Cancel' && r.cancel_return_type !== 'Return/Refund').map(r => r.order_id)
-    )
-    const skuRevRaw = skuRevRows; // ยังไม่ตัด isExcludedRow ออก เพราะต้องดึงแถวรีวิว ฟีมิคส์ (Facebook) มาก่อน
-    freeSampleRows = skuRevRaw.filter(r =>
-      (r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)) ||
-      (r.channel === 'Facebook' && r.sub_channel === 'รีวิว ฟีมิคส์')
-    )
-    skuRevenueAll = skuRevRaw.filter(r => !isExcludedRow(r) && !(r.channel === 'TikTok' && tiktokFreeSampleOrderIds.has(r.order_id)))
-    orderIdToPromo = {}
-    allData.forEach(r => { if (r.order_id && !orderIdToPromo[r.order_id]) orderIdToPromo[r.order_id] = r.sku_promotion || '' })
-    const from = getDateValue('From'), to = getDateValue('To')
-    filteredData = allData.filter(r => r.date && r.date >= from && r.date <= to && shouldIncludeRow(r))
-    const lastOrderDate = await fetchLastOrderDate()
-    document.getElementById('lastUpdate').textContent = 'ข้อมูลล่าสุด: ' + (lastOrderDate || '—')
-    idbSet(CACHE_KEY, {
-      allData, productsMap, provinceRegionMap, promotionsMap, lastOrderDate,
-      promoMonthlyCache: promoMonthly, skuParentMonthlyCache: skuParentMonthly, provinceMonthlyCache: provinceMonthly,
-      skuRevenueAll, freeSampleRows, cachedAt: Date.now()
-    })
-    updateCacheStatus('fresh')
-
-    const monthSelFrom = document.getElementById('filterMonthFrom')
-    const monthSelTo = document.getElementById('filterMonthTo')
-    if (monthSelFrom) { monthSelFrom.innerHTML = '<option value="">— เดือน —</option>'; }
-    if (monthSelTo) { monthSelTo.innerHTML = '<option value="">— เดือน —</option>'; }
-    populateMonthFilter()
-
-    if (barWrap) barWrap.style.display = 'none'
-    statusEl.innerHTML = '<span style="color:var(--green);">✅ โหลดข้อมูลใหม่แล้ว ' + new Date().toLocaleTimeString('th-TH') + '</span><br><span style="font-size:9px;color:var(--text3);">MV refresh ทำงานใน background — ข้อมูลอัพเดทเต็มภายใน 5 นาที</span>'
-    if (currentPage === 'adperf') renderAdpAll(); else renderCurrentPage()
-    try { dgShow(currentPage) } catch (e) {}
+    // ①
+    const PULLS = [['mt-sellout-sync?norefresh=1', 'ยอดห้าง Modern Trade'], ['sync-dealer-orders', 'ออเดอร์ตัวแทน / MT'], ['sync-kol-posts', 'ไฟล์งานทีม KOL'],
+      ['kol-cost-sync', 'ฟอร์มเบิกเงิน KOL'], ['lazada-ads-sync', 'ชีท Lazada Ads'], ['shopee24-sheet-sync', 'ชีท Shopee 24hr'], ['sync-inventory-log', 'Log สต็อก'], ['sync-po-sheet', 'ชีท PO']];
+    const failed = []; let done = 0;
+    setBar(2, `ดึงข้อมูลที่ทีมกรอก 0/${PULLS.length}...`);
+    await Promise.all(PULLS.map(async ([fn, label]) => {
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 150000);
+      try { const r = await fetch(`${window.SUPABASE_URL}/functions/v1/${fn}`, { method: 'POST', headers, body: '{}', signal: c.signal }); if (!r.ok) { failed.push(label); console.warn(fn, r.status, await r.text().catch(() => '')); } }
+      catch (e) { failed.push(label); console.warn(fn, e); }
+      finally { clearTimeout(t); done++; setBar(2 + done / PULLS.length * 33, `ดึงข้อมูลที่ทีมกรอก ${done}/${PULLS.length}...`); }
+    }));
+    // ②
+    let list = [];
+    try { const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/mv_refresh_order`, { method: 'POST', headers, body: '{}' }); if (r.ok) list = await r.json() || []; } catch (e) { console.warn('mv_refresh_order', e); }
+    const BATCH = 3;
+    for (let i = 0; i < list.length; i += BATCH) {
+      setBar(35 + i / Math.max(1, list.length) * 55, `คำนวณสรุปข้อมูลทุกหน้า ${Math.min(i + BATCH, list.length)}/${list.length}...`);
+      try {
+        const c = new AbortController(), t = setTimeout(() => c.abort(), 180000);
+        const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_mv_batch`, { method: 'POST', headers, body: JSON.stringify({ p_names: list.slice(i, i + BATCH) }), signal: c.signal });
+        clearTimeout(t);
+        if (!r.ok) console.warn('refresh_mv_batch', r.status, await r.text().catch(() => ''));
+      } catch (e) { console.warn('refresh_mv_batch', e); }
+    }
+    // ③
+    setBar(92, 'ตรวจตัวเลขทุกหน้า...');
+    try { await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_finish`, { method: 'POST', headers, body: '{}' }); } catch (e) { console.warn('refresh_finish', e); }
+    // ④
+    setBar(98, 'ล้างแคชในเครื่อง แล้วโหลดใหม่ทุกหน้า...');
+    await idbClearAll();
+    try { sessionStorage.setItem('deesay_after_refresh', currentPage); sessionStorage.setItem('deesay_refresh_done', JSON.stringify({ at: Date.now(), failed })); } catch (e) {}
+    location.reload();
   } catch (e) {
-    console.error('refreshDashboardData failed:', e)
-    statusEl.innerHTML = '<span style="color:var(--red);">❌ ' + (e.message || e) + '</span>'
-  } finally {
-    btn.disabled = false
-    btn.textContent = '🔄 รีเฟรชข้อมูล Dashboard'
-    if (barWrap) barWrap.style.display = 'none'
+    console.error('refreshDashboardData failed:', e);
+    statusEl.innerHTML = '<span style="color:var(--red);">❌ ' + (e.message || e) + '</span>';
+    btn.disabled = false; btn.textContent = '🔄 รีเฟรชข้อมูล Dashboard'; if (barWrap) barWrap.style.display = 'none';
   }
+}
+// ล้างแคชในเครื่องทั้งหมด (ทุกหน้า) — หน้าจะโหลดข้อมูลสดใหม่หมด
+async function idbClearAll() {
+  try { const db = await idbOpen(); await new Promise(res => { const tx = db.transaction(IDB_STORE, 'readwrite'); tx.objectStore(IDB_STORE).clear(); tx.oncomplete = res; tx.onerror = res; tx.onabort = res; }); } catch (e) { console.warn('idbClearAll', e); }
 }
 
 // ===== COST PAGE =====
@@ -10597,7 +10550,13 @@ Auth.require('dashboard').then(p => {
   applyPermissions(p);
   loadWhatsNew();
   // (2026-09-29) ทุกคนเปิดมาเจอ "หน้าแรก" ทันที — ไม่ต้องรอข้อมูลหน้าภาพรวมโหลดเสร็จ (หน้าแรกดึงข้อมูลของตัวเอง)
-  if (Auth.canPage('home')) showPage('home', null, document.querySelector(`.nav-item[onclick*="'home'"]`));
+  // (2026-10-02) หลังกด "รีเฟรชข้อมูล Dashboard" หน้าโหลดใหม่ทั้งหมด → กลับมาหน้าเดิม + บอกผลรีเฟรช
+  let _back = null, _rdone = null;
+  try { _back = sessionStorage.getItem('deesay_after_refresh'); _rdone = JSON.parse(sessionStorage.getItem('deesay_refresh_done') || 'null'); sessionStorage.removeItem('deesay_after_refresh'); sessionStorage.removeItem('deesay_refresh_done'); } catch (e) {}
+  if (_back && _back !== 'home' && document.getElementById('page-' + _back) && Auth.canPage(_back)) showPage(_back, null, document.querySelector(`.nav-item[onclick*="'${_back}'"]`));
+  else if (Auth.canPage('home')) showPage('home', null, document.querySelector(`.nav-item[onclick*="'home'"]`));
+  if (_rdone && _rdone.at) { const el = document.getElementById('refreshMVStatus'); if (el) el.innerHTML = '<span style="color:var(--green);">✅ รีเฟรชครบทุกหน้าแล้ว ' + new Date(_rdone.at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + '</span>'
+    + ((_rdone.failed || []).length ? '<br><span style="font-size:10px;color:var(--orange,#f59e0b);">ดึงไม่สำเร็จ: ' + _rdone.failed.join(', ') + ' — ใช้ข้อมูลรอบก่อน</span>' : ''); }
   const r = init();
   // ถ้าไม่มีสิทธิ์หน้าภาพรวม → เปิดหน้าแรกที่มีสิทธิ์แทน
   if (!Auth.canPage('home') && !Auth.canPage('overview')) { const first = pageOrder.find(id => Auth.canPage(id)); if (first) Promise.resolve(r).then(() => showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`))); }
