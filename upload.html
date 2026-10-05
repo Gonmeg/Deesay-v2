@@ -177,9 +177,39 @@
     .btn-sync:hover { border-color: var(--accent); color: var(--accent2); background: var(--accent-soft); }
     .btn-sync:disabled { background: var(--surface2); color: var(--muted2); border-color: var(--border); cursor: not-allowed; }
     .promo-sync-result { font-size: 0.72rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
-  </style>
+  
+    /* (2026-10-05) จัดหน้าใหม่: กว้างเต็มจอขึ้น · หัวหน้า + โหมดแถวเดียว · แถบข้อมูลบรรทัดเดียว · เครื่องมือพับเก็บได้ */
+    main { padding: 20px 24px 48px; }
+    .shell { max-width: 1680px; gap: 20px; }
+    .shell-sidebar { width: 340px; }
+    .page-header { align-items: center; margin-bottom: 12px; }
+    .page-header .mode-toggle { margin-bottom: 0; }
+    .ph-text h1 { margin-bottom: 2px; }
+    .info-line { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.74rem; color: var(--muted); margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+    .info-line b { color: var(--text); font-weight: 600; margin-right: 4px; }
+    .info-line .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--success); margin-right: 6px; vertical-align: 1px; }
+    .info-line .dot.manual { background: var(--accent); }
+    .step-track { margin-bottom: 14px; padding: 10px 16px; }
+    .card { padding: 20px 22px; }
+    .summary-grid, .success-stats { gap: 8px; margin-bottom: 12px; }
+    .stat-box, .success-stat { padding: 10px 12px !important; }
+    .stat-num, .success-stat-num { font-size: 1.25rem !important; }
+    .preview-wrap { max-height: 280px; overflow: auto; }
+    .sidebar-heading { font-size: 0.78rem; letter-spacing: 0; text-transform: none; color: var(--muted); font-weight: 600; margin: 2px 0 8px 2px; }
+    .history-card { padding: 12px 16px; }
+    .tool-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; box-shadow: var(--shadow); }
+    .tool-card > summary { cursor: pointer; list-style: none; padding: 11px 14px; font-size: 0.8rem; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
+    .tool-card > summary::-webkit-details-marker { display: none; }
+    .tool-card > summary::after { content: '▾'; color: var(--muted2); font-size: 0.8rem; }
+    .tool-card[open] > summary::after { content: '▴'; }
+    .tool-card.danger > summary { color: #dc2626; }
+    .tool-card .tool-body { padding: 0 14px 14px; }
+    .tool-card .history-sub { margin-bottom: 4px; }
+    @media (max-width: 1000px) { .page-header { align-items: flex-start; } }
+</style>
 </head>
 <body>
+<script>/* (2026-10-05) ใส่ธีมสว่างทันทีก่อนหน้าแสดงผล — กันจอดำแวบตอนเปิดหน้า */try{if(localStorage.getItem('deesay_theme')==='light')document.body.classList.add('light-theme')}catch(e){}</script>
 <nav>
   <div class="nav-logo">DEESAY<small>UPLOAD</small></div>
   <div class="nav-right">
@@ -192,18 +222,19 @@
 <div class="shell">
 <div class="shell-main">
   <div class="page-header">
-    <h1 id="pageTitle">Upload ข้อมูลยอดขาย</h1>
-    <p id="pageDesc">นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
-  </div>
-  <div class="auto-strip">
-          <span class="auto-chip"><span class="dot"></span><b>Shopee</b> ออเดอร์เข้าอัตโนมัติผ่าน API ทุก 10 นาที — อัปโหลดเฉพาะไฟล์บัญชีปิดเดือน</span>
-          <span class="auto-chip"><span class="dot"></span><b>ค่าแอด</b> Facebook · TikTok · Shopee ดึงจาก API เอง ไม่ต้องอัปโหลด</span>
-          <span class="auto-chip"><span class="dot manual"></span><b>ต้องอัปโหลด</b> ออเดอร์ Facebook · TikTok · Lazada รายวัน + ไฟล์รับเงิน + ต้นทุนสินค้า</span>
-        </div>
-        <div class="mode-toggle">
+    <div class="ph-text">
+      <h1 id="pageTitle">Upload ข้อมูลยอดขาย</h1>
+      <p id="pageDesc">นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
+    </div>
+    <div class="mode-toggle">
     <button class="mode-btn active" id="modeBtnOrder">📦 อัพคำสั่งซื้อ</button>
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
     <button class="mode-btn" id="modeBtnCost">📊 อัพต้นทุนสินค้า</button>
+  </div>
+  </div>
+  <div class="info-line">
+    <span><span class="dot manual"></span><b>ต้องอัปโหลด</b> ออเดอร์ Facebook / TikTok / Shopee / Lazada ทุกวัน, ไฟล์รับเงินเมื่อได้รับ, ไฟล์บัญชีปิดเดือน, ต้นทุนสินค้า</span>
+    <span><span class="dot"></span><b>ระบบดึงเอง</b> ค่า Ads ทุกช่องทาง, ยอดตัวแทน / MT (03:45 และ 13:45)</span>
   </div>
   <div id="stepWizard">
   <div class="step-track">
@@ -225,7 +256,7 @@
               <option value="">— เลือก —</option>
               <option value="Facebook">Facebook</option>
               <option value="TikTok">TikTok</option>
-              <option value="Shopee">Shopee (ออเดอร์อัตโนมัติ — อัปโหลดเฉพาะปิดเดือน)</option>
+              <option value="Shopee">Shopee</option>
               <option value="Lazada">Lazada</option>
               <option value="ตัวแทน/MT">🏪 ตัวแทน / Modern Trade</option>
             </select>
@@ -320,32 +351,16 @@
 
 </div><!-- end shell-main -->
 
-<div class="shell-sidebar"><div class="sidebar-heading">🧰 เครื่องมือ</div>
-  <div class="promo-sync-card" style="display:none;">
-    <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
-    <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
-    <button class="btn-sync" id="btnSyncPromotions" style="margin-top:10px;">🔄 Sync Promotions</button>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">🔁 Re-Match โปรโมชั่น (แก้ไขย้อนหลัง)</div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-        <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">ตั้งแต่</span>
-        <input type="date" id="backfillFrom" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
-        <span style="font-size:0.72rem;color:var(--muted);">ถึง</span>
-        <input type="date" id="backfillTo" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
-      </div>
-      <button class="btn-sync" id="btnBackfillMatching" style="margin-top:0;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔁 Re-Match ออเดอร์ในช่วงนี้</button>
-    </div>
-    <div style="margin-top:8px;">
-      <div class="promo-sync-result" id="promoSyncResult"></div>
-      <div class="promo-sync-result" id="backfillResult"></div>
-    </div>
+<div class="shell-sidebar">
+<div class="sidebar-heading">ประวัติการอัปโหลด</div>
+<div class="history-card">
+    <div class="history-title">30 วันล่าสุด</div>
+    <div class="history-sub">กด 🗑 เพื่อลบรอบที่อัปผิด แล้วอัปโหลดใหม่</div>
+    <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
   </div>
-  <div class="promo-sync-card" style="margin-top:12px;">
-    <div class="history-title">ยอดขาย ตัวแทน / MT — อัตโนมัติแล้ว</div>
-    <div class="history-sub">ระบบซิงค์จากชีท "ยอด" เองทุกวัน 03:45 และ 13:45 น. ไม่ต้องกดปุ่มอีก (ดูสถานะได้ที่หน้า health)</div>
-  </div>
-  <div class="promo-sync-card" style="margin-top:12px;border:1px solid rgba(239,68,68,0.25);">
-    <div class="history-title" style="color:#f87171;">⚠️ ลบข้อมูลตามช่องทาง/เดือน</div>
+<div class="sidebar-heading" style="margin-top:20px;">เครื่องมือ</div>
+<details class="tool-card danger"><summary>🗑 ลบข้อมูลตามช่องทาง / เดือน</summary><div class="tool-body">
+    
     <div class="history-sub">ใช้ก่อนอัพโหลดไฟล์ใหม่ทดแทนของเดิม</div>
     <div style="display:flex;gap:6px;margin-top:10px;">
       <select id="bulkDeleteChannel" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;">
@@ -360,9 +375,9 @@
     </div>
     <button class="btn-sync" id="btnBulkDeleteCheck" style="margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔍 เช็คจำนวนข้อมูล</button>
     <div id="bulkDeleteResult" style="margin-top:8px;"></div>
-  </div>
-  <div class="promo-sync-card" style="margin-top:12px;border:1px solid rgba(99,102,241,0.25);">
-    <div class="history-title" style="color:#818cf8;">📎 อัพเดต Order Channel / Creator (TikTok)</div>
+  </div></details>
+<details class="tool-card "><summary>📎 อัปเดต Order Channel / Creator (TikTok)</summary><div class="tool-body">
+    
     <div class="history-sub">อัพเดตแค่ 2 คอลัมน์นี้ ไม่กระทบยอดขาย/SKU ที่มีอยู่แล้ว — ใช้ไฟล์คำสั่งซื้อ TikTok ปกติได้เลย</div>
     <input type="file" id="attrFileInput" accept=".xlsx,.xls,.csv" style="margin-top:10px;width:100%;font-size:0.72rem;color:var(--muted);">
     <div id="attrMapArea" style="display:none;margin-top:10px;">
@@ -386,12 +401,25 @@
       <button class="btn-sync" id="btnAttrUpdate" style="margin-top:10px;background:var(--accent);color:var(--on-accent);">📎 อัพเดตข้อมูล</button>
     </div>
     <div id="attrResult" style="margin-top:8px;"></div>
-  </div>
-  <div class="sidebar-heading" style="margin-top:22px;">🕘 ประวัติการอัปโหลด</div>
-      <div class="history-card">
-    <div class="history-title">30 วันล่าสุด</div>
-    <div class="history-sub">30 วันล่าสุด — กด 🗑 เพื่อลบและอัพโหลดใหม่</div>
-    <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
+  </div></details>
+<div class="promo-sync-card" style="display:none;">
+    <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
+    <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
+    <button class="btn-sync" id="btnSyncPromotions" style="margin-top:10px;">🔄 Sync Promotions</button>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">🔁 Re-Match โปรโมชั่น (แก้ไขย้อนหลัง)</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">ตั้งแต่</span>
+        <input type="date" id="backfillFrom" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
+        <span style="font-size:0.72rem;color:var(--muted);">ถึง</span>
+        <input type="date" id="backfillTo" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:0.78rem;min-width:0;">
+      </div>
+      <button class="btn-sync" id="btnBackfillMatching" style="margin-top:0;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔁 Re-Match ออเดอร์ในช่วงนี้</button>
+    </div>
+    <div style="margin-top:8px;">
+      <div class="promo-sync-result" id="promoSyncResult"></div>
+      <div class="promo-sync-result" id="backfillResult"></div>
+    </div>
   </div>
 </div>
 
@@ -2014,7 +2042,9 @@ function readExcel(file) {
 
 function parseDateRaw(v) {
   if (v === null || v === undefined || v === '') return null
-  if (v instanceof Date) { return v.getUTCFullYear() + '-' + String(v.getUTCMonth()+1).padStart(2,'0') + '-' + String(v.getUTCDate()).padStart(2,'0') }
+  // (2026-10-05) แก้บั๊กวันที่เลื่อนถอยหลัง 1 วัน: ช่องที่ Excel เก็บเป็นวันที่จริง (เช่น 2026-09-01 00:00:00) SheetJS ให้มาเป็นเวลาไทยของเครื่อง
+  // เดิมอ่านแบบ UTC → ออเดอร์ก่อน 07:00 กลายเป็นวันก่อนหน้า · ตอนนี้อ่านเวลาเครื่อง (ไทย) และปัดเศษวินาทีที่คลาดจากการแปลงวันที่ของ SheetJS
+  if (v instanceof Date) { const d = new Date(Math.round(v.getTime() / 60000) * 60000); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') }
   if (typeof v === 'number') { const d = new Date(Math.round((v-25569)*86400*1000)); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0') }
   const s = String(v).trim()
   if (!s || s === '-') return null
@@ -2038,7 +2068,7 @@ function parseDate(v) {
 // ไม่กระทบ query/MV เดิมที่ใช้ date อยู่แล้วทั่วระบบ
 function parseDateTime(v) {
   if (v === null || v === undefined || v === '') return null
-  if (v instanceof Date) return v.toISOString()
+  if (v instanceof Date) { const d = new Date(Math.round(v.getTime() / 60000) * 60000); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:00` }   // (2026-10-05) เวลาไทยแบบเดียวกับช่องที่เป็นข้อความ
   if (typeof v === 'number') { const d = new Date(Math.round((v-25569)*86400*1000)); return d.toISOString() }
   const s = String(v).trim()
   if (!s || s === '-') return null
