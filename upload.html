@@ -206,6 +206,30 @@
     .tool-card .tool-body { padding: 0 14px 14px; }
     .tool-card .history-sub { margin-bottom: 4px; }
     @media (max-width: 1000px) { .page-header { align-items: flex-start; } }
+
+    /* (2026-10-05 รอบ 2) ช่องวางไฟล์กะทัดรัด · โหมดลบข้อมูล · ประวัติแบ่งหน้า */
+    .step1-grid { grid-template-columns: 240px 1fr; }
+    .drop-label { display: grid !important; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 14px; row-gap: 2px; align-items: center; justify-items: start; padding: 14px 18px !important; min-height: 0 !important; text-align: left !important; }
+    .drop-label .drop-icon { grid-row: 1 / 3; grid-column: 1; font-size: 1.5rem !important; margin: 0; }
+    .drop-label .drop-main { grid-row: 1; grid-column: 2; }
+    .drop-label .drop-sub { grid-row: 2; grid-column: 2; margin-top: 0; font-family: inherit; }
+    .drop-label::after { content: 'เลือกไฟล์'; grid-row: 1 / 3; grid-column: 3; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface); color: var(--text); font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+    .drop-label:hover::after { border-color: var(--accent); color: var(--accent2); }
+    .del-form { display: grid; grid-template-columns: minmax(180px, 240px) minmax(160px, 200px) auto; gap: 14px; align-items: end; margin: 6px 0 4px; justify-content: start; }
+    .del-form select, .del-form input[type=month] { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); padding: 9px 12px; font-family: inherit; font-size: 0.85rem; outline: none; }
+    .del-form .btn-primary { padding: 9px 18px; white-space: nowrap; }
+    .del-result:empty { display: none; }
+    .del-result { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 0.82rem; }
+    .del-result > div { font-size: 0.82rem !important; }
+    .del-result button { font-size: 0.8rem !important; padding: 8px 16px !important; border-radius: 8px !important; margin-top: 6px; }
+    .hist-pager { display: flex; justify-content: center; align-items: center; gap: 4px; padding-top: 12px; }
+    .hist-pager button { min-width: 30px; height: 30px; border: 1px solid var(--border2); background: var(--surface); color: var(--text); border-radius: 8px; font-family: inherit; font-size: 0.78rem; cursor: pointer; }
+    .hist-pager button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+    .hist-pager button:disabled { opacity: 0.4; cursor: default; }
+    .hist-pager button:not(.on):not(:disabled):hover { border-color: var(--accent); color: var(--accent2); }
+    .hist-pager span { padding: 0 2px; color: var(--muted2); }
+    .shell-sidebar { max-height: none; }
+    @media (max-width: 700px) { .del-form { grid-template-columns: 1fr; } .step1-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -230,12 +254,10 @@
     <button class="mode-btn active" id="modeBtnOrder">📦 อัพคำสั่งซื้อ</button>
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
     <button class="mode-btn" id="modeBtnCost">📊 อัพต้นทุนสินค้า</button>
+<button class="mode-btn" id="modeBtnDelete">🗑 ลบข้อมูล</button>
   </div>
   </div>
-  <div class="info-line">
-    <span><span class="dot manual"></span><b>ต้องอัปโหลด</b> ออเดอร์ Facebook / TikTok / Shopee / Lazada ทุกวัน, ไฟล์รับเงินเมื่อได้รับ, ไฟล์บัญชีปิดเดือน, ต้นทุนสินค้า</span>
-    <span><span class="dot"></span><b>ระบบดึงเอง</b> ค่า Ads ทุกช่องทาง, ยอดตัวแทน / MT (03:45 และ 13:45)</span>
-  </div>
+  
   <div id="stepWizard">
   <div class="step-track">
     <div class="step-item"><div class="step-num active" id="snum1">1</div><div class="step-label active" id="slabel1">เลือกไฟล์</div></div>
@@ -267,12 +289,12 @@
           </div>
         </div>
         <div id="fileWrap">
-          <label class="field-label">ไฟล์ Excel หรือ CSV <span class="req">*</span> <span style="color:var(--muted);font-weight:400;">(เลือกได้หลายไฟล์ ถ้าโครงคอลัมน์เหมือนกัน)</span></label>
+          <label class="field-label">ไฟล์ <span class="req">*</span></label>
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple>
           <label class="drop-label" id="dropLabel" for="fileInput">
             <span class="drop-icon" id="dropIcon">📂</span>
-            <div class="drop-main" id="dropMain"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวาง (เลือกหลายไฟล์ได้)</div>
-            <div class="drop-sub" id="dropSub">.xlsx .xls .csv</div>
+            <div class="drop-main" id="dropMain"><strong>ลากไฟล์มาวางที่นี่</strong> หรือกดเลือกไฟล์</div>
+            <div class="drop-sub" id="dropSub">.xlsx .xls .csv · เลือกหลายไฟล์ได้ถ้าคอลัมน์เหมือนกัน</div>
           </label>
           <div id="fileListRows" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
         </div>
@@ -349,6 +371,33 @@
     </div>
   </div>
 
+<!-- (2026-10-05) ลบข้อมูลตามช่องทาง / เดือน — ย้ายจากแถบขวามาเป็นโหมดของหน้า -->
+<div id="deletePanel" style="display:none;">
+  <div class="card">
+    <div class="section-title">ลบข้อมูลตามช่องทาง / เดือน</div>
+    <p class="map-info">ใช้ตอนปิดเดือน: ลบของเดิมแล้วอัปโหลดไฟล์บัญชีทับ — ลบแล้วกู้คืนไม่ได้ เตรียมไฟล์ใหม่ให้พร้อมก่อน</p>
+    <div class="del-form">
+      <div>
+        <label class="field-label">ช่องทาง</label>
+        <select id="bulkDeleteChannel">
+          <option value="">— เลือก —</option>
+          <option value="Facebook">Facebook</option>
+          <option value="TikTok">TikTok</option>
+          <option value="Shopee">Shopee (ทุกร้าน)</option>
+          <option value="Lazada">Lazada (ทุกร้าน)</option>
+          <option value="ตัวแทน">ตัวแทน</option>
+          <option value="Modern Trade">Modern Trade</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">เดือน</label>
+        <input type="month" id="bulkDeleteMonth">
+      </div>
+      <button class="btn-primary" id="btnBulkDeleteCheck">🔍 เช็คจำนวนข้อมูล</button>
+    </div>
+    <div id="bulkDeleteResult" class="del-result"></div>
+  </div>
+</div>
 </div><!-- end shell-main -->
 
 <div class="shell-sidebar">
@@ -358,50 +407,8 @@
     <div class="history-sub">กด 🗑 เพื่อลบรอบที่อัปผิด แล้วอัปโหลดใหม่</div>
     <div id="historyList"><div class="history-loading">กำลังโหลด...</div></div>
   </div>
-<div class="sidebar-heading" style="margin-top:20px;">เครื่องมือ</div>
-<details class="tool-card danger"><summary>🗑 ลบข้อมูลตามช่องทาง / เดือน</summary><div class="tool-body">
-    
-    <div class="history-sub">ใช้ก่อนอัพโหลดไฟล์ใหม่ทดแทนของเดิม</div>
-    <div style="display:flex;gap:6px;margin-top:10px;">
-      <select id="bulkDeleteChannel" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;">
-        <option value="Facebook">Facebook</option>
-        <option value="TikTok" selected>TikTok</option>
-        <option value="Shopee">Shopee</option>
-        <option value="Lazada">Lazada</option>
-        <option value="ตัวแทน">ตัวแทน</option>
-        <option value="Modern Trade">Modern Trade</option>
-      </select>
-      <input type="month" id="bulkDeleteMonth" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;">
-    </div>
-    <button class="btn-sync" id="btnBulkDeleteCheck" style="margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);">🔍 เช็คจำนวนข้อมูล</button>
-    <div id="bulkDeleteResult" style="margin-top:8px;"></div>
-  </div></details>
-<details class="tool-card "><summary>📎 อัปเดต Order Channel / Creator (TikTok)</summary><div class="tool-body">
-    
-    <div class="history-sub">อัพเดตแค่ 2 คอลัมน์นี้ ไม่กระทบยอดขาย/SKU ที่มีอยู่แล้ว — ใช้ไฟล์คำสั่งซื้อ TikTok ปกติได้เลย</div>
-    <input type="file" id="attrFileInput" accept=".xlsx,.xls,.csv" style="margin-top:10px;width:100%;font-size:0.72rem;color:var(--muted);">
-    <div id="attrMapArea" style="display:none;margin-top:10px;">
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Order ID
-          <select id="attrColOrderId" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
-        </label>
-        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Order Channel
-          <select id="attrColChannel" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
-        </label>
-        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Creator Handle
-          <select id="attrColCreator" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
-        </label>
-        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Order Status
-          <select id="attrColStatus" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
-        </label>
-        <label style="font-size:0.72rem;color:var(--muted);">คอลัมน์ Created Time (เวลาละเอียด)
-          <select id="attrColCreatedAt" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:6px;font-size:0.78rem;font-family:inherit;margin-top:2px;"></select>
-        </label>
-      </div>
-      <button class="btn-sync" id="btnAttrUpdate" style="margin-top:10px;background:var(--accent);color:var(--on-accent);">📎 อัพเดตข้อมูล</button>
-    </div>
-    <div id="attrResult" style="margin-top:8px;"></div>
-  </div></details>
+
+
 <div class="promo-sync-card" style="display:none;">
     <div class="history-title">ซิงค์โปรโมชั่น (Facebook)</div>
     <div class="history-sub" id="promoSyncLast">ยังไม่เคย sync</div>
@@ -1000,6 +1007,7 @@ const bulkDeleteResultEl = document.getElementById('bulkDeleteResult')
 document.getElementById('btnBulkDeleteCheck').addEventListener('click', async () => {
   const channel = document.getElementById('bulkDeleteChannel').value
   const monthStr = document.getElementById('bulkDeleteMonth').value
+  if (!channel) { bulkDeleteResultEl.innerHTML = '<div style="color:#fca5a5;font-size:0.78rem;">เลือกช่องทางก่อน</div>'; return }
   if (!monthStr) { bulkDeleteResultEl.innerHTML = '<div style="color:#fca5a5;font-size:0.72rem;">เลือกเดือนก่อน</div>'; return }
   const { from, to } = monthToRange(monthStr)
   bulkDeleteResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">กำลังเช็ค...</div>'
@@ -1115,99 +1123,7 @@ function guessColumn(headers, keywords) {
   return headers[0] || ''
 }
 
-document.getElementById('attrFileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-  const attrResultEl = document.getElementById('attrResult')
-  attrResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">กำลังอ่านไฟล์...</div>'
-  try {
-    const data = await file.arrayBuffer()
-    const wb = XLSX.read(data, { type: 'array' })
-    const ws = wb.Sheets[wb.SheetNames[0]]
-    attrRows = XLSX.utils.sheet_to_json(ws, { defval: '' })
-    if (!attrRows.length) { attrResultEl.innerHTML = '<div style="color:#fca5a5;font-size:0.72rem;">ไฟล์ไม่มีข้อมูล</div>'; return }
-    attrHeaders = Object.keys(attrRows[0])
-
-    const fillSelect = (id, guessKeywords) => {
-      const sel = document.getElementById(id)
-      sel.innerHTML = attrHeaders.map(h => `<option value="${h}">${h}</option>`).join('')
-      sel.value = guessColumn(attrHeaders, guessKeywords)
-    }
-    fillSelect('attrColOrderId', ['order id', 'order_id', 'orderid', 'เลขที่คำสั่งซื้อ', 'หมายเลขคำสั่งซื้อ'])
-    fillSelect('attrColChannel', ['order channel', 'channel'])
-    fillSelect('attrColCreator', ['creator handle', 'creator', 'handle'])
-    fillSelect('attrColStatus', ['order status', 'status'])
-    fillSelect('attrColCreatedAt', ['created time', 'create time'])
-
-    document.getElementById('attrMapArea').style.display = 'block'
-    attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">พบ ${attrRows.length.toLocaleString()} แถวในไฟล์ — เช็คคอลัมน์ด้านบนให้ตรงแล้วกด "อัพเดตข้อมูล"</div>`
-  } catch (err) {
-    attrResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ อ่านไฟล์ไม่สำเร็จ: ${err.message}</div>`
-  }
-})
-
-document.getElementById('btnAttrUpdate').addEventListener('click', async () => {
-  const attrResultEl = document.getElementById('attrResult')
-  const colOrderId = document.getElementById('attrColOrderId').value
-  const colChannel = document.getElementById('attrColChannel').value
-  const colCreator = document.getElementById('attrColCreator').value
-  const colStatus = document.getElementById('attrColStatus').value
-  const colCreatedAt = document.getElementById('attrColCreatedAt').value
-  const btn = document.getElementById('btnAttrUpdate')
-
-  const rows = attrRows
-    .map(r => ({
-      order_id: String(r[colOrderId] || '').trim(),
-      order_channel: String(r[colChannel] || '').trim() || null,
-      creator_handle: String(r[colCreator] || '').trim() || null,
-      order_status: String(r[colStatus] || '').trim() || null,
-      created_at_precise: parseDateTime(r[colCreatedAt]),
-    }))
-    .filter(r => r.order_id)
-
-  const dedupMap = new Map(); rows.forEach(r => dedupMap.set(r.order_id, r))
-  const deduped = [...dedupMap.values()]
-
-  if (!deduped.length) { attrResultEl.innerHTML = '<div style="color:#fca5a5;font-size:0.72rem;">ไม่พบ Order ID ในไฟล์ เช็ค mapping คอลัมน์อีกครั้ง</div>'; return }
-
-  btn.disabled = true; btn.textContent = 'กำลังอัพเดต...'
-  attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังอัพเดต 0 / ${deduped.length.toLocaleString()}...</div>`
-
-  let matched = 0, done = 0
-  const CONCURRENCY = 20
-  try {
-    const failedAttr = []
-    for (let i = 0; i < deduped.length; i += CONCURRENCY) {
-      const batch = deduped.slice(i, i + CONCURRENCY)
-      await Promise.all(batch.map(async (r) => {
-        try {
-          const { data, error } = await withRetry(() =>
-            DB.from('orders')
-              .update({ order_channel: r.order_channel, creator_handle: r.creator_handle, order_status: r.order_status, created_at_precise: r.created_at_precise })
-              .eq('order_id', r.order_id)
-              .select('order_id')
-          )
-          if (error) throw error
-          if (data && data.length) matched++
-        } catch (rowErr) {
-          failedAttr.push(r.order_id) // retry แล้วยังพัง — จดไว้ ไม่ให้ฉุดทั้งชุด
-        }
-      }))
-      done += batch.length
-      attrResultEl.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังอัพเดต ${done.toLocaleString()} / ${deduped.length.toLocaleString()}...</div>`
-    }
-    const notMatched = deduped.length - matched - failedAttr.length
-    attrResultEl.innerHTML = `
-      <div style="font-size:0.74rem;color:#34d399;">✅ อัพเดตสำเร็จ ${matched.toLocaleString()} ออเดอร์</div>
-      ${notMatched > 0 ? `<div style="font-size:0.72rem;color:#fbbf24;margin-top:4px;">⚠️ ไม่พบ order_id ในระบบ ${notMatched.toLocaleString()} รายการ (อาจเป็นออเดอร์ที่ยังไม่เคยอัพโหลด)</div>` : ''}
-      ${failedAttr.length > 0 ? `<div style="font-size:0.72rem;color:#ef4444;margin-top:4px;">🚨 ${failedAttr.length.toLocaleString()} รายการพังแม้ retry แล้ว (เน็ตหลุดยาว) — ลองกดอัพไฟล์เดิมซ้ำอีกรอบ</div>` : ''}
-    `
-  } catch (err) {
-    attrResultEl.innerHTML = `<div style="color:#fca5a5;font-size:0.72rem;">❌ อัพเดตไม่สำเร็จ: ${err.message}</div>`
-  } finally {
-    btn.disabled = false; btn.textContent = '📎 อัพเดตข้อมูล'
-  }
-})
+// (2026-10-05) เอาเครื่องมือ "อัปเดต Order Channel / Creator (TikTok)" ออก — การอัปไฟล์คำสั่งซื้อ TikTok ปกติเก็บ 2 ช่องนี้ให้แล้ว
 
 async function executeBulkDelete(channel, from, to, ordersCount, skuCount) {
   bulkDeleteResultEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">⏳ กำลังลบ...</div>'
@@ -1235,14 +1151,10 @@ function timeAgo(dateStr) {
 
 const CHANNEL_ICON = { Facebook:'📘', TikTok:'🎵', Shopee:'🛒', Lazada:'🛍️', 'ตัวแทน':'🏪', 'Modern Trade':'🏬' }
 
-async function loadUploadHistory() {
-  const el = document.getElementById('historyList')
-  try {
-    const since = new Date(Date.now() - 30*86400*1000).toISOString()
-    const { data, error } = await DB.from('upload_logs').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(50)
-    if (error) throw error
-    if (!data || !data.length) { el.innerHTML = '<div class="history-empty">ยังไม่มีประวัติการอัพโหลด</div>'; return }
-    el.innerHTML = data.map(log => {
+// (2026-10-05) ประวัติการอัปโหลด: หน้าละ 10 รายการ + เลือกหน้า
+let _histLogs = [], _histPage = 1
+const HIST_PER_PAGE = 10
+function histItemHtml(log) {
       const isError = log.status === 'error'
       const isSettlement = log.upload_type === 'settlement'
       const badgeClass = isError ? 'history-badge-error' : (isSettlement ? 'history-badge-settlement' : 'history-badge-order')
@@ -1272,7 +1184,33 @@ async function loadUploadHistory() {
           </div>
           <div id="log-confirm-${log.id}" style="display:none;"></div>
         </div>`
-    }).join('')
+}
+function renderHistoryPage() {
+  const el = document.getElementById('historyList')
+  if (!_histLogs.length) { el.innerHTML = '<div class="history-empty">ยังไม่มีประวัติการอัพโหลด</div>'; return }
+  const pages = Math.max(1, Math.ceil(_histLogs.length / HIST_PER_PAGE))
+  _histPage = Math.min(Math.max(1, _histPage), pages)
+  const rows = _histLogs.slice((_histPage - 1) * HIST_PER_PAGE, _histPage * HIST_PER_PAGE)
+  const nums = []
+  for (let p = 1; p <= pages; p++) {
+    if (p === 1 || p === pages || Math.abs(p - _histPage) <= 1) nums.push(p)
+    else if (nums[nums.length - 1] !== '…') nums.push('…')
+  }
+  const pager = pages > 1 ? `<div class="hist-pager"><button ${_histPage === 1 ? 'disabled' : ''} onclick="histGo(${_histPage - 1})" aria-label="หน้าก่อน">‹</button>`
+    + nums.map(p => p === '…' ? '<span>…</span>' : `<button class="${p === _histPage ? 'on' : ''}" onclick="histGo(${p})">${p}</button>`).join('')
+    + `<button ${_histPage === pages ? 'disabled' : ''} onclick="histGo(${_histPage + 1})" aria-label="หน้าถัดไป">›</button></div>` : ''
+  el.innerHTML = rows.map(histItemHtml).join('') + pager
+}
+window.histGo = function (p) { _histPage = p; renderHistoryPage() }
+
+async function loadUploadHistory() {
+  const el = document.getElementById('historyList')
+  try {
+    const since = new Date(Date.now() - 30*86400*1000).toISOString()
+    const { data, error } = await DB.from('upload_logs').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(100)
+    if (error) throw error
+    _histLogs = data || []; _histPage = 1
+    renderHistoryPage()
   } catch(e) { el.innerHTML = '<div class="history-empty">โหลดประวัติไม่ได้</div>' }
 }
 
@@ -1511,10 +1449,20 @@ function setUploadMode(mode) {
   document.getElementById('modeBtnOrder').classList.toggle('active', mode === 'order')
   document.getElementById('modeBtnSettlement').classList.toggle('active', mode === 'settlement')
   document.getElementById('modeBtnCost').classList.toggle('active', mode === 'cost')
+  document.getElementById('modeBtnDelete').classList.toggle('active', mode === 'delete')
+  const deletePanel = document.getElementById('deletePanel')
+  if (deletePanel) deletePanel.style.display = mode === 'delete' ? 'block' : 'none'
 
   const stepWizard = document.getElementById('stepWizard')
   const costPanel = document.getElementById('costPanel')
 
+  if (mode === 'delete') {
+    if (stepWizard) stepWizard.style.display = 'none'
+    if (costPanel) costPanel.style.display = 'none'
+    document.getElementById('pageTitle').textContent = 'ลบข้อมูล'
+    document.getElementById('pageDesc').textContent = 'ลบออเดอร์ของช่องทาง / เดือนที่เลือก ก่อนอัปโหลดไฟล์ปิดเดือนทับ'
+    return
+  }
   if (mode === 'cost') {
     if (stepWizard) stepWizard.style.display = 'none'
     if (costPanel) costPanel.style.display = 'block'
@@ -1557,6 +1505,7 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
 document.getElementById('modeBtnOrder').addEventListener('click', () => setUploadMode('order'))
 document.getElementById('modeBtnSettlement').addEventListener('click', () => setUploadMode('settlement'))
 document.getElementById('modeBtnCost').addEventListener('click', () => setUploadMode('cost'))
+document.getElementById('modeBtnDelete').addEventListener('click', () => setUploadMode('delete'))
 document.getElementById('channelSelect').addEventListener('change', e => handleChannelChange(e.target.value))
 document.getElementById('btnStep1').addEventListener('click', handleStep1)
 document.getElementById('btnStep2').addEventListener('click', handleStep2)
