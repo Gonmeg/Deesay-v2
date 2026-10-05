@@ -585,7 +585,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.02-j</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.05-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7414,22 +7414,22 @@ async function refreshDashboardData() {
       catch (e) { failed.push(label); console.warn(fn, e); }
       finally { clearTimeout(t); done++; setBar(2 + done / PULLS.length * 33, `ดึงข้อมูลที่ทีมกรอก ${done}/${PULLS.length}...`); }
     }));
-    // ②
-    let list = [];
-    try { const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/mv_refresh_order`, { method: 'POST', headers, body: '{}' }); if (r.ok) list = await r.json() || []; } catch (e) { console.warn('mv_refresh_order', e); }
-    const BATCH = 3;
-    for (let i = 0; i < list.length; i += BATCH) {
-      setBar(35 + i / Math.max(1, list.length) * 55, `คำนวณสรุปข้อมูลทุกหน้า ${Math.min(i + BATCH, list.length)}/${list.length}...`);
-      try {
-        const c = new AbortController(), t = setTimeout(() => c.abort(), 180000);
-        const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_mv_batch`, { method: 'POST', headers, body: JSON.stringify({ p_names: list.slice(i, i + BATCH) }), signal: c.signal });
-        clearTimeout(t);
-        if (!r.ok) console.warn('refresh_mv_batch', r.status, await r.text().catch(() => ''));
-      } catch (e) { console.warn('refresh_mv_batch', e); }
+    // ② + ③ คำนวณตารางสรุปทุกตัวเป็นงานเบื้องหลัง (คิว) แล้วตรวจตัวเลข — เรียกผ่านเว็บตรงๆ โดนตัดที่ ~150 วินาที
+    setBar(36, 'รอคิวคำนวณสรุปข้อมูล (ไม่เกิน 1 นาที)...');
+    let jobId = null;
+    try { const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/request_full_refresh`, { method: 'POST', headers, body: '{}' }); if (r.ok) jobId = await r.json(); } catch (e) { console.warn('request_full_refresh', e); }
+    if (jobId) {
+      const t0 = Date.now();
+      while (Date.now() - t0 < 15 * 60000) {
+        await new Promise(res => setTimeout(res, 4000));
+        let j = null;
+        try { const r = await fetch(`${window.SUPABASE_URL}/rest/v1/refresh_jobs?id=eq.${jobId}&select=status,total,done,current_mv`, { headers }); if (r.ok) j = (await r.json())[0]; } catch (e) {}
+        if (!j) continue;
+        if (j.status === 'pending') { setBar(36, 'รอคิวคำนวณสรุปข้อมูล (ไม่เกิน 1 นาที)...'); continue; }
+        if (j.status === 'running') { const tot = j.total || 1; setBar(38 + (j.done / tot) * 56, `คำนวณสรุปข้อมูลทุกหน้า ${j.done}/${tot}...`); continue; }
+        break;   // done / error
+      }
     }
-    // ③
-    setBar(92, 'ตรวจตัวเลขทุกหน้า...');
-    try { await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/refresh_finish`, { method: 'POST', headers, body: '{}' }); } catch (e) { console.warn('refresh_finish', e); }
     // ④
     setBar(98, 'ล้างแคชในเครื่อง แล้วโหลดใหม่ทุกหน้า...');
     await idbClearAll();
