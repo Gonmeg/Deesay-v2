@@ -1303,10 +1303,10 @@ const SETTLEMENT_FIELDS = {
     { key:'settle_return_id', label:'รหัสคืนสินค้า', required:false, keywords:['รหัสคืนสินค้า'] },
   ],
   TikTok: [
-    { key:'settle_order_id', label:'Related order ID', required:true, keywords:['related order id'] },
-    { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['order settled time'] },
+    { key:'settle_order_id', label:'Related order ID', required:true, keywords:['related order id','หมายเลขคำสั่งซื้อที่เกี่ยวข้อง'] },   // (2026-10-05) ไฟล์รายงานการรับเงิน TikTok ภาษาไทย
+    { key:'settle_date', label:'วันที่รับเงิน', required:true, keywords:['เวลาที่ชำระคำสั่งซื้อ','order settled time'] },
     { key:'order_created_date', label:'วันที่สร้างออเดอร์', required:false, keywords:['เวลาที่สร้างคำสั่งซื้อ','order creation time','created time'] },
-    { key:'settle_amount', label:'จำนวนเงินที่ชำระทั้งหมด', required:false, keywords:['จำนวนเงินที่ชำระทั้งหมด','total settlement amount','settlement amount'] },
+    { key:'settle_amount', label:'จำนวนเงินที่ชำระทั้งหมด', required:false, keywords:['จำนวนเงินที่ชำระทั้งหมด','ยอดการชำระเงินทั้งหมด','total settlement amount','settlement amount'] },
   ],
 }
 
