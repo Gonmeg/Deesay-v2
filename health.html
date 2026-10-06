@@ -193,7 +193,7 @@ const JOB_DESC = {
   'refresh-mv-customer-daily': 'รีเฟรชลูกค้ารายวัน',
   'refresh-mv-free-sample': 'รีเฟรชของแถม/ตัวอย่าง',
   'refresh-unknown-skus': 'หา SKU ที่สมุดสินค้าไม่รู้จัก',
-  'auto-disable-rls': 'ปิด RLS ที่เปิดเองอัตโนมัติ',
+  'auto-secure-tables': 'ล็อกตารางใหม่ให้อัตโนมัติ (เปิด RLS + ให้สิทธิ์เฉพาะบัญชีที่อนุมัติ · ถอนสิทธิ์ anon)',
   'housekeeping-purge-logs': 'ลบ log cron เก่า'
 }
 
@@ -273,7 +273,7 @@ async function render(d, unknown, extra) {
     if ((X.cron_no_timeout || []).length)
       banners.push(['warn', `⏱ cron ${X.cron_no_timeout.length} ตัวยังไม่ได้ตั้งเวลารอ — เสี่ยงถูกตัดกลางคันโดยไม่มีใครรู้: ${X.cron_no_timeout.map(c => '<b>' + esc(c.jobname) + '</b>').join(', ')} (รัน 67_cron_timeouts.sql)`])
     if ((X.rls_on || []).length)
-      banners.push(['bad', `🔒 ตาราง ${X.rls_on.length} ตัวถูกเปิด RLS กลับมาเอง หน้าเว็บจะอ่านข้อมูลไม่ได้: ${X.rls_on.map(t2 => '<b>' + esc(t2) + '</b>').join(', ')}`])
+      banners.push(['bad', `🔒 ตาราง ${X.rls_on.length} ตัวเปิด RLS แต่ยังไม่มีสิทธิ์ให้อ่าน หน้าเว็บจะอ่านข้อมูลไม่ได้ (ระบบใส่สิทธิ์ให้เองภายใน 5 นาที ถ้ายังค้างให้แจ้ง Claude): ${X.rls_on.map(t2 => '<b>' + esc(t2) + '</b>').join(', ')}`])
     // --- TikTok สถิติช่อง: แยกให้ชัดว่า "TikTok ยังไม่ส่ง" หรือ "ตัวดึงของเราไม่ได้รัน" ---
     // วิธีดู: ดึงล่าสุด = วันนี้ แต่ข้อมูลถึงแค่เมื่อวานซืน → TikTok ยังนับไม่เสร็จ (ปกติ) · ดึงล่าสุดไม่ใช่วันนี้ → cron ไม่ทำงาน
     let ttHandled = false
