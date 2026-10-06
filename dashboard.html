@@ -585,7 +585,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.05-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-d</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -613,6 +613,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <!-- ค้นหา creator: โชว์เฉพาะหน้า Creator Performance (ควบคุมใน showPage) -->
       <div class="filter-group" id="cpCreatorFilterGroup" style="display:none;position:relative;padding:0;background:transparent;border:none;gap:6px;">
         <div class="cp-seg" id="cpViewSeg"><button class="on" data-v="creator" onclick="setCpView('creator')">👤 ครีเอเตอร์</button><button data-v="product" onclick="setCpView('product')">📦 สินค้า</button></div>
+        <div class="cp-seg" id="cpSrcSeg" title="วิธีนับยอดครีเอเตอร์: ไฟล์อัปโหลด (เดิม) หรือ TikTok API (ใหม่ — นับตามค่าคอมที่ TikTok จ่ายจริง)"><button class="on" data-s="file" onclick="setCpSource('file')">📄 วิธีเดิม</button><button data-s="api" onclick="setCpSource('api')">⚡ API (ใหม่)</button></div>
+        <span class="ads-info-wrap" style="position:relative;display:inline-block;align-self:center;"><span onclick="toggleFbeInfo('cp-src-info')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="cp-src-info" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span>
         <div style="position:relative;" id="cpCreatorSearchWrap">
           <input type="text" class="ls-input" style="width:210px;padding:6px 10px;font-size:12px;" id="cpCreatorSearch" placeholder="🔎 ค้นหา creator..." oninput="debouncedFilterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
           <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;min-width:260px;right:auto;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
@@ -1624,6 +1626,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
     <div class="page" id="page-creatorperf">
       <div id="cp-content">
+        <div id="cpSrcNote" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;border:1px solid rgba(96,165,250,0.35);background:rgba(96,165,250,0.08);font-size:12px;line-height:1.6;color:var(--text2);"></div>
         <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
         <div class="card" style="margin-bottom:20px;">
           <div class="section-header" style="flex-wrap:wrap;gap:8px;">
@@ -2995,6 +2998,21 @@ function loadFbAdsPage() {
   document.body.appendChild(s);
 }
 
+// (2026-10-06) มุมมองจาก TikTok Shop API (ทราฟฟิกร้าน / รอบ Live / Commission ครีเอเตอร์): โค้ดอยู่ใน ttapi.js — โหลดครั้งแรกที่เปิดหน้าภาพรวม TikTok หรือ Creator Performance
+let _ttApiPromise = null;
+function ensureTtApi() {
+  if (window.ttApi) return Promise.resolve(window.ttApi);
+  if (_ttApiPromise) return _ttApiPromise;
+  _ttApiPromise = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'ttapi.js?v=20261006b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.onload = () => res(window.ttApi);
+    s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
+    document.body.appendChild(s);
+  });
+  return _ttApiPromise;
+}
+
 // เจาะสินค้า: โค้ดอยู่ใน skudeep.js — โหลดครั้งแรกที่กดเมนู
 function loadSkuDeepPage() {
   if (window.renderSkuDeepPage) { window.renderSkuDeepPage(); return; }
@@ -3718,6 +3736,7 @@ function fbeRenderPostListPage(pageNum) {
 // ===== TIKTOK HUB =====
 async function renderTtHub() {
   if (!(await hubPrepare('tthub'))) return;
+  ensureTtApi().then(api => api.renderTraffic(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
   const H = hubAgg('TikTok');   // เฟส 2: จาก sales_summary (v_orders_clean)
 
   const finish = () => {
@@ -4224,6 +4243,30 @@ function clearCpCreator() {
 
 // ===== Creator Performance — มุมมองสินค้า (RPC creator_product_page บน mv_creator_sku_daily) =====
 let cpView = 'creator', cppSelectedSku = null, cppData = null, cppSort = { key: 'creator_rev', dir: -1 };
+// (2026-10-06) วิธีนับยอดครีเอเตอร์: 'file' = คอลัมน์ Creator / Order Channel จากไฟล์อัปโหลด (เดิม) · 'api' = TikTok API (ครีเอเตอร์ตามค่าคอมที่จ่ายจริง + LIVE / คลิปของร้านจาก Analytics)
+let cpSource = (() => { try { return localStorage.getItem('cp_src') === 'file' ? 'file' : 'api'; } catch (e) { return 'api'; } })();   // (2026-10-06) ค่าเริ่มต้น = API
+const CP_API_START = '2026-09-01';   // ข้อมูลวิธีใหม่เริ่มวันนี้ — ช่วงที่เริ่มก่อนนี้ใช้วิธีเดิมอัตโนมัติ
+const cpUseApi = from => cpSource === 'api' && from >= CP_API_START;
+const CP_API_NOTE = '<b>⚡ API (ใหม่)</b>: ครีเอเตอร์ = คนที่ TikTok จ่าย Commission ให้จริง (รวมยอดจาก Live คลิป โชว์เคส และลิงก์ที่แชร์) · Live / คลิปของบัญชีร้าน = ยอดจาก TikTok Analytics รายรอบ / รายคลิป · หน้าสินค้า = ส่วนที่เหลือ · มีข้อมูลตั้งแต่ 1 ก.ย. 69<br><b>📄 วิธีเดิม</b>: ตามช่อง Creator / Order Channel ในไฟล์อัปโหลด (ยอดโชว์เคส / ลิงก์ของครีเอเตอร์ถูกนับเป็นหน้าสินค้า)';
+function syncCpSrcButtons() {
+  document.querySelectorAll('#cpSrcSeg button').forEach(b => b.classList.toggle('on', b.dataset.s === cpSource));
+  const n = document.getElementById('cpSrcNote');
+  if (n) {
+    const from = (typeof getDateValue === 'function' && getDateValue('From')) || '';
+    const fallback = cpSource === 'api' && from && from < CP_API_START;
+    n.style.display = fallback && cpView !== 'product' ? 'block' : 'none';   // แถบนี้บอกสถานะเท่านั้น (คำอธิบายอยู่ใน ⓘ ข้างปุ่ม)
+    n.innerHTML = '📄 ช่วงที่เลือกเริ่มก่อน 1 ก.ย. 69 ซึ่งยังไม่มีข้อมูลวิธี API — หน้านี้จึงแสดง<b>วิธีเดิม</b>';
+  }
+  const pop = document.getElementById('cp-src-info'); if (pop && !pop.innerHTML) pop.innerHTML = CP_API_NOTE;
+}
+function setCpSource(src) {
+  cpSource = src === 'api' ? 'api' : 'file';
+  try { localStorage.setItem('cp_src', cpSource); } catch (e) {}
+  cpCreator.rangeKey = null; _creatorListLoaded = false; cpSelectedCreator = null;
+  syncCpSrcButtons();
+  if (currentPage === 'creatorperf') renderCreatorPerf();
+}
+document.addEventListener('DOMContentLoaded', syncCpSrcButtons);
 const cppCache = {};
 function setCpView(v) {
   cpView = v;
@@ -4435,6 +4478,9 @@ function renderCpTrendingCreators(to) {
 }
 
 async function renderCreatorPerf() {
+  syncCpSrcButtons();
+  { const f = getDateValue('From'), t = getDateValue('To'), on = cpUseApi(f) && cpView !== 'product';
+    if (on || window.ttApi) ensureTtApi().then(api => api.renderCreatorExtras(f, t, on, cpSelectedCreator)).catch(e => console.warn('ttapi', e)); }
   if (cpView === 'product') return renderCpProductView();   // มุมมองสินค้า (สลับจาก topbar)
   const overviewEl = document.getElementById('cp-overview-section');
   if (overviewEl) overviewEl.style.display = cpSelectedCreator ? 'none' : 'block';
@@ -4702,17 +4748,18 @@ async function hubPrepare(page) {
 // ===== เฟส 3: creator / SKU / ตัวอย่างฟรี / ตัวเลือกกรอง — จาก MV + RPC (ไม่ใช้ allData / sku_revenue ในเบราว์เซอร์อีก) =====
 const cpCreator = { rangeKey: null, summary: [], trend: [], topSku: [], daily: [], detail: {} };
 async function ensureCreatorData(from, to, onFresh) {
-  const key = from + '|' + to;
+  const sfx = cpUseApi(from) ? '_api' : '';   // (2026-10-06) วิธีนับใหม่ใช้ RPC ชุด _api (โครงข้อมูลเหมือนเดิมทุกช่อง) · ช่วงก่อน 1 ก.ย. 69 ใช้วิธีเดิม
+  const key = (sfx ? 'api' : 'file') + '|' + from + '|' + to;
   if (cpCreator.rangeKey === key) return;
   const apply = d => { cpCreator.rangeKey = key; cpCreator.summary = d.summary; cpCreator.trend = d.trend; cpCreator.topSku = d.topSku; cpCreator.daily = d.daily; cpCreator.detail = {}; };
   const load = async () => {
     setBgSync('รวมยอด creator (Supabase)...', 30);
     // Pro plan: 4 RPC พร้อมกัน (เดิมเรียงคิว)
     const [summary, trend, topSku, daily] = await Promise.all([
-      supaRpc('creator_summary', { p_from: from, p_to: to }, true),
-      supaRpc('creator_trend', { p_to: to }, true),
-      supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: null }, true),
-      supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: null }, true)]);
+      supaRpc('creator_summary' + sfx, { p_from: from, p_to: to }, true),
+      supaRpc('creator_trend' + sfx, { p_to: to }, true),
+      supaRpc('creator_top_sku' + sfx, { p_from: from, p_to: to, p_handle: null }, true),
+      supaRpc('creator_daily' + sfx, { p_from: from, p_to: to, p_handle: null }, true)]);
     setBgSync(`creator ${fmt(new Set(summary.map(r => r.creator_handle)).size)} คน อัปเดตแล้ว`, null);
     const d = { summary, trend, topSku, daily, cachedAt: Date.now() };
     idbSet('creator:' + key, d);
@@ -4729,14 +4776,15 @@ async function ensureCreatorData(from, to, onFresh) {
 async function ensureCreatorDetail(from, to, handle) {
   await ensureCreatorData(from, to);
   if (cpCreator.detail[handle]) return cpCreator.detail[handle];
-  const [daily, topSku] = await Promise.all([supaRpc('creator_daily', { p_from: from, p_to: to, p_handle: handle }, true), supaRpc('creator_top_sku', { p_from: from, p_to: to, p_handle: handle }, true)]);
+  const sfx = cpUseApi(from) ? '_api' : '';
+  const [daily, topSku] = await Promise.all([supaRpc('creator_daily' + sfx, { p_from: from, p_to: to, p_handle: handle }, true), supaRpc('creator_top_sku' + sfx, { p_from: from, p_to: to, p_handle: handle }, true)]);
   cpCreator.detail[handle] = { daily, topSku };
   return cpCreator.detail[handle];
 }
 let _creatorListLoaded = false;
 async function ensureCreatorList() {
   if (_creatorListLoaded) return;
-  const rows = await supaRpc('creator_list', {}, true);
+  const rows = await supaRpc('creator_list' + (cpSource === 'api' ? '_api' : ''), {}, true);
   _cpAllCreators = rows.map(r => r.creator_handle).filter(Boolean).sort();
   _creatorListLoaded = true;
 }
