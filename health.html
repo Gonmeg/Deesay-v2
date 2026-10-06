@@ -188,8 +188,12 @@ const JOB_DESC = {
   'meta-ads-sync-4': 'Ads Facebook บัญชีที่เหลือ (Makeup, กันแดด, PR, MT, Conversion เดิม)',
   'sync-inventory-log': 'log น้องแพ็ค (ของเข้า-ออก) → inventory_movements',
   'refresh-supply-views': 'คำนวณสต็อก / forecast / แผนเติมสต็อก',
+  'api-to-core-tiktok': 'ออเดอร์ TikTok จาก API → ตารางหลัก orders / sku_revenue (ตั้งแต่ 1 ต.ค. 69 · 3 วันล่าสุด ทุก 15 นาที) + สถานะได้เงิน',
+  'api-to-core-tiktok-nightly-a': 'ไล่สร้างออเดอร์ TikTok จาก API ย้อน 12 วัน (จับคนที่ยกเลิก / คืนทีหลัง)',
+  'api-to-core-tiktok-nightly-b': 'ไล่สร้างออเดอร์ TikTok จาก API ย้อน 13–40 วัน (ไม่แตะเดือนที่ปิดแล้ว)',
+  'tiktok-lives-hourly': 'รอบ LIVE TikTok (ทุกบัญชี) รายชั่วโมง — ใช้บอกว่าออเดอร์ซื้อในไลฟ์รอบไหนของใคร',
   'refresh-supply-views-day': 'คำนวณสต็อก / แผนเติมสต็อกรอบกลางวัน หลังดึง log น้องแพ็ครอบกลางวัน (sync-inventory-log-day)',
-  'refresh-mv-sales-daily': 'รีเฟรชยอดขายรายวัน',
+  'refresh-mv-sales-daily': 'ตารางสรุปยอดขายทุกตัว (ยอดรวม / SKU / โปร / จังหวัด / ลูกค้า / ครีเอเตอร์ / พนักงานขาย) refresh พร้อมกันในคำสั่งเดียว ทุก 30 นาที → ยอดทุกหน้าตรงกันเสมอ · ตัวแยกนาทีเดิม 7 ตัวปิดไว้',
   'refresh-mv-ad-spend': 'รีเฟรชสรุปค่าแอดทุกช่องทาง (หน้า Ad Performance / Hub)',
   'refresh-mv-sku-daily': 'รีเฟรชยอดขายราย SKU',
   'refresh-mv-creator-daily': 'รีเฟรชยอดขายต่อ creator',
@@ -377,7 +381,7 @@ async function render(d, unknown, extra) {
 
   // --- แหล่งข้อมูลของแต่ละหน้า (คงที่ — แก้ตรงนี้เมื่อเปลี่ยนแหล่ง) ---
   const PAGE_SOURCES = [
-    ['ภาพรวมยอดขาย / แยก Channel / SKU', 'orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · Shopee ออเดอร์จาก API ทุก 10 นาที', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
+    ['ภาพรวมยอดขาย / แยก Channel / SKU', 'orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · TikTok ตั้งแต่ 1 ต.ค. 69 = TikTok Shop API (api-to-core ทุก 15 นาที · ไฟล์ที่ทีมอัปลง orders_upload_backup) · Shopee ออเดอร์จาก API ทุก 10 นาที', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
     ['แนวโน้มสินค้า (Momentum)', 'RPC sku_momentum บน mv_sku_daily (ตัด Cancel/Return) เทียบช่วงก่อน + เฉลี่ย 3 ช่วง + 12 สัปดาห์', 'mv_sku_daily รีเฟรชรายชั่วโมง'],
     ['เจาะสินค้า', 'RPC sku_deep (ยอดขาย mv_sku_daily · ค่า Ads รายเดือน · งาน KOL = ไฟล์ทีม KOL: ค่าจ้างตามวันโพสต์ (mv_kol_plan_jobs) · ค่า Ads/ยอดขายตามวันที่ใช้เงิน (mv_kol_job_ads_daily) + สถานะเบิกจ่ายจากฟอร์มเบิก)', 'รายชั่วโมง · KOL ตาม refresh-kol-plan'],
     ['ภาพรวม Facebook (แยกเพจ)', 'ยอดขาย: orders · ค่าแอด: Meta API เฉพาะก้อน Conversion (แอดที่ยิงให้เพจขายใน fb_page_map) — PR/KOL แยก, CPAS → Shopee, MT แยก', 'meta-ads-sync 08:00/20:00'],
@@ -386,6 +390,7 @@ async function render(d, unknown, extra) {
     ['ภาพรวม TikTok / TikTok Ads', 'TikTok Ads API (mv_tiktok_creative_performance, mv_tiktok_objective_summary) · ยอดขายจาก orders', 'tiktok-*-sync 08:xx + 12:xx · MV รีเฟรชรายชั่วโมง'],
     ['ผลงานคอนเทนต์ TikTok / ค้นหาคำ', 'TikTok Accounts API (tiktok_videos) + ปกคลิปจาก Ads API', 'tiktok-organic-sync 07:30/19:30 · covers ทุก 15 นาที'],
     ['Creator Performance', 'ยอดครีเอเตอร์: ⚡ API = TikTok Affiliate API (mv_creator_daily_api / creator_commission_api) ตั้งแต่ 1 ก.ย. 69 · 📄 วิธีเดิม = orders (creator_handle) · ป้าย/ตัวกรอง KOL–Affiliate = v_creator_type (มีงานในไฟล์ทีม KOL) + บัญชีร้าน deesaythailand / ช่องรอง deesay_cosmetics (creator_kind) · ค่า Ads = TikTok Ads API · ค่าจ้าง KOL = ไฟล์งานทีม KOL งาน TikTok ตามวันโพสต์ (mv_kol_plan_jobs)', 'mv_creator_daily รายชั่วโมง · refresh-creator-api ทุก 2 ชม.'],
+    ['พนักงานขาย (Facebook / Line)', 'RPC sales_admin_page: ยอด/ออเดอร์ = mv_fb_admin_daily (refresh พร้อม mv_sales_daily ทุกชั่วโมง + หลังอัปไฟล์ → เท่ายอด Facebook ทุกหน้าเสมอ) · ลูกค้า / สินค้าขายดี จาก orders + sku_revenue · ชื่อจากช่อง sales_admin = คอลัมน์ "พนักงานขาย" ในไฟล์ออเดอร์ Facebook (upload.html) · ส.ค.–ก.ย. 69 เติมจากไฟล์ export ที่เมฆส่ง', 'ตามการอัปไฟล์ Facebook'],
     ['ค้นหา Live', 'RPC live_search_orders_json: ครีเอเตอร์ภายนอก = TikTok Affiliate API (ใครขาย / Live หรือคลิป) · บัญชีร้าน + วันที่ API ยังไม่มีข้อมูล = orders (ไฟล์) · ยอดเงิน = orders (ไม่มีในไฟล์ → tiktok_orders_api_net_t) · สินค้า/โปร = sku_revenue · ค่า Ads = ทีมกรอกเอง (live_sessions)', 'tiktok-affiliate-sync ทุก 3 ชม. · ไฟล์ตามที่อัป'],
     ['ภาพรวม Shopee / Shopee Ads', 'Shopee Open API (shopee_ads_daily) + Cowork offapi (shopee_ads_manual: Brand/Live/Meta ในแอป/เหรียญ) + CPAS จาก Meta API บัญชี Deesay Shopee CPAS (view shopee_cpas_meta_daily)', 'shopee-ads-sync-daily 08:10 · manual ตอนเช้าโดย Cowork'],
     ['ภาพรวม Lazada', 'ยอดขาย: orders · ค่าแอด: ชีท MKT Tracking แท็บ Ads (ยังไม่มี API)', 'Cowork skill lazada-ads'],
