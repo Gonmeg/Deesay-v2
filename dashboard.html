@@ -585,7 +585,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1672,8 +1672,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           </div>
         </div>
 
-        <div class="section-divider"><span>Top Creator (ตาม Live/Video) — ทั้งช่วงที่เลือก</span></div>
-        <div class="grid-3" style="margin-bottom:20px;">
+        <div class="section-divider" id="cp-top10-divider"><span>Top Creator (ตาม Live/Video) — ทั้งช่วงที่เลือก</span></div>
+        <div class="grid-3" style="margin-bottom:20px;" id="cp-top10-grid">
           <div class="card">
             <div class="section-header"><div class="section-title">Top 10 Creator (รวมทุกประเภท)</div></div>
             <div class="table-wrap">
@@ -3005,7 +3005,7 @@ function ensureTtApi() {
   if (_ttApiPromise) return _ttApiPromise;
   _ttApiPromise = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'ttapi.js?v=20261006b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.src = 'ttapi.js?v=20261006c';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
     s.onload = () => res(window.ttApi);
     s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -3759,6 +3759,8 @@ async function renderTtHub() {
     document.getElementById('tbodyTtOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
       <tr><td>${k}</td><td>฿${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
     `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
+    // (2026-10-06) ช่วงที่มีข้อมูล API → ตารางช่องทางใช้ TikTok API แทนช่อง Order Channel ในไฟล์ (ครีเอเตอร์ตาม Commission จริง)
+    if (getDateValue('From') >= CP_API_START) ensureTtApi().then(api => api.renderOrderChannel(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
 
     renderAdpChannel('chartTtAds', null, 'tt', hubAdView.tt);
     renderPromotion('Tt', 'TikTok');
@@ -4254,7 +4256,7 @@ function syncCpSrcButtons() {
   if (n) {
     const from = (typeof getDateValue === 'function' && getDateValue('From')) || '';
     const fallback = cpSource === 'api' && from && from < CP_API_START;
-    n.style.display = fallback && cpView !== 'product' ? 'block' : 'none';   // แถบนี้บอกสถานะเท่านั้น (คำอธิบายอยู่ใน ⓘ ข้างปุ่ม)
+    n.style.display = fallback ? 'block' : 'none';   // แถบนี้บอกสถานะเท่านั้น (คำอธิบายอยู่ใน ⓘ ข้างปุ่ม) · ใช้ทั้งมุมมองครีเอเตอร์และสินค้า
     n.innerHTML = '📄 ช่วงที่เลือกเริ่มก่อน 1 ก.ย. 69 ซึ่งยังไม่มีข้อมูลวิธี API — หน้านี้จึงแสดง<b>วิธีเดิม</b>';
   }
   const pop = document.getElementById('cp-src-info'); if (pop && !pop.innerHTML) pop.innerHTML = CP_API_NOTE;
@@ -4292,11 +4294,12 @@ const cppHandleLink = h => `<a class="cpp-handle" href="javascript:void(0)" oncl
 
 async function renderCpProductView() {
   const from = getDateValue('From'), to = getDateValue('To');
-  const key = `${from}|${to}|${cppSelectedSku || ''}`;
+  const apiSfx = cpUseApi(from) ? '_api' : '';   // (2026-10-06) มุมมองสินค้าใช้ API ด้วย (ช่วงที่มีข้อมูล)
+  const key = `${apiSfx}|${from}|${to}|${cppSelectedSku || ''}`;
   const seq = (renderCpProductView._seq = (renderCpProductView._seq || 0) + 1);
   if (!cppCache[key]) {
     document.getElementById('cpp-kpis').innerHTML = [1, 2, 3, 4].map(() => `<div class="card"><div class="card-title">กำลังโหลด…</div><div class="kpi-value" style="opacity:.3;">—</div></div>`).join('');
-    try { cppCache[key] = await supaRpc('creator_product_page', { p_from: from, p_to: to, p_sku: cppSelectedSku }); }
+    try { cppCache[key] = await supaRpc('creator_product_page' + apiSfx, { p_from: from, p_to: to, p_sku: cppSelectedSku }); }
     catch (e) { showError('โหลดมุมมองสินค้าไม่สำเร็จ: ' + e.message); return; }
   }
   if (seq !== renderCpProductView._seq || currentPage !== 'creatorperf' || cpView !== 'product') return;
@@ -4484,6 +4487,8 @@ async function renderCreatorPerf() {
   if (cpView === 'product') return renderCpProductView();   // มุมมองสินค้า (สลับจาก topbar)
   const overviewEl = document.getElementById('cp-overview-section');
   if (overviewEl) overviewEl.style.display = cpSelectedCreator ? 'none' : 'block';
+  { const apiOn = cpUseApi(getDateValue('From'));   // (2026-10-06) โหมด API: Top 10 สามตารางรวมเป็น "ครีเอเตอร์ทั้งหมด" ในส่วน API (กรอง Live / คลิป / โชว์เคส และ เปิด / ปิด ได้)
+    ['cp-top10-divider', 'cp-top10-grid'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = apiOn ? 'none' : ''; }); }
 
   const from = getDateValue('From'), to = getDateValue('To');
   // เฟส 3: จาก mv_creator_daily ผ่าน RPC (สรุปต่อคน / มาแรง / Top SKU / รายวัน) — ไม่แตะ allData
