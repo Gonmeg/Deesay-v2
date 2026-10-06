@@ -390,7 +390,7 @@
   // สต็อกที่มีจริง = ในคลังทุกที่ + Hold ที่โรงงาน (ผลิตเสร็จแล้ว เรียกเข้าได้ใน 2–3 วัน)
   const stockAll = r => Math.max(0, +r.on_hand || 0) + (HOLD[r.sku] || 0);
   const wipQty = sku => (OPEN_PO[sku] || []).reduce((t, x) => t + x.q, 0);
-  const H = () => ({ apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' });
+  const H = () => ({ apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' });
   async function loadPlans() {
     try {
       const [p, st, po] = await Promise.all([
