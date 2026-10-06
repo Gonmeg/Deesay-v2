@@ -1332,6 +1332,9 @@ const TIKTOK_ATTR_FIELDS = [
 ]
 // เฉพาะ Facebook เท่านั้น — ช่องทางอื่นใช้วันที่สั่งซื้อเป็นตัวตัดรอบเดือนอยู่แล้ว ไม่ต้องเก็บวันที่จัดส่งเพิ่ม
 const FACEBOOK_DELIVERY_FIELD = { key:'delivery_date', label:'วันที่จัดส่ง (สำหรับเทียบบัญชี)', required:false, keywords:['วันที่จัดส่ง','delivery date','ship date','shipdate'] }
+// (2026-10-06) พนักงานขาย (คนเปิดบิล) — ใช้ทำหน้าพนักงานขาย / ค่าคอม · ชื่อจัดรูปแบบ "Admin - ชื่อ" ให้เหมือนกันทุกไฟล์
+const FACEBOOK_SALES_ADMIN_FIELD = { key:'sales_admin', label:'พนักงานขาย', required:false, keywords:['พนักงานขาย','sales person','salesperson'] }
+const normSalesAdmin = s => { s = String(s ?? '').trim(); if (!s || s === '-') return null; return /^admin/i.test(s) ? s.replace(/\s*-\s*/g, ' - ') : s }
 
 const REVENUE_FIELDS = {
   Facebook: [
@@ -1406,7 +1409,7 @@ function getFields(channel) {
   let base = BASE_FIELDS
   if (channel === 'Lazada') base = BASE_FIELDS.filter(f => f.key !== 'province' && f.key !== 'district')
   if (channel === 'TikTok') base = [...base, QTY_MULTIPLIER_FIELD, ...TIKTOK_ATTR_FIELDS]
-  if (channel === 'Facebook') base = [...base, FACEBOOK_DELIVERY_FIELD]
+  if (channel === 'Facebook') base = [...base, FACEBOOK_DELIVERY_FIELD, FACEBOOK_SALES_ADMIN_FIELD]
   if (channel === 'Shopee') base = [...base, ...SHOPEE_STATUS_FIELDS]
   if (channel === 'Lazada') base = [...base, ...LAZADA_STATUS_FIELDS]
   return [...base, ...revFields]
@@ -1925,7 +1928,7 @@ async function handleConfirm() {
     const deduped = [...dedupMap.values()]
     // อัปไฟล์ทับของเดิม: ช่องที่ไฟล์นี้ไม่มี (ไม่ได้จับคู่คอลัมน์) จะไม่ถูกส่งไป → ข้อมูลเดิมในระบบไม่ถูกล้างเป็นค่าว่าง (เช่น Order Channel / Creator Handle ในไฟล์เก่า)
     // และสถานะรับเงินเดิมไม่ถูกรีเซ็ต (ยกเว้น Facebook ที่ตั้งว่าได้เงินแล้วตามเดิม) — ออเดอร์ใหม่ได้ค่าเริ่มต้นของตารางเหมือนเดิม (settled = false)
-    const dropKeys = ['order_channel','creator_handle','province','district','postcode','customer_name','phone','payment_method','order_status','delivery_date'].filter(k => !mappings[k])
+    const dropKeys = ['order_channel','creator_handle','province','district','postcode','customer_name','phone','payment_method','order_status','delivery_date','sales_admin'].filter(k => !mappings[k])
     if (channel !== 'Facebook') dropKeys.push('settled', 'settled_date')
     const upsertRows = dropKeys.length ? deduped.map(r => { const o = { ...r }; dropKeys.forEach(k => delete o[k]); return o }) : deduped
     const BATCH = 500; let done = 0
@@ -2084,7 +2087,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       else if (lazStatus === 'Package Returned' || lazStatus === 'returned' || lazStatus === 'In Transit: Returning to seller') cancel_return_type = 'Return/Refund' // (2026-09-17) เทียบบัญชี เม.ย.–ก.ค. 69: returned / กำลังตีกลับ บัญชีนับเป็นตีกลับด้วย
       else cancel_return_type = 'None'
     }
-    return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null, order_adj }
+    return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, sales_admin: mappings['sales_admin'] ? normSalesAdmin(gs('sales_admin')) : null, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null, order_adj }
   }).filter(r => r.order_id && r.date)
 
   const CRT_SEVERITY = { 'Cancel': 2, 'Return/Refund': 2, 'None': 0 }
@@ -2107,7 +2110,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
     const _composite = mergeSkus(allSkus)
     const _parentStr = promoParentStr(_composite), _childStr = promoChildStr(_composite)
-    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:_parentStr, sku_promotion_child:(_childStr && _childStr !== _parentStr) ? _childStr : null, sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round((g._revenueSum + (g._orderAdj||0))*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
+    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:_parentStr, sku_promotion_child:(_childStr && _childStr !== _parentStr) ? _childStr : null, sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round((g._revenueSum + (g._orderAdj||0))*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, sales_admin:g.sales_admin||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
