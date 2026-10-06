@@ -549,6 +549,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="nav-item nav-sub" onclick="showPage('promotarget',null,this)"><span class="nav-icon">🎯</span> ตั้งเป้าโปรโมชั่น</div>
       <div class="nav-item nav-sub" onclick="showPage('fbengage',null,this)"><span class="nav-icon">📈</span> Engagement รายวัน</div>
       <div class="nav-item nav-sub" onclick="showPage('fbads',null,this)"><span class="nav-icon">📢</span> Facebook Ads</div>
+      <div class="nav-item nav-sub" onclick="showPage('fbadmin',null,this)"><span class="nav-icon">🧑‍💼</span> พนักงานขาย</div>
     </div>
     <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('tt')" id="navGroupLabel-tt">
       <span>TikTok</span><span class="nav-group-chevron" id="navGroupChevron-tt">▸</span>
@@ -590,7 +591,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-i</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1157,6 +1158,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
     <div class="page" id="page-skuanalysis">
       <!-- (2026-09-30) หน้าเจาะสินค้าใหม่ — สร้างโดย skudeep.js (โหลดครั้งแรกที่กดเมนู) -->
+      <div class="card"><div class="empty">กำลังโหลด...</div></div>
+    </div>
+
+    <div class="page" id="page-fbadmin">
+      <!-- (2026-10-06) หน้าพนักงานขาย (Facebook / Line) — สร้างโดย fbadmin.js (โหลดครั้งแรกที่กดเมนู) -->
       <div class="card"><div class="empty">กำลังโหลด...</div></div>
     </div>
 
@@ -2789,10 +2795,10 @@ const pageTitles = {
   tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttkeyword: 'ค้นหาคำบน TikTok', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
   skurev: 'แนวโน้มสินค้า — อะไรขึ้น อะไรลง', skuanalysis: 'เจาะสินค้า', adperf: 'Ad Performance',
-  cost: 'Business Insight', mktlive: 'MKT Tracking', home: 'หน้าแรก — สรุปประจำวัน', fbengage: 'Engagement รายวัน (Facebook)', fbads: 'Facebook Ads (Meta)', kol: 'KOL',
+  cost: 'Business Insight', mktlive: 'MKT Tracking', home: 'หน้าแรก — สรุปประจำวัน', fbengage: 'Engagement รายวัน (Facebook)', fbads: 'Facebook Ads (Meta)', fbadmin: 'พนักงานขาย (Facebook / Line)', kol: 'KOL',
   supply: 'Supply Chain — สต็อก / แผนสั่งซื้อ'
 };
-const pageOrder = ['home','overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
+const pageOrder = ['home','overview','channel','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','fbadmin','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
 const NO_DATE_FILTER_PAGES = ['promotarget','supply','home']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
@@ -2922,7 +2928,7 @@ function showPage(page, lockCh, el) {
 
   // (2026-09-22) MKT Tracking ดูทุกช่องทางรวม (แยกช่องทางดูในหน้า) → ซ่อน Channel / Sub-channel
   // (2026-09-25) Business Insight / MKT Tracking ใช้ตัวเลือกเดือนด้านบน + ปุ่มค้นหา · ไม่มี Channel / Sub-channel (แยกช่องทางดูในหน้า)
-  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
+  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis' || page === 'fbadmin';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
@@ -3007,6 +3013,18 @@ function loadFbAdsPage() {
   document.body.appendChild(s);
 }
 
+// (2026-10-06) หน้าพนักงานขาย (Facebook / Line): โค้ดอยู่ใน fbadmin.js — โหลดครั้งแรกที่กดเมนู
+function loadFbAdminPage() {
+  if (window.renderFbAdminPage) { window.renderFbAdminPage(); return; }
+  if (window._fbadminLoading) return;
+  window._fbadminLoading = true;
+  const s = document.createElement('script');
+  s.src = 'fbadmin.js?v=20261006b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbadmin.js
+  s.onload = () => { window._fbadminLoading = false; if (currentPage === 'fbadmin') window.renderFbAdminPage(); };
+  s.onerror = () => { window._fbadminLoading = false; document.getElementById('page-fbadmin').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbadmin.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+  document.body.appendChild(s);
+}
+
 // (2026-10-06) มุมมองจาก TikTok Shop API (ทราฟฟิกร้าน / รอบ Live / Commission ครีเอเตอร์): โค้ดอยู่ใน ttapi.js — โหลดครั้งแรกที่เปิดหน้าภาพรวม TikTok หรือ Creator Performance
 let _ttApiPromise = null;
 function ensureTtApi() {
@@ -3083,6 +3101,7 @@ function renderCurrentPage() {
   else if (currentPage === 'kol') renderKolPage();
   else if (currentPage === 'supply') loadSupplyPage();
   else if (currentPage === 'fbads') loadFbAdsPage();
+  else if (currentPage === 'fbadmin') loadFbAdminPage();
   // skuanalysis, adperf, livesearch render on-demand ผ่านปุ่ม
 }
 
@@ -7443,7 +7462,7 @@ const DG_PAGE = {
   home: ['orders_', ...DG_ADS], overview: ['orders_', ...DG_ADS], channel: ['orders_', ...DG_ADS], promotarget: ['orders_'], geo: ['orders_'],
   skurev: ['orders_'], skuanalysis: ['orders_', ...DG_ADS, 'kol_file', 'stock_log'],
   fbhub: ['orders_Facebook'], crm: ['orders_Facebook'], flow: ['orders_Facebook'], neverbought: ['orders_Facebook'],
-  fbads: ['fb_ads_accounts', 'fb_cpas'],
+  fbads: ['fb_ads_accounts', 'fb_cpas'], fbadmin: ['orders_Facebook'],
   tthub: ['orders_TikTok'], ttads: ['tt_', 'orders_TikTok'], livesearch: ['tt_', 'orders_TikTok'], creatorperf: ['orders_TikTok', 'tt_', 'kol_file', 'eq_kol_tt'],
   shhub: ['orders_Shopee'], shads: ['sh_ads_', 'sh_manual', 'fb_cpas', 'fb_ads_accounts', 'orders_Shopee'], lzhub: ['orders_Lazada', 'lz_ads'],
   kol: ['kol_file', 'kol_claims', 'fb_ads_accounts', 'tt_', 'eq_kol_'],
@@ -7458,7 +7477,7 @@ const DG_SCHED = {
   overview: `${DG_ORD} · ตัวแทน / MT 03:45, 13:45`, channel: `${DG_ORD} · ตัวแทน / MT 03:45, 13:45`, promotarget: DG_ORD, geo: DG_ORD, skurev: DG_ORD,
   skuanalysis: `${DG_ORD} · Ads / KOL ตามรอบของแต่ละช่องทาง · สต็อก 04:00`,
   fbhub: DG_ORD, crm: DG_ORD, flow: DG_ORD, neverbought: DG_ORD, fbengage: 'วันละครั้ง 07:30',
-  fbads: '08:45 / 20:45',
+  fbads: '08:45 / 20:45', fbadmin: DG_ORD,
   tthub: DG_ORD, ttcontent: '07:30 / 19:30', ttkeyword: 'วันละครั้ง 06:00', ttads: '09:50 / 13:50', livesearch: 'Ads 09:50 / 13:50',
   creatorperf: `${DG_ORD} · Ads 09:50 / 13:50 · ค่าจ้าง KOL 08:40 / 12:40 / 16:40 / 20:40`,
   shhub: DG_ORD, shads: 'Product / Shop Ads 08:15 · Brand / Live / Meta / เหรียญ ช่วงเช้า · CPAS 08:45 / 20:45',
