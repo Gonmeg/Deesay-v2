@@ -18,6 +18,7 @@ window.DEESAY_PAGES = [
   { id: 'promotarget',  name: 'ตั้งเป้าโปรโมชั่น',      group: 'Facebook' },
   { id: 'fbengage',     name: 'Engagement รายวัน',     group: 'Facebook' },
   { id: 'fbads',        name: 'Facebook Ads',          group: 'Facebook' },
+  { id: 'fbadmin',      name: 'พนักงานขาย',             group: 'Facebook' },
   { id: 'tthub',        name: 'ภาพรวม TikTok',         group: 'TikTok' },
   { id: 'ttcontent',    name: 'ผลงานคอนเทนต์',         group: 'TikTok' },
   { id: 'ttkeyword',    name: 'ค้นหาคำบน TikTok',      group: 'TikTok' },
