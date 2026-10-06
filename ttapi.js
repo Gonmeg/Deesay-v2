@@ -1,3 +1,4 @@
+// ttapi.js (v20261006d) — (d) ตัวกรอง ทุกคน / KOL / Affiliate บนแถบด้านบน (dashboard: cpTypeOk) ใช้กับส่วน Commission + ป้ายประเภทหลังชื่อ (cpKindBadge)
 // ttapi.js (v20261006c) — มุมมองใหม่จาก TikTok Shop API · โหลดครั้งแรกที่เปิดหน้าภาพรวม TikTok / Creator Performance
 //   ภาพรวม TikTok  → ตาราง "ยอดขายแยกตามช่องทาง" จาก API (แทนช่อง Order Channel ในไฟล์) · ทราฟฟิกร้าน (Impression → เข้าชม → ยอด) · ผลงานรายรอบ Live
 //   (v20261006c) ตัดส่วนที่ซ้ำ: GMV ในทราฟฟิก (ซ้ำกับกราฟยอดขาย / ตารางช่องทาง) · ยอดขายครีเอเตอร์ในส่วน Commission (ซ้ำกับการ์ดด้านบน) · Top 10 ครีเอเตอร์ 3 ตาราง (รวมเป็นตารางเดียวที่กรองได้)
@@ -106,6 +107,7 @@
   // ================= Creator Performance (วิธี API): Commission + คอนเทนต์ =================
   let _crSeq = 0, _crType = 'all', _crCh = 'all', _crArgs = null;
   const CT_LABEL = { open: 'เปิด', target: 'ปิด', both: 'เปิด + ปิด' };
+  const kb = h => (typeof cpKindBadge === 'function' ? cpKindBadge(h) : '');   // (d) ป้าย KOL / Affiliate / บัญชีร้าน
   const ctBadge = t => `<span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:10.5px;background:${t === 'target' ? 'rgba(167,139,250,0.18)' : t === 'both' ? 'rgba(251,191,36,0.18)' : 'rgba(74,222,128,0.15)'};color:${t === 'target' ? '#a78bfa' : t === 'both' ? '#fbbf24' : '#4ade80'};">${CT_LABEL[t] || t}</span>`;
   async function renderCreatorExtras(from, to, on, handle) {
     _crArgs = [from, to, on, handle];
@@ -116,7 +118,7 @@
     el.style.display = 'block';
     const seq = ++_crSeq;
     el.innerHTML = `
-      <div class="section-divider"><span>💰 ครีเอเตอร์ · Commission · คอนเทนต์ (TikTok API) ${info('ttapi-cr-info', '<b>ที่มา:</b> Affiliate API ของ TikTok Shop — ทุกออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์<br><b>ยอดขาย</b> = ยอดสุทธิของออเดอร์ (ไม่นับยกเลิก / คืน) · 1 ออเดอร์นับให้ครีเอเตอร์ที่ได้ Commission มากสุด<br><b>Commission</b> = ที่ TikTok จ่ายครีเอเตอร์ · <b>Ads Commission</b> = ส่วนที่จ่ายผ่าน GMV Max<br><b>ยอดต่อ ฿1</b> = ยอดขาย ÷ (Commission + Ads Commission)<br><b>กรองช่องทาง</b> (Live / คลิป / โชว์เคส): ยอดขายเป็นของช่องทางนั้น แต่ Commission เป็นของทั้งคน (TikTok ไม่แยกตามช่องทาง) จึงไม่คำนวณ % และยอดต่อ ฿1<br><b>เปิด (Open Collaboration)</b> = ครีเอเตอร์คนไหนก็หยิบสินค้าไปขายได้ ตามอัตรา Commission ที่ร้านเปิดไว้<br><b>ปิด (Target Collaboration)</b> = ร้านเชิญครีเอเตอร์เฉพาะคน ตั้งอัตราเฉพาะ (ส่วนใหญ่คือ KOL ที่จ้าง — Commission จึงต่ำ เพราะจ่ายค่าจ้างแยก ดูหน้า KOL)')}</span></div>
+      <div class="section-divider"><span>💰 ครีเอเตอร์ · Commission · คอนเทนต์ (TikTok API) ${info('ttapi-cr-info', '<b>ที่มา:</b> Affiliate API ของ TikTok Shop — ทุกออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์<br><b>ยอดขาย</b> = ยอดสุทธิของออเดอร์ (ไม่นับยกเลิก / คืน) · 1 ออเดอร์นับให้ครีเอเตอร์ที่ได้ Commission มากสุด<br><b>Commission</b> = ที่ TikTok จ่ายครีเอเตอร์ · <b>Ads Commission</b> = ส่วนที่จ่ายผ่าน GMV Max<br><b>ยอดต่อ ฿1</b> = ยอดขาย ÷ (Commission + Ads Commission)<br><b>กรองช่องทาง</b> (Live / คลิป / โชว์เคส): ยอดขายเป็นของช่องทางนั้น แต่ Commission เป็นของทั้งคน (TikTok ไม่แยกตามช่องทาง) จึงไม่คำนวณ % และยอดต่อ ฿1<br><b>เปิด (Open Collaboration)</b> = ครีเอเตอร์คนไหนก็หยิบสินค้าไปขายได้ ตามอัตรา Commission ที่ร้านเปิดไว้<br><b>ปิด (Target Collaboration)</b> = ร้านเชิญครีเอเตอร์เฉพาะคน ตั้งอัตราเฉพาะ (ส่วนใหญ่คือ KOL ที่จ้าง — Commission จึงต่ำ เพราะจ่ายค่าจ้างแยก ดูหน้า KOL)<br><b>ตัวกรองด้านบน</b> ทุกคน / KOL / Affiliate ใช้กับส่วนนี้ด้วย · ป้ายหลังชื่อ = กลุ่มของครีเอเตอร์ (KOL = มีงานในไฟล์ทีม KOL)')}</span></div>
       <div id="ttapi-cr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">เปิด vs ปิด</div></div>
         <div class="table-wrap"><table><thead><tr><th>แบบ</th><th>ครีเอเตอร์</th><th>ออเดอร์</th><th>ยอดขาย</th><th>สัดส่วนยอด</th><th>Commission</th><th>Ads Commission</th><th>% Commission</th><th>ยอดเฉลี่ย / คน</th><th>Commission เฉลี่ย / คน</th></tr></thead><tbody id="ttapi-ct-cmp"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div>
@@ -131,7 +133,9 @@
     try {
       const [cr, ct] = await Promise.all([supaRpc('creator_commission_api', { p_from: from, p_to: to }, true), supaRpc('creator_content_api', { p_from: from, p_to: to, p_handle: handle || null, p_limit: 500 }, true)]);
       if (seq !== _crSeq) return;
-      const base = handle ? cr.filter(r => r.creator === String(handle).toLowerCase()) : cr;
+      const typeOk = h => (typeof cpTypeOk === 'function' ? cpTypeOk(h) : true);   // (d) ตัวกรอง ทุกคน / KOL / Affiliate
+      const base = handle ? cr.filter(r => r.creator === String(handle).toLowerCase()) : cr.filter(r => typeOk(r.creator));
+      const ctRows = handle ? ct : ct.filter(r => typeOk(r.creator));
       const sum = (arr, k) => arr.reduce((t, r) => t + num(r[k]), 0);
       const S = { rev: sum(base, 'revenue'), com: sum(base, 'commission'), ads: sum(base, 'shop_ads_commission'), ct: sum(base, 'contents') };
       const op = base.filter(r => num(r.open_orders) > 0), tg = base.filter(r => num(r.target_orders) > 0);
@@ -156,12 +160,12 @@
       const bar = r => { const t = num(r.revenue) || 1; const seg = (v, c) => `<span style="display:inline-block;height:8px;width:${(num(v) / t * 100).toFixed(1)}%;background:${c};"></span>`;
         return `<div title="Live ${baht(r.rev_live)} · คลิป ${baht(r.rev_video)} · อื่นๆ ${baht(r.rev_other)}" style="width:120px;background:var(--bg3);border-radius:4px;overflow:hidden;display:flex;">${seg(r.rev_live, '#f472b6')}${seg(r.rev_video, '#60a5fa')}${seg(r.rev_other, '#c8a96e')}</div>`; };
       pagedTable('ttapi-cr', rows, x => { const r = x.r, cost = x.com + x.ads;
-        return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><a href="javascript:void(0)" onclick="selectCpCreator('${esc(r.creator)}')" style="color:inherit;text-decoration:underline dotted;">@${esc(r.creator)}</a></td><td>${ctBadge(r.collab)}</td><td>${baht(x.rev)}</td><td>${fmt(x.ord)}</td><td>${baht(x.com)}</td><td>${x.ads ? baht(x.ads) : '—'}</td><td>${_crCh === 'all' ? pctTxt(x.com, x.rev) : '—'}</td><td>${_crCh === 'all' && cost > 0 ? baht(x.rev / cost) : '—'}</td>${_crType === 'all' ? `<td>${bar(r)}</td>` : ''}<td>${fmt(r.contents)}</td></tr>`; }, _crType === 'all' ? 10 : 9);
+        return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><a href="javascript:void(0)" onclick="selectCpCreator('${esc(r.creator)}')" style="color:inherit;text-decoration:underline dotted;">@${esc(r.creator)}</a>${kb(r.creator)}</td><td>${ctBadge(r.collab)}</td><td>${baht(x.rev)}</td><td>${fmt(x.ord)}</td><td>${baht(x.com)}</td><td>${x.ads ? baht(x.ads) : '—'}</td><td>${_crCh === 'all' ? pctTxt(x.com, x.rev) : '—'}</td><td>${_crCh === 'all' && cost > 0 ? baht(x.rev / cost) : '—'}</td>${_crType === 'all' ? `<td>${bar(r)}</td>` : ''}<td>${fmt(r.contents)}</td></tr>`; }, _crType === 'all' ? 10 : 9);
       const TYPE = { LIVE: 'Live', VIDEO: 'คลิป', SHOWCASE: 'โชว์เคส', LINKSHARE: 'ลิงก์', SHOP: 'ร้าน' };
-      pagedTable('ttapi-ct', ct, r => {
+      pagedTable('ttapi-ct', ctRows, r => {
         const link = r.content_type === 'VIDEO' ? `<a href="https://www.tiktok.com/@${encodeURIComponent(r.creator)}/video/${encodeURIComponent(r.content_id)}" target="_blank" rel="noopener" style="color:var(--blue,#60a5fa);">เปิดคลิป ↗</a>`
           : `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${esc(r.content_id)}</span>`;
-        return `<tr><td>${TYPE[r.content_type] || esc(r.content_type || '—')}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">@${esc(r.creator)}</td><td>${link}</td><td>${baht(r.revenue)}</td><td>${fmt(r.orders)}</td><td>${baht(r.commission)}</td><td style="white-space:nowrap;">${r.first_date === r.last_date ? r.first_date : r.first_date + ' – ' + r.last_date}</td></tr>`;
+        return `<tr><td>${TYPE[r.content_type] || esc(r.content_type || '—')}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">@${esc(r.creator)}${kb(r.creator)}</td><td>${link}</td><td>${baht(r.revenue)}</td><td>${fmt(r.orders)}</td><td>${baht(r.commission)}</td><td style="white-space:nowrap;">${r.first_date === r.last_date ? r.first_date : r.first_date + ' – ' + r.last_date}</td></tr>`;
       }, 7);
     } catch (e) {
       if (seq === _crSeq) document.getElementById('ttapi-cr-kpis').innerHTML = `<div class="error-banner" style="display:block;">โหลด Commission ไม่สำเร็จ: ${esc(e.message)}</div>`;
