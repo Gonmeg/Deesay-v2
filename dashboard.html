@@ -585,7 +585,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-f</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-g</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3906,7 +3906,7 @@ async function renderLzHub() {
 
 // ===== LIVE SEARCH (TikTok) =====
 let lsSelectedCreators = [];
-document.addEventListener('DOMContentLoaded', () => { if (typeof lsLoadSavedList === 'function') lsLoadSavedList(); });
+document.addEventListener('DOMContentLoaded', () => { (window._authP || Promise.resolve()).then(() => { if (typeof lsLoadSavedList === 'function') lsLoadSavedList(); }); });   // (2026-10-06) รอล็อกอินเสร็จก่อน ไม่งั้นคำขอแรกหลุดไปเป็นสิทธิ์ anon
 let _lsAllCreators = [];
 
 // ===== MODERN TRADE HUB =====
@@ -10601,7 +10601,8 @@ function closeWhatsNew() {
 }
 function wnGo() { const pg = document.getElementById('wnGoBtn').dataset.page; closeWhatsNew(); if (pg) showPage(pg, null, document.querySelector(`.nav-item[onclick*="'${pg}'"]`)); }
 
-Auth.require('dashboard').then(p => {
+window._authP = Auth.require('dashboard');
+window._authP.then(p => {
   applyPermissions(p);
   loadWhatsNew();
   // (2026-09-29) ทุกคนเปิดมาเจอ "หน้าแรก" ทันที — ไม่ต้องรอข้อมูลหน้าภาพรวมโหลดเสร็จ (หน้าแรกดึงข้อมูลของตัวเอง)
