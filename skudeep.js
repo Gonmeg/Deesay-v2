@@ -72,7 +72,7 @@
 
   async function loadProducts() {
     if (_prods) return _prods;
-    const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/products?select=parent_sku,product_name&parent_sku=not.is.null&order=parent_sku.asc`, h);
     const by = {}; rows.forEach(r => { const k = String(r.parent_sku).trim(); if (k && !by[k]) by[k] = r.product_name || k; });
     _prods = Object.entries(by).map(([sku, name]) => ({ sku, name }));
