@@ -18,7 +18,7 @@
   // อ่าน 2 ค่าเล็ก ๆ จากตาราง tiktok_account_daily ตรง ๆ: วันล่าสุดที่มีข้อมูล + เวลาที่ดึงครั้งสุดท้าย
   async function loadFreshness() {
     try {
-      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
       const base = `${window.SUPABASE_URL}/rest/v1/tiktok_account_daily`;
       const [a, b] = await Promise.all([
         fetch(`${base}?select=stat_date&order=stat_date.desc&limit=1`, { headers: h }).then(r => r.json()),
@@ -142,7 +142,7 @@
       const idOf = v => String(v.item_id || v.video_id || (String(v.share_url || '').match(/video\/(\d+)/) || [])[1] || '');
       const missing = vids.filter(v => !v.thumbnail_url && idOf(v));
       if (!missing.length) return;
-      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
       const map = {};
       for (let i = 0; i < missing.length; i += 150) {
         const ids = missing.slice(i, i + 150).map(idOf).join(',');
