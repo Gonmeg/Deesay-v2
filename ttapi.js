@@ -1,5 +1,6 @@
-// ttapi.js (v20261006b) — มุมมองใหม่จาก TikTok Shop API · โหลดครั้งแรกที่เปิดหน้าภาพรวม TikTok / Creator Performance
-//   ภาพรวม TikTok  → ทราฟฟิกร้าน (Impression → เข้าชมหน้าสินค้า → ยอดขาย แยก Live / คลิป / หน้าสินค้า) + ผลงานรายรอบ Live
+// ttapi.js (v20261006c) — มุมมองใหม่จาก TikTok Shop API · โหลดครั้งแรกที่เปิดหน้าภาพรวม TikTok / Creator Performance
+//   ภาพรวม TikTok  → ตาราง "ยอดขายแยกตามช่องทาง" จาก API (แทนช่อง Order Channel ในไฟล์) · ทราฟฟิกร้าน (Impression → เข้าชม → ยอด) · ผลงานรายรอบ Live
+//   (v20261006c) ตัดส่วนที่ซ้ำ: GMV ในทราฟฟิก (ซ้ำกับกราฟยอดขาย / ตารางช่องทาง) · ยอดขายครีเอเตอร์ในส่วน Commission (ซ้ำกับการ์ดด้านบน) · Top 10 ครีเอเตอร์ 3 ตาราง (รวมเป็นตารางเดียวที่กรองได้)
 //   Creator Performance (วิธีนับ API) → Commission ที่จ่ายจริงต่อครีเอเตอร์ · แยก Open (เปิด) / Target (ปิด) · คอนเทนต์ที่ขายได้
 // RPC: tiktok_traffic_daily · tiktok_lives_list · creator_commission_api · creator_content_api
 (function () {
@@ -19,8 +20,9 @@
     if (!el) {
       const page = document.getElementById(pageId); if (!page) return null;
       el = document.createElement('div'); el.id = id;
-      const before = beforeId && document.getElementById(beforeId);
-      if (before && before.parentNode) before.parentNode.insertBefore(el, before); else page.appendChild(el);
+      let before = beforeId && document.getElementById(beforeId);
+      while (before && before.parentElement && before.parentElement !== page) before = before.parentElement;   // ขึ้นไปถึงกล่องชั้นนอกสุดในหน้า
+      if (before && before.parentElement === page) page.insertBefore(el, before); else page.appendChild(el);
     }
     return el;
   }
@@ -40,12 +42,11 @@
   // ================= ภาพรวม TikTok: ทราฟฟิกร้าน + รอบ Live =================
   let _trSeq = 0, _liveScope = 'own';
   async function renderTraffic(from, to) {
-    const el = box('page-tthub', 'ttapi-traffic'); if (!el || !from || !to) return;
+    const el = box('page-tthub', 'ttapi-traffic', 'tblTopSKUTt'); if (!el || !from || !to) return;
     const seq = ++_trSeq;
     el.innerHTML = `
-      <div class="section-divider"><span>📈 ทราฟฟิกร้าน TikTok ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน<br><b>GMV</b> = ยอดตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) ใช้ดูสัดส่วนและแนวโน้ม ยอดขายบัญชีดูที่กราฟด้านบน<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า<br><b>CTR</b> = เข้าชม ÷ Impression · <b>GMV / 1,000 Impression</b> = ช่องทางไหนเปลี่ยนการมองเห็นเป็นยอดได้ดี')}</span></div>
+      <div class="section-divider"><span>📈 ทราฟฟิกร้าน TikTok ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน<br><b>GMV</b> = ยอดตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) ใช้เทียบประสิทธิภาพช่องทาง · ยอดขายจริงดูที่กราฟและตารางช่องทางด้านบน<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า<br><b>CTR</b> = เข้าชม ÷ Impression · <b>GMV / 1,000 Impression</b> = ช่องทางไหนเปลี่ยนการมองเห็นเป็นยอดได้ดี')}</span></div>
       <div id="ttapi-tr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
-      <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">GMV แยกช่องทาง</div></div><div class="chart-wrap" style="height:300px;"><canvas id="chartTtApiTraffic"></canvas></div></div>
       <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">ประสิทธิภาพแต่ละช่องทาง</div></div>
         <div class="table-wrap"><table><thead><tr><th>ช่องทาง</th><th>GMV</th><th>สัดส่วน</th><th>Impression</th><th>เข้าชม</th><th>CTR</th><th>GMV / 1,000 Impression</th><th>GMV / เข้าชม</th></tr></thead><tbody id="ttapi-tr-src"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div>
       <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ผลงานรายรอบ Live ${info('ttapi-live-info', 'รอบ Live ที่ขายสินค้าของร้าน จาก TikTok Shop Analytics · เรียงจาก GMV มากไปน้อย<br><b>CTR</b> = คลิกสินค้า ÷ การแสดงสินค้าใน Live · <b>คลิก→สั่ง</b> = สั่งซื้อ ÷ คลิกสินค้า · <b>ดูเฉลี่ย</b> = วินาทีต่อคนดู')}</div>
@@ -59,21 +60,10 @@
       const impr = SRC.reduce((a, s) => a + T['impr_' + s.k], 0), pv = SRC.reduce((a, s) => a + T['pv_' + s.k], 0);
       const last = rows.length ? rows[rows.length - 1].date : null;
       document.getElementById('ttapi-tr-kpis').innerHTML =
-        kpi('GMV', baht(T.gmv), last ? 'ข้อมูลถึง ' + last : '') +
-        kpi('Impression สินค้า', fmt(impr), '') +
+        kpi('Impression สินค้า', fmt(impr), last ? 'ข้อมูลถึง ' + last : '') +
         kpi('เข้าชมหน้าสินค้า', fmt(pv), 'CTR ' + pctTxt(pv, impr, 2)) +
         kpi('ออเดอร์', fmt(T.orders), 'ต่อการเข้าชม ' + pctTxt(T.orders, pv)) +
         kpi('คืนเงิน', baht(T.refunds), pctTxt(T.refunds, T.gmv) + ' ของ GMV');
-      // กราฟ: รายวัน (ไม่เกิน 1 เดือน) / รายเดือน
-      const monthly = isMonthly(from, to), agg = {};
-      rows.forEach(r => { const k = monthly ? String(r.date).slice(0, 7) : r.date; const a = (agg[k] = agg[k] || { live: 0, video: 0, card: 0 }); SRC.forEach(s => { a[s.k] += num(r['gmv_' + s.k]); }); });
-      const labels = Object.keys(agg).sort();
-      const tick = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
-      makeChart('chartTtApiTraffic', 'bar', labels.map(l => (monthly ? l : l.slice(5).split('-').reverse().join('/'))),
-        SRC.map(s => ({ label: s.label, data: labels.map(l => Math.round(agg[l][s.k])), backgroundColor: s.color, borderColor: s.color, stack: 'g' })),
-        { scales: { x: { stacked: true, ticks: { ...tick, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
-                    y: { stacked: true, ticks: { ...tick, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },
-          tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${baht(c.parsed.y)}`, footer: items => 'รวม ' + baht(items.reduce((a, i) => a + (i.parsed?.y || 0), 0)) } } });
       document.getElementById('ttapi-tr-src').innerHTML = SRC.map(s => {
         const g = T['gmv_' + s.k], im = T['impr_' + s.k], p = T['pv_' + s.k];
         return `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color};margin-right:6px;"></span>${s.label}</td><td>${baht(g)}</td><td>${pctTxt(g, T.gmv)}</td><td>${fmt(im)}</td><td>${fmt(p)}</td><td>${pctTxt(p, im, 2)}</td><td>${im > 0 ? baht(g / im * 1000) : '—'}</td><td>${p > 0 ? baht(g / p) : '—'}</td></tr>`;
@@ -87,10 +77,34 @@
       if (seq === _trSeq) el.querySelector('#ttapi-tr-kpis').innerHTML = `<div class="error-banner" style="display:block;">โหลดทราฟฟิกร้าน TikTok ไม่สำเร็จ: ${esc(e.message)}</div>`;
     }
   }
+  // ยอดขายแยกตามช่องทาง จาก API: ครีเอเตอร์ = ตาม Commission ที่ TikTok จ่าย · บัญชีร้าน Live / คลิป = TikTok Analytics · หน้าสินค้า = ส่วนที่เหลือ
+  let _ocSeq = 0;
+  async function renderOrderChannel(from, to) {
+    const tb = document.getElementById('tbodyTtOrderChannel'); if (!tb) return;
+    const seq = ++_ocSeq;
+    const card = tb.closest('.card'), title = card && card.querySelector('.section-title');
+    if (title && !title.dataset.api) { title.dataset.api = '1'; title.innerHTML = 'ยอดขายแยกตามช่องทาง ' + info('ttapi-oc-info', '<b>ที่มา:</b> TikTok Shop API (เดิมใช้ช่อง Order Channel ในไฟล์อัปโหลด)<br><b>ครีเอเตอร์</b> = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · <b>โชว์เคส / ลิงก์</b> = ลูกค้าซื้อผ่านตะกร้าหรือลิงก์ของครีเอเตอร์<br><b>บัญชีร้าน Live / คลิป</b> = ยอดจาก TikTok Analytics รายรอบ / รายคลิป · <b>หน้าสินค้า</b> = ส่วนที่เหลือ<br>ยอดรวมเป็นยอดสุทธิจาก API อาจต่างจากการ์ดยอดขายเล็กน้อย (ออเดอร์ที่ยกเลิก / คืนหลังวันที่อัปไฟล์)'); }
+    try {
+      const rows = await supaRpc('creator_summary_api', { p_from: from, p_to: to }, true);
+      if (seq !== _ocSeq) return;
+      const own = r => String(r.creator_handle || '').toLowerCase() === 'deesaythailand';
+      const G = {};
+      const add = (k, r) => { const g = (G[k] = G[k] || { rev: 0, ord: 0 }); g.rev += num(r.revenue); g.ord += num(r.orders); };
+      rows.forEach(r => {
+        const oc = r.order_channel || '';
+        if (own(r)) add(oc === 'LIVE' ? 'Live (บัญชีร้าน)' : oc === 'Videos' ? 'คลิป (บัญชีร้าน)' : 'หน้าสินค้า', r);
+        else add(oc === 'LIVE' ? 'Live (ครีเอเตอร์)' : oc === 'Videos' ? 'คลิป (ครีเอเตอร์)' : 'โชว์เคส / ลิงก์ (ครีเอเตอร์)', r);
+      });
+      const tot = Object.values(G).reduce((a, g) => a + g.rev, 0);
+      const list = Object.entries(G).sort((a, b) => b[1].rev - a[1].rev);
+      tb.innerHTML = list.length ? list.map(([k, g]) => `<tr><td>${k}</td><td>${baht(g.rev)}</td><td>${fmt(g.ord)}</td><td>${pctTxt(g.rev, tot)}</td></tr>`).join('')
+        + `<tr style="font-weight:700;"><td>รวม</td><td>${baht(tot)}</td><td>${fmt(list.reduce((a, [, g]) => a + g.ord, 0))}</td><td>100%</td></tr>` : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
+    } catch (e) { console.warn('ttapi order channel', e); }
+  }
   function setLiveScope(s) { _liveScope = s; if (typeof renderTtHub === 'function' && currentPage === 'tthub') renderTraffic(getDateValue('From'), getDateValue('To')); }
 
   // ================= Creator Performance (วิธี API): Commission + คอนเทนต์ =================
-  let _crSeq = 0, _crType = 'all', _crArgs = null;
+  let _crSeq = 0, _crType = 'all', _crCh = 'all', _crArgs = null;
   const CT_LABEL = { open: 'เปิด', target: 'ปิด', both: 'เปิด + ปิด' };
   const ctBadge = t => `<span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:10.5px;background:${t === 'target' ? 'rgba(167,139,250,0.18)' : t === 'both' ? 'rgba(251,191,36,0.18)' : 'rgba(74,222,128,0.15)'};color:${t === 'target' ? '#a78bfa' : t === 'both' ? '#fbbf24' : '#4ade80'};">${CT_LABEL[t] || t}</span>`;
   async function renderCreatorExtras(from, to, on, handle) {
@@ -102,12 +116,15 @@
     el.style.display = 'block';
     const seq = ++_crSeq;
     el.innerHTML = `
-      <div class="section-divider"><span>💰 Commission & คอนเทนต์ (TikTok API) ${info('ttapi-cr-info', '<b>ที่มา:</b> Affiliate API ของ TikTok Shop — ทุกออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์<br><b>ยอดขาย</b> = ยอดสุทธิของออเดอร์ (ไม่นับยกเลิก / คืน) · 1 ออเดอร์นับให้ครีเอเตอร์ที่ได้ Commission มากสุด<br><b>Commission</b> = ที่ TikTok จ่ายครีเอเตอร์ · <b>Ads Commission</b> = ส่วนที่จ่ายผ่าน GMV Max<br><b>ยอดต่อ ฿1</b> = ยอดขาย ÷ (Commission + Ads Commission)<br><b>เปิด (Open Collaboration)</b> = ครีเอเตอร์คนไหนก็หยิบสินค้าไปขายได้ ตามอัตรา Commission ที่ร้านเปิดไว้<br><b>ปิด (Target Collaboration)</b> = ร้านเชิญครีเอเตอร์เฉพาะคน ตั้งอัตราเฉพาะ (ส่วนใหญ่คือ KOL ที่จ้าง — Commission จึงต่ำ เพราะจ่ายค่าจ้างแยก ดูหน้า KOL)')}</span></div>
+      <div class="section-divider"><span>💰 ครีเอเตอร์ · Commission · คอนเทนต์ (TikTok API) ${info('ttapi-cr-info', '<b>ที่มา:</b> Affiliate API ของ TikTok Shop — ทุกออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์<br><b>ยอดขาย</b> = ยอดสุทธิของออเดอร์ (ไม่นับยกเลิก / คืน) · 1 ออเดอร์นับให้ครีเอเตอร์ที่ได้ Commission มากสุด<br><b>Commission</b> = ที่ TikTok จ่ายครีเอเตอร์ · <b>Ads Commission</b> = ส่วนที่จ่ายผ่าน GMV Max<br><b>ยอดต่อ ฿1</b> = ยอดขาย ÷ (Commission + Ads Commission)<br><b>กรองช่องทาง</b> (Live / คลิป / โชว์เคส): ยอดขายเป็นของช่องทางนั้น แต่ Commission เป็นของทั้งคน (TikTok ไม่แยกตามช่องทาง) จึงไม่คำนวณ % และยอดต่อ ฿1<br><b>เปิด (Open Collaboration)</b> = ครีเอเตอร์คนไหนก็หยิบสินค้าไปขายได้ ตามอัตรา Commission ที่ร้านเปิดไว้<br><b>ปิด (Target Collaboration)</b> = ร้านเชิญครีเอเตอร์เฉพาะคน ตั้งอัตราเฉพาะ (ส่วนใหญ่คือ KOL ที่จ้าง — Commission จึงต่ำ เพราะจ่ายค่าจ้างแยก ดูหน้า KOL)')}</span></div>
       <div id="ttapi-cr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">เปิด vs ปิด</div></div>
         <div class="table-wrap"><table><thead><tr><th>แบบ</th><th>ครีเอเตอร์</th><th>ออเดอร์</th><th>ยอดขาย</th><th>สัดส่วนยอด</th><th>Commission</th><th>Ads Commission</th><th>% Commission</th><th>ยอดเฉลี่ย / คน</th><th>Commission เฉลี่ย / คน</th></tr></thead><tbody id="ttapi-ct-cmp"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div>
-      <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">ครีเอเตอร์: ยอดขาย vs Commission</div>
-        <div class="toggle-group"><button class="toggle-btn ${_crType === 'all' ? 'active' : ''}" onclick="ttApi.setCrType('all')">ทั้งหมด</button><button class="toggle-btn ${_crType === 'open' ? 'active' : ''}" onclick="ttApi.setCrType('open')">เปิด</button><button class="toggle-btn ${_crType === 'target' ? 'active' : ''}" onclick="ttApi.setCrType('target')">ปิด</button></div></div>
+      <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">ครีเอเตอร์ทั้งหมด (กดชื่อเพื่อดูรายละเอียด)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="toggle-group">${[['all', 'ทุกช่องทาง'], ['live', 'Live'], ['video', 'คลิป'], ['other', 'โชว์เคส / ลิงก์']].map(([k, l]) => `<button class="toggle-btn ${_crCh === k ? 'active' : ''}" onclick="ttApi.setCrCh('${k}')">${l}</button>`).join('')}</div>
+          <div class="toggle-group">${[['all', 'เปิด + ปิด'], ['open', 'เปิด'], ['target', 'ปิด']].map(([k, l]) => `<button class="toggle-btn ${_crType === k ? 'active' : ''}" onclick="ttApi.setCrType('${k}')">${l}</button>`).join('')}</div>
+        </div></div>
         <div class="table-wrap"><table><thead><tr><th>ครีเอเตอร์</th><th>แบบ</th><th>ยอดขาย</th><th>ออเดอร์</th><th>Commission</th><th>Ads Commission</th><th>% ของยอด</th><th>ยอดต่อ ฿1</th>${_crType === 'all' ? '<th>Live / คลิป / อื่นๆ</th>' : ''}<th>คอนเทนต์</th></tr></thead><tbody id="ttapi-cr-body"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-cr-pager"></div></div>
       <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">คอนเทนต์ที่ขายได้${handle ? ' — @' + esc(handle) : ''}</div></div>
         <div class="table-wrap"><table><thead><tr><th>ประเภท</th><th>ครีเอเตอร์</th><th>คอนเทนต์</th><th>ยอดขาย</th><th>ออเดอร์</th><th>Commission</th><th>ขายช่วง</th></tr></thead><tbody id="ttapi-ct-body"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-ct-pager"></div></div>`;
@@ -121,8 +138,7 @@
       const O = { n: op.length, ord: sum(op, 'open_orders'), rev: sum(op, 'open_rev'), com: sum(op, 'open_com'), ads: sum(op, 'open_ads') };
       const G = { n: tg.length, ord: sum(tg, 'target_orders'), rev: sum(tg, 'target_rev'), com: sum(tg, 'target_com'), ads: sum(tg, 'target_ads') };
       document.getElementById('ttapi-cr-kpis').innerHTML =
-        kpi('ยอดขายจากครีเอเตอร์', baht(S.rev), fmt(base.length) + ' คน') +
-        kpi('Commission', baht(S.com), pctTxt(S.com, S.rev) + ' ของยอด') +
+        kpi('Commission', baht(S.com), pctTxt(S.com, S.rev) + ' ของยอดครีเอเตอร์ · ' + fmt(base.length) + ' คน') +
         kpi('เปิด (Open)', baht(O.rev), `${fmt(O.n)} คน · Commission ${baht(O.com)}`) +
         kpi('ปิด (Target)', baht(G.rev), `${fmt(G.n)} คน · Commission ${baht(G.com)}`) +
         kpi('Ads Commission (GMV Max)', baht(S.ads), '') +
@@ -132,11 +148,15 @@
       document.getElementById('ttapi-ct-cmp').innerHTML = cmpRow(ctBadge('open') + ' Open Collaboration', O) + cmpRow(ctBadge('target') + ' Target Collaboration', G) + cmpRow('<b>รวม</b>', all).replace('<tr>', '<tr style="font-weight:700;">');
       // ตารางรายคน: ทั้งหมด = ยอดรวมของคนนั้น · เปิด / ปิด = เฉพาะยอดแบบนั้น
       const pick = (r, k) => _crType === 'all' ? num(r[{ ord: 'orders', rev: 'revenue', com: 'commission', ads: 'shop_ads_commission' }[k]]) : num(r[_crType + '_' + { ord: 'orders', rev: 'rev', com: 'com', ads: 'ads' }[k]]);
-      const rows = (_crType === 'all' ? base : _crType === 'open' ? op : tg).map(r => ({ r, ord: pick(r, 'ord'), rev: pick(r, 'rev'), com: pick(r, 'com'), ads: pick(r, 'ads') })).sort((x, y) => y.rev - x.rev);
+      // กรองช่องทาง: ยอดเฉพาะช่องทางนั้น (Commission / ออเดอร์ยังเป็นของทั้งคน เพราะ TikTok ไม่แยก Commission ตามช่องทาง)
+      const chRev = r => _crCh === 'all' ? null : num(r['rev_' + _crCh]);
+      const rows = (_crType === 'all' ? base : _crType === 'open' ? op : tg)
+        .map(r => ({ r, ord: pick(r, 'ord'), rev: chRev(r) ?? pick(r, 'rev'), com: pick(r, 'com'), ads: pick(r, 'ads') }))
+        .filter(x => x.rev > 0).sort((x, y) => y.rev - x.rev);
       const bar = r => { const t = num(r.revenue) || 1; const seg = (v, c) => `<span style="display:inline-block;height:8px;width:${(num(v) / t * 100).toFixed(1)}%;background:${c};"></span>`;
         return `<div title="Live ${baht(r.rev_live)} · คลิป ${baht(r.rev_video)} · อื่นๆ ${baht(r.rev_other)}" style="width:120px;background:var(--bg3);border-radius:4px;overflow:hidden;display:flex;">${seg(r.rev_live, '#f472b6')}${seg(r.rev_video, '#60a5fa')}${seg(r.rev_other, '#c8a96e')}</div>`; };
       pagedTable('ttapi-cr', rows, x => { const r = x.r, cost = x.com + x.ads;
-        return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">@${esc(r.creator)}</td><td>${ctBadge(r.collab)}</td><td>${baht(x.rev)}</td><td>${fmt(x.ord)}</td><td>${baht(x.com)}</td><td>${x.ads ? baht(x.ads) : '—'}</td><td>${pctTxt(x.com, x.rev)}</td><td>${cost > 0 ? baht(x.rev / cost) : '—'}</td>${_crType === 'all' ? `<td>${bar(r)}</td>` : ''}<td>${fmt(r.contents)}</td></tr>`; }, _crType === 'all' ? 10 : 9);
+        return `<tr><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><a href="javascript:void(0)" onclick="selectCpCreator('${esc(r.creator)}')" style="color:inherit;text-decoration:underline dotted;">@${esc(r.creator)}</a></td><td>${ctBadge(r.collab)}</td><td>${baht(x.rev)}</td><td>${fmt(x.ord)}</td><td>${baht(x.com)}</td><td>${x.ads ? baht(x.ads) : '—'}</td><td>${_crCh === 'all' ? pctTxt(x.com, x.rev) : '—'}</td><td>${_crCh === 'all' && cost > 0 ? baht(x.rev / cost) : '—'}</td>${_crType === 'all' ? `<td>${bar(r)}</td>` : ''}<td>${fmt(r.contents)}</td></tr>`; }, _crType === 'all' ? 10 : 9);
       const TYPE = { LIVE: 'Live', VIDEO: 'คลิป', SHOWCASE: 'โชว์เคส', LINKSHARE: 'ลิงก์', SHOP: 'ร้าน' };
       pagedTable('ttapi-ct', ct, r => {
         const link = r.content_type === 'VIDEO' ? `<a href="https://www.tiktok.com/@${encodeURIComponent(r.creator)}/video/${encodeURIComponent(r.content_id)}" target="_blank" rel="noopener" style="color:var(--blue,#60a5fa);">เปิดคลิป ↗</a>`
@@ -148,6 +168,7 @@
     }
   }
 
-  function setCrType(t) { _crType = t; if (_crArgs) renderCreatorExtras(..._crArgs); }
-  window.ttApi = { renderTraffic, renderCreatorExtras, setLiveScope, setCrType };
+  function setCrType(t) { _crType = t; if (t !== 'all') _crCh = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
+  function setCrCh(c) { _crCh = c; if (c !== 'all') _crType = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
+  window.ttApi = { renderTraffic, renderOrderChannel, renderCreatorExtras, setLiveScope, setCrType, setCrCh };
 })();
