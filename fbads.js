@@ -472,7 +472,7 @@
   let _review = {};
   async function loadKolReview() {
     try {
-      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
       const r = await fetch(`${window.SUPABASE_URL}/rest/v1/fb_kol_pages?needs_review=eq.true&select=page_id,page_name,alt_names`, { headers: h });
       const rows = r.ok ? await r.json() : []; _review = {}; (rows || []).forEach(x => { _review[x.page_id] = x; });
     } catch (e) { _review = {}; }
