@@ -585,7 +585,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.06-f</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2193,6 +2193,8 @@ let freeSampleRows = []; // ออเดอร์ที่เป็นตัว�
 let orderIdToPromo = {};  // order_id -> sku_promotion (มาจาก orders) ใช้ label ชื่อโปรในตาราง promotion ของหน้าวิเคราะห์ SKU
 
 // ===== UTILS =====
+// (2026-10-06) ส่งตัวตนผู้ใช้ที่ล็อกอิน (JWT) ไปกับทุกคำขอข้อมูล แทน anon key — เตรียมปิดสิทธิ์ anon ทั้งระบบ (ใครไม่ล็อกอินจะดึงข้อมูลไม่ได้)
+function authJwt() { try { return (window.Auth && Auth.token && Auth.token()) || window.SUPABASE_ANON_KEY; } catch (e) { return window.SUPABASE_ANON_KEY; } }
 const fmt = n => isNaN(n) ? '—' : Number(n).toLocaleString('th-TH', {maximumFractionDigits:0});
 // สร้างแถว skeleton (แท่งเทาเบลอ) ใส่ใน <tbody> ระหว่างรอโหลดข้อมูลจริง แทนข้อความ "กำลังโหลด..." เปล่าๆ
 function skeletonRows(cols, rows = 4) {
@@ -2461,7 +2463,7 @@ async function loadMktUnified() {
   if (_mktUnified) return _mktUnified;
   if (_mktUnifiedLoading) return _mktUnifiedLoading;
   _mktUnifiedLoading = (async () => {
-    const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     const [pm, pc, up] = await Promise.all([
       fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,revenue,qty,kol_conversion,kol_pr,other_direct&order=month.asc,parent_sku.asc`, h),
       fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=month,channel,parent_sku,ads_direct,ads_allocated&order=month.asc,channel.asc,parent_sku.asc`, h),
@@ -2495,7 +2497,7 @@ function mktAcctNoteHtml(fromM, toM) {
 }
 
 async function fetchAll() {
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
   const baseUrl = `${window.SUPABASE_URL}/rest/v1/orders?select=date,channel,sub_channel,order_id,customer_name,phone,province,sku_promotion,revenue,settled,base_promotion,upsell_items,order_channel,creator_handle,order_status,created_at_precise,cancel_return_type,delivery_date&order=date.asc,order_id.asc`;
   return fetchKeyset(baseUrl, headers, ['date', 'order_id']);
 }
@@ -2524,7 +2526,7 @@ function shouldIncludeRow(r) {
 
 // ===== SUPABASE FETCH: sku_revenue table =====
 async function fetchSkuAll(fromDate, toDate) {
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
   const dateFilter = fromDate && toDate ? `&date=gte.${fromDate}&date=lte.${toDate}` : '';
   const baseUrl = `${window.SUPABASE_URL}/rest/v1/sku_revenue?select=date,channel,sub_channel,order_id,parent_sku,qty,revenue_share,settled&order=date.asc,order_id.asc,parent_sku.asc${dateFilter}`;
   return fetchKeyset(baseUrl, headers, ['date', 'order_id', 'parent_sku']);
@@ -2532,7 +2534,7 @@ async function fetchSkuAll(fromDate, toDate) {
 
 // ===== SUPABASE FETCH: products table (parent_sku -> ชื่อไทย) =====
 async function fetchProducts() {
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
   const res = await fetch(`${window.SUPABASE_URL}/rest/v1/products?select=parent_sku,child_sku,product_name`, { headers });
   if (!res.ok) return {};
   const rows = await res.json();
@@ -2552,7 +2554,7 @@ function skuToName(sku) {
 // ===== SUPABASE FETCH: promotions table (sku_promotion -> ชื่อโปรจริงที่สร้างใน Google Sheet) =====
 let promotionsMap = {}; // sku_promotion -> promo_name
 async function fetchPromotionsMap() {
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
   const res = await fetch(`${window.SUPABASE_URL}/rest/v1/promotions?select=sku_promotion,promo_name&status=eq.active`, { headers });
   if (!res.ok) return {};
   const rows = await res.json();
@@ -2563,7 +2565,7 @@ async function fetchPromotionsMap() {
 
 // ===== SUPABASE FETCH: province_region table =====
 async function fetchProvinceRegion() {
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
   const res = await fetch(`${window.SUPABASE_URL}/rest/v1/province_region?select=province,region`, { headers });
   if (!res.ok) return {};
   const rows = await res.json();
@@ -2581,7 +2583,7 @@ function getRegion(prov) {
 async function upsertRow(table, data, conflictCol) {
   const headers = {
     'apikey': window.SUPABASE_ANON_KEY,
-    'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + authJwt(),
     'Content-Type': 'application/json',
     'Prefer': 'resolution=merge-duplicates,return=minimal',
   };
@@ -2602,7 +2604,7 @@ async function upsertRow(table, data, conflictCol) {
 
 // ===== SUPABASE FETCH: new Materialized Views (monthly granularity) =====
 async function fetchMV(viewName, selectCols, orderCols) {
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
   const orderParam = orderCols ? `&order=${orderCols}` : '';
   const baseUrl = `${window.SUPABASE_URL}/rest/v1/${viewName}?select=${selectCols}${orderParam}`;
   return fetchPaginatedConcurrent(baseUrl, headers);
@@ -2959,7 +2961,7 @@ function loadTtContentPage() {
   window._ttcLoading = true;
   document.getElementById('page-ttcontent').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
   const s2 = document.createElement('script');
-  s2.src = 'ttcontent.js?v=20260917a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
+  s2.src = 'ttcontent.js?v=20261006z';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
   s2.onload = () => { window._ttcLoading = false; if (window.renderTtContentPage) window.renderTtContentPage(); };
   s2.onerror = () => { window._ttcLoading = false; document.getElementById('page-ttcontent').innerHTML = '<div class="error-banner" style="display:block;">โหลด ttcontent.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.head.appendChild(s2);
@@ -2969,7 +2971,7 @@ function loadTtKeywordPage() {
   if (window.renderTtKeywordPage) return window.renderTtKeywordPage();
   document.getElementById('page-ttkeyword').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
   const s3 = document.createElement('script');
-  s3.src = 'ttcontent.js?v=20260917a';
+  s3.src = 'ttcontent.js?v=20261006z';
   s3.onload = () => { if (window.renderTtKeywordPage) window.renderTtKeywordPage(); };
   document.head.appendChild(s3);
 }
@@ -2980,7 +2982,7 @@ function loadSupplyPage() {
   if (window._supplyLoading) return;
   window._supplyLoading = true;
   const s = document.createElement('script');
-  s.src = 'supply.js?v=20261002a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
+  s.src = 'supply.js?v=20261006z'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
   s.onload = () => { window._supplyLoading = false; window.renderSupplyPage(); };
   s.onerror = () => { window._supplyLoading = false; document.getElementById('page-supply').innerHTML = '<div class="error-banner" style="display:block;">โหลด supply.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -2992,7 +2994,7 @@ function loadFbAdsPage() {
   if (window._fbadsLoading) return;
   window._fbadsLoading = true;
   const s = document.createElement('script');
-  s.src = 'fbads.js?v=20261002c'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
+  s.src = 'fbads.js?v=20261006z'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
   s.onload = () => { window._fbadsLoading = false; window.renderFbAdsPage(); };
   s.onerror = () => { window._fbadsLoading = false; document.getElementById('page-fbads').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbads.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3019,7 +3021,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20261002a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20261006z';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -3381,7 +3383,7 @@ function toggleFbeInfo(id) {
 async function fbeInitPageOptions() {
   if (fbePagesCache.length > 0) return;
   try {
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${authJwt()}` };
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/fb_pages?select=page_id,page_name`, { headers });
     const data = await res.json();
     if (!Array.isArray(data)) { console.error('FB Engage: โหลดรายชื่อเพจไม่สำเร็จ', data); showError('โหลดรายชื่อเพจ Facebook ไม่สำเร็จ ลองกดรีเฟรชข้อมูลใหม่'); return; }
@@ -3402,7 +3404,7 @@ async function fbeInitPageOptions() {
 }
 
 async function renderFbEngagePage() {
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${authJwt()}` };
   await fbeInitPageOptions();
   const dateFrom = document.getElementById('dateFrom').value;
   const dateTo = document.getElementById('dateTo').value;
@@ -3653,7 +3655,7 @@ function fbeRenderPostListPage(pageNum) {
 
   document.getElementById('fbeTopCommentedPosts').innerHTML = '<div class="empty" style="padding:16px 0;">กำลังโหลด...</div>';
 
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: `Bearer ${authJwt()}` };
   const postIds = pageItems.map(([pid]) => pid);
   const idFilter = postIds.map(id => `"${id}"`).join(',');
 
@@ -3782,7 +3784,7 @@ async function renderTtHub() {
 const _shHubAds = { key: null, total: 0, days: 0 };
 async function fetchShopeeAdsTotal(from, to) {
   const key = from + '|' + to; if (_shHubAds.key === key) return _shHubAds;
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   try {
     const [r1, r2, r3, r4] = await Promise.all([
       fetch(`${window.SUPABASE_URL}/rest/v1/shopee_ads_daily?select=stat_date,expense&stat_date=gte.${from}&stat_date=lte.${to}`, { headers }),
@@ -3921,14 +3923,14 @@ const MT_PALETTE = ['#D4537E', '#E1306C', '#F43F5E', '#EF4444', '#F97316', '#F59
 let _mtColorsLoaded = false;
 async function loadMtColors() {
   if (_mtColorsLoaded) return; _mtColorsLoaded = true;
-  try { const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  try { const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     const r = await fetch(`${window.SUPABASE_URL}/rest/v1/ui_settings?key=eq.mt_colors&select=value`, { headers: h });
     const d = r.ok ? await r.json() : []; if (d[0] && d[0].value) Object.assign(MT_COLORS, d[0].value); } catch (e) { console.warn('mt colors', e.message); }
 }
 async function mtSetColor(ret, col) {
   MT_COLORS[ret] = col; renderMtHub(); mtColorRender();
   try { await fetch(`${window.SUPABASE_URL}/rest/v1/ui_settings?on_conflict=key`, { method: 'POST',
-      headers: { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      headers: { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ key: 'mt_colors', value: MT_COLORS, updated_at: new Date().toISOString() }) }); }
   catch (e) { alert('บันทึกสีไม่สำเร็จ: ' + e.message); }
 }
@@ -3945,7 +3947,7 @@ function mtGo(r) { _mtRetailer = r || ''; showPage('mthub'); }
 async function loadMtSellout() {
   if (_mtRows && Date.now() - _mtRowsAt < 10 * 60 * 1000) return _mtRows;
   if (_mtLoading) return _mtLoading;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   _mtLoading = fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mt_sellout?select=retailer,month,branch,parent_sku,qty,sales,synced_at&order=id.asc`, h)
     .then(rows => { _mtSyncedAt = rows.reduce((m, r) => r.synced_at > m ? r.synced_at : m, '');
       _mtRows = rows.map(r => ({ retailer: r.retailer, month: String(r.month).slice(0, 10), branch: r.branch || '', parent_sku: r.parent_sku || '—', qty: +r.qty || 0, sales: +r.sales || 0 })); _mtRowsAt = Date.now(); return _mtRows; })
@@ -4577,7 +4579,7 @@ function cpNormHandle(s) { return normalizeHandle(s).replace(/^@+/, ''); }
 // หน้า TikTok Ads ยังใช้ fetchTtaData/ttaByClip แบบเต็มเหมือนเดิม (ต้องการรายคลิปทุกคลิป)
 const cpTta = { rangeKey: null, handles: [], kolClips: [], daily: [], clipsByHandle: {}, dailyByHandle: {} };
 async function supaRpc(name, params, paginate = false) {
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
   const out = [];
   for (let off = 0; ; off += 1000) {
     const res = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/rpc/${name}?limit=1000&offset=${off}`, headers, 3, 800, { method: 'POST', body: JSON.stringify(params) });
@@ -4818,7 +4820,7 @@ async function ensureFilterOptions() {
 async function incrementalHistory(cacheKey, makeUrl, keyCols, label, mapRows) {
   const now = Date.now(), cached = await idbGet(cacheKey);
   if (cached && cached.rows && now - (cached.cachedAt || 0) < 60 * 60 * 1000) return cached.rows;
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const d = new Date(now + 7 * 3600 * 1000); const since = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1)).toISOString().slice(0, 10);
   const useInc = cached && cached.rows && cached.fullAt && now - cached.fullAt < 7 * 24 * 3600 * 1000;
   setBgSync(`${label}${useInc ? ' (เฉพาะตั้งแต่ ' + since + ')' : ''}...`, 10);
@@ -4868,7 +4870,7 @@ function fbPageReady(page, rerender) {
 }
 async function fetchLastOrderDate() {
   try {
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/orders?select=date&order=date.desc&limit=1`, { headers });
     const rows = await res.json(); return rows[0]?.date || null;
   } catch (e) { return null; }
@@ -4921,7 +4923,7 @@ function applyKolPosts(raw, mapRows) {
   _kolPostsLoaded = true;
 }
 async function fetchKolPosts() {
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const url = `${window.SUPABASE_URL}/rest/v1/mv_kol_plan_jobs?select=k,kol_name,kol_handle,tt_handle,platform,post_link,post_date,content_code,cost_month,parent_sku,product_code,kol_type,amount,video_id&order=k.asc`;
   setBgSync('โหลดค่าจ้าง KOL (ไฟล์งานทีม KOL)...', 30);
   const rows = [];
@@ -5130,7 +5132,7 @@ function renderLsPromoTable() {
 // ---- เซฟการค้นหา (creator + ช่วงเวลา + Order Channel + ค่า Ads + โน้ต) — เก็บในตาราง Supabase `live_sessions` ทั้งทีมเห็นชุดเดียวกัน ----
 // (เดิมเก็บใน IndexedDB ต่อเครื่อง — ย้ายมาตารางกลางเพราะทีมจะเป็นคนกรอกค่า Ads) · ต้องรัน SQL 34 ก่อน
 let _lsSaved = [], _lsSavedActive = null, _lsLastResult = null;
-const lsHeaders = () => ({ apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation' });
+const lsHeaders = () => ({ apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json', Prefer: 'return=representation' });
 async function lsLoadSavedList() {
   try {
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/live_sessions?select=*&order=from_ts.desc&limit=300`, { headers: lsHeaders() });
@@ -5260,7 +5262,7 @@ async function runLiveSearch() {
   // เฟส 4: ค้นที่ server — ดึงเฉพาะออเดอร์ TikTok ของ creator ที่เลือกในช่วงเวลา แล้วดึงแถว SKU ของออเดอร์นั้น
   let matched = [], skuRowsLs = [];
   try {
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     const inList = creators.map(c => '"' + String(c).replace(/"/g, '') + '"').join(',');
     const base = `${window.SUPABASE_URL}/rest/v1/orders?select=order_id,creator_handle,order_channel,order_status,settled,revenue,created_at_precise,sku_promotion,cancel_return_type&channel=eq.TikTok&creator_handle=in.(${encodeURIComponent(inList)})&created_at_precise=gte.${encodeURIComponent(fromISO)}&created_at_precise=lte.${encodeURIComponent(toISO)}${ocFilter ? '&order_channel=eq.' + encodeURIComponent(ocFilter) : ''}&order=created_at_precise.asc,order_id.asc`;
     matched = await fetchKeyset(base, headers, ['created_at_precise', 'order_id']);
@@ -5582,7 +5584,7 @@ function clearPtError() {
 }
 
 async function fetchPromotionTargets() {
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
   const res = await fetch(`${window.SUPABASE_URL}/rest/v1/promotion_targets?select=*`, { headers });
   if (!res.ok) {
     const errText = await res.text();
@@ -5714,7 +5716,7 @@ async function removePtRow(rowId) {
   _ptRows = _ptRows.filter(r => r.rowId !== rowId);
   renderPromoTargets();
   if (row && row.sku_promotion) {
-    const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt() };
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/promotion_targets?sku_promotion=eq.${encodeURIComponent(row.sku_promotion)}`, { method: 'DELETE', headers });
     if (!res.ok) showPtError('ลบโปรออกจากฐานข้อมูลไม่สำเร็จ (แต่ลบออกจากหน้าจอแล้ว — เปิดเว็บใหม่อาจโผล่กลับมา)');
   }
@@ -6658,7 +6660,7 @@ async function fetchAdSheetRows() {
   return rows;
 }
 async function fetchAdSystemRows() {
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const out = [];
   for (let off = 0; ; off += 1000) {
     const res = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/mv_ad_spend_daily?select=channel,sub_channel,tag,date,ads,source&date=gte.2025-01-01&order=date.asc,k.asc&limit=1000&offset=${off}`, headers);
@@ -7416,7 +7418,7 @@ const DG_SCHED = {
 };
 async function loadDg(force) {
   if (_dg && !force && Date.now() - _dgAt < 600000) return _dg;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
   const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/data_status`, { method: 'POST', headers: h, body: '{}' });
   if (!r.ok) throw new Error('data_status ' + r.status);
   _dg = await r.json(); _dgAt = Date.now(); return _dg;
@@ -7452,7 +7454,7 @@ async function refreshDashboardData() {
   // ข้อมูลจาก API ดึงเองตามรอบอยู่แล้ว ไม่ดึงซ้ำทุกครั้งที่กด (ช้าและเปลืองโควตา) — ดึงซ้ำเฉพาะตอนตรวจเจอว่าขาด
   const btn = document.getElementById('btnRefreshMV'), statusEl = document.getElementById('refreshMVStatus');
   const barWrap = document.getElementById('refreshMVBarWrap'), bar = document.getElementById('refreshMVBar');
-  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const headers = { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
   const setBar = (pct, txt) => { if (bar) bar.style.width = Math.round(pct) + '%'; if (txt) statusEl.textContent = txt; };
   btn.disabled = true; btn.textContent = '⏳ กำลังรีเฟรชทุกหน้า...'; statusEl.textContent = ''; if (barWrap) barWrap.style.display = 'block'; setBar(0);
   try {
@@ -7517,7 +7519,7 @@ async function renderTtProduct() {
   if (_ttProductRange === key && _ttProductRows.length) { renderTtProductTable(); return; }
   tb.innerHTML = '<tr><td colspan="7" class="empty">กำลังโหลด...</td></tr>';
   try {
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/tta_product_rollup`, {
       method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) });
     if (!res.ok) throw new Error('tta_product_rollup ' + res.status);
@@ -7661,7 +7663,7 @@ function plLbl(t) { let x = String(t || ''); PL_EN.forEach(([re, en]) => x = x.r
 const PL_CH_ORDER = ['TikTok', 'Facebook', 'Shopee', 'Lazada', 'Modern Trade', 'ตัวแทน'];
 async function loadPlCh() {
   if (_plChRows) return _plChRows;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_pl_monthly?select=*&order=month.asc,parent_sku.asc,channel.asc`, h);
   _plChRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));
   return _plChRows;
@@ -7705,7 +7707,7 @@ const PL_TIPS = { cm1: `<b>CM1 · Contribution Margin 1</b><br>เหลือ�
 const PL_TH_M = m => MONTHS_TH[parseInt(m.slice(5, 7)) - 1] + ' ' + (parseInt(m.slice(0, 4)) + 543 - 2500);
 async function loadPl() {
   if (_plRows) return _plRows;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_pl_monthly?select=*&month=gte.2026-01-01&order=month.asc,parent_sku.asc`, h);
   _plRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));   // ยอดขายถอด VAT ให้เทียบกับค่าใช้จ่ายบัญชี
   _plMonths = [...new Set(_plRows.filter(r => +r.channel_cost || +r.overhead_cost).map(r => r.month))].sort();
@@ -7854,7 +7856,7 @@ async function plDetail(sku) {
   const o = _plView.find(x => x.sku === sku); if (!o) return;
   const metric = _plOpen.get(sku);
   const from = document.getElementById('plFrom').value, to = document.getElementById('plTo').value;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const ck = sku + '|' + from + '|' + to;   // เก็บไว้ในเครื่อง กดสลับไม่ต้องโหลดใหม่
   let rows = [], lines = [];
   try {
@@ -8003,7 +8005,7 @@ async function renderHome() {
 let _mlRows = null, _mlCh = null, _mlKol = null, _mlView = [], _mlSortCol = 'rev', _mlSortDir = 'desc', _mlOpen = new Map();
 async function loadMl() {
   if (_mlRows) return;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const [a, b, c] = await Promise.all([
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_mkt_live_monthly?select=*&order=month.asc,parent_sku.asc`, h),
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=month,parent_sku,channel,revenue,ads_direct,ads_allocated&month=gte.2026-01-01&order=month.asc,parent_sku.asc,channel.asc`, h),
@@ -8076,7 +8078,7 @@ const _mlSub = {};
 async function mlLoadSub(sku, from, to) {
   const key = `${sku}|${from}|${to}`; if (_mlSub[key]) return _mlSub[key];
   const [y, m] = to.split('-').map(Number), end = `${to}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_sku_daily?select=channel,sub_channel,revenue&parent_sku=eq.${encodeURIComponent(sku)}&date=gte.${from}-01&date=lte.${end}`, h);
   const o = {}; rows.forEach(r => { const c = r.channel === 'Facebook' || /^Modern/i.test(r.channel) ? (/^Modern/i.test(r.channel) ? 'Modern Trade' : 'Facebook') : r.channel;
     const x = (o[c] = o[c] || {}); const sc = r.sub_channel || ''; x[sc] = (x[sc] || 0) + (+r.revenue || 0) / VAT_DIV; });
@@ -8223,7 +8225,7 @@ function kjCalPick(key) {
 let _kjAds = {};
 async function kjLoadAds(from, to) {
   const key = from + '|' + to; if (_kjAds[key]) return _kjAds[key];
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
   const res = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/kol_ads_range`, { method: 'POST', headers: h, body: JSON.stringify({ p_from: from, p_to: to }) });
   if (!res.ok) throw new Error('kol_ads_range ' + res.status);
   return (_kjAds[key] = (await res.json()) || {});
@@ -8238,7 +8240,7 @@ async function renderKolPage() {
   const tb = document.getElementById('tbodyKj'); if (!tb) return;
   try {
     if (!_kjRows) {
-      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+      const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
       // (2026-10-01) เลือกเฉพาะคอลัมน์ที่หน้าใช้ (ค่า Ads / ยอดขายมาจาก kol_ads_range ตามช่วงวันที่) · โหลดค่า Ads ของช่วงปัจจุบันไปพร้อมกัน
       const KJ_COLS = 'k,job_id,content_code,kol_type,post_date,cost_month,platform,kol_name,kol_handle,tt_handle,channel_link,product_code,parent_sku,product_group,progress,post_link,video_id,budget_total,amount,match_status,match_note,pay_status,claim_amount,acct_amount,acct_months,claim_match,claim_over_budget';
       const [a, b] = await Promise.all([fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_kol_plan_jobs?select=${KJ_COLS}&order=k.asc`, h),
@@ -8418,7 +8420,7 @@ async function renderMktRoi() {
   document.getElementById('mktRoiBtn1').classList.toggle('btn-primary', _mktRoiSpan === 1);
   document.getElementById('mktRoiBtn3').classList.toggle('btn-primary', _mktRoiSpan === 3);
   try {
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     // (2026-09-24) ดึงครบทุกแถว — เดิมใส่ limit=5000 แต่ Supabase ส่งแค่ 1,000 แถว ตาราง "ตามช่องทาง" เลยขาด (ยอดแยกช่องทางไม่เท่ายอดรวม)
     const url = `${window.SUPABASE_URL}/rest/v1/mv_product_marketing_monthly?select=month,parent_sku,product_name,revenue,qty,free_qty,kol_conversion,kol_pr,other_direct,ads_direct,ads_allocated,mkt_total&month=gte.${r.from}&month=lte.${r.to}&order=month.asc,parent_sku.asc`;
     const urlCh = `${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=channel,parent_sku,revenue,ads_direct,ads_allocated&month=gte.${r.from}&month=lte.${r.to}&order=month.asc,channel.asc,parent_sku.asc`;
@@ -9149,7 +9151,7 @@ let ttcData = [];
 let ttcPage = 1;
 let TTC_PAGE_SIZE = pgSize();   // จำนวนแถวต่อหน้า — ใช้ค่ากลางที่ผู้ใช้เลือก (ตั้งได้ที่ตัวแบ่งหน้า)
 async function fetchTtcData() {
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const [organicRes, adsRes] = await Promise.all([
     fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_organic_raw?select=*&order=video_create_datetime.desc&limit=2000`, { headers }),
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/tiktok_ads_by_clip_full?select=item_id,spend,gmv_max_orders,is_deesay_own_channel&is_deesay_own_channel=eq.true&order=item_id.asc`, headers)
@@ -9327,7 +9329,7 @@ let ttaLastRange = null; // เก็บช่วงวันที่ที่ 
 let TTA_PAGE_SIZE = pgSize();   // จำนวนแถวต่อหน้า — ใช้ค่ากลางที่ผู้ใช้เลือก (ตั้งได้ที่ตัวแบ่งหน้า)
 function normalizeHandle(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
 async function fetchTtaData(fromDate, toDate) {
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   // ดึงจาก mv_tiktok_creative_performance (Materialized View รีเฟรชทุกชั่วโมง) แทน v_tiktok_creative_performance
   // หมายเหตุ: เคยลองแบ่งช่วงวันที่ยิงพร้อมกัน 6 ทางเพื่อความเร็ว แต่ตอนนี้โปรเจกต์ Supabase ยังติดปัญหาโควตาเกิน
   // (Database Size / Egress) อยู่ — ยิงพร้อมกันหนักไปกลับไปกระตุ้นให้ตารางอื่นที่ไม่เกี่ยวข้องพังไปด้วย (เช่น sku_revenue)
@@ -9390,7 +9392,7 @@ let TTA_THUMBS = null;   // item_id → { thumb, url }
 async function loadTtaThumbs() {
   if (TTA_THUMBS) return;
   TTA_THUMBS = {};
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   try {
     const base = `${window.SUPABASE_URL}/rest/v1/tiktok_videos`;
     const probe = await fetch(`${base}?select=*&limit=1`, { headers }).then(r => r.json());
@@ -9417,7 +9419,7 @@ let TT_HANDLE_MAP = null;
 async function loadTtHandleMap() {
   if (TT_HANDLE_MAP) return TT_HANDLE_MAP;
   try {
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_tt_handle_map?select=ads_name,handle&order=ads_name.asc,handle.asc`, headers);
     TT_HANDLE_MAP = Object.fromEntries(rows.map(r => [String(r.ads_name).trim().toLowerCase(), r.handle]));
   } catch (e) { TT_HANDLE_MAP = {}; }
@@ -9637,7 +9639,7 @@ let ttaDailyLastRange = null;
 async function fetchTtaDaily(fromDate, toDate) {
   const rangeKey = (fromDate||'') + '|' + (toDate||'');
   if (ttaDailyLastRange === rangeKey && ttaDailyData.length) return; // ช่วงวันที่เดิม ไม่ต้องดึงซ้ำ
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   let baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc,objective.asc`;
   if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
   if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
@@ -9942,7 +9944,7 @@ async function ensureKolBoost(from, to) {
   if (kolBoost.rangeKey === key) return;
   try {
     setBgSync('ค่า boost โพสต์ KOL (Meta)...', 45);
-    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY };
+    const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
     const mFrom = from.slice(0, 7) + '-01', mTo = to.slice(0, 7) + '-01';
     const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_kol_boost_monthly?select=kol_key,kol_name_in_ad,month,spend,in_kol_sheet&month=gte.${mFrom}&month=lte.${mTo}&order=month.asc,kol_key.asc,kol_name_in_ad.asc`, headers);
     const by = {}; let total = 0; const un = {};
@@ -10310,7 +10312,7 @@ async function renderShAds() {
   renderShCpas(from, to);   // (2026-09-30) ส่วน CPAS ท้ายหน้า โหลดขนานกัน
   const kpi = document.getElementById('shads-kpis'); if (!kpi) return;
   kpi.innerHTML = Array.from({ length: 6 }, () => `<div class="card" style="flex:1;min-width:140px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
-  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
   let daily = [], camps = [];
   // ยอดขายจริงตามบัญชี (sales_summary บน v_orders_clean — แหล่งเดียวกับหน้าภาพรวม Shopee) โหลดขนานกับข้อมูลแอด
   const salesReady = ensureSalesSummary(from, to, () => { if (currentPage === 'shads' && seq === _shAdsSeq) renderShAds(); }).catch(e => console.warn('sales_summary (shads)', e.message));
