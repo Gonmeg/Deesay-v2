@@ -36,21 +36,21 @@
   body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
 
   .sidebar { width: 220px; min-height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
-  .logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
-  .logo-text { font-size: 20px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
-  .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
-  .nav { padding: 16px 0; flex: 1; overflow-y: auto; min-height: 0; }
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: all 0.15s; border-left: 2px solid transparent; }
-  .nav-group-label { padding: 14px 20px 4px; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
-  .nav-group-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 20px; }
+  .logo { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); }
+  .logo-text { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: .02em; }
+  .logo-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .nav { padding: 8px 0 16px; flex: 1; overflow-y: auto; min-height: 0; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 20px; cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: background .15s, color .15s; border-left: 2px solid transparent; }
+  .nav-group-label { padding: 14px 20px 4px; font-size: 12px; font-weight: 600; color: var(--text3); }
+  .nav-group-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px 20px 6px; }
   .nav-group-toggle:hover { color: var(--text2); }
   .nav-group-chevron { font-size: 10px; transition: transform 0.15s; }
   .nav-group-chevron.open { transform: rotate(90deg); }
-  .nav-item.nav-sub { padding-left: 34px; font-size: 12.5px; }
+  .nav-item.nav-sub { padding-left: 32px; font-size: 13px; }
   .nav-item:hover { color: var(--text); background: var(--bg3); }
-  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(200,169,110,0.08); }
-  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
-  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; }
+  .nav-item.active { color: var(--text); font-weight: 600; border-left-color: var(--accent); background: var(--accent-soft); }
+  .nav-icon { display: none; }   /* (2026-10-07) หน้าตาใหม่: เมนูเป็นตัวอักษรล้วนตามหน้าตัวอย่าง */
+  .sidebar-footer { padding: 14px 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text3); font-family: 'Sarabun', sans-serif; }
   .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 2s infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .tab-item { padding: 6px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); color: var(--text2); cursor: pointer; transition: all 0.15s; }
@@ -71,9 +71,13 @@
   .fbe-post-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; flex-shrink: 0; cursor: pointer; }
 
   .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
-  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 10px; }
-  .page-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  .page-title { font-size: 16px; font-weight: 700; color: var(--text); }
   .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #dateMoreBtn.is-on { background: var(--accent-soft); border-color: transparent; color: var(--accent-text); font-weight: 600; }
+  #topSearchBtn { height: 34px; padding: 0 16px; }
+  #topSearchBtn.is-pending { box-shadow: 0 0 0 3px var(--accent-soft); }
+  #topSearchBtn.is-pending::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); margin-left: 2px; }
   .filter-group { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
   .ls-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; align-items: end; }
   .ls-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -518,11 +522,23 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #plCard td.pl-cm { background:rgba(99,102,241,0.06); }
   #plCard th.pl-cm { background:rgba(99,102,241,0.12); color:var(--text); }
   /* (2026-10-02) Data Guard — แถบสถานะข้อมูลของแต่ละหน้า */
-  #dgBanner .dg-ok { font-size: 11px; color: var(--text3); text-align: right; margin: -4px 0 8px; }
-  #dgBanner .dg-bar { border-radius: 8px; padding: 9px 14px; margin: 0 0 14px; font-size: 12.5px; line-height: 1.65; color: var(--text); }
-  #dgBanner .dg-red { background: rgba(239,68,68,.10); border: 1px solid rgba(239,68,68,.40); }
-  #dgBanner .dg-orange { background: rgba(245,158,11,.10); border: 1px solid rgba(245,158,11,.40); }
-  #dgBanner .dg-at { font-size: 10.5px; color: var(--text3); margin-top: 2px; }
+</style>
+<style>
+  /* (2026-10-07) Data Guard: บรรทัดเดียว กดดูรายละเอียด · ปกติ = ข้อความเล็กชิดขวา */
+  #dgBanner .dg-ok { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; margin: -10px 0 10px; font-size: 12px; color: var(--text3); }
+  #dgBanner .dg-ok .ok { color: var(--good); font-weight: 600; }
+  #dgBanner .dg-box { margin: 0 0 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); font-size: 13px; color: var(--text2); overflow: hidden; }
+  #dgBanner .dg-box.red { border-color: color-mix(in srgb, var(--bad) 35%, var(--border)); background: color-mix(in srgb, var(--bad) 6%, var(--bg2)); }
+  #dgBanner .dg-box.orange { border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); background: color-mix(in srgb, var(--warn) 7%, var(--bg2)); }
+  #dgBanner .dg-line { display: flex; align-items: center; gap: 10px; padding: 8px 14px; min-width: 0; }
+  #dgBanner .dg-line b { color: var(--text); font-weight: 600; white-space: nowrap; }
+  #dgBanner .dg-line .dg-ic { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
+  #dgBanner .dg-box.orange .dg-ic { background: var(--warn); }
+  #dgBanner .dg-sum { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #dgBanner .dg-detail { padding: 8px 14px 10px 32px; border-top: 1px solid var(--row-border); line-height: 1.75; }
+  #dgBanner .dg-at { margin-top: 4px; font-size: 12px; color: var(--text3); }
+  /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
+  .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
 <link rel="stylesheet" href="ui.css?v=20261007a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 </head>
@@ -539,8 +555,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
 <aside class="sidebar">
   <div class="logo">
-    <div class="logo-text">DEESAY</div>
-    <div class="logo-sub">Dashboard</div>
+    <div class="logo-text">Deesay</div>
+    <div class="logo-sub">Sales &amp; Marketing</div>
   </div>
   <nav class="nav">
     <div class="nav-item" onclick="showPage('home',null,this)"><span class="nav-icon">🏠</span> หน้าแรก</div>
@@ -600,7 +616,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.07-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.07-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -647,36 +663,28 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         </div>
         <input type="date" id="homeDate" aria-label="เลือกวันที่ของสรุป" onchange="homeSetDate(this.value)">
       </div>
-      <div class="filter-group" id="dateRangeGroup" style="position:relative;padding:0;background:transparent;border:none;">
-        <button class="btn btn-ghost" id="dateRangeBtn" onclick="toggleDatePresetMenu(event)" style="padding:6px 10px;font-size:12px;white-space:nowrap;">📅 <span id="dateRangeLabel">เลือกช่วงเวลา</span> ▾</button>
-        <div id="datePresetMenu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;min-width:320px;padding:10px;">
-          <div style="display:flex;gap:14px;">
-            <div style="min-width:130px;border-right:1px solid var(--border);padding-right:10px;">
-              <div onclick="setDatePreset('today')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">วันนี้</div>
-              <div onclick="setDatePreset('yesterday')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เมื่อวาน</div>
-              <div onclick="setDatePreset('7d')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">7 วันที่แล้ว</div>
-              <div onclick="setDatePreset('30d')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">30 วันที่แล้ว</div>
-              <div onclick="setDatePreset('thisMonth')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนนี้</div>
-              <div onclick="setDatePreset('lastMonth')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">เดือนที่แล้ว</div>
-              <div onclick="setDatePreset('3m')" style="padding:7px 8px;cursor:pointer;font-size:12.5px;border-radius:5px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">3 เดือนที่แล้ว</div>
-              <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
-              <div style="padding:4px 8px;font-size:10.5px;color:var(--text3);">เดือนที่ผ่านมา:</div>
-              <div id="datePresetMonthList" style="max-height:180px;overflow-y:auto;"></div>
-            </div>
-            <div style="flex:1;min-width:150px;">
-              <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">กำหนดเอง</div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <label style="font-size:11.5px;color:var(--text2);display:flex;flex-direction:column;gap:3px;">ตั้งแต่
-                  <input type="date" id="dateFrom" onchange="updateDateRangeLabel()" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);">
-                </label>
-                <label style="font-size:11.5px;color:var(--text2);display:flex;flex-direction:column;gap:3px;">ถึง
-                  <input type="date" id="dateTo" onchange="updateDateRangeLabel()" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);">
-                </label>
-                <button class="btn btn-primary" onclick="applyFilters(); hideDatePresetMenu();" style="margin-top:4px;justify-content:center;">🔍 ค้นหา</button>
-              </div>
-            </div>
+      <!-- (2026-10-07) แถบช่วงวันที่แบบใหม่: ปุ่มลัด + "ช่วงอื่น" (เมื่อวาน / รายเดือน) + ปฏิทินไทย 2 ช่อง · ยังต้องกด "ค้นหา" เหมือนเดิม -->
+      <div class="filter-group" id="dateRangeGroup" style="padding:0;background:transparent;border:none;gap:6px;align-items:center;">
+        <div class="ui-presets" id="datePresetBar" role="group" aria-label="ช่วงวันที่ลัด">
+          <button type="button" data-p="ytd" onclick="setDatePreset('ytd')">ปีนี้</button>
+          <button type="button" data-p="thisMonth" onclick="setDatePreset('thisMonth')">เดือนนี้</button>
+          <button type="button" data-p="lastMonth" onclick="setDatePreset('lastMonth')">เดือนก่อน</button>
+          <button type="button" data-p="30d" onclick="setDatePreset('30d')">30 วัน</button>
+          <button type="button" data-p="7d" onclick="setDatePreset('7d')">7 วัน</button>
+        </div>
+        <div class="ui-dd" id="dateMoreDd">
+          <button class="ui-dd-btn" type="button" id="dateMoreBtn" onclick="toggleDateMore(event)">ช่วงอื่น</button>
+          <div class="ui-dd-menu" style="left:auto;right:0;max-height:360px;overflow-y:auto;">
+            <div class="ui-dd-h">ช่วงลัด</div>
+            <button class="ui-dd-item" type="button" data-p="yesterday" onclick="setDatePreset('yesterday')">เมื่อวาน</button>
+            <button class="ui-dd-item" type="button" data-p="today" onclick="setDatePreset('today')">วันนี้ (ยังไม่จบวัน)</button>
+            <button class="ui-dd-item" type="button" data-p="3m" onclick="setDatePreset('3m')">3 เดือนที่แล้ว</button>
+            <div id="datePresetMonthList"></div>
           </div>
         </div>
+        <input type="date" id="dateFrom" onchange="updateDateRangeLabel()" aria-label="ตั้งแต่วันที่">
+        <span style="color:var(--text3);">–</span>
+        <input type="date" id="dateTo" onchange="updateDateRangeLabel()" aria-label="ถึงวันที่">
       </div>
       <div class="filter-group" id="monthFilterGroup" style="display:none;gap:4px;">
         <span class="filter-label">ตั้งแต่</span>
@@ -728,7 +736,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <span class="filter-label">Sub-Channel</span>
         <select id="filterSubChannel"><option value="">ทั้งหมด</option></select>
       </div>
-      <button class="btn btn-primary" id="topSearchBtn" onclick="applyFilters()">🔍 ค้นหา</button>
+      <button class="btn btn-primary" id="topSearchBtn" onclick="applyFilters()" data-tip="ใช้ช่วงวันที่และตัวกรองที่เลือก">ค้นหา</button>
     </div>
   </div>
 
@@ -2294,6 +2302,7 @@ function parseDateLocal(str) {
 function toggleDatePresetMenu(e) {
   if (e) e.stopPropagation();
   const el = document.getElementById('datePresetMenu');
+  if (!el) return toggleDateMore(e);
   const willOpen = el.style.display !== 'block';
   el.style.display = willOpen ? 'block' : 'none';
   if (willOpen) buildMonthPresetList();
@@ -2301,20 +2310,42 @@ function toggleDatePresetMenu(e) {
 function hideDatePresetMenu() {
   const el = document.getElementById('datePresetMenu');
   if (el) el.style.display = 'none';
+  document.getElementById('dateMoreDd')?.classList.remove('is-open');
 }
+// (2026-10-07) เมนู "ช่วงอื่น" ข้างปุ่มลัด
+function toggleDateMore(e) {
+  if (e) e.stopPropagation();
+  const dd = document.getElementById('dateMoreDd'); if (!dd) return;
+  const open = !dd.classList.contains('is-open');
+  if (open) buildMonthPresetList();
+  dd.classList.toggle('is-open', open);
+}
+document.addEventListener('click', e => { const dd = document.getElementById('dateMoreDd'); if (dd && dd.classList.contains('is-open') && !dd.contains(e.target)) dd.classList.remove('is-open'); });
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('datePresetMenu');
   if (menu && menu.style.display === 'block' && !menu.contains(e.target)) hideDatePresetMenu();
 });
 
 function updateDateRangeLabel() {
-  const label = document.getElementById('dateRangeLabel');
-  if (!label) return;
-  const from = document.getElementById('dateFrom')?.value;
-  const to = document.getElementById('dateTo')?.value;
-  const fmtDMY = (iso) => { if (!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
-  if (!from || !to) { label.textContent = 'เลือกช่วงเวลา'; return; }
-  label.textContent = from === to ? fmtDMY(from) : `${fmtDMY(from)} - ${fmtDMY(to)}`;
+  // (2026-10-07) แถบช่วงวันที่ใหม่: ปุ่มลัดที่ตรงกับวันที่ในช่องจะติดสี · เลือกรายเดือนจะโชว์ชื่อเดือนบนปุ่ม "ช่วงอื่น"
+  const from = document.getElementById('dateFrom')?.value, to = document.getElementById('dateTo')?.value;
+  const t = new Date(), y = t.getFullYear(), mo = t.getMonth(), iso = fmtDateISO, back = n => { const d = new Date(t); d.setDate(d.getDate() - n); return iso(d); };
+  const m3 = new Date(t); m3.setMonth(m3.getMonth() - 3);
+  const P = { ytd: [`${y}-01-01`, iso(t)], thisMonth: [iso(new Date(y, mo, 1)), iso(t)], lastMonth: [iso(new Date(y, mo - 1, 1)), iso(new Date(y, mo, 0))],
+    '30d': [back(29), iso(t)], '7d': [back(6), iso(t)], yesterday: [back(1), back(1)], today: [iso(t), iso(t)], '3m': [iso(m3), iso(t)] };
+  const hit = from && to ? Object.keys(P).find(k => P[k][0] === from && P[k][1] === to) || null : null;
+  document.querySelectorAll('#datePresetBar button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === hit ? 'true' : 'false'));
+  let more = null;
+  if (['yesterday', 'today', '3m'].includes(hit)) more = { yesterday: 'เมื่อวาน', today: 'วันนี้', '3m': '3 เดือน' }[hit];
+  else if (!hit && from && to && from.slice(8) === '01' && from.slice(0, 7) === to.slice(0, 7)) {
+    const [yy, mm] = from.split('-').map(Number);
+    if (to === iso(new Date(yy, mm, 0))) more = `${MONTHS_TH[mm - 1]} ${yy + 543}`;
+  }
+  const mb = document.getElementById('dateMoreBtn');
+  if (mb) { mb.textContent = more || 'ช่วงอื่น'; mb.classList.toggle('is-on', !!more); }
+  document.querySelectorAll('#dateMoreDd .ui-dd-item').forEach(b => b.setAttribute('aria-selected', (b.dataset.p && b.dataset.p === hit) || (b.dataset.m && from && from.startsWith(b.dataset.m) && more) ? 'true' : 'false'));
+  const btn = document.getElementById('topSearchBtn');
+  if (btn) btn.classList.toggle('is-pending', !!window._appliedDates && `${from}|${to}` !== window._appliedDates);
 }
 
 function setDatePreset(preset) {
@@ -2327,6 +2358,7 @@ function setDatePreset(preset) {
   else if (preset === 'thisMonth') { from = fmtDateISO(new Date(today.getFullYear(), today.getMonth(), 1)); to = fmtDateISO(today); }
   else if (preset === 'lastMonth') { const f = new Date(today.getFullYear(), today.getMonth()-1, 1); const t = new Date(today.getFullYear(), today.getMonth(), 0); from = fmtDateISO(f); to = fmtDateISO(t); }
   else if (preset === '3m') { const f = new Date(today); f.setMonth(f.getMonth()-3); from = fmtDateISO(f); to = fmtDateISO(today); }
+  else if (preset === 'ytd') { from = `${today.getFullYear()}-01-01`; to = fmtDateISO(today); }   // (2026-10-07) ปุ่ม "ปีนี้" = ค่าเริ่มต้นของระบบ
   document.getElementById('dateFrom').value = from;
   document.getElementById('dateTo').value = to;
   updateDateRangeLabel();
@@ -2350,10 +2382,15 @@ function buildMonthPresetList() {
   if (!el) return;
   // ใช้เดือนที่มีข้อมูลจริงในระบบเท่านั้น (เดิมไล่ย้อนหลัง 12 เดือนจากวันนี้ตรงๆ ทำให้โผล่เดือนที่ยังไม่มีข้อมูลเลย หรือขาดเดือนเก่ากว่านั้นที่จริงมีข้อมูลอยู่)
   const monthsWithData = _filterOptions ? _filterOptions.months : [...new Set((allData || []).map(r => (r.date || '').substring(0,7)).filter(Boolean))].sort().reverse();
-  el.innerHTML = monthsWithData.map(m => {
+  // (2026-10-07) เมนูแบบเดียวกับ dropdown สถานะหน้า Supply Chain · แบ่งกลุ่มตามปี · ปี พ.ศ.
+  let lastY = null, html = '';
+  monthsWithData.forEach(m => {
     const [y, mo] = m.split('-');
-    return `<div onclick="setDatePresetMonth('${m}')" style="padding:6px 12px;cursor:pointer;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${MONTHS_TH[parseInt(mo)-1]} ${y}</div>`;
-  }).join('') || '<div style="padding:6px 12px;color:var(--text3);font-size:11px;">ไม่มีข้อมูล</div>';
+    if (y !== lastY) { html += `<div class="ui-dd-h">รายเดือน ${+y + 543}</div>`; lastY = y; }
+    html += `<button class="ui-dd-item" type="button" data-m="${m}" onclick="setDatePresetMonth('${m}')">${MONTHS_TH[parseInt(mo) - 1]} ${+y + 543}</button>`;
+  });
+  el.innerHTML = html || '<div class="ui-dd-h">ยังไม่มีข้อมูลรายเดือน</div>';
+  updateDateRangeLabel();
 }
 
 function getPrevPeriodData() {
@@ -2784,6 +2821,8 @@ function autoGrainForRange(from, to) {
 function applyFilters() {
   const from = getDateValue('From');
   const to = getDateValue('To');
+  window._appliedDates = `${document.getElementById('dateFrom')?.value}|${document.getElementById('dateTo')?.value}`;   // (2026-10-07)
+  document.getElementById('topSearchBtn')?.classList.remove('is-pending');
   autoGrainForRange(from, to);
   const ch = document.getElementById('filterChannel').value;
   const sub = document.getElementById('filterSubChannel').value;
@@ -2949,7 +2988,8 @@ function showPage(page, lockCh, el) {
   { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis' || page === 'fbadmin';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
-  { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none'; }   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
+  { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
+    const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = page === 'home' ? 'none' : ''; }   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
   const noDateFilter = NO_DATE_FILTER_PAGES.includes(page);
@@ -7513,23 +7553,27 @@ async function loadDg(force) {
   if (!r.ok) throw new Error('data_status ' + r.status);
   _dg = await r.json(); _dgAt = Date.now(); return _dg;
 }
+let _dgOpen = false;
+function dgToggle() { _dgOpen = !_dgOpen; dgShow(currentPage); }
 function dgShow(page) {
+  // (2026-10-07) หน้าตาใหม่: ปกติ = ข้อความเล็กชิดขวา (ข้อมูลครบ + เวลาอัปเดต) · มีปัญหา = กล่องบรรทัดเดียว กด "ดูรายละเอียด" เพื่อดูทีละเรื่อง
   const el = document.getElementById('dgBanner'); if (!el) return;
   const keys = DG_PAGE[page], sched = DG_SCHED[page];
-  const schedTxt = sched ? `🕐 อัปเดต ${sched}` : '';
-  if (!keys) { el.innerHTML = schedTxt ? `<div class="dg-ok">${schedTxt}</div>` : ''; return; }
+  const schedTxt = sched ? `อัปเดต ${sched}` : '';
+  if (!keys) { el.innerHTML = schedTxt ? `<div class="dg-ok"><span>${schedTxt}</span></div>` : ''; return; }
   loadDg().then(list => {
     if (currentPage !== page) return;
     const hit = c => DG_GLOBAL.includes(c.k) || keys.some(k => c.k === k || (k.endsWith('_') && c.k.startsWith(k)));
     const mine = (list || []).filter(hit), bad = mine.filter(c => c.status !== 'ok');
     const at = mine.length ? new Date(Math.max(...mine.map(c => +new Date(c.at)))) : null;
     const atTxt = at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—';
-    if (!bad.length) { el.innerHTML = `<div class="dg-ok">${schedTxt ? schedTxt + ' · ' : ''}✓ ข้อมูลครบ (ตรวจ ${atTxt})</div>`; return; }
+    if (!bad.length) { el.innerHTML = `<div class="dg-ok"><span class="ok">✓ ข้อมูลครบ</span><span>ตรวจล่าสุด ${atTxt}</span>${schedTxt ? `<span>${schedTxt}</span>` : ''}</div>`; return; }
     const red = bad.some(c => c.status === 'fail');
-    el.innerHTML = `<div class="dg-bar ${red ? 'dg-red' : 'dg-orange'}"><b>${red ? '⚠️ ตัวเลขในหน้านี้อาจยังไม่ครบ' : 'ℹ️ ข้อมูลบางส่วนยังไม่เข้า'}</b>`
-      + bad.map(c => `<div>• ${c.title} — ${c.detail || ''}</div>`).join('')
-      + `<div class="dg-at">${schedTxt ? schedTxt + ' · ' : ''}ระบบตรวจอัตโนมัติทุกชั่วโมง · ล่าสุด ${atTxt}</div></div>`;
-  }).catch(() => { el.innerHTML = schedTxt ? `<div class="dg-ok">${schedTxt}</div>` : ''; });
+    el.innerHTML = `<div class="dg-box ${red ? 'red' : 'orange'}"><div class="dg-line"><span class="dg-ic"></span><b>${red ? 'ตัวเลขในหน้านี้อาจยังไม่ครบ' : 'ข้อมูลบางส่วนยังไม่เข้า'}</b>`
+      + `<span class="dg-sum">${bad.map(c => c.title).join(' · ')}</span><span class="ui-link" onclick="dgToggle()">${_dgOpen ? 'ซ่อนรายละเอียด' : `ดูรายละเอียด (${bad.length})`}</span></div>`
+      + (_dgOpen ? `<div class="dg-detail">${bad.map(c => `<div>• ${c.title} — ${c.detail || ''}</div>`).join('')}<div class="dg-at">${schedTxt ? schedTxt + ' · ' : ''}ระบบตรวจอัตโนมัติทุกชั่วโมง · ล่าสุด ${atTxt}</div></div>` : '')
+      + `</div>`;
+  }).catch(() => { el.innerHTML = schedTxt ? `<div class="dg-ok"><span>${schedTxt}</span></div>` : ''; });
 }
 { const _sp = showPage; showPage = function (page) { const r = _sp.apply(this, arguments); try { dgShow(page); } catch (e) {} return r; }; }
 setTimeout(() => { try { dgShow(currentPage); } catch (e) {} }, 2500);   // หน้าแรกที่เปิดตอนโหลด
@@ -7992,6 +8036,60 @@ function exportPl() {
 // (2026-10-07) หน้าตาใหม่ตาม ui.css · เลือกวันที่อยู่แถบบน (homeDayGroup) · ตัวเลขหลักแผงเดียว · ตารางช่องทางมีแถวรวม = ตัวเลขหลักเสมอ
 // สูตรทุกตัวเหมือนเดิม (ยอดขาย / ค่า Ads / ROAS / สะสมเดือนนี้ / Ads ดี-แย่ / สินค้า / สต็อก) — เปลี่ยนแค่การแสดงผล
 let _homeDate = null, _homeLatest = null;
+// (2026-10-07) กราฟแนวโน้มหน้าแรก (RPC home_trend — แหล่งเดียวกับ home_brief วันสุดท้ายจึงเท่าตัวเลขหลักเสมอ)
+let _homeTrend = null, _homeSel = ['sales', 'ads', 'roas'], _homeView = 'm', _homeDays = 30;
+const HM_MET = { sales: { label: 'ยอดขายรวม', color: '--accent' }, ads: { label: 'ค่า Ads รวม', color: '--ch-ads' }, roas: { label: 'ROAS รวม', color: '--cyan' } };
+function homeToggleMetric(k) {
+  if (_homeView !== 'm') { _homeView = 'm'; if (!_homeSel.includes(k)) _homeSel.push(k); }
+  else if (_homeSel.includes(k)) { if (_homeSel.length > 1) _homeSel = _homeSel.filter(x => x !== k); }
+  else _homeSel.push(k);
+  homeSyncChartUi(); renderHomeChart();
+}
+function homeChartView(v) { _homeView = v; homeSyncChartUi(); renderHomeChart(); }
+function homeChartDays(n) { _homeDays = n; homeSyncChartUi(); renderHomeChart(); }
+function homeSyncChartUi() {
+  document.querySelectorAll('#homeBody .ui-metric[data-k]').forEach(el => { const on = _homeView === 'm' && _homeSel.includes(el.dataset.k); el.classList.toggle('is-on', on); el.setAttribute('aria-pressed', on);
+    el.setAttribute('data-tip', on ? 'กดเพื่อเอาเส้นนี้ออกจากกราฟ' : 'กดเพื่อเพิ่มเส้นนี้ในกราฟ'); });
+  document.querySelectorAll('#hmView button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === _homeView));
+  document.querySelectorAll('#hmDays button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === _homeDays));
+}
+function renderHomeChart() {
+  const box = document.getElementById('homeTrendBox'); if (!box) return;
+  const tr = _homeTrend;
+  if (!tr || !tr.rows || !tr.rows.length) { box.innerHTML = '<div class="ui-empty"><b>ยังไม่มีข้อมูลแนวโน้ม</b>ลองกดรีเฟรชข้อมูลอีกครั้ง</div>'; return; }
+  if (!document.getElementById('homeTrendChart')) box.innerHTML = '<canvas id="homeTrendChart"></canvas>';
+  const css = n => getComputedStyle(document.body).getPropertyValue(n).trim();
+  const to = new Date(tr.to + 'T00:00:00'), dates = [];
+  for (let i = _homeDays - 1; i >= 0; i--) { const d = new Date(to); d.setDate(d.getDate() - i); dates.push(homeIso(d)); }
+  const by = {}; tr.rows.forEach(r => { (by[r.date] = by[r.date] || []).push(r); });
+  const sum = (d, f, ch) => (by[d] || []).filter(r => !ch || r.ch === ch).reduce((t, r) => t + (+r[f] || 0), 0);
+  const labels = dates.map(d => new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
+  const money = v => '฿' + fmt(Math.round(+v || 0));
+  const titleCb = items => new Date(dates[items[0].dataIndex] + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  const font = { family: 'Sarabun', size: 11 };
+  if (_homeView === 'ch') {
+    const ds = Object.keys(HM_CH).map(c => { const col = css(HM_CH[c][0].replace(/^var\((.*)\)$/, '$1'));
+      return { label: c, data: dates.map(d => sum(d, 'rev', c)), borderColor: col, backgroundColor: col, cubicInterpolationMode: 'monotone', _fmt: money }; })
+      .filter(x => x.data.some(v => v));
+    makeChart('homeTrendChart', 'line', labels, ds, {
+      tooltip: { uiShare: true, callbacks: { title: titleCb, label: c => `${c.dataset.label}: ${money(c.parsed.y)}`, footer: items => 'รวมทุกช่องทาง: ' + money(items.reduce((t, i) => t + i.parsed.y, 0)) } } });
+    return;
+  }
+  const series = {
+    sales: dates.map(d => sum(d, 'rev')),
+    ads: dates.map(d => sum(d, 'ads')),
+    roas: dates.map(d => { const a = sum(d, 'ads'), r = sum(d, 'rev'); return a && r ? r / a : null; })
+  };
+  const fmtK = { sales: money, ads: money, roas: v => v == null ? '—' : (+v).toFixed(2) + 'x' };
+  const keys = Object.keys(HM_MET).filter(k => _homeSel.includes(k));
+  const ds = keys.map((k, i) => { const col = css(HM_MET[k].color);
+    return { label: HM_MET[k].label, data: series[k], borderColor: col, backgroundColor: col, yAxisID: 'y' + i, spanGaps: false, cubicInterpolationMode: 'monotone', _fmt: fmtK[k] }; });
+  const scales = { y: { display: false } };
+  keys.forEach((k, i) => { scales['y' + i] = { display: keys.length === 1, position: 'left', grid: { color: getComputedStyle(document.body).getPropertyValue('--grid').trim(), display: i === 0 }, border: { display: false },
+    ticks: { color: css('--text3'), font, maxTicksLimit: 5, callback: v => fmtK[k](v) } }; });
+  makeChart('homeTrendChart', 'line', labels, ds, { scales,
+    tooltip: { itemSort: () => 0, callbacks: { title: titleCb, label: c => `${c.dataset.label}: ${c.dataset._fmt(c.parsed.y)}` } } });
+}
 const HM_CH = { Facebook: ['var(--ch-facebook)', 'fbhub'], TikTok: ['var(--ch-tiktok)', 'tthub'], Shopee: ['var(--ch-shopee)', 'shhub'], Lazada: ['var(--ch-lazada)', 'lzhub'], 'Modern Trade': ['var(--ch-mt)', 'mthub'], 'ตัวแทน': ['var(--ch-dealer)', 'channel'] };
 const HM_CUM = ['Modern Trade', 'ตัวแทน'];   // (2026-09-30) ห้างส่งยอดรายเดือน / ตัวแทนสั่งเป็นก้อน → ดูยอดสะสมเดือนนี้ ไม่นับเป็น "ยังไม่อัปยอด"
 function homeGo(page) { const el = document.querySelector(`.nav-item[onclick*="'${page}'"]`); if (el || Auth.canPage(page)) showPage(page, null, el); }
@@ -8014,7 +8112,12 @@ async function renderHome() {
   const seq = renderHome._seq = (renderHome._seq || 0) + 1;
   if (el.dataset.loaded) el.classList.add('is-loading'); else el.innerHTML = HOME_SKEL;
   const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  let b; try { b = await Auth.rpc('home_brief', _homeDate ? { p_date: _homeDate } : {}); }
+  let b; try {
+    const tp = _homeDate ? Auth.rpc('home_trend', { p_date: _homeDate, p_days: 30 }).catch(() => null) : null;
+    b = await Auth.rpc('home_brief', _homeDate ? { p_date: _homeDate } : {});
+    _homeTrend = (tp && (await tp)) || (b && b.date !== _homeDate ? await Auth.rpc('home_trend', { p_date: b.date, p_days: 30 }).catch(() => null) : null);
+    if (_homeTrend && _homeTrend.to !== b.date) _homeTrend = await Auth.rpc('home_trend', { p_date: b.date, p_days: 30 }).catch(() => null);
+  }
   catch (e) { el.classList.remove('is-loading'); el.innerHTML = `<div class="ui-empty"><b>โหลดสรุปไม่สำเร็จ</b>${esc(e.message || e)} · ลองกดรีเฟรชข้อมูลอีกครั้ง</div>`; return; }
   if (seq !== renderHome._seq) return;
   if (!_homeDate) _homeLatest = b.date;   // เปิดครั้งแรก / กดวันล่าสุด = วันล่าสุดที่มีข้อมูล
@@ -8037,7 +8140,9 @@ async function renderHome() {
   const T = ch.reduce((t, c) => { t.rev += +c.rev_d; t.avg += +c.rev_avg7; t.ads += +c.ads_d; t.ads7 += +c.ads_avg7; t.mtd += +c.mtd; t.mtdp += +c.mtd_prev; t.ord += +c.orders_d; return t; }, { rev: 0, avg: 0, ads: 0, ads7: 0, mtd: 0, mtdp: 0, ord: 0 });
   const roas = T.ads ? T.rev / T.ads : 0, roas7 = T.ads7 ? T.avg / T.ads7 : 0;
   const stale = ch.filter(c => !HM_CUM.includes(c.channel) && (!c.last_sales_date || c.last_sales_date < b.date)).map(c => c.channel);
-  const metric = (label, value, sub) => `<div class="ui-metric is-static"><span class="ui-metric-l">${label}</span><span class="ui-metric-v">${value}</span>${sub}</div>`;
+  const metric = (label, value, sub, k) => k
+    ? `<div class="ui-metric" role="button" tabindex="0" data-k="${k}" style="--m:var(${HM_MET[k].color});" onclick="homeToggleMetric('${k}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();homeToggleMetric('${k}')}"><span class="ui-metric-l"><span class="ui-tick"></span>${label}</span><span class="ui-metric-v">${value}</span>${sub}</div>`
+    : `<div class="ui-metric is-static"><span class="ui-metric-l">${label}</span><span class="ui-metric-v">${value}</span>${sub}</div>`;
   const sub = html => `<span class="ui-metric-d">${html}</span>`;
 
   const chRows = ch.map(c => {
@@ -8098,15 +8203,24 @@ async function renderHome() {
       <p>${thDay}</p></div></div>
     ${stale.length ? `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยังไม่อัปยอดของวันนี้</b><span>${stale.map(esc).join(', ')} ตัวเลขรวมจึงยังไม่ครบ</span></div>` : ''}
     <section class="ui-metrics" aria-label="ตัวเลขหลัก">
-      ${metric('ยอดขายรวม', money(T.rev), sub(`${delta(pct(T.rev, T.avg))} เทียบเฉลี่ย 7 วันก่อน`) + sub(`${fmt(T.ord)} ออเดอร์`))}
-      ${metric('ค่า Ads รวม', money(T.ads), sub(`${delta(pct(T.ads, T.ads7), true)} เทียบเฉลี่ย 7 วันก่อน`))}
-      ${metric('ROAS รวม', roas ? roas.toFixed(2) + 'x' : '—', sub(`${delta(pct(roas, roas7))} เทียบเฉลี่ย 7 วันก่อน`))}
+      ${metric('ยอดขายรวม', money(T.rev), sub(`${delta(pct(T.rev, T.avg))} เทียบเฉลี่ย 7 วันก่อน`) + sub(`${fmt(T.ord)} ออเดอร์`), 'sales')}
+      ${metric('ค่า Ads รวม', money(T.ads), sub(`${delta(pct(T.ads, T.ads7), true)} เทียบเฉลี่ย 7 วันก่อน`), 'ads')}
+      ${metric('ROAS รวม', roas ? roas.toFixed(2) + 'x' : '—', sub(`${delta(pct(roas, roas7))} เทียบเฉลี่ย 7 วันก่อน`), 'roas')}
       ${metric('ยอดขายสะสมเดือนนี้', money(T.mtd), sub(`${delta(pct(T.mtd, T.mtdp))} เทียบเดือนก่อนช่วงวันเดียวกัน`))}
     </section>
     <div class="hm-gap"></div>
     <section class="hm-panel">
+      <div class="hm-panel-h"><h2>แนวโน้มรายวัน ${info('hm-i-trend', 'กดช่องตัวเลขด้านบน (ยอดขาย / ค่า Ads / ROAS) เพื่อเพิ่มหรือเอาเส้นออก<br>วันสุดท้ายของกราฟคือวันที่เลือก ตัวเลขตรงกับตัวเลขหลักและตารางด้านล่าง<br><b>ยอดขายแยกช่องทาง</b> ดูเส้นยอดขายของแต่ละช่องทาง ชี้เมาส์เพื่อดูสัดส่วน')}</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="ui-presets" id="hmView"><button type="button" data-v="m" onclick="homeChartView('m')">ตัวเลขที่เลือก</button><button type="button" data-v="ch" onclick="homeChartView('ch')">ยอดขายแยกช่องทาง</button></div>
+          <div class="ui-presets" id="hmDays"><button type="button" data-n="7" onclick="homeChartDays(7)">7 วัน</button><button type="button" data-n="30" onclick="homeChartDays(30)">30 วัน</button></div>
+        </div></div>
+      <div class="chart-wrap" id="homeTrendBox" style="height:280px;"></div>
+    </section>
+    <div class="hm-gap"></div>
+    <section class="hm-panel">
       <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>Modern Trade / ตัวแทน</b> ห้างส่งยอดรายเดือน และตัวแทนสั่งเป็นก้อน จึงดูยอดสะสมเดือนนี้เป็นหลัก (ยอดรายวันแสดงเป็นสีจาง)<br><b>ป้ายสีส้ม</b> ช่องทางที่ยังไม่อัปยอดของวันที่เลือก')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
-      <div class="table-wrap"><table class="ui-table hm-tbl">
+      <div class="table-wrap"><table class="ui-table hm-tbl" data-no-sort>
         <thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย ${dShort(b.date)}</th><th class="num">เทียบเฉลี่ย 7 วัน</th><th class="num">ออเดอร์</th><th class="num">ค่า Ads</th><th class="num">ROAS</th><th class="num">สะสมเดือนนี้</th><th class="num">เทียบเดือนก่อน</th></tr></thead>
         <tbody>${chRows || `<tr><td colspan="8" class="ui-empty">ยังไม่มียอดของวันนี้</td></tr>`}</tbody>
         <tfoot><tr><td>รวม</td><td class="num">${money(T.rev)}</td><td class="num">${delta(pct(T.rev, T.avg))}</td><td class="num">${fmt(T.ord)}</td><td class="num">${money(T.ads)}</td><td class="num">${roasTxt(roas)}</td><td class="num">${money(T.mtd)}</td><td class="num">${delta(pct(T.mtd, T.mtdp))}</td></tr></tfoot>
@@ -8133,6 +8247,7 @@ async function renderHome() {
         ${stockL2}
       </section>
     </div>`;
+  homeSyncChartUi(); renderHomeChart();
 }
 
 // ===== MKT Tracking แบบวันต่อวัน (mv_mkt_live_monthly) — ค่า KOL จากชีทเบิกเงิน + ค่า Ads จริง · CM1 เท่านั้น =====
