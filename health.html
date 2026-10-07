@@ -194,6 +194,7 @@ const JOB_DESC = {
   'api-to-core-tiktok-nightly-b': 'ไล่สร้างออเดอร์ TikTok จาก API ย้อน 13–40 วัน (ไม่แตะเดือนที่ปิดแล้ว)',
   'tiktok-lives-hourly': 'รอบ LIVE TikTok (ทุกบัญชี) รายชั่วโมง — ใช้บอกว่าออเดอร์ซื้อในไลฟ์รอบไหนของใคร',
   'refresh-supply-views-day': 'คำนวณสต็อก / แผนเติมสต็อกรอบกลางวัน หลังดึง log น้องแพ็ครอบกลางวัน (sync-inventory-log-day)',
+  'kpi-lock-prices': 'ล็อกราคาต่อชิ้นที่ใช้คิดเป้าเงินของเดือนที่จบแล้ว (หน้าเป้าหมาย KPI) → kpi_price_lock · ตัวเลขเป้าเงินเดือนเก่าจะไม่ขยับเมื่อมีการแก้ยอดย้อนหลัง',
   'refresh-mv-sales-daily': 'ตารางสรุปยอดขายทุกตัว (ยอดรวม / SKU / โปร / จังหวัด / ลูกค้า / ครีเอเตอร์ / พนักงานขาย) refresh พร้อมกันในคำสั่งเดียว ทุก 30 นาที → ยอดทุกหน้าตรงกันเสมอ · ตัวแยกนาทีเดิม 7 ตัวปิดไว้',
   'refresh-mv-ad-spend': 'รีเฟรชสรุปค่าแอดทุกช่องทาง (หน้า Ad Performance / Hub)',
   'refresh-mv-sku-daily': 'รีเฟรชยอดขายราย SKU',
@@ -399,6 +400,7 @@ async function render(d, unknown, extra) {
     ['Ad Performance', 'ยอดขาย: orders · ค่าแอด: mv_ad_spend_daily (สรุปทุกชม. 07:45–23:45 จาก Facebook/TikTok/Shopee/MT API) + Lazada จากชีท', '—'],
     ['MKT Tracking (ต้นทุน/กำไร)', 'ยอดขาย: orders · ค่าแอดต่อ SKU: ชีท Ads by SKU (ยังชีท) · ต้นทุนสินค้า: products', '—'],
     ['KOL', 'ค่าจ้าง: ไฟล์งานทีม KOL แท็บ Conversion + PR (kol_posts, งบตามวันโพสต์) · ค่า Ads/ยอดขายของคลิป: TikTok Ads API + Meta Ads API · ค่า Ads รายวัน: mv_kol_job_ads_daily + Ads FB→งาน mv_kol_fb_ad_job + boost ที่ยังผูกงานไม่ได้ mv_kol_boost_unmatched_daily (RPC kol_ads_range) · สถานะเบิกจ่าย: ฟอร์มเบิกเงิน (kol_claims) — รวมใน mv_kol_plan_jobs · ยอด Commission ของ KOL: creator_summary_api (TikTok Affiliate API) จับคู่ tt_handle — แสดงแยก ไม่รวม MER', 'sync-kol-posts 5 รอบ/วัน → refresh-kol-plan · kol-cost-sync 4 รอบ/วัน'],
+    ['เป้าหมาย KPI', 'RPC kpi_page: ยอดจริง = mv_sku_daily (แหล่งเดียวกับเจาะสินค้า / แนวโน้มสินค้า) นับถึงเมื่อวาน · เป้า = kpi_product_targets (กรอกชิ้นในหน้า → RPC kpi_set_targets เก็บประวัติใน kpi_target_history) · เป้าเงิน = ชิ้น × ราคาเฉลี่ยต่อชิ้น 3 เดือนก่อน (ล็อกเมื่อเดือนจบ kpi_price_lock)', 'ยอด: ตาม mv_sku_daily ทุก 30 นาที · ล็อกราคา kpi-lock-prices 04:30'],
     ['Supply Chain', 'log น้องแพ็ค (inventory_movements 03:30) + sku_revenue + supply_params (Admin)', 'refresh-supply-views 04:00'],
     ['ชีท MKT Tracking (ขากลับ)', 'Apps Script เติม Mall K/Q/T/Y/AM + Data TT L/R/U จาก v_ads_sheet_daily', 'ทุกวัน 10:00–11:00']
   ]
