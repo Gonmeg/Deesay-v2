@@ -11,6 +11,7 @@ window.DEESAY_PAGES = [
   { id: 'home',         name: 'หน้าแรก (สรุปประจำวัน)', group: 'ยอดขาย' },
   { id: 'overview',     name: 'ภาพรวมยอดขาย',        group: 'ยอดขาย' },
   { id: 'channel',      name: 'แยกตาม Channel',       group: 'ยอดขาย' },
+  { id: 'kpi',          name: 'เป้าหมาย KPI',          group: 'ยอดขาย' },
   { id: 'fbhub',        name: 'ภาพรวม Facebook',       group: 'Facebook' },
   { id: 'crm',          name: 'CRM',                   group: 'Facebook' },
   { id: 'flow',         name: 'เส้นทางซื้อซ้ำ',        group: 'Facebook' },
