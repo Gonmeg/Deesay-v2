@@ -485,6 +485,13 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .hm-info { font-size:12px; font-weight:400; color:var(--text3); cursor:pointer; }
   .hm-info-pop { display:none; position:absolute; top:20px; left:0; width:320px; z-index:50; padding:10px 12px; font-size:12.5px; line-height:1.65; white-space:normal; font-weight:400; text-align:left; }
   #homeBody.is-loading { opacity:.55; transition:opacity .15s; }
+  /* (2026-10-07 รอบ 3) ตัวเลขหลัก 6 ช่องแบบหน้าตัวอย่าง — ⓘ ในช่องต้องไม่โดนตัด จึงไม่ตัดขอบแผง */
+  .hm-metrics { overflow:visible; }
+  .hm-metrics .ui-metric:first-child { border-radius:9px 0 0 9px; } .hm-metrics .ui-metric:first-child::before { border-top-left-radius:9px; }
+  .hm-metrics .ui-metric:last-child { border-radius:0 9px 9px 0; }
+  .hm-metrics .ui-metric-l .ads-info-wrap { margin-left:2px; }
+  .hm-daytag { margin-left:8px; font-size:12px; font-weight:400; color:var(--text3); }
+  .ui-badge.is-click { cursor:pointer; } .ui-badge.is-click:hover { color:var(--accent-text); background:var(--accent-soft); }
   @media (max-width:1100px) { .hm-grid2 { grid-template-columns:1fr; } }
   /* กล่องแจกแจงยอด (กดที่ตัวเลข) */
   .bd { text-align:left; max-width:780px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'Sarabun',sans-serif; }
@@ -616,7 +623,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.07-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.07-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -656,21 +663,25 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
       <!-- (2026-10-07) หน้าแรก: เลือกวันที่ของสรุปประจำวัน (โชว์เฉพาะหน้าแรก — ควบคุมใน showPage) -->
       <div class="filter-group" id="homeDayGroup" style="display:none;padding:0;background:transparent;border:none;gap:6px;align-items:center;">
-        <div class="ui-presets" role="group" aria-label="เลือกวัน">
-          <button type="button" onclick="homeShift(-1)" data-tip="วันก่อนหน้า" aria-label="วันก่อนหน้า">‹</button>
-          <button type="button" id="homeLatestBtn" onclick="homeLatest()">วันล่าสุด</button>
-          <button type="button" id="homeNextBtn" onclick="homeShift(1)" data-tip="วันถัดไป" aria-label="วันถัดไป">›</button>
+        <div class="ui-presets" id="homePresetBar" role="group" aria-label="ช่วงวันที่ของหน้าแรก">
+          <button type="button" data-p="d" onclick="homePreset('d')">วันล่าสุด</button>
+          <button type="button" data-p="7" onclick="homePreset('7')">7 วัน</button>
+          <button type="button" data-p="30" onclick="homePreset('30')">30 วัน</button>
+          <button type="button" data-p="m0" onclick="homePreset('m0')">เดือนนี้</button>
+          <button type="button" data-p="m1" onclick="homePreset('m1')">เดือนก่อน</button>
         </div>
-        <input type="date" id="homeDate" aria-label="เลือกวันที่ของสรุป" onchange="homeSetDate(this.value)">
+        <input type="date" id="homeFrom" aria-label="ตั้งแต่วันที่" onchange="homeSetRange()">
+        <span style="color:var(--text3);">–</span>
+        <input type="date" id="homeTo" aria-label="ถึงวันที่" onchange="homeSetRange()">
       </div>
       <!-- (2026-10-07) แถบช่วงวันที่แบบใหม่: ปุ่มลัด + "ช่วงอื่น" (เมื่อวาน / รายเดือน) + ปฏิทินไทย 2 ช่อง · ยังต้องกด "ค้นหา" เหมือนเดิม -->
       <div class="filter-group" id="dateRangeGroup" style="padding:0;background:transparent;border:none;gap:6px;align-items:center;">
         <div class="ui-presets" id="datePresetBar" role="group" aria-label="ช่วงวันที่ลัด">
-          <button type="button" data-p="ytd" onclick="setDatePreset('ytd')">ปีนี้</button>
+          <button type="button" data-p="7d" onclick="setDatePreset('7d')">7 วัน</button>
+          <button type="button" data-p="30d" onclick="setDatePreset('30d')">30 วัน</button>
           <button type="button" data-p="thisMonth" onclick="setDatePreset('thisMonth')">เดือนนี้</button>
           <button type="button" data-p="lastMonth" onclick="setDatePreset('lastMonth')">เดือนก่อน</button>
-          <button type="button" data-p="30d" onclick="setDatePreset('30d')">30 วัน</button>
-          <button type="button" data-p="7d" onclick="setDatePreset('7d')">7 วัน</button>
+          <button type="button" data-p="ytd" onclick="setDatePreset('ytd')">ปีนี้</button>
         </div>
         <div class="ui-dd" id="dateMoreDd">
           <button class="ui-dd-btn" type="button" id="dateMoreBtn" onclick="toggleDateMore(event)">ช่วงอื่น</button>
@@ -8035,130 +8046,179 @@ function exportPl() {
 // ===== หน้าแรก — สรุปประจำวัน (RPC home_brief) =====
 // (2026-10-07) หน้าตาใหม่ตาม ui.css · เลือกวันที่อยู่แถบบน (homeDayGroup) · ตัวเลขหลักแผงเดียว · ตารางช่องทางมีแถวรวม = ตัวเลขหลักเสมอ
 // สูตรทุกตัวเหมือนเดิม (ยอดขาย / ค่า Ads / ROAS / สะสมเดือนนี้ / Ads ดี-แย่ / สินค้า / สต็อก) — เปลี่ยนแค่การแสดงผล
-let _homeDate = null, _homeLatest = null;
-// (2026-10-07) กราฟแนวโน้มหน้าแรก (RPC home_trend — แหล่งเดียวกับ home_brief วันสุดท้ายจึงเท่าตัวเลขหลักเสมอ)
-let _homeTrend = null, _homeSel = ['sales', 'ads', 'roas'], _homeView = 'm', _homeDays = 30;
-const HM_MET = { sales: { label: 'ยอดขายรวม', color: '--accent' }, ads: { label: 'ค่า Ads รวม', color: '--ch-ads' }, roas: { label: 'ROAS รวม', color: '--cyan' } };
-function homeToggleMetric(k) {
-  if (_homeView !== 'm') { _homeView = 'm'; if (!_homeSel.includes(k)) _homeSel.push(k); }
-  else if (_homeSel.includes(k)) { if (_homeSel.length > 1) _homeSel = _homeSel.filter(x => x !== k); }
-  else _homeSel.push(k);
-  homeSyncChartUi(); renderHomeChart();
-}
-function homeChartView(v) { _homeView = v; homeSyncChartUi(); renderHomeChart(); }
-function homeChartDays(n) { _homeDays = n; homeSyncChartUi(); renderHomeChart(); }
-function homeSyncChartUi() {
-  document.querySelectorAll('#homeBody .ui-metric[data-k]').forEach(el => { const on = _homeView === 'm' && _homeSel.includes(el.dataset.k); el.classList.toggle('is-on', on); el.setAttribute('aria-pressed', on);
-    el.setAttribute('data-tip', on ? 'กดเพื่อเอาเส้นนี้ออกจากกราฟ' : 'กดเพื่อเพิ่มเส้นนี้ในกราฟ'); });
-  document.querySelectorAll('#hmView button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === _homeView));
-  document.querySelectorAll('#hmDays button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === _homeDays));
-}
-function renderHomeChart() {
-  const box = document.getElementById('homeTrendBox'); if (!box) return;
-  const tr = _homeTrend;
-  if (!tr || !tr.rows || !tr.rows.length) { box.innerHTML = '<div class="ui-empty"><b>ยังไม่มีข้อมูลแนวโน้ม</b>ลองกดรีเฟรชข้อมูลอีกครั้ง</div>'; return; }
-  if (!document.getElementById('homeTrendChart')) box.innerHTML = '<canvas id="homeTrendChart"></canvas>';
-  const css = n => getComputedStyle(document.body).getPropertyValue(n).trim();
-  const to = new Date(tr.to + 'T00:00:00'), dates = [];
-  for (let i = _homeDays - 1; i >= 0; i--) { const d = new Date(to); d.setDate(d.getDate() - i); dates.push(homeIso(d)); }
-  const by = {}; tr.rows.forEach(r => { (by[r.date] = by[r.date] || []).push(r); });
-  const sum = (d, f, ch) => (by[d] || []).filter(r => !ch || r.ch === ch).reduce((t, r) => t + (+r[f] || 0), 0);
-  const labels = dates.map(d => new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
-  const money = v => '฿' + fmt(Math.round(+v || 0));
-  const titleCb = items => new Date(dates[items[0].dataIndex] + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  const font = { family: 'Sarabun', size: 11 };
-  if (_homeView === 'ch') {
-    const ds = Object.keys(HM_CH).map(c => { const col = css(HM_CH[c][0].replace(/^var\((.*)\)$/, '$1'));
-      return { label: c, data: dates.map(d => sum(d, 'rev', c)), borderColor: col, backgroundColor: col, cubicInterpolationMode: 'monotone', _fmt: money }; })
-      .filter(x => x.data.some(v => v));
-    makeChart('homeTrendChart', 'line', labels, ds, {
-      tooltip: { uiShare: true, callbacks: { title: titleCb, label: c => `${c.dataset.label}: ${money(c.parsed.y)}`, footer: items => 'รวมทุกช่องทาง: ' + money(items.reduce((t, i) => t + i.parsed.y, 0)) } } });
-    return;
-  }
-  const series = {
-    sales: dates.map(d => sum(d, 'rev')),
-    ads: dates.map(d => sum(d, 'ads')),
-    roas: dates.map(d => { const a = sum(d, 'ads'), r = sum(d, 'rev'); return a && r ? r / a : null; })
-  };
-  const fmtK = { sales: money, ads: money, roas: v => v == null ? '—' : (+v).toFixed(2) + 'x' };
-  const keys = Object.keys(HM_MET).filter(k => _homeSel.includes(k));
-  const ds = keys.map((k, i) => { const col = css(HM_MET[k].color);
-    return { label: HM_MET[k].label, data: series[k], borderColor: col, backgroundColor: col, yAxisID: 'y' + i, spanGaps: false, cubicInterpolationMode: 'monotone', _fmt: fmtK[k] }; });
-  const scales = { y: { display: false } };
-  keys.forEach((k, i) => { scales['y' + i] = { display: keys.length === 1, position: 'left', grid: { color: getComputedStyle(document.body).getPropertyValue('--grid').trim(), display: i === 0 }, border: { display: false },
-    ticks: { color: css('--text3'), font, maxTicksLimit: 5, callback: v => fmtK[k](v) } }; });
-  makeChart('homeTrendChart', 'line', labels, ds, { scales,
-    tooltip: { itemSort: () => 0, callbacks: { title: titleCb, label: c => `${c.dataset.label}: ${c.dataset._fmt(c.parsed.y)}` } } });
-}
 const HM_CH = { Facebook: ['var(--ch-facebook)', 'fbhub'], TikTok: ['var(--ch-tiktok)', 'tthub'], Shopee: ['var(--ch-shopee)', 'shhub'], Lazada: ['var(--ch-lazada)', 'lzhub'], 'Modern Trade': ['var(--ch-mt)', 'mthub'], 'ตัวแทน': ['var(--ch-dealer)', 'channel'] };
 const HM_CUM = ['Modern Trade', 'ตัวแทน'];   // (2026-09-30) ห้างส่งยอดรายเดือน / ตัวแทนสั่งเป็นก้อน → ดูยอดสะสมเดือนนี้ ไม่นับเป็น "ยังไม่อัปยอด"
 function homeGo(page) { const el = document.querySelector(`.nav-item[onclick*="'${page}'"]`); if (el || Auth.canPage(page)) showPage(page, null, el); }
 function homeIso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-function homeShift(n) { if (!_homeDate) return; const d = new Date(_homeDate + 'T00:00:00'); d.setDate(d.getDate() + n); const v = homeIso(d); if (_homeLatest && v > _homeLatest) return; _homeDate = v; renderHome(); }
-function homeLatest() { _homeDate = null; renderHome(); }
-function homeSetDate(v) { if (!v) return; _homeDate = _homeLatest && v > _homeLatest ? _homeLatest : v; renderHome(); }
-function homeSyncNav() {
-  const inp = document.getElementById('homeDate');
-  if (inp) { if (_homeLatest) inp.setAttribute('max', _homeLatest); if (_homeDate && inp.value !== _homeDate) inp.value = _homeDate; }
-  const atLatest = !!_homeLatest && _homeDate === _homeLatest;
-  const nx = document.getElementById('homeNextBtn'); if (nx) nx.disabled = atLatest;
-  const lt = document.getElementById('homeLatestBtn'); if (lt) lt.setAttribute('aria-pressed', atLatest ? 'true' : 'false');
-}
 const HOME_SKEL = `<div class="hm-head"><div><div class="skeleton" style="height:22px;width:200px;margin-bottom:8px;"></div><div class="skeleton" style="height:13px;width:260px;"></div></div></div>
   <div class="skeleton" style="height:106px;border-radius:10px;"></div><div class="hm-gap"></div><div class="skeleton" style="height:300px;border-radius:10px;"></div>`;
+let _homeLatest = null, _homeBrief0 = null, _homeRange = { p: 'd', a: null, b: null };
+// (2026-10-07 รอบ 3) หน้าแรกตามหน้าตัวอย่างที่เมฆเลือก: ปุ่มช่วงวันที่แถบบน · ตัวเลขหลัก 6 ช่อง (กดเลือกเส้นกราฟได้) · กราฟ · ตารางช่องทางแบบตัวอย่าง
+// ตัวเลขช่วงวันที่ทั้งหมดมาจาก home_trend (mv_sales_daily + mv_ad_spend_daily แหล่งเดียวกับ home_brief) → การ์ด = ตาราง = กราฟ เสมอ
+let _homeTrend = null, _homeSel = ['sales', 'ads', 'roas'], _homeView = 'm', _homeBrief = null;
+const HM_MET = {
+  sales: { label: 'ยอดขายรวม', color: '--accent' }, orders: { label: 'ออเดอร์', color: '--blue' }, aov: { label: 'AOV', color: '--purple' },
+  ads: { label: 'ค่า Ads รวม', color: '--ch-ads', cost: true }, roas: { label: 'ROAS', color: '--cyan' }
+};
+function homeAdd(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return homeIso(d); }
+function homePresetRange(p) {
+  const L = _homeLatest; if (!L) return null;
+  const d = new Date(L + 'T00:00:00');
+  if (p === 'd') return [L, L];
+  if (p === '7') return [homeAdd(L, -6), L];
+  if (p === '30') return [homeAdd(L, -29), L];
+  if (p === 'm0') return [homeIso(new Date(d.getFullYear(), d.getMonth(), 1)), L];
+  if (p === 'm1') return [homeIso(new Date(d.getFullYear(), d.getMonth() - 1, 1)), homeIso(new Date(d.getFullYear(), d.getMonth(), 0))];
+  return null;
+}
+function homePreset(p) { const r = homePresetRange(p); if (!r) return; _homeRange = { p, a: r[0], b: r[1] }; renderHome(); }
+function homeSetRange() {
+  let a = document.getElementById('homeFrom')?.value, b = document.getElementById('homeTo')?.value; if (!a || !b) return;
+  if (a > b) [a, b] = [b, a];
+  if (_homeLatest && b > _homeLatest) b = _homeLatest;
+  const hit = ['d', '7', '30', 'm0', 'm1'].find(p => { const r = homePresetRange(p); return r && r[0] === a && r[1] === b; });
+  _homeRange = { p: hit || 'custom', a, b }; renderHome();
+}
+function homeSyncNav() {
+  const f = document.getElementById('homeFrom'), t = document.getElementById('homeTo');
+  [f, t].forEach(x => { if (x && _homeLatest) x.setAttribute('max', _homeLatest); });
+  if (f && f.value !== _homeRange.a) f.value = _homeRange.a;
+  if (t && t.value !== _homeRange.b) t.value = _homeRange.b;
+  document.querySelectorAll('#homePresetBar button').forEach(x => x.setAttribute('aria-pressed', x.dataset.p === _homeRange.p ? 'true' : 'false'));
+}
+function homeToggleMetric(k) {
+  const hint = document.getElementById('homeMetricHint');
+  if (_homeView !== 'm') { _homeView = 'm'; if (!_homeSel.includes(k)) _homeSel.push(k); }
+  else if (_homeSel.includes(k)) { if (_homeSel.length > 1) _homeSel = _homeSel.filter(x => x !== k); }
+  else if (_homeSel.length >= 4) { if (hint) hint.textContent = 'เลือกได้สูงสุด 4 เส้น กดช่องที่เลือกอยู่เพื่อเอาออกก่อน'; return; }
+  else _homeSel.push(k);
+  if (hint) hint.textContent = '';
+  homeSyncChartUi(); renderHomeChart();
+}
+function homeChartView(v) { _homeView = v; homeSyncChartUi(); renderHomeChart(); }
+function homeSyncChartUi() {
+  document.querySelectorAll('#homeBody .ui-metric[data-k]').forEach(el => { const on = _homeView === 'm' && _homeSel.includes(el.dataset.k); el.classList.toggle('is-on', on); el.setAttribute('aria-pressed', on);
+    el.setAttribute('data-tip', on ? 'กดเพื่อเอาเส้นนี้ออกจากกราฟ' : 'กดเพื่อเพิ่มเส้นนี้ในกราฟ'); });
+  document.querySelectorAll('#hmView button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === _homeView));
+}
+// รวมตัวเลขจาก home_trend ในช่วงวันที่ (ตัวแทน / MT ไม่นับใน AOV)
+function homeAgg(rows, a, b, ch) {
+  const t = { rev: 0, ord: 0, ads: 0, revX: 0, ordX: 0 };
+  (rows || []).forEach(r => { if (r.date < a || r.date > b || (ch && r.ch !== ch)) return;
+    t.rev += +r.rev || 0; t.ord += +r.ord || 0; t.ads += +r.ads || 0;
+    if (!HM_CUM.includes(r.ch)) { t.revX += +r.rev || 0; t.ordX += +r.ord || 0; } });
+  t.aov = t.ordX ? t.revX / t.ordX : null; t.roas = t.ads && t.rev ? t.rev / t.ads : null;
+  return t;
+}
+function renderHomeChart() {
+  const box = document.getElementById('homeTrendBox'); if (!box) return;
+  const tr = _homeTrend, leg = document.getElementById('homeLegend');
+  if (!tr || !tr.rows) { box.innerHTML = '<div class="ui-empty"><b>ยังไม่มีข้อมูลแนวโน้ม</b>ลองกดรีเฟรชข้อมูลอีกครั้ง</div>'; if (leg) leg.innerHTML = ''; return; }
+  if (!document.getElementById('homeTrendChart')) box.innerHTML = '<canvas id="homeTrendChart"></canvas>';
+  const css = n => getComputedStyle(document.body).getPropertyValue(n).trim();
+  const { a, b } = _homeRange, n = Math.round((new Date(b) - new Date(a)) / 86400000) + 1;
+  // ช่วงไม่เกิน 1 เดือน = รายวัน (วันเดียว → ย้อนให้ดู 14 วัน) · หลายเดือน = รายเดือน (กฎเมฆ)
+  const monthly = n > 31, start = n === 1 ? homeAdd(b, -13) : a;
+  const buckets = [];
+  if (monthly) { let d = new Date(start + 'T00:00:00'); d.setDate(1); while (homeIso(d) <= b) { const s0 = homeIso(d), e0 = homeIso(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+      buckets.push({ a: s0 < start ? start : s0, b: e0 > b ? b : e0, label: `${MONTHS_TH[d.getMonth()]} ${String(d.getFullYear() + 543).slice(2)}` }); d = new Date(d.getFullYear(), d.getMonth() + 1, 1); } }
+  else { for (let x = start; x <= b; x = homeAdd(x, 1)) buckets.push({ a: x, b: x, label: new Date(x + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) }); }
+  const money = v => '฿' + fmt(Math.round(+v || 0));
+  const fmtK = { sales: money, ads: money, aov: money, orders: v => fmt(Math.round(+v || 0)), roas: v => v == null ? '—' : (+v).toFixed(2) + 'x' };
+  const titleCb = items => { const k = buckets[items[0].dataIndex]; return monthly ? k.label : new Date(k.a + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }); };
+  const grid = css('--grid'), t3 = css('--text3'), font = { family: 'Sarabun', size: 12 };
+  let ds = [], yScales = {};
+  if (_homeView === 'ch') {
+    ds = Object.keys(HM_CH).map(c => { const col = css(HM_CH[c][0].replace(/^var\((.*)\)$/, '$1'));
+      return { label: c, data: buckets.map(k => homeAgg(tr.rows, k.a, k.b, c).rev), borderColor: col, backgroundColor: col, _fmt: money, _tt: c === 'TikTok' }; }).filter(x => x.data.some(v => v));
+    yScales.y = { grid: { color: grid }, border: { display: false }, ticks: { color: t3, font, maxTicksLimit: 5, callback: v => money(v) } };
+  } else {
+    const keys = Object.keys(HM_MET).filter(k => _homeSel.includes(k));
+    ds = keys.map((k, i) => { const col = css(HM_MET[k].color);
+      const data = buckets.map(x => { const g = homeAgg(tr.rows, x.a, x.b); return k === 'sales' ? g.rev : k === 'orders' ? g.ord : k === 'ads' ? g.ads : k === 'aov' ? g.aov : g.roas; });
+      return { label: HM_MET[k].label, data, borderColor: col, backgroundColor: col, yAxisID: 'y' + i, spanGaps: false, _fmt: fmtK[k] }; });
+    keys.forEach((k, i) => { yScales['y' + i] = { display: keys.length === 1, grid: { color: grid, display: i === 0 && keys.length === 1 }, border: { display: false },
+      ticks: { color: t3, font, maxTicksLimit: 5, callback: v => fmtK[k](v) } }; });
+  }
+  ds.forEach(d => Object.assign(d, { borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: buckets.length > 14 ? 0 : 3, pointHoverRadius: 5, pointBackgroundColor: d.borderColor }));
+  if (leg) leg.innerHTML = ds.map(d => `<span><i${d._tt ? ' class="ui-tt"' : ''} style="--c:${d.borderColor};"></i>${d.label}</span>`).join('');
+  if (charts.homeTrendChart) charts.homeTrendChart.destroy();
+  charts.homeTrendChart = new Chart(document.getElementById('homeTrendChart'), {
+    type: 'line', data: { labels: buckets.map(k => k.label), datasets: ds },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false },
+        tooltip: { uiShare: _homeView === 'ch', itemSort: (x, y) => _homeView === 'ch' ? y.parsed.y - x.parsed.y : 0,
+          callbacks: { title: titleCb, label: c => `${c.dataset.label}: ${c.dataset._fmt(c.parsed.y)}`,
+            footer: items => _homeView === 'ch' ? 'รวมทุกช่องทาง: ' + money(items.reduce((t, i) => t + (+i.parsed.y || 0), 0)) : '' } } },
+      scales: Object.assign({ x: { grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: t3, font, maxRotation: 0, autoSkipPadding: 14 } } }, yScales) }
+  });
+}
 async function renderHome() {
   const el = document.getElementById('homeBody'); if (!el) return;
   document.getElementById('loadingOverlay')?.classList.add('hidden');   // หน้าแรกไม่ต้องรอข้อมูลก้อนใหญ่ของหน้าภาพรวม
   const seq = renderHome._seq = (renderHome._seq || 0) + 1;
   if (el.dataset.loaded) el.classList.add('is-loading'); else el.innerHTML = HOME_SKEL;
   const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  let b; try {
-    const tp = _homeDate ? Auth.rpc('home_trend', { p_date: _homeDate, p_days: 30 }).catch(() => null) : null;
-    b = await Auth.rpc('home_brief', _homeDate ? { p_date: _homeDate } : {});
-    _homeTrend = (tp && (await tp)) || (b && b.date !== _homeDate ? await Auth.rpc('home_trend', { p_date: b.date, p_days: 30 }).catch(() => null) : null);
-    if (_homeTrend && _homeTrend.to !== b.date) _homeTrend = await Auth.rpc('home_trend', { p_date: b.date, p_days: 30 }).catch(() => null);
-  }
-  catch (e) { el.classList.remove('is-loading'); el.innerHTML = `<div class="ui-empty"><b>โหลดสรุปไม่สำเร็จ</b>${esc(e.message || e)} · ลองกดรีเฟรชข้อมูลอีกครั้ง</div>`; return; }
+  let b, tr;
+  try {
+    if (!_homeLatest) { _homeBrief0 = await Auth.rpc('home_brief', {}); _homeLatest = _homeBrief0.date; }   // วันล่าสุดที่มีข้อมูลจริง (≥ 3 ช่องทาง)
+    if (!_homeRange.a) { const r = homePresetRange(_homeRange.p) || [_homeLatest, _homeLatest]; _homeRange.a = r[0]; _homeRange.b = r[1]; }
+    const { a: A, b: B } = _homeRange, n = Math.round((new Date(B) - new Date(A)) / 86400000) + 1;
+    [b, tr] = await Promise.all([
+      B === _homeLatest && _homeBrief0 ? _homeBrief0 : Auth.rpc('home_brief', { p_date: B }),
+      Auth.rpc('home_trend', { p_date: B, p_days: Math.min(800, Math.max(14, n * 2)) }).catch(() => null)]);
+  } catch (e) { el.classList.remove('is-loading'); el.innerHTML = `<div class="ui-empty"><b>โหลดสรุปไม่สำเร็จ</b>${esc(e.message || e)} · ลองกดรีเฟรชข้อมูลอีกครั้ง</div>`; return; }
   if (seq !== renderHome._seq) return;
-  if (!_homeDate) _homeLatest = b.date;   // เปิดครั้งแรก / กดวันล่าสุด = วันล่าสุดที่มีข้อมูล
-  _homeDate = b.date; homeSyncNav();
+  _homeBrief = b; _homeTrend = tr; homeSyncNav();
 
-  const d = new Date(b.date + 'T00:00:00'), money = v => '฿' + fmt(Math.round(+v || 0)), pct = (a, c) => c ? (a - c) / c * 100 : null;
+  const A = _homeRange.a, B = _homeRange.b, n = Math.round((new Date(B) - new Date(A)) / 86400000) + 1, one = n === 1;
+  const money = v => '฿' + fmt(Math.round(+v || 0)), pct = (x, y) => x != null && y ? (x - y) / y * 100 : null;
   const delta = (p, inv) => p === null || !isFinite(p) ? '<span class="ui-delta flat">—</span>'
-    : `<span class="ui-delta ${Math.abs(p) < 3 ? 'flat' : ((p > 0) !== !!inv ? 'good' : 'bad')}">${p > 0 ? '▲' : p < 0 ? '▼' : ''} ${Math.abs(p).toFixed(0)}%</span>`;
+    : `<span class="ui-delta ${Math.abs(p) < 3 ? 'flat' : ((p > 0) !== !!inv ? 'good' : 'bad')}">${p > 0 ? '▲' : p < 0 ? '▼' : ''} ${Math.abs(p).toFixed(1)}%</span>`;
   const roasTxt = r => r ? `<span class="hm-roas ${r >= 3 ? 'good' : r >= 1.5 ? 'mid' : 'bad'}">${r.toFixed(2)}x</span>` : '<span class="ui-muted">—</span>';
   const dash = '<span class="ui-muted">—</span>';
   const dShort = v => new Date(v + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-  const thDay = d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dLong = v => new Date(v + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
   // (2026-09-28) หน้าแรกแสดงทุกส่วนให้ทุกคน · ลิงก์ "ดูรายละเอียด" โชว์เฉพาะหน้าที่คนนั้นเข้าได้
   const can = pg => { try { return Auth.canPage(pg); } catch (e) { return true; } };
   const link = (pg, txt) => can(pg) ? `<span class="ui-link" onclick="homeGo('${pg}')">${txt || 'ดูรายละเอียด'}</span>` : '';
   const dot = c => `<span class="ui-chdot${c === 'TikTok' ? ' ui-tt' : ''}" style="--c:${(HM_CH[c] || ['var(--ch-dealer)'])[0]};"></span>`;
-  const info = (id, html) => `<span class="ads-info-wrap" style="position:relative;display:inline-block;"><span class="hm-info" onclick="toggleFbeInfo('${id}')" aria-label="ดูคำอธิบายเพิ่มเติม">ⓘ</span><div id="${id}" class="ads-info-popover hm-info-pop" style="display:none;">${html}</div></span>`;
+  const info = (id, html, stop) => `<span class="ads-info-wrap" style="position:relative;display:inline-block;"><span class="hm-info" onclick="${stop ? 'event.stopPropagation();' : ''}toggleFbeInfo('${id}')" aria-label="ดูคำอธิบายเพิ่มเติม">ⓘ</span><div id="${id}" class="ads-info-popover hm-info-pop" style="display:none;"${stop ? ' onclick="event.stopPropagation()"' : ''}>${html}</div></span>`;
 
+  // ช่วงที่เลือก vs ช่วงเทียบ (วันเดียว = เฉลี่ย 7 วันก่อน เหมือนเดิม · หลายวัน = ช่วงก่อนหน้าที่ยาวเท่ากัน)
+  const rows = tr ? tr.rows : [];
+  const cur = homeAgg(rows, A, B);
+  const pA = one ? homeAdd(A, -7) : homeAdd(A, -n), pB = homeAdd(A, -1), pd = one ? 7 : 1;
+  const prv0 = homeAgg(rows, pA, pB), prv = { rev: prv0.rev / pd, ord: prv0.ord / pd, ads: prv0.ads / pd, aov: prv0.aov, roas: prv0.roas };
+  const cmpTxt = one ? 'เทียบเฉลี่ย 7 วันก่อน' : 'เทียบช่วงก่อน';
+  const cmpLong = one ? `เทียบค่าเฉลี่ยรายวัน ${dShort(pA)} – ${dLong(pB)}` : `เทียบกับ ${dShort(pA)} – ${dLong(pB)} (ช่วงก่อนหน้าที่ยาวเท่ากัน)`;
   const ch = b.channels || [];
-  const T = ch.reduce((t, c) => { t.rev += +c.rev_d; t.avg += +c.rev_avg7; t.ads += +c.ads_d; t.ads7 += +c.ads_avg7; t.mtd += +c.mtd; t.mtdp += +c.mtd_prev; t.ord += +c.orders_d; return t; }, { rev: 0, avg: 0, ads: 0, ads7: 0, mtd: 0, mtdp: 0, ord: 0 });
-  const roas = T.ads ? T.rev / T.ads : 0, roas7 = T.ads7 ? T.avg / T.ads7 : 0;
-  const stale = ch.filter(c => !HM_CUM.includes(c.channel) && (!c.last_sales_date || c.last_sales_date < b.date)).map(c => c.channel);
-  const metric = (label, value, sub, k) => k
-    ? `<div class="ui-metric" role="button" tabindex="0" data-k="${k}" style="--m:var(${HM_MET[k].color});" onclick="homeToggleMetric('${k}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();homeToggleMetric('${k}')}"><span class="ui-metric-l"><span class="ui-tick"></span>${label}</span><span class="ui-metric-v">${value}</span>${sub}</div>`
-    : `<div class="ui-metric is-static"><span class="ui-metric-l">${label}</span><span class="ui-metric-v">${value}</span>${sub}</div>`;
-  const sub = html => `<span class="ui-metric-d">${html}</span>`;
+  const T = ch.reduce((t, c) => { t.mtd += +c.mtd; t.mtdp += +c.mtd_prev; return t; }, { mtd: 0, mtdp: 0 });
+  const lastOf = c => (ch.find(x => x.channel === c) || {}).last_sales_date;
+  const stale = ch.filter(c => !HM_CUM.includes(c.channel) && (!c.last_sales_date || c.last_sales_date < B)).map(c => c.channel);
 
-  const chRows = ch.map(c => {
-    const cum = HM_CUM.includes(c.channel), st = !cum && (!c.last_sales_date || c.last_sales_date < b.date);
-    const r = +c.ads_d ? c.rev_d / c.ads_d : 0, pg = (HM_CH[c.channel] || [0, 'channel'])[1];
-    const name = `<span class="hm-ch-name${can(pg) ? ' is-link' : ''}"${can(pg) ? ` onclick="homeGo('${pg}')"` : ''}>${dot(c.channel)}${esc(c.channel)}</span>`;
-    const tag = cum ? `<span class="ui-badge" data-tip="${c.channel === 'Modern Trade' ? 'ห้างส่งรายงานยอดเป็นรายเดือน' : 'ตัวแทนสั่งเป็นก้อน ไม่ได้สั่งทุกวัน'} ยอดล่าสุด ${c.last_sales_date ? dShort(c.last_sales_date) : '—'}">ดูยอดสะสม</span>` : '';
-    const mute = v => cum ? `<span class="ui-muted">${v}</span>` : v;
+  const metric = (k, label, value, d, inf) => `<div class="ui-metric" role="button" tabindex="0" data-k="${k}" style="--m:var(${HM_MET[k].color});" onclick="homeToggleMetric('${k}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();homeToggleMetric('${k}')}">
+      <span class="ui-metric-l"><span class="ui-tick"></span>${label}${inf || ''}</span><span class="ui-metric-v">${value}</span><span class="ui-metric-d">${d} ${cmpTxt}</span></div>`;
+
+  // ตารางช่องทาง (แบบหน้าตัวอย่าง) — แถวรวม = ตัวเลขหลัก
+  const chNames = Object.keys(HM_CH);
+  const chData = chNames.map(c => ({ c, g: homeAgg(rows, A, B, c), p: homeAgg(rows, pA, pB, c) }));
+  const maxRev = Math.max(1, ...chData.map(x => x.g.rev));
+  const chRows = chData.map(({ c, g, p }) => {
+    const cum = HM_CUM.includes(c), pg = HM_CH[c][1], last = lastOf(c), st = !cum && (!last || last < B);
+    const mute = v => cum && one ? `<span class="ui-muted">${v}</span>` : v;
+    const name = `<span class="hm-ch-name${can(pg) ? ' is-link' : ''}"${can(pg) ? ` onclick="homeGo('${pg}')"` : ''}>${dot(c)}${esc(c)}</span>`;
+    const tag = st ? `<span class="ui-badge warn" data-tip="ช่องทางนี้ยังไม่มียอดของ ${dShort(B)}">ยอดถึง ${last ? dShort(last) : '—'}</span>`
+      : cum && one ? `<span class="ui-badge is-click" onclick="homePreset('m0')" data-tip="${c === 'Modern Trade' ? 'ห้างส่งรายงานยอดเป็นรายเดือน' : 'ตัวแทนสั่งเป็นก้อน ไม่ได้สั่งทุกวัน'} กดเพื่อดูยอดเดือนนี้">ดูยอดเดือนนี้</span>` : '';
+    const share = cur.rev ? g.rev / cur.rev * 100 : 0, pp = one ? p.rev / 7 : p.rev;
     return `<tr${st ? ' class="is-stale"' : ''}><td>${name}${tag}</td>
-      <td class="num">${st ? `<span class="ui-badge warn" data-tip="ช่องทางนี้ยังไม่มียอดของวันที่เลือก">ยอดล่าสุด ${c.last_sales_date ? dShort(c.last_sales_date) : '—'}</span>` : mute(money(c.rev_d))}</td>
-      <td class="num">${st || cum ? dash : delta(pct(+c.rev_d, +c.rev_avg7))}</td>
-      <td class="num">${mute(fmt(+c.orders_d))}</td>
-      <td class="num">${+c.ads_d ? money(c.ads_d) : dash}</td>
-      <td class="num">${!st && !cum && r ? roasTxt(r) : dash}</td>
-      <td class="num">${money(c.mtd)}</td>
-      <td class="num">${delta(pct(+c.mtd, +c.mtd_prev))}</td></tr>`;
+      <td class="num">${mute(money(g.rev))}</td>
+      <td class="num"><span class="ui-share">${share.toFixed(1)}%<span class="ui-share-track"><b style="width:${(g.rev / maxRev * 100).toFixed(1)}%;--c:${HM_CH[c][0]};"></b></span></span></td>
+      <td class="num">${mute(fmt(g.ord))}</td>
+      <td class="num">${cum ? dash : g.aov ? money(g.aov) : dash}</td>
+      <td class="num">${g.ads ? money(g.ads) : dash}</td>
+      <td class="num">${g.ads && g.rev ? roasTxt(g.roas) : dash}</td>
+      <td class="num">${(cum && one) || (st && one) ? dash : delta(pct(g.rev, pp))}</td></tr>`;
   }).join('');
 
   const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, title = tt ? (x.title || x.item_id) : x.name;
@@ -8167,7 +8227,8 @@ async function renderHome() {
       <div class="hm-r">${roasTxt(+x.roas)}</div></div>`; };
   const adBlock = (best, worst, tt) => `<div class="hm-sub">ROAS ดีที่สุด</div>${(best || []).map(x => adItem(x, tt)).join('') || '<div class="hm-empty">ไม่มี Ads ที่มียอดขาย</div>'}
     <div class="hm-sub">ใช้เงินมากแต่ ROAS ต่ำ</div>${(worst || []).map(x => adItem(x, tt)).join('') || '<div class="hm-empty">ไม่มี</div>'}`;
-  const adInfo = 'คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ ฿300 ในวันที่เลือก<br>กลุ่ม "ใช้เงินมากแต่ ROAS ต่ำ" คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ ฿1,000';
+  const adInfo = 'คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ ฿300 ในวันนั้น<br>กลุ่ม "ใช้เงินมากแต่ ROAS ต่ำ" คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ ฿1,000';
+  const dayTag = one ? '' : `<span class="hm-daytag">ของวันที่ ${dShort(B)}</span>`;
 
   const stockL1 = (b.stock_l1 || []).map(x => { const cv = Math.max(0, +x.cover_total || 0), today = new Date(), lt = +x.lt || 0;
     const outDay = new Date(today.getTime() + cv * 86400000);
@@ -8199,41 +8260,42 @@ async function renderHome() {
   el.classList.remove('is-loading'); el.dataset.loaded = '1';
   el.innerHTML = `
     <div class="hm-head"><div>
-      <h1>สรุปประจำวัน ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT ของวันที่เลือก สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada)<br><b>ROAS</b> (Return on Ad Spend) = ยอดขาย ÷ ค่า Ads ทุกช่องทาง<br><b>เทียบเฉลี่ย 7 วันก่อน</b> เทียบกับค่าเฉลี่ยรายวันของ 7 วันก่อนหน้าวันที่เลือก<br><b>ยอดขายสะสมเดือนนี้</b> ตั้งแต่วันที่ 1 ถึงวันที่เลือก เทียบเดือนก่อนช่วงวันเดียวกัน')}</h1>
-      <p>${thDay}</p></div></div>
-    ${stale.length ? `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยังไม่อัปยอดของวันนี้</b><span>${stale.map(esc).join(', ')} ตัวเลขรวมจึงยังไม่ครบ</span></div>` : ''}
-    <section class="ui-metrics" aria-label="ตัวเลขหลัก">
-      ${metric('ยอดขายรวม', money(T.rev), sub(`${delta(pct(T.rev, T.avg))} เทียบเฉลี่ย 7 วันก่อน`) + sub(`${fmt(T.ord)} ออเดอร์`), 'sales')}
-      ${metric('ค่า Ads รวม', money(T.ads), sub(`${delta(pct(T.ads, T.ads7), true)} เทียบเฉลี่ย 7 วันก่อน`), 'ads')}
-      ${metric('ROAS รวม', roas ? roas.toFixed(2) + 'x' : '—', sub(`${delta(pct(roas, roas7))} เทียบเฉลี่ย 7 วันก่อน`), 'roas')}
-      ${metric('ยอดขายสะสมเดือนนี้', money(T.mtd), sub(`${delta(pct(T.mtd, T.mtdp))} เทียบเดือนก่อนช่วงวันเดียวกัน`))}
+      <h1>${one ? 'สรุปประจำวัน' : 'สรุปยอดขาย'} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada)<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน')}</h1>
+      <p>${one ? new Date(B + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : `${dShort(A)} – ${dLong(B)} (${n} วัน)`} · ${cmpLong}</p></div></div>
+    ${stale.length ? `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยังไม่อัปยอดของ ${dShort(B)}</b><span>${stale.map(esc).join(', ')} ตัวเลขรวมจึงยังไม่ครบ</span></div>` : ''}
+    <section class="ui-metrics hm-metrics" aria-label="ตัวเลขหลัก">
+      ${metric('sales', 'ยอดขายรวม', money(cur.rev), delta(pct(cur.rev, prv.rev)))}
+      ${metric('orders', 'ออเดอร์', fmt(cur.ord), delta(pct(cur.ord, prv.ord)))}
+      ${metric('aov', 'AOV', cur.aov ? money(cur.aov) : '—', delta(pct(cur.aov, prv.aov)), info('hm-i-aov', '<b>AOV (Average Order Value)</b> ราคาเฉลี่ยต่อออเดอร์ = ยอดขาย ÷ ออเดอร์<br>ไม่นับตัวแทนและ Modern Trade เพราะสั่งเป็นก้อนใหญ่', true))}
+      ${metric('ads', 'ค่า Ads รวม', money(cur.ads), delta(pct(cur.ads, prv.ads), true))}
+      ${metric('roas', 'ROAS', cur.roas ? cur.roas.toFixed(2) + 'x' : '—', delta(pct(cur.roas, prv.roas)), info('hm-i-roas', '<b>ROAS (Return on Ad Spend)</b> = ยอดขาย ÷ ค่า Ads ทุกช่องทาง<br>ใช้ค่า Ads 1 บาท ได้ยอดขายกี่บาท', true))}
+      <div class="ui-metric is-static"><span class="ui-metric-l">สะสมเดือนนี้${info('hm-i-mtd', `ยอดขายตั้งแต่วันที่ 1 ถึง ${dShort(B)} เทียบเดือนก่อนช่วงวันเดียวกัน`)}</span><span class="ui-metric-v">${money(T.mtd)}</span><span class="ui-metric-d">${delta(pct(T.mtd, T.mtdp))} เทียบเดือนก่อน</span></div>
     </section>
-    <div class="hm-gap"></div>
+    <div class="ui-hint" id="homeMetricHint"></div>
     <section class="hm-panel">
-      <div class="hm-panel-h"><h2>แนวโน้มรายวัน ${info('hm-i-trend', 'กดช่องตัวเลขด้านบน (ยอดขาย / ค่า Ads / ROAS) เพื่อเพิ่มหรือเอาเส้นออก<br>วันสุดท้ายของกราฟคือวันที่เลือก ตัวเลขตรงกับตัวเลขหลักและตารางด้านล่าง<br><b>ยอดขายแยกช่องทาง</b> ดูเส้นยอดขายของแต่ละช่องทาง ชี้เมาส์เพื่อดูสัดส่วน')}</h2>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <div class="ui-presets" id="hmView"><button type="button" data-v="m" onclick="homeChartView('m')">ตัวเลขที่เลือก</button><button type="button" data-v="ch" onclick="homeChartView('ch')">ยอดขายแยกช่องทาง</button></div>
-          <div class="ui-presets" id="hmDays"><button type="button" data-n="7" onclick="homeChartDays(7)">7 วัน</button><button type="button" data-n="30" onclick="homeChartDays(30)">30 วัน</button></div>
-        </div></div>
+      <div class="hm-panel-h">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;"><h2>${n > 31 ? 'แนวโน้มรายเดือน' : 'แนวโน้มรายวัน'}${one ? '<span class="hm-daytag">14 วันถึงวันที่เลือก</span>' : ''}</h2>
+          <div class="ui-presets" id="hmView"><button type="button" data-v="m" onclick="homeChartView('m')">ตัวเลขที่เลือก</button><button type="button" data-v="ch" onclick="homeChartView('ch')">ยอดขายแยกช่องทาง</button></div></div>
+        <div class="ui-legend" id="homeLegend"></div></div>
       <div class="chart-wrap" id="homeTrendBox" style="height:280px;"></div>
     </section>
     <div class="hm-gap"></div>
     <section class="hm-panel">
-      <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>Modern Trade / ตัวแทน</b> ห้างส่งยอดรายเดือน และตัวแทนสั่งเป็นก้อน จึงดูยอดสะสมเดือนนี้เป็นหลัก (ยอดรายวันแสดงเป็นสีจาง)<br><b>ป้ายสีส้ม</b> ช่องทางที่ยังไม่อัปยอดของวันที่เลือก')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
+      <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของช่วงวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>สัดส่วน</b> ยอดขายของช่องทาง ÷ ยอดขายรวม<br><b>AOV</b> ไม่นับตัวแทนและ Modern Trade<br><b>Modern Trade / ตัวแทน</b> ห้างส่งยอดรายเดือน ตัวแทนสั่งเป็นก้อน ดูรายวันจะไม่สะท้อนจริง กด "ดูยอดเดือนนี้" เพื่อดูทั้งเดือน<br><b>ป้ายสีส้ม</b> ช่องทางที่ยังไม่อัปยอดถึงวันสุดท้ายของช่วง')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
       <div class="table-wrap"><table class="ui-table hm-tbl" data-no-sort>
-        <thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย ${dShort(b.date)}</th><th class="num">เทียบเฉลี่ย 7 วัน</th><th class="num">ออเดอร์</th><th class="num">ค่า Ads</th><th class="num">ROAS</th><th class="num">สะสมเดือนนี้</th><th class="num">เทียบเดือนก่อน</th></tr></thead>
-        <tbody>${chRows || `<tr><td colspan="8" class="ui-empty">ยังไม่มียอดของวันนี้</td></tr>`}</tbody>
-        <tfoot><tr><td>รวม</td><td class="num">${money(T.rev)}</td><td class="num">${delta(pct(T.rev, T.avg))}</td><td class="num">${fmt(T.ord)}</td><td class="num">${money(T.ads)}</td><td class="num">${roasTxt(roas)}</td><td class="num">${money(T.mtd)}</td><td class="num">${delta(pct(T.mtd, T.mtdp))}</td></tr></tfoot>
+        <thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ออเดอร์</th><th class="num">AOV</th><th class="num">ค่า Ads</th><th class="num">ROAS</th><th class="num">${one ? 'เทียบเฉลี่ย 7 วัน' : 'เทียบช่วงก่อน'}</th></tr></thead>
+        <tbody>${chRows}</tbody>
+        <tfoot><tr><td>รวม</td><td class="num">${money(cur.rev)}</td><td class="num">100%</td><td class="num">${fmt(cur.ord)}</td><td class="num">${cur.aov ? money(cur.aov) : '—'}</td><td class="num">${money(cur.ads)}</td><td class="num">${roasTxt(cur.roas)}</td><td class="num">${delta(pct(cur.rev, prv.rev))}</td></tr></tfoot>
       </table></div>
     </section>
     <div class="hm-gap"></div>
     <div class="hm-grid2">
-      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('Facebook')}Facebook Ads ${info('hm-i-fb', adInfo)}</h2>${link('fbads', 'ดูทั้งหมด')}</div>${adBlock(b.fb_best, b.fb_worst, false)}</section>
-      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('TikTok')}TikTok Ads ${info('hm-i-tt', adInfo)}</h2>${link('ttads', 'ดูทั้งหมด')}</div>${adBlock(b.tt_best, b.tt_worst, true)}</section>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('Facebook')}Facebook Ads ${info('hm-i-fb', adInfo)}${dayTag}</h2>${link('fbads', 'ดูทั้งหมด')}</div>${adBlock(b.fb_best, b.fb_worst, false)}</section>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('TikTok')}TikTok Ads ${info('hm-i-tt', adInfo)}${dayTag}</h2>${link('ttads', 'ดูทั้งหมด')}</div>${adBlock(b.tt_best, b.tt_worst, true)}</section>
     </div>
     <div class="hm-gap"></div>
     <div class="hm-grid2">
-      <section class="hm-panel"><div class="hm-panel-h"><h2>สินค้าขายดี</h2>${link('skuanalysis', 'ดูทั้งหมด')}</div>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>สินค้าขายดี${dayTag}</h2>${link('skuanalysis', 'ดูทั้งหมด')}</div>
         ${(b.top_products || []).map((x, i) => `<div class="hm-it"><div class="hm-rank${i < 3 ? ' top' : ''}">${i + 1}</div>
           <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>${fmt(Math.round(+x.qty_d || 0))} ชิ้น</span><span>เฉลี่ย 7 วัน ${money(x.avg7)}</span></div></div>
           <div class="hm-r">${money(x.rev_d)}<small>${delta(pct(+x.rev_d, +x.avg7))}</small></div></div>`).join('') || '<div class="hm-empty">ยังไม่มียอด</div>'}
