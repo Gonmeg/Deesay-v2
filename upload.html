@@ -1215,33 +1215,61 @@ async function loadUploadHistory() {
   } catch(e) { el.innerHTML = '<div class="history-empty">โหลดประวัติไม่ได้</div>' }
 }
 
-window.confirmDeleteLog = function(e, logId, subChannel, createdAt, channel) {
+// (2026-10-07) ปุ่ม 🗑 ลบ: ลบเฉพาะออเดอร์ที่ "การอัปครั้งนี้" เพิ่มเข้าระบบเท่านั้น
+// เดิมลบทุกออเดอร์ของเพจแรกในไฟล์ย้อนหลัง 60 วัน → 7 ต.ค. ออเดอร์เพจ 05 แป้งแก้มบุ๋ม 8 ส.ค.–5 ต.ค. หายทั้งช่วง
+// วิธีรู้ว่าออเดอร์ไหนมาจากการอัปครั้งนี้: ช่องทางเดียวกัน + เวลาที่เข้าระบบ (created_at) อยู่หลังการอัปครั้งก่อนของช่องทางนี้ และไม่เกินเวลาบันทึกการอัปครั้งนี้
+// ออเดอร์ที่มีอยู่แล้วก่อนหน้า (อัปซ้ำ) ไม่ถูกลบ เพราะเวลาเข้าระบบเป็นของการอัปครั้งแรก · ช่องทางที่ย้ายไปดึงจาก API แล้วลบไม่ได้ (ไฟล์เป็นแค่สำรอง)
+async function uploadOrderIds(channel, createdAt) {
+  const t = new Date(createdAt).getTime()
+  let start = new Date(t - 30 * 60 * 1000).toISOString()
+  const end = new Date(t + 2 * 60 * 1000).toISOString()
+  const { data: prev } = await DB.from('upload_logs').select('created_at').eq('channel', channel).lt('created_at', createdAt).order('created_at', { ascending: false }).limit(1)
+  if (prev && prev[0] && prev[0].created_at > start) start = prev[0].created_at
+  const ids = []
+  for (let off = 0; ; off += 1000) {
+    const { data, error } = await DB.from('orders').select('order_id').eq('channel', channel).gt('created_at', start).lte('created_at', end).range(off, off + 999)
+    if (error) throw error
+    ;(data || []).forEach(r => ids.push(r.order_id))
+    if (!data || data.length < 1000) break
+  }
+  return ids
+}
+async function channelOnApi(channel) {
+  try { const { data } = await DB.from('api_core_switch').select('channel').eq('channel', channel).limit(1); return !!(data && data.length) } catch (e) { return false }
+}
+window.confirmDeleteLog = async function(e, logId, subChannel, createdAt, channel) {
   e.stopPropagation()
   const confirmEl = document.getElementById('log-confirm-' + logId)
   if (!confirmEl) return
   confirmEl.style.display = 'block'
-  const dateDisplay = new Date(createdAt).toLocaleDateString('th-TH')
-  confirmEl.innerHTML = `
-    <div class="delete-confirm">
-      <div style="margin-bottom:8px;color:var(--text);">⚠️ ลบออเดอร์ทั้งหมดของ <strong style="color:#f87171;">${subChannel}</strong> ที่อัพโหลดในครั้งนี้?</div>
-      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:10px;">จะลบออเดอร์ที่มี sub_channel = "${subChannel}" ในช่วง 60 วันก่อน ${dateDisplay} — แล้วอัพโหลดใหม่ได้เลย</div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="executeDeleteLog('${logId}','${subChannel.replace(/'/g,"\\'")}','${createdAt}')" style="background:var(--danger);color:white;border:none;padding:6px 16px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:600;">✓ ยืนยันลบ</button>
-        <button onclick="document.getElementById('log-confirm-${logId}').style.display='none'" style="background:none;border:1px solid var(--border2);color:var(--muted);padding:6px 14px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;">ยกเลิก</button>
-      </div>
-    </div>`
+  confirmEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);padding:6px 0;">⏳ กำลังนับออเดอร์ของการอัปครั้งนี้...</div>'
+  const cancelBtn = `<button onclick="document.getElementById('log-confirm-${logId}').style.display='none'" style="background:none;border:1px solid var(--border2);color:var(--muted);padding:6px 14px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;">ปิด</button>`
+  try {
+    if (await channelOnApi(channel)) {
+      confirmEl.innerHTML = `<div class="delete-confirm"><div style="margin-bottom:8px;color:var(--text);">ช่องทาง ${channel} ดึงออเดอร์จาก API แล้ว ไฟล์ที่อัปเก็บเป็นสำรองเท่านั้น จึงไม่ต้องลบ</div>${cancelBtn}</div>`
+      return
+    }
+    const ids = await uploadOrderIds(channel, createdAt)
+    window._delIds = window._delIds || {}; window._delIds[logId] = ids
+    confirmEl.innerHTML = `
+      <div class="delete-confirm">
+        <div style="margin-bottom:8px;color:var(--text);">⚠️ ลบออเดอร์ที่การอัปครั้งนี้เพิ่มเข้ามา <strong style="color:#f87171;">${ids.length.toLocaleString()} ออเดอร์</strong> (${channel})?</div>
+        <div style="font-size:0.68rem;color:var(--muted);margin-bottom:10px;">ออเดอร์ที่มีอยู่แล้วจากการอัปครั้งก่อนจะไม่ถูกลบ — ลบแล้วอัปไฟล์ที่ถูกต้องใหม่ได้เลย</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="executeDeleteLog('${logId}','${channel}')" style="background:var(--danger);color:white;border:none;padding:6px 16px;border-radius:6px;font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:600;">✓ ยืนยันลบ</button>
+          ${cancelBtn.replace('>ปิด<', '>ยกเลิก<')}
+        </div>
+      </div>`
+  } catch (err) {
+    confirmEl.innerHTML = `<div style="font-size:0.72rem;color:#fca5a5;padding:6px 0;">❌ นับออเดอร์ไม่สำเร็จ: ${err.message}</div>`
+  }
 }
 
-window.executeDeleteLog = async function(logId, subChannel, createdAt) {
+window.executeDeleteLog = async function(logId, channel) {
   const confirmEl = document.getElementById('log-confirm-' + logId)
   if (confirmEl) confirmEl.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);padding:6px 0;">⏳ กำลังลบ...</div>'
   try {
-    const toDate = new Date(createdAt).toISOString().substring(0, 10)
-    const fromDate = new Date(new Date(createdAt) - 60*86400*1000).toISOString().substring(0, 10)
-    // ดึง order_ids ก่อน
-    const { data: orderRows, error: fetchErr } = await DB.from('orders').select('order_id').eq('sub_channel', subChannel).gte('date', fromDate).lte('date', toDate)
-    if (fetchErr) throw fetchErr
-    const ids = (orderRows || []).map(r => r.order_id)
+    const ids = (window._delIds && window._delIds[logId]) || []
     if (ids.length) {
       const BATCH = 200
       // ลบ sku_revenue ก่อน
@@ -1260,7 +1288,7 @@ window.executeDeleteLog = async function(logId, subChannel, createdAt) {
     // ลบออกจาก UI
     const item = document.getElementById('log-item-' + logId)
     if (item) { item.style.opacity = '0'; setTimeout(() => item.remove(), 300) }
-    showDeleteToast(`✅ ลบสำเร็จ ${ids.length} ออเดอร์ (${subChannel}) — อัพโหลดใหม่ได้เลย`)
+    showDeleteToast(`✅ ลบสำเร็จ ${ids.length} ออเดอร์ (${channel}) — อัพโหลดใหม่ได้เลย`)
   } catch(err) {
     console.error('deleteLog failed:', err)
     if (confirmEl) confirmEl.innerHTML = `<div style="font-size:0.72rem;color:#fca5a5;padding:6px 0;">❌ ลบไม่สำเร็จ: ${err.message}</div>`
