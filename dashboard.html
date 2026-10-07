@@ -74,7 +74,27 @@
   .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
   .page-title { font-size: 16px; font-weight: 700; color: var(--text); }
   .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  #dateMoreBtn.is-on { background: var(--accent-soft); border-color: transparent; color: var(--accent-text); font-weight: 600; }
+  /* (2026-10-07) ตัวเลือกช่วงวันที่แบบ Shopee (เมฆชอบแบบเดิม): ปุ่มเดียว → แผง ซ้าย = ช่วงลัด · ขวา = รายเดือน + กำหนดเอง · ใช้ทุกหน้า */
+  .drp-btn svg { flex: none; color: var(--text3); }
+  .drp-btn span { font-variant-numeric: tabular-nums; }
+  .drp .drp-menu { left: 0; padding: 8px; min-width: 0; }
+  .ui-dd.drp.is-open .drp-menu { display: flex; gap: 8px; }
+  .ui-dd.drp .drp-menu.is-right { left: auto; right: 0; }
+  .drp-l { display: flex; flex-direction: column; min-width: 160px; padding-right: 8px; border-right: 1px solid var(--border); }
+  .drp-r { width: 300px; display: flex; flex-direction: column; }
+  .drp-yr { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 6px; }
+  .drp-yr b { font-size: 13px; font-weight: 600; color: var(--text); }
+  .drp-yr button { width: 28px; height: 28px; border: 0; border-radius: var(--r-sm); background: none; color: var(--text2); font-size: 17px; cursor: pointer; }
+  .drp-yr button:hover:not(:disabled) { background: var(--bg3); color: var(--text); }
+  .drp-yr button:disabled { opacity: .3; cursor: default; }
+  .drp-mg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 6px 4px; }
+  .drp-mg button { height: 30px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--bg2); color: var(--text2); font: inherit; font-size: 13px; cursor: pointer; }
+  .drp-mg button:hover:not(:disabled) { background: var(--bg3); color: var(--text); }
+  .drp-mg button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .drp-mg button:disabled { opacity: .3; cursor: default; }
+  .drp-custom { display: flex; align-items: center; gap: 6px; padding: 0 6px; }
+  .drp-custom .ui-datebtn { flex: 1; justify-content: flex-start; }
+  .drp-ok { margin: 10px 6px 2px auto; }
   #topSearchBtn { height: 34px; padding: 0 16px; }
   #topSearchBtn.is-pending { box-shadow: 0 0 0 3px var(--accent-soft); }
   #topSearchBtn.is-pending::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); margin-left: 2px; }
@@ -623,7 +643,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.07-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.07-f</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -651,8 +671,6 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <!-- ค้นหา creator: โชว์เฉพาะหน้า Creator Performance (ควบคุมใน showPage) -->
       <div class="filter-group" id="cpCreatorFilterGroup" style="display:none;position:relative;padding:0;background:transparent;border:none;gap:6px;">
         <div class="cp-seg" id="cpViewSeg"><button class="on" data-v="creator" onclick="setCpView('creator')">👤 ครีเอเตอร์</button><button data-v="product" onclick="setCpView('product')">📦 สินค้า</button></div>
-        <div class="cp-seg" id="cpSrcSeg" title="วิธีนับยอดครีเอเตอร์: ไฟล์อัปโหลด (เดิม) หรือ TikTok API (ใหม่ — นับตามค่าคอมที่ TikTok จ่ายจริง)"><button class="on" data-s="file" onclick="setCpSource('file')">📄 วิธีเดิม</button><button data-s="api" onclick="setCpSource('api')">⚡ API (ใหม่)</button></div>
-        <span class="ads-info-wrap" style="position:relative;display:inline-block;align-self:center;"><span onclick="toggleFbeInfo('cp-src-info')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="cp-src-info" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span>
         <div class="cp-seg" id="cpTypeSeg"><button class="on" data-t="all" onclick="setCpType('all')">ทุกคน</button><button data-t="KOL" onclick="setCpType('KOL')">KOL</button><button data-t="Affiliate" onclick="setCpType('Affiliate')">Affiliate</button></div>
         <span class="ads-info-wrap" id="cpTypeInfo" style="position:relative;display:inline-block;align-self:center;"><span onclick="toggleFbeInfo('cp-type-info')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="cp-type-info" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>KOL</b> = ครีเอเตอร์ที่ทีม KOL จ้าง (มีงานในไฟล์งานทีม KOL รวม Presenter)<br><b>Affiliate</b> = ครีเอเตอร์ที่ไม่ได้จ้าง ทำคลิป / Live ขายของเราเพื่อรับ Commission<br><b>ทุกคน</b> = KOL + Affiliate + บัญชีร้าน (deesaythailand และช่องรอง deesay_cosmetics)<br>ใช้กับทั้งหน้า: การ์ด กราฟ ตาราง และส่วน Commission · ป้ายหลังชื่อบอกว่าเป็นกลุ่มไหน<br>ค่าจ้าง KOL นับเฉพาะตอนเลือก ทุกคน / KOL · เลือกครีเอเตอร์คนเดียว = เห็นของคนนั้นทั้งหมด</div></span>
         <div style="position:relative;" id="cpCreatorSearchWrap">
@@ -662,49 +680,68 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <button class="btn btn-ghost" id="cpClearBtn" onclick="clearCpCreator()" style="display:none;white-space:nowrap;">✕ ดูทุกคน</button>
       </div>
       <!-- (2026-10-07) หน้าแรก: เลือกวันที่ของสรุปประจำวัน (โชว์เฉพาะหน้าแรก — ควบคุมใน showPage) -->
-      <div class="filter-group" id="homeDayGroup" style="display:none;padding:0;background:transparent;border:none;gap:6px;align-items:center;">
-        <div class="ui-presets" id="homePresetBar" role="group" aria-label="ช่วงวันที่ของหน้าแรก">
-          <button type="button" data-p="d" onclick="homePreset('d')">วันล่าสุด</button>
-          <button type="button" data-p="7" onclick="homePreset('7')">7 วัน</button>
-          <button type="button" data-p="30" onclick="homePreset('30')">30 วัน</button>
-          <button type="button" data-p="m0" onclick="homePreset('m0')">เดือนนี้</button>
-          <button type="button" data-p="m1" onclick="homePreset('m1')">เดือนก่อน</button>
-        </div>
-        <input type="date" id="homeFrom" aria-label="ตั้งแต่วันที่" onchange="homeSetRange()">
-        <span style="color:var(--text3);">–</span>
-        <input type="date" id="homeTo" aria-label="ถึงวันที่" onchange="homeSetRange()">
-      </div>
-      <!-- (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนเดียว (โชว์เฉพาะหน้านี้ — ควบคุมใน showPage · ทำงานใน kpi.js) -->
-      <div class="filter-group" id="kpMonthGroup" style="display:none;padding:0;background:transparent;border:none;gap:6px;align-items:center;">
-        <div class="ui-presets" id="kpMonthPresets" role="group" aria-label="เดือนลัด">
-          <button type="button" data-p="m1">เดือนก่อน</button>
-          <button type="button" data-p="m0">เดือนนี้</button>
-          <button type="button" data-p="n1">เดือนหน้า</button>
-        </div>
-        <input type="month" id="kpMonth" aria-label="เดือนของเป้า">
-      </div>
-      <!-- (2026-10-07) แถบช่วงวันที่แบบใหม่: ปุ่มลัด + "ช่วงอื่น" (เมื่อวาน / รายเดือน) + ปฏิทินไทย 2 ช่อง · ยังต้องกด "ค้นหา" เหมือนเดิม -->
-      <div class="filter-group" id="dateRangeGroup" style="padding:0;background:transparent;border:none;gap:6px;align-items:center;">
-        <div class="ui-presets" id="datePresetBar" role="group" aria-label="ช่วงวันที่ลัด">
-          <button type="button" data-p="7d" onclick="setDatePreset('7d')">7 วัน</button>
-          <button type="button" data-p="30d" onclick="setDatePreset('30d')">30 วัน</button>
-          <button type="button" data-p="thisMonth" onclick="setDatePreset('thisMonth')">เดือนนี้</button>
-          <button type="button" data-p="lastMonth" onclick="setDatePreset('lastMonth')">เดือนก่อน</button>
-          <button type="button" data-p="ytd" onclick="setDatePreset('ytd')">ปีนี้</button>
-        </div>
-        <div class="ui-dd" id="dateMoreDd">
-          <button class="ui-dd-btn" type="button" id="dateMoreBtn" onclick="toggleDateMore(event)">ช่วงอื่น</button>
-          <div class="ui-dd-menu" style="left:auto;right:0;max-height:360px;overflow-y:auto;">
-            <div class="ui-dd-h">ช่วงลัด</div>
-            <button class="ui-dd-item" type="button" data-p="yesterday" onclick="setDatePreset('yesterday')">เมื่อวาน</button>
-            <button class="ui-dd-item" type="button" data-p="today" onclick="setDatePreset('today')">วันนี้ (ยังไม่จบวัน)</button>
-            <button class="ui-dd-item" type="button" data-p="3m" onclick="setDatePreset('3m')">3 เดือนที่แล้ว</button>
-            <div id="datePresetMonthList"></div>
+      <div class="filter-group" id="homeDayGroup" style="display:none;padding:0;background:transparent;border:none;">
+        <div class="ui-dd drp" id="homeDrp">
+          <button class="ui-dd-btn drp-btn" type="button" onclick="drpToggle('homeDrp', event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span id="homeRangeLabel">วันล่าสุด</span></button>
+          <div class="ui-dd-menu drp-menu">
+            <div class="drp-l" id="homePresetBar">
+              <div class="ui-dd-h">ช่วงลัด</div>
+              <button class="ui-dd-item" type="button" data-p="d" onclick="homePreset('d')">วันล่าสุด</button>
+              <button class="ui-dd-item" type="button" data-p="7" onclick="homePreset('7')">7 วันที่แล้ว</button>
+              <button class="ui-dd-item" type="button" data-p="30" onclick="homePreset('30')">30 วันที่แล้ว</button>
+              <button class="ui-dd-item" type="button" data-p="m0" onclick="homePreset('m0')">เดือนนี้</button>
+              <button class="ui-dd-item" type="button" data-p="m1" onclick="homePreset('m1')">เดือนที่แล้ว</button>
+            </div>
+            <div class="drp-r">
+              <div class="ui-dd-h">รายเดือน</div>
+              <div id="homeMonthGrid"></div>
+              <div class="ui-dd-h">กำหนดเอง</div>
+              <div class="drp-custom"><input type="date" id="homeFrom" aria-label="ตั้งแต่วันที่"><span style="color:var(--text3);">–</span><input type="date" id="homeTo" aria-label="ถึงวันที่"></div>
+              <button class="btn btn-primary drp-ok" type="button" onclick="homeSetRange()">ใช้ช่วงนี้</button>
+            </div>
           </div>
         </div>
-        <input type="date" id="dateFrom" onchange="updateDateRangeLabel()" aria-label="ตั้งแต่วันที่">
-        <span style="color:var(--text3);">–</span>
-        <input type="date" id="dateTo" onchange="updateDateRangeLabel()" aria-label="ถึงวันที่">
+      </div>
+      <!-- (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนเดียว (โชว์เฉพาะหน้านี้ — ควบคุมใน showPage · ทำงานใน kpi.js) -->
+      <div class="filter-group" id="kpMonthGroup" style="display:none;padding:0;background:transparent;border:none;">
+        <div class="ui-dd drp" id="kpDrp">
+          <button class="ui-dd-btn drp-btn" type="button" onclick="drpToggle('kpDrp', event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span id="kpMonthLabel">เลือกเดือน</span></button>
+          <div class="ui-dd-menu drp-menu">
+            <div class="drp-l" id="kpMonthPresets">
+              <div class="ui-dd-h">ช่วงลัด</div>
+              <button class="ui-dd-item" type="button" data-p="m0">เดือนนี้</button>
+              <button class="ui-dd-item" type="button" data-p="m1">เดือนที่แล้ว</button>
+              <button class="ui-dd-item" type="button" data-p="n1">เดือนหน้า</button>
+            </div>
+            <div class="drp-r"><div class="ui-dd-h">เลือกเดือน</div><div id="kpMonthGrid"></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- (2026-10-07) ช่วงวันที่แบบ Shopee: ปุ่มเดียว → แผง ซ้าย = ช่วงลัด · ขวา = รายเดือน + กำหนดเอง · เลือกแล้วยังต้องกด "ค้นหา" เหมือนเดิม -->
+      <div class="filter-group" id="dateRangeGroup" style="padding:0;background:transparent;border:none;">
+        <div class="ui-dd drp" id="dateDrp">
+          <button class="ui-dd-btn drp-btn" type="button" id="dateRangeBtn" onclick="drpToggle('dateDrp', event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span id="dateRangeLabel">เลือกช่วงเวลา</span></button>
+          <div class="ui-dd-menu drp-menu">
+            <div class="drp-l">
+              <div class="ui-dd-h">ช่วงลัด</div>
+              <button class="ui-dd-item" type="button" data-p="today" onclick="setDatePreset('today')">วันนี้ (ยังไม่จบวัน)</button>
+              <button class="ui-dd-item" type="button" data-p="yesterday" onclick="setDatePreset('yesterday')">เมื่อวาน</button>
+              <button class="ui-dd-item" type="button" data-p="7d" onclick="setDatePreset('7d')">7 วันที่แล้ว</button>
+              <button class="ui-dd-item" type="button" data-p="30d" onclick="setDatePreset('30d')">30 วันที่แล้ว</button>
+              <button class="ui-dd-item" type="button" data-p="thisMonth" onclick="setDatePreset('thisMonth')">เดือนนี้</button>
+              <button class="ui-dd-item" type="button" data-p="lastMonth" onclick="setDatePreset('lastMonth')">เดือนที่แล้ว</button>
+              <button class="ui-dd-item" type="button" data-p="3m" onclick="setDatePreset('3m')">3 เดือนที่แล้ว</button>
+              <button class="ui-dd-item" type="button" data-p="ytd" onclick="setDatePreset('ytd')">ปีนี้</button>
+            </div>
+            <div class="drp-r">
+              <div class="ui-dd-h">รายเดือน</div>
+              <div id="datePresetMonthList"></div>
+              <div class="ui-dd-h">กำหนดเอง</div>
+              <div class="drp-custom"><input type="date" id="dateFrom" onchange="updateDateRangeLabel()" aria-label="ตั้งแต่วันที่"><span style="color:var(--text3);">–</span><input type="date" id="dateTo" onchange="updateDateRangeLabel()" aria-label="ถึงวันที่"></div>
+              <button class="btn btn-primary drp-ok" type="button" onclick="hideDatePresetMenu()">ใช้ช่วงนี้</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="filter-group" id="monthFilterGroup" style="display:none;gap:4px;">
         <span class="filter-label">ตั้งแต่</span>
@@ -2335,40 +2372,77 @@ function toggleDatePresetMenu(e) {
 function hideDatePresetMenu() {
   const el = document.getElementById('datePresetMenu');
   if (el) el.style.display = 'none';
-  document.getElementById('dateMoreDd')?.classList.remove('is-open');
+  drpClose('dateDrp');
 }
-// (2026-10-07) เมนู "ช่วงอื่น" ข้างปุ่มลัด
-function toggleDateMore(e) {
+function toggleDateMore(e) { drpToggle('dateDrp', e); }
+// ===== (2026-10-07) ตัวเลือกช่วงวันที่แบบ Shopee — ใช้ร่วมกันทุกหน้า (หน้าแรก / หน้าที่มีช่วงวันที่ / เป้าหมาย KPI ใน kpi.js) =====
+// ปุ่มเดียวแสดงช่วงที่เลือก · กดแล้วเปิดแผง: ซ้าย = ช่วงลัด · ขวา = ตารางเดือน 12 ช่อง (เลื่อนปีได้) + กำหนดเอง
+function drpRange(a, b) {   // "7 ต.ค. 2569" · "1–7 ต.ค. 2569" · "1 ก.ย. – 7 ต.ค. 2569"
+  if (!a || !b) return '';
+  const p = s => s.split('-').map(Number), [ya, ma, da] = p(a), [yb, mb, db] = p(b), M = MONTHS_TH;
+  if (a === b) return `${da} ${M[ma - 1]} ${ya + 543}`;
+  if (ya === yb && ma === mb) return `${da}–${db} ${M[mb - 1]} ${yb + 543}`;
+  if (ya === yb) return `${da} ${M[ma - 1]} – ${db} ${M[mb - 1]} ${yb + 543}`;
+  return `${da} ${M[ma - 1]} ${ya + 543} – ${db} ${M[mb - 1]} ${yb + 543}`;
+}
+function drpToggle(id, e) {
   if (e) e.stopPropagation();
-  const dd = document.getElementById('dateMoreDd'); if (!dd) return;
+  const dd = document.getElementById(id); if (!dd) return;
   const open = !dd.classList.contains('is-open');
-  if (open) buildMonthPresetList();
+  document.querySelectorAll('.drp.is-open').forEach(x => x.classList.remove('is-open'));
+  if (open) { if (id === 'dateDrp') buildMonthPresetList(); else if (id === 'homeDrp') homeSyncNav(); else if (typeof window.kpDrpOpen === 'function' && id === 'kpDrp') window.kpDrpOpen(); }
   dd.classList.toggle('is-open', open);
+  if (open) {   // ชิดขวาถ้าแผงล้นจอ
+    const m = dd.querySelector('.drp-menu'); m.classList.remove('is-right');
+    if (m.getBoundingClientRect().right > document.documentElement.clientWidth - 8) m.classList.add('is-right');
+  }
 }
-document.addEventListener('click', e => { const dd = document.getElementById('dateMoreDd'); if (dd && dd.classList.contains('is-open') && !dd.contains(e.target)) dd.classList.remove('is-open'); });
+function drpClose(id) { document.getElementById(id)?.classList.remove('is-open'); }
+document.addEventListener('click', e => { document.querySelectorAll('.drp.is-open').forEach(dd => { if (!dd.contains(e.target)) dd.classList.remove('is-open'); }); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.querySelector('.ui-cal')) document.querySelectorAll('.drp.is-open').forEach(dd => dd.classList.remove('is-open')); });
+// ตารางเดือน 12 ช่อง · opt = { min: 'YYYY-MM', max: 'YYYY-MM', sel: 'YYYY-MM' | '', pick: 'ชื่อฟังก์ชันที่รับ YYYY-MM', year }
+function drpMonths(elId, opt) {
+  const el = document.getElementById(elId); if (!el) return;
+  if (opt) { el._o = Object.assign({}, el._o || {}, opt); if (opt.sel !== undefined && opt.year === undefined && opt.sel) el._o.year = +opt.sel.slice(0, 4); }
+  const o = el._o; if (!o || !o.min || !o.max) return;
+  if (!o.year) o.year = +(o.sel || o.max).slice(0, 4);
+  const y = o.year, minY = +o.min.slice(0, 4), maxY = +o.max.slice(0, 4);
+  let h = `<div class="drp-yr"><button type="button" ${y <= minY ? 'disabled' : ''} onclick="event.stopPropagation();drpYear('${elId}',-1)" aria-label="ปีก่อน">‹</button><b>${y + 543}</b>`
+    + `<button type="button" ${y >= maxY ? 'disabled' : ''} onclick="event.stopPropagation();drpYear('${elId}',1)" aria-label="ปีถัดไป">›</button></div><div class="drp-mg">`;
+  for (let m = 1; m <= 12; m++) {
+    const k = y + '-' + String(m).padStart(2, '0'), ok = k >= o.min && k <= o.max;
+    h += `<button type="button" data-m="${k}"${ok ? '' : ' disabled'}${k === o.sel ? ' aria-selected="true"' : ''} onclick="${o.pick}('${k}')">${MONTHS_TH[m - 1]}</button>`;
+  }
+  el.innerHTML = h + '</div>';
+}
+function drpYear(id, d) { const el = document.getElementById(id); if (el && el._o) { el._o.year += d; drpMonths(id); } }
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('datePresetMenu');
   if (menu && menu.style.display === 'block' && !menu.contains(e.target)) hideDatePresetMenu();
 });
 
+const DATE_PRESET_NAME = { today: 'วันนี้', yesterday: 'เมื่อวาน', '7d': '7 วันที่แล้ว', '30d': '30 วันที่แล้ว', thisMonth: 'เดือนนี้', lastMonth: 'เดือนที่แล้ว', '3m': '3 เดือนที่แล้ว', ytd: 'ปีนี้' };
 function updateDateRangeLabel() {
-  // (2026-10-07) แถบช่วงวันที่ใหม่: ปุ่มลัดที่ตรงกับวันที่ในช่องจะติดสี · เลือกรายเดือนจะโชว์ชื่อเดือนบนปุ่ม "ช่วงอื่น"
+  // (2026-10-07) ปุ่มเดียวแบบ Shopee: บอกช่วงลัดที่ตรง + ช่วงวันที่ · เลือกทั้งเดือนจะโชว์ชื่อเดือน
   const from = document.getElementById('dateFrom')?.value, to = document.getElementById('dateTo')?.value;
   const t = new Date(), y = t.getFullYear(), mo = t.getMonth(), iso = fmtDateISO, back = n => { const d = new Date(t); d.setDate(d.getDate() - n); return iso(d); };
   const m3 = new Date(t); m3.setMonth(m3.getMonth() - 3);
   const P = { ytd: [`${y}-01-01`, iso(t)], thisMonth: [iso(new Date(y, mo, 1)), iso(t)], lastMonth: [iso(new Date(y, mo - 1, 1)), iso(new Date(y, mo, 0))],
     '30d': [back(29), iso(t)], '7d': [back(6), iso(t)], yesterday: [back(1), back(1)], today: [iso(t), iso(t)], '3m': [iso(m3), iso(t)] };
-  const hit = from && to ? Object.keys(P).find(k => P[k][0] === from && P[k][1] === to) || null : null;
-  document.querySelectorAll('#datePresetBar button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === hit ? 'true' : 'false'));
-  let more = null;
-  if (['yesterday', 'today', '3m'].includes(hit)) more = { yesterday: 'เมื่อวาน', today: 'วันนี้', '3m': '3 เดือน' }[hit];
-  else if (!hit && from && to && from.slice(8) === '01' && from.slice(0, 7) === to.slice(0, 7)) {
+  const same = k => P[k] && P[k][0] === from && P[k][1] === to;
+  // ช่วงลัดที่กดล่าสุดมาก่อน (เช่น ต้นเดือน "7 วันที่แล้ว" กับ "เดือนนี้" อาจเป็นช่วงเดียวกัน)
+  let whole = '';
+  if (from && to && from.slice(8) === '01' && from.slice(0, 7) === to.slice(0, 7)) {
     const [yy, mm] = from.split('-').map(Number);
-    if (to === iso(new Date(yy, mm, 0))) more = `${MONTHS_TH[mm - 1]} ${yy + 543}`;
+    if (to === iso(new Date(yy, mm, 0))) whole = from.slice(0, 7);
   }
-  const mb = document.getElementById('dateMoreBtn');
-  if (mb) { mb.textContent = more || 'ช่วงอื่น'; mb.classList.toggle('is-on', !!more); }
-  document.querySelectorAll('#dateMoreDd .ui-dd-item').forEach(b => b.setAttribute('aria-selected', (b.dataset.p && b.dataset.p === hit) || (b.dataset.m && from && from.startsWith(b.dataset.m) && more) ? 'true' : 'false'));
+  const hit = !from || !to || (whole && window._datePresetLast === 'month') ? null   // กดเดือนจากตาราง → โชว์ชื่อเดือน
+    : same(window._datePresetLast) ? window._datePresetLast : Object.keys(P).find(same) || null;
+  const lab = document.getElementById('dateRangeLabel');
+  if (lab) lab.textContent = !from || !to ? 'เลือกช่วงเวลา' : hit ? `${DATE_PRESET_NAME[hit]} · ${drpRange(from, to)}`
+    : whole ? `${MONTHS_TH[+whole.slice(5) - 1]} ${+whole.slice(0, 4) + 543}` : drpRange(from <= to ? from : to, from <= to ? to : from);
+  document.querySelectorAll('#dateDrp .drp-l [data-p]').forEach(b => b.setAttribute('aria-selected', b.dataset.p === hit ? 'true' : 'false'));
+  const ml = document.getElementById('datePresetMonthList'); if (ml && ml._o) drpMonths('datePresetMonthList', { sel: whole });
   const btn = document.getElementById('topSearchBtn');
   if (btn) btn.classList.toggle('is-pending', !!window._appliedDates && `${from}|${to}` !== window._appliedDates);
 }
@@ -2384,6 +2458,7 @@ function setDatePreset(preset) {
   else if (preset === 'lastMonth') { const f = new Date(today.getFullYear(), today.getMonth()-1, 1); const t = new Date(today.getFullYear(), today.getMonth(), 0); from = fmtDateISO(f); to = fmtDateISO(t); }
   else if (preset === '3m') { const f = new Date(today); f.setMonth(f.getMonth()-3); from = fmtDateISO(f); to = fmtDateISO(today); }
   else if (preset === 'ytd') { from = `${today.getFullYear()}-01-01`; to = fmtDateISO(today); }   // (2026-10-07) ปุ่ม "ปีนี้" = ค่าเริ่มต้นของระบบ
+  window._datePresetLast = preset;
   document.getElementById('dateFrom').value = from;
   document.getElementById('dateTo').value = to;
   updateDateRangeLabel();
@@ -2392,6 +2467,7 @@ function setDatePreset(preset) {
 }
 
 function setDatePresetMonth(monthStr) {
+  window._datePresetLast = 'month';
   const [y, m] = monthStr.split('-').map(Number);
   const from = new Date(y, m-1, 1);
   const to = new Date(y, m, 0);
@@ -2403,18 +2479,11 @@ function setDatePresetMonth(monthStr) {
 }
 
 function buildMonthPresetList() {
-  const el = document.getElementById('datePresetMonthList');
-  if (!el) return;
-  // ใช้เดือนที่มีข้อมูลจริงในระบบเท่านั้น (เดิมไล่ย้อนหลัง 12 เดือนจากวันนี้ตรงๆ ทำให้โผล่เดือนที่ยังไม่มีข้อมูลเลย หรือขาดเดือนเก่ากว่านั้นที่จริงมีข้อมูลอยู่)
-  const monthsWithData = _filterOptions ? _filterOptions.months : [...new Set((allData || []).map(r => (r.date || '').substring(0,7)).filter(Boolean))].sort().reverse();
-  // (2026-10-07) เมนูแบบเดียวกับ dropdown สถานะหน้า Supply Chain · แบ่งกลุ่มตามปี · ปี พ.ศ.
-  let lastY = null, html = '';
-  monthsWithData.forEach(m => {
-    const [y, mo] = m.split('-');
-    if (y !== lastY) { html += `<div class="ui-dd-h">รายเดือน ${+y + 543}</div>`; lastY = y; }
-    html += `<button class="ui-dd-item" type="button" data-m="${m}" onclick="setDatePresetMonth('${m}')">${MONTHS_TH[parseInt(mo) - 1]} ${+y + 543}</button>`;
-  });
-  el.innerHTML = html || '<div class="ui-dd-h">ยังไม่มีข้อมูลรายเดือน</div>';
+  // (2026-10-07) ตารางเดือนแบบ Shopee · กดได้เฉพาะเดือนที่มีข้อมูลจริงในระบบ
+  const months = _filterOptions ? _filterOptions.months : [...new Set((allData || []).map(r => (r.date || '').substring(0, 7)).filter(Boolean))].sort().reverse();
+  const now = fmtDateISO(new Date()).slice(0, 7), list = (months || []).filter(Boolean).slice().sort();
+  const from = document.getElementById('dateFrom')?.value || '', to = document.getElementById('dateTo')?.value || '';
+  drpMonths('datePresetMonthList', { min: list[0] || now, max: list[list.length - 1] || now, pick: 'setDatePresetMonth', year: +((to || now).slice(0, 4)), sel: '' });
   updateDateRangeLabel();
 }
 
@@ -3118,7 +3187,7 @@ function loadKpiPage(reload) {
   if (window._kpiLoading) return;
   window._kpiLoading = true;
   const s = document.createElement('script');
-  s.src = 'kpi.js?v=20261007b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
+  s.src = 'kpi.js?v=20261007c'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
   s.onload = () => { window._kpiLoading = false; if (currentPage === 'kpi') window.renderKpiPage(true); };
   s.onerror = () => { window._kpiLoading = false; document.getElementById('page-kpi').innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -4411,7 +4480,9 @@ async function ensureCpTtaType(from, to) {   // ค่า Ads รายวัน
   const k = from + '|' + to + '|' + cpType;
   if (!_cpTtaType[k]) _cpTtaType[k] = await supaRpc('tta_daily_spend', { p_from: from, p_to: to, p_handle: null, p_type: cpType }, true);
 }
-let cpSource = (() => { try { return localStorage.getItem('cp_src') === 'file' ? 'file' : 'api'; } catch (e) { return 'api'; } })();   // (2026-10-06) ค่าเริ่มต้น = API
+// (2026-10-07) เลิกปุ่มสลับ 📄 / ⚡ — ป้ายครีเอเตอร์ในออเดอร์ (ม.ค. 69 →) ย้ายเป็นแบบ TikTok API ครบทุกเดือนแล้ว (ยอดเงินเท่าบัญชี)
+// จึงใช้ข้อมูลชุดเดียวจากออเดอร์ทุกช่วงวันที่ · ชุด _api (เริ่ม 1 ก.ย.) ยังใช้กับยอด Commission หน้า KOL
+let cpSource = 'file';
 const CP_API_START = '2026-09-01';   // ข้อมูลวิธีใหม่เริ่มวันนี้ — ช่วงที่เริ่มก่อนนี้ใช้วิธีเดิมอัตโนมัติ
 const cpUseApi = from => cpSource === 'api' && from >= CP_API_START;
 const CP_API_NOTE = '<b>⚡ API (ใหม่)</b>: ครีเอเตอร์ = คนที่ TikTok จ่าย Commission ให้จริง (รวมยอดจาก Live คลิป โชว์เคส และลิงก์ที่แชร์) · Live / คลิปของบัญชีร้าน = ยอดจาก TikTok Analytics รายรอบ / รายคลิป · หน้าสินค้า = ส่วนที่เหลือ · มีข้อมูลตั้งแต่ 1 ก.ย. 69<br><b>📄 วิธีเดิม</b>: ตามช่อง Creator / Order Channel ในไฟล์อัปโหลด (ยอดโชว์เคส / ลิงก์ของครีเอเตอร์ถูกนับเป็นหน้าสินค้า)';
@@ -8101,20 +8172,31 @@ function homePresetRange(p) {
   if (p === 'm1') return [homeIso(new Date(d.getFullYear(), d.getMonth() - 1, 1)), homeIso(new Date(d.getFullYear(), d.getMonth(), 0))];
   return null;
 }
-function homePreset(p) { const r = homePresetRange(p); if (!r) return; _homeRange = { p, a: r[0], b: r[1] }; renderHome(); }
+function homePreset(p) { const r = homePresetRange(p); if (!r) return; drpClose('homeDrp'); _homeRange = { p, a: r[0], b: r[1] }; renderHome(); }
 function homeSetRange() {
   let a = document.getElementById('homeFrom')?.value, b = document.getElementById('homeTo')?.value; if (!a || !b) return;
   if (a > b) [a, b] = [b, a];
   if (_homeLatest && b > _homeLatest) b = _homeLatest;
   const hit = ['d', '7', '30', 'm0', 'm1'].find(p => { const r = homePresetRange(p); return r && r[0] === a && r[1] === b; });
-  _homeRange = { p: hit || 'custom', a, b }; renderHome();
+  drpClose('homeDrp'); _homeRange = { p: hit || 'custom', a, b }; renderHome();
 }
+// (2026-10-07) เลือกทั้งเดือนจากตารางเดือน (เดือนปัจจุบันนับถึงวันล่าสุดที่มีข้อมูล)
+function homePickMonth(m) {
+  const [y, mm] = m.split('-').map(Number), last = fmtDateISO(new Date(y, mm, 0));
+  drpClose('homeDrp'); _homeRange = { p: 'mon', a: m + '-01', b: _homeLatest && last > _homeLatest ? _homeLatest : last }; renderHome();
+}
+const HOME_PRESET_NAME = { d: 'วันล่าสุด', 7: '7 วันที่แล้ว', 30: '30 วันที่แล้ว', m0: 'เดือนนี้', m1: 'เดือนที่แล้ว' };
 function homeSyncNav() {
   const f = document.getElementById('homeFrom'), t = document.getElementById('homeTo');
   [f, t].forEach(x => { if (x && _homeLatest) x.setAttribute('max', _homeLatest); });
   if (f && f.value !== _homeRange.a) f.value = _homeRange.a;
   if (t && t.value !== _homeRange.b) t.value = _homeRange.b;
-  document.querySelectorAll('#homePresetBar button').forEach(x => x.setAttribute('aria-pressed', x.dataset.p === _homeRange.p ? 'true' : 'false'));
+  document.querySelectorAll('#homePresetBar [data-p]').forEach(x => x.setAttribute('aria-selected', x.dataset.p === _homeRange.p ? 'true' : 'false'));
+  const r = drpRange(_homeRange.a, _homeRange.b), lab = document.getElementById('homeRangeLabel');
+  if (lab && _homeRange.a) lab.textContent = HOME_PRESET_NAME[_homeRange.p] ? `${HOME_PRESET_NAME[_homeRange.p]} · ${r}`
+    : _homeRange.p === 'mon' ? `${MONTHS_TH[+_homeRange.a.slice(5, 7) - 1]} ${+_homeRange.a.slice(0, 4) + 543}` : r;
+  const mx = (_homeLatest || fmtDateISO(new Date())).slice(0, 7), opts = _filterOptions && _filterOptions.months ? _filterOptions.months.slice().sort() : [];
+  drpMonths('homeMonthGrid', { min: opts[0] || '2026-01', max: mx, pick: 'homePickMonth', sel: _homeRange.p === 'mon' ? _homeRange.a.slice(0, 7) : '' });
 }
 function homeToggleMetric(k) {
   const hint = document.getElementById('homeMetricHint');
