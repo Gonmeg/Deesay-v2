@@ -1,4 +1,4 @@
-// kpi.js (v20261007b) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
+// kpi.js (v20261007c) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
 // เป้ารายเดือน ต่อสินค้า (parent) ต่อช่องทาง · กรอกเป็นชิ้น → เป้าเงิน = ชิ้น × ราคาเฉลี่ยต่อชิ้นจริง 3 เดือนก่อนเดือนเป้า (ล็อกเมื่อเดือนจบ: kpi_price_lock)
 // ที่มา: RPC kpi_page(p_month) — ยอดจริงจาก mv_sku_daily (แหล่งเดียวกับเจาะสินค้า / แนวโน้มสินค้า) นับถึงเมื่อวาน · บันทึก: RPC kpi_set_targets (ตรวจสิทธิ์ + เก็บประวัติ)
 // สิทธิ์แก้ = ผู้ดูแลระบบ + คนที่ติ๊ก "แก้เป้า KPI" ใน Admin · เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ
@@ -171,11 +171,17 @@
     if (S.mode === 'edit') renderEdit(K); else renderTrack(K);
     if (window.UI) UI.fit();
   }
+  // (2026-10-07) ตัวเลือกเดือนแบบ Shopee ที่แถบบน (ปุ่มเดียว → ช่วงลัด + ตารางเดือน) — ตัวช่วยกลาง drpMonths อยู่ใน dashboard.html
+  const PRESET_NAME = { m0: 'เดือนนี้', m1: 'เดือนที่แล้ว', n1: 'เดือนหน้า' };
   function renderTopbar() {
-    const mi = $('kpMonth');
-    if (mi) { mi.setAttribute('min', MIN_M); mi.setAttribute('max', mAdd(CUR, 3)); if (mi.value !== S.mo) mi.value = S.mo; }
-    document.querySelectorAll('#kpMonthPresets button').forEach(b => b.setAttribute('aria-pressed', presetMonth(b.dataset.p) === S.mo));
+    if (!CUR || !S.mo) return;
+    let hit = null;
+    document.querySelectorAll('#kpMonthPresets [data-p]').forEach(b => { const on = presetMonth(b.dataset.p) === S.mo; if (on) hit = b.dataset.p; b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    const lab = $('kpMonthLabel'); if (lab) lab.textContent = (hit ? PRESET_NAME[hit] + ' · ' : '') + mLong(S.mo);
+    if (typeof drpMonths === 'function') drpMonths('kpMonthGrid', { min: MIN_M, max: mAdd(CUR, 3), pick: 'kpPickMonth', sel: S.mo });
   }
+  window.kpDrpOpen = () => renderTopbar();
+  window.kpPickMonth = m => { if (typeof drpClose === 'function') drpClose('kpDrp'); goMonth(m); };
   const presetMonth = p => p === 'm0' ? CUR : p === 'm1' ? mAdd(CUR, -1) : mAdd(CUR, 1);
   function renderHead(K) {
     const sub = K.st === 'cur' ? `ผ่านไป ${K.now} จาก ${K.n} วัน · นับยอดถึง ${dLong(YEST)} (ไม่นับวันนี้ที่ยังไม่จบ)`
@@ -623,7 +629,7 @@
     if (!t.closest('.ads-info-wrap')) document.querySelectorAll('.ads-info-popover').forEach(p => { p.style.display = 'none'; });
     if (!t.closest('.ui-dd')) document.querySelectorAll('#page-kpi .ui-dd.is-open').forEach(d => d.classList.remove('is-open'));
     if (!b) return;
-    if (b.closest('#kpMonthPresets')) { goMonth(presetMonth(b.dataset.p)); return; }
+    if (b.closest('#kpMonthPresets') && b.dataset.p) { if (typeof drpClose === 'function') drpClose('kpDrp'); goMonth(presetMonth(b.dataset.p)); return; }
     if (b.closest('#kpMode')) { S.mode = b.dataset.m; S.page = 1; S.st = ''; editOrder = null; render(); return; }
     if (b.closest('#kpUnit')) { S.unit = b.dataset.u; render(); return; }
     if (b.closest('#kpStFilter')) { S.st = b.dataset.st; S.page = 1; render(); return; }
