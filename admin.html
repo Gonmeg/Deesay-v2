@@ -336,6 +336,7 @@
   body.light-theme .km-overlay { background: rgba(20,20,40,.25); }
   body.light-theme .side { background: #ffffff; }
 </style>
+<link rel="stylesheet" href="ui.css?v=20261007a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 </head>
 <body>
 
@@ -1511,5 +1512,6 @@ init()
     window.addEventListener('storage', e => { if (e.key === 'deesay_theme') applyTheme(e.newValue === 'light'); });
   })();
 </script>
+<script src="ui.js?v=20261007a" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
 </body>
 </html>
