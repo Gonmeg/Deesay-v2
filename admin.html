@@ -538,8 +538,8 @@
     <div class="card">
       <div class="pm-head">👥 ผู้ใช้ทั้งหมด <span class="pm-sub">ทุกช่องบันทึกทันทีที่ติ๊ก · คนสมัครใหม่จะยังไม่มีหน้าไหนจนกว่าจะติ๊กให้</span></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>ชื่อ</th><th>อีเมล</th><th>หน้า Dashboard</th><th>อัปโหลดไฟล์</th><th>จัดการสินค้า</th><th>สถานะ</th><th></th></tr></thead>
-        <tbody id="pmUserBody"><tr><td colspan="7" class="pm-empty">กำลังโหลด…</td></tr></tbody>
+        <thead><tr><th>ชื่อ</th><th>อีเมล</th><th>หน้า Dashboard</th><th>อัปโหลดไฟล์</th><th>จัดการสินค้า</th><th title="แก้เป้าในหน้าเป้าหมาย KPI ได้ (เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ) — ต้องติ๊กหน้า เป้าหมาย KPI ให้ด้วยถึงจะเข้าหน้าได้">แก้เป้า KPI</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody id="pmUserBody"><tr><td colspan="8" class="pm-empty">กำลังโหลด…</td></tr></tbody>
       </table></div>
     </div>
   </div><!-- /tab-perms -->
@@ -1351,7 +1351,7 @@ function renderPmRequests(reqs) {
 
 function renderPmUsers() {
   const tb = document.getElementById('pmUserBody')
-  if (!pmUsers.length) { tb.innerHTML = '<tr><td colspan="7" class="pm-empty">ยังไม่มีใครสมัคร</td></tr>'; return }
+  if (!pmUsers.length) { tb.innerHTML = '<tr><td colspan="8" class="pm-empty">ยังไม่มีใครสมัคร</td></tr>'; return }
   tb.innerHTML = pmUsers.map(u => {
     const me = u.user_id === Auth.perm.user_id, adm = u.is_admin, dis = adm ? 'disabled' : ''
     return `<tr data-uid="${u.user_id}">
@@ -1360,6 +1360,7 @@ function renderPmUsers() {
       <td>${pageCount(u)} ${adm ? '' : `<button class="pm-btn" data-act="toggle-pages">แก้</button>`}</td>
       <td><input type="checkbox" data-f="can_upload" ${u.can_upload || adm ? 'checked' : ''} ${dis}></td>
       <td><input type="checkbox" data-f="can_admin" ${u.can_admin || adm ? 'checked' : ''} ${dis}></td>
+      <td><input type="checkbox" data-f="can_edit_kpi" ${u.can_edit_kpi || adm ? 'checked' : ''} ${dis}></td>
       <td>${u.is_active ? '<span class="pm-badge pm-on">ใช้งานได้</span>' : '<span class="pm-badge pm-off">ปิดอยู่</span>'}</td>
       <td><button class="pm-btn gold" data-act="reset">🔑 ตั้งรหัสใหม่</button>${me ? '' : `<button class="pm-btn" data-act="toggle-active">${u.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button><button class="pm-btn danger" data-act="delete">ลบ</button>`}</td>
     </tr>`
@@ -1369,7 +1370,7 @@ function renderPmUsers() {
 function pmDetailRow(u) {
   const groups = [...new Set(PAGES.map(p => p.group))]
   const on = id => hasAll(u) || (u.pages || []).includes(id)
-  return `<tr class="pm-detail" data-detail="${u.user_id}"><td colspan="7">
+  return `<tr class="pm-detail" data-detail="${u.user_id}"><td colspan="8">
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
       <span class="pm-sub">ทางลัด:</span>
       <button class="pm-btn" data-act="preset" data-preset="all">ทุกหน้า</button>
@@ -1384,7 +1385,7 @@ function pmDetailRow(u) {
 
 async function pmSave(uid, patch, okMsg) {
   try {
-    const u = await Auth.rpc('admin_set_permissions', { p_user_id: uid, p_pages: patch.pages ?? null, p_can_upload: patch.can_upload ?? null, p_can_admin: patch.can_admin ?? null, p_is_active: patch.is_active ?? null, p_display_name: patch.display_name ?? null })
+    const u = await Auth.rpc('admin_set_permissions', { p_user_id: uid, p_pages: patch.pages ?? null, p_can_upload: patch.can_upload ?? null, p_can_admin: patch.can_admin ?? null, p_is_active: patch.is_active ?? null, p_display_name: patch.display_name ?? null, p_can_edit_kpi: patch.can_edit_kpi ?? null })
     const i = pmUsers.findIndex(x => x.user_id === uid); if (i >= 0) pmUsers[i] = u
     showToast(okMsg || 'บันทึกแล้ว')
     return u
@@ -1443,7 +1444,7 @@ document.getElementById('tab-perms').addEventListener('change', async e => {
     const main = document.querySelector(`tr[data-uid="${uid}"] td:nth-child(3)`); if (main) main.firstChild.textContent = pageCount(pmUsers.find(x => x.user_id === uid)) + ' '
     return
   }
-  if (el.dataset.f === 'can_upload' || el.dataset.f === 'can_admin') await pmSave(uid, { [el.dataset.f]: el.checked })
+  if (el.dataset.f === 'can_upload' || el.dataset.f === 'can_admin' || el.dataset.f === 'can_edit_kpi') await pmSave(uid, { [el.dataset.f]: el.checked })
   if (el.dataset.f === 'name') await pmSave(uid, { display_name: el.value.trim() }, 'บันทึกชื่อแล้ว')
 })
 
