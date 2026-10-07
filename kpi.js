@@ -1,4 +1,4 @@
-// kpi.js (v20261007a) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
+// kpi.js (v20261007b) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
 // เป้ารายเดือน ต่อสินค้า (parent) ต่อช่องทาง · กรอกเป็นชิ้น → เป้าเงิน = ชิ้น × ราคาเฉลี่ยต่อชิ้นจริง 3 เดือนก่อนเดือนเป้า (ล็อกเมื่อเดือนจบ: kpi_price_lock)
 // ที่มา: RPC kpi_page(p_month) — ยอดจริงจาก mv_sku_daily (แหล่งเดียวกับเจาะสินค้า / แนวโน้มสินค้า) นับถึงเมื่อวาน · บันทึก: RPC kpi_set_targets (ตรวจสิทธิ์ + เก็บประวัติ)
 // สิทธิ์แก้ = ผู้ดูแลระบบ + คนที่ติ๊ก "แก้เป้า KPI" ใน Admin · เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ
@@ -706,7 +706,6 @@
 
   if (!document.getElementById('kpStyle')) {
     const st = document.createElement('style'); st.id = 'kpStyle'; st.textContent = `/* ===== เป้าหมาย KPI (2026-10-07) — ใช้ชิ้นส่วน ui.css + .hm-* ของหน้าแรก ===== */
-#page-kpi { max-width: 1480px; }
 .kp-head-r { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .hm-head h1 .ui-badge { font-size:12px; font-weight:600; }
 .kp-scope { font-size:11px; font-weight:500; color:var(--text3); }
