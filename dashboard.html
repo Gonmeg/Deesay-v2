@@ -468,6 +468,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .hm-ch-name.is-link { cursor:pointer; } .hm-ch-name.is-link:hover { color:var(--accent-text); text-decoration:underline; }
   .hm-tbl td:first-child { white-space:nowrap; }
   .hm-tbl tr.is-stale td { color:var(--text3); }
+  .hm-tbl tr.hm-sub-row td { color:var(--text3); font-size:12.5px; }
   .hm-tbl .ui-badge { margin-left:8px; font-weight:500; }
   .hm-roas { font-weight:700; font-variant-numeric:tabular-nums; }
   .hm-roas.good { color:var(--good); } .hm-roas.mid { color:var(--accent-text); } .hm-roas.bad { color:var(--bad); }
@@ -643,7 +644,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.07-f</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.08-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -8148,7 +8149,10 @@ function exportPl() {
 // (2026-10-07) หน้าตาใหม่ตาม ui.css · เลือกวันที่อยู่แถบบน (homeDayGroup) · ตัวเลขหลักแผงเดียว · ตารางช่องทางมีแถวรวม = ตัวเลขหลักเสมอ
 // สูตรทุกตัวเหมือนเดิม (ยอดขาย / ค่า Ads / ROAS / สะสมเดือนนี้ / Ads ดี-แย่ / สินค้า / สต็อก) — เปลี่ยนแค่การแสดงผล
 const HM_CH = { Facebook: ['var(--ch-facebook)', 'fbhub'], TikTok: ['var(--ch-tiktok)', 'tthub'], Shopee: ['var(--ch-shopee)', 'shhub'], Lazada: ['var(--ch-lazada)', 'lzhub'], 'Modern Trade': ['var(--ch-mt)', 'mthub'], 'ตัวแทน': ['var(--ch-dealer)', 'channel'] };
-const HM_CUM = ['Modern Trade', 'ตัวแทน'];   // (2026-09-30) ห้างส่งยอดรายเดือน / ตัวแทนสั่งเป็นก้อน → ดูยอดสะสมเดือนนี้ ไม่นับเป็น "ยังไม่อัปยอด"
+const HM_CUM = ['Modern Trade', 'ตัวแทน'];
+// (2026-10-08) ROAS ไม่นับตัวแทน / Modern Trade (สั่งเป็นก้อน) และ Facebook PR / KOL (ไม่ได้ขายของโดยตรง) · ช่องทางออนไลน์ที่ต้องรอยอดเข้า
+const HM_ROAS_X = ['Modern Trade', 'ตัวแทน', 'Facebook PR'], HM_ONLINE = ['Facebook', 'TikTok', 'Shopee', 'Lazada'];
+function homeTodayTH() { return new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10); }   // (2026-09-30) ห้างส่งยอดรายเดือน / ตัวแทนสั่งเป็นก้อน → ดูยอดสะสมเดือนนี้ ไม่นับเป็น "ยังไม่อัปยอด"
 function homeGo(page) { const el = document.querySelector(`.nav-item[onclick*="'${page}'"]`); if (el || Auth.canPage(page)) showPage(page, null, el); }
 function homeIso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 const HOME_SKEL = `<div class="hm-head"><div><div class="skeleton" style="height:22px;width:200px;margin-bottom:8px;"></div><div class="skeleton" style="height:13px;width:260px;"></div></div></div>
@@ -8161,6 +8165,7 @@ const HM_MET = {
   sales: { label: 'ยอดขายรวม', color: '--accent' }, orders: { label: 'ออเดอร์', color: '--blue' }, aov: { label: 'AOV', color: '--purple' },
   ads: { label: 'ค่า Ads รวม', color: '--ch-ads', cost: true }, roas: { label: 'ROAS', color: '--cyan' }
 };
+function homePrevMonthStart(iso) { const d = new Date(iso + 'T00:00:00'); return homeIso(new Date(d.getFullYear(), d.getMonth() - 1, 1)); }
 function homeAdd(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return homeIso(d); }
 function homePresetRange(p) {
   const L = _homeLatest; if (!L) return null;
@@ -8214,12 +8219,16 @@ function homeSyncChartUi() {
   document.querySelectorAll('#hmView button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === _homeView));
 }
 // รวมตัวเลขจาก home_trend ในช่วงวันที่ (ตัวแทน / MT ไม่นับใน AOV)
-function homeAgg(rows, a, b, ch) {
-  const t = { rev: 0, ord: 0, ads: 0, revX: 0, ordX: 0 };
-  (rows || []).forEach(r => { if (r.date < a || r.date > b || (ch && r.ch !== ch)) return;
-    t.rev += +r.rev || 0; t.ord += +r.ord || 0; t.ads += +r.ads || 0;
-    if (!HM_CUM.includes(r.ch)) { t.revX += +r.rev || 0; t.ordX += +r.ord || 0; } });
-  t.aov = t.ordX ? t.revX / t.ordX : null; t.roas = t.ads && t.rev ? t.rev / t.ads : null;
+// ex = ช่องทางที่ไม่นับ (ใช้เทียบแบบช่องทางชุดเดียวกัน) · ROAS นับเฉพาะวันที่ยอดของช่องทางนั้นเข้าครบแล้ว (complete จาก home_trend) ทั้งยอดและค่า Ads
+function homeAgg(rows, a, b, ch, ex) {
+  const CT = (_homeTrend && _homeTrend.complete) || {};
+  const t = { rev: 0, ord: 0, ads: 0, revX: 0, ordX: 0, revR: 0, adsR: 0 };
+  (rows || []).forEach(r => { if (r.date < a || r.date > b || (ch && r.ch !== ch) || (ex && ex.includes(r.ch))) return;
+    const rev = +r.rev || 0, ord = +r.ord || 0, ads = +r.ads || 0;
+    t.rev += rev; t.ord += ord; t.ads += ads;
+    if (!HM_CUM.includes(r.ch)) { t.revX += rev; t.ordX += ord; }
+    if (!HM_ROAS_X.includes(r.ch) && (!CT[r.ch] || r.date <= CT[r.ch])) { t.revR += rev; t.adsR += ads; } });
+  t.aov = t.ordX ? t.revX / t.ordX : null; t.roas = t.adsR && t.revR ? t.revR / t.adsR : null;
   return t;
 }
 function renderHomeChart() {
@@ -8273,12 +8282,12 @@ async function renderHome() {
   const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   let b, tr;
   try {
-    if (!_homeLatest) { _homeBrief0 = await Auth.rpc('home_brief', {}); _homeLatest = _homeBrief0.date; }   // วันล่าสุดที่มีข้อมูลจริง (≥ 3 ช่องทาง)
+    if (!_homeLatest) { _homeLatest = homeAdd(homeTodayTH(), -1); _homeBrief0 = await Auth.rpc('home_brief', { p_date: _homeLatest }); }   // (2026-10-08) เปิดที่เมื่อวานเสมอ ยอดที่ยังไม่เข้าติดป้าย Pending upload / Partial
     if (!_homeRange.a) { const r = homePresetRange(_homeRange.p) || [_homeLatest, _homeLatest]; _homeRange.a = r[0]; _homeRange.b = r[1]; }
     const { a: A, b: B } = _homeRange, n = Math.round((new Date(B) - new Date(A)) / 86400000) + 1;
     [b, tr] = await Promise.all([
       B === _homeLatest && _homeBrief0 ? _homeBrief0 : Auth.rpc('home_brief', { p_date: B }),
-      Auth.rpc('home_trend', { p_date: B, p_days: Math.min(800, Math.max(14, n * 2)) }).catch(() => null)]);
+      Auth.rpc('home_trend', { p_date: B, p_days: Math.min(800, Math.max(14, n * 2, Math.round((new Date(B) - new Date(homePrevMonthStart(B))) / 86400000) + 1)) }).catch(() => null)]);
   } catch (e) { el.classList.remove('is-loading'); el.innerHTML = `<div class="ui-empty"><b>โหลดสรุปไม่สำเร็จ</b>${esc(e.message || e)} · ลองกดรีเฟรชข้อมูลอีกครั้ง</div>`; return; }
   if (seq !== renderHome._seq) return;
   _homeBrief = b; _homeTrend = tr; homeSyncNav();
@@ -8299,15 +8308,22 @@ async function renderHome() {
 
   // ช่วงที่เลือก vs ช่วงเทียบ (วันเดียว = เฉลี่ย 7 วันก่อน เหมือนเดิม · หลายวัน = ช่วงก่อนหน้าที่ยาวเท่ากัน)
   const rows = tr ? tr.rows : [];
-  const cur = homeAgg(rows, A, B);
+  // (2026-10-08) ช่องทางที่ยอดยังเข้าไม่ครบถึงวันสุดท้ายของช่วง: ตัวเลขรวมแสดงเท่าที่มี · การเทียบใช้เฉพาะช่องทางที่ยอดเข้าครบ (ทั้งช่วงนี้และช่วงเทียบ)
+  const CT = (tr && tr.complete) || {}, inc = HM_ONLINE.filter(c => CT[c] && CT[c] < B);
+  const cur = homeAgg(rows, A, B), curC = homeAgg(rows, A, B, null, inc);
   const pA = one ? homeAdd(A, -7) : homeAdd(A, -n), pB = homeAdd(A, -1), pd = one ? 7 : 1;
-  const prv0 = homeAgg(rows, pA, pB), prv = { rev: prv0.rev / pd, ord: prv0.ord / pd, ads: prv0.ads / pd, aov: prv0.aov, roas: prv0.roas };
+  const prv0 = homeAgg(rows, pA, pB, null, inc), prv = { rev: prv0.rev / pd, ord: prv0.ord / pd, ads: prv0.ads / pd, aov: prv0.aov, roas: prv0.roas };
   const cmpTxt = one ? 'เทียบเฉลี่ย 7 วันก่อน' : 'เทียบช่วงก่อน';
   const cmpLong = one ? `เทียบค่าเฉลี่ยรายวัน ${dShort(pA)} – ${dLong(pB)}` : `เทียบกับ ${dShort(pA)} – ${dLong(pB)} (ช่วงก่อนหน้าที่ยาวเท่ากัน)`;
   const ch = b.channels || [];
-  const T = ch.reduce((t, c) => { t.mtd += +c.mtd; t.mtdp += +c.mtd_prev; return t; }, { mtd: 0, mtdp: 0 });
-  const lastOf = c => (ch.find(x => x.channel === c) || {}).last_sales_date;
-  const stale = ch.filter(c => !HM_CUM.includes(c.channel) && (!c.last_sales_date || c.last_sales_date < B)).map(c => c.channel);
+  const stOf = c => !CT[c] || CT[c] >= B ? '' : rows.some(r => r.ch === c && r.date === B && (+r.rev || +r.ord)) ? 'partial' : 'pending';
+  const stName = x => x === 'pending' ? 'Pending upload' : 'Partial';
+  const stale = inc.map(c => ({ c, s: stOf(c) }));
+  // สะสมเดือนนี้: เฉพาะออนไลน์ (ไม่นับตัวแทน / MT) · แต่ละช่องทางนับถึงวันที่ยอดเข้าครบ เทียบเดือนก่อนช่วงวันเดียวกัน
+  const mS = B.slice(0, 8) + '01', pmS = homePrevMonthStart(B), pmE = homeAdd(mS, -1);
+  const T = HM_ONLINE.reduce((t, c) => { const L = CT[c] && CT[c] < B ? CT[c] : B; if (L < mS) return t;
+    const pe = homeAdd(pmS, +L.slice(8) - 1); t.mtd += homeAgg(rows, mS, L, c).rev; t.mtdp += homeAgg(rows, pmS, pe > pmE ? pmE : pe, c).rev; return t; }, { mtd: 0, mtdp: 0 });
+  const prAds = homeAgg(rows, A, B, 'Facebook PR').ads;
 
   const metric = (k, label, value, d, inf) => `<div class="ui-metric" role="button" tabindex="0" data-k="${k}" style="--m:var(${HM_MET[k].color});" onclick="homeToggleMetric('${k}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();homeToggleMetric('${k}')}">
       <span class="ui-metric-l"><span class="ui-tick"></span>${label}${inf || ''}</span><span class="ui-metric-v">${value}</span><span class="ui-metric-d">${d} ${cmpTxt}</span></div>`;
@@ -8317,10 +8333,10 @@ async function renderHome() {
   const chData = chNames.map(c => ({ c, g: homeAgg(rows, A, B, c), p: homeAgg(rows, pA, pB, c) }));
   const maxRev = Math.max(1, ...chData.map(x => x.g.rev));
   const chRows = chData.map(({ c, g, p }) => {
-    const cum = HM_CUM.includes(c), pg = HM_CH[c][1], last = lastOf(c), st = !cum && (!last || last < B);
+    const cum = HM_CUM.includes(c), pg = HM_CH[c][1], sx = cum ? '' : stOf(c), st = !!sx;
     const mute = v => cum && one ? `<span class="ui-muted">${v}</span>` : v;
     const name = `<span class="hm-ch-name${can(pg) ? ' is-link' : ''}"${can(pg) ? ` onclick="homeGo('${pg}')"` : ''}>${dot(c)}${esc(c)}</span>`;
-    const tag = st ? `<span class="ui-badge warn" data-tip="ช่องทางนี้ยังไม่มียอดของ ${dShort(B)}">ยอดถึง ${last ? dShort(last) : '—'}</span>`
+    const tag = st ? `<span class="ui-badge warn" data-tip="${sx === 'pending' ? 'ยังไม่ได้อัปไฟล์ยอดของ ' + dShort(B) : 'ยอดของ ' + dShort(B) + ' ยังเข้าไม่ครบ (ไฟล์ที่อัปยังไม่ครอบทั้งวัน)'} · ไม่นับในการเทียบและ ROAS">${stName(sx)}</span>`
       : cum && one ? `<span class="ui-badge is-click" onclick="homePreset('m0')" data-tip="${c === 'Modern Trade' ? 'ห้างส่งรายงานยอดเป็นรายเดือน' : 'ตัวแทนสั่งเป็นก้อน ไม่ได้สั่งทุกวัน'} กดเพื่อดูยอดเดือนนี้">ดูยอดเดือนนี้</span>` : '';
     const share = cur.rev ? g.rev / cur.rev * 100 : 0, pp = one ? p.rev / 7 : p.rev;
     return `<tr${st ? ' class="is-stale"' : ''}><td>${name}${tag}</td>
@@ -8330,7 +8346,8 @@ async function renderHome() {
       <td class="num">${cum ? dash : g.aov ? money(g.aov) : dash}</td>
       <td class="num">${g.ads ? money(g.ads) : dash}</td>
       <td class="num">${g.ads && g.rev ? roasTxt(g.roas) : dash}</td>
-      <td class="num">${(cum && one) || (st && one) ? dash : delta(pct(g.rev, pp))}</td></tr>`;
+      <td class="num">${(cum && one) || (st && one) ? dash : delta(pct(g.rev, pp))}</td></tr>` + (c === 'Facebook' && prAds ? `<tr class="hm-sub-row"><td><span class="hm-ch-name">${dot('Facebook')}<span class="ui-muted">Facebook PR / KOL</span></span><span class="ui-badge" data-tip="ค่า Ads ที่ไม่ได้ขายของโดยตรง (PR / boost โพสต์ KOL) แสดงให้เห็นค่าใช้จ่าย แต่ไม่นับใน ROAS">ไม่นับ ROAS</span></td>
+      <td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${money(prAds)}</td><td class="num">${dash}</td><td class="num">${dash}</td></tr>` : '');
   }).join('');
 
   const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, title = tt ? (x.title || x.item_id) : x.name;
@@ -8372,16 +8389,16 @@ async function renderHome() {
   el.classList.remove('is-loading'); el.dataset.loaded = '1';
   el.innerHTML = `
     <div class="hm-head"><div>
-      <h1>${one ? 'สรุปประจำวัน' : 'สรุปยอดขาย'} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada)<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน')}</h1>
+      <h1>${one ? 'สรุปประจำวัน' : 'สรุปยอดขาย'} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน')}</h1>
       <p>${one ? new Date(B + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : `${dShort(A)} – ${dLong(B)} (${n} วัน)`} · ${cmpLong}</p></div></div>
-    ${stale.length ? `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยังไม่อัปยอดของ ${dShort(B)}</b><span>${stale.map(esc).join(', ')} ตัวเลขรวมจึงยังไม่ครบ</span></div>` : ''}
+    ${stale.length ? `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยอดของ ${dShort(B)} ยังเข้าไม่ครบ</b><span>${stale.map(x => esc(x.c) + ' (' + stName(x.s) + ')').join(', ')} · ยอดรวมยังไม่ครบ ส่วนการเทียบและ ROAS คิดเฉพาะช่องทางที่ยอดเข้าครบ</span></div>` : ''}
     <section class="ui-metrics hm-metrics" aria-label="ตัวเลขหลัก">
-      ${metric('sales', 'ยอดขายรวม', money(cur.rev), delta(pct(cur.rev, prv.rev)))}
-      ${metric('orders', 'ออเดอร์', fmt(cur.ord), delta(pct(cur.ord, prv.ord)))}
-      ${metric('aov', 'AOV', cur.aov ? money(cur.aov) : '—', delta(pct(cur.aov, prv.aov)), info('hm-i-aov', '<b>AOV (Average Order Value)</b> ราคาเฉลี่ยต่อออเดอร์ = ยอดขาย ÷ ออเดอร์<br>ไม่นับตัวแทนและ Modern Trade เพราะสั่งเป็นก้อนใหญ่', true))}
-      ${metric('ads', 'ค่า Ads รวม', money(cur.ads), delta(pct(cur.ads, prv.ads), true))}
-      ${metric('roas', 'ROAS', cur.roas ? cur.roas.toFixed(2) + 'x' : '—', delta(pct(cur.roas, prv.roas)), info('hm-i-roas', '<b>ROAS (Return on Ad Spend)</b> = ยอดขาย ÷ ค่า Ads ทุกช่องทาง<br>ใช้ค่า Ads 1 บาท ได้ยอดขายกี่บาท', true))}
-      <div class="ui-metric is-static"><span class="ui-metric-l">สะสมเดือนนี้${info('hm-i-mtd', `ยอดขายตั้งแต่วันที่ 1 ถึง ${dShort(B)} เทียบเดือนก่อนช่วงวันเดียวกัน`)}</span><span class="ui-metric-v">${money(T.mtd)}</span><span class="ui-metric-d">${delta(pct(T.mtd, T.mtdp))} เทียบเดือนก่อน</span></div>
+      ${metric('sales', 'ยอดขายรวม', money(cur.rev), delta(pct(curC.rev, prv.rev)))}
+      ${metric('orders', 'ออเดอร์', fmt(cur.ord), delta(pct(curC.ord, prv.ord)))}
+      ${metric('aov', 'AOV', cur.aov ? money(cur.aov) : '—', delta(pct(curC.aov, prv.aov)), info('hm-i-aov', '<b>AOV (Average Order Value)</b> ราคาเฉลี่ยต่อออเดอร์ = ยอดขาย ÷ ออเดอร์<br>ไม่นับตัวแทนและ Modern Trade เพราะสั่งเป็นก้อนใหญ่', true))}
+      ${metric('ads', 'ค่า Ads รวม', money(cur.ads), delta(pct(curC.ads, prv.ads), true), info('hm-i-ads', `ค่า Ads ทุกแหล่ง (Meta / TikTok / Shopee / Lazada)${prAds ? '<br>รวม Facebook PR / KOL ' + money(prAds) + ' ซึ่งไม่นับใน ROAS' : ''}`, true))}
+      ${metric('roas', 'ROAS', cur.roas ? cur.roas.toFixed(2) + 'x' : '—', delta(pct(curC.roas, prv.roas)), info('hm-i-roas', '<b>ROAS (Return on Ad Spend)</b> = ยอดขายออนไลน์ ÷ ค่า Ads ที่ใช้ขาย<br>ไม่นับยอดตัวแทนและ Modern Trade (สั่งเป็นก้อน) และไม่นับค่า Ads ของ Facebook PR / KOL และ Modern Trade<br>ช่องทางที่ยอดยังเข้าไม่ครบ ไม่นับทั้งยอดขายและค่า Ads', true))}
+      <div class="ui-metric is-static"><span class="ui-metric-l">สะสมเดือนนี้${info('hm-i-mtd', `ยอดขายออนไลน์ (Facebook / TikTok / Shopee / Lazada) ตั้งแต่วันที่ 1 เทียบเดือนก่อนช่วงวันเดียวกัน<br>ไม่นับตัวแทนและ Modern Trade เพราะลงยอดเป็นก้อนไม่ตรงวัน<br>แต่ละช่องทางนับถึงวันที่ยอดเข้าครบ`)}</span><span class="ui-metric-v">${money(T.mtd)}</span><span class="ui-metric-d">${delta(pct(T.mtd, T.mtdp))} เทียบเดือนก่อน</span></div>
     </section>
     <div class="ui-hint" id="homeMetricHint"></div>
     <section class="hm-panel">
@@ -8393,11 +8410,11 @@ async function renderHome() {
     </section>
     <div class="hm-gap"></div>
     <section class="hm-panel">
-      <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของช่วงวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>สัดส่วน</b> ยอดขายของช่องทาง ÷ ยอดขายรวม<br><b>AOV</b> ไม่นับตัวแทนและ Modern Trade<br><b>Modern Trade / ตัวแทน</b> ห้างส่งยอดรายเดือน ตัวแทนสั่งเป็นก้อน ดูรายวันจะไม่สะท้อนจริง กด "ดูยอดเดือนนี้" เพื่อดูทั้งเดือน<br><b>ป้ายสีส้ม</b> ช่องทางที่ยังไม่อัปยอดถึงวันสุดท้ายของช่วง')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
+      <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของช่วงวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>สัดส่วน</b> ยอดขายของช่องทาง ÷ ยอดขายรวม<br><b>AOV</b> ไม่นับตัวแทนและ Modern Trade<br><b>Modern Trade / ตัวแทน</b> ห้างส่งยอดรายเดือน ตัวแทนสั่งเป็นก้อน ดูรายวันจะไม่สะท้อนจริง กด "ดูยอดเดือนนี้" เพื่อดูทั้งเดือน<br><b>Pending upload</b> ยังไม่ได้อัปไฟล์ยอดของวันนั้น · <b>Partial</b> อัปแล้วแต่ไฟล์ยังไม่ครอบทั้งวัน — ทั้งสองแบบไม่นับในการเทียบและ ROAS<br><b>Facebook PR / KOL</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง แสดงค่าใช้จ่ายแต่ไม่นับใน ROAS<br><b>ROAS</b> ไม่นับยอดตัวแทนและ Modern Trade')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
       <div class="table-wrap"><table class="ui-table hm-tbl" data-no-sort>
         <thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ออเดอร์</th><th class="num">AOV</th><th class="num">ค่า Ads</th><th class="num">ROAS</th><th class="num">${one ? 'เทียบเฉลี่ย 7 วัน' : 'เทียบช่วงก่อน'}</th></tr></thead>
         <tbody>${chRows}</tbody>
-        <tfoot><tr><td>รวม</td><td class="num">${money(cur.rev)}</td><td class="num">100%</td><td class="num">${fmt(cur.ord)}</td><td class="num">${cur.aov ? money(cur.aov) : '—'}</td><td class="num">${money(cur.ads)}</td><td class="num">${roasTxt(cur.roas)}</td><td class="num">${delta(pct(cur.rev, prv.rev))}</td></tr></tfoot>
+        <tfoot><tr><td>รวม</td><td class="num">${money(cur.rev)}</td><td class="num">100%</td><td class="num">${fmt(cur.ord)}</td><td class="num">${cur.aov ? money(cur.aov) : '—'}</td><td class="num">${money(cur.ads)}</td><td class="num">${roasTxt(cur.roas)}</td><td class="num">${delta(pct(curC.rev, prv.rev))}</td></tr></tfoot>
       </table></div>
     </section>
     <div class="hm-gap"></div>
