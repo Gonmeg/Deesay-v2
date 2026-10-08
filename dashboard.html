@@ -469,6 +469,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .hm-tbl td:first-child { white-space:nowrap; }
   .hm-tbl tr.is-stale td { color:var(--text3); }
   .hm-tbl tr.hm-sub-row td { color:var(--text3); font-size:12.5px; }
+  .hm-msgsum { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--text2); margin:2px 0 8px; }
+  .hm-msgsum b { font-size:18px; color:var(--text); }
+  .hm-msgsum span { font-size:12px; color:var(--text3); }
+  .hm-m .hm-prod { color:var(--accent); font-weight:600; }
   .hm-tbl .ui-badge { margin-left:8px; font-weight:500; }
   .hm-roas { font-weight:700; font-variant-numeric:tabular-nums; }
   .hm-roas.good { color:var(--good); } .hm-roas.mid { color:var(--accent-text); } .hm-roas.bad { color:var(--bad); }
@@ -7642,6 +7646,8 @@ const DG_PAGE = {
   supply: ['stock_log', 'orders_']
 };
 const DG_GLOBAL = ['mv_stale', 'fb_bucket', 'rls'];   // กระทบตัวเลขทุกหน้า
+// (2026-10-08) หน้าที่ระบุไว้ตรงนี้: เตือน "ตารางสรุปยังไม่คำนวณ" เฉพาะเมื่อเป็นตารางที่หน้านั้นใช้
+const DG_MV_PAGE = { home: ['mv_sales_daily', 'mv_ad_spend_daily', 'mv_sku_daily', 'mv_fb_ads_daily_b', 'mv_tiktok_creative_performance', 'mv_tt_clips_by_product', 'mv_replenishment'] };
 // (2026-10-02) แต่ละหน้าข้อมูลอัปเดตกี่โมง (เวลาที่ตัวเลขขึ้นหน้าเว็บจริง = หลังดึงข้อมูล + คำนวณสรุปเสร็จ) — แก้ตรงนี้ทุกครั้งที่เปลี่ยนรอบเวลา
 const DG_ORD = 'ออเดอร์ทุกชั่วโมงหลังทีมอัปโหลด';
 const DG_SCHED = {
@@ -7676,7 +7682,8 @@ function dgShow(page) {
   if (!keys) { el.innerHTML = schedTxt ? `<div class="dg-ok"><span>${schedTxt}</span></div>` : ''; return; }
   loadDg().then(list => {
     if (currentPage !== page) return;
-    const hit = c => DG_GLOBAL.includes(c.k) || keys.some(k => c.k === k || (k.endsWith('_') && c.k.startsWith(k)));
+    const hit = c => (DG_GLOBAL.includes(c.k) && (c.k !== 'mv_stale' || !DG_MV_PAGE[page] || DG_MV_PAGE[page].some(m => new RegExp('\\b' + m + '\\b').test(c.detail || ''))))
+      || keys.some(k => c.k === k || (k.endsWith('_') && c.k.startsWith(k)));
     const mine = (list || []).filter(hit), bad = mine.filter(c => c.status !== 'ok');
     const at = mine.length ? new Date(Math.max(...mine.map(c => +new Date(c.at)))) : null;
     const atTxt = at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—';
@@ -8282,7 +8289,7 @@ async function renderHome() {
   const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   let b, tr;
   try {
-    if (!_homeLatest) { _homeLatest = homeAdd(homeTodayTH(), -1); _homeBrief0 = await Auth.rpc('home_brief', { p_date: _homeLatest }); }   // (2026-10-08) เปิดที่เมื่อวานเสมอ ยอดที่ยังไม่เข้าติดป้าย Pending upload / Partial
+    if (!_homeLatest) { _homeBrief0 = await Auth.rpc('home_brief', {}); _homeLatest = _homeBrief0.date; }   // (2026-10-08 รอบ 2) วันล่าสุดที่ยอด Facebook เข้าแล้ว (ช่องทางอื่นครบด้วย) · MT / ตัวแทนเหมือนเดิม
     if (!_homeRange.a) { const r = homePresetRange(_homeRange.p) || [_homeLatest, _homeLatest]; _homeRange.a = r[0]; _homeRange.b = r[1]; }
     const { a: A, b: B } = _homeRange, n = Math.round((new Date(B) - new Date(A)) / 86400000) + 1;
     [b, tr] = await Promise.all([
@@ -8351,12 +8358,14 @@ async function renderHome() {
   }).join('');
 
   const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, title = tt ? (x.title || x.item_id) : x.name;
-    return `<div class="hm-it"><div class="hm-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${tt ? 'TT' : 'FB'}'">` : (tt ? 'TT' : 'FB')}</div>
-      <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(title)}</div><div class="hm-m">${tt ? `<span>@${esc(x.acc || '—')}</span>` : ''}<span>ค่า Ads ${money(x.spend)}</span><span>ยอดขาย ${money(tt ? x.rev : x.pv)}</span>${!tt && +x.msg ? `<span>ทัก ${fmt(x.msg)}</span>` : ''}</div></div>
+    return `<div class="hm-it"><div class="hm-thumb">${img ? `<img class="zoom-thumb" src="${esc(img)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${tt ? 'TT' : 'FB'}'">` : (tt ? 'TT' : 'FB')}</div>
+      <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(title)}</div><div class="hm-m"><span class="hm-prod">${esc(x.product || 'ยังไม่ได้ผูกสินค้า')}</span>${tt ? `<span>@${esc(x.acc || '—')}</span>` : ''}<span>ค่า Ads ${money(x.spend)}</span><span>ยอดขาย ${money(tt ? x.rev : x.pv)}</span>${!tt ? `<span>ทัก ${fmt(+x.msg || 0)}</span>` : ''}</div></div>
       <div class="hm-r">${roasTxt(+x.roas)}</div></div>`; };
   const adBlock = (best, worst, tt) => `<div class="hm-sub">ROAS ดีที่สุด</div>${(best || []).map(x => adItem(x, tt)).join('') || '<div class="hm-empty">ไม่มี Ads ที่มียอดขาย</div>'}
     <div class="hm-sub">ใช้เงินมากแต่ ROAS ต่ำ</div>${(worst || []).map(x => adItem(x, tt)).join('') || '<div class="hm-empty">ไม่มี</div>'}`;
-  const adInfo = 'คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ ฿300 ในวันนั้น<br>กลุ่ม "ใช้เงินมากแต่ ROAS ต่ำ" คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ ฿1,000';
+  const adInfo = 'คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ ฿300 ในวันนั้น · ยอดขายและ ROAS ตามที่ Meta / TikTok นับให้ Ads นั้น<br>กลุ่ม "ใช้เงินมากแต่ ROAS ต่ำ" คัด Ads ที่ใช้เงินตั้งแต่ ฿1,000 และ ROAS ต่ำกว่า 2x';
+  const fbInfo = adInfo + '<br><b>สินค้า</b> ตามชีทผูก Ads กับสินค้า · "หลายสินค้า" = แคมเปญรวม<br><b>ทัก</b> คนที่เริ่มแชทจาก Ads นั้นในวันนั้น ยอดขายอาจมาจากคนที่ทักไว้วันก่อน Ads บางตัวจึงมียอดขายแต่ทัก 0<br><b>คนทักทั้งหมด</b> รวมทุก Ads ทุกบัญชีในวันนั้น';
+  const ttInfo = adInfo + '<br><b>สินค้า</b> สินค้าที่คลิปนั้นขายได้ในวันนั้น';
   const dayTag = one ? '' : `<span class="hm-daytag">ของวันที่ ${dShort(B)}</span>`;
 
   const stockL1 = (b.stock_l1 || []).map(x => { const cv = Math.max(0, +x.cover_total || 0), today = new Date(), lt = +x.lt || 0;
@@ -8419,8 +8428,8 @@ async function renderHome() {
     </section>
     <div class="hm-gap"></div>
     <div class="hm-grid2">
-      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('Facebook')}Facebook Ads ${info('hm-i-fb', adInfo)}${dayTag}</h2>${link('fbads', 'ดูทั้งหมด')}</div>${adBlock(b.fb_best, b.fb_worst, false)}</section>
-      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('TikTok')}TikTok Ads ${info('hm-i-tt', adInfo)}${dayTag}</h2>${link('ttads', 'ดูทั้งหมด')}</div>${adBlock(b.tt_best, b.tt_worst, true)}</section>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('Facebook')}Facebook Ads ${info('hm-i-fb', fbInfo)}${dayTag}</h2>${link('fbads', 'ดูทั้งหมด')}</div>${b.fb_msg && b.fb_msg.msg_d != null ? `<div class="hm-msgsum">คนทักทั้งหมด <b>${fmt(+b.fb_msg.msg_d)}</b> คน<span>เฉลี่ย 7 วันก่อน ${fmt(Math.round(+b.fb_msg.msg_avg7 || 0))} คน ${delta(pct(+b.fb_msg.msg_d, +b.fb_msg.msg_avg7))}</span></div>` : ''}${adBlock(b.fb_best, b.fb_worst, false)}</section>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('TikTok')}TikTok Ads ${info('hm-i-tt', ttInfo)}${dayTag}</h2>${link('ttads', 'ดูทั้งหมด')}</div>${adBlock(b.tt_best, b.tt_worst, true)}</section>
     </div>
     <div class="hm-gap"></div>
     <div class="hm-grid2">
