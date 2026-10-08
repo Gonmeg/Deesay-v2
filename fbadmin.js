@@ -1,6 +1,7 @@
-// fbadmin.js (v20261006b) — หน้า "พนักงานขาย" (Facebook / Line) · โหลดครั้งแรกที่กดเมนู
+// fbadmin.js (v20261008a) — หน้า "พนักงานขาย" (Facebook / Line) · โหลดครั้งแรกที่กดเมนู
 // ที่มา: RPC sales_admin_page(p_from, p_to) — ยอด/ออเดอร์จาก mv_fb_admin_daily ที่ refresh พร้อม mv_sales_daily → เท่ากับยอด Facebook ทุกหน้าเสมอ
 //   ลูกค้า (เบอร์ไม่ซ้ำ) และสินค้าขายดี นับจากออเดอร์จริง · ค่าคอม: ยังไม่ตั้งสูตร
+// (20261008a) ตีกลับ: ออเดอร์ที่เลขอยู่ในชีทตีกลับ (fb_return_orders, ดึงทุกวัน) ไม่นับเป็นยอดของพนักงาน · ยอดสุทธิ = ยอดขาย − ตีกลับ ใช้จัดอันดับ/กราฟ/สัดส่วน · การ์ดยอดรวมยังเป็นยอดขายเต็ม (เท่ายอด Facebook ทุกหน้า) · ใช้เฉพาะหน้านี้
 // (b) อันดับ · ชื่อย่อ · ออเดอร์ต่อวัน · ส่วนแบ่งในเพจหลัก · ซ่อนการเทียบช่วงก่อนเมื่อช่วงนั้นยังไม่มีชื่อพนักงานครบ (กันตัวเลขเพี้ยน)
 (function () {
   const num = v => Number(v) || 0;
@@ -22,19 +23,20 @@
     const p = (cur - prev) / prev * 100;
     return `<span style="color:${p >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:600;">${p >= 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(0)}%</span>`;
   };
+  const net = a => num(a.revenue) - num(a.ret_revenue), prevNet = a => num(a.prev_revenue) - num(a.prev_ret_revenue);
   const skel = '<span class="skeleton" style="display:inline-block;width:60%;height:22px;border-radius:4px;"></span>';
 
   function shell(el) {
     el.innerHTML = `
       <div id="fba-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="section-header"><div class="section-title" id="fba-chart-title">ยอดขายต่อพนักงาน</div></div>
+        <div class="section-header"><div class="section-title" id="fba-chart-title">ยอดสุทธิต่อพนักงาน</div></div>
         <div class="chart-wrap" style="height:300px;"><canvas id="chartFbAdmin"></canvas></div>
       </div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="section-header"><div class="section-title">อันดับพนักงานขาย ${fbeInfoIcon('fba-info-tbl', '<b>ยอดขาย</b> = ยอดของออเดอร์ที่คนนี้เปิดบิล (ยอดรวมสินค้า − ส่วนลดท้ายบิล + ค่าส่ง) ชุดเดียวกับยอด Facebook ทุกหน้า · ไม่นับเคลม รีวิว MT ตัวแทน และชาฟ้าใส<br><b>เทียบช่วงก่อน</b> = ช่วงยาวเท่ากันก่อนหน้า · แสดงเมื่อทั้งสองช่วงมีชื่อพนักงานครบ (≥ 95% ของยอด) ไม่งั้นตัวเลขจะเพี้ยน<br><b>ยอดต่อออเดอร์</b> = ยอดขาย ÷ ออเดอร์ (AOV)<br><b>ออเดอร์ต่อวัน</b> = ออเดอร์ ÷ วันที่มีบิล — เทียบคนที่ทำงานไม่เท่ากันได้แฟร์กว่ายอดรวม<br><b>ส่วนแบ่งในเพจหลัก</b> = ยอดของคนนี้ในเพจที่ขายมากสุด ÷ ยอดทั้งเพจนั้น — เทียบกับคนที่ดูแลเพจเดียวกัน (เพจใหญ่ยอดย่อมสูงกว่า)<br><b>ลูกค้า</b> = เบอร์โทรไม่ซ้ำ<br><b>ไม่ระบุ</b> = ออเดอร์ที่ยังไม่มีชื่อพนักงานในระบบ')}<span style="font-size:11.5px;color:var(--text3);font-weight:400;margin-left:6px;">กดชื่อเพื่อดูรายละเอียด</span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>#</th><th>พนักงานขาย</th><th>ยอดขาย</th><th>เทียบช่วงก่อน</th><th>ออเดอร์</th><th>ยอดต่อออเดอร์</th><th>ออเดอร์ต่อวัน</th><th>ลูกค้า</th><th>สัดส่วน</th><th>ส่วนแบ่งในเพจหลัก</th></tr></thead>
-          <tbody id="fba-body"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div>
+        <div class="section-header"><div class="section-title">อันดับพนักงานขาย ${fbeInfoIcon('fba-info-tbl', '<b>ยอดขาย</b> = ยอดของออเดอร์ที่คนนี้เปิดบิล (ยอดรวมสินค้า − ส่วนลดท้ายบิล + ค่าส่ง) ชุดเดียวกับยอด Facebook ทุกหน้า · ไม่นับเคลม รีวิว MT ตัวแทน และชาฟ้าใส<br><b>ตีกลับ</b> = ออเดอร์ที่เลขออเดอร์อยู่ในชีทตีกลับ (ทุกแท็บเดือน) นับตามวันที่สั่งซื้อ · ไม่นับเป็นยอดของพนักงาน · ของตีกลับเข้ามาทีหลัง 2–6 สัปดาห์ เดือนล่าสุดจึงยังเพิ่มได้ · ดึงจากชีทใหม่ทุกวัน<br><b>ยอดสุทธิ</b> = ยอดขาย − ตีกลับ ใช้จัดอันดับ กราฟ และสัดส่วน<br><b>เทียบช่วงก่อน</b> = ยอดสุทธิเทียบช่วงยาวเท่ากันก่อนหน้า · แสดงเมื่อทั้งสองช่วงมีชื่อพนักงานครบ (≥ 95% ของยอด) ไม่งั้นตัวเลขจะเพี้ยน<br><b>ยอดต่อออเดอร์</b> = ยอดขาย ÷ ออเดอร์ (AOV)<br><b>ออเดอร์ต่อวัน</b> = ออเดอร์ ÷ วันที่มีบิล — เทียบคนที่ทำงานไม่เท่ากันได้แฟร์กว่ายอดรวม<br><b>ส่วนแบ่งในเพจหลัก</b> = ยอดของคนนี้ในเพจที่ขายมากสุด ÷ ยอดทั้งเพจนั้น — เทียบกับคนที่ดูแลเพจเดียวกัน (เพจใหญ่ยอดย่อมสูงกว่า)<br><b>ลูกค้า</b> = เบอร์โทรไม่ซ้ำ<br><b>ไม่ระบุ</b> = ออเดอร์ที่ยังไม่มีชื่อพนักงานในระบบ')}<span style="font-size:11.5px;color:var(--text3);font-weight:400;margin-left:6px;">กดชื่อเพื่อดูรายละเอียด</span></div></div>
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>พนักงานขาย</th><th>ยอดขาย</th><th>ตีกลับ</th><th>ยอดสุทธิ</th><th>เทียบช่วงก่อน</th><th>ออเดอร์</th><th>ยอดต่อออเดอร์</th><th>ออเดอร์ต่อวัน</th><th>ลูกค้า</th><th>สัดส่วน</th><th>ส่วนแบ่งในเพจหลัก</th></tr></thead>
+          <tbody id="fba-body"><tr><td colspan="12" class="empty">กำลังโหลด...</td></tr></tbody></table></div>
       </div>
       <div class="card" id="fba-detail" style="display:none;margin-bottom:20px;"></div>`;
   }
@@ -58,15 +60,17 @@
     const named = admins.filter(a => a.admin !== NONE);
     const order = named.map(a => a.admin);
     const tot = admins.reduce((t, a) => t + num(a.revenue), 0), totOrd = admins.reduce((t, a) => t + num(a.orders), 0);
-    const totNamed = named.reduce((t, a) => t + num(a.revenue), 0), prevTot = admins.reduce((t, a) => t + num(a.prev_revenue), 0);
+    const totNamed = named.reduce((t, a) => t + net(a), 0), prevTot = admins.reduce((t, a) => t + num(a.prev_revenue), 0);
+    const totRet = admins.reduce((t, a) => t + num(a.ret_revenue), 0), totRetOrd = admins.reduce((t, a) => t + num(a.ret_orders), 0), totNet = tot - totRet;
+    const R = D.returns || {};
     const share = num(D.named_share), cmpOk = share >= FULL && num(D.prev_named_share) >= FULL;
     const cov = D.coverage || {};
     const top = named[0];
     document.getElementById('fba-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย Facebook / Line</div><div class="kpi-value">${baht(tot)}</div><div class="kpi-sub">${fmt(totOrd)} ออเดอร์ · ${delta(tot, prevTot, true)} เทียบช่วงก่อน</div></div>
+      <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย Facebook / Line</div><div class="kpi-value">${baht(tot)}</div><div class="kpi-sub">${fmt(totOrd)} ออเดอร์ · ${delta(tot, prevTot, true)} เทียบช่วงก่อน</div><div class="kpi-sub">ตีกลับ ${baht(totRet)} (${fmt(totRetOrd)} ออเดอร์) · สุทธิ ${baht(totNet)} ${fbeInfoIcon('fba-info-ret', 'ตีกลับ = ออเดอร์ที่เลขอยู่ในชีทตีกลับ นับตามวันที่สั่งซื้อ · ใช้เฉพาะหน้านี้ หน้าอื่นยังเป็นยอดขายเต็ม<br>อัปเดตจากชีทล่าสุด ' + (R.synced_at ? new Date(R.synced_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—') + ((R.tabs_pending || []).length ? '<br>แท็บที่ยังดึงไม่สำเร็จ: ' + R.tabs_pending.join(', ') + ' (ระบบลองใหม่ทุก 5 นาที)' : ''))}</div></div>
       <div class="card" style="flex:1;min-width:150px;"><div class="card-title">พนักงานขาย</div><div class="kpi-value">${fmt(named.length)} คน</div><div class="kpi-sub">เฉลี่ย ${baht(named.length ? totNamed / named.length : 0)} ต่อคน</div></div>
       <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ระบุพนักงานได้ ${fbeInfoIcon('fba-info-cov', 'สัดส่วนยอดขายที่รู้ว่าใครเปิดบิล · ที่เหลือคือออเดอร์ที่ยังไม่มีชื่อพนักงาน (เดือนที่ยังไม่ได้เติมจากไฟล์ หรือไฟล์ที่อัปก่อนระบบเก็บช่องนี้)<br>ถ้าต่ำกว่า 95% ตัวเลขรายคนยังไม่ครบ และจะไม่แสดงการเทียบช่วงก่อนรายคน')}</div><div class="kpi-value" style="color:${share >= FULL ? 'var(--green)' : 'var(--orange)'};">${(share * 100).toFixed(1)}%</div><div class="kpi-sub">${cov.first_date ? 'มีชื่อพนักงาน ' + thDate(cov.first_date) + ' – ' + thDate(cov.last_date) : 'ยังไม่มีชื่อพนักงานในระบบ'}</div></div>
-      <div class="card" style="flex:1;min-width:150px;"><div class="card-title">อันดับ 1</div><div class="kpi-value" style="font-size:20px;">${top ? esc(short(top.admin)) : '—'}</div><div class="kpi-sub">${top ? baht(top.revenue) + ' · ' + pct(num(top.revenue), tot) + ' ของยอด' : ''}</div></div>`;
+      <div class="card" style="flex:1;min-width:150px;"><div class="card-title">อันดับ 1</div><div class="kpi-value" style="font-size:20px;">${top ? esc(short(top.admin)) : '—'}</div><div class="kpi-sub">${top ? 'สุทธิ ' + baht(net(top)) + ' · ' + pct(net(top), totNet) + ' ของยอดสุทธิ' : ''}</div></div>`;
 
     // ส่วนแบ่งในเพจหลัก
     const pages = D.pages || [], pageTot = {}; (D.page_totals || []).forEach(p => { pageTot[p.page] = num(p.revenue); });
@@ -78,10 +82,11 @@
       return `<tr style="${_sel === a.admin ? 'background:var(--bg3);' : ''}${isNone ? 'color:var(--text3);' : ''}">
         <td style="font-weight:700;color:${r === 1 ? 'var(--accent)' : 'var(--text3)'};">${r}</td>
         <td>${isNone ? NONE : `<a href="javascript:void(0)" onclick="fbAdmin.select(${esc(JSON.stringify(a.admin))})" title="${esc(a.admin)}" style="color:inherit;font-weight:600;text-decoration:underline dotted;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${colorOf(a.admin, order)};margin-right:6px;"></span>${esc(short(a.admin))}</a>`}</td>
-        <td>${baht(a.revenue)}</td><td>${isNone ? dash : delta(num(a.revenue), num(a.prev_revenue), cmpOk)}</td><td>${fmt(a.orders)}</td>
-        <td>${baht(num(a.orders) ? num(a.revenue) / num(a.orders) : 0)}</td><td>${perDay.toFixed(1)}</td><td>${fmt(a.customers)}</td><td>${pct(num(a.revenue), tot)}</td>
+        <td>${baht(a.revenue)}</td><td style="color:${num(a.ret_orders) ? 'var(--red)' : 'var(--text3)'};">${num(a.ret_orders) ? `${baht(a.ret_revenue)} <span style="font-size:11px;">· ${fmt(a.ret_orders)} ออเดอร์</span>` : '—'}</td>
+        <td style="font-weight:700;">${baht(net(a))}</td><td>${isNone ? dash : delta(net(a), prevNet(a), cmpOk)}</td><td>${fmt(a.orders)}</td>
+        <td>${baht(num(a.orders) ? num(a.revenue) / num(a.orders) : 0)}</td><td>${perDay.toFixed(1)}</td><td>${fmt(a.customers)}</td><td>${pct(net(a), totNet)}</td>
         <td style="font-size:11.5px;">${isNone || !mp ? dash : `${pct(num(mp.revenue), pageTot[mp.page])} <span style="color:var(--text3);">· ${esc(pageShort(mp.page))}</span>`}</td></tr>`;
-    }).join('') : '<tr><td colspan="10" class="empty">ไม่มีออเดอร์ในช่วงนี้</td></tr>';
+    }).join('') : '<tr><td colspan="12" class="empty">ไม่มีออเดอร์ในช่วงนี้</td></tr>';
 
     // กราฟ: ช่วงไม่เกิน 1 เดือน = รายวัน · หลายเดือน = รายเดือน (กติกาเดียวกับทุกหน้า) · ไม่รวม "ไม่ระบุ"
     const monthly = (new Date(to) - new Date(from)) / 86400000 > 31;
@@ -90,11 +95,11 @@
     const labels = [...new Set(daily.map(r => bucket(r.date)))].sort();
     const show = _sel ? [_sel] : order.slice(0, 8);
     const datasets = show.map(name => {
-      const m = {}; daily.filter(r => r.admin === name).forEach(r => { const k = bucket(r.date); m[k] = (m[k] || 0) + num(r.revenue); });
+      const m = {}; daily.filter(r => r.admin === name).forEach(r => { const k = bucket(r.date); m[k] = (m[k] || 0) + num(r.revenue) - num(r.ret_revenue); });
       const c = colorOf(name, order);
       return { label: short(name), data: labels.map(k => m[k] || 0), borderColor: c, backgroundColor: c + '22', fill: !!_sel };
     });
-    document.getElementById('fba-chart-title').textContent = (_sel ? 'ยอดขายของ ' + short(_sel) : 'ยอดขายต่อพนักงาน') + (monthly ? ' (รายเดือน)' : ' (รายวัน)');
+    document.getElementById('fba-chart-title').textContent = (_sel ? 'ยอดสุทธิของ ' + short(_sel) : 'ยอดสุทธิต่อพนักงาน') + (monthly ? ' (รายเดือน)' : ' (รายวัน)');
     makeChart('chartFbAdmin', 'line', labels.map(k => monthly ? thMonth(k) : thDate(k)), datasets, { options: { interaction: { mode: 'index', intersect: false } } });
 
     // รายละเอียดคนที่เลือก
@@ -108,7 +113,7 @@
     det.innerHTML = `<div class="section-header"><div class="section-title">${esc(short(_sel))} <span style="font-size:12px;color:var(--text3);font-weight:400;">${esc(_sel)}</span></div>
         <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="fbAdmin.select(null)">✕ ดูทุกคน</button></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-        ${chip('อันดับ', '#' + (order.indexOf(_sel) + 1) + ' จาก ' + order.length)}${chip('ยอดขาย', baht(a.revenue))}${chip('ออเดอร์', fmt(a.orders))}
+        ${chip('อันดับ', '#' + (order.indexOf(_sel) + 1) + ' จาก ' + order.length)}${chip('ยอดขาย', baht(a.revenue))}${chip('ตีกลับ', num(a.ret_orders) ? baht(a.ret_revenue) + ' · ' + fmt(a.ret_orders) + ' ออเดอร์' : '—')}${chip('ยอดสุทธิ', baht(net(a)))}${chip('ออเดอร์', fmt(a.orders))}
         ${chip('ยอดต่อออเดอร์', baht(num(a.orders) ? num(a.revenue) / num(a.orders) : 0))}${chip('ออเดอร์ต่อวัน', (num(a.active_days) ? num(a.orders) / num(a.active_days) : 0).toFixed(1))}${chip('ลูกค้า', fmt(a.customers))}
       </div>
       <div class="grid-2">
