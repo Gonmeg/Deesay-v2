@@ -648,7 +648,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.08-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.08-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7909,6 +7909,7 @@ function mktRoiMonths() {
 // ===== กำไรขั้นบันไดต่อสินค้า (mv_product_pl_monthly) =====
 const VAT_DIV = 1.07;   // (2026-09-25) Business Insight / MKT Tracking / KOL แสดงยอดขายถอด VAT 7% (ค่าใช้จ่ายบัญชี/ค่าจ้างเป็นยอดไม่รวม VAT)
 const VAT_TIP = 'ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่าใช้จ่ายที่บัญชีลงแบบไม่รวม VAT — หน้ายอดขายอื่นยังเป็นยอดรวม VAT';
+const ML_REV_TIP = VAT_TIP + '<br><b>Facebook หักออเดอร์ตีกลับแล้ว</b> (เลขออเดอร์ที่อยู่ในชีทตีกลับ) ให้ใกล้ยอดบัญชี — ของตีกลับลงชีทช้า 2–6 สัปดาห์ ยอด 1–2 เดือนล่าสุดจึงอาจลดลงอีกเล็กน้อย · หน้ายอดขายอื่นไม่หัก';
 let _plRows = null, _plMonths = [], _plSortCol = 'rev', _plSortDir = 'desc', _plOpen = new Map(), _plView = [], _plLineCache = {};
 let _plChRows = null, _plMode = 'prod', _plMetric = 'cm2', _plTab = {}, _plAllocCache = {};
 // คำทับศัพท์ → ใช้ภาษาอังกฤษ (ชื่อหมวดที่มาจากบัญชี/ระบบ)
@@ -8457,7 +8458,7 @@ async function loadMl() {
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   const [a, b, c] = await Promise.all([
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_mkt_live_monthly?select=*&order=month.asc,parent_sku.asc`, h),
-    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_monthly?select=month,parent_sku,channel,revenue,ads_direct,ads_allocated&month=gte.2026-01-01&order=month.asc,parent_sku.asc,channel.asc`, h),
+    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_mkt_channel_monthly?select=month,parent_sku,channel,revenue,ads_direct,ads_allocated&month=gte.2026-01-01&order=month.asc,parent_sku.asc,channel.asc`, h),   // (2026-10-08) Facebook หักตีกลับแล้ว
     fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_kol_plan_alloc_detail?select=cost_month,parent_sku,kol_type,kol_name,platform,amount&order=cost_month.asc`, h)]);   // (2026-10-01) งบจากไฟล์ทีม KOL ตามเดือนที่โพสต์
   _mlRows = a.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));   // ยอดขายถอด VAT
   _mlCh = b.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));
@@ -8489,7 +8490,7 @@ async function renderMktLive() {
   document.getElementById('mlNote').textContent = `${from === to ? PL_TH_M(from) : 'ยอดสะสม ' + PL_TH_M(from) + ' – ' + PL_TH_M(to)} · ข้อมูลถึงปัจจุบัน · ค่า KOL = งบจากไฟล์ทีม KOL ตามเดือนที่โพสต์ · ค่า Ads ยอดจริง`;
   const all = (T.kol || 0) + (T.ads || 0);
   document.getElementById('mlKpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย (ถอด VAT) ${plTip('tip-ml-vat', VAT_TIP)}</div><div class="kpi-value">฿${fmt(Math.round(T.rev || 0))}</div><div style="font-size:10.5px;color:var(--text3);">${PL_TH_M(from)}${from !== to ? ' – ' + PL_TH_M(to) : ''}</div></div>
+    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย (ถอด VAT) ${plTip('tip-ml-vat', ML_REV_TIP)}</div><div class="kpi-value">฿${fmt(Math.round(T.rev || 0))}</div><div style="font-size:10.5px;color:var(--text3);">${PL_TH_M(from)}${from !== to ? ' – ' + PL_TH_M(to) : ''}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า KOL</div><div class="kpi-value">฿${fmt(Math.round(T.kol || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Conversion ฿${fmt(Math.round(T.kc || 0))} · PR ฿${fmt(Math.round(T.kp || 0))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads</div><div class="kpi-value">฿${fmt(Math.round(T.ads || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Product Ads ฿${fmt(Math.round(T.ad || 0))} · Shared Ads ฿${fmt(Math.round(T.aa || 0))}</div></div>
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">CM1 ${plTip('tip-ml-cm1', '<b>CM1 · Contribution Margin 1</b><br>ยอดขาย − ค่า KOL − ค่า Ads<br>เงินที่เหลือหลังจ่ายค่าการตลาดที่ใช้กับสินค้า')}</div><div class="kpi-value">${T.rev > 0 ? (T.cm1 / T.rev * 100).toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(T.cm1 || 0))}</div></div>
@@ -8547,9 +8548,13 @@ function mlDetail(sku) {
   if (metric === 'rev') {   // (2026-09-30) ยอดขายมาจากช่องทางไหน → ร้าน / เพจ / ห้าง
     const chs = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { chs[r.channel] = (chs[r.channel] || 0) + (+r.revenue || 0); });
     const key = `${sku}|${from}|${to}`, subs = _mlSub[key];
-    const groups = Object.entries(chs).map(([c, v]) => ({ label: c, amount: v, children: subs && subs[c] ? bdTop(bdFrom(Object.entries(subs[c]).map(([sc, a]) => [mlSubName(c, sc), a])), 8) : [] }));
+    const groups = Object.entries(chs).map(([c, v]) => {
+      if (!(subs && subs[c])) return { label: c, amount: v, children: [] };
+      const ent = Object.entries(subs[c]).map(([sc, a]) => [mlSubName(c, sc), a]);
+      if (c === 'Facebook') { const s = ent.reduce((t, x) => t + x[1], 0); if (Math.abs(v - s) > 1) ent.push(['หักออเดอร์ตีกลับ', v - s]); }   // (2026-10-08) รายเพจยังเป็นยอดก่อนหักตีกลับ
+      return { label: c, amount: v, children: bdTop(bdFrom(ent), 8) }; });
     el.innerHTML = bdRender({ title: `ยอดขายแยกตามช่องทาง · ${o.name}`, total: o.rev, rev: 0, groups, tipId: 'tip-mld-rev-' + sku,
-      tip: 'ยอดขายถอด VAT ชุดเดียวกับคอลัมน์ยอดขาย<br>บรรทัดย่อย = ร้าน / เพจ / ห้าง ในช่องทางนั้น<br>Modern Trade = ยอดที่ห้างขายออก (ไฟล์รายงานห้าง)', note: subs ? '' : 'กำลังโหลดรายร้าน / เพจ...' });
+      tip: 'ยอดขายถอด VAT ชุดเดียวกับคอลัมน์ยอดขาย<br>บรรทัดย่อย = ร้าน / เพจ / ห้าง ในช่องทางนั้น<br>Facebook หักออเดอร์ตีกลับแล้ว (บรรทัด "หักออเดอร์ตีกลับ")<br>Modern Trade = ยอดที่ห้างขายออก (ไฟล์รายงานห้าง)', note: subs ? '' : 'กำลังโหลดรายร้าน / เพจ...' });
     if (!subs) mlLoadSub(sku, from, to).then(() => { if (_mlOpen.get(sku) === 'rev') mlDetail(sku); }).catch(e => console.warn('ml sub', e.message));
     return;
   }
@@ -9077,9 +9082,17 @@ function exportMktRoi() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `mkt-roi-per-product.csv`; a.click();
 }
 
-async function renderCostPage() {
-  // (2026-09-24) หน้า MKT Tracking เหลือตาราง ROI การตลาดต่อสินค้าอย่างเดียว — ตารางรายเดือน/รายละเอียดเก่า (ค่าแอดจาก Google Sheet) ลบออกแล้ว
-  renderPl();   // ตาราง ROI เดิมซ่อนแล้ว ไม่ต้องคำนวณ (เคยทำให้การ์ดบนใช้ช่วงเวลาคนละแบบ)
+// (2026-10-08) Business Insight ใหม่: ใช้ไฟล์ต้นฉบับบัญชีโดยตรง (ดึงอัตโนมัติ) · โค้ดอยู่ใน bizinsight.js — โหลดครั้งแรกที่กดเมนู
+// ตาราง/ฟังก์ชันเดิมของหน้านี้ (renderPl, mv_product_pl_monthly) ไม่ถูกเรียกแล้ว
+function renderCostPage() {
+  if (window.renderBizInsight) { window.renderBizInsight(); return; }
+  if (window._biLoading) return;
+  window._biLoading = true;
+  const s = document.createElement('script');
+  s.src = 'bizinsight.js?v=20261008a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
+  s.onload = () => { window._biLoading = false; if (currentPage === 'cost') window.renderBizInsight(); };
+  s.onerror = () => { window._biLoading = false; document.getElementById('page-cost').innerHTML = '<div class="error-banner" style="display:block;">โหลด bizinsight.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+  document.body.appendChild(s);
 }
 
 const IDB_NAME = 'deesay_dashboard_cache', IDB_STORE = 'snapshot', CACHE_KEY = 'dashboard_snapshot_v2'
