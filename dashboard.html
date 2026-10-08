@@ -648,7 +648,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.08-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.08-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -8109,7 +8109,7 @@ function renderPlTable() {
       <td class="c-left pl-amt${op(o.sku) === 'chan' ? ' on' : ''}" onclick="plToggle('${o.sku}','chan')" title="กดเพื่อดูผลแยกตามช่องทาง"><span style="color:var(--text3);font-size:10px;">${op(o.sku) ? '▼' : '▶'}</span> <b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
       <td>฿${fmt(Math.round(o.rev))}</td>${cell(o, 'dir', o.dir)}${cell(o, 'ads', o.ads)}
       <td class="pl-cm">${cm(o.cm1, o.cm1p)}</td>${cell(o, 'ch', o.ch)}<td class="pl-cm">${cm(o.cm2, o.cm2p)}</td>
-      ${cell(o, 'br', o.br)}<td class="pl-cm">${cm(o.cm3, o.cm3p)}</td>${cell(o, 'oh', o.oh)}${o.cogs == null ? '<td><span style="color:var(--text3);font-size:11px;">รอไฟล์ต้นทุน</span></td>' : `<td>${money(o.cogs, o.rev)}</td>`}<td class="pl-cm">${cm(o.net, o.netp)}</td>
+      ${cell(o, 'br', o.br)}<td class="pl-cm">${cm(o.cm3, o.cm3p)}</td>${cell(o, 'oh', o.oh)}${o.cogs == null ? '<td></td>' : `<td>${money(o.cogs, o.rev)}</td>`}<td class="pl-cm">${cm(o.net, o.netp)}</td>
     </tr>${op(o.sku) ? `<tr class="pl-detail"><td colspan="12" style="padding:0;"><div id="pld-${o.sku}" style="padding:12px 20px;background:var(--bg2);">กำลังโหลด…</div></td></tr>` : ''}`).join('')
     || '<tr><td colspan="12" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>';
   _plOpen.forEach((m, sku) => plDetail(sku));
@@ -8524,7 +8524,7 @@ function renderMlTable() {
   const op = sku => _mlOpen.get(sku);
   const cell = (o, key, v) => v ? `<td class="pl-amt${op(o.sku) === key ? ' on' : ''}" onclick="event.stopPropagation();mlToggle('${o.sku}','${key}')" title="กดเพื่อดูว่าประกอบด้วยอะไร"><div>฿${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, o.rev)}</div></td>` : '<td><span style="color:var(--text3);">—</span></td>';
   document.getElementById('tbodyMl').innerHTML = rows.map(o => `
-    <tr><td class="c-left"><b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
+    <tr><td class="c-left pl-amt${op(o.sku) === 'chan' ? ' on' : ''}" onclick="mlToggle('${o.sku}','chan')" title="กดเพื่อดูผลแยกตามช่องทาง"><span style="color:var(--text3);font-size:10px;">${op(o.sku) ? '▼' : '▶'}</span> <b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
       <td class="pl-amt${op(o.sku) === 'rev' ? ' on' : ''}" onclick="event.stopPropagation();mlToggle('${o.sku}','rev')" title="กดเพื่อดูว่ายอดขายมาจากช่องทางไหน"><div>฿${fmt(Math.round(o.rev))}</div><div style="font-size:10.5px;color:var(--text3);">แยกช่องทาง</div></td>${cell(o, 'kol', o.kol)}${cell(o, 'ads', o.ads)}
       <td class="pl-cm"><div style="font-weight:700;font-size:13px;${o.cm1 < 0 ? 'color:var(--red);' : ''}">${isFinite(o.cm1p) ? o.cm1p.toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(o.cm1))}</div></td>
       <td class="pl-cm"><b>${o.roi > 0 ? o.roi.toFixed(2) + 'x' : '—'}</b></td></tr>
@@ -8554,6 +8554,18 @@ function mlPlatforms(p) { const out = String(p || '').split(',').map(x => x.trim
 function mlDetail(sku) {
   const el = document.getElementById('mld-' + sku); const o = _mlView.find(x => x.sku === sku); if (!el || !o) return;
   const [from, to] = mlRange(), metric = _mlOpen.get(sku);
+  if (metric === 'chan') {   // (2026-10-08) กดชื่อสินค้า = เทียบผลแต่ละช่องทาง แบบหน้า Business Insight · ค่า KOL ไม่ผูกช่องทาง จึงแบ่งตามสัดส่วนยอดขาย
+    const m = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { const c = (m[r.channel] = m[r.channel] || { ch: r.channel, rev: 0, ads: 0 }); c.rev += +r.revenue || 0; c.ads += (+r.ads_direct || 0) + (+r.ads_allocated || 0); });
+    const chs = Object.values(m).filter(x => Math.abs(x.rev) >= 0.5 || x.ads >= 0.5).map(x => { x.kol = o.rev > 0 ? (o.kol || 0) * Math.max(x.rev, 0) / o.rev : 0; x.cm1 = x.rev - x.ads - x.kol; x.mer = (x.ads + x.kol) > 0 ? x.rev / (x.ads + x.kol) : 0; return x; }).sort((a, b) => b.rev - a.rev);
+    const p2 = (v, b) => b > 0 ? (v / b * 100).toFixed(1) + '%' : '—';
+    const bar = v => `<div style="height:5px;background:var(--border);border-radius:3px;margin-top:3px;"><div style="height:5px;width:${o.rev > 0 ? Math.max(0, Math.min(100, v / o.rev * 100)) : 0}%;background:var(--accent);border-radius:3px;"></div></div>`;
+    const cmc = (v, b) => { const p = b > 0 ? v / b * 100 : NaN; return `<td style="--h:${plHeat(p)};border-radius:6px;"><b style="${p < 0 ? 'color:var(--red);' : ''}">${isFinite(p) ? p.toFixed(1) + '%' : '—'}</b><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(v))}</div></td>`; };
+    const T = chs.reduce((t, x) => { ['rev', 'ads', 'kol', 'cm1'].forEach(k => t[k] += x[k]); return t; }, { rev: 0, ads: 0, kol: 0, cm1: 0 });
+    el.innerHTML = `<div style="font-weight:700;margin-bottom:8px;">${o.name} แยกตามช่องทาง</div><table class="pl-mx" style="max-width:1000px;"><thead><tr><th style="text-align:left;">ช่องทาง</th><th>ยอดขาย</th><th>ค่า Ads</th><th>ค่า KOL ${plTip('tip-mlc-kol-' + sku, 'ค่า KOL ไม่ได้ผูกช่องทางขาย จึงแบ่งตามสัดส่วนยอดขายของสินค้าในแต่ละช่องทาง')}</th><th>CM1</th><th>MER</th></tr></thead><tbody>`
+      + chs.map(x => `<tr><td class="nm"><b>${x.ch}</b></td><td style="text-align:right;">฿${fmt(Math.round(x.rev))} <span style="color:var(--text3);font-size:10.5px;">${p2(x.rev, o.rev)}</span>${bar(x.rev)}</td><td>฿${fmt(Math.round(x.ads))}<div style="font-size:10.5px;color:var(--text3);">${p2(x.ads, x.rev)}</div></td><td>฿${fmt(Math.round(x.kol))}<div style="font-size:10.5px;color:var(--text3);">${p2(x.kol, x.rev)}</div></td>${cmc(x.cm1, x.rev)}<td><b>${x.mer > 0 ? x.mer.toFixed(2) + 'x' : '—'}</b></td></tr>`).join('')
+      + `<tr style="border-top:1px solid var(--border);"><td class="nm"><b>รวม</b></td><td style="text-align:right;"><b>฿${fmt(Math.round(T.rev))}</b></td><td><b>฿${fmt(Math.round(T.ads))}</b></td><td><b>฿${fmt(Math.round(T.kol))}</b></td>${cmc(T.cm1, T.rev)}<td><b>${(T.ads + T.kol) > 0 ? (T.rev / (T.ads + T.kol)).toFixed(2) + 'x' : '—'}</b></td></tr></tbody></table>`;
+    return;
+  }
   if (metric === 'rev') {   // (2026-09-30) ยอดขายมาจากช่องทางไหน → ร้าน / เพจ / ห้าง
     const chs = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { chs[r.channel] = (chs[r.channel] || 0) + (+r.revenue || 0); });
     const key = `${sku}|${from}|${to}`, subs = _mlSub[key];
