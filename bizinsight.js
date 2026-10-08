@@ -1,6 +1,8 @@
-// bizinsight.js (v20261008a) — Business Insight จากไฟล์ต้นฉบับบัญชี (Google Sheet เผยแพร่ ดึงอัตโนมัติ → acct_src_lines)
+// bizinsight.js (v20261008b) — Business Insight จากไฟล์ต้นฉบับบัญชี (Google Sheet เผยแพร่ ดึงอัตโนมัติ → acct_src_lines)
 // ทุกยอดรวมเท่าไฟล์บัญชี (คอลัมน์ "ใช้ช่องนี้ หัก MO") · ส่วนบน = ทั้งบริษัท · แท็บ รายสินค้า / รายช่องทาง / งบกำไรขาดทุน
-// RPC: biz_insight_data (บรรทัดบัญชี + รายช่องทาง), biz_insight_issues (แถบแจ้งเตือน), biz_product_data (รายสินค้า ตามช่วงเดือน)
+// RPC: biz_insight_data (บรรทัดบัญชี + รายช่องทาง), biz_insight_issues (แถบแจ้งเตือน)
+// (b) แท็บรายสินค้า = ตารางกำไรขั้นบันไดแบบเดิม (renderPl ใน dashboard.html) ที่เปลี่ยนไปอ่าน v_biz_pl_monthly / v_biz_channel_pl_monthly / v_biz_cost_alloc / v_biz_cost_lines
+//     แสดงทุกแถว ไม่มีกล่องเลื่อน · หัวคอลัมน์ล็อกไว้ใต้แถบด้านบนตอนเลื่อนหน้า
 // ช่วงเดือน = ตัวเลือก "ตั้งแต่–ถึง" ด้านบนของ dashboard (topMonthsFor) · ไม่มีตัวเลือกช่วงในหน้า
 (function () {
   const CSS = `.bi .seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg3)}
@@ -120,7 +122,10 @@
 .bi .mini td:first-child,.bi .mini th:first-child{text-align:left}
 .bi .wait{color:var(--text3);font-size:12px;font-weight:400}
 .bi tr.co td{color:var(--text2)}
-@media (max-width:1200px){.bi .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.bi .row2{grid-template-columns:1fr}.bi .det-grid{grid-template-columns:1fr}}`;
+@media (max-width:1200px){.bi .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.bi .row2{grid-template-columns:1fr}.bi .det-grid{grid-template-columns:1fr}}
+/* ตารางกำไรขั้นบันไดแบบเดิม: แสดงทุกแถว · ล็อกหัวคอลัมน์ใต้แถบด้านบนตอนเลื่อนหน้า */
+#page-cost #plCard,#page-cost #plTableWrap{overflow:visible!important}
+#page-cost #tblPl thead th{position:sticky;top:var(--bi-top,0px);z-index:6;background:var(--bg2);box-shadow:0 1px 0 var(--border)}`;
   if (!document.getElementById('bi-css')) { const st = document.createElement('style'); st.id = 'bi-css'; st.textContent = CSS; document.head.appendChild(st); }
 
   const TH = m => MONTHS_TH[parseInt(m.slice(5, 7), 10) - 1];
@@ -132,8 +137,8 @@
   const pctf = (a, b, d = 1) => b ? (a / b * 100).toFixed(d) + '%' : '—';
   const tip = t => `<span class="i">i<span class="tip">${t}</span></span>`;
 
-  let D = null, ISS = [], PD = null, M = [], LINES = [], CH = [], A = 0, B = 0;
-  let basis = 'order', split = 'a', metric = 'op', tab = 'prod', openAll = false, openProd = {}, chart = null;
+  let D = null, ISS = [], M = [], LINES = [], CH = [], A = 0, B = 0;
+  let basis = 'order', split = 'a', metric = 'op', tab = 'prod', openAll = false, chart = null;
   const COSTCAT = [['ต้นทุนสินค้า', '#94A3B8'], ['Ads', '#EF4444'], ['ค่า Platform', '#F2643F'], ['KOL และ Affiliate', '#A78BFA'], ['Presenter และ Live', '#22D3EE'], ['ค่าใช้จ่ายขายอื่น', '#FBBF24'], ['ค่าใช้จ่ายบริหาร', '#60A5FA']];
   const CHMETA = { 'TikTok': ['var(--ch-tiktok)', 'ช่องทางออนไลน์'], 'Shopee Mall': ['var(--ch-shopee)', 'ช่องทางออนไลน์'], 'Shopee 24': ['var(--ch-shopee)', 'ช่องทางออนไลน์'],
     'Lazada Mall': ['var(--ch-lazada)', 'ช่องทางออนไลน์'], 'Lazada 24': ['var(--ch-lazada)', 'ช่องทางออนไลน์'], 'FB-COD': ['var(--ch-facebook)', 'ช่องทางออนไลน์'],
@@ -290,49 +295,46 @@
       <div class="scroll"><table>${h}</tbody></table></div></div>`;
   }
 
-  // ---------- แท็บ: รายสินค้า ----------
-  const PCOLS = ['sku', 'name', 'grp', 'rev', 'cogs', 'ads', 'kol', 'pres', 'promo', 'mkt_id', 'plat', 'comm', 'ship', 'live', 'cm3', 'oh'];
-  function prodTable() {
-    if (!PD) return `<div class="card"><div class="cs">กำลังโหลดข้อมูลรายสินค้า…</div></div>`;
-    const hasCost = !!PD.has_unit_cost, by = {};
-    (PD.rows || []).forEach(a => { const r = {}; PCOLS.forEach((k, i) => r[k] = i < 3 ? a[i] : (a[i] == null ? null : +a[i]));
-      const o = by[r.sku] || (by[r.sku] = { sku: r.sku, name: r.name || r.sku, rev: 0, cogs: 0, ads: 0, kol: 0, pres: 0, promo: 0, mkt_id: 0, plat: 0, comm: 0, ship: 0, live: 0, cm3: 0, oh: 0, ch: {} });
-      PCOLS.slice(3).forEach(k => o[k] += r[k] || 0); o.ch[r.grp] = r; });
-    const list = Object.values(by).map(o => { o.cm1 = o.ads + o.kol + o.pres + o.promo + o.mkt_id; o.cm2 = o.plat + o.comm + o.ship + o.live;
-      o.pr = o.rev - (hasCost ? o.cogs : 0) - o.cm1 - o.cm2 - o.cm3 - o.oh; return o; }).filter(o => Math.abs(o.rev) + Math.abs(o.cm1) > 1).sort((a, b) => b.rev - a.rev);
-    const T = list.reduce((s, o) => { ['rev', 'cogs', 'cm1', 'cm2', 'cm3', 'oh', 'pr'].forEach(k => s[k] = (s[k] || 0) + o[k]); return s; }, {});
-    const t = sumP(A, B), mainCogs = (() => { let s = 0; for (let i = A; i <= B; i++) s += g([mainCogsKind(i)], i); return s; })();
-    const mp = (pr, rev) => { const p = rev ? pr / rev * 100 : 0; return `<span class="mpill ${p < 0 ? 'n' : 'p'}">${rev ? p.toFixed(1) + '%' : '—'}</span>`; };
-    const cogsCell = v => hasCost ? `<td>${fmt(v)}</td>` : `<td><span class="wait">รอไฟล์ต้นทุน</span></td>`;
-    let h = `<thead><tr><th style="text-align:left">สินค้า</th><th>รายได้สุทธิ</th><th>ต้นทุนสินค้า</th><th>การตลาดของสินค้า (CM1)</th><th>ค่าช่องทางขาย (CM2)</th><th>การตลาดส่วนกลาง (CM3)</th><th>ค่าบริหาร</th><th>${hasCost ? 'กำไร (ขาดทุน)' : 'กำไรก่อนหักต้นทุนสินค้า'}</th><th>อัตรากำไร</th></tr></thead><tbody>`;
-    list.forEach(o => {
-      h += `<tr class="pr" onclick="BI.togProd('${esc(o.sku)}')"><td><div class="lab"><span class="chev" style="${openProd[o.sku] ? 'transform:rotate(90deg)' : ''}">▸</span>${esc(o.name)}</div></td><td>${fmt(o.rev)}</td>${cogsCell(o.cogs)}<td>${fmt(o.cm1)}</td><td>${fmt(o.cm2)}</td><td>${fmt(o.cm3)}</td><td>${fmt(o.oh)}</td>
-        <td class="${o.pr < 0 ? 'neg' : 'pos'}" style="font-weight:700">${fmt(o.pr)}</td><td>${mp(o.pr, o.rev)}</td></tr>`;
-      if (openProd[o.sku]) {
-        const comp = [['Ads', o.ads], ['KOL และ Affiliate', o.kol], ['ค่า Presenter', o.pres], ['ค่าส่งเสริมการขาย', o.promo], ['การตลาดอื่นที่ระบุสินค้า', o.mkt_id], ['ค่า Platform', o.plat], ['ค่า Commission', o.comm], ['ค่าขนส่งสินค้า', o.ship], ['ค่า Live', o.live], ['การตลาดส่วนกลาง', o.cm3], ['ค่าบริหาร', o.oh]].filter(x => Math.abs(x[1]) >= .5);
-        const chs = Object.values(o.ch).map(r => ({ g: r.grp, rev: r.rev || 0, cost: (hasCost ? r.cogs || 0 : 0) + PCOLS.slice(5).reduce((s, k) => s + (r[k] || 0), 0) })).sort((a, b) => b.rev - a.rev);
-        h += `<tr class="det"><td colspan="9"><div class="det-grid">
-          <div><div class="cs" style="margin-bottom:4px">ค่าใช้จ่ายของสินค้านี้</div><table class="mini"><tbody>${comp.map(([n, v]) => `<tr><td>${n}</td><td>${fmt(v)}</td><td class="pct">${pctf(v, o.rev)}</td></tr>`).join('')}</tbody></table></div>
-          <div><div class="cs" style="margin-bottom:4px">แยกตามช่องทาง</div><table class="mini"><thead><tr><th>ช่องทาง</th><th>รายได้</th><th>ค่าใช้จ่าย</th><th>${hasCost ? 'กำไร' : 'กำไรก่อนต้นทุนสินค้า'}</th></tr></thead><tbody>
-            ${chs.map(c => `<tr><td>${esc(c.g)}</td><td>${fmt(c.rev)}</td><td>${fmt(c.cost)}</td><td class="${c.rev - c.cost < 0 ? 'neg' : 'pos'}">${fmt(c.rev - c.cost)}</td></tr>`).join('')}</tbody></table></div></div></td></tr>`;
-      }
-    });
-    h += `<tr class="sum"><td>รวมทุกสินค้า</td><td>${fmt(T.rev || 0)}</td>${hasCost ? `<td>${fmt(T.cogs || 0)}</td>` : '<td></td>'}<td>${fmt(T.cm1 || 0)}</td><td>${fmt(T.cm2 || 0)}</td><td>${fmt(T.cm3 || 0)}</td><td>${fmt(T.oh || 0)}</td><td class="${(T.pr || 0) < 0 ? 'neg' : 'pos'}">${fmt(T.pr || 0)}</td><td>${mp(T.pr || 0, T.rev || 0)}</td></tr>`;
-    h += `<tr class="co"><td>บวก รายได้อื่น (ระดับบริษัท)</td><td colspan="6"></td><td>${fmt(t.oth)}</td><td></td></tr>`;
-    const cogsCo = hasCost ? mainCogs - (T.cogs || 0) : mainCogs;
-    if (Math.abs(cogsCo) >= .5) h += `<tr class="co"><td>หัก ต้นทุนสินค้า${hasCost ? ' ส่วนที่ไม่มีต้นทุนต่อชิ้น' : ' (ทั้งบริษัท — รอไฟล์ต้นทุนรายสินค้า)'}</td><td colspan="6"></td><td class="neg">${fmt(-cogsCo)}</td><td></td></tr>`;
-    const op = (T.pr || 0) + t.oth - cogsCo;
-    h += `<tr class="sum big"><td>กำไร (ขาดทุน) จากการดำเนินงาน</td><td colspan="6"></td><td class="${op < 0 ? 'neg' : 'pos'}">${fmt(op)}</td><td></td></tr>`;
-    return `<div class="card"><div class="ch"><div><div class="ct">กำไร (ขาดทุน) แยกตามสินค้า ${tip('<b>รายได้</b> ยอดขายของบัญชีแต่ละช่องทาง แบ่งลงสินค้าตามสัดส่วนที่ขายจริงในระบบ<br><b>CM1 การตลาดของสินค้า</b> Ads ทั้งหมด, KOL / Affiliate, Presenter (เฉพาะสินค้าของแต่ละคน), ค่าส่งเสริมการขาย · ส่วนที่บัญชีระบุสินค้าไว้ลงสินค้านั้นก่อน<br><b>CM2 ค่าช่องทางขาย</b> ค่า Platform, Commission, ค่าขนส่ง, ค่า Live (Live TikTok แบ่งตามยอดขายใน Live)<br><b>CM3 การตลาดส่วนกลาง</b> แบ่งตามยอดขาย · <b>ค่าบริหาร</b> แบ่งตามยอดขาย<br>รวมทุกสินค้า + รายการระดับบริษัท = กำไรจากการดำเนินงานด้านบนพอดี · ใช้ต้นทุนตามคำสั่งซื้อ / Shipment')}</div>
-      <div class="cs">${hasCost ? 'ต้นทุนสินค้า = จำนวนที่ออก (รวมของแถม) × ต้นทุนต่อชิ้น ปรับให้รวมแต่ละช่องทางเท่าต้นทุนบัญชี' : 'ยังไม่มีต้นทุนต่อชิ้นรายสินค้า — กำไรรายสินค้าเป็นกำไรก่อนหักต้นทุนสินค้า และหักต้นทุนทั้งก้อนที่ระดับบริษัท'} · กดชื่อสินค้าเพื่อดูรายละเอียด</div></div></div>
-      <div class="scroll"><table class="prod">${h}</tbody></table></div></div>`;
-  }
-
+  // ---------- แท็บ: รายสินค้า (ตารางเดิม) ----------
+  const PROD_HTML = `<div style="display:none"><select id="plFrom"></select><select id="plTo"></select><span id="plPeriodNote"></span><div id="mktTopKpis"></div><div id="mktTopCh"></div></div><div class="card" id="plCard" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">กำไรขั้นบันไดต่อสินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM · Contribution Margin</b> = เงินที่สินค้าเหลือหลังหักค่าใช้จ่ายของตัวเอง<br>① หักค่าการตลาดที่ระบุสินค้าได้ + ค่า Ads ทั้งหมด → CM1<br>② หักค่า Platform / ช่องทาง → CM2<br>③ หักค่าการตลาดอื่น (ปันตามยอดขาย) → CM3<br>④ หักค่าบริหาร → สุทธิ<br>ตัวเลขจากไฟล์ต้นฉบับบัญชี รวมทุกสินค้าเท่ายอดบัญชี · ⚠️ ยังไม่หักทุนสินค้า (รอไฟล์ต้นทุนต่อชิ้น)</div></span></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <div class="pl-seg" id="plViewSeg"><button class="on" data-v="prod" onclick="plSetView('prod')">ตามสินค้า</button><button data-v="mx" onclick="plSetView('mx')">สินค้า × ช่องทาง</button></div>
+            <div class="pl-seg" id="plMetricSeg" style="display:none;"><button data-m="cm1" onclick="plSetMetric('cm1')">CM1</button><button class="on" data-m="cm2" onclick="plSetMetric('cm2')">CM2</button></div>
+            <button class="btn btn-ghost" style="white-space:nowrap;padding:6px 12px;font-size:12px;" onclick="exportPl()">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div id="plNote" style="font-size:11.5px;color:var(--text2);margin:-4px 0 12px;"></div>
+        <div id="plKpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
+        <div id="plMatrix" style="display:none;overflow-x:auto;"></div>
+        <div id="plTableWrap">
+          <table id="tblPl" class="mkt-tbl" data-no-sort style="table-layout:fixed;min-width:1180px;">
+            <colgroup><col style="width:17%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"></colgroup>
+            <thead><tr>
+              <th class="sortable-th c-left" onclick="plSort('name')">สินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-row')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-row" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">กดชื่อสินค้า = ดูผลแยกตามช่องทาง<br>กดตัวเลขค่าใช้จ่าย = ดูว่าก้อนนั้นประกอบด้วยอะไร (ยอดรวมเท่าตัวเลขที่กด)<br>ตัวเลขใหญ่ในช่อง CM = % ของยอดขาย · สีแดง = ติดลบ</div></span> <span class="sort-ind" id="pls-name"></span></th>
+              <th class="sortable-th" onclick="plSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-plh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-plh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดขาย<b>ของบัญชี</b> (ไม่รวม VAT) แต่ละช่องทาง แบ่งลงสินค้าตามสัดส่วนที่ขายจริงในระบบ · รวมทุกสินค้าเท่ายอดบัญชี</div></span> <span class="sort-ind" id="pls-rev"></span></th>
+              <th class="sortable-th" onclick="plSort('dir')">ค่าการตลาดตรง <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-dir')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-dir" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b>: ค่าที่บัญชีระบุสินค้านี้ไว้ (เช่น ค่ารีวิว KOL) · ค่า Presenter ตามสินค้าของแต่ละคน<br>👆 กดที่ตัวเลขเพื่อดูว่าประกอบด้วยอะไร</div></span> <span class="sort-ind" id="pls-dir"></span></th>
+              <th class="sortable-th" onclick="plSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่า Ads ตามบัญชี แบ่งลงสินค้าตามการผูก Ads กับสินค้า (Meta / TikTok / Shopee / Lazada)<br><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = Ads ที่ไม่ผูกสินค้า (awareness เพจ Live Promotion Shop Ads) ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="pls-ads"></span></th>
+              <th class="sortable-th pl-cm" onclick="plSort('cm1p')">CM1 <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm1')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm1" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM1 · Contribution Margin 1</b><br>ยอดขาย − ค่าการตลาดที่ระบุสินค้าได้ (KOL, Presenter ฯลฯ) − ค่า Ads ทั้งหมด</div></span> <span class="sort-ind" id="pls-cm1p"></span></th>
+              <th class="sortable-th" onclick="plSort('ch')">ค่า Platform <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-ch')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-ch" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง: ค่าธรรมเนียม/บริการ Platform · Commission · ค่าส่ง · Live — แบ่งตามยอดขายของสินค้าในช่องทางนั้น<br>👆 กดที่ตัวเลขเพื่อดูรายละเอียด</div></span> <span class="sort-ind" id="pls-ch"></span></th>
+              <th class="sortable-th pl-cm" onclick="plSort('cm2p')">CM2 <span title="ค่า Live TikTok ปันให้เฉพาะสินค้าที่ขายใน Live TikTok — ดูรายละเอียดที่ ⓘ" style="color:var(--orange);font-size:11px;cursor:help;">❗</span> <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm2')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm2" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM2 · Contribution Margin 2</b><br>CM1 − ค่า Platform / ช่องทาง (ค่าธรรมเนียม, Commission, ค่าส่ง, Live)</div></span> <span class="sort-ind" id="pls-cm2p"></span></th>
+              <th class="sortable-th" onclick="plSort('br')">การตลาดอื่น (ปัน) <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-br')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-br" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าการตลาดที่ระบุสินค้าไม่ได้ ปันตามสัดส่วนยอดขาย (ถ้าบัญชีลงไว้ที่ช่องทาง ปันตามยอดขายในช่องทางนั้น)<br>👆 กดที่ตัวเลขเพื่อดูรายละเอียด</div></span> <span class="sort-ind" id="pls-br"></span></th>
+              <th class="sortable-th pl-cm" onclick="plSort('cm3p')">CM3 <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-cm3')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-cm3" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>CM3 · Contribution Margin 3</b><br>CM2 − ค่าการตลาดที่ระบุสินค้าไม่ได้ ปันตามยอดขาย (Promotion, Affiliate, Rebranding, ที่ปรึกษา ฯลฯ)</div></span> <span class="sort-ind" id="pls-cm3p"></span></th>
+              <th class="sortable-th" onclick="plSort('oh')">ค่าบริหาร <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-oh')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-oh" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ค่าใช้จ่ายบริหารทั้งบริษัท (เงินเดือน ค่าเช่า ค่าสำนักงาน) แบ่งตามสัดส่วนยอดขายรวม</div></span> <span class="sort-ind" id="pls-oh"></span></th>
+              <th class="sortable-th pl-cm" onclick="plSort('netp')">สุทธิ <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-net2')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-net2" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>สุทธิ · Net Margin</b><br>CM3 − ค่าบริหารที่ปันตามยอดขาย (เงินเดือน ค่าเช่า ฯลฯ)<br>⚠️ ยังไม่หักทุนสินค้า</div></span> <span class="sort-ind" id="pls-netp"></span></th>
+            </tr></thead>
+            <tbody id="tbodyPl"><tr><td colspan="11" class="empty">กำลังโหลด…</td></tr></tbody>
+          </table>
+        </div>
+      </div>`;
   // ---------- วาด ----------
   function drawTop() { alerts(); kpis(); trend(); costStruct(); }
   function drawTab() {
     document.querySelectorAll('#biTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
-    document.getElementById('biTab').innerHTML = tab === 'prod' ? prodTable() : tab === 'ch' ? chTable() : plTable();
+    const el = document.getElementById('biTab');
+    if (tab === 'prod') { el.innerHTML = PROD_HTML; if (window.renderPl) window.renderPl(); return; }
+    el.innerHTML = tab === 'ch' ? chTable() : plTable();
   }
   const LAYOUT = `<div class="bi">
     <div class="bar-top"><div class="src" id="biSrc"></div>
@@ -357,13 +359,13 @@
       D = d; ISS = iss || []; build();
     } catch (e) { page.querySelector('#biTab').innerHTML = `<div class="error-banner" style="display:block;">โหลดข้อมูลบัญชีไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     if (!M.length) { page.querySelector('#biTab').innerHTML = '<div class="card"><div class="cs">ยังไม่มีข้อมูลบัญชี</div></div>'; return; }
-    const [a, b] = topMonthsFor('cost', M); A = Math.max(0, M.indexOf(a)); B = Math.max(A, M.indexOf(b));
+    const M7 = M.map(m => m.slice(0, 7));   // รูปแบบเดือนเดียวกับตารางเดิม (YYYY-MM) ตัวเลือกด้านบนจะได้ไม่สลับไปมา
+    const [a, b] = topMonthsFor('cost', M7); A = Math.max(0, M7.indexOf(a)); B = Math.max(A, M7.indexOf(b));
+    const tb = document.querySelector('.topbar'); page.style.setProperty('--bi-top', (tb ? Math.round(tb.getBoundingClientRect().height) : 0) + 'px');
     const sync = D.synced_at ? new Date(D.synced_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
     const bad = (D.checks || []).filter(c => +c.bad > 0).length, nm = (D.checks || []).length;
     document.getElementById('biSrc').innerHTML = `<span>งบกำไรขาดทุนตามไฟล์บัญชี · ไม่รวม VAT · ไม่รวม MO</span><span class="okp">${bad ? '⚠ ' : '✓ '}ตรงกับไฟล์บัญชี ${nm - bad}/${nm} เดือน</span><span>ข้อมูลบัญชีถึง ${PL_TH_M(M[M.length - 1])} · ดึงจากไฟล์ล่าสุด ${sync}</span>`;
-    drawTop(); PD = null; drawTab();
-    try { PD = await Auth.rpc('biz_product_data', { p_from: M[A], p_to: M[B] }); } catch (e) { PD = { rows: [], has_unit_cost: false }; }
-    if (tab === 'prod') drawTab();
+    drawTop(); drawTab();
   }
 
   window.BI = {
@@ -372,7 +374,6 @@
     setSplit: s => { split = s; drawTab(); },
     expandAll: () => { openAll = !openAll; drawTab(); },
     tog: tr => { const gid = tr.dataset.g; if (!gid) return; const o = !tr.classList.contains('open'); tr.classList.toggle('open', o); document.querySelectorAll(`.bi tr[data-p="${gid}"]`).forEach(r => r.style.display = o ? '' : 'none'); },
-    togProd: sku => { openProd[sku] = !openProd[sku]; drawTab(); },
     togAlert: () => { const el = document.getElementById('biAlert'); if (el.dataset.open) delete el.dataset.open; else el.dataset.open = '1'; alerts(); }
   };
   window.renderBizInsight = render;
