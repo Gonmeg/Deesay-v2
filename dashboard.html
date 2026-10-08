@@ -3175,7 +3175,7 @@ function loadFbAdminPage() {
   if (window._fbadminLoading) return;
   window._fbadminLoading = true;
   const s = document.createElement('script');
-  s.src = 'fbadmin.js?v=20261006b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbadmin.js
+  s.src = 'fbadmin.js?v=20261008a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbadmin.js
   s.onload = () => { window._fbadminLoading = false; if (currentPage === 'fbadmin') window.renderFbAdminPage(); };
   s.onerror = () => { window._fbadminLoading = false; document.getElementById('page-fbadmin').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbadmin.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
