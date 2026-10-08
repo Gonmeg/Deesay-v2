@@ -648,7 +648,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.08-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.08-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7919,8 +7919,9 @@ const PL_CH_ORDER = ['TikTok', 'Facebook', 'Shopee', 'Lazada', 'Modern Trade', '
 async function loadPlCh() {
   if (_plChRows) return _plChRows;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
-  const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_channel_pl_monthly?select=*&order=month.asc,parent_sku.asc,channel.asc`, h);
-  _plChRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));
+  // (2026-10-08) จากไฟล์ต้นฉบับบัญชี (v_biz_channel_pl_monthly) — ยอดขายของบัญชีไม่รวม VAT อยู่แล้ว ไม่ต้องหาร 1.07
+  const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_biz_channel_pl_monthly?select=*&order=month.asc,parent_sku.asc,channel.asc`, h);
+  _plChRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: +r.revenue || 0 }));
   return _plChRows;
 }
 function plChAgg(filterSku) {
@@ -7963,8 +7964,9 @@ const PL_TH_M = m => MONTHS_TH[parseInt(m.slice(5, 7)) - 1] + ' ' + (parseInt(m.
 async function loadPl() {
   if (_plRows) return _plRows;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
-  const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_pl_monthly?select=*&month=gte.2026-01-01&order=month.asc,parent_sku.asc`, h);
-  _plRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));   // ยอดขายถอด VAT ให้เทียบกับค่าใช้จ่ายบัญชี
+  // (2026-10-08) จากไฟล์ต้นฉบับบัญชี (v_biz_pl_monthly) — ทุกบรรทัดบัญชีแบ่งลงสินค้า รวมทุกสินค้าเท่ายอดบัญชี · ยอดขายไม่รวม VAT อยู่แล้ว
+  const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_biz_pl_monthly?select=*&month=gte.2026-01-01&order=month.asc,parent_sku.asc`, h);
+  _plRows = rows.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: +r.revenue || 0 }));
   _plMonths = [...new Set(_plRows.filter(r => +r.channel_cost || +r.overhead_cost).map(r => r.month))].sort();
   const opts = _plMonths.map(m => `<option value="${m}">${PL_TH_M(m)}</option>`).join('');
   const f = document.getElementById('plFrom'), t = document.getElementById('plTo');
@@ -7991,7 +7993,7 @@ async function renderPl() {
     return o;
   });
   const up = (_mktUnified && _mktUnified.uploads) || {};
-  document.getElementById('plNote').innerHTML = `📄 ข้อมูลบัญชี ${_plMonths.length ? PL_TH_M(_plMonths[0]) + ' – ' + PL_TH_M(_plMonths[_plMonths.length - 1]) : '—'} · <span style="color:var(--orange);">ยังไม่รวมต้นทุนสินค้า และค่าส่งเสริมการขาย Platform</span> ${plTip('tip-pl-note', 'ค่าใช้จ่ายจากงบแยกช่องทางที่บัญชีส่ง (ค่าขาย + ค่าบริหาร) · ค่า Ads ใช้ยอดจริงจาก Meta / TikTok / Shopee<br>ยังไม่รวม: ทุนสินค้า (ยังไม่มีข้อมูล) · ค่าส่งเสริมการขาย Platform (รอบัญชีแยก Commission กับส่วนลด)')}`;
+  document.getElementById('plNote').innerHTML = `📄 ไฟล์ต้นฉบับบัญชี ${_plMonths.length ? PL_TH_M(_plMonths[0]) + ' – ' + PL_TH_M(_plMonths[_plMonths.length - 1]) : '—'} · รวมทุกสินค้าเท่ายอดบัญชี · <span style="color:var(--orange);">ยังไม่หักต้นทุนสินค้า (รอไฟล์ต้นทุนต่อชิ้น)</span> ${plTip('tip-pl-note', 'ทุกบรรทัดค่าใช้จ่ายในไฟล์บัญชีแบ่งลงสินค้าตามกติกาเดิม: ส่วนที่บัญชีระบุสินค้าไว้ลงสินค้านั้นก่อน · Ads ตามการผูก Ads กับสินค้า · ค่าช่องทางตามยอดขายในช่องทาง · ค่า Live TikTok ตามยอดขายใน Live · ที่เหลือตามยอดขาย')}`;
   renderPlTop();
   document.getElementById('plTableWrap').style.display = _plMode === 'prod' ? '' : 'none';
   document.getElementById('plMatrix').style.display = _plMode === 'mx' ? '' : 'none';
@@ -8087,7 +8089,7 @@ function renderPlTable() {
   const pc = (v, base) => base > 0 ? (v / base * 100).toFixed(1) + '%' : '—';
   const kc = (label, v, sub, tk) => `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">${label} ${plTip('tip-plk-' + tk, PL_TIPS[tk])}</div><div class="kpi-value" style="font-size:20px;${v < 0 ? 'color:var(--red);' : ''}">${sub}</div><div style="font-size:11.5px;color:var(--text2);">฿${fmt(Math.round(v))}</div></div>`;
   document.getElementById('plKpis').innerHTML =
-    `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">ยอดขาย (ถอด VAT) ${plTip('tip-pl-vat1', VAT_TIP)}</div><div class="kpi-value" style="font-size:20px;">฿${fmt(Math.round(T.rev || 0))}</div></div>`
+    `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">ยอดขาย (ไม่รวม VAT) ${plTip('tip-pl-vat1', 'ยอดขายของบัญชีแต่ละช่องทาง แบ่งลงสินค้าตามสัดส่วนที่ขายจริงในระบบ')}</div><div class="kpi-value" style="font-size:20px;">฿${fmt(Math.round(T.rev || 0))}</div></div>`
     + kc('CM1 หลังค่าการตลาดตรง + Ads', T.cm1 || 0, pc(T.cm1, T.rev), 'cm1') + kc('CM2 หลังค่า Platform', T.cm2 || 0, pc(T.cm2, T.rev), 'cm2')
     + kc('CM3 หลังการตลาดอื่น (ปัน)', T.cm3 || 0, pc(T.cm3, T.rev), 'cm3') + kc('สุทธิ หลังค่าบริหาร', T.net || 0, pc(T.net, T.rev), 'net');
   const money = (v, rev) => v ? `<div>฿${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, rev)}</div>` : '<span style="color:var(--text3);">—</span>';
@@ -8115,17 +8117,17 @@ async function plDetail(sku) {
   const ck = sku + '|' + from + '|' + to;   // เก็บไว้ในเครื่อง กดสลับไม่ต้องโหลดใหม่
   let rows = [], lines = [];
   try {
-    rows = _plAllocCache[ck] = _plAllocCache[ck] || await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_product_cost_alloc?select=tier,layer,account_group,channel,amount&parent_sku=eq.${encodeURIComponent(sku)}&month=gte.${from}-01&month=lte.${to}-01&order=tier.asc,account_group.asc,channel.asc,month.asc`, h);
-    lines = _plLineCache[ck] = _plLineCache[ck] || await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_product_cost_lines?select=month,cost_category,amount,layer&parent_sku=eq.${encodeURIComponent(sku)}&month=gte.${from}-01&month=lte.${to}-01&order=month.asc,cost_category.asc`, h);
+    rows = _plAllocCache[ck] = _plAllocCache[ck] || await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_biz_cost_alloc?select=tier,layer,account_group,channel,amount&parent_sku=eq.${encodeURIComponent(sku)}&month=gte.${from}-01&month=lte.${to}-01&order=tier.asc,account_group.asc,channel.asc,month.asc`, h);
+    lines = _plLineCache[ck] = _plLineCache[ck] || await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_biz_cost_lines?select=month,cost_category,amount,layer&parent_sku=eq.${encodeURIComponent(sku)}&month=gte.${from}-01&month=lte.${to}-01&order=month.asc,cost_category.asc`, h);
   } catch (e) { el.textContent = 'โหลดไม่สำเร็จ: ' + e.message; return; }
   const group = (arr, key) => { const m = {}; arr.forEach(r => { m[r[key]] = (m[r[key]] || 0) + (+r.amount || 0); }); return Object.entries(m).filter(([, v]) => Math.abs(v) >= 0.5); };
   const tid = 'tip-pld-' + sku + '-' + metric;
   if (metric === 'dir') {
-    const g = bdFrom(group(lines.filter(r => r.layer === 'cm1'), 'cost_category')); if (o.pres >= 0.5) g.push({ label: 'Presenter (K.แก้มบุ๋ม)', amount: o.pres });
-    el.innerHTML = bdRender({ title: `ค่าการตลาดตรง · ${o.name}`, total: o.dir, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่บัญชีลงเป็นสินค้านี้โดยตรง (ตามหมวดบัญชี) + ค่า Presenter ที่ผูกสินค้า' });
+    const g = bdFrom(group(lines.filter(r => r.layer === 'cm1'), 'cost_category')); if (o.pres >= 0.5) g.push({ label: 'ค่า Presenter (ตามสินค้าของแต่ละคน)', amount: o.pres });
+    el.innerHTML = bdRender({ title: `ค่าการตลาดตรง · ${o.name}`, total: o.dir, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่บัญชีระบุสินค้านี้ไว้ (ตามหมวดบัญชี) + ค่า Presenter ตามสินค้าของแต่ละคน (แก้มบุ๋ม / กุ๊บกิ๊บ / มีน)' });
   } else if (metric === 'ads') {
     const g = plChAgg(sku).filter(x => x.ads >= 0.5).map(x => ({ label: x.ch, amount: x.ads, fixed: true, children: [{ label: 'Product Ads', amount: x.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: x.aa }] }));
-    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups: g, tipId: tid, tip: 'ยอดใช้จ่ายจริงจาก Meta / TikTok / Shopee / Lazada<br><b>Product Ads</b> = Ads ที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = Ads ที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
+    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups: g, tipId: tid, tip: 'ค่า Ads ตามบัญชี แบ่งลงสินค้าตามการผูก Ads กับสินค้า (Meta / TikTok / Shopee / Lazada)<br><b>Product Ads</b> = Ads ที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = Ads ที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
   } else if (metric === 'ch') {
     const g = bdFrom(group(rows.filter(r => r.layer === 'cm2'), 'account_group')).map(x => ({ ...x, children: bdFrom(group(rows.filter(r => r.layer === 'cm2' && r.account_group === x.label && r.tier === 'channel'), 'channel'))
       .map(c => x.label === 'ค่าไลฟ์' && c.label === 'TikTok' ? { ...c, label: 'TikTok ❗ ปันเฉพาะสินค้าที่ขายใน Live' } : c) }));   // (2026-09-30) ค่าไลฟ์ TikTok ปันตามยอดในไลฟ์
@@ -9089,7 +9091,7 @@ function renderCostPage() {
   if (window._biLoading) return;
   window._biLoading = true;
   const s = document.createElement('script');
-  s.src = 'bizinsight.js?v=20261008a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
+  s.src = 'bizinsight.js?v=20261008b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
   s.onload = () => { window._biLoading = false; if (currentPage === 'cost') window.renderBizInsight(); };
   s.onerror = () => { window._biLoading = false; document.getElementById('page-cost').innerHTML = '<div class="error-banner" style="display:block;">โหลด bizinsight.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
