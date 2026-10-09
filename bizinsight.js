@@ -1,4 +1,4 @@
-// bizinsight.js (v20261008c) — Business Insight จากไฟล์ต้นฉบับบัญชี (Google Sheet เผยแพร่ ดึงอัตโนมัติ → acct_src_lines)
+// bizinsight.js (v20261009a) — Business Insight จากไฟล์ต้นฉบับบัญชี (Google Sheet เผยแพร่ ดึงอัตโนมัติ → acct_src_lines)
 // ทุกยอดรวมเท่าไฟล์บัญชี (คอลัมน์ "ใช้ช่องนี้ หัก MO") · ส่วนบน = ทั้งบริษัท · แท็บ รายสินค้า / รายช่องทาง / งบกำไรขาดทุน
 // RPC: biz_insight_data (บรรทัดบัญชี + รายช่องทาง), biz_insight_issues (แถบแจ้งเตือน)
 // (b) แท็บรายสินค้า = ตารางกำไรขั้นบันไดแบบเดิม (renderPl ใน dashboard.html) ที่เปลี่ยนไปอ่าน v_biz_pl_monthly / v_biz_channel_pl_monthly / v_biz_cost_alloc / v_biz_cost_lines
@@ -359,14 +359,17 @@
     const page = document.getElementById('page-cost'); if (!page) return;
     if (!page.dataset.bi) { page.innerHTML = LAYOUT; page.dataset.bi = '1';
       page.querySelectorAll('#biBasis button').forEach(b => b.onclick = () => { basis = b.dataset.v; page.querySelectorAll('#biBasis button').forEach(x => x.classList.toggle('on', x === b)); drawTop(); if (tab === 'pl') drawTab(); }); }
+    const seq = (render._seq = (render._seq || 0) + 1);
     try {
       const [d, iss] = await Promise.all([Auth.rpc('biz_insight_data', { p_from: '2026-01-01' }), Auth.rpc('biz_insight_issues', {}).catch(() => [])]);
+      if (seq !== render._seq) return;   // มีการโหลดรอบใหม่แล้ว
       D = d; ISS = iss || []; build();
     } catch (e) { page.querySelector('#biTab').innerHTML = `<div class="error-banner" style="display:block;">โหลดข้อมูลบัญชีไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     if (!M.length) { page.querySelector('#biTab').innerHTML = '<div class="card"><div class="cs">ยังไม่มีข้อมูลบัญชี</div></div>'; return; }
     const M7 = M.map(m => m.slice(0, 7));   // รูปแบบเดือนเดียวกับตารางเดิม (YYYY-MM) ตัวเลือกด้านบนจะได้ไม่สลับไปมา
     const [a, b] = topMonthsFor('cost', M7); A = Math.max(0, M7.indexOf(a)); B = Math.max(A, M7.indexOf(b));
-    const tb = document.querySelector('.topbar'); page.style.setProperty('--bi-top', (tb ? Math.round(tb.getBoundingClientRect().height) : 0) + 'px');
+    const setTop = () => { const tb = document.querySelector('.topbar'); page.style.setProperty('--bi-top', (tb ? Math.round(tb.getBoundingClientRect().height) : 0) + 'px'); };
+    setTop(); if (!window._biResize) { window._biResize = true; window.addEventListener('resize', () => { const p = document.getElementById('page-cost'); if (p && p.dataset.bi) { const tb = document.querySelector('.topbar'); p.style.setProperty('--bi-top', (tb ? Math.round(tb.getBoundingClientRect().height) : 0) + 'px'); } }); }
     const sync = D.synced_at ? new Date(D.synced_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
     const bad = (D.checks || []).filter(c => +c.bad > 0).length, nm = (D.checks || []).length;
     document.getElementById('biSrc').innerHTML = `<span>งบกำไรขาดทุนตามไฟล์บัญชี · ไม่รวม VAT · ไม่รวม MO</span><span class="okp">${bad ? '⚠ ' : '✓ '}ตรงกับไฟล์บัญชี ${nm - bad}/${nm} เดือน</span><span>ข้อมูลบัญชีถึง ${PL_TH_M(M[M.length - 1])} · ดึงจากไฟล์ล่าสุด ${sync}</span>`;
