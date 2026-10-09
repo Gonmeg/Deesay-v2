@@ -1,3 +1,4 @@
+// fbads.js v20261009a — ข้อมูลช่วงที่ไม่เปลี่ยนเก็บไว้ในเครื่อง (sigCachedRpc + fb_ads_page_check) ไม่ต้องดาวน์โหลดซ้ำ
 // fbads.js v20261002c — คำอธิบาย ⓘ กระชับขึ้น (ไม่มีชื่อตารางในระบบบนหน้าจอ)
 // fbads.js v20261002b — คำอธิบาย ⓘ ส่วน KOL สั้นลง
 // fbads.js v20261002a — การ์ดค่า Ads รวมบอกส่วนที่เป็น Ads งาน KOL (ชุดเดียวกับหน้า KOL, RPC kol_job) + boost KOL ที่ยังผูกงานไม่ได้ · ตารางเพจบอกส่วน KOL ของแต่ละเพจ
@@ -196,7 +197,9 @@
     const from = getDateValue('From'), to = getDateValue('To');
     document.getElementById('fba-kpis').innerHTML = Array.from({ length: 5 }, () => `<div class="card" style="flex:1;min-width:150px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
     try {
-      const [d] = await Promise.all([supaRpc('fb_ads_page', { p_from: from, p_to: to }), loadKolReview()]);
+      // (2026-10-09) ช่วงที่ข้อมูลไม่เปลี่ยน ใช้ผลที่เก็บไว้ในเครื่อง ไม่ต้องดาวน์โหลดใหม่ (ถามแค่ลายนิ้วมือข้อมูลก่อน)
+      const getPage = window.sigCachedRpc ? sigCachedRpc('fb_ads_page', { p_from: from, p_to: to }, 'fb_ads_page_check') : supaRpc('fb_ads_page', { p_from: from, p_to: to });
+      const [d] = await Promise.all([getPage, loadKolReview()]);
       if (seq !== _seq) return;
       _data = d;
       // ตัวกรอง
