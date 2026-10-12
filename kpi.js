@@ -1,4 +1,4 @@
-// kpi.js (v20261007c) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
+// kpi.js (v20261012a) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
 // เป้ารายเดือน ต่อสินค้า (parent) ต่อช่องทาง · กรอกเป็นชิ้น → เป้าเงิน = ชิ้น × ราคาเฉลี่ยต่อชิ้นจริง 3 เดือนก่อนเดือนเป้า (ล็อกเมื่อเดือนจบ: kpi_price_lock)
 // ที่มา: RPC kpi_page(p_month) — ยอดจริงจาก mv_sku_daily (แหล่งเดียวกับเจาะสินค้า / แนวโน้มสินค้า) นับถึงเมื่อวาน · บันทึก: RPC kpi_set_targets (ตรวจสิทธิ์ + เก็บประวัติ)
 // สิทธิ์แก้ = ผู้ดูแลระบบ + คนที่ติ๊ก "แก้เป้า KPI" ใน Admin · เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ
@@ -149,6 +149,21 @@
     const tk = tick != null ? `<i style="left:${Math.min(100, tick * 100).toFixed(1)}%"></i>` : '';
     return `<div class="kp-p ${st.c}${wide ? ' is-wide' : ''}"><span class="kp-bar" style="--c:${barColor(st.c)}"><b style="width:${w.toFixed(1)}%"></b>${tk}</span><span class="kp-pct">${pct.toFixed(pct > 0 && pct < 1 ? 1 : 0)}%</span></div>`;
   }
+  // (2026-10-12) "ตามจังหวะ" = ทำได้ ÷ ควรได้ถึงวันที่ข้อมูลมี (เฉพาะออนไลน์) · 100% = ตรงเป้า · แถบเต็มที่ 150% · ขีด = 100%
+  const paceOf = g => g.ot > 0 && g.ex > 0 ? g.oa / g.ex : null;
+  function paceProg(g, st, wide) {
+    const r = paceOf(g); if (r == null) return prog(g, st, null, wide);
+    const w = Math.max(0, Math.min(1.5, r)) / 1.5 * 100, pct = r * 100;
+    return `<div class="kp-p ${st.c}${wide ? ' is-wide' : ''}"><span class="kp-bar" style="--c:${barColor(st.c)}"><b style="width:${w.toFixed(1)}%"></b><i style="left:66.7%"></i></span><span class="kp-pct">${pct.toFixed(pct > 0 && pct < 1 ? 1 : 0)}%</span></div>`;
+  }
+  function ofTarget(g, wide) {   // % ของเป้าทั้งเดือน สีเทา (ตัวแทน / MT ที่สั่งเป็นก้อน)
+    if (g.t == null || g.t <= 0) return `<div class="kp-p flat">${g.a > 0 ? 'ไม่มีเป้า' : ''}</div>`;
+    const pct = g.a / g.t * 100, w = Math.max(0, Math.min(100, pct));
+    return `<div class="kp-p flat${wide ? ' is-wide' : ''}"><span class="kp-bar" style="--c:var(--text3)"><b style="width:${w.toFixed(1)}%"></b></span><span class="kp-pct">${pct.toFixed(pct > 0 && pct < 1 ? 1 : 0)}%</span></div>`;
+  }
+  const lagDays = iso => iso && YEST ? Math.round((Date.parse(YEST) - Date.parse(iso)) / 864e5) : 0;
+  const subL = t => `<div style="font-size:10.5px;color:var(--text3);font-weight:400;">${t}</div>`;
+  const PACE_INFO = `<b>ตามจังหวะ</b> = ทำได้ ÷ ควรได้ถึงวันที่ข้อมูลมี · <b>100% = ตรงเป้า</b> มากกว่า = นำ น้อยกว่า = ช้า · ขีดบนแถบ = 100%<br>ควรได้ = เป้าเดือน ÷ จำนวนวันในเดือน × วันที่ข้อมูลมี (แบ่งเท่ากันทุกวัน)<br>สถานะ: ≥105% นำเป้า · 95–105% ตามเป้า · ต่ำกว่า 95% ช้ากว่าเป้า<br><b>คาดการณ์สิ้นเดือน</b> = ทำได้ ÷ วันที่ข้อมูลมี × จำนวนวันในเดือน (= เป้า × ตามจังหวะ)`;
   const gapTxt = (v, fm) => Math.round(v) === 0 ? '<span class="ui-delta flat">ตรงเป้า</span>'
     : v > 0 ? `<span class="ui-delta good">▲ นำ ${fm(v)}</span>` : `<span class="ui-delta bad">▼ ช้ากว่า ${fm(-v)}</span>`;
   const diffTxt = (v, fm) => Math.round(v) === 0 ? '<span class="ui-delta flat">ตรงเป้า</span>'
@@ -304,29 +319,41 @@
   }
 
   function chPanel(K) {
-    const u = S.unit, fm = fmU(u), lc = lastComplete(S.mo);
-    const head = K.st === 'cur' ? ['ช่องทาง', 'เป้า', 'ทำได้', 'ความคืบหน้า', 'ควรได้ถึงวันนี้', 'นำ / ช้า', 'คาดการณ์สิ้นเดือน', 'ข้อมูลถึง', 'สถานะ']
+    const u = S.unit, fm = fmU(u), lc = lastComplete(S.mo), dash = '<span class="ui-muted">—</span>';
+    const head = K.st === 'cur' ? ['ช่องทาง', 'เป้าเดือน', 'ทำได้', 'ตามจังหวะ', 'นำ / ช้า', 'คาดการณ์สิ้นเดือน', 'ข้อมูลถึง', 'สถานะ']
       : K.st === 'past' ? ['ช่องทาง', 'เป้า', 'ทำได้', 'ความคืบหน้า', 'ผลต่าง', 'สถานะ'] : ['ช่องทาง', 'เป้า', `ยอดจริง ${mShort(lc)} *`, 'เป้าเทียบยอดจริง', 'เป้าต่อวัน'];
-    const row = (c, g, isTot) => {
-      const st = status(K, g), name = isTot ? 'รวม' : `<span class="hm-ch-name is-link" onclick="kpSetChannel('${c}')" data-tip="ดูเฉพาะ ${esc(c)}">${dot(c)}${esc(c)}</span>`;
-      const t = g.t != null ? fm(g.t) : '<span class="ui-muted">—</span>';
+    // kind: '' = ช่องทาง · 'tot' = รวม (เดือนที่จบ / เดือนหน้า) · 'on' = รวมออนไลน์ · 'all' = รวมทั้งหมด (+ ตัวแทน, MT)
+    const row = (c, g, kind) => {
+      const isTot = !!kind, st = status(K, g);
+      const name = kind === 'on' ? '<b>รวมออนไลน์</b>' : kind === 'all' ? 'รวมทั้งหมด <small class="kp-scope">+ ตัวแทน, MT</small>' : kind === 'tot' ? 'รวม'
+        : `<span class="hm-ch-name is-link" onclick="kpSetChannel('${c}')" data-tip="ดูเฉพาะ ${esc(c)}">${dot(c)}${esc(c)}</span>`;
+      const t = g.t != null ? fm(g.t) : dash;
       if (K.st === 'future') {
         const la = isTot ? lcRows(CH, u) : lcRows([c], u);
         return `<tr><td>${name}</td><td class="num">${t}</td><td class="num">${fm(la)}</td><td class="num">${g.t != null && la > 0 ? diffPct(g.t, la) : '—'}</td><td class="num">${g.t != null ? fm(g.t / K.n) : '—'}</td></tr>`;
       }
-      const tick = K.st === 'cur' ? (isTot ? K.now / K.n : isBulk(c) ? null : K.el[c] / K.n) : null;
       if (K.st === 'past') return `<tr><td>${name}</td><td class="num">${t}</td><td class="num">${fm(g.a)}</td><td class="num">${prog(g, st, null, true)}</td><td class="num">${g.t != null ? diffTxt(g.a - g.t, fm) : '—'}</td><td>${badge(st)}</td></tr>`;
-      const bulk = !isTot && isBulk(c), dash = '<span class="ui-muted">—</span>';
-      const on = isTot ? ' <small class="kp-scope">ออนไลน์</small>' : '';
-      const upto = isTot ? '' : bulk ? `<span class="ui-muted">${c === 'ตัวแทน' ? 'สั่งเป็นก้อน' : 'ยอดรายเดือน'}</span>` : (K.last[c] ? dShort(K.last[c]) : dash) + (K.last[c] && K.last[c] < YEST ? ' <span class="ui-badge warn">ยังไม่ครบ</span>' : '');
-      return `<tr><td>${name}</td><td class="num">${t}</td><td class="num">${fm(g.a)}</td><td class="num">${prog(g, st, tick, true)}</td>
-        <td class="num">${bulk || !g.ot ? dash : fm(g.ex) + on}</td><td class="num">${bulk || !g.ot ? dash : gapTxt(g.oa - g.ex, fm)}</td>
-        <td class="num">${bulk || !g.oa ? dash : fm(g.pj) + on}</td><td class="num">${upto}</td><td>${badge(st)}</td></tr>`;
+      // เดือนปัจจุบัน
+      if (kind === 'all') return `<tr><td>${name}</td><td class="num">${t}</td><td class="num">${fm(g.a)}${g.t ? subL((g.a / g.t * 100).toFixed(0) + '% ของเป้าเดือน') : ''}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td></td><td></td></tr>`;
+      const bulk = !isTot && isBulk(c);
+      const ofT = !bulk && g.t ? subL((g.a / g.t * 100).toFixed(0) + '% ของเป้าเดือน') : '';
+      const lag = !isTot && !bulk && K.last[c] ? lagDays(K.last[c]) : 0;
+      const upto = isTot ? '' : bulk ? `<span class="ui-muted">${c === 'ตัวแทน' ? 'สั่งเป็นก้อน' : 'ยอดรายเดือน'}</span>`
+        : (K.last[c] ? dShort(K.last[c]) : dash) + (lag > 0 ? ` <span class="ui-badge warn" data-tip="ข้อมูลยังมาไม่ถึงเมื่อวาน · ตามจังหวะคิดถึงวันที่ข้อมูลมี จึงยังเทียบได้ยุติธรรม">ขาด ${lag} วัน</span>` : '');
+      const exTip = !bulk && g.ot ? ` data-tip="${esc('ควรได้ถึง' + (isTot ? 'วันที่ข้อมูลแต่ละช่องทางมี' : ' ' + dShort(K.last[c] || YEST)) + ' ' + fm(g.ex) + ' · ทำได้ ' + fm(g.oa))}"` : '';
+      return `<tr><td>${name}</td><td class="num">${t}</td><td class="num">${fm(g.a)}${ofT}</td>
+        <td class="num"${exTip}>${bulk ? ofTarget(g, true) : paceProg(g, st, true)}</td>
+        <td class="num">${bulk || !g.ot ? dash : gapTxt(g.oa - g.ex, fm)}</td>
+        <td class="num">${bulk || !g.oa ? dash : fm(g.pj)}</td><td class="num">${upto}</td><td>${badge(st)}</td></tr>`;
     };
-    const body = CH.map(c => row(c, tot(K, [c], u))).join('');
-    return `<div class="hm-panel-h"><h2>แยกตามช่องทาง ${info('kp-i-cht', `กดชื่อช่องทางเพื่อดูเฉพาะช่องทางนั้นทั้งหน้า<br><b>ความคืบหน้า</b> ทำได้ ÷ เป้าทั้งเดือน · ขีดเล็ก = ผ่านไปกี่ % ของเดือน<br><b>ตัวแทน</b> สั่งเป็นก้อน · <b>Modern Trade</b> ห้างส่งยอดเป็นรายเดือน จึงไม่คิด "ควรได้ถึงวันนี้" และ "คาดการณ์" ดูผลตอนสิ้นเดือน${K.st === 'future' ? `<br><b>ยอดจริง ${mShort(lc)} *</b> นับเฉพาะสินค้าในตาราง เพื่อเทียบกับเป้าแบบรายการเดียวกัน` : ''}`)}</h2></div>
+    const body = CH.map(c => row(c, tot(K, [c], u), '')).join('');
+    const foot = K.st === 'cur' ? row('', tot(K, ONLINE, u), 'on') + row('', tot(K, CH, u), 'all') : row('', tot(K, CH, u), 'tot');
+    const infoTxt = K.st === 'cur'
+      ? `กดชื่อช่องทางเพื่อดูเฉพาะช่องทางนั้นทั้งหน้า<br>${PACE_INFO}<br><b>ตัวแทน</b> สั่งเป็นก้อน · <b>Modern Trade</b> ห้างส่งยอดเป็นรายเดือน จึงไม่คิดตามจังหวะ แสดงเป็น % ของเป้าทั้งเดือน (สีเทา) ดูผลตอนสิ้นเดือน<br><b>รวมออนไลน์</b> ใช้วัดว่าเดือนนี้ไปได้ดีไหม · <b>รวมทั้งหมด</b> รวมตัวแทน + MT ไว้ดูยอดเงินรวม`
+      : `กดชื่อช่องทางเพื่อดูเฉพาะช่องทางนั้นทั้งหน้า<br><b>ความคืบหน้า</b> ทำได้ ÷ เป้าทั้งเดือน${K.st === 'future' ? `<br><b>ยอดจริง ${mShort(lc)} *</b> นับเฉพาะสินค้าในตาราง เพื่อเทียบกับเป้าแบบรายการเดียวกัน` : ''}`;
+    return `<div class="hm-panel-h"><h2>แยกตามช่องทาง ${info('kp-i-cht', infoTxt)}</h2></div>
       <div class="table-wrap"><table class="ui-table hm-tbl kp-tbl" data-no-sort data-no-page><thead><tr>${head.map((x, i) => `<th${i && x !== 'สถานะ' ? ' class="num"' : ''}>${x}</th>`).join('')}</tr></thead>
-      <tbody>${body}</tbody><tfoot>${row('', tot(K, CH, u), true)}</tfoot></table></div>`;
+      <tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>`;
   }
   const diffPct = (a, b) => `<span class="ui-delta ${a >= b ? 'good' : 'bad'}">${a >= b ? '▲' : '▼'} ${Math.abs((a / b - 1) * 100).toFixed(1)}%</span>`;
 
@@ -371,7 +398,7 @@
       <input type="search" class="kp-search" id="kpSearch" placeholder="ค้นหาสินค้า / รหัส" value="${esc(S.q)}" aria-label="ค้นหาสินค้า">
       ${K.st === 'future' ? '' : `<div class="ui-presets" id="kpStFilter" role="group" aria-label="กรองตามสถานะ"><button type="button" data-st="" aria-pressed="${!S.st}">ทั้งหมด</button>${stLabels.map(([k, l]) => `<button type="button" data-st="${k}" aria-pressed="${S.st === k}">${l}</button>`).join('')}<button type="button" data-st="none" aria-pressed="${S.st === 'none'}">ไม่มีเป้า</button></div>`}
       <label class="kp-chk"><input type="checkbox" id="kpDisc" ${S.showDisc ? 'checked' : ''}> แสดงสินค้าเลิกผลิต</label></div>`;
-    const infoTxt = `<b>สินค้าที่แสดง</b> สินค้าปกติ / สินค้าใหม่ที่มียอดใน 3 เดือนล่าสุด และทุกสินค้าที่ตั้งเป้าไว้ · ของแถม (ราคา 0) ไม่แสดง<br><b>สินค้าอื่น</b> ยอดของสินค้าที่ไม่ได้แสดงและของแถม เพื่อให้แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br>${S.F ? '' : 'ชี้ที่ช่องเพื่อดูเป้า / ควรได้ถึงวันนี้ / คาดการณ์ของช่องนั้น<br>'}กดชื่อสินค้าเพื่อเปิดหน้าเจาะสินค้า`;
+    const infoTxt = (K.st === 'cur' ? `<b>% ในตาราง</b> ช่องออนไลน์ = ตามจังหวะ (100% = ตรงเป้าถึงวันนี้ · ขีดบนแถบ = 100%) · ตัวแทน / MT = % ของเป้าทั้งเดือน (สีเทา ไม่นับเข้าสี เพราะสั่งเป็นก้อน) · คอลัมน์รวม = ยอดทุกช่องทาง แต่สีและ % คิดเฉพาะออนไลน์<br>` : '') + `<b>สินค้าที่แสดง</b> สินค้าปกติ / สินค้าใหม่ที่มียอดใน 3 เดือนล่าสุด และทุกสินค้าที่ตั้งเป้าไว้ · ของแถม (ราคา 0) ไม่แสดง<br><b>สินค้าอื่น</b> ยอดของสินค้าที่ไม่ได้แสดงและของแถม เพื่อให้แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br>${S.F ? '' : 'ชี้ที่ช่องเพื่อดูเป้า / ควรได้ถึงวันนี้ / คาดการณ์ของช่องนั้น<br>'}กดชื่อสินค้าเพื่อเปิดหน้าเจาะสินค้า`;
     let head, body, foot;
     // แถว "สินค้าอื่น" + "รวม" (= ตัวเลขหลัก)
     const chs = S.F ? [S.F] : CH, shown = new Set(rowSkus(S.mo));
@@ -383,21 +410,35 @@
         const g = agg(K, [{ c, x }], u), st = status(K, g);
         if (K.st === 'future') { const la = act(lc, sku, c)[u === 'rev' ? 1 : 0]; return `<td class="num kp-cell"><div class="kp-a">${g.t != null ? fm(g.t) : '<span class="ui-muted">—</span>'}</div><div class="kp-p flat">${la ? mShort(lc) + ' ' + fm(la) : ''}</div></td>`; }
         if (!g.a && g.t == null) return '<td class="num kp-cell"><span class="ui-muted">—</span></td>';
-        if (K.st === 'cur' && isBulk(c) && !g.a) return `<td class="num kp-cell" data-tip="${esc(c + (c === 'ตัวแทน' ? ' สั่งเป็นก้อน' : ' ห้างส่งยอดเป็นรายเดือน') + ' · ยังไม่มียอดเดือนนี้ · เป้า ' + fm(g.t))}"><div class="kp-a"><span class="ui-muted">—</span></div><div class="kp-p flat">เป้า ${fm(g.t)}</div></td>`;
-        const tick = K.st === 'cur' && !isBulk(c) ? K.el[c] / K.n : null;
+        if (K.st === 'cur') {   // (2026-10-12) ออนไลน์ = ตามจังหวะ · ตัวแทน / MT = % ของเป้าทั้งเดือน สีเทา · มีเป้าแต่ยังไม่มียอด = ฿0
+          if (isBulk(c)) return `<td class="num kp-cell" data-tip="${esc(c + (c === 'ตัวแทน' ? ' สั่งเป็นก้อน' : ' ห้างส่งยอดเป็นรายเดือน') + ' · % ของเป้าทั้งเดือน' + (g.t != null ? ' · เป้า ' + fm(g.t) : ''))}"><div class="kp-a">${fm(g.a)}</div>${ofTarget(g)}</td>`;
+          const tipC = g.t != null ? `${c} · เป้าเดือน ${fm(g.t)} · ควรได้ถึงวันนี้ ${fm(g.ex)} · ทำได้ ${fm(g.a)} · คาดการณ์ ${fm(g.pj)} · ${st.l}` : `${c} · ยังไม่ได้ตั้งเป้า`;
+          return `<td class="num kp-cell" data-tip="${esc(tipC)}"><div class="kp-a">${fm(g.a)}</div>${g.t != null ? paceProg(g, st) : '<div class="kp-p flat">ไม่มีเป้า</div>'}</td>`;
+        }
+        const tick = null;
         const tip = g.t != null ? `${c} · เป้า ${fm(g.t)}${K.st === 'cur' && !isBulk(c) ? ` · ควรได้ถึงวันนี้ ${fm(g.ex)} · คาดการณ์ ${fm(g.pj)}` : ''} · ${st.l}` : `${c} · ยังไม่ได้ตั้งเป้า`;
         return `<td class="num kp-cell" data-tip="${esc(tip)}"><div class="kp-a">${fm(g.a)}</div>${prog(g, st, tick)}</td>`;
       };
+      // (2026-10-12) คอลัมน์รวม: ยอด = ทุกช่องทาง · % = ตามจังหวะเฉพาะออนไลน์ (ตัวแทน / MT สั่งเป็นก้อน ไม่นับเข้าสี)
+      const totCell = (g, cells) => {
+        if (K.st !== 'cur') return `<td class="num kp-cell kp-tot" data-tip="${esc(`รวม · เป้า ${g.t != null ? fm(g.t) : '—'} · ${status(K, g).l}`)}"><div class="kp-a">${fm(g.a)}</div>${prog(g, status(K, g), null)}</td>`;
+        const gOn = agg(K, cells.filter(x => !isBulk(x.c)), u), stOn = status(K, gOn), bulkA = g.a - gOn.a;
+        const tipT = `รวมทุกช่องทาง ${fm(g.a)}${g.t != null ? ' · เป้าเดือน ' + fm(g.t) : ''}` + (gOn.ot ? ` · % = ตามจังหวะเฉพาะออนไลน์ (ทำได้ ${fm(gOn.oa)} ÷ ควรได้ ${fm(gOn.ex)})` : '') + (bulkA ? ` · ตัวแทน/MT ${fm(bulkA)} ไม่นับเข้าสี` : '');
+        return `<td class="num kp-cell kp-tot" data-tip="${esc(tipT)}"><div class="kp-a">${fm(g.a)}</div>${gOn.ot ? paceProg(gOn, stOn) : ofTarget(g)}</td>`;
+      };
       body = view.map(r => `<tr>${nmCell(r.s)}${r.cells.map(({ c, x }) => mcell(c, x, r.s)).join('')}${K.st === 'future'
         ? `<td class="num kp-cell"><div class="kp-a">${r.g.t != null ? fm(r.g.t) : '—'}</div></td>`
-        : `<td class="num kp-cell kp-tot" data-tip="${esc(`รวม · เป้า ${r.g.t != null ? fm(r.g.t) : '—'} · ${r.st.l}`)}"><div class="kp-a">${fm(r.g.a)}</div>${prog(r.g, r.st, K.st === 'cur' ? K.now / K.n : null)}</td>`}</tr>`).join('');
+        : totCell(r.g, r.cells)}</tr>`).join('');
       const totC = CH.map(c => tot(K, [c], u)), all = tot(K, CH, u);
-      const fcell = g => { const st = status(K, g); return K.st === 'future' ? `<td class="num"><div class="kp-a">${g.t != null ? fm(g.t) : '—'}</div></td>` : `<td class="num kp-cell"><div class="kp-a">${fm(g.a)}</div>${prog(g, st, null)}</td>`; };
+      const fcell = (g, c) => { const st = status(K, g); return K.st === 'future' ? `<td class="num"><div class="kp-a">${g.t != null ? fm(g.t) : '—'}</div></td>`
+        : K.st === 'cur' ? `<td class="num kp-cell"><div class="kp-a">${fm(g.a)}</div>${c && isBulk(c) ? ofTarget(g) : g.ot ? paceProg(g, st) : ofTarget(g)}</td>`
+        : `<td class="num kp-cell"><div class="kp-a">${fm(g.a)}</div>${prog(g, st, null)}</td>`; };
+      const allOn = tot(K, ONLINE, u);
       foot = `<tr class="kp-other"><td>สินค้าอื่น <span class="ui-muted">(ไม่ได้ตั้งเป้า + ของแถม)</span></td>${others.map(o => `<td class="num">${K.st === 'future' ? '' : fm(u === 'rev' ? o.x.ar : o.x.aq)}</td>`).join('')}<td class="num">${K.st === 'future' ? '' : fm(oG.a)}</td></tr>
-        <tr><td>รวม</td>${totC.map(fcell).join('')}${fcell(all)}</tr>`;
+        <tr><td>รวม</td>${totC.map((g, k) => fcell(g, CH[k])).join('')}${K.st === 'cur' ? `<td class="num kp-cell kp-tot"><div class="kp-a">${fm(all.a)}</div>${paceProg(allOn, status(K, allOn))}</td>` : fcell(all)}</tr>`;
     } else {
       const c = S.F, bulk = isBulk(c), dash = '<span class="ui-muted">—</span>';
-      const cols = K.st === 'cur' ? [th('สินค้า', 'name', ''), th('เป้า', 't'), th('ทำได้', 'a'), th('ความคืบหน้า', 'pct'), th('ควรได้ถึงวันนี้', 'ex'), th('นำ / ช้า', 'gap'), th('คาดการณ์สิ้นเดือน', 'pj'), th('ราคาเฉลี่ย/ชิ้น', 'price'), '<th>สถานะ</th>']
+      const cols = K.st === 'cur' ? [th('สินค้า', 'name', ''), th('เป้าเดือน', 't'), th('ทำได้', 'a'), th(bulk ? 'ความคืบหน้า' : 'ตามจังหวะ', 'pct'), th('นำ / ช้า', 'gap'), th('คาดการณ์สิ้นเดือน', 'pj'), th('ราคาเฉลี่ย/ชิ้น', 'price'), '<th>สถานะ</th>']
         : K.st === 'past' ? [th('สินค้า', 'name', ''), th('เป้า', 't'), th('ทำได้', 'a'), th('ความคืบหน้า', 'pct'), th('ผลต่าง', 'gap'), th('ราคาเฉลี่ย/ชิ้น', 'price'), '<th>สถานะ</th>']
           : [th('สินค้า', 'name', ''), th('เป้า', 't'), `<th class="num">ยอดจริง ${mShort(lc)}</th>`, '<th class="num">เป้าเทียบยอดจริง</th>', th('ราคาเฉลี่ย/ชิ้น', 'price')];
       head = `<tr>${cols.join('')}</tr>`;
@@ -406,13 +447,14 @@
         const x = r.cells[0].x, g = r.g, st = r.st, t = g.t != null ? fm(g.t) : dash;
         if (K.st === 'future') { const la = act(lc, r.s, c)[u === 'rev' ? 1 : 0]; return `<tr>${nmCell(r.s)}<td class="num">${t}</td><td class="num">${fm(la)}</td><td class="num">${g.t != null && la > 0 ? diffPct(g.t, la) : '—'}</td><td class="num">${pr(x)}</td></tr>`; }
         if (K.st === 'past') return `<tr>${nmCell(r.s)}<td class="num">${t}</td><td class="num">${fm(g.a)}</td><td class="num">${prog(g, st, null, true)}</td><td class="num">${g.t != null ? diffTxt(g.a - g.t, fm) : dash}</td><td class="num">${pr(x)}</td><td>${badge(st)}</td></tr>`;
-        return `<tr>${nmCell(r.s)}<td class="num">${t}</td><td class="num">${fm(g.a)}</td><td class="num">${prog(g, st, bulk ? null : K.el[c] / K.n, true)}</td>
-          <td class="num">${bulk || g.t == null ? dash : fm(g.ex)}</td><td class="num">${bulk || g.t == null ? dash : gapTxt(g.oa - g.ex, fm)}</td><td class="num">${bulk || !g.a ? dash : fm(g.pj)}</td><td class="num">${pr(x)}</td><td>${badge(st)}</td></tr>`;
+        const exTip = !bulk && g.t != null ? ` data-tip="${esc('ควรได้ถึงวันนี้ ' + fm(g.ex) + ' · ทำได้ ' + fm(g.a))}"` : '';
+        return `<tr>${nmCell(r.s)}<td class="num">${t}</td><td class="num">${fm(g.a)}</td><td class="num"${exTip}>${bulk ? ofTarget(g, true) : g.t != null ? paceProg(g, st, true) : prog(g, st, null, true)}</td>
+          <td class="num">${bulk || g.t == null ? dash : gapTxt(g.oa - g.ex, fm)}</td><td class="num">${bulk || !g.a ? dash : fm(g.pj)}</td><td class="num">${pr(x)}</td><td>${badge(st)}</td></tr>`;
       }).join('');
       const all = tot(K, [c], u), stA = status(K, all), n = cols.length;
       const fRow = K.st === 'future' ? `<td class="num">${all.t != null ? fm(all.t) : '—'}</td><td class="num">${fm(lcRows([c], u))}</td><td></td><td></td>`
         : K.st === 'past' ? `<td class="num">${all.t != null ? fm(all.t) : '—'}</td><td class="num">${fm(all.a)}</td><td class="num">${prog(all, stA, null, true)}</td><td class="num">${all.t != null ? diffTxt(all.a - all.t, fm) : ''}</td><td></td><td>${badge(stA)}</td>`
-          : `<td class="num">${all.t != null ? fm(all.t) : '—'}</td><td class="num">${fm(all.a)}</td><td class="num">${prog(all, stA, bulk ? null : K.el[c] / K.n, true)}</td><td class="num">${bulk || all.t == null ? dash : fm(all.ex)}</td><td class="num">${bulk || all.t == null ? dash : gapTxt(all.oa - all.ex, fm)}</td><td class="num">${bulk ? dash : fm(all.pj)}</td><td></td><td>${badge(stA)}</td>`;
+          : `<td class="num">${all.t != null ? fm(all.t) : '—'}</td><td class="num">${fm(all.a)}</td><td class="num">${bulk ? ofTarget(all, true) : all.t != null ? paceProg(all, stA, true) : prog(all, stA, null, true)}</td><td class="num">${bulk || all.t == null ? dash : gapTxt(all.oa - all.ex, fm)}</td><td class="num">${bulk ? dash : fm(all.pj)}</td><td></td><td>${badge(stA)}</td>`;
       foot = `<tr class="kp-other"><td>สินค้าอื่น <span class="ui-muted">(ไม่ได้ตั้งเป้า + ของแถม)</span></td><td></td><td class="num">${K.st === 'future' ? '' : fm(oG.a)}</td>${'<td></td>'.repeat(n - 3)}</tr><tr><td>รวม</td>${fRow}</tr>`;
     }
     const empty = !N ? `<tr><td colspan="9"><div class="ui-empty"><b>ไม่พบสินค้า</b>${S.q || S.st ? 'ลองล้างคำค้นหาหรือตัวกรองสถานะ' : 'เดือนนี้ยังไม่มีสินค้าที่ตั้งเป้า'}</div></td></tr>` : '';
