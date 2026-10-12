@@ -1430,6 +1430,8 @@ const SHOPEE_STATUS_FIELDS = [
 // (ตรงตัว, case-sensitive — สถานะอื่นเช่น "returned" ตัวเล็กไม่ถูกนับเป็น Return เพราะเช็คกับบัญชีแล้วไม่ตรง)
 const LAZADA_STATUS_FIELDS = [
   { key:'lazada_status', label:'status', required:false, keywords:['status'] },
+  // (2026-10-12) บัญชีนับ "ขอคืนเงินอย่างเดียว" (only_refund-buyer) เป็นสินค้าตีกลับด้วย
+  { key:'lazada_return_initiator', label:'buyerFailedDeliveryReturnInitiator', required:false, keywords:['buyerfaileddeliveryreturninitiator'] },
 ]
 
 function getFields(channel) {
@@ -2112,8 +2114,10 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
       // เทียบกับบัญชีแล้วยืนยัน: Cancel = status "canceled", Return = status "Package Returned" (ตรงตัว)
       // หมายเหตุ: มี residual เล็กน้อย (<1%/เดือน) จากเคส cross-month return ที่ยอมรับไว้แล้ว (ดู session notes)
       const lazStatus = mappings['lazada_status'] ? gs('lazada_status') : ''
+      const lazInitiator = mappings['lazada_return_initiator'] ? String(gs('lazada_return_initiator') || '').toLowerCase() : ''
       if (lazStatus === 'canceled') cancel_return_type = 'Cancel'
       else if (lazStatus === 'Package Returned' || lazStatus === 'returned' || lazStatus === 'In Transit: Returning to seller') cancel_return_type = 'Return/Refund' // (2026-09-17) เทียบบัญชี เม.ย.–ก.ค. 69: returned / กำลังตีกลับ บัญชีนับเป็นตีกลับด้วย
+      else if (lazStatus === 'Lost by 3PL' || lazInitiator.includes('only_refund')) cancel_return_type = 'Return/Refund' // (2026-10-12) เทียบไฟล์ Reconcile บัญชี: ขนส่งทำหาย / ขอคืนเงินอย่างเดียว = ตีกลับ
       else cancel_return_type = 'None'
     }
     return { order_id: gs('order_id'), date, created_at_precise, channel: chMap[sub]||channel, sub_channel: sub||channel, sku_promotion_part: tfn(rawSku, skuMap, qtyMul), sku_promotion_raw: rawSku, revenue, revenue_raw: revenueRaw, province: normalizeProvince(gs('province')), district: normalizeDistrict(gs('district')), postcode: gs('postcode'), customer_name: gs('customer_name'), phone: gs('phone'), payment_method: gs('payment_method'), order_channel: gs('order_channel') || null, creator_handle: gs('creator_handle') || null, order_status: gs('order_status') || null, delivery_date, sales_admin: mappings['sales_admin'] ? normSalesAdmin(gs('sales_admin')) : null, cancel_return_type, settled: channel==='Facebook', settled_date: channel==='Facebook'?date:null, order_adj }
@@ -2139,7 +2143,7 @@ async function processRows(rows, mappings, channel, forcedSubChannel = null) {
     const allSkus = []; g._skuParts.filter(Boolean).forEach(part => { part.split('+').forEach(p => { const m = p.match(/^(.+?)x(\d+)$/i); if(m) allSkus.push({sku:m[1],qty:parseInt(m[2])}) }) })
     const _composite = mergeSkus(allSkus)
     const _parentStr = promoParentStr(_composite), _childStr = promoChildStr(_composite)
-    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:_parentStr, sku_promotion_child:(_childStr && _childStr !== _parentStr) ? _childStr : null, sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round((g._revenueSum + (g._orderAdj||0))*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, sales_admin:g.sales_admin||null, cancel_return_type:g.cancel_return_type||null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
+    return { order_id:g.order_id, date:g.date, created_at_precise:g.created_at_precise||null, channel:g.channel, sub_channel:g.sub_channel, sku_promotion:_parentStr, sku_promotion_child:(_childStr && _childStr !== _parentStr) ? _childStr : null, sku_promotion_raw:g._rawParts.join(' | '), revenue:Math.round((g._revenueSum + (g._orderAdj||0))*100)/100, revenue_raw:Math.round(g._revenueRawSum*100)/100, province:g.province, district:g.district, postcode:g.postcode, customer_name:g.customer_name, phone:g.phone, payment_method:g.payment_method, order_channel:g.order_channel||null, creator_handle:g.creator_handle||null, order_status:g.order_status||null, delivery_date:g.delivery_date||null, sales_admin:g.sales_admin||null, cancel_return_type:(g.cancel_return_type && g.cancel_return_type !== 'None') ? g.cancel_return_type : null, settled:channel==='Facebook'?true:false, settled_date:channel==='Facebook'?g.date:null }
   })
 
   if (newSubChannels.size > 0) await DB.from('channels').upsert([...newSubChannels].map(sub => ({ sub_channel:sub, channel })), { onConflict:'sub_channel' })
