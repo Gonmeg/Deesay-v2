@@ -648,7 +648,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.09-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.12-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7641,6 +7641,7 @@ const VAT_TIP = 'ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอ�
 const ML_REV_TIP = VAT_TIP + '<br><b>Facebook หักออเดอร์ตีกลับแล้ว</b> (เลขออเดอร์ที่อยู่ในชีทตีกลับ) ให้ใกล้ยอดบัญชี — ของตีกลับลงชีทช้า 2–6 สัปดาห์ ยอด 1–2 เดือนล่าสุดจึงอาจลดลงอีกเล็กน้อย · หน้ายอดขายอื่นไม่หัก';
 let _plHasCost = false;   // (2026-10-08) มีต้นทุนต่อชิ้นรายสินค้าแล้วหรือยัง (product_unit_costs)
 let _plRows = null, _plMonths = [], _plSortCol = 'rev', _plSortDir = 'desc', _plOpen = new Map(), _plView = [], _plLineCache = {};
+let _plNone = null;   // (2026-10-12) แถว "ไม่ลงสินค้า" ใน Business Insight รายสินค้า
 let _plChRows = null, _plMode = 'prod', _plMetric = 'cm2', _plTab = {}, _plAllocCache = {};
 // คำทับศัพท์ → ใช้ภาษาอังกฤษ (ชื่อหมวดที่มาจากบัญชี/ระบบ)
 const PL_EN = [[/คอมมิชชั่น/g, 'Commission'], [/ค่าคอม(?!มิ)/g, 'ค่า Commission'], [/แอด/g, 'Ads'], [/แบรนด์/g, 'Brand'], [/พรีเซนเตอร์/g, 'Presenter'], [/ไลฟ์/g, 'Live'], [/แพลตฟอร์ม/g, 'Platform'], [/แคมเปญ/g, 'Campaign'], [/คอนเทนต์/g, 'Content'], [/บูท/g, 'Booth'], [/โปร(?=\/|ร้าน)/g, 'Promotion']];
@@ -7689,7 +7690,7 @@ function renderPlMatrix() {
     </tbody></table>`;
 }
 const plTip = (id, html, side = 'left') => `<span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;${side}:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">${html}</div></span>`;
-const PL_TIPS = { cm1: `<b>CM1 · Contribution Margin 1</b><br>เหลือหลังค่าการตลาดตรง + Ads<br><br>ขายได้ 100 บาท หักค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b> (ค่ารีวิว KOL, Presenter, ค่าที่บัญชีลงเป็นสินค้านี้) และ<b>ค่า Ads ทั้งหมด</b> (ยิงสินค้า + ทั่วไป/awareness ที่ปันตามยอดขายในช่องทาง) เหลือเท่าไร`, cm2: `<b>CM2 · Contribution Margin 2</b><br>เหลือหลังค่า Platform/ช่องทาง<br><br>จาก CM1 หักค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง (ค่าธรรมเนียม/บริการ Platform, Commission, ค่าส่ง, ค่า Live)<br><br>❗ <b>ค่า Live TikTok</b> ปันให้เฉพาะสินค้าที่ขายใน Live TikTok (ตามยอดขายใน Live) — สินค้าที่ไม่ได้ขายใน Live ไม่ต้องแบก`, cm3: `<b>CM3 · Contribution Margin 3</b><br>เหลือหลังค่าการตลาดอื่น (ปันส่วน)<br><br>จาก CM2 หักค่าการตลาดที่<b>ระบุสินค้าไม่ได้</b> ปันตามสัดส่วนยอดขาย (Presenter คนอื่น, Promotion, Affiliate Campaign, Rebranding, ที่ปรึกษา, ค่ารับรอง, ค่าเดินทาง ฯลฯ)`, net: `<b>สุทธิ · Net Margin (ก่อนหักทุนสินค้า)</b><br>เหลือหลังแบ่งค่าบริหาร<br><br>จาก CM3 แบ่งค่าบริหารบริษัทมาแบกตามยอดขาย (เงินเดือน ค่าเช่า ค่าสำนักงาน)<br>⚠️ ยังไม่ได้หักค่าตัวสินค้า (ทุนสินค้า)` };
+const PL_TIPS = { cm1: `<b>CM1 · Contribution Margin 1</b><br>เหลือหลังค่าการตลาดตรง + Ads<br><br>ขายได้ 100 บาท หักค่าการตลาดที่<b>ระบุสินค้าได้ตรงๆ</b> (ค่ารีวิว KOL, Presenter, ค่าที่บัญชีลงเป็นสินค้านี้) และ<b>ค่า Ads ทั้งหมด</b> (ยิงสินค้า + ทั่วไป/awareness ที่ปันตามยอดขายในช่องทาง) เหลือเท่าไร`, cm2: `<b>CM2 · Contribution Margin 2</b><br>เหลือหลังค่าช่องทาง<br><br>จาก CM1 หักค่าที่เกิดจากการขายผ่านช่องทาง (ค่าธรรมเนียม / บริการ / ค่าส่งเสริมการขายของ Platform, Commission, ค่าขนส่งสินค้า, ค่า Live)<br><br>❗ <b>ค่า Live TikTok</b> ปันให้เฉพาะสินค้าที่ขายใน Live TikTok (ตามยอดขายใน Live) — สินค้าที่ไม่ได้ขายใน Live ไม่ต้องแบก`, cm3: `<b>CM3 · Contribution Margin 3</b><br>เหลือหลังค่าการตลาดอื่น (ปันส่วน)<br><br>จาก CM2 หักค่าการตลาดที่<b>ระบุสินค้าไม่ได้</b> ปันตามสัดส่วนยอดขาย (Presenter คนอื่น, Promotion, Affiliate Campaign, Rebranding, ที่ปรึกษา, ค่ารับรอง, ค่าเดินทาง ฯลฯ)`, net: `<b>สุทธิ · Net Margin</b><br>เหลือหลังค่าบริหาร + ต้นทุนสินค้า<br><br>จาก CM3 แบ่งค่าบริหารบริษัทมาแบกตามยอดขาย (เงินเดือน ค่าเช่า ค่าสำนักงาน) แล้วหักต้นทุนสินค้าจากไฟล์ต้นทุนขายของบัญชี<br>การ์ดนี้รวมแถว "ไม่ลงสินค้า" (รายได้อื่น − ต้นทุนที่ไม่มีสินค้าให้ลง) แล้ว จึงเท่ากับกำไร (ขาดทุน) จากการดำเนินงานในงบ` };
 const PL_TH_M = m => MONTHS_TH[parseInt(m.slice(5, 7)) - 1] + ' ' + (parseInt(m.slice(0, 4)) + 543 - 2500);
 async function loadPl() {
   if (_plRows) return _plRows;
@@ -7731,6 +7732,11 @@ async function renderPl() {
     Object.keys(cm).forEach(k => { if (!inView.has(k)) cogsOther += cm[k]; });   // ของแถม / สินค้าที่ไม่มียอดขายในช่วงนี้
     _plView.forEach(o => { o.cogs = _plHasCost ? (cm[o.sku] || 0) : null; if (o.cogs) { o.net -= o.cogs; o.netp = o.rev > 0 ? o.net / o.rev * 100 : -Infinity; } });
   } catch (e) { _plHasCost = false; _plView.forEach(o => { o.cogs = null; }); }
+  // (2026-10-12) แถว "ไม่ลงสินค้า" ท้ายตาราง: รายได้อื่นในงบที่ไม่ใช่ของสินค้าไหน (ดอกเบี้ย · ค่าบริการแพ็ค · รายได้อื่น) − ต้นทุนที่ไม่มีสินค้าที่มียอดขายให้ลง → ยอดรวมทั้งตารางเท่ากำไรจากการดำเนินงานในงบ
+  {
+    const oi = +((cogsInfo && cogsInfo.other_income) || 0), co = _plHasCost ? cogsOther : 0;
+    _plNone = (Math.abs(oi) >= 1 || co >= 1) ? { sku: '', name: 'ไม่ลงสินค้า', oi, oiLines: (cogsInfo && cogsInfo.other_income_lines) || [], cogs: co, net: oi - co } : null;
+  }
   const up = (_mktUnified && _mktUnified.uploads) || {};
   {
     const rng = _plMonths.length ? PL_TH_M(_plMonths[0]) + ' – ' + PL_TH_M(_plMonths[_plMonths.length - 1]) : '—';
@@ -7738,7 +7744,7 @@ async function renderPl() {
     const adj = (cogsInfo && cogsInfo.adjusted) || [];
     const cogsTip = `<b>ต้นทุนสินค้า</b> จากไฟล์ต้นทุนขายของบัญชี: จำนวนชิ้นรายสินค้า × ต้นทุนของเดือนนั้น · ต้นทุนของแถมย้ายเข้าสินค้าหลักที่ลูกค้าซื้อในออเดอร์เดียวกัน<br>Modern Trade: ไฟล์ไม่มีรายสินค้า แบ่งตามยอดขายสินค้าในห้าง<br>ดึงไฟล์ล่าสุด ${syncTxt}`
       + (adj.length ? `<br>⚠️ ไฟล์ต้นทุนกับงบยังไม่ตรงกัน ระบบปรับให้เท่างบ: ${adj.map(a => `${PL_TH_M(a.month)} ${a.channel} ×${(+a.factor).toFixed(2)}`).join(', ')}` : '')
-      + (cogsOther >= 1 ? `<br>ต้นทุนสินค้าที่ไม่มียอดขายในช่วงนี้ (เช่น ของแถมในออเดอร์ที่ส่งฟรีทั้งออเดอร์) ฿${fmt(Math.round(cogsOther))} ไม่อยู่ในตาราง (รวมอยู่ในต้นทุนรวมของบริษัท)` : '');
+      + (cogsOther >= 1 ? `<br>ต้นทุนสินค้าที่ไม่มียอดขายในช่วงนี้ (เช่น ของแถมในออเดอร์ที่ส่งฟรีทั้งออเดอร์) ฿${fmt(Math.round(cogsOther))} อยู่ในแถว "ไม่ลงสินค้า" ท้ายตาราง` : '');
     const tipEl = document.getElementById('tip-pl-cogs'); if (tipEl) tipEl.innerHTML = cogsTip;
     document.getElementById('plNote').innerHTML = `📄 ไฟล์ต้นฉบับบัญชี ${rng} · รวมทุกสินค้าเท่ายอดบัญชี · ` + (_plHasCost
       ? `ต้นทุนสินค้าจากไฟล์ต้นทุนขายของบัญชี (ดึงล่าสุด ${syncTxt})${adj.length ? ' · <span style="color:var(--orange);">มีเดือนที่ไฟล์ต้นทุนกับงบยังไม่ตรงกัน</span>' : ''}`
@@ -7836,11 +7842,12 @@ function renderPlTable() {
   document.querySelectorAll('[id^="pls-"]').forEach(el => el.textContent = '');
   const ind = document.getElementById('pls-' + _plSortCol); if (ind) ind.textContent = _plSortDir === 'asc' ? '▲' : '▼';
   const T = rows.reduce((t, o) => { ['rev', 'dir', 'ads', 'ch', 'br', 'oh', 'cogs', 'cm1', 'cm2', 'cm3', 'net'].forEach(k => t[k] = (t[k] || 0) + (o[k] || 0)); return t; }, {});
+  if (_plNone) { T.cogs = (T.cogs || 0) + _plNone.cogs; T.net = (T.net || 0) + _plNone.net; }   // (2026-10-12) ยอดรวมเท่างบ
   const pc = (v, base) => base > 0 ? (v / base * 100).toFixed(1) + '%' : '—';
   const kc = (label, v, sub, tk) => `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">${label} ${plTip('tip-plk-' + tk, PL_TIPS[tk])}</div><div class="kpi-value" style="font-size:20px;${v < 0 ? 'color:var(--red);' : ''}">${sub}</div><div style="font-size:11.5px;color:var(--text2);">฿${fmt(Math.round(v))}</div></div>`;
   document.getElementById('plKpis').innerHTML =
     `<div class="card" style="flex:1;min-width:150px;padding:12px 14px;"><div class="card-title">ยอดขาย (ไม่รวม VAT) ${plTip('tip-pl-vat1', 'ยอดขายของบัญชีแต่ละช่องทาง แบ่งลงสินค้าตามสัดส่วนที่ขายจริงในระบบ')}</div><div class="kpi-value" style="font-size:20px;">฿${fmt(Math.round(T.rev || 0))}</div></div>`
-    + kc('CM1 หลังค่าการตลาดตรง + Ads', T.cm1 || 0, pc(T.cm1, T.rev), 'cm1') + kc('CM2 หลังค่า Platform', T.cm2 || 0, pc(T.cm2, T.rev), 'cm2')
+    + kc('CM1 หลังค่าการตลาดตรง + Ads', T.cm1 || 0, pc(T.cm1, T.rev), 'cm1') + kc('CM2 หลังค่าช่องทาง', T.cm2 || 0, pc(T.cm2, T.rev), 'cm2')
     + kc('CM3 หลังการตลาดอื่น (ปัน)', T.cm3 || 0, pc(T.cm3, T.rev), 'cm3') + kc(_plHasCost ? 'สุทธิ หลังค่าบริหาร + ต้นทุนสินค้า' : 'สุทธิ หลังค่าบริหาร (ยังไม่หักต้นทุนสินค้า)', T.net || 0, pc(T.net, T.rev), 'net');
   const money = (v, rev) => v ? `<div>฿${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, rev)}</div>` : '<span style="color:var(--text3);">—</span>';
   const cm = (v, p) => `<div style="font-weight:700;font-size:13px;${v < 0 ? 'color:var(--red);' : ''}">${isFinite(p) ? p.toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(v))}</div>`;
@@ -7854,6 +7861,17 @@ function renderPlTable() {
       <td class="pl-cm">${cm(o.cm1, o.cm1p)}</td>${cell(o, 'ch', o.ch)}<td class="pl-cm">${cm(o.cm2, o.cm2p)}</td>
       ${cell(o, 'br', o.br)}<td class="pl-cm">${cm(o.cm3, o.cm3p)}</td>${cell(o, 'oh', o.oh)}${o.cogs == null ? '<td></td>' : `<td>${money(o.cogs, o.rev)}</td>`}<td class="pl-cm">${cm(o.net, o.netp)}</td>
     </tr>${op(o.sku) ? `<tr class="pl-detail"><td colspan="12" style="padding:0;"><div id="pld-${o.sku}" style="padding:12px 20px;background:var(--bg2);">กำลังโหลด…</div></td></tr>` : ''}`).join('')
+    + (rows.length && _plNone ? (() => {
+        const n = _plNone, dash = '<td><span style="color:var(--text3);">—</span></td>';
+        const tip = `<b>ไม่ลงสินค้า</b> = รายการในงบที่ไม่ใช่ของสินค้าไหน จึงไม่แบ่งลงสินค้า<br>`
+          + (n.oiLines.length ? `รายได้อื่น +฿${fmt(Math.round(n.oi))}: ${n.oiLines.map(l => `${l[0]} ฿${fmt(Math.round(+l[1]))}`).join(' · ')}<br>` : '')
+          + (n.cogs >= 1 ? `ต้นทุนสินค้าที่ไม่มีสินค้าที่มียอดขายให้ลง −฿${fmt(Math.round(n.cogs))} (เช่น ของแถมในออเดอร์ที่ฟรีทั้งออเดอร์ · ของที่บัญชีลงต้นทุนแต่ระบบไม่มียอดขาย)<br>` : '')
+          + `ใส่แถวนี้เพื่อให้ยอดรวมทั้งตารางเท่ากำไร (ขาดทุน) จากการดำเนินงานในงบ`;
+        return `<tr style="background:var(--bg2);"><td class="c-left"><b>ไม่ลงสินค้า</b> ${plTip('tip-pl-none', tip)}<div style="font-size:10.5px;color:var(--text3);">รายได้อื่น ฿${fmt(Math.round(n.oi))} − ต้นทุนที่ไม่มีสินค้าให้ลง ฿${fmt(Math.round(n.cogs))}</div></td>`
+          + dash + dash + dash + dash + dash + dash + dash + dash + dash
+          + (n.cogs >= 1 ? `<td><div>฿${fmt(Math.round(n.cogs))}</div></td>` : dash)
+          + `<td class="pl-cm"><div style="font-weight:700;font-size:13px;${n.net < 0 ? 'color:var(--red);' : ''}">฿${fmt(Math.round(n.net))}</div></td></tr>`;
+      })() : '')
     || '<tr><td colspan="12" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>';
   _plOpen.forEach((m, sku) => plDetail(sku));
 }
@@ -7882,7 +7900,7 @@ async function plDetail(sku) {
     const g = bdFrom(group(rows.filter(r => r.layer === 'cm2'), 'account_group')).map(x => ({ ...x, children: bdFrom(group(rows.filter(r => r.layer === 'cm2' && r.account_group === x.label && r.tier === 'channel'), 'channel'))
       .map(c => x.label === 'ค่าไลฟ์' && c.label === 'TikTok' ? { ...c, label: 'TikTok ❗ ปันเฉพาะสินค้าที่ขายใน Live' } : c) }));   // (2026-09-30) ค่าไลฟ์ TikTok ปันตามยอดในไลฟ์
     group(lines.filter(r => r.layer === 'cm2'), 'cost_category').forEach(([k, v]) => g.push({ label: k + ' (บัญชีลงเป็นสินค้านี้)', amount: v }));
-    el.innerHTML = bdRender({ title: `ค่า Platform/ช่องทาง · ${o.name}`, total: o.ch, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง — บัญชีลงไว้ที่ช่องทาง แบ่งให้สินค้าตามยอดขายของสินค้านี้ในช่องทางนั้น (บรรทัดย่อย = มาจากช่องทางไหน)<br><br>❗ <b>ค่า Live TikTok</b> ปันให้เฉพาะสินค้าที่ขายใน Live TikTok ตามยอดขายใน Live ของเดือนนั้น — สินค้าที่ไม่ได้ขายใน Live ไม่ต้องแบก · ค่า Live Shopee / ตัวแทน ยังปันตามยอดทั้งช่องทาง (ยังแยกยอด Live ไม่ได้)' });
+    el.innerHTML = bdRender({ title: `ค่าช่องทาง · ${o.name}`, total: o.ch, rev: o.rev, groups: g, tipId: tid, tip: 'ค่าที่เกิดจากการขายผ่านแพลตฟอร์ม/ช่องทาง — บัญชีลงไว้ที่ช่องทาง แบ่งให้สินค้าตามยอดขายของสินค้านี้ในช่องทางนั้น (บรรทัดย่อย = มาจากช่องทางไหน)<br><br>❗ <b>ค่า Live TikTok</b> ปันให้เฉพาะสินค้าที่ขายใน Live TikTok ตามยอดขายใน Live ของเดือนนั้น — สินค้าที่ไม่ได้ขายใน Live ไม่ต้องแบก · ค่า Live Shopee / ตัวแทน ยังปันตามยอดทั้งช่องทาง (ยังแยกยอด Live ไม่ได้)' });
   } else if (metric === 'br') {
     el.innerHTML = bdRender({ title: `ค่าการตลาดอื่น (ปันส่วน) · ${o.name}`, total: o.br, rev: o.rev, groups: bdTop(bdFrom(group(rows.filter(r => r.layer === 'cm1' || r.layer === 'cm3'), 'account_group')), 10), tipId: tid, tip: 'ค่าการตลาดที่ระบุสินค้าไม่ได้ — ปันตามสัดส่วนยอดขายของเดือนนั้น (ถ้าบัญชีลงไว้ที่ช่องทาง ปันตามยอดขายในช่องทางนั้น)' });
   } else if (metric === 'oh') {
@@ -7892,14 +7910,15 @@ async function plDetail(sku) {
     const cmc = (v, b) => { const p = b > 0 ? v / b * 100 : NaN; return `<td style="--h:${plHeat(p)};border-radius:6px;"><b style="${p < 0 ? 'color:var(--red);' : ''}">${isFinite(p) ? p.toFixed(1) + '%' : '—'}</b><div style="font-size:10.5px;color:var(--text3);">฿${fmt(Math.round(v))}</div></td>`; };
     const bar = (v) => `<div style="height:5px;background:var(--border);border-radius:3px;margin-top:3px;"><div style="height:5px;width:${Math.max(0, Math.min(100, v / o.rev * 100))}%;background:var(--accent);border-radius:3px;"></div></div>`;
     const p2 = (v, b) => b > 0 ? (v / b * 100).toFixed(1) + '%' : '—';
-    el.innerHTML = `<div style="font-weight:700;margin-bottom:8px;">${o.name} แยกตามช่องทาง</div><table class="pl-mx" style="max-width:1000px;"><thead><tr><th style="text-align:left;">ช่องทาง</th><th>ยอดขาย</th><th>ค่า Ads</th><th>ค่าการตลาดตรง ${plTip('tip-plc-dir-' + sku, 'ค่าการตลาดที่ระบุสินค้าได้ ไม่ได้ผูกช่องทาง จึงแบ่งตามสัดส่วนยอดขายของสินค้าในแต่ละช่องทาง')}</th><th>CM1</th><th>ค่า Platform</th><th>CM2</th></tr></thead><tbody>`
+    el.innerHTML = `<div style="font-weight:700;margin-bottom:8px;">${o.name} แยกตามช่องทาง</div><table class="pl-mx" style="max-width:1000px;"><thead><tr><th style="text-align:left;">ช่องทาง</th><th>ยอดขาย</th><th>ค่า Ads</th><th>ค่าการตลาดตรง ${plTip('tip-plc-dir-' + sku, 'ค่าการตลาดที่ระบุสินค้าได้ ไม่ได้ผูกช่องทาง จึงแบ่งตามสัดส่วนยอดขายของสินค้าในแต่ละช่องทาง')}</th><th>CM1</th><th>ค่าช่องทาง</th><th>CM2</th></tr></thead><tbody>`
       + chs.map(x => `<tr><td class="nm"><b>${x.ch}</b></td><td style="text-align:right;">฿${fmt(Math.round(x.rev))} <span style="color:var(--text3);font-size:10.5px;">${p2(x.rev, o.rev)}</span>${bar(x.rev)}</td><td>฿${fmt(Math.round(x.ads))}<div style="font-size:10.5px;color:var(--text3);">${p2(x.ads, x.rev)}</div></td><td>฿${fmt(Math.round(x.dir))}<div style="font-size:10.5px;color:var(--text3);">${p2(x.dir, x.rev)}</div></td>${cmc(x.cm1, x.rev)}<td>฿${fmt(Math.round(x.chc))}<div style="font-size:10.5px;color:var(--text3);">${p2(x.chc, x.rev)}</div></td>${cmc(x.cm2, x.rev)}</tr>`).join('')
       + `</tbody></table>`;
   }
 }
 function exportPl() {
-  const head = ['SKU', 'สินค้า', 'ยอดขาย', 'ค่ารีวิว KOL-Conversion', 'ค่ารีวิว KOL-PR', 'ค่าใช้จ่ายผูกสินค้า', 'Presenter', 'Ads ยิงสินค้า', 'Ads ทั่วไป', 'CM1', 'ค่า Platform/ช่องทาง', 'CM2', 'ค่าการตลาดอื่น (ปันส่วน)', 'CM3', 'ค่าบริหาร', 'ต้นทุนสินค้า', 'สุทธิ'];
+  const head = ['SKU', 'สินค้า', 'ยอดขาย', 'ค่ารีวิว KOL-Conversion', 'ค่ารีวิว KOL-PR', 'ค่าใช้จ่ายผูกสินค้า', 'Presenter', 'Ads ยิงสินค้า', 'Ads ทั่วไป', 'CM1', 'ค่าช่องทาง', 'CM2', 'ค่าการตลาดอื่น (ปันส่วน)', 'CM3', 'ค่าบริหาร', 'ต้นทุนสินค้า', 'สุทธิ'];
   const lines = [head.join(',')].concat(_plView.map(o => [o.sku, `"${o.name}"`, o.rev, o.kc, o.kp, o.od, o.pres, o.ad, o.aa, o.cm1, o.ch, o.cm2, o.br, o.cm3, o.oh, o.cogs == null ? '' : o.cogs, o.net].map(v => typeof v === 'number' ? v.toFixed(2) : v).join(',')));
+  if (_plNone) lines.push(['', `"ไม่ลงสินค้า (รายได้อื่น ${_plNone.oi.toFixed(2)} − ต้นทุนที่ไม่มีสินค้าให้ลง ${_plNone.cogs.toFixed(2)})"`, '', '', '', '', '', '', '', '', '', '', '', '', '', _plNone.cogs.toFixed(2), _plNone.net.toFixed(2)].join(','));   // (2026-10-12)
   const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `กำไรขั้นบันได_${document.getElementById('plFrom').value}_${document.getElementById('plTo').value}.csv`; a.click();
 }
@@ -8677,7 +8696,7 @@ function renderCostPage() {
   if (window._biLoading) return;
   window._biLoading = true;
   const s = document.createElement('script');
-  s.src = 'bizinsight.js?v=20261009c'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
+  s.src = 'bizinsight.js?v=20261012a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
   s.onload = () => { window._biLoading = false; if (currentPage === 'cost') window.renderBizInsight(); };
   s.onerror = () => { window._biLoading = false; document.getElementById('page-cost').innerHTML = '<div class="error-banner" style="display:block;">โหลด bizinsight.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
