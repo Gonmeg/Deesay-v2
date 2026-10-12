@@ -219,8 +219,9 @@ async function load() {
     DB.rpc('system_health'),
     DB.rpc('unknown_skus', { p_days: UNKNOWN_SKU_DAYS }),
     DB.rpc('system_health_extra'),
-    DB.from('v_ads_health_summary').select('*')   // (2026-09-19) ตรวจค่าแอดหายรายวัน
-  ])
+    DB.from('v_ads_health_summary').select('*'),   // (2026-09-19) ตรวจค่าแอดหายรายวัน
+    DB.rpc('recon_channel_monthly')   // (2026-10-12) ยอดขายระบบ vs งบบัญชี (เฉพาะแอดมิน / สิทธิ์ต้นทุน)
+  ]).then(r => { window._recon = r[4]; return r.slice(0, 4) })
   window._adsHealth = adsHealth
   if (health.error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(health.error.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 27_system_health_rpc.sql</div>`; return }
   render(health.data, unknown, extra)
@@ -353,6 +354,24 @@ async function render(d, unknown, extra) {
       <tr><td>คอมเมนต์ TikTok ค้างตอบ</td><td class="${todo['คอมเมนต์ค้างตอบ'] ? 'warn' : 'ok'}"><b>${fmt(todo['คอมเมนต์ค้างตอบ'])}</b></td><td>แดชบอร์ด → ผลงานคอนเทนต์ → แท็บคอมเมนต์</td></tr>
       <tr><td>SKU ที่สมุดสินค้าไม่รู้จัก</td><td class="${todo['SKU ที่สมุดไม่รู้จัก'] ? 'bad' : 'ok'}"><b>${fmt(todo['SKU ที่สมุดไม่รู้จัก'])}</b></td><td>Admin → เพิ่มรหัสลูก</td></tr>
       </tbody></table></div></div>`
+  }
+
+  // --- (2026-10-12) ยอดขายระบบ vs งบบัญชี — ไว้ดูเฉยๆ ไม่ขึ้นเตือน (Business Insight ใช้ยอดบัญชีเสมอ) ---
+  const rc = (window._recon && !window._recon.error && Array.isArray(window._recon.data)) ? window._recon.data : []
+  if (rc.length) {
+    const months = [...new Set(rc.map(r => r.month))].sort().reverse().slice(0, 4)
+    const chs = ['TikTok','Shopee Mall','Shopee 24hr','Lazada Mall','Lazada 24hr','Facebook','ตัวแทน','Modern Trade'].filter(c => rc.some(r => r.channel === c))
+    const mLabel = m => new Date(m + 'T00:00:00').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })
+    const cell = r => {
+      if (!r || r.diff_pct === null) return '<td>—</td>'
+      const p = Number(r.diff_pct), cls = Math.abs(p) <= 0.3 ? 'ok' : (Math.abs(p) <= 2 ? 'warn' : '')
+      const tip = `ระบบ ${fmt(Math.round(r.system_revenue))} · บัญชี ${fmt(Math.round(r.accounting_revenue))}${r.cn_in_system ? ' · ระบบหัก CN แล้ว ' + fmt(Math.round(r.cn_in_system)) : ''}`
+      return `<td class="${cls}" title="${esc(tip)}">${r.diff > 0 ? '+' : ''}${fmt(Math.round(r.diff))}<br><span style="font-size:11px;color:#8b93a7">${p > 0 ? '+' : ''}${p.toFixed(2)}%</span></td>`
+    }
+    html += `<div class="card"><div class="card-head"><h2>⚖️ ยอดขายระบบ vs งบบัญชี</h2><span>ไม่รวม VAT · เฉพาะเดือนที่บัญชีปิดแล้ว · ไว้ดูเฉยๆ ไม่ขึ้นเตือน — Business Insight ใช้ยอดบัญชีเสมอ ส่วนต่างนี้กระทบเฉพาะหน้าอื่น · ชี้ที่ตัวเลขเพื่อดูยอดเต็ม</span></div><div class="tbl-wrap"><table>
+      <thead><tr><th>ช่องทาง</th>${months.map(m => `<th>${mLabel(m)}<br><span style="font-size:11px;font-weight:400">ระบบ − บัญชี</span></th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>` +
+      chs.map(c => `<tr><td><b>${esc(c)}</b></td>${months.map(m => cell(rc.find(r => r.channel === c && r.month === m))).join('')}<td style="font-size:12px;color:#5b6475">${esc((rc.find(r => r.channel === c) || {}).note)}</td></tr>`).join('') +
+      `</tbody></table></div></div>`
   }
 
   // --- SKU ที่ระบบไม่รู้จัก ---
