@@ -9,7 +9,7 @@
   const pct = (a, b) => (b > 0 ? (a / b) * 100 : 0);
   const pctTxt = (a, b, d = 1) => (b > 0 ? pct(a, b).toFixed(d) + '%' : '—');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const baht = v => '฿' + fmt(Math.round(num(v)));
+  const baht = v => fmt(Math.round(num(v)));
   const SRC = [{ k: 'live', label: 'Live', color: '#f472b6' }, { k: 'video', label: 'คลิป', color: '#60a5fa' }, { k: 'card', label: 'หน้าสินค้า', color: '#c8a96e' }];
 
   // ⓘ แบบเดียวกับทั้งเว็บ
@@ -118,7 +118,7 @@
     el.style.display = 'block';
     const seq = ++_crSeq;
     el.innerHTML = `
-      <div class="section-divider"><span>💰 ครีเอเตอร์ · Commission · คอนเทนต์ (TikTok API) ${info('ttapi-cr-info', '<b>ที่มา:</b> Affiliate API ของ TikTok Shop — ทุกออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์<br><b>ยอดขาย</b> = ยอดสุทธิของออเดอร์ (ไม่นับยกเลิก / คืน) · 1 ออเดอร์นับให้ครีเอเตอร์ที่ได้ Commission มากสุด<br><b>Commission</b> = ที่ TikTok จ่ายครีเอเตอร์ · <b>Ads Commission</b> = ส่วนที่จ่ายผ่าน GMV Max<br><b>ยอดต่อ ฿1</b> = ยอดขาย ÷ (Commission + Ads Commission)<br><b>กรองช่องทาง</b> (Live / คลิป / โชว์เคส): ยอดขายเป็นของช่องทางนั้น แต่ Commission เป็นของทั้งคน (TikTok ไม่แยกตามช่องทาง) จึงไม่คำนวณ % และยอดต่อ ฿1<br><b>เปิด (Open Collaboration)</b> = ครีเอเตอร์คนไหนก็หยิบสินค้าไปขายได้ ตามอัตรา Commission ที่ร้านเปิดไว้<br><b>ปิด (Target Collaboration)</b> = ร้านเชิญครีเอเตอร์เฉพาะคน ตั้งอัตราเฉพาะ (ส่วนใหญ่คือ KOL ที่จ้าง — Commission จึงต่ำ เพราะจ่ายค่าจ้างแยก ดูหน้า KOL)<br><b>ตัวกรองด้านบน</b> ทุกคน / KOL / Affiliate ใช้กับส่วนนี้ด้วย · ป้ายหลังชื่อ = กลุ่มของครีเอเตอร์ (KOL = มีงานในไฟล์ทีม KOL)')}</span></div>
+      <div class="section-divider"><span>💰 ครีเอเตอร์ · Commission · คอนเทนต์ (TikTok API) ${info('ttapi-cr-info', '<b>ที่มา:</b> Affiliate API ของ TikTok Shop — ทุกออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์<br><b>ยอดขาย</b> = ยอดสุทธิของออเดอร์ (ไม่นับยกเลิก / คืน) · 1 ออเดอร์นับให้ครีเอเตอร์ที่ได้ Commission มากสุด<br><b>Commission</b> = ที่ TikTok จ่ายครีเอเตอร์ · <b>Ads Commission</b> = ส่วนที่จ่ายผ่าน GMV Max<br><b>ยอดต่อ 1</b> = ยอดขาย ÷ (Commission + Ads Commission)<br><b>กรองช่องทาง</b> (Live / คลิป / โชว์เคส): ยอดขายเป็นของช่องทางนั้น แต่ Commission เป็นของทั้งคน (TikTok ไม่แยกตามช่องทาง) จึงไม่คำนวณ % และยอดต่อ 1<br><b>เปิด (Open Collaboration)</b> = ครีเอเตอร์คนไหนก็หยิบสินค้าไปขายได้ ตามอัตรา Commission ที่ร้านเปิดไว้<br><b>ปิด (Target Collaboration)</b> = ร้านเชิญครีเอเตอร์เฉพาะคน ตั้งอัตราเฉพาะ (ส่วนใหญ่คือ KOL ที่จ้าง — Commission จึงต่ำ เพราะจ่ายค่าจ้างแยก ดูหน้า KOL)<br><b>ตัวกรองด้านบน</b> ทุกคน / KOL / Affiliate ใช้กับส่วนนี้ด้วย · ป้ายหลังชื่อ = กลุ่มของครีเอเตอร์ (KOL = มีงานในไฟล์ทีม KOL)')}</span></div>
       <div id="ttapi-cr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">เปิด vs ปิด</div></div>
         <div class="table-wrap"><table><thead><tr><th>แบบ</th><th>ครีเอเตอร์</th><th>ออเดอร์</th><th>ยอดขาย</th><th>สัดส่วนยอด</th><th>Commission</th><th>Ads Commission</th><th>% Commission</th><th>ยอดเฉลี่ย / คน</th><th>Commission เฉลี่ย / คน</th></tr></thead><tbody id="ttapi-ct-cmp"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div>
@@ -127,7 +127,7 @@
           <div class="toggle-group">${[['all', 'ทุกช่องทาง'], ['live', 'Live'], ['video', 'คลิป'], ['other', 'โชว์เคส / ลิงก์']].map(([k, l]) => `<button class="toggle-btn ${_crCh === k ? 'active' : ''}" onclick="ttApi.setCrCh('${k}')">${l}</button>`).join('')}</div>
           <div class="toggle-group">${[['all', 'เปิด + ปิด'], ['open', 'เปิด'], ['target', 'ปิด']].map(([k, l]) => `<button class="toggle-btn ${_crType === k ? 'active' : ''}" onclick="ttApi.setCrType('${k}')">${l}</button>`).join('')}</div>
         </div></div>
-        <div class="table-wrap"><table><thead><tr><th>ครีเอเตอร์</th><th>แบบ</th><th>ยอดขาย</th><th>ออเดอร์</th><th>Commission</th><th>Ads Commission</th><th>% ของยอด</th><th>ยอดต่อ ฿1</th>${_crType === 'all' ? '<th>Live / คลิป / อื่นๆ</th>' : ''}<th>คอนเทนต์</th></tr></thead><tbody id="ttapi-cr-body"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-cr-pager"></div></div>
+        <div class="table-wrap"><table><thead><tr><th>ครีเอเตอร์</th><th>แบบ</th><th>ยอดขาย</th><th>ออเดอร์</th><th>Commission</th><th>Ads Commission</th><th>% ของยอด</th><th>ยอดต่อ 1</th>${_crType === 'all' ? '<th>Live / คลิป / อื่นๆ</th>' : ''}<th>คอนเทนต์</th></tr></thead><tbody id="ttapi-cr-body"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-cr-pager"></div></div>
       <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">คอนเทนต์ที่ขายได้${handle ? ' — @' + esc(handle) : ''}</div></div>
         <div class="table-wrap"><table><thead><tr><th>ประเภท</th><th>ครีเอเตอร์</th><th>คอนเทนต์</th><th>ยอดขาย</th><th>ออเดอร์</th><th>Commission</th><th>ขายช่วง</th></tr></thead><tbody id="ttapi-ct-body"><tr><td colspan="7" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-ct-pager"></div></div>`;
     try {
