@@ -16,7 +16,7 @@
   const BULK = ['ตัวแทน', 'Modern Trade'];   // สั่งเป็นก้อน — ไม่คิดราคาเฉลี่ย / AOV (กฎเดียวกับทุกหน้า)
   const _open = new Set();
   const esc = s => ttcEsc(s == null ? '' : String(s)), escA = s => ttcEscAttr(s == null ? '' : String(s));
-  const money = v => '฿' + fmt(Math.round(+v || 0));
+  const money = v => fmt(Math.round(+v || 0));
   const dash = '<span style="color:var(--text3);">—</span>';
   const m0 = v => Math.round(+v || 0) ? money(v) : dash;
   const n0 = v => Math.round(+v || 0) ? fmt(Math.round(+v)) : dash;
@@ -164,7 +164,7 @@
         <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
       <div class="skd-kpis">
         ${kpi('ยอดขาย ' + info, money(rev), `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
-        ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', (() => { const r = daily.filter(x => !BULK.includes(x.channel)); const q = r.reduce((t, x) => t + (+x.qty || 0), 0), v = r.reduce((t, x) => t + (+x.rev || 0), 0); return q ? `ราคาเฉลี่ย ฿${fmt(Math.round(v / q))} / ชิ้น (ไม่รวมตัวแทน / MT)` : ''; })())}
+        ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', (() => { const r = daily.filter(x => !BULK.includes(x.channel)); const q = r.reduce((t, x) => t + (+x.qty || 0), 0), v = r.reduce((t, x) => t + (+x.rev || 0), 0); return q ? `ราคาเฉลี่ย ${fmt(Math.round(v / q))} / ชิ้น (ไม่รวมตัวแทน / MT)` : ''; })())}
         ${kpi('ค่า Ads', m0(ads), `${pct(ads, rev)} ของยอดขาย · นับ ${mLbl}`)}
         ${kpi('ค่า KOL', m0(kol), `${fmt(new Set((d.kol || []).filter(x => x.in_range !== false).map(x => x.content_code)).size)} งาน · ตามวันโพสต์`)}
         ${kpi('ROAS Ads', roas(rev, ads), 'ยอดขาย ÷ ค่า Ads')}
@@ -198,7 +198,7 @@
       ds.push({ type: 'line', label: 'ค่า Ads', data: keys.map(k => adsM[k] || 0), borderColor: '#c8a96e', backgroundColor: '#c8a96e', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y1', order: -1 });
       scales.y1 = { position: 'right', beginAtZero: true, ticks: { ...tk, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } };
     }
-    const unit = v => qm ? `${fmt(Math.round(v))} ชิ้น` : `฿${fmt(Math.round(v))}`;
+    const unit = v => qm ? `${fmt(Math.round(v))} ชิ้น` : `${fmt(Math.round(v))}`;
     document.getElementById('skdChartTtl').textContent = (qm ? 'จำนวนชิ้น' : 'ยอดขาย') + (g === 'day' ? 'รายวันแยกช่องทาง' : 'รายเดือนแยกช่องทาง') + (withAds ? ' + ค่า Ads' : '');
     document.getElementById('skdChartNote').textContent = g === 'day'
       ? 'ช่วงไม่เกิน 1 เดือนแสดงรายวัน · Modern Trade ลงวันที่ 1 ของเดือน'
@@ -210,7 +210,7 @@
           footer: items => { if (!items.length) return '';
             const t = items.reduce((a, i) => a + (+i.raw || 0), 0), lines = [`${qm ? 'จำนวนรวม' : 'ยอดขายรวม'} ${unit(t)}`];
             const adsDs = items[0].chart.data.datasets.find(x => x.yAxisID === 'y1');
-            if (adsDs) { const a = +adsDs.data[items[0].dataIndex] || 0; lines.push(`ค่า Adsเดือนนี้ ฿${fmt(Math.round(a))}${a > 0 ? ` · ROAS ${(t / a).toFixed(2)}x` : ''} (แยกจากยอดขาย)`); }
+            if (adsDs) { const a = +adsDs.data[items[0].dataIndex] || 0; lines.push(`ค่า Adsเดือนนี้ ${fmt(Math.round(a))}${a > 0 ? ` · ROAS ${(t / a).toFixed(2)}x` : ''} (แยกจากยอดขาย)`); }
             return lines; } } } });
   }
 
@@ -274,7 +274,7 @@
 
   function promoCard(d) {
     const p = d.promos || [];
-    const chips = ch => Object.entries(ch || {}).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<span title="${escA(c)} ฿${fmt(v)}" style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--bg3);color:var(--text2);white-space:nowrap;"><i style="width:7px;height:7px;border-radius:50%;background:${CH_COL[c] || '#94a3b8'};display:inline-block;"></i>${esc(c)}</span>`).join(' ');
+    const chips = ch => Object.entries(ch || {}).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<span title="${escA(c)} ${fmt(v)}" style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--bg3);color:var(--text2);white-space:nowrap;"><i style="width:7px;height:7px;border-radius:50%;background:${CH_COL[c] || '#94a3b8'};display:inline-block;"></i>${esc(c)}</span>`).join(' ');
     const rows = p.map((x, i) => `<tr><td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>
       <td><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.promo)}">${esc(x.promo)}</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${chips(x.ch)}</div></td>
       <td class="num">${n0(x.ord)}</td><td class="num">${n0(x.qty)}</td><td class="num"><b>${money(x.rev)}</b></td></tr>`).join('');
@@ -302,7 +302,7 @@
     const S = k => p.reduce((t, r) => t + (+r[k] || 0), 0);
     const rev = S('revenue') / VAT_DIV, dir = S('kol_conversion') + S('kol_pr') + S('other_direct') + S('presenter_direct'), ad = S('ads_direct') + S('ads_allocated');
     const cm1 = rev - dir - ad, cm2 = cm1 - S('channel_cost'), cm3 = cm2 - S('brand_cost'), net = cm3 - S('overhead_cost');
-    const line = (lbl, v, col) => `<div class="skd-pl"><div>${lbl}</div><div class="bar"><div style="width:${rev > 0 ? Math.max(0, Math.min(100, v / rev * 100)) : 0}%;background:${col};"></div></div><div style="text-align:right;font-weight:600;${v < 0 ? 'color:var(--red);' : ''}">฿${fmt(Math.round(v))}</div><div style="text-align:right;color:var(--text3);">${pct(v, rev)}</div></div>`;
+    const line = (lbl, v, col) => `<div class="skd-pl"><div>${lbl}</div><div class="bar"><div style="width:${rev > 0 ? Math.max(0, Math.min(100, v / rev * 100)) : 0}%;background:${col};"></div></div><div style="text-align:right;font-weight:600;${v < 0 ? 'color:var(--red);' : ''}">${fmt(Math.round(v))}</div><div style="text-align:right;color:var(--text3);">${pct(v, rev)}</div></div>`;
     const tip = fbeInfoIcon('skd-info-pl', 'ชุดเดียวกับหน้า Business Insight (ยอดขายถอด VAT · ค่าใช้จ่ายจากไฟล์บัญชี)<br><b>CM1</b> = ยอดขาย − ค่าการตลาดตรง − ค่า Ads<br><b>CM2</b> = CM1 − ค่า Platform/ช่องทาง<br>❗ ค่า Live TikTok ปันเฉพาะสินค้าที่ขายใน Live<br><b>CM3</b> = CM2 − ค่าการตลาดที่ปันส่วน<br><b>สุทธิ</b> = CM3 − ค่าบริหาร (ยังไม่หักทุนสินค้า)');
     return card('กำไรขั้นบันได · ตามบัญชี (Business Insight) ' + tip, line('ยอดขาย (ถอด VAT)', rev, '#60a5fa') + line('CM1', cm1, '#22c55e') + line('CM2 ❗', cm2, '#16a34a') + line('CM3', cm3, '#15803d') + line('สุทธิ (ก่อนทุนสินค้า)', net, '#c8a96e')
       + `<div class="skd-note">เดือนที่บัญชียังไม่ปิดจะมีแต่ค่า Ads / KOL ยังไม่มีค่าช่องทาง · <a onclick="showPage('cost')" style="cursor:pointer;color:var(--accent);">ดูใน Business Insight →</a></div>`);
