@@ -423,7 +423,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 .mkt-up { color:#16a34a; font-size:10px; } .mkt-dn { color:#ef4444; font-size:10px; }
 /* (2026-09-19) ปุ่ม ! อธิบายหัวคอลัมน์ + จัดตารางหน้า MKT Tracking / TikTok Ads ให้อ่านง่าย */
 .mkt-info { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%;
-  border:1px solid var(--border); color:var(--text3); font-size:9.5px; font-weight:700; cursor:help; line-height:1; vertical-align:middle; }
+  border:1px solid var(--border); color:var(--text3); font-size:9.5px; font-weight:700; cursor:default; line-height:1; vertical-align:middle; }
 .mkt-info:hover { color:#60a5fa; border-color:#60a5fa; }
 #tblMktRoi th, #tblTtProduct th { white-space:nowrap; vertical-align:bottom; }
 #tblMktRoi td:not(:first-child), #tblTtProduct td:not(:first-child) { text-align:right; font-variant-numeric:tabular-nums; }
@@ -441,7 +441,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblPl th, #tblMl th { white-space:nowrap; font-size:11.5px; }
   #page-kol .card-title, #page-kol .kpi-value, #page-kol th, #page-kol .mkt-tbl td { font-family:'Sarabun',sans-serif !important; letter-spacing:normal !important; text-transform:none !important; }
   #page-kol .card-title { font-size:12px; color:var(--text2); font-weight:600; } #tblKj th { white-space:nowrap; font-size:11.5px; }
-  #tblKj th { white-space:nowrap; } #tblKj td.pl-amt { cursor:pointer; } #tblKj td.pl-amt:hover > span:first-child { text-decoration:underline dotted; } #tblKj td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
+  #tblKj th { white-space:nowrap; } #tblKj td.pl-amt { cursor:pointer; } #tblKj td.pl-amt > span:first-child { text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); } #tblKj td.pl-amt:hover > span:first-child { text-decoration-color:var(--text); } #tblKj td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
   #tblKj tr.pl-detail > td, #tblKj tr.pl-detail:hover > td { background:transparent !important; }
   .kj-ic { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 4px; border-radius:5px; font:700 10.5px/1 Arial, sans-serif; margin-right:3px; vertical-align:middle; }
   #tblKj td { overflow:hidden; text-overflow:ellipsis; } #tblKj td.kj-icons { white-space:nowrap; overflow:visible; text-overflow:clip; }
@@ -531,9 +531,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .bd-amt { text-align:right; white-space:nowrap; font-weight:600; } .bd-row.sub .bd-amt { font-weight:400; }
   .bd-pct { text-align:right; color:var(--text3); font-size:11px; }
   .bd-note { font-size:11px; color:var(--text3); margin-top:8px; line-height:1.6; }
-  #tblMl th { width:auto !important; } #tblMl td.pl-amt { cursor:pointer; } #tblMl td.pl-amt:hover > div:first-child { text-decoration:underline dotted; } #tblMl td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
+  #tblMl th { width:auto !important; } #tblMl td.pl-amt { cursor:pointer; } #tblMl td.pl-amt > div:first-child { text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); } #tblMl td.pl-amt:hover > div:first-child { text-decoration-color:var(--text); } #tblMl td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
   #tblMl tr.pl-detail > td, #tblMl tr.pl-detail:hover > td { background:transparent !important; }
-  #tblPl td.pl-amt { cursor:pointer; } #tblPl td.pl-amt:hover > div:first-child, #tblPl td.pl-amt:hover b { text-decoration:underline dotted; }
+  #tblPl td.pl-amt { cursor:pointer; } #tblPl td.pl-amt > div:first-child, #tblPl td.pl-amt > span.pl-n { text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); } #tblPl td.pl-amt:hover > div:first-child, #tblPl td.pl-amt:hover > span.pl-n { text-decoration-color:var(--text); }
   #tblPl td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
   #tblPl tr.pl-detail > td, #tblPl tr.pl-detail:hover > td { background:transparent !important; cursor:default; }
   .pl-mx td, .pl-mx tr:hover td { background:var(--h, transparent) !important; }
@@ -571,7 +571,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261014b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261014c"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -591,7 +591,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-card-m { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text3); }
   .tr-card-m > span + span::before { content:'·'; margin-right:14px; color:var(--border); }
   .tr-sku { font-family:'IBM Plex Mono',monospace; font-size:11px; }
-  .tr-i { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; font-size:11px; color:var(--text3); cursor:help; vertical-align:1px; font-weight:400; }
+  .tr-i { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; font-size:11px; color:var(--text3); cursor:default; vertical-align:1px; font-weight:400; }
   .tr-i:hover { color:var(--text); }
   .tr-part { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:6px 0 4px; margin-bottom:14px; overflow:hidden; }
   .tr-sec { display:flex; justify-content:space-between; align-items:baseline; padding:8px 16px 6px; font-size:12.5px; font-weight:700; color:var(--text); }
@@ -607,7 +607,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-tb th:first-child, .tr-tb td:first-child { text-align:left; padding-left:16px; }
   .tr-tb td:last-child { color:var(--text); font-weight:600; }
   .tr-tb td.tr-pc { color:var(--accent-text, var(--text)); font-weight:600; }
-  .tr-tb td.tr-pc[data-tip]:not([data-tip=""]) { cursor:help; text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); }
+  
   .tr-tb tr.tr-gh { cursor:pointer; background:var(--bg3); }
   .tr-tb tr.tr-gh td { color:var(--text); font-weight:700; }
   .tr-tb tr.tr-gh:hover td { background:rgba(127,127,127,.08); }
@@ -625,8 +625,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-chips span { font-size:11px; color:var(--text2); background:var(--bg3); border:1px solid var(--border); border-radius:999px; padding:2px 9px; }
   .bd-row.is-trace { cursor:pointer; border-radius:6px; }
   .bd-row.is-trace:hover { background:var(--bg3); }
-  .bd-row.is-trace .bd-amt { text-decoration:underline dotted; text-underline-offset:3px; }
-  .pl-trace { cursor:pointer; } .pl-trace:hover { text-decoration:underline dotted; text-underline-offset:3px; }
+  .bd-row.is-trace .bd-amt { text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); }
+  .pl-trace { cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); } .pl-trace:hover { text-decoration-color:var(--text); }
 </style>
 </head>
 <body>
@@ -704,7 +704,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-h</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3034,7 +3034,7 @@ function loadFbAdsPage() {
   if (window._fbadsLoading) return;
   window._fbadsLoading = true;
   const s = document.createElement('script');
-  s.src = 'fbads.js?v=20261014a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
+  s.src = 'fbads.js?v=20261014b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
   s.onload = () => { window._fbadsLoading = false; window.renderFbAdsPage(); };
   s.onerror = () => { window._fbadsLoading = false; document.getElementById('page-fbads').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbads.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -8063,7 +8063,7 @@ function renderPlTable() {
   document.getElementById('tbodyPl').innerHTML = rows.map(o => `
     <tr>
       <td class="c-left"><b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
-      <td class="pl-amt${op(o.sku) === 'chan' ? ' on' : ''}" onclick="plToggle('${o.sku}','chan')" title="คลิกเพื่อดูแยกตามช่องทาง">${fmt(Math.round(o.rev))}</td>${cell(o, 'dir', o.dir)}${cell(o, 'ads', o.ads)}
+      <td class="pl-amt${op(o.sku) === 'chan' ? ' on' : ''}" onclick="plToggle('${o.sku}','chan')" title="คลิกเพื่อดูแยกตามช่องทาง"><span class="pl-n">${fmt(Math.round(o.rev))}</span></td>${cell(o, 'dir', o.dir)}${cell(o, 'ads', o.ads)}
       <td class="pl-cm">${cm(o.cm1, o.cm1p)}</td>${cell(o, 'ch', o.ch)}<td class="pl-cm">${cm(o.cm2, o.cm2p)}</td>
       ${cell(o, 'br', o.br)}<td class="pl-cm">${cm(o.cm3, o.cm3p)}</td>${cell(o, 'oh', o.oh)}${o.cogs == null ? '<td></td>' : `<td>${money(o.cogs, o.rev)}</td>`}<td class="pl-cm">${cm(o.net, o.netp)}</td>
     </tr>${op(o.sku) ? `<tr class="pl-detail"><td colspan="12" style="padding:0;"><div id="pld-${o.sku}" style="padding:12px 20px;background:var(--bg2);">กำลังโหลด…</div></td></tr>` : ''}`).join('')
@@ -8902,7 +8902,7 @@ function renderCostPage() {
   if (window._biLoading) return;
   window._biLoading = true;
   const s = document.createElement('script');
-  s.src = 'bizinsight.js?v=20261014c'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
+  s.src = 'bizinsight.js?v=20261014d'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
   s.onload = () => { window._biLoading = false; if (currentPage === 'cost') window.renderBizInsight(); };
   s.onerror = () => { window._biLoading = false; document.getElementById('page-cost').innerHTML = '<div class="error-banner" style="display:block;">โหลด bizinsight.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
