@@ -621,6 +621,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-dl { display:grid; grid-template-columns:84px 1fr; gap:8px 12px; margin:0; font-size:12px; }
   .tr-dl dt { color:var(--text3); } .tr-dl dd { margin:0; color:var(--text2); line-height:1.6; }
   .tr-n { font-size:12px; color:var(--text3); line-height:1.65; }
+  .tr-tb td .tr-s2 { font-size:11px; color:var(--text3); font-weight:400; white-space:normal; margin-top:1px; line-height:1.45; }
   .tr-chips { display:flex; flex-wrap:wrap; gap:6px; }
   .tr-chips span { font-size:11px; color:var(--text2); background:var(--bg3); border:1px solid var(--border); border-radius:999px; padding:2px 9px; }
   .bd-row.is-trace { cursor:pointer; border-radius:6px; }
@@ -704,7 +705,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-i</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7999,6 +8000,80 @@ function trPart(j, d, src, sch, list, multi) {
       .map(({ c, L }) => grpBody(trEsc(c), L, r => PL_TH_M(r.m))).join('') + `${tot}</table></div>`;
   return h + `</section>`;
 }
+
+// ───────── (2026-10-14) ที่มาของตัวเลข: หน้า KOL (ค่า Ads / ยอดขายของงาน → รายแอด Facebook และรายแคมเปญ TikTok) ─────────
+function trOpenShell(kicker) {
+  let ov = document.getElementById('trOv'), dw = document.getElementById('trDw');
+  if (!dw) {
+    ov = document.createElement('div'); ov.id = 'trOv'; ov.className = 'tr-ov'; ov.onclick = trClose; document.body.appendChild(ov);
+    dw = document.createElement('aside'); dw.id = 'trDw'; dw.className = 'tr-dw'; dw.setAttribute('role', 'dialog'); dw.setAttribute('aria-label', 'ที่มาของตัวเลข'); document.body.appendChild(dw);
+    requestAnimationFrame(() => { ov.classList.add('on'); dw.classList.add('on'); });
+  } else { ov.classList.add('on'); dw.classList.add('on'); }
+  dw.innerHTML = `<div class="tr-h"><span>${trEsc(kicker || 'ที่มาของตัวเลข')}</span><button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button></div><div class="tr-b" id="trBody"><div class="tr-n">กำลังโหลด…</div></div>`;
+}
+async function openKolTrace(i, focus) {
+  const d = _trq[i]; if (!d) return;
+  trOpenShell('ที่มาของตัวเลข');
+  const from = getDateValue('From') || '2000-01-01', to = getDateValue('To') || '2999-12-31';
+  let j;
+  try { j = await supaRpc('kol_trace', { p_ks: d.ks, p_from: from, p_to: to }, true); if (j && j.message && !j.jobs) throw new Error(j.message); }
+  catch (e) { const b = document.getElementById('trBody'); if (b) b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
+  const body = document.getElementById('trBody'); if (!body) return;
+  try { body.innerHTML = kolTraceRender(j, d, focus, from, to); }
+  catch (e) { body.innerHTML = `<div class="tr-warn">แสดงผลไม่สำเร็จ: ${trEsc(e.message)}</div>`; console.error('kol trace', e); }
+}
+function kolTraceRender(j, d, focus, from, to) {
+  const n = v => fmt(Math.round(+v || 0)), dash = '<span style="color:var(--text3);">—</span>';
+  const dd = v => v ? new Date(v).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '';
+  const rng = (a, b) => a ? (a === b ? dd(a) : `${dd(a)} – ${dd(b)}`) : '';
+  const jobs = j.jobs || [], FB = j.fb || [], TT = j.tt || [];
+  const fbS = FB.reduce((t, r) => t + +r[4], 0), fbV = FB.reduce((t, r) => t + +r[5], 0);
+  const gmS = TT.reduce((t, r) => t + +r[4], 0), gmV = TT.reduce((t, r) => t + +r[5], 0), naS = TT.reduce((t, r) => t + +r[6], 0);
+  const ads = fbS + gmS + naS, sales = (fbV + gmV) / VAT_DIV;
+  const val = focus === 'sales' ? sales : ads, shown = focus === 'sales' ? d.sales : d.ads;
+  const multi = jobs.length > 1;
+  const period = `${dd(from)} – ${dd(to)}`;
+  const method = focus === 'sales'
+    ? 'วิธีคิด\nยอดขายที่แพลตฟอร์มรายงานจากโฆษณาที่ใช้คอนเทนต์ของงานนี้ รวม TikTok และ Facebook\n• TikTok: แอดที่ใช้คลิปของงานนี้ (GMV Max รายงานยอดขาย · แอดประเภทอื่นไม่รายงานยอดขาย)\n• Facebook: แอดที่ชื่อตรงกับชื่อแอดในไฟล์ทีม KOL หรือชื่อแอดลงท้ายด้วยชื่อ KOL\nถอด VAT · นับตามวันที่เกิดยอดจริงในช่วงที่เลือก'
+    : 'วิธีคิด\nค่าโฆษณาทั้งหมดที่ใช้คอนเทนต์ของงานนี้ รวม TikTok และ Facebook\n• TikTok: แอดที่ใช้คลิปของงานนี้ (GMV Max และแอดประเภทอื่น)\n• Facebook: แอดที่ชื่อตรงกับชื่อแอดในไฟล์ทีม KOL หรือชื่อแอดลงท้ายด้วยชื่อ KOL\nนับตามวันที่ใช้เงินจริงในช่วงที่เลือก';
+  let h = '';
+  if (shown != null && Math.abs(val - shown) >= 1.5) h += `<div class="tr-warn">ยอดรวมของรายละเอียด ${n(val)} ต่างจากตัวเลขในตาราง ${n(shown)} อยู่ ${n(val - shown)}</div>`;
+  h += `<div class="tr-card"><div class="tr-card-t">${focus === 'sales' ? 'ยอดขายจาก Ads' : 'ค่า Ads'} ${trI(method)}</div>
+    <div class="tr-card-v">${n(shown != null ? shown : val)}</div>
+    <div class="tr-card-m"><span>${multi ? jobs.length + ' งาน' : trEsc('@' + String(d.kol || jobs[0] && jobs[0].kol || '').replace(/^@/, ''))}${!multi && jobs[0] ? ` <span class="tr-sku">${trEsc(jobs[0].content)}</span>` : ''}</span><span>${period}</span>${focus === 'sales' ? '<span>ถอด VAT</span>' : ''}</div></div>`;
+  // สรุปตามแหล่ง
+  const srcRow = (lbl, tip, s, v, vTip) => `<tr><td>${lbl}${tip ? ' ' + trI(tip) : ''}</td><td>${s ? n(s) : dash}</td><td${vTip ? ` data-tip="${trEsc(vTip)}"` : ''}>${v == null ? dash : v ? n(v) : dash}</td></tr>`;
+  h += `<section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>แหล่ง</th><th>ค่า Ads</th><th>ยอดขาย ${trI('ถอด VAT')}</th></tr></thead><tbody>`
+    + srcRow('TikTok GMV Max', 'แอดแบบ GMV Max ที่ใช้คลิปของงานนี้ · TikTok รายงานทั้งค่าแอดและยอดขาย', gmS, gmV / VAT_DIV)
+    + srcRow('TikTok แอดอื่น', 'แอด Reach / Video views / Spark ที่ใช้คลิปของงานนี้ · TikTok ไม่รายงานยอดขายของแอดประเภทนี้', naS, naS ? null : 0, 'TikTok ไม่รายงานยอดขายของแอดประเภทนี้')
+    + srcRow('Facebook', 'แอดบน Facebook / Instagram ที่ใช้คอนเทนต์ของงานนี้', fbS, fbV / VAT_DIV)
+    + `</tbody><tfoot><tr><td>รวม</td><td>${n(ads)}</td><td>${n(sales)}</td></tr></tfoot></table></section>`;
+  // รายละเอียด: ตามงาน → รายแคมเปญ / รายแอด
+  const jobName = c => { const x = jobs.find(o => o.content === c); return x ? `${trEsc(x.content)}${x.share < 0.999 ? ` · แบ่ง ${Math.round(1 / x.share)} สินค้า` : ''}` : trEsc(c); };
+  const tbl = (title, tip, head, rows, cnt) => rows.length ? `<section class="tr-part"><div class="tr-sec"><span>${title} ${trI(tip)}</span><b>${cnt} รายการ</b></div><table class="tr-tb" data-no-sort data-no-page><thead><tr>${head}</tr></thead>${rows.join('')}</table></section>` : '';
+  const byJob = (list, rowFn) => {
+    const g = {}; list.forEach(r => { (g[r[0]] = g[r[0]] || []).push(r); });
+    return Object.entries(g).map(([c, L]) => multi
+      ? `<tbody class="tr-grp"><tr class="tr-gh" onclick="trGrp(this)"><td colspan="4"><span class="tr-car">▾</span>${jobName(c)}</td></tr>${L.map(r => rowFn(r, true)).join('')}</tbody>`
+      : `<tbody>${L.map(r => rowFn(r, false)).join('')}</tbody>`);
+  };
+  const ttRow = (r, sub) => `<tr class="${sub ? 'tr-gc' : ''}"><td style="white-space:normal;">${trEsc(String(r[1]).trim() || '—')}<div class="tr-s2">${trEsc(r[2] || '')}${r[9] > 1 ? ` · คลิปนี้ใช้กับ ${r[9]} งาน (หารเท่ากัน)` : ''}</div></td><td>${rng(r[7], r[8])}</td><td>${n(+r[4] + +r[6])}</td><td>${+r[5] ? n(+r[5] / VAT_DIV) : dash}</td></tr>`;
+  const fbRow = (r, sub) => `<tr class="${sub ? 'tr-gc' : ''}"><td style="white-space:normal;">${trEsc(r[2] || r[1])}<div class="tr-s2">${trEsc(r[3] || '')}${+r[6] ? ` · ${n(r[6])} คำสั่งซื้อ` : ''}</div></td><td>${rng(r[7], r[8])}</td><td>${n(r[4])}</td><td>${+r[5] ? n(+r[5] / VAT_DIV) : dash}</td></tr>`;
+  const head = '<th>แคมเปญ / แอด</th><th>ช่วงที่ยิง</th><th>ค่า Ads</th><th>ยอดขาย</th>';
+  h += tbl('TikTok · แคมเปญที่ใช้คลิปของงาน', 'แคมเปญที่ยิงคลิปของงานนี้ จาก TikTok Ads API (รายงานรายคลิป รายวัน)', head, byJob(TT, ttRow), TT.length);
+  h += tbl('Facebook · แอดที่ใช้คอนเทนต์ของงาน', 'แอดที่จับคู่กับงานนี้ จาก Meta Ads API (รายงานรายแอด รายวัน)', head, byJob(FB, fbRow), FB.length);
+  if (!TT.length && !FB.length) h += '<div class="tr-n" style="margin-bottom:14px;">ไม่พบโฆษณาที่ใช้คอนเทนต์ของงานนี้ในช่วงที่เลือก</div>';
+  // แหล่งที่มา
+  const split = jobs.filter(x => x.share < 0.999);
+  h += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">
+    <dt>งาน</dt><dd>ไฟล์ทีม KOL${multi ? ` (${jobs.length} งาน)` : ` · รหัสงาน ${trEsc(jobs[0] ? jobs[0].content : '')}`}</dd>
+    <dt>TikTok</dt><dd>TikTok Ads API รายงานรายคลิป · จับคู่จากลิงก์คลิปในไฟล์ทีม KOL</dd>
+    <dt>Facebook</dt><dd>Meta Ads API รายงานรายแอด · จับคู่จากชื่อแอดที่ทีม KOL กรอก หรือชื่อแอดลงท้ายด้วยชื่อ KOL</dd>
+    <dt>ช่วงวันที่</dt><dd>นับตามวันที่ใช้เงิน / เกิดยอดจริง ไม่ใช่วันโพสต์</dd>`
+    + (split.length ? `<dt>แบ่งสินค้า</dt><dd>งานที่รีวิวหลายสินค้า ค่า Ads และยอดขายแบ่งเท่ากันให้แต่ละสินค้า (กติกาเดียวกับ MKT Tracking)</dd>` : '') + `</dl></div>`;
+  return h;
+}
+
 const bdTop = (arr, max) => { const s = arr.slice().sort((a, b) => b.amount - a.amount); if (s.length <= max) return s; const rest = s.slice(max).reduce((t, g) => t + g.amount, 0); return s.slice(0, max).concat([{ label: `อื่นๆ (${s.length - max} รายการ)`, amount: rest }]); };
 const bdFrom = entries => entries.map(([label, amount]) => ({ label, amount }));
 
@@ -8868,7 +8943,7 @@ function renderKolTable() {
       <td class="c-left"><b>${o.kol}</b>${o.channel_link ? ` <a href="${o.channel_link}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;font-size:11px;">👤</a>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}<div style="color:var(--text3);font-size:10px;font-family:'IBM Plex Mono',monospace;word-break:break-all;">${o.content_code || ''}</div></td>
       <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${o.sku}${o.n > 1 ? `<div style="font-size:10px;color:var(--accent);" title="งานนี้รีวิวหลายสินค้า — ค่าจ้าง ค่า Ads และยอดขายถูกแบ่งเท่าๆ กันให้แต่ละสินค้า (กติกาเดียวกับ MKT Tracking)">แบ่ง ${o.n} สินค้า</div>` : ''}</td><td>${o.type}</td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}${o.progress && o.match_status === 'not_posted' ? `<div style="font-size:10.5px;color:var(--text3);">${o.progress}</div>` : ''}${o.inRange ? '' : '<div style="font-size:10.5px;color:var(--orange);" title="ค่าจ้างนับในเดือนที่โพสต์ — แถวนี้ขึ้นเพราะยังมีค่า Ads / ยอดขายในช่วงนี้">โพสต์ก่อนช่วงนี้</div>'}</td>
-      <td>${money(o.amount)}</td><td>${money(o.ads)}</td><td>${money(o.sales)}</td><td>${mer(o)}</td>
+      <td>${money(o.amount)}</td><td>${o.ads >= 1 ? `<span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'ads')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.ads))}</span>` : money(o.ads)}</td><td>${o.sales >= 1 ? `<span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'sales')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.sales))}</span>` : money(o.sales)}</td><td>${mer(o)}</td>
       <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอ Ads</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิง Ads</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : o.match_status === 'not_posted' ? '<span class="kj-tag kj-no">ยังไม่โพสต์</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูล Ads</span>'}${kjShortNote(o.match_note) ? `<div style="font-size:10.5px;color:var(--text3);">${kjShortNote(o.match_note)}</div>` : ''}${o.shared ? (() => { const K = { link: ['⚠️ ลิงก์อาจผิด', 'var(--orange)', 'รหัสงานต่างกัน แต่ลิงก์เปิดแล้วเป็นคลิปเดียวกับงานอื่น — ถ้าเป็นคลิปใหม่ ให้แก้ลิงก์ในไฟล์ทีม KOL'], extra: ['⚠️ คลิปเดิมหลายงาน?', 'var(--orange)', 'KOL คนเดิมใช้คลิปเดียวกันในงานคนละเดือน — ถ้าเป็นการจ่ายเพิ่มสำหรับคลิปเดิม ไม่ต้องแก้'] }[o.dupKind] || ['⚠️ คลิปเดียวกับอีก ' + o.shared + ' งาน', 'var(--orange)', ''];
         return `<div style="font-size:10px;color:${K[1]};font-weight:700;" title="${K[2]} · ค่า Ads และยอดขายของคลิปถูกแบ่งเท่าๆ กันระหว่างงาน (ไม่นับซ้ำ)">${K[0]}</div>`; })() : ''}</td>
       <td>${kjPayCell(o, o.acct, o.claim)}</td></tr>`).join('')
