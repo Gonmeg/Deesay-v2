@@ -482,7 +482,7 @@
   }
   const needsReview = a => a.kol_source === 'page' && !!_review[a.page_id];
   const warnIcon = (pageId, name) => { const r = _review[pageId]; if (!r) return ''; const all = [name, ...(r.alt_names || [])].filter((v, i, x) => v && x.indexOf(v) === i).join(' / ');
-    return ` <span title="ยังไม่ชัวร์ — ทีม Ads ตั้งชื่อ Ads ของเพจนี้ไม่ตรงกัน: ${ttcEscAttr(all)}\nกดชื่อเพื่อเปิดเพจดูว่าใคร แล้วกด ✏️ ใส่ลิงก์ที่ถูกเพื่อยืนยัน" style="cursor:help;font-size:12px;">⚠️</span>`; };
+    return ` <span title="ยังไม่ชัวร์ — ทีม Ads ตั้งชื่อ Ads ของเพจนี้ไม่ตรงกัน: ${ttcEscAttr(all)}\nกดชื่อเพื่อเปิดเพจดูว่าใคร แล้วกด ✏️ ใส่ลิงก์ที่ถูกเพื่อยืนยัน" style="cursor:default;font-size:12px;">⚠️</span>`; };
 
   // รวมแอดที่ใช้โพสต์เดียวกัน (post_id) เป็นแถวเดียว — ตัวเลขดิบบวกกัน แล้วให้สูตร CPM/CTR/ER คำนวณจากผลรวม · reach เป็นผลรวม (คนซ้ำข้ามแอดนับซ้ำ) จึงเป็นค่าประมาณ
   const SUM_KEYS = ['spend','impressions','reach','clicks','link_clicks','post_engagement','reactions','comments','shares','saves','video_3s','thruplay','msg_started','purchases','purchase_value','revenue'];
