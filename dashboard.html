@@ -683,7 +683,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-d</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7837,6 +7837,7 @@ function bdRender(o) {
 // ───────── (2026-10-14) ที่มาของตัวเลข (Business Insight) ─────────
 // กดตัวเลขย่อย → แผงด้านขวา: ก้อนในงบบัญชี × สัดส่วน = ได้ แยกรายเดือน (และรายช่องทาง) พร้อมตัวเลขที่ใช้คิดสัดส่วน และบรรทัดในงบที่เป็นที่มา
 const _trq = [];
+const trEsc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);   // (trEsc ของหน้าแรกเป็นตัวแปรภายใน ใช้ข้างนอกไม่ได้)
 const trReg = d => { _trq.push(d); return _trq.length - 1; };
 const TR_SCH = {
   grp: { f: 'ยอดในงบของช่องทาง × (ยอดขายสินค้านี้ ÷ ยอดขายทุกสินค้า ในช่องทางนั้น)', b: 'ยอดขายสินค้านี้ ÷ ทั้งช่องทาง' },
@@ -7863,10 +7864,11 @@ async function openTrace(sku, d) {
     dw = document.createElement('aside'); dw.id = 'trDw'; dw.className = 'tr-dw'; dw.setAttribute('role', 'dialog'); dw.setAttribute('aria-label', 'ที่มาของตัวเลข'); document.body.appendChild(dw);
     requestAnimationFrame(() => { ov.classList.add('on'); dw.classList.add('on'); });
   } else { ov.classList.add('on'); dw.classList.add('on'); }
+  dw.innerHTML = `<div class="tr-h"><button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button><div class="t">กำลังโหลด…</div></div>`;   // ปุ่มปิดขึ้นก่อนเสมอ
   const period = from === to ? PL_TH_M(from) : `${PL_TH_M(from)} – ${PL_TH_M(to)}`;
   const title = `${d.label || TR_LAYER[d.layer] || ''}${d.grp ? ' · ' + d.grp : ''}`;
-  dw.innerHTML = `<div class="tr-h"><div class="k">ที่มาของตัวเลข · ${esc(o.name)} <span style="font-family:'IBM Plex Mono',monospace;">${esc(sku)}</span></div>
-      <div class="t">${esc(plLbl(title))}</div><div class="v">${d.amount != null ? fmt(Math.round(d.amount)) : '…'}<small>${period}</small></div>
+  dw.innerHTML = `<div class="tr-h"><div class="k">ที่มาของตัวเลข · ${trEsc(o.name)} <span style="font-family:'IBM Plex Mono',monospace;">${trEsc(sku)}</span></div>
+      <div class="t">${trEsc(plLbl(title))}</div><div class="v">${d.amount != null ? fmt(Math.round(d.amount)) : '…'}<small>${period}</small></div>
       <button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button></div><div class="tr-b" id="trBody">กำลังโหลด…</div>`;
   let j;
   try {
@@ -7876,7 +7878,8 @@ async function openTrace(sku, d) {
     j = await r.json(); if (!r.ok) throw new Error(j.message || r.status);
   } catch (e) { const b = document.getElementById('trBody'); if (b) b.textContent = 'โหลดไม่สำเร็จ: ' + e.message; return; }
   const body = document.getElementById('trBody'); if (!body) return;
-  body.innerHTML = trRender(j, d);
+  try { body.innerHTML = trRender(j, d); }
+  catch (e) { body.innerHTML = `<div class="tr-n">แสดงผลไม่สำเร็จ: ${trEsc(e.message)}</div>`; console.error('trace', e); }   // กันแผงค้างว่าง ปิดได้เสมอ
 }
 function trRender(j, d) {
   const n = v => fmt(Math.round(+v || 0)), pc = (a, b) => b ? (a / b * 100).toFixed(Math.abs(a / b) < 0.1 ? 2 : 1) + '%' : '—';
@@ -7899,7 +7902,7 @@ function trRender(j, d) {
           const L = list.filter(r => r.m === m), amt = L.reduce((t, r) => t + r.amt, 0), pool = L.reduce((t, r) => t + r.pool, 0);
           const ps = P.filter(p => p.m === m && p.mine), all = P.filter(p => p.m === m);
           return ps.map((p, k) => `<tr><td>${k ? '' : PL_TH_M(m)}</td><td>${k ? '' : n(pool)}<span class="s">${k ? '' : 'ค่าตัว ' + all.length + ' คนรวมกัน'}</span></td>
-              <td>${esc(p.who)} ${n(p.fee)}<span class="s">${(p.fs * 100).toFixed(1)}% ของค่าตัวรวม</span></td>
+              <td>${trEsc(p.who)} ${n(p.fee)}<span class="s">${(p.fs * 100).toFixed(1)}% ของค่าตัวรวม</span></td>
               <td>${pc(p.num, p.den)}<span class="s">${n(p.num)} ÷ ${n(p.den)}</span></td><td class="r">${k ? '' : n(amt)}</td></tr>`).join('')
             || `<tr><td>${PL_TH_M(m)}</td><td>${n(pool)}</td><td>—</td><td>—</td><td class="r">${n(amt)}</td></tr>`;
         }).join('') + `</tbody></table>`;
@@ -7918,7 +7921,7 @@ function trRender(j, d) {
             return `<tr><td>${PL_TH_M(m)}</td><td>${n(pool)}${L.length > 1 ? `<span class="s">${L.length} คอลัมน์ช่องทางรวมกัน</span>` : ''}</td>${bcell(amt, pool, one ? L[0].bn : null, one ? L[0].bd : null)}<td class="r">${n(amt)}</td></tr>`;
           }
           return `<tr><td><b>${PL_TH_M(m)}</b></td><td>${n(pool)}</td><td>${pc(amt, pool)}</td><td class="r">${n(amt)}</td></tr>`
-            + L.slice().sort((a, b) => b.amt - a.amt).map(r => `<tr class="sub"><td>${esc(r.grp)}</td><td>${n(r.pool)}</td>${bcell(r.amt, r.pool, r.bn, r.bd)}<td>${n(r.amt)}</td></tr>`).join('');
+            + L.slice().sort((a, b) => b.amt - a.amt).map(r => `<tr class="sub"><td>${trEsc(r.grp)}</td><td>${n(r.pool)}</td>${bcell(r.amt, r.pool, r.bn, r.bd)}<td>${n(r.amt)}</td></tr>`).join('');
         }).join('') + `</tbody></table>`;
     }
   });
@@ -7927,8 +7930,8 @@ function trRender(j, d) {
   const refs = j.refs || [], labels = {}; refs.forEach(r => { const k = (r[1] ? r[1] + ' ' : '') + r[2]; labels[k] = 1; });
   const lk = Object.keys(labels), ms = refs.map(r => r[0]).sort();
   const mRange = ms.length ? (ms[0] === ms[ms.length - 1] ? PL_TH_M(ms[0]) : `${PL_TH_M(ms[0])} – ${PL_TH_M(ms[ms.length - 1])}`) : '';
-  h += `<div class="tr-sec">ก้อนในงบมาจากไหน</div><div class="tr-n" style="margin-top:0;">ไฟล์งบกำไรขาดทุนของบัญชี แท็บรายเดือน${mRange ? ' (' + mRange + ')' : ''} บรรทัด: ${lk.length ? lk.slice(0, 8).map(esc).join(' · ') + (lk.length > 8 ? ` และอีก ${lk.length - 8} บรรทัด` : '') : '—'}`
-    + ((j.brand || []).length ? `<br>${j.brand.map(b => `<b>${esc(b[0])}</b> ตัดมาจากบรรทัด "${esc(b[1])}" เดือนละ ${n(b[2])} ตามที่ตั้งไว้`).join('<br>')}` : '')
+  h += `<div class="tr-sec">ก้อนในงบมาจากไหน</div><div class="tr-n" style="margin-top:0;">ไฟล์งบกำไรขาดทุนของบัญชี แท็บรายเดือน${mRange ? ' (' + mRange + ')' : ''} บรรทัด: ${lk.length ? lk.slice(0, 8).map(trEsc).join(' · ') + (lk.length > 8 ? ` และอีก ${lk.length - 8} บรรทัด` : '') : '—'}`
+    + ((j.brand || []).length ? `<br>${j.brand.map(b => `<b>${trEsc(b[0])}</b> ตัดมาจากบรรทัด "${trEsc(b[1])}" เดือนละ ${n(b[2])} ตามที่ตั้งไว้`).join('<br>')}` : '')
     + (d.layer === 'rev' ? `<br>ยอดขายแยกตามคอลัมน์ช่องทางในงบ · สัดส่วนสินค้าคิดจากยอดขายในระบบของเดือนเดียวกัน</div>` : `<br>ก้อนในงบแยกตามคอลัมน์ช่องทางที่บัญชีลงไว้ · ค่าใช้จ่ายส่วนกลางบัญชีแบ่งเข้าคอลัมน์ช่องทางด้วยสัดส่วนคงที่</div>`);
   return h;
 }
