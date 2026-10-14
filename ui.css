@@ -248,5 +248,9 @@ th { font-family: var(--font) !important; letter-spacing: 0 !important; text-tra
 .ui-tip { position: fixed; z-index: 3000; max-width: 320px; padding: 9px 12px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border);
   color: var(--text2); font: 400 12px/1.6 var(--font); text-align: left; pointer-events: none; opacity: 0; transition: opacity .12s ease;
   box-shadow: 0 6px 20px rgba(0,0,0,.22); white-space: pre-line; }   /* (2026-10-14) การ์ดสว่าง/มืดตามธีม แบบเดียวกับ ⓘ · รองรับขึ้นบรรทัดใหม่ */
+.ui-tip.has-img { padding: 8px; max-width: 260px; }   /* (2026-10-14) tooltip แบบมีภาพ */
+.ui-tip-img { display: block; max-width: 244px; max-height: 320px; border-radius: 6px; background: var(--bg3); }
+.ui-tip.has-img > div { margin-top: 6px; }
+.ui-tip-noimg { font-size: 11.5px; color: var(--text3); padding: 4px 2px; }
 .ui-tip.is-on { opacity: 1; }
 .ui-trunc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
