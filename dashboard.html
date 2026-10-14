@@ -574,62 +574,54 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 <link rel="stylesheet" href="ui.css?v=20261014b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
-  /* (2026-10-14) แผง "ที่มาของตัวเลข" v2 — กลุ่มพับได้ · บรรทัดสมการ ก้อนในงบ × สัดส่วน = ได้ · เลื่อนดูได้ ไม่แบ่งหน้า */
+  /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
   .tr-ov { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:400; opacity:0; transition:opacity .15s; }
   .tr-ov.on { opacity:1; }
-  .tr-dw { position:fixed; top:0; right:0; bottom:0; width:min(640px, 94vw); background:var(--bg2); border-left:1px solid var(--border); box-shadow:-8px 0 30px rgba(0,0,0,.25);
+  .tr-dw { position:fixed; top:0; right:0; bottom:0; width:min(620px, 94vw); background:var(--bg); border-left:1px solid var(--border); box-shadow:-8px 0 30px rgba(0,0,0,.25);
     z-index:401; transform:translateX(100%); transition:transform .2s ease; display:flex; flex-direction:column; font-family:'Sarabun',sans-serif; }
   .tr-dw.on { transform:none; }
-  .tr-h { position:relative; padding:16px 52px 14px 22px; border-bottom:1px solid var(--border); }
-  .tr-h .k { font-size:12px; color:var(--text3); }
-  .tr-sku { font-family:'IBM Plex Mono',monospace; font-size:11px; }
-  .tr-h .t { font-size:16px; font-weight:700; color:var(--text); margin-top:2px; line-height:1.4; }
-  .tr-h .v { font-size:26px; font-weight:700; color:var(--text); margin-top:4px; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
-  .tr-h .v small { font-size:12px; font-weight:400; color:var(--text3); margin-left:10px; letter-spacing:0; }
-  .tr-x { position:absolute; top:12px; right:14px; width:32px; height:32px; border-radius:8px; background:none; border:0; font-size:18px; line-height:1; color:var(--text3); cursor:pointer; }
+  .tr-h { display:flex; align-items:center; justify-content:space-between; padding:12px 14px 12px 22px; border-bottom:1px solid var(--border); background:var(--bg2); font-size:13px; font-weight:600; color:var(--text2); }
+  .tr-x { width:32px; height:32px; border-radius:8px; background:none; border:0; font-size:17px; line-height:1; color:var(--text3); cursor:pointer; }
   .tr-x:hover { background:var(--bg3); color:var(--text); }
-  .tr-b { flex:1; overflow:auto; padding:16px 22px 32px; }
-  .tr-part + .tr-part { margin-top:22px; padding-top:18px; border-top:1px dashed var(--border); }
-  .tr-sec { display:flex; justify-content:space-between; align-items:baseline; font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px; }
-  .tr-f { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:12.5px; line-height:1.7; color:var(--text2); }
-  .tr-f-h { font-size:11.5px; font-weight:700; color:var(--text3); letter-spacing:.02em; margin-bottom:2px; }
-  .tr-f ol { margin:0; padding-left:18px; } .tr-f li { margin:1px 0; }
-  .tr-ex { margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); font-size:12px; color:var(--text2); font-variant-numeric:tabular-nums; }
-  .tr-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:16px 0 8px; }
-  .tr-hint { font-size:11.5px; color:var(--text3); margin-right:auto; } .tr-hint b { color:var(--text2); font-weight:600; }
+  .tr-b { flex:1; overflow:auto; padding:16px 20px 32px; }
+  .tr-warn { background:rgba(239,68,68,.10); border:1px solid rgba(239,68,68,.35); color:var(--red, #ef4444); border-radius:10px; padding:10px 12px; font-size:12.5px; margin-bottom:12px; }
+  .tr-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
+  .tr-card-t { font-size:13px; font-weight:700; color:var(--text2); }
+  .tr-card-v { font-size:30px; font-weight:700; color:var(--text); margin:4px 0 6px; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .tr-card-m { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text3); }
+  .tr-card-m > span + span::before { content:'·'; margin-right:14px; color:var(--border); }
+  .tr-sku { font-family:'IBM Plex Mono',monospace; font-size:11px; }
+  .tr-i { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; font-size:11px; color:var(--text3); cursor:help; vertical-align:1px; font-weight:400; }
+  .tr-i:hover { color:var(--text); }
+  .tr-part { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:6px 0 4px; margin-bottom:14px; overflow:hidden; }
+  .tr-sec { display:flex; justify-content:space-between; align-items:baseline; padding:8px 16px 6px; font-size:12.5px; font-weight:700; color:var(--text); }
+  .tr-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 16px 6px; }
   .tr-seg { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
   .tr-seg button { border:0; background:none; padding:5px 12px; font:inherit; font-size:12px; color:var(--text2); cursor:pointer; }
   .tr-seg button[aria-pressed="true"] { background:var(--accent, #b8892e); color:#fff; font-weight:600; }
   .tr-lnk { border:0; background:none; font:inherit; font-size:12px; color:var(--accent-text, var(--accent, #b8892e)); cursor:pointer; padding:4px 2px; }
   .tr-part[data-view="m"] .tr-v-c, .tr-part[data-view="c"] .tr-v-m { display:none; }
-  .tr-g { border:1px solid var(--border); border-radius:10px; margin-bottom:8px; background:var(--bg2); overflow:hidden; }
-  .tr-g > summary { list-style:none; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:10px; padding:10px 14px; cursor:pointer; }
-  .tr-g > summary::-webkit-details-marker { display:none; }
-  .tr-g > summary::before { content:'▸'; color:var(--text3); font-size:11px; margin-right:-4px; transition:transform .15s; display:inline-block; }
-  .tr-g[open] > summary::before { transform:rotate(90deg); }
-  .tr-g > summary { grid-template-columns:12px auto 1fr auto; }
-  .tr-g > summary:hover { background:var(--bg3); }
-  .tr-g-n { font-weight:700; color:var(--text); font-size:13px; }
-  .tr-g-m { font-size:11.5px; color:var(--text3); font-variant-numeric:tabular-nums; }
-  .tr-g-v { font-size:14px; color:var(--text); font-variant-numeric:tabular-nums; }
-  .tr-g-b { border-top:1px solid var(--border); padding:2px 14px 6px; background:var(--bg2); }
-  .tr-list { border:1px solid var(--border); border-radius:10px; padding:2px 14px 6px; }
-  .tr-r { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:4px 16px; align-items:start; padding:9px 0; border-bottom:1px solid var(--row-border, rgba(127,127,127,.12)); }
-  .tr-r:last-child { border-bottom:0; }
-  .tr-l { font-size:12.5px; color:var(--text); font-weight:600; }
-  .tr-s { display:block; font-size:11px; font-weight:400; color:var(--text3); margin-top:2px; line-height:1.5; }
-  .tr-eq { display:flex; align-items:baseline; gap:6px; font-size:12.5px; color:var(--text2); font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .tr-eq i { font-style:normal; color:var(--text3); font-size:11px; }
-  .tr-eq .tr-pct { color:var(--accent-text, var(--text)); font-weight:600; }
-  .tr-eq b { min-width:84px; text-align:right; color:var(--text); }
-  .tr-total { display:flex; align-items:center; gap:12px; margin-top:16px; padding:12px 14px; border-radius:10px; background:var(--bg3); border:1px solid var(--border); font-size:13px; }
-  .tr-total > span:first-child { font-weight:700; color:var(--text); margin-right:auto; }
-  .tr-total b { font-size:16px; color:var(--text); font-variant-numeric:tabular-nums; }
-  .tr-ok { color:var(--green, #22c55e); font-weight:600; font-size:12px; } .tr-bad { color:var(--red, #ef4444); font-weight:600; font-size:12px; }
-  .tr-src { margin-top:18px; }
-  .tr-src-h { font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:4px; }
-  .tr-n { font-size:11.5px; color:var(--text3); line-height:1.65; margin-top:6px; }
-  .tr-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .tr-tb { width:100%; border-collapse:collapse; font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .tr-tb th { text-align:right; font-weight:600; color:var(--text3); font-size:11.5px; padding:8px 16px 8px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .tr-tb td { text-align:right; padding:8px 16px 8px 8px; color:var(--text2); border-bottom:1px solid var(--row-border, rgba(127,127,127,.12)); white-space:nowrap; }
+  .tr-tb th:first-child, .tr-tb td:first-child { text-align:left; padding-left:16px; }
+  .tr-tb td:last-child { color:var(--text); font-weight:600; }
+  .tr-tb td.tr-pc { color:var(--accent-text, var(--text)); font-weight:600; }
+  .tr-tb td.tr-pc[data-tip]:not([data-tip=""]) { cursor:help; text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); }
+  .tr-tb tr.tr-gh { cursor:pointer; background:var(--bg3); }
+  .tr-tb tr.tr-gh td { color:var(--text); font-weight:700; }
+  .tr-tb tr.tr-gh:hover td { background:rgba(127,127,127,.08); }
+  .tr-car { display:inline-block; width:14px; color:var(--text3); font-size:11px; transition:transform .15s; }
+  .tr-tb tbody.is-closed .tr-car { transform:rotate(-90deg); }
+  .tr-tb tbody.is-closed tr.tr-gc { display:none; }
+  .tr-tb tr.tr-gc td:first-child { padding-left:34px; color:var(--text2); }
+  .tr-tb tfoot td { font-weight:700; color:var(--text); border-top:1px solid var(--border); border-bottom:0; padding-top:10px; padding-bottom:10px; }
+  .tr-src { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:12px 16px 14px; }
+  .tr-src-h { font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .tr-dl { display:grid; grid-template-columns:84px 1fr; gap:8px 12px; margin:0; font-size:12px; }
+  .tr-dl dt { color:var(--text3); } .tr-dl dd { margin:0; color:var(--text2); line-height:1.6; }
+  .tr-n { font-size:12px; color:var(--text3); line-height:1.65; }
+  .tr-chips { display:flex; flex-wrap:wrap; gap:6px; }
   .tr-chips span { font-size:11px; color:var(--text2); background:var(--bg3); border:1px solid var(--border); border-radius:999px; padding:2px 9px; }
   .bd-row.is-trace { cursor:pointer; border-radius:6px; }
   .bd-row.is-trace:hover { background:var(--bg3); }
@@ -712,7 +704,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-g</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7863,21 +7855,30 @@ function bdRender(o) {
       <div class="bd-stack">${stack}</div>${gs.map(row).join('')}${o.note ? `<div class="bd-note">${o.note}</div>` : ''}</div>`;
 }
 
-// ───────── (2026-10-14) ที่มาของตัวเลข (Business Insight) ─────────
-// กดตัวเลข → แผงด้านขวา: ก้อนในงบบัญชี × สัดส่วน = ได้ จัดกลุ่มรายเดือน / รายช่องทาง (พับได้) เลื่อนดูได้ทั้งหมด ไม่แบ่งหน้า
+// ───────── (2026-10-14) ที่มาของตัวเลข (Business Insight) v3 ─────────
+// กดตัวเลข → แผงด้านขวา: การ์ดสรุป · ตารางรายเดือน/รายช่องทาง (ยอดในงบ × สัดส่วน = ได้) · แหล่งที่มา
+// วิธีคิดและตัวเลขประกอบอยู่ใน ⓘ / ชี้เมาส์ · ยอดตรงกับตารางไม่ต้องแจ้ง แจ้งเฉพาะตอนไม่ตรง (แถบด้านบน)
 const _trq = [];
 const trEsc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const trReg = d => { _trq.push(d); return _trq.length - 1; };
 const TR_LAYER = { rev: 'ยอดขาย', dir: 'ค่าการตลาดตรง', ads: 'ค่า Ads', cm2: 'ค่าช่องทาง', cm3: 'การตลาดอื่น (ปัน)', overhead: 'ค่าบริหาร' };
-const TR_STEPS = {
-  grp: d => [`ยอด${d.layer === 'rev' ? 'ขาย' : ''}ของแต่ละช่องทางตามงบบัญชี${d.layer === 'rev' ? ' (ไม่รวม VAT)' : ''}`, 'คูณสัดส่วนที่สินค้านี้ขายได้ในช่องทางนั้น (จากออเดอร์ในระบบ เดือนเดียวกัน)', 'รวมทุกช่องทาง ทุกเดือน'],
-  all: () => ['ยอดตามงบบัญชีของแต่ละเดือน', 'คูณสัดส่วนที่สินค้านี้ขายได้ เทียบยอดขายทั้งบริษัท (จากระบบ)', 'รวมทุกเดือน'],
-  ads: () => ['ค่า Ads ของแต่ละช่องทางตามงบบัญชี', 'คูณสัดส่วนค่าโฆษณาที่ผูกกับสินค้านี้ในช่องทางนั้น (Meta · TikTok · Shopee · Lazada)', 'รวมทุกช่องทาง ทุกเดือน'],
-  live: () => ['ค่า Live TikTok ตามงบบัญชี', 'คูณสัดส่วนยอดขายสินค้านี้ใน Live TikTok เทียบยอดขาย Live ทั้งหมด', 'รวมทุกเดือน'],
-  pres: () => ['ค่า Presenter ตามงบบัญชี (ค่าตัวทุกคนรวมกัน)', 'คูณสัดส่วนค่าตัวของ Presenter ที่ดูแลสินค้านี้', 'คูณสัดส่วนยอดขายสินค้านี้ ในสินค้าที่ Presenter คนนั้นดูแล'],
-  id: () => ['ยอดตามงบบัญชีของบรรทัดนั้น', 'คูณสัดส่วนที่บัญชีระบุให้สินค้านี้ (ไฟล์ค่าใช้จ่ายรายสินค้าของบัญชี)', 'รวมทุกเดือน']
+const TR_METHOD = {
+  grp: d => `วิธีคิด\n1. ${d.layer === 'rev' ? 'ยอดขาย' : 'ยอด'}ของแต่ละช่องทางตามงบบัญชี${d.layer === 'rev' ? ' (ไม่รวม VAT)' : ''}\n2. คูณสัดส่วนที่สินค้านี้ขายได้ในช่องทางนั้น (จากออเดอร์ในระบบ เดือนเดียวกัน)\n3. รวมทุกช่องทาง ทุกเดือน`,
+  all: () => 'วิธีคิด\n1. ยอดตามงบบัญชีของแต่ละเดือน\n2. คูณสัดส่วนที่สินค้านี้ขายได้ เทียบยอดขายทั้งบริษัท (จากระบบ)\n3. รวมทุกเดือน',
+  ads: () => 'วิธีคิด\n1. ค่า Ads ของแต่ละช่องทางตามงบบัญชี\n2. คูณสัดส่วนค่าโฆษณาที่ผูกกับสินค้านี้ในช่องทางนั้น (Meta · TikTok · Shopee · Lazada)\n3. รวมทุกช่องทาง ทุกเดือน',
+  live: () => 'วิธีคิด\n1. ค่า Live TikTok ตามงบบัญชี\n2. คูณสัดส่วนยอดขายสินค้านี้ใน Live TikTok เทียบยอดขาย Live ทั้งหมด\n3. รวมทุกเดือน',
+  pres: () => 'วิธีคิด\n1. ค่าตัวของ Presenter ที่ดูแลสินค้านี้ (แยกจากบรรทัดค่าจ้างนักแสดงสาธารณะในงบ ซึ่งรวมค่าตัวทุกคน)\n2. คูณสัดส่วนยอดขายสินค้านี้ ในสินค้าที่ Presenter คนนั้นดูแล\n3. รวมทุกเดือน\nค่าตัวของ Presenter คนอื่นไม่ลงสินค้านี้',
+  id: () => 'วิธีคิด\n1. ยอดตามงบบัญชีของบรรทัดนั้น\n2. คูณสัดส่วนที่บัญชีระบุให้สินค้านี้ (ไฟล์ค่าใช้จ่ายรายสินค้าของบัญชี)\n3. รวมทุกเดือน'
 };
-const TR_BASIS = { grp: ['สินค้านี้ขาย', 'จากทั้งช่องทาง'], all: ['สินค้านี้ขาย', 'จากทั้งบริษัท'], ads: ['Ads ผูกสินค้านี้', 'จาก Ads ที่ผูกสินค้าทั้งช่องทาง'], live: ['ขายใน Live', 'จาก Live ทั้งหมด'] };
+const TR_SHARE = {
+  grp: 'ยอดขายสินค้านี้ ÷ ยอดขายทุกสินค้าในช่องทางนั้น (จากออเดอร์ในระบบ เดือนเดียวกัน)',
+  all: 'ยอดขายสินค้านี้ ÷ ยอดขายทุกสินค้าทั้งบริษัท (จากระบบ เดือนเดียวกัน)',
+  ads: 'ค่าโฆษณาที่ผูกกับสินค้านี้ ÷ ค่าโฆษณาที่ผูกสินค้าทั้งหมดในช่องทางนั้น',
+  live: 'ยอดขายสินค้านี้ใน Live TikTok ÷ ยอดขาย Live TikTok ทั้งหมด',
+  id: 'สัดส่วนที่บัญชีระบุให้สินค้านี้ ในไฟล์ค่าใช้จ่ายรายสินค้าของบัญชี'
+};
+const TR_BASIS = { grp: ['สินค้านี้', 'ทั้งช่องทาง'], all: ['สินค้านี้', 'ทั้งบริษัท'], ads: ['Ads สินค้านี้', 'Ads ทั้งช่องทาง'], live: ['Live สินค้านี้', 'Live ทั้งหมด'] };
+const trI = tip => `<span class="tr-i" data-tip="${trEsc(tip)}">ⓘ</span>`;
 function trClose() {
   const dw = document.getElementById('trDw'), ov = document.getElementById('trOv');
   if (dw) dw.classList.remove('on'); if (ov) ov.classList.remove('on');
@@ -7886,7 +7887,12 @@ function trClose() {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('trDw')) trClose(); });
 function openTraceIdx(i) { const d = _trq[i]; if (d) openTrace(d.sku, d); }
 function trView(btn, v) { const p = btn.closest('.tr-part'); p.dataset.view = v; p.querySelectorAll('.tr-seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v)); }
-function trAll(btn) { const p = btn.closest('.tr-part'), open = btn.dataset.open !== '1'; p.querySelectorAll(`.tr-v-${p.dataset.view || 'm'} details`).forEach(x => { x.open = open; }); btn.dataset.open = open ? '1' : '0'; btn.textContent = open ? 'ย่อทั้งหมด' : 'ขยายทั้งหมด'; }
+function trGrp(row) { row.closest('tbody').classList.toggle('is-closed'); }
+function trAll(btn) {
+  const p = btn.closest('.tr-part'), open = btn.dataset.open !== '1';
+  p.querySelectorAll(`.tr-v-${p.dataset.view || 'm'} tbody.tr-grp`).forEach(tb => tb.classList.toggle('is-closed', !open));
+  btn.dataset.open = open ? '1' : '0'; btn.textContent = open ? 'ย่อทั้งหมด' : 'ขยายทั้งหมด';
+}
 async function openTrace(sku, d) {
   const o = _plView.find(x => x.sku === sku) || { name: sku };
   const from = document.getElementById('plFrom').value, to = document.getElementById('plTo').value;
@@ -7896,95 +7902,101 @@ async function openTrace(sku, d) {
     dw = document.createElement('aside'); dw.id = 'trDw'; dw.className = 'tr-dw'; dw.setAttribute('role', 'dialog'); dw.setAttribute('aria-label', 'ที่มาของตัวเลข'); document.body.appendChild(dw);
     requestAnimationFrame(() => { ov.classList.add('on'); dw.classList.add('on'); });
   } else { ov.classList.add('on'); dw.classList.add('on'); }
-  dw.innerHTML = `<div class="tr-h"><button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button><div class="t">กำลังโหลด…</div></div>`;   // ปุ่มปิดขึ้นก่อนเสมอ
-  const period = from === to ? PL_TH_M(from) : `${PL_TH_M(from)} – ${PL_TH_M(to)}`;
-  const title = `${d.label || TR_LAYER[d.layer] || ''}${d.grp ? ' · ' + d.grp : ''}`;
-  dw.innerHTML = `<div class="tr-h"><div class="k">ที่มาของตัวเลข · ${trEsc(o.name)} <span class="tr-sku">${trEsc(sku)}</span></div>
-      <div class="t">${trEsc(plLbl(title))}</div><div class="v">${d.amount != null ? fmt(Math.round(d.amount)) : '…'}<small>${period}</small></div>
-      <button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button></div><div class="tr-b" id="trBody"><div class="tr-n">กำลังโหลด…</div></div>`;
+  dw.innerHTML = `<div class="tr-h"><span>ที่มาของตัวเลข</span><button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button></div><div class="tr-b" id="trBody"><div class="tr-n">กำลังโหลด…</div></div>`;
+  d = { ...d, sku, period: from === to ? PL_TH_M(from) : `${PL_TH_M(from)} – ${PL_TH_M(to)}`, name: o.name, rev: o.rev };
   let j;
   try {
     const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/biz_trace`, { method: 'POST',
       headers: { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_sku: sku, p_layer: d.layer, p_std: d.std || null, p_grp: d.grp || null, p_from: from + '-01', p_to: to + '-01' }) });
     j = await r.json(); if (!r.ok) throw new Error(j.message || r.status);
-  } catch (e) { const b = document.getElementById('trBody'); if (b) b.innerHTML = `<div class="tr-n">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
+  } catch (e) { const b = document.getElementById('trBody'); if (b) b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
   const body = document.getElementById('trBody'); if (!body) return;
   try { body.innerHTML = trRender(j, d); }
-  catch (e) { body.innerHTML = `<div class="tr-n">แสดงผลไม่สำเร็จ: ${trEsc(e.message)}</div>`; console.error('trace', e); }   // กันแผงค้างว่าง ปิดได้เสมอ
+  catch (e) { body.innerHTML = `<div class="tr-warn">แสดงผลไม่สำเร็จ: ${trEsc(e.message)}</div>`; console.error('trace', e); }   // กันแผงค้างว่าง ปิดได้เสมอ
 }
 function trRender(j, d) {
   const n = v => fmt(Math.round(+v || 0));
   const rows = (j.rows || []).map(r => ({ m: r[0], grp: r[1], src: r[2], sch: r[3], amt: +r[4], pool: +r[5], bn: r[6] == null ? null : +r[6], bd: r[7] == null ? null : +r[7] }));
-  if (!rows.length) return '<div class="tr-n">ไม่มีข้อมูลในช่วงนี้</div>';
   const total = rows.reduce((t, r) => t + r.amt, 0);
   const parts = {}; rows.forEach(r => { (parts[r.src + '|' + r.sch] = parts[r.src + '|' + r.sch] || []).push(r); });
   const keys = Object.keys(parts).sort((a, b) => (a.startsWith('id') ? 0 : 1) - (b.startsWith('id') ? 0 : 1));
-  let h = keys.map(k => trPart(j, d, k.split('|')[0], k.split('|')[1], parts[k], keys.length > 1)).join('');
-  const ok = d.amount == null || Math.abs(total - d.amount) < 1.5;
-  h += `<div class="tr-total"><span>รวมทุกเดือน</span><span class="${ok ? 'tr-ok' : 'tr-bad'}">${ok ? '✓ ตรงกับตัวเลขในตาราง' : 'ต่างจากตาราง ' + n(total - d.amount)}</span><b>${n(total)}</b></div>`;
+  const method = keys.map(k => (TR_METHOD[k.split('|')[1]] || TR_METHOD.all)(d)).filter((v, i, a) => a.indexOf(v) === i).join('\n\n');
+  const title = `${d.label || TR_LAYER[d.layer] || ''}${d.grp ? ' · ' + d.grp : ''}`;
+  let h = '';
+  if (d.amount != null && Math.abs(total - d.amount) >= 1.5)   // ตรงอยู่แล้วไม่ต้องแจ้ง · แจ้งเฉพาะตอนไม่ตรง
+    h += `<div class="tr-warn">ยอดรวมของรายละเอียด ${n(total)} ต่างจากตัวเลขในตาราง ${n(d.amount)} อยู่ ${n(total - d.amount)}</div>`;
+  h += `<div class="tr-card"><div class="tr-card-t">${trEsc(plLbl(title))} ${method ? trI(method) : ''}</div>
+    <div class="tr-card-v">${n(d.amount != null ? d.amount : total)}</div>
+    <div class="tr-card-m"><span>${trEsc(d.name)} <span class="tr-sku">${trEsc(d.sku || '')}</span></span><span>${d.period}</span>${d.layer !== 'rev' && d.rev > 0 ? `<span>${((d.amount != null ? d.amount : total) / d.rev * 100).toFixed(1)}% ของยอดขายสินค้านี้</span>` : ''}</div></div>`;
+  if (!rows.length) return h + '<div class="tr-n">ไม่มีข้อมูลในช่วงนี้</div>';
+  h += keys.map(k => trPart(j, d, k.split('|')[0], k.split('|')[1], parts[k], keys.length > 1)).join('');
+  // แหล่งที่มา
   const refs = j.refs || [], seen = {}; refs.forEach(r => { seen[(r[1] ? r[1] + ' ' : '') + r[2]] = 1; });
   const lk = Object.keys(seen), ms = refs.map(r => r[0]).sort();
   const mRange = ms.length ? (ms[0] === ms[ms.length - 1] ? PL_TH_M(ms[0]) : `${PL_TH_M(ms[0])} – ${PL_TH_M(ms[ms.length - 1])}`) : '';
-  h += `<div class="tr-src"><div class="tr-src-h">ก้อนในงบมาจากไหน</div>
-    <div class="tr-n">ไฟล์งบกำไรขาดทุนของบัญชี แท็บรายเดือน${mRange ? ' ' + mRange : ''} · บรรทัดที่ใช้</div>
-    <div class="tr-chips">${lk.slice(0, 12).map(x => `<span>${trEsc(x)}</span>`).join('')}${lk.length > 12 ? `<span>และอีก ${lk.length - 12} บรรทัด</span>` : ''}</div>`
-    + ((j.brand || []).length ? `<div class="tr-n">${j.brand.map(b => `<b>${trEsc(b[0])}</b> ตัดมาจากบรรทัด "${trEsc(b[1])}" เดือนละ ${n(b[2])} ตามที่ตั้งไว้`).join('<br>')}</div>` : '')
-    + `<div class="tr-n">${d.layer === 'rev' ? 'ยอดในงบแยกตามคอลัมน์ช่องทาง · สัดส่วนของสินค้าคิดจากยอดขายในระบบของเดือนเดียวกัน' : 'ยอดในงบแยกตามคอลัมน์ช่องทางที่บัญชีลงไว้ · ค่าใช้จ่ายส่วนกลางบัญชีแบ่งเข้าคอลัมน์ช่องทางด้วยสัดส่วนคงที่'}</div></div>`;
+  h += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div>
+    <dl class="tr-dl"><dt>ไฟล์</dt><dd>งบกำไรขาดทุนของบัญชี แท็บรายเดือน${mRange ? ' (' + mRange + ')' : ''}</dd>
+    <dt>บรรทัดบัญชี</dt><dd><div class="tr-chips">${lk.slice(0, 12).map(x => `<span>${trEsc(x)}</span>`).join('')}${lk.length > 12 ? `<span>และอีก ${lk.length - 12} บรรทัด</span>` : ''}</div></dd>`
+    + ((j.brand || []).length ? `<dt>หมายเหตุ</dt><dd>${j.brand.map(b => `${trEsc(b[0])} ตัดจากบรรทัด "${trEsc(b[1])}" เดือนละ ${n(b[2])}`).join('<br>')}</dd>` : '')
+    + `<dt>ช่องทาง</dt><dd>${d.layer === 'rev' ? 'ตามคอลัมน์ช่องทางในงบ · สัดส่วนสินค้าจากยอดขายในระบบ' : 'ตามคอลัมน์ช่องทางที่บัญชีลงไว้ (ค่าใช้จ่ายส่วนกลางบัญชีแบ่งด้วยสัดส่วนคงที่)'}</dd></dl></div>`;
   return h;
 }
 function trPart(j, d, src, sch, list, multi) {
   const n = v => fmt(Math.round(+v || 0)), pc = v => isFinite(v) ? (v * 100).toFixed(Math.abs(v) < 0.1 ? 2 : 1) + '%' : '—';
   const sum = (L, k) => L.reduce((t, r) => t + r[k], 0);
-  const steps = (TR_STEPS[sch] || TR_STEPS.all)(d), B = TR_BASIS[sch];
   const months = [...new Set(list.map(r => r.m))].sort(), chans = [...new Set(list.map(r => r.grp))];
-  const P = (j.pres || []).map(p => ({ m: p[0], who: p[1], fee: +p[2], fs: +p[3], num: +p[4] || 0, den: +p[5] || 0, mine: p[6] }));
-  // บรรทัดสมการ: ก้อนในงบ × สัดส่วน = ได้ (+ ตัวเลขที่ใช้คิดสัดส่วน)
-  const basis = (r, amt, pool) => {
+  const B = TR_BASIS[sch];
+  const poolTip = d.layer === 'rev' ? 'ยอดขายตามงบบัญชีของช่องทางในเดือนนั้น (ไม่รวม VAT)' : 'ยอดตามงบบัญชีของบรรทัดนี้ ในคอลัมน์ช่องทางนั้น';
+  const shareTip = (r, amt, pool) => {   // ตัวเลขที่ใช้คิดสัดส่วน (ชี้เมาส์ที่ %)
     if (sch === 'id') return 'บัญชีระบุสัดส่วนนี้ให้สินค้านี้';
     if (!B || r.bn == null || !r.bd) return '';
-    const sh = pool ? amt / pool : 0, bs = r.bn / r.bd;
-    return Math.abs(bs - sh) < 0.005 && r.bn ? `${B[0]} ${n(r.bn)} ${B[1]} ${n(r.bd)}` : 'ใช้สัดส่วนสำรอง เพราะช่องทางนี้ไม่มีข้อมูลของสินค้านี้';
+    const sh = pool ? amt / pool : 0;
+    return Math.abs(r.bn / r.bd - sh) < 0.005 && r.bn ? `${B[0]} ${n(r.bn)} ÷ ${B[1]} ${n(r.bd)}` : 'ใช้สัดส่วนสำรอง เพราะช่องทางนี้ไม่มีข้อมูลของสินค้านี้';
   };
-  const eqRow = (label, pool, amt, sub, strong) => `<div class="tr-r${strong ? ' is-strong' : ''}"><div class="tr-l">${label}${sub ? `<span class="tr-s">${sub}</span>` : ''}</div>
-      <div class="tr-eq"><span>${n(pool)}</span><i>×</i><span class="tr-pct">${pc(pool ? amt / pool : NaN)}</span><i>=</i><b>${n(amt)}</b></div></div>`;
-  const presRow = m => {
-    const L = list.filter(r => r.m === m), amt = sum(L, 'amt'), pool = sum(L, 'pool'), ps = P.filter(p => p.m === m && p.mine), all = P.filter(p => p.m === m);
-    if (!ps.length) return eqRow(PL_TH_M(m), pool, amt, '');
-    const p = ps[0], s2 = p.den ? p.num / p.den : 0, calc = pool * p.fs * s2, eq = Math.abs(calc - amt) < 1 ? '=' : '≈';
-    return `<div class="tr-r"><div class="tr-l">${PL_TH_M(m)}<span class="tr-s">${trEsc(p.who)} ค่าตัว ${n(p.fee)} จากค่าตัวรวม ${n(all.reduce((t, x) => t + x.fee, 0))} (${all.length} คน) · สินค้านี้ขาย ${n(p.num)} จากสินค้าที่${trEsc(p.who)}ดูแล ${n(p.den)}</span></div>
-      <div class="tr-eq"><span>${n(pool)}</span><i>×</i><span class="tr-pct">${pc(p.fs)}</span><i>×</i><span class="tr-pct">${pc(s2)}</span><i title="${eq === '≈' ? 'ต่างเล็กน้อยจากการปรับให้ทุกสินค้ารวมกันเท่าก้อนในงบ' : ''}">${eq}</i><b>${n(amt)}</b></div></div>`;
-  };
-  const grpBox = (name, meta, val, inner, open) => `<details class="tr-g"${open ? ' open' : ''}><summary><span class="tr-g-n">${name}</span><span class="tr-g-m">${meta}</span><b class="tr-g-v">${val}</b></summary><div class="tr-g-b">${inner}</div></details>`;
-  const ex = (() => {   // ตัวอย่าง 1 บรรทัดจากข้อมูลจริง
-    const r = list.slice().sort((a, b) => b.amt - a.amt)[0]; if (!r || !r.pool) return '';
-    return `${PL_TH_M(r.m)}${chans.length > 1 && !['all', 'live', 'pres'].includes(sch) ? ' · ' + trEsc(r.grp) : ''}: ${n(r.pool)} × ${pc(r.amt / r.pool)} = ${n(r.amt)}`;
-  })();
+  const pcell = (amt, pool, tip) => `<td class="tr-pc"${tip ? ` data-tip="${trEsc(tip)}"` : ''}>${pc(pool ? amt / pool : NaN)}</td>`;
+  const tot = `<tfoot><tr><td>รวม</td><td>${n(sum(list, 'pool'))}</td><td class="tr-pc">${pc(sum(list, 'pool') ? sum(list, 'amt') / sum(list, 'pool') : NaN)}</td><td>${n(sum(list, 'amt'))}</td></tr></tfoot>`;
   let h = `<section class="tr-part" data-view="m">`;
-  if (multi) h += `<div class="tr-sec">${src === 'id' ? 'ส่วนที่บัญชีระบุสินค้า' : 'ส่วนที่แบ่งตามสัดส่วน'}<b>${n(sum(list, 'amt'))}</b></div>`;
-  h += `<div class="tr-f"><div class="tr-f-h">วิธีคิด</div><ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>${ex && sch !== 'pres' ? `<div class="tr-ex">ตัวอย่าง ${ex}</div>` : ''}</div>`;
-  const twoDim = !['all', 'live', 'id', 'pres'].includes(sch) && !d.grp && chans.length > 1;
-  h += `<div class="tr-bar"><span class="tr-hint">อ่านแต่ละบรรทัด: <b>ก้อนในงบ × สัดส่วน = ได้</b></span>`
-    + (twoDim ? `<span class="tr-seg"><button type="button" data-v="m" aria-pressed="true" onclick="trView(this,'m')">ตามเดือน</button><button type="button" data-v="c" aria-pressed="false" onclick="trView(this,'c')">ตามช่องทาง</button></span><button type="button" class="tr-lnk" onclick="trAll(this)">ขยายทั้งหมด</button>` : '') + `</div>`;
-  if (sch === 'pres') {
-    h += `<div class="tr-list">${months.map(presRow).join('')}</div>`;
-  } else if (!twoDim) {
-    h += `<div class="tr-list">${months.map(m => {
+  if (multi) h += `<div class="tr-sec"><span>${src === 'id' ? 'ส่วนที่บัญชีระบุสินค้า' : 'ส่วนที่แบ่งตามสัดส่วน'}</span><b>${n(sum(list, 'amt'))}</b></div>`;
+  if (sch === 'pres') {   // (2026-10-14) เริ่มจากค่าตัวของคนที่ดูแลสินค้านี้เลย ไม่โชว์ก้อนรวมทุกคน (ค่าตัวคนอื่นไม่ลงสินค้านี้)
+    const P = (j.pres || []).map(p => ({ m: p[0], who: p[1], fee: +p[2], fs: +p[3], num: +p[4] || 0, den: +p[5] || 0, mine: p[6] }));
+    const who = (P.find(p => p.mine) || {}).who || 'Presenter';
+    let tf = 0;
+    h += `<table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เดือน</th>
+        <th>ค่าตัว${trEsc(who)} ${trI(`ค่าตัว${who}ในเดือนนั้น แยกจากบรรทัดค่าจ้างนักแสดงสาธารณะในงบ (บรรทัดนี้รวมค่าตัว Presenter ทุกคน)`)}</th>
+        <th>สัดส่วนสินค้านี้ ${trI(`ยอดขายสินค้านี้ ÷ ยอดขายสินค้าทั้งหมดที่${who}ดูแล (จากระบบ เดือนเดียวกัน)`)}</th>
+        <th>ได้ ${trI(`ค่าตัว${who} × สัดส่วนสินค้านี้`)}</th></tr></thead><tbody>`
+      + months.map(m => {
+        const L = list.filter(r => r.m === m), amt = sum(L, 'amt'), pool = sum(L, 'pool'), p = P.find(x => x.m === m && x.mine), all = P.filter(x => x.m === m);
+        const fee = p ? pool * p.fs : 0; tf += fee;
+        const feeTip = p ? `บรรทัดค่าจ้างนักแสดงสาธารณะในงบ ${n(pool)} = ${all.map(x => `${x.who} ${n(x.fee)}`).join(' + ')}\nส่วนของ${p.who} ${n(fee)}` : '';
+        const prodTip = p ? `สินค้านี้ ${n(p.num)} ÷ สินค้าที่${p.who}ดูแลทั้งหมด ${n(p.den)}` : '';
+        return `<tr><td>${PL_TH_M(m)}</td><td class="tr-pc" data-tip="${trEsc(feeTip)}" style="color:var(--text2);font-weight:400;">${p ? n(fee) : '—'}</td><td class="tr-pc" data-tip="${trEsc(prodTip)}">${p && p.den ? pc(p.num / p.den) : '—'}</td><td>${n(amt)}</td></tr>`;
+      }).join('') + `</tbody><tfoot><tr><td>รวม</td><td>${n(tf)}</td><td class="tr-pc">${tf ? pc(sum(list, 'amt') / tf) : '—'}</td><td>${n(sum(list, 'amt'))}</td></tr></tfoot></table>`;
+    return h + `</section>`;
+  }
+  const twoDim = !['all', 'live', 'id'].includes(sch) && !d.grp && chans.length > 1;
+  const head = first => `<thead><tr><th>${first}</th><th>ยอดในงบ ${trI(poolTip)}</th><th>สัดส่วน ${trI(TR_SHARE[sch] || TR_SHARE.all)}</th><th>ได้ ${trI('ยอดในงบ × สัดส่วน')}</th></tr></thead>`;
+  if (!twoDim) {
+    h += `<table class="tr-tb" data-no-sort data-no-page>${head('เดือน')}<tbody>` + months.map(m => {
       const L = list.filter(r => r.m === m), amt = sum(L, 'amt'), pool = sum(L, 'pool');
       const r0 = L.length === 1 || ['all', 'live'].includes(sch) ? L[0] : { bn: null, bd: null };
-      return eqRow(PL_TH_M(m), pool, amt, basis(r0, amt, pool) || (L.length > 1 ? `${L.length} คอลัมน์ช่องทางในงบรวมกัน` : ''));
-    }).join('')}</div>`;
-  } else {
-    const byM = months.map((m, i) => {
-      const L = list.filter(r => r.m === m).sort((a, b) => b.amt - a.amt), amt = sum(L, 'amt'), pool = sum(L, 'pool');
-      return grpBox(PL_TH_M(m), `ก้อนในงบ ${n(pool)} · สัดส่วนรวม ${pc(pool ? amt / pool : NaN)}`, n(amt), L.map(r => eqRow(trEsc(r.grp), r.pool, r.amt, basis(r, r.amt, r.pool))).join(''), i === 0);
-    }).join('');
-    const byC = chans.map(c => ({ c, L: list.filter(r => r.grp === c) })).sort((a, b) => sum(b.L, 'amt') - sum(a.L, 'amt')).map(({ c, L }, i) => {
-      const amt = sum(L, 'amt'), pool = sum(L, 'pool');
-      return grpBox(trEsc(c), `ก้อนในงบ ${n(pool)} · สัดส่วนรวม ${pc(pool ? amt / pool : NaN)}`, n(amt), L.sort((a, b) => a.m.localeCompare(b.m)).map(r => eqRow(PL_TH_M(r.m), r.pool, r.amt, basis(r, r.amt, r.pool))).join(''), i === 0);
-    }).join('');
-    h += `<div class="tr-v-m">${byM}</div><div class="tr-v-c">${byC}</div>`;
+      return `<tr><td>${PL_TH_M(m)}</td><td>${n(pool)}</td>${pcell(amt, pool, shareTip(r0, amt, pool) || (L.length > 1 ? `${L.length} คอลัมน์ช่องทางในงบรวมกัน` : ''))}<td>${n(amt)}</td></tr>`;
+    }).join('') + `</tbody>${tot}</table>`;
+    return h + `</section>`;
   }
+  h += `<div class="tr-bar"><span class="tr-seg"><button type="button" data-v="m" aria-pressed="true" onclick="trView(this,'m')">ตามเดือน</button><button type="button" data-v="c" aria-pressed="false" onclick="trView(this,'c')">ตามช่องทาง</button></span>
+    <button type="button" class="tr-lnk" data-open="1" onclick="trAll(this)">ย่อทั้งหมด</button></div>`;
+  const grpBody = (label, L, childLabel) => {
+    const amt = sum(L, 'amt'), pool = sum(L, 'pool');
+    return `<tbody class="tr-grp"><tr class="tr-gh" onclick="trGrp(this)"><td><span class="tr-car">▾</span>${label}</td><td>${n(pool)}</td><td class="tr-pc">${pc(pool ? amt / pool : NaN)}</td><td>${n(amt)}</td></tr>`
+      + L.map(r => `<tr class="tr-gc"><td>${childLabel(r)}</td><td>${n(r.pool)}</td>${pcell(r.amt, r.pool, shareTip(r, r.amt, r.pool))}<td>${n(r.amt)}</td></tr>`).join('') + `</tbody>`;
+  };
+  h += `<div class="tr-v-m"><table class="tr-tb" data-no-sort data-no-page>${head('เดือน / ช่องทาง')}`
+    + months.map(m => grpBody(PL_TH_M(m), list.filter(r => r.m === m).sort((a, b) => b.amt - a.amt), r => trEsc(r.grp))).join('') + `${tot}</table></div>`;
+  h += `<div class="tr-v-c"><table class="tr-tb" data-no-sort data-no-page>${head('ช่องทาง / เดือน')}`
+    + chans.map(c => ({ c, L: list.filter(r => r.grp === c).sort((a, b) => a.m.localeCompare(b.m)) })).sort((a, b) => sum(b.L, 'amt') - sum(a.L, 'amt'))
+      .map(({ c, L }) => grpBody(trEsc(c), L, r => PL_TH_M(r.m))).join('') + `${tot}</table></div>`;
   return h + `</section>`;
 }
 const bdTop = (arr, max) => { const s = arr.slice().sort((a, b) => b.amount - a.amount); if (s.length <= max) return s; const rest = s.slice(max).reduce((t, g) => t + g.amount, 0); return s.slice(0, max).concat([{ label: `อื่นๆ (${s.length - max} รายการ)`, amount: rest }]); };
