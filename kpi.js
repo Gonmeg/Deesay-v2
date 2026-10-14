@@ -1,4 +1,4 @@
-// kpi.js (v20261013a) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
+// kpi.js (v20261013b) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
 // เป้ารายเดือน ต่อสินค้า (parent) ต่อช่องทาง · กรอกเป็นชิ้น → เป้าเงิน = ชิ้น × ราคาเฉลี่ยต่อชิ้นจริง 3 เดือนก่อนเดือนเป้า (ล็อกเมื่อเดือนจบ: kpi_price_lock)
 // ที่มา: RPC kpi_page(p_month) — ยอดจริงจาก mv_sku_daily (แหล่งเดียวกับเจาะสินค้า / แนวโน้มสินค้า) นับถึงเมื่อวาน · บันทึก: RPC kpi_set_targets (ตรวจสิทธิ์ + เก็บประวัติ)
 // สิทธิ์แก้ = ผู้ดูแลระบบ + คนที่ติ๊ก "แก้เป้า KPI" ใน Admin · เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ
@@ -12,10 +12,10 @@
   const MIN_M = '2026-01';
   const MS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   const ML = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-  let TODAY = null, YEST = null, CUR = null;   // มาจากเซิร์ฟเวอร์ (เวลาไทย)
+  let TODAY = null, YEST = null, CUR = null, YEST_REAL = null, DATA_LAST = {};   // มาจากเซิร์ฟเวอร์ (เวลาไทย) · (2026-10-13) YEST = วันตัดยอดที่ข้อมูลครบทุกช่องทางหลัก
 
   const fmt = v => Math.round(+v || 0).toLocaleString('en-US');
-  const money = v => (Math.round(v) < 0 ? '−฿' : '฿') + fmt(Math.abs(v));
+  const money = v => (Math.round(v) < 0 ? '−' : '') + fmt(Math.abs(v));
   const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const css = n => getComputedStyle(document.body).getPropertyValue(n).trim();
   const $ = id => document.getElementById(id);
@@ -55,7 +55,7 @@
     if (mo && !force && CACHE[mo] && Date.now() - CACHE[mo].at < 5 * 60 * 1000) { use(mo); return mo; }
     const n = new Date(), here = n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-01';
     const d = await Auth.rpc('kpi_page', { p_month: mo ? mo + '-01' : here });
-    TODAY = d.today; YEST = d.yest; CUR = d.cur; mo = d.month;
+    TODAY = d.today; YEST = d.yest; CUR = d.cur; mo = d.month; YEST_REAL = d.yest_real || d.yest; DATA_LAST = d.data_last || {};
     CACHE[mo] = build(mo, d); use(mo); return mo;
   }
 
@@ -101,7 +101,7 @@
   const rev3 = (mo, s) => prev3(mo).reduce((a, m) => a + CH.reduce((b, c) => b + act(m, s, c)[1], 0), 0);
 
   function ctx(mo) {
-    const st = state3(mo), n = dim(mo), el = {}, last = {}, partial = {}, now = st === 'cur' ? +YEST.slice(8) : st === 'past' ? n : 0;
+    const st = state3(mo), n = dim(mo), el = {}, last = {}, partial = {}, now = st === 'cur' ? (YEST && YEST.startsWith(mo) ? +YEST.slice(8) : 0) : st === 'past' ? n : 0;   // ต้นเดือนที่ยังไม่มีวันไหนครบ = 0
     CH.forEach(c => {
       if (st !== 'cur') { el[c] = st === 'past' ? n : 0; return; }
       const L = lastData(mo, c); last[c] = L; el[c] = isBulk(c) ? now : (L ? +L.slice(8) : now);
@@ -215,14 +215,16 @@
   window.kpPickMonth = m => { if (typeof drpClose === 'function') drpClose('kpDrp'); goMonth(m); };
   const presetMonth = p => p === 'm0' ? CUR : p === 'm1' ? mAdd(CUR, -1) : mAdd(CUR, 1);
   function renderHead(K) {
-    const sub = K.st === 'cur' ? `ผ่านไป ${K.now} จาก ${K.n} วัน · นับยอดถึง ${dLong(YEST)} (ไม่นับวันนี้ที่ยังไม่จบ)`
+    const ahead = Object.entries(DATA_LAST).filter(([c, d]) => d > YEST).map(([c, d]) => `${c} มีถึง ${dShort(d)}`);
+    const cutTip = `ทุกตัวเลขในหน้านี้นับถึง ${dLong(YEST)} ซึ่งเป็นวันล่าสุดที่ Facebook · Shopee · TikTok มีข้อมูลครบทุกช่องทาง จะได้เทียบกันที่วันเดียวกัน` + (ahead.length ? `<br>ข้อมูลที่เข้ามาแล้วแต่ยังไม่นับ: ${ahead.join(' · ')} (ยังไม่ครบหรือช่องอื่นยังไม่ถึง) · ดูยอดล่าสุดรายวันได้ที่หน้าแรก` : '');
+    const sub = K.st === 'cur' ? `ผ่านไป ${K.now} จาก ${K.n} วัน · นับยอดทุกช่องทางถึง ${dLong(YEST)} ${info('kp-i-cut', cutTip)}`
       : K.st === 'past' ? 'จบเดือนแล้ว · ผลสุดท้าย' : 'เดือนนี้ยังไม่เริ่ม · ใช้ตั้งเป้าล่วงหน้า';
     const lock = K.st === 'past' ? `<span class="ui-badge" data-tip="เดือนที่จบแล้วแก้เป้าได้เฉพาะผู้ดูแลระบบ">🔒 ล็อกแล้ว</span>` : '';
     const modeBtns = !ME.can_edit ? '' : `<div class="ui-presets" id="kpMode" role="group" aria-label="โหมดของหน้า">
         <button type="button" data-m="track" aria-pressed="${S.mode === 'track'}">📊 ติดตามผล</button>
         <button type="button" data-m="edit" aria-pressed="${S.mode === 'edit'}">✏️ ตั้งเป้า</button></div>`;
     const unitBtns_unused = `<div class="ui-presets" role="group" aria-label="หน่วย">
-        <button type="button" data-u="rev" aria-pressed="${S.unit === 'rev'}">ยอดขาย (฿)</button>
+        <button type="button" data-u="rev" aria-pressed="${S.unit === 'rev'}">ยอดขาย (บาท)</button>
         <button type="button" data-u="qty" aria-pressed="${S.unit === 'qty'}">จำนวนชิ้น</button></div>`;
     $('kpHead').innerHTML = `<div><h1>🏁 เป้าหมาย KPI <span class="ui-badge gold">${mLong(S.mo)}</span>${lock}</h1><p>${sub}</p></div>
       <div class="kp-head-r">${modeBtns}</div>`;
@@ -414,7 +416,7 @@
     const N = rows.length, view = rows.slice((S.page - 1) * S.per, S.page * S.per);
     // (2026-10-13) ยอดขาย / จำนวนชิ้น ใช้กับตารางสินค้าเท่านั้น (การ์ด กราฟ ตารางช่องทาง เป็นยอดขายเสมอ)
     const unitBtns = S.mode === 'track' ? `<div class="ui-presets" id="kpUnit" role="group" aria-label="หน่วยของตารางสินค้า">
-        <button type="button" data-u="rev" aria-pressed="${S.unit === 'rev'}">ยอดขาย (฿)</button>
+        <button type="button" data-u="rev" aria-pressed="${S.unit === 'rev'}">ยอดขาย (บาท)</button>
         <button type="button" data-u="qty" aria-pressed="${S.unit === 'qty'}">จำนวนชิ้น</button></div>` : '';
     const tools = `<div class="kp-tools">${unitBtns}
       <input type="search" class="kp-search" id="kpSearch" placeholder="ค้นหาสินค้า / รหัส" value="${esc(S.q)}" aria-label="ค้นหาสินค้า">
@@ -432,7 +434,7 @@
         const g = agg(K, [{ c, x }], u), st = status(K, g);
         if (K.st === 'future') { const la = act(lc, sku, c)[u === 'rev' ? 1 : 0]; return `<td class="num kp-cell"><div class="kp-a">${g.t != null ? fm(g.t) : '<span class="ui-muted">—</span>'}</div><div class="kp-p flat">${la ? mShort(lc) + ' ' + fm(la) : ''}</div></td>`; }
         if (!g.a && g.t == null) return '<td class="num kp-cell"><span class="ui-muted">—</span></td>';
-        if (K.st === 'cur') {   // (2026-10-12) ออนไลน์ = เทียบเป้าถึงวันนี้ · ตัวแทน / MT = % ของเป้าทั้งเดือน สีเทา · มีเป้าแต่ยังไม่มียอด = ฿0
+        if (K.st === 'cur') {   // (2026-10-12) ออนไลน์ = เทียบเป้าถึงวันนี้ · ตัวแทน / MT = % ของเป้าทั้งเดือน สีเทา · มีเป้าแต่ยังไม่มียอด = 0
           const g2 = agg(K, [{ c, x }], oU(u)), gR = u === 'rev' ? g : g2, gQ = u === 'rev' ? g2 : g;
           const tLine = x.tq != null ? `เป้าเดือน ${fmt(x.tq)} ชิ้น × ${money(x.p.v)} = ${money(x.tr)}` : 'ยังไม่ได้ตั้งเป้า';
           if (isBulk(c)) return `<td class="num kp-cell" data-tip="${esc(c + (c === 'ตัวแทน' ? ' สั่งเป็นก้อน' : ' ห้างส่งยอดเป็นรายเดือน') + ' · % ของเป้าทั้งเดือน · ' + tLine + ' · ทำได้ ' + fmt(x.aq) + ' ชิ้น ' + money(x.ar))}"><div class="kp-a">${fm(g.a)}</div>${tgtLine(g, fm, u)}${ofTarget(g)}</td>`;
@@ -524,7 +526,7 @@
         <div class="kp-row" style="justify-content:flex-end;"><button class="btn btn-primary" type="button" id="kpGrowGo">ใช้กับ ${S.F ? esc(S.F) : 'ทุกช่องทาง'}</button></div></div></div>` : '';
     // (2026-10-13) ยอดขาย / จำนวนชิ้น ใช้กับตารางสินค้าเท่านั้น (การ์ด กราฟ ตารางช่องทาง เป็นยอดขายเสมอ)
     const unitBtns = S.mode === 'track' ? `<div class="ui-presets" id="kpUnit" role="group" aria-label="หน่วยของตารางสินค้า">
-        <button type="button" data-u="rev" aria-pressed="${S.unit === 'rev'}">ยอดขาย (฿)</button>
+        <button type="button" data-u="rev" aria-pressed="${S.unit === 'rev'}">ยอดขาย (บาท)</button>
         <button type="button" data-u="qty" aria-pressed="${S.unit === 'qty'}">จำนวนชิ้น</button></div>` : '';
     const tools = `<div class="kp-tools">${unitBtns}
       <input type="search" class="kp-search" id="kpSearch" placeholder="ค้นหาสินค้า / รหัส" value="${esc(S.q)}" aria-label="ค้นหาสินค้า">
