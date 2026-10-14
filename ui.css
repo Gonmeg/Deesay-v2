@@ -244,9 +244,9 @@ th { font-family: var(--font) !important; letter-spacing: 0 !important; text-tra
 .ui-ctip-f { display: flex; justify-content: space-between; gap: 16px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--row-border); }
 .ui-ctip-f b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-/* Tooltip ตอนชี้เมาส์ (data-tip / ข้อความถูกตัด) — กล่องเล็กสีกลับด้าน แยกจาก ⓘ ที่เป็นคำอธิบายยาว */
-.ui-tip { position: fixed; z-index: 300; max-width: 280px; padding: 6px 10px; border-radius: var(--r-sm); background: var(--text);
-  color: var(--bg2); font: 500 var(--fs-xs)/1.5 var(--font); pointer-events: none; opacity: 0; transition: opacity .12s ease;
-  box-shadow: var(--shadow-pop); white-space: normal; }
+/* Tooltip ตอนชี้เมาส์ (data-tip / title / ข้อความถูกตัด) — กล่องการ์ดเหมือน ⓘ ใช้ทั้งเว็บ */
+.ui-tip { position: fixed; z-index: 300; max-width: 320px; padding: 9px 12px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); font: 400 12px/1.6 var(--font); text-align: left; pointer-events: none; opacity: 0; transition: opacity .12s ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,.22); white-space: pre-line; }   /* (2026-10-14) การ์ดสว่าง/มืดตามธีม แบบเดียวกับ ⓘ · รองรับขึ้นบรรทัดใหม่ */
 .ui-tip.is-on { opacity: 1; }
 .ui-trunc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
