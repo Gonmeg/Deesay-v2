@@ -231,7 +231,7 @@
     .shell-sidebar { max-height: none; }
     @media (max-width: 700px) { .del-form { grid-template-columns: 1fr; } .step1-grid { grid-template-columns: 1fr; } }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261007a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261014b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 </head>
 <body>
 <script>/* (2026-10-05) ใส่ธีมสว่างทันทีก่อนหน้าแสดงผล — กันจอดำแวบตอนเปิดหน้า */try{if(localStorage.getItem('deesay_theme')==='light')document.body.classList.add('light-theme')}catch(e){}</script>
@@ -900,7 +900,7 @@ async function parseCostFile() {
       <div class="stat-box"><div class="stat-num">${_costParsed.length.toLocaleString()}</div><div class="stat-label">แถวข้อมูล</div></div>
       <div class="stat-box"><div class="stat-num">${skuSet.size}</div><div class="stat-label">SKU</div></div>
       <div class="stat-box"><div class="stat-num">${catSet.size}</div><div class="stat-label">หัวข้อต้นทุน</div></div>
-      <div class="stat-box"><div class="stat-num">฿${Math.round(totalAmt).toLocaleString()}</div><div class="stat-label">ต้นทุนรวม</div></div>`
+      <div class="stat-box"><div class="stat-num">${Math.round(totalAmt).toLocaleString()}</div><div class="stat-label">ต้นทุนรวม</div></div>`
 
     // Preview table
     const bycat = {}
@@ -914,8 +914,8 @@ async function parseCostFile() {
       const tot = Object.values(skuAmts).reduce((s,v)=>s+v,0)
       return `<tr style="border-bottom:1px solid var(--border);">
         <td style="padding:6px 10px;color:var(--text);font-size:0.72rem;white-space:nowrap;">${cat}</td>
-        ${skus.map(s=>`<td style="padding:6px 10px;text-align:right;color:var(--text2);font-size:0.72rem;">${skuAmts[s]?'฿'+Math.round(skuAmts[s]).toLocaleString():'-'}</td>`).join('')}
-        <td style="padding:6px 10px;text-align:right;color:var(--accent);font-size:0.72rem;font-weight:600;">฿${Math.round(tot).toLocaleString()}</td>
+        ${skus.map(s=>`<td style="padding:6px 10px;text-align:right;color:var(--text2);font-size:0.72rem;">${skuAmts[s]?''+Math.round(skuAmts[s]).toLocaleString():'-'}</td>`).join('')}
+        <td style="padding:6px 10px;text-align:right;color:var(--accent);font-size:0.72rem;font-weight:600;">${Math.round(tot).toLocaleString()}</td>
       </tr>`
     }).join('')
     document.getElementById('costPreview').style.display = 'block'
@@ -941,7 +941,7 @@ async function uploadCostData() {
     resultEl.innerHTML = `
       <div class="success-banner"><span class="success-banner-icon">✓</span><div>
         <div class="success-banner-title">Upload ต้นทุนสำเร็จ</div>
-        <div class="success-banner-sub">${_costParsed.length} แถว · ฿${Math.round(totalAmt).toLocaleString()} · เดือน ${monthDate.substring(0,7)}</div>
+        <div class="success-banner-sub">${_costParsed.length} แถว · ${Math.round(totalAmt).toLocaleString()} · เดือน ${monthDate.substring(0,7)}</div>
       </div></div>
       <div style="display:flex;gap:10px;margin-top:12px;">
         <button class="btn-primary" onclick="location.reload()">อัพโหลดต่อ</button>
@@ -1164,7 +1164,7 @@ function histItemHtml(log) {
       let detail = ''
       if (isError) detail = `<span style="color:#fca5a5">${log.error_message || 'เกิดข้อผิดพลาด'}</span>`
       else if (isSettlement) detail = `Match สำเร็จ ${(log.success_count||0).toLocaleString()} · ไม่เจอ ${(log.not_matched_count||0).toLocaleString()}`
-      else detail = `${(log.success_count||0).toLocaleString()} ออเดอร์ · ฿${Math.round(log.total_revenue||0).toLocaleString()}`
+      else detail = `${(log.success_count||0).toLocaleString()} ออเดอร์ · ${Math.round(log.total_revenue||0).toLocaleString()}`
       // ปุ่มลบ เฉพาะ order ที่ success และมี sub_channel
       const canDelete = !isError && !isSettlement && log.sub_channel
       const safeSubCh = (log.sub_channel||'').replace(/'/g, "\\'")
@@ -1669,7 +1669,7 @@ async function handleStep2() {
     document.getElementById('summaryGrid').innerHTML = `
       <div class="stat-box"><div class="stat-num">${rawData.length.toLocaleString()}</div><div class="stat-label">แถวในไฟล์</div></div>
       <div class="stat-box"><div class="stat-num">${totalOrders.toLocaleString()}</div><div class="stat-label">ออเดอร์ (หลัง group)</div></div>
-      <div class="stat-box"><div class="stat-num">฿${Math.round(totalRev).toLocaleString()}</div><div class="stat-label">Revenue รวม</div></div>`
+      <div class="stat-box"><div class="stat-num">${Math.round(totalRev).toLocaleString()}</div><div class="stat-label">Revenue รวม</div></div>`
     const cols = ['order_id','date','channel','sub_channel','customer_name','sku_promotion','revenue']
     document.getElementById('previewTbl').innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' +
       processed.slice(0,5).map(r => '<tr>' + cols.map(c => `<td>${r[c]??''}</td>`).join('') + '</tr>').join('')
@@ -1739,13 +1739,13 @@ async function handleConfirm() {
         <div style="width:100%">
           <div class="success-banner"><span class="success-banner-icon">✓</span><div>
             <div class="success-banner-title">Upload ตัวแทน / MT สำเร็จ</div>
-            <div class="success-banner-sub">${processed.length.toLocaleString()} ออเดอร์ · ฿${Math.round(totalRev).toLocaleString()}</div>
+            <div class="success-banner-sub">${processed.length.toLocaleString()} ออเดอร์ · ${Math.round(totalRev).toLocaleString()}</div>
           </div></div>
           <div style="font-size:11px;color:var(--muted);margin-top:8px;">ℹ️ Dashboard จะอัพเดทข้อมูลอัตโนมัติภายใน 5 นาที</div>
           <div class="success-stats">
             <div class="success-stat"><div class="success-stat-num">${rawData.length.toLocaleString()}</div><div class="success-stat-label">แถวในไฟล์</div></div>
             <div class="success-stat"><div class="success-stat-num">${processed.length.toLocaleString()}</div><div class="success-stat-label">ออเดอร์</div></div>
-            <div class="success-stat"><div class="success-stat-num">฿${Math.round(totalRev).toLocaleString()}</div><div class="success-stat-label">Revenue รวม</div></div>
+            <div class="success-stat"><div class="success-stat-num">${Math.round(totalRev).toLocaleString()}</div><div class="success-stat-label">Revenue รวม</div></div>
           </div>
           <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
           <div class="success-actions">
@@ -1868,7 +1868,7 @@ async function handleConfirm() {
             <thead><tr style="background:rgba(251,146,60,0.1);">
               <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">วันที่สร้างออเดอร์</th>
               <th style="padding:6px 10px;text-align:center;color:var(--muted);border-bottom:1px solid var(--border);">จำนวน</th>
-              <th style="padding:6px 10px;text-align:right;color:var(--muted);border-bottom:1px solid var(--border);">ยอดรวม (฿)</th>
+              <th style="padding:6px 10px;text-align:right;color:var(--muted);border-bottom:1px solid var(--border);">ยอดรวม (บาท)</th>
               <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">สถานะ</th>
               <th style="padding:6px 10px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">ตัวอย่าง Order ID</th>
             </tr></thead>
@@ -1881,7 +1881,7 @@ async function handleConfirm() {
                 return `<tr style="border-bottom:1px solid var(--border);${hasAmt?'background:rgba(239,68,68,0.04);':''}">
                   <td style="padding:6px 10px;color:var(--text);font-weight:600;">${date}</td>
                   <td style="padding:6px 10px;text-align:center;color:#fb923c;font-weight:600;">${orders.length}</td>
-                  <td style="padding:6px 10px;text-align:right;color:${hasAmt?'#ef4444':'var(--muted)'};font-weight:${hasAmt?'600':'400'};">฿${totalAmt.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
+                  <td style="padding:6px 10px;text-align:right;color:${hasAmt?'#ef4444':'var(--muted)'};font-weight:${hasAmt?'600':'400'};">${totalAmt.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
                   <td style="padding:6px 10px;color:${statusColor};font-size:0.7rem;font-weight:600;">${statusText}</td>
                   <td style="padding:6px 10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.7rem;">${orders.slice(0,2).map(o=>o.order_id).join(', ')}${orders.length>2?' ...':''}</td>
                 </tr>`
@@ -1985,7 +1985,7 @@ async function handleConfirm() {
         <div class="success-stats">
           <div class="success-stat"><div class="success-stat-num">${deduped.length.toLocaleString()}</div><div class="success-stat-label">ออเดอร์</div></div>
           <div class="success-stat"><div class="success-stat-num">${skuRowCount.toLocaleString()}</div><div class="success-stat-label">SKU rows</div></div>
-          <div class="success-stat"><div class="success-stat-num">฿${Math.round(totalRevenue).toLocaleString()}</div><div class="success-stat-label">Revenue รวม</div></div>
+          <div class="success-stat"><div class="success-stat-num">${Math.round(totalRevenue).toLocaleString()}</div><div class="success-stat-label">Revenue รวม</div></div>
         </div>
         <div class="success-divider"><div class="success-action-label">ต้องการทำอะไรต่อ?</div>
         <div class="success-actions">
@@ -2351,6 +2351,6 @@ function goStep(n) {
 }
 function showAlert(el, msg) { el.textContent=msg; el.style.display='block' }
 </script>
-<script src="ui.js?v=20261007a" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
+<script src="ui.js?v=20261014b" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
 </body>
 </html>
