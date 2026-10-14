@@ -571,7 +571,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261014c"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261014d"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -621,6 +621,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-dl { display:grid; grid-template-columns:84px 1fr; gap:8px 12px; margin:0; font-size:12px; }
   .tr-dl dt { color:var(--text3); } .tr-dl dd { margin:0; color:var(--text2); line-height:1.6; }
   .tr-n { font-size:12px; color:var(--text3); line-height:1.65; }
+  .tr-img { border-bottom:1px dashed var(--text3); }   /* ชี้แล้วเห็นภาพ (ไม่ใช่ลิงก์กดต่อ จึงไม่ใช้เส้นประใต้แบบตัวเลข) */
   .tr-tb td .tr-s2 { font-size:11px; color:var(--text3); font-weight:400; white-space:normal; margin-top:1px; line-height:1.45; }
   .tr-chips { display:flex; flex-wrap:wrap; gap:6px; }
   .tr-chips span { font-size:11px; color:var(--text2); background:var(--bg3); border:1px solid var(--border); border-radius:999px; padding:2px 9px; }
@@ -705,7 +706,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-i</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.14-j</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -8040,7 +8041,7 @@ function kolTraceRender(j, d, focus, from, to) {
   if (shown != null && Math.abs(val - shown) >= 1.5) h += `<div class="tr-warn">ยอดรวมของรายละเอียด ${n(val)} ต่างจากตัวเลขในตาราง ${n(shown)} อยู่ ${n(val - shown)}</div>`;
   h += `<div class="tr-card"><div class="tr-card-t">${focus === 'sales' ? 'ยอดขายจาก Ads' : 'ค่า Ads'} ${trI(method)}</div>
     <div class="tr-card-v">${n(shown != null ? shown : val)}</div>
-    <div class="tr-card-m"><span>${multi ? jobs.length + ' งาน' : trEsc('@' + String(d.kol || jobs[0] && jobs[0].kol || '').replace(/^@/, ''))}${!multi && jobs[0] ? ` <span class="tr-sku">${trEsc(jobs[0].content)}</span>` : ''}</span><span>${period}</span>${focus === 'sales' ? '<span>ถอด VAT</span>' : ''}</div></div>`;
+    <div class="tr-card-m"><span>${multi ? jobs.length + ' งาน' : trEsc('@' + String(d.kol || jobs[0] && jobs[0].kol || '').replace(/^@/, ''))}${!multi && jobs[0] ? ` <span class="tr-sku${jobs[0].cover ? ' tr-img' : ''}"${jobs[0].cover ? ` data-tip-img="${trEsc(jobs[0].cover)}" data-tip="ปกคลิปของงาน"` : ''}>${trEsc(jobs[0].content)}</span>` : ''}</span><span>${period}</span>${focus === 'sales' ? '<span>ถอด VAT</span>' : ''}</div></div>`;
   // สรุปตามแหล่ง
   const srcRow = (lbl, tip, s, v, vTip) => `<tr><td>${lbl}${tip ? ' ' + trI(tip) : ''}</td><td>${s ? n(s) : dash}</td><td${vTip ? ` data-tip="${trEsc(vTip)}"` : ''}>${v == null ? dash : v ? n(v) : dash}</td></tr>`;
   h += `<section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>แหล่ง</th><th>ค่า Ads</th><th>ยอดขาย ${trI('ถอด VAT')}</th></tr></thead><tbody>`
@@ -8057,11 +8058,13 @@ function kolTraceRender(j, d, focus, from, to) {
       ? `<tbody class="tr-grp"><tr class="tr-gh" onclick="trGrp(this)"><td colspan="4"><span class="tr-car">▾</span>${jobName(c)}</td></tr>${L.map(r => rowFn(r, true)).join('')}</tbody>`
       : `<tbody>${L.map(r => rowFn(r, false)).join('')}</tbody>`);
   };
-  const ttRow = (r, sub) => `<tr class="${sub ? 'tr-gc' : ''}"><td style="white-space:normal;">${trEsc(String(r[1]).trim() || '—')}<div class="tr-s2">${trEsc(r[2] || '')}${r[9] > 1 ? ` · คลิปนี้ใช้กับ ${r[9]} งาน (หารเท่ากัน)` : ''}</div></td><td>${rng(r[7], r[8])}</td><td>${n(+r[4] + +r[6])}</td><td>${+r[5] ? n(+r[5] / VAT_DIV) : dash}</td></tr>`;
-  const fbRow = (r, sub) => `<tr class="${sub ? 'tr-gc' : ''}"><td style="white-space:normal;">${trEsc(r[2] || r[1])}<div class="tr-s2">${trEsc(r[3] || '')}${+r[6] ? ` · ${n(r[6])} คำสั่งซื้อ` : ''}</div></td><td>${rng(r[7], r[8])}</td><td>${n(r[4])}</td><td>${+r[5] ? n(+r[5] / VAT_DIV) : dash}</td></tr>`;
+  const coverOf = c => { const x = jobs.find(o => o.content === c); return x && x.cover ? x.cover : ''; };
+  const imgAttr = (url, cap) => url ? ` class="tr-img" data-tip-img="${trEsc(url)}" data-tip="${trEsc(cap)}"` : '';
+  const ttRow = (r, sub) => `<tr class="${sub ? 'tr-gc' : ''}"><td style="white-space:normal;"><span${imgAttr(coverOf(r[0]), 'ปกคลิปของงาน ' + r[0])}>${trEsc(String(r[1]).trim() || '—')}</span><div class="tr-s2">${trEsc(r[2] || '')}${r[9] > 1 ? ` · คลิปนี้ใช้กับ ${r[9]} งาน (หารเท่ากัน)` : ''}</div></td><td>${rng(r[7], r[8])}</td><td>${n(+r[4] + +r[6])}</td><td>${+r[5] ? n(+r[5] / VAT_DIV) : dash}</td></tr>`;
+  const fbRow = (r, sub) => `<tr class="${sub ? 'tr-gc' : ''}"><td style="white-space:normal;"><span${imgAttr(r[9], 'แอด ' + (r[2] || r[1]))}>${trEsc(r[2] || r[1])}</span><div class="tr-s2">${trEsc(r[3] || '')}${+r[6] ? ` · ${n(r[6])} คำสั่งซื้อ` : ''}</div></td><td>${rng(r[7], r[8])}</td><td>${n(r[4])}</td><td>${+r[5] ? n(+r[5] / VAT_DIV) : dash}</td></tr>`;
   const head = '<th>แคมเปญ / แอด</th><th>ช่วงที่ยิง</th><th>ค่า Ads</th><th>ยอดขาย</th>';
-  h += tbl('TikTok · แคมเปญที่ใช้คลิปของงาน', 'แคมเปญที่ยิงคลิปของงานนี้ จาก TikTok Ads API (รายงานรายคลิป รายวัน)', head, byJob(TT, ttRow), TT.length);
-  h += tbl('Facebook · แอดที่ใช้คอนเทนต์ของงาน', 'แอดที่จับคู่กับงานนี้ จาก Meta Ads API (รายงานรายแอด รายวัน)', head, byJob(FB, fbRow), FB.length);
+  h += tbl('TikTok · แคมเปญที่ใช้คลิปของงาน', 'แคมเปญที่ยิงคลิปของงานนี้ จาก TikTok Ads API (รายงานรายคลิป รายวัน)\nชี้ที่ชื่อแคมเปญเพื่อดูปกคลิป', head, byJob(TT, ttRow), TT.length);
+  h += tbl('Facebook · แอดที่ใช้คอนเทนต์ของงาน', 'แอดที่จับคู่กับงานนี้ จาก Meta Ads API (รายงานรายแอด รายวัน)\nชี้ที่ชื่อแอดเพื่อดูภาพแอด', head, byJob(FB, fbRow), FB.length);
   if (!TT.length && !FB.length) h += '<div class="tr-n" style="margin-bottom:14px;">ไม่พบโฆษณาที่ใช้คอนเทนต์ของงานนี้ในช่วงที่เลือก</div>';
   // แหล่งที่มา
   const split = jobs.filter(x => x.share < 0.999);
@@ -10726,6 +10729,6 @@ window._authP.then(p => {
   setInterval(() => { document.querySelectorAll('select[data-ux]').forEach(sel => { if (sel._uxBtn && sel._uxSig !== sigOf(sel)) sync(sel); }); }, 300);
 })();
 </script>
-<script src="ui.js?v=20261014b" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
+<script src="ui.js?v=20261014c" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
 </body>
 </html>
