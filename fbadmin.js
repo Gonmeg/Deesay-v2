@@ -6,7 +6,7 @@
 (function () {
   const num = v => Number(v) || 0;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const baht = v => '฿' + fmt(Math.round(num(v)));
+  const baht = v => fmt(Math.round(num(v)));
   const pct = (a, b) => b ? (a / b * 100).toFixed(1) + '%' : '—';
   const PALETTE = ['#2a78d6', '#f472b6', '#14b8a6', '#f59e0b', '#a78bfa', '#ef4444', '#22c55e', '#60a5fa', '#c8a96e', '#94a3b8'];
   const NONE = 'ไม่ระบุ', FULL = 0.95;   // ช่วงที่มีชื่อพนักงาน ≥ 95% ของยอด ถึงจะเทียบรายคนได้
