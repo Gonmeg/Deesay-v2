@@ -245,7 +245,7 @@ th { font-family: var(--font) !important; letter-spacing: 0 !important; text-tra
 .ui-ctip-f b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* Tooltip ตอนชี้เมาส์ (data-tip / title / ข้อความถูกตัด) — กล่องการ์ดเหมือน ⓘ ใช้ทั้งเว็บ */
-.ui-tip { position: fixed; z-index: 300; max-width: 320px; padding: 9px 12px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border);
+.ui-tip { position: fixed; z-index: 3000; max-width: 320px; padding: 9px 12px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border);
   color: var(--text2); font: 400 12px/1.6 var(--font); text-align: left; pointer-events: none; opacity: 0; transition: opacity .12s ease;
   box-shadow: 0 6px 20px rgba(0,0,0,.22); white-space: pre-line; }   /* (2026-10-14) การ์ดสว่าง/มืดตามธีม แบบเดียวกับ ⓘ · รองรับขึ้นบรรทัดใหม่ */
 .ui-tip.is-on { opacity: 1; }
