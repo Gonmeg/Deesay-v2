@@ -1,9 +1,9 @@
 /* ui.js — ตัวช่วยหน้าตากลางของ Deesay-v2 (ใช้คู่กับ ui.css ทุกหน้า)
    โหลดท้าย body:  script src="ui.js?v=20261007a" defer
-   1) ตัวเลขในการ์ดย่อให้พอดีกล่องเองทุกขนาดจอ (ไม่ตัดเป็น ฿1.4M — แสดงเต็มเสมอ)
+   1) ตัวเลขในการ์ดย่อให้พอดีกล่องเองทุกขนาดจอ (ไม่ตัดเป็น 1.4M — แสดงเต็มเสมอ)
    3) Tooltip กราฟ (Chart.js) ทุกกราฟหน้าตาเดียวกัน + เส้นชี้วันแนวตั้ง — ใช้ title/label/footer callbacks เดิมของแต่ละกราฟได้เลย
       ใส่ plugins.tooltip.uiShare = true ถ้าอยากให้โชว์ % สัดส่วนต่อรวมในแต่ละแถว
-   4) Tooltip ตอนชี้เมาส์: ใส่ data-tip="ข้อความ" ที่ปุ่ม/ไอคอน · ข้อความที่ถูกตัด "…" ใส่ class ui-trunc จะโชว์ชื่อเต็มเอง
+   4) Tooltip ตอนชี้เมาส์: ใส่ data-tip="ข้อความ" (หรือ title เดิม) ที่ปุ่ม/ไอคอน · ข้อความที่ถูกตัด "…" ใส่ class ui-trunc จะโชว์ชื่อเต็มเอง
    2) ช่องวันที่ / ช่องเดือน ทุกช่องแสดงแบบไทยเหมือนกันทุกเครื่อง: "7 ต.ค. 2569" / "ต.ค. 2569"
       ค่าจริงใน input ยังเป็น YYYY-MM-DD / YYYY-MM เหมือนเดิม โค้ดเดิมที่อ่าน .value หรือฟัง change ใช้ได้ทันที
       ช่องไหนอยากคงแบบเดิมให้ใส่ data-native */
@@ -116,8 +116,16 @@
     tipEl.classList.add('is-on');
   }
   function tipTarget(e) {
-    const t = e.target.closest && e.target.closest('[data-tip], .ui-trunc');
+    const t = e.target.closest && e.target.closest('[data-tip], [title], .ui-trunc');
     if (!t) return null;
+    // (2026-10-14) title ของเบราว์เซอร์ (กล่องดำ) → ย้ายไปใช้กล่อง tooltip กลางหน้าตาเดียวกันทั้งเว็บ
+    //   โค้ดหน้าไหนตั้ง title ใหม่ทีหลัง (หรือล้างเป็นค่าว่าง) ก็ตามทันในการชี้ครั้งถัดไป · ช่องกรอกข้อมูลคง title เดิมของเบราว์เซอร์
+    if (t.hasAttribute('title') && !(t instanceof SVGElement) && !/^(SELECT|INPUT|TEXTAREA|OPTION)$/.test(t.tagName)) {
+      const v = t.getAttribute('title'); t.removeAttribute('title');
+      if (v && v.trim()) { t.setAttribute('data-tip', v); t.dataset.tipT = '1'; }
+      else if (t.dataset.tipT) { t.removeAttribute('data-tip'); delete t.dataset.tipT; return null; }
+      if (!t.hasAttribute('data-tip')) return null;
+    }
     if (t.hasAttribute('data-tip')) return [t, t.getAttribute('data-tip')];
     return t.scrollWidth > t.clientWidth + 1 ? [t, t.textContent.trim()] : null;
   }
