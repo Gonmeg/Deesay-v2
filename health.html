@@ -59,7 +59,7 @@
   .banner.info { background:var(--bg3); border-color:var(--border); color:var(--text2); }
   .loading { padding:44px; text-align:center; color:var(--muted); font-size:13px; }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261007a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261014b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 </head>
 <body>
 <nav>
@@ -381,7 +381,7 @@ async function render(d, unknown, extra) {
   else html += `<div class="tbl-wrap"><table>
       <thead><tr><th>รหัสที่ไม่รู้จัก</th><th>ช่องทาง</th><th>ออเดอร์</th><th>ชิ้น</th><th>ยอดเงินที่บันทึกไว้</th><th>เจอครั้งแรก</th><th>เจอล่าสุด</th></tr></thead><tbody>` +
       unkRows.map(r => `<tr><td><b class="mono">${esc(r.parent_sku)}</b></td><td>${esc(r.channels)}</td><td>${fmt(r.orders)}</td><td>${fmt(r.qty)}</td>
-        <td class="${(+r.revenue||0) === 0 ? 'bad' : ''}">฿${fmt(r.revenue)}${(+r.revenue||0) === 0 ? ' <span class="pill bad">เงินหาย</span>' : ''}</td>
+        <td class="${(+r.revenue||0) === 0 ? 'bad' : ''}">${fmt(r.revenue)}${(+r.revenue||0) === 0 ? ' <span class="pill bad">เงินหาย</span>' : ''}</td>
         <td class="mono">${esc(String(r.first_date||'').slice(0,10))}</td><td class="mono">${esc(String(r.last_date||'').slice(0,10))}</td></tr>`).join('') +
       `</tbody></table></div>`
   html += `</div>`
@@ -401,7 +401,7 @@ async function render(d, unknown, extra) {
         .map(r => `<tr><td><b>${esc(r.source)}</b></td>` +
           `<td style="color:${(r.bad_days || 0) > 0 ? '#f87171' : '#4ade80'};font-weight:600;">${r.bad_days || 0}</td>` +
           `<td style="font-size:11.5px;">${esc(r.latest_bad_day || '—')}</td>` +
-          `<td>฿${Number(r.total_35d || 0).toLocaleString()}</td></tr>`).join('') +
+          `<td>${Number(r.total_35d || 0).toLocaleString()}</td></tr>`).join('') +
       `</tbody></table></div>`
   }
   html += `<div style="font-size:11px;color:#8b93a7;margin-top:8px;">ถ้าแถวไหนขึ้นวันที่ขาด: TikTok LIVE/GMV Max → cron tiktok-gmv-max-* · Facebook → meta-ads-sync · Shopee Brand/Live/Meta → สั่ง Cowork "รัน shopee ads offapi" (ตามเก็บย้อนหลัง 14 วันให้เอง)</div></div>`
@@ -469,7 +469,7 @@ async function render(d, unknown, extra) {
   // --- channels ---
   html += `<div class="card"><div class="card-head"><h2>📦 ยอดขายล่าสุดต่อช่องทาง</h2><span>จาก mv_sales_daily</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>ช่องทาง</th><th>วันที่ล่าสุด</th><th>ห่างจากวันนี้</th><th>ยอด 30 วัน</th></tr></thead><tbody>` +
-    ch.map(c => `<tr><td><b>${esc(c.channel)}</b></td><td class="mono">${esc(c.last_date)}</td><td class="${c.days_ago > 14 ? 'bad' : c.days_ago > 7 ? 'warn' : ''}">${c.days_ago} วัน</td><td>${c.rev_30d != null ? '฿' + fmt(c.rev_30d) : '—'}</td></tr>`).join('') + `</tbody></table></div></div>`
+    ch.map(c => `<tr><td><b>${esc(c.channel)}</b></td><td class="mono">${esc(c.last_date)}</td><td class="${c.days_ago > 14 ? 'bad' : c.days_ago > 7 ? 'warn' : ''}">${c.days_ago} วัน</td><td>${c.rev_30d != null ? fmt(c.rev_30d) : '—'}</td></tr>`).join('') + `</tbody></table></div></div>`
 
   // --- MVs ---
   html += `<div class="card"><div class="card-head"><h2>🧱 Materialized views (${mv.length})</h2><span>จำนวนแถวโดยประมาณ · เวลารีเฟรชดูจาก cron ด้านบน (refresh_all_views รายชั่วโมง)</span></div><div class="tbl-wrap"><table>
@@ -488,6 +488,6 @@ document.getElementById('refreshBtn').onclick = load
 load()
 setInterval(load, 5 * 60 * 1000)
 </script>
-<script src="ui.js?v=20261007a" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
+<script src="ui.js?v=20261014b" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
 </body>
 </html>
