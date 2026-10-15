@@ -145,7 +145,7 @@
   const COSTCAT = [['ต้นทุนสินค้า', '#94A3B8'], ['Ads', '#EF4444'], ['ค่า Platform', '#F2643F'], ['KOL และ Affiliate', '#A78BFA'], ['Presenter และ Live', '#22D3EE'], ['ค่าใช้จ่ายขายอื่น', '#FBBF24'], ['ค่าใช้จ่ายบริหาร', '#60A5FA']];
   const CHMETA = { 'TikTok': ['var(--ch-tiktok)', 'ช่องทางออนไลน์'], 'Shopee Mall': ['var(--ch-shopee)', 'ช่องทางออนไลน์'], 'Shopee 24': ['var(--ch-shopee)', 'ช่องทางออนไลน์'],
     'Lazada Mall': ['var(--ch-lazada)', 'ช่องทางออนไลน์'], 'Lazada 24': ['var(--ch-lazada)', 'ช่องทางออนไลน์'], 'FB-COD': ['var(--ch-facebook)', 'ช่องทางออนไลน์'],
-    'FB-โอนเงิน': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Line my shop': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Eve&Boy': ['var(--ch-mt)', 'Modern Trade'],
+    'FB-โอนเงิน': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Line my shop': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Telesales': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Eve&Boy': ['var(--ch-mt)', 'Modern Trade'],
     'Konvy': ['var(--ch-mt)', 'Modern Trade'], 'Watsons': ['var(--ch-mt)', 'Modern Trade'], 'CJ': ['var(--ch-mt)', 'Modern Trade'], 'Thaimart': ['var(--ch-mt)', 'Modern Trade'],
     'ตัวแทน': ['var(--ch-dealer)', 'ตัวแทนจำหน่าย'] };
 
