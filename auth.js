@@ -37,6 +37,8 @@ window.DEESAY_PAGES = [
   { id: 'adperf',       name: 'Ad Performance',        group: 'สินค้า / การตลาด' },
   { id: 'kol',          name: 'KOL',                   group: 'สินค้า / การตลาด' },
   { id: 'supply',       name: 'Supply Chain',          group: 'สินค้า / การตลาด' },
+  { id: 'promo',        name: 'ขอโปรโมชั่น',            group: 'สินค้า / การตลาด' },
+  { id: 'exec',         name: 'ผู้บริหาร: อนุมัติโปร + ค่าธรรมเนียมช่องทาง (เห็นต้นทุน)', group: 'ผู้บริหาร' },
 ];
 // ปุ่มลัด "ให้แบบพนักงานทั่วไป" ใน admin.html = หน้าชุดนี้ (แก้ได้ตามใจ)
 window.DEESAY_STAFF_PAGES = ['overview', 'channel', 'fbhub', 'tthub', 'ttcontent', 'shhub', 'lzhub', 'skurev', 'skuanalysis'];
@@ -84,7 +86,8 @@ window.Auth = (function () {
   }
 
   // (2026-09-28) 'home' (หน้าแรก) เปิดให้ทุกคนที่ใช้งานได้เสมอ — ในหน้าจะโชว์เฉพาะส่วนของหน้าที่คนนั้นมีสิทธิ์
-  function canPage(id) { return !!perm && perm.is_active && (id === 'home' || perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
+  // (2026-10-15) execfee (ค่าธรรมเนียมช่องทาง) ใช้สิทธิ์เดียวกับ exec (หน้าผู้บริหาร)
+  function canPage(id) { if (id === 'execfee') id = 'exec'; return !!perm && perm.is_active && (id === 'home' || perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
 
   // ด่านหลัก — where = 'dashboard' | 'upload' | 'admin' | 'health'
   async function require(where) {
