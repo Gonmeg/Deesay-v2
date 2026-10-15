@@ -81,26 +81,20 @@
   // ยอดขายแยกตามช่องทาง จาก API: ครีเอเตอร์ = ตาม Commission ที่ TikTok จ่าย · บัญชีร้าน Live / คลิป = TikTok Analytics · หน้าสินค้า = ส่วนที่เหลือ
   let _ocSeq = 0;
   async function renderOrderChannel(from, to) {
+    // (2026-10-15) ใช้ออเดอร์ชุดเดียวกับการ์ดยอดขาย (ตัดยกเลิก / คืน + ลดหนี้) → รวมทุกแถวเท่าการ์ดยอดขายเสมอ
+    //   เดิมใช้ยอดจาก API แยกชุด ทำให้รวมไม่ตรงการ์ด และ "หน้าสินค้า" กลายเป็นส่วนที่เหลือที่ผิดเพี้ยน
     const tb = document.getElementById('tbodyTtOrderChannel'); if (!tb) return;
     const seq = ++_ocSeq;
     const card = tb.closest('.card'), title = card && card.querySelector('.section-title');
-    if (title && !title.dataset.api) { title.dataset.api = '1'; title.innerHTML = 'ยอดขายแยกตามช่องทาง ' + info('ttapi-oc-info', '<b>ที่มา:</b> TikTok Shop API (เดิมใช้ช่อง Order Channel ในไฟล์อัปโหลด)<br><b>ครีเอเตอร์</b> = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · <b>โชว์เคส / ลิงก์</b> = ลูกค้าซื้อผ่านตะกร้าหรือลิงก์ของครีเอเตอร์<br><b>บัญชีร้าน Live / คลิป</b> = ยอดจาก TikTok Analytics รายรอบ / รายคลิป · <b>หน้าสินค้า</b> = ส่วนที่เหลือ<br>ยอดรวมเป็นยอดสุทธิจาก API อาจต่างจากการ์ดยอดขายเล็กน้อย (ออเดอร์ที่ยกเลิก / คืนหลังวันที่อัปไฟล์)'); }
+    if (title && title.dataset.api !== '2') { title.dataset.api = '2'; title.innerHTML = 'ยอดขายแยกตามช่องทาง ' + info('ttapi-oc-info', '<b>ที่มา:</b> ออเดอร์ชุดเดียวกับการ์ดยอดขาย (ตัดยกเลิก / คืนสินค้าแล้ว) · รวมทุกแถวเท่ายอดขายในการ์ดเสมอ<br><b>วิธีแบ่ง:</b> ตามช่องทางที่ลูกค้าซื้อในออเดอร์ · <b>ครีเอเตอร์</b> = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · <b>บัญชีร้าน</b> = deesaythailand และช่องรอง<br><b>ลดหนี้ (CN)</b> = ยอดลดหนี้ตามบัญชี ที่หักจากยอดขายรวม'); }
     try {
-      const rows = await supaRpc('creator_summary_api', { p_from: from, p_to: to }, true);
+      const rows = await supaRpc('tt_channel_split', { p_from: from, p_to: to }, true);
       if (seq !== _ocSeq) return;
-      const own = r => String(r.creator_handle || '').toLowerCase() === 'deesaythailand';
-      const G = {};
-      const add = (k, r) => { const g = (G[k] = G[k] || { rev: 0, ord: 0 }); g.rev += num(r.revenue); g.ord += num(r.orders); };
-      rows.forEach(r => {
-        const oc = r.order_channel || '';
-        if (own(r)) add(oc === 'LIVE' ? 'Live (บัญชีร้าน)' : oc === 'Videos' ? 'คลิป (บัญชีร้าน)' : 'หน้าสินค้า', r);
-        else add(oc === 'LIVE' ? 'Live (ครีเอเตอร์)' : oc === 'Videos' ? 'คลิป (ครีเอเตอร์)' : 'โชว์เคส / ลิงก์ (ครีเอเตอร์)', r);
-      });
-      const tot = Object.values(G).reduce((a, g) => a + g.rev, 0);
-      const list = Object.entries(G).sort((a, b) => b[1].rev - a[1].rev);
-      tb.innerHTML = list.length ? list.map(([k, g]) => `<tr><td>${k}</td><td>${baht(g.rev)}</td><td>${fmt(g.ord)}</td><td>${pctTxt(g.rev, tot)}</td></tr>`).join('')
+      const list = rows.map(r => [r.label, { rev: num(r.revenue), ord: num(r.orders), sort: +r.sort }]).sort((a, b) => a[1].sort - b[1].sort || b[1].rev - a[1].rev);
+      const tot = list.reduce((a, [, g]) => a + g.rev, 0);
+      tb.innerHTML = list.length ? list.map(([k, g]) => `<tr${g.sort === 2 ? ' style="color:var(--text3);"' : ''}><td>${k}</td><td>${baht(g.rev)}</td><td>${g.ord ? fmt(g.ord) : '—'}</td><td>${pctTxt(g.rev, tot)}</td></tr>`).join('')
         + `<tr style="font-weight:700;"><td>รวม</td><td>${baht(tot)}</td><td>${fmt(list.reduce((a, [, g]) => a + g.ord, 0))}</td><td>100%</td></tr>` : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
-    } catch (e) { console.warn('ttapi order channel', e); }
+    } catch (e) { console.warn('tt channel split', e); }
   }
   function setLiveScope(s) { _liveScope = s; if (typeof renderTtHub === 'function' && currentPage === 'tthub') renderTraffic(getDateValue('From'), getDateValue('To')); }
 
