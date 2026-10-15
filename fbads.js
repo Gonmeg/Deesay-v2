@@ -1,3 +1,4 @@
+// fbads.js v20261015d — ROAS / % ไม่กดขยาย (สูตรอยู่หัวคอลัมน์) · แผงรายละเอียดยุบตามชื่อคอนเทนต์ 20 อันดับ + ทักแชท / ค่า Ads / ยอดขาย Meta / ROAS Meta · ตัดบรรทัดที่มาใต้ชื่อสินค้า
 // fbads.js v20261015c — ผูกสินค้าจากชื่อคอนเทนต์อย่างเดียว (ไม่ใช้ชื่อแคมเปญ) · ตารางสินค้ามีทั้งยอดจริงในระบบ และตัวเลขที่ Meta นับ (คำอธิบายที่หัวคอลัมน์)
 // fbads.js v20261015b — แผงที่มาแสดงเฉพาะตัวเลขที่กด + รูป Ads · ตารางสินค้า: ยอดขายจริง / ROAS แทนตัวเลขที่ Meta นับ · ที่มา = ชื่อคอนเทนต์
 // fbads.js v20261015a — ตัดตาราง ตามเพจ / แคมเปญ (ดูในรายละเอียดรายวันแทน) · ค่า Ads ต่อสินค้าผูกจากชีท Ads ของทีมก่อนชื่อแคมเปญ + แบ่งกลุ่มตามยอดขาย · กดตัวเลขดูที่มา · ตาราง Ads กรองสินค้าได้
@@ -383,10 +384,11 @@
     }
     daily.sort((a, b) => b.d.localeCompare(a.d));
     const all = R; const F = k => (R[k] ? R[k].fmt : M[k].fmt);
-    document.getElementById('theadFbaDaily').innerHTML = `<tr><th>วันที่</th>${ks.map(k => `<th>${mlabel(k)}</th>`).join('')}</tr>`;
+    const HTIP = { roas: 'ยอดขายจริง Facebook ÷ ค่า Ads Conversion ของวันเดียวกัน', acos: 'ค่า Ads Conversion ÷ ยอดขายจริง Facebook ของวันเดียวกัน', revenue: 'ออเดอร์ Facebook ในระบบ (ไม่นับยกเลิก / ตีกลับ) · คลิกตัวเลขดูแยกเพจขาย', spend_conv: 'ค่า Ads จาก Meta เฉพาะ Ads Conversion (ยิงให้เพจขาย) · คลิกตัวเลขดูแยกเพจ / คอนเทนต์' };
+    document.getElementById('theadFbaDaily').innerHTML = `<tr><th>วันที่</th>${ks.map(k => `<th${HTIP[k] ? ` data-tip="${HTIP[k]}"` : ''}>${mlabel(k)}${HTIP[k] ? ' ⓘ' : ''}</th>`).join('')}</tr>`;
     document.getElementById('fba-daily-count').textContent = `(${fmt(daily.length)} วัน${db.length ? '' : ' · ⚠ RPC ยังเป็นตัวเก่า — รัน SQL 95 อีกครั้ง'})`;
     const tot = daily.reduce((t, r) => { Object.keys(r).forEach(k => { if (k !== 'd' && typeof r[k] !== 'object') t[k] = (t[k] || 0) + (+r[k] || 0); }); return t; }, {});
-    const TRK = ['spend_conv', 'revenue', 'roas', 'acos', 'spend'];   // (2026-10-15) ตัวเลขที่กดดูที่มาได้ (เพจ / บัญชี / แคมเปญ ของวันนั้น)
+    const TRK = ['spend_conv', 'revenue', 'spend'];   // กดดูที่มาได้เฉพาะตัวเลขที่หาไม่ได้จากตารางเอง   // (2026-10-15) ตัวเลขที่กดดูที่มาได้ (เพจ / บัญชี / แคมเปญ ของวันนั้น)
     document.getElementById('tbodyFbaDaily').innerHTML = daily.map(r => `<tr><td style="white-space:nowrap;">${thShort(r.d)}</td>${ks.map(k => `<td${k === 'spend' || k === 'revenue' ? ' style="font-weight:600;"' : ''}>${TRK.includes(k) ? `<span class="pl-trace" data-fbday="${r.d}" data-fbk="${k}">${F(k)(r)}</span>` : F(k)(r)}</td>`).join('')}</tr>`).join('')
       + (daily.length ? `<tr style="font-weight:700;background:var(--bg3);"><td>รวม</td>${ks.map(k => `<td>${F(k)(tot)}</td>`).join('')}</tr>` : `<tr><td colspan="${1 + ks.length}" class="empty">ไม่มีข้อมูล</td></tr>`);
   }
@@ -430,37 +432,30 @@
           ${(d.sales_by_page || []).map(x => `<tr><td ${W1}>${ttcEsc(x[0])}</td><td>${fmt(x[2])}</td><td>${m(x[1])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">ยังไม่มีออเดอร์วันนี้</td></tr>'}</tbody></table></section>` + src([SRC_SALES]);
       return;
     }
-    if (key === 'roas' || key === 'acos') {
-      const isR = key === 'roas';
-      b.innerHTML = card(`${isR ? 'ROAS' : '% Conversion ต่อยอดขาย'} · ${dt}`, isR ? (sp ? (sa / sp).toFixed(2) + 'x' : '—') : (sa ? (sp / sa * 100).toFixed(1) + '%' : '—'), [isR ? 'ยอดขายจริง ÷ ค่า Ads Conversion' : 'ค่า Ads Conversion ÷ ยอดขายจริง'])
-        + `<section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><tbody>
-          <tr><td>ยอดขายจริง Facebook</td><td><span class="pl-trace" data-fbday="${day}" data-fbk="revenue">${m(sa)}</span></td></tr>
-          <tr><td>ค่า Ads Conversion</td><td><span class="pl-trace" data-fbday="${day}" data-fbk="spend_conv">${m(sp)}</span></td></tr>
-          <tr class="tr-gh"><td>${isR ? 'ROAS' : '% Conversion ต่อยอดขาย'}</td><td>${isR ? (sp ? (sa / sp).toFixed(2) + 'x' : '—') : (sa ? (sp / sa * 100).toFixed(1) + '%' : '—')}</td></tr></tbody></table></section>` + src([SRC_SALES, SRC_ADS]);
-      b.querySelectorAll('[data-fbday]').forEach(x => x.onclick = () => openDayTrace(x.dataset.fbday, x.dataset.fbk));
-      return;
-    }
-    b.innerHTML = card(`ค่า Ads Conversion · ${dt}`, m(sp), [`${fmt(d.ads || 0)} Ads`, `${fmt(d.campaigns || 0)} แคมเปญ`])
+    b.innerHTML = card(`ค่า Ads Conversion · ${dt}`, m(sp), [`${fmt(d.contents || 0)} คอนเทนต์`, `${fmt(d.ads || 0)} Ads`, `${fmt(d.campaigns || 0)} แคมเปญ`])
       + `<section class="tr-part"><div class="tr-sec"><span>แยกตามเพจ · บัญชีโฆษณา</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เพจ · บัญชี</th><th>Ads</th><th>ทักแชท</th><th>ค่า Ads</th></tr></thead><tbody>
         ${(d.by_page || []).map(x => `<tr><td ${W1}>${ttcEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[1])}</div></td><td>${fmt(x[3])}</td><td>${fmt(x[4])}</td><td>${m(x[2])}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">ไม่มี Ads Conversion วันนี้</td></tr>'}</tbody></table></section>
-      <section class="tr-part"><div class="tr-sec"><span>Ads ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">20 อันดับแรก</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>Ads · แคมเปญ</th><th>ทักแชท</th><th>ค่า Ads</th></tr></thead><tbody>
-        ${(d.top_ads || []).map(x => `<tr><td ${W1}>${adCell(x[0], x[1] + ' · ' + x[2], x[5])}</td><td>${fmt(x[4])}</td><td>${m(x[3])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">—</td></tr>'}</tbody></table></section>` + src([SRC_ADS]);
+      <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">20 อันดับแรก</span></div>${contentTable(d.top || [], x => `${fmt(x[1])} Ads · ${x[8] > 1 ? fmt(x[8]) + ' แคมเปญ' : ttcEsc(x[2] || '')}`)}</section>` + src([SRC_ADS, ['คอนเทนต์', 'ยุบ Ads ที่ชื่อคอนเทนต์เดียวกัน (รวม Copy) เป็นแถวเดียว']]);
+  }
+  // ตารางคอนเทนต์ (ใช้ร่วมทุกแผง): รูปปก · ทักแชท · ค่า Ads · ยอดขาย (Meta นับ) · ROAS (Meta นับ)
+  // แถว = [content, n_ads, campaign/n_camp, spend, msg, purchase_value, purchases, thumb, ...]
+  function contentTable(rows, subFn) {
+    const m = v => fmt(Math.round(+v || 0));
+    return `<table class="tr-tb" data-no-sort data-no-page><thead><tr><th>คอนเทนต์</th><th data-tip="จำนวนคนที่เริ่มคุยจาก Ads (Meta นับ)">ทักแชท</th><th>ค่า Ads</th><th data-tip="มูลค่าซื้อที่ Meta นับ (Pixel / แชท) · ไม่ใช่ยอดขายจริงในระบบ">ยอดขาย Meta</th><th data-tip="ยอดขายที่ Meta นับ ÷ ค่า Ads">ROAS Meta</th></tr></thead><tbody>`
+      + (rows.map(x => `<tr><td ${W1}>${adCell(x[0], subFn(x), x[7])}</td><td>${fmt(Math.round(+x[4] || 0))}</td><td><b>${m(x[3])}</b></td><td>${+x[5] ? m(x[5]) : '—'}</td><td>${+x[3] ? roasCell(+x[5] || 0, +x[3]) : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">ไม่มี</td></tr>') + '</tbody></table>';
   }
   async function openProductTrace(sku) {
     trOpenShell('ที่มาของตัวเลข');
     const b = document.getElementById('trBody'), from = _data && _data.from, to = _data && _data.to;
-    let L; try { L = await Auth.rpc('fb_ads_product_detail', { p_from: from, p_to: to, p_sku: sku }); } catch (e) { b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
-    L = Array.isArray(L) ? L : [];
-    const m = v => fmt(Math.round(+v || 0)), tot = L.reduce((t, x) => t + +x[6], 0);
-    const HOW = { sheet: 'ชื่อคอนเทนต์', sheet_ad: 'ชื่อคอนเทนต์', sheet_shared: 'ชีทระบุว่า รวม', shared: 'คอนเทนต์ยังไม่มีในชีท' };
-    const byHow = {}; L.forEach(x => { const h = HOW[x[2]] || x[2]; byHow[h] = (byHow[h] || 0) + +x[6]; });
-    b.innerHTML = `<div class="tr-card"><div class="tr-card-t">ค่า Ads · ${ttcEsc(sku ? skuName(sku) : 'Ads รวม (ไม่ผูกสินค้า)')}</div><div class="tr-card-v">${m(tot)}</div>
-        <div class="tr-card-m"><span>${ttcEsc(thShort(from))} – ${ttcEsc(thShort(to))}</span><span>${fmt(L.length)} Ads</span>${Object.entries(byHow).map(([h, v]) => `<span>${ttcEsc(h)} ${m(v)}</span>`).join('')}</div></div>
-      <section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>Ads · แคมเปญ</th><th>ผูกสินค้าจาก</th><th>นับเข้าแถวนี้</th></tr></thead><tbody>
-        ${L.map(x => `<tr><td ${W1}>${adCell(x[0], x[1], x[8])}</td><td ${W1}>${ttcEsc(HOW[x[2]] || x[2])}${x[3] ? `<div style="font-size:11px;color:var(--text3);">ชีท: ${ttcEsc(x[3])}</div>` : ''}</td>
-          <td><b>${m(x[6])}</b>${+x[7] > 1 ? `<div style="font-size:11px;color:var(--text3);">${(x[4] * 100).toFixed(1)}% ของ ${m(x[5])}</div>` : ''}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">ไม่มี</td></tr>'}</tbody></table></section>
-      <div class="tr-src"><div class="tr-src-h">วิธีคิด</div><dl class="tr-dl"><dt>ผูกสินค้า</dt><dd>ชื่อคอนเทนต์ (ชื่อ Ads) เทียบชีท Ads ของทีมเท่านั้น · คอนเทนต์ที่ยังไม่มีในชีท = Ads รวม</dd>
-        <dt>แบ่งกลุ่ม</dt><dd>Ads ที่ผูกหลายสินค้า แบ่งตามสัดส่วนยอดขาย Facebook ของสินค้าในกลุ่ม ช่วงวันที่เดียวกัน</dd><dt>ค่า Ads</dt><dd>Meta Marketing API · Conversion + PR</dd></dl></div>`;
+    let d; try { d = await Auth.rpc('fb_ads_product_detail', { p_from: from, p_to: to, p_sku: sku }); } catch (e) { b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
+    d = d || {};
+    const m = v => fmt(Math.round(+v || 0)), top = d.top || [];
+    b.innerHTML = `<div class="tr-card"><div class="tr-card-t">ค่า Ads · ${ttcEsc(sku ? skuName(sku) : 'Ads รวม (ไม่ผูกสินค้า)')}</div><div class="tr-card-v">${m(d.total)}</div>
+        <div class="tr-card-m"><span>${ttcEsc(thShort(from))} – ${ttcEsc(thShort(to))}</span><span>${fmt(d.contents || 0)} คอนเทนต์ · ${fmt(d.ads || 0)} Ads</span></div></div>
+      <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">${top.length < (d.contents || 0) ? '20 อันดับแรก · ดูครบที่ตาราง Ads ด้านล่าง' : 'ทั้งหมด'}</span></div>
+        ${contentTable(top, x => `${fmt(x[1])} Ads${x[2] > 1 ? ' · ' + fmt(x[2]) + ' แคมเปญ' : ''}`)}</section>
+      <div class="tr-src"><div class="tr-src-h">วิธีคิด</div><dl class="tr-dl"><dt>ผูกสินค้า</dt><dd>ชื่อคอนเทนต์ (ชื่อ Ads) เทียบชีท Ads ของทีม · คอนเทนต์ที่ยังไม่มีในชีท = Ads รวม</dd>
+        <dt>แบ่งกลุ่ม</dt><dd>คอนเทนต์ที่ผูกหลายสินค้า แบ่งตามสัดส่วนยอดขาย Facebook ของสินค้าในกลุ่ม ช่วงวันที่เดียวกัน</dd><dt>ค่า Ads</dt><dd>Meta Marketing API · Conversion + PR · ยุบ Ads ชื่อคอนเทนต์เดียวกันเป็นแถวเดียว</dd></dl></div>`;
   }
   function fillProductFilter() {
     const sel = document.getElementById('fbaAdsProduct'); if (!sel || !_data) return;
@@ -487,8 +482,7 @@
     const prods = (d.by_product || []).slice().sort((a, b) => b.spend - a.spend), pSum = prods.reduce((s, r) => s + +r.spend, 0);
     const known = prods.filter(r => r.parent_sku).reduce((s, r) => s + +r.spend, 0);
     document.getElementById('tbodyFbaProduct').innerHTML = prods.length ? prods.map(r => `<tr>
-      <td>${r.parent_sku ? `<b>${ttcEsc(skuName(r.parent_sku))}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${ttcEsc(r.parent_sku)}</span>` : `<span style="color:var(--text3);">${ttcEsc(r.product)}</span>`}
-        <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${srcLine(r)}</div></td>
+      <td>${r.parent_sku ? `<b>${ttcEsc(skuName(r.parent_sku))}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${ttcEsc(r.parent_sku)}</span>` : `<span style="color:var(--text3);">${ttcEsc(r.product)}</span>`}</td>
       <td>${fmt(r.campaigns)}</td><td>${fmt(r.ads)}</td><td style="font-weight:600;"><span class="pl-trace" data-fbsku="${ttcEscAttr(r.parent_sku || '__shared')}">${money(r.spend)}</span></td><td>${pct(r.spend, pSum)}</td>
       <td>${fmt(r.impressions)}</td><td>${fmt(r.link_clicks)}</td><td>${fmt(r.msg_started)}</td><td>${ratio(r.spend, r.msg_started)}</td>
       <td>${r.parent_sku ? money(+r.sales || 0) : '<span style="color:var(--text3);">—</span>'}</td><td>${r.parent_sku ? roasCell(+r.sales || 0, +r.spend) : '<span style="color:var(--text3);">—</span>'}</td>
