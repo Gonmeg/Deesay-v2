@@ -1,4 +1,4 @@
-// promo.js (v20261015a) — โปรโมชั่น 3 หน้า
+// promo.js (v20261015b) — โปรโมชั่น 3 หน้า
 //  • promo   (หน้าทีม)     ขอโปรโมชั่น: กรอกโปร → เห็นสัญญาณไฟทันทีว่าผ่าน "ต้นทุนทั้งหมด + กำไรขั้นต่ำ" หรือยัง (ไม่เห็นต้นทุน) → ส่งขออนุมัติ
 //  • exec    (ผู้บริหาร)   โปรโมชั่น · อนุมัติ: กำไรต่อออเดอร์เป็นขั้นบันได · จุดคุ้มทุน · ลองปรับราคา / ของแถม · อนุมัติ / ไม่อนุมัติ
 //  • execfee (ผู้บริหาร)   ค่าธรรมเนียมช่องทาง: ตารางแก้ได้ เพิ่ม / ลบรายการและช่องทาง · เก็บประวัติทุกครั้ง
@@ -87,6 +87,32 @@
       .pr-mx select { background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text2); font:inherit; font-size:11px; padding:2px 4px; }
       .pr-mx .del { border:0; background:none; color:var(--text3); cursor:pointer; font-size:12px; padding:0 2px; } .pr-mx .del:hover { color:var(--red, #ef4444); }
       .pr-note { font-size:12px; color:var(--text3); line-height:1.7; }
+
+      .pr-i { display:inline-flex; width:15px; height:15px; align-items:center; justify-content:center; font-size:11px; color:var(--text3); cursor:default; vertical-align:1px; }
+      .pr-bar2 { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+      .pr-bar2-l { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+      .pr-chip { border:1px solid var(--border); background:var(--bg2); border-radius:999px; padding:5px 12px; font:inherit; font-size:12px; color:var(--text2); cursor:pointer; }
+      .pr-chip:hover { border-color:var(--accent); color:var(--text); }
+      .pr-fx { overflow-x:auto; border:1px solid var(--border); border-bottom:0; border-radius:12px 12px 0 0; background:var(--bg2); }
+      .pr-sum { overflow-x:auto; position:sticky; bottom:0; z-index:5; border:1px solid var(--border); border-radius:0 0 12px 12px; background:var(--bg3); box-shadow:0 -6px 16px rgba(0,0,0,.12); scrollbar-width:none; }
+      .pr-sum::-webkit-scrollbar { display:none; }
+      .pr-ft { border-collapse:separate; border-spacing:0; table-layout:fixed; font-size:12.5px; }
+      .pr-ft th, .pr-ft td { border-bottom:1px solid var(--row-border, rgba(127,127,127,.12)); padding:8px 10px; background:inherit; text-align:right; vertical-align:middle; }
+      .pr-ft th:first-child, .pr-ft td:first-child { position:sticky; left:0; z-index:2; text-align:left; background:var(--bg2); box-shadow:1px 0 0 var(--border); }
+      .pr-sum .pr-ft td { background:var(--bg3); font-size:12.5px; color:var(--text); } .pr-sum .pr-ft td:first-child { background:var(--bg3); font-weight:700; }
+      .pr-ft thead th { font-size:11.5px; color:var(--text2); font-weight:600; background:var(--bg2); border-bottom:1px solid var(--border); vertical-align:bottom; }
+      .pr-hd, .pr-rn { border:0; background:none; font:inherit; color:inherit; cursor:pointer; padding:4px 6px; margin:-4px -6px; border-radius:6px; display:flex; flex-direction:column; gap:1px; text-align:inherit; max-width:100%; }
+      .pr-hd { align-items:flex-end; margin-left:auto; } .pr-hd:hover, .pr-rn:hover { background:var(--bg3); }
+      .pr-hd span { white-space:normal; line-height:1.3; } .pr-hd small, .pr-rn small { font-size:10.5px; color:var(--text3); font-weight:400; }
+      .pr-rn b { font-weight:600; color:var(--text); white-space:normal; line-height:1.35; }
+      .pr-cell { display:flex; align-items:center; justify-content:flex-end; gap:2px; }
+      .pr-cell input { width:72px; text-align:right; background:transparent; border:1px solid transparent; border-radius:6px; padding:5px 6px; color:var(--text); font:inherit; font-variant-numeric:tabular-nums; }
+      .pr-cell input:hover { border-color:var(--border); background:var(--bg); } .pr-cell input:focus { border-color:var(--accent); outline:none; background:var(--bg); box-shadow:0 0 0 3px rgba(200,169,110,.15); }
+      .pr-cell input.saving { opacity:.5; } .pr-cell i { font-style:normal; font-size:11px; color:var(--text3); width:16px; text-align:left; }
+      .pr-act { display:inline-block; margin-top:2px; border:0; background:none; padding:0 2px; font:inherit; font-size:10.5px; color:var(--text3); cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px; }
+      .pr-act.hi { color:var(--red, #dc2626); } .pr-act.lo { color:var(--green, #16a34a); } .pr-act:hover { color:var(--text); }
+      .pr-chk { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--text2); cursor:pointer; }
+      .pr-hist { margin-top:16px; } .pr-hist summary { cursor:pointer; font-size:13px; font-weight:700; color:var(--text); }
     `;
     document.head.appendChild(st);
   }
@@ -128,9 +154,9 @@
     el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     let C; try { C = await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     if (!C) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
-    el.innerHTML = `<div class="pr-head"><div><h2>ขอโปรโมชั่น</h2><p>กรอกโปรที่อยากทำ ระบบบอกทันทีว่าราคาที่ขอ<b>ผ่านต้นทุนทั้งหมด + ${pc(+(C.min_markup || 0.05), 0)}</b> หรือยัง (ไม่แสดงตัวเลขต้นทุน) แล้วส่งให้ผู้บริหารอนุมัติ</p></div></div>
+    el.innerHTML = `
       <datalist id="prProducts">${C.products.map(p => `<option value="${esc(prodLabel(p))}">`).join('')}</datalist>
-      <div class="pr-grid"><div class="pr-card"><h3>รายละเอียดโปร</h3><div class="pr-f">
+      <div class="pr-grid"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอกทันทีว่าราคาที่ขอผ่านต้นทุนทั้งหมด + ${pc(+(C.min_markup || 0.05), 0)} หรือยัง (ไม่แสดงตัวเลขต้นทุน) แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
         <div class="full"><label>ชื่อโปร</label><input class="pr-in" data-f="title" value="${esc(F.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1"></div>
         <div><label>ช่องทาง</label><select class="pr-in" data-f="channel_id"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+F.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
         <div><label>ช่วงเวลา</label><div style="display:flex;gap:8px;"><input class="pr-in" type="date" data-f="start_date" value="${esc(F.start_date)}"><input class="pr-in" type="date" data-f="end_date" value="${esc(F.end_date)}"></div></div>
@@ -188,7 +214,8 @@
     try { EX.list = await rpc('promo_list', { p_scope: 'all' }); await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     const L = EX.list, cnt = s => L.filter(r => r.status === s).length;
     const expProfit = L.filter(r => r.status === 'approved').reduce((t, r) => t + (+(r.calc || {}).total_profit || 0), 0);
-    el.innerHTML = `<div class="pr-head"><div><h2>โปรโมชั่น · อนุมัติ</h2><p>คำขอโปรจากทีม พร้อมกำไรต่อออเดอร์ที่คำนวณจากต้นทุนล่าสุดและตารางค่าธรรมเนียมปัจจุบัน · คลิกแถวเพื่อดูขั้นบันไดกำไร ลองปรับราคา และอนุมัติ</p></div>
+    el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l"><span class="pr-i" data-tip="คำขอโปรจากทีม พร้อมกำไรต่อออเดอร์ที่คำนวณจากต้นทุนล่าสุดและตารางค่าธรรมเนียมปัจจุบัน
+คลิกแถวเพื่อดูขั้นบันไดกำไร ลองปรับราคา และอนุมัติ">ⓘ</span></div>
         <div class="pr-seg" id="exSeg">${[['pending', 'รออนุมัติ'], ['approved', 'อนุมัติแล้ว'], ['rejected', 'ไม่อนุมัติ'], ['all', 'ทั้งหมด']].map(([k, t]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}</button>`).join('')}</div></div>
       <div class="pr-metrics"><div class="pr-metric"><div class="l">รออนุมัติ</div><div class="v">${cnt('pending')}</div></div><div class="pr-metric"><div class="l">อนุมัติแล้ว</div><div class="v">${cnt('approved')}</div></div>
         <div class="pr-metric"><div class="l">ไม่อนุมัติ</div><div class="v">${cnt('rejected')}</div></div><div class="pr-metric"><div class="l">กำไรรวมที่คาด (โปรที่อนุมัติ)</div><div class="v" style="color:${expProfit < 0 ? 'var(--red,#dc2626)' : 'var(--text)'}">${n0(expProfit)}</div></div></div>
@@ -273,50 +300,132 @@
   }
 
   // ===================== หน้า ค่าธรรมเนียมช่องทาง (ผู้บริหาร) =====================
+  // (2026-10-15 v2) ตารางเต็มความยาว (ไม่มีกรอบเลื่อนในตัว) · แถวรวมล็อกล่างจอ · แก้รายการ / ช่องทางผ่านแผงขวา · ใต้ตัวเลขมี "จริง" ไว้เทียบ (กดดูที่มาได้)
+  const ACT_LABEL = { commission: 'Commission', ads: 'ค่า Ads', admin: 'ค่าบริหาร (ทั้งบริษัท)', marketing: 'Marketing (ทั้งบริษัท)', platform: 'ค่าแพลตฟอร์มรวม' };
+  const ACCT_CH = ['TikTok', 'Shopee Mall', 'Shopee 24', 'Lazada Mall', 'Lazada 24', 'FB-COD', 'FB-โอนเงิน', 'Telesales', 'Line my shop', 'ตัวแทน', 'Eve&Boy', 'Konvy', 'Watsons', 'CJ', 'Thaimart'];
+  const SYS_CH = ['TikTok', 'Shopee', 'Lazada', 'Facebook', 'ตัวแทน', 'Modern Trade'];
+  const info = tip => `<span class="pr-i" data-tip="${esc(tip)}">ⓘ</span>`;
+  const mLbl = m => { const th = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']; return th[+m.slice(5, 7) - 1] + ' ' + String(+m.slice(0, 4) + 543).slice(2); };
+  let FT = null, FA = null;
+  const feeEdit = async p => { try { await rpc('fee_edit', { p }); toast('บันทึกแล้ว'); return true; } catch (e) { alert('บันทึกไม่สำเร็จ: ' + e.message); return false; } };
+  function seg(name, opts, cur) { return `<div class="pr-seg" data-seg="${name}">${opts.map(([k, t]) => `<button type="button" data-v="${k}" aria-pressed="${k === cur}">${t}</button>`).join('')}</div>`; }
+  function segVal(root, name) { const b = root.querySelector(`[data-seg="${name}"] button[aria-pressed="true"]`); return b ? b.dataset.v : null; }
+  function bindSeg(root) { root.querySelectorAll('[data-seg]').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); })); }
+  function itemForm(it) {
+    trOpenShell(it ? 'แก้ไขรายการค่าใช้จ่าย' : 'เพิ่มรายการค่าใช้จ่าย');
+    const b = document.getElementById('trBody');
+    b.innerHTML = `<section class="tr-part" style="padding:16px;"><div class="pr-f">
+      <div class="full"><label>ชื่อรายการ</label><input class="pr-in" id="fiName" value="${esc(it ? it.name : '')}" placeholder="เช่น ค่าธรรมเนียมแคมเปญ"></div>
+      <div class="full"><label>คิดเป็น</label>${seg('kind', [['pct', '% ของราคาขาย'], ['per_order', 'บาทต่อออเดอร์']], it ? it.kind : 'pct')}</div>
+      <div class="full"><label>หมวด ${info('ใช้จัดกลุ่มในขั้นบันไดกำไรของโปรโมชั่น: หลังค่าแพลตฟอร์ม → หลังค่าขาย → กำไรสุทธิ')}</label>${seg('layer', Object.entries(LAYER).map(([k, t]) => [k, t.split(' (')[0]]), it ? it.layer : 'platform')}</div>
+      <div class="full"><label>ใช้กับ</label>${seg('apply', Object.entries(APPLY), it ? it.apply : 'all')}</div>
+      <div class="full"><label>เทียบกับค่าจริงหมวด ${info('ใต้ตัวเลขในตารางจะแสดง % ที่เสียจริงตามงบบัญชีของหมวดนี้ไว้เทียบ')}</label>
+        <select class="pr-in" id="fiAct"><option value="">ไม่เทียบ</option>${['commission', 'ads', 'admin', 'marketing'].map(k => `<option value="${k}"${it && it.actual_key === k ? ' selected' : ''}>${ACT_LABEL[k]}</option>`).join('')}</select></div>
+    </div><div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;"><button class="pr-btn" id="fiSave">บันทึก</button>
+      ${it ? '<button class="pr-btn ghost" id="fiDel" style="margin-left:auto;color:var(--red,#dc2626);">ลบรายการนี้</button>' : ''}</div></section>`;
+    bindSeg(b);
+    document.getElementById('fiSave').onclick = async () => {
+      const name = document.getElementById('fiName').value.trim(); if (!name) return alert('ใส่ชื่อรายการ');
+      const p = { name, kind: segVal(b, 'kind'), layer: segVal(b, 'layer'), apply: segVal(b, 'apply'), actual_key: document.getElementById('fiAct').value };
+      if (await feeEdit(it ? { op: 'item_update', id: it.id, ...p } : { op: 'item_add', ...p })) { trClose(); renderFee(); }
+    };
+    const d = document.getElementById('fiDel'); if (d) d.onclick = async () => { if (confirm(`ลบ "${it.name}" และตัวเลขทุกช่องทางของรายการนี้?`) && await feeEdit({ op: 'item_delete', id: it.id })) { trClose(); renderFee(); } };
+  }
+  function channelForm(c) {
+    trOpenShell(c ? 'แก้ไขช่องทาง' : 'เพิ่มช่องทาง');
+    const b = document.getElementById('trBody'), sel = new Set((c && c.acct_channels) || []);
+    b.innerHTML = `<section class="tr-part" style="padding:16px;"><div class="pr-f">
+      <div class="full"><label>ชื่อช่องทาง</label><input class="pr-in" id="fcName" value="${esc(c ? c.name : '')}" placeholder="เช่น Shopee Video"></div>
+      <div class="full"><label>อยู่ในกลุ่มช่องทาง</label>${seg('sys', SYS_CH.map(x => [x, x]), c ? c.sys_channel : '')}</div>
+      <div class="full"><label>คอลัมน์ในงบบัญชีที่ใช้เทียบค่าจริง ${info('เลือกคอลัมน์ช่องทางในงบกำไรขาดทุนของบัญชีที่ตรงกับช่องทางนี้ (เลือกได้หลายคอลัมน์)')}</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${ACCT_CH.map(x => `<label class="pr-chk"><input type="checkbox" value="${esc(x)}"${sel.has(x) ? ' checked' : ''}> ${esc(x)}</label>`).join('')}</div></div>
+    </div><div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;"><button class="pr-btn" id="fcSave">บันทึก</button>
+      ${c ? '<button class="pr-btn ghost" id="fcDel" style="margin-left:auto;color:var(--red,#dc2626);">ลบช่องทางนี้</button>' : ''}</div></section>`;
+    bindSeg(b);
+    document.getElementById('fcSave').onclick = async () => {
+      const name = document.getElementById('fcName').value.trim(); if (!name) return alert('ใส่ชื่อช่องทาง');
+      const p = { name, sys_channel: segVal(b, 'sys') || '', acct_channels: [...b.querySelectorAll('.pr-chk input:checked')].map(x => x.value) };
+      if (await feeEdit(c ? { op: 'channel_update', id: c.id, ...p } : { op: 'channel_add', ...p })) { CAT = null; trClose(); renderFee(); }
+    };
+    const d = document.getElementById('fcDel'); if (d) d.onclick = async () => { if (confirm(`ลบช่องทาง "${c.name}"? (ถ้ามีโปรอ้างถึง ระบบจะปิดใช้งานแทนการลบ)`) && await feeEdit({ op: 'channel_delete', id: c.id })) { CAT = null; trClose(); renderFee(); } };
+  }
+  function thresholdForm() {
+    trOpenShell('เกณฑ์สัญญาณไฟ');
+    const b = document.getElementById('trBody'), cur = +(((FT.settings || {}).min_markup || 0.05) * 100).toFixed(2);
+    b.innerHTML = `<section class="tr-part" style="padding:16px;"><div class="pr-f"><div class="full"><label>ไฟเขียวเมื่อกำไรเกินต้นทุนทั้งหมดอย่างน้อย (%)</label>
+      <input class="pr-in" id="fmV" type="number" step="0.5" min="0" value="${cur}"></div></div>
+      <div class="pr-note" style="margin-top:10px;">ต้นทุนทั้งหมด = ต้นทุนสินค้า + ของแถม + ค่าธรรมเนียมทุกรายการในตารางนี้ · คนขอโปรเห็นแค่ผ่าน / ไม่ผ่าน ไม่เห็นตัวเลข</div>
+      <div style="margin-top:16px;"><button class="pr-btn" id="fmSave">บันทึก</button></div></section>`;
+    document.getElementById('fmSave').onclick = async () => { const v = +document.getElementById('fmV').value; if (!isFinite(v) || v < 0) return alert('ใส่ตัวเลข');
+      if (await feeEdit({ op: 'settings', min_markup: v / 100 })) { CAT = null; trClose(); renderFee(); } };
+  }
+  async function actualTrace(chId, key, label) {
+    trOpenShell('ที่มาของตัวเลข');
+    const body = document.getElementById('trBody');
+    let d; try { d = await rpc('fee_actual_detail', { p_channel_id: chId, p_key: key }); } catch (e) { body.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    const ms = d.months || [], rev = d.rev || {}, lines = d.lines || [];
+    const costM = m => lines.filter(x => x[0] === m).reduce((t, x) => t + +x[3], 0), revT = ms.reduce((t, m) => t + (+rev[m] || 0), 0), costT = ms.reduce((t, m) => t + costM(m), 0);
+    const stds = [...new Set(lines.map(x => (x[1] ? x[1] + ' ' : '') + x[2]))];
+    body.innerHTML = `<div class="tr-card"><div class="tr-card-t">${esc(label)} จริง ${info('วิธีคิด\n' + ACT_LABEL[key] + ' รวม ' + ms.length + ' เดือน ÷ ยอดขายรวม ' + ms.length + ' เดือน (ตามงบบัญชี ไม่รวม VAT)' + (d.scope === 'company' ? '\nใช้ตัวเลขทั้งบริษัท เพราะบัญชีแบ่งค่าใช้จ่ายส่วนกลางเข้าแต่ละช่องทางด้วยสัดส่วนคงที่ จึงไม่สะท้อนช่องทางจริง' : ''))}</div>
+        <div class="tr-card-v">${pc(revT ? costT / revT : null)}</div>
+        <div class="tr-card-m"><span>${d.scope === 'company' ? 'ทั้งบริษัท' : esc((d.acct_channels || []).join(' + '))}</span><span>${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : ''}</span></div></div>
+      <section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>รายการ</th>${ms.map(m => `<th>${mLbl(m)}</th>`).join('')}<th>รวม</th></tr></thead><tbody>
+        <tr class="tr-gh"><td>ยอดขาย ${info('รายได้จากการขาย + ค่าขนส่ง + ส่วนลดจากแพลตฟอร์ม − รับคืน − ส่วนลดจ่าย (ไม่รวม VAT)')}</td>${ms.map(m => `<td>${n0(rev[m])}</td>`).join('')}<td>${n0(revT)}</td></tr>
+        ${stds.map(sn => `<tr class="tr-gc"><td>${esc(sn)}</td>${ms.map(m => `<td>${n0(lines.filter(x => x[0] === m && (x[1] ? x[1] + ' ' : '') + x[2] === sn).reduce((t, x) => t + +x[3], 0))}</td>`).join('')}<td>${n0(lines.filter(x => (x[1] ? x[1] + ' ' : '') + x[2] === sn).reduce((t, x) => t + +x[3], 0))}</td></tr>`).join('')}
+        <tr class="tr-gh"><td>${esc(ACT_LABEL[key])} รวม</td>${ms.map(m => `<td>${n0(costM(m))}</td>`).join('')}<td>${n0(costT)}</td></tr>
+        <tr><td><b>% ของยอดขาย</b></td>${ms.map(m => `<td class="tr-pc">${pc(+rev[m] ? costM(m) / rev[m] : null)}</td>`).join('')}<td class="tr-pc">${pc(revT ? costT / revT : null)}</td></tr></tbody></table></section>
+      <div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl"><dt>ไฟล์</dt><dd>งบกำไรขาดทุนของบัญชี แท็บรายเดือน (${ms.map(mLbl).join(', ')})</dd>
+        <dt>คอลัมน์</dt><dd>${d.scope === 'company' ? 'ทุกช่องทางรวมกัน' : esc((d.acct_channels || []).join(' + '))}</dd>
+        <dt>บรรทัดบัญชี</dt><dd><div class="tr-chips">${(d.rev_lines || []).map(x => `<span>${esc((x[0] ? x[0] + ' ' : '') + x[1])}</span>`).join('')}${stds.map(x => `<span>${esc(x)}</span>`).join('')}</div></dd></dl></div>`;
+  }
   async function renderFee() {
     const el = document.getElementById('page-execfee'); if (!el) return;
-    el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
-    let T; try { T = await rpc('fee_table'); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-    if (!T) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
+    if (!FT) el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
+    try { [FT, FA] = await Promise.all([rpc('fee_table'), rpc('fee_actuals').catch(() => null)]); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    if (!FT) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
+    const T = FT, A = FA || {}, AC = A.channels || {}, CO = A.company || {}, ms = A.months || [];
     const V = {}; T.values.forEach(([i, c, v]) => { V[i + '|' + c] = +v; });
-    const chs = T.channels.filter(c => c.active), items = T.items;
+    const chs = T.channels.filter(c => c.active), items = T.items.filter(it => it.active);
     const val = (it, c) => V[it.id + '|' + c.id];
     const show = (it, v) => v == null ? '' : it.kind === 'pct' ? +(v * 100).toFixed(4) : +v;
-    const tot = (c, pred) => items.filter(it => it.active && it.kind === 'pct' && pred(it)).reduce((t, it) => t + (val(it, c) || 0), 0);
-    el.innerHTML = `<div class="pr-head"><div><h2>ค่าธรรมเนียมช่องทาง</h2><p>ใช้คำนวณกำไรโปรโมชั่นทุกคำขอ · แก้ตัวเลขในช่องได้ทันที (บันทึกเองเมื่อออกจากช่อง) · ช่อง % ใส่เป็นตัวเลขเปอร์เซ็นต์ เช่น 7.49 · ระบบเก็บประวัติทุกครั้ง</p></div>
+    const act = (key, c) => key === 'admin' || key === 'marketing' ? CO[key] : (AC[c.id] || {})[key];
+    const tot = (c, pred) => items.filter(it => it.kind === 'pct' && pred(it)).reduce((t, it) => t + (val(it, c) || 0), 0);
+    const actCell = (key, c, setV) => { const a = act(key, c); if (a == null || !(AC[c.id] || key === 'admin' || key === 'marketing')) return '';
+      const diff = setV == null ? 0 : a - setV, cls = diff > 0.02 ? ' hi' : diff < -0.02 ? ' lo' : '';
+      return `<button type="button" class="pr-act${cls}" data-act="${c.id}|${key}" data-tip="จริง ${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : ''} · คลิกเพื่อดูที่มา">จริง ${(a * 100).toFixed(1)}%</button>`; };
+    const W0 = 260, W = 112, width = W0 + W * chs.length;
+    const cols = `<colgroup><col style="width:${W0}px">${chs.map(() => `<col style="width:${W}px">`).join('')}</colgroup>`;
+    const legend = `ตัวเลขในช่อง = ค่าที่ตั้งไว้ใช้คิดกำไรโปร (แก้ได้ทันที บันทึกเองเมื่อออกจากช่อง · ช่อง % ใส่เป็นตัวเลขเปอร์เซ็นต์ เช่น 7.49)\n"จริง" = % ที่เสียจริงตามงบบัญชี ${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : '3 เดือนล่าสุด'} ไว้เทียบ ไม่เขียนทับค่าที่ตั้ง · สีแดง = จริงสูงกว่าที่ตั้งเกิน 2% · สีเขียว = จริงต่ำกว่า\nค่าบริหาร / Marketing ใช้ตัวเลขทั้งบริษัท เพราะบัญชีแบ่งเข้าช่องทางด้วยสัดส่วนคงที่\nระบบเก็บประวัติการแก้ทุกครั้ง`;
+    el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l">${info(legend)}<span class="pr-note" style="margin:0;">เทียบค่าจริง: ${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : '—'}</span>
+        <button type="button" class="pr-chip" id="feMm" data-tip="คลิกเพื่อแก้">ไฟเขียวเมื่อกำไร ≥ ${pc(+((T.settings || {}).min_markup || 0.05), 0)} ของต้นทุน</button></div>
         <div style="display:flex;gap:8px;"><button class="pr-btn ghost" id="feAddItem">＋ เพิ่มรายการ</button><button class="pr-btn ghost" id="feAddCh">＋ เพิ่มช่องทาง</button></div></div>
-      <div class="pr-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><b style="font-size:13px;color:var(--text);">เกณฑ์สัญญาณไฟ</b>
-        <span class="pr-note" style="margin:0;">เขียวเมื่อราคาขายครอบคลุมต้นทุนทั้งหมด และมีกำไรเกินอีก</span>
-        <input class="pr-in" id="feMm" type="number" step="0.5" style="width:80px;" value="${+(((T.settings || {}).min_markup || 0.05) * 100).toFixed(2)}"><span class="pr-note" style="margin:0;">% ของต้นทุน</span>
-        <button class="pr-btn" id="feMmSave" style="padding:6px 14px;">บันทึก</button></div>
-      <div class="pr-mx"><table><thead><tr><th>รายการ</th>${chs.map(c => `<th>${esc(c.name)}<div style="font-weight:400;color:var(--text3);font-size:10.5px;">${esc(c.sys_channel || '')} <button class="del" data-delch="${c.id}" title="ลบช่องทางนี้">✕</button></div></th>`).join('')}</tr></thead><tbody>`
-      + items.map(it => `<tr${it.active ? '' : ' style="opacity:.5;"'}><td><div class="iname" data-ren="${it.id}" title="คลิกเพื่อเปลี่ยนชื่อ">${esc(it.name)}</div><div class="imeta">
-          <select data-it="${it.id}" data-fld="kind"><option value="pct"${it.kind === 'pct' ? ' selected' : ''}>% ของราคา</option><option value="per_order"${it.kind === 'per_order' ? ' selected' : ''}>บาท/ออเดอร์</option></select>
-          <select data-it="${it.id}" data-fld="layer">${Object.entries(LAYER).map(([k, t]) => `<option value="${k}"${it.layer === k ? ' selected' : ''}>${t}</option>`).join('')}</select>
-          <select data-it="${it.id}" data-fld="apply">${Object.entries(APPLY).map(([k, t]) => `<option value="${k}"${it.apply === k ? ' selected' : ''}>${t}</option>`).join('')}</select>
-          <button class="del" data-delit="${it.id}" title="ลบรายการนี้">✕</button></div></td>`
-        + chs.map(c => `<td><input inputmode="decimal" data-cell="${it.id}|${c.id}" data-kind="${it.kind}" value="${show(it, val(it, c))}" placeholder="—"></td>`).join('') + '</tr>').join('')
-      + `</tbody><tfoot><tr><td>รวมค่าแพลตฟอร์ม (%)</td>${chs.map(c => `<td>${(tot(c, it => it.layer === 'platform') * 100).toFixed(2)}%</td>`).join('')}</tr>
-        <tr><td>รวมทุกรายการ (%)</td>${chs.map(c => `<td>${(tot(c, () => true) * 100).toFixed(2)}%</td>`).join('')}</tr></tfoot></table></div>
-      <div class="pr-card" style="margin-top:16px;"><h3>ประวัติการแก้ไข</h3>${(T.history || []).length ? `<table class="pr-tb" data-no-sort data-no-page><tbody>${T.history.map(h => `<tr><td style="white-space:nowrap;">${new Date(h[0]).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${esc(h[1] || '')}</td><td>${esc(h[2] || '')}</td><td class="num">${esc(h[3] ?? '')}${h[3] != null || h[4] != null ? ' → ' : ''}${esc(String(h[4] ?? '').slice(0, 60))}</td></tr>`).join('')}</tbody></table>` : '<div class="pr-empty">ยังไม่มี</div>'}</div>`;
-    const edit = async p => { try { await rpc('fee_edit', { p }); toast('บันทึกแล้ว'); return true; } catch (e) { alert('บันทึกไม่สำเร็จ: ' + e.message); return false; } };
-    el.querySelectorAll('input[data-cell]').forEach(inp => inp.addEventListener('change', async () => {
-      const [item_id, channel_id] = inp.dataset.cell.split('|').map(Number), raw = inp.value.trim().replace(/[,%\s]/g, '');
-      if (raw !== '' && !isFinite(+raw)) { alert('ใส่เป็นตัวเลข'); return; }
-      if (await edit({ op: 'value', item_id, channel_id, value: raw === '' ? '' : String(inp.dataset.kind === 'pct' ? +raw / 100 : +raw) })) renderFee();
-    }));
-    el.querySelectorAll('select[data-it]').forEach(s => s.addEventListener('change', async () => { if (await edit({ op: 'item_update', id: +s.dataset.it, [s.dataset.fld]: s.value })) renderFee(); }));
-    el.querySelectorAll('[data-ren]').forEach(d => d.onclick = async () => { const n = prompt('ชื่อรายการ', d.textContent); if (n && n.trim() && await edit({ op: 'item_update', id: +d.dataset.ren, name: n.trim() })) renderFee(); });
-    el.querySelectorAll('[data-delit]').forEach(b => b.onclick = async () => { if (confirm('ลบรายการนี้และตัวเลขทุกช่องทางของรายการนี้?') && await edit({ op: 'item_delete', id: +b.dataset.delit })) renderFee(); });
-    el.querySelectorAll('[data-delch]').forEach(b => b.onclick = async () => { if (confirm('ลบช่องทางนี้? (ถ้ามีโปรอ้างถึง ระบบจะปิดใช้งานแทนการลบ)') && await edit({ op: 'channel_delete', id: +b.dataset.delch })) { CAT = null; renderFee(); } });
-    document.getElementById('feAddItem').onclick = async () => { const n = prompt('ชื่อรายการค่าใช้จ่ายใหม่'); if (!n || !n.trim()) return;
-      const k = confirm('คิดเป็น % ของราคาขาย?\nกด OK = % ของราคา · กด Cancel = บาทต่อออเดอร์') ? 'pct' : 'per_order';
-      if (await edit({ op: 'item_add', name: n.trim(), kind: k, layer: 'platform', apply: 'all' })) renderFee(); };
-    document.getElementById('feAddCh').onclick = async () => { const n = prompt('ชื่อช่องทางใหม่ (เช่น Shopee Video)'); if (!n || !n.trim()) return;
-      const s = prompt('อยู่ในกลุ่มช่องทางไหนของระบบ (Facebook / TikTok / Shopee / Lazada / ตัวแทน / Modern Trade)', '') || '';
-      if (await edit({ op: 'channel_add', name: n.trim(), sys_channel: s.trim() })) { CAT = null; renderFee(); } };
-    document.getElementById('feMmSave').onclick = async () => { const v = +document.getElementById('feMm').value; if (!isFinite(v) || v < 0) return alert('ใส่ตัวเลข');
-      if (await edit({ op: 'settings', min_markup: v / 100 })) { CAT = null; renderFee(); } };
+      <div class="pr-fx" id="feWrap"><table class="pr-ft" style="width:${width}px;">${cols}<thead><tr><th>รายการ</th>${chs.map(c => `<th><button type="button" class="pr-hd" data-ch="${c.id}" data-tip="คลิกเพื่อแก้ไขช่องทาง"><span>${esc(c.name)}</span><small>${esc(c.sys_channel || '')}</small></button></th>`).join('')}</tr></thead><tbody>`
+      + items.map(it => `<tr><td><button type="button" class="pr-rn" data-it="${it.id}" data-tip="คลิกเพื่อแก้ไขรายการ"><b>${esc(it.name)}</b><small>${it.kind === 'pct' ? '% ของราคา' : 'บาท / ออเดอร์'} · ${esc(LAYER[it.layer].split(' (')[0])}${it.apply !== 'all' ? ' · ' + esc(APPLY[it.apply]) : ''}</small></button></td>`
+        + chs.map(c => { const v = val(it, c); return `<td><div class="pr-cell"><input inputmode="decimal" data-cell="${it.id}|${c.id}" data-kind="${it.kind}" value="${show(it, v)}" placeholder="—"><i>${v == null ? '' : it.kind === 'pct' ? '%' : 'บ.'}</i></div>${it.actual_key ? actCell(it.actual_key, c, v) : ''}</td>`; }).join('') + '</tr>').join('')
+      + `</tbody></table></div>
+      <div class="pr-sum" id="feSum"><table class="pr-ft" style="width:${width}px;">${cols}<tbody>
+        <tr><td>รวมค่าแพลตฟอร์ม</td>${chs.map(c => { const s = tot(c, it => it.layer === 'platform'); return `<td><b>${(s * 100).toFixed(2)}%</b>${actCell('platform', c, s)}</td>`; }).join('')}</tr>
+        <tr><td>รวมทุกรายการ (%)</td>${chs.map(c => `<td><b>${(tot(c, () => true) * 100).toFixed(2)}%</b></td>`).join('')}</tr></tbody></table></div>
+      <details class="pr-card pr-hist"><summary>ประวัติการแก้ไข (${(T.history || []).length})</summary>${(T.history || []).length ? `<table class="pr-tb" data-no-sort data-no-page><tbody>${T.history.map(h => `<tr><td style="white-space:nowrap;">${new Date(h[0]).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${esc(h[1] || '')}</td><td>${esc(h[2] || '')}</td><td class="num">${esc(h[3] ?? '')}${h[3] != null || h[4] != null ? ' → ' : ''}${esc(String(h[4] ?? '').slice(0, 60))}</td></tr>`).join('')}</tbody></table>` : '<div class="pr-empty">ยังไม่มี</div>'}</details>`;
+    const wrap = document.getElementById('feWrap'), sum = document.getElementById('feSum');
+    wrap.addEventListener('scroll', () => { sum.scrollLeft = wrap.scrollLeft; });
+    sum.addEventListener('scroll', () => { if (Math.abs(wrap.scrollLeft - sum.scrollLeft) > 1) wrap.scrollLeft = sum.scrollLeft; });
+    el.querySelectorAll('input[data-cell]').forEach(inp => {
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = inp.defaultValue; inp.blur(); } });
+      inp.addEventListener('change', async () => {
+        const [item_id, channel_id] = inp.dataset.cell.split('|').map(Number), raw = inp.value.trim().replace(/[,%\s]/g, '');
+        if (raw !== '' && !isFinite(+raw)) { alert('ใส่เป็นตัวเลข'); inp.value = inp.defaultValue; return; }
+        inp.classList.add('saving');
+        if (await feeEdit({ op: 'value', item_id, channel_id, value: raw === '' ? '' : String(inp.dataset.kind === 'pct' ? +raw / 100 : +raw) })) { const y = window.scrollY, x = wrap.scrollLeft; await renderFee(); window.scrollTo(0, y); const w2 = document.getElementById('feWrap'); if (w2) w2.scrollLeft = x; }
+        else inp.classList.remove('saving');
+      });
+    });
+    el.querySelectorAll('[data-it]').forEach(b => b.onclick = () => itemForm(T.items.find(x => x.id === +b.dataset.it)));
+    el.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => channelForm(T.channels.find(x => x.id === +b.dataset.ch)));
+    el.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { const [cid, key] = b.dataset.act.split('|'); const c = chs.find(x => x.id === +cid); actualTrace(+cid, key, `${ACT_LABEL[key]}${key === 'admin' || key === 'marketing' ? '' : ' · ' + c.name}`); });
+    document.getElementById('feAddItem').onclick = () => itemForm(null);
+    document.getElementById('feAddCh').onclick = () => channelForm(null);
+    document.getElementById('feMm').onclick = thresholdForm;
   }
 
   window.PromoUI = { render(page) { if (page === 'promo') renderPromo(); else if (page === 'exec') renderExec(); else if (page === 'execfee') renderFee(); } };
