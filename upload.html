@@ -257,6 +257,7 @@
     <button class="mode-btn" id="modeBtnCost">📊 อัพต้นทุนสินค้า</button>
 <button class="mode-btn" id="modeBtnDelete">🗑 ลบข้อมูล</button>
 <button class="mode-btn" id="modeBtnExport">📤 ส่งออกให้บัญชี</button>
+<button class="mode-btn" id="modeBtnAcctLink">📑 ลิงก์งบบัญชี</button>
   </div>
   </div>
   
@@ -333,6 +334,29 @@
     </div>
   </div><!-- end panel3 -->
   </div><!-- end stepWizard -->
+
+  <!-- (2026-10-15) ACCT LINK PANEL — บัญชีวางลิงก์งบเดือนใหม่ → ระบบตรวจ → กดใช้งาน -->
+  <div id="acctLinkPanel" style="display:none;">
+    <div class="card">
+      <div class="section-title">ลิงก์งบกำไรขาดทุนจากบัญชี</div>
+      <p class="map-info">บัญชีขึ้นลิงก์ใหม่ทุกครั้งที่ปิดงบเดือนใหม่ (และอาจแก้ตัวเลขเดือนก่อนๆ ในไฟล์เดียวกัน) · วางลิงก์ "เผยแพร่ไปยังเว็บ" ของไฟล์งบที่นี่ ระบบจะ<b>ตรวจก่อน</b>ว่ามีเดือนไหนเพิ่ม เดือนไหนแก้ และมีจุดผิดปกติอะไร แล้วค่อยกดใช้งาน · ลิงก์เดิมยังใช้อยู่จนกว่าจะกดใช้งานลิงก์ใหม่</p>
+      <div id="alActive" class="map-info" style="margin-bottom:14px;"></div>
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="flex:1;min-width:280px;">
+          <label class="field-label">ลิงก์ไฟล์งบ (Google Sheets → ไฟล์ → แชร์ → เผยแพร่ไปยังเว็บ) <span class="req">*</span></label>
+          <input type="url" id="alUrl" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub…" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:8px 12px;font-size:0.85rem;font-family:inherit;outline:none;">
+        </div>
+        <button class="btn-primary" id="btnAlCheck" style="padding:9px 20px;white-space:nowrap;">🔍 ตรวจสอบลิงก์</button>
+      </div>
+      <div id="alAlert" class="alert alert-error" style="display:none;"></div>
+      <div id="alProgress" class="map-info" style="display:none;"></div>
+      <div id="alReport" style="display:none;"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">ประวัติลิงก์</div>
+      <div id="alHistory" class="map-info">กำลังโหลด…</div>
+    </div>
+  </div>
 
   <!-- (2026-10-14) EXPORT PANEL — ส่งออกให้บัญชี: จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย (ต้นทุนวอลเล็ท) -->
   <div id="exportPanel" style="display:none;">
@@ -1504,6 +1528,9 @@ function setUploadMode(mode) {
   document.getElementById('modeBtnCost').classList.toggle('active', mode === 'cost')
   document.getElementById('modeBtnDelete').classList.toggle('active', mode === 'delete')
   document.getElementById('modeBtnExport').classList.toggle('active', mode === 'export')
+  document.getElementById('modeBtnAcctLink').classList.toggle('active', mode === 'acctlink')
+  const acctLinkPanel = document.getElementById('acctLinkPanel')
+  if (acctLinkPanel) acctLinkPanel.style.display = mode === 'acctlink' ? 'block' : 'none'
   const exportPanel = document.getElementById('exportPanel')
   if (exportPanel) exportPanel.style.display = mode === 'export' ? 'block' : 'none'
   const deletePanel = document.getElementById('deletePanel')
@@ -1512,6 +1539,14 @@ function setUploadMode(mode) {
   const stepWizard = document.getElementById('stepWizard')
   const costPanel = document.getElementById('costPanel')
 
+  if (mode === 'acctlink') {
+    if (stepWizard) stepWizard.style.display = 'none'
+    if (costPanel) costPanel.style.display = 'none'
+    document.getElementById('pageTitle').textContent = 'ลิงก์งบบัญชี'
+    document.getElementById('pageDesc').textContent = 'วางลิงก์ไฟล์งบเดือนใหม่จากบัญชี ระบบตรวจให้ก่อนใช้งาน'
+    alLoadHistory()
+    return
+  }
   if (mode === 'export') {
     if (stepWizard) stepWizard.style.display = 'none'
     if (costPanel) costPanel.style.display = 'none'
@@ -1572,6 +1607,102 @@ document.getElementById('modeBtnSettlement').addEventListener('click', () => set
 document.getElementById('modeBtnCost').addEventListener('click', () => setUploadMode('cost'))
 document.getElementById('modeBtnDelete').addEventListener('click', () => setUploadMode('delete'))
 document.getElementById('modeBtnExport').addEventListener('click', () => setUploadMode('export'))
+document.getElementById('modeBtnAcctLink').addEventListener('click', () => setUploadMode('acctlink'))
+// ===== (2026-10-15) ลิงก์งบกำไรขาดทุนจากบัญชี: วางลิงก์ → ระบบตรวจ (acct_source_step) → สรุปผล → กดใช้งาน (acct_source_activate) =====
+const AL_TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+const alM = m => m ? `${AL_TH[+m.slice(5, 7) - 1]} ${(+m.slice(0, 4) + 543) % 100}` : ''
+const alN = v => (Math.round((+v || 0) * 100) / 100).toLocaleString('th-TH', { maximumFractionDigits: 0 })
+const alE = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+const AL_KIND = { rev: 'รายได้จากการขาย', oth: 'รายได้อื่น', cogs_order: 'ต้นทุน (ตามคำสั่งซื้อ)', cogs_ship: 'ต้นทุน (ตาม Shipment)', cogs_acct: 'ต้นทุน (ทางบัญชี)', cogs_wallet: 'ต้นทุน (ตามวอลเลต)', sell: 'ค่าใช้จ่ายในการขาย', admin: 'ค่าใช้จ่ายบริหาร', vat: 'ภพ.30 / ภพ.36', plat_invoice: 'ค่าแพลตฟอร์มตามใบแจ้งหนี้ (ข้อมูลประกอบ)', plat_wallet: 'ค่าแพลตฟอร์มตามวอลเลต (ข้อมูลประกอบ)' }
+const AL_ST = { active: ['ใช้งานอยู่', '#16a34a'], ready: ['ตรวจผ่าน รอใช้งาน', '#2563eb'], error: ['ใช้ไม่ได้', '#dc2626'], retired: ['เลิกใช้', '#6b7280'], new: ['กำลังตรวจ', '#d97706'], index: ['กำลังตรวจ', '#d97706'], fetching: ['กำลังตรวจ', '#d97706'] }
+let alPolling = null
+
+async function alLoadHistory() {
+  const { data, error } = await DB.rpc('acct_source_list')
+  const h = document.getElementById('alHistory'), act = document.getElementById('alActive')
+  if (error) { h.textContent = 'โหลดไม่สำเร็จ: ' + error.message; return }
+  const rows = data || []
+  const a = rows.find(r => r.status === 'active')
+  act.innerHTML = a ? `<b>ใช้อยู่ตอนนี้:</b> ${(a.closed || []).length ? `ปิดบัญชีแล้ว ${alM(a.closed[0])} – ${alM(a.closed[a.closed.length - 1])}` : ''} · ใช้งานตั้งแต่ ${a.activated_at ? new Date(a.activated_at).toLocaleString('th-TH') : '-'} · <a href="${alE(a.url)}" target="_blank" rel="noopener">เปิดไฟล์</a>` : 'ยังไม่มีลิงก์ที่ใช้งาน'
+  h.innerHTML = rows.length ? `<table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr>
+      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);">สถานะ</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);">เดือนที่ปิดแล้ว</th>
+      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);">เพิ่ม / แก้</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);">ส่งเมื่อ</th><th style="padding:6px 8px;border-bottom:1px solid var(--border2);"></th></tr></thead><tbody>`
+    + rows.map(r => { const s = AL_ST[r.status] || [r.status, '#6b7280']; const c = r.closed || [];
+      return `<tr><td style="padding:6px 8px;"><span style="color:${s[1]};font-weight:600;">● ${s[0]}</span>${r.recheck ? ' <span style="color:var(--text3);">(ตรวจไฟล์เดิมซ้ำ)</span>' : ''}</td>
+        <td style="padding:6px 8px;">${c.length ? `${alM(c[0])} – ${alM(c[c.length - 1])}` : '—'}</td>
+        <td style="padding:6px 8px;">${(r.new_months || []).map(alM).join(', ') || '—'}${(r.changed_months || []).length ? ` · แก้ ${(r.changed_months || []).map(alM).join(', ')}` : ''}</td>
+        <td style="padding:6px 8px;">${r.submitted_at ? new Date(r.submitted_at).toLocaleString('th-TH') : ''}${r.submitted_name ? ' · ' + alE(r.submitted_name) : ''}</td>
+        <td style="padding:6px 8px;text-align:right;">${['ready', 'error'].includes(r.status) ? `<button class="btn-ghost" data-al-open="${r.id}" style="padding:3px 10px;">ดูผลตรวจ</button>` : `<a href="${alE(r.url)}" target="_blank" rel="noopener">ไฟล์</a>`}</td></tr>` }).join('') + '</tbody></table>' : 'ยังไม่มีประวัติ'
+  h.querySelectorAll('[data-al-open]').forEach(b => b.addEventListener('click', () => alPoll(+b.dataset.alOpen)))
+}
+
+function alRender(id, st) {
+  const out = document.getElementById('alReport'), r = st.report || {}
+  const sec = (title, body, tone) => `<div style="margin-top:14px;padding:12px 14px;border:1px solid ${tone === 'bad' ? 'rgba(220,38,38,.45)' : tone === 'warn' ? 'rgba(217,119,6,.45)' : 'var(--border2)'};border-radius:10px;">
+      <div style="font-weight:700;margin-bottom:6px;">${title}</div>${body}</div>`
+  const tbl = (head, rows) => `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr>${head.map((h, i) => `<th style="text-align:${i ? 'right' : 'left'};padding:5px 8px;border-bottom:1px solid var(--border2);white-space:nowrap;">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(rw => `<tr>${rw.map((c, i) => `<td style="text-align:${i ? 'right' : 'left'};padding:5px 8px;border-bottom:1px solid var(--border);">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+  let h = ''
+  if (st.status === 'error') h += sec('❌ ใช้ลิงก์นี้ไม่ได้', `<div>${alE(st.error || 'ตรวจไม่ผ่าน')}</div>`, 'bad')
+  const closed = r.closed || [], nm = r.new_months || [], ch = r.changed_months || []
+  const warn = (r.errors || []).length + (r.total_mismatch || []).filter(x => x[1]).length + (r.shift || []).length + (r.new_accounts || []).length + (r.new_channels || []).length + (r.unknown_lines || []).length + (r.failed_tabs || []).length + (r.dropped_months || []).length
+  if (st.status === 'ready') h += sec(warn ? '⚠️ ใช้งานได้ แต่มีเรื่องที่ควรดู' : '✅ ตรวจผ่าน พร้อมใช้งาน',
+    `<div>เดือนที่ปิดบัญชีแล้ว: <b>${closed.length ? `${alM(closed[0])} – ${alM(closed[closed.length - 1])}` : '—'}</b> · เดือนใหม่: <b>${nm.map(alM).join(', ') || 'ไม่มี'}</b> · เดือนที่ตัวเลขเปลี่ยนจากเดิม: <b>${ch.map(alM).join(', ') || 'ไม่มี'}</b></div>`, warn ? 'warn' : '')
+  // ยอดหลักของเดือนใหม่
+  const kinds = (r.kinds || []).map(k => ({ m: k[0], kind: k[1], o: +k[2], n: +k[3] }))
+  nm.forEach(m => {
+    const L = kinds.filter(k => k.m === m && AL_KIND[k.kind])
+    if (L.length) h += sec(`ยอดหลักเดือนใหม่ · ${alM(m)}`, tbl(['รายการ', 'ยอด (ทุกช่องทาง)'], L.sort((a, b) => Object.keys(AL_KIND).indexOf(a.kind) - Object.keys(AL_KIND).indexOf(b.kind)).map(k => [AL_KIND[k.kind], alN(k.n)])))
+  })
+  // แก้ย้อนหลัง
+  if (ch.length) {
+    const big = kinds.filter(k => ch.includes(k.m) && Math.abs(k.n - k.o) >= 1)
+    const lc = (r.line_changes || []).map(x => [alM(x[0]), alE(x[1]), alE(x[2]), alN(x[3]), alN(x[4]), alN(+x[4] - +x[3])])
+    h += sec('เดือนที่ตัวเลขเปลี่ยนจากเดิม (บัญชีแก้ย้อนหลัง)',
+      (big.length ? `<div style="margin-bottom:8px;">ยอดรวมที่เปลี่ยน: ${big.map(k => `${alM(k.m)} ${AL_KIND[k.kind] || k.kind} ${alN(k.o)} → ${alN(k.n)}`).join(' · ')}</div>` : '<div style="margin-bottom:8px;">ยอดรวมรายได้ ต้นทุน ค่าใช้จ่าย ไม่เปลี่ยน (เปลี่ยนแค่การแบ่งระหว่างช่องทาง หรือข้อมูลประกอบ)</div>')
+      + tbl(['เดือน', 'รายการ', 'ช่องทาง', 'เดิม', 'ใหม่', 'ต่าง'], lc.slice(0, 40)) + (lc.length > 40 ? `<div style="margin-top:6px;">และอีก ${lc.length - 40} รายการ</div>` : ''), 'warn')
+  }
+  if ((r.new_channels || []).length) h += sec('ช่องทางใหม่ในงบ', `<div>${r.new_channels.map(alE).join(', ')} · ระบบนับ Telesales รวมในกลุ่ม Facebook · ถ้าเป็นช่องทางอื่นที่ระบบยังไม่รู้จัก แจ้งทีมระบบก่อนกดใช้งาน</div>`, 'warn')
+  if ((r.new_accounts || []).length) h += sec('บัญชีใหม่ที่ไม่เคยมีในงบ', tbl(['เดือน', 'บัญชี', 'จัดเป็น', 'ยอด'], r.new_accounts.map(x => [alM(x[0]), alE(x[1]), AL_KIND[x[2]] || alE(x[2]), alN(x[3])])), 'warn')
+  if ((r.unknown_lines || []).length) h += sec('บรรทัดที่ระบบไม่รู้ว่าเป็นหมวดไหน (จะไม่ถูกนับ)', tbl(['เดือน', 'บรรทัด', 'ยอด'], r.unknown_lines.map(x => [alM(x[0]), alE(x[1]), alN(x[2])])), 'bad')
+  if ((r.errors || []).length) h += sec('เซลล์ที่สูตรผิด (#REF!, #VALUE! …)', tbl(['เดือน', 'จำนวน', 'ตัวอย่างบรรทัด'], r.errors.map(x => [alM(x[0]), x[1], alE((x[2] || []).join(', '))])), 'bad')
+  const tm = (r.total_mismatch || []).filter(x => x[1])
+  if (tm.length) h += sec('ยอดรวมช่องทางไม่ตรงกับช่อง "รวม"', tbl(['เดือน', 'บรรทัด', 'รวมทุกช่องทาง', 'ช่องรวม'], tm.map(x => [alM(x[0]), alE(x[1]), alN(x[2]), alN(x[3])])), 'warn')
+  if ((r.shift || []).length) h += sec('สัดส่วนช่องทางน่าจะเลื่อนคอลัมน์ (ตัวแทน ↔ Eve&Boy ↔ Watsons)', tbl(['เดือน', 'บรรทัด', 'TikTok %', 'ตัวแทน %', 'Eve&Boy %'], r.shift.map(x => [alM(x[0]), alE(x[1]), x[2], x[3], x[4]])), 'warn')
+  if ((r.dropped_months || []).length) h += sec('เดือนที่หายไปจากไฟล์ใหม่', `<div>${r.dropped_months.map(alM).join(', ')} · ถ้ากดใช้งาน เดือนเหล่านี้จะหายจาก Business Insight</div>`, 'bad')
+  if (st.status === 'ready') h += `<div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button class="btn-primary" id="btnAlActivate" style="padding:9px 20px;">✓ ใช้งานลิงก์นี้</button>
+      <span class="map-info" style="margin:0;">ตัวเลขทุกเดือนใน Business Insight จะอ่านจากไฟล์นี้ และคำนวณใหม่ภายใน ~2 นาที</span></div>`
+  out.innerHTML = h; out.style.display = 'block'
+  const b = document.getElementById('btnAlActivate')
+  if (b) b.addEventListener('click', async () => {
+    if (!confirm(`ใช้งานลิงก์นี้แทนลิงก์เดิม?\n\nเดือนใหม่: ${nm.map(alM).join(', ') || 'ไม่มี'}\nเดือนที่ตัวเลขเปลี่ยน: ${ch.map(alM).join(', ') || 'ไม่มี'}`)) return
+    b.disabled = true; b.textContent = '⏳ กำลังโหลดข้อมูล…'
+    const { data, error } = await DB.rpc('acct_source_activate', { p_id: id })
+    if (error) { b.disabled = false; b.textContent = '✓ ใช้งานลิงก์นี้'; alert('ใช้งานไม่สำเร็จ: ' + error.message); return }
+    out.innerHTML = sec('✅ ใช้งานลิงก์ใหม่แล้ว', `<div>โหลด ${(data.loaded || []).length} แท็บ · ${alE(data.refresh || '')}</div>`)
+    alLoadHistory()
+  })
+}
+
+async function alPoll(id) {
+  clearTimeout(alPolling)
+  const pg = document.getElementById('alProgress'), al = document.getElementById('alAlert')
+  al.style.display = 'none'; pg.style.display = 'block'
+  const { data, error } = await DB.rpc('acct_source_step', { p_id: id })
+  if (error) { pg.style.display = 'none'; al.textContent = 'ตรวจไม่สำเร็จ: ' + error.message; al.style.display = 'block'; return }
+  if (['ready', 'error', 'active', 'retired'].includes(data.status)) { pg.style.display = 'none'; alRender(id, data); alLoadHistory(); return }
+  pg.textContent = data.status === 'fetching' ? `⏳ กำลังอ่านแท็บในไฟล์ ${data.done || 0} / ${data.total || '?'} …` : '⏳ กำลังเปิดลิงก์…'
+  alPolling = setTimeout(() => alPoll(id), 3000)
+}
+
+document.getElementById('btnAlCheck').addEventListener('click', async () => {
+  const url = document.getElementById('alUrl').value.trim(), al = document.getElementById('alAlert')
+  al.style.display = 'none'; document.getElementById('alReport').style.display = 'none'
+  if (!url) { al.textContent = 'กรุณาวางลิงก์'; al.style.display = 'block'; return }
+  const { data, error } = await DB.rpc('acct_source_submit', { p_url: url })
+  if (error) { al.textContent = error.message; al.style.display = 'block'; return }
+  alPoll(data)
+})
+
 
 // ===== (2026-10-14) ส่งออกให้บัญชี: จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย (ต้นทุนวอลเล็ท) =====
 // ระบบแตก child SKU ในฐานข้อมูล (acct_child_qty_export) ด้วยกติกาเดียวกับที่เคยทำด้วย Python ทุกเดือน → ไฟล์ Excel คอลัมน์เดิม
