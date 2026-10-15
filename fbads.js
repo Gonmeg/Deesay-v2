@@ -1,3 +1,5 @@
+// fbads.js v20261015c — ผูกสินค้าจากชื่อคอนเทนต์อย่างเดียว (ไม่ใช้ชื่อแคมเปญ) · ตารางสินค้ามีทั้งยอดจริงในระบบ และตัวเลขที่ Meta นับ (คำอธิบายที่หัวคอลัมน์)
+// fbads.js v20261015b — แผงที่มาแสดงเฉพาะตัวเลขที่กด + รูป Ads · ตารางสินค้า: ยอดขายจริง / ROAS แทนตัวเลขที่ Meta นับ · ที่มา = ชื่อคอนเทนต์
 // fbads.js v20261015a — ตัดตาราง ตามเพจ / แคมเปญ (ดูในรายละเอียดรายวันแทน) · ค่า Ads ต่อสินค้าผูกจากชีท Ads ของทีมก่อนชื่อแคมเปญ + แบ่งกลุ่มตามยอดขาย · กดตัวเลขดูที่มา · ตาราง Ads กรองสินค้าได้
 // fbads.js v20261009a — ข้อมูลช่วงที่ไม่เปลี่ยนเก็บไว้ในเครื่อง (sigCachedRpc + fb_ads_page_check) ไม่ต้องดาวน์โหลดซ้ำ
 // fbads.js v20261002c — คำอธิบาย ⓘ กระชับขึ้น (ไม่มีชื่อตารางในระบบบนหน้าจอ)
@@ -163,9 +165,9 @@
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ประเภท Ads ไหนคุ้ม — วิดีโอ / ภาพ / อัลบั้ม <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('fba-info-type')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fba-info-type" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">ประเภทมาจากชิ้นงานที่ Meta บอก: วิดีโอ / ภาพเดี่ยว / อัลบั้ม (หลายรูปเลื่อนดู) / ลิงก์<br><br>Ads ที่สร้างจากโพสต์เดิมบนเพจ Meta บอกได้แค่ "วิดีโอ" หรือ "ภาพ" — อัลบั้มจากโพสต์เดิมจึงอาจขึ้นเป็นภาพ · "ยังไม่ทราบ" = Ads เก่าที่ระบบยังไม่ได้อ่านประเภท (ทยอยเติมเอง)<br><br>ทุก Ads ในช่วง ไม่ใช่แค่ 1,500 ตัวที่แสดงในตารางล่าง</div></span></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaType')">⬇ Export CSV</button></div>
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaType" data-no-page><thead><tr><th>ประเภท</th><th>Ads</th><th>ค่า Ads</th><th>% งบ</th><th>Impressions</th><th>CPM</th><th>คลิกลิงก์</th><th>CTR</th><th>ทักแชท</th><th>บาท/ทัก</th><th>ซื้อ (Meta นับ)</th><th>บาท/ซื้อ</th><th>ROAS (Meta)</th><th>ดูจบ (ThruPlay)</th></tr></thead><tbody id="tbodyFbaType"></tbody></table></div></div>
-        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ค่า Ads ต่อสินค้า <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="ที่มา: ค่า Ads จาก Meta (Conversion + PR) ช่วงวันที่ที่เลือก&#10;ผูกสินค้า: ① ชีท Ads ของทีม (ชื่อ Ads → สินค้า) ② ถ้าไม่มีในชีท ใช้คำในชื่อแคมเปญ (กฎในหน้า Admin › Ads Facebook)&#10;Ads ที่ผูกหลายสินค้า (เช่น รวมกันแดด) แบ่งให้แต่ละสินค้าตามยอดขาย Facebook ช่วงเดียวกัน&#10;Ads รวม = ชีทระบุว่า รวม หรือไม่รู้สินค้า → MKT Tracking / Business Insight เฉลี่ยตามยอดขาย&#10;เป็นวิธีเดียวกับ MKT Tracking และ Business Insight · คลิกค่า Ads เพื่อดูรายชื่อ Ads ที่นับ">ⓘ</span></div>
+        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ค่า Ads ต่อสินค้า <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="ที่มา: ค่า Ads จาก Meta (Conversion + PR) ช่วงวันที่ที่เลือก&#10;ผูกสินค้า: ชื่อคอนเทนต์ (ชื่อ Ads เช่น May26_006) เทียบกับชีท Ads ของทีมว่าเป็นสินค้าอะไร · คอนเทนต์ที่ยังไม่มีในชีท นับเป็น Ads รวม (เพิ่มลงชีทแล้วจะย้ายไปอยู่ที่สินค้าเอง)&#10;Ads ที่ผูกหลายสินค้า (เช่น รวมกันแดด) แบ่งให้แต่ละสินค้าตามยอดขาย Facebook ช่วงเดียวกัน&#10;Ads รวม = ชีทระบุว่า รวม หรือคอนเทนต์ยังไม่มีในชีท → MKT Tracking / Business Insight เฉลี่ยตามยอดขาย&#10;ยอดขายจริง = ออเดอร์ Facebook ของสินค้านั้นในระบบ · คอลัมน์ "Meta นับ" = ตัวเลขจาก Meta ไว้ดูประกอบ (ชี้ที่หัวคอลัมน์ดูคำอธิบาย)&#10;เป็นวิธีเดียวกับ MKT Tracking และ Business Insight · คลิกค่า Ads เพื่อดูรายชื่อ Ads ที่นับ">ⓘ</span></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaProduct')">⬇ Export CSV</button></div>
-          <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaProduct" data-no-page><thead><tr><th>สินค้า</th><th>แคมเปญ</th><th>Ads</th><th>ค่า Ads</th><th>% งบ</th><th>Impressions</th><th>คลิกลิงก์</th><th>ทักแชท</th><th>บาท/ทัก</th><th>ซื้อ (Meta นับ)</th><th>บาท/ซื้อ</th><th>ROAS (Meta)</th></tr></thead><tbody id="tbodyFbaProduct"></tbody></table></div></div>
+          <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaProduct" data-no-page><thead><tr><th>สินค้า</th><th>แคมเปญ</th><th>Ads</th><th>ค่า Ads</th><th>% งบ</th><th>Impressions</th><th>คลิกลิงก์</th><th>ทักแชท</th><th>บาท/ทัก</th><th data-tip="ยอดขายจริงในระบบเรา: ออเดอร์ Facebook ของสินค้านั้น (ไม่นับยกเลิก / ตีกลับ) ชุดเดียวกับหน้าภาพรวม">ยอดขายจริง ⓘ</th><th data-tip="ยอดขายจริงในระบบ ÷ ค่า Ads">ROAS ยอดจริง ⓘ</th><th data-tip="จำนวนที่ Meta นับว่าซื้อ (จาก Pixel / แชท) · ไม่ใช่ออเดอร์จริงในระบบ ไว้ดูประกอบ">ซื้อ (Meta นับ) ⓘ</th><th data-tip="ค่า Ads ÷ จำนวนซื้อที่ Meta นับ">บาท/ซื้อ (Meta) ⓘ</th><th data-tip="มูลค่าซื้อที่ Meta นับ ÷ ค่า Ads · มักไม่ตรงยอดจริงเพราะลูกค้าส่วนใหญ่ปิดการขายในแชท">ROAS Meta นับ ⓘ</th></tr></thead><tbody id="tbodyFbaProduct"></tbody></table></div></div>
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">Ads / โพสต์ที่ยิง <span id="fba-ads-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;"><select class="ls-input" id="fbaAdsBucket" style="width:190px;padding:6px 10px;font-size:12px;"><option value="">ทุกประเภท Ads</option><option value="Conversion">Conversion — เพจขาย</option><option value="PR">PR — เพจอื่น / KOL</option></select>
             <select class="ls-input" id="fbaAdsKol" style="width:120px;padding:6px 10px;font-size:12px;" title="กรองตาม KOL · เลือก in-house + เรียงค่า Ads = ลิสต์โพสต์ที่ยังไม่ได้ระบุ KOL"><option value="">ทุก KOL</option><option value="kol">มี KOL</option><option value="house">in-house</option><option value="review">⚠️ ต้องตรวจ</option></select>
@@ -182,7 +184,7 @@
       document.getElementById('fbaAdsProduct').onchange = () => renderAds();
       // (2026-10-15) คลิกตัวเลขในตารางรายวัน / ค่า Ads ต่อสินค้า → แผงที่มาของตัวเลข
       el.addEventListener('click', e => { const t = e.target.closest('[data-fbday],[data-fbsku]'); if (!t) return;
-        if (t.dataset.fbday) openDayTrace(t.dataset.fbday); else openProductTrace(t.dataset.fbsku === '__shared' ? null : t.dataset.fbsku); });
+        if (t.dataset.fbday) openDayTrace(t.dataset.fbday, t.dataset.fbk); else openProductTrace(t.dataset.fbsku === '__shared' ? null : t.dataset.fbsku); });
       document.getElementById('fbaAdsKol').onchange = () => renderAds();
       const prOpts = ['spend','impressions','reach','post_engagement','er','link_clicks','msg_started','cpm','cpe','thruplay'];
       const prSel = document.getElementById('fbaPrMetric'); prSel.innerHTML = prOpts.map(k => `<option value="${k}">${M[k].label}</option>`).join(''); prSel.value = 'reach'; prSel.onchange = () => renderPr();
@@ -385,7 +387,7 @@
     document.getElementById('fba-daily-count').textContent = `(${fmt(daily.length)} วัน${db.length ? '' : ' · ⚠ RPC ยังเป็นตัวเก่า — รัน SQL 95 อีกครั้ง'})`;
     const tot = daily.reduce((t, r) => { Object.keys(r).forEach(k => { if (k !== 'd' && typeof r[k] !== 'object') t[k] = (t[k] || 0) + (+r[k] || 0); }); return t; }, {});
     const TRK = ['spend_conv', 'revenue', 'roas', 'acos', 'spend'];   // (2026-10-15) ตัวเลขที่กดดูที่มาได้ (เพจ / บัญชี / แคมเปญ ของวันนั้น)
-    document.getElementById('tbodyFbaDaily').innerHTML = daily.map(r => `<tr><td style="white-space:nowrap;">${thShort(r.d)}</td>${ks.map(k => `<td${k === 'spend' || k === 'revenue' ? ' style="font-weight:600;"' : ''}>${TRK.includes(k) ? `<span class="pl-trace" data-fbday="${r.d}">${F(k)(r)}</span>` : F(k)(r)}</td>`).join('')}</tr>`).join('')
+    document.getElementById('tbodyFbaDaily').innerHTML = daily.map(r => `<tr><td style="white-space:nowrap;">${thShort(r.d)}</td>${ks.map(k => `<td${k === 'spend' || k === 'revenue' ? ' style="font-weight:600;"' : ''}>${TRK.includes(k) ? `<span class="pl-trace" data-fbday="${r.d}" data-fbk="${k}">${F(k)(r)}</span>` : F(k)(r)}</td>`).join('')}</tr>`).join('')
       + (daily.length ? `<tr style="font-weight:700;background:var(--bg3);"><td>รวม</td>${ks.map(k => `<td>${F(k)(tot)}</td>`).join('')}</tr>` : `<tr><td colspan="${1 + ks.length}" class="empty">ไม่มีข้อมูล</td></tr>`);
   }
 
@@ -405,45 +407,60 @@
   // ตารางสรุป: ประเภทชิ้นงาน + สินค้า (จาก RPC by_type / by_product — ทุกแอดในช่วง)
   // (2026-10-15) ที่มาของค่า Ads ต่อสินค้า: ชีท Ads ของทีม / ชื่อแคมเปญ / ส่วนที่แบ่งจากกลุ่ม
   function srcLine(r) {
-    const s = +r.spend || 0; if (!r.parent_sku) return 'ชีทระบุว่า รวม หรือไม่รู้สินค้า';
-    const a = []; if (+r.spend_sheet) a.push('ชีท Ads ' + (s ? Math.round(r.spend_sheet / s * 100) : 0) + '%'); if (+r.spend_rule) a.push('ชื่อแคมเปญ ' + (s ? Math.round(r.spend_rule / s * 100) : 0) + '%');
+    const s = +r.spend || 0; if (!r.parent_sku) return 'ชีทระบุว่า รวม หรือคอนเทนต์ยังไม่มีในชีท';
+    const a = ['จากชื่อคอนเทนต์'];
     if (+r.spend_split) a.push('แบ่งจากกลุ่ม ' + fmt(Math.round(r.spend_split))); return a.join(' · ');
   }
-  async function openDayTrace(day) {
+  // (2026-10-15 v2) แผงที่มาของตัวเลข: แสดงเฉพาะตัวเลขที่กด · Ads มีรูปปก (ชี้แล้วเห็นใหญ่) · ข้อความยาวขึ้นบรรทัดใหม่
+  const W1 = 'style="white-space:normal;line-height:1.4;"';
+  const thumbHtml = u => u ? `<img src="${ttcEscAttr(u)}" data-tip-img="${ttcEscAttr(u)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:var(--bg3);" onerror="this.style.visibility='hidden'">` : '<span style="width:36px;height:36px;border-radius:6px;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;">📘</span>';
+  const adCell = (name, sub, u) => `<div style="display:flex;gap:10px;align-items:center;">${thumbHtml(u)}<div style="min-width:0;white-space:normal;line-height:1.35;">${ttcEsc(name || '')}<div style="font-size:11px;color:var(--text3);">${ttcEsc(sub || '')}</div></div></div>`;
+  async function openDayTrace(day, key) {
     trOpenShell('ที่มาของตัวเลข');
     const b = document.getElementById('trBody');
-    let d; try { d = await supaRpc('fb_ads_day_detail', { p_date: day }, true); } catch (e) { b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
+    let d; try { d = await Auth.rpc('fb_ads_day_detail', { p_date: day }); } catch (e) { b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
     if (!d) { b.innerHTML = '<div class="tr-warn">ไม่มีสิทธิ์ดูข้อมูลนี้</div>'; return; }
-    const m = v => fmt(Math.round(+v || 0)), sp = +d.spend || 0, sa = +d.sales || 0;
-    b.innerHTML = `<div class="tr-card"><div class="tr-card-t">Facebook · ${ttcEsc(thShort(day))}</div>
-        <div class="tr-card-v">${sp ? (sa / sp).toFixed(2) + 'x' : '—'} <small style="font-size:13px;font-weight:400;color:var(--text3);">ROAS</small></div>
-        <div class="tr-card-m"><span>ยอดขายจริง ${m(sa)}</span><span>ค่า Ads Conversion ${m(sp)}</span><span>% Conversion ต่อยอดขาย ${sa ? (sp / sa * 100).toFixed(1) + '%' : '—'}</span></div></div>
-      <section class="tr-part"><div class="tr-part-h"><b>ค่า Ads Conversion</b><span>${m(sp)}</span></div>
-        <table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เพจ · บัญชีโฆษณา</th><th>Ads</th><th>ทักแชท</th><th>ค่า Ads</th></tr></thead><tbody>
-        ${(d.by_page || []).map(x => `<tr><td>${ttcEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[1])}</div></td><td>${fmt(x[3])}</td><td>${fmt(x[4])}</td><td>${m(x[2])}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">ไม่มี Ads Conversion วันนี้</td></tr>'}</tbody></table></section>
-      <section class="tr-part"><div class="tr-part-h"><b>แคมเปญที่ใช้เงินมากสุด</b><span>${fmt(d.campaigns || 0)} แคมเปญ</span></div>
-        <table class="tr-tb" data-no-sort data-no-page><thead><tr><th>แคมเปญ</th><th>Ads</th><th>ค่า Ads</th></tr></thead><tbody>
-        ${(d.by_campaign || []).map(x => `<tr><td>${ttcEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[1])}</div></td><td>${fmt(x[3])}</td><td>${m(x[2])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">—</td></tr>'}</tbody></table></section>
-      <section class="tr-part"><div class="tr-part-h"><b>ยอดขายจริง Facebook</b><span>${m(sa)} · ${fmt(d.orders || 0)} ออเดอร์</span></div>
-        <table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เพจขาย (จากไฟล์ออเดอร์)</th><th>ออเดอร์</th><th>ยอดขาย</th></tr></thead><tbody>
-        ${(d.sales_by_page || []).map(x => `<tr><td>${ttcEsc(x[0])}</td><td>${fmt(x[2])}</td><td>${m(x[1])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">ยังไม่มีออเดอร์วันนี้</td></tr>'}</tbody></table></section>
-      <div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl"><dt>ค่า Ads</dt><dd>Meta Marketing API · เฉพาะ Ads Conversion (ยิงให้เพจขาย)</dd>
-        <dt>ยอดขาย</dt><dd>ออเดอร์ Facebook ในระบบ (ไม่นับยกเลิก / ตีกลับ) ชุดเดียวกับหน้าภาพรวม</dd><dt>ROAS</dt><dd>ยอดขายจริง ÷ ค่า Ads Conversion</dd></dl></div>`;
+    const m = v => fmt(Math.round(+v || 0)), sp = +d.spend || 0, sa = +d.sales || 0, dt = ttcEsc(thShort(day));
+    const card = (t, v, meta) => `<div class="tr-card"><div class="tr-card-t">${t}</div><div class="tr-card-v">${v}</div><div class="tr-card-m">${meta.map(x => `<span>${x}</span>`).join('')}</div></div>`;
+    const src = rows => `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div>`;
+    const SRC_ADS = ['ค่า Ads', 'Meta Marketing API · เฉพาะ Ads Conversion (ยิงให้เพจขาย)'], SRC_SALES = ['ยอดขาย', 'ออเดอร์ Facebook ในระบบ (ไม่นับยกเลิก / ตีกลับ) ชุดเดียวกับหน้าภาพรวม'];
+    if (key === 'revenue') {
+      b.innerHTML = card(`ยอดขายจริง Facebook · ${dt}`, m(sa), [`${fmt(d.orders || 0)} ออเดอร์`])
+        + `<section class="tr-part"><div class="tr-sec"><span>แยกตามเพจขาย</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เพจขาย (จากไฟล์ออเดอร์)</th><th>ออเดอร์</th><th>ยอดขาย</th></tr></thead><tbody>
+          ${(d.sales_by_page || []).map(x => `<tr><td ${W1}>${ttcEsc(x[0])}</td><td>${fmt(x[2])}</td><td>${m(x[1])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">ยังไม่มีออเดอร์วันนี้</td></tr>'}</tbody></table></section>` + src([SRC_SALES]);
+      return;
+    }
+    if (key === 'roas' || key === 'acos') {
+      const isR = key === 'roas';
+      b.innerHTML = card(`${isR ? 'ROAS' : '% Conversion ต่อยอดขาย'} · ${dt}`, isR ? (sp ? (sa / sp).toFixed(2) + 'x' : '—') : (sa ? (sp / sa * 100).toFixed(1) + '%' : '—'), [isR ? 'ยอดขายจริง ÷ ค่า Ads Conversion' : 'ค่า Ads Conversion ÷ ยอดขายจริง'])
+        + `<section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><tbody>
+          <tr><td>ยอดขายจริง Facebook</td><td><span class="pl-trace" data-fbday="${day}" data-fbk="revenue">${m(sa)}</span></td></tr>
+          <tr><td>ค่า Ads Conversion</td><td><span class="pl-trace" data-fbday="${day}" data-fbk="spend_conv">${m(sp)}</span></td></tr>
+          <tr class="tr-gh"><td>${isR ? 'ROAS' : '% Conversion ต่อยอดขาย'}</td><td>${isR ? (sp ? (sa / sp).toFixed(2) + 'x' : '—') : (sa ? (sp / sa * 100).toFixed(1) + '%' : '—')}</td></tr></tbody></table></section>` + src([SRC_SALES, SRC_ADS]);
+      b.querySelectorAll('[data-fbday]').forEach(x => x.onclick = () => openDayTrace(x.dataset.fbday, x.dataset.fbk));
+      return;
+    }
+    b.innerHTML = card(`ค่า Ads Conversion · ${dt}`, m(sp), [`${fmt(d.ads || 0)} Ads`, `${fmt(d.campaigns || 0)} แคมเปญ`])
+      + `<section class="tr-part"><div class="tr-sec"><span>แยกตามเพจ · บัญชีโฆษณา</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เพจ · บัญชี</th><th>Ads</th><th>ทักแชท</th><th>ค่า Ads</th></tr></thead><tbody>
+        ${(d.by_page || []).map(x => `<tr><td ${W1}>${ttcEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[1])}</div></td><td>${fmt(x[3])}</td><td>${fmt(x[4])}</td><td>${m(x[2])}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">ไม่มี Ads Conversion วันนี้</td></tr>'}</tbody></table></section>
+      <section class="tr-part"><div class="tr-sec"><span>Ads ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">20 อันดับแรก</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>Ads · แคมเปญ</th><th>ทักแชท</th><th>ค่า Ads</th></tr></thead><tbody>
+        ${(d.top_ads || []).map(x => `<tr><td ${W1}>${adCell(x[0], x[1] + ' · ' + x[2], x[5])}</td><td>${fmt(x[4])}</td><td>${m(x[3])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">—</td></tr>'}</tbody></table></section>` + src([SRC_ADS]);
   }
   async function openProductTrace(sku) {
     trOpenShell('ที่มาของตัวเลข');
     const b = document.getElementById('trBody'), from = _data && _data.from, to = _data && _data.to;
-    let L; try { L = await supaRpc('fb_ads_product_detail', { p_from: from, p_to: to, p_sku: sku }, true); } catch (e) { b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
+    let L; try { L = await Auth.rpc('fb_ads_product_detail', { p_from: from, p_to: to, p_sku: sku }); } catch (e) { b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div>`; return; }
     L = Array.isArray(L) ? L : [];
     const m = v => fmt(Math.round(+v || 0)), tot = L.reduce((t, x) => t + +x[6], 0);
-    const HOW = { sheet: 'ชีท Ads', sheet_ad: 'ชีท Ads (ตามชื่อ Ads)', sheet_shared: 'ชีท Ads: รวม', rule: 'ชื่อแคมเปญ', shared: 'ไม่รู้สินค้า' };
+    const HOW = { sheet: 'ชื่อคอนเทนต์', sheet_ad: 'ชื่อคอนเทนต์', sheet_shared: 'ชีทระบุว่า รวม', shared: 'คอนเทนต์ยังไม่มีในชีท' };
+    const byHow = {}; L.forEach(x => { const h = HOW[x[2]] || x[2]; byHow[h] = (byHow[h] || 0) + +x[6]; });
     b.innerHTML = `<div class="tr-card"><div class="tr-card-t">ค่า Ads · ${ttcEsc(sku ? skuName(sku) : 'Ads รวม (ไม่ผูกสินค้า)')}</div><div class="tr-card-v">${m(tot)}</div>
-        <div class="tr-card-m"><span>${ttcEsc(thShort(from))} – ${ttcEsc(thShort(to))}</span><span>${fmt(L.length)} Ads</span></div></div>
-      <section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>Ads · แคมเปญ</th><th>ผูกสินค้าจาก</th><th>ค่า Ads ทั้งตัว</th><th>ส่วนที่นับ</th><th>นับเข้าแถวนี้</th></tr></thead><tbody>
-        ${L.map(x => `<tr><td>${ttcEsc(x[0] || '')}<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[1] || '')}</div></td><td>${ttcEsc(HOW[x[2]] || x[2])}${x[3] ? `<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[3])}</div>` : ''}</td>
-          <td>${m(x[5])}</td><td>${+x[7] > 1 ? (x[4] * 100).toFixed(1) + '%' : '100%'}</td><td><b>${m(x[6])}</b></td></tr>`).join('') || '<tr><td colspan="5" class="empty">ไม่มี</td></tr>'}</tbody></table></section>
-      <div class="tr-src"><div class="tr-src-h">วิธีคิด</div><dl class="tr-dl"><dt>ผูกสินค้า</dt><dd>① ชีท Ads ของทีม (ชื่อ Ads → สินค้า) ② ถ้าไม่มีในชีท ใช้คำในชื่อแคมเปญ</dd>
-        <dt>ส่วนที่นับ</dt><dd>Ads ที่ผูกหลายสินค้า แบ่งตามสัดส่วนยอดขาย Facebook ของสินค้าในกลุ่ม ช่วงวันที่เดียวกัน</dd></dl></div>`;
+        <div class="tr-card-m"><span>${ttcEsc(thShort(from))} – ${ttcEsc(thShort(to))}</span><span>${fmt(L.length)} Ads</span>${Object.entries(byHow).map(([h, v]) => `<span>${ttcEsc(h)} ${m(v)}</span>`).join('')}</div></div>
+      <section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>Ads · แคมเปญ</th><th>ผูกสินค้าจาก</th><th>นับเข้าแถวนี้</th></tr></thead><tbody>
+        ${L.map(x => `<tr><td ${W1}>${adCell(x[0], x[1], x[8])}</td><td ${W1}>${ttcEsc(HOW[x[2]] || x[2])}${x[3] ? `<div style="font-size:11px;color:var(--text3);">ชีท: ${ttcEsc(x[3])}</div>` : ''}</td>
+          <td><b>${m(x[6])}</b>${+x[7] > 1 ? `<div style="font-size:11px;color:var(--text3);">${(x[4] * 100).toFixed(1)}% ของ ${m(x[5])}</div>` : ''}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">ไม่มี</td></tr>'}</tbody></table></section>
+      <div class="tr-src"><div class="tr-src-h">วิธีคิด</div><dl class="tr-dl"><dt>ผูกสินค้า</dt><dd>ชื่อคอนเทนต์ (ชื่อ Ads) เทียบชีท Ads ของทีมเท่านั้น · คอนเทนต์ที่ยังไม่มีในชีท = Ads รวม</dd>
+        <dt>แบ่งกลุ่ม</dt><dd>Ads ที่ผูกหลายสินค้า แบ่งตามสัดส่วนยอดขาย Facebook ของสินค้าในกลุ่ม ช่วงวันที่เดียวกัน</dd><dt>ค่า Ads</dt><dd>Meta Marketing API · Conversion + PR</dd></dl></div>`;
   }
   function fillProductFilter() {
     const sel = document.getElementById('fbaAdsProduct'); if (!sel || !_data) return;
@@ -474,9 +491,10 @@
         <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">${srcLine(r)}</div></td>
       <td>${fmt(r.campaigns)}</td><td>${fmt(r.ads)}</td><td style="font-weight:600;"><span class="pl-trace" data-fbsku="${ttcEscAttr(r.parent_sku || '__shared')}">${money(r.spend)}</span></td><td>${pct(r.spend, pSum)}</td>
       <td>${fmt(r.impressions)}</td><td>${fmt(r.link_clicks)}</td><td>${fmt(r.msg_started)}</td><td>${ratio(r.spend, r.msg_started)}</td>
-      <td>${fmt(r.purchases)}</td><td>${ratio(r.spend, r.purchases)}</td><td>${roas(r.purchase_value, r.spend)}</td></tr>`).join('')
-      + `<tr style="font-weight:700;background:var(--bg3);"><td>รวม <span style="font-weight:400;color:var(--text3);font-size:10.5px;">· ระบุสินค้าได้ ${pct(known, pSum)} ของงบ</span></td><td>${fmt(prods.reduce((s, r) => s + +r.campaigns, 0))}</td><td>${fmt(prods.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(pSum)}</td><td>100%</td><td colspan="7"></td></tr>`
-      : '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
+      <td>${r.parent_sku ? money(+r.sales || 0) : '<span style="color:var(--text3);">—</span>'}</td><td>${r.parent_sku ? roasCell(+r.sales || 0, +r.spend) : '<span style="color:var(--text3);">—</span>'}</td>
+      <td>${fmt(Math.round(+r.purchases || 0))}</td><td>${ratio(r.spend, r.purchases)}</td><td>${roas(r.purchase_value, r.spend)}</td></tr>`).join('')
+      + `<tr style="font-weight:700;background:var(--bg3);"><td>รวม <span style="font-weight:400;color:var(--text3);font-size:10.5px;">· ระบุสินค้าได้ ${pct(known, pSum)} ของงบ</span></td><td>${fmt(prods.reduce((s, r) => s + +r.campaigns, 0))}</td><td>${fmt(prods.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(pSum)}</td><td>100%</td><td colspan="4"></td><td>${money(prods.reduce((s, r) => s + (+r.sales || 0), 0))}</td><td>${roasCell(prods.reduce((s, r) => s + (+r.sales || 0), 0), pSum)}</td><td>${fmt(Math.round(prods.reduce((s, r) => s + (+r.purchases || 0), 0)))}</td><td>${ratio(pSum, prods.reduce((s, r) => s + (+r.purchases || 0), 0))}</td><td>${roas(prods.reduce((s, r) => s + (+r.purchase_value || 0), 0), pSum)}</td></tr>`
+      : '<tr><td colspan="14" class="empty">ไม่มีข้อมูล</td></tr>';
   }
 
   // ===== KOL: แสดง + ✏️ แก้ลิงก์เพจ (เฉพาะคนที่มีสิทธิ์จัดการสินค้า/แอดมิน) =====
