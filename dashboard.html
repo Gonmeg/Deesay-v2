@@ -571,7 +571,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261014d"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261015a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -692,13 +692,20 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="nav-item nav-sub" onclick="_mtRetailer='';showPage('mthub',null,this)"><span class="nav-icon">🏬</span> ภาพรวม Modern Trade</div>
     </div>
     <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">📈</span> แนวโน้มสินค้า</div>
-    <div class="nav-item" onclick="showPage('cost',null,this)"><span class="nav-icon">💼</span> Business Insight</div>
     <div class="nav-item" onclick="showPage('mktlive',null,this)"><span class="nav-icon">📊</span> MKT Tracking</div>
     <div class="nav-item" onclick="showPage('skuanalysis',null,this)"><span class="nav-icon">🔬</span> เจาะสินค้า</div>
     <div class="nav-item" onclick="showPage('adperf',null,this)"><span class="nav-icon">📈</span> Ad Performance</div>
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL</div>
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
+    <div class="nav-item" onclick="showPage('promo',null,this)"><span class="nav-icon">🏷️</span> ขอโปรโมชั่น</div>
+    <!-- (2026-10-15) หน้าผู้บริหาร: เปิดที่ exec.html (dashboard.html?app=exec) · หน้าทีมไม่เห็นกลุ่มนี้ -->
+    <div class="nav-group-label exec-only" id="navExecLabel" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ผู้บริหาร</div>
+    <div class="nav-item exec-only" onclick="showPage('exec',null,this)"><span class="nav-icon">✅</span> โปรโมชั่น · อนุมัติ</div>
+    <div class="nav-item exec-only" onclick="showPage('cost',null,this)"><span class="nav-icon">💼</span> Business Insight</div>
+    <div class="nav-item exec-only" onclick="showPage('execfee',null,this)"><span class="nav-icon">🧾</span> ค่าธรรมเนียมช่องทาง</div>
     <div class="nav-group-label" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ระบบ</div>
+    <a class="nav-item nav-sub" id="navToExec" href="exec.html" style="text-decoration:none;color:inherit;display:none;"><span class="nav-icon">👔</span> หน้าผู้บริหาร ↗</a>
+    <a class="nav-item nav-sub" id="navToOps" href="dashboard.html" style="text-decoration:none;color:inherit;display:none;"><span class="nav-icon">↩</span> กลับหน้าทีม</a>
     <div class="nav-item nav-sub" onclick="openWhatsNew(false)" id="navWhatsNew"><span class="nav-icon">🆕</span> มีอะไรใหม่ <span class="wn-dot" id="wnDot" style="display:none;"></span></div>
     <a class="nav-item nav-sub" href="upload.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">📤</span> อัปโหลดข้อมูล</a>
     <a class="nav-item nav-sub" href="admin.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">⚙️</span> ตั้งค่า (Admin)</a>
@@ -706,7 +713,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.15-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.15-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -735,7 +742,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="filter-group" id="cpCreatorFilterGroup" style="display:none;position:relative;padding:0;background:transparent;border:none;gap:6px;">
         <div class="cp-seg" id="cpViewSeg"><button class="on" data-v="creator" onclick="setCpView('creator')">👤 ครีเอเตอร์</button><button data-v="product" onclick="setCpView('product')">📦 สินค้า</button></div>
         <div class="cp-seg" id="cpTypeSeg"><button class="on" data-t="all" onclick="setCpType('all')">ทุกคน</button><button data-t="KOL" onclick="setCpType('KOL')">KOL</button><button data-t="Affiliate" onclick="setCpType('Affiliate')">Affiliate</button></div>
-        <span class="ads-info-wrap" id="cpTypeInfo" style="position:relative;display:inline-block;align-self:center;"><span onclick="toggleFbeInfo('cp-type-info')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="cp-type-info" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>KOL</b> = ครีเอเตอร์ที่ทีม KOL จ้าง (มีงานในไฟล์งานทีม KOL รวม Presenter)<br><b>Affiliate</b> = ครีเอเตอร์ที่ไม่ได้จ้าง ทำคลิป / Live ขายของเราเพื่อรับ Commission<br><b>ทุกคน</b> = KOL + Affiliate + บัญชีร้าน (deesaythailand และช่องรอง deesay_cosmetics)<br>ใช้กับทั้งหน้า: การ์ด กราฟ ตาราง และส่วน Commission · ป้ายหลังชื่อบอกว่าเป็นกลุ่มไหน<br>ค่าจ้าง KOL นับเฉพาะตอนเลือก ทุกคน / KOL · เลือกครีเอเตอร์คนเดียว = เห็นของคนนั้นทั้งหมด</div></span>
+        <span class="ads-info-wrap" id="cpTypeInfo" style="position:relative;display:inline-block;align-self:center;"><span onclick="toggleFbeInfo('cp-type-info')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="cp-type-info" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"><b>KOL</b> = ครีเอเตอร์ที่ทีม KOL จ้าง (มีงานในไฟล์งานทีม KOL รวม Presenter)<br><b>Affiliate</b> = ครีเอเตอร์ที่ไม่ได้จ้าง ทำคลิป / Live ขายของเราเพื่อรับ Commission<br><b>ทุกคน</b> = KOL + Affiliate + บัญชีร้าน (deesaythailand และช่องรอง deesay_cosmetics)<br>ใช้กับทั้งหน้า: การ์ด กราฟ ตาราง และส่วน Commission · ป้ายหลังชื่อบอกว่าเป็นกลุ่มไหน<br>ค่าจ้าง KOL นับเฉพาะตอนเลือก ทุกคน / KOL · เลือกครีเอเตอร์คนเดียว = เห็นของคนนั้นทั้งหมด<br>ยอดรวมในหน้านี้ยังไม่หักลดหนี้ (CN) ที่บัญชีออกให้ TikTok ทั้งก้อน จึงอาจมากกว่าการ์ดยอดขายหน้าภาพรวม TikTok เล็กน้อย</div></span>
         <div style="position:relative;" id="cpCreatorSearchWrap">
           <input type="text" class="ls-input" style="width:210px;padding:6px 10px;font-size:12px;" id="cpCreatorSearch" placeholder="🔎 ค้นหา creator..." oninput="debouncedFilterCpCreatorDropdown()" onfocus="showCpCreatorDropdown()" onblur="setTimeout(hideCpCreatorDropdown,200)">
           <div id="cpCreatorDropdown" style="display:none;position:absolute;top:100%;left:0;min-width:260px;right:auto;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
@@ -2241,6 +2248,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-cost"><!-- (2026-10-09) Business Insight: หน้าทั้งหมดสร้างโดย bizinsight.js --></div>
+<div class="page" id="page-promo"></div><div class="page" id="page-exec"></div><div class="page" id="page-execfee"></div><!-- (2026-10-15) promo.js -->
 
   </div>
 </div>
@@ -2814,6 +2822,7 @@ function applyFilters() {
 
 // ===== NAVIGATION =====
 const pageTitles = {
+  promo: 'ขอโปรโมชั่น', exec: 'โปรโมชั่น · อนุมัติ', execfee: 'ค่าธรรมเนียมช่องทาง',
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', kpi: 'เป้าหมาย KPI', promotarget: 'ตั้งเป้าโปรโมชั่น', fbhub: 'ภาพรวม Facebook',
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttkeyword: 'ค้นหาคำบน TikTok', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
@@ -2824,7 +2833,7 @@ const pageTitles = {
 };
 const pageOrder = ['home','overview','channel','kpi','promotarget','fbhub','crm','flow','neverbought','fbengage','fbads','fbadmin','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่าแอดต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
-const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
+const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -2880,7 +2889,7 @@ function toggleNavGroup(key) {
 function showPage(page, lockCh, el) {
   if (window.Auth && Auth.perm && !Auth.canPage(page)) { alert('คุณยังไม่มีสิทธิ์ดูหน้านี้ — ติดต่อผู้ดูแลระบบถ้าต้องใช้'); return; }   // ด่านสิทธิ์รายหน้า
   // (2026-09-29) เปิดมาที่หน้าแรกแล้วกดไปหน้าอื่นก่อนข้อมูลก้อนหลักโหลดเสร็จ → โชว์ตัวโหลดไว้ก่อน
-  if (page !== 'home' && !window._initDone) document.getElementById('loadingOverlay')?.classList.remove('hidden');
+  if (!['home', 'promo', 'exec', 'execfee'].includes(page) && !window._initDone) document.getElementById('loadingOverlay')?.classList.remove('hidden');
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
@@ -2893,8 +2902,8 @@ function showPage(page, lockCh, el) {
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
-  const HIDE_CHANNEL_FILTER = ['fbads', 'fbhub', 'tthub', 'ttcontent', 'ttkeyword', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
-  const HIDE_SUBCHANNEL_FILTER = ['fbads', 'fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply', 'kpi']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
+  const HIDE_CHANNEL_FILTER = ['promo', 'exec', 'execfee', 'fbads', 'fbhub', 'tthub', 'ttcontent', 'ttkeyword', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['promo', 'exec', 'execfee', 'fbads', 'fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply', 'kpi']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   { const g = document.getElementById('skdFilterGroup'); if (g) g.style.display = page === 'skuanalysis' ? 'flex' : 'none';   // (2026-09-30) เจาะสินค้า: เลือกสินค้าที่แถบด้านบน
@@ -2956,7 +2965,7 @@ function showPage(page, lockCh, el) {
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
-    const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = (page === 'home' || page === 'kpi') ? 'none' : '';
+    const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = ['home', 'kpi', 'promo', 'exec', 'execfee'].includes(page) ? 'none' : '';
     const kg = document.getElementById('kpMonthGroup'); if (kg) kg.style.display = page === 'kpi' ? 'flex' : 'none'; }   // (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนแถบบน เปลี่ยนแล้วโหลดทันที   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
@@ -2991,6 +3000,8 @@ function showPage(page, lockCh, el) {
     renderFbEngagePage();
   } else if (page === 'kpi') {
     loadKpiPage(true);
+  } else if (['promo', 'exec', 'execfee'].includes(page)) {
+    loadPromoPage(page);
   } else {
     applyFilters();
   }
@@ -3055,6 +3066,17 @@ function loadFbAdminPage() {
 }
 
 // (2026-10-07) หน้าเป้าหมาย KPI: โค้ดอยู่ใน kpi.js — โหลดครั้งแรกที่กดเมนู · reload = true ตอนกดเข้าหน้า (ดึงยอดล่าสุด)
+// (2026-10-15) โปรโมชั่น (ขอโปร / อนุมัติ / ค่าธรรมเนียมช่องทาง): โค้ดอยู่ใน promo.js — โหลดครั้งแรกที่เปิด
+function loadPromoPage(page) {
+  if (window.PromoUI) { window.PromoUI.render(page); return; }
+  if (window._promoLoading) return;
+  window._promoLoading = true;
+  const s = document.createElement('script');
+  s.src = 'promo.js?v=20261015a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
+  s.onload = () => { window._promoLoading = false; if (['promo', 'exec', 'execfee'].includes(currentPage)) window.PromoUI.render(currentPage); };
+  s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+  document.body.appendChild(s);
+}
 function loadKpiPage(reload) {
   if (window.renderKpiPage) { window.renderKpiPage(reload); return; }
   if (window._kpiLoading) return;
@@ -3073,7 +3095,7 @@ function ensureTtApi() {
   if (_ttApiPromise) return _ttApiPromise;
   _ttApiPromise = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'ttapi.js?v=20261014a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.src = 'ttapi.js?v=20261015a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
     s.onload = () => res(window.ttApi);
     s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -3830,7 +3852,7 @@ async function renderTtHub() {
       <tr><td>${k}</td><td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
     `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
     // (2026-10-06) ช่วงที่มีข้อมูล API → ตารางช่องทางใช้ TikTok API แทนช่อง Order Channel ในไฟล์ (ครีเอเตอร์ตาม Commission จริง)
-    if (getDateValue('From') >= CP_API_START) ensureTtApi().then(api => api.renderOrderChannel(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
+    ensureTtApi().then(api => api.renderOrderChannel(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));   // (2026-10-15) ทุกช่วงวันที่ ใช้ออเดอร์ชุดเดียวกับการ์ด
 
     renderAdpChannel('chartTtAds', null, 'tt', hubAdView.tt);
     renderPromotion('Tt', 'TikTok');
@@ -7529,17 +7551,26 @@ async function refreshDashboardData() {
   const setBar = (pct, txt) => { if (bar) bar.style.width = Math.round(pct) + '%'; if (txt) statusEl.textContent = txt; };
   btn.disabled = true; btn.textContent = '⏳ กำลังรีเฟรชทุกหน้า...'; statusEl.textContent = ''; if (barWrap) barWrap.style.display = 'block'; setBar(0);
   try {
-    // ①
-    const PULLS = [['mt-sellout-sync?norefresh=1', 'ยอดห้าง Modern Trade'], ['sync-dealer-orders', 'ออเดอร์ตัวแทน / MT'], ['sync-kol-posts', 'ไฟล์งานทีม KOL'],
-      ['kol-cost-sync', 'ฟอร์มเบิกเงิน KOL'], ['lazada-ads-sync', 'ชีท Lazada Ads'], ['shopee24-sheet-sync', 'ชีท Shopee 24hr'], ['sync-inventory-log', 'Log สต็อก'], ['sync-po-sheet', 'ชีท PO']];
-    const failed = []; let done = 0;
-    setBar(2, `ดึงข้อมูลที่ทีมกรอก 0/${PULLS.length}...`);
-    await Promise.all(PULLS.map(async ([fn, label]) => {
-      const c = new AbortController(), t = setTimeout(() => c.abort(), 150000);
-      try { const r = await fetch(`${window.SUPABASE_URL}/functions/v1/${fn}`, { method: 'POST', headers, body: '{}', signal: c.signal }); if (!r.ok) { failed.push(label); console.warn(fn, r.status, await r.text().catch(() => '')); } }
-      catch (e) { failed.push(label); console.warn(fn, e); }
-      finally { clearTimeout(t); done++; setBar(2 + done / PULLS.length * 33, `ดึงข้อมูลที่ทีมกรอก ${done}/${PULLS.length}...`); }
-    }));
+    // ① (2026-10-15) สั่งดึงชีทผ่านฐานข้อมูล (request_sheet_pulls) แล้วรอผล
+    //   เดิมเบราว์เซอร์เรียก Edge Function ตรงๆ แต่ฟังก์ชันไม่ตอบหัว CORS → เบราว์เซอร์ตัดคำขอ ขึ้น "ดึงไม่สำเร็จ" ทุกตัว
+    const PULL_LABEL = { 'mt-sellout-sync': 'ยอดห้าง Modern Trade', 'sync-dealer-orders': 'ออเดอร์ตัวแทน / MT', 'sync-kol-posts': 'ไฟล์งานทีม KOL', 'kol-cost-sync': 'ฟอร์มเบิกเงิน KOL',
+      'lazada-ads-sync': 'ชีท Lazada Ads', 'shopee24-sheet-sync': 'ชีท Shopee 24hr', 'sync-inventory-log': 'Log สต็อก', 'sync-po-sheet': 'ชีท PO' };
+    const failed = [];
+    setBar(2, 'ดึงข้อมูลที่ทีมกรอก...');
+    try {
+      const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/request_sheet_pulls`, { method: 'POST', headers, body: '{}' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const reqs = await r.json(), ids = reqs.map(x => x[1]), t0 = Date.now();
+      let st = [];
+      while (Date.now() - t0 < 160000) {
+        await new Promise(res => setTimeout(res, 3000));
+        try { const r2 = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/sheet_pull_status`, { method: 'POST', headers, body: JSON.stringify({ p_ids: ids }) }); if (r2.ok) st = await r2.json(); } catch (e) {}
+        setBar(2 + st.length / ids.length * 33, `ดึงข้อมูลที่ทีมกรอก ${st.length}/${ids.length}...`);
+        if (st.length >= ids.length) break;
+      }
+      const byId = Object.fromEntries(st.map(x => [x[0], x]));
+      reqs.forEach(([fn, id]) => { const x = byId[id]; if (!x || x[1] !== 200 || x[2] || x[4]) { failed.push(PULL_LABEL[fn] || fn); console.warn('sheet pull', fn, x); } });
+    } catch (e) { console.warn('request_sheet_pulls', e); failed.push('ชีทที่ทีมกรอก (สั่งดึงไม่สำเร็จ)'); }
     // ② + ③ คำนวณตารางสรุปทุกตัวเป็นงานเบื้องหลัง (คิว) แล้วตรวจตัวเลข — เรียกผ่านเว็บตรงๆ โดนตัดที่ ~150 วินาที
     setBar(36, 'รอคิวคำนวณสรุปข้อมูล (ไม่เกิน 1 นาที)...');
     let jobId = null;
@@ -8842,7 +8873,8 @@ function renderKolTable() {
   if (!A) { const tb = document.getElementById('tbodyKj'); if (tb) tb.innerHTML = '<tr><td class="empty">กำลังโหลดค่า Ads ของช่วงนี้…</td></tr>';
     kjLoadAds(dFrom, dTo).then(() => { if (currentPage === 'kol') renderKolTable(); }).catch(e => { const t2 = document.getElementById('tbodyKj'); if (t2) t2.innerHTML = `<tr><td class="empty">โหลดไม่สำเร็จ: ${e.message}</td></tr>`; }); return; }
   const inR = r => !!(r.post_date && r.post_date >= dFrom && r.post_date <= dTo);
-  const rows = _kjRows.filter(r => (inR(r) || A[r.k]) && stOk(r) && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || '')) && (!prod || (r.parent_sku || r.product_code) === prod)
+  // (2026-10-15) เลือกสถานะ (เบิกจ่าย / Ads ของงาน) = ดูเฉพาะงานที่โพสต์ในช่วงนี้ ให้ตรงกับตัวเลขในการ์ด · ไม่เลือกสถานะ = รวมงานเก่าที่ยังยิง Ads ในช่วงนี้
+  const rows = _kjRows.filter(r => (inR(r) || (!st && A[r.k])) && stOk(r) && (!plat || kjPlat(r.platform) === plat) && (!typ || new RegExp('^' + typ, 'i').test(r.kol_type || '')) && (!prod || (r.parent_sku || r.product_code) === prod)
     && (!q || `${r.kol_name || ''} ${r.content_code || ''} ${r.tt_handle || ''}`.toLowerCase().includes(q))).map(r => kjWithAds(r, A[r.k], inR(r)));
   // (2026-10-06) ยอด Commission: ไม่ได้กรองอะไรนอกจากวันที่ = KOL ทุกคนในไฟล์ทีม KOL (ตรงกับ Creator Performance กรอง KOL) · มีตัวกรองอื่น = เฉพาะ KOL ในแถวที่เห็น
   const C = _kjCom[dFrom + '|' + dTo];
@@ -10469,6 +10501,19 @@ function applyPermissions(p) {
     if (!g.querySelector('.nav-item')) { g.style.display = 'none'; const key = g.id.replace('navGroup-', ''); document.getElementById('navGroupLabel-' + key)?.remove(); }
   });
   // เมนูระบบ
+  // (2026-10-15) หน้าผู้บริหาร (exec.html → dashboard.html?app=exec) เห็นเฉพาะกลุ่มผู้บริหาร · หน้าทีมไม่เห็นกลุ่มนี้ (มีลิงก์ไปหน้าผู้บริหารถ้ามีสิทธิ์)
+  window.APP_EXEC = new URLSearchParams(location.search).get('app') === 'exec';
+  const canExec = Auth.canPage('exec') || Auth.canPage('cost');
+  if (window.APP_EXEC) {
+    document.querySelectorAll('.nav .nav-item[onclick^="showPage("]:not(.exec-only), .nav .nav-group-label:not(.exec-only), .nav [id^="navGroup-"]').forEach(el => { if (!el.closest('#navGroupSys')) el.style.display = 'none'; });
+    document.querySelectorAll('.nav .nav-group-label').forEach(el => { if (el.textContent.trim() === 'ระบบ') el.style.display = ''; });
+    const ns = document.querySelector('.logo-sub'); if (ns) ns.textContent = 'ผู้บริหาร';
+    document.getElementById('navToOps').style.display = 'flex';
+    document.title = 'Deesay · ผู้บริหาร';
+  } else {
+    document.querySelectorAll('.nav .exec-only').forEach(el => el.remove());
+    if (canExec) document.getElementById('navToExec').style.display = 'flex';
+  }
   const sys = { 'upload.html': p.is_admin || p.can_upload, 'admin.html': p.is_admin || p.can_admin, 'health.html': p.is_admin };
   document.querySelectorAll('a.nav-item[href]').forEach(a => { const h = a.getAttribute('href'); if (h in sys && !sys[h]) a.remove(); });
 }
@@ -10516,6 +10561,7 @@ window._authP.then(p => {
   let _back = null, _rdone = null;
   try { _back = sessionStorage.getItem('deesay_after_refresh'); _rdone = JSON.parse(sessionStorage.getItem('deesay_refresh_done') || 'null'); sessionStorage.removeItem('deesay_after_refresh'); sessionStorage.removeItem('deesay_refresh_done'); } catch (e) {}
   if (_back && _back !== 'home' && document.getElementById('page-' + _back) && Auth.canPage(_back)) showPage(_back, null, document.querySelector(`.nav-item[onclick*="'${_back}'"]`));
+  else if (window.APP_EXEC) { const first = ['exec', 'cost', 'execfee'].find(id => Auth.canPage(id) && document.querySelector(`.nav-item[onclick*="'${id}'"]`)); if (first) showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`)); }
   else if (Auth.canPage('home')) showPage('home', null, document.querySelector(`.nav-item[onclick*="'home'"]`));
   if (_rdone && _rdone.at) { const el = document.getElementById('refreshMVStatus'); if (el) el.innerHTML = '<span style="color:var(--green);">✅ รีเฟรชครบทุกหน้าแล้ว ' + new Date(_rdone.at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + '</span>'
     + ((_rdone.failed || []).length ? '<br><span style="font-size:10px;color:var(--orange,#f59e0b);">ดึงไม่สำเร็จ: ' + _rdone.failed.join(', ') + ' — ใช้ข้อมูลรอบก่อน</span>' : ''); }
