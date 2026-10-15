@@ -704,8 +704,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <div class="nav-item exec-only" onclick="showPage('cost',null,this)"><span class="nav-icon">💼</span> Business Insight</div>
     <div class="nav-item exec-only" onclick="showPage('execfee',null,this)"><span class="nav-icon">🧾</span> ค่าธรรมเนียมช่องทาง</div>
     <div class="nav-group-label" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ระบบ</div>
-    <a class="nav-item nav-sub" id="navToExec" href="exec.html" style="text-decoration:none;color:inherit;display:none;"><span class="nav-icon">👔</span> หน้าผู้บริหาร ↗</a>
-    <a class="nav-item nav-sub" id="navToOps" href="dashboard.html" style="text-decoration:none;color:inherit;display:none;"><span class="nav-icon">↩</span> กลับหน้าทีม</a>
+    <a class="nav-item nav-sub" id="navToExec" href="exec.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:none;" title="เปิดในแท็บใหม่"><span class="nav-icon">👔</span> Management ↗</a>
+    <a class="nav-item nav-sub" id="navToOps" href="dashboard.html" style="text-decoration:none;color:inherit;display:none;"><span class="nav-icon">↩</span> Team View</a>
     <div class="nav-item nav-sub" onclick="openWhatsNew(false)" id="navWhatsNew"><span class="nav-icon">🆕</span> มีอะไรใหม่ <span class="wn-dot" id="wnDot" style="display:none;"></span></div>
     <a class="nav-item nav-sub" href="upload.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">📤</span> อัปโหลดข้อมูล</a>
     <a class="nav-item nav-sub" href="admin.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">⚙️</span> ตั้งค่า (Admin)</a>
@@ -713,7 +713,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.15-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.15-h</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3072,7 +3072,7 @@ function loadPromoPage(page) {
   if (window._promoLoading) return;
   window._promoLoading = true;
   const s = document.createElement('script');
-  s.src = 'promo.js?v=20261015a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
+  s.src = 'promo.js?v=20261015b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
   s.onload = () => { window._promoLoading = false; if (['promo', 'exec', 'execfee'].includes(currentPage)) window.PromoUI.render(currentPage); };
   s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -10507,9 +10507,9 @@ function applyPermissions(p) {
   if (window.APP_EXEC) {
     document.querySelectorAll('.nav .nav-item[onclick^="showPage("]:not(.exec-only), .nav .nav-group-label:not(.exec-only), .nav [id^="navGroup-"]').forEach(el => { if (!el.closest('#navGroupSys')) el.style.display = 'none'; });
     document.querySelectorAll('.nav .nav-group-label').forEach(el => { if (el.textContent.trim() === 'ระบบ') el.style.display = ''; });
-    const ns = document.querySelector('.logo-sub'); if (ns) ns.textContent = 'ผู้บริหาร';
+    const ns = document.querySelector('.logo-sub'); if (ns) ns.textContent = 'Management'; const xl = document.getElementById('navExecLabel'); if (xl) xl.style.display = 'none';
     document.getElementById('navToOps').style.display = 'flex';
-    document.title = 'Deesay · ผู้บริหาร';
+    document.title = 'Deesay · Management';
   } else {
     document.querySelectorAll('.nav .exec-only').forEach(el => el.remove());
     if (canExec) document.getElementById('navToExec').style.display = 'flex';
