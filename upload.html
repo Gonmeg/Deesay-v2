@@ -256,6 +256,7 @@
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
     <button class="mode-btn" id="modeBtnCost">📊 อัพต้นทุนสินค้า</button>
 <button class="mode-btn" id="modeBtnDelete">🗑 ลบข้อมูล</button>
+<button class="mode-btn" id="modeBtnExport">📤 ส่งออกให้บัญชี</button>
   </div>
   </div>
   
@@ -332,6 +333,24 @@
     </div>
   </div><!-- end panel3 -->
   </div><!-- end stepWizard -->
+
+  <!-- (2026-10-14) EXPORT PANEL — ส่งออกให้บัญชี: จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย (ต้นทุนวอลเล็ท) -->
+  <div id="exportPanel" style="display:none;">
+    <div class="card">
+      <div class="section-title">จำนวนชิ้นที่ได้เงินแล้ว · สำหรับต้นทุนวอลเล็ท</div>
+      <p class="map-info">ออเดอร์ที่<b>ได้เงินแล้ว</b> นับตาม<b>เดือนที่สั่งซื้อ</b> · แตกโปรโมชั่นเป็นสินค้าย่อย (child SKU) · ตัดเพจที่ไม่ใช่การขาย (เคลม · รีวิว · สินค้าเสียหาย · พนักงานสั่งซื้อ · ชาฟ้าใส · FM-ตัวแทน · Moderntrade) · แยกประเภทการชำระเฉพาะ Facebook<br>
+      คอลัมน์ในไฟล์: month · channel · sub_channel · payment_type · child_sku · total_qty (แบบเดียวกับที่ส่งบัญชีทุกเดือน)</p>
+      <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;">
+        <div>
+          <label class="field-label">เดือนที่สั่งซื้อ <span class="req">*</span></label>
+          <input type="month" id="exportMonth" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:8px 12px;font-size:0.85rem;font-family:inherit;outline:none;">
+        </div>
+        <button class="btn-primary" id="btnExportQty" style="padding:9px 20px;white-space:nowrap;">📥 Export Excel</button>
+      </div>
+      <div id="exportAlert" class="alert alert-error" style="display:none;"></div>
+      <div id="exportResult" style="display:none;"></div>
+    </div>
+  </div>
 
   <!-- COST UPLOAD PANEL -->
   <div id="costPanel" style="display:none;">
@@ -1484,12 +1503,24 @@ function setUploadMode(mode) {
   document.getElementById('modeBtnSettlement').classList.toggle('active', mode === 'settlement')
   document.getElementById('modeBtnCost').classList.toggle('active', mode === 'cost')
   document.getElementById('modeBtnDelete').classList.toggle('active', mode === 'delete')
+  document.getElementById('modeBtnExport').classList.toggle('active', mode === 'export')
+  const exportPanel = document.getElementById('exportPanel')
+  if (exportPanel) exportPanel.style.display = mode === 'export' ? 'block' : 'none'
   const deletePanel = document.getElementById('deletePanel')
   if (deletePanel) deletePanel.style.display = mode === 'delete' ? 'block' : 'none'
 
   const stepWizard = document.getElementById('stepWizard')
   const costPanel = document.getElementById('costPanel')
 
+  if (mode === 'export') {
+    if (stepWizard) stepWizard.style.display = 'none'
+    if (costPanel) costPanel.style.display = 'none'
+    document.getElementById('pageTitle').textContent = 'ส่งออกให้บัญชี'
+    document.getElementById('pageDesc').textContent = 'จำนวนชิ้นที่ลูกค้าจ่ายเงินแล้ว แยกตามสินค้าย่อย สำหรับทำต้นทุนวอลเล็ท'
+    const em = document.getElementById('exportMonth')
+    if (em && !em.value) { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); em.value = d.toISOString().slice(0, 7) }
+    return
+  }
   if (mode === 'delete') {
     if (stepWizard) stepWizard.style.display = 'none'
     if (costPanel) costPanel.style.display = 'none'
@@ -1540,6 +1571,48 @@ document.getElementById('modeBtnOrder').addEventListener('click', () => setUploa
 document.getElementById('modeBtnSettlement').addEventListener('click', () => setUploadMode('settlement'))
 document.getElementById('modeBtnCost').addEventListener('click', () => setUploadMode('cost'))
 document.getElementById('modeBtnDelete').addEventListener('click', () => setUploadMode('delete'))
+document.getElementById('modeBtnExport').addEventListener('click', () => setUploadMode('export'))
+
+// ===== (2026-10-14) ส่งออกให้บัญชี: จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย (ต้นทุนวอลเล็ท) =====
+// ระบบแตก child SKU ในฐานข้อมูล (acct_child_qty_export) ด้วยกติกาเดียวกับที่เคยทำด้วย Python ทุกเดือน → ไฟล์ Excel คอลัมน์เดิม
+document.getElementById('btnExportQty').addEventListener('click', async () => {
+  const btn = document.getElementById('btnExportQty'), al = document.getElementById('exportAlert'), out = document.getElementById('exportResult')
+  const mo = document.getElementById('exportMonth').value
+  al.style.display = 'none'
+  if (!mo) { al.textContent = 'กรุณาเลือกเดือน'; al.style.display = 'block'; return }
+  btn.disabled = true; const label = btn.textContent; btn.textContent = '⏳ กำลังดึงข้อมูล…'
+  try {
+    const { data, error } = await DB.rpc('acct_child_qty_export', { p_month: mo + '-01' })
+    if (error) throw new Error(error.message)
+    const rows = data.rows || [], cov = data.coverage || []
+    const nf = v => Math.round(+v || 0).toLocaleString('th-TH')
+    const total = rows.reduce((t, r) => t + (+r[5] || 0), 0)
+    const low = cov.filter(c => c[1] > 0 && c[2] / c[1] < 0.95)
+    out.innerHTML = `<div class="section-title" style="margin:6px 0 10px;">เดือน ${mo} · ${nf(rows.length)} แถว · รวม ${nf(total)} ชิ้น</div>
+      <table style="width:100%;max-width:560px;border-collapse:collapse;font-size:0.82rem;">
+        <thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);">ช่องทาง</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border2);">ออเดอร์ (ไม่รวมยกเลิก/คืน)</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border2);">ได้เงินแล้ว</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border2);">%</th></tr></thead>
+        <tbody>${cov.map(c => { const p = c[1] ? c[2] / c[1] * 100 : 0; return `<tr><td style="padding:6px 8px;">${c[0]}</td><td style="text-align:right;padding:6px 8px;">${nf(c[1])}</td><td style="text-align:right;padding:6px 8px;">${nf(c[2])}</td><td style="text-align:right;padding:6px 8px;${p < 95 ? 'color:var(--red,#ef4444);font-weight:600;' : ''}">${p.toFixed(0)}%</td></tr>` }).join('')}</tbody></table>
+      ${low.length ? `<p class="map-info" style="color:var(--red,#ef4444);margin-top:10px;">⚠️ ${low.map(c => c[0]).join(' · ')} ยังได้เงินไม่ครบ ตัวเลขในไฟล์จะน้อยกว่าที่ควร · อัปไฟล์รับเงินของช่องทางนั้นก่อน หรือรอให้ได้เงินครบ แล้ว Export ใหม่</p>` : '<p class="map-info" style="margin-top:10px;">✓ ทุกช่องทางได้เงินครบเกือบทั้งหมดแล้ว</p>'}`
+    out.style.display = 'block'
+    if (!rows.length) throw new Error('ไม่มีออเดอร์ที่ได้เงินแล้วในเดือนนี้')
+    if (low.length && !confirm(`${low.map(c => `${c[0]} ได้เงินแล้ว ${Math.round(c[2] / c[1] * 100)}%`).join('\n')}\n\nยังได้เงินไม่ครบ ตัวเลขจะน้อยกว่าที่ควร ยังต้องการดาวน์โหลดไหม?`)) return
+    const aoa = [['month', 'channel', 'sub_channel', 'payment_type', 'child_sku', 'total_qty'], ...rows.map(r => [r[0], r[1], r[2], r[3], r[4], +r[5]])]
+    const ws = XLSX.utils.aoa_to_sheet(aoa)
+    ws['!cols'] = [{ wch: 9 }, { wch: 14 }, { wch: 42 }, { wch: 18 }, { wch: 16 }, { wch: 10 }]
+    ws['!autofilter'] = { ref: `A1:F${aoa.length}` }
+    const info = XLSX.utils.aoa_to_sheet([
+      ['รายงาน', 'จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย (ต้นทุนวอลเล็ท)'], ['เดือนที่สั่งซื้อ', mo], ['ดึงข้อมูลเมื่อ', new Date().toLocaleString('th-TH')],
+      ['กติกา', 'ออเดอร์ที่ได้เงินแล้ว นับตามเดือนที่สั่งซื้อ · ตัดเพจที่ไม่ใช่การขาย · แยกประเภทการชำระเฉพาะ Facebook'], [],
+      ['ช่องทาง', 'ออเดอร์ (ไม่รวมยกเลิก/คืน)', 'ได้เงินแล้ว', '% ได้เงินแล้ว'], ...cov.map(c => [c[0], +c[1], +c[2], c[1] ? Math.round(c[2] / c[1] * 1000) / 10 : 0])])
+    info['!cols'] = [{ wch: 16 }, { wch: 70 }, { wch: 12 }, { wch: 14 }]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Child SKU Qty')
+    XLSX.utils.book_append_sheet(wb, info, 'ข้อมูลไฟล์')
+    XLSX.writeFile(wb, `Child_SKU_Qty_Paid_${mo}.xlsx`)
+  } catch (e) {
+    al.textContent = 'ส่งออกไม่สำเร็จ: ' + e.message; al.style.display = 'block'
+  } finally { btn.disabled = false; btn.textContent = label }
+})
 document.getElementById('channelSelect').addEventListener('change', e => handleChannelChange(e.target.value))
 document.getElementById('btnStep1').addEventListener('click', handleStep1)
 document.getElementById('btnStep2').addEventListener('click', handleStep2)
