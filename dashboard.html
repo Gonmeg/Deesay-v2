@@ -755,7 +755,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-h</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -8735,7 +8735,7 @@ async function renderHome() {
           <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>${fmt(Math.round(+x.qty_d || 0))} ชิ้น</span><span>ปกติวันละ ${money(x.avg7)}</span></div></div>
           <div class="hm-r"><span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span><small>${delta(pct(+x.rev_d, +x.avg7))}</small></div></div>`).join('') || '<div class="hm-empty">ยังไม่มียอด</div>'}
         <div class="hm-sub">ขยับแรง · เทียบยอดปกติต่อวัน (เฉลี่ย ${dShort(homeAdd(B, -7))} – ${dShort(homeAdd(B, -1))})</div>
-        ${(b.movers || []).map(x => `<div class="hm-it no-lead"><div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>ปกติวันละ ${money(x.avg7)} → ${dShort(B)} <span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span></span></div></div><div class="hm-r">${delta(+x.chg * 100)}</div></div>`).join('') || '<div class="hm-empty">—</div>'}
+        ${(b.movers || []).map(x => `<div class="hm-it no-lead"><div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>ปกติวันละ ${money(x.avg7)} → ${dShort(B)} ${money(x.rev_d)}</span></div></div><div class="hm-r">${delta(+x.chg * 100)}</div></div>`).join('') || '<div class="hm-empty">—</div>'}
       </section>
       <section class="hm-panel"><div class="hm-panel-h"><h2>สต็อกต้องระวัง</h2>${link('supply', 'ไป Supply Chain')}</div>
         <div class="hm-lv"><span class="hm-lv-n l1">1</span>ทั้งบริษัท — ต้องสั่งผลิต / ตามของ ${info('hm-i-l1', 'นับของทุกคลัง รวมของที่ผลิตเสร็จฝากไว้ที่โรงงาน<br>แสดงเฉพาะตัวที่พอขายได้ไม่ถึง 30 วัน')}</div>
