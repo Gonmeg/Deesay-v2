@@ -755,7 +755,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -4820,6 +4820,7 @@ async function ensureTtaDataForRange(from, to, onFresh) {
     return;
   }
   await fetchTtaData(from, to);
+  if (getDateValue('From') + '|' + getDateValue('To') !== rangeKey) return;   // (2026-10-16) ผลช่วงเก่า ไม่ตั้งเป็นช่วงปัจจุบัน
   ttaLastRange = rangeKey;
 }
 
@@ -7684,11 +7685,12 @@ function ttProductSort(col) {
   else { _ttProductSortCol = col; _ttProductSortDir = col === 'name' ? 'asc' : 'desc'; }
   renderTtProductTable();
 }
+let _ttProductSeq = 0;
 async function renderTtProduct() {
   const tb = document.getElementById('tbodyTtProduct'); if (!tb) return;
   const from = document.getElementById('dateFrom')?.value, to = document.getElementById('dateTo')?.value;
   if (!from || !to) return;
-  const key = from + '|' + to;
+  const key = from + '|' + to, seq = ++_ttProductSeq;   // (2026-10-16) ผลของคำขอเก่าที่มาช้า ไม่ทับช่วงใหม่
   if (_ttProductRange === key && _ttProductRows.length) { renderTtProductTable(); return; }
   tb.innerHTML = '<tr><td colspan="7" class="empty">กำลังโหลด...</td></tr>';
   try {
@@ -7697,6 +7699,7 @@ async function renderTtProduct() {
       method: 'POST', headers, body: JSON.stringify({ p_from: from, p_to: to }) });
     if (!res.ok) throw new Error('tta_product_rollup ' + res.status);
     const d = await res.json();
+    if (seq !== _ttProductSeq) return;
     _ttProductGrain = d.grain || 'month';
     _ttProductLabels = d.labels || [];
     _ttProductSeries = d.series || {};
@@ -7766,7 +7769,20 @@ function renderTtProductChart() {
     tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(Math.round(c.parsed.y))}` } }
   });
 }
-function ttProductToggle(sku) { if (_ttProductOpen.has(sku)) _ttProductOpen.delete(sku); else _ttProductOpen.add(sku); renderTtProductTable(); }
+// (2026-10-16) กาง/หุบเฉพาะแถวตะกร้าใต้สินค้านั้น ไม่วาดตารางใหม่ทั้งตาราง → ไม่กระพริบ ไม่เด้ง แถวที่กดอยู่ที่เดิม
+function ttProductToggle(sku) {
+  const tb = document.getElementById('tbodyTtProduct');
+  const tr = tb && [...tb.querySelectorAll('tr.ttp-prod')].find(r => r.dataset.sku === sku);
+  const open = !_ttProductOpen.has(sku);
+  if (open) _ttProductOpen.add(sku); else _ttProductOpen.delete(sku);
+  if (!tr) { renderTtProductTable(); return; }
+  const top0 = tr.getBoundingClientRect().top;
+  tr.classList.toggle('open', open);
+  const car = tr.querySelector('.ttp-caret'); if (car) car.textContent = open ? '▾' : '▸';
+  let n = tr.nextElementSibling; while (n && n.classList.contains('ttp-basket')) { const x = n.nextElementSibling; n.remove(); n = x; }
+  if (open) { const row = _ttProductRows.find(a => a.sku === sku); tr.insertAdjacentHTML('afterend', ttBasketRows(sku, row ? row.name : '')); }
+  const dy = tr.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy);
+}
 const TTP_STATUS = { SELLER_DEACTIVATED: 'ปิดขายแล้ว', PLATFORM_DEACTIVATED: 'ถูกระงับ', DELETED: 'ลบแล้ว', FREEZE: 'ถูกระงับ', DRAFT: 'ฉบับร่าง', PENDING: 'รอตรวจ', FAILED: 'ไม่ผ่านตรวจ' };
 function ttBasketRows(sku, pname) {
   const list = (_ttProductBaskets[sku] || []).slice().sort((a, b) => b.ads - a.ads);
@@ -7810,8 +7826,8 @@ function renderTtProductTable() {
   const ind = document.getElementById('tps-' + _ttProductSortCol); if (ind) ind.textContent = _ttProductSortDir === 'asc' ? '▲' : '▼';
   document.getElementById('ttProductSummary').innerHTML =
     `รวม ${fmt(rows.length)} สินค้า · ค่า Ads ${fmt(Math.round(total.ads))} · ยอดขาย ${fmt(Math.round(total.gmv))} · ${fmt(Math.round(total.orders))} ออเดอร์ · ROI รวม ${total.ads > 0 ? (total.gmv / total.ads).toFixed(2) + 'x' : '—'}`;
-  document.getElementById('tbodyTtProduct').innerHTML = rows.map(a => { const nb = (_ttProductBaskets[a.sku] || []).length, open = _ttProductOpen.has(a.sku); return `<tr ${nb ? `onclick="ttProductToggle('${ttcEscAttr(a.sku)}')" class="ttp-prod${open ? ' open' : ''}" style="cursor:pointer;"` : ''}>
-      <td>${nb ? `<span style="display:inline-block;width:14px;color:var(--text3);">${open ? '▾' : '▸'}</span>` : '<span style="display:inline-block;width:14px;"></span>'}<b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span>${nb ? ` <span style="font-size:10.5px;color:var(--text3);">· ${nb} ตะกร้า</span>` : ''}</td>
+  document.getElementById('tbodyTtProduct').innerHTML = rows.map(a => { const nb = (_ttProductBaskets[a.sku] || []).length, open = _ttProductOpen.has(a.sku); return `<tr ${nb ? `onclick="ttProductToggle('${ttcEscAttr(a.sku)}')" data-sku="${ttcEscAttr(a.sku)}" class="ttp-prod${open ? ' open' : ''}" style="cursor:pointer;"` : ''}>
+      <td>${nb ? `<span class="ttp-caret" style="display:inline-block;width:14px;color:var(--text3);">${open ? '▾' : '▸'}</span>` : '<span style="display:inline-block;width:14px;"></span>'}<b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span>${nb ? ` <span style="font-size:10.5px;color:var(--text3);">· ${nb} ตะกร้า</span>` : ''}</td>
       <td style="font-weight:600;">${fmt(Math.round(a.ads))}</td>
       <td>${fmt(Math.round(a.gmv))}</td>
       <td>${fmt(Math.round(a.orders))}</td>
@@ -9864,6 +9880,7 @@ async function fetchTtaData(fromDate, toDate) {
       body: JSON.stringify({ p_from: fromDate || '2026-01-01', p_to: toDate || fmtDateISO(new Date()) }) });
     if (rpcRes.ok) {
       const rollup = await rpcRes.json();
+      if (getDateValue('From') + '|' + getDateValue('To') !== fromDate + '|' + toDate) return;   // (2026-10-16) ช่วงเปลี่ยนระหว่างโหลด → ไม่เอาผลช่วงเก่ามาทับ
       if (rollup && Array.isArray(rollup.clips) && Array.isArray(rollup.cols)) {
         await loadTtaThumbs();
         applyTtaRollup(rollup);
@@ -10042,12 +10059,14 @@ function ttaFilteredClips() {
   });
 }
 
+let _ttaRenderSeq = 0;
 async function renderTta() {
   const from = getDateValue('From'), to = getDateValue('To');
-  const rangeKey = from + '|' + to;
+  const rangeKey = from + '|' + to, seq = ++_ttaRenderSeq;   // (2026-10-16) มีรอบใหม่กว่าเริ่มแล้ว → รอบนี้ไม่วาด (กันข้อมูลช่วงเก่ามาทับ)
   try {
     await ensureTtaDataForRange(from, to, () => { if (currentPage === 'ttads') renderTta(); });
     await fetchTtaDaily(from, to); // โหลดยอดจริงจากระบบ เฉพาะช่วงวันที่ที่เลือกอยู่ตอนนี้ (v_tiktok_objective_summary รวม revenue/orders/UNSPECIFIED)
+    if (seq !== _ttaRenderSeq) return;
   } catch (e) {
     console.error('renderTta fetch failed:', e);
     showError('โหลดข้อมูล TikTok Ads ไม่สำเร็จ: ' + e.message + ' — ลองกดค้นหาใหม่อีกครั้ง');
@@ -10088,7 +10107,9 @@ async function renderTtaDailyReport() {
   const tb = document.getElementById('tbodyTtaDailyRep'); if (!tb) return;
   const from = getDateValue('From'), to = getDateValue('To'), key = from + '|' + to;
   if (_ttaDr.key !== key) {
-    try { const d = await Auth.rpc('tta_daily_report', { p_from: from, p_to: to }); _ttaDr = { key, rows: Array.isArray(d) ? d : [] }; }
+    try { const d = await Auth.rpc('tta_daily_report', { p_from: from, p_to: to });
+      if (getDateValue('From') + '|' + getDateValue('To') !== key) return;   // (2026-10-16) ช่วงเปลี่ยนระหว่างโหลด → ทิ้งผลเก่า
+      _ttaDr = { key, rows: Array.isArray(d) ? d : [] }; }
     catch (e) { tb.innerHTML = `<tr><td class="empty">โหลดไม่สำเร็จ: ${e.message || e}</td></tr>`; return; }
   }
   const ks = activeCols('ttaDailyRep'), M = METRIC_CONFIGS.ttaDailyRep.meta;
@@ -10158,14 +10179,23 @@ function renderTtaCampaignTable() {
 
 let ttaDailyData = [];
 let ttaDailyLastRange = null;
+let _ttaDailySeq = 0, _ttaDailyPending = null;
 async function fetchTtaDaily(fromDate, toDate) {
   const rangeKey = (fromDate||'') + '|' + (toDate||'');
   if (ttaDailyLastRange === rangeKey && ttaDailyData.length) return; // ช่วงวันที่เดิม ไม่ต้องดึงซ้ำ
+  if (_ttaDailyPending && _ttaDailyPending.key === rangeKey) return _ttaDailyPending.p;   // (2026-10-16) ช่วงเดียวกันกำลังโหลดอยู่ → รอตัวเดิม ไม่ยิงซ้ำ
+  const seq = ++_ttaDailySeq;
+  const p = _fetchTtaDaily(fromDate, toDate, rangeKey, seq);
+  _ttaDailyPending = { key: rangeKey, p };
+  try { await p; } finally { if (_ttaDailyPending && _ttaDailyPending.p === p) _ttaDailyPending = null; }
+}
+async function _fetchTtaDaily(fromDate, toDate, rangeKey, seq) {
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
   let baseUrl = `${window.SUPABASE_URL}/rest/v1/mv_tiktok_objective_summary?select=stat_date,objective,total_cost,total_revenue,total_orders&order=stat_date.asc,objective.asc`;
   if (fromDate) baseUrl += `&stat_date=gte.${fromDate}`;
   if (toDate) baseUrl += `&stat_date=lte.${toDate}`;
   const rows = await fetchKeyset(baseUrl, headers, ['stat_date', 'objective']);
+  if (seq !== _ttaDailySeq) return;   // มีการโหลดช่วงใหม่กว่าแล้ว → ทิ้งผลช่วงเก่า
   const byDate = {};
   (Array.isArray(rows) ? rows : []).forEach(r => {
     const d = r.stat_date;
