@@ -755,7 +755,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-d</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7781,7 +7781,7 @@ function ttBasketRows(sku, pname) {
       ? ttcEsc(b.mix).split(' · ').map(x => pname && x.startsWith(ttcEsc(pname) + ' ') ? `<b style="color:var(--text);">${x}</b>` : x).join(' · ') : '';
     const img = b.img ? `<img class="zoom-thumb ttp-img" src="${ttcEscAttr(b.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;ttp-img ttp-noimg&quot;>🛒</div>'">`
       : `<div class="ttp-img ttp-noimg">🛒</div>`;
-    return `<tr class="ttp-basket${k === 0 ? ' first' : ''}${k === list.length - 1 ? ' last' : ''}">
+    return `<tr class="ttp-basket pg-child${k === 0 ? ' first' : ''}${k === list.length - 1 ? ' last' : ''}">
       <td><div class="ttp-cell">${img}
         <div class="ttp-txt">
           <div class="ttp-title" title="${ttcEscAttr(title)}">${ttcEsc(title)}</div>
@@ -9710,17 +9710,19 @@ function autoPageTable(table) {
   if (table.hasAttribute('data-no-page')) return;
   const nextEl = table.nextElementSibling, wrapNext = table.parentElement && table.parentElement.nextElementSibling;
   if ((nextEl && /Pager$/.test(nextEl.id || '')) || (wrapNext && /Pager$/.test(wrapNext.id || ''))) return;
-  const rows = [...tbody.children].filter(tr => tr.tagName === 'TR');
+  // (2026-10-16) แถวย่อยที่กางออกใต้แถวหลัก (class pg-child) ไปหน้าเดียวกับแถวหลัก ไม่นับเป็นแถวของหน้า — กางแล้วแถวล่างไม่ตกไปหน้าถัดไป
+  const rows = [];
+  [...tbody.children].filter(tr => tr.tagName === 'TR').forEach(tr => { if (tr.classList.contains('pg-child') && rows.length) rows[rows.length - 1].push(tr); else rows.push([tr]); });
   const fixedSize = +table.getAttribute('data-page-size') || 0;   // (2026-09-30) ตารางที่ต้องสูงพอดีกับการ์ดข้างๆ
   const size = fixedSize || pgSize();
   let pager = table._pgEl;
-  if (rows.length <= size && !(table._pg && table._pg.page > 1)) { rows.forEach(tr => { if (tr._pgHidden) { tr.style.display = ''; tr._pgHidden = false; } }); if (pager) pager.innerHTML = ''; return; }
+  if (rows.length <= size && !(table._pg && table._pg.page > 1)) { rows.flat().forEach(tr => { if (tr._pgHidden) { tr.style.display = ''; tr._pgHidden = false; } }); if (pager) pager.innerHTML = ''; return; }
   table._pg = table._pg || { page: 1, n: rows.length };
   if (table._pg.n !== rows.length) { table._pg.page = 1; table._pg.n = rows.length; }
   const totalPages = Math.max(1, Math.ceil(rows.length / size));
   if (table._pg.page > totalPages) table._pg.page = totalPages;
   const cur = table._pg.page, start = (cur - 1) * size;
-  rows.forEach((tr, i) => { const hide = i < start || i >= start + size; if (hide) { tr.style.display = 'none'; tr._pgHidden = true; } else if (tr._pgHidden) { tr.style.display = ''; tr._pgHidden = false; } });
+  rows.forEach((g, i) => { const hide = i < start || i >= start + size; g.forEach(tr => { if (hide) { tr.style.display = 'none'; tr._pgHidden = true; } else if (tr._pgHidden) { tr.style.display = ''; tr._pgHidden = false; } }); });
   if (!pager) { pager = document.createElement('div'); pager.className = 'auto-pager'; const host = table.closest('.table-wrap') || table; host.insertAdjacentElement('afterend', pager); table._pgEl = pager; }
   const nums = [];
   for (let i = 1; i <= totalPages; i++) { if (i === 1 || i === totalPages || Math.abs(i - cur) <= 2) nums.push(i); else if (nums[nums.length - 1] !== '...') nums.push('...'); }
