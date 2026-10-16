@@ -556,6 +556,25 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </style>
 <style>
   /* (2026-10-07) Data Guard: บรรทัดเดียว กดดูรายละเอียด · ปกติ = ข้อความเล็กชิดขวา */
+
+  /* (2026-10-15) สถานะข้อมูล: ปุ่มเล็กข้างชื่อหน้า + แผงรายละเอียด (รวมทุกคำเตือนของหน้าไว้ที่เดียว) */
+  .tb-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .dg-wrap { position: relative; display: inline-flex; }
+  .dg-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--bg2); border-radius: 999px; padding: 3px 10px 3px 8px; font: inherit; font-size: 12px; color: var(--text3); cursor: pointer; white-space: nowrap; }
+  .dg-chip:hover { color: var(--text); border-color: var(--text3); }
+  .dg-chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); display: inline-block; }
+  .dg-chip.warn i { background: var(--warn); } .dg-chip.bad i { background: var(--bad); }
+  .dg-chip.warn, .dg-chip.bad { color: var(--text); font-weight: 600; }
+  .dg-chip.bad { border-color: color-mix(in srgb, var(--bad) 45%, var(--border)); background: color-mix(in srgb, var(--bad) 7%, var(--bg2)); }
+  .dg-chip.warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); background: color-mix(in srgb, var(--warn) 8%, var(--bg2)); }
+  .dg-pop { position: absolute; top: calc(100% + 8px); left: 0; z-index: 2500; width: 380px; max-width: 86vw; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 14px 16px; font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+  .dg-pop h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); }
+  .dg-pop .it { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .dg-pop .it:last-of-type { border-bottom: 0; }
+  .dg-pop .it i { flex: none; width: 7px; height: 7px; border-radius: 50%; margin-top: 7px; background: var(--good); }
+  .dg-pop .it.warn i { background: var(--warn); } .dg-pop .it.bad i { background: var(--bad); }
+  .dg-pop .it b { color: var(--text); font-weight: 600; } .dg-pop .meta { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); color: var(--text3); font-size: 11.5px; }
+  #dgBanner { display: none !important; }
   #dgBanner .dg-ok { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; margin: -10px 0 10px; font-size: 12px; color: var(--text3); }
   #dgBanner .dg-ok .ok { color: var(--good); font-weight: 600; }
   #dgBanner .dg-box { margin: 0 0 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); font-size: 13px; color: var(--text2); overflow: hidden; }
@@ -711,7 +730,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.15-m</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.15-t</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -734,7 +753,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
 <div class="main">
   <div class="topbar">
-    <div class="page-title" id="pageTitle">ภาพรวมยอดขาย</div>
+    <div class="tb-title"><div class="page-title" id="pageTitle">ภาพรวมยอดขาย</div>
+      <!-- (2026-10-15) สถานะข้อมูลแบบ Seller Centre: จุดสี + เวลาอัปเดต ข้างชื่อหน้า · กดดูรายละเอียด (แทนแถบในหน้า) -->
+      <span class="dg-wrap"><button type="button" class="dg-chip" id="dgChip" onclick="dgPopToggle(event)" style="display:none;"></button><div class="dg-pop" id="dgPop" hidden></div></span></div>
     <div class="filters">
       <!-- ค้นหา creator: โชว์เฉพาะหน้า Creator Performance (ควบคุมใน showPage) -->
       <div class="filter-group" id="cpCreatorFilterGroup" style="display:none;position:relative;padding:0;background:transparent;border:none;gap:6px;">
@@ -3080,7 +3101,7 @@ function loadKpiPage(reload) {
   if (window._kpiLoading) return;
   window._kpiLoading = true;
   const s = document.createElement('script');
-  s.src = 'kpi.js?v=20261014a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
+  s.src = 'kpi.js?v=20261015b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
   s.onload = () => { window._kpiLoading = false; if (currentPage === 'kpi') window.renderKpiPage(true); };
   s.onerror = () => { window._kpiLoading = false; document.getElementById('page-kpi').innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3107,7 +3128,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20261014a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20261015a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -3261,12 +3282,14 @@ async function renderOverview() {
   const prevRevenue = mvPrev.reduce((s, r) => s + (parseFloat(r.net_revenue) || 0), 0);
   const prevOrders = mvPrev.reduce((s, r) => s + (parseInt(r.net_orders) || 0), 0);
 
-  document.getElementById('kpi-revenue').textContent = fmt(totalRevenue);
-  document.getElementById('kpi-orders').textContent = fmt(totalOrders);
+  // (2026-10-15) ตัวเลขที่หาจากหน้านี้ไม่ได้ กดดูที่มาได้ (แยกช่องทาง / เพจ / รายวัน)
+  const _tk = `${ch}|${from}|${to}||${sub}`;
+  document.getElementById('kpi-revenue').innerHTML = `<span class="pl-trace" data-tsales="${_tk}">${fmt(totalRevenue)}</span>`;
+  document.getElementById('kpi-orders').innerHTML = `<span class="pl-trace" data-tsales="${_tk}|orders">${fmt(totalOrders)}</span>`;
   document.getElementById('kpi-aov').textContent = fmt(aov);
   // ลูกค้าไม่ซ้ำ: นับ distinct ที่ DB (RPC unique_customers) — ขึ้นทีหลังไม่บล็อกส่วนอื่น
   document.getElementById('kpi-customers').textContent = '…';
-  fetchUniqueCustomers(from, to, ch, sub).then(n => { if (seq === renderOverview._seq) document.getElementById('kpi-customers').textContent = fmt(n); }).catch(() => { document.getElementById('kpi-customers').textContent = '—'; });
+  fetchUniqueCustomers(from, to, ch, sub).then(n => { if (seq === renderOverview._seq) document.getElementById('kpi-customers').innerHTML = `<span class="pl-trace" data-tcust="${ch}|${from}|${to}|${sub}">${fmt(n)}</span>`; }).catch(() => { document.getElementById('kpi-customers').textContent = '—'; });
 
   const rCmp = cmpBadge(totalRevenue, prevRevenue);
   const oCmp = cmpBadge(totalOrders, prevOrders);
@@ -3278,7 +3301,7 @@ async function renderOverview() {
   const unsettledOrders = mvInRange.reduce((s,r) => s+(parseInt(r.cancelled_orders)||0), 0);
   const totalWithUnsettled = totalRevenue + unsettledRev;
   const unsettledPct = totalWithUnsettled ? ((unsettledRev/totalWithUnsettled)*100).toFixed(1) : '0.0';
-  document.getElementById('kpi-unsettled-rev').textContent = fmt(unsettledRev);
+  document.getElementById('kpi-unsettled-rev').innerHTML = `<span class="pl-trace" data-tsales="${ch}|${from}|${to}||${sub}|cancel">${fmt(unsettledRev)}</span>`;
   document.getElementById('kpi-unsettled-orders').textContent = `${fmt(unsettledOrders)} ออเดอร์ที่ถูกยกเลิก/คืน`;
   document.getElementById('kpi-unsettled-pct').textContent = unsettledPct + '%';
 
@@ -3331,7 +3354,7 @@ async function renderChannel() {
   document.getElementById('ch-kpis').innerHTML = channels.map(([ch, v], i) => `
     <div class="card" style="flex:1;min-width:140px;border-top:3px solid ${COLORS[i%COLORS.length]};">
       <div class="card-title" style="color:${COLORS[i%COLORS.length]};">${ch}</div>
-      <div class="kpi-value" style="font-size:20px;">${fmt(v.rev)}</div>
+      <div class="kpi-value" style="font-size:20px;"><span class="pl-trace" data-tsales="${ch}|${from}|${to}||${subF}">${fmt(v.rev)}</span></div>
       <div class="kpi-sub">${fmt(v.ord)} ออเดอร์ · ${totalRev ? ((v.rev/totalRev)*100).toFixed(1) : 0}%</div>
     </div>`).join('');
 
@@ -3374,7 +3397,7 @@ async function renderChannel() {
     <tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
       <td>${k}</td><td>${v.ch}</td>
-      <td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${fmt(v.ord ? v.rev/v.ord : 0)}</td>
+      <td><span class="pl-trace" data-tsales="${v.ch}|${from}|${to}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="${v.ch}|${from}|${to}||${k}|orders">${fmt(v.ord)}</span></td><td>${fmt(v.ord ? v.rev/v.ord : 0)}</td>
     </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 
@@ -3393,9 +3416,9 @@ async function renderFbHub() {
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
 
     document.getElementById('fbhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('fbads', null, document.querySelector('.nav-item[onclick*=\\'fbads\\']'))" title="ดูรายละเอียดที่หน้า Facebook Ads"><div class="card-title">ค่าโฆษณา ↗</div><div class="kpi-value">${fmt(tAds)}</div><div class="kpi-sub">รายละเอียดที่หน้า Facebook Ads</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value"><span class="pl-trace" data-tsales="Facebook|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}">${fmt(totalRev)}</span></div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value"><span class="pl-trace" data-tsales="Facebook|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}|orders">${fmt(totalOrd)}</span></div></div>
+      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('fbads', null, document.querySelector('.nav-item[onclick*=\\'fbads\\']'))" title="ดูรายละเอียดที่หน้า Facebook Ads"><div class="card-title">ค่าโฆษณา ↗</div><div class="kpi-value"><span class="pl-trace" onclick="event.stopPropagation();traceAds('${getDateValue('From')}','${getDateValue('To')}','Facebook')">${fmt(tAds)}</span></div><div class="kpi-sub">รายละเอียดที่หน้า Facebook Ads</div></div>
       <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('fbads', null, document.querySelector('.nav-item[onclick*=\\'fbads\\']'))" title="ดูรายละเอียดที่หน้า Facebook Ads"><div class="card-title">ROAS ↗</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
     `;
 
@@ -3408,7 +3431,7 @@ async function renderFbHub() {
     document.getElementById('tbodyFbSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
       <tr>
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-        <td>${k}</td><td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+        <td>${k}</td><td><span class="pl-trace" data-tsales="Facebook|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="Facebook|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td>
         <td>${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
       </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
@@ -3837,9 +3860,9 @@ async function renderTtHub() {
     const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
 
     document.getElementById('tthub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('ttads', null, document.querySelector('.nav-item[onclick*=\\'ttads\\']'))" title="ดูรายละเอียดที่หน้า TikTok Ads"><div class="card-title">ค่าโฆษณา ↗</div><div class="kpi-value">${fmt(tAds)}</div><div class="kpi-sub">รายละเอียดที่หน้า TikTok Ads</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value"><span class="pl-trace" data-tsales="TikTok|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}">${fmt(totalRev)}</span></div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value"><span class="pl-trace" data-tsales="TikTok|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}|orders">${fmt(totalOrd)}</span></div></div>
+      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('ttads', null, document.querySelector('.nav-item[onclick*=\\'ttads\\']'))" title="ดูรายละเอียดที่หน้า TikTok Ads"><div class="card-title">ค่าโฆษณา ↗</div><div class="kpi-value"><span class="pl-trace" onclick="event.stopPropagation();traceAds('${getDateValue('From')}','${getDateValue('To')}','TikTok')">${fmt(tAds)}</span></div><div class="kpi-sub">รายละเอียดที่หน้า TikTok Ads</div></div>
       <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('ttads', null, document.querySelector('.nav-item[onclick*=\\'ttads\\']'))" title="ดูรายละเอียดที่หน้า TikTok Ads"><div class="card-title">ROAS ↗</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
       ${cancelReturnCardHtml2('tt', H.cancelRev, H.cancelOrd, totalRev)}
       ${freeSampleCardHtml(getDateValue('From'), getDateValue('To'))}
@@ -3847,7 +3870,7 @@ async function renderTtHub() {
 
     const ocSorted = Object.entries(H.byOC).sort((a,b) => b[1].rev - a[1].rev);
     document.getElementById('tbodyTtOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
-      <tr><td>${k}</td><td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
+      <tr><td>${k}</td><td><span class="pl-trace" data-tsales="TikTok|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="TikTok|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
     `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
     // (2026-10-06) ช่วงที่มีข้อมูล API → ตารางช่องทางใช้ TikTok API แทนช่อง Order Channel ในไฟล์ (ครีเอเตอร์ตาม Commission จริง)
     ensureTtApi().then(api => api.renderOrderChannel(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));   // (2026-10-15) ทุกช่วงวันที่ ใช้ออเดอร์ชุดเดียวกับการ์ด
@@ -3907,9 +3930,9 @@ async function renderShHub() {
     const goAds = `onclick="showPage('shads', null, document.querySelector('.nav-item[onclick*=\\'shads\\']'))" style="cursor:pointer;" title="ดูรายละเอียดค่า Ads ที่หน้า Shopee Ads"`;
 
     document.getElementById('shhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div><div class="kpi-sub"><span class="${revBadge.cls}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" ${goAds}><div class="card-title">ค่า Ads รวม</div><div class="kpi-value">${fmt(tAds)}</div><div class="kpi-sub">${ads.days ? `${adsPct} ของยอดขาย · ${fmt(ads.days)} วัน · ดูรายละเอียด →` : 'ยังไม่มีข้อมูลในช่วงนี้'}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value"><span class="pl-trace" data-tsales="Shopee|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}">${fmt(totalRev)}</span></div><div class="kpi-sub"><span class="${revBadge.cls}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value"><span class="pl-trace" data-tsales="Shopee|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}|orders">${fmt(totalOrd)}</span></div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
+      <div class="card" ${goAds}><div class="card-title">ค่า Ads รวม</div><div class="kpi-value"><span class="pl-trace" onclick="event.stopPropagation();traceAds('${getDateValue('From')}','${getDateValue('To')}','Shopee')">${fmt(tAds)}</span></div><div class="kpi-sub">${ads.days ? `${adsPct} ของยอดขาย · ${fmt(ads.days)} วัน · ดูรายละเอียด →` : 'ยังไม่มีข้อมูลในช่วงนี้'}</div></div>
       <div class="card" ${goAds}><div class="card-title">ROAS จริง</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div><div class="kpi-sub">ยอดขาย ÷ ค่า Ads รวมทุกประเภท</div></div>
       ${cancelReturnCardHtml2('sh', H.cancelRev, H.cancelOrd, totalRev)}
     `;
@@ -3918,7 +3941,7 @@ async function renderShHub() {
     document.getElementById('tbodyShSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
       <tr>
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-        <td>${k}</td><td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+        <td>${k}</td><td><span class="pl-trace" data-tsales="Shopee|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="Shopee|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td>
         <td>${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
       </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
@@ -3960,9 +3983,9 @@ async function renderLzHub() {
     const revBadge = cmpBadge(totalRev, prevRev), ordBadge = cmpBadge(totalOrd, prevOrd);
 
     document.getElementById('lzhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div><div class="kpi-sub"><span class="${revBadge.cls}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">${fmt(tAds)}</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value"><span class="pl-trace" data-tsales="Lazada|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}">${fmt(totalRev)}</span></div><div class="kpi-sub"><span class="${revBadge.cls}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value"><span class="pl-trace" data-tsales="Lazada|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}|orders">${fmt(totalOrd)}</span></div><div class="kpi-sub"><span class="${ordBadge.cls}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
+      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value"><span class="pl-trace" onclick="event.stopPropagation();traceAds('${getDateValue('From')}','${getDateValue('To')}','Lazada')">${fmt(tAds)}</span></div></div>
       <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
       ${cancelReturnCardHtml2('lz', H.cancelRev, H.cancelOrd, totalRev)}
     `;
@@ -3971,7 +3994,7 @@ async function renderLzHub() {
     document.getElementById('tbodyLzSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
       <tr>
         <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-        <td>${k}</td><td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td>
+        <td>${k}</td><td><span class="pl-trace" data-tsales="Lazada|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="Lazada|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td>
         <td>${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
       </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
@@ -4073,7 +4096,7 @@ async function renderMtHub() {
     const top = Object.entries(byRet).sort((a, b) => b[1] - a[1])[0];
     const brBy = ret => new Set(rows.filter(r => r.retailer === ret && r.branch).map(r => r.branch)).size;
     kpis = [
-      [`ยอดขาย ${src}`, money(tSales), 'จากรายงานห้าง ทุกห้างรวมกัน'],
+      [`ยอดขาย ${src}`, `<span class="pl-trace" data-tsales="Modern Trade|${from}|${to}">${money(tSales)}</span>`, 'จากรายงานห้าง ทุกห้างรวมกัน'],
       ['จำนวนที่ขายออก', fmt(Math.round(tQty)) + ' ชิ้น', 'ทุกห้าง'],
       ['สาขาที่มียอด', fmt(branchSet.size), MT_RETAILERS.filter(x => brBy(x)).map(x => `${x} ${fmt(brBy(x))}`).join(' · ') || '—'],
       ['ห้างที่ยอดสูงสุด', top ? top[0] : '—', top && tSales ? `${(top[1] / tSales * 100).toFixed(0)}% ของยอด Modern Trade` : '']
@@ -4854,7 +4877,7 @@ function cancelReturnCardHtml2(hub, crRev, crOrd, totalRev) {
   const grossRev = totalRev + crRev, pct = grossRev ? (crRev / grossRev * 100) : 0;
   return `<div class="card" style="flex:1;min-width:160px;border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.04);">
     <div class="card-title" style="color:var(--red);">ยอดตีกลับ (ยกเลิก+คืนสินค้า)</div>
-    <div class="kpi-value" style="color:var(--red);">${fmt(crRev)}</div>
+    <div class="kpi-value" style="color:var(--red);"><span class="pl-trace" data-tsales="${({ fb: 'Facebook', tt: 'TikTok', sh: 'Shopee', lz: 'Lazada' })[hub] || ''}|${getDateValue('From')}|${getDateValue('To')}||${document.getElementById('filterSubChannel').value || ''}|cancel">${fmt(crRev)}</span></div>
     <div style="font-size:11px;color:var(--text3);margin-top:2px;">${pct.toFixed(1)}% ของยอดรวมก่อนตัดออก · ${fmt(crOrd)} ออเดอร์</div>
   </div>`;
 }
@@ -6641,7 +6664,7 @@ function renderMomentumTable() {
       <td class="rank">${rankOf[r.sku]}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);">${ttcEsc(r.sku)}</td>
       <td>${ttcEsc(skuToName(r.sku))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-weight:600;">${fmt(Math.round(r.rev_cur))}</td>
+      <td style="font-weight:600;"><span class="pl-trace" onclick="event.stopPropagation();traceSales(getDateValue('From'),getDateValue('To'),null,'${ttcEscAttr(r.sku)}')">${fmt(Math.round(r.rev_cur))}</span></td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(r.qty_cur)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--text2);">${r.qty_cur ? fmt(Math.round(r.rev_cur / r.qty_cur)) : '—'}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${r.share.toFixed(1)}%</td>
@@ -7511,26 +7534,47 @@ async function loadDg(force) {
 }
 let _dgOpen = false;
 function dgToggle() { _dgOpen = !_dgOpen; dgShow(currentPage); }
+// (2026-10-15) หมายเหตุของแต่ละหน้า (เช่น ยอดบางวันยังเข้าไม่ครบ) ส่งมารวมที่ปุ่มสถานะข้อมูล แทนการทำแถบเตือนในหน้า
+window._pageNotes = window._pageNotes || {};
+window.pageNote = function (page, key, level, title, detail) {
+  const N = (window._pageNotes[page] = window._pageNotes[page] || {});
+  if (!level) delete N[key]; else N[key] = { level, title, detail };
+  if (currentPage === page) dgShow(page);
+};
+let _dgLast = null;
+function dgPopToggle(e) {
+  if (e) e.stopPropagation();
+  const pop = document.getElementById('dgPop'); if (!pop) return;
+  if (pop.hidden && _dgLast) pop.innerHTML = _dgLast;
+  pop.hidden = !pop.hidden;
+}
+document.addEventListener('click', e => { const pop = document.getElementById('dgPop'); if (pop && !pop.hidden && !e.target.closest('.dg-wrap')) pop.hidden = true; });
 function dgShow(page) {
-  // (2026-10-07) หน้าตาใหม่: ปกติ = ข้อความเล็กชิดขวา (ข้อมูลครบ + เวลาอัปเดต) · มีปัญหา = กล่องบรรทัดเดียว กด "ดูรายละเอียด" เพื่อดูทีละเรื่อง
-  const el = document.getElementById('dgBanner'); if (!el) return;
+  const chip = document.getElementById('dgChip'), pop = document.getElementById('dgPop'); if (!chip) return;
   const keys = DG_PAGE[page], sched = DG_SCHED[page];
-  const schedTxt = sched ? `อัปเดต ${sched}` : '';
-  if (!keys) { el.innerHTML = schedTxt ? `<div class="dg-ok"><span>${schedTxt}</span></div>` : ''; return; }
+  const notes = Object.values((window._pageNotes || {})[page] || {});
+  const draw = (mine, atTxt) => {
+    const bad = mine.filter(c => c.status !== 'ok');
+    const items = bad.map(c => ({ level: c.status === 'fail' ? 'bad' : 'warn', title: c.title, detail: c.detail || '' })).concat(notes);
+    const lvl = items.some(x => x.level === 'bad') ? 'bad' : items.length ? 'warn' : 'ok';
+    if (!keys && !sched && !items.length) { chip.style.display = 'none'; pop.hidden = true; return; }
+    chip.style.display = '';
+    chip.className = 'dg-chip ' + (lvl === 'ok' ? '' : lvl);
+    chip.innerHTML = `<i></i>${lvl === 'ok' ? (atTxt ? 'อัปเดต ' + atTxt : 'ข้อมูลครบ') : `ต้องเช็ค ${items.length} เรื่อง`}`;
+    _dgLast = `<h4>${lvl === 'ok' ? '✓ ข้อมูลของหน้านี้ครบ' : 'เรื่องที่ควรรู้ก่อนดูตัวเลข'}</h4>`
+      + (items.length ? items.map(x => `<div class="it ${x.level}"><i></i><div><b>${x.title}</b>${x.detail ? `<div>${x.detail}</div>` : ''}</div></div>`).join('') : '<div class="it"><i></i><div>ทุกแหล่งข้อมูลเข้าครบตามรอบ และตัวเลขข้ามหน้าตรงกัน</div></div>')
+      + `<div class="meta">${atTxt ? 'ระบบตรวจล่าสุด ' + atTxt + ' (ตรวจอัตโนมัติทุกชั่วโมง)' : ''}${sched ? `<br>รอบอัปเดต: ${sched}` : ''}</div>`;
+    if (!pop.hidden) pop.innerHTML = _dgLast;
+  };
+  if (!keys) { draw([], ''); return; }
   loadDg().then(list => {
     if (currentPage !== page) return;
     const hit = c => (DG_GLOBAL.includes(c.k) && (c.k !== 'mv_stale' || !DG_MV_PAGE[page] || DG_MV_PAGE[page].some(m => new RegExp('\\b' + m + '\\b').test(c.detail || ''))))
       || keys.some(k => c.k === k || (k.endsWith('_') && c.k.startsWith(k)));
-    const mine = (list || []).filter(hit), bad = mine.filter(c => c.status !== 'ok');
+    const mine = (list || []).filter(hit);
     const at = mine.length ? new Date(Math.max(...mine.map(c => +new Date(c.at)))) : null;
-    const atTxt = at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—';
-    if (!bad.length) { el.innerHTML = `<div class="dg-ok"><span class="ok">✓ ข้อมูลครบ</span><span>ตรวจล่าสุด ${atTxt}</span>${schedTxt ? `<span>${schedTxt}</span>` : ''}</div>`; return; }
-    const red = bad.some(c => c.status === 'fail');
-    el.innerHTML = `<div class="dg-box ${red ? 'red' : 'orange'}"><div class="dg-line"><span class="dg-ic"></span><b>${red ? 'ตัวเลขในหน้านี้อาจยังไม่ครบ' : 'ข้อมูลบางส่วนยังไม่เข้า'}</b>`
-      + `<span class="dg-sum">${bad.map(c => c.title).join(' · ')}</span><span class="ui-link" onclick="dgToggle()">${_dgOpen ? 'ซ่อนรายละเอียด' : `ดูรายละเอียด (${bad.length})`}</span></div>`
-      + (_dgOpen ? `<div class="dg-detail">${bad.map(c => `<div>• ${c.title} — ${c.detail || ''}</div>`).join('')}<div class="dg-at">${schedTxt ? schedTxt + ' · ' : ''}ระบบตรวจอัตโนมัติทุกชั่วโมง · ล่าสุด ${atTxt}</div></div>` : '')
-      + `</div>`;
-  }).catch(() => { el.innerHTML = schedTxt ? `<div class="dg-ok"><span>${schedTxt}</span></div>` : ''; });
+    draw(mine, at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '');
+  }).catch(() => draw([], ''));
 }
 { const _sp = showPage; showPage = function (page) { const r = _sp.apply(this, arguments); try { dgShow(page); } catch (e) {} return r; }; }
 setTimeout(() => { try { dgShow(currentPage); } catch (e) {} }, 2500);   // หน้าแรกที่เปิดตอนโหลด
@@ -8368,6 +8412,82 @@ function renderHomeChart() {
       scales: Object.assign({ x: { grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: t3, font, maxRotation: 0, autoSkipPadding: 14 } } }, yScales) }
   });
 }
+
+// ===== (2026-10-15) แผงที่มาของตัวเลขแบบใช้ร่วมทุกหน้า =====
+//  traceSales(from, to, channel?, sku?) · traceAds(from, to, channel?) · กดตัวเลขที่มี data-tsales="ช่องทาง|จาก|ถึง[|สินค้า]" / data-tads="ช่องทาง|จาก|ถึง" ได้ทุกหน้า
+const TR_SALES_SRC = 'ออเดอร์ของช่องทางนี้ในระบบ (ไฟล์ที่อัปโหลด / API ของช่องทาง) · ไม่นับยกเลิก / คืนสินค้า / พัสดุตีกลับ · หักลดหนี้ (CN) ตามบัญชี';
+const TR_ADS_SRC = { 'Facebook': 'Meta Marketing API · Ads Conversion (ยิงให้เพจขาย)', 'Facebook PR': 'Meta Marketing API · Ads PR / boost โพสต์ KOL (ไม่นับ ROAS)', 'TikTok': 'TikTok Ads API (GMV Max + แอดอื่น)',
+  'Shopee': 'Shopee API (Product / Shop Ads) · Brand / Live / Meta in-app กรอกจาก Seller Centre · CPAS จาก Meta API', 'Lazada': 'ชีทค่า Ads Lazada ที่ทีมกรอก' };
+function trRange(a, b) { const f = v => new Date(v + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }); return a === b ? f(a) : `${f(a)} – ${f(b)}`; }
+function trThumb(u, fb) { return u ? `<img src="${trEsc(u)}" data-tip-img="${trEsc(u)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:var(--bg3);" onerror="this.style.visibility='hidden'">`
+  : `<span style="width:36px;height:36px;border-radius:6px;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:11px;color:var(--text3);">${fb ? 'FB' : 'TT'}</span>`; }
+async function traceSales(a, b, ch, sku, sub, mode) {
+  trOpenShell('ที่มาของตัวเลข');
+  const body = document.getElementById('trBody'), m = v => fmt(Math.round(+v || 0));
+  let d; try { d = await Auth.rpc('trace_sales', { p_from: a, p_to: b, p_channel: ch || null, p_sku: sku || null, p_sub: sub || null }); } catch (e) { body.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
+  if (mode === 'cancel') {   // ยอดที่ไม่นับ: ยกเลิก / คืน / ตีกลับ
+    const C = d.cancel_by || [];
+    body.innerHTML = `<div class="tr-card"><div class="tr-card-t">ยกเลิก / คืน / ตีกลับ${ch ? ' · ' + trEsc(ch) : ''}${sub ? ' · ' + trEsc(sub) : ''}</div><div class="tr-card-v">${m(d.cancel && d.cancel.rev)}</div>
+      <div class="tr-card-m"><span>${trRange(a, b)}</span><span>${fmt(d.cancel && d.cancel.n || 0)} ออเดอร์</span></div></div>
+      <section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>ช่องทาง · ประเภท</th><th>ออเดอร์</th><th>ยอด</th></tr></thead><tbody>`
+      + (C.map(x => `<tr><td>${trEsc(x[0])} · ${trEsc(x[1] === 'Cancel' ? 'ยกเลิก' : x[1] === 'Return/Refund' ? 'คืนสินค้า / คืนเงิน' : x[1] === 'Return' ? 'พัสดุตีกลับ' : x[1])}</td><td>${fmt(x[2])}</td><td>${m(x[3])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">ไม่มี</td></tr>') + `</tbody></table></section>
+      <div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl"><dt>ที่มา</dt><dd>สถานะออเดอร์จากไฟล์ / API ของช่องทาง · พัสดุ Facebook ตีกลับจากรายงานขนส่ง</dd><dt>ผลกับยอดขาย</dt><dd>ไม่นับรวมในยอดขายทุกหน้า</dd></dl></div>`;
+    return;
+  }
+  const isSku = d.mode === 'sku', subs = d.by_sub || [], days = d.by_day || [], nm = sku ? (typeof skuName === 'function' ? skuName(sku) : sku) : '';
+  const cnt = isSku ? `${fmt(d.qty || 0)} ชิ้น` : `${fmt(d.orders || 0)} ออเดอร์`;
+  const nDays = Math.round((new Date(b) - new Date(a)) / 86400000) + 1;
+  let h = `<div class="tr-card"><div class="tr-card-t">${mode === 'orders' ? 'ออเดอร์' : mode === 'avg' ? 'ยอดขายเฉลี่ยต่อวัน' : 'ยอดขาย'}${nm ? ' · ' + trEsc(nm) : ''}${ch ? ' · ' + trEsc(ch) : ''}${sub ? ' · ' + trEsc(sub) : ''}</div><div class="tr-card-v">${mode === 'orders' ? fmt(d.orders || 0) : mode === 'avg' ? m(d.total / nDays) : m(d.total)}</div>
+    <div class="tr-card-m"><span>${trRange(a, b)}</span><span>${mode === 'orders' ? 'ยอดขาย ' + m(d.total) : mode === 'avg' ? `รวม ${nDays} วัน ${m(d.total)} ÷ ${nDays}` : cnt}</span></div></div>`;
+  if (!ch && (d.by_channel || []).length > 1) h += `<section class="tr-part"><div class="tr-sec"><span>แยกตามช่องทาง</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>ช่องทาง</th><th>${isSku ? 'ชิ้น' : 'ออเดอร์'}</th><th>ยอดขาย</th></tr></thead><tbody>`
+    + d.by_channel.map(x => `<tr><td>${trEsc(x[0])}</td><td>${fmt(x[2])}</td><td><b>${m(x[1])}</b></td></tr>`).join('') + '</tbody></table></section>';
+  if (subs.length && !sub) h += `<section class="tr-part"><div class="tr-sec"><span>แยกตามเพจ / ร้าน</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>${ch ? 'เพจ / ร้าน' : 'ช่องทาง · เพจ / ร้าน'}</th><th>${isSku ? 'ชิ้น' : 'ออเดอร์'}</th><th>ยอดขาย</th></tr></thead><tbody>`
+    + subs.map(x => `<tr><td style="white-space:normal;">${ch ? '' : trEsc(x[0]) + ' · '}${trEsc(x[1])}</td><td>${fmt(x[3])}</td><td>${m(x[2])}</td></tr>`).join('') + '</tbody></table></section>';
+  if (days.length > 1) h += `<section class="tr-part"><div class="tr-sec"><span>รายวัน</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>วันที่</th><th>${isSku ? 'ชิ้น' : 'ออเดอร์'}</th><th>ยอดขาย</th></tr></thead><tbody>`
+    + days.slice().reverse().map(x => `<tr><td>${trRange(x[0], x[0])}</td><td>${fmt(x[2])}</td><td>${m(x[1])}</td></tr>`).join('') + '</tbody></table></section>';
+  const adj = [];
+  if (!isSku && +d.cn) adj.push(`<dt>ลดหนี้ (CN)</dt><dd>${m(d.cn)} · หักจากยอดขายแล้ว</dd>`);
+  if (!isSku && d.cancel && +d.cancel.n) adj.push(`<dt>ไม่นับ</dt><dd>ยกเลิก / คืน / ตีกลับ ${fmt(d.cancel.n)} ออเดอร์ (${m(d.cancel.rev)})</dd>`);
+  h += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl"><dt>ยอดขาย</dt><dd>${isSku ? 'ยอดขายของสินค้านี้ แบ่งจากราคาออเดอร์ตามราคาปกติของสินค้าในออเดอร์ · ' : ''}${TR_SALES_SRC}</dd>${adj.join('')}</dl></div>`;
+  body.innerHTML = h;
+}
+async function traceAds(a, b, ch) {
+  trOpenShell('ที่มาของตัวเลข');
+  const body = document.getElementById('trBody'), m = v => fmt(Math.round(+v || 0));
+  let d; try { d = await Auth.rpc('trace_ads', { p_from: a, p_to: b, p_channel: ch || null }); } catch (e) { body.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
+  const src = (d.by_source || []).filter(x => !ch || x[0] === ch);
+  const tot = ch ? src.reduce((t, x) => t + +x[4], 0) : +d.total;
+  let h = `<div class="tr-card"><div class="tr-card-t">ค่า Ads${ch ? ' · ' + trEsc(ch) : ''}</div><div class="tr-card-v">${m(tot)}</div><div class="tr-card-m"><span>${trRange(a, b)}</span></div></div>`;
+  h += `<section class="tr-part"><div class="tr-sec"><span>แยกตามบัญชี / ร้าน / ประเภท</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>ที่มา</th><th>ค่า Ads</th></tr></thead><tbody>`
+    + (src.map(x => `<tr><td style="white-space:normal;">${ch ? '' : trEsc(x[0]) + ' · '}${trEsc(x[1])}${x[2] ? ` <span style="color:var(--text3);">· ${trEsc(x[2])}</span>` : ''}</td><td>${m(x[4])}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">ไม่มี</td></tr>') + '</tbody></table></section>';
+  const fbOn = !ch || ch === 'Facebook' || ch === 'Facebook PR', ttOn = !ch || ch === 'TikTok';
+  if (fbOn && (d.fb_top || []).length) h += `<section class="tr-part"><div class="tr-sec"><span>Facebook · คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">10 อันดับแรก · รวม Conversion + PR</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>คอนเทนต์</th><th data-tip="คนที่เริ่มคุยจาก Ads (Meta นับ)">ทักแชท</th><th>ค่า Ads</th><th data-tip="มูลค่าซื้อที่ Meta นับ">ยอดขาย Meta</th><th>ROAS Meta</th></tr></thead><tbody>`
+    + d.fb_top.map(x => `<tr><td style="white-space:normal;"><div style="display:flex;gap:10px;align-items:center;">${trThumb(x[5], true)}<div>${trEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${fmt(x[1])} Ads</div></div></div></td><td>${fmt(x[3])}</td><td><b>${m(x[2])}</b></td><td>${+x[4] ? m(x[4]) : '—'}</td><td>${+x[2] ? (+x[4] / +x[2]).toFixed(2) + 'x' : '—'}</td></tr>`).join('') + '</tbody></table></section>';
+  if (ttOn && (d.tt_top || []).length) h += `<section class="tr-part"><div class="tr-sec"><span>TikTok · คลิปที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">10 อันดับแรก</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>คลิป · แคมเปญ</th><th>ค่า Ads</th><th data-tip="ยอดขายที่ TikTok นับให้คลิปนี้ (GMV Max)">ยอดขาย TikTok</th><th>ROAS</th></tr></thead><tbody>`
+    + d.tt_top.map(x => `<tr><td style="white-space:normal;"><div style="display:flex;gap:10px;align-items:center;">${trThumb(x[4], false)}<div>${trEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${trEsc(x[1] || '')}</div></div></div></td><td><b>${m(x[2])}</b></td><td>${+x[3] ? m(x[3]) : '—'}</td><td>${+x[2] && +x[3] ? (+x[3] / +x[2]).toFixed(2) + 'x' : '—'}</td></tr>`).join('') + '</tbody></table></section>';
+  h += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">${(ch ? [ch] : Object.keys(TR_ADS_SRC)).filter(k => TR_ADS_SRC[k]).map(k => `<dt>${trEsc(k)}</dt><dd>${TR_ADS_SRC[k]}</dd>`).join('')}<dt>วันที่</dt><dd>นับตามวันที่ใช้เงินจริง</dd></dl></div>`;
+  body.innerHTML = h;
+}
+
+async function traceCustomers(a, b, ch, sub) {
+  trOpenShell('ที่มาของตัวเลข');
+  const body = document.getElementById('trBody');
+  let d; try { d = await Auth.rpc('trace_customers', { p_from: a, p_to: b, p_channel: ch || null, p_sub: sub || null }); } catch (e) { body.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
+  body.innerHTML = `<div class="tr-card"><div class="tr-card-t">ลูกค้าไม่ซ้ำ${ch ? ' · ' + trEsc(ch) : ''}${sub ? ' · ' + trEsc(sub) : ''}</div><div class="tr-card-v">${fmt(d.total || 0)}</div>
+      <div class="tr-card-m"><span>${trRange(a, b)}</span><span>ลูกค้าใหม่ ${fmt(d.new || 0)}</span><span>เคยซื้อมาก่อน ${fmt(d.returning || 0)}</span></div></div>
+    <section class="tr-part"><div class="tr-sec"><span>แยกตามช่องทาง</span><span style="font-weight:400;color:var(--text3);">คนเดียวซื้อหลายช่องทางนับทุกช่องทาง</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>ช่องทาง</th><th>ลูกค้า</th></tr></thead><tbody>`
+    + ((d.by_channel || []).map(x => `<tr><td>${trEsc(x[0])}</td><td>${fmt(x[1])}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">ไม่มี</td></tr>') + `</tbody></table></section>
+    <div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl"><dt>นับจาก</dt><dd>เบอร์โทรในออเดอร์ (ไม่นับซ้ำ) · ช่องทางที่ไม่มีเบอร์ลูกค้า (เช่น ตัวแทน / ห้าง) ไม่นับ</dd>
+      <dt>ลูกค้าใหม่</dt><dd>เบอร์ที่ซื้อครั้งแรกในช่วงนี้</dd></dl></div>`;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-tsales],[data-tads],[data-tcust]'); if (!t) return;
+  e.stopPropagation();
+  if (t.dataset.tsales) { const [ch, a, b, sku, sub, mode] = t.dataset.tsales.split('|'); traceSales(a, b, ch || null, sku || null, sub || null, mode || null); }
+  else if (t.dataset.tcust) { const [ch, a, b, sub] = t.dataset.tcust.split('|'); traceCustomers(a, b, ch || null, sub || null); }
+  else { const [ch, a, b] = t.dataset.tads.split('|'); traceAds(a, b, ch || null); }
+});
+
 async function renderHome() {
   const el = document.getElementById('homeBody'); if (!el) return;
   document.getElementById('loadingOverlay')?.classList.add('hidden');   // หน้าแรกไม่ต้องรอข้อมูลก้อนใหญ่ของหน้าภาพรวม
@@ -8434,14 +8554,14 @@ async function renderHome() {
       : cum && one ? `<span class="ui-badge is-click" onclick="homePreset('m0')" data-tip="${c === 'Modern Trade' ? 'ห้างส่งรายงานยอดเป็นรายเดือน' : 'ตัวแทนสั่งเป็นก้อน ไม่ได้สั่งทุกวัน'} กดเพื่อดูยอดเดือนนี้">ดูยอดเดือนนี้</span>` : '';
     const share = cur.rev ? g.rev / cur.rev * 100 : 0, pp = one ? p.rev / 7 : p.rev;
     return `<tr${st ? ' class="is-stale"' : ''}><td>${name}${tag}</td>
-      <td class="num">${mute(money(g.rev))}</td>
+      <td class="num">${g.rev ? `<span class="pl-trace" data-tsales="${c}|${A}|${B}">${mute(money(g.rev))}</span>` : mute(money(g.rev))}</td>
       <td class="num"><span class="ui-share">${share.toFixed(1)}%<span class="ui-share-track"><b style="width:${(g.rev / maxRev * 100).toFixed(1)}%;--c:${HM_CH[c][0]};"></b></span></span></td>
       <td class="num">${mute(fmt(g.ord))}</td>
       <td class="num">${cum ? dash : g.aov ? money(g.aov) : dash}</td>
-      <td class="num">${g.ads ? money(g.ads) : dash}</td>
+      <td class="num">${g.ads ? `<span class="pl-trace" data-tads="${c}|${A}|${B}">${money(g.ads)}</span>` : dash}</td>
       <td class="num">${g.ads && g.rev ? roasTxt(g.roas) : dash}</td>
       <td class="num">${(cum && one) || (st && one) ? dash : delta(pct(g.rev, pp))}</td></tr>` + (c === 'Facebook' && prAds ? `<tr class="hm-sub-row"><td><span class="hm-ch-name">${dot('Facebook')}<span class="ui-muted">Facebook PR / KOL</span></span><span class="ui-badge" data-tip="ค่า Ads ที่ไม่ได้ขายของโดยตรง (PR / boost โพสต์ KOL) แสดงให้เห็นค่าใช้จ่าย แต่ไม่นับใน ROAS">ไม่นับ ROAS</span></td>
-      <td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${money(prAds)}</td><td class="num">${dash}</td><td class="num">${dash}</td></tr>` : '');
+      <td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num"><span class="pl-trace" data-tads="Facebook PR|${A}|${B}">${money(prAds)}</span></td><td class="num">${dash}</td><td class="num">${dash}</td></tr>` : '');
   }).join('');
 
   const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, title = tt ? (x.title || x.item_id) : x.name;
@@ -8522,10 +8642,10 @@ async function renderHome() {
     <div class="hm-grid2">
       <section class="hm-panel"><div class="hm-panel-h"><h2>สินค้าขายดี${dayTag}</h2>${link('skuanalysis', 'ดูทั้งหมด')}</div>
         ${(b.top_products || []).map((x, i) => `<div class="hm-it"><div class="hm-rank${i < 3 ? ' top' : ''}">${i + 1}</div>
-          <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>${fmt(Math.round(+x.qty_d || 0))} ชิ้น</span><span>เฉลี่ย 7 วัน ${money(x.avg7)}</span></div></div>
-          <div class="hm-r">${money(x.rev_d)}<small>${delta(pct(+x.rev_d, +x.avg7))}</small></div></div>`).join('') || '<div class="hm-empty">ยังไม่มียอด</div>'}
+          <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>${fmt(Math.round(+x.qty_d || 0))} ชิ้น</span><span>เฉลี่ย 7 วัน <span class="pl-trace" data-tsales="|${homeAdd(B, -7)}|${homeAdd(B, -1)}|${esc(x.parent_sku)}||avg">${money(x.avg7)}</span></span></div></div>
+          <div class="hm-r"><span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span><small>${delta(pct(+x.rev_d, +x.avg7))}</small></div></div>`).join('') || '<div class="hm-empty">ยังไม่มียอด</div>'}
         <div class="hm-sub">ขยับแรงเทียบเฉลี่ย 7 วัน</div>
-        ${(b.movers || []).map(x => `<div class="hm-it no-lead"><div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>เฉลี่ย ${money(x.avg7)} → ${money(x.rev_d)}</span></div></div><div class="hm-r">${delta(+x.chg * 100)}</div></div>`).join('') || '<div class="hm-empty">—</div>'}
+        ${(b.movers || []).map(x => `<div class="hm-it no-lead"><div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>เฉลี่ย <span class="pl-trace" data-tsales="|${homeAdd(B, -7)}|${homeAdd(B, -1)}|${esc(x.parent_sku)}||avg">${money(x.avg7)}</span> → <span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span></span></div></div><div class="hm-r">${delta(+x.chg * 100)}</div></div>`).join('') || '<div class="hm-empty">—</div>'}
       </section>
       <section class="hm-panel"><div class="hm-panel-h"><h2>สต็อกต้องระวัง</h2>${link('supply', 'ไป Supply Chain')}</div>
         <div class="hm-lv"><span class="hm-lv-n l1">1</span>ทั้งบริษัท — ต้องสั่งผลิต / ตามของ ${info('hm-i-l1', 'นับของทุกคลัง รวมของที่ผลิตเสร็จฝากไว้ที่โรงงาน<br>แสดงเฉพาะตัวที่พอขายได้ไม่ถึง 30 วัน')}</div>
@@ -9012,7 +9132,7 @@ function renderCostPage() {
   if (window._biLoading) return;
   window._biLoading = true;
   const s = document.createElement('script');
-  s.src = 'bizinsight.js?v=20261015a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
+  s.src = 'bizinsight.js?v=20261015b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
   s.onload = () => { window._biLoading = false; if (currentPage === 'cost') window.renderBizInsight(); };
   s.onerror = () => { window._biLoading = false; document.getElementById('page-cost').innerHTML = '<div class="error-banner" style="display:block;">โหลด bizinsight.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -9879,7 +9999,7 @@ async function renderTta() {
   const cpoTip = 'ค่า Ads จริงทั้งระบบ ÷ จำนวนออเดอร์จริงทั้งระบบ';
   document.getElementById('tta-kpis').innerHTML = `
     <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คลิปที่ยิง Ads</div><div class="kpi-value">${fmt(ttaClipTotal())}</div><div class="kpi-sub"><span style="color:var(--blue);">${fmt(ttaClipTotal(true))} Deesay</span> / <span style="color:#a78bfa;">${fmt(ttaClipTotal() - ttaClipTotal(true))} affi-KOL</span></div></div>
-    <div class="card" style="flex:1;min-width:160px;position:relative;"><div class="card-title">ค่า Ads รวม (ยอดจริงทั้งระบบ) ${fbeInfoIcon('tta-kpi-spend', spendTip)}</div><div class="kpi-value" style="color:var(--accent);">${fmt(totalSpend)}</div></div>
+    <div class="card" style="flex:1;min-width:160px;position:relative;"><div class="card-title">ค่า Ads รวม (ยอดจริงทั้งระบบ) ${fbeInfoIcon('tta-kpi-spend', spendTip)}</div><div class="kpi-value" style="color:var(--accent);"><span class="pl-trace" data-tads="TikTok|${getDateValue('From')}|${getDateValue('To')}">${fmt(totalSpend)}</span></div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ยอดขาย TikTok Shop ${fbeInfoIcon('tta-kpi-rev', revTip)}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalPurchaseValue)}</div></div>
     <div class="card" style="flex:1;min-width:130px;position:relative;"><div class="card-title">ROAS รวม ${fbeInfoIcon('tta-kpi-roas', roasTip)}</div><div class="kpi-value" style="color:var(--green);">${overallRoas!==null?overallRoas.toFixed(2)+'x':'—'}</div></div>
     <div class="card" style="flex:1;min-width:150px;position:relative;"><div class="card-title">GMV Max Orders ${fbeInfoIcon('tta-kpi-orders', ordersTip)}</div><div class="kpi-value" style="color:var(--green);">${fmt(totalOrders)}</div><div class="kpi-sub">CPO เฉลี่ย ${fbeInfoIcon('tta-kpi-cpo', cpoTip)} ${totalOrders?Math.round(totalSpend/totalOrders):'—'}</div></div>
@@ -9915,7 +10035,9 @@ async function renderTtaDailyReport() {
   document.getElementById('theadTtaDailyRep').innerHTML = `<tr><th class="sortable-th" data-k="date" style="cursor:pointer;">วันที่ <span class="sort-ind">${ind('date')}</span></th>${ks.map(k => `<th class="sortable-th" data-k="${k}" style="cursor:pointer;">${M[k].label} <span class="sort-ind">${ind(k)}</span></th>`).join('')}</tr>`;
   document.querySelectorAll('#theadTtaDailyRep th.sortable-th').forEach(th => th.onclick = () => { const k = th.dataset.k; if (_ttaDrSort === k) _ttaDrDir = _ttaDrDir === 'desc' ? 'asc' : 'desc'; else { _ttaDrSort = k; _ttaDrDir = 'desc'; } renderTtaDailyReport(); });
   document.getElementById('tta-dr-count').textContent = `(${fmt(rows.length)} วัน)`;
-  tb.innerHTML = rows.map(r => `<tr><td style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;">${new Date(r.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}</td>${ks.map(k => `<td>${F[k](r)}</td>`).join('')}</tr>`).join('')
+  // (2026-10-15) ยอดขาย / ค่า Ads ของวันนั้น กดดูที่มาได้ (ตัวอื่นคิดจากสองตัวนี้ในแถวเดียวกัน)
+  const dd = r => String(r.date).slice(0, 10), TRK = { sales: r => `data-tsales="TikTok|${dd(r)}|${dd(r)}"`, spend: r => `data-tads="TikTok|${dd(r)}|${dd(r)}"` };
+  tb.innerHTML = rows.map(r => `<tr><td style="white-space:nowrap;">${new Date(r.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}</td>${ks.map(k => `<td>${TRK[k] ? `<span class="pl-trace" ${TRK[k](r)}>${F[k](r)}</span>` : F[k](r)}</td>`).join('')}</tr>`).join('')
     || `<tr><td colspan="${ks.length + 1}" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>`;
   updateMetricCount('ttaDailyRep');
 }
