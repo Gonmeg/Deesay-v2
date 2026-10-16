@@ -584,6 +584,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
   /* (2026-10-15) สถานะข้อมูล: ปุ่มเล็กข้างชื่อหน้า + แผงรายละเอียด (รวมทุกคำเตือนของหน้าไว้ที่เดียว) */
   .tb-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .page-sub { font-size: 12.5px; color: var(--text3); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .page-sub:empty { display: none; }
   .dg-wrap { position: relative; display: inline-flex; }
   .dg-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--bg2); border-radius: 999px; padding: 3px 10px 3px 8px; font: inherit; font-size: 12px; color: var(--text3); cursor: pointer; white-space: nowrap; }
   .dg-chip:hover { color: var(--text); border-color: var(--text3); }
@@ -595,7 +597,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .dg-pop { position: absolute; top: calc(100% + 8px); left: 0; z-index: 2500; width: 380px; max-width: 86vw; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 14px 16px; font-size: 12.5px; color: var(--text2); line-height: 1.6; }
   .dg-pop h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); }
   .dg-pop .it { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
-  .dg-pop .it:last-of-type { border-bottom: 0; }
+  .dg-pop .its > .it:last-child { border-bottom: 0; }
   .dg-pop .it i { flex: none; width: 7px; height: 7px; border-radius: 50%; margin-top: 7px; background: var(--good); }
   .dg-pop .it.warn i { background: var(--warn); } .dg-pop .it.bad i { background: var(--bad); }
   .dg-pop .it b { color: var(--text); font-weight: 600; } .dg-pop .meta { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); color: var(--text3); font-size: 11.5px; }
@@ -755,7 +757,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-i</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -778,7 +780,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
 <div class="main">
   <div class="topbar">
-    <div class="tb-title"><div class="page-title" id="pageTitle">ภาพรวมยอดขาย</div>
+    <div class="tb-title"><div class="page-title" id="pageTitle">ภาพรวมยอดขาย</div><span class="page-sub" id="pageSub"></span>
       <!-- (2026-10-15) สถานะข้อมูลแบบ Seller Centre: จุดสี + เวลาอัปเดต ข้างชื่อหน้า · กดดูรายละเอียด (แทนแถบในหน้า) -->
       <span class="dg-wrap"><button type="button" class="dg-chip" id="dgChip" onclick="dgPopToggle(event)" style="display:none;"></button><div class="dg-pop" id="dgPop" hidden></div></span></div>
     <div class="filters">
@@ -7590,9 +7592,9 @@ function dgShow(page) {
     chip.style.display = '';
     chip.className = 'dg-chip ' + (lvl === 'ok' ? '' : lvl);
     chip.innerHTML = `<i></i>${lvl === 'ok' ? (atTxt ? 'Updated ' + atTxt : 'Data OK') : `${items.length} ${items.length > 1 ? 'alerts' : 'alert'}`}`;
-    chip.title = lvl === 'ok' ? 'ข้อมูลของหน้านี้ครบ' : 'กดดูเรื่องที่ควรรู้ก่อนดูตัวเลข';
-    _dgLast = `<h4>${lvl === 'ok' ? '✓ ข้อมูลของหน้านี้ครบ' : `Alerts · เรื่องที่ควรรู้ก่อนดูตัวเลข`}</h4>`
-      + (items.length ? items.map(x => `<div class="it ${x.level}"><i></i><div><b>${x.title}</b>${x.detail ? `<div>${x.detail}</div>` : ''}</div></div>`).join('') : '<div class="it"><i></i><div>ทุกแหล่งข้อมูลเข้าครบตามรอบ และตัวเลขข้ามหน้าตรงกัน</div></div>')
+    chip.removeAttribute('title');
+    _dgLast = `<h4>${lvl === 'ok' ? '✓ ข้อมูลของหน้านี้ครบ' : items.length > 1 ? 'Alerts' : 'Alert'}</h4><div class="its">`
+      + (items.length ? items.map(x => `<div class="it ${x.level}"><i></i><div><b>${x.title}</b>${x.detail ? `<div>${x.detail}</div>` : ''}</div></div>`).join('') : '<div class="it"><i></i><div>ทุกแหล่งข้อมูลเข้าครบตามรอบ และตัวเลขข้ามหน้าตรงกัน</div></div>') + '</div>'
       + `<div class="meta">${atTxt ? 'ระบบตรวจล่าสุด ' + atTxt + ' (ตรวจอัตโนมัติทุกชั่วโมง)' : ''}${sched ? `<br>รอบอัปเดต: ${sched}` : ''}</div>`;
     if (!pop.hidden) pop.innerHTML = _dgLast;
   };
@@ -7606,7 +7608,7 @@ function dgShow(page) {
     draw(mine, at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '');
   }).catch(() => draw([], ''));
 }
-{ const _sp = showPage; showPage = function (page) { const r = _sp.apply(this, arguments); try { dgShow(page); } catch (e) {} return r; }; }
+{ const _sp = showPage; showPage = function (page) { const ps = document.getElementById('pageSub'); if (ps) ps.innerHTML = ''; const r = _sp.apply(this, arguments); try { dgShow(page); } catch (e) {} return r; }; }
 setTimeout(() => { try { dgShow(currentPage); } catch (e) {} }, 2500);   // หน้าแรกที่เปิดตอนโหลด
 setInterval(() => { try { dgShow(currentPage); } catch (e) {} }, 600000);   // อัปเดตทุก 10 นาที
 
@@ -8380,8 +8382,7 @@ const HM_ROAS_X = ['Modern Trade', 'ตัวแทน', 'Facebook PR'], HM_ONLI
    // (2026-09-30) ห้างส่งยอดรายเดือน / ตัวแทนสั่งเป็นก้อน → ดูยอดสะสมเดือนนี้ ไม่นับเป็น "ยังไม่อัปยอด"
 function homeGo(page) { const el = document.querySelector(`.nav-item[onclick*="'${page}'"]`); if (el || Auth.canPage(page)) showPage(page, null, el); }
 function homeIso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-const HOME_SKEL = `<div class="hm-head"><div><div class="skeleton" style="height:22px;width:200px;margin-bottom:8px;"></div><div class="skeleton" style="height:13px;width:260px;"></div></div></div>
-  <div class="skeleton" style="height:106px;border-radius:10px;"></div><div class="hm-gap"></div><div class="skeleton" style="height:300px;border-radius:10px;"></div>`;
+const HOME_SKEL = `  <div class="skeleton" style="height:106px;border-radius:10px;"></div><div class="hm-gap"></div><div class="skeleton" style="height:300px;border-radius:10px;"></div>`;
 let _homeLatest = null, _homeBrief0 = null, _homeRange = { p: 'd', a: null, b: null };
 // (2026-10-07 รอบ 3) หน้าแรกตามหน้าตัวอย่างที่เมฆเลือก: ปุ่มช่วงวันที่แถบบน · ตัวเลขหลัก 6 ช่อง (กดเลือกเส้นกราฟได้) · กราฟ · ตารางช่องทางแบบตัวอย่าง
 // ตัวเลขช่วงวันที่ทั้งหมดมาจาก home_trend (mv_sales_daily + mv_ad_spend_daily แหล่งเดียวกับ home_brief) → การ์ด = ตาราง = กราฟ เสมอ
@@ -8693,10 +8694,11 @@ async function renderHome() {
       <div class="hm-days ${cv < 3 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="hm-none">✓ คลัง 111/53 + 44/1 พอขายทุกตัว</div>';
 
   el.classList.remove('is-loading'); el.dataset.loaded = '1';
+  // (2026-10-16) วันที่ + ช่วงที่เทียบ อยู่บรรทัดเดียวกับชื่อหน้าด้านบน (ไม่ทำหัวข้อซ้ำในหน้า)
+  const ps = document.getElementById('pageSub');
+  if (ps && currentPage === 'home') ps.innerHTML = `· ${one ? new Date(B + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) + ' · เทียบเฉลี่ยรายวัน ' + dShort(pA) + ' – ' + dShort(pB)
+    : dShort(A) + ' – ' + dLong(B) + ' (' + n + ' วัน) · เทียบ ' + dShort(pA) + ' – ' + dShort(pB)} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน')}`;
   el.innerHTML = `
-    <div class="hm-head"><div>
-      <h1>${one ? 'สรุปประจำวัน' : 'สรุปยอดขาย'} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน')}</h1>
-      <p>${one ? new Date(B + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : `${dShort(A)} – ${dLong(B)} (${n} วัน)`} · ${cmpLong}</p></div></div>
 
     <section class="ui-metrics hm-metrics" aria-label="ตัวเลขหลัก">
       ${metric('sales', 'ยอดขายรวม', money(cur.rev), delta(pct(curC.rev, prv.rev)))}
