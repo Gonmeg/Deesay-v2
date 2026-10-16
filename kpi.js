@@ -235,7 +235,9 @@
       const late = ONLINE.filter(c => (!S.F || S.F === c) && K.last[c] && K.last[c] < YEST);
       if (late.length) h += `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยอดบางช่องทางยังไม่ถึง ${dShort(YEST)}</b><span>${late.map(c => `${c} ถึง ${dShort(K.last[c])}`).join(' · ')} — "ควรได้ถึงวันนี้" ของช่องนั้นนับถึงวันที่มีข้อมูล ไม่ทำให้ดูช้ากว่าเป้าเกินจริง</span></div>`;
       const part = ONLINE.filter(c => (!S.F || S.F === c) && K.partial[c]);
-      if (part.length) h += `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยอดบางวันยังเข้าไม่ครบ</b><span>${part.map(c => `${c} ${dShort(K.partial[c].d)} เข้ามา ${money(K.partial[c].v)} (${Math.round(K.partial[c].f * 100)}% ของวันปกติ ~${money(K.partial[c].med)})`).join(' · ')} — นับวันนั้นตามสัดส่วนที่เข้ามา จะได้ไม่ดูช้ากว่าเป้าเกินจริง (ข้อมูลครบเมื่อไรตัวเลขจะปรับเอง)</span></div>`;
+      // (2026-10-15) แจ้งที่ปุ่มสถานะข้อมูลข้างชื่อหน้า แทนแถบในหน้า (ในตารางยังมีป้าย "เข้า xx%" ตรงช่องทางนั้น)
+      if (window.pageNote) window.pageNote('kpi', 'partial', part.length ? 'warn' : null, 'ยอดบางวันยังเข้าไม่ครบ',
+        part.map(c => `${c} ${dShort(K.partial[c].d)} เข้ามา ${money(K.partial[c].v)} (${Math.round(K.partial[c].f * 100)}% ของวันปกติ ~${money(K.partial[c].med)})`).join(' · ') + ' — นับวันนั้นตามสัดส่วนที่เข้ามา ข้อมูลครบเมื่อไรตัวเลขจะปรับเอง');
     }
     $('kpNote').innerHTML = h;
   }
@@ -408,6 +410,7 @@
   }
   const th = (label, k, cls) => `<th class="${cls || 'num'}" data-sort="${k}"${S.sort.k === k ? ` aria-sort="${S.sort.d < 0 ? 'descending' : 'ascending'}"` : ''}>${label}</th>`;
 
+  const mEndK = mo => { const [y, m] = String(mo).slice(0, 7).split('-').map(Number); return `${String(mo).slice(0, 7)}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`; };
   function prodPanel(K) {
     const u = S.unit, fm = fmU(u), lc = lastComplete(S.mo);
     let rows = sortRows(prodData(K), K);
@@ -432,18 +435,20 @@
       head = `<tr>${th('สินค้า', 'name', '')}${CH.map(c => th(`${dot(c)}${c === 'Modern Trade' ? 'MT' : esc(c)}`, 'ch:' + c)).join('')}${th('รวม', 't')}</tr>`;
       const mcell = (c, x, sku) => {
         const g = agg(K, [{ c, x }], u), st = status(K, g);
+        // (2026-10-15) ยอดที่ทำได้ กดดูที่มาได้ (แยกเพจ / ร้าน · รายวัน) — ช่วงทั้งเดือนที่เลือก
+        const aV = sku && g.a ? `<span class="pl-trace" data-tsales="${c}|${S.mo}-01|${mEndK(S.mo)}|${sku}">${fm(g.a)}</span>` : fm(g.a);
         if (K.st === 'future') { const la = act(lc, sku, c)[u === 'rev' ? 1 : 0]; return `<td class="num kp-cell"><div class="kp-a">${g.t != null ? fm(g.t) : '<span class="ui-muted">—</span>'}</div><div class="kp-p flat">${la ? mShort(lc) + ' ' + fm(la) : ''}</div></td>`; }
         if (!g.a && g.t == null) return '<td class="num kp-cell"><span class="ui-muted">—</span></td>';
         if (K.st === 'cur') {   // (2026-10-12) ออนไลน์ = เทียบเป้าถึงวันนี้ · ตัวแทน / MT = % ของเป้าทั้งเดือน สีเทา · มีเป้าแต่ยังไม่มียอด = 0
           const g2 = agg(K, [{ c, x }], oU(u)), gR = u === 'rev' ? g : g2, gQ = u === 'rev' ? g2 : g;
           const tLine = x.tq != null ? `เป้าเดือน ${fmt(x.tq)} ชิ้น × ${money(x.p.v)} = ${money(x.tr)}` : 'ยังไม่ได้ตั้งเป้า';
-          if (isBulk(c)) return `<td class="num kp-cell" data-tip="${esc(c + (c === 'ตัวแทน' ? ' สั่งเป็นก้อน' : ' ห้างส่งยอดเป็นรายเดือน') + ' · % ของเป้าทั้งเดือน · ' + tLine + ' · ทำได้ ' + fmt(x.aq) + ' ชิ้น ' + money(x.ar))}"><div class="kp-a">${fm(g.a)}</div>${tgtLine(g, fm, u)}${ofTarget(g)}</td>`;
+          if (isBulk(c)) return `<td class="num kp-cell" data-tip="${esc(c + (c === 'ตัวแทน' ? ' สั่งเป็นก้อน' : ' ห้างส่งยอดเป็นรายเดือน') + ' · % ของเป้าทั้งเดือน · ' + tLine + ' · ทำได้ ' + fmt(x.aq) + ' ชิ้น ' + money(x.ar))}"><div class="kp-a">${aV}</div>${tgtLine(g, fm, u)}${ofTarget(g)}</td>`;
           const tipC = x.tq != null ? `${c} · ${tLine} · ควรได้ถึงวันนี้ (ขีด) ${money(gR.ex)} · ทำได้ ${fmt(x.aq)} ชิ้น ${money(x.ar)} · คาดการณ์สิ้นเดือน ${money(gR.pj)} ≈ ${fmt(gQ.pj)} ชิ้น (${fcTip(gR, gQ)}) · ${st.l}` : `${c} · ยังไม่ได้ตั้งเป้า · ทำได้ ${fmt(x.aq)} ชิ้น ${money(x.ar)}`;
-          return `<td class="num kp-cell" data-tip="${esc(tipC)}"><div class="kp-a">${fm(g.a)}</div>${tgtLine(g, fm, u)}${g.t != null ? paceProg(g, st) : '<div class="kp-p flat">ไม่มีเป้า</div>'}</td>`;
+          return `<td class="num kp-cell" data-tip="${esc(tipC)}"><div class="kp-a">${aV}</div>${tgtLine(g, fm, u)}${g.t != null ? paceProg(g, st) : '<div class="kp-p flat">ไม่มีเป้า</div>'}</td>`;
         }
         const tick = null;
         const tip = g.t != null ? `${c} · เป้า ${fm(g.t)}${K.st === 'cur' && !isBulk(c) ? ` · ควรได้ถึงวันนี้ ${fm(g.ex)} · คาดการณ์ ${fm(g.pj)}` : ''} · ${st.l}` : `${c} · ยังไม่ได้ตั้งเป้า`;
-        return `<td class="num kp-cell" data-tip="${esc(tip)}"><div class="kp-a">${fm(g.a)}</div>${prog(g, st, tick)}</td>`;
+        return `<td class="num kp-cell" data-tip="${esc(tip)}"><div class="kp-a">${aV}</div>${prog(g, st, tick)}</td>`;
       };
       // (2026-10-12) คอลัมน์รวม: ยอด = ทุกช่องทาง · % = เทียบเป้าถึงวันนี้ เฉพาะออนไลน์ (ตัวแทน / MT สั่งเป็นก้อน ไม่นับเข้าสี)
       const totCell = (g, cells) => {
