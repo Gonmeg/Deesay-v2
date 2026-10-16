@@ -185,6 +185,14 @@
   function alerts() {
     const rows = (ISS || []).filter(x => { const m = String(x.month).slice(0, 10); return m >= M[A] && m <= M[B]; });
     const el = document.getElementById('biAlert'); if (!el) return;
+    // (2026-10-15) รวมไปที่ปุ่มสถานะข้อมูลข้างชื่อหน้า (แถบเตือนอยู่ที่เดียวทั้งเว็บ) · ในหน้าไม่ขึ้นแถบแล้ว
+    if (window.pageNote) {
+      const w = rows.filter(r => r.sev === '1');
+      window.pageNote('cost', 'acct', rows.length ? (w.length ? 'warn' : 'info') : null,
+        w.length ? `ไฟล์บัญชีมี ${w.length} รายการที่ควรตรวจสอบ` : 'มีรายการพิเศษในช่วงที่เลือก',
+        rows.map(r => `${TH(String(r.month))} · ${esc(r.tag)} — ${esc(r.title)}${r.amount == null ? '' : ' (' + fmt2(+r.amount) + ')'}`).join('<br>'));
+      el.innerHTML = ''; return;
+    }
     if (!rows.length) { el.innerHTML = ''; return; }
     const warn = rows.filter(r => r.sev === '1'), info = rows.filter(r => r.sev !== '1');
     const tags = {}; warn.forEach(r => tags[r.tag] = (tags[r.tag] || 0) + 1);
