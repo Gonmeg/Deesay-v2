@@ -755,7 +755,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-g</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7589,8 +7589,9 @@ function dgShow(page) {
     if (!keys && !sched && !items.length) { chip.style.display = 'none'; pop.hidden = true; return; }
     chip.style.display = '';
     chip.className = 'dg-chip ' + (lvl === 'ok' ? '' : lvl);
-    chip.innerHTML = `<i></i>${lvl === 'ok' ? (atTxt ? 'อัปเดต ' + atTxt : 'ข้อมูลครบ') : `ต้องเช็ค ${items.length} เรื่อง`}`;
-    _dgLast = `<h4>${lvl === 'ok' ? '✓ ข้อมูลของหน้านี้ครบ' : 'เรื่องที่ควรรู้ก่อนดูตัวเลข'}</h4>`
+    chip.innerHTML = `<i></i>${lvl === 'ok' ? (atTxt ? 'Updated ' + atTxt : 'Data OK') : `${items.length} ${items.length > 1 ? 'alerts' : 'alert'}`}`;
+    chip.title = lvl === 'ok' ? 'ข้อมูลของหน้านี้ครบ' : 'กดดูเรื่องที่ควรรู้ก่อนดูตัวเลข';
+    _dgLast = `<h4>${lvl === 'ok' ? '✓ ข้อมูลของหน้านี้ครบ' : `Alerts · เรื่องที่ควรรู้ก่อนดูตัวเลข`}</h4>`
       + (items.length ? items.map(x => `<div class="it ${x.level}"><i></i><div><b>${x.title}</b>${x.detail ? `<div>${x.detail}</div>` : ''}</div></div>`).join('') : '<div class="it"><i></i><div>ทุกแหล่งข้อมูลเข้าครบตามรอบ และตัวเลขข้ามหน้าตรงกัน</div></div>')
       + `<div class="meta">${atTxt ? 'ระบบตรวจล่าสุด ' + atTxt + ' (ตรวจอัตโนมัติทุกชั่วโมง)' : ''}${sched ? `<br>รอบอัปเดต: ${sched}` : ''}</div>`;
     if (!pop.hidden) pop.innerHTML = _dgLast;
@@ -8619,6 +8620,9 @@ async function renderHome() {
   const stOf = c => !CT[c] || CT[c] >= B ? '' : rows.some(r => r.ch === c && r.date === B && (+r.rev || +r.ord)) ? 'partial' : 'pending';
   const stName = x => x === 'pending' ? 'Pending upload' : 'Partial';
   const stale = inc.map(c => ({ c, s: stOf(c) }));
+  // (2026-10-16) แจ้งยอดที่ยังเข้าไม่ครบที่ปุ่มสถานะข้อมูลข้างชื่อหน้า (ที่เดียว) แทนแถบในหน้า
+  if (window.pageNote) window.pageNote('home', 'stale', stale.length ? 'warn' : null, `ยอดของ ${dShort(B)} ยังเข้าไม่ครบ`,
+    `${stale.map(x => esc(x.c) + ' (' + stName(x.s) + ')').join(', ')} · ยอดรวมยังไม่ครบ ส่วนการเทียบ ROAS และสินค้าขายดี/ขยับแรง คิดเฉพาะช่องทางที่ยอดเข้าครบ`);
   // สะสมเดือนนี้: เฉพาะออนไลน์ (ไม่นับตัวแทน / MT) · แต่ละช่องทางนับถึงวันที่ยอดเข้าครบ เทียบเดือนก่อนช่วงวันเดียวกัน
   const mS = B.slice(0, 8) + '01', pmS = homePrevMonthStart(B), pmE = homeAdd(mS, -1);
   const T = HM_ONLINE.reduce((t, c) => { const L = CT[c] && CT[c] < B ? CT[c] : B; if (L < mS) return t;
@@ -8693,7 +8697,7 @@ async function renderHome() {
     <div class="hm-head"><div>
       <h1>${one ? 'สรุปประจำวัน' : 'สรุปยอดขาย'} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน')}</h1>
       <p>${one ? new Date(B + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : `${dShort(A)} – ${dLong(B)} (${n} วัน)`} · ${cmpLong}</p></div></div>
-    ${stale.length ? `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยอดของ ${dShort(B)} ยังเข้าไม่ครบ</b><span>${stale.map(x => esc(x.c) + ' (' + stName(x.s) + ')').join(', ')} · ยอดรวมยังไม่ครบ ส่วนการเทียบและ ROAS คิดเฉพาะช่องทางที่ยอดเข้าครบ</span></div>` : ''}
+
     <section class="ui-metrics hm-metrics" aria-label="ตัวเลขหลัก">
       ${metric('sales', 'ยอดขายรวม', money(cur.rev), delta(pct(curC.rev, prv.rev)))}
       ${metric('orders', 'ออเดอร์', fmt(cur.ord), delta(pct(curC.ord, prv.ord)))}
@@ -8726,12 +8730,12 @@ async function renderHome() {
     </div>
     <div class="hm-gap"></div>
     <div class="hm-grid2">
-      <section class="hm-panel"><div class="hm-panel-h"><h2>สินค้าขายดี${dayTag}</h2>${link('skuanalysis', 'ดูทั้งหมด')}</div>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>สินค้าขายดี${dayTag} ${info('hm-i-top', `<b>ตัวเลขขวา</b> ยอดขายของ ${dShort(B)} · % เทียบกับยอดปกติ<br><b>ปกติวันละ</b> = ยอดขายเฉลี่ยต่อวันของ 7 วันก่อนหน้า (${dShort(homeAdd(B, -7))} – ${dShort(homeAdd(B, -1))}) คือยอดรวม 7 วัน ÷ 7<br>ช่องทางที่ยอดของวันนั้นยังเข้าไม่ครบ ไม่นับทั้งยอดวันนั้นและค่าเฉลี่ย`)}</h2>${link('skuanalysis', 'ดูทั้งหมด')}</div>
         ${(b.top_products || []).map((x, i) => `<div class="hm-it"><div class="hm-rank${i < 3 ? ' top' : ''}">${i + 1}</div>
-          <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>${fmt(Math.round(+x.qty_d || 0))} ชิ้น</span><span>เฉลี่ย 7 วัน <span class="pl-trace" data-tsales="|${homeAdd(B, -7)}|${homeAdd(B, -1)}|${esc(x.parent_sku)}||avg">${money(x.avg7)}</span></span></div></div>
+          <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>${fmt(Math.round(+x.qty_d || 0))} ชิ้น</span><span>ปกติวันละ ${money(x.avg7)}</span></div></div>
           <div class="hm-r"><span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span><small>${delta(pct(+x.rev_d, +x.avg7))}</small></div></div>`).join('') || '<div class="hm-empty">ยังไม่มียอด</div>'}
-        <div class="hm-sub">ขยับแรงเทียบเฉลี่ย 7 วัน</div>
-        ${(b.movers || []).map(x => `<div class="hm-it no-lead"><div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>เฉลี่ย <span class="pl-trace" data-tsales="|${homeAdd(B, -7)}|${homeAdd(B, -1)}|${esc(x.parent_sku)}||avg">${money(x.avg7)}</span> → <span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span></span></div></div><div class="hm-r">${delta(+x.chg * 100)}</div></div>`).join('') || '<div class="hm-empty">—</div>'}
+        <div class="hm-sub">ขยับแรง · เทียบยอดปกติต่อวัน (เฉลี่ย ${dShort(homeAdd(B, -7))} – ${dShort(homeAdd(B, -1))})</div>
+        ${(b.movers || []).map(x => `<div class="hm-it no-lead"><div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>ปกติวันละ ${money(x.avg7)} → ${dShort(B)} <span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span></span></div></div><div class="hm-r">${delta(+x.chg * 100)}</div></div>`).join('') || '<div class="hm-empty">—</div>'}
       </section>
       <section class="hm-panel"><div class="hm-panel-h"><h2>สต็อกต้องระวัง</h2>${link('supply', 'ไป Supply Chain')}</div>
         <div class="hm-lv"><span class="hm-lv-n l1">1</span>ทั้งบริษัท — ต้องสั่งผลิต / ตามของ ${info('hm-i-l1', 'นับของทุกคลัง รวมของที่ผลิตเสร็จฝากไว้ที่โรงงาน<br>แสดงเฉพาะตัวที่พอขายได้ไม่ถึง 30 วัน')}</div>
