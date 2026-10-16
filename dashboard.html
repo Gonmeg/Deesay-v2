@@ -730,7 +730,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.15-t</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.16-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1685,10 +1685,12 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div id="ttaTablePager"></div>
       </div>
 
-      <!-- (2026-09-19) GMV Max รายสินค้า — ตัวเลขจาก TikTok ตรงๆ ไม่มีการปันส่วน · อยู่ล่างสุดของหน้า -->
+      <!-- (2026-09-19) GMV Max รายสินค้า · อยู่ล่างสุดของหน้า
+           (2026-10-16) TikTok ให้ค่าแอดเป็นรายตะกร้า → แบ่งค่าแอดของแต่ละตะกร้าลงสินค้าตามที่ขายออกจริงในตะกร้านั้น (mv_tt_listing_w) · กดสินค้าเพื่อดูรายตะกร้า (ชื่อ/รูปจาก TikTok Shop) -->
       <div class="card" id="ttProductCard" style="margin-bottom:20px;overflow:hidden;">
         <div class="section-header">
-          <div class="section-title">GMV Max รายสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เฉพาะแคมเปญแบบยิงสินค้า — ไม่รวมไลฟ์และ Ads awareness)</span></div>
+          <div class="section-title">GMV Max รายสินค้า <span style="font-size:11px;color:var(--text3);font-weight:400;">(เฉพาะแคมเปญแบบยิงสินค้า — ไม่รวมไลฟ์และ Ads awareness) · กดที่สินค้าเพื่อดูรายตะกร้า</span>
+            <span class="tr-i" data-tip="TikTok ส่งค่าแอด GMV Max มาเป็น<b>รายตะกร้า</b> (สินค้าบนหน้าร้าน) · ระบบแบ่งค่าแอดของแต่ละตะกร้าลงสินค้า <b>ตามสินค้าที่ขายออกจริงในตะกร้านั้น</b> (ออเดอร์ TikTok เดือนเดียวกัน ไม่นับของแถม) · ตะกร้าที่ขายสินค้าเดียวลงสินค้านั้นเต็ม 100%" style="cursor:help;color:var(--text3);font-size:11px;">ⓘ</span></div>
           <button class="btn btn-ghost" onclick="exportTtProduct()">⬇ Export CSV</button>
         </div>
         <div id="ttProductSummary" style="font-size:11px;color:var(--text3);padding:0 2px 10px;"></div>
@@ -7647,6 +7649,7 @@ async function idbClearAll() {
 
 // ===== COST PAGE =====
 let _ttProductRows = [], _ttProductSeries = {}, _ttProductLabels = [], _ttProductGrain = 'month';
+let _ttProductBaskets = {}, _ttProductOpen = new Set();   // (2026-10-16) รายตะกร้าต่อสินค้า (จาก tta_product_rollup.baskets)
 let _ttProductSortCol = 'ads', _ttProductSortDir = 'desc', _ttProductRange = '', _ttProductPicked = null;
 const TTP_COLORS = ['#60a5fa', '#f472b6', '#4ade80', '#fbbf24', '#a78bfa', '#38bdf8', '#fb923c', '#34d399', '#f87171', '#c084fc'];
 
@@ -7674,6 +7677,10 @@ async function renderTtProduct() {
     _ttProductRows = (d.products || []).map(a => ({
       sku: a[0], name: a[1], ads: +a[2] || 0, gmv: +a[3] || 0, orders: +a[4] || 0,
       roi: (+a[2] > 0) ? (+a[3] / +a[2]) : null, cpo: (+a[4] > 0) ? (+a[2] / +a[4]) : null }));
+    _ttProductBaskets = {};
+    (d.baskets || []).forEach(b => { (_ttProductBaskets[b[0]] ||= []).push({ pid: b[1], title: b[2], img: b[3], ads: +b[4] || 0, gmv: +b[5] || 0, orders: +b[6] || 0,
+      pct: b[7] == null ? null : +b[7], mix: b[8], status: b[9] }); });
+    _ttProductOpen = new Set();
     _ttProductRange = key;
     _ttProductPicked = null;                 // ช่วงใหม่ → กลับไปใช้ค่าเริ่มต้น 5 อันดับแรก
     renderTtProductTable();
@@ -7733,6 +7740,31 @@ function renderTtProductChart() {
     tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(Math.round(c.parsed.y))}` } }
   });
 }
+function ttProductToggle(sku) { if (_ttProductOpen.has(sku)) _ttProductOpen.delete(sku); else _ttProductOpen.add(sku); renderTtProductTable(); }
+const TTP_STATUS = { SELLER_DEACTIVATED: 'ปิดขายแล้ว', PLATFORM_DEACTIVATED: 'ถูกระงับ', DELETED: 'ลบแล้ว', FREEZE: 'ถูกระงับ', DRAFT: 'ฉบับร่าง', PENDING: 'รอตรวจ', FAILED: 'ไม่ผ่านตรวจ' };
+function ttBasketRows(sku) {
+  const list = (_ttProductBaskets[sku] || []).slice().sort((a, b) => b.ads - a.ads);
+  return list.map(b => {
+    const roi = b.ads > 0 ? b.gmv / b.ads : null, cpo = b.orders > 0 ? b.ads / b.orders : null;
+    const st = TTP_STATUS[b.status] ? `<span style="color:#e11d48;"> · ${TTP_STATUS[b.status]}</span>` : '';
+    const split = b.pct != null && b.pct < 99.5 ? `<div style="color:var(--text3);">ค่าแอดตะกร้านี้ลงสินค้านี้ ${Math.round(b.pct)}% · ตะกร้านี้ขาย: ${ttcEsc(b.mix || '')}</div>` : '';
+    const img = b.img ? `<img src="${ttcEscAttr(b.img)}" loading="lazy" referrerpolicy="no-referrer" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex:0 0 34px;background:var(--border);">`
+      : `<div style="width:34px;height:34px;border-radius:6px;flex:0 0 34px;background:var(--border);"></div>`;
+    return `<tr class="ttp-basket" style="background:rgba(96,165,250,0.04);">
+      <td style="padding-left:28px;"><div style="display:flex;gap:10px;align-items:flex-start;">${img}
+        <div style="min-width:0;max-width:460px;font-size:11.5px;line-height:1.35;">
+          <div style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${ttcEsc(b.title || 'ตะกร้า ' + b.pid)}</div>
+          <div style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:10px;">ตะกร้า …${ttcEsc(String(b.pid).slice(-6))}${st}</div>${split}
+        </div></div></td>
+      <td>${fmt(Math.round(b.ads))}</td>
+      <td>${fmt(Math.round(b.gmv))}</td>
+      <td>${fmt(Math.round(b.orders))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</td>
+      <td>${cpo !== null ? fmt(Math.round(cpo)) : '—'}</td>
+      <td></td>
+    </tr>`;
+  }).join('');
+}
 function renderTtProductTable() {
   const total = _ttProductRows.reduce((t, a) => ({ ads: t.ads + a.ads, gmv: t.gmv + a.gmv, orders: t.orders + a.orders }), { ads: 0, gmv: 0, orders: 0 });
   const rows = _ttProductRows.map(a => ({ ...a, share: total.ads > 0 ? a.ads / total.ads * 100 : 0 })).sort((a, b) => {
@@ -7745,8 +7777,8 @@ function renderTtProductTable() {
   const ind = document.getElementById('tps-' + _ttProductSortCol); if (ind) ind.textContent = _ttProductSortDir === 'asc' ? '▲' : '▼';
   document.getElementById('ttProductSummary').innerHTML =
     `รวม ${fmt(rows.length)} สินค้า · ค่า Ads ${fmt(Math.round(total.ads))} · ยอดขาย ${fmt(Math.round(total.gmv))} · ${fmt(Math.round(total.orders))} ออเดอร์ · ROI รวม ${total.ads > 0 ? (total.gmv / total.ads).toFixed(2) + 'x' : '—'}`;
-  document.getElementById('tbodyTtProduct').innerHTML = rows.map(a => `<tr>
-      <td><b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span></td>
+  document.getElementById('tbodyTtProduct').innerHTML = rows.map(a => { const nb = (_ttProductBaskets[a.sku] || []).length, open = _ttProductOpen.has(a.sku); return `<tr ${nb ? `onclick="ttProductToggle('${ttcEscAttr(a.sku)}')" style="cursor:pointer;"` : ''}>
+      <td>${nb ? `<span style="display:inline-block;width:14px;color:var(--text3);">${open ? '▾' : '▸'}</span>` : '<span style="display:inline-block;width:14px;"></span>'}<b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span>${nb ? ` <span style="font-size:10.5px;color:var(--text3);">· ${nb} ตะกร้า</span>` : ''}</td>
       <td style="font-weight:600;">${fmt(Math.round(a.ads))}</td>
       <td>${fmt(Math.round(a.gmv))}</td>
       <td>${fmt(Math.round(a.orders))}</td>
@@ -7754,11 +7786,16 @@ function renderTtProductTable() {
       <td>${a.cpo !== null ? fmt(Math.round(a.cpo)) : '—'}</td>
       <td style="min-width:110px;">${a.share.toFixed(1)}%
         <div style="height:4px;border-radius:2px;background:var(--border);margin-top:3px;"><div style="height:4px;border-radius:2px;width:${Math.min(100, a.share).toFixed(0)}%;background:#22c55e;"></div></div></td>
-    </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
+    </tr>` + (open ? ttBasketRows(a.sku) : ''); }).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
 }
 function exportTtProduct() {
-  const head = ['สินค้า', 'SKU', 'ค่า Ads', 'ยอดขาย GMV', 'ออเดอร์', 'ROI', 'ต้นทุนต่อออเดอร์'];
-  const lines = [head.join(',')].concat(_ttProductRows.map(a => [a.name, a.sku, Math.round(a.ads), Math.round(a.gmv), Math.round(a.orders), a.roi !== null ? a.roi.toFixed(2) : '', a.cpo !== null ? Math.round(a.cpo) : ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')));
+  const head = ['สินค้า', 'SKU', 'ตะกร้า (TikTok)', 'รหัสตะกร้า', 'ค่า Ads', 'ยอดขาย GMV', 'ออเดอร์', 'ROI', 'ต้นทุนต่อออเดอร์', '% ค่าแอดตะกร้าที่ลงสินค้านี้'];
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [head.join(',')];
+  _ttProductRows.forEach(a => {
+    lines.push([a.name, a.sku, 'รวมทุกตะกร้า', '', Math.round(a.ads), Math.round(a.gmv), Math.round(a.orders), a.roi !== null ? a.roi.toFixed(2) : '', a.cpo !== null ? Math.round(a.cpo) : '', ''].map(q).join(','));
+    (_ttProductBaskets[a.sku] || []).forEach(b => lines.push([a.name, a.sku, b.title || '', b.pid, Math.round(b.ads), Math.round(b.gmv), Math.round(b.orders), b.ads > 0 ? (b.gmv / b.ads).toFixed(2) : '', b.orders > 0 ? Math.round(b.ads / b.orders) : '', b.pct ?? ''].map(q).join(',')));
+  });
   const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tiktok-gmvmax-by-product.csv'; a.click();
 }
