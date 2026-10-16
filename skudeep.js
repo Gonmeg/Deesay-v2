@@ -163,7 +163,7 @@
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 14px;"><div style="font-size:18px;font-weight:700;">${esc(d.name || nameOf(d.sku))}</div>
         <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
       <div class="skd-kpis">
-        ${kpi('ยอดขาย ' + info, money(rev), `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
+        ${kpi('ยอดขาย ' + info, `<span class="pl-trace" data-tsales="|${getDateValue('From')}|${getDateValue('To')}|${esc(d.sku)}">${money(rev)}</span>`, `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
         ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', (() => { const r = daily.filter(x => !BULK.includes(x.channel)); const q = r.reduce((t, x) => t + (+x.qty || 0), 0), v = r.reduce((t, x) => t + (+x.rev || 0), 0); return q ? `ราคาเฉลี่ย ${fmt(Math.round(v / q))} / ชิ้น (ไม่รวมตัวแทน / MT)` : ''; })())}
         ${kpi('ค่า Ads', m0(ads), `${pct(ads, rev)} ของยอดขาย · นับ ${mLbl}`)}
         ${kpi('ค่า KOL', m0(kol), `${fmt(new Set((d.kol || []).filter(x => x.in_range !== false).map(x => x.content_code)).size)} งาน · ตามวันโพสต์`)}
