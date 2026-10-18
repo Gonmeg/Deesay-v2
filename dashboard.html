@@ -617,7 +617,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261018a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261018b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -677,7 +677,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .pl-trace { cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); } .pl-trace:hover { text-decoration-color:var(--text); }
 </style>
 </head>
-<body data-ui-select><!-- (2026-10-18) ui.js แปลง dropdown ทุกอันเฉพาะหน้านี้ -->
+<body>
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
@@ -10905,6 +10905,6 @@ window._authP.then(p => {
   setInterval(() => { document.querySelectorAll('select[data-ux]').forEach(sel => { if (sel._uxBtn && sel._uxSig !== sigOf(sel)) sync(sel); }); }, 300);
 })();
 </script>
-<script src="ui.js?v=20261018a" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
+<script src="ui.js?v=20261018b" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
 </body>
 </html>
