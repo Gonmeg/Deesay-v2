@@ -145,7 +145,7 @@
     const abc = ['A', 'B', 'C'].find(x => kids.some(r => r.abc === x));
     // เทรนด์: เดือนล่าสุดที่ครบเดือน เทียบเฉลี่ย 3 เดือนก่อนหน้า
     const byMon = {}; daily.forEach(r => { const m = String(r.d).slice(0, 7); byMon[m] = (byMon[m] || 0) + (+r.rev || 0); });
-    const ms = Object.keys(byMon).sort(); const today = new Date().toISOString().slice(0, 7);
+    const ms = Object.keys(byMon).sort(); const today = fmtDateISO(new Date()).slice(0, 7);   // (2026-10-18) เดือนท้องถิ่น
     const full = ms.filter(m => m < today); let trend = null;
     if (full.length >= 4) { const last = byMon[full[full.length - 1]], prev = full.slice(-4, -1).reduce((t, m) => t + byMon[m], 0) / 3; if (prev > 0) trend = (last - prev) / prev * 100; }
     const badges = (abc ? `<span class="skd-badge${abc === 'A' ? ' g' : ''}">สินค้ากลุ่ม ${abc}</span>` : '')
@@ -158,7 +158,8 @@
     const mFrom = dFrom.slice(0, 7), mTo = dTo.slice(0, 7), mLbl = mFrom === mTo ? PL_TH_M(mFrom) : `${PL_TH_M(mFrom)} – ${PL_TH_M(mTo)}`;
     const lastDay = m => { const [y, mm] = m.split('-').map(Number); return `${m}-${String(new Date(y, mm, 0).getDate()).padStart(2, '0')}`; };
     const partial = dFrom !== `${mFrom}-01` || dTo !== lastDay(mTo);
-    const warn = partial && ads ? `<div style="font-size:11.5px;color:var(--orange);margin:-6px 0 14px;">⚠ ช่วงวันที่ไม่ครบเดือน — ค่า Ads นับทั้งเดือน ${mLbl} แต่ยอดขายนับตามวันที่ ROAS / MER จึงอาจเพี้ยน · เลือกวันที่ 1 ถึงสิ้นเดือนเพื่อให้ตรงกับหน้า MKT Tracking</div>` : '';
+    if (window.pageNote) window.pageNote('skuanalysis', 'partial', partial && ads ? 'warn' : null, `ช่วงวันที่ไม่ครบเดือน — ค่า Ads นับทั้งเดือน ${mLbl}`, 'ยอดขายนับตามวันที่ ROAS / MER จึงอาจเพี้ยน · เลือกวันที่ 1 ถึงสิ้นเดือนเพื่อให้ตรงกับหน้า MKT Tracking');   // (2026-10-18) ย้ายไปปุ่มสถานะข้อมูล
+    const warn = '';
     body.innerHTML = `
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 14px;"><div style="font-size:18px;font-weight:700;">${esc(d.name || nameOf(d.sku))}</div>
         <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
@@ -236,7 +237,7 @@
       const img = x.thumbnail_url ? `<img src="${escA(x.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
       return `<tr><td><div style="display:flex;gap:8px;align-items:center;min-width:200px;"><a class="skd-thumb" ${url ? `href="${escA(url)}" target="_blank" rel="noopener"` : ''}>${img}</a><div style="min-width:0;"><div style="font-size:11.5px;font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.name)}">${esc(x.name || x.ad_id)}</div><div style="font-size:10.5px;color:var(--text3);">${esc(x.bucket || '')} · ${thShort(x.first_date)}${x.last_date !== x.first_date ? ' – ' + thShort(x.last_date) : ''}</div></div></div></td>
         <td class="num"><b>${money(x.spend)}</b></td><td class="num">${n0(x.msg_started)}</td><td class="num">${n0(x.purchases)}</td><td class="num">${+x.spend && +x.purchase_value ? (x.purchase_value / x.spend).toFixed(2) + 'x' : dash}</td></tr>`; }).join('');
-    return card('Facebook Ads ที่ยิงสินค้านี้', `<div class="table-wrap"><table id="tblSkdFb"><thead><tr><th>Ads</th><th class="num">ค่า Ads</th><th class="num">ทักแชท</th><th class="num">ซื้อ (Meta)</th><th class="num">ROAS (Meta)</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่พบ Ads ที่ชื่อแคมเปญผูกกับสินค้านี้</td></tr>'}</tbody></table></div><div class="skd-note">15 อันดับตามค่า Ads · จับสินค้าจากชื่อแคมเปญ (ตั้งกฎเพิ่มได้ใน Admin) · ซื้อ / ROAS เป็นตัวเลขที่ Meta นับ</div>`);
+    return card('Facebook Ads ที่ยิงสินค้านี้', `<div class="table-wrap"><table id="tblSkdFb"><thead><tr><th>Ads</th><th class="num">ค่า Ads</th><th class="num">ทักแชท</th><th class="num">ซื้อ (Meta)</th><th class="num">ROAS (Meta)</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่พบ Ads ที่ชื่อ Campaign ผูกกับสินค้านี้</td></tr>'}</tbody></table></div><div class="skd-note">15 อันดับตามค่า Ads · จับสินค้าจากชื่อ Campaign (ตั้งกฎเพิ่มได้ใน Admin) · ซื้อ / ROAS เป็นตัวเลขที่ Meta นับ</div>`);
   }
 
   function ttCard(d) {
