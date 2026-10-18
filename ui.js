@@ -4,7 +4,6 @@
    3) Tooltip กราฟ (Chart.js) ทุกกราฟหน้าตาเดียวกัน + เส้นชี้วันแนวตั้ง — ใช้ title/label/footer callbacks เดิมของแต่ละกราฟได้เลย
       ใส่ plugins.tooltip.uiShare = true ถ้าอยากให้โชว์ % สัดส่วนต่อรวมในแต่ละแถว
    4) Tooltip ตอนชี้เมาส์: ใส่ data-tip="ข้อความ" (หรือ title เดิม) ที่ปุ่ม/ไอคอน · ข้อความที่ถูกตัด "…" ใส่ class ui-trunc จะโชว์ชื่อเต็มเอง
-   5) dropdown (<select>) ทุกอันหน้าตาเดียวกับ dropdown Supply Chain — เฉพาะหน้าที่ <body data-ui-select>
    2) ช่องวันที่ / ช่องเดือน ทุกช่องแสดงแบบไทยเหมือนกันทุกเครื่อง: "7 ต.ค. 2569" / "ต.ค. 2569"
       ค่าจริงใน input ยังเป็น YYYY-MM-DD / YYYY-MM เหมือนเดิม โค้ดเดิมที่อ่าน .value หรือฟัง change ใช้ได้ทันที
       ช่องไหนอยากคงแบบเดิมให้ใส่ data-native */
@@ -251,93 +250,13 @@
   addEventListener('resize', () => { closePop(); queueFit(); });
   addEventListener('scroll', e => { if (pop && !pop.contains(e.target)) closePop(); }, true);
 
-  /* ───────── 5) dropdown ทุกอัน (2026-10-18) ─────────
-     <select> เดิมยังอยู่ (ซ่อนไว้) โค้ดเดิมอ่าน .value / ฟัง change ได้เหมือนเดิม · หน้าตาเหมือน dropdown หน้า Supply Chain (ui-dd)
-     ใช้เฉพาะหน้าที่ <body data-ui-select> · ช่องไหนอยากคงแบบเดิมให้ใส่ data-native */
-  const escH = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const selOn = () => document.body && document.body.hasAttribute('data-ui-select');
-  let selPop = null, selFor = null;
-  function closeSel() { if (selPop) { selPop.remove(); selPop = null; } if (selFor && selFor._uiSel) selFor._uiSel.classList.remove('is-open'); selFor = null; }
-  function openSel(sel, btn) {
-    if (selFor === sel) { closeSel(); return; }
-    closeSel(); closePop(); hideTip();
-    selFor = sel; btn.classList.add('is-open');
-    const item = o => `<button type="button" class="ui-dd-item" role="option" data-i="${o.index}"${o.selected ? ' aria-selected="true"' : ''}${o.disabled ? ' disabled' : ''}>${escH(o.textContent.trim() || '—')}</button>`;
-    let html = '';
-    [...sel.children].forEach(ch => {
-      if (ch.tagName === 'OPTGROUP') html += `<div class="ui-dd-h">${escH(ch.label)}</div>` + [...ch.children].filter(o => !o.hidden).map(item).join('');
-      else if (ch.tagName === 'OPTION' && !ch.hidden) html += item(ch);
-    });
-    const p = document.createElement('div');
-    p.className = 'ui-dd-menu ui-sel-pop'; p.setAttribute('role', 'listbox');
-    p.innerHTML = html || '<div class="ui-dd-h">ไม่มีตัวเลือก</div>';
-    p.addEventListener('click', e => {
-      const b = e.target.closest('.ui-dd-item'); if (!b || b.disabled) return;
-      const i = +b.dataset.i; closeSel();
-      if (sel.selectedIndex !== i) { sel.selectedIndex = i; sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); }
-      btn.focus();
-    });
-    selPop = portal(p);
-    const r = btn.getBoundingClientRect();
-    p.style.minWidth = Math.max(r.width, 160) + 'px';
-    const h = p.offsetHeight, w = p.offsetWidth;
-    let top = r.bottom + 6; if (top + h > innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
-    p.style.top = top + 'px'; p.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
-    const cur = p.querySelector('[aria-selected="true"]'); if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
-  }
-  let selPatched = false;
-  function patchSelectProto() {
-    if (selPatched) return; selPatched = true;
-    const P = HTMLSelectElement.prototype;
-    ['value', 'selectedIndex'].forEach(k => {
-      const d = Object.getOwnPropertyDescriptor(P, k); if (!d || !d.set) return;
-      Object.defineProperty(P, k, { configurable: true, enumerable: d.enumerable, get: d.get, set(v) { d.set.call(this, v); if (this._uiSync) this._uiSync(); } });
-    });
-  }
-  function enhanceSel(sel) {
-    if (sel._uiSel || sel.multiple || +sel.size > 1 || sel.hasAttribute('data-native')) return;
-    const btn = document.createElement('button');
-    btn.type = 'button'; btn.className = 'ui-dd-btn ui-sel-btn';
-    const lab = document.createElement('span'); btn.appendChild(lab);
-    // ขนาดเดิมของช่อง (width / min-width / max-width / flex) ตามไปที่ปุ่ม · ช่องกรอกในฟอร์ม (pr-in) กว้างเต็ม
-    const st = sel.style; ['width', 'minWidth', 'maxWidth', 'flex', 'marginLeft', 'marginRight'].forEach(k => { if (st[k]) btn.style[k] = st[k]; });
-    if (sel.classList.contains('pr-in')) btn.style.width = '100%';
-    const sync = () => {
-      const o = sel.options[sel.selectedIndex];
-      lab.textContent = o ? (o.textContent.trim() || '—') : '—';
-      btn.disabled = sel.disabled;
-      btn.style.display = sel.style.display === 'none' ? 'none' : '';
-      if (sel.title) btn.setAttribute('data-tip', sel.title);
-    };
-    // โค้ดเดิมที่สั่ง select.value = '...' / selectedIndex → ปุ่มเปลี่ยนตามทันที (ผ่าน patchSelectProto)
-    sel._uiSync = sync; patchSelectProto();
-    new MutationObserver(sync).observe(sel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'style', 'selected'] });
-    sel.addEventListener('change', sync);
-    sel.classList.add('ui-native-hidden'); sel.setAttribute('tabindex', '-1');
-    sel.after(btn); sel._uiSel = btn;
-    btn.addEventListener('click', e => { e.stopPropagation(); openSel(sel, btn); });
-    btn.addEventListener('keydown', e => {
-      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-      e.preventDefault(); const n = sel.selectedIndex + (e.key === 'ArrowDown' ? 1 : -1);
-      if (n >= 0 && n < sel.options.length) { sel.selectedIndex = n; sel.dispatchEvent(new Event('change', { bubbles: true })); }
-    });
-    sync();
-  }
-  function enhanceSelAll(root) { if (selOn()) (root || document).querySelectorAll('select').forEach(enhanceSel); }
-  document.addEventListener('click', e => { if (selPop && !selPop.contains(e.target)) closeSel(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && selPop) { const b = selFor && selFor._uiSel; closeSel(); if (b) b.focus(); } });
-  addEventListener('resize', closeSel);
-  addEventListener('scroll', e => { if (selPop && !selPop.contains(e.target)) closeSel(); }, true);
-
   function start() {
     setupCharts();
     enhanceAll();
-    enhanceSelAll();
     fitAll();
     new MutationObserver(muts => {
       for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) {
         if (n.matches && n.matches('input[type="date"], input[type="month"]')) enhance(n); else if (n.querySelector) enhanceAll(n);
-        if (selOn()) { if (n.tagName === 'SELECT') enhanceSel(n); else if (n.querySelector) enhanceSelAll(n); }
       }
       queueFit();
     }).observe(document.body, { childList: true, subtree: true, characterData: true });
@@ -345,5 +264,5 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-  window.UI = { fit: queueFit, enhanceDates: enhanceAll, enhanceSelects: enhanceSelAll, showDate, showMonth, setupCharts };
+  window.UI = { fit: queueFit, enhanceDates: enhanceAll, showDate, showMonth, setupCharts };
 })();
