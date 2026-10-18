@@ -409,7 +409,7 @@ async function render(d, unknown, extra) {
 
   // --- แหล่งข้อมูลของแต่ละหน้า (คงที่ — แก้ตรงนี้เมื่อเปลี่ยนแหล่ง) ---
   const PAGE_SOURCES = [
-    ['ภาพรวมยอดขาย / แยก Channel / SKU', 'orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · TikTok ตั้งแต่ 1 ต.ค. 69 = TikTok Shop API (api-to-core ทุก 15 นาที · ไฟล์ที่ทีมอัปลง orders_upload_backup) · Shopee ออเดอร์จาก API ทุก 10 นาที', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
+    ['ภาพรวมยอดขาย (รวมแยก Channel แล้ว) / SKU', 'ลูกค้า Facebook = mv_customer_daily (unique_customers / fb_customers_series) · orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · TikTok ตั้งแต่ 1 ต.ค. 69 = TikTok Shop API (api-to-core ทุก 15 นาที · ไฟล์ที่ทีมอัปลง orders_upload_backup) · Shopee ออเดอร์จาก API ทุก 10 นาที', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
     ['แนวโน้มสินค้า (Momentum)', 'RPC sku_momentum บน mv_sku_daily (ตัด Cancel/Return) เทียบช่วงก่อน + เฉลี่ย 3 ช่วง + 12 สัปดาห์', 'mv_sku_daily รีเฟรชรายชั่วโมง'],
     ['เจาะสินค้า', 'RPC sku_deep (ยอดขาย mv_sku_daily · ค่า Ads รายเดือน · งาน KOL = ไฟล์ทีม KOL: ค่าจ้างตามวันโพสต์ (mv_kol_plan_jobs) · ค่า Ads/ยอดขายตามวันที่ใช้เงิน (mv_kol_job_ads_daily) + สถานะเบิกจ่ายจากฟอร์มเบิก)', 'รายชั่วโมง · KOL ตาม refresh-kol-plan'],
     ['ภาพรวม Facebook (แยกเพจ)', 'ยอดขาย: orders · ค่าแอด: Meta API เฉพาะก้อน Conversion (แอดที่ยิงให้เพจขายใน fb_page_map) — PR/KOL แยก, CPAS → Shopee, MT แยก', 'meta-ads-sync 08:00/20:00'],
