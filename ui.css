@@ -266,10 +266,3 @@ body td { font-variant-numeric: tabular-nums; }
 body .btn { border-radius: 8px; }
 body .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
 body .empty { font-size: 13px; color: var(--text3); }
-
-/* ───────── (2026-10-18) dropdown ที่ ui.js แปลงจาก <select> ───────── */
-.ui-sel-btn { height: 32px; max-width: 100%; justify-content: space-between; vertical-align: middle; }
-.ui-sel-btn > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ui-sel-btn.is-open { border-color: var(--accent); }
-.ui-sel-btn:disabled { opacity: .5; cursor: default; }
-.ui-dd-menu.ui-sel-pop { position: fixed; display: block; z-index: 2500; max-height: 340px; overflow-y: auto; min-width: 160px; font-family: var(--font); color: var(--text); }
