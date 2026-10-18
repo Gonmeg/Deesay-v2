@@ -141,6 +141,8 @@
     if (urgent.length) banners.push(['var(--red)', `⛔ ${urgent.length} SKU ต้องรีบจัดการ (ของจะขาดก่อน WIP เข้า หรือเลยวันต้องเปิด PO แล้ว): ${urgent.slice(0, 10).map(r => `<b>${esc(r.sku)}</b>`).join(', ')}${urgent.length > 10 ? ' และอีก ' + (urgent.length - 10) : ''}`]);
     if (k.no_params > 0) banners.push(['var(--accent)', `🛠 ${k.no_params} SKU ยังไม่ได้ตั้ง lead time — ใช้ค่ากลาง 60 วันไปก่อน (ตั้งได้ที่หน้า Admin → Supply Chain)`]);
 
+    // (2026-10-18) เตือนต่าง ๆ ย้ายไปปุ่มสถานะข้อมูลข้างชื่อหน้า (ที่เดียว) แทนแถบในหน้า
+    if (window.pageNote) { for (let i = 0; i < 4; i++) window.pageNote('supply', 'b' + i, null); banners.forEach(([c, txt], i) => window.pageNote('supply', 'b' + i, c === 'var(--red)' ? 'bad' : 'warn', txt.replace(/^(⚠️|⛔|🛠)\s*/u, ''), '')); }
     // (2026-09-29) การ์ด + dropdown ใช้ตัวเลขชุดเดียวกัน (ครบทุกสถานะ) — ปุ่มกรองแถวนอกตารางเอาออกแล้ว
     const vis = rows.filter(r => showHidden || r.plan_mode !== 'hidden');
     const sc = {}; vis.forEach(r => { const k2 = statusKey(r); sc[k2] = (sc[k2] || 0) + 1; });
@@ -180,7 +182,7 @@
         <div style="font-size:11.5px;color:var(--text3);">สต็อกจาก log ทีมแพ็ค · ความต้องการจากยอดขายจริง · คำนวณใหม่ทุกคืน 04:00 · แผน ณ <b>${dTH(d.as_of)}</b> · log ล่าสุด ${dTH(d.ledger_last)} · ยอดขายล่าสุด ${dTH(d.sales_last)} · ไฟล์ PO ดึงล่าสุด <b>${PO_SYNCED ? new Date(PO_SYNCED).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</b></div>
         <button class="btn btn-ghost" id="supRefresh" title="ดึง log ทีมแพ็ค + ไฟล์ PO ของจัดซื้อใหม่ทันที แล้วคำนวณใหม่ทั้งหน้า (ราว 10–60 วินาที)">↻ รีเฟรช (ดึงข้อมูลล่าสุด)</button>
       </div>
-      ${banners.map(([c, t]) => `<div style="padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:12px;color:${c};background:color-mix(in srgb, ${c} 10%, transparent);border:1px solid color-mix(in srgb, ${c} 30%, transparent);">${t}</div>`).join('')}
+      
 
       <div class="sup-top">
         <div class="sup-kpis" id="supKpis">
