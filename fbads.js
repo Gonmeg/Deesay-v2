@@ -141,10 +141,10 @@
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaDaily')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaDaily')">เลือกทั้งหมด</button></div></div></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaDaily')">⬇ Export CSV</button></div></div>
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaDaily"><thead id="theadFbaDaily"></thead><tbody id="tbodyFbaDaily"></tbody></table></div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">เรียงวันล่าสุดขึ้นก่อน · <b>คลิกตัวเลขที่มีเส้นประ</b> เพื่อดูว่ามาจากเพจ / บัญชี / แคมเปญไหน · แถวสุดท้ายคือผลรวมทั้งช่วง · ทุก metric = เฉพาะ Ads Conversion (ยิงให้เพจขาย) · ยอดขายจริงมาจากออเดอร์ Facebook ในระบบ (ทั้งช่องทาง) · ค่า Ads PR ดูส่วน PR ด้านบน</div></div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">เรียงวันล่าสุดขึ้นก่อน · <b>คลิกตัวเลขที่มีเส้นประ</b> เพื่อดูว่ามาจากเพจ / บัญชี / Campaign ไหน · แถวสุดท้ายคือผลรวมทั้งช่วง · ทุก metric = เฉพาะ Ads Conversion (ยิงให้เพจขาย) · ยอดขายจริงมาจากออเดอร์ Facebook ในระบบ (ทั้งช่องทาง) · ค่า Ads PR ดูส่วน PR ด้านบน</div></div>
         <div class="card" style="display:none;"><div class="section-header"><div class="section-title">ตามเพจ <span style="font-size:11px;font-weight:400;color:var(--text3);">· บัญชีที่ยิงเพจเดียวกันรวมเป็นแถวเดียว (ดูบัญชีใต้ชื่อเพจ)</span></div><button class="btn btn-ghost" onclick="exportTable('tblFbaAccount')">⬇ Export CSV</button></div>
           <div class="table-wrap"><table id="tblFbaAccount" data-no-page><thead><tr><th>เพจ</th><th>Ads</th><th>ค่า Ads</th><th>% งบ</th><th>Impressions</th><th>Reach</th><th>CPM</th><th>คลิกลิงก์</th><th>บาท/คลิก</th><th>ทักแชท</th><th>บาท/ทัก</th><th>ซื้อ (Meta นับ)</th></tr></thead><tbody id="tbodyFbaAccount"></tbody></table></div></div>
-        <div class="card" style="display:none;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">แคมเปญ <span id="fba-camp-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+        <div class="card" style="display:none;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">Campaign <span id="fba-camp-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;">
             <div style="position:relative;"><button class="btn btn-ghost" id="fbaCampMetricsBtn" onclick="toggleMetricsPanel('fbaCamp')">⚙ Metrics <span id="fbaCamp-metric-count" style="color:var(--accent);"></span></button>
               <div id="fbaCamp-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaCamp-metrics-checks"></div>
@@ -172,7 +172,7 @@
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">Ads / โพสต์ที่ยิง <span id="fba-ads-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
           <div style="display:flex;gap:8px;align-items:center;"><select class="ls-input" id="fbaAdsBucket" style="width:190px;padding:6px 10px;font-size:12px;"><option value="">ทุกประเภท Ads</option><option value="Conversion">Conversion — เพจขาย</option><option value="PR">PR — เพจอื่น / KOL</option></select>
             <select class="ls-input" id="fbaAdsKol" style="width:120px;padding:6px 10px;font-size:12px;" title="กรองตาม KOL · เลือก in-house + เรียงค่า Ads = ลิสต์โพสต์ที่ยังไม่ได้ระบุ KOL"><option value="">ทุก KOL</option><option value="kol">มี KOL</option><option value="house">in-house</option><option value="review">⚠️ ต้องตรวจ</option></select>
-            <select class="ls-input" id="fbaAdsType" style="width:130px;padding:6px 10px;font-size:12px;"><option value="">ทุกชิ้นงาน</option><option value="video">🎬 วิดีโอ</option><option value="photo">🖼 ภาพ</option><option value="album">🗂 อัลบั้ม</option><option value="link">🔗 ลิงก์</option><option value="unknown">ยังไม่ทราบ</option></select><select class="ls-input" id="fbaAdsProduct" style="width:170px;padding:6px 10px;font-size:12px;"><option value="">ทุกสินค้า</option></select><input type="text" class="ls-input" id="fbaAdsSearch" placeholder="🔎 ชื่อ Ads / แคมเปญ / KOL / สินค้า" style="width:220px;padding:6px 10px;font-size:12px;">
+            <select class="ls-input" id="fbaAdsType" style="width:130px;padding:6px 10px;font-size:12px;"><option value="">ทุกชิ้นงาน</option><option value="video">🎬 วิดีโอ</option><option value="photo">🖼 ภาพ</option><option value="album">🗂 อัลบั้ม</option><option value="link">🔗 ลิงก์</option><option value="unknown">ยังไม่ทราบ</option></select><select class="ls-input" id="fbaAdsProduct" style="width:170px;padding:6px 10px;font-size:12px;"><option value="">ทุกสินค้า</option></select><input type="text" class="ls-input" id="fbaAdsSearch" placeholder="🔎 ชื่อ Ads / Campaign / KOL / สินค้า" style="width:220px;padding:6px 10px;font-size:12px;">
             <div style="position:relative;"><button class="btn btn-ghost" id="fbaAdsMetricsBtn" onclick="toggleMetricsPanel('fbaAds')">⚙ Metrics <span id="fbaAds-metric-count" style="color:var(--accent);"></span></button>
               <div id="fbaAds-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaAds-metrics-checks"></div>
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaAds')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaAds')">เลือกทั้งหมด</button></div></div></div>
@@ -296,7 +296,7 @@
         line('ยอดขายจริง Facebook', daily.map(r => +r.revenue), '#22c55e', { fill: true, backgroundColor: 'rgba(34,197,94,0.10)', yAxisID: 'y', borderWidth: 2 }),
         line('ค่า Ads Conversion', daily.map(r => +r.spend_conv || 0), '#ef4444', { fill: true, backgroundColor: 'rgba(239,68,68,0.10)', yAxisID: 'y', borderWidth: 2 })
       ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
-        scales: { x: xaxis(), y: Object.assign(axis(undefined, v => fmtB(v), 'บาท'), { position: 'left', beginAtZero: true }) },   // แกนเดียว สเกลเดียวกัน จะได้เห็นจริงว่าค่าแอดเล็กกว่ายอดขายแค่ไหน
+        scales: { x: xaxis(), y: Object.assign(axis(undefined, v => fmtB(v), 'บาท'), { position: 'left', beginAtZero: true }) },   // แกนเดียว สเกลเดียวกัน จะได้เห็นจริงว่าค่า Ads เล็กกว่ายอดขายแค่ไหน
         tooltip: tooltipOpts({ label: it => `${it.dataset.label}: ${fmt(it.raw)}`, footer: items => { const r = daily[items[0].dataIndex]; return +r.spend_conv ? `ROAS ${(r.revenue / r.spend_conv).toFixed(2)}x · Conversion ${r.revenue ? ((+r.spend_conv) / r.revenue * 100).toFixed(1) : '—'}% ของยอด · ทั้งหมด ${fmt(r.spend)}` : ''; } }) });
     } else {
       makeChart('chartFbaDaily', 'line', labels, [
@@ -360,7 +360,7 @@
     ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
       scales: { x: xaxis(), y: Object.assign(axis('#a78bfa', v => fmtB(v), 'ค่า Ads'), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#2563eb', v => isMoneyK ? fmtB(v) : (mk === 'er' || mk === 'ctr') ? (v * 100).toFixed(1) + '%' : fmtB(v), M[mk].label), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
       tooltip: tooltipOpts({ label: it => `${it.dataset.label}: ${it.datasetIndex === 0 || isMoneyK ? fmt(it.raw) : (mk === 'er' || mk === 'ctr') ? (it.raw * 100).toFixed(2) + '%' : fmt(it.raw)}` }) });
-    if (!pr.length) { const c = document.getElementById('chartFbaPr'); if (c) c.parentElement.innerHTML = '<div class="empty" style="padding:30px;">ยังไม่มีข้อมูลรายวันต่อประเภท — รัน SQL 95 ตัวล่าสุด (daily_bucket) แล้วรีเฟรช</div>'; }
+    if (!pr.length) { const c = document.getElementById('chartFbaPr'); if (c) c.parentElement.innerHTML = '<div class="empty" style="padding:30px;">ยังไม่มีข้อมูลรายวันต่อประเภทในช่วงนี้</div>'; }
     // ตารางรายเพจ/KOL — metric เลือกได้
     const byPage = {};
     prAds.forEach(a => { const key = a.page_name || (a.kol_name ? a.kol_name : (a.page_id ? 'เพจ ' + a.page_id : a.account || '—')); const o = byPage[key] = byPage[key] || { name: key, page_id: a.page_id, own: !!a.own_page, link: a.own_page ? null : a.kol_link, named: !!a.page_name, ads: 0 }; o.ads++; ORDER.forEach(k => { if (!['frequency','cpm','ctr','cpc','er','cpe','cpv','cost_per_msg','cpa','roas_meta','days','period'].includes(k)) o[k] = (o[k] || 0) + (+a[k] || 0); }); });
@@ -386,9 +386,9 @@
     const all = R; const F = k => (R[k] ? R[k].fmt : M[k].fmt);
     const HTIP = { roas: 'ยอดขายจริง Facebook ÷ ค่า Ads Conversion ของวันเดียวกัน', acos: 'ค่า Ads Conversion ÷ ยอดขายจริง Facebook ของวันเดียวกัน', revenue: 'ออเดอร์ Facebook ในระบบ (ไม่นับยกเลิก / ตีกลับ) · คลิกตัวเลขดูแยกเพจขาย', spend_conv: 'ค่า Ads จาก Meta เฉพาะ Ads Conversion (ยิงให้เพจขาย) · คลิกตัวเลขดูแยกเพจ / คอนเทนต์' };
     document.getElementById('theadFbaDaily').innerHTML = `<tr><th>วันที่</th>${ks.map(k => `<th${HTIP[k] ? ` data-tip="${HTIP[k]}"` : ''}>${mlabel(k)}${HTIP[k] ? ' ⓘ' : ''}</th>`).join('')}</tr>`;
-    document.getElementById('fba-daily-count').textContent = `(${fmt(daily.length)} วัน${db.length ? '' : ' · ⚠ RPC ยังเป็นตัวเก่า — รัน SQL 95 อีกครั้ง'})`;
+    document.getElementById('fba-daily-count').textContent = `(${fmt(daily.length)} วัน)`;
     const tot = daily.reduce((t, r) => { Object.keys(r).forEach(k => { if (k !== 'd' && typeof r[k] !== 'object') t[k] = (t[k] || 0) + (+r[k] || 0); }); return t; }, {});
-    const TRK = ['spend_conv', 'revenue', 'spend'];   // กดดูที่มาได้เฉพาะตัวเลขที่หาไม่ได้จากตารางเอง   // (2026-10-15) ตัวเลขที่กดดูที่มาได้ (เพจ / บัญชี / แคมเปญ ของวันนั้น)
+    const TRK = ['spend_conv', 'revenue', 'spend'];   // กดดูที่มาได้เฉพาะตัวเลขที่หาไม่ได้จากตารางเอง   // (2026-10-15) ตัวเลขที่กดดูที่มาได้ (เพจ / บัญชี / Campaign ของวันนั้น)
     document.getElementById('tbodyFbaDaily').innerHTML = daily.map(r => `<tr><td style="white-space:nowrap;">${thShort(r.d)}</td>${ks.map(k => `<td${k === 'spend' || k === 'revenue' ? ' style="font-weight:600;"' : ''}>${TRK.includes(k) ? `<span class="pl-trace" data-fbday="${r.d}" data-fbk="${k}">${F(k)(r)}</span>` : F(k)(r)}</td>`).join('')}</tr>`).join('')
       + (daily.length ? `<tr style="font-weight:700;background:var(--bg3);"><td>รวม</td>${ks.map(k => `<td>${F(k)(tot)}</td>`).join('')}</tr>` : `<tr><td colspan="${1 + ks.length}" class="empty">ไม่มีข้อมูล</td></tr>`);
   }
@@ -398,7 +398,7 @@
     const ks = cols('fbaCamp');
     if (!M[_sortKey]) _sortKey = 'spend';
     const rows = sortRows(filteredCampaigns(), _sortKey, _sortDir);
-    document.getElementById('theadFbaCampaign').innerHTML = `<tr><th>แคมเปญ</th><th>บัญชี</th><th>objective</th><th>สถานะ</th><th>Ads</th>${ks.map(k => `<th class="sortable-th" data-k="${k}">${M[k].label} <span class="sort-ind"></span></th>`).join('')}</tr>`;
+    document.getElementById('theadFbaCampaign').innerHTML = `<tr><th>Campaign</th><th>บัญชี</th><th>objective</th><th>สถานะ</th><th>Ads</th>${ks.map(k => `<th class="sortable-th" data-k="${k}">${M[k].label} <span class="sort-ind"></span></th>`).join('')}</tr>`;
     bindSort('tblFbaCampaign', k => { if (_sortKey === k) _sortDir = _sortDir === 'desc' ? 'asc' : 'desc'; else { _sortKey = k; _sortDir = 'desc'; } renderCampaigns(); });
     sortInd('tblFbaCampaign', _sortKey, _sortDir);
     document.getElementById('fba-camp-count').textContent = `(${fmt(rows.length)})`;
@@ -432,10 +432,10 @@
           ${(d.sales_by_page || []).map(x => `<tr><td ${W1}>${ttcEsc(x[0])}</td><td>${fmt(x[2])}</td><td>${m(x[1])}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">ยังไม่มีออเดอร์วันนี้</td></tr>'}</tbody></table></section>` + src([SRC_SALES]);
       return;
     }
-    b.innerHTML = card(`ค่า Ads Conversion · ${dt}`, m(sp), [`${fmt(d.contents || 0)} คอนเทนต์`, `${fmt(d.ads || 0)} Ads`, `${fmt(d.campaigns || 0)} แคมเปญ`])
+    b.innerHTML = card(`ค่า Ads Conversion · ${dt}`, m(sp), [`${fmt(d.contents || 0)} คอนเทนต์`, `${fmt(d.ads || 0)} Ads`, `${fmt(d.campaigns || 0)} Campaign`])
       + `<section class="tr-part"><div class="tr-sec"><span>แยกตามเพจ · บัญชีโฆษณา</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เพจ · บัญชี</th><th>Ads</th><th>ทักแชท</th><th>ค่า Ads</th></tr></thead><tbody>
         ${(d.by_page || []).map(x => `<tr><td ${W1}>${ttcEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[1])}</div></td><td>${fmt(x[3])}</td><td>${fmt(x[4])}</td><td>${m(x[2])}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">ไม่มี Ads Conversion วันนี้</td></tr>'}</tbody></table></section>
-      <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">20 อันดับแรก</span></div>${contentTable(d.top || [], x => `${fmt(x[1])} Ads · ${x[8] > 1 ? fmt(x[8]) + ' แคมเปญ' : ttcEsc(x[2] || '')}`)}</section>` + src([SRC_ADS, ['คอนเทนต์', 'ยุบ Ads ที่ชื่อคอนเทนต์เดียวกัน (รวม Copy) เป็นแถวเดียว']]);
+      <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">20 อันดับแรก</span></div>${contentTable(d.top || [], x => `${fmt(x[1])} Ads · ${x[8] > 1 ? fmt(x[8]) + ' Campaign' : ttcEsc(x[2] || '')}`)}</section>` + src([SRC_ADS, ['คอนเทนต์', 'ยุบ Ads ที่ชื่อคอนเทนต์เดียวกัน (รวม Copy) เป็นแถวเดียว']]);
   }
   // ตารางคอนเทนต์ (ใช้ร่วมทุกแผง): รูปปก · ทักแชท · ค่า Ads · ยอดขาย (Meta นับ) · ROAS (Meta นับ)
   // แถว = [content, n_ads, campaign/n_camp, spend, msg, purchase_value, purchases, thumb, ...]
@@ -453,7 +453,7 @@
     b.innerHTML = `<div class="tr-card"><div class="tr-card-t">ค่า Ads · ${ttcEsc(sku ? skuName(sku) : 'Ads รวม (ไม่ผูกสินค้า)')}</div><div class="tr-card-v">${m(d.total)}</div>
         <div class="tr-card-m"><span>${ttcEsc(thShort(from))} – ${ttcEsc(thShort(to))}</span><span>${fmt(d.contents || 0)} คอนเทนต์ · ${fmt(d.ads || 0)} Ads</span></div></div>
       <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">${top.length < (d.contents || 0) ? '20 อันดับแรก · ดูครบที่ตาราง Ads ด้านล่าง' : 'ทั้งหมด'}</span></div>
-        ${contentTable(top, x => `${fmt(x[1])} Ads${x[2] > 1 ? ' · ' + fmt(x[2]) + ' แคมเปญ' : ''}`)}</section>
+        ${contentTable(top, x => `${fmt(x[1])} Ads${x[2] > 1 ? ' · ' + fmt(x[2]) + ' Campaign' : ''}`)}</section>
       <div class="tr-src"><div class="tr-src-h">วิธีคิด</div><dl class="tr-dl"><dt>ผูกสินค้า</dt><dd>ชื่อคอนเทนต์ (ชื่อ Ads) เทียบชีท Ads ของทีม · คอนเทนต์ที่ยังไม่มีในชีท = Ads รวม</dd>
         <dt>แบ่งกลุ่ม</dt><dd>คอนเทนต์ที่ผูกหลายสินค้า แบ่งตามสัดส่วนยอดขาย Facebook ของสินค้าในกลุ่ม ช่วงวันที่เดียวกัน</dd><dt>ค่า Ads</dt><dd>Meta Marketing API · Conversion + PR · ยุบ Ads ชื่อคอนเทนต์เดียวกันเป็นแถวเดียว</dd></dl></div>`;
   }
@@ -581,7 +581,7 @@
     if (q) rows = rows.filter(a => (a.name || '').toLowerCase().includes(q) || (a.campaign || '').toLowerCase().includes(q) || (a.kol_name || '').toLowerCase().includes(q) || productLabel(a).toLowerCase().includes(q));
     const tf = document.getElementById('fbaAdsType')?.value || '';
     if (tf) rows = rows.filter(a => (a.creative_type || 'unknown') === tf);
-    const pf = document.getElementById('fbaAdsProduct')?.value || '';   // (2026-10-15) กรองสินค้า (ผูกจากชีท Ads ของทีม → ชื่อแคมเปญ)
+    const pf = document.getElementById('fbaAdsProduct')?.value || '';   // (2026-10-15) กรองสินค้า (ผูกจากชีท Ads ของทีม → ชื่อ Campaign)
     if (pf) rows = rows.filter(a => pf === '__shared' ? !(a.parent_skus || []).length : (a.parent_skus || []).includes(pf));
     rows = groupAdsByPost(rows);
     const kf = document.getElementById('fbaAdsKol')?.value || '';
@@ -597,9 +597,9 @@
       return `<tr><td><div style="display:flex;align-items:center;gap:8px;"><a ${link ? `href="${ttcEscAttr(link)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${thumb}</a>
         <div style="font-size:10.5px;color:var(--text3);line-height:1.3;"><div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:${a.bucket === 'Conversion' ? 'rgba(34,197,94,0.15)' : a.bucket === 'CPAS' ? 'rgba(96,165,250,0.15)' : 'rgba(167,139,250,0.15)'};color:${a.bucket === 'Conversion' ? 'var(--green)' : a.bucket === 'CPAS' ? '#60a5fa' : '#a78bfa'};">${ttcEsc(a.bucket || '—')}</div>${a.page_name ? `<div style="color:var(--text2);">${ttcEsc(a.page_name)}</div>` : ''}</div></div></td>
         <td style="font-size:11.5px;white-space:nowrap;">${kolCell(a)}</td>
-        <td style="font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ttcEscAttr(a.name || '')}${a._n > 1 ? ' — รวม ' + a._n + ' Ads' : ''} · คลิกเพื่อเปิดโพสต์">${link ? `<a href="${ttcEscAttr(link)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;">${ttcEsc(a.name || a.ad_id)}</a>` : ttcEsc(a.name || a.ad_id)}${a._n > 1 ? `<div style="font-size:10px;color:var(--accent);">รวม ${a._n} Ads${a._nCamp > 1 ? ` · ${a._nCamp} แคมเปญ` : ''}</div>` : ''}</td>
+        <td style="font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ttcEscAttr(a.name || '')}${a._n > 1 ? ' — รวม ' + a._n + ' Ads' : ''} · คลิกเพื่อเปิดโพสต์">${link ? `<a href="${ttcEscAttr(link)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;">${ttcEsc(a.name || a.ad_id)}</a>` : ttcEsc(a.name || a.ad_id)}${a._n > 1 ? `<div style="font-size:10px;color:var(--accent);">รวม ${a._n} Ads${a._nCamp > 1 ? ` · ${a._nCamp} Campaign` : ''}</div>` : ''}</td>
         <td style="font-size:11px;white-space:nowrap;color:${a.creative_type ? 'var(--text)' : 'var(--text3)'};">${typeTh(a.creative_type)}</td>
-        <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${a.parent_skus ? 'var(--text)' : 'var(--text3)'};" title="${ttcEscAttr(a.parent_skus ? productLabel(a) + ' — คำที่เจอ: ' + (a.product_keyword || '') : 'ชื่อแคมเปญไม่มีคำที่รู้จัก — ตั้งกฎเพิ่มได้ใน Admin › Ads Facebook')}">${a.parent_skus ? ttcEsc(productLabel(a)) : '—'}</td>
+        <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${a.parent_skus ? 'var(--text)' : 'var(--text3)'};" title="${ttcEscAttr(a.parent_skus ? productLabel(a) + ' — คำที่เจอ: ' + (a.product_keyword || '') : 'ชื่อ Campaign ไม่มีคำที่รู้จัก — ตั้งกฎเพิ่มได้ใน Admin › Ads Facebook')}">${a.parent_skus ? ttcEsc(productLabel(a)) : '—'}</td>
         ${ks.map(k => `<td${k === 'spend' ? ' style="font-weight:600;"' : ''}>${M[k].fmt(a)}</td>`).join('')}</tr>`;
     }).join('') || `<tr><td colspan="${5 + ks.length}" class="empty">ไม่มี Ads ตามเงื่อนไข</td></tr>`;
   }
