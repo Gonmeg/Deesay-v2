@@ -30,26 +30,29 @@
 
   // ข้อความบอกสถานะข้อมูล (สั้น ๆ ให้ทุกคนอ่านเข้าใจ) — คืน '' ถ้าทุกอย่างปกติ
   function freshnessNote() {
-    if (!FRESH || !FRESH.lastDay) return '';
+    // (2026-10-18) แจ้งที่ปุ่มสถานะข้อมูลข้างชื่อหน้า (ที่เดียว) แทนแถบในหน้า — คืน '' เสมอ
+    const pg = typeof currentPage !== 'undefined' ? currentPage : 'ttcontent';
+    const set = (lv, title, detail) => { if (window.pageNote) window.pageNote(pg, 'fresh', lv, title, detail); return ''; };
+    if (!FRESH || !FRESH.lastDay) return set(null);
     const today = todayTH();
     const gap = dayDiff(today, FRESH.lastDay);                 // 1 = มีถึงเมื่อวาน (ปกติ)
     const pulledToday = FRESH.lastPull ? new Date(new Date(FRESH.lastPull).getTime() + 7 * 3600000).toISOString().slice(0, 10) === today : false;
     const pullTxt = FRESH.lastPull ? new Date(FRESH.lastPull).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
-    const missing = new Date(new Date(FRESH.lastDay + 'T00:00:00').getTime() + 86400000).toISOString().slice(0, 10);
-    if (gap <= 1) return '';
-    if (pulledToday && gap === 2)
-      return `<div class="ttc-hint" style="border-left-color:var(--text3);">ℹ️ ข้อมูลถึง <b>${dTH(FRESH.lastDay)}</b> — TikTok ยังไม่ส่งตัวเลขของ <b>${dTH(missing)}</b> มา (ระบบดึงแล้วเมื่อ ${pullTxt} แต่ TikTok ยังนับไม่เสร็จ) ปกติจะได้ภายใน 1–2 วัน ไม่ต้องทำอะไร</div>`;
-    if (pulledToday)
-      return `<div class="ttc-hint" style="border-left-color:var(--orange);">⚠️ ข้อมูลถึง <b>${dTH(FRESH.lastDay)}</b> — ระบบดึงแล้ววันนี้ (${pullTxt}) แต่ TikTok ยังไม่ส่งข้อมูลมา ${gap - 1} วันแล้ว ถ้ายังไม่มาพรุ่งนี้ให้แจ้งทีมข้อมูล</div>`;
-    return `<div class="ttc-hint" style="border-left-color:var(--orange);">⚠️ ข้อมูลถึง <b>${dTH(FRESH.lastDay)}</b> — ระบบยังไม่ได้ดึงข้อมูลใหม่วันนี้ (ดึงครั้งล่าสุด ${pullTxt}) ตัวเลขที่เห็นจึงยังเป็นของเดิม — ตรวจได้ที่หน้า <b>สถานะระบบ</b></div>`;
+    const nd = new Date(FRESH.lastDay + 'T00:00:00'); nd.setDate(nd.getDate() + 1);
+    const missing = nd.getFullYear() + '-' + String(nd.getMonth() + 1).padStart(2, '0') + '-' + String(nd.getDate()).padStart(2, '0');
+    if (gap <= 1) return set(null);
+    if (pulledToday && gap === 2) return set('warn', `ข้อมูลถึง ${dTH(FRESH.lastDay)}`, `TikTok ยังไม่ส่งตัวเลขของ ${dTH(missing)} มา (ระบบดึงแล้วเมื่อ ${pullTxt}) ปกติได้ภายใน 1–2 วัน ไม่ต้องทำอะไร`);
+    if (pulledToday) return set('warn', `ข้อมูลถึง ${dTH(FRESH.lastDay)}`, `ระบบดึงแล้ววันนี้ (${pullTxt}) แต่ TikTok ยังไม่ส่งข้อมูลมา ${gap - 1} วันแล้ว ถ้ายังไม่มาพรุ่งนี้ให้แจ้งทีมข้อมูล`);
+    return set('bad', `ข้อมูลถึง ${dTH(FRESH.lastDay)} — วันนี้ระบบยังไม่ได้ดึงข้อมูลใหม่`, `ดึงครั้งล่าสุด ${pullTxt} · ตรวจได้ที่หน้าสถานะระบบ`);
   }
+
 
   // ===== metric ทั้งหมดที่ TikTok ให้ได้ + ที่คำนวณต่อเอง =====
   // v = ค่าที่เอาไปเรียง · f = วิธีแสดง
   const M = {
     post_date:   { label: 'Date',        tip: 'วันที่โพสต์คลิป',
                    v: c => c.post_date || '',             f: c => dTH(c.post_date) },
-    video_views: { label: 'Views',       tip: 'ยอดวิวสะสมทั้งหมดของคลิป (รวมทั้งที่มาจากแอดและออร์แกนิก)',
+    video_views: { label: 'Views',       tip: 'ยอดวิวสะสมทั้งหมดของคลิป (รวมทั้งที่มาจาก Ads และ Organic)',
                    v: c => +c.video_views || 0,           f: c => `<b>${fmtN(c.video_views)}</b>` },
     views_day:   { label: 'Views/day',   tip: 'ยอดวิวสะสม ÷ จำนวนวันตั้งแต่โพสต์ — ใช้เทียบคลิปใหม่กับคลิปเก่าอย่างยุติธรรม',
                    v: c => viewsPerDay(c),                f: c => fmtN(viewsPerDay(c)) },
@@ -75,7 +78,7 @@
                    v: c => (+c.total_time_watched || 0) / 3600, f: c => fmtN((+c.total_time_watched || 0) / 3600, 1) },
     src_foryou:  { label: 'For You',     tip: 'ยอดวิว % ที่มาจากหน้าฟีด — สูง = อัลกอริทึมดันให้คนใหม่เห็น',
                    v: c => +c.src_foryou || 0,            f: c => pct(c.src_foryou, 1) },
-    src_search:  { label: 'Search',      tip: 'ยอดวิว % ที่มาจากคนกดค้นหา — สูง = คนตั้งใจหาแบรนด์หรือสินค้าเรา',
+    src_search:  { label: 'Search',      tip: 'ยอดวิว % ที่มาจากคนกดค้นหา — สูง = คนตั้งใจหา Brand หรือสินค้าเรา',
                    v: c => +c.src_search || 0,            f: c => pct(c.src_search, 1) },
     src_follow:  { label: 'Followers',   tip: 'ยอดวิว % ที่มาจากคนที่ติดตามอยู่แล้ว — สูงแต่ For You ต่ำ = ไม่กระจายออกนอกกลุ่มเดิม',
                    v: c => +c.src_follow || 0,            f: c => pct(c.src_follow, 1) },
@@ -188,11 +191,6 @@
     root().innerHTML = `
       <div id="ttcDebug" style="display:none;"></div>
       ${freshnessNote()}
-      <div class="ttc-head">
-        <div style="font-size:11.5px;color:var(--text3);">ข้อมูลจาก TikTok API โดยตรง · ช่วงที่เลือก <b>${filterLabel()}</b> · ข้อมูลล่าสุดถึง <b>${(FRESH && FRESH.lastDay) ? dTH(FRESH.lastDay) : (lastDay ? dTH(lastDay) : '—')}</b></div>
-        <div style="font-size:10.5px;color:var(--text3);">ระบบดึงข้อมูลใหม่ให้เองวันละ 2 รอบ 07:30 และ 19:30 · TikTok ปล่อยตัวเลขของแต่ละวันช้า 1–2 วัน</div>
-      </div>
-
       <div class="ttc-kpis">
         ${kpis.map(([l, v, s]) => `<div class="card ttc-kpi"><div class="card-title">${l}</div><div class="kpi-value">${v}</div><div class="kpi-sub">${s}</div></div>`).join('')}
       </div>
@@ -202,7 +200,7 @@
           <div class="section-header"><div class="section-title">ยอดวิวมาจากไหน</div><span style="font-size:10.5px;color:var(--text3);">เฉลี่ยทุกคลิปในช่วงนี้</span></div>
           ${[['หน้าฟีด (For You)', t.foryou, 'var(--accent)'], ['ค้นหา', t.search, '#60a5fa'], ['ผู้ติดตาม', t.follow, '#4ade80'], ['โปรไฟล์', t.profile, '#c084fc']]
             .map(([l, v, c]) => `<div class="ttc-src"><span>${l}</span><div class="ttc-srcbar"><i style="width:${Math.min(100, (v || 0) * 100)}%;background:${c};"></i></div><b>${pct(v, 1)}</b></div>`).join('')}
-          <div style="font-size:10.5px;color:var(--text3);margin-top:10px;line-height:1.6;">ฟีดเยอะ = อัลกอริทึมดัน ได้คนใหม่ · ค้นหาเยอะ = คนตั้งใจหาแบรนด์เรา · ผู้ติดตามเยอะแต่ฟีดน้อย = ไม่กระจายออกนอกกลุ่มเดิม</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:10px;line-height:1.6;">ฟีดเยอะ = อัลกอริทึมดัน ได้คนใหม่ · ค้นหาเยอะ = คนตั้งใจหา Brand เรา · ผู้ติดตามเยอะแต่ฟีดน้อย = ไม่กระจายออกนอกกลุ่มเดิม</div>
         </div>
         <div class="card">
           <div class="section-header"><div class="section-title">เทียบกับวงการความงาม</div><span style="font-size:10.5px;color:var(--text3);">ค่าเฉลี่ยช่องหมวดเดียวกันในไทย</span></div>
@@ -629,8 +627,8 @@
         box.innerHTML = words.length
           ? `<div style="margin-bottom:12px;color:var(--text2);">คนที่ค้นคำว่า "<b>${esc(w)}</b>" มักค้นคำพวกนี้ด้วย — ${words.length} คำ <span style="font-size:11px;color:var(--text3);">(ข้อมูลคนทั่วไปทั้งประเทศ ไม่ปรับตามบัญชีเรา)</span></div>
              <div class="kw-grid">${words.map((x, i) => { const b = brandOf(x); return `
-               <div class="kw-item${b ? ' kw-' + b : ''}"><span class="kw-rank">${i + 1}</span><span class="kw-word">${esc(x)}</span>${b === 'ours' ? '<span class="kw-tag ours">แบรนด์เรา</span>' : b === 'other' ? '<span class="kw-tag">แบรนด์อื่น</span>' : ''}<button class="kw-again" data-w="${esc(x)}" title="ค้นต่อจากคำนี้">↻</button></div>`; }).join('')}</div>
-             <div class="kw-note"><b>สรุป:</b> คำทั่วไป ${n.plain} · แบรนด์เรา ${n.ours} · แบรนด์อื่น ${n.other}${otherNames.length ? ` (${otherNames.map(esc).join(', ')})` : ''} — คำทั่วไปคือคำที่เอาไปตั้งชื่อคลิป/แฮชแท็กได้เลย<br>เรียงตามลำดับที่ TikTok ส่งมา (เกี่ยวข้องมากอยู่บน) — <b>TikTok ไม่ได้ให้จำนวนครั้งที่คนค้น</b> จึงเทียบปริมาณไม่ได้ และรายการเปลี่ยนไปตามวัน<br>กดปุ่ม ↻ ข้างคำเพื่อค้นต่อจากคำนั้น จะได้เห็นคำที่ลึกลงไปอีกชั้น</div>`
+               <div class="kw-item${b ? ' kw-' + b : ''}"><span class="kw-rank">${i + 1}</span><span class="kw-word">${esc(x)}</span>${b === 'ours' ? '<span class="kw-tag ours">Brand เรา</span>' : b === 'other' ? '<span class="kw-tag">Brand อื่น</span>' : ''}<button class="kw-again" data-w="${esc(x)}" title="ค้นต่อจากคำนี้">↻</button></div>`; }).join('')}</div>
+             <div class="kw-note"><b>สรุป:</b> คำทั่วไป ${n.plain} · Brand เรา ${n.ours} · Brand อื่น ${n.other}${otherNames.length ? ` (${otherNames.map(esc).join(', ')})` : ''} — คำทั่วไปคือคำที่เอาไปตั้งชื่อคลิป/แฮชแท็กได้เลย<br>เรียงตามลำดับที่ TikTok ส่งมา (เกี่ยวข้องมากอยู่บน) — <b>TikTok ไม่ได้ให้จำนวนครั้งที่คนค้น</b> จึงเทียบปริมาณไม่ได้ และรายการเปลี่ยนไปตามวัน<br>กดปุ่ม ↻ ข้างคำเพื่อค้นต่อจากคำนั้น จะได้เห็นคำที่ลึกลงไปอีกชั้น</div>`
           : `ไม่พบคำที่เกี่ยวข้อง ${esc(j?.keyword?.message || j?.result || '')}`;
         box.querySelectorAll('.kw-again').forEach(b4 => b4.onclick = () => { el.querySelector('#kwInput').value = b4.dataset.w; go(); });
       } catch (e) {
@@ -679,7 +677,7 @@
           <tr>
             <td class="ht-c ht-mono">${r.rank_position ?? '—'}</td>
             <td class="ht-c">${chg(r)}</td>
-            <td class="t-left"><span class="ht-name">#${esc(r.hashtag_name)}</span>${b === 'ours' ? ' <span class="kw-tag ours">แบรนด์เรา</span>' : b === 'other' ? ' <span class="kw-tag">แบรนด์อื่น</span>' : ''}</td>
+            <td class="t-left"><span class="ht-name">#${esc(r.hashtag_name)}</span>${b === 'ours' ? ' <span class="kw-tag ours">Brand เรา</span>' : b === 'other' ? ' <span class="kw-tag">Brand อื่น</span>' : ''}</td>
             <td class="ht-r ht-mono">${fmtKM(r.posts)}</td>
             <td class="ht-r ht-mono">${fmtKM(r.views)}</td>
             <td class="ht-c">${spark(r.trending_history)}</td>
