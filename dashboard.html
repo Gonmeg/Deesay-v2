@@ -757,7 +757,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.18-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.18-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2460,11 +2460,17 @@ function showError(msg) {
 // ลองใหม่อัตโนมัติเมื่อเจอ error 5xx ชั่วคราว (Supabase hiccup ระหว่าง paginate ข้อมูลจำนวนมาก)
 // ไม่ retry 4xx (เช่น 401/403 คีย์ผิด/สิทธิ์ไม่พอ) เพราะลองใหม่กี่ครั้งก็ไม่หาย ต้องแจ้ง error ทันที
 async function fetchWithRetry(url, headers, retries = 3, backoffMs = 800, opts = {}) {
-  let lastErr;
+  let lastErr, renewed = false;
   for (let i = 0; i <= retries; i++) {
     try {
       const res = await fetch(url, { ...opts, headers });
       if (res.ok) return res;
+      // (2026-10-18) สิทธิ์หมดอายุ (เครื่องพัก / แท็บค้างนาน) → ต่ออายุแล้วลองใหม่ 1 ครั้ง แทนที่จะพังเงียบ ๆ
+      if (res.status === 401 && !renewed && window.Auth && Auth.client && Auth.client.auth) {
+        renewed = true;
+        try { await Auth.client.auth.refreshSession(); } catch (e) {}
+        headers = { ...headers, Authorization: 'Bearer ' + authJwt() }; i--; continue;
+      }
       lastErr = new Error('API error: ' + res.status);
       if (res.status < 500) throw lastErr;
     } catch (e) { lastErr = e; }
@@ -6990,10 +6996,12 @@ const HUB_SALES_ONLY = { fb: true, tt: true };
 
 async function renderAdpAll() {
   if (adRawData.length === 0) {
-    const sEl = document.getElementById('adp-summary');
-    if (sEl) sEl.textContent = '⏳ กำลังโหลดข้อมูลค่า Ads...';
-    fetchAdData().then(()=>renderAdpAll()); return;
+    // (2026-10-18) กันโหลดซ้ำไม่หยุด: ถ้าโหลดแล้วยังไม่มีข้อมูล (ไม่มีค่า Ads / เน็ตหลุด / สิทธิ์หมดอายุ) เดิมหน้านี้ยิงขอข้อมูลวนไม่รู้จบ → ลองใหม่ได้ทุก 60 วินาที
+    if (Date.now() - (renderAdpAll._at || 0) < 60000) { if (window.pageNote) window.pageNote('adperf', 'adempty', 'warn', 'ยังโหลดข้อมูลค่า Ads ไม่ได้', 'ลองกดรีเฟรชอีกครั้งในอีกสักครู่'); return; }
+    renderAdpAll._at = Date.now();
+    fetchAdData().then(() => renderAdpAll()); return;
   }
+  if (window.pageNote) window.pageNote('adperf', 'adempty', null);
   { const f = getDateValue('From'), t = getDateValue('To'); const seq = (renderAdpAll._seq = (renderAdpAll._seq || 0) + 1);
     try { await ensureSalesSummary(f, t, () => { if (currentPage === 'adperf' && seq === renderAdpAll._seq) renderAdpAll(); }); } catch (e) { showError('โหลดยอดขายไม่สำเร็จ: ' + e.message); return; }
     if (seq !== renderAdpAll._seq) return; }
@@ -7450,8 +7458,8 @@ const DG_SCHED = {
 async function loadDg(force) {
   if (_dg && !force && Date.now() - _dgAt < 600000) return _dg;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
-  const r = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/data_status`, { method: 'POST', headers: h, body: '{}' });
-  if (!r.ok) throw new Error('data_status ' + r.status);
+  // (2026-10-18) เดิม fetch ตรง → สิทธิ์หมดอายุตอนเครื่องพัก = ปุ่มสถานะโหลดไม่ขึ้น (401) · ใช้ fetchWithRetry ที่ต่ออายุให้เอง
+  const r = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/rpc/data_status`, h, 1, 800, { method: 'POST', body: '{}' });
   _dg = await r.json(); _dgAt = Date.now(); return _dg;
 }
 let _dgOpen = false;
@@ -8659,6 +8667,7 @@ async function renderMktLive() {
   const tb = document.getElementById('tbodyMl'); if (!tb) return;
   try { await loadMl(); } catch (e) { tb.innerHTML = `<tr><td colspan="6" class="empty">โหลดไม่สำเร็จ: ${e.message}</td></tr>`; return; }
   const [from, to] = mlRange();
+  if (!from || !to) { tb.innerHTML = '<tr><td colspan="6" class="empty">ยังไม่มีข้อมูล</td></tr>'; return; }   // (2026-10-18) กันหน้าพังเมื่อยังไม่มีเดือนให้เลือก
   const by = {}, byM = {};
   _mlRows.filter(r => r.month >= from && r.month <= to).forEach(r => {
     const o = (by[r.parent_sku] = by[r.parent_sku] || { sku: r.parent_sku, name: r.product_name || r.parent_sku, rev: 0, kc: 0, kp: 0, ko: 0, ad: 0, aa: 0 });
