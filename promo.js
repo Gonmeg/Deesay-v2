@@ -12,7 +12,7 @@
   const toast = m => (window.uiToast ? window.uiToast(m) : null);
   const rpc = (n, a) => Auth.rpc(n, a);
   const ST = { pending: ['รออนุมัติ', 'warn'], approved: ['อนุมัติแล้ว', 'good'], rejected: ['ไม่อนุมัติ', 'bad'], cancelled: ['ยกเลิก', ''] };
-  const LAYER = { platform: 'ค่าแพลตฟอร์ม', selling: 'ค่าขาย (Commission / Ads / ขนส่ง)', overhead: 'ค่าบริหาร / Marketing' };
+  const LAYER = { platform: 'ค่า Platform', selling: 'ค่าขาย (Commission / Ads / ขนส่ง)', overhead: 'ค่าบริหาร / Marketing' };
   const APPLY = { all: 'ทุกออเดอร์', single: 'เฉพาะสินค้าเดี่ยว', set: 'เฉพาะเซต' };
   let CAT = null;
   const cat = async () => (CAT = CAT || await rpc('promo_catalog'));
@@ -164,7 +164,7 @@
         <div class="full"><label>ของแถมใน 1 ออเดอร์ <small>ไม่มีก็เว้นไว้</small></label><div class="pr-rows" id="prGifts">${rowsHtml('gifts', F.gifts, C)}</div><button type="button" class="pr-add" data-addrow="gifts">＋ เพิ่มของแถม</button></div>
         <div><label>ราคาขายต่อออเดอร์ <small>รวม VAT หลังส่วนลด</small></label><input class="pr-in" type="number" min="0" step="0.01" data-f="price" value="${esc(F.price)}" placeholder="0.00"></div>
         <div><label>ยอดที่คาดว่าจะขาย <small>ออเดอร์</small></label><input class="pr-in" type="number" min="0" step="1" data-f="orders" value="${esc(F.orders)}" placeholder="0"></div>
-        <div class="full"><label>หมายเหตุ <small>ไม่บังคับ</small></label><textarea class="pr-in" rows="2" data-f="note" placeholder="เช่น เงื่อนไขพิเศษของแพลตฟอร์ม">${esc(F.note)}</textarea></div>
+        <div class="full"><label>หมายเหตุ <small>ไม่บังคับ</small></label><textarea class="pr-in" rows="2" data-f="note" placeholder="เช่น เงื่อนไขพิเศษของ Platform">${esc(F.note)}</textarea></div>
       </div><div style="margin-top:16px;display:flex;gap:10px;align-items:center;"><button class="pr-btn" id="prSubmit">ส่งขออนุมัติ</button><span class="pr-note" id="prMsg"></span></div></div>
       <div id="prSig"></div></div>
       <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
@@ -246,7 +246,7 @@
       ${sum('รายได้ไม่รวม VAT', c.revenue_ex)}
       ${ln('item')}${ln('gift')}
       ${sum('กำไรขั้นต้น', c.gross, pc(c.revenue_ex ? c.gross / c.revenue_ex : null))}
-      ${fee('platform')}${sum('หลังค่าแพลตฟอร์ม', c.after_platform)}
+      ${fee('platform')}${sum('หลังค่า Platform', c.after_platform)}
       ${fee('selling')}${sum('หลังค่าขาย', c.after_selling)}
       ${fee('overhead')}${sum('กำไรสุทธิต่อออเดอร์', c.profit, `${pc(c.margin)} ของรายได้ · ${pc(c.markup)} ของต้นทุน`)}
       ${+c.orders ? sum(`กำไรรวม × ${n0(c.orders)} ออเดอร์`, c.total_profit) : ''}</tbody></table>`;
@@ -254,7 +254,7 @@
   async function openReq(id) {
     const r = EX.list.find(x => x.id === id); if (!r) return;
     const C = await cat();
-    trOpenShell('โปรโมชั่น · รายละเอียด');
+    trOpenShell('Promotion · รายละเอียด');
     const S = { price: r.price, orders: r.orders || 0, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])) };
     const body = () => document.getElementById('trBody');
     const draw = (c) => {
@@ -301,7 +301,7 @@
 
   // ===================== หน้า ค่าธรรมเนียมช่องทาง (ผู้บริหาร) =====================
   // (2026-10-15 v2) ตารางเต็มความยาว (ไม่มีกรอบเลื่อนในตัว) · แถวรวมล็อกล่างจอ · แก้รายการ / ช่องทางผ่านแผงขวา · ใต้ตัวเลขมี "จริง" ไว้เทียบ (กดดูที่มาได้)
-  const ACT_LABEL = { commission: 'Commission', ads: 'ค่า Ads', admin: 'ค่าบริหาร (ทั้งบริษัท)', marketing: 'Marketing (ทั้งบริษัท)', platform: 'ค่าแพลตฟอร์มรวม' };
+  const ACT_LABEL = { commission: 'Commission', ads: 'ค่า Ads', admin: 'ค่าบริหาร (ทั้งบริษัท)', marketing: 'Marketing (ทั้งบริษัท)', platform: 'ค่า Platform รวม' };
   const ACCT_CH = ['TikTok', 'Shopee Mall', 'Shopee 24', 'Lazada Mall', 'Lazada 24', 'FB-COD', 'FB-โอนเงิน', 'Telesales', 'Line my shop', 'ตัวแทน', 'Eve&Boy', 'Konvy', 'Watsons', 'CJ', 'Thaimart'];
   const SYS_CH = ['TikTok', 'Shopee', 'Lazada', 'Facebook', 'ตัวแทน', 'Modern Trade'];
   const info = tip => `<span class="pr-i" data-tip="${esc(tip)}">ⓘ</span>`;
@@ -315,9 +315,9 @@
     trOpenShell(it ? 'แก้ไขรายการค่าใช้จ่าย' : 'เพิ่มรายการค่าใช้จ่าย');
     const b = document.getElementById('trBody');
     b.innerHTML = `<section class="tr-part" style="padding:16px;"><div class="pr-f">
-      <div class="full"><label>ชื่อรายการ</label><input class="pr-in" id="fiName" value="${esc(it ? it.name : '')}" placeholder="เช่น ค่าธรรมเนียมแคมเปญ"></div>
+      <div class="full"><label>ชื่อรายการ</label><input class="pr-in" id="fiName" value="${esc(it ? it.name : '')}" placeholder="เช่น ค่าธรรมเนียม Campaign"></div>
       <div class="full"><label>คิดเป็น</label>${seg('kind', [['pct', '% ของราคาขาย'], ['per_order', 'บาทต่อออเดอร์']], it ? it.kind : 'pct')}</div>
-      <div class="full"><label>หมวด ${info('ใช้จัดกลุ่มในขั้นบันไดกำไรของโปรโมชั่น: หลังค่าแพลตฟอร์ม → หลังค่าขาย → กำไรสุทธิ')}</label>${seg('layer', Object.entries(LAYER).map(([k, t]) => [k, t.split(' (')[0]]), it ? it.layer : 'platform')}</div>
+      <div class="full"><label>หมวด ${info('ใช้จัดกลุ่มในขั้นบันไดกำไรของ Promotion: หลังค่า Platform → หลังค่าขาย → กำไรสุทธิ')}</label>${seg('layer', Object.entries(LAYER).map(([k, t]) => [k, t.split(' (')[0]]), it ? it.layer : 'platform')}</div>
       <div class="full"><label>ใช้กับ</label>${seg('apply', Object.entries(APPLY), it ? it.apply : 'all')}</div>
       <div class="full"><label>เทียบกับค่าจริงหมวด ${info('ใต้ตัวเลขในตารางจะแสดง % ที่เสียจริงตามงบบัญชีของหมวดนี้ไว้เทียบ')}</label>
         <select class="pr-in" id="fiAct"><option value="">ไม่เทียบ</option>${['commission', 'ads', 'admin', 'marketing'].map(k => `<option value="${k}"${it && it.actual_key === k ? ' selected' : ''}>${ACT_LABEL[k]}</option>`).join('')}</select></div>
@@ -370,7 +370,7 @@
         <div class="tr-card-v">${pc(revT ? costT / revT : null)}</div>
         <div class="tr-card-m"><span>${d.scope === 'company' ? 'ทั้งบริษัท' : esc((d.acct_channels || []).join(' + '))}</span><span>${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : ''}</span></div></div>
       <section class="tr-part"><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>รายการ</th>${ms.map(m => `<th>${mLbl(m)}</th>`).join('')}<th>รวม</th></tr></thead><tbody>
-        <tr class="tr-gh"><td>ยอดขาย ${info('รายได้จากการขาย + ค่าขนส่ง + ส่วนลดจากแพลตฟอร์ม − รับคืน − ส่วนลดจ่าย (ไม่รวม VAT)')}</td>${ms.map(m => `<td>${n0(rev[m])}</td>`).join('')}<td>${n0(revT)}</td></tr>
+        <tr class="tr-gh"><td>ยอดขาย ${info('รายได้จากการขาย + ค่าขนส่ง + ส่วนลดจาก Platform − รับคืน − ส่วนลดจ่าย (ไม่รวม VAT)')}</td>${ms.map(m => `<td>${n0(rev[m])}</td>`).join('')}<td>${n0(revT)}</td></tr>
         ${stds.map(sn => `<tr class="tr-gc"><td>${esc(sn)}</td>${ms.map(m => `<td>${n0(lines.filter(x => x[0] === m && (x[1] ? x[1] + ' ' : '') + x[2] === sn).reduce((t, x) => t + +x[3], 0))}</td>`).join('')}<td>${n0(lines.filter(x => (x[1] ? x[1] + ' ' : '') + x[2] === sn).reduce((t, x) => t + +x[3], 0))}</td></tr>`).join('')}
         <tr class="tr-gh"><td>${esc(ACT_LABEL[key])} รวม</td>${ms.map(m => `<td>${n0(costM(m))}</td>`).join('')}<td>${n0(costT)}</td></tr>
         <tr><td><b>% ของยอดขาย</b></td>${ms.map(m => `<td class="tr-pc">${pc(+rev[m] ? costM(m) / rev[m] : null)}</td>`).join('')}<td class="tr-pc">${pc(revT ? costT / revT : null)}</td></tr></tbody></table></section>
@@ -404,7 +404,7 @@
         + chs.map(c => { const v = val(it, c); return `<td><div class="pr-cell"><input inputmode="decimal" data-cell="${it.id}|${c.id}" data-kind="${it.kind}" value="${show(it, v)}" placeholder="—"><i>${v == null ? '' : it.kind === 'pct' ? '%' : 'บ.'}</i></div>${it.actual_key ? actCell(it.actual_key, c, v) : ''}</td>`; }).join('') + '</tr>').join('')
       + `</tbody></table></div>
       <div class="pr-sum" id="feSum"><table class="pr-ft" style="width:${width}px;">${cols}<tbody>
-        <tr><td>รวมค่าแพลตฟอร์ม</td>${chs.map(c => { const s = tot(c, it => it.layer === 'platform'); return `<td><b>${(s * 100).toFixed(2)}%</b>${actCell('platform', c, s)}</td>`; }).join('')}</tr>
+        <tr><td>รวมค่า Platform</td>${chs.map(c => { const s = tot(c, it => it.layer === 'platform'); return `<td><b>${(s * 100).toFixed(2)}%</b>${actCell('platform', c, s)}</td>`; }).join('')}</tr>
         <tr><td>รวมทุกรายการ (%)</td>${chs.map(c => `<td><b>${(tot(c, () => true) * 100).toFixed(2)}%</b></td>`).join('')}</tr></tbody></table></div>
       <details class="pr-card pr-hist"><summary>ประวัติการแก้ไข (${(T.history || []).length})</summary>${(T.history || []).length ? `<table class="pr-tb" data-no-sort data-no-page><tbody>${T.history.map(h => `<tr><td style="white-space:nowrap;">${new Date(h[0]).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${esc(h[1] || '')}</td><td>${esc(h[2] || '')}</td><td class="num">${esc(h[3] ?? '')}${h[3] != null || h[4] != null ? ' → ' : ''}${esc(String(h[4] ?? '').slice(0, 60))}</td></tr>`).join('')}</tbody></table>` : '<div class="pr-empty">ยังไม่มี</div>'}</details>`;
     const wrap = document.getElementById('feWrap'), sum = document.getElementById('feSum');
