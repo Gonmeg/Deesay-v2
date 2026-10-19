@@ -617,7 +617,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261018b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261018a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -677,7 +677,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .pl-trace { cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); } .pl-trace:hover { text-decoration-color:var(--text); }
 </style>
 </head>
-<body>
+<body data-ui-select><!-- (2026-10-18) ui.js แปลง dropdown ทุกอันเฉพาะหน้านี้ -->
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
@@ -757,7 +757,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.18-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.18-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -998,36 +998,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
     </div>
     <div class="page" id="page-fbhub">
-      <div id="fbhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
-          <div class="section-header">
-            <div class="card-title">ยอดขาย (Facebook) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="fbhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-            <div class="toggle-group">
-              <button class="toggle-btn" id="fbhub-yr" onclick="setHubAdView('fb','year',this)">ทั้งปี</button>
-              <button class="toggle-btn active" id="fbhub-mo" onclick="setHubAdView('fb','month',this)">รายเดือน</button>
-              <button class="toggle-btn" id="fbhub-dy" onclick="setHubAdView('fb','day',this)">รายวัน</button>
-            </div>
-          </div>
-          <div class="chart-wrap chart-wrap-lg"><canvas id="chartFbAds"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">สัดส่วนยอดขายตาม Sub-Channel</div>
-          <div id="fbSubChannelBars" style="padding-top:6px;"></div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header">
-          <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblFbSubChannel')">⬇ Export CSV</button>
-        </div>
-        <div class="table-wrap">
-          <table id="tblFbSubChannel">
-            <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-            <tbody id="tbodyFbSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
-          </table>
-        </div>
-      </div>
+      <!-- (2026-10-18) แม่แบบ 1: แผงตัวเลข (รวมค่า Ads + ROAS) · กราฟ · ตารางรายเพจ / ร้าน — วาดโดย sales.js -->
+      <div id="fbhub-ov" style="margin-bottom:20px;"></div>
 
       <div class="section-divider" style="display:flex;justify-content:space-between;align-items:center;">
         <span>Promotion / SKU</span>
@@ -1450,20 +1422,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-tthub">
-      <div id="tthub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
-          <div class="section-header">
-            <div class="card-title">ยอดขาย (TikTok) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="tthub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-            <div class="toggle-group">
-              <button class="toggle-btn" id="tthub-yr" onclick="setHubAdView('tt','year',this)">ทั้งปี</button>
-              <button class="toggle-btn active" id="tthub-mo" onclick="setHubAdView('tt','month',this)">รายเดือน</button>
-              <button class="toggle-btn" id="tthub-dy" onclick="setHubAdView('tt','day',this)">รายวัน</button>
-            </div>
-          </div>
-          <div class="chart-wrap chart-wrap-lg"><canvas id="chartTtAds"></canvas></div>
-        </div>
-        <div class="card">
+      <!-- (2026-10-18) แม่แบบ 1: แผงตัวเลข (รวมค่า Ads + ROAS) · กราฟ · ตารางรายเพจ / ร้าน — วาดโดย sales.js -->
+      <div id="tthub-ov" style="margin-bottom:20px;"></div>
+      <div class="card" style="margin-bottom:20px;">
           <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
           <div class="table-wrap">
             <table id="tblTtOrderChannel">
@@ -1472,7 +1433,6 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             </table>
           </div>
         </div>
-      </div>
 
       <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
 
@@ -1926,25 +1886,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-shhub">
-      <div id="shhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
-          <div class="section-header"><div class="section-title" id="ttlShMonthly">ยอดขายรายเดือน (Shopee)</div><div style="font-size:10.5px;color:var(--text3);">ค่า Ads และ ROAS ดูที่หน้า Shopee Ads</div></div>
-          <div class="chart-wrap chart-wrap-lg"><canvas id="chartShMonthly"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="section-header">
-            <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
-            <button class="btn btn-ghost" onclick="exportTable('tblShSubChannel')">⬇ Export CSV</button>
-          </div>
-          <div class="table-wrap">
-            <table id="tblShSubChannel">
-              <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyShSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <!-- (2026-10-18) แม่แบบ 1: แผงตัวเลข (รวมค่า Ads + ROAS) · กราฟ · ตารางรายเพจ / ร้าน — วาดโดย sales.js -->
+      <div id="shhub-ov" style="margin-bottom:20px;"></div>
 
       <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
 
@@ -2092,32 +2035,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-lzhub">
-      <div id="lzhub-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
-          <div class="section-header">
-            <div class="card-title">ยอดขาย vs ค่าโฆษณา (Lazada) <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('lz')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="lzhub-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:300px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-            <div class="toggle-group">
-              <button class="toggle-btn" id="lzhub-yr" onclick="setHubAdView('lz','year',this)">ทั้งปี</button>
-              <button class="toggle-btn active" id="lzhub-mo" onclick="setHubAdView('lz','month',this)">รายเดือน</button>
-              <button class="toggle-btn" id="lzhub-dy" onclick="setHubAdView('lz','day',this)">รายวัน</button>
-            </div>
-          </div>
-          <div class="chart-wrap chart-wrap-lg"><canvas id="chartLzAds"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="section-header">
-            <div class="section-title">ยอดขายแยกตาม Sub-Channel</div>
-            <button class="btn btn-ghost" onclick="exportTable('tblLzSubChannel')">⬇ Export CSV</button>
-          </div>
-          <div class="table-wrap">
-            <table id="tblLzSubChannel">
-              <thead><tr><th>#</th><th>Sub-Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>AOV</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyLzSubChannel"><tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <!-- (2026-10-18) แม่แบบ 1: แผงตัวเลข (รวมค่า Ads + ROAS) · กราฟ · ตารางรายเพจ / ร้าน — วาดโดย sales.js -->
+      <div id="lzhub-ov" style="margin-bottom:20px;"></div>
 
       <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
 
@@ -3229,18 +3148,26 @@ function toggleTheme() {
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
 // ===== OVERVIEW =====
+// (2026-10-18) แม่แบบ 1 อยู่ใน sales.js — โหลดครั้งแรกที่เปิดหน้าภาพรวมยอดขาย / ภาพรวมรายช่องทาง
+function loadSalesJs() {
+  if (window.renderSalesOverview) return Promise.resolve();
+  if (window._salesJsP) return window._salesJsP;
+  window._salesJsP = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'sales.js?v=20261018b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
+    s.onload = res;
+    s.onerror = () => { window._salesJsP = null; rej(new Error('โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
+    document.body.appendChild(s);
+  });
+  return window._salesJsP;
+}
 async function renderOverview() {
-  // (2026-10-18) แม่แบบ 1 "ภาพรวมยอดขาย" (รวมหน้าแยกตาม Channel แล้ว) อยู่ใน sales.js — โหลดครั้งแรกที่เปิดหน้า
-  const go = () => window.renderSalesOverview({ root: document.getElementById('ov-root'), from: getDateValue('From'), to: getDateValue('To'),
+  // (2026-10-18) แม่แบบ 1 "ภาพรวมยอดขาย" (รวมหน้าแยกตาม Channel แล้ว)
+  const root = document.getElementById('ov-root');
+  try { await loadSalesJs(); } catch (e) { root.innerHTML = `<div class="error-banner" style="display:block;">${e.message}</div>`; return; }
+  if (currentPage !== 'overview') return;
+  return window.renderSalesOverview({ root, from: getDateValue('From'), to: getDateValue('To'),
     ch: document.getElementById('filterChannel').value, sub: document.getElementById('filterSubChannel').value, page: 'overview' });
-  if (window.renderSalesOverview) return go();
-  if (window._salesJsLoading) return;
-  window._salesJsLoading = true;
-  const s = document.createElement('script');
-  s.src = 'sales.js?v=20261018a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
-  s.onload = () => { window._salesJsLoading = false; if (currentPage === 'overview') go(); };
-  s.onerror = () => { window._salesJsLoading = false; document.getElementById('ov-root').innerHTML = '<div class="error-banner" style="display:block;">โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
-  document.body.appendChild(s);
 }
 
 async function renderChannel() {
@@ -3320,68 +3247,15 @@ async function renderChannel() {
 // Google Sheet ต้นทางไม่มีคอลัมน์ sub_channel เลยแสดงค่าโฆษณา/ROAS ได้แค่ระดับ Facebook รวม ไม่ใช่รายsub-channel
 async function renderFbHub() {
   if (!(await hubPrepare('fbhub'))) return;
-  const H = hubAgg('Facebook');   // เฟส 2: จาก sales_summary (v_orders_clean)
-
-  const finish = () => {
-    const adData = getAdDateFiltered().ads.filter(r => r.channel==='Facebook');
-    const tAds = adData.reduce((s,r) => s + r.ads, 0);
-    const totalRev = H.totalRev;
-    const totalOrd = H.totalOrd;
-    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
-
-    document.getElementById('fbhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('fbads', null, document.querySelector('.nav-item[onclick*=\\'fbads\\']'))" title="ดูรายละเอียดที่หน้า Facebook Ads"><div class="card-title">ค่าโฆษณา ↗</div><div class="kpi-value">${fmt(tAds)}</div><div class="kpi-sub">รายละเอียดที่หน้า Facebook Ads</div></div>
-      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('fbads', null, document.querySelector('.nav-item[onclick*=\\'fbads\\']'))" title="ดูรายละเอียดที่หน้า Facebook Ads"><div class="card-title">ROAS ↗</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
-    `;
-
-    // Sub-channel breakdown (ยอดขาย/ออเดอร์เท่านั้น — ไม่มีข้อมูลค่าโฆษณาระดับ sub-channel)
-    const sorted = H.sortedSub;
-    const subSel = document.getElementById('fbPromoSubChannel');
-    if (subSel && subSel.options.length <= 1) {
-      subSel.innerHTML = '<option value="">ทั้งหมด</option>' + sorted.map(([k]) => `<option value="${k}">${k}</option>`).join('');
-    }
-    document.getElementById('tbodyFbSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
-      <tr>
-        <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-        <td>${k}</td><td><span class="pl-trace" data-tsales="Facebook|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="Facebook|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td>
-        <td>${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-      </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
-
-    document.getElementById('fbSubChannelBars').innerHTML = sorted.length ? sorted.slice(0,8).map(([k,v],i) => {
-      const pct = totalRev ? (v.rev/totalRev*100) : 0;
-      const isSelected = hubSelectedSub.fb === k;
-      const safeSub = k.replace(/'/g, "\\'");
-      return `
-      <div class="hub-subch-bar${isSelected?' selected':''}" data-hub="fb" data-sub="${k}" onclick="selectHubSubChannel('fb','${safeSub}')" style="margin-bottom:10px;cursor:pointer;padding:4px 6px;margin-left:-6px;margin-right:-6px;border-radius:6px;transition:background 0.15s;${isSelected?'background:rgba(99,102,241,0.12);box-shadow:inset 0 0 0 1px var(--accent);':''}">
-        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;">
-          <span style="color:${isSelected?'var(--accent)':'var(--text)'};font-weight:${isSelected?'700':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;">${isSelected?'✓ ':''}${k}</span>
-          <span style="color:var(--text2);font-family:'IBM Plex Mono',monospace;">${fmt(v.rev)} · ${pct.toFixed(1)}%</span>
-        </div>
-        <div style="background:var(--bg3);border-radius:4px;height:8px;overflow:hidden;">
-          <div style="width:${pct}%;height:100%;background:${COLORS[i % COLORS.length]};border-radius:4px;"></div>
-        </div>
-      </div>`;
-    }).join('') + '<div style="font-size:10.5px;color:var(--text3);margin-top:8px;">💡 คลิกที่เพจเพื่อดูกราฟยอดขายเฉพาะเพจนั้นเฉพาะเพจนั้น (คลิกซ้ำเพื่อยกเลิก)</div>' : '<div class="empty">ไม่มีข้อมูล</div>';
-
-    renderAdpChannel('chartFbAds', null, 'fb', hubAdView.fb, hubSelectedSub.fb);
-    renderPromotion('Fb', 'Facebook');
-    // renderRealPromoAndUpsell() — ซ่อนตาราง "Top Promotion ของจริง / Upsell" ไว้ก่อน (เงื่อนไข attribution ยังไม่ validate) โค้ดคงไว้
-
-    // คำแนะนำอย่างง่าย: sub-channel ที่ ROAS/AOV เด่นสุด (เทียบจาก AOV เพราะไม่มี ad ต่อ sub-channel)
-    let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
-    if (sorted.length >= 2) {
-      const top = sorted[0];
-      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
-      insight = `Sub-channel "${top[0]}" ทำยอดขายสูงสุด ${share}% ของ Facebook ทั้งหมด (${fmt(top[1].rev)}) — ลองเช็คว่างบโฆษณาที่จัดสรรให้ sub-channel นี้เหมาะสมกับสัดส่วนยอดขายหรือยัง`;
-    }
-    (document.getElementById('fbhub-insight') || {}).textContent = insight;
-  };
-
-  if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+  // (2026-10-18) แม่แบบ 1: แผงตัวเลข + กราฟ + ตารางรายเพจ อยู่ใน sales.js (กราฟ / ตาราง Sub-Channel เดิมเอาออกแล้ว)
+  renderHubOverview('fbhub');
+  const subSel = document.getElementById('fbPromoSubChannel');
+  if (subSel && subSel.options.length <= 1) {
+    subSel.innerHTML = '<option value="">ทั้งหมด</option>' + hubAgg('Facebook').sortedSub.map(([k]) => `<option value="${k}">${k}</option>`).join('');
+  }
+  renderPromotion('Fb', 'Facebook');
+  // renderRealPromoAndUpsell() — ซ่อนตาราง "Top Promotion ของจริง / Upsell" ไว้ก่อน (เงื่อนไข attribution ยังไม่ validate) โค้ดคงไว้
 }
-
 
 // ===== FB ENGAGEMENT (DAILY) — เทียบ engagement 3 เพจ + วิเคราะห์คอมเมนต์ =====
 let fbePagesCache = [];
@@ -3763,45 +3637,19 @@ function fbeRenderPostListPage(pageNum) {
 // ===== TIKTOK HUB =====
 async function renderTtHub() {
   if (!(await hubPrepare('tthub'))) return;
-  ensureTtApi().then(api => api.renderTraffic(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
-  const H = hubAgg('TikTok');   // เฟส 2: จาก sales_summary (v_orders_clean)
-
-  const finish = () => {
-    const adData = getAdDateFiltered().ads.filter(r => r.channel==='TikTok');
-    const tAds = adData.reduce((s,r) => s + r.ads, 0);
-    const totalRev = H.totalRev;
-    const totalOrd = H.totalOrd;
-    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
-
-    document.getElementById('tthub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('ttads', null, document.querySelector('.nav-item[onclick*=\\'ttads\\']'))" title="ดูรายละเอียดที่หน้า TikTok Ads"><div class="card-title">ค่าโฆษณา ↗</div><div class="kpi-value">${fmt(tAds)}</div><div class="kpi-sub">รายละเอียดที่หน้า TikTok Ads</div></div>
-      <div class="card" style="flex:1;min-width:140px;cursor:pointer;" onclick="showPage('ttads', null, document.querySelector('.nav-item[onclick*=\\'ttads\\']'))" title="ดูรายละเอียดที่หน้า TikTok Ads"><div class="card-title">ROAS ↗</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
-      ${cancelReturnCardHtml2('tt', H.cancelRev, H.cancelOrd, totalRev)}
-      ${freeSampleCardHtml(getDateValue('From'), getDateValue('To'))}
-    `;
-
-    const ocSorted = Object.entries(H.byOC).sort((a,b) => b[1].rev - a[1].rev);
-    document.getElementById('tbodyTtOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
-      <tr><td>${k}</td><td><span class="pl-trace" data-tsales="TikTok|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="TikTok|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
-    `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
-    // (2026-10-06) ช่วงที่มีข้อมูล API → ตารางช่องทางใช้ TikTok API แทนช่อง Order Channel ในไฟล์ (ครีเอเตอร์ตาม Commission จริง)
-    ensureTtApi().then(api => api.renderOrderChannel(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));   // (2026-10-15) ทุกช่วงวันที่ ใช้ออเดอร์ชุดเดียวกับการ์ด
-
-    renderAdpChannel('chartTtAds', null, 'tt', hubAdView.tt);
-    renderPromotion('Tt', 'TikTok');
-
-    let insight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
-    if (ocSorted.length) {
-      const top = ocSorted[0];
-      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
-      insight = `${top[0]} ทำยอดขายสูงสุด ${share}% ของ TikTok ทั้งหมด — ใช้เมนู "ค้นหา Live" เพื่อดูรายละเอียดแต่ละรอบ Live ได้`;
-    }
-    (document.getElementById('tthub-insight') || {}).textContent = insight;
-  };
-
-  if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+  const from = getDateValue('From'), to = getDateValue('To');
+  // (2026-10-18) แม่แบบ 1 (sales.js) · TikTok มีร้านเดียว จึงไม่มีตารางรายร้าน — ใช้ตาราง "ยอดขายแยกตามช่องทาง" แทน (ออเดอร์ชุดเดียวกับแผงตัวเลข)
+  renderHubOverview('tthub', [ttFreeSampleTile(from, to)]);
+  ensureTtApi().then(api => { api.renderOrderChannel(from, to); api.renderTraffic(from, to); }).catch(e => console.warn('ttapi', e));
+  renderPromotion('Tt', 'TikTok');
+}
+// ตัวอย่าง / รีวิวที่ส่งฟรี (ตัวเลขเดิมของการ์ดเดิม) — แสดงในแผงตัวเลขแบบดูอย่างเดียว ไม่เป็นเส้นในกราฟ
+function ttFreeSampleTile(from, to) {
+  const rows = (freeSample.rangeKey === from + '|' + to) ? freeSample.rows : [];
+  const qty = rows.reduce((s, r) => s + (parseFloat(r.qty) || 0), 0), ord = rows.reduce((s, r) => s + (parseInt(r.orders) || 0), 0);
+  return { name: 'ตัวอย่างฟรี', value: rows.length ? fmt(qty) + ' ชิ้น' : '0',
+    sub: rows.length ? `${fmt(ord)} ออเดอร์ · ไม่นับเป็นยอดขาย` : 'ไม่มีในช่วงนี้',
+    tip: 'ตัวอย่าง / รีวิวที่ส่งให้ฟรี รวมจาก 2 ช่องทาง<br>• <b>TikTok</b> ออเดอร์ที่ยอดขาย 0 บาท และไม่ใช่ Cancel / Return<br>• <b>Facebook</b> Sub-channel "รีวิว ฟีมิคส์" ทั้งหมด<br>ไม่นับเป็นยอดขาย และไม่นับในจำนวนชิ้นของทุกหน้า' };
 }
 
 // ===== SHOPEE HUB =====
@@ -3829,104 +3677,16 @@ async function fetchShopeeAdsTotal(from, to) {
 }
 async function renderShHub() {
   if (!(await hubPrepare('shhub'))) return;
-  const H = hubAgg('Shopee');   // เฟส 2: จาก sales_summary (v_orders_clean)
-  const prevRev = H.prevRev, prevOrd = H.prevOrd;
-  const ads = await fetchShopeeAdsTotal(H.from, H.to);
-  if (currentPage !== 'shhub') return;
-
-  const finish = () => {
-    const tAds = ads.total;
-    const totalRev = H.totalRev;
-    const totalOrd = H.totalOrd;
-    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
-    const adsPct = tAds > 0 && totalRev > 0 ? (tAds / totalRev * 100).toFixed(1) + '%' : '—';
-    const noCmp = { text: '—', cls: '', tip: H.cmp.tip }; const revBadge = H.cmp.none ? noCmp : cmpBadge(H.cmpRev, prevRev, H.cmp.tip), ordBadge = H.cmp.none ? noCmp : cmpBadge(H.cmpOrd, prevOrd, H.cmp.tip); noteSalesStatus('shhub', H.cmp, H.cancelPend);
-    const goAds = `onclick="showPage('shads', null, document.querySelector('.nav-item[onclick*=\\'shads\\']'))" style="cursor:pointer;" title="ดูรายละเอียดค่า Ads ที่หน้า Shopee Ads"`;
-
-    document.getElementById('shhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div><div class="kpi-sub"><span class="${revBadge.cls}" title="${revBadge.tip || ''}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}" title="${ordBadge.tip || ''}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" ${goAds}><div class="card-title">ค่า Ads รวม</div><div class="kpi-value">${fmt(tAds)}</div><div class="kpi-sub">${ads.days ? `${adsPct} ของยอดขาย · ${fmt(ads.days)} วัน · ดูรายละเอียด →` : 'ยังไม่มีข้อมูลในช่วงนี้'}</div></div>
-      <div class="card" ${goAds}><div class="card-title">ROAS จริง</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div><div class="kpi-sub">ยอดขาย ÷ ค่า Ads รวมทุกประเภท</div></div>
-      ${cancelReturnCardHtml2('sh', H.cancelRev, H.cancelOrd, totalRev, H.cancelPend)}
-    `;
-
-    const sorted = H.sortedSub;
-    document.getElementById('tbodyShSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
-      <tr>
-        <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-        <td>${k}</td><td><span class="pl-trace" data-tsales="Shopee|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="Shopee|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td>
-        <td>${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-      </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
-
-    // ยอดขายรายเดือนจาก sales_summary (กราฟ "ยอดขาย vs ค่าโฆษณา" เดิมย้ายไปหน้า Shopee Ads แล้ว ไม่ให้ซ้ำ)
-    const gSh = effGrain('month'), bySh = gSh === 'day' ? H.byDay : H.byMonth;   // ช่วงไม่เกิน 1 เดือน → รายวัน
-    const months = Object.keys(bySh).sort();
-    { const t = document.getElementById('ttlShMonthly'); if (t) t.textContent = gSh === 'day' ? 'ยอดขายรายวัน (Shopee)' : 'ยอดขายรายเดือน (Shopee)'; }
-    makeChart('chartShMonthly', 'bar', months.map(m => gSh === 'day' ? grainDayLabel(m) : new Date(m + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })),
-      [{ label: 'ยอดขาย', data: months.map(m => bySh[m]), backgroundColor: 'rgba(238,77,45,0.7)' }],
-      { tooltip: { callbacks: { label: it => `ยอดขาย: ${fmt(it.raw)}` } } });
-    renderPromotion('Sh', 'Shopee');
-
-    // คำแนะนำอัตโนมัติ: sub-channel เด่นสุด + ประเมิน ROAS ภาพรวม (เกณฑ์เดียวกับ Ad Performance)
-    let shInsight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
-    if (sorted.length) {
-      const top = sorted[0];
-      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
-      const roasNum = parseFloat(roas);
-      const roasNote = isNaN(roasNum) ? '' : (roasNum>=5?` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) อยู่ในเกณฑ์ดีมาก`:roasNum>=3?` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) พอใช้ ลองดูประเภท Ads ที่คุ้มน้อยในหน้า Shopee Ads`:` ROAS จริง ${roas}x (ค่า Ads ${adsPct} ของยอดขาย) ค่อนข้างต่ำ ควรทบทวนงบโฆษณา`);
-      shInsight = `Sub-channel "${top[0]}" ทำยอดขายสูงสุด ${share}% ของ Shopee ทั้งหมด (${fmt(top[1].rev)})${roasNote} — หมายเหตุ: ประเมินจาก ROAS เท่านั้น ยังไม่รวมต้นทุนสินค้า`;
-    }
-    (document.getElementById('shhub-insight') || {}).textContent = shInsight;
-  };
-  finish();
+  // (2026-10-18) แม่แบบ 1 (sales.js) · ค่า Ads จาก mv_ad_spend_daily — ยอดเท่ากับ 4 แหล่งเดิม (API + Brand / Live / Coins + CPAS + ชีท 24hr) ทุกเดือน
+  renderHubOverview('shhub');
+  renderPromotion('Sh', 'Shopee');
 }
 
 // ===== LAZADA HUB =====
 async function renderLzHub() {
   if (!(await hubPrepare('lzhub'))) return;
-  const H = hubAgg('Lazada');   // เฟส 2: จาก sales_summary (v_orders_clean)
-  const prevRev = H.prevRev, prevOrd = H.prevOrd;
-
-  const finish = () => {
-    const adData = getAdDateFiltered().ads.filter(r => r.channel==='Lazada');
-    const tAds = adData.reduce((s,r) => s + r.ads, 0);
-    const totalRev = H.totalRev;
-    const totalOrd = H.totalOrd;
-    const roas = tAds > 0 ? (totalRev/tAds).toFixed(2) : '—';
-    const noCmp = { text: '—', cls: '', tip: H.cmp.tip }; const revBadge = H.cmp.none ? noCmp : cmpBadge(H.cmpRev, prevRev, H.cmp.tip), ordBadge = H.cmp.none ? noCmp : cmpBadge(H.cmpOrd, prevOrd, H.cmp.tip); noteSalesStatus('lzhub', H.cmp, H.cancelPend);
-
-    document.getElementById('lzhub-kpis').innerHTML = `
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขาย</div><div class="kpi-value">${fmt(totalRev)}</div><div class="kpi-sub"><span class="${revBadge.cls}" title="${revBadge.tip || ''}">${revBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ออเดอร์</div><div class="kpi-value">${fmt(totalOrd)}</div><div class="kpi-sub"><span class="${ordBadge.cls}" title="${ordBadge.tip || ''}">${ordBadge.text}</span> vs ช่วงก่อนหน้า</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ค่าโฆษณา</div><div class="kpi-value">${fmt(tAds)}</div></div>
-      <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ROAS</div><div class="kpi-value" style="color:var(--green);">${roas}${roas!=='—'?'x':''}</div></div>
-      ${cancelReturnCardHtml2('lz', H.cancelRev, H.cancelOrd, totalRev, H.cancelPend)}
-    `;
-
-    const sorted = H.sortedSub;
-    document.getElementById('tbodyLzSubChannel').innerHTML = sorted.length ? sorted.map(([k,v],i) => `
-      <tr>
-        <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-        <td>${k}</td><td><span class="pl-trace" data-tsales="Lazada|${getDateValue('From')}|${getDateValue('To')}||${k}">${fmt(v.rev)}</span></td><td><span class="pl-trace" data-tsales="Lazada|${getDateValue('From')}|${getDateValue('To')}||${k}|orders">${fmt(v.ord)}</span></td>
-        <td>${fmt(v.ord ? v.rev/v.ord : 0)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td>
-      </tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
-
-    renderAdpChannel('chartLzAds', null, 'lz', hubAdView.lz);
-    renderPromotion('Lz', 'Lazada');
-
-    let lzInsight = 'ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคำแนะนำในช่วงที่เลือก';
-    if (sorted.length) {
-      const top = sorted[0];
-      const share = totalRev ? (top[1].rev/totalRev*100).toFixed(0) : 0;
-      const roasNum = parseFloat(roas);
-      const roasNote = isNaN(roasNum) ? '' : (roasNum>=5?` ROAS รวม ${roas}x อยู่ในเกณฑ์ดีมาก`:roasNum>=3?` ROAS รวม ${roas}x พอใช้ ลองดูช่องทางที่ efficiency ต่ำกว่าค่าเฉลี่ย`:` ROAS รวม ${roas}x ค่อนข้างต่ำ ควรทบทวนงบโฆษณา`);
-      lzInsight = `Sub-channel "${top[0]}" ทำยอดขายสูงสุด ${share}% ของ Lazada ทั้งหมด (${fmt(top[1].rev)})${roasNote} — หมายเหตุ: ประเมินจาก ROAS เท่านั้น ยังไม่รวมต้นทุนสินค้า`;
-    }
-    (document.getElementById('lzhub-insight') || {}).textContent = lzInsight;
-  };
-
-  if (adRawData.length === 0) { fetchAdData().then(finish); } else { finish(); }
+  renderHubOverview('lzhub');   // (2026-10-18) แม่แบบ 1 (sales.js)
+  renderPromotion('Lz', 'Lazada');
 }
 
 // ===== LIVE SEARCH (TikTok) =====
@@ -4800,6 +4560,25 @@ function cancelReturnCardHtml2(hub, crRev, crOrd, totalRev, pend) {
     <div class="kpi-value" style="color:var(--red);">${fmt(crRev)}</div>
     <div style="font-size:11px;color:var(--text3);margin-top:2px;">${pct.toFixed(1)}% ของยอดรวมก่อนตัดออก · ${fmt(crOrd)} ออเดอร์${pend ? ` · ยังไม่รวม ${pend.mon} เป็นต้นไป` : ''}</div>
   </div>`;
+}
+// (2026-10-18) แม่แบบ 1 กับหน้าภาพรวม Facebook / TikTok / Shopee / Lazada — ค่า Ads จาก adRawData (mv_ad_spend_daily) แหล่งเดียวกับ Ad Performance
+const HUB_OV = {
+  fbhub: { ch: 'Facebook', key: 'fb', adsPage: 'fbads', adsName: 'Facebook Ads' },
+  tthub: { ch: 'TikTok', key: 'tt', adsPage: 'ttads', adsName: 'TikTok Ads' },
+  shhub: { ch: 'Shopee', key: 'sh', adsPage: 'shads', adsName: 'Shopee Ads' },
+  lzhub: { ch: 'Lazada', key: 'lz' },
+};
+async function renderHubOverview(page, extraTiles) {
+  const C = HUB_OV[page], root = document.getElementById(page + '-ov'); if (!C || !root) return;
+  try {
+    await loadSalesJs();
+    // ยังไม่มีค่า Ads ในเครื่อง → โหลด 1 ครั้ง (ถ้าโหลดไม่ได้ ลองใหม่ได้ทุก 60 วินาที ไม่ยิงซ้ำวน)
+    if (!adRawData.length && Date.now() - (renderHubOverview._at || 0) > 60000) { renderHubOverview._at = Date.now(); await fetchAdData(); }
+    if (currentPage !== page) return;
+    await window.renderSalesOverview({ root, page, hub: true, skipEnsure: true, ch: C.ch,
+      from: getDateValue('From'), to: getDateValue('To'), sub: document.getElementById('filterSubChannel').value,
+      ads: adRawData.filter(r => r.channel === C.ch), adsTip: ADS_SOURCE_INFO[C.key], adsPage: C.adsPage, adsName: C.adsName, extraTiles: extraTiles || [] });
+  } catch (e) { root.innerHTML = `<div class="error-banner" style="display:block;">${String(e.message || e)}</div>`; }
 }
 async function hubPrepare(page) {
   const from = getDateValue('From'), to = getDateValue('To');
@@ -10905,6 +10684,6 @@ window._authP.then(p => {
   setInterval(() => { document.querySelectorAll('select[data-ux]').forEach(sel => { if (sel._uxBtn && sel._uxSig !== sigOf(sel)) sync(sel); }); }, 300);
 })();
 </script>
-<script src="ui.js?v=20261018b" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
+<script src="ui.js?v=20261018a" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
 </body>
 </html>
