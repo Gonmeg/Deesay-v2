@@ -41,9 +41,9 @@
     const nd = new Date(FRESH.lastDay + 'T00:00:00'); nd.setDate(nd.getDate() + 1);
     const missing = nd.getFullYear() + '-' + String(nd.getMonth() + 1).padStart(2, '0') + '-' + String(nd.getDate()).padStart(2, '0');
     if (gap <= 1) return set(null);
-    if (pulledToday && gap === 2) return set('warn', `ข้อมูลถึง ${dTH(FRESH.lastDay)}`, `TikTok ยังไม่ส่งตัวเลขของ ${dTH(missing)} มา (ระบบดึงแล้วเมื่อ ${pullTxt}) ปกติได้ภายใน 1–2 วัน ไม่ต้องทำอะไร`);
-    if (pulledToday) return set('warn', `ข้อมูลถึง ${dTH(FRESH.lastDay)}`, `ระบบดึงแล้ววันนี้ (${pullTxt}) แต่ TikTok ยังไม่ส่งข้อมูลมา ${gap - 1} วันแล้ว ถ้ายังไม่มาพรุ่งนี้ให้แจ้งทีมข้อมูล`);
-    return set('bad', `ข้อมูลถึง ${dTH(FRESH.lastDay)} — วันนี้ระบบยังไม่ได้ดึงข้อมูลใหม่`, `ดึงครั้งล่าสุด ${pullTxt} · ตรวจได้ที่หน้าสถานะระบบ`);
+    // (2026-10-19) บอกแค่ข้อมูลมีถึงวันไหน ไม่บอกผลพ่วง · TikTok ส่งตัวเลขช้า 1 วันเป็นเรื่องปกติ (ไม่เตือน)
+    if (pulledToday && gap === 2) return set(null);
+    return set(pulledToday ? 'warn' : 'bad', `ข้อมูล TikTok มีถึง ${dTH(FRESH.lastDay)}`, '');
   }
 
 
