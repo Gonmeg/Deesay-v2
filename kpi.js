@@ -232,12 +232,11 @@
   function renderNote(K) {
     let h = '';
     if (K.st === 'cur' && S.mode === 'track') {
-      const late = ONLINE.filter(c => (!S.F || S.F === c) && K.last[c] && K.last[c] < YEST);
-      if (late.length) h += `<div class="ui-status warn" style="margin-bottom:12px;"><b>ยอดบางช่องทางยังไม่ถึง ${dShort(YEST)}</b><span>${late.map(c => `${c} ถึง ${dShort(K.last[c])}`).join(' · ')} — "ควรได้ถึงวันนี้" ของช่องนั้นนับถึงวันที่มีข้อมูล ไม่ทำให้ดูช้ากว่าเป้าเกินจริง</span></div>`;
+      // (2026-10-19) ช่องทางไหนมีถึงวันไหน → Data Guard ที่ปุ่มสถานะข้างชื่อหน้า (ที่เดียว) ไม่ทำแถบในหน้า
       const part = ONLINE.filter(c => (!S.F || S.F === c) && K.partial[c]);
       // (2026-10-15) แจ้งที่ปุ่มสถานะข้อมูลข้างชื่อหน้า แทนแถบในหน้า (ในตารางยังมีป้าย "เข้า xx%" ตรงช่องทางนั้น)
-      if (window.pageNote) window.pageNote('kpi', 'partial', part.length ? 'warn' : null, 'ยอดบางวันยังเข้าไม่ครบ',
-        part.map(c => `${c} ${dShort(K.partial[c].d)} เข้ามา ${money(K.partial[c].v)} (${Math.round(K.partial[c].f * 100)}% ของวันปกติ ~${money(K.partial[c].med)})`).join(' · ') + ' — นับวันนั้นตามสัดส่วนที่เข้ามา ข้อมูลครบเมื่อไรตัวเลขจะปรับเอง');
+      if (window.pageNote) window.pageNote('kpi', 'partial', part.length ? 'warn' : null,
+        part.map(c => `ยอด ${c} ของ ${dShort(K.partial[c].d)} ยังเข้าไม่ครบ`).join(' · '), '');
     }
     $('kpNote').innerHTML = h;
   }
