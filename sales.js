@@ -351,9 +351,8 @@
       vals.roas = roasTxt(total.rev, totAds);
       deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ');
       // ค่า Ads ที่เข้าช้ากว่ายอดขาย → แจ้งที่ปุ่มสถานะของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
-      const lateA = AC.cap && AC.cap < salesCap ? AC.late.filter(([, d]) => d < salesCap) : [];
-      if (window.pageNote) window.pageNote(page, 'adsstale', lateA.length ? 'warn' : null, lateA.length ? `ค่า Ads ${lateA.map(([s]) => SRC_LABEL[s] || s).join(' / ')} มีถึง ${dLbl(lateA[0][1])}` : '',
-        lateA.length ? 'ยอดรวมนับตามที่เข้าแล้ว · ROAS ในกราฟคิดถึงวันที่ค่า Ads เข้าครบ' : '');
+      // (2026-10-19) ค่า Ads แต่ละแหล่งมีถึงวันไหน แจ้งที่ Data Guard ของหน้า (Ads …) ที่เดียว ไม่ซ้ำที่นี่
+      if (window.pageNote) window.pageNote(page, 'adsstale', null);
       A = { adsAll, adsBy, adsIn, totAds, AC, capC, SG: subGroups(rowsAll, adsIn) };
     }
 
