@@ -135,11 +135,10 @@
     const d = DATA, k = d.kpi || {}, m = d.matrix || [];
     const ledgerAge = d.ledger_last ? -daysFrom(d.ledger_last) : null, salesAge = d.sales_last ? -daysFrom(d.sales_last) : null;
     const banners = [];
-    if (ledgerAge > 2) banners.push(['var(--orange)', `⚠️ log ทีมแพ็คล่าสุดคือ ${dTH(d.ledger_last)} (${ledgerAge} วันก่อน) — สต็อกที่เห็นอาจไม่ใช่ปัจจุบัน เช็ค cron sync-inventory-log ในหน้าสถานะระบบ`]);
-    if (salesAge > 3) banners.push(['var(--orange)', `⚠️ ยอดขายล่าสุดคือ ${dTH(d.sales_last)} (${salesAge} วันก่อน) — ค่าเฉลี่ยขาย/วันจะต่ำกว่าจริงจนกว่าจะอัปโหลดออเดอร์`]);
+    // (2026-10-19) log ทีมแพ็ค / ยอดขายมีถึงวันไหน → Data Guard ที่ปุ่มสถานะ (Log สต็อกทีมแพ็ค · ออเดอร์ <ช่องทาง>) ที่เดียว ไม่ซ้ำที่นี่
     const urgent = rows.filter(r => meetKey(r) === 'risk' || (meetKey(r) === 'order_now' && planCalc(r).orderBy && planCalc(r).orderBy < toD(iso(new Date()))));
     if (urgent.length) banners.push(['var(--red)', `⛔ ${urgent.length} SKU ต้องรีบจัดการ (ของจะขาดก่อน WIP เข้า หรือเลยวันต้องเปิด PO แล้ว): ${urgent.slice(0, 10).map(r => `<b>${esc(r.sku)}</b>`).join(', ')}${urgent.length > 10 ? ' และอีก ' + (urgent.length - 10) : ''}`]);
-    if (k.no_params > 0) banners.push(['var(--accent)', `🛠 ${k.no_params} SKU ยังไม่ได้ตั้ง lead time — ใช้ค่ากลาง 60 วันไปก่อน (ตั้งได้ที่หน้า Admin → Supply Chain)`]);
+    if (k.no_params > 0) banners.push(['var(--accent)', `🛠 ${k.no_params} SKU ยังไม่ได้ตั้ง lead time`]);
 
     // (2026-10-18) เตือนต่าง ๆ ย้ายไปปุ่มสถานะข้อมูลข้างชื่อหน้า (ที่เดียว) แทนแถบในหน้า
     if (window.pageNote) { for (let i = 0; i < 4; i++) window.pageNote('supply', 'b' + i, null); banners.forEach(([c, txt], i) => window.pageNote('supply', 'b' + i, c === 'var(--red)' ? 'bad' : 'warn', txt.replace(/^(⚠️|⛔|🛠)\s*/u, ''), '')); }
