@@ -757,7 +757,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.18-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.19-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2219,9 +2219,14 @@ function cancelPending(to, ch) {
 // แจ้งที่ปุ่มสถานะข้อมูลของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
 function noteSalesStatus(page, R, P) {
   if (!window.pageNote) return;
-  const d1 = R && R.cut ? dayAdd(R.ct, 1) : null;
-  window.pageNote(page, 'stale', R && R.cut ? 'warn' : null, d1 ? `ยอด${R.none || d1 === getDateValue('To') ? 'ของ' : 'ตั้งแต่'} ${dLbl(d1)} ยังเข้าไม่ครบ` : '',
-    d1 ? `${R.late.join(', ')} · ยอดรวมนับตามที่เข้าแล้ว ส่วน % เทียบช่วงก่อน${R.none ? 'ยังไม่คิด' : ' คิดถึง ' + dLbl(R.ct)}` : '');
+  // (2026-10-19) แจ้งเฉพาะช่องทางที่ยอดยังไม่ถึง "เมื่อวาน" จริง ๆ · วันนี้ยังไม่จบวัน ยอดยังไม่ครบเป็นเรื่องปกติ ไม่ต้องเตือน
+  //   (เดิมเอาทุกช่องทางที่ยังไม่มียอดวันนี้มารวมในรายชื่อ ทำให้ Facebook ที่อัปถึงเมื่อวานแล้วถูกแจ้งว่าไม่ครบ)
+  const C = (_salesDone && _salesDone.complete) || {};
+  const yest = dayAdd(fmtDateISO(new Date()), -1);
+  const behind = R && R.cut ? R.late.filter(c => C[c] && C[c] < yest) : [];
+  const has = behind.length > 0;
+  window.pageNote(page, 'stale', has ? 'warn' : null, has ? `% เทียบช่วงก่อน${R.none ? 'ยังไม่คิด' : ' คิดถึง ' + dLbl(R.ct)}` : '',
+    has ? `เพราะยอด ${behind.map(c => c + ' มีถึง ' + dLbl(C[c])).join(' · ')} · ยอดรวมนับตามที่เข้าแล้ว` : '');
   window.pageNote(page, 'cancel', P ? 'warn' : null, P ? `ยอดยกเลิก ${P.chs.join(' / ')} ตั้งแต่ ${P.mon} ยังไม่เข้า` : '',
     P ? 'มากับไฟล์ปิดเดือนจากบัญชี · ตอนนี้ยอดตีกลับนับเฉพาะช่องทางอื่น' : '');
 }
