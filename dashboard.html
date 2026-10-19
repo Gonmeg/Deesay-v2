@@ -757,7 +757,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.19-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.19-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2221,14 +2221,9 @@ function noteSalesStatus(page, R, P) {
   if (!window.pageNote) return;
   // (2026-10-19) แจ้งเฉพาะช่องทางที่ยอดยังไม่ถึง "เมื่อวาน" จริง ๆ · วันนี้ยังไม่จบวัน ยอดยังไม่ครบเป็นเรื่องปกติ ไม่ต้องเตือน
   //   (เดิมเอาทุกช่องทางที่ยังไม่มียอดวันนี้มารวมในรายชื่อ ทำให้ Facebook ที่อัปถึงเมื่อวานแล้วถูกแจ้งว่าไม่ครบ)
-  const C = (_salesDone && _salesDone.complete) || {};
-  const yest = dayAdd(fmtDateISO(new Date()), -1);
-  const behind = R && R.cut ? R.late.filter(c => C[c] && C[c] < yest) : [];
-  const has = behind.length > 0;
-  window.pageNote(page, 'stale', has ? 'warn' : null, has ? `% เทียบช่วงก่อน${R.none ? 'ยังไม่คิด' : ' คิดถึง ' + dLbl(R.ct)}` : '',
-    has ? `เพราะยอด ${behind.map(c => c + ' มีถึง ' + dLbl(C[c])).join(' · ')} · ยอดรวมนับตามที่เข้าแล้ว` : '');
-  window.pageNote(page, 'cancel', P ? 'warn' : null, P ? `ยอดยกเลิก ${P.chs.join(' / ')} ตั้งแต่ ${P.mon} ยังไม่เข้า` : '',
-    P ? 'มากับไฟล์ปิดเดือนจากบัญชี · ตอนนี้ยอดตีกลับนับเฉพาะช่องทางอื่น' : '');
+  // (2026-10-19 b) เตือนแค่ "อะไรมีถึงวันไหน" ไม่บอกผลพ่วง · ยอดออเดอร์แต่ละช่องทางมีถึงวันไหน = Data Guard (ออเดอร์ <ช่องทาง>) ที่เดียว ไม่ซ้ำที่นี่
+  window.pageNote(page, 'stale', null);
+  window.pageNote(page, 'cancel', P ? 'warn' : null, P ? `ยอดยกเลิก / คืน ${P.chs.join(' / ')} มีถึง ${MONTHS_TH[parseDateLocal(dayAdd(P.from, -1)).getMonth()]}` : '', '');
 }
 
 function getDateValue(suffix) {
@@ -2932,7 +2927,7 @@ function loadTtContentPage() {
   window._ttcLoading = true;
   document.getElementById('page-ttcontent').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
   const s2 = document.createElement('script');
-  s2.src = 'ttcontent.js?v=20261018a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
+  s2.src = 'ttcontent.js?v=20261019a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttcontent.js
   s2.onload = () => { window._ttcLoading = false; if (window.renderTtContentPage) window.renderTtContentPage(); };
   s2.onerror = () => { window._ttcLoading = false; document.getElementById('page-ttcontent').innerHTML = '<div class="error-banner" style="display:block;">โหลด ttcontent.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.head.appendChild(s2);
@@ -2942,7 +2937,7 @@ function loadTtKeywordPage() {
   if (window.renderTtKeywordPage) return window.renderTtKeywordPage();
   document.getElementById('page-ttkeyword').innerHTML = '<div class="card"><div class="empty">กำลังโหลด...</div></div>';
   const s3 = document.createElement('script');
-  s3.src = 'ttcontent.js?v=20261018a';
+  s3.src = 'ttcontent.js?v=20261019a';
   s3.onload = () => { if (window.renderTtKeywordPage) window.renderTtKeywordPage(); };
   document.head.appendChild(s3);
 }
@@ -2953,7 +2948,7 @@ function loadSupplyPage() {
   if (window._supplyLoading) return;
   window._supplyLoading = true;
   const s = document.createElement('script');
-  s.src = 'supply.js?v=20261018a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
+  s.src = 'supply.js?v=20261019a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
   s.onload = () => { window._supplyLoading = false; window.renderSupplyPage(); };
   s.onerror = () => { window._supplyLoading = false; document.getElementById('page-supply').innerHTML = '<div class="error-banner" style="display:block;">โหลด supply.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3000,7 +2995,7 @@ function loadKpiPage(reload) {
   if (window._kpiLoading) return;
   window._kpiLoading = true;
   const s = document.createElement('script');
-  s.src = 'kpi.js?v=20261018a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
+  s.src = 'kpi.js?v=20261019a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
   s.onload = () => { window._kpiLoading = false; if (currentPage === 'kpi') window.renderKpiPage(true); };
   s.onerror = () => { window._kpiLoading = false; document.getElementById('page-kpi').innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3027,7 +3022,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20261018a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20261019a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -3159,7 +3154,7 @@ function loadSalesJs() {
   if (window._salesJsP) return window._salesJsP;
   window._salesJsP = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'sales.js?v=20261018b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
+    s.src = 'sales.js?v=20261019a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
     s.onload = res;
     s.onerror = () => { window._salesJsP = null; rej(new Error('โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -6525,7 +6520,7 @@ async function fetchAdData() {
     adRawData = sys.concat(sheet.filter(r => !AD_CHANNELS_FROM_SYSTEM.includes(r.channel)));   // ชีทเหลือแค่ Lazada
     // (2026-10-18) แจ้งที่ปุ่มสถานะข้อมูลแทนแถบในหน้า
     { const laz = adUnmapped.filter(k => k.toLowerCase().startsWith('lazada'));
-      ['adperf', 'lzhub'].forEach(pg => window.pageNote && window.pageNote(pg, 'lzmap', laz.length ? 'warn' : null, `พบ Sub Channel ใหม่ของ Lazada ในชีต Ads ที่ยังไม่ได้ map: ${laz.join(', ')}`, 'ยอดถูกรวมในยอด Lazada แล้ว แต่ยังแยกร้านไม่ได้')); }
+      ['adperf', 'lzhub'].forEach(pg => window.pageNote && window.pageNote(pg, 'lzmap', laz.length ? 'warn' : null, `Sub Channel ใหม่ของ Lazada ในชีต Ads ยังไม่ได้ map: ${laz.join(', ')}`, '')); }
   } catch(e) { console.error('Ad fetch error:', e); showError('โหลดข้อมูลค่า Ads ไม่สำเร็จ: ' + e.message); adRawData = []; }
 }
 
@@ -6781,7 +6776,7 @@ const HUB_SALES_ONLY = { fb: true, tt: true };
 async function renderAdpAll() {
   if (adRawData.length === 0) {
     // (2026-10-18) กันโหลดซ้ำไม่หยุด: ถ้าโหลดแล้วยังไม่มีข้อมูล (ไม่มีค่า Ads / เน็ตหลุด / สิทธิ์หมดอายุ) เดิมหน้านี้ยิงขอข้อมูลวนไม่รู้จบ → ลองใหม่ได้ทุก 60 วินาที
-    if (Date.now() - (renderAdpAll._at || 0) < 60000) { if (window.pageNote) window.pageNote('adperf', 'adempty', 'warn', 'ยังโหลดข้อมูลค่า Ads ไม่ได้', 'ลองกดรีเฟรชอีกครั้งในอีกสักครู่'); return; }
+    if (Date.now() - (renderAdpAll._at || 0) < 60000) { if (window.pageNote) window.pageNote('adperf', 'adempty', 'warn', 'ยังโหลดข้อมูลค่า Ads ไม่ได้', ''); return; }
     renderAdpAll._at = Date.now();
     fetchAdData().then(() => renderAdpAll()); return;
   }
@@ -7211,33 +7206,34 @@ const DG_ADS = ['fb_ads_accounts', 'fb_cpas', 'tt_', 'sh_ads_', 'sh_manual', 'lz
 const DG_PAGE = {
   home: ['orders_', ...DG_ADS], overview: ['orders_', ...DG_ADS], channel: ['orders_', ...DG_ADS], promotarget: ['orders_'], geo: ['orders_'],
   skurev: ['orders_'], skuanalysis: ['orders_', ...DG_ADS, 'kol_file', 'stock_log'],
-  fbhub: ['orders_Facebook'], crm: ['orders_Facebook'], flow: ['orders_Facebook'], neverbought: ['orders_Facebook'],
+  fbhub: ['orders_Facebook', 'fb_ads_accounts'], crm: ['orders_Facebook'], flow: ['orders_Facebook'], neverbought: ['orders_Facebook'],
   fbads: ['fb_ads_accounts', 'fb_cpas'], fbadmin: ['orders_Facebook'],
-  tthub: ['orders_TikTok'], ttads: ['tt_', 'orders_TikTok'], livesearch: ['tt_', 'orders_TikTok'], creatorperf: ['orders_TikTok', 'tt_', 'kol_file', 'eq_kol_tt'],
-  shhub: ['orders_Shopee'], shads: ['sh_ads_', 'sh_manual', 'fb_cpas', 'fb_ads_accounts', 'orders_Shopee'], lzhub: ['orders_Lazada', 'lz_ads'],
+  tthub: ['orders_TikTok', 'tt_gmvmax', 'tt_insight'], ttads: ['tt_', 'orders_TikTok'], livesearch: ['tt_', 'orders_TikTok'], creatorperf: ['orders_TikTok', 'tt_', 'kol_file', 'eq_kol_tt'],
+  shhub: ['orders_Shopee', 'sh_ads_', 'sh_manual', 'fb_cpas'], shads: ['sh_ads_', 'sh_manual', 'fb_cpas', 'fb_ads_accounts', 'orders_Shopee'], lzhub: ['orders_Lazada', 'lz_ads'],
   kol: ['kol_file', 'kol_claims', 'fb_ads_accounts', 'tt_', 'eq_kol_'],
   mktlive: ['orders_', ...DG_ADS, 'kol_file', 'eq_kol_fee'], cost: ['acct_src', 'cogs_src'], adperf: [...DG_ADS],   // (2026-10-09) Business Insight ใช้ไฟล์บัญชี ไม่ใช่ออเดอร์ / Ads
-  supply: ['stock_log', 'orders_']
+  supply: ['stock_log', 'orders_'], kpi: ['orders_']
 };
 const DG_GLOBAL = ['mv_stale', 'fb_bucket', 'rls'];   // กระทบตัวเลขทุกหน้า
 // (2026-10-08) หน้าที่ระบุไว้ตรงนี้: เตือน "ตารางสรุปยังไม่คำนวณ" เฉพาะเมื่อเป็นตารางที่หน้านั้นใช้
 const DG_MV_PAGE = { home: ['mv_sales_daily', 'mv_ad_spend_daily', 'mv_sku_daily', 'mv_fb_ads_daily_b', 'mv_tiktok_creative_performance', 'mv_tt_clips_by_product', 'mv_replenishment'] };
 // (2026-10-02) แต่ละหน้าข้อมูลอัปเดตกี่โมง (เวลาที่ตัวเลขขึ้นหน้าเว็บจริง = หลังดึงข้อมูล + คำนวณสรุปเสร็จ) — แก้ตรงนี้ทุกครั้งที่เปลี่ยนรอบเวลา
-const DG_ORD = 'ออเดอร์ทุกชั่วโมงหลังทีมอัปโหลด';
+const DG_ORD = 'Facebook / Lazada ทุกชั่วโมงหลังทีมอัปโหลด · TikTok / Shopee อัตโนมัติทุก 30 นาที';
+const DG_API = 'ออเดอร์อัตโนมัติทุก 30 นาที';   // (2026-10-19) TikTok / Shopee ดึงจาก API
 const DG_SCHED = {
   home: `${DG_ORD} · Ads Facebook 08:45 / 20:45 · TikTok 09:50 / 13:50 · Shopee 08:15`,
   overview: `${DG_ORD} · ตัวแทน / MT 03:45, 13:45`, channel: `${DG_ORD} · ตัวแทน / MT 03:45, 13:45`, promotarget: DG_ORD, geo: DG_ORD, skurev: DG_ORD,
   skuanalysis: `${DG_ORD} · Ads / KOL ตามรอบของแต่ละช่องทาง · สต็อก 04:00`,
-  fbhub: DG_ORD, crm: DG_ORD, flow: DG_ORD, neverbought: DG_ORD, fbengage: 'วันละครั้ง 07:30',
+  fbhub: 'ออเดอร์ทุกชั่วโมงหลังทีมอัปโหลด · Ads 08:45 / 20:45', crm: DG_ORD, flow: DG_ORD, neverbought: DG_ORD, fbengage: 'วันละครั้ง 07:30',
   fbads: '08:45 / 20:45', fbadmin: DG_ORD,
-  tthub: DG_ORD, ttcontent: '07:30 / 19:30 · TikTok ปล่อยตัวเลขของแต่ละวันช้า 1–2 วัน', ttkeyword: 'วันละครั้ง 06:00', ttads: '09:50 / 13:50', livesearch: 'Ads 09:50 / 13:50',
+  tthub: `${DG_API} · Ads 09:50 / 13:50`, ttcontent: '07:30 / 19:30 · TikTok ปล่อยตัวเลขของแต่ละวันช้า 1–2 วัน', ttkeyword: 'วันละครั้ง 06:00', ttads: '09:50 / 13:50', livesearch: 'Ads 09:50 / 13:50',
   creatorperf: `${DG_ORD} · Ads 09:50 / 13:50 · ค่าจ้าง KOL 08:40 / 12:40 / 16:40 / 20:40`,
-  shhub: DG_ORD, shads: 'Product / Shop Ads 08:15 · Brand / Live / Meta / เหรียญ ช่วงเช้า · CPAS 08:45 / 20:45',
-  lzhub: `${DG_ORD} · Ads ทุก 2 ชม. (08:15–20:15)`, mthub: 'ไฟล์ห้าง 09:30 / 17:30',
+  shhub: `${DG_API} · Ads 08:15 · Brand / Live / Meta / เหรียญ ช่วงเช้า`, shads: 'Product / Shop Ads 08:15 · Brand / Live / Meta / เหรียญ ช่วงเช้า · CPAS 08:45 / 20:45',
+  lzhub: 'ออเดอร์ทุกชั่วโมงหลังทีมอัปโหลด · Ads ทุก 2 ชม. (08:15–20:15)', mthub: 'ไฟล์ห้าง 09:30 / 17:30',
   kol: 'ไฟล์ทีม KOL 08:40 / 12:40 / 16:40 / 20:40 · Ads Facebook 08:45 / 20:45 · TikTok 09:50 / 13:50',
   mktlive: `${DG_ORD} · ค่า Ads / KOL ตามรอบของแต่ละช่องทาง`, cost: 'ไฟล์บัญชีดึงอัตโนมัติ (เช็คการแก้ทุก 6 ชม.) · รายสินค้าคำนวณใหม่ 01:20 / 07:20 / 13:20 / 19:20',
   adperf: 'Facebook 08:45 / 20:45 · TikTok 09:50 / 13:50 · Shopee 08:15 · Lazada ทุก 2 ชม.',
-  supply: 'สต็อก 03:30 / 13:30 / 18:30 · แผนสั่งซื้อคำนวณ 04:00'
+  supply: 'สต็อก 03:30 / 13:30 / 18:30 · แผนสั่งซื้อคำนวณ 04:00', kpi: DG_ORD
 };
 async function loadDg(force) {
   if (_dg && !force && Date.now() - _dgAt < 600000) return _dg;
@@ -8305,8 +8301,9 @@ async function renderHome() {
   const stName = x => x === 'pending' ? 'Pending upload' : 'Partial';
   const stale = inc.map(c => ({ c, s: stOf(c) }));
   // (2026-10-16) แจ้งยอดที่ยังเข้าไม่ครบที่ปุ่มสถานะข้อมูลข้างชื่อหน้า (ที่เดียว) แทนแถบในหน้า
-  if (window.pageNote) window.pageNote('home', 'stale', stale.length ? 'warn' : null, `ยอดของ ${dShort(B)} ยังเข้าไม่ครบ`,
-    `${stale.map(x => esc(x.c) + ' (' + stName(x.s) + ')').join(', ')} · ยอดรวมยังไม่ครบ ส่วนการเทียบ ROAS และสินค้าขายดี/ขยับแรง คิดเฉพาะช่องทางที่ยอดเข้าครบ`);
+  // (2026-10-19 b) เตือนแค่ข้อเท็จจริง ไม่บอกผลพ่วง · ช่องทางที่ยังไม่อัปเลย Data Guard แจ้งแล้ว (ออเดอร์ <ช่องทาง> มีถึงวันไหน)
+  const partialCh = stale.filter(x => x.s === 'partial').map(x => esc(x.c));
+  if (window.pageNote) window.pageNote('home', 'stale', partialCh.length ? 'warn' : null, `ยอด ${partialCh.join(' / ')} ของ ${dShort(B)} ยังเข้าไม่ครบ`, '');
   // สะสมเดือนนี้: เฉพาะออนไลน์ (ไม่นับตัวแทน / MT) · แต่ละช่องทางนับถึงวันที่ยอดเข้าครบ เทียบเดือนก่อนช่วงวันเดียวกัน
   const mS = B.slice(0, 8) + '01', pmS = homePrevMonthStart(B), pmE = homeAdd(mS, -1);
   const T = HM_ONLINE.reduce((t, c) => { const L = CT[c] && CT[c] < B ? CT[c] : B; if (L < mS) return t;
