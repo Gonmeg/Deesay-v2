@@ -683,7 +683,8 @@
   const LOC_LABEL = { 'Online': 'Online', 'TikTok': 'TikTok', 'Marketplace': 'Marketplace', 'Dealer': 'Dealer', 'Modern trade': 'Modern trade',
     '01 - 111/53': '111/53', '02 - 44/1': '44/1', '03 - พระราม2': 'Rama 2', '04 - บ้านแม่': 'Ban Mae', '05 - ETC.': 'ETC' };
   // สีประจำช่องทาง (ชุดเดียวกับหน้าแรก: Facebook ฟ้า · Shopee ส้ม · ตัวแทน เทา · MT เหลือง · TikTok ชมพู ให้เห็นชัดทั้งธีมมืด/สว่าง)
-  const CH_COL = { 'Online': '#1877f2', 'TikTok': '#fe2c55', 'Marketplace': '#f97316', 'Dealer': '#64748b', 'Modern trade': '#f59e0b' };
+  // (2026-10-19) สีคลังตามสีช่องทางชุดเดียวทั้งเว็บ (Online = Facebook · Marketplace = Shopee)
+  const CH_COL = { 'Online': 'var(--ch-facebook)', 'TikTok': 'var(--ch-tiktok)', 'Marketplace': 'var(--ch-shopee)', 'Dealer': 'var(--ch-dealer)', 'Modern trade': 'var(--ch-mt)' };
   const LOC_LOW = 14;   // ป้ายแดง = พอขายไม่ถึง 14 วัน (ตรงกับปุ่มกรอง)
   async function loadLocUse() { if (LOC_USE) return; try { LOC_USE = await supaRpc('supply_loc_usage', { p_days: 30 }) || {}; } catch (e) { LOC_USE = {}; console.warn('supply_loc_usage', e.message); } }
   function locCover(r, loc) { const q = (r.by_loc || {})[loc] || 0, u = ((LOC_USE || {})[r.sku] || {})[loc] || 0; return u > 0 ? Math.floor(q / (u / 30)) : null; }
