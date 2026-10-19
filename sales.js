@@ -53,6 +53,8 @@
 .ov-seg button{border:0;border-radius:7px;padding:6px 12px;font:inherit;font-size:12.5px;cursor:pointer;background:transparent;color:var(--text3)}
 .ov-seg button[aria-pressed="true"]{background:var(--bg2);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.2)}
 .ov-seg button[hidden]{display:none}
+.ov[data-mode="channel"] .ui-metric.is-on::before{transform:scaleX(0)}
+.ov[data-mode="channel"] .ui-metric.is-on .ui-tick{background:transparent;border-color:var(--text3)}
 .ov-leg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--text2)}
 .ov-leg i{display:inline-block;width:16px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .ov-chart{position:relative;height:280px}
@@ -315,7 +317,8 @@
           root.querySelectorAll('tr.ov-sub').forEach(r => { if (r.dataset.ovp === c2) r.style.display = open ? '' : 'none'; }); }
       });
     }
-    function syncSeg(J) { root.querySelectorAll('[data-ovmode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ovmode === J.S.mode)); }
+    function syncSeg(J) { root.querySelectorAll('[data-ovmode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ovmode === J.S.mode));
+      const ov = root.querySelector('.ov'); if (ov) ov.dataset.mode = J.S.mode; }
     syncSeg(I);
 
     if (!o.skipEnsure) {
@@ -355,7 +358,8 @@
       const aCur = noneA ? 0 : sumAds(adsBy(from, capC)), aPrev = noneA ? 0 : sumAds(adsBy(pA.from, pA.to));
       const rCur = noneA ? 0 : sumOf(salesRows(from, capC, ch, sub), 'net_revenue'), rPrev = noneA ? 0 : sumOf(salesRows(pA.from, pA.to, ch, sub), 'net_revenue');
       vals.ads = fmt(totAds);
-      deltas.ads = badgeW(aCur, aPrev, noneA, tipA) + (total.rev > 0 && totAds > 0 ? ` · ${pct1(totAds / total.rev)} ของยอดขาย` : '');
+      const adsPct = total.rev > 0 && totAds > 0 ? `${pct1(totAds / total.rev)} ของยอดขาย` : '';
+      deltas.ads = noneA ? (adsPct || badgeW(0, 0, true, tipA)) : badgeW(aCur, aPrev, false, tipA) + (adsPct ? ' · ' + adsPct : '');
       vals.roas = roasTxt(total.rev, totAds);
       deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ');
       // ค่า Ads ที่เข้าช้ากว่ายอดขาย → แจ้งที่ปุ่มสถานะของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
