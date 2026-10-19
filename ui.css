@@ -19,8 +19,8 @@
   /* สีประจำช่องทาง — ใช้สีเดียวกันทุกกราฟ ทุกหน้า */
   /* TikTok ใช้สี CI จริง: Cyan #25F4EE · Red #FE2C55 · Black — โหมดมืดเส้นเป็น Cyan, โหมดสว่างเส้นเป็นดำ (Cyan บนพื้นขาวจะจางจนมองไม่เห็น) */
   --tt-cyan: #25F4EE; --tt-red: #FE2C55; --tt-ink: #000000;
-  --ch-shopee: #F2643F; --ch-tiktok: var(--tt-cyan); --ch-facebook: #5B8DEF; --ch-lazada: #8B93FF;
-  --ch-dealer: #94A3B8; --ch-mt: #F472B6; --ch-ads: #EF4444;
+  --ch-shopee: #F2643F; --ch-tiktok: var(--tt-cyan); --ch-facebook: #5B8DEF; --ch-lazada: #FF4FB0;
+  --ch-dealer: #2DD4BF; --ch-mt: #A78BFA; --ch-ads: #EF4444;
 
   /* ขนาดตัวอักษร 6 ขนาด */
   --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-lg: 16px; --fs-xl: 20px; --fs-kpi: 28px;
@@ -41,8 +41,9 @@ body.light-theme, .ui-light {
   --good: var(--green); --bad: var(--red); --warn: #B7791F;
   --grid: rgba(15,23,42,.06);
   --shadow-pop: 0 12px 28px rgba(15,23,42,.14);
-  --ch-shopee: #EE4D2D; --ch-tiktok: var(--tt-ink); --ch-facebook: #1877F2; --ch-lazada: #4F5BD5;
-  --ch-dealer: #64748B; --ch-mt: #DB2777; --ch-ads: #DC2626;
+  /* (2026-10-19) สีช่องทางชุดเดียวทั้งเว็บ: TikTok / Facebook / Shopee / Lazada = สี CI ของแบรนด์ (Lazada = ชมพูจากโลโก้หัวใจ) · ตัวแทน = เขียวอมฟ้า · Modern Trade = ม่วง */
+  --ch-shopee: #EE4D2D; --ch-tiktok: var(--tt-ink); --ch-facebook: #1877F2; --ch-lazada: #F0168C;
+  --ch-dealer: #0D9488; --ch-mt: #7C3AED; --ch-ads: #DC2626;
 }
 
 /* ───────── ชั้น 1: ฟอนต์ (กฎเมฆ: Sarabun ทุกอย่าง · IBM Plex Mono เฉพาะรหัส) ───────── */
