@@ -1,4 +1,5 @@
-// sales.js — (2026-10-19) ตัวเลขในตารางไม่มีเส้นประแล้ว · แถวย่อยไม่มีพื้นสี (แถบสีช่องทางด้านซ้าย) · ช่วงก่อน 1 ม.ค. 69 ไม่เทียบ
+// sales.js — (2026-10-19 c) แถวย่อย: ไม่มีเส้นคั่น · พื้นเทาอ่อนทั้งกลุ่ม · เส้นนำสายบาง ๆ แบบผังต้นไม้
+// (2026-10-19) ตัวเลขในตารางไม่มีเส้นประแล้ว · แถวย่อยไม่มีพื้นสี (แถบสีช่องทางด้านซ้าย) · ช่วงก่อน 1 ม.ค. 69 ไม่เทียบ
 // (2026-10-18) แม่แบบ 1 "ภาพรวมยอดขาย" (รวมหน้าแยกตาม Channel เข้ามาแล้ว) · อ้างอิง Shopee Seller Centre + Facebook Ads Manager
 // โหลดจาก dashboard.html (loadSalesJs) · ใช้ตัวช่วยกลางของ dashboard: ensureSalesSummary / salesRows / ensureSalesDone / cmpRange / cancelPending / noteSalesStatus
 // ตัวเลขทุกตัวมาจากตารางสรุปยอดขาย (mv_sales_daily ผ่าน sales_summary) แหล่งเดียวกับหน้าแรกและทุกหน้า · ลูกค้านับเฉพาะ Facebook (fb_customers_series / unique_customers)
@@ -60,8 +61,13 @@
 .ov-tbl th:first-child,.ov-tbl td:first-child{text-align:left}
 .ov-tbl td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--row-border,var(--border));white-space:nowrap}
 .ov-tbl tr.ov-tot td{font-weight:700;background:var(--bg3);border-bottom:1px solid var(--border)}
-.ov-tbl tr.ov-sub td{background:transparent;font-size:13px;color:var(--text2)}
-.ov-tbl tr.ov-sub td:first-child{padding-left:46px;max-width:360px;overflow:hidden;text-overflow:ellipsis;box-shadow:inset 3px 0 0 var(--chc,var(--border))}
+.ov-tbl tr.ov-sub td{background:color-mix(in srgb,var(--bg3) 55%,var(--bg2));font-size:13px;color:var(--text2);border-bottom:0;padding-top:7px;padding-bottom:7px}
+.ov-tbl tr.ov-sub td:first-child{position:relative;padding-left:62px;max-width:380px;overflow:hidden;text-overflow:ellipsis}
+.ov-tbl tr.ov-sub td:first-child::before{content:"";position:absolute;left:37px;top:0;bottom:0;width:1px;background:var(--border)}
+.ov-tbl tr.ov-sub.ov-last td:first-child::before{bottom:50%}
+.ov-tbl tr.ov-sub td:first-child::after{content:"";position:absolute;left:37px;top:50%;width:12px;height:1px;background:var(--border)}
+.ov-tbl tr.ov-sub.ov-last td{border-bottom:1px solid var(--border);padding-bottom:9px}
+.ov-tbl tr.ov-open td{border-bottom-color:transparent}
 .ov-ch{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:0;color:var(--text);font:inherit;font-weight:600;cursor:pointer}
 .ov-ch[disabled]{cursor:default;padding-left:20px}
 .ov-ch .chev{display:inline-block;width:12px;color:var(--text3);transition:transform .15s}
@@ -217,16 +223,16 @@
       const open = canOpen && (S.open[ch] != null ? S.open[ch] : !!c.ch);
       const share = total.rev ? t.rev / total.rev : 0, k = cmpOf(ch, sub), col = `var(${CH_VAR[ch] || '--text2'})`;
       const unit = ch === 'Facebook' ? 'เพจ' : 'ร้าน';
-      h += `<tr data-ovch="${esc(ch)}"><td><button type="button" class="ov-ch" ${canOpen ? `aria-expanded="${open}"` : 'disabled'}>${canOpen ? '<span class="chev">›</span>' : ''}<span class="ov-dot" style="background:${col}"></span>${esc(ch)}${canOpen ? ` <span class="ov-n">${subs.length} ${unit}</span>` : ''}</button></td>
+      h += `<tr data-ovch="${esc(ch)}"${open ? ' class="ov-open"' : ''}><td><button type="button" class="ov-ch" ${canOpen ? `aria-expanded="${open}"` : 'disabled'}>${canOpen ? '<span class="chev">›</span>' : ''}<span class="ov-dot" style="background:${col}"></span>${esc(ch)}${canOpen ? ` <span class="ov-n">${subs.length} ${unit}</span>` : ''}</button></td>
         <td>${fmt(t.rev)}</td>
         <td>${pct1(share)}<span class="ov-bar"><i style="width:${(share * 100).toFixed(1)}%;background:${col}"></i></span></td>
         <td>${fmt(t.ord)}</td>
         <td>${isBulkChannel(ch) ? '<span style="color:var(--text3);" title="ตัวแทน / MT สั่งลอตใหญ่ ไม่คิด AOV">—</span>' : (t.ord ? fmt(t.rev / t.ord) : '—')}</td>
         <td class="${k.cls}">${k.t}</td><td>${cancCell(ch, sub, t.cr, t.co, t.rev)}</td></tr>`;
-      if (canOpen) subs.forEach(s => { const sr = g.subs[s], st = tot(sr), sk = cmpOf(ch, s === NOSUB ? null : s), sh = total.rev ? st.rev / total.rev : 0, sname = s === NOSUB ? '' : s;
-        h += `<tr class="ov-sub pg-child" data-ovp="${esc(ch)}" style="--chc:${col};${open ? '' : 'display:none;'}"><td title="${esc(s)}">${esc(s)}</td>
+      if (canOpen) subs.forEach((s, si) => { const sr = g.subs[s], st = tot(sr), sk = cmpOf(ch, s === NOSUB ? null : s), sh = total.rev ? st.rev / total.rev : 0, sname = s === NOSUB ? '' : s;
+        h += `<tr class="ov-sub pg-child${si === subs.length - 1 ? ' ov-last' : ''}" data-ovp="${esc(ch)}" style="${open ? '' : 'display:none;'}"><td title="${esc(s)}">${esc(s)}</td>
           <td>${fmt(st.rev)}</td><td>${pct1(sh)}</td>
-          <td>${fmt(st.ord)}</td><td>${isBulkChannel(ch) ? '—' : (st.ord ? fmt(st.rev / st.ord) : '—')}</td>
+          <td>${fmt(st.ord)}</td><td>${isBulkChannel(ch) ? '—' : (st.ord && st.rev ? fmt(st.rev / st.ord) : '—')}</td>
           <td class="${sk.cls}">${sk.t}</td><td>${cancCell(ch, sname, st.cr, st.co, st.rev)}</td></tr>`; });
     });
     return h;
@@ -305,7 +311,7 @@
         const m = e.target.closest('[data-ovmode]'); if (m) { T.mode = m.dataset.ovmode; syncSeg(J); drawChart(J); return; }
         const g = e.target.closest('[data-ovgo]'); if (g) { const p = g.dataset.ovgo; showPage(p, null, document.querySelector(`.nav-item[onclick*="'${p}'"]`)); return; }
         const b = e.target.closest('.ov-ch[aria-expanded]'); if (b) { const tr = b.closest('tr'), c2 = tr.dataset.ovch, open = b.getAttribute('aria-expanded') !== 'true';
-          T.open[c2] = open; b.setAttribute('aria-expanded', open);
+          T.open[c2] = open; b.setAttribute('aria-expanded', open); tr.classList.toggle('ov-open', open);
           root.querySelectorAll('tr.ov-sub').forEach(r => { if (r.dataset.ovp === c2) r.style.display = open ? '' : 'none'; }); }
       });
     }
