@@ -594,13 +594,27 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .dg-chip.warn, .dg-chip.bad { color: var(--text); font-weight: 600; }
   .dg-chip.bad { border-color: color-mix(in srgb, var(--bad) 45%, var(--border)); background: color-mix(in srgb, var(--bad) 7%, var(--bg2)); }
   .dg-chip.warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); background: color-mix(in srgb, var(--warn) 8%, var(--bg2)); }
-  .dg-pop { position: absolute; top: calc(100% + 8px); left: 0; z-index: 2500; width: 380px; max-width: 86vw; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 14px 16px; font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+  .dg-pop { position: absolute; top: calc(100% + 8px); left: 0; z-index: 2500; width: 420px; max-width: 86vw; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.22); padding: 14px 16px; font-size: 12.5px; color: var(--text2); line-height: 1.6; }
   .dg-pop h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); }
   .dg-pop .it { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
   .dg-pop .its > .it:last-child { border-bottom: 0; }
   .dg-pop .it i { flex: none; width: 7px; height: 7px; border-radius: 50%; margin-top: 7px; background: var(--good); }
   .dg-pop .it.warn i { background: var(--warn); } .dg-pop .it.bad i { background: var(--bad); }
-  .dg-pop .it b { color: var(--text); font-weight: 600; } .dg-pop .meta { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); color: var(--text3); font-size: 11.5px; }
+  .dg-pop .it b { color: var(--text); font-weight: 600; } .dg-pop .dg-rows { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 14px; margin: 2px 0 6px; }
+.dg-pop .dg-rows > span { padding: 6px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.dg-pop .dg-rows .hd { padding-top: 0; font-size: 11px; color: var(--text3); }
+.dg-pop .dg-rows .r { text-align: right; }
+.dg-pop .dg-rows .nm { display: flex; align-items: center; gap: 8px; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+.dg-pop .dg-rows .nm i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.dg-pop .dg-rows .nm.warn, .dg-pop .dg-rows .nm.bad { font-weight: 600; }
+.dg-pop .dg-rows .dt { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+.dg-pop .dg-rows .dt.warn { color: var(--warn); font-weight: 700; }
+.dg-pop .dg-rows .dt.bad { color: var(--bad); font-weight: 700; }
+.dg-pop .dg-rows .sc { text-align: right; color: var(--text3); font-size: 11.5px; }
+.dg-pop .dg-rows > span:nth-last-child(-n+3) { border-bottom: 0; }
+.dg-pop .its { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); }
+.dg-pop h4 + .its { border-top: 0; padding-top: 0; margin-top: 0; }
+.dg-pop .meta { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); color: var(--text3); font-size: 11.5px; }
   #dgBanner { display: none !important; }
   #dgBanner .dg-ok { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; margin: -10px 0 10px; font-size: 12px; color: var(--text3); }
   #dgBanner .dg-ok .ok { color: var(--good); font-weight: 600; }
@@ -617,7 +631,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261018a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261019a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -757,7 +771,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.19-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.19-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2197,6 +2211,8 @@ const ONLINE_CHS = ['Facebook', 'TikTok', 'Shopee', 'Lazada'];
 const dayAdd = (s, n) => { const d = parseDateLocal(s); d.setDate(d.getDate() + n); return fmtDateISO(d); };
 const dLbl = s => parseDateLocal(s).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
 // ช่วงที่ใช้คิด % เทียบช่วงก่อน: ตัดวันที่ยอดยังเข้าไม่ครบออก แล้วเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน (ตัวแทน / MT ไม่ตัด)
+// (2026-10-19) ระบบมีข้อมูลยอดขายครบทุกช่องทางตั้งแต่วันนี้ · ช่วงก่อนที่ย้อนไปก่อนวันนี้ = ไม่มีข้อมูลให้เทียบ (ไม่โชว์ % มั่ว ๆ)
+const SALES_DATA_START = '2026-01-01';
 function cmpRange(from, to, ch) {
   const C = (_salesDone && _salesDone.complete) || {};
   const chs = ch ? (ONLINE_CHS.includes(ch) ? [ch] : []) : ONLINE_CHS;
@@ -2205,6 +2221,7 @@ function cmpRange(from, to, ch) {
   const out = { late, cut: cap < to, ct: cap };
   if (cap < from) return { ...out, none: true, tip: `ยอด ${late.join(', ')} ของช่วงนี้ยังเข้าไม่ครบ จึงยังไม่เทียบกับช่วงก่อน` };
   const p = getPrevPeriodRange(from, cap);
+  if (p.from < SALES_DATA_START) return { ...out, cf: from, pf: p.from, pt: p.to, noPrev: true, tip: 'ระบบมีข้อมูลตั้งแต่ 1 ม.ค. 69 จึงยังไม่มีช่วงก่อนให้เทียบ' };
   return { ...out, cf: from, pf: p.from, pt: p.to,
     tip: `เทียบ ${dLbl(from)} – ${dLbl(cap)} กับ ${dLbl(p.from)} – ${dLbl(p.to)}` + (cap < to ? ` · ไม่นับตั้งแต่ ${dLbl(dayAdd(cap, 1))} เพราะยอด ${late.join(', ')} ยังเข้าไม่ครบ` : '') };
 }
@@ -2948,7 +2965,7 @@ function loadSupplyPage() {
   if (window._supplyLoading) return;
   window._supplyLoading = true;
   const s = document.createElement('script');
-  s.src = 'supply.js?v=20261019a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
+  s.src = 'supply.js?v=20261019b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
   s.onload = () => { window._supplyLoading = false; window.renderSupplyPage(); };
   s.onerror = () => { window._supplyLoading = false; document.getElementById('page-supply').innerHTML = '<div class="error-banner" style="display:block;">โหลด supply.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3022,7 +3039,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20261019a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20261019b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -3154,7 +3171,7 @@ function loadSalesJs() {
   if (window._salesJsP) return window._salesJsP;
   window._salesJsP = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'sales.js?v=20261019a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
+    s.src = 'sales.js?v=20261019b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
     s.onload = res;
     s.onerror = () => { window._salesJsP = null; rej(new Error('โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -4531,8 +4548,8 @@ function hubAgg(channel) {
   const rows = salesRows(from, to, channel, subF);
   // (2026-10-18) % เทียบช่วงก่อน: ตัดวันที่ยอดยังเข้าไม่ครบ แล้วเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน (cmpRange — กฎเดียวกับหน้าแรก)
   const R = cmpRange(from, to, channel);
-  const prevRows = R.none ? [] : salesRows(R.pf, R.pt, channel, subF);
-  const curCmp = R.none ? [] : salesRows(R.cf, R.ct, channel, subF);
+  const prevRows = R.none || R.noPrev ? [] : salesRows(R.pf, R.pt, channel, subF);
+  const curCmp = R.none || R.noPrev ? [] : salesRows(R.cf, R.ct, channel, subF);
   const A = { from, to, totalRev: 0, totalOrd: 0, cancelRev: 0, cancelOrd: 0, freeSampleOrd: 0, prevRev: 0, prevOrd: 0, cmpRev: 0, cmpOrd: 0, cmp: R, cancelPend: cancelPending(to, channel), bySub: {}, byOC: {}, byMonth: {}, byDay: {} };
   rows.forEach(r => {
     const rev = parseFloat(r.net_revenue) || 0, ord = parseInt(r.net_orders) || 0;
@@ -7204,7 +7221,7 @@ function renderFlowTable() {
 let _dg = null, _dgAt = 0;
 const DG_ADS = ['fb_ads_accounts', 'fb_cpas', 'tt_', 'sh_ads_', 'sh_manual', 'lz_ads'];
 const DG_PAGE = {
-  home: ['orders_', ...DG_ADS], overview: ['orders_', ...DG_ADS], channel: ['orders_', ...DG_ADS], promotarget: ['orders_'], geo: ['orders_'],
+  home: ['orders_', ...DG_ADS], overview: ['orders_'], channel: ['orders_'], promotarget: ['orders_'], geo: ['orders_'],
   skurev: ['orders_'], skuanalysis: ['orders_', ...DG_ADS, 'kol_file', 'stock_log'],
   fbhub: ['orders_Facebook', 'fb_ads_accounts'], crm: ['orders_Facebook'], flow: ['orders_Facebook'], neverbought: ['orders_Facebook'],
   fbads: ['fb_ads_accounts', 'fb_cpas'], fbadmin: ['orders_Facebook'],
@@ -7242,6 +7259,24 @@ async function loadDg(force) {
   const r = await fetchWithRetry(`${window.SUPABASE_URL}/rest/v1/rpc/data_status`, h, 1, 800, { method: 'POST', body: '{}' });
   _dg = await r.json(); _dgAt = Date.now(); return _dg;
 }
+// (2026-10-19) แถวในกล่องสถานะข้อมูล: 1 แถวต่อ 1 แหล่ง · แถวที่ไม่มีในหน้านั้นไม่แสดง · หลายตัวเฝ้าในแถวเดียว = เอาวันที่เก่าสุด / สถานะแย่สุด
+const DG_ROWS = [
+  ['Facebook', '--ch-facebook', ['orders_Facebook'], 'ทุกชม. หลังทีมอัปไฟล์'],
+  ['TikTok', '--ch-tiktok', ['orders_TikTok'], 'อัตโนมัติทุก 30 นาที'],
+  ['Shopee', '--ch-shopee', ['orders_Shopee'], 'อัตโนมัติทุก 30 นาที'],
+  ['Lazada', '--ch-lazada', ['orders_Lazada'], 'ทุกชม. หลังทีมอัปไฟล์'],
+  ['ตัวแทน', '--ch-dealer', ['orders_ตัวแทน'], '03:45 / 13:45'],
+  ['Modern Trade', '--ch-mt', ['orders_Modern Trade'], '03:45 / 13:45'],
+  ['Ads Facebook', '--ch-facebook', ['fb_ads_accounts'], '08:45 / 20:45'],
+  ['Ads CPAS (Meta)', '--ch-shopee', ['fb_cpas'], '08:45 / 20:45'],
+  ['Ads TikTok', '--ch-tiktok', ['tt_gmvmax', 'tt_insight', 'tt_summary'], '09:50 / 13:50'],
+  ['Ads Shopee', '--ch-shopee', ['sh_ads_566792331', 'sh_ads_530338789'], '08:15'],
+  ['Ads Shopee · Brand / Live / เหรียญ', '--ch-shopee', ['sh_manual'], 'ช่วงเช้า'],
+  ['Ads Lazada', '--ch-lazada', ['lz_ads'], 'ทุก 2 ชม.'],
+  ['Log สต็อกทีมแพ็ค', '--text3', ['stock_log'], '03:30 / 13:30 / 18:30'],
+];
+const DG_ROW_KEYS = new Set(DG_ROWS.flatMap(r => r[2]));
+const dgDate = d => { if (!d) return 'ไม่มีข้อมูล'; const [y, m, dd] = String(d).slice(0, 10).split('-'); return `${parseInt(dd)} ${MONTHS_TH[parseInt(m) - 1]}`; };
 let _dgOpen = false;
 function dgToggle() { _dgOpen = !_dgOpen; dgShow(currentPage); }
 // (2026-10-15) หมายเหตุของแต่ละหน้า (เช่น ยอดบางวันยังเข้าไม่ครบ) ส่งมารวมที่ปุ่มสถานะข้อมูล แทนการทำแถบเตือนในหน้า
@@ -7264,17 +7299,28 @@ function dgShow(page) {
   const keys = DG_PAGE[page], sched = DG_SCHED[page];
   const notes = Object.values((window._pageNotes || {})[page] || {});
   const draw = (mine, atTxt) => {
-    const bad = mine.filter(c => c.status !== 'ok');
-    const items = bad.map(c => ({ level: c.status === 'fail' ? 'bad' : 'warn', title: c.title, detail: c.detail || '' })).concat(notes);
-    const lvl = items.some(x => x.level === 'bad') ? 'bad' : items.length ? 'warn' : 'ok';
-    if (!keys && !sched && !items.length) { chip.style.display = 'none'; pop.hidden = true; return; }
+    // แถวแหล่งข้อมูล (ช่องทาง / Ads / สต็อก ที่หน้านี้ใช้)
+    const lv = st => st === 'fail' ? 'bad' : st === 'ok' ? 'ok' : 'warn';
+    const rows = DG_ROWS.map(([name, cv, ks, when]) => {
+      const cs = mine.filter(c => ks.includes(c.k)); if (!cs.length) return null;
+      const st = cs.some(c => c.status === 'fail') ? 'bad' : cs.some(c => c.status !== 'ok') ? 'warn' : 'ok';
+      const until = cs.map(c => c.until).filter(Boolean).sort()[0] || null;
+      return { name, cv, when, st, until };
+    }).filter(Boolean);
+    const other = mine.filter(c => !DG_ROW_KEYS.has(c.k) && c.status !== 'ok').map(c => ({ level: lv(c.status), title: c.title, detail: c.detail || '' })).concat(notes);
+    const nAlert = rows.filter(r => r.st !== 'ok').length + other.length;
+    const lvl = rows.some(r => r.st === 'bad') || other.some(x => x.level === 'bad') ? 'bad' : nAlert ? 'warn' : 'ok';
+    if (!keys && !sched && !nAlert) { chip.style.display = 'none'; pop.hidden = true; return; }
     chip.style.display = '';
     chip.className = 'dg-chip ' + (lvl === 'ok' ? '' : lvl);
-    chip.innerHTML = `<i></i>${lvl === 'ok' ? (atTxt ? 'Updated ' + atTxt : 'Data OK') : `${items.length} ${items.length > 1 ? 'alerts' : 'alert'}`}`;
+    chip.innerHTML = `<i></i>${lvl === 'ok' ? (atTxt ? 'Updated ' + atTxt : 'Data OK') : `${nAlert} ${nAlert > 1 ? 'alerts' : 'alert'}`}`;
     chip.removeAttribute('title');
-    _dgLast = `<h4>${lvl === 'ok' ? '✓ ข้อมูลของหน้านี้ครบ' : items.length > 1 ? 'Alerts' : 'Alert'}</h4><div class="its">`
-      + (items.length ? items.map(x => `<div class="it ${x.level}"><i></i><div><b>${x.title}</b>${x.detail ? `<div>${x.detail}</div>` : ''}</div></div>`).join('') : '<div class="it"><i></i><div>ทุกแหล่งข้อมูลเข้าครบตามรอบ และตัวเลขข้ามหน้าตรงกัน</div></div>') + '</div>'
-      + `<div class="meta">${atTxt ? 'ระบบตรวจล่าสุด ' + atTxt + ' (ตรวจอัตโนมัติทุกชั่วโมง)' : ''}${sched ? `<br>รอบอัปเดต: ${sched}` : ''}</div>`;
+    const tbl = rows.length ? `<div class="dg-rows"><span class="hd">แหล่งข้อมูล</span><span class="hd r">ข้อมูลถึง</span><span class="hd r">อัปเดต</span>`
+      + rows.map(r => `<span class="nm ${r.st}"><i style="--c:var(${r.cv})"></i>${r.name}</span><span class="dt ${r.st}">${dgDate(r.until)}</span><span class="sc">${r.when}</span>`).join('') + '</div>' : '';
+    const list = other.length ? `<div class="its">${other.map(x => `<div class="it ${x.level}"><i></i><div><b>${x.title}</b>${x.detail ? `<div>${x.detail}</div>` : ''}</div></div>`).join('')}</div>` : '';
+    _dgLast = `<h4>สถานะข้อมูล</h4>${tbl}${list}`
+      + (!tbl && !list ? '<div class="its"><div class="it"><i></i><div>ทุกแหล่งข้อมูลเข้าครบตามรอบ และตัวเลขข้ามหน้าตรงกัน</div></div></div>' : '')
+      + `<div class="meta">${atTxt ? 'ระบบตรวจล่าสุด ' + atTxt + ' (ตรวจอัตโนมัติทุกชั่วโมง)' : ''}${sched && !rows.length ? `${atTxt ? '<br>' : ''}รอบอัปเดต: ${sched}` : ''}</div>`;
     if (!pop.hidden) pop.innerHTML = _dgLast;
   };
   if (!keys) { draw([], ''); return; }
