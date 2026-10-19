@@ -9,7 +9,9 @@
 // ข้อมูล: RPC sku_deep(p_sku, p_from, p_to) ครั้งเดียว (ยอดขาย ช่องทาง ร้าน/เพจ โปร ค่าแอด KOL สี/เบอร์ สต็อก กำไร แอด Facebook คลิป TikTok ลูกค้า)
 // ใช้ helper ของ dashboard.html: supaRpc, makeChart, fmt, fmtB, ttcEsc, ttcEscAttr, getDateValue, effGrain, PL_TH_M, VAT_DIV, mtStoreName, fbeInfoIcon, exportTable, thShort, showPage, chartTickColor, chartGridColor
 (function () {
-  const CH_COL = { TikTok: '#fe2c55', Facebook: '#1877f2', Shopee: '#f97316', Lazada: '#8b5cf6', 'Modern Trade': '#f59e0b', 'ตัวแทน': '#64748b' };
+  // (2026-10-19) สีช่องทางชุดเดียวทั้งเว็บ (ตัวแปร --ch-* ใน ui.css) · อ่านค่าจริงตอนวาด ให้ใช้ได้ทั้งกราฟและจุดสี
+  const CH_VAR = { TikTok: '--ch-tiktok', Facebook: '--ch-facebook', Shopee: '--ch-shopee', Lazada: '--ch-lazada', 'Modern Trade': '--ch-mt', 'ตัวแทน': '--ch-dealer' };
+  const CH_COL = new Proxy({}, { get: (_, c) => CH_VAR[c] ? (getComputedStyle(document.body).getPropertyValue(CH_VAR[c]).trim() || undefined) : undefined });
   const CH_ORDER = ['TikTok', 'Facebook', 'Shopee', 'Lazada', 'Modern Trade', 'ตัวแทน'];
   const ST = { late: '🔴 Order now', stockout: '⚫ Stockout risk', reorder: '🟡 Next review', ok: '🟢 OK', no_need: 'No reorder', inactive: 'Inactive' };
   let _prods = null, _data = null, _seq = 0, _top = [], _mode = 'rev';
