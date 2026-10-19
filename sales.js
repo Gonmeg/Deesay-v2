@@ -1,4 +1,5 @@
-// sales.js — (2026-10-18) แม่แบบ 1 "ภาพรวมยอดขาย" (รวมหน้าแยกตาม Channel เข้ามาแล้ว) · อ้างอิง Shopee Seller Centre + Facebook Ads Manager
+// sales.js — (2026-10-19) ตัวเลขในตารางไม่มีเส้นประแล้ว · แถวย่อยไม่มีพื้นสี (แถบสีช่องทางด้านซ้าย) · ช่วงก่อน 1 ม.ค. 69 ไม่เทียบ
+// (2026-10-18) แม่แบบ 1 "ภาพรวมยอดขาย" (รวมหน้าแยกตาม Channel เข้ามาแล้ว) · อ้างอิง Shopee Seller Centre + Facebook Ads Manager
 // โหลดจาก dashboard.html (loadSalesJs) · ใช้ตัวช่วยกลางของ dashboard: ensureSalesSummary / salesRows / ensureSalesDone / cmpRange / cancelPending / noteSalesStatus
 // ตัวเลขทุกตัวมาจากตารางสรุปยอดขาย (mv_sales_daily ผ่าน sales_summary) แหล่งเดียวกับหน้าแรกและทุกหน้า · ลูกค้านับเฉพาะ Facebook (fb_customers_series / unique_customers)
 // (2026-10-18 b) ใช้กับหน้าภาพรวมรายช่องทางด้วย (Facebook / TikTok / Shopee / Lazada — o.hub = true):
@@ -59,8 +60,8 @@
 .ov-tbl th:first-child,.ov-tbl td:first-child{text-align:left}
 .ov-tbl td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--row-border,var(--border));white-space:nowrap}
 .ov-tbl tr.ov-tot td{font-weight:700;background:var(--bg3);border-bottom:1px solid var(--border)}
-.ov-tbl tr.ov-sub td{background:var(--accent-soft);font-size:13px;color:var(--text2)}
-.ov-tbl tr.ov-sub td:first-child{padding-left:46px;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+.ov-tbl tr.ov-sub td{background:transparent;font-size:13px;color:var(--text2)}
+.ov-tbl tr.ov-sub td:first-child{padding-left:46px;max-width:360px;overflow:hidden;text-overflow:ellipsis;box-shadow:inset 3px 0 0 var(--chc,var(--border))}
 .ov-ch{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:0;color:var(--text);font:inherit;font-weight:600;cursor:pointer}
 .ov-ch[disabled]{cursor:default;padding-left:20px}
 .ov-ch .chev{display:inline-block;width:12px;color:var(--text3);transition:transform .15s}
@@ -187,7 +188,7 @@
 
   // ===== ตารางแยกช่องทาง (หน้าภาพรวมยอดขาย · กดชื่อช่องทาง → กางรายเพจ / ร้านในที่เดิม ไม่วาดตารางใหม่) =====
   function cmpOfFn(R) {
-    return (ch, s) => { if (R.none) return { t: '—', cls: '' };
+    return (ch, s) => { if (R.none || R.noPrev) return { t: '—', cls: '' };
       const cu = sumOf(salesRows(R.cf, R.ct, ch, s), 'net_revenue'), pv = sumOf(salesRows(R.pf, R.pt, ch, s), 'net_revenue');
       if (!pv) return { t: '—', cls: '' }; const v = (cu - pv) / pv * 100;
       return { t: (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(1) + '%', cls: v >= 0 ? 'ov-up' : 'ov-down' }; };
@@ -198,7 +199,7 @@
       if (isBulkChannel(ch)) return '<span style="color:var(--text3);">—</span>';
       if (!co && pendCh(ch)) return `<span class="ov-pend">รอไฟล์ปิดเดือน</span>`;
       if (!co) return '0';
-      return `<span class="pl-trace" data-tsales="${esc(ch)}|${from}|${to}||${esc(s || '')}|cancel">${fmt(cr)}</span> · ${pct1(rev + cr ? cr / (rev + cr) : 0)}${pendCh(ch) ? ` <span class="ov-pend">ยังไม่รวม ${P.mon}</span>` : ''}`;
+      return `${fmt(cr)} · ${pct1(rev + cr ? cr / (rev + cr) : 0)}${pendCh(ch) ? ` <span class="ov-pend">ยังไม่รวม ${P.mon}</span>` : ''}`;
     };
   }
   function tableHtml(I, c) {
@@ -217,14 +218,14 @@
       const share = total.rev ? t.rev / total.rev : 0, k = cmpOf(ch, sub), col = `var(${CH_VAR[ch] || '--text2'})`;
       const unit = ch === 'Facebook' ? 'เพจ' : 'ร้าน';
       h += `<tr data-ovch="${esc(ch)}"><td><button type="button" class="ov-ch" ${canOpen ? `aria-expanded="${open}"` : 'disabled'}>${canOpen ? '<span class="chev">›</span>' : ''}<span class="ov-dot" style="background:${col}"></span>${esc(ch)}${canOpen ? ` <span class="ov-n">${subs.length} ${unit}</span>` : ''}</button></td>
-        <td><span class="pl-trace" data-tsales="${esc(ch)}|${from}|${to}||${esc(sub || '')}">${fmt(t.rev)}</span></td>
+        <td>${fmt(t.rev)}</td>
         <td>${pct1(share)}<span class="ov-bar"><i style="width:${(share * 100).toFixed(1)}%;background:${col}"></i></span></td>
-        <td><span class="pl-trace" data-tsales="${esc(ch)}|${from}|${to}||${esc(sub || '')}|orders">${fmt(t.ord)}</span></td>
+        <td>${fmt(t.ord)}</td>
         <td>${isBulkChannel(ch) ? '<span style="color:var(--text3);" title="ตัวแทน / MT สั่งลอตใหญ่ ไม่คิด AOV">—</span>' : (t.ord ? fmt(t.rev / t.ord) : '—')}</td>
         <td class="${k.cls}">${k.t}</td><td>${cancCell(ch, sub, t.cr, t.co, t.rev)}</td></tr>`;
       if (canOpen) subs.forEach(s => { const sr = g.subs[s], st = tot(sr), sk = cmpOf(ch, s === NOSUB ? null : s), sh = total.rev ? st.rev / total.rev : 0, sname = s === NOSUB ? '' : s;
-        h += `<tr class="ov-sub pg-child" data-ovp="${esc(ch)}" style="${open ? '' : 'display:none;'}"><td title="${esc(s)}">${esc(s)}</td>
-          <td><span class="pl-trace" data-tsales="${esc(ch)}|${from}|${to}||${esc(sname)}">${fmt(st.rev)}</span></td><td>${pct1(sh)}</td>
+        h += `<tr class="ov-sub pg-child" data-ovp="${esc(ch)}" style="--chc:${col};${open ? '' : 'display:none;'}"><td title="${esc(s)}">${esc(s)}</td>
+          <td>${fmt(st.rev)}</td><td>${pct1(sh)}</td>
           <td>${fmt(st.ord)}</td><td>${isBulkChannel(ch) ? '—' : (st.ord ? fmt(st.rev / st.ord) : '—')}</td>
           <td class="${sk.cls}">${sk.t}</td><td>${cancCell(ch, sname, st.cr, st.co, st.rev)}</td></tr>`; });
     });
@@ -249,11 +250,11 @@
     SG.keys.forEach(k => {
       // แถว "(ไม่ระบุ)" กดดูที่มา / เทียบช่วงก่อนไม่ได้ (ตัวกรองว่าง = ทั้งช่องทาง)
       const x = SG.g[k], t = tot(x.rows), named = k !== NOSUB && x.rows.length > 0, share = total.rev ? t.rev / total.rev : 0, cm = named ? cmpOf(ch, k) : { t: '—', cls: '' }, v = subVar(SG.keys, k);
-      const tr = (val, kind) => named ? `<span class="pl-trace" data-tsales="${esc(ch)}|${from}|${to}||${esc(k)}${kind || ''}">${fmt(val)}</span>` : (val ? fmt(val) : '<span class="ov-mute">0</span>');
+      const tr = (val, kind) => named ? `${fmt(val)}` : (val ? fmt(val) : '<span class="ov-mute">0</span>');
       h += `<tr><td><span class="ov-nm"><span class="ov-dot" style="background:var(${v})"></span><span class="ui-trunc" title="${esc(k)}">${esc(k)}</span></span></td>
         <td>${tr(t.rev)}</td>
         <td>${pct1(share)}<span class="ov-bar"><i style="width:${(share * 100).toFixed(1)}%;background:var(${v})"></i></span></td>
-        <td>${tr(t.ord, '|orders')}</td>
+        <td>${tr(t.ord)}</td>
         <td>${t.ord ? fmt(t.rev / t.ord) : '—'}</td>
         <td>${x.ads ? fmt(x.ads) : '<span class="ov-mute">0</span>'}</td><td>${x.ads ? roasTxt(t.rev, x.ads) : '<span class="ov-mute">—</span>'}</td>
         <td class="${cm.cls}">${cm.t}</td><td>${named ? cancCell(ch, k, t.cr, t.co, t.rev) : (t.cr ? fmt(t.cr) : '<span class="ov-mute">—</span>')}</td></tr>`;
@@ -322,15 +323,16 @@
     const rowsAll = salesRows(from, to, ch, sub), total = tot(rowsAll);
     const R = cmpRange(from, to, ch), P = cancelPending(to, ch);
     noteSalesStatus(page, R, P);
-    const cC = R.none ? null : tot(salesRows(R.cf, R.ct, ch, sub)), cP = R.none ? null : tot(salesRows(R.pf, R.pt, ch, sub));
+    const noCmp = R.none || R.noPrev;   // (2026-10-19) noPrev = ช่วงก่อนอยู่ก่อนวันที่ระบบเริ่มมีข้อมูล
+    const cC = noCmp ? null : tot(salesRows(R.cf, R.ct, ch, sub)), cP = noCmp ? null : tot(salesRows(R.pf, R.pt, ch, sub));
     const badgeW = (a, b, none, tip) => { if (none) return `<span title="${esc(tip)}">—</span>`; const x = cmpBadge(a, b, tip); return `<span class="${x.cls}" title="${esc(x.tip || '')}">${x.text}</span> vs ช่วงก่อน`; };
-    const badge = (a, b) => badgeW(a, b, R.none, R.tip);
+    const badge = (a, b) => badgeW(a, b, noCmp, R.tip);
     const custOk = !ch || ch === 'Facebook';
     const vals = { rev: fmt(total.rev), ord: fmt(total.ord), aov: total.aov ? fmt(total.aov) : '—', cust: custOk ? '…' : '—', canc: fmt(total.cr) };
     const deltas = { rev: badge(cC && cC.rev, cP && cP.rev), ord: badge(cC && cC.ord, cP && cP.ord), aov: badge(cC && cC.aov, cP && cP.aov),
       cust: custOk ? '' : '<span title="ช่องทางนี้ไม่ส่งเบอร์โทรจริงมา">นับได้เฉพาะ Facebook</span>',
       canc: `${pct1(total.cpct)} ของยอดก่อนตัดออก${P ? ` · <span class="ov-pend">ยังไม่รวม ${P.chs.join(' / ')} ${P.mon}</span>` : ''}` };
-    const totCmp = (() => { if (R.none || !cP || !cP.rev) return { t: '—', cls: '' }; const v = (cC.rev - cP.rev) / cP.rev * 100; return { t: (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(1) + '%', cls: v >= 0 ? 'ov-up' : 'ov-down' }; })();
+    const totCmp = (() => { if (noCmp || !cP || !cP.rev) return { t: '—', cls: '' }; const v = (cC.rev - cP.rev) / cP.rev * 100; return { t: (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(1) + '%', cls: v >= 0 ? 'ov-up' : 'ov-down' }; })();
 
     // ===== ค่า Ads + ROAS (เฉพาะหน้าภาพรวมรายช่องทาง) =====
     let A = null;
@@ -341,8 +343,8 @@
       const AC = adsCapOf(adsAll, to);
       const salesCap = R.none ? dayAdd(from, -1) : R.ct;   // วันล่าสุดที่ยอดขายเข้าครบ
       const capC = AC.cap && AC.cap < salesCap ? AC.cap : salesCap;   // วันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ
-      const noneA = capC < from, pA = noneA ? null : getPrevPeriodRange(from, capC);
-      const tipA = noneA ? 'ยอดขาย / ค่า Ads ของช่วงนี้ยังเข้าไม่ครบ จึงยังไม่เทียบกับช่วงก่อน'
+      const noneA = capC < from || !!R.noPrev, pA = noneA ? null : getPrevPeriodRange(from, capC);
+      const tipA = R.noPrev ? R.tip : noneA ? 'ยอดขาย / ค่า Ads ของช่วงนี้ยังเข้าไม่ครบ จึงยังไม่เทียบกับช่วงก่อน'
         : `เทียบ ${dLbl(from)} – ${dLbl(capC)} กับ ${dLbl(pA.from)} – ${dLbl(pA.to)}` + (capC < to ? ` · ไม่นับตั้งแต่ ${dLbl(dayAdd(capC, 1))} เพราะยอดขาย / ค่า Ads ยังเข้าไม่ครบ` : '');
       const aCur = noneA ? 0 : sumAds(adsBy(from, capC)), aPrev = noneA ? 0 : sumAds(adsBy(pA.from, pA.to));
       const rCur = noneA ? 0 : sumOf(salesRows(from, capC, ch, sub), 'net_revenue'), rPrev = noneA ? 0 : sumOf(salesRows(pA.from, pA.to, ch, sub), 'net_revenue');
@@ -384,7 +386,7 @@
       if (rest.length) { const d = B.list.map((_, i) => rest.reduce((s, k) => s + ((cur.sub[k] || [])[i] || 0), 0)); if (d.some(v => v)) subLines.push({ name: `อื่น ๆ (${rest.length})`, data: d, v: '--text3' }); }
     }
     let prv = null, prevLbl = null;
-    const showPrev = !B.monthly;
+    const showPrev = !B.monthly && !R.noPrev;
     if (showPrev) { const pr = getPrevPeriodRange(from, to);
       if (pr && pr.from) { const PB = { monthly: false, list: [], key: r => r.date }; let d = pr.from; while (d <= pr.to) { PB.list.push(d); d = dayAdd(d, 1); }
         prv = series(salesRows(pr.from, pr.to, ch, sub), PB, A && A.adsBy(pr.from, pr.to), A && pr.to); prevLbl = PB.list.map(dLbl); } }
@@ -397,7 +399,7 @@
       try {
         const [n, nc, np, ser, pser] = await Promise.all([
           fetchUniqueCustomers(from, to, 'Facebook', sub),
-          R.none ? null : fetchUniqueCustomers(R.cf, R.ct, 'Facebook', sub), R.none ? null : fetchUniqueCustomers(R.pf, R.pt, 'Facebook', sub),
+          noCmp ? null : fetchUniqueCustomers(R.cf, R.ct, 'Facebook', sub), noCmp ? null : fetchUniqueCustomers(R.pf, R.pt, 'Facebook', sub),
           supaRpc('fb_customers_series', { p_from: from, p_to: to, p_sub: sub || null, p_month: B.monthly }),
           showPrev && I.ctx.prevLbl ? supaRpc('fb_customers_series', { p_from: getPrevPeriodRange(from, to).from, p_to: getPrevPeriodRange(from, to).to, p_sub: sub || null, p_month: false }) : null]);
         if (!alive()) return;
