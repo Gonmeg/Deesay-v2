@@ -158,7 +158,7 @@
     const mFrom = dFrom.slice(0, 7), mTo = dTo.slice(0, 7), mLbl = mFrom === mTo ? PL_TH_M(mFrom) : `${PL_TH_M(mFrom)} – ${PL_TH_M(mTo)}`;
     const lastDay = m => { const [y, mm] = m.split('-').map(Number); return `${m}-${String(new Date(y, mm, 0).getDate()).padStart(2, '0')}`; };
     const partial = dFrom !== `${mFrom}-01` || dTo !== lastDay(mTo);
-    if (window.pageNote) window.pageNote('skuanalysis', 'partial', partial && ads ? 'warn' : null, `ช่วงวันที่ไม่ครบเดือน — ค่า Ads นับทั้งเดือน ${mLbl}`, 'ยอดขายนับตามวันที่ ROAS / MER จึงอาจเพี้ยน · เลือกวันที่ 1 ถึงสิ้นเดือนเพื่อให้ตรงกับหน้า MKT Tracking');   // (2026-10-18) ย้ายไปปุ่มสถานะข้อมูล
+    if (window.pageNote) window.pageNote('skuanalysis', 'partial', partial && ads ? 'warn' : null, `ค่า Ads นับทั้งเดือน ${mLbl}`, '');   // (2026-10-18) ย้ายไปปุ่มสถานะข้อมูล
     const warn = '';
     body.innerHTML = `
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 14px;"><div style="font-size:18px;font-weight:700;">${esc(d.name || nameOf(d.sku))}</div>
