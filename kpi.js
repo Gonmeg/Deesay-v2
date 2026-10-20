@@ -396,7 +396,7 @@
     return rows.sort((a, b) => { const x = key(a), y = key(b); const c = typeof x === 'string' ? x.localeCompare(y, 'th') : x - y; return c !== 0 ? c * d : b.g.a - a.g.a; });
   }
   function nmCell(s) {
-    const disc = P[s] && P[s].status === 'Discontinued' ? ' <span class="ui-badge" data-tip="สถานะในหน้า Admin = เลิกผลิต (ยังมีของขาย)">เลิกผลิต</span>' : '';
+    const disc = P[s] && P[s].status === 'Discontinued' ? ' <span class="ui-badge" data-tip="สถานะ = เลิกผลิต (ยังขายของที่เหลือ ไม่สั่งเพิ่ม) · แก้ได้ในหน้า สินค้า & ราคา">เลิกผลิต</span>' : '';
     return `<td class="kp-nmc"><span class="kp-nm is-link" onclick="kpOpenSku('${s}')" data-tip="เปิดหน้าเจาะสินค้า">${esc(nameOf(s))}</span>${disc}<span class="ui-code kp-code">${esc(s)}</span></td>`;
   }
   function pager(N) {
