@@ -289,3 +289,11 @@ tr.ui-sum > td, tr.ui-sum > th { background: var(--row-sum); border-top: 1px sol
 .ui-dlg .btn.good { background: #16a34a; color: #fff; } .ui-dlg .btn.bad { background: #dc2626; color: #fff; } .ui-dlg .btn.pri { background: var(--accent); color: #111; }
 .ui-dlg .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @keyframes uiDlgIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* (2026-10-20) ⓘ ทุกหน้าหน้าตาเดียวกัน · ชี้เมาส์แล้วขึ้น .ui-tip กล่องเดียวกัน (ไม่ต้องคลิก) */
+.ui-tip.is-html { white-space: normal; }
+.ui-tip.is-html b { color: var(--text); }
+.ads-info-wrap > .ads-info-popover:not(#ttProductPicker), .ads-info-wrap > [id^="tip-"] { display: none !important; }
+.ads-info-wrap > span:first-child, .pr-i, .pp-i, .ui-i { color: var(--text3) !important; font-size: 12px !important; font-weight: 400 !important; cursor: help !important;
+  font-style: normal; border: 0 !important; width: auto !important; height: auto !important; display: inline !important; vertical-align: baseline !important; }
+.ads-info-wrap > span:first-child:hover, .pr-i:hover, .pp-i:hover, .ui-i:hover { color: var(--text2) !important; }
