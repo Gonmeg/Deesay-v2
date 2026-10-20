@@ -19,6 +19,7 @@
   /* สีประจำช่องทาง — ใช้สีเดียวกันทุกกราฟ ทุกหน้า */
   /* TikTok ใช้สี CI จริง: Cyan #25F4EE · Red #FE2C55 · Black — โหมดมืดเส้นเป็น Cyan, โหมดสว่างเส้นเป็นดำ (Cyan บนพื้นขาวจะจางจนมองไม่เห็น) */
   --tt-cyan: #25F4EE; --tt-red: #FE2C55; --tt-ink: #000000;
+  --row-sum: #1E2633; --row-sum-line: #33435A;   /* (2026-10-20) แถวสรุป / แถวรวม: ฟ้าเทาเข้ม */
   --ch-shopee: #F2643F; --ch-tiktok: var(--tt-cyan); --ch-facebook: #5B8DEF; --ch-lazada: #FF4FB0;
   --ch-dealer: #2DD4BF; --ch-mt: #A78BFA; --ch-ads: #EF4444;
 
@@ -41,6 +42,7 @@ body.light-theme, .ui-light {
   --good: var(--green); --bad: var(--red); --warn: #B7791F;
   --grid: rgba(15,23,42,.06);
   --shadow-pop: 0 12px 28px rgba(15,23,42,.14);
+  --row-sum: #EAF0F8; --row-sum-line: #C9D5E6;   /* (2026-10-20) แถวสรุป / แถวรวม: ฟ้าเทาอ่อน (เดิมเทา กลืนกับพื้นหลังในธีมขาว) */
   /* (2026-10-19) สีช่องทางชุดเดียวทั้งเว็บ: TikTok / Facebook / Shopee / Lazada = สี CI ของแบรนด์ (Lazada = ชมพูจากโลโก้หัวใจ) · ตัวแทน = เขียวอมฟ้า · Modern Trade = ม่วง */
   --ch-shopee: #EE4D2D; --ch-tiktok: var(--tt-ink); --ch-facebook: #1877F2; --ch-lazada: #F0168C;
   --ch-dealer: #0D9488; --ch-mt: #7C3AED; --ch-ads: #DC2626;
@@ -267,3 +269,6 @@ body td { font-variant-numeric: tabular-nums; }
 body .btn { border-radius: 8px; }
 body .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
 body .empty { font-size: 13px; color: var(--text3); }
+
+/* (2026-10-20) แถวสรุป / แถวรวมทุกตาราง: ใส่ class="ui-sum" ที่ <tr> */
+tr.ui-sum > td, tr.ui-sum > th { background: var(--row-sum); border-top: 1px solid var(--row-sum-line); font-weight: 700; color: var(--text); }
