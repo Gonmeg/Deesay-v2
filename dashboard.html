@@ -755,6 +755,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <div class="nav-item" onclick="showPage('adperf',null,this)"><span class="nav-icon">📈</span> Ad Performance</div>
     <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL</div>
     <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
+    <div class="nav-item" onclick="showPage('products',null,this)"><span class="nav-icon">🧴</span> สินค้า & ราคา</div>
     <div class="nav-item" onclick="showPage('promo',null,this)"><span class="nav-icon">🏷️</span> ขอ Promotion</div>
     <!-- (2026-10-15) หน้าผู้บริหาร: เปิดที่ exec.html (dashboard.html?app=exec) · หน้าทีมไม่เห็นกลุ่มนี้ -->
     <div class="nav-group-label exec-only" id="navExecLabel" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ผู้บริหาร</div>
@@ -771,7 +772,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-i</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-j</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2118,6 +2119,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
     <div class="page" id="page-cost"><!-- (2026-10-09) Business Insight: หน้าทั้งหมดสร้างโดย bizinsight.js --></div>
 <div class="page" id="page-promo"></div><div class="page" id="page-exec"></div><div class="page" id="page-execfee"></div><!-- (2026-10-15) promo.js -->
+<div class="page" id="page-products"></div><!-- (2026-10-20) products.js -->
 
   </div>
 </div>
@@ -2130,7 +2132,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   </div>
 </div>
 <script src="config.js"></script>
-<script src="auth.js"></script>
+<script src="auth.js?v=20261020a"></script>
 <script>
 // ===== STATE =====
 let allData = [];
@@ -2742,7 +2744,7 @@ function applyFilters() {
 
 // ===== NAVIGATION =====
 const pageTitles = {
-  promo: 'ขอ Promotion', exec: 'Promotion · อนุมัติ', execfee: 'ค่าธรรมเนียมช่องทาง',
+  promo: 'ขอ Promotion', exec: 'Promotion · อนุมัติ', execfee: 'ค่าธรรมเนียมช่องทาง', products: 'สินค้า & ราคา',
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', kpi: 'เป้าหมาย KPI', promotarget: 'ตั้งเป้า Promotion', fbhub: 'ภาพรวม Facebook',
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttkeyword: 'ค้นหาคำบน TikTok', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
@@ -2761,7 +2763,7 @@ const PAGE_INFO = {
 };
 const pageOrder = ['home','overview','kpi','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่า Ads ต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
-const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
+const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee','products']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -2818,7 +2820,7 @@ function showPage(page, lockCh, el) {
   if (page === 'channel') page = 'overview';   // (2026-10-18) หน้าแยกตาม Channel รวมเข้าภาพรวมยอดขายแล้ว
   if (window.Auth && Auth.perm && !Auth.canPage(page) && !(page === 'overview' && Auth.canPage('channel'))) { uiAlert('ยังไม่มีสิทธิ์ดูหน้านี้', { text: 'ติดต่อผู้ดูแลระบบถ้าต้องใช้' }); return; }   // ด่านสิทธิ์รายหน้า
   // (2026-09-29) เปิดมาที่หน้าแรกแล้วกดไปหน้าอื่นก่อนข้อมูลก้อนหลักโหลดเสร็จ → โชว์ตัวโหลดไว้ก่อน
-  if (!['home', 'promo', 'exec', 'execfee'].includes(page) && !window._initDone) document.getElementById('loadingOverlay')?.classList.remove('hidden');
+  if (!['home', 'promo', 'exec', 'execfee', 'products'].includes(page) && !window._initDone) document.getElementById('loadingOverlay')?.classList.remove('hidden');
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
@@ -2832,8 +2834,8 @@ function showPage(page, lockCh, el) {
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
-  const HIDE_CHANNEL_FILTER = ['promo', 'exec', 'execfee', 'fbads', 'fbhub', 'tthub', 'ttcontent', 'ttkeyword', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
-  const HIDE_SUBCHANNEL_FILTER = ['promo', 'exec', 'execfee', 'fbads', 'fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply', 'kpi']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
+  const HIDE_CHANNEL_FILTER = ['promo', 'exec', 'execfee', 'products', 'fbads', 'fbhub', 'tthub', 'ttcontent', 'ttkeyword', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['promo', 'exec', 'execfee', 'products', 'fbads', 'fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply', 'kpi']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   { const g = document.getElementById('skdFilterGroup'); if (g) g.style.display = page === 'skuanalysis' ? 'flex' : 'none';   // (2026-09-30) เจาะสินค้า: เลือกสินค้าที่แถบด้านบน
@@ -2895,7 +2897,7 @@ function showPage(page, lockCh, el) {
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
-    const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = ['home', 'kpi', 'promo', 'exec', 'execfee'].includes(page) ? 'none' : '';
+    const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = ['home', 'kpi', 'promo', 'exec', 'execfee', 'products'].includes(page) ? 'none' : '';
     const kg = document.getElementById('kpMonthGroup'); if (kg) kg.style.display = page === 'kpi' ? 'flex' : 'none'; }   // (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนแถบบน เปลี่ยนแล้วโหลดทันที   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
@@ -2932,6 +2934,8 @@ function showPage(page, lockCh, el) {
     loadKpiPage(true);
   } else if (['promo', 'exec', 'execfee'].includes(page)) {
     loadPromoPage(page);
+  } else if (page === 'products') {
+    loadProductsPage();
   } else {
     applyFilters();
   }
@@ -2996,13 +3000,24 @@ function loadFbAdminPage() {
 }
 
 // (2026-10-07) หน้าเป้าหมาย KPI: โค้ดอยู่ใน kpi.js — โหลดครั้งแรกที่กดเมนู · reload = true ตอนกดเข้าหน้า (ดึงยอดล่าสุด)
+// (2026-10-20) สินค้า & ราคา (ข้อมูลสินค้า · Mock / RSP · Rank ราคา · ช่องทางที่ขาย · การวางแผน): โค้ดอยู่ใน products.js
+function loadProductsPage() {
+  if (window.ProductsUI) { window.ProductsUI.render(); return; }
+  if (window._productsLoading) return;
+  window._productsLoading = true;
+  const s = document.createElement('script');
+  s.src = 'products.js?v=20261020a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต products.js
+  s.onload = () => { window._productsLoading = false; if (currentPage === 'products') window.ProductsUI.render(); };
+  s.onerror = () => { window._productsLoading = false; const el = document.getElementById('page-products'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด products.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+  document.body.appendChild(s);
+}
 // (2026-10-15) โปรโมชั่น (ขอโปร / อนุมัติ / ค่าธรรมเนียมช่องทาง): โค้ดอยู่ใน promo.js — โหลดครั้งแรกที่เปิด
 function loadPromoPage(page) {
   if (window.PromoUI) { window.PromoUI.render(page); return; }
   if (window._promoLoading) return;
   window._promoLoading = true;
   const s = document.createElement('script');
-  s.src = 'promo.js?v=20261020i';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
+  s.src = 'promo.js?v=20261020j';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
   s.onload = () => { window._promoLoading = false; if (['promo', 'exec', 'execfee'].includes(currentPage)) window.PromoUI.render(currentPage); };
   s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3096,6 +3111,7 @@ function renderCurrentPage() {
   else if (currentPage === 'fbads') loadFbAdsPage();
   else if (currentPage === 'fbadmin') loadFbAdminPage();
   else if (currentPage === 'kpi') loadKpiPage(false);
+  else if (currentPage === 'products') loadProductsPage();
   // skuanalysis, adperf, livesearch render on-demand ผ่านปุ่ม
 }
 
@@ -10446,6 +10462,9 @@ window._authP.then(p => {
   // (2026-10-02) หลังกด "รีเฟรชข้อมูล Dashboard" หน้าโหลดใหม่ทั้งหมด → กลับมาหน้าเดิม + บอกผลรีเฟรช
   let _back = null, _rdone = null;
   try { _back = sessionStorage.getItem('deesay_after_refresh'); _rdone = JSON.parse(sessionStorage.getItem('deesay_refresh_done') || 'null'); sessionStorage.removeItem('deesay_after_refresh'); sessionStorage.removeItem('deesay_refresh_done'); } catch (e) {}
+  // (2026-10-20) เปิดหน้าตรงจากลิงก์ได้: dashboard.html?page=products (เช่นจากเมนูใน admin.html)
+  const _qp = new URLSearchParams(location.search).get('page');
+  if (_qp && !_back && document.getElementById('page-' + _qp) && Auth.canPage(_qp) && document.querySelector(`.nav-item[onclick*="'${_qp}'"]`)) _back = _qp;
   if (_back && _back !== 'home' && document.getElementById('page-' + _back) && Auth.canPage(_back)) showPage(_back, null, document.querySelector(`.nav-item[onclick*="'${_back}'"]`));
   else if (window.APP_EXEC) { const first = ['exec', 'cost', 'execfee'].find(id => Auth.canPage(id) && document.querySelector(`.nav-item[onclick*="'${id}'"]`)); if (first) showPage(first, null, document.querySelector(`.nav-item[onclick*="'${first}'"]`)); }
   else if (Auth.canPage('home')) showPage('home', null, document.querySelector(`.nav-item[onclick*="'home'"]`));
