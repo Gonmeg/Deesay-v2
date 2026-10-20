@@ -231,7 +231,7 @@
     .shell-sidebar { max-height: none; }
     @media (max-width: 700px) { .del-form { grid-template-columns: 1fr; } .step1-grid { grid-template-columns: 1fr; } }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261015a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261020b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 </head>
 <body>
 <script>/* (2026-10-05) ใส่ธีมสว่างทันทีก่อนหน้าแสดงผล — กันจอดำแวบตอนเปิดหน้า */try{if(localStorage.getItem('deesay_theme')==='light')document.body.classList.add('light-theme')}catch(e){}</script>
@@ -1674,10 +1674,10 @@ function alRender(id, st) {
   out.innerHTML = h; out.style.display = 'block'
   const b = document.getElementById('btnAlActivate')
   if (b) b.addEventListener('click', async () => {
-    if (!confirm(`ใช้งานลิงก์นี้แทนลิงก์เดิม?\n\nเดือนใหม่: ${nm.map(alM).join(', ') || 'ไม่มี'}\nเดือนที่ตัวเลขเปลี่ยน: ${ch.map(alM).join(', ') || 'ไม่มี'}`)) return
+    if (!(await uiConfirm('ใช้ลิงก์นี้แทนลิงก์เดิม', { text: `เดือนใหม่: ${nm.map(alM).join(', ') || 'ไม่มี'}\nเดือนที่ตัวเลขเปลี่ยน: ${ch.map(alM).join(', ') || 'ไม่มี'}`, ok: 'ใช้งานลิงก์นี้' }))) return
     b.disabled = true; b.textContent = '⏳ กำลังโหลดข้อมูล…'
     const { data, error } = await DB.rpc('acct_source_activate', { p_id: id })
-    if (error) { b.disabled = false; b.textContent = '✓ ใช้งานลิงก์นี้'; alert('ใช้งานไม่สำเร็จ: ' + error.message); return }
+    if (error) { b.disabled = false; b.textContent = '✓ ใช้งานลิงก์นี้'; uiAlert('ใช้งานไม่สำเร็จ', { text: error.message, tone: 'bad' }); return }
     out.innerHTML = sec('✅ ใช้งานลิงก์ใหม่แล้ว', `<div>โหลด ${(data.loaded || []).length} แท็บ · ${alE(data.refresh || '')}</div>`)
     alLoadHistory()
   })
@@ -1726,7 +1726,7 @@ document.getElementById('btnExportQty').addEventListener('click', async () => {
       ${low.length ? `<p class="map-info" style="color:var(--red,#ef4444);margin-top:10px;">⚠️ ${low.map(c => c[0]).join(' · ')} ยังได้เงินไม่ครบ ตัวเลขในไฟล์จะน้อยกว่าที่ควร · อัปไฟล์รับเงินของช่องทางนั้นก่อน หรือรอให้ได้เงินครบ แล้ว Export ใหม่</p>` : '<p class="map-info" style="margin-top:10px;">✓ ทุกช่องทางได้เงินครบเกือบทั้งหมดแล้ว</p>'}`
     out.style.display = 'block'
     if (!rows.length) throw new Error('ไม่มีออเดอร์ที่ได้เงินแล้วในเดือนนี้')
-    if (low.length && !confirm(`${low.map(c => `${c[0]} ได้เงินแล้ว ${Math.round(c[2] / c[1] * 100)}%`).join('\n')}\n\nยังได้เงินไม่ครบ ตัวเลขจะน้อยกว่าที่ควร ยังต้องการดาวน์โหลดไหม?`)) return
+    if (low.length && !(await uiConfirm('ยังได้เงินไม่ครบ', { text: `${low.map(c => `${c[0]} ได้เงินแล้ว ${Math.round(c[2] / c[1] * 100)}%`).join('\n')}\nตัวเลขจะน้อยกว่าที่ควร ดาวน์โหลดต่อไหม?`, ok: 'ดาวน์โหลด' }))) return
     const aoa = [['month', 'channel', 'sub_channel', 'payment_type', 'child_sku', 'total_qty'], ...rows.map(r => [r[0], r[1], r[2], r[3], r[4], +r[5]])]
     const ws = XLSX.utils.aoa_to_sheet(aoa)
     ws['!cols'] = [{ wch: 9 }, { wch: 14 }, { wch: 42 }, { wch: 18 }, { wch: 16 }, { wch: 10 }]
@@ -2151,7 +2151,7 @@ async function handleConfirm() {
         const d = calcRevenue(channel, mappings, row) - fileTotal
         if (Math.abs(d) > 1) { bad++; badDiff += d }
       })
-      if (bad > 0 && !confirm(`⚠️ มี ${bad.toLocaleString()} แถวที่ยอดคำนวณไม่เท่ากับคอลัมน์ "รวมทั้งสิ้น" ในไฟล์ (ต่างรวม ${Math.round(badDiff).toLocaleString()} บาท)\n\nมักเกิดจากช่อง "ยอดรวมสินค้า" จับคอลัมน์ผิด ทำให้หักส่วนลดหรือบวกค่าส่งซ้ำ\n\nกด "ยกเลิก" เพื่อกลับไปแก้การจับคู่คอลัมน์ · กด "ตกลง" ถ้าตรวจแล้วว่าถูก`)) {
+      if (bad > 0 && !(await uiConfirm(`มี ${bad.toLocaleString()} แถวที่ยอดคำนวณไม่เท่ากับคอลัมน์ "รวมทั้งสิ้น" ในไฟล์ (ต่างรวม ${Math.round(badDiff).toLocaleString()} บาท)\n\nมักเกิดจากช่อง "ยอดรวมสินค้า" จับคอลัมน์ผิด ทำให้หักส่วนลดหรือบวกค่าส่งซ้ำ\n\nกด "ยกเลิก" เพื่อกลับไปแก้การจับคู่คอลัมน์ · กด "ตกลง" ถ้าตรวจแล้วว่าถูก`, { tone: 'bad', ok: 'อัปโหลดต่อ' }))) {
         btn.disabled = false; back.disabled = false; btn.textContent = '✓ ยืนยัน Upload'; pt.style.display = 'none'
         return
       }
@@ -2555,6 +2555,6 @@ function goStep(n) {
 }
 function showAlert(el, msg) { el.textContent=msg; el.style.display='block' }
 </script>
-<script src="ui.js?v=20261014c" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
+<script src="ui.js?v=20261020a" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
 </body>
 </html>
