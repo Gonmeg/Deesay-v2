@@ -39,9 +39,9 @@
 .bi .callout{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.55;background:var(--bg3);border:1px solid var(--border);color:var(--text2)}
 .bi table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
 .bi th,.bi td{padding:9px 12px;border-bottom:1px solid var(--row);text-align:right;white-space:nowrap;font-size:13px}
-.bi th{color:var(--text3);font-weight:600;font-size:12px;position:sticky;top:0;background:var(--bg3);z-index:2;border-bottom:1px solid var(--border)}
+.bi th{color:var(--text3);font-weight:600;font-size:12px;position:sticky;top:0;background:var(--row-sum);z-index:2;border-bottom:1px solid var(--border)}
 .bi td:first-child,.bi th:first-child{text-align:left;position:sticky;left:0;background:var(--bg2);z-index:1}
-.bi th:first-child{background:var(--bg3);z-index:3}
+.bi th:first-child{background:var(--row-sum);z-index:3}
 .bi .scroll{overflow:auto;max-height:640px;border:1px solid var(--border);border-radius:10px}
 .bi tr.sec td{color:var(--text3);font-size:11.5px;font-weight:700;letter-spacing:.3px;padding-top:14px;background:var(--bg2)}
 .bi tr.sum td{font-weight:700;background:color-mix(in srgb,var(--accent) 7%,var(--bg2))}
@@ -94,8 +94,8 @@
 .bi .pl .chip::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--c)}
 .bi .pl tr.sub td{font-weight:700;background:color-mix(in srgb,var(--c) 7%,var(--bg2))}
 .bi .pl tr.sub td:first-child{background:color-mix(in srgb,var(--c) 7%,var(--bg2))}
-.bi .pl tr.res td{font-weight:700;font-size:14px;padding-top:10px;padding-bottom:10px;background:var(--bg3)}
-.bi .pl tr.res td:first-child{background:var(--bg3)}
+.bi .pl tr.res td{font-weight:700;font-size:14px;padding-top:10px;padding-bottom:10px;background:var(--row-sum)}
+.bi .pl tr.res td:first-child{background:var(--row-sum)}
 .bi .pl tr.res.key td{font-size:15px;background:color-mix(in srgb,var(--accent) 16%,var(--bg2))}
 .bi .pl tr.res.key td:first-child{background:color-mix(in srgb,var(--accent) 16%,var(--bg2));box-shadow:inset 3px 0 0 var(--accent)}
 .bi .pl tr.gap td{padding:6px;background:var(--bg2)!important}
@@ -124,7 +124,7 @@
 .bi tr.co td{color:var(--text2)}
 @media (max-width:1200px){.bi .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.bi .row2{grid-template-columns:1fr}.bi .det-grid{grid-template-columns:1fr}}
 .bi .flow{overflow:visible;border:1px solid var(--border);border-radius:10px}
-.bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--bg3)}
+.bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--row-sum)}
 .bi .flow .pl thead th{background:var(--bg2)}
 .bi .flow:has(.pl){border:0}
 #page-cost #plCard,#page-cost #plTableWrap{overflow:visible!important}
