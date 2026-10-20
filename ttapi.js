@@ -89,7 +89,8 @@
     const card = tb.closest('.card'), title = card && card.querySelector('.section-title');
     if (title && title.dataset.api !== '2') { title.dataset.api = '2'; title.innerHTML = 'ยอดขายแยกตามช่องทาง ' + info('ttapi-oc-info', '<b>ที่มา:</b> ออเดอร์ชุดเดียวกับการ์ดยอดขาย (ตัดยกเลิก / คืนสินค้าแล้ว) · รวมทุกแถวเท่ายอดขายในการ์ดเสมอ<br><b>วิธีแบ่ง:</b> ตามช่องทางที่ลูกค้าซื้อในออเดอร์ · <b>ครีเอเตอร์</b> = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · <b>บัญชีร้าน</b> = deesaythailand และช่องรอง<br><b>ลดหนี้ (CN)</b> = ยอดลดหนี้ตามบัญชี ที่หักจากยอดขายรวม'); }
     try {
-      // (2026-10-20) + ค่าแอด / ยอดขายจากแอด แยกตามช่องทาง (tt_channel_ads) · รวมค่าแอดทุกแถว = ค่า Ads ในแผงตัวเลข
+      // (2026-10-20) + ค่า Ads / ROAS / %Ads / ยอดขายจาก Ads (ตาม TikTok) แยกตามช่องทาง (tt_channel_ads)
+      //   ROAS = ยอดขายจริง ÷ ค่า Ads (แบบเดียวกับการ์ด → แถวรวม = ROAS ในการ์ด) · ยอดขายจาก Ads = ตัวเลขที่ TikTok นับ ไว้ดูประกอบ
       const [rows, adRows] = await Promise.all([supaRpc('tt_channel_split', { p_from: from, p_to: to }, true), supaRpc('tt_channel_ads', { p_from: from, p_to: to }, true).catch(() => [])]);
       if (seq !== _ocSeq) return;
       const AD = {}; (adRows || []).forEach(a => { AD[a.label] = { cost: num(a.ad_cost), rev: a.ad_rev == null ? null : num(a.ad_rev) }; });
@@ -97,16 +98,18 @@
       const tot = list.reduce((a, [, g]) => a + g.rev, 0);
       const dash = '<span style="color:var(--text3);">—</span>';
       const adCells = (sales, a) => {
-        if (!a || !(a.cost > 0)) return `<td class="tt-gl">${dash}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>`;
-        return `<td class="tt-gl">${a.rev == null ? dash : baht(a.rev)}</td><td>${baht(a.cost)}</td><td>${a.rev == null ? dash : (a.rev / a.cost).toFixed(2) + 'x'}</td><td>${sales > 0 ? pctTxt(a.cost, sales) : dash}</td>`;
+        if (!a || !(a.cost > 0)) return `<td class="tt-gl">${dash}</td><td>${dash}</td><td>${dash}</td><td class="tt-gl">${a && a.rev ? baht(a.rev) : dash}</td><td>${dash}</td>`;
+        const tiny = sales > 0 && a.cost / sales < 0.01;   // ค่า Ads ไม่ถึง 1% ของยอด → ROAS สูงเพราะยอดเกือบทั้งหมดไม่ได้มาจาก Ads
+        return `<td class="tt-gl">${baht(a.cost)}</td><td${tiny ? ' style="color:var(--text3);" data-tip="ค่า Ads ไม่ถึง 1% ของยอดขายช่องทางนี้ ยอดเกือบทั้งหมดไม่ได้มาจาก Ads"' : ''}>${sales > 0 ? (sales / a.cost).toFixed(2) + 'x' : dash}</td><td>${sales > 0 ? pctTxt(a.cost, sales) : dash}</td><td class="tt-gl">${a.rev == null ? dash : baht(a.rev)}</td><td>${a.rev == null ? dash : (a.rev / a.cost).toFixed(2) + 'x'}</td>`;   // ROI ที่ TikTok คำนวณ = ยอดจาก Ads ÷ ค่า Ads
       };
       const used = new Set(list.map(([k]) => k));
       const extra = Object.entries(AD).filter(([k]) => !used.has(k));   // แอดที่ไม่ผูกช่องทางขาย เช่น แอดสร้างการรับรู้
       const adCost = Object.values(AD).reduce((a, x) => a + x.cost, 0), adRev = Object.values(AD).reduce((a, x) => a + (x.rev || 0), 0);
+      const roiCost = Object.values(AD).filter(x => x.rev != null).reduce((a, x) => a + x.cost, 0);   // ROI รวมของ TikTok: ไม่นับ Ads ที่ไม่ผูกยอดขาย
       tb.innerHTML = list.length ? list.map(([k, g]) => `<tr${g.sort === 2 ? ' style="color:var(--text3);"' : ''}><td>${k}</td><td>${baht(g.rev)}</td><td>${g.ord ? fmt(g.ord) : '—'}</td><td>${pctTxt(g.rev, tot)}</td>${adCells(g.rev, AD[k])}</tr>`).join('')
-        + extra.map(([k, a]) => `<tr style="color:var(--text3);"><td>${esc(k)} ${info('ttapi-oc-aw-' + k.length, 'แอดแบบ Reach / Video views / Brand ที่ TikTok ไม่ผูกยอดขาย · แยกไว้ไม่ให้ ROI ของช่องทางอื่นเพี้ยน')}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>${adCells(0, { cost: a.cost, rev: a.rev })}</tr>`).join('')
-        + `<tr class="ui-sum"><td>รวม</td><td>${baht(tot)}</td><td>${fmt(list.reduce((a, [, g]) => a + g.ord, 0))}</td><td>100%</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${adCost ? baht(adCost) : dash}</td><td>${adCost ? (adRev / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td></tr>`
-        : '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>';
+        + extra.map(([k, a]) => `<tr style="color:var(--text3);"><td>${esc(k)} ${info('ttapi-oc-aw-' + k.length, 'Ads แบบ Reach / Video views / Brand ที่ไม่ผูกกับยอดขาย · แยกแถวไว้ ไม่ให้ ROAS ของช่องทางอื่นเพี้ยน')}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>${adCells(0, { cost: a.cost, rev: a.rev })}</tr>`).join('')
+        + `<tr class="ui-sum"><td>รวม</td><td>${baht(tot)}</td><td>${fmt(list.reduce((a, [, g]) => a + g.ord, 0))}</td><td>100%</td><td class="tt-gl">${adCost ? baht(adCost) : dash}</td><td>${adCost && tot > 0 ? (tot / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${roiCost ? (adRev / roiCost).toFixed(2) + 'x' : dash}</td></tr>`
+        : '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
     } catch (e) { console.warn('tt channel split', e); }
   }
   function setLiveScope(s) { _liveScope = s; if (typeof renderTtHub === 'function' && currentPage === 'tthub') renderTraffic(getDateValue('From'), getDateValue('To')); }
