@@ -43,10 +43,10 @@
   // ================= ภาพรวม TikTok: ทราฟฟิกร้าน + รอบ Live =================
   let _trSeq = 0, _liveScope = 'own';
   async function renderTraffic(from, to) {
-    const el = box('page-tthub', 'ttapi-traffic', 'tblTopSKUTt'); if (!el || !from || !to) return;
+    const el = box('page-tthub', 'ttapi-traffic', document.getElementById('ttPromoDiv') ? 'ttPromoDiv' : 'tblTopSKUTt'); if (!el || !from || !to) return;   // (2026-10-20) วางก่อนหัวข้อ Promotion / SKU (เดิมไปแทรกใต้หัวข้อ)
     const seq = ++_trSeq;
     el.innerHTML = `
-      <div class="section-divider"><span>📈 ทราฟฟิกร้าน TikTok ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน<br><b>GMV</b> = ยอดตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) ใช้เทียบประสิทธิภาพช่องทาง · ยอดขายจริงดูที่กราฟและตารางช่องทางด้านบน<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า<br><b>CTR</b> = เข้าชม ÷ Impression · <b>GMV / 1,000 Impression</b> = ช่องทางไหนเปลี่ยนการมองเห็นเป็นยอดได้ดี')}</span></div>
+      <div class="section-divider"><span>📈 TikTok Shop Traffic ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน<br><b>GMV</b> = ยอดตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) ใช้เทียบประสิทธิภาพช่องทาง · ยอดขายจริงดูที่กราฟและตารางช่องทางด้านบน<br>TikTok ให้ข้อมูลย้อนหลังได้ถึง 10 เม.ย. 69 เท่านั้น<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า<br><b>CTR</b> = เข้าชม ÷ Impression · <b>GMV / 1,000 Impression</b> = ช่องทางไหนเปลี่ยนการมองเห็นเป็นยอดได้ดี')} <span id="ttapi-tr-note" style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:normal;"></span></span></div>
       <div id="ttapi-tr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">ประสิทธิภาพแต่ละช่องทาง</div></div>
         <div class="table-wrap"><table><thead><tr><th>ช่องทาง</th><th>GMV</th><th>สัดส่วน</th><th>Impression</th><th>เข้าชม</th><th>CTR</th><th>GMV / 1,000 Impression</th><th>GMV / เข้าชม</th></tr></thead><tbody id="ttapi-tr-src"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div>
@@ -59,7 +59,8 @@
       const T = { gmv: 0, orders: 0, refunds: 0 }; SRC.forEach(s => { T['gmv_' + s.k] = 0; T['impr_' + s.k] = 0; T['pv_' + s.k] = 0; });
       rows.forEach(r => { T.gmv += num(r.gmv); T.orders += num(r.orders); T.refunds += num(r.refunds); SRC.forEach(s => { T['gmv_' + s.k] += num(r['gmv_' + s.k]); T['impr_' + s.k] += num(r['impr_' + s.k]); T['pv_' + s.k] += num(r['pv_' + s.k]); }); });
       const impr = SRC.reduce((a, s) => a + T['impr_' + s.k], 0), pv = SRC.reduce((a, s) => a + T['pv_' + s.k], 0);
-      const last = rows.length ? rows[rows.length - 1].date : null;
+      const last = rows.length ? rows[rows.length - 1].date : null, first = rows.length ? rows[0].date : null;
+      const nt = document.getElementById('ttapi-tr-note'); if (nt) nt.textContent = first && first > from ? '· ข้อมูลเริ่ม ' + new Date(first + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '';
       document.getElementById('ttapi-tr-kpis').innerHTML =
         kpi('Impression สินค้า', fmt(impr), last ? 'ข้อมูลถึง ' + last : '') +
         kpi('เข้าชมหน้าสินค้า', fmt(pv), 'CTR ' + pctTxt(pv, impr, 2)) +
@@ -88,12 +89,24 @@
     const card = tb.closest('.card'), title = card && card.querySelector('.section-title');
     if (title && title.dataset.api !== '2') { title.dataset.api = '2'; title.innerHTML = 'ยอดขายแยกตามช่องทาง ' + info('ttapi-oc-info', '<b>ที่มา:</b> ออเดอร์ชุดเดียวกับการ์ดยอดขาย (ตัดยกเลิก / คืนสินค้าแล้ว) · รวมทุกแถวเท่ายอดขายในการ์ดเสมอ<br><b>วิธีแบ่ง:</b> ตามช่องทางที่ลูกค้าซื้อในออเดอร์ · <b>ครีเอเตอร์</b> = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · <b>บัญชีร้าน</b> = deesaythailand และช่องรอง<br><b>ลดหนี้ (CN)</b> = ยอดลดหนี้ตามบัญชี ที่หักจากยอดขายรวม'); }
     try {
-      const rows = await supaRpc('tt_channel_split', { p_from: from, p_to: to }, true);
+      // (2026-10-20) + ค่าแอด / ยอดขายจากแอด แยกตามช่องทาง (tt_channel_ads) · รวมค่าแอดทุกแถว = ค่า Ads ในแผงตัวเลข
+      const [rows, adRows] = await Promise.all([supaRpc('tt_channel_split', { p_from: from, p_to: to }, true), supaRpc('tt_channel_ads', { p_from: from, p_to: to }, true).catch(() => [])]);
       if (seq !== _ocSeq) return;
+      const AD = {}; (adRows || []).forEach(a => { AD[a.label] = { cost: num(a.ad_cost), rev: a.ad_rev == null ? null : num(a.ad_rev) }; });
       const list = rows.map(r => [r.label, { rev: num(r.revenue), ord: num(r.orders), sort: +r.sort }]).sort((a, b) => a[1].sort - b[1].sort || b[1].rev - a[1].rev);
       const tot = list.reduce((a, [, g]) => a + g.rev, 0);
-      tb.innerHTML = list.length ? list.map(([k, g]) => `<tr${g.sort === 2 ? ' style="color:var(--text3);"' : ''}><td>${k}</td><td>${baht(g.rev)}</td><td>${g.ord ? fmt(g.ord) : '—'}</td><td>${pctTxt(g.rev, tot)}</td></tr>`).join('')
-        + `<tr style="font-weight:700;"><td>รวม</td><td>${baht(tot)}</td><td>${fmt(list.reduce((a, [, g]) => a + g.ord, 0))}</td><td>100%</td></tr>` : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
+      const dash = '<span style="color:var(--text3);">—</span>';
+      const adCells = (sales, a) => {
+        if (!a || !(a.cost > 0)) return `<td class="tt-gl">${dash}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>`;
+        return `<td class="tt-gl">${a.rev == null ? dash : baht(a.rev)}</td><td>${baht(a.cost)}</td><td>${a.rev == null ? dash : (a.rev / a.cost).toFixed(2) + 'x'}</td><td>${sales > 0 ? pctTxt(a.cost, sales) : dash}</td>`;
+      };
+      const used = new Set(list.map(([k]) => k));
+      const extra = Object.entries(AD).filter(([k]) => !used.has(k));   // แอดที่ไม่ผูกช่องทางขาย เช่น แอดสร้างการรับรู้
+      const adCost = Object.values(AD).reduce((a, x) => a + x.cost, 0), adRev = Object.values(AD).reduce((a, x) => a + (x.rev || 0), 0);
+      tb.innerHTML = list.length ? list.map(([k, g]) => `<tr${g.sort === 2 ? ' style="color:var(--text3);"' : ''}><td>${k}</td><td>${baht(g.rev)}</td><td>${g.ord ? fmt(g.ord) : '—'}</td><td>${pctTxt(g.rev, tot)}</td>${adCells(g.rev, AD[k])}</tr>`).join('')
+        + extra.map(([k, a]) => `<tr style="color:var(--text3);"><td>${esc(k)} ${info('ttapi-oc-aw-' + k.length, 'แอดแบบ Reach / Video views / Brand ที่ TikTok ไม่ผูกยอดขาย · แยกไว้ไม่ให้ ROI ของช่องทางอื่นเพี้ยน')}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>${adCells(0, { cost: a.cost, rev: a.rev })}</tr>`).join('')
+        + `<tr class="ui-sum"><td>รวม</td><td>${baht(tot)}</td><td>${fmt(list.reduce((a, [, g]) => a + g.ord, 0))}</td><td>100%</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${adCost ? baht(adCost) : dash}</td><td>${adCost ? (adRev / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td></tr>`
+        : '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>';
     } catch (e) { console.warn('tt channel split', e); }
   }
   function setLiveScope(s) { _liveScope = s; if (typeof renderTtHub === 'function' && currentPage === 'tthub') renderTraffic(getDateValue('From'), getDateValue('To')); }
