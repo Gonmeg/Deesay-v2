@@ -390,7 +390,7 @@
     const tot = daily.reduce((t, r) => { Object.keys(r).forEach(k => { if (k !== 'd' && typeof r[k] !== 'object') t[k] = (t[k] || 0) + (+r[k] || 0); }); return t; }, {});
     const TRK = ['spend_conv', 'revenue', 'spend'];   // กดดูที่มาได้เฉพาะตัวเลขที่หาไม่ได้จากตารางเอง   // (2026-10-15) ตัวเลขที่กดดูที่มาได้ (เพจ / บัญชี / Campaign ของวันนั้น)
     document.getElementById('tbodyFbaDaily').innerHTML = daily.map(r => `<tr><td style="white-space:nowrap;">${thShort(r.d)}</td>${ks.map(k => `<td${k === 'spend' || k === 'revenue' ? ' style="font-weight:600;"' : ''}>${TRK.includes(k) ? `<span class="pl-trace" data-fbday="${r.d}" data-fbk="${k}">${F(k)(r)}</span>` : F(k)(r)}</td>`).join('')}</tr>`).join('')
-      + (daily.length ? `<tr style="font-weight:700;background:var(--bg3);"><td>รวม</td>${ks.map(k => `<td>${F(k)(tot)}</td>`).join('')}</tr>` : `<tr><td colspan="${1 + ks.length}" class="empty">ไม่มีข้อมูล</td></tr>`);
+      + (daily.length ? `<tr class="ui-sum"><td>รวม</td>${ks.map(k => `<td>${F(k)(tot)}</td>`).join('')}</tr>` : `<tr><td colspan="${1 + ks.length}" class="empty">ไม่มีข้อมูล</td></tr>`);
   }
 
   function sortRows(rows, key, dir) { const v = M[key] ? M[key].val : (r => +r[key] || 0); return rows.slice().sort((a, b) => { const x = v(a), y = v(b); const c = typeof x === 'string' ? x.localeCompare(y) : x - y; return dir === 'asc' ? c : -c; }); }
@@ -477,7 +477,7 @@
       <td>${fmt(r.msg_started)}</td><td>${ratio(r.spend, r.msg_started)}</td>
       <td>${fmt(r.purchases)}</td><td>${ratio(r.spend, r.purchases)}</td><td>${roas(r.purchase_value, r.spend)}</td>
       <td>${r.creative_type === 'video' ? fmt(r.thruplay) : '<span style="color:var(--text3);">—</span>'}</td></tr>`).join('')
-      + `<tr style="font-weight:700;background:var(--bg3);"><td>รวม</td><td>${fmt(types.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(tSum)}</td><td>100%</td><td colspan="10"></td></tr>`
+      + `<tr class="ui-sum"><td>รวม</td><td>${fmt(types.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(tSum)}</td><td>100%</td><td colspan="10"></td></tr>`
       : '<tr><td colspan="14" class="empty">ไม่มีข้อมูล</td></tr>';
     const prods = (d.by_product || []).slice().sort((a, b) => b.spend - a.spend), pSum = prods.reduce((s, r) => s + +r.spend, 0);
     const known = prods.filter(r => r.parent_sku).reduce((s, r) => s + +r.spend, 0);
@@ -487,7 +487,7 @@
       <td>${fmt(r.impressions)}</td><td>${fmt(r.link_clicks)}</td><td>${fmt(r.msg_started)}</td><td>${ratio(r.spend, r.msg_started)}</td>
       <td>${r.parent_sku ? money(+r.sales || 0) : '<span style="color:var(--text3);">—</span>'}</td><td>${r.parent_sku ? roasCell(+r.sales || 0, +r.spend) : '<span style="color:var(--text3);">—</span>'}</td>
       <td>${fmt(Math.round(+r.purchases || 0))}</td><td>${ratio(r.spend, r.purchases)}</td><td>${roas(r.purchase_value, r.spend)}</td></tr>`).join('')
-      + `<tr style="font-weight:700;background:var(--bg3);"><td>รวม <span style="font-weight:400;color:var(--text3);font-size:10.5px;">· ระบุสินค้าได้ ${pct(known, pSum)} ของงบ</span></td><td>${fmt(prods.reduce((s, r) => s + +r.campaigns, 0))}</td><td>${fmt(prods.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(pSum)}</td><td>100%</td><td colspan="4"></td><td>${money(prods.reduce((s, r) => s + (+r.sales || 0), 0))}</td><td>${roasCell(prods.reduce((s, r) => s + (+r.sales || 0), 0), pSum)}</td><td>${fmt(Math.round(prods.reduce((s, r) => s + (+r.purchases || 0), 0)))}</td><td>${ratio(pSum, prods.reduce((s, r) => s + (+r.purchases || 0), 0))}</td><td>${roas(prods.reduce((s, r) => s + (+r.purchase_value || 0), 0), pSum)}</td></tr>`
+      + `<tr class="ui-sum"><td>รวม <span style="font-weight:400;color:var(--text3);font-size:10.5px;">· ระบุสินค้าได้ ${pct(known, pSum)} ของงบ</span></td><td>${fmt(prods.reduce((s, r) => s + +r.campaigns, 0))}</td><td>${fmt(prods.reduce((s, r) => s + +r.ads, 0))}</td><td>${money(pSum)}</td><td>100%</td><td colspan="4"></td><td>${money(prods.reduce((s, r) => s + (+r.sales || 0), 0))}</td><td>${roasCell(prods.reduce((s, r) => s + (+r.sales || 0), 0), pSum)}</td><td>${fmt(Math.round(prods.reduce((s, r) => s + (+r.purchases || 0), 0)))}</td><td>${ratio(pSum, prods.reduce((s, r) => s + (+r.purchases || 0), 0))}</td><td>${roas(prods.reduce((s, r) => s + (+r.purchase_value || 0), 0), pSum)}</td></tr>`
       : '<tr><td colspan="14" class="empty">ไม่มีข้อมูล</td></tr>';
   }
 
