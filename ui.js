@@ -3,6 +3,7 @@
    1) ตัวเลขในการ์ดย่อให้พอดีกล่องเองทุกขนาดจอ (ไม่ตัดเป็น 1.4M — แสดงเต็มเสมอ)
    3) Tooltip กราฟ (Chart.js) ทุกกราฟหน้าตาเดียวกัน + เส้นชี้วันแนวตั้ง — ใช้ title/label/footer callbacks เดิมของแต่ละกราฟได้เลย
       ใส่ plugins.tooltip.uiShare = true ถ้าอยากให้โชว์ % สัดส่วนต่อรวมในแต่ละแถว
+   5) กล่องยืนยัน / แจ้งเตือน ของเว็บเอง: uiConfirm / uiAlert / uiPrompt (ท้ายไฟล์)
    4) Tooltip ตอนชี้เมาส์: ใส่ data-tip="ข้อความ" (หรือ title เดิม) ที่ปุ่ม/ไอคอน · ข้อความที่ถูกตัด "…" ใส่ class ui-trunc จะโชว์ชื่อเต็มเอง
    2) ช่องวันที่ / ช่องเดือน ทุกช่องแสดงแบบไทยเหมือนกันทุกเครื่อง: "7 ต.ค. 2569" / "ต.ค. 2569"
       ค่าจริงใน input ยังเป็น YYYY-MM-DD / YYYY-MM เหมือนเดิม โค้ดเดิมที่อ่าน .value หรือฟัง change ใช้ได้ทันที
@@ -265,4 +266,38 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
   window.UI = { fit: queueFit, enhanceDates: enhanceAll, showDate, showMonth, setupCharts };
+})();
+
+/* (2026-10-20) กล่องยืนยัน / แจ้งเตือน / ถามข้อความ ของเว็บเอง แทน confirm / alert / prompt ของเบราว์เซอร์
+   (กล่องของเบราว์เซอร์มีชื่อเว็บ "… บอกว่า" และแต่งสีไม่ได้)
+   uiConfirm(หัวข้อ, { text, ok, cancel, tone: 'good' | 'bad' | 'pri', icon }) → Promise<true/false>
+   uiAlert(หัวข้อ, { text, tone, icon })                                       → Promise (ปิดแล้ว)
+   uiPrompt(หัวข้อ, { text, value, placeholder, ok, type })                     → Promise<ข้อความ | null>
+   Enter = ยืนยัน · Esc / คลิกนอกกล่อง = ยกเลิก */
+(function () {
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function open(o) {
+    return new Promise(res => {
+      if (!o.text && /\n/.test(o.title || '')) { const t = String(o.title), i = t.indexOf('\n'); o = { ...o, title: t.slice(0, i).trim(), text: t.slice(i + 1).trim() }; }
+      const tone = o.tone || 'pri', single = !!o.single, inp = !!o.input;
+      const icon = o.icon || (tone === 'good' ? '✓' : tone === 'bad' ? '!' : 'i');
+      const prev = document.activeElement;
+      const bg = document.createElement('div'); bg.className = 'ui-dlg-bg';
+      bg.innerHTML = `<div class="ui-dlg" role="dialog" aria-modal="true"><div class="hd"><span class="ic ${tone}">${esc(icon)}</span><div class="tx"><div class="t">${esc(o.title || '')}</div>${o.text ? `<div class="b">${esc(o.text)}</div>` : ''}</div></div>`
+        + (inp ? `<input class="in" type="${o.type === 'password' ? 'password' : 'text'}" value="${esc(o.value || '')}" placeholder="${esc(o.placeholder || '')}">` : '')
+        + `<div class="ft">${single ? '' : `<button type="button" class="btn ghost" data-v="0">${esc(o.cancel || 'ยกเลิก')}</button>`}<button type="button" class="btn ${tone}" data-v="1">${esc(o.ok || 'ตกลง')}</button></div></div>`;
+      const field = bg.querySelector('.in');
+      const done = v => { document.removeEventListener('keydown', onKey, true); bg.remove(); try { prev && prev.focus && prev.focus(); } catch (e) {} res(v); };
+      const yes = () => done(inp ? field.value : single ? undefined : true), no = () => done(inp ? null : single ? undefined : false);
+      const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); no(); } else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); yes(); } };
+      bg.addEventListener('mousedown', e => { if (e.target === bg) no(); });
+      bg.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => b.dataset.v === '1' ? yes() : no()));
+      document.addEventListener('keydown', onKey, true);
+      document.body.appendChild(bg);
+      setTimeout(() => { if (field) { field.focus(); field.select(); } else bg.querySelector('[data-v="1"]').focus(); }, 0);
+    });
+  }
+  window.uiConfirm = (title, o = {}) => open({ ...o, title });
+  window.uiAlert = (title, o = {}) => open({ ...o, title, single: true });
+  window.uiPrompt = (title, o = {}) => open({ ...o, title, input: true });
 })();
