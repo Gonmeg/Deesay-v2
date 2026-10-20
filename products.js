@@ -1,4 +1,4 @@
-// products.js (v20261020b) — หน้า "สินค้า & ราคา" (page id: products)
+// products.js (v20261020d) — หน้า "สินค้า & ราคา" (page id: products)
 // (2026-10-20) รวมข้อมูลสินค้า · Mock / RSP · Rank ราคา · ช่องทางที่ขาย · การวางแผน / Lead time ไว้หน้าเดียว
 //   แทนแท็บสินค้าใน admin.html และชีท Google "Price Rank" (ย้ายข้อมูลมาแล้ว · เลิกดึงชีท)
 //   ใครเปิดหน้านี้ได้ก็ดูได้ · แก้ได้เฉพาะผู้ดูแลระบบ หรือคนที่มีสิทธิ์ "จัดการสินค้า" (RPC product_page.can_edit)
@@ -6,10 +6,14 @@
 //   RSP = ราคาขายจริง · ของแถม (สถานะ) ไม่ถูกแบ่งยอดขาย — ฐานข้อมูลคิดให้เอง (trigger products_rsp_sync)
 //   (2026-10-20 b) การวางแผน = ซ่อน: คนทั่วไปไม่เห็น (RPC ไม่ส่งมา) · คนแก้ได้เห็นในแท็บ "ซ่อน" แยก ไม่ปนแท็บอื่น
 //                  ราคา Rank ช่องไหนมีบางช่องทางตั้งราคาต่าง → ขีดเส้นประ กดดูว่าช่องทางไหนราคาเท่าไร
+//   (2026-10-20 c) กดซ้ำที่ตัวเดิม = ปิด / ยกเลิก: เส้นประ · แท็บตัวกรอง (กลับเป็น "ทั้งหมด") · ✎ ราคาเฉพาะช่องทาง
+//   (2026-10-20 d) สถานะ 5 แบบ: สินค้าใหม่ (NPD) · ขายปกติ (Existing) · เลิกผลิต (Discontinued = ยังขายของที่เหลือ ไม่สั่งเพิ่ม)
+//                  · หยุดขาย (Inactive = ขายหมดแล้ว · แท็บแยก ไม่ปนแท็บอื่น · เลือกในหน้าขอโปรไม่ได้) · ของแถม (GWP)
 (function () {
   'use strict';
   const CATS = [['สินค้าเดี่ยว', 'เดี่ยว'], ['สินค้าเซ็ต', 'เซ็ต']];
-  const ST = { Existing: ['ขายอยู่', 'ok'], NPD: ['NPD', 'npd'], GWP: ['ของแถม', 'gwp'], Discontinued: ['เลิกขาย', 'off'] };
+  const ST = { NPD: ['สินค้าใหม่', 'npd'], Existing: ['ขายปกติ', 'ok'], Discontinued: ['เลิกผลิต', 'eol'], Inactive: ['หยุดขาย', 'off'], GWP: ['ของแถม', 'gwp'] };
+  const ST_TIP = 'สินค้าใหม่ = เพิ่งออก\nขายปกติ = ขายอยู่ ผลิตต่อ\nเลิกผลิต = ยังขายของที่เหลือ ไม่สั่งเพิ่ม\nหยุดขาย = ขายหมดแล้ว ไม่ขายแล้ว (เลือกในหน้าขอโปรไม่ได้)\nของแถม = ไม่ถูกแบ่งยอดขายเมื่ออยู่ในออเดอร์เดียวกับสินค้าอื่น';
   const PLAN = { plan: ['วางแผนปกติ', 'p1'], watch: ['ดูเฉย ๆ', 'p2'], hidden: ['ซ่อน', 'p3'] };
   const S = { data: null, chip: 'all', plan: '', q: '' };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -30,7 +34,7 @@
       .pp-chip b { color:var(--text); margin-left:5px; font-weight:700; }
       .pp-chip.w { border-color:#f3c37e; background:#fff7ea; color:#b45309; } .pp-chip.w b { color:#b45309; }
       body:not(.light-theme) .pp-chip.w { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.4); color:#fbbf24; } body:not(.light-theme) .pp-chip.w b { color:#fbbf24; }
-      .pp-chip.h { margin-left:auto; border-style:dashed; }
+      .pp-chip.h { margin-left:auto; border-style:dashed; } .pp-chip.h2 { border-style:dashed; }
       .pp-chip[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#111; } .pp-chip[aria-pressed="true"] b { color:#111; }
       .pp-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
       .pp-in { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:9px 13px; font:inherit; font-size:13.5px; color:var(--text); outline:none; }
@@ -49,6 +53,7 @@
       .pp-st, .pp-pl, .pp-wb { display:inline-block; font-size:11.5px; font-weight:600; padding:2px 10px; border-radius:99px; white-space:nowrap; }
       .pp-st.ok, .pp-pl.p1 { background:rgba(34,197,94,.13); color:#15803d; } .pp-st.npd { background:rgba(59,130,246,.12); color:#1d4ed8; }
       .pp-st.gwp { background:rgba(168,85,247,.12); color:#7e22ce; } .pp-st.off, .pp-pl.p3 { background:var(--bg3); color:var(--text3); }
+      .pp-st.eol { background:rgba(234,88,12,.11); color:#c2410c; } body:not(.light-theme) .pp-st.eol { color:#fdba74; }
       .pp-pl.p2 { background:rgba(245,158,11,.15); color:#b45309; } .pp-wb { background:#fff1e3; color:#c2410c; margin-left:6px; font-size:11px; }
       body:not(.light-theme) .pp-st.ok, body:not(.light-theme) .pp-pl.p1 { color:#4ade80; } body:not(.light-theme) .pp-st.npd { color:#93c5fd; }
       body:not(.light-theme) .pp-st.gwp { color:#d8b4fe; } body:not(.light-theme) .pp-pl.p2 { color:#fbbf24; } body:not(.light-theme) .pp-wb { background:rgba(234,88,12,.15); color:#fdba74; }
@@ -122,13 +127,15 @@
 
   // ---------- หน้ารายการ ----------
   const isHidden = p => (p.plan || 'plan') === 'hidden';
+  const isStop = p => !isHidden(p) && p.status === 'Inactive';
   function visible() {
     const q = S.q.trim().toLowerCase();
     return S.data.products.filter(p => {
       if ((S.chip === 'hidden') !== isHidden(p)) return false;
+      if ((S.chip === 'Inactive') !== isStop(p)) return false;
       if (S.chip === 'noprice' && !p.noPrice) return false;
       if (S.chip === 'norank' && p.hasRank) return false;
-      if (ST[S.chip] && p.status !== S.chip) return false;
+      if (ST[S.chip] && S.chip !== 'Inactive' && p.status !== S.chip) return false;
       if (S.plan && (p.plan || 'plan') !== S.plan) return false;
       if (q && !(p.sku.toLowerCase().includes(q) || (p.name || '').toLowerCase().includes(q) || (p.kids || []).some(k => k.toLowerCase().includes(q)))) return false;
       return true;
@@ -142,11 +149,13 @@
     return out;
   }
   function showDiff(btn) {
+    const cur = document.getElementById('ppDiffPop');
+    if (cur && cur.dataset.key === btn.dataset.dv) { closeDiff(); return; }   // กดตัวเดิมซ้ำ = ปิด
     closeDiff();
     const [sku, cat, r] = btn.dataset.dv.split('|'), p = S.data.products.find(x => x.sku === sku) || {};
     const base = ((S.data._base[sku] || {})[cat] || {})[r], list = diffs(sku)[cat + '|' + r] || [];
     const by = {}; list.forEach(([lb, v]) => { (by[v] = by[v] || []).push(lb); });
-    const pop = document.createElement('div'); pop.className = 'pp-dpop'; pop.id = 'ppDiffPop';
+    const pop = document.createElement('div'); pop.className = 'pp-dpop'; pop.id = 'ppDiffPop'; pop.dataset.key = btn.dataset.dv;
     pop.innerHTML = `<div class="t">${esc(p.name || sku)} · ${cat === 'สินค้าเซ็ต' ? 'เซ็ต' : 'เดี่ยว'} R${r}</div>
       <div class="r"><span>ราคากลาง</span><b>${n0(base)}</b></div>
       ${Object.entries(by).map(([v, lbs]) => `<div class="r d"><span>${lbs.map(esc).join(' · ')}</span><b>${+v === 0 ? 'ไม่ขาย' : n0(v)}</b></div>`).join('')}`;
@@ -181,17 +190,20 @@
   }
   function renderPage() {
     const el = document.getElementById('page-products'); if (!el) return;
-    const P = S.data.products.filter(p => !isHidden(p)), nHid = S.data.products.length - P.length, cnt = f => P.filter(f).length;
-    const chips = [['all', 'ทั้งหมด', P.length], ['Existing', 'ขายอยู่', cnt(p => p.status === 'Existing')], ['NPD', 'NPD', cnt(p => p.status === 'NPD')],
-      ['Discontinued', 'เลิกขาย', cnt(p => p.status === 'Discontinued')], ['GWP', 'ของแถม', cnt(p => p.status === 'GWP')],
+    const P = S.data.products.filter(p => !isHidden(p) && !isStop(p)), nHid = S.data.products.filter(isHidden).length, nStop = S.data.products.filter(isStop).length, cnt = f => P.filter(f).length;
+    const chips = [['all', 'ทั้งหมด', P.length], ['NPD', 'สินค้าใหม่', cnt(p => p.status === 'NPD')], ['Existing', 'ขายปกติ', cnt(p => p.status === 'Existing')],
+      ['Discontinued', 'เลิกผลิต', cnt(p => p.status === 'Discontinued')], ['GWP', 'ของแถม', cnt(p => p.status === 'GWP')],
       ['noprice', 'ยังไม่มี RSP / Mock', cnt(p => p.noPrice), 'w'], ['norank', 'ยังไม่มีราคา Rank', cnt(p => !p.hasRank), 'w']];
-    if (S.data.can_edit) chips.push(['hidden', 'ซ่อน', nHid, 'h']);
+    chips.push(['Inactive', 'หยุดขาย', nStop, 'h']);
+    if (S.data.can_edit) chips.push(['hidden', 'ซ่อน', nHid, 'h2']);
     el.innerHTML = `<div class="pp-chips" id="ppChips">${chips.map(([k, t, n, w]) => `<button type="button" class="pp-chip ${w || ''}" data-c="${k}" aria-pressed="${S.chip === k}">${t}<b>${n}</b></button>`).join('')}</div>
       <div class="pp-bar"><input class="pp-in" id="ppQ" style="flex:1;min-width:220px;" placeholder="ค้นหา SKU รหัสลูก หรือชื่อสินค้า…" value="${esc(S.q)}">
         <select class="pp-in" id="ppPlan"><option value="">การวางแผน: ทั้งหมด</option>${Object.entries(PLAN).filter(([k]) => k !== 'hidden').map(([k, v]) => `<option value="${k}" ${S.plan === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select>
         ${S.data.can_edit ? '<button type="button" class="pp-btn" id="ppAdd">+ เพิ่มสินค้า</button>' : ''}</div>
       <div class="pp-card" id="ppList"></div>`;
-    el.querySelector('#ppChips').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; S.chip = b.dataset.c; el.querySelectorAll('#ppChips [data-c]').forEach(x => x.setAttribute('aria-pressed', x === b)); renderList(); };
+    el.querySelector('#ppChips').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return;
+      S.chip = S.chip === b.dataset.c ? 'all' : b.dataset.c;   // กดแท็บที่เลือกอยู่ซ้ำ = ยกเลิก กลับเป็นทั้งหมด
+      el.querySelectorAll('#ppChips [data-c]').forEach(x => x.setAttribute('aria-pressed', x.dataset.c === S.chip)); closeDiff(); renderList(); };
     el.querySelector('#ppQ').oninput = e => { S.q = e.target.value; renderList(); };
     el.querySelector('#ppPlan').onchange = e => { S.plan = e.target.value; renderList(); };
     const add = el.querySelector('#ppAdd'); if (add) add.onclick = () => openEdit(null);
@@ -221,8 +233,8 @@
         ${can ? '' : '<div class="pp-ro">ดูได้อย่างเดียว · แก้ได้เฉพาะผู้ดูแลระบบหรือคนที่มีสิทธิ์จัดการสินค้า</div>'}
         <div class="pp-sec"><div class="pp-sh">ข้อมูลสินค้า</div>
           ${isNew ? `<div style="margin-bottom:12px;"><div class="pp-lb">รหัสสินค้า (SKU)</div><input class="pp-f" id="ppSku" placeholder="เช่น DSP" style="text-transform:uppercase;"></div>` : ''}
-          <div class="pp-g2"><div><div class="pp-lb">ชื่อสินค้า</div><input class="pp-f" id="ppName" value="${esc(E.name)}" ${dis}></div>
-            <div><div class="pp-lb">สถานะ${tip('ของแถม = ไม่ถูกแบ่งยอดขายเมื่ออยู่ในออเดอร์เดียวกับสินค้าอื่น (ถ้าขายเดี่ยว ๆ ได้ยอดเต็ม)')}</div>
+          <div class="pp-g2"><div style="grid-column:1 / -1;"><div class="pp-lb">ชื่อสินค้า</div><input class="pp-f" id="ppName" value="${esc(E.name)}" ${dis}></div>
+            <div style="grid-column:1 / -1;"><div class="pp-lb">สถานะ${tip(ST_TIP)}</div>
               <div class="pp-seg" id="ppSt">${Object.entries(ST).map(([k, v]) => `<button type="button" data-v="${k}" aria-pressed="${E.status === k}" ${dis}>${v[0]}</button>`).join('')}</div></div></div>
           <div class="pp-lb" style="margin-top:12px;">รหัสลูก (สี / เบอร์)${tip('รหัสที่อยู่ในไฟล์ออเดอร์ของแต่ละสี / เบอร์ · ลบแล้วยอดขายเก่าไม่หาย แต่ไฟล์ออเดอร์ใหม่ที่ใช้รหัสนั้นจะจับคู่ไม่เจอ')}</div>
           <div class="pp-tags" id="ppKids">${E.kids.map((k, i) => `<span class="pp-tag">${esc(k)}${can ? `<button type="button" data-rmk="${i}" aria-label="ลบ">✕</button>` : ''}</span>`).join('')}
@@ -287,7 +299,7 @@
         else if (e.key === 'Backspace' && !ki.value && E.kids.length) { keep(); E.kids.pop(); draw(); setTimeout(() => { const n = document.getElementById('ppKidIn'); if (n) n.focus(); }, 0); }
       });
       B.querySelectorAll('[data-on]').forEach(x => x.onchange = () => { keep(); if (x.checked) E.off.delete(x.dataset.on); else E.off.add(x.dataset.on); draw(); });
-      B.querySelectorAll('[data-pen]').forEach(x => x.onclick = e => { e.preventDefault(); e.stopPropagation(); if (!can) return; openPop(x.dataset.pen); });
+      B.querySelectorAll('[data-pen]').forEach(x => x.onclick = e => { e.preventDefault(); e.stopPropagation(); if (!can) return; if (E.pop === x.dataset.pen) { closePop(); return; } openPop(x.dataset.pen); });
       // ราคากลางเปลี่ยน → ช่องทางที่ราคาต่าง ถ้าเท่าราคากลางใหม่ก็ไม่นับเป็นราคาต่าง (ตอนบันทึก)
       const cc = document.getElementById('ppCancel'); if (cc) cc.onclick = () => window.trClose();
       const sv = document.getElementById('ppSave'); if (sv) sv.onclick = () => save(sv);
