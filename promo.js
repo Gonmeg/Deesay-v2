@@ -1,4 +1,4 @@
-// promo.js (v20261020j) — โปรโมชั่น 3 หน้า
+// promo.js (v20261020k) — โปรโมชั่น 3 หน้า
 // (2026-10-20 i) กล่องยืนยัน / แจ้งเตือนเป็นของเว็บเอง (uiConfirm / uiAlert ใน ui.js) แทนกล่องของเบราว์เซอร์
 // (2026-10-20 h) หน้าอนุมัติ: จำนวนคำขอรวมไว้ในแท็บ (เลิกการ์ดใหญ่) · รายละเอียด: ราคาที่ขออยู่บนสุด · คำอธิบายย้ายไป ⓘ · ตาราง "สินค้าในโปร" แก้จำนวน + ดู Rank ในที่เดียว (รองรับหลายสินค้า) · ไม่มีแถบเส้น Rank · ขั้นบันไดกำไรกดดูรายละเอียดค่าใช้จ่ายได้
 // (2026-10-20 f) หน้าอนุมัติ: ตารางแยกคอลัมน์ (ขอโดย / วันเริ่ม / วันจบ / ส่งเมื่อ) จัดกลาง · ตัดยอดคาด / กำไรรวมที่คาด / เกณฑ์ · รายละเอียดคำขอ: สรุปเป็นช่องเรียบ ๆ ข้อความสั้น · ลองปรับตัวเลขแล้วกด "คำนวณ" หรือ Enter (ไม่คำนวณระหว่างพิมพ์)
@@ -321,7 +321,7 @@
     };
     function pickDraw() {
       if (!ddFor) return;
-      dd.innerHTML = ddList.length ? ddList.slice(0, 80).map((p, i) => `<button type="button" data-pick="${esc(p.sku)}" class="${i === ddOn ? 'on' : ''}"><span>${esc(p.name)}</span><small>${esc(p.sku)}</small>${p.status === 'Discontinued' ? '<em>เลิกขาย</em>' : p.status === 'NPD' ? '<em>ใหม่</em>' : ''}</button>`).join('')
+      dd.innerHTML = ddList.length ? ddList.slice(0, 80).map((p, i) => `<button type="button" data-pick="${esc(p.sku)}" class="${i === ddOn ? 'on' : ''}"><span>${esc(p.name)}</span><small>${esc(p.sku)}</small>${p.status === 'Discontinued' ? '<em>เลิกผลิต</em>' : p.status === 'NPD' ? '<em>ใหม่</em>' : ''}</button>`).join('')
         : '<div class="none">ไม่เจอสินค้าที่ตรงกับคำค้น · ลองพิมพ์รหัสสินค้า หรือคำสั้นลง</div>';
       const r = ddFor.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.width = r.width + 'px';
       const below = window.innerHeight - r.bottom; dd.style.top = (below < 240 && r.top > below ? Math.max(8, r.top - Math.min(300, dd.scrollHeight) - 4) : r.bottom + 4) + 'px';
