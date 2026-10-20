@@ -20,7 +20,7 @@
   const num = v => v == null || v === '' || isNaN(+v) ? null : +v;
   const n0 = v => v == null ? '' : (+v).toLocaleString('th-TH', { maximumFractionDigits: 2 });
   const dash = '<span class="pp-mu">—</span>';
-  const tip = t => ` <span class="pp-i" data-tip="${esc(t)}">i</span>`;
+  const tip = t => ` <span class="pp-i" data-tip="${esc(t)}">ⓘ</span>`;
   const toastMsg = m => (window.toast ? window.toast(m) : null);
   const rpc = (fn, args) => window.Auth.rpc(fn, args || {});
 
