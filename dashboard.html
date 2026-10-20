@@ -631,7 +631,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261019b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261020a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -668,7 +668,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-tb td:last-child { color:var(--text); font-weight:600; }
   .tr-tb td.tr-pc { color:var(--accent-text, var(--text)); font-weight:600; }
   
-  .tr-tb tr.tr-gh { cursor:pointer; background:var(--bg3); }
+  .tr-tb tr.tr-gh { cursor:pointer; background:var(--row-sum); }
   .tr-tb tr.tr-gh td { color:var(--text); font-weight:700; }
   .tr-tb tr.tr-gh:hover td { background:rgba(127,127,127,.08); }
   .tr-car { display:inline-block; width:14px; color:var(--text3); font-size:11px; transition:transform .15s; }
@@ -771,7 +771,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-g</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2965,7 +2965,7 @@ function loadSupplyPage() {
   if (window._supplyLoading) return;
   window._supplyLoading = true;
   const s = document.createElement('script');
-  s.src = 'supply.js?v=20261019c'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
+  s.src = 'supply.js?v=20261020a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
   s.onload = () => { window._supplyLoading = false; window.renderSupplyPage(); };
   s.onerror = () => { window._supplyLoading = false; document.getElementById('page-supply').innerHTML = '<div class="error-banner" style="display:block;">โหลด supply.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -2977,7 +2977,7 @@ function loadFbAdsPage() {
   if (window._fbadsLoading) return;
   window._fbadsLoading = true;
   const s = document.createElement('script');
-  s.src = 'fbads.js?v=20261018a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
+  s.src = 'fbads.js?v=20261020a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต fbads.js
   s.onload = () => { window._fbadsLoading = false; window.renderFbAdsPage(); };
   s.onerror = () => { window._fbadsLoading = false; document.getElementById('page-fbads').innerHTML = '<div class="error-banner" style="display:block;">โหลด fbads.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3002,7 +3002,7 @@ function loadPromoPage(page) {
   if (window._promoLoading) return;
   window._promoLoading = true;
   const s = document.createElement('script');
-  s.src = 'promo.js?v=20261020e';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
+  s.src = 'promo.js?v=20261020g';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
   s.onload = () => { window._promoLoading = false; if (['promo', 'exec', 'execfee'].includes(currentPage)) window.PromoUI.render(currentPage); };
   s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3171,7 +3171,7 @@ function loadSalesJs() {
   if (window._salesJsP) return window._salesJsP;
   window._salesJsP = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'sales.js?v=20261019d';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
+    s.src = 'sales.js?v=20261020a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
     s.onload = res;
     s.onerror = () => { window._salesJsP = null; rej(new Error('โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -8880,7 +8880,7 @@ function renderCostPage() {
   if (window._biLoading) return;
   window._biLoading = true;
   const s = document.createElement('script');
-  s.src = 'bizinsight.js?v=20261018a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
+  s.src = 'bizinsight.js?v=20261020a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต bizinsight.js
   s.onload = () => { window._biLoading = false; if (currentPage === 'cost') window.renderBizInsight(); };
   s.onerror = () => { window._biLoading = false; document.getElementById('page-cost').innerHTML = '<div class="error-banner" style="display:block;">โหลด bizinsight.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
