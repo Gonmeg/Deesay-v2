@@ -1,4 +1,5 @@
-// promo.js (v20261020a) — โปรโมชั่น 3 หน้า
+// promo.js (v20261020b) — โปรโมชั่น 3 หน้า
+// (2026-10-20 b) หน้าขอโปร: เอาช่องยอดที่คาดว่าจะขายออก · กล่องเช็คต้นทุนขึ้นเฉพาะตอนมีคำตอบ · ตารางคำขอแยกคอลัมน์ · Feedback · ปฏิทินอยู่ล่างสุด
 // (2026-10-20) ช่องเลือกสินค้า: กล่องค้นหาของเว็บเอง (เดิมใช้ datalist ของเบราว์เซอร์ = กล่องดำ ค้นได้แค่บางคำ) · ค้นจากชื่อ / รหัส / รหัสลูก / ชื่อเรียกอื่น (product_alias)
 // (2026-10-20) หน้าขอโปรโมชั่น: ปฏิทินโปรโมชั่นรายเดือน — โปรที่อนุมัติแล้ว + รออนุมัติของทุกคน (RPC promo_calendar)
 //  • promo   (หน้าทีม)     ขอโปรโมชั่น: กรอกโปร → เห็นสัญญาณไฟทันทีว่าผ่าน "ต้นทุนทั้งหมด + กำไรขั้นต่ำ" หรือยัง (ไม่เห็นต้นทุน) → ส่งขออนุมัติ
@@ -28,6 +29,7 @@
       .pr-head p { margin:4px 0 0; font-size:13px; color:var(--text3); max-width:760px; line-height:1.6; }
       .pr-grid { display:grid; grid-template-columns:minmax(0, 1fr) 320px; gap:16px; align-items:start; }
       @media (max-width: 1100px) { .pr-grid { grid-template-columns:1fr; } }
+      .pr-grid.nosig { grid-template-columns:minmax(0, 1fr); }
       .pr-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin-bottom:16px; }
       .pr-card h3 { margin:0 0 12px; font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; justify-content:space-between; }
       .pr-f { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px 16px; }
@@ -161,20 +163,22 @@
   }
   function sigHtml(r, C) {
     const mm = pc(+(C.min_markup || 0.05), 0);
-    if (!r) return `<div class="pr-sig"><div class="ic">?</div><div class="t">ยังบอกไม่ได้</div><div class="s">กรอกช่องทาง ราคาขาย และสินค้าอย่างน้อย 1 รายการ ระบบจะบอกทันทีว่าผ่านเกณฑ์หรือยัง</div>
-      <div class="m">เกณฑ์: ราคาขายต้องครอบคลุม <b>ต้นทุนทั้งหมด</b> (สินค้า · ของแถม · ค่าธรรมเนียมช่องทาง · ค่า Ads · ค่าบริหาร) และมีกำไรเกินอีก <b>${mm}</b> ของต้นทุน</div></div>`;
-    const rsp = +r.rsp > 0 ? `<div class="m">ราคาปกติรวม ${n0(r.rsp)} · ลด ${pc(r.discount_vs_rsp)}</div>` : '';
+    if (!r) return '';   // (2026-10-20) ยังกรอกไม่ครบ = ยังไม่มีคำตอบ ไม่ต้องแสดงกล่อง
+    const rsp = (+r.rsp > 0 ? `<div class="m">ราคาปกติรวม ${n0(r.rsp)} · ลด ${pc(r.discount_vs_rsp)}</div>` : '')
+      + `<div class="m">เกณฑ์: ราคาขายต้องครอบคลุมต้นทุนทั้งหมด (สินค้า · ของแถม · ค่าธรรมเนียมช่องทาง · ค่า Ads · ค่าบริหาร) และมีกำไรเกินอีก ${mm} ของต้นทุน</div>`;
     if (r.signal === 'green') return `<div class="pr-sig green"><div class="ic">✓</div><div class="t">ผ่านต้นทุนทั้งหมด + ${mm}</div><div class="s">ส่งขออนุมัติได้เลย · ยังต้องรอผู้บริหารอนุมัติอีกครั้ง</div>${rsp}</div>`;
     if (r.signal === 'red') return `<div class="pr-sig red"><div class="ic">✕</div><div class="t">ยังไม่ผ่านต้นทุนทั้งหมด + ${mm}</div><div class="s">ลองขึ้นราคา ลดของแถม หรือเพิ่มจำนวนสินค้าในเซต · ส่งได้ แต่ผู้บริหารจะเห็นว่ายังไม่ผ่าน</div>${rsp}</div>`;
     const miss = (r.missing_costs || []);
-    return `<div class="pr-sig"><div class="ic">?</div><div class="t">ยังบอกไม่ได้</div><div class="s">${miss.length ? 'ยังไม่มีต้นทุนของ ' + miss.map(esc).join(', ') + ' ในไฟล์ต้นทุนขาย · แจ้งผู้บริหาร / บัญชี' : 'กรอกช่องทาง ราคาขาย และสินค้าให้ครบ'}</div>${rsp}</div>`;
+    const nmOf = s => ((C.products || []).find(p => p.sku === s) || { name: s }).name;
+    return `<div class="pr-sig"><div class="ic">?</div><div class="t">ยังเช็คต้นทุนไม่ได้</div><div class="s">${miss.length ? 'ยังไม่มีต้นทุนของ ' + miss.map(x => esc(nmOf(x))).join(', ') + ' ในไฟล์ต้นทุนขาย · แจ้งผู้บริหาร / บัญชี' : 'กรอกช่องทาง ราคาขาย และสินค้าให้ครบ'}</div>${rsp}</div>`;
   }
   async function check() {
     const C = await cat(), p = payload(), seq = ++chkSeq, box = document.getElementById('prSig');
     if (!box) return;
-    if (!p.channel_id || !p.price || !p.items.length) { box.innerHTML = sigHtml(null, C); return; }
-    try { const r = await rpc('promo_check', { p }); if (seq === chkSeq) box.innerHTML = sigHtml(r, C); }
-    catch (e) { box.innerHTML = `<div class="pr-sig"><div class="t">ตรวจไม่สำเร็จ</div><div class="s">${esc(e.message)}</div></div>`; }
+    const grid = box.closest('.pr-grid'), show = h => { box.innerHTML = h; if (grid) grid.classList.toggle('nosig', !h); };
+    if (!p.channel_id || !p.price || !p.items.length) { show(sigHtml(null, C)); return; }
+    try { const r = await rpc('promo_check', { p }); if (seq === chkSeq) show(sigHtml(r, C)); }
+    catch (e) { show(`<div class="pr-sig"><div class="t">ตรวจไม่สำเร็จ</div><div class="s">${esc(e.message)}</div></div>`); }
   }
   const later = () => { clearTimeout(chkTimer); chkTimer = setTimeout(check, 350); };
   function rowsHtml(key, list, C) {
@@ -192,22 +196,21 @@
     if (!C) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
     el.innerHTML = `
       <div class="pr-dd" id="prDD" hidden></div>
-      <div class="pr-grid"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอกทันทีว่าราคาที่ขอผ่านต้นทุนทั้งหมด + ${pc(+(C.min_markup || 0.05), 0)} หรือยัง (ไม่แสดงตัวเลขต้นทุน) แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
+      <div class="pr-grid nosig"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอกทันทีว่าราคาที่ขอผ่านต้นทุนทั้งหมด + ${pc(+(C.min_markup || 0.05), 0)} หรือยัง (ไม่แสดงตัวเลขต้นทุน) แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
         <div class="full"><label>ชื่อโปร</label><input class="pr-in" data-f="title" value="${esc(F.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1"></div>
         <div><label>ช่องทาง</label><select class="pr-in" data-f="channel_id"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+F.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
         <div><label>ช่วงเวลา</label><div style="display:flex;gap:8px;"><input class="pr-in" type="date" data-f="start_date" value="${esc(F.start_date)}"><input class="pr-in" type="date" data-f="end_date" value="${esc(F.end_date)}"></div></div>
         <div class="full"><label>สินค้าที่ขายใน 1 ออเดอร์ <small>ชื่อสินค้า · จำนวนชิ้น</small></label><div class="pr-rows" id="prItems">${rowsHtml('items', F.items, C)}</div><button type="button" class="pr-add" data-addrow="items">＋ เพิ่มสินค้า</button></div>
         <div class="full"><label>ของแถมใน 1 ออเดอร์ <small>ไม่มีก็เว้นไว้</small></label><div class="pr-rows" id="prGifts">${rowsHtml('gifts', F.gifts, C)}</div><button type="button" class="pr-add" data-addrow="gifts">＋ เพิ่มของแถม</button></div>
         <div><label>ราคาขายต่อออเดอร์ <small>รวม VAT หลังส่วนลด</small></label><input class="pr-in" type="number" min="0" step="0.01" data-f="price" value="${esc(F.price)}" placeholder="0.00"></div>
-        <div><label>ยอดที่คาดว่าจะขาย <small>ออเดอร์</small></label><input class="pr-in" type="number" min="0" step="1" data-f="orders" value="${esc(F.orders)}" placeholder="0"></div>
         <div class="full"><label>หมายเหตุ <small>ไม่บังคับ</small></label><textarea class="pr-in" rows="2" data-f="note" placeholder="เช่น เงื่อนไขพิเศษของ Platform">${esc(F.note)}</textarea></div>
       </div><div style="margin-top:16px;display:flex;gap:10px;align-items:center;"><button class="pr-btn" id="prSubmit">ส่งขออนุมัติ</button><span class="pr-note" id="prMsg"></span></div></div>
       <div id="prSig"></div></div>
+      <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>
       <div class="pr-card"><h3><span>ปฏิทินโปรโมชั่น <span class="pr-i" data-tip="โปรที่อนุมัติแล้วและรออนุมัติของทุกคน แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
         <span class="pr-cal-leg"><span><i></i>อนุมัติแล้ว</span><span><i class="p"></i>รออนุมัติ</span></span>
         <span class="pr-cal-nav"><button type="button" data-calmv="-1" aria-label="เดือนก่อน">‹</button><span id="prCalM"></span><button type="button" data-calmv="1" aria-label="เดือนถัดไป">›</button></span></h3>
-        <div class="pr-cal" id="prCal"><div class="pr-empty">กำลังโหลด…</div></div></div>
-      <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
+        <div class="pr-cal" id="prCal"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
     const sync = t => { const k = t.dataset.k, i = +t.dataset.i, f = t.dataset.f; if (!f) return;
       if (k) F[k][i][f] = f === 'sku' ? (C.products.some(p => p.sku === skuOf(t.value)) ? skuOf(t.value) : '') : t.value; else F[f] = t.value; later(); };
     el.addEventListener('input', e => { if (e.target.classList.contains('pr-pick')) { if (!e.target.value.trim()) sync(e.target); pickOpen(e.target); return; } sync(e.target); });
@@ -303,14 +306,20 @@
     try {
       const L = await rpc('promo_list', { p_scope: 'mine' }), C = await cat();
       const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
-      box.innerHTML = L.length ? `<div style="overflow-x:auto;"><table class="pr-tb" data-no-sort data-no-page><thead><tr><th>โปร</th><th>ช่องทาง</th><th class="num">ราคา</th><th class="num">ยอดคาด</th><th>เกณฑ์ต้นทุน</th><th>สถานะ</th><th>ความเห็นผู้บริหาร</th><th></th></tr></thead><tbody>`
-        + L.map(r => { const s = ST[r.status] || [r.status, ''];
-          return `<tr><td><div class="t1">${esc(r.title)}</div><div class="t2">${(r.items || []).map(x => esc(nm(x.sku)) + ' ×' + x.qty).join(' + ')}${(r.gifts || []).length ? ' · แถม ' + r.gifts.map(x => esc(nm(x.sku)) + ' ×' + x.qty).join(' + ') : ''}</div>
-            <div class="t2">${dTh(r.start_date)}${r.end_date ? ' – ' + dTh(r.end_date) : ''} · ส่งเมื่อ ${dTh(r.requested_at)}</div></td>
-            <td>${esc(r.channel || '')}</td><td class="num">${n2(r.price)}</td><td class="num">${r.orders ? n0(r.orders) : '—'}</td>
-            <td><span class="pr-dot ${r.signal === 'green' ? 'green' : r.signal === 'red' ? 'red' : ''}"></span> ${r.signal === 'green' ? 'ผ่าน' : r.signal === 'red' ? 'ไม่ผ่าน' : 'ยังบอกไม่ได้'}</td>
-            <td><span class="pr-pill ${s[1]}">${s[0]}</span>${r.decided_name ? `<div class="t2">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : ''}</td>
-            <td style="white-space:normal;max-width:240px;">${esc(r.decision_note || '')}</td>
+      const list = a => (a || []).map(x => `<div>${esc(nm(x.sku))} ×${x.qty}</div>`).join('') || '<span class="t2">—</span>';
+      const sigCell = r => r.signal === 'green' ? '<span class="pr-dot green"></span> ผ่าน' : r.signal === 'red' ? '<span class="pr-dot red"></span> ไม่ผ่าน'
+        : `<span class="pr-dot"></span> ขาดต้นทุน${(r.missing || []).length ? `<div class="t2">${(r.missing || []).map(x => esc(nm(x))).join(', ')}</div>` : ''}`;
+      box.innerHTML = L.length ? `<div style="overflow-x:auto;"><table class="pr-tb" data-no-sort data-no-page><thead><tr><th>ชื่อโปร</th><th>ช่องทาง</th><th>ช่วงเวลา</th><th>สินค้า</th><th>ของแถม</th><th class="num">ราคา</th>
+          <th><span title="ราคาขายครอบคลุมต้นทุนทั้งหมด + กำไรขั้นต่ำหรือไม่ · ขาดต้นทุน = สินค้าหรือของแถมบางตัวยังไม่มีต้นทุนในไฟล์ต้นทุนขาย">เกณฑ์ต้นทุน</span></th><th>สถานะ</th><th>Feedback</th><th></th></tr></thead><tbody>`
+        + L.map(r => { const st = ST[r.status] || [r.status, ''];
+          return `<tr><td><div class="t1">${esc(r.title)}</div><div class="t2">ส่งเมื่อ ${dTh(r.requested_at)}</div></td>
+            <td>${esc(r.channel || '')}</td>
+            <td style="white-space:nowrap;">${dTh(r.start_date)}${r.end_date ? ' – ' + dTh(r.end_date) : ''}</td>
+            <td>${list(r.items)}</td><td>${list(r.gifts)}</td>
+            <td class="num">${n2(r.price)}</td>
+            <td>${sigCell(r)}</td>
+            <td><span class="pr-pill ${st[1]}">${st[0]}</span>${r.decided_name ? `<div class="t2">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : ''}</td>
+            <td style="white-space:normal;max-width:240px;">${r.decision_note ? esc(r.decision_note) : '<span class="t2">—</span>'}</td>
             <td>${r.status === 'pending' ? `<button class="pr-btn ghost" data-cancel="${r.id}" style="padding:4px 10px;font-size:12px;">ยกเลิก</button>` : ''}</td></tr>`; }).join('') + '</tbody></table></div>'
         : '<div class="pr-empty">ยังไม่มีคำขอ</div>';
     } catch (e) { box.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; }
