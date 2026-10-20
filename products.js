@@ -1,9 +1,11 @@
-// products.js (v20261020a) — หน้า "สินค้า & ราคา" (page id: products)
+// products.js (v20261020b) — หน้า "สินค้า & ราคา" (page id: products)
 // (2026-10-20) รวมข้อมูลสินค้า · Mock / RSP · Rank ราคา · ช่องทางที่ขาย · การวางแผน / Lead time ไว้หน้าเดียว
 //   แทนแท็บสินค้าใน admin.html และชีท Google "Price Rank" (ย้ายข้อมูลมาแล้ว · เลิกดึงชีท)
 //   ใครเปิดหน้านี้ได้ก็ดูได้ · แก้ได้เฉพาะผู้ดูแลระบบ หรือคนที่มีสิทธิ์ "จัดการสินค้า" (RPC product_page.can_edit)
 //   Rank: ราคากลาง (ทุกช่องทาง) + ราคาต่างรายช่องทาง (เก็บเฉพาะช่องที่ต่าง) + ช่องทางที่ไม่ขาย → v_price_rank ใช้เช็ค Rank ตอนขอโปร
 //   RSP = ราคาขายจริง · ของแถม (สถานะ) ไม่ถูกแบ่งยอดขาย — ฐานข้อมูลคิดให้เอง (trigger products_rsp_sync)
+//   (2026-10-20 b) การวางแผน = ซ่อน: คนทั่วไปไม่เห็น (RPC ไม่ส่งมา) · คนแก้ได้เห็นในแท็บ "ซ่อน" แยก ไม่ปนแท็บอื่น
+//                  ราคา Rank ช่องไหนมีบางช่องทางตั้งราคาต่าง → ขีดเส้นประ กดดูว่าช่องทางไหนราคาเท่าไร
 (function () {
   'use strict';
   const CATS = [['สินค้าเดี่ยว', 'เดี่ยว'], ['สินค้าเซ็ต', 'เซ็ต']];
@@ -28,6 +30,7 @@
       .pp-chip b { color:var(--text); margin-left:5px; font-weight:700; }
       .pp-chip.w { border-color:#f3c37e; background:#fff7ea; color:#b45309; } .pp-chip.w b { color:#b45309; }
       body:not(.light-theme) .pp-chip.w { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.4); color:#fbbf24; } body:not(.light-theme) .pp-chip.w b { color:#fbbf24; }
+      .pp-chip.h { margin-left:auto; border-style:dashed; }
       .pp-chip[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#111; } .pp-chip[aria-pressed="true"] b { color:#111; }
       .pp-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
       .pp-in { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:9px 13px; font:inherit; font-size:13.5px; color:var(--text); outline:none; }
@@ -51,6 +54,12 @@
       body:not(.light-theme) .pp-st.gwp { color:#d8b4fe; } body:not(.light-theme) .pp-pl.p2 { color:#fbbf24; } body:not(.light-theme) .pp-wb { background:rgba(234,88,12,.15); color:#fdba74; }
       .pp-i { display:inline-flex; width:15px; height:15px; border-radius:50%; border:1px solid var(--text3); color:var(--text3); font-size:9.5px; font-weight:700; align-items:center; justify-content:center; font-style:normal; cursor:default; vertical-align:1px; }
       .pp-empty { padding:40px; text-align:center; color:var(--text3); }
+      .pp-dv { border:0; background:none; font:inherit; color:inherit; padding:0 1px; cursor:pointer; border-bottom:1.5px dashed #d97706; line-height:1.25; }
+      .pp-dv:hover { color:#b45309; } body:not(.light-theme) .pp-dv:hover { color:#fbbf24; }
+      .pp-dpop { position:absolute; z-index:9000; min-width:220px; max-width:320px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,.18); padding:10px 12px; font-size:12.5px; color:var(--text); }
+      .pp-dpop .t { font-weight:700; font-size:13px; margin-bottom:6px; }
+      .pp-dpop .r { display:flex; justify-content:space-between; gap:14px; padding:4px 0; border-top:1px solid var(--border); color:var(--text2); }
+      .pp-dpop .r b { color:var(--text); font-variant-numeric:tabular-nums; } .pp-dpop .r.d b { color:#b45309; } body:not(.light-theme) .pp-dpop .r.d b { color:#fbbf24; }
       /* แผงแก้สินค้า */
       .pp-dh { display:flex; align-items:center; gap:10px; } .pp-dh h3 { font-size:18px; margin:0; font-weight:700; color:var(--text); }
       .pp-dm { font-size:12px; color:var(--text3); margin:2px 0 14px; }
@@ -112,9 +121,11 @@
   }
 
   // ---------- หน้ารายการ ----------
+  const isHidden = p => (p.plan || 'plan') === 'hidden';
   function visible() {
     const q = S.q.trim().toLowerCase();
     return S.data.products.filter(p => {
+      if ((S.chip === 'hidden') !== isHidden(p)) return false;
       if (S.chip === 'noprice' && !p.noPrice) return false;
       if (S.chip === 'norank' && p.hasRank) return false;
       if (ST[S.chip] && p.status !== S.chip) return false;
@@ -123,9 +134,36 @@
       return true;
     });
   }
+  // ช่องราคา Rank ที่บางช่องทางตั้งราคาต่าง (ไม่นับช่องทางที่ไม่ขาย) → { 'สินค้าเซ็ต|3': [[label, price], …] }
+  function diffs(sku) {
+    const o = S.data._ovr[sku] || {}, off = S.data._off[sku] || new Set(), out = {};
+    S.data.channels.forEach(([ch, g, l]) => { const lb = g === 'TikTok' ? 'TikTok ' + l : l; if (off.has(ch) || !o[ch]) return;
+      Object.entries(o[ch]).forEach(([cat, rs]) => Object.entries(rs).forEach(([r, v]) => { if (v == null) return; (out[cat + '|' + r] = out[cat + '|' + r] || []).push([lb, v]); })); });
+    return out;
+  }
+  function showDiff(btn) {
+    closeDiff();
+    const [sku, cat, r] = btn.dataset.dv.split('|'), p = S.data.products.find(x => x.sku === sku) || {};
+    const base = ((S.data._base[sku] || {})[cat] || {})[r], list = diffs(sku)[cat + '|' + r] || [];
+    const by = {}; list.forEach(([lb, v]) => { (by[v] = by[v] || []).push(lb); });
+    const pop = document.createElement('div'); pop.className = 'pp-dpop'; pop.id = 'ppDiffPop';
+    pop.innerHTML = `<div class="t">${esc(p.name || sku)} · ${cat === 'สินค้าเซ็ต' ? 'เซ็ต' : 'เดี่ยว'} R${r}</div>
+      <div class="r"><span>ราคากลาง</span><b>${n0(base)}</b></div>
+      ${Object.entries(by).map(([v, lbs]) => `<div class="r d"><span>${lbs.map(esc).join(' · ')}</span><b>${+v === 0 ? 'ไม่ขาย' : n0(v)}</b></div>`).join('')}`;
+    document.body.appendChild(pop);
+    const rc = btn.getBoundingClientRect(), pw = pop.offsetWidth;
+    pop.style.top = (window.scrollY + rc.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, Math.min(window.scrollX + rc.left + rc.width / 2 - pw / 2, window.scrollX + document.documentElement.clientWidth - pw - 8)) + 'px';
+  }
+  function closeDiff() { const x = document.getElementById('ppDiffPop'); if (x) x.remove(); }
+  document.addEventListener('mousedown', e => { if (!e.target.closest('#ppDiffPop') && !e.target.closest('.pp-dv')) closeDiff(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDiff(); });
+  window.addEventListener('scroll', closeDiff, true);
   function rowHtml(p) {
     const b = S.data._base[p.sku] || {};
-    const rk = (cat, i) => { const v = (b[cat] || {})[i]; return `<td class="rk${i === 1 ? ' gl' : ''}">${v ? n0(v) : dash}</td>`; };
+    const dif = diffs(p.sku);
+    const rk = (cat, i) => { const v = (b[cat] || {})[i], d = dif[cat + '|' + i];
+      return `<td class="rk${i === 1 ? ' gl' : ''}">${!v ? dash : d ? `<button type="button" class="pp-dv" data-dv="${esc(p.sku)}|${cat}|${i}">${n0(v)}</button>` : n0(v)}</td>`; };
     const st = ST[p.status] || [p.status || '—', 'off'], pl = PLAN[p.plan || 'plan'] || PLAN.plan;
     return `<tr data-sku="${esc(p.sku)}"><td><div class="pp-sku">${esc(p.sku)}${p.hasRank ? '' : '<span class="pp-wb">ยังไม่มีราคา Rank</span>'}</div><div class="pp-nm">${esc(p.name || '')}</div></td>
       <td><span class="pp-st ${st[1]}">${st[0]}</span></td><td>${+p.mock > 0 ? n0(p.mock) : dash}</td><td>${+p.rsp > 0 ? n0(p.rsp) : dash}</td>
@@ -139,17 +177,18 @@
       <thead><tr><th rowspan="2">สินค้า</th><th rowspan="2">สถานะ</th><th rowspan="2">Mock</th><th rowspan="2">RSP</th><th colspan="3" class="grp gl">Rank เดี่ยว</th><th colspan="3" class="grp gl">Rank เซ็ต</th><th rowspan="2">การวางแผน</th><th rowspan="2">Lead time</th></tr>
       <tr><th class="sub gl">R1</th><th class="sub">R2</th><th class="sub">R3</th><th class="sub gl">R1</th><th class="sub">R2</th><th class="sub">R3</th></tr></thead>
       <tbody>${L.map(rowHtml).join('')}</tbody></table>` : '<div class="pp-empty">ไม่มีสินค้าที่ตรงกับตัวกรอง</div>';
-    box.querySelectorAll('tr[data-sku]').forEach(tr => tr.onclick = () => openEdit(tr.dataset.sku));
+    box.querySelectorAll('tr[data-sku]').forEach(tr => tr.onclick = e => { const dv = e.target.closest('.pp-dv'); if (dv) { e.stopPropagation(); showDiff(dv); return; } closeDiff(); openEdit(tr.dataset.sku); });
   }
   function renderPage() {
     const el = document.getElementById('page-products'); if (!el) return;
-    const P = S.data.products, cnt = f => P.filter(f).length;
+    const P = S.data.products.filter(p => !isHidden(p)), nHid = S.data.products.length - P.length, cnt = f => P.filter(f).length;
     const chips = [['all', 'ทั้งหมด', P.length], ['Existing', 'ขายอยู่', cnt(p => p.status === 'Existing')], ['NPD', 'NPD', cnt(p => p.status === 'NPD')],
       ['Discontinued', 'เลิกขาย', cnt(p => p.status === 'Discontinued')], ['GWP', 'ของแถม', cnt(p => p.status === 'GWP')],
       ['noprice', 'ยังไม่มี RSP / Mock', cnt(p => p.noPrice), 'w'], ['norank', 'ยังไม่มีราคา Rank', cnt(p => !p.hasRank), 'w']];
+    if (S.data.can_edit) chips.push(['hidden', 'ซ่อน', nHid, 'h']);
     el.innerHTML = `<div class="pp-chips" id="ppChips">${chips.map(([k, t, n, w]) => `<button type="button" class="pp-chip ${w || ''}" data-c="${k}" aria-pressed="${S.chip === k}">${t}<b>${n}</b></button>`).join('')}</div>
       <div class="pp-bar"><input class="pp-in" id="ppQ" style="flex:1;min-width:220px;" placeholder="ค้นหา SKU รหัสลูก หรือชื่อสินค้า…" value="${esc(S.q)}">
-        <select class="pp-in" id="ppPlan"><option value="">การวางแผน: ทั้งหมด</option>${Object.entries(PLAN).map(([k, v]) => `<option value="${k}" ${S.plan === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select>
+        <select class="pp-in" id="ppPlan"><option value="">การวางแผน: ทั้งหมด</option>${Object.entries(PLAN).filter(([k]) => k !== 'hidden').map(([k, v]) => `<option value="${k}" ${S.plan === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select>
         ${S.data.can_edit ? '<button type="button" class="pp-btn" id="ppAdd">+ เพิ่มสินค้า</button>' : ''}</div>
       <div class="pp-card" id="ppList"></div>`;
     el.querySelector('#ppChips').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; S.chip = b.dataset.c; el.querySelectorAll('#ppChips [data-c]').forEach(x => x.setAttribute('aria-pressed', x === b)); renderList(); };
