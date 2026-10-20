@@ -1,4 +1,5 @@
-// promo.js (v20261020f) — โปรโมชั่น 3 หน้า
+// promo.js (v20261020h) — โปรโมชั่น 3 หน้า
+// (2026-10-20 h) หน้าอนุมัติ: จำนวนคำขอรวมไว้ในแท็บ (เลิกการ์ดใหญ่) · รายละเอียด: ราคาที่ขออยู่บนสุด · คำอธิบายย้ายไป ⓘ · ตาราง "สินค้าในโปร" แก้จำนวน + ดู Rank ในที่เดียว (รองรับหลายสินค้า) · ไม่มีแถบเส้น Rank · ขั้นบันไดกำไรกดดูรายละเอียดค่าใช้จ่ายได้
 // (2026-10-20 f) หน้าอนุมัติ: ตารางแยกคอลัมน์ (ขอโดย / วันเริ่ม / วันจบ / ส่งเมื่อ) จัดกลาง · ตัดยอดคาด / กำไรรวมที่คาด / เกณฑ์ · รายละเอียดคำขอ: สรุปเป็นช่องเรียบ ๆ ข้อความสั้น · ลองปรับตัวเลขแล้วกด "คำนวณ" หรือ Enter (ไม่คำนวณระหว่างพิมพ์)
 // (2026-10-20 e) หน้าขอโปร: ไม่แสดงผลเช็คต้นทุนให้ทีมแล้ว (ผู้บริหารเห็นในหน้าอนุมัติ) · การ์ด Rank กว้างขึ้น · แถบราคารวมขีดที่ราคาเท่ากัน · "ส่งเมื่อ" เป็นคอลัมน์ท้าย · ลบคำขอที่ยกเลิกแล้วได้
 // (2026-10-20 d) Rank ราคา: เช็คคำขอกับชีท Price Rank (RPC promo_rank) · กล่องผลในฟอร์ม · คอลัมน์ Rank ในตารางคำขอและหน้าอนุมัติ · การ์ด Rank ในรายละเอียดคำขอของผู้บริหาร
@@ -98,6 +99,21 @@
       .pr-tb.pr-mine { table-layout:fixed; min-width:1140px; }
       .pr-tb.pr-ex { table-layout:fixed; min-width:1100px; } .pr-tb.pr-ex th, .pr-tb.pr-ex td { text-align:center; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .pr-tb.pr-ex th:first-child, .pr-tb.pr-ex td:first-child { text-align:left; } .pr-tb.pr-ex td.tn { font-variant-numeric:tabular-nums; }
+      .ex-big { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0 8px; }
+      .ex-big .l { font-size:11.5px; color:var(--text3); } .ex-big .v { font-size:28px; font-weight:700; color:var(--text); letter-spacing:-.01em; font-variant-numeric:tabular-nums; line-height:1.2; }
+      .ex-big .s { font-size:11.5px; color:var(--text3); }
+      .ex-items { padding:12px 14px; }
+      .ex-items-hd { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; } .ex-items-hd b { font-size:13px; color:var(--text); margin-right:auto; }
+      .ex-items-hd label { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); font-weight:600; } .ex-items-hd label .pr-in { width:110px; padding:6px 10px; }
+      .ex-items-hd .pr-btn { padding:7px 14px; }
+      .ex-it { width:100%; border-collapse:collapse; font-size:12.5px; }
+      .ex-it th { font-size:11px; color:var(--text3); font-weight:600; text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+      .ex-it td { padding:5px 8px; border-bottom:1px solid var(--border); color:var(--text2); vertical-align:middle; }
+      .ex-it th.num, .ex-it td.num { text-align:right; font-variant-numeric:tabular-nums; } .ex-it .q { width:86px; text-align:center; }
+      .ex-it td.q .pr-in { width:70px; padding:5px 8px; text-align:center; } .ex-it td.hit { background:rgba(184,134,47,.13); color:var(--text); font-weight:700; }
+      .ex-it tr.gift td { color:var(--text3); } .ex-it td.miss { color:var(--text3); font-size:11.5px; white-space:nowrap; }
+      .ex-it th.rk { color:var(--text3); } .ex-it th.rk:first-of-type { }
+      .ex-it td:nth-child(5), .ex-it th:nth-child(5) { border-left:1px solid var(--border); } .ex-it .tag { display:inline-block; font-size:10.5px; padding:0 6px; margin-right:6px; border-radius:99px; background:var(--bg3); color:var(--text2); }
       .ex-st { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; margin:0 0 14px; }
       .ex-st > div { border:1px solid var(--border); border-radius:10px; padding:9px 11px; background:var(--bg2); min-width:0; }
       .ex-st .l { font-size:11px; color:var(--text3); white-space:nowrap; } .ex-st .v { font-size:15px; font-weight:700; color:var(--text); margin-top:3px; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -139,12 +155,18 @@
       .pr-seg { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
       .pr-seg button { border:0; background:none; padding:6px 14px; font:inherit; font-size:12.5px; color:var(--text2); cursor:pointer; }
       .pr-seg button[aria-pressed="true"] { background:var(--accent); color:#111; font-weight:700; }
+      .ex-tabs button b { display:inline-block; min-width:18px; margin-left:7px; padding:0 6px; border-radius:99px; background:var(--bg3); color:var(--text2); font-size:11px; font-weight:700; line-height:18px; text-align:center; }
+      .ex-tabs button[aria-pressed="true"] b { background:rgba(0,0,0,.14); color:#111; }
       .pr-metrics { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px; margin-bottom:16px; }
       .pr-metric { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
       .pr-metric .l { font-size:12px; color:var(--text3); } .pr-metric .v { font-size:22px; font-weight:700; color:var(--text); margin-top:4px; font-variant-numeric:tabular-nums; }
       .pr-empty { padding:28px; text-align:center; color:var(--text3); font-size:13px; }
       .pr-lad td { padding:7px 10px; } .pr-lad tr.sum td { font-weight:700; color:var(--text); background:var(--row-sum); }
-      .pr-lad tr.sub td:first-child { padding-left:26px; font-size:12px; color:var(--text3); } .pr-lad tr.sub td { font-size:12px; }
+      .pr-lad tr.sub td:first-child { padding-left:34px; font-size:12px; color:var(--text3); }
+      .pr-lad tr.grp td { cursor:pointer; color:var(--text2); } .pr-lad tr.grp:hover td { background:var(--bg3); }
+      .pr-lad tr.grp td.neg, .pr-lad tr.sub td.neg { color:var(--red, #dc2626); }
+      .pr-lad .car { display:inline-block; width:16px; color:var(--text3); transition:transform .15s; } .pr-lad tr.grp.open .car { transform:rotate(90deg); }
+      .pr-lad .xt { font-weight:400; color:var(--text3); font-size:11.5px; } .pr-lad tr.sub td { font-size:12px; }
       .pr-lad td.neg { color:var(--red, #dc2626); }
       .pr-kv { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; margin:12px 0; }
       .pr-kv div { background:var(--bg3); border-radius:10px; padding:10px 12px; } .pr-kv b { display:block; font-size:16px; color:var(--text); margin-top:2px; font-variant-numeric:tabular-nums; }
@@ -417,9 +439,7 @@
     const L = EX.list, cnt = s => L.filter(r => r.status === s).length;
     el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l"><span class="pr-i" data-tip="คำขอโปรจากทีม พร้อมกำไรต่อออเดอร์ที่คำนวณจากต้นทุนล่าสุดและตารางค่าธรรมเนียมปัจจุบัน
 คลิกแถวเพื่อดูขั้นบันไดกำไร ลองปรับราคา และอนุมัติ">ⓘ</span></div>
-        <div class="pr-seg" id="exSeg">${[['pending', 'รออนุมัติ'], ['approved', 'อนุมัติแล้ว'], ['rejected', 'ไม่อนุมัติ'], ['all', 'ทั้งหมด']].map(([k, t]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}</button>`).join('')}</div></div>
-      <div class="pr-metrics"><div class="pr-metric"><div class="l">รออนุมัติ</div><div class="v">${cnt('pending')}</div></div><div class="pr-metric"><div class="l">อนุมัติแล้ว</div><div class="v">${cnt('approved')}</div></div>
-        <div class="pr-metric"><div class="l">ไม่อนุมัติ</div><div class="v">${cnt('rejected')}</div></div></div>
+        <div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}<b>${n}</b></button>`).join('')}</div></div>
       <div class="pr-card" style="padding:6px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
     el.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; el.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); listExec(); };
     listExec();
@@ -441,19 +461,27 @@
     box.querySelectorAll('tr[data-id]').forEach(tr => tr.onclick = () => openReq(+tr.dataset.id));
   }
   function ladder(c, C) {
-    const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
-    const fee = ly => (c.fees || []).filter(f => f.layer === ly).map(f => `<tr class="sub"><td>${esc(f.item)} <span style="color:var(--text3);">${f.kind === 'pct' ? +(f.rate * 100).toFixed(2) + '%' : n2(f.rate) + ' ฿'}</span></td><td class="num neg">−${n2(f.amount_ex)}</td></tr>`).join('');
-    const ln = k => (c.lines || []).filter(l => l.kind === k).map(l => `<tr class="sub"><td>${l.kind === 'gift' ? 'แถม ' : ''}${esc(l.name || nm(l.sku))} ×${l.qty} <span style="color:var(--text3);">${l.unit_cost == null ? 'ไม่มีต้นทุน' : '@ ' + n2(l.unit_cost)}</span></td><td class="num neg">−${n2(l.cost)}</td></tr>`).join('');
-    const sum = (t, v, extra) => `<tr class="sum"><td>${t}${extra ? ` <span style="font-weight:400;color:var(--text3);">${extra}</span>` : ''}</td><td class="num" style="color:${v < 0 ? 'var(--red,#dc2626)' : 'var(--text)'}">${n2(v)}</td></tr>`;
+    const nm = k => (C.products.find(p => p.sku === k) || { name: k }).name;
+    const fees = ly => (c.fees || []).filter(f => f.layer === ly);
+    const lines = (c.lines || []);
+    const sumOf = a => a.reduce((t, x) => t + (+x || 0), 0);
+    const grp = (id, title, amt, subs, tip) => `<tr class="grp" data-lad="${id}"><td><span class="car">▸</span>${title}${tip ? ` <span class="pr-i" data-tip="${esc(tip)}">ⓘ</span>` : ''}</td><td class="num neg">−${n2(amt)}</td></tr>`
+      + subs.map(x => `<tr class="sub" data-ladp="${id}" hidden><td>${x[0]}</td><td class="num neg">−${n2(x[1])}</td></tr>`).join('');
+    const tot = (t, v, extra) => `<tr class="sum"><td>${t}${extra ? ` <span class="xt">${extra}</span>` : ''}</td><td class="num" style="color:${v < 0 ? 'var(--red,#dc2626)' : 'var(--text)'}">${n2(v)}</td></tr>`;
+    const costRows = lines.map(l => [`${l.kind === 'gift' ? 'แถม ' : ''}${esc(l.name || nm(l.sku))} ×${l.qty} <span class="xt">${l.unit_cost == null ? 'ไม่มีต้นทุน' : '@ ' + n2(l.unit_cost)}</span>`, l.cost]);
+    const feeRows = ly => fees(ly).map(f => [`${esc(f.item)} <span class="xt">${f.kind === 'pct' ? +(f.rate * 100).toFixed(2) + '%' : n2(f.rate) + ' ฿'}</span>`, f.amount_ex]);
     return `<table class="pr-tb pr-lad" data-no-sort data-no-page><tbody>
       <tr><td>ราคาขาย (รวม VAT)</td><td class="num">${n2(c.price)}</td></tr>
-      ${sum('รายได้ไม่รวม VAT', c.revenue_ex)}
-      ${ln('item')}${ln('gift')}
-      ${sum('กำไรขั้นต้น', c.gross, pc(c.revenue_ex ? c.gross / c.revenue_ex : null))}
-      ${fee('platform')}${sum('หลังค่า Platform', c.after_platform)}
-      ${fee('selling')}${sum('หลังค่าขาย', c.after_selling)}
-      ${fee('overhead')}${sum('กำไรสุทธิ / ออเดอร์', c.profit, `${pc(c.margin)} ของรายได้`)}
-</tbody></table>`;
+      ${tot('รายได้ไม่รวม VAT', c.revenue_ex)}
+      ${grp('cost', 'ต้นทุนสินค้า + ของแถม', sumOf(lines.map(l => l.cost)), costRows)}
+      ${tot('กำไรขั้นต้น', c.gross, pc(c.revenue_ex ? c.gross / c.revenue_ex : null))}
+      ${grp('platform', 'ค่า Platform', sumOf(fees('platform').map(f => f.amount_ex)), feeRows('platform'))}
+      ${tot('หลังค่า Platform', c.after_platform)}
+      ${grp('selling', 'ค่าขาย', sumOf(fees('selling').map(f => f.amount_ex)), feeRows('selling'))}
+      ${tot('หลังค่าขาย', c.after_selling)}
+      ${grp('overhead', 'ค่าบริหาร / Marketing', sumOf(fees('overhead').map(f => f.amount_ex)), feeRows('overhead'))}
+      ${tot('กำไรสุทธิ / ออเดอร์', c.profit, `${pc(c.margin)} ของรายได้`)}
+    </tbody></table>`;
   }
   async function openReq(id) {
     const r = EX.list.find(x => x.id === id); if (!r) return;
@@ -462,40 +490,56 @@
     const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null };
     const body = () => document.getElementById('trBody');
     const draw = (c) => {
-      const s = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0);
+      const st = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0), k = S.rank;
       const changed = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []);
+      const pnm = x => (C.products.find(p => p.sku === x) || { name: x }).name;
       const sig = c.signal === 'green' ? ['g', 'ผ่าน'] : c.signal === 'red' ? ['r', 'ไม่ผ่าน'] : ['', 'ขาดต้นทุน'];
-      const pnm = k => (C.products.find(p => p.sku === k) || { name: k }).name;
-      const sigSub = c.signal === 'unknown' || !c.signal ? (c.missing_costs || []).map(pnm).join(', ') : `ต้นทุน + ${mm}`;
-      const cm = (c.lines || [])[0] && c.lines[0].cost_month ? new Date(c.lines[0].cost_month + 'T00:00:00') : null;
-      const cmTxt = cm ? ` ${['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][cm.getMonth()]} ${String(cm.getFullYear() + 543).slice(2)}` : '';
+      const miss = (c.missing_costs || []).map(pnm);
       const rsp = +c.rsp, dif = rsp ? (+c.price - rsp) / rsp : null;
+      const cm = (c.lines || [])[0] && c.lines[0].cost_month ? new Date(c.lines[0].cost_month + 'T00:00:00') : null;
+      const cmTxt = cm ? `${['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][cm.getMonth()]} ${String(cm.getFullYear() + 543).slice(2)}` : 'ล่าสุด';
+      const tip = (t) => ` <span class="pr-i" data-tip="${esc(t)}">ⓘ</span>`;
+      // ตาราง "สินค้าในโปร": แก้จำนวนได้ + ราคา Rank ต่อชิ้น (รองรับหลายสินค้า)
+      const kl = {}; ((k && k.lines) || []).forEach(l => { kl[l.sku] = l; });
+      const hit = k && k.status === 'ok' ? k.rank : 0;
+      const rc = (v, r) => `<td class="num${hit === r ? ' hit' : ''}">${v == null || +v === 0 ? '—' : n0(v)}</td>`;
+      const showRank = k && ['ok', 'below'].includes(k.status);
+      // ต้นทุนต่อชิ้น / ต้นทุนรวม ของแต่ละรายการ (จากผลคำนวณล่าสุด)
+      const cl = {}; (c.lines || []).forEach(l => { cl[l.kind + '|' + l.sku] = l; });
+      const costCells = (kind, sku) => { const l = cl[kind + '|' + sku]; return l && l.unit_cost != null ? `<td class="num">${n2(l.unit_cost)}</td><td class="num">${n2(l.cost)}</td>` : '<td class="num miss">ไม่มีต้นทุน</td><td class="num">—</td>'; };
+      const costTot = (c.lines || []).reduce((t, l) => t + (l.unit_cost != null ? +l.cost || 0 : 0), 0), costMiss = (c.lines || []).filter(l => l.unit_cost == null).map(l => pnm(l.sku));
+      const itemRows = S.items.map((g, i) => { const l = kl[g.sku] || {}; return `<tr><td>${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" data-ii="${i}" value="${g.qty}"></td>${costCells('item', g.sku)}${showRank ? rc(l.p1, 1) + rc(l.p2, 2) + rc(l.p3, 3) : ''}</tr>`; }).join('');
+      const giftRows = S.gifts.map((g, i) => `<tr class="gift"><td><span class="tag">แถม</span>${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" data-gi="${i}" value="${g.qty}"></td>${costCells('gift', g.sku)}${showRank ? '<td class="num">—</td><td class="num">—</td><td class="num">—</td>' : ''}</tr>`).join('');
+      const sumRow = `<tr class="ui-sum"><td>รวม</td><td></td><td></td><td class="num">${n2(costTot)}${costMiss.length ? tip('ไม่รวม ' + costMiss.join(', ') + ' (ยังไม่มีต้นทุน)') : ''}</td>${showRank ? rc(k.sum1, 1) + rc(k.sum2, 2) + rc(k.sum3, 3) : ''}</tr>`;
+      const rkTip = 'ราคาที่ขอ ≥ ผลรวม Rank ไหน (ไล่จาก Rank 1) = Rank นั้น · ต่ำกว่า Rank 3 = ไม่ผ่าน\nมากกว่า 1 ชิ้นใช้ราคาเซ็ต · ไม่นับของแถม · ราคาจากชีท Price Rank';
       body().innerHTML = `
-        <div class="tr-card"><div class="tr-card-t">${esc(r.title)} <span class="pr-pill ${s[1]}" style="margin-left:6px;">${s[0]}</span></div>
-          <div class="tr-card-v" style="color:${+c.profit < 0 ? 'var(--red,#dc2626)' : 'var(--text)'}">${n2(c.profit)} <small style="font-size:13px;font-weight:400;color:var(--text3);">กำไร / ออเดอร์ · ${pc(c.markup)} ของต้นทุน</small></div>
+        <div class="tr-card ex-hd"><div class="tr-card-t">${esc(r.title)} <span class="pr-pill ${st[1]}" style="margin-left:6px;">${st[0]}</span></div>
+          <div class="ex-big"><div><div class="l">ราคาที่ขอ</div><div class="v">${n2(c.price)}</div>${dif == null ? '' : `<div class="s">${dif < 0 ? 'ต่ำกว่า' : dif > 0 ? 'สูงกว่า' : 'เท่า'}ราคาปกติ${dif ? ' ' + pc(Math.abs(dif)) : ''}${tip('ราคาปกติ (RSP) รวม ' + n2(rsp))}</div>`}</div>
+            <div><div class="l">กำไร / ออเดอร์</div><div class="v" style="color:${+c.profit < 0 ? 'var(--red,#dc2626)' : 'var(--text)'}">${n2(c.profit)}</div><div class="s">${pc(c.markup)} ของต้นทุน</div></div></div>
           <div class="tr-card-m"><span>${esc(r.channel || '')}</span>${r.start_date ? `<span>${dTh(r.start_date)}${r.end_date ? ' – ' + dTh(r.end_date) : ''}</span>` : ''}<span>ขอโดย ${esc(r.requested_name || '')}</span></div></div>
         <div class="ex-st">
-          <div><div class="l">เกณฑ์ต้นทุน</div><div class="v"><i class="d ${sig[0]}"></i>${sig[1]}</div><div class="s" title="${esc(sigSub)}">${esc(sigSub)}</div></div>
-          <div><div class="l">จุดคุ้มทุน</div><div class="v">${c.breakeven_price == null ? '—' : n2(c.breakeven_price)}</div><div class="s">ราคาต่ำสุดที่ไม่ขาดทุน</div></div>
-          <div><div class="l">ราคาที่ผ่านเกณฑ์</div><div class="v">${c.target_price == null ? '—' : n2(c.target_price)}</div><div class="s">ต้นทุน + ${mm}</div></div>
-          <div><div class="l">ราคาปกติ (RSP)</div><div class="v">${rsp ? n2(rsp) : '—'}</div><div class="s">${dif == null ? '' : dif < 0 ? 'ขายต่ำกว่า ' + pc(-dif) : dif > 0 ? 'ขายสูงกว่า ' + pc(dif) : 'เท่าราคาปกติ'}</div></div>
+          <div><div class="l">เกณฑ์ต้นทุน${tip(miss.length ? 'ยังไม่มีต้นทุนของ ' + miss.join(', ') + ' ในไฟล์ต้นทุนขาย' : 'ราคาครอบคลุมต้นทุนทั้งหมด (สินค้า · ของแถม · ค่าธรรมเนียม · ค่า Ads · ค่าบริหาร) + กำไรอีก ' + mm + ' ของต้นทุนหรือไม่')}</div><div class="v"><i class="d ${sig[0]}"></i>${sig[1]}</div></div>
+          <div><div class="l">Rank ราคา${tip(rkTip)}</div><div class="v">${rkPill(k)}</div></div>
+          <div><div class="l">จุดคุ้มทุน${tip('ราคาขาย (รวม VAT) ที่กำไรสุทธิเท่ากับ 0 พอดี\nคิดจากต้นทุนสินค้า + ของแถม + ค่าธรรมเนียม + ค่า Ads + ค่าบริหาร (ค่าที่เป็น % ขยับตามราคา)')}</div><div class="v">${c.breakeven_price == null ? '—' : n2(c.breakeven_price)}</div></div>
+          <div><div class="l">ราคาผ่านเกณฑ์${tip('ราคาขาย (รวม VAT) ต่ำสุดที่กำไรสุทธิได้อย่างน้อย ' + mm + ' ของต้นทุน')}</div><div class="v">${c.target_price == null ? '—' : n2(c.target_price)}</div></div>
         </div>
-        <div id="exRank">${rankCard(S.rank).replace('class="pr-rk"', 'class="pr-rk cmp"')}</div>
-        <section class="tr-part" style="padding:12px 14px;"><div class="ex-try">
-          <div><label>ราคา (รวม VAT)</label><input class="pr-in" type="number" step="0.01" id="exPrice" value="${S.price}"></div>
-          ${S.items.map((g, i) => `<div><label title="${esc((C.products.find(p => p.sku === g.sku) || { name: g.sku }).name)}">${esc((C.products.find(p => p.sku === g.sku) || { name: g.sku }).name)}</label><input class="pr-in" type="number" min="0" step="1" data-ii="${i}" value="${g.qty}"></div>`).join('')}
-          ${S.gifts.map((g, i) => `<div><label title="แถม ${esc((C.products.find(p => p.sku === g.sku) || { name: g.sku }).name)}">แถม ${esc((C.products.find(p => p.sku === g.sku) || { name: g.sku }).name)}</label><input class="pr-in" type="number" min="0" step="1" data-gi="${i}" value="${g.qty}"></div>`).join('')}
-          <div class="acts"><button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button>' : ''}</div>
-        </div>${changed ? '<div class="ex-chg">ตัวเลขด้านล่างเป็นผลจากการลองปรับ ยังไม่แก้คำขอ</div>' : ''}</section>
+        <section class="tr-part ex-items"><div class="ex-items-hd"><b>สินค้าในโปร</b>${showRank ? tip(rkTip) : ''}
+            <label>ราคาที่ขอ <input class="pr-in" type="number" step="0.01" id="exPrice" value="${S.price}"></label>
+            <button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button>' : ''}</div>
+          <table class="ex-it"><thead><tr><th>รายการ</th><th class="q">จำนวน</th><th class="num">ต้นทุน/ชิ้น</th><th class="num">ต้นทุนรวม</th>${showRank ? '<th class="num rk">Rank 1</th><th class="num rk">Rank 2</th><th class="num rk">Rank 3</th>' : ''}</tr></thead>
+            <tbody>${itemRows}${giftRows}${sumRow}</tbody></table>
+          ${changed ? '<div class="ex-chg">ผลด้านล่างเป็นตัวเลขที่ลองปรับ ยังไม่แก้คำขอ</div>' : ''}${k && !showRank ? `<div class="ex-chg" style="color:var(--text3);">${k.status === 'no_rank' ? 'ช่องทางนี้ไม่เช็ค Rank' : k.status === 'not_sold' ? 'สินค้าไม่ขายในช่องทางนี้ (ราคาในชีทเป็น 0)' : 'ยังไม่มีราคา Rank ของ ' + esc((k.missing || []).join(', '))}</div>` : ''}</section>
         <section class="tr-part">${ladder(c, C)}</section>
-        <div class="pr-note" style="margin:0 2px 14px;">ต้นทุน: ไฟล์ต้นทุนขาย${cmTxt} · ค่าธรรมเนียม: ตารางปัจจุบัน</div>
+        <div class="pr-note" style="margin:-6px 2px 14px;">ต้นทุน ${cmTxt}${tip('ต้นทุนต่อชิ้น: ไฟล์ต้นทุนขายของบัญชี เดือนล่าสุดที่มี\nค่าธรรมเนียม: ตาราง "ค่าธรรมเนียมช่องทาง" ปัจจุบัน\n% คิดจากราคารวม VAT แล้วถอด VAT ' + (c.vat * 100).toFixed(0) + '%')}</div>
         <section class="tr-part" style="padding:12px 14px;"><label style="font-size:12px;font-weight:600;color:var(--text2);">Feedback ถึงทีม</label>
           <textarea class="pr-in" id="exNote" rows="2" style="margin-top:6px;" placeholder="เช่น อนุมัติถ้าขึ้นราคาเป็น ${c.target_price ? n0(Math.ceil(c.target_price)) : '…'}">${esc(S.note != null ? S.note : (r.decision_note || ''))}</textarea>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
             ${r.status === 'pending' ? '<button class="pr-btn good" data-dec="approved">✓ อนุมัติ</button><button class="pr-btn bad" data-dec="rejected">✕ ไม่อนุมัติ</button>' : '<button class="pr-btn ghost" data-dec="pending">กลับเป็นรออนุมัติ</button>'}
           </div></section>
         ${r.note ? `<div class="pr-note">หมายเหตุจากทีม: ${esc(r.note)}</div>` : ''}`;
-      // ลองปรับ: คำนวณเมื่อกดปุ่ม "คำนวณ" หรือกด Enter ในช่องตัวเลข (ไม่คำนวณระหว่างพิมพ์)
+      // ขั้นบันไดกำไร: กดแถวกลุ่มเพื่อดูรายการย่อย
+      body().querySelectorAll('.pr-lad tr.grp').forEach(tr => tr.onclick = () => { const open = !tr.classList.contains('open'); tr.classList.toggle('open', open); body().querySelectorAll(`.pr-lad tr[data-ladp="${tr.dataset.lad}"]`).forEach(x => { x.hidden = !open; }); });
+      // ลองปรับ: คำนวณเมื่อกด "คำนวณ" หรือ Enter
       const recalc = async () => {
         S.note = document.getElementById('exNote').value;
         S.price = +document.getElementById('exPrice').value || 0;
@@ -511,8 +555,8 @@
       const rs = document.getElementById('exReset');
       if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
       body().querySelectorAll('[data-dec]').forEach(b => b.onclick = async () => {
-        const st = b.dataset.dec; if (st !== 'pending' && !confirm(st === 'approved' ? 'อนุมัติโปรนี้?' : 'ไม่อนุมัติโปรนี้?')) return;
-        try { await rpc('promo_decide', { p_id: r.id, p_status: st, p_note: document.getElementById('exNote').value }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { alert(e.message); }
+        const d = b.dataset.dec; if (d !== 'pending' && !confirm(d === 'approved' ? 'อนุมัติโปรนี้?' : 'ไม่อนุมัติโปรนี้?')) return;
+        try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: document.getElementById('exNote').value }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { alert(e.message); }
       });
     };
     draw(r.calc || await rpc('promo_calc', { p: { channel_id: r.channel_id, price: r.price, orders: r.orders, items: r.items, gifts: r.gifts } }));
