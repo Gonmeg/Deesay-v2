@@ -24,7 +24,7 @@
     soon:     ['#fbbf24',       'สั่งเดือนนี้'],
     ok:       ['var(--green)',  'ยังไม่ต้องสั่ง'],
     no_need:  ['var(--text3)',  'ไม่มียอดขาย'],
-    inactive: ['var(--text3)',  'เลิกขาย'],
+    inactive: ['var(--text3)',  'เลิกผลิต / หยุดขาย'],
   };
   const STATUS = ORDER;
   const ABC_TXT = { A: 'ยอดขายหลัก (80%)', B: 'ยอดขายรอง (15%)', C: 'ยอดขายน้อย (5%)' };
