@@ -772,7 +772,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-k</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-m</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2969,7 +2969,7 @@ function loadSupplyPage() {
   if (window._supplyLoading) return;
   window._supplyLoading = true;
   const s = document.createElement('script');
-  s.src = 'supply.js?v=20261020b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
+  s.src = 'supply.js?v=20261020c'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต supply.js ให้เบราว์เซอร์โหลดของใหม่
   s.onload = () => { window._supplyLoading = false; window.renderSupplyPage(); };
   s.onerror = () => { window._supplyLoading = false; document.getElementById('page-supply').innerHTML = '<div class="error-banner" style="display:block;">โหลด supply.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3006,7 +3006,7 @@ function loadProductsPage() {
   if (window._productsLoading) return;
   window._productsLoading = true;
   const s = document.createElement('script');
-  s.src = 'products.js?v=20261020b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต products.js
+  s.src = 'products.js?v=20261020d';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต products.js
   s.onload = () => { window._productsLoading = false; if (currentPage === 'products') window.ProductsUI.render(); };
   s.onerror = () => { window._productsLoading = false; const el = document.getElementById('page-products'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด products.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3017,7 +3017,7 @@ function loadPromoPage(page) {
   if (window._promoLoading) return;
   window._promoLoading = true;
   const s = document.createElement('script');
-  s.src = 'promo.js?v=20261020j';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
+  s.src = 'promo.js?v=20261020k';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
   s.onload = () => { window._promoLoading = false; if (['promo', 'exec', 'execfee'].includes(currentPage)) window.PromoUI.render(currentPage); };
   s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3027,7 +3027,7 @@ function loadKpiPage(reload) {
   if (window._kpiLoading) return;
   window._kpiLoading = true;
   const s = document.createElement('script');
-  s.src = 'kpi.js?v=20261019a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
+  s.src = 'kpi.js?v=20261020a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
   s.onload = () => { window._kpiLoading = false; if (currentPage === 'kpi') window.renderKpiPage(true); };
   s.onerror = () => { window._kpiLoading = false; document.getElementById('page-kpi').innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
