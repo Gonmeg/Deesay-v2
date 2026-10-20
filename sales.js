@@ -1,3 +1,4 @@
+// sales.js — (2026-10-20 a) หน้าภาพรวมรายช่องทาง: กราฟแนวโน้ม (ซ้าย) + ตารางแยกเพจ / ร้าน / ช่องทาง (ขวา) วางคู่กันใน .ov-row
 // sales.js — (2026-10-19 c) แถวย่อย: ไม่มีเส้นคั่น · พื้นเทาอ่อนทั้งกลุ่ม · เส้นนำสายบาง ๆ แบบผังต้นไม้
 // (2026-10-19) ตัวเลขในตารางไม่มีเส้นประแล้ว · แถวย่อยไม่มีพื้นสี (แถบสีช่องทางด้านซ้าย) · ช่วงก่อน 1 ม.ค. 69 ไม่เทียบ
 // (2026-10-18) แม่แบบ 1 "ภาพรวมยอดขาย" (รวมหน้าแยกตาม Channel เข้ามาแล้ว) · อ้างอิง Shopee Seller Centre + Facebook Ads Manager
@@ -58,6 +59,12 @@
 .ov-leg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--text2)}
 .ov-leg i{display:inline-block;width:16px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .ov-chart{position:relative;height:280px}
+.ov-row{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:16px;align-items:stretch}
+.ov-row>.ov-card,.ov-row>.card{min-width:0;margin:0!important;display:flex;flex-direction:column}
+.ov-row .ov-chart{flex:1;min-height:280px}
+.ov-row .ov-tbl{min-width:0}
+.ov-row>.card .table-wrap{overflow-x:auto}
+@media (max-width:1250px){.ov-row{grid-template-columns:1fr}}
 .ov-tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:860px}
 .ov-tbl th{font-size:12px;font-weight:500;color:var(--text3);text-align:right;padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
 .ov-tbl th:first-child,.ov-tbl td:first-child{text-align:left}
@@ -283,12 +290,12 @@
     const cols = o.hub ? 9 : 7;
     return `<div class="ov">
       <section class="ui-metrics" id="${idOf(o, 'ovTiles')}" aria-label="ตัวเลขหลัก"><div class="empty" style="padding:22px;">กำลังโหลด...</div></section>
-      <div class="ov-card"><div class="ov-head"><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;"><h2>แนวโน้ม<span id="${idOf(o, 'ovGrain')}">รายวัน</span></h2>
+      <div class="${o.hub ? 'ov-row' : ''}" style="${o.hub ? '' : 'display:contents;'}"><div class="ov-card"><div class="ov-head"><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;"><h2>แนวโน้ม<span id="${idOf(o, 'ovGrain')}">รายวัน</span></h2>
         <div class="ov-seg" role="group" aria-label="มุมมองกราฟ"><button type="button" data-ovmode="metric">ตัวเลขที่เลือก</button><button type="button" data-ovmode="channel">${segAlt}</button></div>${go}</div>
         <div class="ov-leg" id="${idOf(o, 'ovLegend')}"></div></div><div class="ov-chart"><canvas id="${idOf(o, 'ovChart')}"></canvas></div></div>
       <div class="ov-card" id="${idOf(o, 'ovTblCard')}" style="padding:16px 0 4px;"><div class="ov-head" style="padding:0 18px;"><h2>${o.hub ? 'แยกตาม' + unit : 'แยกตามช่องทาง'}</h2><button class="btn btn-ghost" type="button" onclick="exportTable('${idOf(o, 'ovTbl')}')">⬇ Export</button></div>
         <div style="overflow-x:auto;"><table class="ov-tbl" id="${idOf(o, 'ovTbl')}" data-no-page><thead><tr>${head}</tr></thead>
-          <tbody id="${idOf(o, 'ovTbody')}"><tr><td colspan="${cols}" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div></div>`;
+          <tbody id="${idOf(o, 'ovTbody')}"><tr><td colspan="${cols}" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div></div></div>`;
   }
 
   // ===== หน้า =====
