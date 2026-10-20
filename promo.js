@@ -1,4 +1,5 @@
-// promo.js (v20261020h) — โปรโมชั่น 3 หน้า
+// promo.js (v20261020i) — โปรโมชั่น 3 หน้า
+// (2026-10-20 i) กล่องยืนยัน / แจ้งเตือนเป็นของเว็บเอง (uiConfirm / uiAlert ใน ui.js) แทนกล่องของเบราว์เซอร์
 // (2026-10-20 h) หน้าอนุมัติ: จำนวนคำขอรวมไว้ในแท็บ (เลิกการ์ดใหญ่) · รายละเอียด: ราคาที่ขออยู่บนสุด · คำอธิบายย้ายไป ⓘ · ตาราง "สินค้าในโปร" แก้จำนวน + ดู Rank ในที่เดียว (รองรับหลายสินค้า) · ไม่มีแถบเส้น Rank · ขั้นบันไดกำไรกดดูรายละเอียดค่าใช้จ่ายได้
 // (2026-10-20 f) หน้าอนุมัติ: ตารางแยกคอลัมน์ (ขอโดย / วันเริ่ม / วันจบ / ส่งเมื่อ) จัดกลาง · ตัดยอดคาด / กำไรรวมที่คาด / เกณฑ์ · รายละเอียดคำขอ: สรุปเป็นช่องเรียบ ๆ ข้อความสั้น · ลองปรับตัวเลขแล้วกด "คำนวณ" หรือ Enter (ไม่คำนวณระหว่างพิมพ์)
 // (2026-10-20 e) หน้าขอโปร: ไม่แสดงผลเช็คต้นทุนให้ทีมแล้ว (ผู้บริหารเห็นในหน้าอนุมัติ) · การ์ด Rank กว้างขึ้น · แถบราคารวมขีดที่ราคาเท่ากัน · "ส่งเมื่อ" เป็นคอลัมน์ท้าย · ลบคำขอที่ยกเลิกแล้วได้
@@ -348,11 +349,11 @@
     window._prDDOff = () => { window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
     el.addEventListener('click', async e => {
       const a = e.target.closest('[data-addrow]'), d = e.target.closest('[data-del]'), cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]'), rm = e.target.closest('[data-rm]');
-      if (rm) { if (confirm('ลบคำขอนี้ออกถาวร?')) { try { await rpc('promo_delete', { p_id: +rm.dataset.rm }); loadMine(); } catch (er) { alert(er.message); } } return; }
+      if (rm) { if (await uiConfirm('ลบคำขอ', { text: (rm.closest('tr')?.querySelector('.t1')?.textContent || '') + ' · ลบแล้วกู้คืนไม่ได้', ok: 'ลบ', tone: 'bad' })) { try { await rpc('promo_delete', { p_id: +rm.dataset.rm }); loadMine(); } catch (er) { uiAlert('ลบไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
       if (mv) { const [y, m] = CAL.m.split('-').map(Number); const dt = new Date(y, m - 1 + (+mv.dataset.calmv), 1); CAL.m = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`; loadCal(C); return; }
       if (a) { F[a.dataset.addrow].push({ sku: '', qty: 1 }); document.getElementById(a.dataset.addrow === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(a.dataset.addrow, F[a.dataset.addrow], C); }
       if (d) { F[d.dataset.del].splice(+d.dataset.i, 1); if (d.dataset.del === 'items' && !F.items.length) F.items.push({ sku: '', qty: 1 }); document.getElementById(d.dataset.del === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(d.dataset.del, F[d.dataset.del], C); later(); }
-      if (cx && confirm('ยกเลิกคำขอนี้?')) { try { await rpc('promo_cancel', { p_id: +cx.dataset.cancel }); loadMine(); } catch (er) { alert(er.message); } }
+      if (cx && await uiConfirm('ยกเลิกคำขอ', { text: cx.closest('tr')?.querySelector('.t1')?.textContent || '', ok: 'ยกเลิกคำขอ', cancel: 'ปิด', tone: 'bad' })) { try { await rpc('promo_cancel', { p_id: +cx.dataset.cancel }); loadMine(); } catch (er) { uiAlert('ยกเลิกไม่สำเร็จ', { text: er.message, tone: 'bad' }); } }
     });
     document.getElementById('prSubmit').onclick = async () => {
       const p = payload(), msg = document.getElementById('prMsg');
@@ -555,8 +556,8 @@
       const rs = document.getElementById('exReset');
       if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
       body().querySelectorAll('[data-dec]').forEach(b => b.onclick = async () => {
-        const d = b.dataset.dec; if (d !== 'pending' && !confirm(d === 'approved' ? 'อนุมัติโปรนี้?' : 'ไม่อนุมัติโปรนี้?')) return;
-        try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: document.getElementById('exNote').value }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { alert(e.message); }
+        const d = b.dataset.dec; if (d !== 'pending' && !(await uiConfirm(d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', { text: `${r.title} · ${r.channel || ''} · ${n0(r.price)}`, ok: d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', tone: d === 'approved' ? 'good' : 'bad', icon: d === 'approved' ? '✓' : '✕' }))) return;
+        try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: document.getElementById('exNote').value }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
       });
     };
     draw(r.calc || await rpc('promo_calc', { p: { channel_id: r.channel_id, price: r.price, orders: r.orders, items: r.items, gifts: r.gifts } }));
@@ -570,7 +571,7 @@
   const info = tip => `<span class="pr-i" data-tip="${esc(tip)}">ⓘ</span>`;
   const mLbl = m => { const th = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']; return th[+m.slice(5, 7) - 1] + ' ' + String(+m.slice(0, 4) + 543).slice(2); };
   let FT = null, FA = null;
-  const feeEdit = async p => { try { await rpc('fee_edit', { p }); toast('บันทึกแล้ว'); return true; } catch (e) { alert('บันทึกไม่สำเร็จ: ' + e.message); return false; } };
+  const feeEdit = async p => { try { await rpc('fee_edit', { p }); toast('บันทึกแล้ว'); return true; } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); return false; } };
   function seg(name, opts, cur) { return `<div class="pr-seg" data-seg="${name}">${opts.map(([k, t]) => `<button type="button" data-v="${k}" aria-pressed="${k === cur}">${t}</button>`).join('')}</div>`; }
   function segVal(root, name) { const b = root.querySelector(`[data-seg="${name}"] button[aria-pressed="true"]`); return b ? b.dataset.v : null; }
   function bindSeg(root) { root.querySelectorAll('[data-seg]').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); })); }
@@ -588,11 +589,11 @@
       ${it ? '<button class="pr-btn ghost" id="fiDel" style="margin-left:auto;color:var(--red,#dc2626);">ลบรายการนี้</button>' : ''}</div></section>`;
     bindSeg(b);
     document.getElementById('fiSave').onclick = async () => {
-      const name = document.getElementById('fiName').value.trim(); if (!name) return alert('ใส่ชื่อรายการ');
+      const name = document.getElementById('fiName').value.trim(); if (!name) return uiAlert('ใส่ชื่อรายการ');
       const p = { name, kind: segVal(b, 'kind'), layer: segVal(b, 'layer'), apply: segVal(b, 'apply'), actual_key: document.getElementById('fiAct').value };
       if (await feeEdit(it ? { op: 'item_update', id: it.id, ...p } : { op: 'item_add', ...p })) { trClose(); renderFee(); }
     };
-    const d = document.getElementById('fiDel'); if (d) d.onclick = async () => { if (confirm(`ลบ "${it.name}" และตัวเลขทุกช่องทางของรายการนี้?`) && await feeEdit({ op: 'item_delete', id: it.id })) { trClose(); renderFee(); } };
+    const d = document.getElementById('fiDel'); if (d) d.onclick = async () => { if (await uiConfirm('ลบรายการ', { text: `${it.name} · ตัวเลขทุกช่องทางของรายการนี้จะหายด้วย`, ok: 'ลบ', tone: 'bad' }) && await feeEdit({ op: 'item_delete', id: it.id })) { trClose(); renderFee(); } };
   }
   function channelForm(c) {
     trOpenShell(c ? 'แก้ไขช่องทาง' : 'เพิ่มช่องทาง');
@@ -606,11 +607,11 @@
       ${c ? '<button class="pr-btn ghost" id="fcDel" style="margin-left:auto;color:var(--red,#dc2626);">ลบช่องทางนี้</button>' : ''}</div></section>`;
     bindSeg(b);
     document.getElementById('fcSave').onclick = async () => {
-      const name = document.getElementById('fcName').value.trim(); if (!name) return alert('ใส่ชื่อช่องทาง');
+      const name = document.getElementById('fcName').value.trim(); if (!name) return uiAlert('ใส่ชื่อช่องทาง');
       const p = { name, sys_channel: segVal(b, 'sys') || '', acct_channels: [...b.querySelectorAll('.pr-chk input:checked')].map(x => x.value) };
       if (await feeEdit(c ? { op: 'channel_update', id: c.id, ...p } : { op: 'channel_add', ...p })) { CAT = null; trClose(); renderFee(); }
     };
-    const d = document.getElementById('fcDel'); if (d) d.onclick = async () => { if (confirm(`ลบช่องทาง "${c.name}"? (ถ้ามีโปรอ้างถึง ระบบจะปิดใช้งานแทนการลบ)`) && await feeEdit({ op: 'channel_delete', id: c.id })) { CAT = null; trClose(); renderFee(); } };
+    const d = document.getElementById('fcDel'); if (d) d.onclick = async () => { if (await uiConfirm('ลบช่องทาง', { text: `${c.name} · ถ้ามีโปรอ้างถึง ระบบจะปิดใช้งานแทนการลบ`, ok: 'ลบ', tone: 'bad' }) && await feeEdit({ op: 'channel_delete', id: c.id })) { CAT = null; trClose(); renderFee(); } };
   }
   function thresholdForm() {
     trOpenShell('เกณฑ์สัญญาณไฟ');
@@ -619,7 +620,7 @@
       <input class="pr-in" id="fmV" type="number" step="0.5" min="0" value="${cur}"></div></div>
       <div class="pr-note" style="margin-top:10px;">ต้นทุนทั้งหมด = ต้นทุนสินค้า + ของแถม + ค่าธรรมเนียมทุกรายการในตารางนี้ · คนขอโปรเห็นแค่ผ่าน / ไม่ผ่าน ไม่เห็นตัวเลข</div>
       <div style="margin-top:16px;"><button class="pr-btn" id="fmSave">บันทึก</button></div></section>`;
-    document.getElementById('fmSave').onclick = async () => { const v = +document.getElementById('fmV').value; if (!isFinite(v) || v < 0) return alert('ใส่ตัวเลข');
+    document.getElementById('fmSave').onclick = async () => { const v = +document.getElementById('fmV').value; if (!isFinite(v) || v < 0) return uiAlert('ใส่ตัวเลข');
       if (await feeEdit({ op: 'settings', min_markup: v / 100 })) { CAT = null; trClose(); renderFee(); } };
   }
   async function actualTrace(chId, key, label) {
@@ -677,7 +678,7 @@
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = inp.defaultValue; inp.blur(); } });
       inp.addEventListener('change', async () => {
         const [item_id, channel_id] = inp.dataset.cell.split('|').map(Number), raw = inp.value.trim().replace(/[,%\s]/g, '');
-        if (raw !== '' && !isFinite(+raw)) { alert('ใส่เป็นตัวเลข'); inp.value = inp.defaultValue; return; }
+        if (raw !== '' && !isFinite(+raw)) { uiAlert('ใส่เป็นตัวเลข'); inp.value = inp.defaultValue; return; }
         inp.classList.add('saving');
         if (await feeEdit({ op: 'value', item_id, channel_id, value: raw === '' ? '' : String(inp.dataset.kind === 'pct' ? +raw / 100 : +raw) })) { const y = window.scrollY, x = wrap.scrollLeft; await renderFee(); window.scrollTo(0, y); const w2 = document.getElementById('feWrap'); if (w2) w2.scrollLeft = x; }
         else inp.classList.remove('saving');
