@@ -1,4 +1,6 @@
-// promo.js (v20261015b) — โปรโมชั่น 3 หน้า
+// promo.js (v20261020a) — โปรโมชั่น 3 หน้า
+// (2026-10-20) ช่องเลือกสินค้า: กล่องค้นหาของเว็บเอง (เดิมใช้ datalist ของเบราว์เซอร์ = กล่องดำ ค้นได้แค่บางคำ) · ค้นจากชื่อ / รหัส / รหัสลูก / ชื่อเรียกอื่น (product_alias)
+// (2026-10-20) หน้าขอโปรโมชั่น: ปฏิทินโปรโมชั่นรายเดือน — โปรที่อนุมัติแล้ว + รออนุมัติของทุกคน (RPC promo_calendar)
 //  • promo   (หน้าทีม)     ขอโปรโมชั่น: กรอกโปร → เห็นสัญญาณไฟทันทีว่าผ่าน "ต้นทุนทั้งหมด + กำไรขั้นต่ำ" หรือยัง (ไม่เห็นต้นทุน) → ส่งขออนุมัติ
 //  • exec    (ผู้บริหาร)   โปรโมชั่น · อนุมัติ: กำไรต่อออเดอร์เป็นขั้นบันได · จุดคุ้มทุน · ลองปรับราคา / ของแถม · อนุมัติ / ไม่อนุมัติ
 //  • execfee (ผู้บริหาร)   ค่าธรรมเนียมช่องทาง: ตารางแก้ได้ เพิ่ม / ลบรายการและช่องทาง · เก็บประวัติทุกครั้ง
@@ -35,6 +37,37 @@
       .pr-in { width:100%; box-sizing:border-box; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:8px 11px; font:inherit; font-size:13px; outline:none; }
       .pr-in:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(200,169,110,.15); }
       .pr-rows .pr-row { display:grid; grid-template-columns:minmax(0, 1fr) 90px 32px; gap:8px; margin-bottom:8px; }
+      .pr-pickw { position:relative; min-width:0; }
+      .pr-pick { padding-right:30px; background-image:linear-gradient(45deg, transparent 50%, var(--text3) 50%), linear-gradient(135deg, var(--text3) 50%, transparent 50%); background-position:calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+      .pr-dd { position:fixed; z-index:3000; max-height:300px; overflow-y:auto; background:var(--bg2); border:1px solid var(--border); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.14); padding:4px; }
+      .pr-dd[hidden] { display:none; }
+      .pr-dd button { display:flex; align-items:center; gap:10px; width:100%; border:0; background:none; padding:8px 10px; border-radius:7px; font:inherit; font-size:13px; color:var(--text); text-align:left; cursor:pointer; }
+      .pr-dd button span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .pr-dd button small { color:var(--text3); font-size:11.5px; font-variant-numeric:tabular-nums; }
+      .pr-dd button em { font-style:normal; font-size:10.5px; color:var(--text3); border:1px solid var(--border); border-radius:99px; padding:0 6px; }
+      .pr-dd button.on, .pr-dd button:hover { background:var(--bg3); }
+      .pr-dd .none { padding:10px; font-size:12.5px; color:var(--text3); }
+      .pr-cal-nav { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text); }
+      .pr-cal-nav button { border:1px solid var(--border); background:var(--bg2); border-radius:7px; width:28px; height:28px; cursor:pointer; color:var(--text2); font:inherit; }
+      .pr-cal-nav button:hover { background:var(--bg3); }
+      .pr-cal-leg { display:flex; gap:14px; font-size:11.5px; color:var(--text3); font-weight:400; }
+      .pr-cal-leg i { display:inline-block; width:18px; height:8px; border-radius:3px; margin-right:5px; vertical-align:middle; background:var(--text3); }
+      .pr-cal-leg i.p { background:repeating-linear-gradient(135deg, var(--text3) 0 3px, transparent 3px 6px); border:1px solid var(--text3); }
+      .pr-cal { overflow-x:auto; }
+      .pr-cal-g { display:grid; min-width:760px; font-size:11.5px; }
+      .pr-cal-g .hd { color:var(--text3); text-align:center; padding:4px 0 6px; border-bottom:1px solid var(--border); }
+      .pr-cal-g .hd.we { color:var(--text2); }
+      .pr-cal-g .hd.td { color:var(--accent); font-weight:700; }
+      .pr-cal-g .nm { padding:7px 10px 7px 0; border-bottom:1px solid var(--border); min-width:0; }
+      .pr-cal-g .nm b { display:block; font-size:12.5px; color:var(--text); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .pr-cal-g .nm small { color:var(--text3); }
+      .pr-cal-g .ln { position:relative; border-bottom:1px solid var(--border); min-height:34px; }
+      .pr-cal-g .we-bg { position:absolute; top:0; bottom:0; background:var(--bg3); opacity:.6; }
+      .pr-cal-g .td-ln { position:absolute; top:0; bottom:0; width:2px; background:var(--accent); opacity:.7; }
+      .pr-cal-g .bar { position:absolute; top:50%; transform:translateY(-50%); height:20px; border-radius:6px; background:var(--c); color:#fff; font-size:11px; font-weight:600; line-height:20px; padding:0 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; box-sizing:border-box; cursor:default; }
+      .pr-cal-g .bar.pend { background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 30%, transparent) 0 4px, transparent 4px 8px); border:1.5px solid var(--c); color:var(--text); }
+      .pr-cal-g .bar.cut-l { border-top-left-radius:0; border-bottom-left-radius:0; } .pr-cal-g .bar.cut-r { border-top-right-radius:0; border-bottom-right-radius:0; }
+      .pr-cal-empty { padding:22px; text-align:center; color:var(--text3); font-size:13px; }
       .pr-x { border:1px solid var(--border); background:none; border-radius:8px; color:var(--text3); cursor:pointer; font-size:14px; }
       .pr-x:hover { color:var(--red, #ef4444); border-color:var(--red, #ef4444); }
       .pr-add { border:1px dashed var(--border); background:none; border-radius:8px; color:var(--text2); padding:6px 12px; cursor:pointer; font:inherit; font-size:12px; }
@@ -145,17 +178,20 @@
   }
   const later = () => { clearTimeout(chkTimer); chkTimer = setTimeout(check, 350); };
   function rowsHtml(key, list, C) {
-    return list.map((x, i) => `<div class="pr-row"><input class="pr-in" list="prProducts" data-k="${key}" data-i="${i}" data-f="sku" placeholder="ค้นหาชื่อสินค้าหรือรหัส" value="${esc(x.sku ? prodLabel(C.products.find(p => p.sku === x.sku) || { name: x.sku, sku: x.sku }) : '')}">
+    return list.map((x, i) => `<div class="pr-row"><div class="pr-pickw"><input class="pr-in pr-pick" autocomplete="off" data-k="${key}" data-i="${i}" data-f="sku" placeholder="ค้นหาชื่อสินค้าหรือรหัส" value="${esc(x.sku ? prodLabel(C.products.find(p => p.sku === x.sku) || { name: x.sku, sku: x.sku }) : '')}"></div>
       <input class="pr-in" type="number" min="1" step="1" data-k="${key}" data-i="${i}" data-f="qty" value="${esc(x.qty)}" title="จำนวนชิ้นต่อ 1 ออเดอร์">
       <button type="button" class="pr-x" data-del="${key}" data-i="${i}" aria-label="ลบ">✕</button></div>`).join('');
   }
   async function renderPromo() {
-    const el = document.getElementById('page-promo'); if (!el) return;
+    let el = document.getElementById('page-promo'); if (!el) return;
+    // (2026-10-20) เปิดหน้าซ้ำ = เปลี่ยนกล่องหน้าใหม่ ล้างตัวดักเหตุการณ์ของรอบก่อน (กันกดเพิ่มสินค้าแล้วได้ 2 แถว / ปุ่มลูกศรเลื่อน 2 ขั้น)
+    { const fresh = el.cloneNode(false); el.replaceWith(fresh); el = fresh; }
+    if (window._prDDOff) window._prDDOff();
     el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     let C; try { C = await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     if (!C) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
     el.innerHTML = `
-      <datalist id="prProducts">${C.products.map(p => `<option value="${esc(prodLabel(p))}">`).join('')}</datalist>
+      <div class="pr-dd" id="prDD" hidden></div>
       <div class="pr-grid"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอกทันทีว่าราคาที่ขอผ่านต้นทุนทั้งหมด + ${pc(+(C.min_markup || 0.05), 0)} หรือยัง (ไม่แสดงตัวเลขต้นทุน) แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
         <div class="full"><label>ชื่อโปร</label><input class="pr-in" data-f="title" value="${esc(F.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1"></div>
         <div><label>ช่องทาง</label><select class="pr-in" data-f="channel_id"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+F.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
@@ -167,13 +203,57 @@
         <div class="full"><label>หมายเหตุ <small>ไม่บังคับ</small></label><textarea class="pr-in" rows="2" data-f="note" placeholder="เช่น เงื่อนไขพิเศษของ Platform">${esc(F.note)}</textarea></div>
       </div><div style="margin-top:16px;display:flex;gap:10px;align-items:center;"><button class="pr-btn" id="prSubmit">ส่งขออนุมัติ</button><span class="pr-note" id="prMsg"></span></div></div>
       <div id="prSig"></div></div>
+      <div class="pr-card"><h3><span>ปฏิทินโปรโมชั่น <span class="pr-i" data-tip="โปรที่อนุมัติแล้วและรออนุมัติของทุกคน แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
+        <span class="pr-cal-leg"><span><i></i>อนุมัติแล้ว</span><span><i class="p"></i>รออนุมัติ</span></span>
+        <span class="pr-cal-nav"><button type="button" data-calmv="-1" aria-label="เดือนก่อน">‹</button><span id="prCalM"></span><button type="button" data-calmv="1" aria-label="เดือนถัดไป">›</button></span></h3>
+        <div class="pr-cal" id="prCal"><div class="pr-empty">กำลังโหลด…</div></div></div>
       <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
     const sync = t => { const k = t.dataset.k, i = +t.dataset.i, f = t.dataset.f; if (!f) return;
       if (k) F[k][i][f] = f === 'sku' ? (C.products.some(p => p.sku === skuOf(t.value)) ? skuOf(t.value) : '') : t.value; else F[f] = t.value; later(); };
-    el.addEventListener('input', e => sync(e.target));
-    el.addEventListener('change', e => sync(e.target));
+    el.addEventListener('input', e => { if (e.target.classList.contains('pr-pick')) { if (!e.target.value.trim()) sync(e.target); pickOpen(e.target); return; } sync(e.target); });
+    el.addEventListener('change', e => { if (!e.target.classList.contains('pr-pick')) sync(e.target); });
+    // ---- กล่องค้นหาสินค้า ----
+    const dd = document.getElementById('prDD'); let ddFor = null, ddList = [], ddOn = 0;
+    const nz = t => String(t || '').toLowerCase().replace(/[\s\-._·]/g, '');
+    const prodMatch = q => {
+      const toks = String(q || '').trim().toLowerCase().split(/\s+/).filter(Boolean).map(nz);
+      const list = C.products.map(p => ({ p, nm: nz(p.name), sk: nz(p.sku), al: nz(p.alias) }));
+      if (!toks.length) return list.map(x => x.p);
+      return list.filter(x => toks.every(t => (x.nm + x.sk + x.al).includes(t))).map(x => {
+        const t = toks.join(''); const r = x.nm.startsWith(t) ? 0 : x.nm.includes(t) ? 1 : x.sk.startsWith(t) ? 2 : 3;
+        return { p: x.p, r: r + (x.p.status === 'Discontinued' ? 10 : 0) }; }).sort((a, b) => a.r - b.r || a.p.name.localeCompare(b.p.name, 'th')).map(x => x.p);
+    };
+    function pickDraw() {
+      if (!ddFor) return;
+      dd.innerHTML = ddList.length ? ddList.slice(0, 80).map((p, i) => `<button type="button" data-pick="${esc(p.sku)}" class="${i === ddOn ? 'on' : ''}"><span>${esc(p.name)}</span><small>${esc(p.sku)}</small>${p.status === 'Discontinued' ? '<em>เลิกขาย</em>' : p.status === 'NPD' ? '<em>ใหม่</em>' : ''}</button>`).join('')
+        : '<div class="none">ไม่เจอสินค้าที่ตรงกับคำค้น · ลองพิมพ์รหัสสินค้า หรือคำสั้นลง</div>';
+      const r = ddFor.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.width = r.width + 'px';
+      const below = window.innerHeight - r.bottom; dd.style.top = (below < 240 && r.top > below ? Math.max(8, r.top - Math.min(300, dd.scrollHeight) - 4) : r.bottom + 4) + 'px';
+      const on = dd.querySelector('button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
+    }
+    function pickOpen(inp) {
+      ddFor = inp; const v = inp.value, cur = C.products.find(p => prodLabel(p) === v);
+      ddList = cur ? prodMatch('') : prodMatch(v); ddOn = cur ? Math.max(0, ddList.indexOf(cur)) : 0;
+      dd.hidden = false; pickDraw();
+    }
+    const pickClose = () => { dd.hidden = true; ddFor = null; };
+    function pickSet(p) { if (!ddFor || !p) return; const inp = ddFor; inp.value = prodLabel(p); sync(inp); pickClose(); }
+    el.addEventListener('focusin', e => { if (e.target.classList.contains('pr-pick')) { e.target.select(); pickOpen(e.target); } });
+    el.addEventListener('focusout', e => { if (e.target === ddFor) setTimeout(() => { if (document.activeElement !== ddFor) { const inp = ddFor; pickClose(); if (inp && !C.products.some(p => prodLabel(p) === inp.value)) { const k = inp.dataset.k, i = +inp.dataset.i; const keep = F[k][i] && F[k][i].sku ? C.products.find(p => p.sku === F[k][i].sku) : null; inp.value = keep ? prodLabel(keep) : ''; } } }, 120); });
+    el.addEventListener('keydown', e => {
+      if (!ddFor || e.target !== ddFor || dd.hidden) return;
+      if (e.key === 'ArrowDown') { ddOn = Math.min(ddList.length - 1, ddOn + 1); pickDraw(); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { ddOn = Math.max(0, ddOn - 1); pickDraw(); e.preventDefault(); }
+      else if (e.key === 'Enter') { pickSet(ddList[ddOn]); e.preventDefault(); }
+      else if (e.key === 'Escape') { pickClose(); }
+    });
+    dd.addEventListener('mousedown', e => { e.preventDefault(); const b = e.target.closest('[data-pick]'); if (b) pickSet(C.products.find(p => p.sku === b.dataset.pick)); });
+    const onMove = () => { if (ddFor) pickDraw(); };
+    window.addEventListener('scroll', onMove, true); window.addEventListener('resize', onMove);
+    window._prDDOff = () => { window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
     el.addEventListener('click', async e => {
-      const a = e.target.closest('[data-addrow]'), d = e.target.closest('[data-del]'), cx = e.target.closest('[data-cancel]');
+      const a = e.target.closest('[data-addrow]'), d = e.target.closest('[data-del]'), cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]');
+      if (mv) { const [y, m] = CAL.m.split('-').map(Number); const dt = new Date(y, m - 1 + (+mv.dataset.calmv), 1); CAL.m = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`; loadCal(C); return; }
       if (a) { F[a.dataset.addrow].push({ sku: '', qty: 1 }); document.getElementById(a.dataset.addrow === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(a.dataset.addrow, F[a.dataset.addrow], C); }
       if (d) { F[d.dataset.del].splice(+d.dataset.i, 1); if (d.dataset.del === 'items' && !F.items.length) F.items.push({ sku: '', qty: 1 }); document.getElementById(d.dataset.del === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(d.dataset.del, F[d.dataset.del], C); later(); }
       if (cx && confirm('ยกเลิกคำขอนี้?')) { try { await rpc('promo_cancel', { p_id: +cx.dataset.cancel }); loadMine(); } catch (er) { alert(er.message); } }
@@ -186,7 +266,37 @@
         Object.assign(F, { title: '', items: [{ sku: '', qty: 1 }], gifts: [], price: '', orders: '', note: '' }); renderPromo(); }
       catch (er) { msg.textContent = 'ส่งไม่สำเร็จ: ' + er.message; b.disabled = false; }
     };
-    check(); loadMine();
+    check(); loadMine(); loadCal(C);
+  }
+  // ---------- ปฏิทินโปรโมชั่น (เดือนละหน้า) ----------
+  const CAL = { m: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })() };
+  const CH_VAR = { Facebook: '--ch-facebook', TikTok: '--ch-tiktok', Shopee: '--ch-shopee', Lazada: '--ch-lazada', 'ตัวแทน': '--ch-dealer', 'Modern Trade': '--ch-mt' };
+  const TH_M = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  async function loadCal(C) {
+    const box = document.getElementById('prCal'), lab = document.getElementById('prCalM'); if (!box) return;
+    const [y, m] = CAL.m.split('-').map(Number), days = new Date(y, m, 0).getDate();
+    const from = `${CAL.m}-01`, to = `${CAL.m}-${String(days).padStart(2, '0')}`, want = CAL.m;
+    if (lab) lab.textContent = `${TH_M[m - 1]} ${y + 543}`;
+    let L; try { L = await rpc('promo_calendar', { p_from: from, p_to: to }); } catch (e) { box.innerHTML = `<div class="pr-cal-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    if (want !== CAL.m) return;
+    if (!L || !L.length) { box.innerHTML = '<div class="pr-cal-empty">เดือนนี้ยังไม่มีโปรที่อนุมัติแล้วหรือรออนุมัติ</div>'; return; }
+    const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
+    const dayIx = d => Math.round((new Date(d + 'T00:00:00') - new Date(from + 'T00:00:00')) / 864e5);
+    const now = new Date(), td = now.getFullYear() === y && now.getMonth() + 1 === m ? now.getDate() - 1 : -1;
+    const pct = i => (i / days * 100).toFixed(3) + '%';
+    const we = []; for (let i = 0; i < days; i++) { const w = new Date(y, m - 1, i + 1).getDay(); if (w === 0 || w === 6) we.push(i); }
+    const bg = we.map(i => `<span class="we-bg" style="left:${pct(i)};width:${pct(1)}"></span>`).join('') + (td >= 0 ? `<span class="td-ln" style="left:calc(${pct(td)} + ${(50 / days).toFixed(3)}%)"></span>` : '');
+    let h = `<div class="pr-cal-g" style="grid-template-columns:220px repeat(${days}, minmax(0, 1fr));--days:${days};"><div class="hd"></div>`;
+    for (let i = 0; i < days; i++) h += `<div class="hd${we.includes(i) ? ' we' : ''}${i === td ? ' td' : ''}">${i + 1}</div>`;
+    L.forEach(r => {
+      const s = Math.max(0, dayIx(r.start_date)), e = Math.min(days - 1, dayIx(r.end_date)); if (e < s) return;
+      const items = (r.items || []).map(x => nm(x.sku) + ' ×' + x.qty).join(' + '), gifts = (r.gifts || []).map(x => nm(x.sku) + ' ×' + x.qty).join(' + ');
+      const tip = `${r.title} · ${r.channel || ''}\n${dTh(r.start_date)} – ${dTh(r.end_date)} · ${(ST[r.status] || [r.status])[0]}\n${items}${gifts ? '\nแถม ' + gifts : ''}`;
+      const cls = (r.status === 'pending' ? ' pend' : '') + (dayIx(r.start_date) < 0 ? ' cut-l' : '') + (dayIx(r.end_date) > days - 1 ? ' cut-r' : '');
+      h += `<div class="nm"><b title="${esc(r.title)}">${esc(r.title)}</b><small>${esc(r.channel || '')}</small></div>
+        <div class="ln" style="grid-column:2 / span ${days};">${bg}<span class="bar${cls}" style="--c:var(${CH_VAR[r.sys] || '--text3'});left:calc(${pct(s)} + 2px);width:calc(${pct(e - s + 1)} - 4px);" title="${esc(tip)}">${esc(r.title)}</span></div>`;
+    });
+    box.innerHTML = h + '</div>';
   }
   async function loadMine() {
     const box = document.getElementById('prMine'); if (!box) return;
