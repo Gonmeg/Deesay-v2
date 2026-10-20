@@ -373,7 +373,7 @@
       } catch (e) { console.warn('supply_sync_now', e.message); }
       clearInterval(iv);
       DATA = null; LOC_USE = null; await load();
-      if (!done) alert('ดึงไฟล์ PO ยังไม่เสร็จภายใน 3 นาที — ลองกดรีเฟรชอีกครั้งภายหลัง (ระบบดึงให้เองทุกวัน 03:40 และ 13:40)');
+      if (!done) uiAlert('ดึงไฟล์ PO ยังไม่เสร็จ', { text: 'ลองกดรีเฟรชอีกครั้งภายหลัง · ระบบดึงให้เองทุกวัน 03:40 และ 13:40' });
     };
     document.getElementById('supQ').oninput = e => { filt.q = e.target.value; renderTable(); };
     document.getElementById('supClear').onclick = () => { filt = { status: '', abc: '', xyz: '', q: '' }; renderAll(); };
@@ -523,7 +523,7 @@
         renderAll();
         window.scrollTo(0, y); const tb2 = document.getElementById('supTbl'); if (tb2) tb2.scrollTop = ty;
       }
-      catch (e) { el.style.borderColor = 'var(--red)'; alert(e.message); }
+      catch (e) { el.style.borderColor = 'var(--red)'; uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
     };
     document.querySelectorAll('.sup-plan-qty').forEach(el => {
       el.onclick = ev => ev.stopPropagation();
