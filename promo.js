@@ -1,4 +1,4 @@
-// promo.js (v20261020i) — โปรโมชั่น 3 หน้า
+// promo.js (v20261020j) — โปรโมชั่น 3 หน้า
 // (2026-10-20 i) กล่องยืนยัน / แจ้งเตือนเป็นของเว็บเอง (uiConfirm / uiAlert ใน ui.js) แทนกล่องของเบราว์เซอร์
 // (2026-10-20 h) หน้าอนุมัติ: จำนวนคำขอรวมไว้ในแท็บ (เลิกการ์ดใหญ่) · รายละเอียด: ราคาที่ขออยู่บนสุด · คำอธิบายย้ายไป ⓘ · ตาราง "สินค้าในโปร" แก้จำนวน + ดู Rank ในที่เดียว (รองรับหลายสินค้า) · ไม่มีแถบเส้น Rank · ขั้นบันไดกำไรกดดูรายละเอียดค่าใช้จ่ายได้
 // (2026-10-20 f) หน้าอนุมัติ: ตารางแยกคอลัมน์ (ขอโดย / วันเริ่ม / วันจบ / ส่งเมื่อ) จัดกลาง · ตัดยอดคาด / กำไรรวมที่คาด / เกณฑ์ · รายละเอียดคำขอ: สรุปเป็นช่องเรียบ ๆ ข้อความสั้น · ลองปรับตัวเลขแล้วกด "คำนวณ" หรือ Enter (ไม่คำนวณระหว่างพิมพ์)
@@ -237,17 +237,17 @@
     const nmOf = s => ((C.products || []).find(p => p.sku === s) || { name: s }).name;
     return `<div class="pr-sig"><div class="ic">?</div><div class="t">ยังเช็คต้นทุนไม่ได้</div><div class="s">${miss.length ? 'ยังไม่มีต้นทุนของ ' + miss.map(x => esc(nmOf(x))).join(', ') + ' ในไฟล์ต้นทุนขาย · แจ้งผู้บริหาร / บัญชี' : 'กรอกช่องทาง ราคาขาย และสินค้าให้ครบ'}</div>${rsp}</div>`;
   }
-  // ---------- Rank ราคา (จากชีท Price Rank) ----------
+  // ---------- Rank ราคา (จากหน้า สินค้า & ราคา · v_price_rank) ----------
   const rkPill = k => { if (!k || k.status === 'no_rank') return '<span class="t2">—</span>';
     return k.status === 'ok' ? `<span class="pr-pill rk${k.rank}">Rank ${k.rank}</span>` : k.status === 'below' ? '<span class="pr-pill rkx">ต่ำกว่า Rank 3</span>'
       : k.status === 'not_sold' ? '<span class="pr-pill rkx">ไม่ขายช่องทางนี้</span>' : '<span class="pr-pill rk0">ยังไม่มีราคา Rank</span>'; };
   function rankCard(k) {
     if (!k) return '';
-    if (k.status === 'no_rank') return `<div class="pr-rk"><div class="hd"><span class="bd rk0">ไม่เช็ค Rank</span><div class="sb">${esc(k.channel)} ไม่มีในชีท Price Rank</div></div></div>`;
+    if (k.status === 'no_rank') return `<div class="pr-rk"><div class="hd"><span class="bd rk0">ไม่เช็ค Rank</span><div class="sb">${esc(k.channel)} ไม่เช็ค Rank</div></div></div>`;
     const lines = k.lines || [], cat = k.category === 'สินค้าเซ็ต' ? `ราคาเซ็ต (${n0(k.pieces)} ชิ้น)` : 'ราคาเดี่ยว (1 ชิ้น)';
     const sub = `${esc(k.channel)} · ${cat} · ไม่นับของแถม`;
-    if (k.status === 'missing') return `<div class="pr-rk"><div class="hd"><span class="bd rk0">ยังไม่มีราคา Rank</span><div class="sb">${(k.missing || []).map(esc).join(', ')} ยังไม่มีในชีท Price Rank<br>${sub}</div></div></div>`;
-    if (k.status === 'not_sold') return `<div class="pr-rk"><div class="hd"><span class="bd rkx">ไม่ขายช่องทางนี้</span><div class="sb">${(k.not_sold || []).map(esc).join(', ') || 'สินค้าในชุดนี้'} ราคาในชีทเป็น 0 สำหรับ ${esc(k.channel)}<br>${sub}</div></div></div>`;
+    if (k.status === 'missing') return `<div class="pr-rk"><div class="hd"><span class="bd rk0">ยังไม่มีราคา Rank</span><div class="sb">${(k.missing || []).map(esc).join(', ')} ยังไม่มีราคา Rank ในหน้า สินค้า & ราคา<br>${sub}</div></div></div>`;
+    if (k.status === 'not_sold') return `<div class="pr-rk"><div class="hd"><span class="bd rkx">ไม่ขายช่องทางนี้</span><div class="sb">${(k.not_sold || []).map(esc).join(', ') || 'สินค้าในชุดนี้'} ไม่ได้ติ๊กขายใน ${esc(k.channel)}<br>${sub}</div></div></div>`;
     const S = [k.sum1, k.sum2, k.sum3].map(v => v == null ? null : +v), price = +k.price, hit = k.rank || 0;
     const ok = k.status === 'ok';
     // แถบตำแหน่งราคา: ซ้าย = ต่ำ ขวา = สูง
@@ -263,7 +263,7 @@
     const why = ok ? (hit === 1 ? `ราคาที่ขอ ${n0(price)} ≥ Rank 1 (${n0(S[0])})` : `ราคาที่ขอ ${n0(price)} ≥ Rank ${hit} (${n0(S[hit - 1])}) แต่ต่ำกว่า Rank ${hit - 1} (${n0(S[hit - 2])})`)
       : `ราคาที่ขอ ${n0(price)} ต่ำกว่า Rank 3 (${n0(S[2])}) ซึ่งเป็นราคาต่ำสุดที่ยอมให้ขาย`;
     return `<div class="pr-rk"><div class="hd"><span class="bd ${ok ? 'rk' + hit : 'rkx'}">${ok ? 'Rank ' + hit : 'ต่ำกว่า Rank 3'}</span><div class="sb"><b>${ok ? 'ราคานี้อยู่ Rank ' + hit : 'ราคานี้ต่ำกว่าเกณฑ์'}</b><br>${sub}</div></div>
-      ${bar}${tbl}<div class="nt">${why}<span class="nt2"><br>ราคา Rank จากชีท Price Rank · ราคาต่อชิ้น${k.category === 'สินค้าเซ็ต' ? 'แบบเซ็ต เพราะมากกว่า 1 ชิ้น' : 'แบบเดี่ยว'}</span></div></div>`;
+      ${bar}${tbl}<div class="nt">${why}<span class="nt2"><br>ราคา Rank จากหน้า สินค้า & ราคา · ราคาต่อชิ้น${k.category === 'สินค้าเซ็ต' ? 'แบบเซ็ต เพราะมากกว่า 1 ชิ้น' : 'แบบเดี่ยว'}</span></div></div>`;
   }
   async function check() {
     const C = await cat(), p = payload(), seq = ++chkSeq, box = document.getElementById('prSig');
@@ -289,7 +289,7 @@
     if (!C) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
     el.innerHTML = `
       <div class="pr-dd" id="prDD" hidden></div>
-      <div class="pr-grid nosig"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอก Rank ราคาทันทีจากชีท Price Rank แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
+      <div class="pr-grid nosig"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอก Rank ราคาทันทีจากหน้า สินค้า & ราคา แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
         <div class="full"><label>ชื่อโปร</label><input class="pr-in" data-f="title" value="${esc(F.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1"></div>
         <div><label>ช่องทาง</label><select class="pr-in" data-f="channel_id"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+F.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
         <div><label>ช่วงเวลา</label><div style="display:flex;gap:8px;"><input class="pr-in" type="date" data-f="start_date" value="${esc(F.start_date)}"><input class="pr-in" type="date" data-f="end_date" value="${esc(F.end_date)}"></div></div>
@@ -438,8 +438,7 @@
     el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     try { EX.list = await rpc('promo_list', { p_scope: 'all' }); await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     const L = EX.list, cnt = s => L.filter(r => r.status === s).length;
-    el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l"><span class="pr-i" data-tip="คำขอโปรจากทีม พร้อมกำไรต่อออเดอร์ที่คำนวณจากต้นทุนล่าสุดและตารางค่าธรรมเนียมปัจจุบัน
-คลิกแถวเพื่อดูขั้นบันไดกำไร ลองปรับราคา และอนุมัติ">ⓘ</span></div>
+    el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l"></div>
         <div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}<b>${n}</b></button>`).join('')}</div></div>
       <div class="pr-card" style="padding:6px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
     el.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; el.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); listExec(); };
@@ -512,7 +511,7 @@
       const itemRows = S.items.map((g, i) => { const l = kl[g.sku] || {}; return `<tr><td>${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" data-ii="${i}" value="${g.qty}"></td>${costCells('item', g.sku)}${showRank ? rc(l.p1, 1) + rc(l.p2, 2) + rc(l.p3, 3) : ''}</tr>`; }).join('');
       const giftRows = S.gifts.map((g, i) => `<tr class="gift"><td><span class="tag">แถม</span>${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" data-gi="${i}" value="${g.qty}"></td>${costCells('gift', g.sku)}${showRank ? '<td class="num">—</td><td class="num">—</td><td class="num">—</td>' : ''}</tr>`).join('');
       const sumRow = `<tr class="ui-sum"><td>รวม</td><td></td><td></td><td class="num">${n2(costTot)}${costMiss.length ? tip('ไม่รวม ' + costMiss.join(', ') + ' (ยังไม่มีต้นทุน)') : ''}</td>${showRank ? rc(k.sum1, 1) + rc(k.sum2, 2) + rc(k.sum3, 3) : ''}</tr>`;
-      const rkTip = 'ราคาที่ขอ ≥ ผลรวม Rank ไหน (ไล่จาก Rank 1) = Rank นั้น · ต่ำกว่า Rank 3 = ไม่ผ่าน\nมากกว่า 1 ชิ้นใช้ราคาเซ็ต · ไม่นับของแถม · ราคาจากชีท Price Rank';
+      const rkTip = 'ราคาที่ขอ ≥ ผลรวม Rank ไหน (ไล่จาก Rank 1) = Rank นั้น · ต่ำกว่า Rank 3 = ไม่ผ่าน\nมากกว่า 1 ชิ้นใช้ราคาเซ็ต · ไม่นับของแถม · ราคาจากหน้า สินค้า & ราคา';
       body().innerHTML = `
         <div class="tr-card ex-hd"><div class="tr-card-t">${esc(r.title)} <span class="pr-pill ${st[1]}" style="margin-left:6px;">${st[0]}</span></div>
           <div class="ex-big"><div><div class="l">ราคาที่ขอ</div><div class="v">${n2(c.price)}</div>${dif == null ? '' : `<div class="s">${dif < 0 ? 'ต่ำกว่า' : dif > 0 ? 'สูงกว่า' : 'เท่า'}ราคาปกติ${dif ? ' ' + pc(Math.abs(dif)) : ''}${tip('ราคาปกติ (RSP) รวม ' + n2(rsp))}</div>`}</div>
@@ -529,7 +528,7 @@
             <button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button>' : ''}</div>
           <table class="ex-it"><thead><tr><th>รายการ</th><th class="q">จำนวน</th><th class="num">ต้นทุน/ชิ้น</th><th class="num">ต้นทุนรวม</th>${showRank ? '<th class="num rk">Rank 1</th><th class="num rk">Rank 2</th><th class="num rk">Rank 3</th>' : ''}</tr></thead>
             <tbody>${itemRows}${giftRows}${sumRow}</tbody></table>
-          ${changed ? '<div class="ex-chg">ผลด้านล่างเป็นตัวเลขที่ลองปรับ ยังไม่แก้คำขอ</div>' : ''}${k && !showRank ? `<div class="ex-chg" style="color:var(--text3);">${k.status === 'no_rank' ? 'ช่องทางนี้ไม่เช็ค Rank' : k.status === 'not_sold' ? 'สินค้าไม่ขายในช่องทางนี้ (ราคาในชีทเป็น 0)' : 'ยังไม่มีราคา Rank ของ ' + esc((k.missing || []).join(', '))}</div>` : ''}</section>
+          ${changed ? '<div class="ex-chg">ผลด้านล่างเป็นตัวเลขที่ลองปรับ ยังไม่แก้คำขอ</div>' : ''}${k && !showRank ? `<div class="ex-chg" style="color:var(--text3);">${k.status === 'no_rank' ? 'ช่องทางนี้ไม่เช็ค Rank' : k.status === 'not_sold' ? 'สินค้าไม่ขายในช่องทางนี้ ' : 'ยังไม่มีราคา Rank ของ ' + esc((k.missing || []).join(', '))}</div>` : ''}</section>
         <section class="tr-part">${ladder(c, C)}</section>
         <div class="pr-note" style="margin:-6px 2px 14px;">ต้นทุน ${cmTxt}${tip('ต้นทุนต่อชิ้น: ไฟล์ต้นทุนขายของบัญชี เดือนล่าสุดที่มี\nค่าธรรมเนียม: ตาราง "ค่าธรรมเนียมช่องทาง" ปัจจุบัน\n% คิดจากราคารวม VAT แล้วถอด VAT ' + (c.vat * 100).toFixed(0) + '%')}</div>
         <section class="tr-part" style="padding:12px 14px;"><label style="font-size:12px;font-weight:600;color:var(--text2);">Feedback ถึงทีม</label>
