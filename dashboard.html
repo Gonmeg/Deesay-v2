@@ -771,7 +771,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.19-e</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.19-f</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -5213,6 +5213,9 @@ function setProdSort(col) {
   renderPromotion(window._lastPromoSuffix, window._lastPromoChannel);
 }
 
+// (2026-10-19) ตาราง Top 20 Promotion / สินค้าเดี่ยว: นับตามช่วงวันที่ที่เลือกจริง (RPC promo_top จาก mv_sku_daily รายวัน)
+//   เดิมใช้ตารางรายเดือน → ช่วงที่ไม่เริ่มวันที่ 1 / ไม่จบสิ้นเดือน ได้ยอดทั้งเดือน · ช่วงก่อนอยู่ก่อน 1 ม.ค. 69 = ไม่เทียบ (—)
+const _promoTopCache = {};
 function renderPromotion(idSuffix, forceChannel) {
   idSuffix = idSuffix || '';
   window._lastPromoSuffix = idSuffix;
@@ -5221,142 +5224,68 @@ function renderPromotion(idSuffix, forceChannel) {
   const sub = idSuffix ? (document.getElementById(idSuffix.toLowerCase()+'PromoSubChannel')?.value || '') : document.getElementById('filterSubChannel').value;
   const from = idSuffix ? document.getElementById('dateFrom').value : getDateValue('From');
   const to = idSuffix ? document.getElementById('dateTo').value : getDateValue('To');
-  const prevRange = getPrevPeriodRange(from, to);
-  const promoData = window._promoMonthlyCache || [];
-
-  if (!promoData.length) {
-    document.getElementById('tbodyTopSKU'+idSuffix).innerHTML = '<tr><td colspan="9" class="empty">กำลังโหลดข้อมูล...</td></tr>';
+  const pr = getPrevPeriodRange(from, to);
+  const noPrev = !pr || !pr.from || pr.from < SALES_DATA_START;
+  const key = [from, to, ch, sub, noPrev ? '' : pr.from].join('|');
+  const tbP = document.getElementById('tbodyTopSKU' + idSuffix), tbQ = document.getElementById('tbodyTopProduct' + idSuffix);
+  if (!tbP || !tbQ) return;
+  const D = _promoTopCache[key];
+  if (!D) {
+    if (_promoTopCache[key + '#loading']) return;
+    _promoTopCache[key + '#loading'] = true;
+    tbP.innerHTML = '<tr><td colspan="9" class="empty">กำลังโหลดข้อมูล...</td></tr>';
+    tbQ.innerHTML = '<tr><td colspan="7" class="empty">กำลังโหลดข้อมูล...</td></tr>';
+    supaRpc('promo_top', { p_from: from, p_to: to, p_ch: ch || null, p_sub: sub || null, p_pfrom: noPrev ? null : pr.from, p_pto: noPrev ? null : pr.to })
+      .then(d => { _promoTopCache[key] = d || { promo: [], prod: [] }; })
+      .catch(e => { console.warn('promo_top', e); tbP.innerHTML = '<tr><td colspan="9" class="empty">โหลดข้อมูลไม่สำเร็จ</td></tr>'; tbQ.innerHTML = '<tr><td colspan="7" class="empty">โหลดข้อมูลไม่สำเร็จ</td></tr>'; })
+      .finally(() => { delete _promoTopCache[key + '#loading']; if (_promoTopCache[key] && window._lastPromoSuffix === idSuffix) renderPromotion(idSuffix, forceChannel); });
     return;
   }
+  const dash = '<span style="color:var(--text3);">—</span>';
+  const noCmpTip = 'ระบบมีข้อมูลตั้งแต่ 1 ม.ค. 69 จึงยังไม่มีช่วงก่อนให้เทียบ';
+  const cmpCell = (cur, prev) => noPrev ? `<span title="${noCmpTip}">${dash}</span>`
+    : prev > 0 ? (() => { const p = ((cur - prev) / prev * 100).toFixed(1); const up = parseFloat(p) >= 0; return `<span style="color:${up?'var(--green)':'var(--red)'};font-weight:600;">${up?'▲':'▼'}${Math.abs(p)}%</span>`; })()
+    : `<span style="color:var(--accent);font-weight:600;">★ NEW</span>`;
+  const rankCell = (prevRank, currRank) => noPrev ? dash
+    : !prevRank ? `<span style="color:var(--accent);font-size:11px;">NEW</span>`
+    : prevRank - currRank > 0 ? `<span style="color:var(--green);font-size:11px;">▲${prevRank - currRank}</span>`
+    : prevRank - currRank < 0 ? `<span style="color:var(--red);font-size:11px;">▼${currRank - prevRank}</span>`
+    : dash;
 
-  // TABLE 1: Top 20 Promotion (จาก mv_promo_monthly — ระดับเดือน, ตอนนี้กรอง sub_channel ได้แล้ว)
-  const inRange = r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
-  const inPrevRange = r => r.date >= prevRange.from && r.date <= prevRange.to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
-
-  const bySKU = {};
-  promoData.filter(inRange).forEach(r => {
-    const k = r.sku_promotion || 'ไม่ระบุ';
-    if (!bySKU[k]) bySKU[k] = { rev: 0, ord: 0 };
-    bySKU[k].rev += parseFloat(r.total_revenue) || 0;
-    bySKU[k].ord += parseInt(r.total_orders) || 0;
-  });
-  const prevBySKU = {};
-  promoData.filter(inPrevRange).forEach(r => {
-    const k = r.sku_promotion || 'ไม่ระบุ';
-    if (!prevBySKU[k]) prevBySKU[k] = { rev: 0, ord: 0 };
-    prevBySKU[k].rev += parseFloat(r.total_revenue) || 0;
-    prevBySKU[k].ord += parseInt(r.total_orders) || 0;
-  });
-  const prevRankMap = {};
-  Object.entries(prevBySKU).sort((a,b) => b[1].rev - a[1].rev).forEach(([k], i) => { prevRankMap[k] = i + 1; });
-  const totalRev = Object.values(bySKU).reduce((s, v) => s + v.rev, 0);
-  const top20 = Object.entries(bySKU).sort((a,b) => b[1].rev - a[1].rev).slice(0, 20);
-  const rankMap = {};
-  top20.forEach(([k], i) => { rankMap[k] = i + 1; }); // อันดับอิงยอดขายเสมอ ไม่ว่าจะเรียงตารางแสดงผลด้วยคอลัมน์ไหน
-
+  // TABLE 1: Top 20 Promotion
   function thaiNameForPromo(promo) {
     return promo.split('+').map(p => { const m = p.trim().match(/^(.+?)x(\d+)$/i); return m ? skuToName(m[1].trim()) + 'x' + m[2] : p; }).join('+');
   }
-
-  const promoSortGetters = {
-    sku: ([k]) => k,
-    name: ([k]) => thaiNameForPromo(k),
-    rev: ([,v]) => v.rev,
-    ord: ([,v]) => v.ord,
-    aov: ([,v]) => v.ord ? v.rev / v.ord : 0,
-    share: ([,v]) => v.rev,
-  };
+  const top20 = (D.promo || []).map((x, i) => [x.k, { rev: +x.rev || 0, ord: +x.ord || 0, prev: +x.prev_rev || 0, prevRank: x.prev_rank || null, rank: i + 1 }]);
+  const totalRev = +D.promo_total || 0;
+  const promoSortGetters = { sku: ([k]) => k, name: ([k]) => thaiNameForPromo(k), rev: ([,v]) => v.rev, ord: ([,v]) => v.ord, aov: ([,v]) => v.ord ? v.rev / v.ord : 0, share: ([,v]) => v.rev };
   const promoGetVal = promoSortGetters[_promoSortCol] || promoSortGetters.rev;
-  const byRev = [...top20].sort((a,b) => {
-    const av = promoGetVal(a), bv = promoGetVal(b);
-    const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
-    return _promoSortDir === 'asc' ? cmp : -cmp;
-  });
-
-  document.getElementById('tbodyTopSKU'+idSuffix).innerHTML = byRev.map(([k, v], i) => {
-    const currRank = rankMap[k];
-    const sharePct = totalRev ? ((v.rev / totalRev) * 100).toFixed(1) : '0.0';
-    const prevRev = prevBySKU[k]?.rev || 0;
-    let cmpHtml = prevRev > 0
-      ? (() => { const p = ((v.rev-prevRev)/prevRev*100).toFixed(1); const up = parseFloat(p)>=0; return `<span style="color:${up?'var(--green)':'var(--red)'};font-weight:600;">${up?'▲':'▼'}${Math.abs(p)}%</span>`; })()
-      : `<span style="color:var(--accent);font-weight:600;">★ NEW</span>`;
-    const prevRank = prevRankMap[k];
-    const diff = prevRank ? prevRank - currRank : null;
-    const rankHtml = !prevRank ? `<span style="color:var(--accent);font-size:11px;">NEW</span>`
-      : diff > 0 ? `<span style="color:var(--green);font-size:11px;">▲${diff}</span>`
-      : diff < 0 ? `<span style="color:var(--red);font-size:11px;">▼${Math.abs(diff)}</span>`
-      : `<span style="color:var(--text3);font-size:11px;">—</span>`;
-    return `<tr>
+  const byRev = [...top20].sort((a, b) => { const av = promoGetVal(a), bv = promoGetVal(b); const c = typeof av === 'string' ? av.localeCompare(bv) : av - bv; return _promoSortDir === 'asc' ? c : -c; });
+  tbP.innerHTML = byRev.map(([k, v], i) => `<tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${k}</td>
       <td style="color:var(--text);">${thaiNameForPromo(k)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.rev)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.ord)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--blue);">${fmt(Math.round(v.ord ? v.rev/v.ord : 0))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${sharePct}%</td>
-      <td>${cmpHtml}</td><td>${rankHtml}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--blue);">${fmt(Math.round(v.ord ? v.rev / v.ord : 0))}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${totalRev ? (v.rev / totalRev * 100).toFixed(1) : '0.0'}%</td>
+      <td>${cmpCell(v.rev, v.prev)}</td><td>${rankCell(v.prevRank, v.rank)}</td>
+    </tr>`).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  // TABLE 2: Top 20 สินค้าเดี่ยว — จาก mv_sku_parent_monthly
-  const skuParentData = window._skuParentMonthlyCache || [];
-  const inRangeProd = r => r.date >= from && r.date <= to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
-  const inPrevRangeProd = r => r.date >= prevRange.from && r.date <= prevRange.to && (!ch || r.channel === ch) && (!sub || r.sub_channel === sub);
-
-  const byProduct = {};
-  skuParentData.filter(inRangeProd).forEach(r => {
-    const k = r.parent_sku || '—';
-    if (!byProduct[k]) byProduct[k] = 0;
-    byProduct[k] += parseFloat(r.total_qty) || 0;
-  });
-  const prevByProduct = {};
-  skuParentData.filter(inPrevRangeProd).forEach(r => {
-    const k = r.parent_sku || '—';
-    if (!prevByProduct[k]) prevByProduct[k] = 0;
-    prevByProduct[k] += parseFloat(r.total_qty) || 0;
-  });
-  const prevProdRankMap = {};
-  Object.entries(prevByProduct).sort((a,b) => b[1]-a[1]).forEach(([k], i) => { prevProdRankMap[k] = i + 1; });
-  const totalQty = Object.values(byProduct).reduce((s,v) => s+v, 0);
-  const top20Prod = Object.entries(byProduct).sort((a,b) => b[1]-a[1]).slice(0, 20);
-  const prodRankMap = {};
-  top20Prod.forEach(([k], i) => { prodRankMap[k] = i + 1; });
-
-  const prodSortGetters = {
-    sku: ([k]) => k,
-    name: ([k]) => skuToName(k),
-    qty: ([,qty]) => qty,
-    share: ([,qty]) => qty,
-  };
+  // TABLE 2: Top 20 สินค้าเดี่ยว (จำนวนชิ้น)
+  const top20Prod = (D.prod || []).map((x, i) => [x.k, { qty: +x.qty || 0, prev: +x.prev_qty || 0, prevRank: x.prev_rank || null, rank: i + 1 }]);
+  const totalQty = +D.prod_total || 0;
+  const prodSortGetters = { sku: ([k]) => k, name: ([k]) => skuToName(k), qty: ([,v]) => v.qty, share: ([,v]) => v.qty };
   const prodGetVal = prodSortGetters[_prodSortCol] || prodSortGetters.qty;
-  const sortedProd = [...top20Prod].sort((a,b) => {
-    const av = prodGetVal(a), bv = prodGetVal(b);
-    const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
-    return _prodSortDir === 'asc' ? cmp : -cmp;
-  });
-
-  document.getElementById('tbodyTopProduct'+idSuffix).innerHTML = sortedProd.map(([sku, qty], i) => {
-    const currRank = prodRankMap[sku];
-    const sharePct = totalQty ? ((qty/totalQty)*100).toFixed(1) : '0.0';
-    const prevQty = prevByProduct[sku] || 0;
-    let cmpHtml = prevQty > 0
-      ? (() => { const p = ((qty-prevQty)/prevQty*100).toFixed(1); const up = parseFloat(p)>=0; return `<span style="color:${up?'var(--green)':'var(--red)'};font-weight:600;">${up?'▲':'▼'}${Math.abs(p)}%</span>`; })()
-      : `<span style="color:var(--accent);font-weight:600;">★ NEW</span>`;
-    const prevRank = prevProdRankMap[sku];
-    const diff = prevRank ? prevRank - currRank : null;
-    const rankHtml = !prevRank ? `<span style="color:var(--accent);font-size:11px;">NEW</span>`
-      : diff > 0 ? `<span style="color:var(--green);font-size:11px;">▲${diff}</span>`
-      : diff < 0 ? `<span style="color:var(--red);font-size:11px;">▼${Math.abs(diff)}</span>`
-      : `<span style="color:var(--text3);font-size:11px;">—</span>`;
-    return `<tr>
+  const sortedProd = [...top20Prod].sort((a, b) => { const av = prodGetVal(a), bv = prodGetVal(b); const c = typeof av === 'string' ? av.localeCompare(bv) : av - bv; return _prodSortDir === 'asc' ? c : -c; });
+  tbQ.innerHTML = sortedProd.map(([sku, v], i) => `<tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
       <td style="color:var(--text);">${skuToName(sku)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(qty)} ชิ้น</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${sharePct}%</td>
-      <td>${cmpHtml}</td><td>${rankHtml}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
+      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.qty)} ชิ้น</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${totalQty ? (v.qty / totalQty * 100).toFixed(1) : '0.0'}%</td>
+      <td>${cmpCell(v.qty, v.prev)}</td><td>${rankCell(v.prevRank, v.rank)}</td>
+    </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 
   if (!idSuffix) renderRealPromoAndUpsell();
 }
