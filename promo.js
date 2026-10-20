@@ -1,4 +1,5 @@
-// promo.js (v20261020d) — โปรโมชั่น 3 หน้า
+// promo.js (v20261020e) — โปรโมชั่น 3 หน้า
+// (2026-10-20 e) หน้าขอโปร: ไม่แสดงผลเช็คต้นทุนให้ทีมแล้ว (ผู้บริหารเห็นในหน้าอนุมัติ) · การ์ด Rank กว้างขึ้น · แถบราคารวมขีดที่ราคาเท่ากัน · "ส่งเมื่อ" เป็นคอลัมน์ท้าย · ลบคำขอที่ยกเลิกแล้วได้
 // (2026-10-20 d) Rank ราคา: เช็คคำขอกับชีท Price Rank (RPC promo_rank) · กล่องผลในฟอร์ม · คอลัมน์ Rank ในตารางคำขอและหน้าอนุมัติ · การ์ด Rank ในรายละเอียดคำขอของผู้บริหาร
 // (2026-10-20 c) ฟอร์มกระชับ (ช่องสินค้า / ราคาไม่ยาวเต็มจอ) · ตารางคำขอ: แยกวันเริ่ม / วันจบ / วันที่ส่ง · ไม่มีคอลัมน์เกณฑ์ต้นทุน · ปฏิทินแบบรายเดือน (จันทร์–อาทิตย์) แถบโปรวิ่งข้ามวัน
 // (2026-10-20 b) หน้าขอโปร: เอาช่องยอดที่คาดว่าจะขายออก · กล่องเช็คต้นทุนขึ้นเฉพาะตอนมีคำตอบ · ตารางคำขอแยกคอลัมน์ · Feedback · ปฏิทินอยู่ล่างสุด
@@ -29,7 +30,7 @@
       .pr-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
       .pr-head h2 { margin:0; font-size:20px; font-weight:700; color:var(--text); }
       .pr-head p { margin:4px 0 0; font-size:13px; color:var(--text3); max-width:760px; line-height:1.6; }
-      .pr-grid { display:grid; grid-template-columns:minmax(0, 1fr) 400px; gap:16px; align-items:start; }
+      .pr-grid { display:grid; grid-template-columns:minmax(0, 1fr) 460px; gap:16px; align-items:start; }
       @media (max-width: 1100px) { .pr-grid { grid-template-columns:1fr; } }
       .pr-grid.nosig { grid-template-columns:minmax(0, 1fr); }
       .pr-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin-bottom:16px; }
@@ -93,7 +94,7 @@
       .pr-tb th { text-align:left; font-size:11.5px; font-weight:600; color:var(--text3); padding:9px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
       .pr-tb td { padding:10px; border-bottom:1px solid var(--row-border, rgba(127,127,127,.12)); color:var(--text2); vertical-align:top; }
       .pr-tb td.num, .pr-tb th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
-      .pr-tb.pr-mine { table-layout:fixed; min-width:1080px; }
+      .pr-tb.pr-mine { table-layout:fixed; min-width:1140px; }
       .pr-tb.pr-mine td { vertical-align:middle; } .pr-tb .ctr { text-align:center; } .pr-tb .nw { white-space:nowrap; }
       .pr-tb.pr-mine td > div + div { margin-top:2px; }
       .pr-tb tr.click { cursor:pointer; } .pr-tb tr.click:hover td { background:var(--bg3); }
@@ -214,8 +215,10 @@
     const ok = k.status === 'ok';
     // แถบตำแหน่งราคา: ซ้าย = ต่ำ ขวา = สูง
     const vals = S.filter(v => v != null).concat(price), lo = Math.min(...vals), hi = Math.max(...vals), span = Math.max(1, hi - lo);
-    const pos = v => (8 + (v - lo) / span * 84).toFixed(1) + '%';
-    const bar = `<div class="bar"><div class="ln"></div>${S.map((v, i) => v == null ? '' : `<div class="tk" style="left:${pos(v)}" title="Rank ${i + 1} = ${n0(v)}"><i></i>R${i + 1}</div>`).join('')}<div class="me" style="left:${pos(price)}" title="ราคาที่ขอ ${n2(price)}"></div></div>`;
+    const pos = v => 8 + (v - lo) / span * 84;
+    // ขีดของ Rank ที่ราคาเท่ากัน / ใกล้กันมาก รวมเป็นขีดเดียว (เช่น "R1–R3 760") ไม่ให้ตัวหนังสือทับกัน
+    const ticks = []; S.forEach((v, i) => { if (v == null) return; const t = ticks.find(x => Math.abs(pos(x.v) - pos(v)) < 9); if (t) t.r.push(i + 1); else ticks.push({ v, r: [i + 1] }); });
+    const bar = `<div class="bar"><div class="ln"></div>${ticks.map(t => `<div class="tk" style="left:${pos(t.v).toFixed(1)}%"><i></i>${t.r.length > 1 ? 'R' + t.r[0] + '–R' + t.r[t.r.length - 1] : 'R' + t.r[0]} · ${n0(t.v)}</div>`).join('')}<div class="me" style="left:${pos(price).toFixed(1)}%" title="ราคาที่ขอ ${n2(price)}"></div></div>`;
     const cell = (v, r) => `<td class="${hit === r ? 'hit' : ''}">${v == null || +v === 0 ? '—' : n0(v)}</td>`;
     const tbl = `<table><thead><tr><th>สินค้า</th><th>จำนวน</th><th>Rank 1</th><th>Rank 2</th><th>Rank 3</th></tr></thead><tbody>`
       + lines.map(l => `<tr><td>${esc(l.name)}</td><td>${n0(l.qty)}</td>${cell(l.p1, 1)}${cell(l.p2, 2)}${cell(l.p3, 3)}</tr>`).join('')
@@ -230,7 +233,7 @@
     if (!box) return;
     const grid = box.closest('.pr-grid'), show = h => { box.innerHTML = h; if (grid) grid.classList.toggle('nosig', !h); };
     if (!p.channel_id || !p.price || !p.items.length) { show(sigHtml(null, C)); return; }
-    try { const [r, k] = await Promise.all([rpc('promo_check', { p }), rpc('promo_rank', { p }).catch(() => null)]); if (seq === chkSeq) show(rankCard(k) + sigHtml(r, C)); }
+    try { const k = await rpc('promo_rank', { p }); if (seq === chkSeq) show(rankCard(k)); }   // (2026-10-20 e) ทีมเห็นแค่ Rank · ต้นทุนผู้บริหารดูในหน้าอนุมัติ
     catch (e) { show(`<div class="pr-sig"><div class="t">ตรวจไม่สำเร็จ</div><div class="s">${esc(e.message)}</div></div>`); }
   }
   const later = () => { clearTimeout(chkTimer); chkTimer = setTimeout(check, 350); };
@@ -249,7 +252,7 @@
     if (!C) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
     el.innerHTML = `
       <div class="pr-dd" id="prDD" hidden></div>
-      <div class="pr-grid nosig"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอกทันทีว่าราคาที่ขอผ่านต้นทุนทั้งหมด + ${pc(+(C.min_markup || 0.05), 0)} หรือยัง (ไม่แสดงตัวเลขต้นทุน) แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
+      <div class="pr-grid nosig"><div class="pr-card"><h3><span>รายละเอียดโปร <span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอก Rank ราคาทันทีจากชีท Price Rank แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></span></h3><div class="pr-f">
         <div class="full"><label>ชื่อโปร</label><input class="pr-in" data-f="title" value="${esc(F.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1"></div>
         <div><label>ช่องทาง</label><select class="pr-in" data-f="channel_id"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+F.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
         <div><label>ช่วงเวลา</label><div style="display:flex;gap:8px;"><input class="pr-in" type="date" data-f="start_date" value="${esc(F.start_date)}"><input class="pr-in" type="date" data-f="end_date" value="${esc(F.end_date)}"></div></div>
@@ -308,7 +311,8 @@
     window.addEventListener('scroll', onMove, true); window.addEventListener('resize', onMove);
     window._prDDOff = () => { window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
     el.addEventListener('click', async e => {
-      const a = e.target.closest('[data-addrow]'), d = e.target.closest('[data-del]'), cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]');
+      const a = e.target.closest('[data-addrow]'), d = e.target.closest('[data-del]'), cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]'), rm = e.target.closest('[data-rm]');
+      if (rm) { if (confirm('ลบคำขอนี้ออกถาวร?')) { try { await rpc('promo_delete', { p_id: +rm.dataset.rm }); loadMine(); } catch (er) { alert(er.message); } } return; }
       if (mv) { const [y, m] = CAL.m.split('-').map(Number); const dt = new Date(y, m - 1 + (+mv.dataset.calmv), 1); CAL.m = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`; loadCal(C); return; }
       if (a) { F[a.dataset.addrow].push({ sku: '', qty: 1 }); document.getElementById(a.dataset.addrow === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(a.dataset.addrow, F[a.dataset.addrow], C); }
       if (d) { F[d.dataset.del].splice(+d.dataset.i, 1); if (d.dataset.del === 'items' && !F.items.length) F.items.push({ sku: '', qty: 1 }); document.getElementById(d.dataset.del === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(d.dataset.del, F[d.dataset.del], C); later(); }
@@ -372,10 +376,10 @@
       const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
       const list = a => (a || []).map(x => `<div>${esc(nm(x.sku))} <span class="t2">×${x.qty}</span></div>`).join('') || '<span class="t2">—</span>';
       box.innerHTML = L.length ? `<div style="overflow-x:auto;"><table class="pr-tb pr-mine" data-no-sort data-no-page>
-          <colgroup><col style="width:12%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:14%"><col style="width:11%"><col style="width:7%"><col style="width:9%"><col style="width:9%"><col style="width:12%"><col style="width:64px"></colgroup>
-          <thead><tr><th>ชื่อโปร</th><th>ช่องทาง</th><th>วันเริ่ม</th><th>วันจบ</th><th>สินค้า</th><th>ของแถม</th><th class="num">ราคา</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>Feedback</th><th></th></tr></thead><tbody>`
+          <colgroup><col style="width:11%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:14%"><col style="width:10%"><col style="width:7%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:7%"><col style="width:64px"></colgroup>
+          <thead><tr><th>ชื่อโปร</th><th>ช่องทาง</th><th>วันเริ่ม</th><th>วันจบ</th><th>สินค้า</th><th>ของแถม</th><th class="num">ราคา</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>Feedback</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>`
         + L.map(r => { const st = ST[r.status] || [r.status, ''];
-          return `<tr><td><div class="t1">${esc(r.title)}</div><div class="t2">ส่งเมื่อ ${dTh(r.requested_at)}</div></td>
+          return `<tr><td><div class="t1">${esc(r.title)}</div></td>
             <td>${esc(r.channel || '')}</td>
             <td class="nw">${dTh(r.start_date)}</td><td class="nw">${r.end_date ? dTh(r.end_date) : '—'}</td>
             <td>${list(r.items)}</td><td>${list(r.gifts)}</td>
@@ -383,7 +387,9 @@
             <td class="ctr">${rkPill(r.rank)}</td>
             <td class="ctr"><span class="pr-pill ${st[1]}">${st[0]}</span>${r.decided_name ? `<div class="t2">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : ''}</td>
             <td style="white-space:normal;">${r.decision_note ? esc(r.decision_note) : '<span class="t2">—</span>'}</td>
-            <td class="ctr">${r.status === 'pending' ? `<button class="pr-btn ghost" data-cancel="${r.id}" style="padding:4px 10px;font-size:12px;">ยกเลิก</button>` : ''}</td></tr>`; }).join('') + '</tbody></table></div>'
+            <td class="nw">${dTh(r.requested_at)}</td>
+            <td class="ctr">${r.status === 'pending' ? `<button class="pr-btn ghost" data-cancel="${r.id}" style="padding:4px 10px;font-size:12px;">ยกเลิก</button>`
+              : r.status === 'cancelled' ? `<button class="pr-btn ghost" data-rm="${r.id}" style="padding:4px 10px;font-size:12px;color:var(--red,#dc2626);">ลบ</button>` : ''}</td></tr>`; }).join('') + '</tbody></table></div>'
         : '<div class="pr-empty">ยังไม่มีคำขอ</div>';
     } catch (e) { box.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; }
   }
