@@ -669,6 +669,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-tb td.tr-pc { color:var(--accent-text, var(--text)); font-weight:600; }
   
   .tr-tb tr.tr-gh { cursor:pointer; background:var(--row-sum); }
+  /* (2026-10-20) ตารางยอดขายแยกตามช่องทาง TikTok: ตัวเลขชิดขวา · กลุ่มคอลัมน์แอดมีเส้นคั่น */
+  #tblTtOrderChannel th, #tblTtOrderChannel td { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  #tblTtOrderChannel th:first-child, #tblTtOrderChannel td:first-child { text-align:left; }
+  #tblTtOrderChannel .tt-gl { border-left:1px solid var(--border); } #tblTtOrderChannel th.tt-ad { color:#b45309; }
+  body:not(.light-theme) #tblTtOrderChannel th.tt-ad { color:#fbbf24; }
   .tr-tb tr.tr-gh td { color:var(--text); font-weight:700; }
   .tr-tb tr.tr-gh:hover td { background:rgba(127,127,127,.08); }
   .tr-car { display:inline-block; width:14px; color:var(--text3); font-size:11px; transition:transform .15s; }
@@ -772,7 +777,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-n</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-o</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1442,14 +1447,14 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="card" style="margin-bottom:20px;">
           <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
           <div class="table-wrap">
-            <table id="tblTtOrderChannel">
-              <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
-              <tbody id="tbodyTtOrderChannel"><tr><td colspan="4" class="empty">กำลังโหลด...</td></tr></tbody>
+            <table id="tblTtOrderChannel" class="tt-oc" data-no-sort data-no-page>
+              <thead><tr><th>ช่องทาง</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน</th><th class="tt-gl tt-ad" data-tip="ยอดขายที่แอดพาไป ตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน และนับยอดทั้งไลฟ์ที่มีแอด) จึงสูงกว่ายอดขายจริงได้">ยอดขายจากแอด ⓘ</th><th class="tt-ad">ค่าแอด</th><th class="tt-ad" data-tip="ยอดขายจากแอด ÷ ค่าแอด (ตามที่ TikTok นับ)">ROI ⓘ</th><th class="tt-ad" data-tip="ค่าแอด ÷ ยอดขายจริงของช่องทางนั้น">%Ads ⓘ</th></tr></thead>
+              <tbody id="tbodyTtOrderChannel"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
             </table>
           </div>
         </div>
 
-      <div class="section-divider"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
+      <div class="section-divider" id="ttPromoDiv"><span>Promotion / SKU (รูปแบบที่ลูกค้าสั่งจริง)</span></div>
 
       <div class="card" style="margin-bottom:20px;">
         <div class="section-header">
@@ -3040,7 +3045,7 @@ function ensureTtApi() {
   if (_ttApiPromise) return _ttApiPromise;
   _ttApiPromise = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'ttapi.js?v=20261015a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.src = 'ttapi.js?v=20261020a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
     s.onload = () => res(window.ttApi);
     s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -3187,7 +3192,7 @@ function loadSalesJs() {
   if (window._salesJsP) return window._salesJsP;
   window._salesJsP = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'sales.js?v=20261020a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
+    s.src = 'sales.js?v=20261020b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
     s.onload = res;
     s.onerror = () => { window._salesJsP = null; rej(new Error('โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -3672,7 +3677,11 @@ async function renderTtHub() {
   if (!(await hubPrepare('tthub'))) return;
   const from = getDateValue('From'), to = getDateValue('To');
   // (2026-10-18) แม่แบบ 1 (sales.js) · TikTok มีร้านเดียว จึงไม่มีตารางรายร้าน — ใช้ตาราง "ยอดขายแยกตามช่องทาง" แทน (ออเดอร์ชุดเดียวกับแผงตัวเลข)
-  renderHubOverview('tthub', [ttFreeSampleTile(from, to)]);
+  renderHubOverview('tthub', [ttFreeSampleTile(from, to)]).then(() => {
+    // (2026-10-20) ตาราง "ยอดขายแยกตามช่องทาง" ย้ายไปอยู่ขวาของกราฟแนวโน้ม (แถวเดียวกัน)
+    const row = document.querySelector('#tthub-ov .ov-row'), card = document.getElementById('tblTtOrderChannel')?.closest('.card');
+    if (row && card && card.parentElement !== row) row.appendChild(card);
+  });
   ensureTtApi().then(api => { api.renderOrderChannel(from, to); api.renderTraffic(from, to); }).catch(e => console.warn('ttapi', e));
   renderPromotion('Tt', 'TikTok');
 }
