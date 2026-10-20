@@ -336,7 +336,7 @@
   body.light-theme .km-overlay { background: rgba(20,20,40,.25); }
   body.light-theme .side { background: #ffffff; }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261015a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261020b"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 </head>
 <body>
 
@@ -807,7 +807,7 @@ async function kidRename(p, oldKid, newKid) {
 }
 async function kidDelete(p, kid) {
   if ((p.kids||[]).length <= 1) { showToast('ลบไม่ได้ — สินค้าต้องมีอย่างน้อย 1 แถว (ถ้าจะเลิกขายให้เปลี่ยนสถานะเป็น Discontinued แทน)', true); return false }
-  if (!confirm(`ลบรหัส ${kid} ออกจาก ${p.parent_sku}?\nยอดขายเก่าที่จดไว้ใต้ ${p.parent_sku} ไม่หาย แต่ไฟล์ออเดอร์ใหม่ที่เขียน ${kid} จะ map ไม่เจอ`)) return false
+  if (!(await uiConfirm(`ลบรหัส ${kid} ออกจาก ${p.parent_sku}`, { text: `ยอดขายเก่าที่จดไว้ใต้ ${p.parent_sku} ไม่หาย แต่ไฟล์ออเดอร์ใหม่ที่เขียน ${kid} จะ map ไม่เจอ`, ok: 'ลบ', tone: 'bad' }))) return false
   const { error } = await DB.from('products').delete().eq('child_sku', kid)
   if (error) { showToast(`ลบไม่สำเร็จ: ${error.message}`, true); return false }
   p.kids = p.kids.filter(k => k !== kid); showToast(`ลบ ${kid} แล้ว`); return true
@@ -1257,7 +1257,7 @@ document.getElementById('tab-fbads').addEventListener('click', async e => {
   if (btn.dataset.act === 'rule-add') {
     const keyword = document.getElementById('faNewKw').value.trim(), grpTxt = document.getElementById('faNewSkuGroup').value.trim(), skus = grpTxt ? faParseSkus(grpTxt) : faParseSkus(document.getElementById('faNewSku').value), sort_order = +document.getElementById('faNewSort').value || 100, note = document.getElementById('faNewNote').value.trim() || null
     if (!keyword || !skus.length) { showToast('กรอกคำและ SKU ก่อน', true); return }
-    const bad = skus.filter(sk => !allProducts.some(p => p.parent_sku === sk)); if (bad.length && !confirm(`ไม่พบ SKU ${bad.join(', ')} ในตารางสินค้า — บันทึกต่อไหม?`)) return
+    const bad = skus.filter(sk => !allProducts.some(p => p.parent_sku === sk)); if (bad.length && !(await uiConfirm('ไม่พบ SKU ในตารางสินค้า', { text: `${bad.join(', ')} · บันทึกต่อไหม?`, ok: 'บันทึกต่อ' }))) return
     const { data, error } = await DB.from('fb_campaign_product_rules').insert({ keyword, parent_skus: skus, sort_order, note }).select().single()
     if (error) { showToast('เพิ่มไม่สำเร็จ: ' + error.message, true); return }
     faRules.push(data); faRules.sort((a, b) => a.sort_order - b.sort_order || a.id - b.id); renderFaRules()
@@ -1268,7 +1268,7 @@ document.getElementById('tab-fbads').addEventListener('click', async e => {
   }
   if (btn.dataset.act === 'rule-del') {
     const id = +btn.closest('tr').dataset.rid; const r = faRules.find(x => x.id === id)
-    if (!confirm(`ลบกฎ "${r?.keyword}"?`)) return
+    if (!(await uiConfirm('ลบกฎ', { text: r?.keyword || '', ok: 'ลบ', tone: 'bad' }))) return
     const { error } = await DB.from('fb_campaign_product_rules').delete().eq('id', id)
     if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, true); return }
     faRules = faRules.filter(x => x.id !== id); renderFaRules(); showToast('ลบกฎแล้ว')
@@ -1394,7 +1394,7 @@ async function pmSave(uid, patch, okMsg) {
 
 async function pmResetPassword(uid, reqId) {
   const u = pmUsers.find(x => x.user_id === uid); if (!u) return
-  const pw = prompt(`ตั้งรหัสผ่านใหม่ให้ ${u.display_name || u.email}\n(อย่างน้อย 6 ตัว — ตั้งเสร็จแจ้งรหัสให้เขาเอง)`)
+  const pw = await uiPrompt(`ตั้งรหัสผ่านใหม่ให้ ${u.display_name || u.email}`, { text: 'อย่างน้อย 6 ตัว · ตั้งเสร็จแจ้งรหัสให้เขาเอง', ok: 'บันทึก' })
   if (pw === null) return
   if (pw.length < 6) { showToast('รหัสผ่านต้องยาวอย่างน้อย 6 ตัว', true); return }
   try {
@@ -1426,11 +1426,11 @@ document.getElementById('tab-perms').addEventListener('click', async e => {
   }
   if (act === 'reset') return pmResetPassword(uid)
   if (act === 'toggle-active') {
-    if (u.is_active && !confirm(`ปิดใช้งาน ${u.display_name || u.email}? เขาจะเข้าหน้าไหนไม่ได้เลยจนกว่าจะเปิดใหม่`)) return
+    if (u.is_active && !(await uiConfirm(`ปิดใช้งาน ${u.display_name || u.email}`, { text: 'เขาจะเข้าหน้าไหนไม่ได้เลยจนกว่าจะเปิดใหม่', ok: 'ปิดใช้งาน', tone: 'bad' }))) return
     await pmSave(uid, { is_active: !u.is_active }); renderPmUsers(); return
   }
   if (act === 'delete') {
-    if (!confirm(`ลบบัญชี ${u.display_name || u.email} ทิ้งถาวร? (ถ้าแค่ไม่ให้เข้า ใช้ "ปิดใช้งาน" แทน)`)) return
+    if (!(await uiConfirm(`ลบบัญชี ${u.display_name || u.email}`, { text: 'ลบถาวร · ถ้าแค่ไม่ให้เข้า ใช้ "ปิดใช้งาน" แทน', ok: 'ลบ', tone: 'bad' }))) return
     try { await authAdmin('delete_user', uid); showToast('ลบบัญชีแล้ว'); loadPermsTab() } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message, true) }
   }
 })
@@ -1513,6 +1513,6 @@ init()
     window.addEventListener('storage', e => { if (e.key === 'deesay_theme') applyTheme(e.newValue === 'light'); });
   })();
 </script>
-<script src="ui.js?v=20261014c" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
+<script src="ui.js?v=20261020a" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
 </body>
 </html>
