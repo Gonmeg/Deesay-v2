@@ -62,7 +62,7 @@
 .ov-tbl th{font-size:12px;font-weight:500;color:var(--text3);text-align:right;padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
 .ov-tbl th:first-child,.ov-tbl td:first-child{text-align:left}
 .ov-tbl td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--row-border,var(--border));white-space:nowrap}
-.ov-tbl tr.ov-tot td{font-weight:700;background:var(--bg3);border-bottom:1px solid var(--border)}
+.ov-tbl tr.ov-tot td{font-weight:700;background:var(--row-sum);border-top:1px solid var(--row-sum-line);border-bottom:1px solid var(--row-sum-line)}
 .ov-tbl tr.ov-sub td{background:color-mix(in srgb,var(--bg3) 55%,var(--bg2));font-size:13px;color:var(--text2);border-bottom:0;padding-top:7px;padding-bottom:7px}
 .ov-tbl tr.ov-sub td:first-child{position:relative;padding-left:62px;max-width:380px;overflow:hidden;text-overflow:ellipsis}
 .ov-tbl tr.ov-sub td:first-child::before{content:"";position:absolute;left:37px;top:0;bottom:0;width:1px;background:var(--border)}
