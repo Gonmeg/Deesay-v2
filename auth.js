@@ -35,6 +35,7 @@ window.DEESAY_PAGES = [
   { id: 'adperf',       name: 'Ad Performance',        group: 'สินค้า / การตลาด' },
   { id: 'kol',          name: 'KOL',                   group: 'สินค้า / การตลาด' },
   { id: 'supply',       name: 'Supply Chain',          group: 'สินค้า / การตลาด' },
+  { id: 'products',     name: 'สินค้า & ราคา (แก้ได้เฉพาะคนที่มีสิทธิ์จัดการสินค้า)', group: 'สินค้า / การตลาด' },
   { id: 'promo',        name: 'ขอโปรโมชั่น',            group: 'สินค้า / การตลาด' },
   { id: 'exec',         name: 'ผู้บริหาร: อนุมัติโปร + ค่าธรรมเนียมช่องทาง (เห็นต้นทุน)', group: 'ผู้บริหาร' },
 ];
