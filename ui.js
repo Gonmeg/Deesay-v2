@@ -114,7 +114,7 @@
     tipEl.style.top = top + 'px';
     tipEl.style.left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)) + 'px';
   }
-  function showTip(t, text, img) {
+  function showTip(t, text, img, html) {
     if (!tipEl) { tipEl = document.createElement('div'); tipEl.className = 'ui-tip'; tipEl.setAttribute('role', 'tooltip'); }
     portal(tipEl); tipFor = t;
     // (2026-10-14) data-tip-img = ภาพตอนชี้เมาส์ (เช่น ภาพแอด / ปกคลิป) · ข้อความใน data-tip แสดงใต้ภาพ
@@ -125,11 +125,22 @@
       im.onerror = () => { im.replaceWith(Object.assign(document.createElement('div'), { className: 'ui-tip-noimg', textContent: 'โหลดภาพไม่ได้ (ลิงก์ภาพอาจหมดอายุ)' })); if (tipFor === t) placeTip(t); };
       im.src = img; tipEl.appendChild(im);
       if (text) { const c = document.createElement('div'); c.textContent = text; tipEl.appendChild(c); }
-    } else { tipEl.classList.remove('has-img'); tipEl.textContent = text; }
+    } else if (html) { tipEl.classList.remove('has-img'); tipEl.classList.add('is-html'); tipEl.innerHTML = text; }   // ⓘ แบบเดิม (เนื้อหาจากโค้ดเว็บเอง)
+    else { tipEl.classList.remove('has-img', 'is-html'); tipEl.textContent = text; }
+    if (!html) tipEl.classList.remove('is-html');
     placeTip(t);
     tipEl.classList.add('is-on');
   }
+  // (2026-10-20) ⓘ แบบเดิมที่ต้อง "คลิก" (.ads-info-wrap + กล่อง .ads-info-popover) → ชี้เมาส์แล้วขึ้นกล่องเดียวกับ data-tip ทั้งเว็บ
+  //   เฉพาะกล่องที่ปุ่มเป็นไอคอน ⓘ (กล่องที่เป็นปุ่มเลือก เช่น "เลือกสินค้า" ยังคลิกเหมือนเดิม)
+  function infoWrap(el) {
+    const w = el && el.closest && el.closest('.ads-info-wrap'); if (!w) return null;
+    const icon = [...w.children].find(c => c.tagName === 'SPAN' && c.textContent.trim() === 'ⓘ'); if (!icon) return null;
+    const p = w.querySelector('.ads-info-popover, [id^="tip-"]'); if (!p || p.contains(el)) return null;
+    const html = p.innerHTML.trim(); return html ? [w, html, null, true] : null;
+  }
   function tipTarget(e) {
+    const iw = infoWrap(e.target); if (iw) return iw;
     const t = e.target.closest && e.target.closest('[data-tip], [data-tip-img], [title], .ui-trunc');
     if (!t) return null;
     // (2026-10-14) title ของเบราว์เซอร์ (กล่องดำ) → ย้ายไปใช้กล่อง tooltip กลางหน้าตาเดียวกันทั้งเว็บ
@@ -144,8 +155,10 @@
     if (t.hasAttribute('data-tip')) return [t, t.getAttribute('data-tip')];
     return t.scrollWidth > t.clientWidth + 1 ? [t, t.textContent.trim()] : null;
   }
-  document.addEventListener('mouseover', e => { const r = tipTarget(e); if (!r) { if (tipFor && !tipFor.contains(e.target)) hideTip(); return; } if (r[0] !== tipFor) showTip(r[0], r[1], r[2]); });
-  document.addEventListener('focusin', e => { const r = tipTarget(e); if (r) showTip(r[0], r[1], r[2]); });
+  document.addEventListener('mouseover', e => { const r = tipTarget(e); if (!r) { if (tipFor && !tipFor.contains(e.target)) hideTip(); return; } if (r[0] !== tipFor) showTip(r[0], r[1], r[2], r[3]); });
+  // คลิก ⓘ แบบเดิม: ไม่เปิดกล่องลอยแบบเก่าแล้ว (กันค้าง / หน้าตาไม่เหมือนกัน) · แตะบนมือถือ = โชว์ tooltip เดียวกัน
+  document.addEventListener('click', e => { const r = infoWrap(e.target); if (!r) return; e.stopPropagation(); e.preventDefault(); if (tipFor === r[0]) hideTip(); else showTip(r[0], r[1], r[2], r[3]); }, true);
+  document.addEventListener('focusin', e => { const r = tipTarget(e); if (r) showTip(r[0], r[1], r[2], r[3]); });
   document.addEventListener('focusout', hideTip);
   addEventListener('scroll', hideTip, true);
 
