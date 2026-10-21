@@ -1,3 +1,4 @@
+// sales.js — (2026-10-21 b) หน้าภาพรวมรายช่องทาง: กลับเป็นกราฟบน ตารางล่าง (ยกเลิกวางคู่กัน)
 // sales.js — (2026-10-21 a) Facebook: การ์ด / กราฟ / แถวรวม "ค่า Ads" = Conversion + PR (เท่าหน้า Facebook Ads และหน้าแรก) · ROAS คิดจาก Conversion เท่านั้น · PR แยกแถวในตาราง
 // sales.js — (2026-10-20 a) หน้าภาพรวมรายช่องทาง: กราฟแนวโน้ม (ซ้าย) + ตารางแยกเพจ / ร้าน / ช่องทาง (ขวา) วางคู่กันใน .ov-row
 // sales.js — (2026-10-19 c) แถวย่อย: ไม่มีเส้นคั่น · พื้นเทาอ่อนทั้งกลุ่ม · เส้นนำสายบาง ๆ แบบผังต้นไม้
@@ -60,12 +61,8 @@
 .ov-leg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--text2)}
 .ov-leg i{display:inline-block;width:16px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .ov-chart{position:relative;height:280px}
-.ov-row{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:16px;align-items:stretch}
-.ov-row>.ov-card,.ov-row>.card{min-width:0;margin:0!important;display:flex;flex-direction:column}
-.ov-row .ov-chart{flex:1;min-height:280px}
-.ov-row .ov-tbl{min-width:0}
-.ov-row>.card .table-wrap{overflow-x:auto}
-@media (max-width:1250px){.ov-row{grid-template-columns:1fr}}
+.ov-row{display:flex;flex-direction:column;gap:16px}   /* (2026-10-21 b) กราฟบน ตารางล่าง */
+.ov-row>.ov-card{min-width:0}
 .ov-tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:860px}
 .ov-tbl th{font-size:12px;font-weight:500;color:var(--text3);text-align:right;padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
 .ov-tbl th:first-child,.ov-tbl td:first-child{text-align:left}
