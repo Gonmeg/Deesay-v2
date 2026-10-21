@@ -777,7 +777,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-b</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-c</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3192,7 +3192,7 @@ function loadSalesJs() {
   if (window._salesJsP) return window._salesJsP;
   window._salesJsP = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'sales.js?v=20261021a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
+    s.src = 'sales.js?v=20261021b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
     s.onload = res;
     s.onerror = () => { window._salesJsP = null; rej(new Error('โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -3677,11 +3677,7 @@ async function renderTtHub() {
   if (!(await hubPrepare('tthub'))) return;
   const from = getDateValue('From'), to = getDateValue('To');
   // (2026-10-18) แม่แบบ 1 (sales.js) · TikTok มีร้านเดียว จึงไม่มีตารางรายร้าน — ใช้ตาราง "ยอดขายแยกตามช่องทาง" แทน (ออเดอร์ชุดเดียวกับแผงตัวเลข)
-  renderHubOverview('tthub', [ttFreeSampleTile(from, to)]).then(() => {
-    // (2026-10-20) ตาราง "ยอดขายแยกตามช่องทาง" ย้ายไปอยู่ขวาของกราฟแนวโน้ม (แถวเดียวกัน)
-    const row = document.querySelector('#tthub-ov .ov-row'), card = document.getElementById('tblTtOrderChannel')?.closest('.card');
-    if (row && card && card.parentElement !== row) row.appendChild(card);
-  });
+  renderHubOverview('tthub', [ttFreeSampleTile(from, to)]);   // (2026-10-21) ตาราง "ยอดขายแยกตามช่องทาง" อยู่ใต้กราฟตามเดิม
   ensureTtApi().then(api => { api.renderOrderChannel(from, to); api.renderTraffic(from, to); }).catch(e => console.warn('ttapi', e));
   renderPromotion('Tt', 'TikTok');
 }
