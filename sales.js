@@ -1,3 +1,4 @@
+// sales.js — (2026-10-21 a) Facebook: การ์ด / กราฟ / แถวรวม "ค่า Ads" = Conversion + PR (เท่าหน้า Facebook Ads และหน้าแรก) · ROAS คิดจาก Conversion เท่านั้น · PR แยกแถวในตาราง
 // sales.js — (2026-10-20 a) หน้าภาพรวมรายช่องทาง: กราฟแนวโน้ม (ซ้าย) + ตารางแยกเพจ / ร้าน / ช่องทาง (ขวา) วางคู่กันใน .ov-row
 // sales.js — (2026-10-19 c) แถวย่อย: ไม่มีเส้นคั่น · พื้นเทาอ่อนทั้งกลุ่ม · เส้นนำสายบาง ๆ แบบผังต้นไม้
 // (2026-10-19) ตัวเลขในตารางไม่มีเส้นประแล้ว · แถวย่อยไม่มีพื้นสี (แถบสีช่องทางด้านซ้าย) · ช่วงก่อน 1 ม.ค. 69 ไม่เทียบ
@@ -103,7 +104,7 @@
     return { monthly, list, key: r => monthly ? r.date.slice(0, 7) : r.date };
   }
   // adsRows / capC ใช้เฉพาะหน้าภาพรวมรายช่องทาง: capC = วันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (ROAS คิดถึงวันนี้เท่านั้น)
-  function series(rows, B, adsRows, capC) {
+  function series(rows, B, adsRows, capC, prRows) {
     const idx = Object.fromEntries(B.list.map((b, i) => [b, i]));
     const z = () => B.list.map(() => 0);
     const o = { rev: z(), ord: z(), rx: z(), ox: z(), canc: z(), ch: {}, sub: {} };
@@ -120,6 +121,7 @@
     if (withAds) {
       adsRows.forEach(a => { const i = idx[B.key(a)]; if (i == null) return; o.ads[i] += a.ads; if (capC && a.date <= capC) o.adsC[i] += a.ads; });
       o.roas = o.revC.map((v, i) => o.adsC[i] > 0 ? v / o.adsC[i] : null);
+      (prRows || []).forEach(a => { const i = idx[B.key(a)]; if (i != null) o.ads[i] += a.ads; });   // PR: นับในค่า Ads แต่ไม่นับใน ROAS
     }
     return o;
   }
@@ -258,10 +260,10 @@
   const subVar = (keys, k) => { const i = keys.indexOf(k); return i >= 0 && i < SUB_PAL.length ? SUB_PAL[i] : '--text3'; };
   function hubTableHtml(I, c) {
     const { o } = I;
-    const { from, to, sub, R, P, rowsAll, total, totCmp, adsIn, totAds, SG } = c;
+    const { from, to, sub, R, P, rowsAll, total, totCmp, adsIn, totAds, SG } = c, totPR = c.totPR || 0;
     const cmpOf = cmpOfFn(R), cancCell = cancCellFn(from, to, P), ch = o.ch;
     let h = `<tr class="ov-tot"><td>รวม ${esc(ch)}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td>
-      <td>${fmt(totAds)}</td><td>${roasTxt(total.rev, totAds)}</td><td class="${totCmp.cls}">${totCmp.t}</td><td>${cancCell(ch, sub, total.cr, total.co, total.rev)}</td></tr>`;
+      <td>${fmt(totAds + totPR)}</td><td>${roasTxt(total.rev, totAds)}</td><td class="${totCmp.cls}">${totCmp.t}</td><td>${cancCell(ch, sub, total.cr, total.co, total.rev)}</td></tr>`;
     SG.keys.forEach(k => {
       // แถว "(ไม่ระบุ)" กดดูที่มา / เทียบช่วงก่อนไม่ได้ (ตัวกรองว่าง = ทั้งช่องทาง)
       const x = SG.g[k], t = tot(x.rows), named = k !== NOSUB && x.rows.length > 0, share = total.rev ? t.rev / total.rev : 0, cm = named ? cmpOf(ch, k) : { t: '—', cls: '' }, v = subVar(SG.keys, k);
@@ -274,6 +276,7 @@
         <td>${x.ads ? fmt(x.ads) : '<span class="ov-mute">0</span>'}</td><td>${x.ads ? roasTxt(t.rev, x.ads) : '<span class="ov-mute">—</span>'}</td>
         <td class="${cm.cls}">${cm.t}</td><td>${named ? cancCell(ch, k, t.cr, t.co, t.rev) : (t.cr ? fmt(t.cr) : '<span class="ov-mute">—</span>')}</td></tr>`;
     });
+    if (totPR > 0) h += `<tr class="ov-mute"><td><span class="ov-nm" data-tip="Ads ที่ไม่ผูกยอดขาย: boost โพสต์ KOL · เพจอื่น · บัญชี PR&#10;นับในค่า Ads รวม แต่ไม่นับใน ROAS">PR (KOL / เพจอื่น) <span class="ui-i">ⓘ</span></span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>${fmt(totPR)}</td><td>—</td><td>—</td><td>—</td></tr>`;
     return h;
   }
 
@@ -356,6 +359,9 @@
       const adsAll = o.ads || [];
       const adsBy = (f, t) => adsAll.filter(a => a.date >= f && a.date <= t && (!sub || a.subChannel === sub));
       const adsIn = adsBy(from, to), totAds = sumAds(adsIn);
+      // PR (Facebook): ไม่มีเพจ → นับเฉพาะตอนไม่ได้เลือกเพจ · อยู่ในค่า Ads รวม ไม่อยู่ใน ROAS
+      const prBy = (f, t) => sub ? [] : (o.adsPR || []).filter(a => a.date >= f && a.date <= t);
+      const prIn = prBy(from, to), totPR = sumAds(prIn);
       const AC = adsCapOf(adsAll, to);
       const salesCap = R.none ? dayAdd(from, -1) : R.ct;   // วันล่าสุดที่ยอดขายเข้าครบ
       const capC = AC.cap && AC.cap < salesCap ? AC.cap : salesCap;   // วันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ
@@ -364,15 +370,17 @@
         : `เทียบ ${dLbl(from)} – ${dLbl(capC)} กับ ${dLbl(pA.from)} – ${dLbl(pA.to)}` + (capC < to ? ` · ไม่นับตั้งแต่ ${dLbl(dayAdd(capC, 1))} เพราะยอดขาย / ค่า Ads ยังเข้าไม่ครบ` : '');
       const aCur = noneA ? 0 : sumAds(adsBy(from, capC)), aPrev = noneA ? 0 : sumAds(adsBy(pA.from, pA.to));
       const rCur = noneA ? 0 : sumOf(salesRows(from, capC, ch, sub), 'net_revenue'), rPrev = noneA ? 0 : sumOf(salesRows(pA.from, pA.to, ch, sub), 'net_revenue');
-      vals.ads = fmt(totAds);
+      vals.ads = fmt(totAds + totPR);
       const adsPct = total.rev > 0 && totAds > 0 ? `${pct1(totAds / total.rev)} ของยอดขาย` : '';
-      deltas.ads = noneA ? (adsPct || badgeW(0, 0, true, tipA)) : badgeW(aCur, aPrev, false, tipA) + (adsPct ? ' · ' + adsPct : '');
+      const prCur = noneA ? 0 : sumAds(prBy(from, capC)), prPrev = noneA ? 0 : sumAds(prBy(pA.from, pA.to));
+      const adsSub = totPR > 0 ? `Conversion ${fmt(totAds)} · PR ${fmt(totPR)}` : adsPct;
+      deltas.ads = noneA ? (adsSub || badgeW(0, 0, true, tipA)) : badgeW(aCur + prCur, aPrev + prPrev, false, tipA) + (adsSub ? ' · ' + adsSub : '');
       vals.roas = roasTxt(total.rev, totAds);
       deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ');
       // ค่า Ads ที่เข้าช้ากว่ายอดขาย → แจ้งที่ปุ่มสถานะของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
       // (2026-10-19) ค่า Ads แต่ละแหล่งมีถึงวันไหน แจ้งที่ Data Guard ของหน้า (Ads …) ที่เดียว ไม่ซ้ำที่นี่
       if (window.pageNote) window.pageNote(page, 'adsstale', null);
-      A = { adsAll, adsBy, adsIn, totAds, AC, capC, SG: subGroups(rowsAll, adsIn) };
+      A = { adsAll, adsBy, adsIn, totAds, prBy, prIn, totPR, AC, capC, SG: subGroups(rowsAll, adsIn) };
     }
 
     $(o, 'ovTiles').innerHTML = tilesHtml(I, { vals, deltas });
@@ -381,7 +389,7 @@
     if (o.hub) {
       const show = A.SG.keys.length > 1;   // ร้านเดียว (เช่น TikTok) = ซ้ำกับแผงตัวเลข → ไม่แสดงตาราง
       $(o, 'ovTblCard').style.display = show ? '' : 'none';
-      tbody.innerHTML = show ? hubTableHtml(I, { from, to, sub, R, P, rowsAll, total, totCmp, adsIn: A.adsIn, totAds: A.totAds, SG: A.SG }) : '';
+      tbody.innerHTML = show ? hubTableHtml(I, { from, to, sub, R, P, rowsAll, total, totCmp, adsIn: A.adsIn, totAds: A.totAds, totPR: A.totPR, SG: A.SG }) : '';
       const alt = root.querySelector('[data-ovmode="channel"]'); if (alt) alt.hidden = !show;
       if (!show && S.mode === 'channel') { S.mode = 'metric'; syncSeg(I); }
     } else tbody.innerHTML = rowsAll.length ? tableHtml(I, { from, to, ch, sub, R, P, rowsAll, total, totCmp }) : '<tr><td colspan="7" class="empty">ไม่มียอดขายในช่วงนี้</td></tr>';
@@ -389,7 +397,7 @@
     // กราฟ: รายวัน (≤ 1 เดือน) / รายเดือน · เส้นประหลังวันที่ยอดเข้าครบล่าสุด · เส้นประจาง = ช่วงก่อนที่ยาวเท่ากัน (เฉพาะรายวัน)
     const B = buckets(from, to);
     $(o, 'ovGrain').textContent = B.monthly ? 'รายเดือน' : 'รายวัน';
-    const cur = series(rowsAll, B, A && A.adsIn, A && A.capC);
+    const cur = series(rowsAll, B, A && A.adsIn, A && A.capC, A && A.prIn);
     // ช่วงที่ยอดยังเข้าไม่ครบ = เส้นประ: รายวัน = หลังวันที่ครบล่าสุด · รายเดือน = เดือนสุดท้าย (ยังไม่จบเดือน)
     const capIdx = !R.cut ? B.list.length : R.none ? -1 : B.monthly ? B.list.length - 2 : B.list.indexOf(R.ct);
     let dashAt = null, subLines = [];
@@ -406,7 +414,7 @@
     const showPrev = !B.monthly && !R.noPrev;
     if (showPrev) { const pr = getPrevPeriodRange(from, to);
       if (pr && pr.from) { const PB = { monthly: false, list: [], key: r => r.date }; let d = pr.from; while (d <= pr.to) { PB.list.push(d); d = dayAdd(d, 1); }
-        prv = series(salesRows(pr.from, pr.to, ch, sub), PB, A && A.adsBy(pr.from, pr.to), A && pr.to); prevLbl = PB.list.map(dLbl); } }
+        prv = series(salesRows(pr.from, pr.to, ch, sub), PB, A && A.adsBy(pr.from, pr.to), A && pr.to, A && A.prBy(pr.from, pr.to)); prevLbl = PB.list.map(dLbl); } }
     I.ctx = { B, cur, prv, cust: null, prvCust: null, capIdx, showPrev, prevLbl, dashAt, subLines };
     drawChart(I);
     if (window.UI && UI.fit) UI.fit();
