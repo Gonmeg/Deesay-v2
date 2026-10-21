@@ -677,9 +677,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblTtOrderChannel tr.tt-grp td { background:var(--bg3); }
   #tblTtOrderChannel td.tt-sub { padding-left:30px; color:var(--text2); }
   #tblTtOrderChannel .tt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
-  .tt-seg { display:inline-flex; background:var(--bg3); border-radius:9px; padding:3px; gap:2px; }
-  .tt-seg button { border:0; background:transparent; padding:5px 12px; font-size:12.5px; border-radius:7px; color:var(--text2); cursor:pointer; font-family:inherit; }
-  .tt-seg button.on { background:var(--bg2); color:var(--text); font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .tt-vi span { display:flex; flex-direction:column; gap:1px; }
+  .tt-vi small { color:var(--text3); font-size:11px; font-weight:400; }
   #tblTtOrderChannel .tt-gl { border-left:1px solid var(--border); } #tblTtOrderChannel th.tt-ad { color:#b45309; }
   body:not(.light-theme) #tblTtOrderChannel th.tt-ad { color:#fbbf24; }
   .tr-tb tr.tr-gh td { color:var(--text); font-weight:700; }
@@ -785,7 +784,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-d</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-e</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -911,9 +910,16 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <option value="">รวมทุกเพจ</option>
         </select>
       </div>
-      <div class="filter-group tt-filter" id="ttViewGroup" style="display:none;">
-        <span class="filter-label">มุมมอง</span>
-        <div class="tt-seg"><button type="button" data-v="order" class="on" onclick="ttSetView('order')">ยอดขายจริง</button><button type="button" data-v="tiktok" onclick="ttSetView('tiktok')">GMV ตาม TikTok</button></div>
+      <!-- (2026-10-21) มุมมองหน้าภาพรวม TikTok — ปุ่มแบบเดียวกับปุ่มวันที่ · กดซ้ำ / กดที่อื่น = ปิด -->
+      <div class="filter-group tt-filter" id="ttViewGroup" style="display:none;padding:0;background:transparent;border:none;">
+        <div class="ui-dd" id="ttViewDd">
+          <button class="ui-dd-btn" type="button" onclick="ttViewToggle(event)"><small>มุมมอง ·</small><b id="ttViewLbl" style="font-weight:600;">ยอดขายจริง</b></button>
+          <div class="ui-dd-menu" style="left:auto;right:0;min-width:280px;">
+            <div class="ui-dd-h">มุมมอง</div>
+            <button class="ui-dd-item tt-vi" type="button" data-v="order" aria-selected="true" onclick="ttSetView('order')"><span>ยอดขายจริง<small>ตามคำสั่งซื้อ · หักยกเลิก / คืนแล้ว</small></span></button>
+            <button class="ui-dd-item tt-vi" type="button" data-v="tiktok" aria-selected="false" onclick="ttSetView('tiktok')"><span>GMV ตาม TikTok<small>ตรงกับ Seller Center · ก่อนหักยกเลิก / คืน</small></span></button>
+          </div>
+        </div>
       </div>
       <div class="filter-group mm-filter" id="momentumModeGroup" style="display:none;">
         <span class="filter-label">เทียบกับ</span>
@@ -3058,7 +3064,7 @@ function ensureTtApi() {
   if (_ttApiPromise) return _ttApiPromise;
   _ttApiPromise = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'ttapi.js?v=20261021a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.src = 'ttapi.js?v=20261021b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
     s.onload = () => res(window.ttApi);
     s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -3695,8 +3701,19 @@ async function renderTtHub() {
   renderPromotion('Tt', 'TikTok');
 }
 // (2026-10-21) สลับมุมมองหน้าภาพรวม TikTok: ยอดขายจริง (ตามคำสั่งซื้อ) / GMV ตาม TikTok (ตรง Seller Center)
+function ttViewMark(v) {
+  document.querySelectorAll('#ttViewGroup [data-v]').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v ? 'true' : 'false'));
+  const l = document.getElementById('ttViewLbl'); if (l) l.textContent = v === 'tiktok' ? 'GMV ตาม TikTok' : 'ยอดขายจริง';
+}
+function ttViewToggle(e) {
+  if (e) e.stopPropagation();
+  const dd = document.getElementById('ttViewDd'); if (!dd) return;
+  const open = !dd.classList.contains('is-open'); dd.classList.toggle('is-open', open);
+  if (open && !ttViewToggle._bound) { ttViewToggle._bound = true;
+    document.addEventListener('click', ev => { const x = document.getElementById('ttViewDd'); if (x && !x.contains(ev.target)) x.classList.remove('is-open'); }); }
+}
 function ttSetView(v) {
-  document.querySelectorAll('#ttViewGroup [data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  ttViewMark(v); document.getElementById('ttViewDd')?.classList.remove('is-open');
   ensureTtApi().then(api => api.setView(v, getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
 }
 // ตัวอย่าง / รีวิวที่ส่งฟรี (ตัวเลขเดิมของการ์ดเดิม) — แสดงในแผงตัวเลขแบบดูอย่างเดียว ไม่เป็นเส้นในกราฟ
