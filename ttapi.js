@@ -1,3 +1,4 @@
+// ttapi.js (v20261021d) — การ์ด "เป้า GMV" รายเดือนในมุมมอง GMV ตาม TikTok (ตั้งเป้าที่ปุ่ม ✎ ตั้งเป้า)
 // ttapi.js (v20261021c) — เอาตาราง "ประสิทธิภาพแต่ละช่องทาง" ออก (ซ้ำกับมุมมอง GMV) · รอบ Live เรียงล่าสุดก่อน
 // ttapi.js (v20261021a) — หน้าภาพรวม TikTok 2 มุมมอง (ยอดขายจริง / GMV ตาม TikTok) · ตารางแบ่งแบบ TikTok (แอฟฟิลิเอต / ผู้ขาย × ไลฟ์ / วิดีโอ / การ์ดสินค้า) + ค่า Ads
 // ttapi.js (v20261006d) — (d) ตัวกรอง ทุกคน / KOL / Affiliate บนแถบด้านบน (dashboard: cpTypeOk) ใช้กับส่วน Commission + ป้ายประเภทหลังชื่อ (cpKindBadge)
@@ -108,7 +109,7 @@
       + tile('ค่า Ads', ads ? baht(ads) : '—', ads && gmv ? pctTxt(ads, gmv) + ' ของ GMV' : '', `ค่า Ads TikTok ทุกบัญชี ถึงวันเดียวกับ GMV${adTo ? ' (' + thDate(adTo) + ')' : ''}`)
       + tile('ROAS', ads ? (gmv / ads).toFixed(2) + 'x' : '—', 'GMV ÷ ค่า Ads', 'GMV ÷ ค่า Ads (ช่วงวันเดียวกัน)')
       + tile('GMV โดยอ้อม', fmt2(ind), gmv ? pctTxt(ind, gmv) + ' ของ GMV' : '', 'ยอดที่ลูกค้าซื้อหลังดูไลฟ์ / วิดีโอ แต่ไม่ได้ซื้อตรงจากคอนเทนต์นั้น (TikTok นับ)')
-      + `</section><div class="ov-card"><div class="ov-head"><div style="font-weight:700;font-size:15px;">แนวโน้ม GMV (TikTok)</div><div class="ov-leg" style="margin-left:auto;font-size:11.5px;color:var(--text2);"><span style="display:inline-block;width:14px;height:3px;background:#b8862f;border-radius:2px;vertical-align:middle;margin-right:5px;"></span>GMV<span style="display:inline-block;width:14px;height:3px;background:#dc2626;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px;"></span>ค่า Ads</div></div><div class="ov-chart"><canvas id="ttgmvChart"></canvas></div></div></div>`;
+      + `</section><div class="ov-card"><div class="ov-head"><div style="font-weight:700;font-size:15px;">แนวโน้ม GMV (TikTok)</div><div class="ov-leg" style="margin-left:auto;font-size:11.5px;color:var(--text2);"><span style="display:inline-block;width:14px;height:3px;background:#b8862f;border-radius:2px;vertical-align:middle;margin-right:5px;"></span>GMV<span style="display:inline-block;width:14px;height:3px;background:#dc2626;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px;"></span>ค่า Ads</div></div><div class="ov-chart"><canvas id="ttgmvChart"></canvas></div></div><div id="ttgmv-target"></div></div>`;
     // กราฟ: ช่วงไม่เกิน 1 เดือน = รายวัน · หลายเดือน = รายเดือน · ค่า Ads ถึงวันเดียวกับ GMV
     const daily = (V.daily || []).map(x => ({ d: x.d, v: num(x.gmv) }));
     const multi = (V.from || '').slice(0, 7) !== (V.to || '').slice(0, 7) && daily.length > 31;
@@ -127,6 +128,68 @@
       options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}  ${fmt(c.raw)}` } } },
         scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { display: false, beginAtZero: true }, y1: { display: false, beginAtZero: true, position: 'right' } } } });
+  }
+  // ===== (2026-10-21) เป้า GMV รายเดือน (มุมมอง GMV ตาม TikTok) — แอฟฟิลิเอต ก้อนเดียว · ผู้ขาย แยก ไลฟ์ / วิดีโอ / การ์ดสินค้า =====
+  //   เดือน = เดือนของวันสุดท้ายที่เลือก · ทำได้ = GMV ตาม TikTok ตั้งแต่วันที่ 1 ถึงวันล่าสุดที่ TikTok ปล่อย · ตั้งเป้าได้เฉพาะผู้ดูแล / คนที่แก้ KPI ได้
+  let _tgSeq = 0, _tg = null;
+  const TG = [['aff', 'แอฟฟิลิเอต'], ['sel_live', 'ไลฟ์'], ['sel_video', 'วิดีโอ'], ['sel_card', 'การ์ดสินค้า']];
+  async function renderTarget(to) {
+    const box2 = document.getElementById('ttgmv-target'); if (!box2) return;
+    const seq = ++_tgSeq;
+    try { _tg = await supaRpc('tt_gmv_target_page', { p_month: to }, true); } catch (e) { box2.innerHTML = ''; return; }
+    if (seq !== _tgSeq) return;
+    drawTarget();
+  }
+  function drawTarget() {
+    const box2 = document.getElementById('ttgmv-target'); if (!box2 || !_tg) return;
+    const P = _tg, T = P.target || {}, A = P.actual || {}, dim = +P.days_in_month || 30;
+    const TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const mm = P.month ? `${TH[+P.month.slice(5, 7) - 1]} ${(+P.month.slice(0, 4) + 543) % 100}` : '';
+    const el = P.latest ? Math.min(+P.latest.slice(8, 10), dim) : 0;   // วันที่มีข้อมูลแล้วในเดือนนี้
+    const pace = el / dim;
+    const has = TG.some(([k]) => T[k] != null && +T[k] > 0);
+    const dash = '<span style="color:var(--text3);">—</span>';
+    const colr = (pct) => pct >= pace ? 'var(--green, #16a34a)' : pct >= pace * 0.9 ? '#c9851a' : 'var(--red, #dc2626)';
+    const cells = (tgt, act, bar) => {
+      if (!(tgt > 0)) return `<td>${dash}</td><td>${baht(act)}</td><td>${dash}</td><td>${dash}</td><td>${el ? baht(act / el * dim) : dash}</td>`;
+      const pct = act / tgt, c = colr(pct), proj = el ? act / el * dim : 0;
+      const b = bar ? `<div style="position:relative;height:6px;background:var(--bg3);border-radius:4px;width:140px;margin:5px auto 0;"><div style="height:6px;border-radius:4px;width:${Math.min(pct, 1) * 100}%;background:${c};"></div><div style="position:absolute;top:-3px;left:${pace * 100}%;width:2px;height:12px;background:var(--text2);"></div></div>` : '';
+      return `<td>${baht(tgt)}</td><td>${baht(act)}</td><td><span style="color:${c};font-weight:700;">${(pct * 100).toFixed(1)}%</span>${b}</td><td>${baht(tgt * pace)}</td><td>${el ? baht(proj) + ` <span style="color:var(--text3);font-size:11px;">(${Math.round(proj / tgt * 100)}%)</span>` : dash}</td>`;
+    };
+    const selT = ['sel_live', 'sel_video', 'sel_card'].reduce((a, k) => a + (+T[k] || 0), 0), selA = ['sel_live', 'sel_video', 'sel_card'].reduce((a, k) => a + (+A[k] || 0), 0);
+    const totT = selT + (+T.aff || 0), totA = selA + (+A.aff || 0);
+    const rows = `<tr class="tt-grp"><td class="l"><span class="tt-dot" style="background:#14b8a6"></span><b>แอฟฟิลิเอต</b> <span style="color:var(--text3);font-size:11px;">(รวม)</span></td>${cells(+T.aff || 0, +A.aff || 0, true)}</tr>`
+      + `<tr class="tt-grp"><td class="l"><span class="tt-dot" style="background:#f5b942"></span><b>ผู้ขาย</b> <span style="color:var(--text3);font-size:11px;">(รวม)</span></td>${cells(selT, selA, false)}</tr>`
+      + ['sel_live', 'sel_video', 'sel_card'].map(k => `<tr><td class="l tt-sub">${TG.find(x => x[0] === k)[1]}</td>${cells(+T[k] || 0, +A[k] || 0, true)}</tr>`).join('')
+      + `<tr class="ui-sum"><td class="l">รวม</td>${cells(totT, totA, false)}</tr>`;
+    const edit = P.can_edit ? `<div class="ui-dd" id="ttTgDd" style="margin-left:auto;"><button class="ui-dd-btn" type="button" onclick="ttApi.tgToggle(event)" style="background:var(--bg3);">✎ ตั้งเป้า</button>
+        <div class="ui-dd-menu" style="left:auto;right:0;width:320px;padding:14px;" onclick="event.stopPropagation()">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">ตั้งเป้า GMV · ${mm}</div>
+          ${TG.map(([k, l], i) => `${i === 1 ? '<div style="border-top:1px solid var(--border);margin:8px 0;"></div>' : ''}<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:7px 0;font-size:12.5px;"><span>${i ? 'ผู้ขาย · ' + l : '<b>แอฟฟิลิเอต</b> (รวม)'}</span><input class="ls-input" inputmode="numeric" data-k="${k}" value="${T[k] != null ? fmt(Math.round(+T[k])) : ''}" oninput="ttApi.tgSum()" style="width:150px;text-align:right;padding:6px 10px;"></label>`).join('')}
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin:4px 0 0;"><span>ผู้ขาย (รวม)</span><span id="ttTgSel">${fmt(selT)}</span></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;"><button class="btn btn-ghost btn-sm" type="button" onclick="ttApi.tgToggle()">ยกเลิก</button><button class="btn btn-primary btn-sm" type="button" onclick="ttApi.tgSave()">บันทึก</button></div>
+        </div></div>` : '';
+    box2.innerHTML = `<div class="card" style="margin-top:16px;"><div class="section-header" style="display:flex;align-items:center;gap:10px;">
+        <div class="section-title">เป้า GMV ${mm}${iTip('เป้าทั้งเดือน เทียบ GMV ตาม TikTok (ตามแหล่งที่มาของคำสั่งซื้อ)\nทำได้ = ตั้งแต่วันที่ 1 ถึงวันล่าสุดที่ TikTok ปล่อยข้อมูล\nควรได้ถึงวันนี้ = เป้า × วันที่ผ่านไป ÷ วันทั้งเดือน (ขีดดำบนแถบ)\nคาดว่าสิ้นเดือน = ทำได้ ÷ วันที่ผ่านไป × วันทั้งเดือน\nสี: เขียว = ทันเป้า · ส้ม = ช้ากว่าไม่เกิน 10% · แดง = ช้ากว่ามาก')}</div>
+        <span style="font-size:11.5px;color:var(--text3);">${P.latest ? `ทำได้ถึง ${thDate(P.latest)} (${el} จาก ${dim} วัน)` : 'ยังไม่มีข้อมูลเดือนนี้'}${has ? '' : ' · ยังไม่ได้ตั้งเป้าเดือนนี้'}</span>${edit}</div>
+      <div class="table-wrap"><table id="tblTtTarget" data-no-sort data-no-page style="table-layout:fixed;width:100%;"><thead><tr><th class="l" style="text-align:left;width:210px;">ช่องทาง</th><th>เป้าทั้งเดือน</th><th>ทำได้</th><th>% ของเป้า</th><th>ควรได้ถึงวันนี้</th><th>คาดว่าสิ้นเดือน</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  }
+  function tgToggle(e) {
+    if (e) e.stopPropagation();
+    const dd = document.getElementById('ttTgDd'); if (!dd) return;
+    const open = !dd.classList.contains('is-open'); dd.classList.toggle('is-open', open);
+    if (open && !tgToggle._b) { tgToggle._b = true; document.addEventListener('click', ev => { const x = document.getElementById('ttTgDd'); if (x && !x.contains(ev.target)) x.classList.remove('is-open'); }); }
+  }
+  const tgVal = el => { const v = String(el.value || '').replace(/[^\d.]/g, ''); return v === '' ? '' : String(Math.round(+v)); };
+  function tgSum() {
+    const v = k => +tgVal(document.querySelector(`#ttTgDd input[data-k="${k}"]`) || {}) || 0;
+    const o = document.getElementById('ttTgSel'); if (o) o.textContent = fmt(v('sel_live') + v('sel_video') + v('sel_card'));
+  }
+  async function tgSave() {
+    if (!_tg) return;
+    const p = {}; document.querySelectorAll('#ttTgDd input[data-k]').forEach(el => { p[el.dataset.k] = tgVal(el); });
+    try { _tg = await supaRpc('tt_gmv_target_save', { p_month: _tg.month, p }, true); drawTarget(); }
+    catch (e) { if (typeof uiAlert === 'function') uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
   }
   async function renderOrderChannel(from, to) {
     const tb = document.getElementById('tbodyTtOrderChannel'); if (!tb) return;
@@ -183,7 +246,7 @@
       const t2 = tk ? fmt2(Object.values(ind).reduce((a, x) => a + (x || 0), 0)) : fmt(Object.values(ord).reduce((a, x) => a + num(x), 0));
       h += `<tr class="ui-sum"><td class="l">รวม</td><td>${money(tot)}</td><td>${t2}</td><td>100%</td><td class="tt-gl">${adCost ? baht(adCost) : dash}</td><td>${adCost && tot > 0 ? (tot / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${roiCost ? (adRev / roiCost).toFixed(2) + 'x' : dash}</td></tr>`;
       tb.innerHTML = tot || adCost ? h : '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
-      if (tk && V) renderGmvTop(V, adCost, adTo);
+      if (tk && V) { renderGmvTop(V, adCost, adTo); renderTarget(to); }
     } catch (e) { console.warn('tt channel grid', e); tb.innerHTML = `<tr><td colspan="9" class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; }
   }
   function setLiveScope(s) { _liveScope = s; if (typeof renderTtHub === 'function' && currentPage === 'tthub') renderTraffic(getDateValue('From'), getDateValue('To')); }
@@ -258,5 +321,5 @@
 
   function setCrType(t) { _crType = t; if (t !== 'all') _crCh = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
   function setCrCh(c) { _crCh = c; if (c !== 'all') _crType = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
-  window.ttApi = { renderTraffic, renderOrderChannel, renderCreatorExtras, setLiveScope, setCrType, setCrCh, setView, getView: () => _view };
+  window.ttApi = { renderTraffic, renderOrderChannel, renderCreatorExtras, setLiveScope, setCrType, setCrCh, setView, getView: () => _view, tgToggle, tgSum, tgSave };
 })();
