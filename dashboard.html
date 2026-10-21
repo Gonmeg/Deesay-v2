@@ -670,8 +670,16 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   
   .tr-tb tr.tr-gh { cursor:pointer; background:var(--row-sum); }
   /* (2026-10-20) ตารางยอดขายแยกตามช่องทาง TikTok: ตัวเลขชิดขวา · กลุ่มคอลัมน์แอดมีเส้นคั่น */
-  #tblTtOrderChannel th, #tblTtOrderChannel td { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
-  #tblTtOrderChannel th:first-child, #tblTtOrderChannel td:first-child { text-align:left; }
+  #tblTtOrderChannel { table-layout:fixed; width:100%; }
+  #tblTtOrderChannel th, #tblTtOrderChannel td { text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums; }   /* (2026-10-21) หัวคอลัมน์กับตัวเลขอยู่ตรงกัน */
+  #tblTtOrderChannel th.l, #tblTtOrderChannel td.l { text-align:left; width:210px; }
+  #tblTtOrderChannel th { white-space:normal; line-height:1.35; vertical-align:bottom; }
+  #tblTtOrderChannel tr.tt-grp td { background:var(--bg3); }
+  #tblTtOrderChannel td.tt-sub { padding-left:30px; color:var(--text2); }
+  #tblTtOrderChannel .tt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+  .tt-seg { display:inline-flex; background:var(--bg3); border-radius:9px; padding:3px; gap:2px; }
+  .tt-seg button { border:0; background:transparent; padding:5px 12px; font-size:12.5px; border-radius:7px; color:var(--text2); cursor:pointer; font-family:inherit; }
+  .tt-seg button.on { background:var(--bg2); color:var(--text); font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.12); }
   #tblTtOrderChannel .tt-gl { border-left:1px solid var(--border); } #tblTtOrderChannel th.tt-ad { color:#b45309; }
   body:not(.light-theme) #tblTtOrderChannel th.tt-ad { color:#fbbf24; }
   .tr-tb tr.tr-gh td { color:var(--text); font-weight:700; }
@@ -777,7 +785,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-c</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-d</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -902,6 +910,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <select id="fbePageSelect" onchange="fbeOnPageChange()">
           <option value="">รวมทุกเพจ</option>
         </select>
+      </div>
+      <div class="filter-group tt-filter" id="ttViewGroup" style="display:none;">
+        <span class="filter-label">มุมมอง</span>
+        <div class="tt-seg"><button type="button" data-v="order" class="on" onclick="ttSetView('order')">ยอดขายจริง</button><button type="button" data-v="tiktok" onclick="ttSetView('tiktok')">GMV ตาม TikTok</button></div>
       </div>
       <div class="filter-group mm-filter" id="momentumModeGroup" style="display:none;">
         <span class="filter-label">เทียบกับ</span>
@@ -1448,7 +1460,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div class="section-header"><div class="section-title">ยอดขายแยกตาม Order Channel</div></div>
           <div class="table-wrap">
             <table id="tblTtOrderChannel" class="tt-oc" data-no-sort data-no-page>
-              <thead><tr><th>ช่องทาง</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน</th><th class="tt-gl tt-ad">ค่า Ads</th><th class="tt-ad" data-tip="ROAS = ยอดขายจริง ÷ ค่า Ads (แบบเดียวกับการ์ดด้านบน)&#10;ยอดขายจริงของช่องทางรวมยอดที่ไม่ได้มาจาก Ads ด้วย">ROAS <span class="ui-i">ⓘ</span></th><th class="tt-ad" data-tip="%Ads = ค่า Ads ÷ ยอดขายจริงของช่องทาง">%Ads <span class="ui-i">ⓘ</span></th><th class="tt-gl tt-ad" data-tip="ยอดขายที่ TikTok บอกว่ามาจาก Ads&#10;TikTok นับตอนลูกค้ากดสั่ง (ก่อนหักยกเลิก / คืน) และนับยอดทั้งไลฟ์ที่มี Ads วิ่ง จึงสูงกว่ายอดขายจริงได้">ยอดขายจาก Ads (TikTok) <span class="ui-i">ⓘ</span></th><th class="tt-ad" data-tip="ROI ที่ TikTok คำนวณให้ = ยอดขายจาก Ads (TikTok) ÷ ค่า Ads&#10;รวมทั้งช่วงก่อนแล้วค่อยหาร (ไม่เอา ROI รายวันมาเฉลี่ย)&#10;แถวรวมไม่นับ Ads สร้างการรับรู้ เพราะ TikTok ไม่ผูกยอดขาย">ROI (TikTok) <span class="ui-i">ⓘ</span></th></tr></thead>
+              <thead><tr><th class="l">ช่องทาง</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน</th><th class="tt-gl tt-ad">ค่า Ads</th><th class="tt-ad">ROAS</th><th class="tt-ad">%Ads</th><th class="tt-gl tt-ad">ยอดขายจาก Ads (TikTok)</th><th class="tt-ad">ROI (TikTok)</th></tr></thead>
               <tbody id="tbodyTtOrderChannel"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
             </table>
           </div>
@@ -2852,6 +2864,7 @@ function showPage(page, lockCh, el) {
   document.querySelectorAll('.fba-filter').forEach(el => { el.style.display = (page === 'fbads') ? 'flex' : 'none'; });
   document.querySelectorAll('.kj-filter').forEach(el => { el.style.display = (page === 'kol') ? 'flex' : 'none'; });   // (2026-10-01) ตัวกรองหน้า KOL
   document.querySelectorAll('.mm-filter').forEach(el => { el.style.display = (page === 'skurev') ? 'flex' : 'none'; });
+  document.querySelectorAll('.tt-filter').forEach(el => { el.style.display = (page === 'tthub') ? 'flex' : 'none'; });   // (2026-10-21) มุมมอง ยอดขายจริง / GMV ตาม TikTok
   const cpGroup = document.getElementById('cpCreatorFilterGroup');
   if (cpGroup) cpGroup.style.display = (page === 'creatorperf') ? 'flex' : 'none';
   // หน้า KOL มีตัวเลือก ปี/เดือน ของตัวเอง (นับตามวันโพสต์) — ซ่อนช่วงวันที่ + ปุ่มค้นหาด้านบน
@@ -3045,7 +3058,7 @@ function ensureTtApi() {
   if (_ttApiPromise) return _ttApiPromise;
   _ttApiPromise = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'ttapi.js?v=20261020c';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.src = 'ttapi.js?v=20261021a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
     s.onload = () => res(window.ttApi);
     s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -3680,6 +3693,11 @@ async function renderTtHub() {
   renderHubOverview('tthub', [ttFreeSampleTile(from, to)]);   // (2026-10-21) ตาราง "ยอดขายแยกตามช่องทาง" อยู่ใต้กราฟตามเดิม
   ensureTtApi().then(api => { api.renderOrderChannel(from, to); api.renderTraffic(from, to); }).catch(e => console.warn('ttapi', e));
   renderPromotion('Tt', 'TikTok');
+}
+// (2026-10-21) สลับมุมมองหน้าภาพรวม TikTok: ยอดขายจริง (ตามคำสั่งซื้อ) / GMV ตาม TikTok (ตรง Seller Center)
+function ttSetView(v) {
+  document.querySelectorAll('#ttViewGroup [data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  ensureTtApi().then(api => api.setView(v, getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
 }
 // ตัวอย่าง / รีวิวที่ส่งฟรี (ตัวเลขเดิมของการ์ดเดิม) — แสดงในแผงตัวเลขแบบดูอย่างเดียว ไม่เป็นเส้นในกราฟ
 function ttFreeSampleTile(from, to) {
