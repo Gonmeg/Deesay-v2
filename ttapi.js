@@ -1,3 +1,4 @@
+// ttapi.js (v20261021a) — หน้าภาพรวม TikTok 2 มุมมอง (ยอดขายจริง / GMV ตาม TikTok) · ตารางแบ่งแบบ TikTok (แอฟฟิลิเอต / ผู้ขาย × ไลฟ์ / วิดีโอ / การ์ดสินค้า) + ค่า Ads
 // ttapi.js (v20261006d) — (d) ตัวกรอง ทุกคน / KOL / Affiliate บนแถบด้านบน (dashboard: cpTypeOk) ใช้กับส่วน Commission + ป้ายประเภทหลังชื่อ (cpKindBadge)
 // ttapi.js (v20261006c) — มุมมองใหม่จาก TikTok Shop API · โหลดครั้งแรกที่เปิดหน้าภาพรวม TikTok / Creator Performance
 //   ภาพรวม TikTok  → ตาราง "ยอดขายแยกตามช่องทาง" จาก API (แทนช่อง Order Channel ในไฟล์) · ทราฟฟิกร้าน (Impression → เข้าชม → ยอด) · ผลงานรายรอบ Live
@@ -79,38 +80,116 @@
       if (seq === _trSeq) el.querySelector('#ttapi-tr-kpis').innerHTML = `<div class="error-banner" style="display:block;">โหลดทราฟฟิกร้าน TikTok ไม่สำเร็จ: ${esc(e.message)}</div>`;
     }
   }
-  // ยอดขายแยกตามช่องทาง จาก API: ครีเอเตอร์ = ตาม Commission ที่ TikTok จ่าย · บัญชีร้าน Live / คลิป = TikTok Analytics · หน้าสินค้า = ส่วนที่เหลือ
-  let _ocSeq = 0;
+  // ===== (2026-10-21) หน้าภาพรวม TikTok: 2 มุมมอง (ปุ่ม "มุมมอง" บนแถบด้านบน) =====
+  //   order  = ยอดขายจริงตามคำสั่งซื้อ (หักยกเลิก / คืน) — การ์ด / กราฟ จาก sales.js เหมือนเดิม · ตาราง = tt_channel_grid
+  //   tiktok = GMV ตามที่ TikTok นับ (Seller Center › รายละเอียด GMV › ตามแหล่งที่มาของคำสั่งซื้อ) — การ์ด / กราฟ / ตาราง จาก tt_gmv_view
+  //   ตารางทั้ง 2 มุมมองแบ่งแบบเดียวกับ TikTok: แอฟฟิลิเอต / ผู้ขาย × ไลฟ์ / วิดีโอ / การ์ดสินค้า + ค่า Ads (tt_channel_ads)
+  let _ocSeq = 0, _view = 'order', _gmvChart = null;
+  const fmt2 = v => num(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const iTip = t => ` <span class="ui-i" data-tip="${esc(t)}">ⓘ</span>`;
+  const thTip = (label, t) => `${label}${t ? iTip(t) : ''}`;
+  const AD_KEY = { 'Live (บัญชีร้าน)': 'sel.live', 'คลิป (บัญชีร้าน)': 'sel.video', 'หน้าสินค้า': 'sel.card', 'คลิป (ครีเอเตอร์)': 'aff.video', 'Ads สร้างการรับรู้': 'aw' };
+  const GRP = [['aff', 'แอฟฟิลิเอต', '#14b8a6'], ['sel', 'ผู้ขาย', '#f5b942']];
+  const TYP = [['live', 'ไลฟ์'], ['video', 'วิดีโอ'], ['card', 'การ์ดสินค้า']];
+  const thDate = d => { const x = new Date(d + 'T00:00:00'); return x.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }); };
+  function applyView() {
+    const ov = document.getElementById('tthub-ov'); if (ov) ov.style.display = _view === 'tiktok' ? 'none' : '';
+    let g = document.getElementById('ttgmv-ov');
+    if (!g && ov) { g = document.createElement('div'); g.id = 'ttgmv-ov'; g.style.marginBottom = '20px'; ov.parentNode.insertBefore(g, ov); }
+    if (g) g.style.display = _view === 'tiktok' ? '' : 'none';
+    document.querySelectorAll('#ttViewGroup [data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === _view));
+  }
+  function setView(v, from, to) { _view = v === 'tiktok' ? 'tiktok' : 'order'; applyView(); renderOrderChannel(from, to); }
+  // การ์ด + กราฟ ของมุมมอง TikTok (หน้าตาแบบเดียวกับแม่แบบ 1)
+  function renderGmvTop(V, ads, adTo) {
+    const g = document.getElementById('ttgmv-ov'); if (!g) return;
+    const gmv = num(V.gmv), ind = num(V.aff_live_i) + num(V.aff_video_i) + num(V.sel_live_i) + num(V.sel_video_i);
+    const capNote = V.latest_date && V.to > V.latest_date ? `ข้อมูลถึง ${thDate(V.latest_date)}` : 'ตามที่ TikTok นับ';
+    const tile = (l, v, d, t) => `<div class="ui-metric is-static"><span class="ui-metric-l">${l}${t ? iTip(t) : ''}</span><span class="ui-metric-v" data-fit>${v}</span><span class="ui-metric-d">${d || '&nbsp;'}</span></div>`;
+    g.innerHTML = `<div class="ov"><section class="ui-metrics">`
+      + tile('GMV', fmt2(gmv), capNote, 'GMV ตามที่ TikTok นับ ก่อนหักยกเลิก / คืน · ตรงกับ Seller Center\nTikTok ปล่อยข้อมูลให้ API ช้าราว 2 วัน')
+      + tile('คำสั่งซื้อ', fmt(num(V.orders)), '', 'จำนวนคำสั่งซื้อตามที่ TikTok นับ')
+      + tile('สินค้าที่ขายได้', fmt(num(V.items)), '', 'จำนวนชิ้นตามที่ TikTok นับ')
+      + tile('ค่า Ads', ads ? baht(ads) : '—', ads && gmv ? pctTxt(ads, gmv) + ' ของ GMV' : '', `ค่า Ads TikTok ทุกบัญชี ถึงวันเดียวกับ GMV${adTo ? ' (' + thDate(adTo) + ')' : ''}`)
+      + tile('ROAS', ads ? (gmv / ads).toFixed(2) + 'x' : '—', 'GMV ÷ ค่า Ads', 'GMV ÷ ค่า Ads (ช่วงวันเดียวกัน)')
+      + tile('GMV โดยอ้อม', fmt2(ind), gmv ? pctTxt(ind, gmv) + ' ของ GMV' : '', 'ยอดที่ลูกค้าซื้อหลังดูไลฟ์ / วิดีโอ แต่ไม่ได้ซื้อตรงจากคอนเทนต์นั้น (TikTok นับ)')
+      + `</section><div class="ov-card"><div class="ov-head"><div style="font-weight:700;font-size:15px;">แนวโน้ม GMV (TikTok)</div><div class="ov-leg" style="margin-left:auto;font-size:11.5px;color:var(--text2);"><span style="display:inline-block;width:14px;height:3px;background:#b8862f;border-radius:2px;vertical-align:middle;margin-right:5px;"></span>GMV<span style="display:inline-block;width:14px;height:3px;background:#dc2626;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px;"></span>ค่า Ads</div></div><div class="ov-chart"><canvas id="ttgmvChart"></canvas></div></div></div>`;
+    // กราฟ: ช่วงไม่เกิน 1 เดือน = รายวัน · หลายเดือน = รายเดือน · ค่า Ads ถึงวันเดียวกับ GMV
+    const daily = (V.daily || []).map(x => ({ d: x.d, v: num(x.gmv) }));
+    const multi = (V.from || '').slice(0, 7) !== (V.to || '').slice(0, 7) && daily.length > 31;
+    const key = d => multi ? d.slice(0, 7) : d;
+    const keys = [...new Set(daily.map(x => key(x.d)))];
+    const gm = {}, am = {}; daily.forEach(x => { gm[key(x.d)] = (gm[key(x.d)] || 0) + x.v; });
+    (typeof adRawData !== 'undefined' ? adRawData : []).forEach(a => { if (a.channel === 'TikTok' && a.date >= V.from && a.date <= (adTo || V.to)) { const k = key(a.date); if (k in gm) am[k] = (am[k] || 0) + (+a.ads || 0); } });
+    const TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const lbl = k => multi ? `${TH[+k.slice(5, 7) - 1]} ${(+k.slice(0, 4) + 543) % 100}` : `${+k.slice(8, 10)} ${TH[+k.slice(5, 7) - 1]}`;
+    const cv = document.getElementById('ttgmvChart'); if (!cv || !window.Chart) return;
+    if (_gmvChart) { try { _gmvChart.destroy(); } catch (e) {} }
+    const css = getComputedStyle(document.body), grid = css.getPropertyValue('--border') || '#e5e7eb', tx = css.getPropertyValue('--text3') || '#9ca3af';
+    _gmvChart = new Chart(cv, { type: 'line', data: { labels: keys.map(lbl), datasets: [
+        { label: 'GMV', data: keys.map(k => Math.round(gm[k] || 0)), borderColor: '#b8862f', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y' },
+        { label: 'ค่า Ads', data: keys.map(k => Math.round(am[k] || 0)), borderColor: '#dc2626', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y1' }] },
+      options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}  ${fmt(c.raw)}` } } },
+        scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { display: false, beginAtZero: true }, y1: { display: false, beginAtZero: true, position: 'right' } } } });
+  }
   async function renderOrderChannel(from, to) {
-    // (2026-10-15) ใช้ออเดอร์ชุดเดียวกับการ์ดยอดขาย (ตัดยกเลิก / คืน + ลดหนี้) → รวมทุกแถวเท่าการ์ดยอดขายเสมอ
-    //   เดิมใช้ยอดจาก API แยกชุด ทำให้รวมไม่ตรงการ์ด และ "หน้าสินค้า" กลายเป็นส่วนที่เหลือที่ผิดเพี้ยน
     const tb = document.getElementById('tbodyTtOrderChannel'); if (!tb) return;
-    const seq = ++_ocSeq;
-    const card = tb.closest('.card'), title = card && card.querySelector('.section-title');
-    if (title && title.dataset.api !== '2') { title.dataset.api = '2'; title.innerHTML = 'ยอดขายแยกตามช่องทาง ' + info('ttapi-oc-info', '<b>ที่มา:</b> ออเดอร์ชุดเดียวกับการ์ดยอดขาย (ตัดยกเลิก / คืนสินค้าแล้ว) · รวมทุกแถวเท่ายอดขายในการ์ดเสมอ<br><b>วิธีแบ่ง:</b> ตามช่องทางที่ลูกค้าซื้อในออเดอร์ · <b>ครีเอเตอร์</b> = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · <b>บัญชีร้าน</b> = deesaythailand และช่องรอง<br><b>ลดหนี้ (CN)</b> = ยอดลดหนี้ตามบัญชี ที่หักจากยอดขายรวม'); }
+    const seq = ++_ocSeq; applyView();
+    const tbl = tb.closest('table'), card = tb.closest('.card'), title = card && card.querySelector('.section-title');
+    const tk = _view === 'tiktok';
+    if (title) title.innerHTML = tk
+      ? 'GMV แยกตามแหล่งที่มาของคำสั่งซื้อ' + iTip('ตัวเลขชุดเดียวกับ TikTok Seller Center › รายละเอียด GMV › ตามแหล่งที่มาของคำสั่งซื้อ\nGMV ก่อนหักยกเลิก / คืน · ไม่ใช้รวมกับยอดขายช่องทางอื่น')
+      : 'ยอดขายแยกตามช่องทาง' + iTip('ยอดขายจริงตามคำสั่งซื้อ (หักยกเลิก / คืนแล้ว) · ชุดเดียวกับการ์ดยอดขาย รวมทุกแถวเท่าการ์ดเสมอ\nแบ่งแบบเดียวกับ TikTok: แอฟฟิลิเอต = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · ผู้ขาย = บัญชีร้าน\nลดหนี้ (CN) = ยอดลดหนี้ตามบัญชี');
+    if (tbl && tbl.tHead) tbl.tHead.innerHTML = `<tr><th class="l">ช่องทาง</th>`
+      + (tk ? `<th>${thTip('GMV', 'GMV ตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) = GMV ตรง + GMV โดยอ้อม')}</th><th>${thTip('GMV โดยอ้อม', 'ยอดที่ลูกค้าซื้อหลังดูไลฟ์ / วิดีโอ แต่ไม่ได้ซื้อตรงจากคอนเทนต์นั้น')}</th>`
+            : `<th>${thTip('ยอดขาย', 'ยอดขายจริง หักยกเลิก / คืนแล้ว')}</th><th>ออเดอร์</th>`)
+      + `<th>สัดส่วน</th><th class="tt-gl tt-ad">ค่า Ads</th><th class="tt-ad">${thTip('ROAS', tk ? 'GMV ÷ ค่า Ads (ค่า Ads ถึงวันเดียวกับ GMV)' : 'ยอดขายจริง ÷ ค่า Ads')}</th><th class="tt-ad">${thTip('%Ads', tk ? 'ค่า Ads ÷ GMV' : 'ค่า Ads ÷ ยอดขายจริง')}</th>`
+      + `<th class="tt-gl tt-ad">${thTip('ยอดขายจาก Ads (TikTok)', 'ยอดขายที่ TikTok บอกว่ามาจาก Ads\nTikTok นับตอนลูกค้ากดสั่ง (ก่อนหักยกเลิก / คืน) และนับยอดทั้งไลฟ์ที่มี Ads วิ่ง')}</th><th class="tt-ad">${thTip('ROI (TikTok)', 'ROI ที่ TikTok คำนวณ = ยอดขายจาก Ads (TikTok) ÷ ค่า Ads\nแถวรวมไม่นับ Ads สร้างการรับรู้')}</th></tr>`;
     try {
-      // (2026-10-20) + ค่า Ads / ROAS / %Ads / ยอดขายจาก Ads (ตาม TikTok) แยกตามช่องทาง (tt_channel_ads)
-      //   ROAS = ยอดขายจริง ÷ ค่า Ads (แบบเดียวกับการ์ด → แถวรวม = ROAS ในการ์ด) · ยอดขายจาก Ads = ตัวเลขที่ TikTok นับ ไว้ดูประกอบ
-      const [rows, adRows] = await Promise.all([supaRpc('tt_channel_split', { p_from: from, p_to: to }, true), supaRpc('tt_channel_ads', { p_from: from, p_to: to }, true).catch(() => [])]);
+      let C = {}, ord = {}, ind = {}, est = {}, adTo = to, V = null;
+      if (tk) {
+        V = await supaRpc('tt_gmv_view', { p_from: from, p_to: to }, true);
+        adTo = V && V.latest_date && V.latest_date < to ? V.latest_date : to;
+        const m = { 'aff.live': [V.aff_live_d, V.aff_live_i], 'aff.video': [V.aff_video_d, V.aff_video_i], 'aff.card': [V.aff_card, null], 'sel.live': [V.sel_live_d, V.sel_live_i], 'sel.video': [V.sel_video_d, V.sel_video_i], 'sel.card': [V.sel_card, null] };
+        Object.entries(m).forEach(([k, [d, i]]) => { C[k] = num(d) + num(i); ind[k] = i == null ? null : num(i); });
+      } else {
+        const rows = await supaRpc('tt_channel_grid', { p_from: from, p_to: to }, true);
+        (rows || []).forEach(r => { const k = r.grp + '.' + r.typ; C[k] = num(r.revenue); ord[k] = num(r.orders); est[k] = !!r.est; });
+      }
+      const adRows = adTo >= from ? await supaRpc('tt_channel_ads', { p_from: from, p_to: adTo }, true).catch(() => []) : [];
       if (seq !== _ocSeq) return;
-      const AD = {}; (adRows || []).forEach(a => { AD[a.label] = { cost: num(a.ad_cost), rev: a.ad_rev == null ? null : num(a.ad_rev) }; });
-      const list = rows.map(r => [r.label, { rev: num(r.revenue), ord: num(r.orders), sort: +r.sort }]).sort((a, b) => a[1].sort - b[1].sort || b[1].rev - a[1].rev);
-      const tot = list.reduce((a, [, g]) => a + g.rev, 0);
+      const AD = {}; (adRows || []).forEach(a => { const k = AD_KEY[a.label]; if (k) AD[k] = { cost: num(a.ad_cost), rev: a.ad_rev == null ? null : num(a.ad_rev) }; });
       const dash = '<span style="color:var(--text3);">—</span>';
+      const money = v => tk ? fmt2(v) : baht(v);
       const adCells = (sales, a) => {
         if (!a || !(a.cost > 0)) return `<td class="tt-gl">${dash}</td><td>${dash}</td><td>${dash}</td><td class="tt-gl">${a && a.rev ? baht(a.rev) : dash}</td><td>${dash}</td>`;
-        const tiny = sales > 0 && a.cost / sales < 0.01;   // ค่า Ads ไม่ถึง 1% ของยอด → ROAS สูงเพราะยอดเกือบทั้งหมดไม่ได้มาจาก Ads
-        return `<td class="tt-gl">${baht(a.cost)}</td><td${tiny ? ' style="color:var(--text3);" data-tip="ค่า Ads ไม่ถึง 1% ของยอดขายช่องทางนี้ ยอดเกือบทั้งหมดไม่ได้มาจาก Ads"' : ''}>${sales > 0 ? (sales / a.cost).toFixed(2) + 'x' : dash}</td><td>${sales > 0 ? pctTxt(a.cost, sales) : dash}</td><td class="tt-gl">${a.rev == null ? dash : baht(a.rev)}</td><td>${a.rev == null ? dash : (a.rev / a.cost).toFixed(2) + 'x'}</td>`;   // ROI ที่ TikTok คำนวณ = ยอดจาก Ads ÷ ค่า Ads
+        return `<td class="tt-gl">${baht(a.cost)}</td><td>${sales > 0 ? (sales / a.cost).toFixed(2) + 'x' : dash}</td><td>${sales > 0 ? pctTxt(a.cost, sales) : dash}</td><td class="tt-gl">${a.rev == null ? dash : baht(a.rev)}</td><td>${a.rev == null ? dash : (a.rev / a.cost).toFixed(2) + 'x'}</td>`;
       };
-      const used = new Set(list.map(([k]) => k));
-      const extra = Object.entries(AD).filter(([k]) => !used.has(k));   // แอดที่ไม่ผูกช่องทางขาย เช่น แอดสร้างการรับรู้
+      const sumAd = keys => keys.reduce((o, k) => { const a = AD[k]; if (a) { o.cost += a.cost; if (a.rev != null) o.rev = (o.rev || 0) + a.rev; } return o; }, { cost: 0, rev: null });
+      const cn = num(C['cn.cn']);
+      const tot = GRP.reduce((t, [g]) => t + TYP.reduce((a, [ty]) => a + num(C[g + '.' + ty]), 0), 0) + cn;
+      const estTip = 'ตั้งแต่ออเดอร์มาจาก API (ต.ค. 69) ออเดอร์ไม่บอกว่ามาจากคลิปร้านหรือการ์ดสินค้า · แบ่งยอดรายวันตามสัดส่วนที่ TikTok บอก (ผู้ขาย · วิดีโอ : ผู้ขาย · การ์ดสินค้า) · ยอดรวมผู้ขายยังตรง';
+      let h = '';
+      GRP.forEach(([g, gname, color]) => {
+        const keys = TYP.map(([ty]) => g + '.' + ty), gv = keys.reduce((a, k) => a + num(C[k]), 0);
+        const g2 = tk ? keys.reduce((a, k) => a + (ind[k] || 0), 0) : keys.reduce((a, k) => a + num(ord[k]), 0);
+        h += `<tr class="tt-grp"><td class="l"><span class="tt-dot" style="background:${color}"></span><b>${gname}</b></td><td><b>${money(gv)}</b></td><td><b>${tk ? fmt2(g2) : fmt(g2)}</b></td><td><b>${pctTxt(gv, tot)}</b></td>${adCells(gv, sumAd(keys))}</tr>`;
+        TYP.forEach(([ty, tname]) => {
+          const k = g + '.' + ty, v = num(C[k]), e = !tk && est[k];
+          const c2 = tk ? (ind[k] == null ? dash : fmt2(ind[k])) : (ord[k] ? fmt(ord[k]) : dash);
+          h += `<tr><td class="l tt-sub">${tname}${e ? ` <span data-tip="${esc(estTip)}" style="color:var(--text3);">≈</span>` : ''}</td><td>${money(v)}</td><td>${c2}</td><td>${pctTxt(v, tot)}</td>${adCells(v, AD[k])}</tr>`;
+        });
+      });
+      if (!tk && cn) h += `<tr style="color:var(--text3);"><td class="l">ลดหนี้ (CN)</td><td>${baht(cn)}</td><td>${dash}</td><td>${pctTxt(cn, tot)}</td>${adCells(0, null)}</tr>`;
+      if (AD.aw) h += `<tr style="color:var(--text3);"><td class="l">Ads สร้างการรับรู้${iTip('Ads แบบ Reach / Video views / Brand ที่ไม่ผูกกับยอดขาย · แยกแถวไว้ ไม่ให้ ROAS ของช่องทางอื่นเพี้ยน')}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>${adCells(0, { cost: AD.aw.cost, rev: null })}</tr>`;
       const adCost = Object.values(AD).reduce((a, x) => a + x.cost, 0), adRev = Object.values(AD).reduce((a, x) => a + (x.rev || 0), 0);
-      const roiCost = Object.values(AD).filter(x => x.rev != null).reduce((a, x) => a + x.cost, 0);   // ROI รวมของ TikTok: ไม่นับ Ads ที่ไม่ผูกยอดขาย
-      tb.innerHTML = list.length ? list.map(([k, g]) => `<tr${g.sort === 2 ? ' style="color:var(--text3);"' : ''}><td>${k}</td><td>${baht(g.rev)}</td><td>${g.ord ? fmt(g.ord) : '—'}</td><td>${pctTxt(g.rev, tot)}</td>${adCells(g.rev, AD[k])}</tr>`).join('')
-        + extra.map(([k, a]) => `<tr style="color:var(--text3);"><td>${esc(k)} ${info('ttapi-oc-aw-' + k.length, 'Ads แบบ Reach / Video views / Brand ที่ไม่ผูกกับยอดขาย · แยกแถวไว้ ไม่ให้ ROAS ของช่องทางอื่นเพี้ยน')}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>${adCells(0, { cost: a.cost, rev: a.rev })}</tr>`).join('')
-        + `<tr class="ui-sum"><td>รวม</td><td>${baht(tot)}</td><td>${fmt(list.reduce((a, [, g]) => a + g.ord, 0))}</td><td>100%</td><td class="tt-gl">${adCost ? baht(adCost) : dash}</td><td>${adCost && tot > 0 ? (tot / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${roiCost ? (adRev / roiCost).toFixed(2) + 'x' : dash}</td></tr>`
-        : '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
-    } catch (e) { console.warn('tt channel split', e); }
+      const roiCost = Object.values(AD).filter(x => x.rev != null).reduce((a, x) => a + x.cost, 0);
+      const t2 = tk ? fmt2(Object.values(ind).reduce((a, x) => a + (x || 0), 0)) : fmt(Object.values(ord).reduce((a, x) => a + num(x), 0));
+      h += `<tr class="ui-sum"><td class="l">รวม</td><td>${money(tot)}</td><td>${t2}</td><td>100%</td><td class="tt-gl">${adCost ? baht(adCost) : dash}</td><td>${adCost && tot > 0 ? (tot / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${roiCost ? (adRev / roiCost).toFixed(2) + 'x' : dash}</td></tr>`;
+      tb.innerHTML = tot || adCost ? h : '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
+      if (tk && V) renderGmvTop(V, adCost, adTo);
+    } catch (e) { console.warn('tt channel grid', e); tb.innerHTML = `<tr><td colspan="9" class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; }
   }
   function setLiveScope(s) { _liveScope = s; if (typeof renderTtHub === 'function' && currentPage === 'tthub') renderTraffic(getDateValue('From'), getDateValue('To')); }
 
@@ -184,5 +263,5 @@
 
   function setCrType(t) { _crType = t; if (t !== 'all') _crCh = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
   function setCrCh(c) { _crCh = c; if (c !== 'all') _crType = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
-  window.ttApi = { renderTraffic, renderOrderChannel, renderCreatorExtras, setLiveScope, setCrType, setCrCh };
+  window.ttApi = { renderTraffic, renderOrderChannel, renderCreatorExtras, setLiveScope, setCrType, setCrCh, setView, getView: () => _view };
 })();
