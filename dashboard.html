@@ -777,7 +777,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.20-q</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3192,7 +3192,7 @@ function loadSalesJs() {
   if (window._salesJsP) return window._salesJsP;
   window._salesJsP = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'sales.js?v=20261020b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
+    s.src = 'sales.js?v=20261021a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต sales.js
     s.onload = res;
     s.onerror = () => { window._salesJsP = null; rej(new Error('โหลด sales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
@@ -4615,11 +4615,12 @@ async function renderHubOverview(page, extraTiles) {
   try {
     await loadSalesJs();
     // ยังไม่มีค่า Ads ในเครื่อง → โหลด 1 ครั้ง (ถ้าโหลดไม่ได้ ลองใหม่ได้ทุก 60 วินาที ไม่ยิงซ้ำวน)
-    if (!adRawData.length && Date.now() - (renderHubOverview._at || 0) > 60000) { renderHubOverview._at = Date.now(); await fetchAdData(); }
+    // (2026-10-21) ค่า Ads ในเครื่องเก่าเกิน 15 นาที → โหลดใหม่ (ตารางในหน้าดึงสดทุกครั้ง การ์ดต้องไม่ค้างตัวเลขเก่า)
+    if ((!adRawData.length || Date.now() - (fetchAdData._at || 0) > 15 * 60000) && Date.now() - (renderHubOverview._at || 0) > 60000) { renderHubOverview._at = Date.now(); await fetchAdData(); }
     if (currentPage !== page) return;
     await window.renderSalesOverview({ root, page, hub: true, skipEnsure: true, ch: C.ch,
       from: getDateValue('From'), to: getDateValue('To'), sub: document.getElementById('filterSubChannel').value,
-      ads: adRawData.filter(r => r.channel === C.ch), adsTip: ADS_SOURCE_INFO[C.key], adsPage: C.adsPage, adsName: C.adsName, extraTiles: extraTiles || [] });
+      ads: adRawData.filter(r => r.channel === C.ch), adsPR: C.ch === 'Facebook' ? adRawData.filter(r => r.channel === 'Facebook PR') : null, adsTip: ADS_SOURCE_INFO[C.key], adsPage: C.adsPage, adsName: C.adsName, extraTiles: extraTiles || [] });
   } catch (e) { root.innerHTML = `<div class="error-banner" style="display:block;">${String(e.message || e)}</div>`; }
 }
 async function hubPrepare(page) {
@@ -6489,6 +6490,7 @@ async function fetchAdData() {
     const [sys, sheet] = await Promise.all([fetchAdSystemRows(), fetchAdSheetRows().catch(e => { console.warn('ชีท Ads อ่านไม่ได้:', e); return []; })]);
     adSheetData = sheet;
     adRawData = sys.concat(sheet.filter(r => !AD_CHANNELS_FROM_SYSTEM.includes(r.channel)));   // ชีทเหลือแค่ Lazada
+    fetchAdData._at = Date.now();
     // (2026-10-18) แจ้งที่ปุ่มสถานะข้อมูลแทนแถบในหน้า
     { const laz = adUnmapped.filter(k => k.toLowerCase().startsWith('lazada'));
       ['adperf', 'lzhub'].forEach(pg => window.pageNote && window.pageNote(pg, 'lzmap', laz.length ? 'warn' : null, `Sub Channel ใหม่ของ Lazada ในชีต Ads ยังไม่ได้ map: ${laz.join(', ')}`, '')); }
@@ -6629,7 +6631,7 @@ function toggleFreeSamplePopover() {
   }
 }
 const ADS_SOURCE_INFO = {
-  fb: 'ค่า Ads Facebook = เฉพาะ Conversion (Ads ที่ยิงให้เพจขาย) — ตรงกับหน้า Facebook Ads\n• ไม่รวม PR (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade) — ดูหน้า Facebook Ads\n• CPAS นับอยู่กับ Shopee\n• อัปเดต 08:00 / 20:00',
+  fb: 'ค่า Ads Facebook = Conversion + PR — ตรงกับหน้า Facebook Ads และหน้าแรก\n• Conversion = Ads ที่ยิงให้เพจขาย\n• PR = boost โพสต์ KOL / เพจอื่น / บัญชี PR (ไม่มียอดขาย)\n• ROAS คิดจาก Conversion เท่านั้น\n• CPAS นับอยู่กับ Shopee',
   tt: 'ค่า Ads TikTok = ทุกประเภท (GMV Max สินค้า / Live, Brand, Video views, Traditional) — ตรงกับหน้า TikTok Ads',
   sh: 'ค่า Ads Shopee =\n• Product / Shop Ads (ร้าน Mall + 24hr)\n• Brand / Live / Meta ในแอป / เหรียญ (อ่านจาก Seller Centre ทุกเช้า)\n• CPAS (บัญชี Meta "CPAS → Shopee")',
   lz: 'ค่า Ads Lazada (Mall + 24hr) จากชีท Ads Daily Reports',
