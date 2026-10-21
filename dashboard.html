@@ -777,7 +777,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1251,7 +1251,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th>
               <th class="sortable-th" onclick="momentumSort('rev_cur')">ยอดขาย <span class="sort-ind" id="mms-rev_cur"></span></th>
               <th class="sortable-th" onclick="momentumSort('qty_cur')">ชิ้น <span class="sort-ind" id="mms-qty_cur"></span></th>
-              <th>ราคา/ชิ้น</th><th>สัดส่วน</th>
+              <th data-tip="ยอดขาย ÷ ชิ้น ไม่นับตัวแทน / Modern Trade">ราคา/ชิ้น</th><th>สัดส่วน</th>
               <th class="sortable-th" onclick="momentumSort('chg')">vs ช่วงเทียบ <span class="sort-ind" id="mms-chg"></span> <span id="mm-info-chg"></span></th>
               <th class="sortable-th" onclick="momentumSort('chg3')">vs เฉลี่ย 3 ช่วง <span class="sort-ind" id="mms-chg3"></span> <span id="mm-info-chg3"></span></th>
               <th>12 สัปดาห์ <span id="mm-info-wk"></span></th><th class="sortable-th" onclick="momentumSort('rank')">สถานะ <span class="sort-ind" id="mms-rank"></span> <span id="mm-info-st"></span></th><th>เปลี่ยนแปลงแต่ละช่องทาง <span id="mm-info-ch"></span></th></tr></thead>
@@ -6238,10 +6238,13 @@ function renderSkuTrend() {
 // ===== Momentum (2026-09-16): ทุก SKU ช่วงนี้ vs ช่วงก่อน vs เฉลี่ย 3 ช่วง — RPC sku_momentum (mv_sku_daily) =====
 const MOMENTUM_UP = 15, MOMENTUM_DOWN = -15;
 let _momentum = null, _momentumKey = null, _mmSortKey = 'rev_cur', _mmSortDir = 'desc';
+// (2026-10-21) เทียบด้วย rev_cur_cmp = ยอดช่วงนี้เฉพาะวันที่ข้อมูลครบ (ยาวเท่าช่วงเทียบ) · rev_cur = ยอดทั้งช่วงที่โชว์ (ตรงกับหน้าอื่น)
+const mmCur = r => r.rev_cur_cmp != null ? +r.rev_cur_cmp : +r.rev_cur;
 function momentumStatus(r) {
-  if (r.rev_cur <= 0 && r.rev_prev > 0) return { key: 'dead', label: '💤 หยุดขาย', color: 'var(--text3)', rank: 5 };
+  const cur = mmCur(r);
+  if (cur <= 0 && r.rev_prev > 0) return { key: 'dead', label: '💤 หยุดขาย', color: 'var(--text3)', rank: 5 };
   if (r.rev_prev <= 0 && r.rev_cur > 0) return { key: 'new', label: '🆕 ใหม่', color: 'var(--accent)', rank: 3 };
-  const chg = r.rev_prev > 0 ? (r.rev_cur - r.rev_prev) / r.rev_prev * 100 : 0;
+  const chg = r.rev_prev > 0 ? (cur - r.rev_prev) / r.rev_prev * 100 : 0;
   if (chg >= MOMENTUM_UP) return { key: 'up', label: '🔺 Upturn', color: 'var(--green)', rank: 1 };
   if (chg <= MOMENTUM_DOWN) return { key: 'down', label: '🔻 Downturn', color: 'var(--red)', rank: 2 };
   return { key: 'flat', label: '➖ ทรงตัว', color: 'var(--text2)', rank: 4 };
@@ -6292,8 +6295,9 @@ function momentumRows() {
   const total = +d.total_cur || 1;
   return (d.skus || []).map(r => {
     const st = momentumStatus(r);
-    const chg = r.rev_prev > 0 ? (r.rev_cur - r.rev_prev) / r.rev_prev * 100 : (r.rev_cur > 0 ? 999 : 0);
-    const chg3 = r.rev_avg3 > 0 ? (r.rev_cur - r.rev_avg3) / r.rev_avg3 * 100 : (r.rev_cur > 0 ? 999 : 0);
+    const cur = mmCur(r);
+    const chg = r.rev_prev > 0 ? (cur - r.rev_prev) / r.rev_prev * 100 : (r.rev_cur > 0 ? 999 : 0);
+    const chg3 = r.rev_avg3 > 0 ? (cur - r.rev_avg3) / r.rev_avg3 * 100 : (r.rev_cur > 0 ? 999 : 0);
     const chs = (r.channels || []).map(c => ({ ...c, diff: (+c.cur || 0) - (+c.prev || 0) }));
     const drag = chs.filter(c => c.diff < 0).sort((a, b) => a.diff - b.diff)[0] || null;
     const lift = chs.filter(c => c.diff > 0).sort((a, b) => b.diff - a.diff)[0] || null;
@@ -6309,10 +6313,13 @@ function renderMomentumTable() {
   const v = r => _mmSortKey === 'rank' ? r.rank : +r[_mmSortKey] || 0;
   rows.sort((a, b) => (_mmSortDir === 'asc' ? 1 : -1) * (v(a) - v(b)));
   document.querySelectorAll('[id^="mms-"]').forEach(el => el.textContent = ''); const ind = document.getElementById('mms-' + _mmSortKey); if (ind) ind.textContent = _mmSortDir === 'asc' ? '▲' : '▼';
-  document.getElementById('momentum-count').textContent = `(${fmt(rows.length)} SKU · เทียบกับ ${thShort(_momentum.prev_from)} – ${thShort(_momentum.prev_to)})`;
+  // (2026-10-21) ช่องทางที่ข้อมูลยังไม่ครบถึงวันสุดท้ายที่เลือก → เทียบเฉพาะวันที่ครบ (จัดกลุ่มตามวันที่)
+  const capTxt = (() => { const g = {}; (_momentum.cmp_caps || []).forEach(c => { (g[c.to] = g[c.to] || []).push(c.channel); });
+    return Object.entries(g).sort().map(([dt, chs]) => `${chs.join(' · ')} ถึง ${thShort(dt)}`).join(' · '); })();
+  document.getElementById('momentum-count').textContent = `(${fmt(rows.length)} SKU · เทียบกับ ${thShort(_momentum.prev_from)} – ${thShort(_momentum.prev_to)}${capTxt ? ' · เทียบเฉพาะวันที่ข้อมูลครบ: ' + capTxt : ''})`;
   // ⓘ อธิบายคอลัมน์ (ครั้งเดียว)
   { const M = _momentum; const mode = M.mode === 'month' ? 'วันเดียวกันของเดือนก่อน' : 'ช่วงก่อนหน้าติดกัน';
-    const put = (id, html) => { const el = document.getElementById(id); if (el && !el.innerHTML) el.innerHTML = html; };
+    const put = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };   // (2026-10-21) อัปเดตทุกครั้ง (เดิมค้างข้อความของช่วงแรก)
     const cur = `${thShort(M.from)} – ${thShort(M.to)}`, prv = `${thShort(M.prev_from)} – ${thShort(M.prev_to)}`;
     // 3 ช่วงเทียบจริง (คำนวณแบบเดียวกับ RPC) เพื่อบอกวันที่ในกล่อง ⓘ
     const addM = (s, k) => { const dt = new Date(s + 'T00:00:00'); const day = dt.getDate(); dt.setDate(1); dt.setMonth(dt.getMonth() - k); const last = new Date(dt.getFullYear(), dt.getMonth() + 1, 0).getDate(); dt.setDate(Math.min(day, last)); return fmtDateISO(dt); };
@@ -6320,9 +6327,10 @@ function renderMomentumTable() {
     const n = +M.period_days || 1;
     const per = k => M.mode === 'month' ? [addM(M.from, k), addM(M.to, k)] : [addD(M.from, -k * n), addD(M.from, -(k - 1) * n - 1)];
     const three = [1, 2, 3].map(k => { const [a, b] = per(k); return `${thShort(a)} – ${thShort(b)}`; }).join(' / ');
-    put('mm-info-chg', fbeInfoIcon('mmi-chg', `<b>vs ช่วงเทียบ</b><br>ช่วงที่เลือก (${cur}) ขายได้มากหรือน้อยกว่า <b>${prv}</b> กี่ %<br>เช่น ▼8.6% = ช่วงนี้ขายได้น้อยกว่าช่วงเทียบ 8.6%<br><span style="color:var(--text3);">เปลี่ยนช่วงเทียบได้ที่แถบบน "เทียบกับ"</span>`));
+    const capNote = (M.cmp_caps || []).length ? '<br>วันที่ข้อมูลยังไม่ครบ (เช่น วันนี้) ไม่นับในการเทียบ — ทั้ง 2 ช่วงตัดให้ยาวเท่ากัน' : '';
+    put('mm-info-chg', fbeInfoIcon('mmi-chg', `<b>vs ช่วงเทียบ</b><br>ช่วงที่เลือก (${cur}) ขายได้มากหรือน้อยกว่า <b>${prv}</b> กี่ %<br>เช่น ▼8.6% = ช่วงนี้ขายได้น้อยกว่าช่วงเทียบ 8.6%${capNote}<br><span style="color:var(--text3);">เปลี่ยนช่วงเทียบได้ที่แถบบน "เทียบกับ"</span>`));
     put('mm-info-chg3', fbeInfoIcon('mmi-chg3', `<b>vs เฉลี่ย 3 ช่วง</b><br>เทียบช่วงที่เลือก (${cur}) กับค่าเฉลี่ยของ 3 ช่วงเทียบ (${three})<br>• ▼ ช่วงเทียบ แต่ ▲ เฉลี่ย → ช่วงเทียบแค่สูงผิดปกติ (เช่น ตัวแทนสั่งลอต)<br>• ▼ ทั้งคู่ → ลงจริง ควรดู`));
-    put('mm-info-wk', fbeInfoIcon('mmi-wk', '<b>12 สัปดาห์</b><br>ยอดขายรายสัปดาห์ 12 สัปดาห์ล่าสุด (ซ้าย = เก่า ขวา = ล่าสุด) ไว้ดูรูปทรงว่า ค่อยๆ ลง / พุ่งครั้งเดียว / แกว่ง · สีเส้นตามสถานะ'));
+    put('mm-info-wk', fbeInfoIcon('mmi-wk', `<b>12 สัปดาห์</b><br>ยอดขายรายสัปดาห์ 12 สัปดาห์ จบที่ ${thShort(M.week_end || M.to)} (วันสุดท้ายที่ข้อมูลครบ)<br>ซ้าย = เก่า · ขวา = ล่าสุด · สีเส้นตามสถานะ`));
     put('mm-info-st', fbeInfoIcon('mmi-st', `<b>สถานะ</b> (จาก % vs ช่วงเทียบ)<br>🔺 Upturn = ขึ้นเกิน ${MOMENTUM_UP}% · 🔻 Downturn = ลงเกิน ${Math.abs(MOMENTUM_DOWN)}%<br>➖ ทรงตัว · 🆕 ใหม่ (ช่วงเทียบไม่มียอด) · 💤 หยุดขาย (ช่วงนี้ไม่มียอด)<br>บรรทัดเล็ก = ขึ้น/ลงกี่ช่องทาง และช่องที่เปลี่ยนมากสุด<br>ลงทุกช่อง → มักเป็นที่ตัวสินค้า · ลงบางช่อง → มักเป็นที่ช่องนั้น (Ads / ราคา / ของหมด)`));
     put('mm-info-ch', fbeInfoIcon('mmi-ch', '<b>เปลี่ยนแปลงแต่ละช่องทาง</b><br>สินค้านี้ในแต่ละช่องทาง ขึ้นหรือลงกี่ % vs ช่วงเทียบ (เรียงจากหายมากสุด) · เอาเมาส์วางเห็นตัวเลขบาท')); }
   // สัดส่วน (วงกลม 2 อัน) + ข้อมูลให้ปุ่ม "วิเคราะห์ใหม่" — จากชุดเดียวกัน
@@ -6331,10 +6339,11 @@ function renderMomentumTable() {
   }
   // KPI 4 ใบบนสุด — ใช้ตัวเลขรายวันชุดเดียวกับตาราง (เดิมคิดจากตารางรายเดือน ทำให้ % เพี้ยนเมื่อเลือกช่วงไม่เต็มเดือน)
   { const M = _momentum; const tc = +M.total_cur || 0, tp = +M.total_prev || 0, qc = +M.qty_cur || 0, qp = +M.qty_prev || 0;
+    const tcc = M.total_cur_cmp != null ? +M.total_cur_cmp : tc, qcc = M.qty_cur_cmp != null ? +M.qty_cur_cmp : qc;
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set('skurev-total-rev', fmt(tc)); set('skurev-total-qty', fmt(qc) + ' ชิ้น');
     const rr = +M.rev_cur_retail || 0, qr = +M.qty_cur_retail || 0; set('skurev-avg-price', qr ? fmt(Math.round(rr / qr)) : '—');
-    const rC = cmpBadge(tc, tp), qC = cmpBadge(qc, qp);
+    const rC = cmpBadge(tcc, tp), qC = cmpBadge(qcc, qp);
     const rEl = document.getElementById('skurev-rev-cmp'); if (rEl) { rEl.textContent = rC.text; rEl.className = rC.cls; }
     const qEl = document.getElementById('skurev-qty-cmp'); if (qEl) { qEl.textContent = qC.text; qEl.className = qC.cls; } }
   const rankOf = {}; rows0.slice().sort((a, b) => b.rev_cur - a.rev_cur).forEach((r, i) => { rankOf[r.sku] = i + 1; });
@@ -6345,7 +6354,7 @@ function renderMomentumTable() {
       <td>${ttcEsc(skuToName(r.sku))}</td>
       <td style="font-weight:600;"><span class="pl-trace" onclick="event.stopPropagation();traceSales(getDateValue('From'),getDateValue('To'),null,'${ttcEscAttr(r.sku)}')">${fmt(Math.round(r.rev_cur))}</span></td>
       <td style="font-family:'IBM Plex Mono',monospace;">${fmt(r.qty_cur)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--text2);">${r.qty_cur ? fmt(Math.round(r.rev_cur / r.qty_cur)) : '—'}</td>
+      <td style="color:var(--text2);">${(r.qty_retail != null ? +r.qty_retail : +r.qty_cur) ? fmt(Math.round((r.rev_retail != null ? +r.rev_retail : +r.rev_cur) / (r.qty_retail != null ? +r.qty_retail : +r.qty_cur))) : '—'}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${r.share.toFixed(1)}%</td>
       <td>${pctCell(r.chg, r.rev_prev > 0)}<div style="font-size:9.5px;color:var(--text3);">ก่อน ${fmt(r.rev_prev)}</div></td>
       <td>${pctCell(r.chg3, r.rev_avg3 > 0)}<div style="font-size:9.5px;color:var(--text3);">เฉลี่ย ${fmt(r.rev_avg3)}</div></td>
@@ -6353,13 +6362,14 @@ function renderMomentumTable() {
       <td style="white-space:nowrap;color:${r.st.color};font-weight:600;">${r.st.label}${momentumWhy(r)}</td>
       <td style="font-size:11px;line-height:1.55;white-space:nowrap;">${(r.channels || []).map(c => ({ ...c, diff: (+c.cur || 0) - (+c.prev || 0), pct: +c.prev > 0 ? ((+c.cur || 0) - (+c.prev || 0)) / +c.prev * 100 : null })).sort((a, b) => a.diff - b.diff).map(c => { const col = c.diff > 0 ? 'var(--green)' : c.diff < 0 ? 'var(--red)' : 'var(--text3)'; const pctTxt = c.pct === null ? (c.cur > 0 ? 'ใหม่' : '—') : (c.pct >= 0 ? '+' : '−') + Math.abs(c.pct).toFixed(0) + '%'; return `<div title="ก่อน ${fmt(Math.round(c.prev))} → ตอนนี้ ${fmt(Math.round(c.cur))} (${c.diff >= 0 ? '+' : '−'}${fmt(Math.round(Math.abs(c.diff)))})"><span style="color:${col};font-weight:700;display:inline-block;width:12px;">${c.diff > 0 ? '▲' : c.diff < 0 ? '▼' : '—'}</span> ${ttcEsc(c.channel)} <span style="color:${col};font-weight:600;">${pctTxt}</span></div>`; }).join('') || '—'}</td>
     </tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
-  const withBase = rows0.filter(r => r.rev_prev > 0 && r.rev_cur > 0);
-  const ups = withBase.filter(r => r.chg >= MOMENTUM_UP).sort((a, b) => (b.rev_cur - b.rev_prev) - (a.rev_cur - a.rev_prev));
-  const downs = withBase.filter(r => r.chg <= MOMENTUM_DOWN).sort((a, b) => (a.rev_cur - a.rev_prev) - (b.rev_cur - b.rev_prev));
-  const li = (r, up) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(skuToName(r.sku))} <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${ttcEsc(r.sku)}</span></span><span style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '+' : '−'}${fmt(Math.abs(r.rev_cur - r.rev_prev))} <span style="font-weight:400;color:var(--text3);">(${up ? '▲' : '▼'}${Math.abs(r.chg).toFixed(0)}%)</span></span></div>`;
+  const withBase = rows0.filter(r => r.rev_prev > 0 && mmCur(r) > 0);
+  const ups = withBase.filter(r => r.chg >= MOMENTUM_UP).sort((a, b) => (mmCur(b) - b.rev_prev) - (mmCur(a) - a.rev_prev));
+  const downs = withBase.filter(r => r.chg <= MOMENTUM_DOWN).sort((a, b) => (mmCur(a) - a.rev_prev) - (mmCur(b) - b.rev_prev));
+  const li = (r, up) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(skuToName(r.sku))} <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${ttcEsc(r.sku)}</span></span><span style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '+' : '−'}${fmt(Math.abs(mmCur(r) - r.rev_prev))} <span style="font-weight:400;color:var(--text3);">(${up ? '▲' : '▼'}${Math.abs(r.chg).toFixed(0)}%)</span></span></div>`;
   const chAgg = {}; rows0.forEach(r => (r.channels || []).forEach(c => { chAgg[c.channel] = chAgg[c.channel] || { cur: 0, prev: 0 }; chAgg[c.channel].cur += +c.cur || 0; chAgg[c.channel].prev += +c.prev || 0; }));
   const chLine = Object.entries(chAgg).map(([k, v]) => ({ k, diff: v.cur - v.prev, pct: v.prev ? (v.cur - v.prev) / v.prev * 100 : null })).sort((a, b) => a.diff - b.diff);
-  const totChg = _momentum.total_prev ? (_momentum.total_cur - _momentum.total_prev) / _momentum.total_prev * 100 : null;
+  const totCur = _momentum.total_cur_cmp != null ? +_momentum.total_cur_cmp : +_momentum.total_cur;
+  const totChg = _momentum.total_prev ? (totCur - _momentum.total_prev) / _momentum.total_prev * 100 : null;
   // (2026-10-18) รายการยาวไม่ใช้กล่องเลื่อน: โชว์ 10 อันดับแรก + ปุ่มดูทั้งหมด
   const mmList = (arr, k) => !arr.length ? '<div class="empty">ไม่มี</div>' : arr.slice(0, 10).join('') + (arr.length > 10
     ? `<div id="mm-more-${k}" style="display:none;">${arr.slice(10).join('')}</div><button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="const m=document.getElementById('mm-more-${k}'),o=m.style.display==='none';m.style.display=o?'':'none';this.textContent=o?'ย่อ':'ดูทั้งหมด (${arr.length})';">ดูทั้งหมด (${arr.length})</button>` : '');
