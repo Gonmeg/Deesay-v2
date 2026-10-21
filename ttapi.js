@@ -1,3 +1,4 @@
+// ttapi.js (v20261021c) — เอาตาราง "ประสิทธิภาพแต่ละช่องทาง" ออก (ซ้ำกับมุมมอง GMV) · รอบ Live เรียงล่าสุดก่อน
 // ttapi.js (v20261021a) — หน้าภาพรวม TikTok 2 มุมมอง (ยอดขายจริง / GMV ตาม TikTok) · ตารางแบ่งแบบ TikTok (แอฟฟิลิเอต / ผู้ขาย × ไลฟ์ / วิดีโอ / การ์ดสินค้า) + ค่า Ads
 // ttapi.js (v20261006d) — (d) ตัวกรอง ทุกคน / KOL / Affiliate บนแถบด้านบน (dashboard: cpTypeOk) ใช้กับส่วน Commission + ป้ายประเภทหลังชื่อ (cpKindBadge)
 // ttapi.js (v20261006c) — มุมมองใหม่จาก TikTok Shop API · โหลดครั้งแรกที่เปิดหน้าภาพรวม TikTok / Creator Performance
@@ -47,11 +48,9 @@
     const el = box('page-tthub', 'ttapi-traffic', document.getElementById('ttPromoDiv') ? 'ttPromoDiv' : 'tblTopSKUTt'); if (!el || !from || !to) return;   // (2026-10-20) วางก่อนหัวข้อ Promotion / SKU (เดิมไปแทรกใต้หัวข้อ)
     const seq = ++_trSeq;
     el.innerHTML = `
-      <div class="section-divider"><span>📈 TikTok Shop Traffic ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน<br><b>GMV</b> = ยอดตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) ใช้เทียบประสิทธิภาพช่องทาง · ยอดขายจริงดูที่กราฟและตารางช่องทางด้านบน<br>TikTok ให้ข้อมูลย้อนหลังได้ถึง 10 เม.ย. 69 เท่านั้น<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า<br><b>CTR</b> = เข้าชม ÷ Impression · <b>GMV / 1,000 Impression</b> = ช่องทางไหนเปลี่ยนการมองเห็นเป็นยอดได้ดี')} <span id="ttapi-tr-note" style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:normal;"></span></span></div>
+      <div class="section-divider"><span>📈 TikTok Shop Traffic ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน · TikTok ให้ข้อมูลย้อนหลังได้ถึง 10 เม.ย. 69<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า · <b>CTR</b> = เข้าชม ÷ Impression<br>GMV แยกช่องทางดูที่มุมมอง "GMV ตาม TikTok" ด้านบน')} <span id="ttapi-tr-note" style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:normal;"></span></span></div>
       <div id="ttapi-tr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
-      <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">ประสิทธิภาพแต่ละช่องทาง</div></div>
-        <div class="table-wrap"><table><thead><tr><th>ช่องทาง</th><th>GMV</th><th>สัดส่วน</th><th>Impression</th><th>เข้าชม</th><th>CTR</th><th>GMV / 1,000 Impression</th><th>GMV / เข้าชม</th></tr></thead><tbody id="ttapi-tr-src"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div>
-      <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ผลงานรายรอบ Live ${info('ttapi-live-info', 'รอบ Live ที่ขายสินค้าของร้าน จาก TikTok Shop Analytics · เรียงจาก GMV มากไปน้อย<br><b>CTR</b> = คลิกสินค้า ÷ การแสดงสินค้าใน Live · <b>คลิก→สั่ง</b> = สั่งซื้อ ÷ คลิกสินค้า · <b>ดูเฉลี่ย</b> = วินาทีต่อคนดู')}</div>
+      <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ผลงานรายรอบ Live ${info('ttapi-live-info', 'รอบ Live ที่ขายสินค้าของร้าน จาก TikTok Shop Analytics · เรียงจากรอบล่าสุด<br><b>CTR</b> = คลิกสินค้า ÷ การแสดงสินค้าใน Live · <b>คลิก→สั่ง</b> = สั่งซื้อ ÷ คลิกสินค้า · <b>ดูเฉลี่ย</b> = วินาทีต่อคนดู')}</div>
         <div class="toggle-group" id="ttapi-live-scope"><button class="toggle-btn ${_liveScope === 'own' ? 'active' : ''}" onclick="ttApi.setLiveScope('own')">บัญชีร้าน</button><button class="toggle-btn ${_liveScope === 'all' ? 'active' : ''}" onclick="ttApi.setLiveScope('all')">ทุกบัญชี</button></div></div>
         <div class="table-wrap"><table><thead><tr><th>วันเวลา</th><th>บัญชี</th><th>นาน</th><th>GMV</th><th>คนซื้อ</th><th>ชิ้น</th><th>คนดู</th><th>คลิกสินค้า</th><th>CTR</th><th>คลิก→สั่ง</th><th>ดูเฉลี่ย</th><th>ผู้ติดตามใหม่</th></tr></thead><tbody id="ttapi-live-body"><tr><td colspan="12" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-live-pager"></div></div>`;
     try {
@@ -67,15 +66,11 @@
         kpi('เข้าชมหน้าสินค้า', fmt(pv), 'CTR ' + pctTxt(pv, impr, 2)) +
         kpi('ออเดอร์', fmt(T.orders), 'ต่อการเข้าชม ' + pctTxt(T.orders, pv)) +
         kpi('คืนเงิน', baht(T.refunds), pctTxt(T.refunds, T.gmv) + ' ของ GMV');
-      document.getElementById('ttapi-tr-src').innerHTML = SRC.map(s => {
-        const g = T['gmv_' + s.k], im = T['impr_' + s.k], p = T['pv_' + s.k];
-        return `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color};margin-right:6px;"></span>${s.label}</td><td>${baht(g)}</td><td>${pctTxt(g, T.gmv)}</td><td>${fmt(im)}</td><td>${fmt(p)}</td><td>${pctTxt(p, im, 2)}</td><td>${im > 0 ? baht(g / im * 1000) : '—'}</td><td>${p > 0 ? baht(g / p) : '—'}</td></tr>`;
-      }).join('');
       const liveRow = r => {
         const d = new Date(r.start_time), when = isNaN(d) ? '—' : d.toLocaleString('th-TH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
         return `<tr><td style="white-space:nowrap;">${when}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">@${esc(r.username)}</td><td>${r.minutes != null ? fmt(r.minutes) + ' น.' : '—'}</td><td>${baht(r.gmv)}</td><td>${fmt(r.customers)}</td><td>${fmt(r.items_sold)}</td><td>${fmt(r.viewers)}</td><td>${fmt(r.product_clicks)}</td><td>${r.ctr != null ? num(r.ctr).toFixed(2) + '%' : '—'}</td><td>${r.click_to_order != null ? num(r.click_to_order).toFixed(2) + '%' : '—'}</td><td>${r.avg_watch_s != null ? fmt(r.avg_watch_s) + ' วิ' : '—'}</td><td>${fmt(r.new_followers)}</td></tr>`;
       };
-      pagedTable('ttapi-live', lives, liveRow, 12);
+      pagedTable('ttapi-live', (lives || []).slice().sort((a, b) => String(b.start_time).localeCompare(String(a.start_time))), liveRow, 12);   // (2026-10-21) รอบล่าสุดก่อน
     } catch (e) {
       if (seq === _trSeq) el.querySelector('#ttapi-tr-kpis').innerHTML = `<div class="error-banner" style="display:block;">โหลดทราฟฟิกร้าน TikTok ไม่สำเร็จ: ${esc(e.message)}</div>`;
     }
