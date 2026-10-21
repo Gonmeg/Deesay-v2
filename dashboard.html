@@ -674,11 +674,6 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblTtOrderChannel th, #tblTtOrderChannel td { text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums; }   /* (2026-10-21) หัวคอลัมน์กับตัวเลขอยู่ตรงกัน */
   #tblTtOrderChannel th.l, #tblTtOrderChannel td.l { text-align:left; width:210px; }
   #tblTtOrderChannel th { white-space:normal; line-height:1.35; vertical-align:bottom; }
-  #tblTtTarget th, #tblTtTarget td { text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums; }   /* (2026-10-21) การ์ดเป้า GMV TikTok */
-  #tblTtTarget th.l, #tblTtTarget td.l { text-align:left; }
-  #tblTtTarget tr.tt-grp td { background:var(--bg3); }
-  #tblTtTarget td.tt-sub { padding-left:30px; color:var(--text2); }
-  #tblTtTarget .tt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
   #tblTtOrderChannel tr.tt-grp td { background:var(--bg3); }
   #tblTtOrderChannel td.tt-sub { padding-left:30px; color:var(--text2); }
   #tblTtOrderChannel .tt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
@@ -789,7 +784,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-h</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3069,7 +3064,7 @@ function ensureTtApi() {
   if (_ttApiPromise) return _ttApiPromise;
   _ttApiPromise = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'ttapi.js?v=20261021d';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.src = 'ttapi.js?v=20261021e';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
     s.onload = () => res(window.ttApi);
     s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
