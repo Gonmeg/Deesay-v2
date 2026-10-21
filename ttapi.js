@@ -97,7 +97,7 @@
     let g = document.getElementById('ttgmv-ov');
     if (!g && ov) { g = document.createElement('div'); g.id = 'ttgmv-ov'; g.style.marginBottom = '20px'; ov.parentNode.insertBefore(g, ov); }
     if (g) g.style.display = _view === 'tiktok' ? '' : 'none';
-    document.querySelectorAll('#ttViewGroup [data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === _view));
+    if (typeof ttViewMark === 'function') ttViewMark(_view);   // ปุ่มมุมมองบนแถบด้านบน
   }
   function setView(v, from, to) { _view = v === 'tiktok' ? 'tiktok' : 'order'; applyView(); renderOrderChannel(from, to); }
   // การ์ด + กราฟ ของมุมมอง TikTok (หน้าตาแบบเดียวกับแม่แบบ 1)
