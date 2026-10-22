@@ -674,6 +674,25 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblTtOrderChannel th, #tblTtOrderChannel td { text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums; }   /* (2026-10-21) หัวคอลัมน์กับตัวเลขอยู่ตรงกัน */
   #tblTtOrderChannel th.l, #tblTtOrderChannel td.l { text-align:left; width:210px; }
   #tblTtOrderChannel th { white-space:normal; line-height:1.35; vertical-align:bottom; }
+  /* (2026-10-22 d) แผงที่มาของตัวเลขแบบสูตร (กระชับ) */
+  .tr-mcs { display:flex; flex-wrap:wrap; gap:5px; margin:2px 0 10px; }
+  .tr-mc { border:1px solid var(--border); border-radius:20px; padding:2px 10px; font-size:11.5px; background:var(--bg2); color:var(--text2); cursor:pointer; font-family:inherit; }
+  .tr-mc[aria-pressed="true"] { background:#b8862f; color:#fff; border-color:#b8862f; font-weight:700; }
+  .tr-fg { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:8px 14px 10px; margin-bottom:10px; }
+  .tr-fg-h { display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-weight:800; font-size:13px; color:var(--text); padding:2px 0 4px; border-bottom:1px solid var(--border); }
+  .tr-fg-h .tr-ref { font-weight:400; margin:0; white-space:nowrap; }
+  .tr-ln { display:grid; grid-template-columns:14px 1fr auto; gap:6px; padding:5px 0; border-bottom:1px dashed var(--row-border, rgba(127,127,127,.15)); align-items:baseline; }
+  .tr-sg { font-weight:800; color:var(--text3); text-align:center; font-size:12px; }
+  .tr-lb { font-size:12.4px; color:var(--text); min-width:0; line-height:1.45; }
+  .tr-tag { display:inline-block; font-size:10.5px; color:var(--text3); background:var(--bg3); border-radius:4px; padding:0 5px; margin-left:2px; vertical-align:1px; white-space:nowrap; }
+  .tr-ref { font-size:11px; color:var(--text3); margin-top:1px; line-height:1.45; }
+  .tr-num { font-variant-numeric:tabular-nums; text-align:right; font-size:12.4px; white-space:nowrap; color:var(--text); }
+  .tr-eq { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top:7px; padding:6px 10px; border-radius:8px; background:rgba(184,134,47,.1); font-size:12.4px; color:var(--text2); font-variant-numeric:tabular-nums; }
+  .tr-eq b { font-size:14px; color:var(--text); font-weight:800; white-space:nowrap; }
+  .tr-why { margin:4px 2px 0; }
+  .tr-mrow { cursor:pointer; } .tr-mrow:hover .tr-lb { color:#b8862f; text-decoration:underline; }
+  .tr-more > summary { cursor:pointer; font-size:11.5px; color:#b8862f; padding:5px 0 3px 20px; list-style:none; } .tr-more > summary::-webkit-details-marker { display:none; }
+  .tr-fin { padding:4px 10px; } .tr-fin .tr-eq { margin:0; }
   .tr-src-a { color:var(--accent, #b8862f); text-decoration:underline; text-underline-offset:2px; font-weight:600; white-space:nowrap; }   /* (2026-10-22) ลิงก์แหล่งที่มา */
   #tblShSys { table-layout:fixed; width:100%; }   /* (2026-10-22) มุมมองยอดตามระบบ Shopee */
   #tblShSys th, #tblShSys td { text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums; }
@@ -795,7 +814,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.22-g</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.22-i</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -7874,38 +7893,128 @@ async function openTrace(sku, d) {
   catch (e) { body.innerHTML = `<div class="tr-warn">แสดงผลไม่สำเร็จ: ${trEsc(e.message)}</div>`; console.error('trace', e); }   // กันแผงค้างว่าง ปิดได้เสมอ
 }
 function trRender(j, d) {
+  // (2026-10-22 c) แผงที่มาของตัวเลขแบบ "สูตรคำนวณ": เลือกเดือน → ไล่จากตัวเลขในงบ (แถว × คอลัมน์ เลขเท่าในไฟล์) → + / − → × สัดส่วน → = ได้
   const n = v => fmt(Math.round(+v || 0));
   const rows = (j.rows || []).map(r => ({ m: r[0], grp: r[1], src: r[2], sch: r[3], amt: +r[4], pool: +r[5], bn: r[6] == null ? null : +r[6], bd: r[7] == null ? null : +r[7] }));
   const total = rows.reduce((t, r) => t + r.amt, 0);
-  const parts = {}; rows.forEach(r => { (parts[r.src + '|' + r.sch] = parts[r.src + '|' + r.sch] || []).push(r); });
-  const keys = Object.keys(parts).sort((a, b) => (a.startsWith('id') ? 0 : 1) - (b.startsWith('id') ? 0 : 1));
-  const method = keys.map(k => (TR_METHOD[k.split('|')[1]] || TR_METHOD.all)(d)).filter((v, i, a) => a.indexOf(v) === i).join('\n\n');
   const title = `${d.label || TR_LAYER[d.layer] || ''}${d.grp ? ' · ' + d.grp : ''}`;
   let h = '';
   if (d.amount != null && Math.abs(total - d.amount) >= 1.5)   // ตรงอยู่แล้วไม่ต้องแจ้ง · แจ้งเฉพาะตอนไม่ตรง
     h += `<div class="tr-warn">ยอดรวมของรายละเอียด ${n(total)} ต่างจากตัวเลขในตาราง ${n(d.amount)} อยู่ ${n(total - d.amount)}</div>`;
-  h += `<div class="tr-card"><div class="tr-card-t">${trEsc(plLbl(title))} ${method ? trI(method) : ''}</div>
+  h += `<div class="tr-card"><div class="tr-card-t">${trEsc(plLbl(title))}</div>
     <div class="tr-card-v">${n(d.amount != null ? d.amount : total)}</div>
     <div class="tr-card-m"><span>${trEsc(d.name)} <span class="tr-sku">${trEsc(d.sku || '')}</span></span><span>${d.period}</span>${d.layer !== 'rev' && d.rev > 0 ? `<span>${((d.amount != null ? d.amount : total) / d.rev * 100).toFixed(1)}% ของยอดขายสินค้านี้</span>` : ''}</div></div>`;
   if (!rows.length) return h + '<div class="tr-n">ไม่มีข้อมูลในช่วงนี้</div>';
-  h += keys.map(k => trPart(j, d, k.split('|')[0], k.split('|')[1], parts[k], keys.length > 1)).join('');
-  // แหล่งที่มา
-  // (2026-10-22) แหล่งที่มากดไปเช็คได้: ลิงก์แท็บรายเดือน · เลขแถวของแต่ละบรรทัด · ตัวอักษรคอลัมน์ช่องทาง
-  const refs = j.refs || [], seen = {}; refs.forEach(r => { const k = (r[1] ? r[1] + ' ' : '') + r[2]; (seen[k] = seen[k] || new Set()); if (r[3] != null) seen[k].add(+r[3]); });
-  const lk = Object.keys(seen), ms = [...new Set(refs.map(r => r[0]))].sort();
-  const rowTxt = () => '';   // (2026-10-22 b) หน้าไฟล์ที่เผยแพร่ไม่โชว์เลขแถว → บอกด้วยเลขที่บัญชี + ชื่อบัญชี (เห็นในไฟล์) แทน
-  const fileLinks = ms.length ? ms.map(m => trTabLink(j, m, PL_TH_M(m))).join(' · ') : 'แท็บรายเดือน';
-  // คอลัมน์ช่องทาง: ใช้ชื่อหัวคอลัมน์ตามที่เห็นในไฟล์ (หน้าไฟล์ที่เผยแพร่ไม่โชว์ตัวอักษร A–Z) · เรียงตามตำแหน่งในไฟล์
-  const T = (j.src && j.src.tabs) || {}, HN = { 'TikTok': 'Tiktok', 'FB-COD': 'Facebook-COD', 'FB-โอนเงิน': 'Facebook-โอนเงิน', 'ตัวแทน': 'ตัวแทนจำหน่าย' }, pos = {};
-  ms.forEach(m => { const c = (T[m] && T[m].cols) || {}; Object.keys(c).forEach(k => { if (k !== 'รวมหักMO' && pos[k] == null) pos[k] = c[k].length * 100 + c[k].charCodeAt(c[k].length - 1); }); });
-  const chNames = Object.keys(pos).sort((a, b) => pos[a] - pos[b]);
-  const colTxt = chNames.length ? `คอลัมน์ ${chNames.map(k => `"${trEsc(HN[k] || k)}"`).join(' · ')} · ยอดรวมของบรรทัดอยู่คอลัมน์ "ใช้ช่องนี้ หัก MO"` : '';
-  h += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div>
-    <dl class="tr-dl"><dt>ไฟล์</dt><dd>งบกำไรขาดทุนของบัญชี · แท็บ ${fileLinks}</dd>
-    <dt>บรรทัดบัญชี</dt><dd><div class="tr-chips">${lk.slice(0, 12).map(x => `<span>${trEsc(x)}${rowTxt(x)}</span>`).join('')}${lk.length > 12 ? `<span>และอีก ${lk.length - 12} บรรทัด</span>` : ''}</div></dd>`
-    + ((j.brand || []).length ? `<dt>หมายเหตุ</dt><dd>${j.brand.map(b => `${trEsc(b[0])} ตัดจากบรรทัด "${trEsc(b[1])}" เดือนละ ${n(b[2])}`).join('<br>')}</dd>` : '')
-    + `<dt>ช่องทาง</dt><dd>${colTxt ? colTxt + '<br>' : ''}<span style="color:var(--text3);">${d.layer === 'rev' ? 'สัดส่วนสินค้าจากยอดขายในระบบ' : 'ค่าใช้จ่ายส่วนกลางบัญชีแบ่งด้วยสัดส่วนคงที่'}</span></dd></dl></div>`;
+  window._trJ = j; window._trD = d;
+  const months = [...new Set(rows.map(r => r.m))].sort(), def = months.length === 1 ? months[0] : 'all';
+  h += `<div class="tr-mcs" id="trMcs">${(months.length > 1 ? ['all'] : []).concat(months).map(m => `<button type="button" class="tr-mc" data-m="${m}" aria-pressed="${m === def}" onclick="trPick('${m}')">${m === 'all' ? 'ทุกเดือน' : PL_TH_M(m)}</button>`).join('')}</div>
+    <div id="trFx">${trFx(j, d, def)}</div>`;
+  // แหล่งที่มา (ลิงก์ไฟล์)
+  const fileLinks = months.map(m => trTabLink(j, m, PL_TH_M(m))).join(' · ');
+  const hasId = rows.some(r => r.src === 'id');
+  h += `<div class="tr-src"><div class="tr-src-h">ไฟล์ต้นทาง</div><dl class="tr-dl">
+    <dt>งบบัญชี</dt><dd>งบกำไรขาดทุนแยกตามช่องทาง · แท็บ ${fileLinks}</dd>`
+    + (hasId ? `<dt>รายสินค้า</dt><dd><a class="tr-src-a" href="${TR_PC_URL}" target="_blank" rel="noopener">ไฟล์ค่าใช้จ่ายรายสินค้าของบัญชี (RP-003) ↗</a></dd>` : '')
+    + `</dl></div>`;
   return h;
+}
+const TR_PC_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQs7oCae3yzr2uVHMKvLkkm3DYoH6oK_z2jmsaxxak_br8tBVJRzREDb1rRM_J6QDcKJPTBvqa6mj9-/pubhtml';
+const TR_HN = { 'TikTok': 'Tiktok', 'FB-COD': 'Facebook-COD', 'FB-โอนเงิน': 'Facebook-โอนเงิน', 'ตัวแทน': 'ตัวแทนจำหน่าย' };
+function trPick(m) {
+  document.querySelectorAll('#trMcs .tr-mc').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
+  const x = document.getElementById('trFx'); if (x && window._trJ) x.innerHTML = trFx(window._trJ, window._trD, m);
+}
+// กลุ่มต่อเดือน: ช่องทาง × วิธีแบ่ง (src|sch) — ชื่อกลุ่มจากหมวดบัญชีของบรรทัดในกลุ่ม
+function trGroups(j, d, m) {
+  const SP = (j.stdp || []).map(a => ({ m: a[0], grp: a[1], std: a[2], src: a[3], sch: a[4], amt: +a[5], pool: +a[6], cat: a[7] })).filter(x => !m || x.m === m);
+  const G = {};
+  SP.forEach(x => { const k = x.grp + '|' + x.src + '|' + x.sch; (G[k] = G[k] || { grp: x.grp, src: x.src, sch: x.sch, items: [] }).items.push(x); });
+  return Object.values(G).map(g => {
+    const cats = [...new Set(g.items.map(x => x.cat).filter(Boolean))];
+    g.amt = g.items.reduce((t, x) => t + x.amt, 0);
+    g.title = g.src === 'id' ? 'ค่าใช้จ่ายที่บัญชีระบุให้สินค้านี้' : g.sch === 'pres' ? 'ค่าตัว Presenter' : d.layer === 'rev' ? 'ยอดขายตามงบ' : (cats.length ? cats.join(' · ') : g.items.map(x => x.std).slice(0, 3).join(' · '));
+    if (!d.grp) g.title += ' · ' + g.grp;
+    g.how = g.src === 'id' ? 'บัญชีระบุสินค้ามาเอง' : ({ grp: `แบ่งตามยอดขายสินค้านี้ในช่อง ${g.grp}`, all: 'แบ่งตามยอดขายสินค้านี้ ทั้งบริษัท', ads: `แบ่งตามค่า Ads ที่ผูกกับสินค้านี้ในช่อง ${g.grp}`, live: 'แบ่งตามยอดขายสินค้านี้ในไลฟ์ TikTok', pres: 'ค่าตัวของ Presenter ที่ดูแลสินค้านี้ × สัดส่วนยอดขาย' }[g.sch] || 'แบ่งตามสัดส่วน');
+    return g;
+  }).sort((a, b) => Math.abs(b.amt) - Math.abs(a.amt));
+}
+function trFx(j, d, m) {
+  // (2026-10-22 d) แบบกระชับ: 1 บรรทัดในงบ = 1 แถว (เลขบัญชี + ชื่อ + คอลัมน์) · ส่วนที่หัก / แยกคอลัมน์อยู่บรรทัดเล็กใต้แถว · สรุปเป็นสูตรบรรทัดเดียว
+  const n = v => fmt(Math.round(+v || 0)), n2 = v => (+v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pc = v => isFinite(v) ? (v * 100).toFixed(Math.abs(v) < 0.1 ? 2 : 1) + '%' : '—';
+  const rows = (j.rows || []).map(r => ({ m: r[0], grp: r[1], src: r[2], sch: r[3], amt: +r[4], pool: +r[5], bn: r[6] == null ? null : +r[6], bd: r[7] == null ? null : +r[7] }));
+  const MK = '①②③④⑤⑥⑦⑧⑨⑩';
+  if (m === 'all') {   // ทุกเดือน: สรุปกลุ่ม + รายเดือน (กดเดือนเพื่อดูสูตร)
+    const gs = trGroups(j, d, null), months = [...new Set(rows.map(r => r.m))].sort();
+    let h = `<div class="tr-fg"><div class="tr-fg-h"><span>ประกอบด้วย</span></div>` + gs.map((g, gi) => `<div class="tr-ln"><span class="tr-sg">${MK[gi] || '•'}</span><div class="tr-lb">${trEsc(g.title)}<div class="tr-ref">${trEsc(g.how)}</div></div><div class="tr-num">${n(g.amt)}</div></div>`).join('')
+      + `<div class="tr-eq"><span>รวมทุกเดือน</span><b>${n(rows.reduce((t, r) => t + r.amt, 0))}</b></div></div>`;
+    h += `<div class="tr-fg"><div class="tr-fg-h"><span>รายเดือน</span><span class="tr-ref">กดเดือนเพื่อดูวิธีคิด</span></div>` + months.map(mm => {
+      const a = rows.filter(r => r.m === mm).reduce((t, r) => t + r.amt, 0);
+      return `<div class="tr-ln tr-mrow" onclick="trPick('${mm}')"><span class="tr-sg">›</span><div class="tr-lb">${PL_TH_M(mm)}</div><div class="tr-num">${n(a)}</div></div>`;
+    }).join('') + `</div>`;
+    return h;
+  }
+  const DET = (j.det || []).map(a => ({ m: a[0], grp: a[1], std: a[2], acc: a[3], label: a[4], ch: a[5], v: +a[6] })).filter(x => x.m === m);
+  const PL = (j.pl || []).map(a => ({ m: a[0], grp: a[1], std: a[2], src: a[3], pool: +a[4] })).filter(x => x.m === m);
+  const PLX = (j.plx || []).map(a => ({ m: a[0], grp: a[1], std: a[2], layer: a[3], src: a[4], pool: +a[5] })).filter(x => x.m === m);
+  const PCM = (j.pcm || []).map(a => ({ m: a[0], std: a[1], mine: +a[2], total: +a[3] })).filter(x => x.m === m);
+  const brand = j.brand || [], tab = trTabLink(j, m, `งบ ${PL_TH_M(m)}`);
+  const colN = c => trEsc(TR_HN[c] || c);
+  // 1 แถว: เครื่องหมาย · ชื่อ (+ แท็กคอลัมน์) · ตัวเลข · บรรทัดเล็กใต้แถว (ถ้ามี)
+  const ln = (sg, lb, tag, v, sub) => `<div class="tr-ln"><span class="tr-sg">${sg}</span><div class="tr-lb">${lb}${tag ? ` <span class="tr-tag">${tag}</span>` : ''}${sub ? `<div class="tr-ref">${sub}</div>` : ''}</div><div class="tr-num">${v}</div></div>`;
+  const gs = trGroups(j, d, m);
+  let out = '', gsum = 0;
+  gs.forEach((g, gi) => {
+    let h = `<div class="tr-fg"><div class="tr-fg-h"><span>${gs.length > 1 ? `${MK[gi] || (gi + 1) + '.'} ` : ''}${trEsc(g.title)}</span>${g.src === 'id' ? '' : `<span class="tr-ref">${tab}</span>`}</div>`, L = [];
+    if (g.src === 'id') {   // บัญชีระบุสินค้า
+      g.items.forEach(x => {
+        const p = PCM.find(z => z.std === x.std), f = p && p.mine ? x.amt / p.mine : null;
+        L.push(ln(L.length ? '+' : '', trEsc(x.std), '', n2(x.amt), `ไฟล์ค่าใช้จ่ายรายสินค้า แท็บ ${PL_TH_M(m)} คอลัมน์ของสินค้านี้${p && p.mine ? ` ${n2(p.mine)}` : ''}${f != null && Math.abs(f - 1) > 0.0005 ? ` × ส่วนของช่อง ${trEsc(g.grp)} ในงบ ${pc(f)}` : ''}`));
+      });
+      h += L.join('') + `<div class="tr-eq"><span>ได้</span><b>${n2(g.amt)}</b></div>`;
+    } else if (g.sch === 'pres') {   // ค่าตัว Presenter
+      const P = (j.pres || []).map(p => ({ m: p[0], who: p[1], fee: +p[2], fs: +p[3], num: +p[4] || 0, den: +p[5] || 0, mine: p[6] })).filter(p => p.m === m);
+      const me = P.find(p => p.mine), pool = g.items.reduce((t, x) => t + x.pool, 0);
+      const dl = DET.filter(x => x.grp === g.grp && g.items.some(i => i.std === x.std)), L0 = dl[0] || {};
+      h += ln('', trEsc(((L0.acc ? L0.acc + ' ' : '') + (L0.label || 'ค่า Presenter'))), dl.length === 1 ? colN(dl[0].ch) : '', n2(pool), dl.length > 1 ? dl.map(z => `${colN(z.ch)} ${n2(z.v)}`).join(' + ') : '');
+      if (me) h += `<div class="tr-eq"><span>${n2(pool)} × ส่วนค่าตัว${trEsc(me.who)} ${pc(me.fs)} × สัดส่วน ${pc(me.den ? me.num / me.den : NaN)} =</span><b>${n2(g.amt)}</b></div>
+        <div class="tr-ref tr-why">ส่วนค่าตัว = ${P.map(p => `${trEsc(p.who)} ${n(p.fee)}`).join(' · ')} (ตั้งไว้ในระบบ) · สัดส่วน = ยอดขายสินค้านี้ ${n2(me.num)} ÷ สินค้าที่${trEsc(me.who)}ดูแล ${n2(me.den)} (ระบบ ${PL_TH_M(m)})</div>`;
+      else h += `<div class="tr-eq"><span>ได้</span><b>${n2(g.amt)}</b></div>`;
+    } else {   // ตามกฎ: 1 บรรทัดในงบ = 1 แถว (ยอดที่เหลือให้แบ่ง) · ที่หัก / แยกคอลัมน์อยู่บรรทัดเล็ก
+      let pool = 0; const zero = [];
+      g.items.slice().sort((a, b) => Math.abs(b.pool) - Math.abs(a.pool)).forEach(x => {
+        const dl = DET.filter(z => z.grp === g.grp && z.std === x.std), b = brand.find(bb => bb[0] === x.std), src = brand.find(bb => bb[1] === x.std);
+        const sheet = dl.reduce((t, z) => t + z.v, 0), parts = [];
+        const colsTxt = dl.length > 1 ? dl.map(z => `${colN(z.ch)} ${n2(z.v)}`).join(' + ') : '';
+        const idp = PL.filter(z => z.grp === g.grp && z.std === x.std && z.src === 'id').reduce((t, z) => t + z.pool, 0);
+        let rest = sheet;
+        if (Math.abs(idp) >= 0.005) { rest -= idp; parts.push(`− บัญชีระบุสินค้าแล้ว ${n2(idp)}`); }
+        PLX.filter(z => z.grp === g.grp && z.std === x.std).forEach(z => { rest -= z.pool; parts.push(`− ลงเป็น${trEsc(TR_LAYER[z.layer] || z.layer)}${z.src === 'id' ? ' (บัญชีระบุสินค้า)' : ''} ${n2(z.pool)}`); });
+        if (!dl.length && b) parts.push(`แยกจากบรรทัด "${trEsc(b[1])}" ตั้งไว้เดือนละ ${n2(b[2])} แบ่งตามช่องทาง`);
+        else if (Math.abs(rest - x.pool) >= 1) parts.push(`− ${src ? `แยกไปเป็น ${trEsc(src[0])}` : 'ปรับส่วนต่าง'} ${n2(rest - x.pool)}`);
+        if (parts.length && dl.length) parts.unshift(`ในงบ ${n2(sheet)}${colsTxt ? ` (${colsTxt})` : ''}`);   // มีหัก → เริ่มจากยอดในงบ
+        else if (colsTxt) parts.push(colsTxt);                                                           // หลายคอลัมน์ ไม่มีหัก → บอกยอดแต่ละคอลัมน์
+        pool += x.pool;
+        if (Math.abs(x.pool) < 0.005) { zero.push(x.std); return; }
+        const L1 = dl[0], name = L1 ? (L1.acc ? L1.acc + ' ' : '') + L1.label : x.std;
+        L.push(ln(L.length ? (x.pool < 0 ? '−' : '+') : (x.pool < 0 ? '−' : ''), trEsc(name), dl.length === 1 ? colN(dl[0].ch) : '', n2(Math.abs(x.pool)), parts.join(' ')));
+      });
+      const r = rows.find(z => z.m === m && z.grp === g.grp && z.src === g.src && z.sch === g.sch) || {};
+      const share = pool ? g.amt / pool : NaN, basisOk = r.bn != null && r.bd && Math.abs(r.bn / r.bd - share) < 0.005;
+      const BL = { grp: [`ยอดขายสินค้านี้ ÷ ทุกสินค้าในช่อง ${g.grp}`, `ยอดขายจริงในระบบ ${PL_TH_M(m)} ไม่รวม VAT`],
+        all: ['ยอดขายสินค้านี้ ÷ ทั้งบริษัท', `ยอดขายจริงในระบบ ${PL_TH_M(m)} ทุกช่องทาง`],
+        ads: [`ค่า Ads สินค้านี้ ÷ ค่า Ads ที่ผูกสินค้าทั้งหมดในช่อง ${g.grp}`, `ค่า Ads ในระบบ ${PL_TH_M(m)}`],
+        live: ['ยอดขายในไลฟ์ สินค้านี้ ÷ ไลฟ์ TikTok ทั้งหมด', `ยอดขายจริงในระบบ ${PL_TH_M(m)} เฉพาะออเดอร์จากไลฟ์`] }[g.sch] || ['สัดส่วนของสินค้านี้', ''];
+      const many = L.length > 8;
+      h += (many ? L.slice(0, 6).join('') + `<details class="tr-more"><summary>อีก ${L.length - 6} บรรทัด</summary>${L.slice(6).join('')}</details>` : L.join(''))
+        + (zero.length ? `<div class="tr-ref tr-why">ไม่เหลือให้แบ่ง (ลงที่อื่นทั้งหมด): ${zero.map(trEsc).join(' · ')}</div>` : '')
+        + `<div class="tr-eq"><span>${n2(pool)} × ${pc(share)} =</span><b>${n2(g.amt)}</b></div>`
+        + `<div class="tr-ref tr-why">${pc(share)} = ${basisOk ? `${BL[0]} ${n2(r.bn)} ÷ ${n2(r.bd)} (${BL[1]})` : 'สัดส่วนสำรอง เพราะเดือนนี้ไม่มีข้อมูลของสินค้านี้ในตัวแบ่งหลัก'}</div>`;
+    }
+    gsum += g.amt; out += h + `</div>`;
+  });
+  if (gs.length > 1) out += `<div class="tr-fg tr-fin"><div class="tr-eq"><span>รวม ${PL_TH_M(m)} = ${gs.map((g, i) => `${MK[i] || i + 1} ${n2(g.amt)}`).join(' + ')}</span><b>${n2(gsum)}</b></div></div>`;
+  return out;
 }
 // (2026-10-22) ลิงก์ไปแท็บเดือนนั้นในไฟล์บัญชี (เปิดแท็บใหม่) — j.src จาก biz_trace
 function trTabLink(j, m, label) {
