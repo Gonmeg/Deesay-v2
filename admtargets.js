@@ -1,3 +1,4 @@
+// admtargets.js (v20261022c) — ตัวเลขเต็มทุกช่อง (ไม่ย่อเป็น k / M)
 // admtargets.js (v20261022b) — คอลัมน์ "รวม 12 เดือน" + เตือนเมื่อแผนรายเดือนไม่เท่าเป้าทั้งปี · ยกยอดเฉพาะส่วนที่ขาด
 // admtargets.js (v20261022a) — หน้า Admin › "ตั้งเป้ายอดขาย" (ตารางแบบ Excel)
 // แถว = ช่องทางย่อย (TikTok: แอฟฟิลิเอต / ผู้ขาย ไลฟ์ / วิดีโอ / การ์ดสินค้า · Facebook: เพจ · Shopee / Lazada: ร้าน) · คอลัมน์ = ทั้งปี + 12 เดือน
@@ -62,7 +63,7 @@
         : `<td class="at-chk ng" data-tip="${diff > 0 ? 'เดือนที่แก้เองรวมกันเกินเป้าทั้งปี เดือนที่เหลือเลยเป็น 0 แล้วก็ยังเกิน' : 'แก้เองครบทุกเดือน แต่รวมกันไม่ถึงเป้าทั้งปี'}">⚠ ${diff > 0 ? 'เกิน' : 'ขาด'} ${n0(Math.abs(diff))}</td>`;
       return `<tr><td class="l" title="${esc(r.label)}">${esc(r.label)}<div class="at-sub">ทำได้ปีนี้ ${n0(r.ytd) || 0}</div></td>
         <td class="at-an" onclick="atAnnual(this,'${esc(r.k)}')" data-tip="พิมพ์เป้าทั้งปี · ลบให้ว่าง = ลบเป้าแถวนี้">${has ? n0(r.annual) : '<span class="at-add">＋ ตั้งเป้า</span>'}</td>
-        ${(r.months || []).map((x, i) => `<td class="${x.is_override ? 'at-ov' : ''}${has ? '' : ' at-off'}"${has ? ` onclick="atMonth(this,'${esc(r.k)}',${i})" data-tip="${x.is_override ? 'แก้เอง · ลบให้ว่าง = กลับไปแบ่งอัตโนมัติ' : 'แบ่งอัตโนมัติ · พิมพ์ทับเพื่อล็อกเดือนนี้'}"` : ''}>${x.plan != null ? short(x.plan) : '—'}</td>`).join('')}${chk}</tr>`;
+        ${(r.months || []).map((x, i) => `<td class="${x.is_override ? 'at-ov' : ''}${has ? '' : ' at-off'}"${has ? ` onclick="atMonth(this,'${esc(r.k)}',${i})" data-tip="${x.is_override ? 'แก้เอง · ลบให้ว่าง = กลับไปแบ่งอัตโนมัติ' : 'แบ่งอัตโนมัติ · พิมพ์ทับเพื่อล็อกเดือนนี้'}"` : ''}>${x.plan != null ? n0(x.plan) : '—'}</td>`).join('')}${chk}</tr>`;
     }).join('');
     const yrs = [S.year - 1, S.year, S.year + 1].map(v => `<option value="${v}"${v === S.year ? ' selected' : ''}>ปี ${v + 543}</option>`).join('');
     const warn = bad.length ? `<div class="at-warn">⚠ แผนรายเดือนไม่เท่าเป้าทั้งปี ${bad.length} แถว: ${bad.map(b => `<b>${esc(b.label)}</b> ${b.diff > 0 ? 'เกิน' : 'ขาด'} ${n0(Math.abs(b.diff))}`).join(' · ')} — ปรับเดือนที่แก้เอง หรือแก้เป้าทั้งปีให้ตรงกัน</div>` : '';
@@ -71,7 +72,7 @@
         <a class="at-link" href="dashboard.html?page=kpi&tab=sales">ดูผลที่หน้าเป้าหมาย KPI ↗</a></div>${warn}
       <div class="at-wrap"><table class="at-tbl"><thead><tr><th class="l">${S.ch === 'Facebook' ? 'เพจ' : S.ch === 'TikTok' ? 'แถว (GMV ตาม TikTok)' : 'ร้าน'}</th><th>ทั้งปี</th>${MS.map(m => `<th>${m}</th>`).join('')}<th>รวม 12 เดือน</th></tr></thead>
       <tbody>${body || '<tr><td colspan="15" class="at-empty">ไม่มีข้อมูล</td></tr>'}</tbody>
-      <tfoot><tr><td class="l">รวม</td><td>${tot.annual ? n0(tot.annual) : '—'}</td>${tot.m.map(v => `<td>${v ? short(v) : '—'}</td>`).join('')}<td></td></tr></tfoot></table></div>
+      <tfoot><tr><td class="l">รวม</td><td>${tot.annual ? n0(tot.annual) : '—'}</td>${tot.m.map(v => `<td>${v ? n0(v) : '—'}</td>`).join('')}<td></td></tr></tfoot></table></div>
       <div class="at-hint">พิมพ์ช่อง <b>ทั้งปี</b> → 12 เดือนแบ่งตามจำนวนวันให้เอง · แก้รายเดือนได้ พิมพ์ทับ (ช่องสีส้ม = แก้เอง) เดือนที่ยังไม่ได้แก้จะปรับให้รวมเท่าทั้งปีเอง · ช่อง <b>รวม 12 เดือน</b> บอกว่าพอดีกับเป้าทั้งปีไหม · Enter บันทึก · Esc ยกเลิก<br>
       เดือนไหนทำไม่ถึง ส่วนที่ขาดยกไปเพิ่มเป้าเดือนถัดไปให้อัตโนมัติ · เดือนที่ทำเกิน ไม่ไปลดเป้าเดือนอื่น (ดูที่หน้าเป้าหมาย KPI)</div>`;
   }
@@ -90,7 +91,7 @@
 .at-yr { border:1px solid var(--border, #e5e7eb); background:transparent; color:inherit; border-radius:9px; padding:6px 10px; font-family:inherit; font-size:13px; }
 .at-link { font-size:12.5px; color:#b8862f; text-decoration:none; }
 .at-wrap { overflow-x:auto; }
-.at-tbl { width:100%; border-collapse:collapse; font-size:12.5px; min-width:1100px; }
+.at-tbl { width:100%; border-collapse:collapse; font-size:12px; min-width:1400px; }   /* ตัวเลขยอดขายเต็ม ไม่ย่อ */
 .at-tbl th { font-size:11px; opacity:.65; font-weight:600; padding:8px 4px; border-bottom:1px solid var(--border, #e5e7eb); text-align:center; }
 .at-tbl td { padding:9px 4px; border-bottom:1px solid var(--border, #e5e7eb); text-align:center; font-variant-numeric:tabular-nums; white-space:nowrap; cursor:pointer; }
 .at-tbl th.l, .at-tbl td.l { text-align:left; width:260px; max-width:260px; overflow:hidden; text-overflow:ellipsis; cursor:default; }
