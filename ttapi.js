@@ -1,3 +1,4 @@
+// ttapi.js (v20261021f) — คอลัมน์เป้าดูอย่างเดียว (tt_gmv_target_range) · ตั้งเป้าที่หน้าเป้าหมาย KPI › TikTok GMV
 // ttapi.js (v20261021e) — เป้า GMV เป็นคอลัมน์ "เป้า" หน้าคอลัมน์ GMV (กดตัวเลขเพื่อแก้ เฉพาะผู้ดูแล) · เอาการ์ดเป้าออก
 // ttapi.js (v20261021c) — เอาตาราง "ประสิทธิภาพแต่ละช่องทาง" ออก (ซ้ำกับมุมมอง GMV) · รอบ Live เรียงล่าสุดก่อน
 // ttapi.js (v20261021a) — หน้าภาพรวม TikTok 2 มุมมอง (ยอดขายจริง / GMV ตาม TikTok) · ตารางแบ่งแบบ TikTok (แอฟฟิลิเอต / ผู้ขาย × ไลฟ์ / วิดีโอ / การ์ดสินค้า) + ค่า Ads
@@ -130,29 +131,10 @@
         plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}  ${fmt(c.raw)}` } } },
         scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { display: false, beginAtZero: true }, y1: { display: false, beginAtZero: true, position: 'right' } } } });
   }
-  // ===== (2026-10-21 b) เป้า GMV รายเดือน = คอลัมน์ "เป้า" หน้าคอลัมน์ GMV (มุมมอง GMV ตาม TikTok) =====
-  //   แอฟฟิลิเอต ก้อนเดียว · ผู้ขาย แยก ไลฟ์ / วิดีโอ / การ์ดสินค้า (ผู้ขายรวม = บวกให้) · เดือน = เดือนของวันสุดท้ายที่เลือก
-  //   แก้ได้เฉพาะผู้ดูแล / คนที่แก้ KPI ได้: กดที่ตัวเลขเป้า → พิมพ์ → Enter บันทึก · Esc ยกเลิก
-  let _tg = null, _last = { from: null, to: null };
+  // ===== (2026-10-21 c) คอลัมน์ "เป้า" (มุมมอง GMV ตาม TikTok · ดูอย่างเดียว) — ตั้งเป้าที่หน้าเป้าหมาย KPI › แท็บ TikTok GMV =====
+  //   เลือกในเดือนเดียว = เป้าจริงของเดือน (แผน + ยกมา) · หลายเดือน / ทั้งปี = แผนรวมตามวันที่ทับช่วง ถึงวันล่าสุดที่ TikTok ปล่อย
+  let _tg = null;
   const TGK = ['aff', 'sel_live', 'sel_video', 'sel_card'];
-  function tgEdit(td, k) {
-    if (!_tg || !_tg.can_edit || td.querySelector('input')) return;
-    const cur = _tg.target && _tg.target[k] != null ? Math.round(+_tg.target[k]) : '';
-    td.innerHTML = `<input class="ls-input" inputmode="numeric" value="${cur === '' ? '' : fmt(cur)}" style="width:110px;text-align:right;padding:4px 8px;font-size:12.5px;">`;
-    const inp = td.querySelector('input'); inp.focus(); inp.select();
-    let done = false;
-    const finish = async save => {
-      if (done) return; done = true;
-      if (!save) { renderOrderChannel(_last.from, _last.to); return; }
-      const p = {}; TGK.forEach(x => { p[x] = _tg.target && _tg.target[x] != null ? String(Math.round(+_tg.target[x])) : ''; });
-      p[k] = String(inp.value || '').replace(/[^\d.]/g, '');
-      try { _tg = await supaRpc('tt_gmv_target_save', { p_month: _tg.month, p }, true); }
-      catch (e) { if (typeof uiAlert === 'function') uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
-      renderOrderChannel(_last.from, _last.to);
-    };
-    inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') finish(true); else if (ev.key === 'Escape') finish(false); });
-    inp.addEventListener('blur', () => finish(true));
-  }
   async function renderOrderChannel(from, to) {
     const tb = document.getElementById('tbodyTtOrderChannel'); if (!tb) return;
     const seq = ++_ocSeq; applyView();
@@ -162,15 +144,14 @@
       ? 'GMV แยกตามแหล่งที่มาของคำสั่งซื้อ' + iTip('ตัวเลขชุดเดียวกับ TikTok Seller Center › รายละเอียด GMV › ตามแหล่งที่มาของคำสั่งซื้อ\nGMV ก่อนหักยกเลิก / คืน · ไม่ใช้รวมกับยอดขายช่องทางอื่น')
       : 'ยอดขายแยกตามช่องทาง' + iTip('ยอดขายจริงตามคำสั่งซื้อ (หักยกเลิก / คืนแล้ว) · ชุดเดียวกับการ์ดยอดขาย รวมทุกแถวเท่าการ์ดเสมอ\nแบ่งแบบเดียวกับ TikTok: แอฟฟิลิเอต = ออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์ · ผู้ขาย = บัญชีร้าน\nลดหนี้ (CN) = ยอดลดหนี้ตามบัญชี');
     if (tbl && tbl.tHead) tbl.tHead.innerHTML = `<tr><th class="l">ช่องทาง</th>`
-      + (tk ? `<th>${thTip('เป้า ' + tgMonth(to), 'เป้า GMV ทั้งเดือน · แอฟฟิลิเอตเป็นก้อนเดียว · ผู้ขายแยก ไลฟ์ / วิดีโอ / การ์ดสินค้า (ผู้ขายรวม = บวกให้)\n% ใต้ตัวเลข = GMV ÷ เป้า (เฉพาะเมื่อเลือกตั้งแต่วันที่ 1 ของเดือน) · สีเทียบกับจำนวนวันที่ผ่านไป: เขียว ทัน · ส้ม ช้าไม่เกิน 10% · แดง ช้ามาก\nกดที่ตัวเลขเพื่อแก้ (เฉพาะผู้ดูแล)')}</th><th>${thTip('GMV', 'GMV ตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) = GMV ตรง + GMV โดยอ้อม')}</th><th>${thTip('GMV โดยอ้อม', 'ยอดที่ลูกค้าซื้อหลังดูไลฟ์ / วิดีโอ แต่ไม่ได้ซื้อตรงจากคอนเทนต์นั้น')}</th>`
+      + (tk ? `<th>${thTip(from.slice(0, 7) === to.slice(0, 7) ? 'เป้า ' + tgMonth(to) : 'เป้า (ช่วงที่เลือก)', 'ตั้งเป้าที่หน้าเป้าหมาย KPI › แท็บ TikTok GMV (เป้าทั้งปี → รายเดือน → ยกยอดขาด / เกิน)\nเลือกในเดือนเดียว = เป้าจริงของเดือนนั้น (แผน + ยกมา) · % เทียบกับจำนวนวันที่ผ่านไป (เมื่อเลือกตั้งแต่วันที่ 1)\nเลือกหลายเดือน / ทั้งปี = แผนรวมของช่วงนั้น นับถึงวันล่าสุดที่ TikTok ปล่อยข้อมูล\nสี: เขียว ทัน · ส้ม ช้าไม่เกิน 10% · แดง ช้ามาก')}</th><th>${thTip('GMV', 'GMV ตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) = GMV ตรง + GMV โดยอ้อม')}</th><th>${thTip('GMV โดยอ้อม', 'ยอดที่ลูกค้าซื้อหลังดูไลฟ์ / วิดีโอ แต่ไม่ได้ซื้อตรงจากคอนเทนต์นั้น')}</th>`
             : `<th>${thTip('ยอดขาย', 'ยอดขายจริง หักยกเลิก / คืนแล้ว')}</th><th>ออเดอร์</th>`)
       + `<th>สัดส่วน</th><th class="tt-gl tt-ad">ค่า Ads</th><th class="tt-ad">${thTip('ROAS', tk ? 'GMV ÷ ค่า Ads (ค่า Ads ถึงวันเดียวกับ GMV)' : 'ยอดขายจริง ÷ ค่า Ads')}</th><th class="tt-ad">${thTip('%Ads', tk ? 'ค่า Ads ÷ GMV' : 'ค่า Ads ÷ ยอดขายจริง')}</th>`
       + `<th class="tt-gl tt-ad">${thTip('ยอดขายจาก Ads (TikTok)', 'ยอดขายที่ TikTok บอกว่ามาจาก Ads\nTikTok นับตอนลูกค้ากดสั่ง (ก่อนหักยกเลิก / คืน) และนับยอดทั้งไลฟ์ที่มี Ads วิ่ง')}</th><th class="tt-ad">${thTip('ROI (TikTok)', 'ROI ที่ TikTok คำนวณ = ยอดขายจาก Ads (TikTok) ÷ ค่า Ads\nแถวรวมไม่นับ Ads สร้างการรับรู้')}</th></tr>`;
     try {
       let C = {}, ord = {}, ind = {}, est = {}, adTo = to, V = null;
-      _last = { from, to };
       if (tk) {
-        [V, _tg] = await Promise.all([supaRpc('tt_gmv_view', { p_from: from, p_to: to }, true), supaRpc('tt_gmv_target_page', { p_month: to }, true).catch(() => null)]);
+        [V, _tg] = await Promise.all([supaRpc('tt_gmv_view', { p_from: from, p_to: to }, true), supaRpc('tt_gmv_target_range', { p_from: from, p_to: to }, true).catch(() => null)]);
         adTo = V && V.latest_date && V.latest_date < to ? V.latest_date : to;
         const m = { 'aff.live': [V.aff_live_d, V.aff_live_i], 'aff.video': [V.aff_video_d, V.aff_video_i], 'aff.card': [V.aff_card, null], 'sel.live': [V.sel_live_d, V.sel_live_i], 'sel.video': [V.sel_video_d, V.sel_video_i], 'sel.card': [V.sel_card, null] };
         Object.entries(m).forEach(([k, [d, i]]) => { C[k] = num(d) + num(i); ind[k] = i == null ? null : num(i); });
@@ -192,16 +173,16 @@
       const tot = GRP.reduce((t, [g]) => t + TYP.reduce((a, [ty]) => a + num(C[g + '.' + ty]), 0), 0) + cn;
       const estTip = 'ตั้งแต่ออเดอร์มาจาก API (ต.ค. 69) ออเดอร์ไม่บอกว่ามาจากคลิปร้านหรือการ์ดสินค้า · แบ่งยอดรายวันตามสัดส่วนที่ TikTok บอก (ผู้ขาย · วิดีโอ : ผู้ขาย · การ์ดสินค้า) · ยอดรวมผู้ขายยังตรง';
       // เซลล์เป้า (มุมมอง TikTok เท่านั้น)
-      const TT = (_tg && _tg.target) || {}, canE = !!(_tg && _tg.can_edit);
-      const mtd = from.slice(8, 10) === '01' && from.slice(0, 7) === to.slice(0, 7);   // เลือกตั้งแต่วันที่ 1 → % เทียบเป้าได้
-      const dim = _tg ? +_tg.days_in_month || 30 : 30, el = _tg && _tg.latest ? Math.min(+_tg.latest.slice(8, 10), dim) : 0, pace = el / dim;
+      const TT = (_tg && _tg.t) || {}, monthMode = !_tg || _tg.mode === 'month';
+      const mtd = monthMode && from.slice(8, 10) === '01' && from.slice(0, 7) === to.slice(0, 7);   // เดือนเดียว เลือกตั้งแต่วันที่ 1 → % เทียบเป้าได้
+      const dim = _tg ? +_tg.days_in_month || 30 : 30, lt = _tg && _tg.latest;
+      const pace = monthMode ? (lt && lt.slice(0, 7) === to.slice(0, 7) ? Math.min(+lt.slice(8, 10), dim) / dim : (lt && lt > to ? 1 : 0)) : 1;
       const tCell = (tgt, act, key, bold) => {
         if (!tk) return '';
-        const ed = canE && key ? ` onclick="ttApi.tgEdit(this,'${key}')" style="cursor:pointer;" data-tip="กดเพื่อแก้เป้า"` : '';
-        if (!(tgt > 0)) return `<td${ed}>${canE && key ? '<span style="color:var(--text3);">＋ ตั้งเป้า</span>' : dash}</td>`;
+        if (!(tgt > 0)) return `<td>${dash}</td>`;
         let p = '';
-        if (mtd && act != null) { const r = act / tgt, c = r >= pace ? 'var(--green, #16a34a)' : r >= pace * 0.9 ? '#c9851a' : 'var(--red, #dc2626)'; p = `<div style="font-size:11px;font-weight:700;color:${c};">${(r * 100).toFixed(1)}%</div>`; }
-        return `<td${ed}>${bold ? '<b>' + baht(tgt) + '</b>' : baht(tgt)}${p}</td>`;
+        if ((mtd || !monthMode) && act != null && pace > 0) { const r = act / tgt, c = r >= pace ? 'var(--green, #16a34a)' : r >= pace * 0.9 ? '#c9851a' : 'var(--red, #dc2626)'; p = `<div style="font-size:11px;font-weight:700;color:${c};">${(r * 100).toFixed(1)}%</div>`; }
+        return `<td>${bold ? '<b>' + baht(tgt) + '</b>' : baht(tgt)}${p}</td>`;
       };
       const tgOf = k => +TT[k] || 0;
       let h = '';
@@ -300,5 +281,5 @@
 
   function setCrType(t) { _crType = t; if (t !== 'all') _crCh = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
   function setCrCh(c) { _crCh = c; if (c !== 'all') _crType = 'all'; if (_crArgs) renderCreatorExtras(..._crArgs); }
-  window.ttApi = { renderTraffic, renderOrderChannel, renderCreatorExtras, setLiveScope, setCrType, setCrCh, setView, getView: () => _view, tgEdit };
+  window.ttApi = { renderTraffic, renderOrderChannel, renderCreatorExtras, setLiveScope, setCrType, setCrCh, setView, getView: () => _view };
 })();
