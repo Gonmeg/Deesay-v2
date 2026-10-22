@@ -674,6 +674,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblTtOrderChannel th, #tblTtOrderChannel td { text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums; }   /* (2026-10-21) หัวคอลัมน์กับตัวเลขอยู่ตรงกัน */
   #tblTtOrderChannel th.l, #tblTtOrderChannel td.l { text-align:left; width:210px; }
   #tblTtOrderChannel th { white-space:normal; line-height:1.35; vertical-align:bottom; }
+  #tblShSys { table-layout:fixed; width:100%; }   /* (2026-10-22) มุมมองยอดตามระบบ Shopee */
+  #tblShSys th, #tblShSys td { text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  #tblShSys th { white-space:normal; line-height:1.35; vertical-align:bottom; }
+  #tblShSys th.l, #tblShSys td.l { text-align:left; width:170px; }
+  #tblShSys .tt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
   #tblTtOrderChannel tr.tt-grp td { background:var(--bg3); }
   #tblTtOrderChannel td.tt-sub { padding-left:30px; color:var(--text2); }
   #tblTtOrderChannel .tt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
@@ -684,6 +689,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tt-vi small { color:var(--text3); font-size:11px; font-weight:400; }
   #tblTtOrderChannel .tt-gl { border-left:1px solid var(--border); } #tblTtOrderChannel th.tt-ad { color:#b45309; }
   body:not(.light-theme) #tblTtOrderChannel th.tt-ad { color:#fbbf24; }
+  #tblShSys .tt-gl { border-left:1px solid var(--border); } #tblShSys th.tt-ad { color:#b45309; }
+  body:not(.light-theme) #tblShSys th.tt-ad { color:#fbbf24; }
   .tr-tb tr.tr-gh td { color:var(--text); font-weight:700; }
   .tr-tb tr.tr-gh:hover td { background:rgba(127,127,127,.08); }
   .tr-car { display:inline-block; width:14px; color:var(--text3); font-size:11px; transition:transform .15s; }
@@ -787,7 +794,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.22-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.22-d</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -921,6 +928,17 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <div class="ui-dd-h">มุมมอง</div>
             <button class="ui-dd-item tt-vi" type="button" data-v="order" aria-selected="true" onclick="ttSetView('order')"><span>ยอดขายจริง<small>ตามคำสั่งซื้อ · หักยกเลิก / คืนแล้ว</small></span></button>
             <button class="ui-dd-item tt-vi" type="button" data-v="tiktok" aria-selected="false" onclick="ttSetView('tiktok')"><span>GMV ตาม TikTok<small>ตรงกับ Seller Center · ก่อนหักยกเลิก / คืน</small></span></button>
+          </div>
+        </div>
+      </div>
+      <!-- (2026-10-22) มุมมองหน้าภาพรวม Shopee: ยอดขายจริง / ยอดตามระบบ Shopee (ดู KPI) — shsys.js -->
+      <div class="filter-group sh-filter" id="shViewGroup" style="display:none;padding:0;background:transparent;border:none;">
+        <div class="ui-dd" id="shViewDd">
+          <button class="ui-dd-btn" type="button" onclick="shViewToggle(event)"><small>มุมมอง ·</small><b id="shViewLbl" style="font-weight:600;">ยอดขายจริง</b></button>
+          <div class="ui-dd-menu" style="left:auto;right:0;min-width:290px;">
+            <div class="ui-dd-h">มุมมอง</div>
+            <button class="ui-dd-item tt-vi" type="button" data-v="order" aria-selected="true" onclick="shSetView('order')"><span>ยอดขายจริง<small>ตามคำสั่งซื้อ · หักยกเลิก / คืนแล้ว</small></span></button>
+            <button class="ui-dd-item tt-vi" type="button" data-v="system" aria-selected="false" onclick="shSetView('system')"><span>ยอดตามระบบ Shopee<small>แบบ Business Insights · ใช้ดู KPI</small></span></button>
           </div>
         </div>
       </div>
@@ -2876,6 +2894,7 @@ function showPage(page, lockCh, el) {
   document.querySelectorAll('.kj-filter').forEach(el => { el.style.display = (page === 'kol') ? 'flex' : 'none'; });   // (2026-10-01) ตัวกรองหน้า KOL
   document.querySelectorAll('.mm-filter').forEach(el => { el.style.display = (page === 'skurev') ? 'flex' : 'none'; });
   document.querySelectorAll('.tt-filter').forEach(el => { el.style.display = (page === 'tthub') ? 'flex' : 'none'; });
+  document.querySelectorAll('.sh-filter').forEach(el => { el.style.display = (page === 'shhub') ? 'flex' : 'none'; });   // (2026-10-22) มุมมอง Shopee
   { const cg = document.getElementById('filterChannel')?.closest('.filter-group'); if (cg && page !== 'kpi') cg.style.visibility = ''; }   // (2026-10-21) มุมมอง ยอดขายจริง / GMV ตาม TikTok
   const cpGroup = document.getElementById('cpCreatorFilterGroup');
   if (cpGroup) cpGroup.style.display = (page === 'creatorperf') ? 'flex' : 'none';
@@ -3066,7 +3085,7 @@ function kpTab(t) {
 function loadTtKpi() {
   if (window.renderKpiSales) { window.renderKpiSales(); return; }
   if (window._ttkLoading) return; window._ttkLoading = true;
-  const s = document.createElement('script'); s.src = 'kpisales.js?v=20261022a';
+  const s = document.createElement('script'); s.src = 'kpisales.js?v=20261022c';
   s.onload = () => { window._ttkLoading = false; window.renderKpiSales && window.renderKpiSales(); };
   s.onerror = () => { window._ttkLoading = false; const b = document.getElementById('kpPaneTt'); if (b) b.innerHTML = '<div class="error-banner" style="display:block;">โหลด kpisales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -3738,6 +3757,30 @@ function ttViewToggle(e) {
   if (open && !ttViewToggle._bound) { ttViewToggle._bound = true;
     document.addEventListener('click', ev => { const x = document.getElementById('ttViewDd'); if (x && !x.contains(ev.target)) x.classList.remove('is-open'); }); }
 }
+// (2026-10-22) มุมมองหน้าภาพรวม Shopee — ยอดขายจริง (sales.js) / ยอดตามระบบ Shopee (shsys.js · ดู KPI)
+let _shView = 'order', _shSysPromise = null;
+function ensureShSys() {
+  if (window.shSys) return Promise.resolve(window.shSys);
+  if (_shSysPromise) return _shSysPromise;
+  _shSysPromise = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'shsys.js?v=20261022a'; s.onload = () => res(window.shSys); s.onerror = () => { _shSysPromise = null; rej(new Error('โหลด shsys.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); }; document.body.appendChild(s); });
+  return _shSysPromise;
+}
+function shViewMark(v) {
+  document.querySelectorAll('#shViewGroup [data-v]').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v ? 'true' : 'false'));
+  const l = document.getElementById('shViewLbl'); if (l) l.textContent = v === 'system' ? 'ยอดตามระบบ Shopee' : 'ยอดขายจริง';
+}
+function shViewToggle(e) {
+  if (e) e.stopPropagation();
+  const dd = document.getElementById('shViewDd'); if (!dd) return;
+  const open = !dd.classList.contains('is-open'); dd.classList.toggle('is-open', open);
+  if (open && !shViewToggle._bound) { shViewToggle._bound = true;
+    document.addEventListener('click', ev => { const x = document.getElementById('shViewDd'); if (x && !x.contains(ev.target)) x.classList.remove('is-open'); }); }
+}
+function shSetView(v) {
+  _shView = v === 'system' ? 'system' : 'order'; shViewMark(_shView); document.getElementById('shViewDd')?.classList.remove('is-open');
+  if (_shView === 'system') ensureShSys().then(m => m.setView('system', getDateValue('From'), getDateValue('To'))).catch(e => console.warn('shsys', e));
+  else if (window.shSys) window.shSys.setView('order');
+}
 function ttSetView(v) {
   ttViewMark(v); document.getElementById('ttViewDd')?.classList.remove('is-open');
   ensureTtApi().then(api => api.setView(v, getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
@@ -3778,6 +3821,8 @@ async function renderShHub() {
   if (!(await hubPrepare('shhub'))) return;
   // (2026-10-18) แม่แบบ 1 (sales.js) · ค่า Ads จาก mv_ad_spend_daily — ยอดเท่ากับ 4 แหล่งเดิม (API + Brand / Live / Coins + CPAS + ชีท 24hr) ทุกเดือน
   renderHubOverview('shhub');
+  if (_shView === 'system') ensureShSys().then(m => m.render(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('shsys', e));
+  else if (window.shSys) window.shSys.apply();
   renderPromotion('Sh', 'Shopee');
 }
 
