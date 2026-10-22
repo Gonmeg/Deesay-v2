@@ -678,6 +678,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblTtOrderChannel td.tt-sub { padding-left:30px; color:var(--text2); }
   #tblTtOrderChannel .tt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
   .tt-vi span { display:flex; flex-direction:column; gap:1px; }
+  .kp-tabs { display:inline-flex; background:var(--bg3); border-radius:10px; padding:3px; gap:2px; margin-bottom:14px; }
+  .kp-tabs button { border:0; background:transparent; padding:6px 14px; font-size:13px; border-radius:8px; color:var(--text2); cursor:pointer; font-family:inherit; }
+  .kp-tabs button.on { background:var(--bg2); color:var(--text); font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.12); }
   .tt-vi small { color:var(--text3); font-size:11px; font-weight:400; }
   #tblTtOrderChannel .tt-gl { border-left:1px solid var(--border); } #tblTtOrderChannel th.tt-ad { color:#b45309; }
   body:not(.light-theme) #tblTtOrderChannel th.tt-ad { color:#fbbf24; }
@@ -784,7 +787,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.21-h</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.22-a</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -1288,8 +1291,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-kpi">
-      <!-- (2026-10-07) หน้าเป้าหมาย KPI — สร้างโดย kpi.js (โหลดครั้งแรกที่กดเมนู) -->
-      <div class="card"><div class="empty">กำลังโหลด...</div></div>
+      <!-- (2026-10-07) หน้าเป้าหมาย KPI — สร้างโดย kpi.js (โหลดครั้งแรกที่กดเมนู) · (2026-10-22) แท็บเป้ายอดขายรายช่องทาง = kpisales.js (ตั้งเป้าที่ admin.html#targets) -->
+      <div class="kp-tabs" id="kpTabs"><button type="button" class="on" data-t="main" onclick="kpTab('main')">เป้าสินค้า × ช่องทาง</button><button type="button" data-t="tt" onclick="kpTab('tt')">เป้ายอดขายรายช่องทาง</button></div>
+      <div id="kpPaneMain"><div class="card"><div class="empty">กำลังโหลด...</div></div></div>
+      <div id="kpPaneTt" style="display:none;"></div>
     </div>
 
     <div class="page" id="page-fbadmin">
@@ -2155,7 +2160,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   </div>
 </div>
 <script src="config.js"></script>
-<script src="auth.js?v=20261020a"></script>
+<script src="auth.js?v=20261022a"></script>
 <script>
 // ===== STATE =====
 let allData = [];
@@ -2870,7 +2875,8 @@ function showPage(page, lockCh, el) {
   document.querySelectorAll('.fba-filter').forEach(el => { el.style.display = (page === 'fbads') ? 'flex' : 'none'; });
   document.querySelectorAll('.kj-filter').forEach(el => { el.style.display = (page === 'kol') ? 'flex' : 'none'; });   // (2026-10-01) ตัวกรองหน้า KOL
   document.querySelectorAll('.mm-filter').forEach(el => { el.style.display = (page === 'skurev') ? 'flex' : 'none'; });
-  document.querySelectorAll('.tt-filter').forEach(el => { el.style.display = (page === 'tthub') ? 'flex' : 'none'; });   // (2026-10-21) มุมมอง ยอดขายจริง / GMV ตาม TikTok
+  document.querySelectorAll('.tt-filter').forEach(el => { el.style.display = (page === 'tthub') ? 'flex' : 'none'; });
+  { const cg = document.getElementById('filterChannel')?.closest('.filter-group'); if (cg && page !== 'kpi') cg.style.visibility = ''; }   // (2026-10-21) มุมมอง ยอดขายจริง / GMV ตาม TikTok
   const cpGroup = document.getElementById('cpCreatorFilterGroup');
   if (cpGroup) cpGroup.style.display = (page === 'creatorperf') ? 'flex' : 'none';
   // หน้า KOL มีตัวเลือก ปี/เดือน ของตัวเอง (นับตามวันโพสต์) — ซ่อนช่วงวันที่ + ปุ่มค้นหาด้านบน
@@ -3046,14 +3052,34 @@ function loadPromoPage(page) {
   s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
 }
+// (2026-10-22) แท็บในหน้า KPI: เป้าสินค้า × ช่องทาง (kpi.js) / เป้ายอดขายรายช่องทาง (kpisales.js · ดูผล — ตั้งเป้าที่ Admin)
+let _kpTab = new URLSearchParams(location.search).get('tab') === 'sales' ? 'tt' : 'main';
+function kpTab(t) {
+  _kpTab = t === 'tt' ? 'tt' : 'main';
+  document.querySelectorAll('#kpTabs [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === _kpTab));
+  const a = document.getElementById('kpPaneMain'), b = document.getElementById('kpPaneTt');
+  if (a) a.style.display = _kpTab === 'main' ? '' : 'none'; if (b) b.style.display = _kpTab === 'tt' ? '' : 'none';
+  const mg = document.getElementById('kpMonthGroup'); if (mg && currentPage === 'kpi') mg.style.display = _kpTab === 'main' ? 'flex' : 'none';
+  const cg = document.getElementById('filterChannel')?.closest('.filter-group'); if (cg && currentPage === 'kpi') cg.style.visibility = _kpTab === 'main' ? '' : 'hidden';   // แท็บเป้ายอดขายเลือกช่องทางในหน้าเอง
+  if (_kpTab === 'tt') loadTtKpi(); else loadKpiPage(false);
+}
+function loadTtKpi() {
+  if (window.renderKpiSales) { window.renderKpiSales(); return; }
+  if (window._ttkLoading) return; window._ttkLoading = true;
+  const s = document.createElement('script'); s.src = 'kpisales.js?v=20261022a';
+  s.onload = () => { window._ttkLoading = false; window.renderKpiSales && window.renderKpiSales(); };
+  s.onerror = () => { window._ttkLoading = false; const b = document.getElementById('kpPaneTt'); if (b) b.innerHTML = '<div class="error-banner" style="display:block;">โหลด kpisales.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+  document.body.appendChild(s);
+}
 function loadKpiPage(reload) {
+  if (_kpTab === 'tt') { kpTab('tt'); return; }
   if (window.renderKpiPage) { window.renderKpiPage(reload); return; }
   if (window._kpiLoading) return;
   window._kpiLoading = true;
   const s = document.createElement('script');
-  s.src = 'kpi.js?v=20261020a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
+  s.src = 'kpi.js?v=20261021a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
   s.onload = () => { window._kpiLoading = false; if (currentPage === 'kpi') window.renderKpiPage(true); };
-  s.onerror = () => { window._kpiLoading = false; document.getElementById('page-kpi').innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+  s.onerror = () => { window._kpiLoading = false; (document.getElementById('kpPaneMain') || document.getElementById('page-kpi')).innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
 }
 
@@ -3064,7 +3090,7 @@ function ensureTtApi() {
   if (_ttApiPromise) return _ttApiPromise;
   _ttApiPromise = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'ttapi.js?v=20261021e';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
+    s.src = 'ttapi.js?v=20261021f';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ttapi.js
     s.onload = () => res(window.ttApi);
     s.onerror = () => { _ttApiPromise = null; rej(new Error('โหลด ttapi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
     document.body.appendChild(s);
