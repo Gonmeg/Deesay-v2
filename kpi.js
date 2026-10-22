@@ -1,3 +1,4 @@
+// kpi.js (v20261021a) — วาดลงกล่อง #kpPaneMain (หน้า KPI มีแท็บ: เป้าสินค้า × ช่องทาง / TikTok GMV)
 // kpi.js (v20261013b) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
 // เป้ารายเดือน ต่อสินค้า (parent) ต่อช่องทาง · กรอกเป็นชิ้น → เป้าเงิน = ชิ้น × ราคาเฉลี่ยต่อชิ้นจริง 3 เดือนก่อนเดือนเป้า (ล็อกเมื่อเดือนจบ: kpi_price_lock)
 // ที่มา: RPC kpi_page(p_month) — ยอดจริงจาก mv_sku_daily (แหล่งเดียวกับเจาะสินค้า / แนวโน้มสินค้า) นับถึงเมื่อวาน · บันทึก: RPC kpi_set_targets (ตรวจสิทธิ์ + เก็บประวัติ)
@@ -771,13 +772,14 @@
 
   const SKEL = `<div class="hm-head"><div><div class="skeleton" style="height:22px;width:200px;margin-bottom:8px;"></div><div class="skeleton" style="height:13px;width:260px;"></div></div></div>
     <div class="skeleton" style="height:106px;border-radius:10px;"></div><div class="hm-gap"></div><div class="skeleton" style="height:300px;border-radius:10px;"></div>`;
+  const root = () => $('kpPaneMain') || $('page-kpi');   // (2026-10-21) หน้า KPI มีแท็บ → วาดในกล่องของแท็บแรก
   function shell() {
-    const pg = $('page-kpi');
+    const pg = root();
     if (!$('kpHead')) pg.innerHTML = `<div class="hm-head" id="kpHead"></div><div id="kpNote"></div><section class="ui-metrics hm-metrics" id="kpCards" aria-label="ตัวเลขหลัก"></section><div class="hm-gap"></div><div id="kpMain"></div>`;
   }
   let seq = 0;
   async function goMonth(mo, force) {
-    const my = ++seq, pg = $('page-kpi');
+    const my = ++seq, pg = root();
     if (!CACHE[mo] || force) { if (!CACHE[S.mo || mo]) pg.innerHTML = SKEL; else pg.style.opacity = '.55'; }
     let got;
     try { got = await load(mo, force); }
