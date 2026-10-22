@@ -106,7 +106,7 @@ window.Auth = (function () {
     perm.pages = perm.pages || [];
     if (!perm.is_active) return showBlocked('บัญชีถูกปิดใช้งาน', 'ติดต่อผู้ดูแลระบบถ้าต้องการใช้งานต่อ');
     const ok = where === 'upload' ? (perm.is_admin || perm.can_upload)
-             : where === 'admin'  ? (perm.is_admin || perm.can_admin)
+             : where === 'admin'  ? (perm.is_admin || perm.can_admin || perm.can_edit_kpi)   // (2026-10-22) คนแก้ KPI เข้าได้เฉพาะแท็บตั้งเป้ายอดขาย
              : where === 'health' ? perm.is_admin
              : (perm.is_admin || perm.pages.length > 0);
     if (!ok) return showBlocked('รอเปิดสิทธิ์ใช้งาน', where === 'dashboard'
