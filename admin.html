@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | Deesay</title>
 <script src="config.js"></script>
-<script src="auth.js?v=20261020a"></script>
+<script src="auth.js?v=20261022a"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -357,6 +357,7 @@
   <div class="side-sec">จัดการข้อมูล</div>
   <!-- (2026-10-20) สินค้า & ราคา ย้ายไปหน้า dashboard (เมนู สินค้า / การตลาด) แล้ว -->
   <button class="side-item active" data-tab="fbads"><span class="ico">📣</span>แอด Facebook</button>
+  <button class="side-item" data-tab="targets" id="sideTargets"><span class="ico">🎯</span>ตั้งเป้ายอดขาย</button><!-- (2026-10-22) เป้ายอดขายรายช่องทาง: admtargets.js -->
   <button class="side-item" data-tab="perms" id="sidePerms" style="display:none;"><span class="ico">🔐</span>สิทธิ์ผู้ใช้</button>
 
   <div class="side-sec">ไปหน้าอื่น</div>
@@ -387,6 +388,7 @@
     <button class="tab-btn" data-tab="supply">🚚 Supply Chain</button>
     <button class="tab-btn" data-tab="fbads">📣 แอด Facebook</button>
     <button class="tab-btn" data-tab="perms">🔐 สิทธิ์ผู้ใช้</button>
+    <button class="tab-btn" data-tab="targets">🎯 ตั้งเป้ายอดขาย</button>
   </div>
 
   <div id="tab-products" class="tabpane">
@@ -543,6 +545,10 @@
       </table></div>
     </div>
   </div><!-- /tab-perms -->
+
+  <div id="tab-targets" class="tabpane" style="display:none;">
+    <div class="card"><div id="atBody"><div class="at-empty">กำลังโหลด…</div></div></div>
+  </div><!-- /tab-targets -->
 
   <div id="tab-fbads" class="tabpane" style="display:none;">
     <div class="card" style="margin-bottom:18px;">
@@ -1466,10 +1472,12 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById('tab-supply').style.display = tab === 'supply' ? '' : 'none'
     document.getElementById('tab-perms').style.display = tab === 'perms' ? '' : 'none'
     document.getElementById('tab-fbads').style.display = tab === 'fbads' ? '' : 'none'
+    document.getElementById('tab-targets').style.display = tab === 'targets' ? '' : 'none'
     document.getElementById('btnShowNewRow').style.display = tab === 'products' ? '' : 'none'
     if (tab === 'supply') loadSupplyTab()
     if (tab === 'perms') loadPermsTab()
     if (tab === 'fbads') loadFbAdsTab()
+    if (tab === 'targets' && window.openAdminTargets) window.openAdminTargets()
   })
 })
 
@@ -1492,7 +1500,12 @@ async function init() {
     document.getElementById('tblBody').innerHTML = `<tr class="empty-row"><td colspan="9">❌ โหลดข้อมูลไม่สำเร็จ: ${err.message}</td></tr>`
   }
 }
-init().then(() => { document.querySelector('.side-item[data-tab="fbads"]')?.click(); })   // (2026-10-20) แท็บสินค้าย้ายไป dashboard → เปิดมาเจอแอด Facebook
+// (2026-10-22) คนที่มีแค่สิทธิ์แก้ KPI (ไม่ใช่ผู้ดูแล / จัดการสินค้า) → เห็นเฉพาะแท็บตั้งเป้ายอดขาย · ลิงก์ #targets เปิดแท็บนี้ตรง
+const _fullAdmin = !!(Auth.perm?.is_admin || Auth.perm?.can_admin)
+if (!_fullAdmin) {
+  document.querySelectorAll('.side-item[data-tab]').forEach(el => { if (el.dataset.tab !== 'targets') el.style.display = 'none' })
+  document.querySelector('.side-item[data-tab="targets"]')?.click()
+} else init().then(() => { document.querySelector(`.side-item[data-tab="${/^#targets/.test(location.hash) ? 'targets' : 'fbads'}"]`)?.click(); })   // (2026-10-20) แท็บสินค้าย้ายไป dashboard → เปิดมาเจอแอด Facebook
 </script>
 <script>
   // เมนูซ้ายกดแล้วไปกดปุ่มแท็บเดิม (ซ่อนไว้) — logic การสลับแท็บเดิมทำงานต่อได้ทั้งหมด
@@ -1501,6 +1514,7 @@ init().then(() => { document.querySelector('.side-item[data-tab="fbads"]')?.clic
       products: ['📦 สินค้า & Supply Chain', 'ชื่อ · รหัสสี/เบอร์ · ราคา · สถานะ · การวางแผนสั่งของ · Lead time — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard'],
       supply: ['🚚 Supply Chain', 'ตั้ง Lead time และเลือกว่าสินค้าไหนต้องวางแผนสั่งของ — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard'],
       fbads: ['📣 แอด Facebook', 'กฎอ่านชื่อแคมเปญ → สินค้า (ต้นทุนแอดต่อสินค้าในหน้า Facebook Ads / MKT Tracking) · จับคู่รหัสแอด → KOL ด้วยลิงก์ Facebook'],
+      targets: ['🎯 ตั้งเป้ายอดขาย', 'เป้าทั้งปีต่อช่องทางย่อย (TikTok · เพจ Facebook · ร้าน Shopee / Lazada) → แบ่งรายเดือนตามจำนวนวัน · ยอดขาด / เกินยกไปเดือนถัดไป · ดูผลที่หน้าเป้าหมาย KPI'],
       perms: ['🔐 สิทธิ์ผู้ใช้', 'ติ๊กว่าใครเห็นหน้าไหน อัปโหลดได้ไหม จัดการสินค้าได้ไหม · ตั้งรหัสผ่านใหม่ให้คนที่ลืม · ปิด/ลบบัญชี']
     };
     document.querySelectorAll('.side-item[data-tab]').forEach(el => el.addEventListener('click', () => {
@@ -1522,6 +1536,7 @@ init().then(() => { document.querySelector('.side-item[data-tab="fbads"]')?.clic
     window.addEventListener('storage', e => { if (e.key === 'deesay_theme') applyTheme(e.newValue === 'light'); });
   })();
 </script>
-<script src="ui.js?v=20261020b" defer></script><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
+<script src="ui.js?v=20261020b" defer></script>
+<script src="admtargets.js?v=20261022a"></script><!-- (2026-10-22) แท็บตั้งเป้ายอดขาย --><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
 </body>
 </html>
