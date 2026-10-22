@@ -1,3 +1,4 @@
+// kpisales.js (v20261022d) — ตัวเลขเต็ม (ไม่ย่อ)
 // kpisales.js (v20261022c) — Shopee นับยอดตามระบบ Shopee (basis shopee_system)
 // kpisales.js (v20261022b) — ยกยอดเฉพาะส่วนที่ขาด (เกินไม่ลดเดือนอื่น) · การ์ดรวม = บวกของแต่ละแถว
 // kpisales.js (v20261022a) — หน้า "เป้าหมาย KPI" › แท็บ "เป้ายอดขายรายช่องทาง" (ดูผลอย่างเดียว)
@@ -65,7 +66,7 @@
     if (cur && cur.eff != null) {
       const a = +cur.actual || 0, ef = +cur.eff, left = Math.max(0, ef - a), r2 = ef > 0 ? a / ef : 1;
       const carry = +cur.carry || 0;
-      h += `<div class="ks-now"><div><span>เป้า ${MS[curI]}</span><b>${n0(ef)}</b><em>แผน ${short(cur.plan)}${carry > 0 ? ' + ขาดยกมา ' + short(carry) : ''}</em></div>
+      h += `<div class="ks-now"><div><span>เป้า ${MS[curI]}</span><b>${n0(ef)}</b><em>แผน ${n0(cur.plan)}${carry > 0 ? ' + ขาดยกมา ' + n0(carry) : ''}</em></div>
         <div><span>ทำได้</span><b>${n0(a)}</b><em style="color:${colr(r2, mPace)};">${Math.round(r2 * 100)}% ของเป้า</em></div>
         <div><span>ต้องทำอีก</span><b style="color:${left > 0 ? 'var(--red, #dc2626)' : 'var(--green, #16a34a)'};">${left > 0 ? n0(left) : 'ถึงเป้าแล้ว'}</b><em>${left > 0 && dLeft > 0 ? `วันละ ${n0(left / dLeft)} ใน ${dLeft} วัน` : left > 0 ? 'เดือนนี้หมดเวลาแล้ว' : `เกิน ${n0(a - ef)}`}</em></div></div>`;
     }
