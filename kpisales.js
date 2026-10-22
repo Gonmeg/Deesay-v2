@@ -1,3 +1,5 @@
+// kpisales.js (v20261022c) — Shopee นับยอดตามระบบ Shopee (basis shopee_system)
+// kpisales.js (v20261022b) — ยกยอดเฉพาะส่วนที่ขาด (เกินไม่ลดเดือนอื่น) · การ์ดรวม = บวกของแต่ละแถว
 // kpisales.js (v20261022a) — หน้า "เป้าหมาย KPI" › แท็บ "เป้ายอดขายรายช่องทาง" (ดูผลอย่างเดียว)
 // การ์ดละ 1 แถว: % ทั้งปี + แถบ (ขีด = ควรถึงตรงนี้แล้ว) · กราฟ 12 เดือน (แท่ง = ทำได้ · เส้น = เป้าของเดือนที่รวมยอดยกมาแล้ว) · เดือนนี้ต้องทำอีกเท่าไร / วันละเท่าไร
 //   TikTok = GMV ตาม TikTok (แอฟฟิลิเอต / ผู้ขาย ไลฟ์ / วิดีโอ / การ์ดสินค้า) · Facebook = ต่อเพจ · Shopee / Lazada = ต่อร้าน (ยอดขายจริง)
@@ -26,16 +28,14 @@
   window.ksNo = () => { S.showNo = !S.showNo; draw(); };
 
   const colr = (r, p) => r >= p ? 'var(--green, #16a34a)' : r >= p * 0.9 ? '#c9851a' : 'var(--red, #dc2626)';
-  // รวมทุกแถว (ยกยอดคิดจากผลรวม)
+  // รวมทุกแถว = บวกของแต่ละแถว (เป้าจริง / ขาดยกมา คิดรายแถว แล้วค่อยรวม)
   function totalOf(rows) {
-    const m = Array.from({ length: 12 }, (_, i) => ({ plan: null, actual: null, started: false, days: 30, month: '' }));
+    const m = Array.from({ length: 12 }, () => ({ plan: null, actual: null, carry: null, eff: null, started: false, days: 30, month: '' }));
     let annual = null;
+    const add = (o, f, v) => { if (v != null) o[f] = (o[f] || 0) + +v; };
     rows.forEach(r => { if (r.annual != null) annual = (annual || 0) + +r.annual;
       (r.months || []).forEach((x, i) => { const o = m[i]; o.month = x.month; o.days = x.days; o.started = x.started;
-        if (x.plan != null) o.plan = (o.plan || 0) + +x.plan; if (x.actual != null) o.actual = (o.actual || 0) + +x.actual; }); });
-    let cp = 0, ca = 0;
-    m.forEach(o => { o.carry = o.started && o.plan != null ? cp - ca : null; o.eff = o.plan == null ? null : (o.started ? Math.max(0, o.plan + o.carry) : o.plan);
-      cp += o.plan || 0; ca += o.actual || 0; });
+        add(o, 'plan', x.plan); add(o, 'actual', x.actual); add(o, 'carry', x.carry); add(o, 'eff', x.eff); }); });
     return { k: '__tot', label: 'รวม ' + S.ch, annual, ytd: rows.reduce((a, r) => a + (+r.ytd || 0), 0), months: m, total: true };
   }
 
@@ -65,7 +65,7 @@
     if (cur && cur.eff != null) {
       const a = +cur.actual || 0, ef = +cur.eff, left = Math.max(0, ef - a), r2 = ef > 0 ? a / ef : 1;
       const carry = +cur.carry || 0;
-      h += `<div class="ks-now"><div><span>เป้า ${MS[curI]}</span><b>${n0(ef)}</b><em>แผน ${short(cur.plan)} ${carry > 0 ? '+ ขาดยกมา ' + short(carry) : carry < 0 ? '− เกินยกมา ' + short(-carry) : ''}</em></div>
+      h += `<div class="ks-now"><div><span>เป้า ${MS[curI]}</span><b>${n0(ef)}</b><em>แผน ${short(cur.plan)}${carry > 0 ? ' + ขาดยกมา ' + short(carry) : ''}</em></div>
         <div><span>ทำได้</span><b>${n0(a)}</b><em style="color:${colr(r2, mPace)};">${Math.round(r2 * 100)}% ของเป้า</em></div>
         <div><span>ต้องทำอีก</span><b style="color:${left > 0 ? 'var(--red, #dc2626)' : 'var(--green, #16a34a)'};">${left > 0 ? n0(left) : 'ถึงเป้าแล้ว'}</b><em>${left > 0 && dLeft > 0 ? `วันละ ${n0(left / dLeft)} ใน ${dLeft} วัน` : left > 0 ? 'เดือนนี้หมดเวลาแล้ว' : `เกิน ${n0(a - ef)}`}</em></div></div>`;
     }
@@ -79,9 +79,11 @@
     const pills = CHS.map(([c, v]) => `<button type="button" class="ks-pill${c === S.ch ? ' on' : ''}" onclick="ksCh('${c}')"><i style="background:var(${v});"></i>${c}</button>`).join('');
     const yrs = [y - 1, y, y + 1].map(v => `<option value="${v}"${v === y ? ' selected' : ''}>ปี ${v + 543}</option>`).join('');
     const setBtn = D.can_edit ? `<a class="btn btn-ghost btn-sm" href="admin.html#targets?ch=${encodeURIComponent(S.ch)}&y=${y}" style="text-decoration:none;">⚙ ตั้งเป้า</a>` : '';
-    const basis = D.basis === 'gmv' ? 'GMV ตาม TikTok (ตรงกับ Seller Center › ตามแหล่งที่มาของคำสั่งซื้อ)' : 'ยอดขายจริง หักยกเลิก / คืนแล้ว (ชุดเดียวกับการ์ดยอดขาย)';
+    const basis = { tiktok_gmv: 'GMV ตามระบบ TikTok (ตรงกับ Seller Center › ตามแหล่งที่มาของคำสั่งซื้อ · รวมยกเลิก / คืน)',
+      shopee_system: 'ยอดขายตามระบบ Shopee (แบบหน้า Business Insights · รวมออเดอร์ที่ยกเลิก / คืนทีหลัง) — คำนวณจากออเดอร์ API อาจต่างจากหน้า Shopee เล็กน้อย (ราว 0.3%)' }[D.basis]
+      || 'ยอดขายจริง หักยกเลิก / คืนแล้ว (ชุดเดียวกับการ์ดยอดขาย)';
     const lt = latest ? new Date(latest + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '';
-    let h = `<div class="ks-top"><div class="ks-pills">${pills}</div><span class="ks-meta">ทำได้ถึง ${lt}${tip('ทำได้ = ' + basis + '\n% ทั้งปี: ขีดดำบนแถบ = ควรถึงตรงนี้แล้วตามจำนวนวัน · สี: เขียว ทัน · ส้ม ช้าไม่เกิน 10% · แดง ช้ามาก\nกราฟ: แท่ง = ทำได้รายเดือน (เขียว = ถึงเป้า · สีทอง = เดือนนี้) · เส้น = เป้าของเดือนนั้นที่รวมยอดยกมาแล้ว\nเป้าเดือน = แผน (เป้าทั้งปีแบ่งตามจำนวนวัน) + ยอดยกมา (ขาด = เพิ่ม · เกิน = ลด)')}</span>
+    let h = `<div class="ks-top"><div class="ks-pills">${pills}</div><span class="ks-meta">ทำได้ถึง ${lt}${tip('ทำได้ = ' + basis + '\n% ทั้งปี: ขีดดำบนแถบ = ควรถึงตรงนี้แล้วตามจำนวนวัน · สี: เขียว ทัน · ส้ม ช้าไม่เกิน 10% · แดง ช้ามาก\nกราฟ: แท่ง = ทำได้รายเดือน (เขียว = ถึงเป้า · สีทอง = เดือนนี้) · เส้น = เป้าของเดือนนั้นที่รวมยอดยกมาแล้ว\nเป้าเดือน = แผน (เป้าทั้งปีแบ่งตามจำนวนวัน หรือที่แก้เองในหน้า Admin) + ส่วนที่ขาดยกมา\nเดือนไหนทำไม่ถึง ส่วนที่ขาดยกไปเพิ่มเดือนถัดไปจนกว่าจะทำได้ · เดือนที่ทำเกิน ไม่ไปลดเป้าเดือนอื่น')}</span>
       <span style="flex:1;"></span><select class="ks-yr" onchange="ksYear(this.value)">${yrs}</select>${setBtn}</div>`;
     if (!withT.length) h += `<div class="card"><div class="empty" style="padding:28px;">ยังไม่ได้ตั้งเป้า ${esc(S.ch)} ปี ${y + 543}${D.can_edit ? ' — กด ⚙ ตั้งเป้า มุมขวาบน' : ''}</div></div>`;
     else h += `<div class="ks-grid">${withT.length > 1 ? card(totalOf(withT), latest) : ''}${withT.map(r => card(r, latest)).join('')}</div>`;
