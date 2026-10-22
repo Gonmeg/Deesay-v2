@@ -1,3 +1,4 @@
+// admtargets.js (v20261022b) — คอลัมน์ "รวม 12 เดือน" + เตือนเมื่อแผนรายเดือนไม่เท่าเป้าทั้งปี · ยกยอดเฉพาะส่วนที่ขาด
 // admtargets.js (v20261022a) — หน้า Admin › "ตั้งเป้ายอดขาย" (ตารางแบบ Excel)
 // แถว = ช่องทางย่อย (TikTok: แอฟฟิลิเอต / ผู้ขาย ไลฟ์ / วิดีโอ / การ์ดสินค้า · Facebook: เพจ · Shopee / Lazada: ร้าน) · คอลัมน์ = ทั้งปี + 12 เดือน
 //   พิมพ์ "ทั้งปี" → 12 เดือนแบ่งตามจำนวนวันให้เอง · พิมพ์ทับรายเดือน = ล็อกเดือนนั้น (สีส้ม) เดือนที่เหลือแบ่งส่วนที่เหลือ รวมเท่าทั้งปี
@@ -50,21 +51,29 @@
     const rows = S.data.rows || [];
     const tot = { annual: 0, m: Array(12).fill(0) };
     rows.forEach(r => { tot.annual += +r.annual || 0; (r.months || []).forEach((x, i) => { tot.m[i] += +x.plan || 0; }); });
+    const bad = [];
     const body = rows.map(r => {
       const has = r.annual != null && +r.annual > 0;
+      const sumM = (r.months || []).reduce((a, x) => a + (+x.plan || 0), 0), diff = has ? Math.round(sumM - +r.annual) : 0;
+      const nOv = (r.months || []).filter(x => x.is_override).length;
+      if (has && Math.abs(diff) >= 1) bad.push({ label: r.label, diff });
+      const chk = !has ? '<td class="at-chk">—</td>'
+        : Math.abs(diff) < 1 ? `<td class="at-chk ok" data-tip="${nOv ? 'แก้เอง ' + nOv + ' เดือน · เดือนที่เหลือปรับให้แล้ว รวมเท่าเป้าทั้งปีพอดี' : 'แบ่งอัตโนมัติ รวมเท่าเป้าทั้งปีพอดี'}">✓ พอดี</td>`
+        : `<td class="at-chk ng" data-tip="${diff > 0 ? 'เดือนที่แก้เองรวมกันเกินเป้าทั้งปี เดือนที่เหลือเลยเป็น 0 แล้วก็ยังเกิน' : 'แก้เองครบทุกเดือน แต่รวมกันไม่ถึงเป้าทั้งปี'}">⚠ ${diff > 0 ? 'เกิน' : 'ขาด'} ${n0(Math.abs(diff))}</td>`;
       return `<tr><td class="l" title="${esc(r.label)}">${esc(r.label)}<div class="at-sub">ทำได้ปีนี้ ${n0(r.ytd) || 0}</div></td>
         <td class="at-an" onclick="atAnnual(this,'${esc(r.k)}')" data-tip="พิมพ์เป้าทั้งปี · ลบให้ว่าง = ลบเป้าแถวนี้">${has ? n0(r.annual) : '<span class="at-add">＋ ตั้งเป้า</span>'}</td>
-        ${(r.months || []).map((x, i) => `<td class="${x.is_override ? 'at-ov' : ''}${has ? '' : ' at-off'}"${has ? ` onclick="atMonth(this,'${esc(r.k)}',${i})" data-tip="${x.is_override ? 'แก้เอง · ลบให้ว่าง = กลับไปแบ่งอัตโนมัติ' : 'แบ่งอัตโนมัติ · พิมพ์ทับเพื่อล็อกเดือนนี้'}"` : ''}>${x.plan != null ? short(x.plan) : '—'}</td>`).join('')}</tr>`;
+        ${(r.months || []).map((x, i) => `<td class="${x.is_override ? 'at-ov' : ''}${has ? '' : ' at-off'}"${has ? ` onclick="atMonth(this,'${esc(r.k)}',${i})" data-tip="${x.is_override ? 'แก้เอง · ลบให้ว่าง = กลับไปแบ่งอัตโนมัติ' : 'แบ่งอัตโนมัติ · พิมพ์ทับเพื่อล็อกเดือนนี้'}"` : ''}>${x.plan != null ? short(x.plan) : '—'}</td>`).join('')}${chk}</tr>`;
     }).join('');
     const yrs = [S.year - 1, S.year, S.year + 1].map(v => `<option value="${v}"${v === S.year ? ' selected' : ''}>ปี ${v + 543}</option>`).join('');
+    const warn = bad.length ? `<div class="at-warn">⚠ แผนรายเดือนไม่เท่าเป้าทั้งปี ${bad.length} แถว: ${bad.map(b => `<b>${esc(b.label)}</b> ${b.diff > 0 ? 'เกิน' : 'ขาด'} ${n0(Math.abs(b.diff))}`).join(' · ')} — ปรับเดือนที่แก้เอง หรือแก้เป้าทั้งปีให้ตรงกัน</div>` : '';
     box.innerHTML = `<div class="at-top"><div class="at-pills">${CHS.map(c => `<button type="button" class="at-pill${c === S.ch ? ' on' : ''}" onclick="atCh('${c}')">${c}</button>`).join('')}</div>
         <span style="flex:1;"></span><select class="at-yr" onchange="atYear(this.value)">${yrs}</select>
-        <a class="at-link" href="dashboard.html?page=kpi&tab=sales">ดูผลที่หน้าเป้าหมาย KPI ↗</a></div>
-      <div class="at-wrap"><table class="at-tbl"><thead><tr><th class="l">${S.ch === 'Facebook' ? 'เพจ' : S.ch === 'TikTok' ? 'แถว (GMV ตาม TikTok)' : 'ร้าน'}</th><th>ทั้งปี</th>${MS.map(m => `<th>${m}</th>`).join('')}</tr></thead>
-      <tbody>${body || '<tr><td colspan="14" class="at-empty">ไม่มีข้อมูล</td></tr>'}</tbody>
-      <tfoot><tr><td class="l">รวม</td><td>${tot.annual ? n0(tot.annual) : '—'}</td>${tot.m.map(v => `<td>${v ? short(v) : '—'}</td>`).join('')}</tr></tfoot></table></div>
-      <div class="at-hint">พิมพ์ช่อง <b>ทั้งปี</b> → 12 เดือนแบ่งตามจำนวนวันให้เอง · อยากให้เดือนไหนสูงกว่า พิมพ์ทับได้ (ช่องสีส้ม = แก้เอง) เดือนที่เหลือปรับให้รวมเท่าทั้งปีเอง · Enter บันทึก · Esc ยกเลิก<br>
-      ยอดที่ขาด / เกินในแต่ละเดือนจะยกไปเพิ่ม / ลดเป้าเดือนถัดไปให้อัตโนมัติ (ดูที่หน้าเป้าหมาย KPI)</div>`;
+        <a class="at-link" href="dashboard.html?page=kpi&tab=sales">ดูผลที่หน้าเป้าหมาย KPI ↗</a></div>${warn}
+      <div class="at-wrap"><table class="at-tbl"><thead><tr><th class="l">${S.ch === 'Facebook' ? 'เพจ' : S.ch === 'TikTok' ? 'แถว (GMV ตาม TikTok)' : 'ร้าน'}</th><th>ทั้งปี</th>${MS.map(m => `<th>${m}</th>`).join('')}<th>รวม 12 เดือน</th></tr></thead>
+      <tbody>${body || '<tr><td colspan="15" class="at-empty">ไม่มีข้อมูล</td></tr>'}</tbody>
+      <tfoot><tr><td class="l">รวม</td><td>${tot.annual ? n0(tot.annual) : '—'}</td>${tot.m.map(v => `<td>${v ? short(v) : '—'}</td>`).join('')}<td></td></tr></tfoot></table></div>
+      <div class="at-hint">พิมพ์ช่อง <b>ทั้งปี</b> → 12 เดือนแบ่งตามจำนวนวันให้เอง · แก้รายเดือนได้ พิมพ์ทับ (ช่องสีส้ม = แก้เอง) เดือนที่ยังไม่ได้แก้จะปรับให้รวมเท่าทั้งปีเอง · ช่อง <b>รวม 12 เดือน</b> บอกว่าพอดีกับเป้าทั้งปีไหม · Enter บันทึก · Esc ยกเลิก<br>
+      เดือนไหนทำไม่ถึง ส่วนที่ขาดยกไปเพิ่มเป้าเดือนถัดไปให้อัตโนมัติ · เดือนที่ทำเกิน ไม่ไปลดเป้าเดือนอื่น (ดูที่หน้าเป้าหมาย KPI)</div>`;
   }
 
   // เปิดจากลิงก์ admin.html#targets?ch=Facebook&y=2026
@@ -94,7 +103,9 @@
 .at-add { opacity:.55; font-weight:400; }
 .at-in { width:100%; max-width:120px; text-align:right; padding:4px 6px; font-size:12.5px; border:1.5px solid #b8862f; border-radius:6px; background:var(--bg, #fff); color:inherit; font-family:inherit; }
 .at-hint { font-size:11.5px; opacity:.6; margin-top:10px; line-height:1.6; }
-.at-empty { padding:24px; text-align:center; opacity:.6; }`;
+.at-empty { padding:24px; text-align:center; opacity:.6; }
+.at-tbl td.at-chk { cursor:default; font-weight:700; font-size:12px; } .at-tbl td.at-chk.ok { color:#16a34a; } .at-tbl td.at-chk.ng { color:#dc2626; background:rgba(220,38,38,.08); }
+.at-warn { background:rgba(220,38,38,.08); border:1px solid rgba(220,38,38,.35); color:#b91c1c; border-radius:10px; padding:9px 12px; font-size:12.5px; margin-bottom:12px; line-height:1.6; }`;
     document.head.appendChild(st);
   }
 })();
