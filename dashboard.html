@@ -836,7 +836,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-m</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-n</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -2201,7 +2201,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               <th class="sortable-th c-left" onclick="mlSort('name')">สินค้า <span class="sort-ind" id="mls-name"></span></th>
               <th class="sortable-th" onclick="mlSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่า KOL/ค่า Ads ที่ไม่รวม VAT</div></span> <span class="sort-ind" id="mls-rev"></span></th>
               <th class="sortable-th" onclick="mlSort('kol')">ค่า KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-kol')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-kol" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">งบในไฟล์ทีม KOL (Conversion + PR) ตามเดือนที่โพสต์ — ตรงกับหน้า KOL<br>Business Insight ใช้ยอดบัญชี จึงอาจต่างกัน<br>👆 กดตัวเลขเพื่อดูแยก Conversion / PR และช่องทาง</div></span> <span class="sort-ind" id="mls-kol"></span></th>
-              <th class="sortable-th" onclick="mlSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = Ads ที่ไม่ผูกสินค้า ปันตามยอดขายในช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="mls-ads"></span></th>
+              <th class="sortable-th" onclick="mlSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = Ads ที่ไม่ผูกสินค้า ปันตามยอดขายในช่องทาง · Ads PR ปันตามยอดขายทุกช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="mls-ads"></span></th>
               <th class="sortable-th pl-cm" onclick="mlSort('cm1p')">CM1 <span class="sort-ind" id="mls-cm1p"></span></th>
               <th class="sortable-th pl-cm" onclick="mlSort('roi')">MER <span class="sort-ind" id="mls-roi"></span></th>
             </tr></thead>
@@ -3106,7 +3106,7 @@ function loadOrdProfitPage() {
   if (window._opLoading) return;
   window._opLoading = true;
   const s = document.createElement('script');
-  s.src = 'ordprofit.js?v=20261026m';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
+  s.src = 'ordprofit.js?v=20261026n';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
   s.onload = () => { window._opLoading = false; if (currentPage === 'ordprofit') window.OrdProfit.render(); };
   s.onerror = () => { window._opLoading = false; const el = document.getElementById('page-ordprofit'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด ordprofit.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -7392,7 +7392,7 @@ const DG_PAGE = {
   tthub: ['orders_TikTok', 'tt_gmvmax', 'tt_insight'], ttads: ['tt_', 'orders_TikTok'], livesearch: ['tt_', 'orders_TikTok'], creatorperf: ['orders_TikTok', 'tt_', 'kol_file', 'eq_kol_tt'],
   shhub: ['orders_Shopee', 'sh_ads_', 'sh_manual', 'fb_cpas'], shads: ['sh_ads_', 'sh_manual', 'fb_cpas', 'fb_ads_accounts', 'orders_Shopee'], lzhub: ['orders_Lazada', 'lz_ads'],
   kol: ['kol_file', 'kol_claims', 'fb_ads_accounts', 'tt_', 'eq_kol_'],
-  mktlive: ['orders_', ...DG_ADS, 'kol_file', 'eq_kol_fee'], cost: ['acct_src', 'cogs_src'], adperf: [...DG_ADS],   // (2026-10-09) Business Insight ใช้ไฟล์บัญชี ไม่ใช่ออเดอร์ / Ads
+  mktlive: ['orders_', ...DG_ADS, 'kol_file', 'eq_kol_fee', 'eq_ads_acct'], ordprofit: [...DG_ADS, 'eq_ads_acct'], cost: ['acct_src', 'cogs_src'], adperf: [...DG_ADS],   // (2026-10-09) Business Insight ใช้ไฟล์บัญชี ไม่ใช่ออเดอร์ / Ads
   supply: ['stock_log', 'orders_'], kpi: ['orders_']
 };
 const DG_GLOBAL = ['mv_stale', 'fb_bucket', 'rls'];   // กระทบตัวเลขทุกหน้า
@@ -9083,7 +9083,7 @@ function mlDetail(sku) {
   } else {
     const chs = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { const c = (chs[r.channel] = chs[r.channel] || { ad: 0, aa: 0 }); c.ad += +r.ads_direct || 0; c.aa += +r.ads_allocated || 0; });
     const groups = Object.entries(chs).map(([c, v]) => ({ label: c, amount: v.ad + v.aa, fixed: true, children: [{ label: 'Product Ads', amount: v.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: v.aa }] }));
-    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'ยอดใช้จ่ายจริง<br><b>Product Ads</b> = Ads ที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = Ads ที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง' });
+    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'ยอดใช้จ่ายจริง<br><b>Product Ads</b> = Ads ที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = Ads ที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง<br><b>Ads PR</b> (Facebook PR + บัญชี TikTok PR) ปันให้ทุกช่องทางตามยอดขาย รวมอยู่ใน Shared Ads' });
   }
 }
 function exportMl() {
