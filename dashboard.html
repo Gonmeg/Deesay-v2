@@ -836,7 +836,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-o</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-q</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -958,9 +958,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
       <div class="filter-group" id="opChGroup" style="display:none;">   <!-- (2026-10-26) หน้ากำไรต่อคำสั่งซื้อ: เฉพาะช่องทางที่มีข้อมูลการเงินรายคำสั่งซื้อจาก API -->
         <span class="filter-label">Channel</span>
-        <select id="opChSelect" onchange="window.OrdProfit && window.OrdProfit.pickCh(this.value)">
+        <select id="opChSelect" onchange="updateDateRangeLabel()">   <!-- เลือกแล้วรอกดค้นหา (จุดแดงที่ปุ่มค้นหา) -->
           <option value="TikTok">TikTok</option>
-          <option value="Shopee">Shopee</option>
+          <option value="Shopee">Shopee ทุกร้าน</option>
+          <option value="Shopee:566792331">Shopee Mall</option>
+          <option value="Shopee:530338789">Shopee 24hr</option>
         </select>
       </div>
       <div class="filter-group" id="fbePageFilterGroup" style="display:none;">
@@ -2445,7 +2447,7 @@ function updateDateRangeLabel() {
   document.querySelectorAll('#dateDrp .drp-l [data-p]').forEach(b => b.setAttribute('aria-selected', b.dataset.p === hit ? 'true' : 'false'));
   const ml = document.getElementById('datePresetMonthList'); if (ml && ml._o) drpMonths('datePresetMonthList', { sel: whole });
   const btn = document.getElementById('topSearchBtn');
-  if (btn) btn.classList.toggle('is-pending', !!window._appliedDates && `${from}|${to}` !== window._appliedDates);
+  if (btn) btn.classList.toggle('is-pending', (!!window._appliedDates && `${from}|${to}` !== window._appliedDates) || (currentPage === 'ordprofit' && !!window._opChApplied && (document.getElementById('opChSelect') || {}).value !== window._opChApplied));   // (2026-10-26) หน้ากำไรต่อคำสั่งซื้อ: เปลี่ยน Channel แล้วยังไม่กดค้นหา
 }
 
 function setDatePreset(preset) {
@@ -3115,7 +3117,7 @@ function loadOrdProfitPage() {
   if (window._opLoading) return;
   window._opLoading = true;
   const s = document.createElement('script');
-  s.src = 'ordprofit.js?v=20261026o';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
+  s.src = 'ordprofit.js?v=20261026q';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
   s.onload = () => { window._opLoading = false; if (currentPage === 'ordprofit') window.OrdProfit.render(); };
   s.onerror = () => { window._opLoading = false; const el = document.getElementById('page-ordprofit'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด ordprofit.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -7401,7 +7403,7 @@ const DG_PAGE = {
   tthub: ['orders_TikTok', 'tt_gmvmax', 'tt_insight'], ttads: ['tt_', 'orders_TikTok'], livesearch: ['tt_', 'orders_TikTok'], creatorperf: ['orders_TikTok', 'tt_', 'kol_file', 'eq_kol_tt'],
   shhub: ['orders_Shopee', 'sh_ads_', 'sh_manual', 'fb_cpas'], shads: ['sh_ads_', 'sh_manual', 'fb_cpas', 'fb_ads_accounts', 'orders_Shopee'], lzhub: ['orders_Lazada', 'lz_ads'],
   kol: ['kol_file', 'kol_claims', 'fb_ads_accounts', 'tt_', 'eq_kol_'],
-  mktlive: ['orders_', ...DG_ADS, 'kol_file', 'eq_kol_fee', 'eq_ads_acct'], ordprofit: [...DG_ADS, 'eq_ads_acct'], cost: ['acct_src', 'cogs_src'], adperf: [...DG_ADS],   // (2026-10-09) Business Insight ใช้ไฟล์บัญชี ไม่ใช่ออเดอร์ / Ads
+  mktlive: ['orders_', ...DG_ADS, 'kol_file', 'eq_kol_fee', 'eq_ads_acct'], ordprofit: ['tt_', 'sh_ads_', 'sh_manual', 'fb_cpas', 'fb_ads_accounts', 'op_ads_acct'], cost: ['acct_src', 'cogs_src'], adperf: [...DG_ADS],   // (2026-10-09) Business Insight ใช้ไฟล์บัญชี ไม่ใช่ออเดอร์ / Ads
   supply: ['stock_log', 'orders_'], kpi: ['orders_']
 };
 const DG_GLOBAL = ['mv_stale', 'fb_bucket', 'rls'];   // กระทบตัวเลขทุกหน้า
