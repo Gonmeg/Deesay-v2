@@ -1,3 +1,6 @@
+// ordprofit.js (v20261026g) — คำอธิบาย ⓘ สั้นลง
+// ordprofit.js (v20261026f) — ค่าบริการ Shopee: ไม่ระบุชื่อโปรแกรมตายตัว (API และรายงานรายรับส่งมาเป็นยอดรวม)
+// ordprofit.js (v20261026e) — ชื่อ / คำอธิบายค่าธรรมเนียมแยกตามแพลตฟอร์ม (ใช้คำเดียวกับ Seller Centre) · Shopee แยกค่าจัดส่ง
 // ordprofit.js (v20261026d) — ตารางสรุปแทนแถบสี · คอลัมน์ SKU + ตัวกรองสินค้า · สถานะจาก API
 // ordprofit.js (v20261026c) — หน้า "กำไรต่อคำสั่งซื้อ" (Management) · TikTok / Shopee
 // รายคำสั่งซื้อแตกครบทุกรายการในตารางเดียว: ยอดขาย → ค่าธรรมเนียมแพลตฟอร์ม 5 หมวด → รายรับสุทธิ → VAT · ต้นทุนขาย · ค่าบรรจุภัณฑ์ · ค่าโฆษณา · ค่าการตลาดอื่น · ค่าใช้จ่ายบริหาร → กำไรสุทธิ
@@ -19,33 +22,62 @@
   const dLabel = d => { const [, m, dd] = String(d).split('-'); return `${+dd} ${TH_M[+m - 1]}`; };
   const lastDay = m => { const [y, mm] = m.split('-').map(Number); return new Date(Date.UTC(y, mm, 0)).toISOString().slice(0, 10); };
 
-  // หมวดค่าธรรมเนียม (ตรงกับ op_fee_cat ในฐานข้อมูล)
-  const CAT = { comm: 'ค่าคอมมิชชั่น', svc: 'ค่าบริการโปรแกรม', pay: 'ค่าธรรมเนียมชำระเงิน', aff: 'ค่าคอม Affiliate', oth: 'ค่าขนส่งและอื่น ๆ' };
-  const CAT_S = { comm: 'ค่าคอม', svc: 'ค่าบริการ', pay: 'ชำระเงิน', aff: 'Affiliate', oth: 'ขนส่ง/อื่น' };
-  const CAT_TIP = {
-    comm: 'ค่าคอมมิชชั่นของแพลตฟอร์ม (TikTok รวมค่าคอมมิชชั่นตามแคมเปญ)', svc: 'ค่าบริการโปรแกรมที่เข้าร่วม เช่น ส่งฟรี · Coins Cashback · Flash Sale · LIVE Specials · Voucher Xtra',
-    pay: 'ค่าธรรมเนียมการชำระเงินและค่าดำเนินการ', aff: 'ค่าคอมมิชชั่นครีเอเตอร์ / Affiliate ที่แพลตฟอร์มหักจากยอด', oth: 'ค่าขนส่งสุทธิ · ค่าบริการโครงสร้างพื้นฐาน · รายการปรับปรุง และรายการอื่น'
-  };
+  // หมวดค่าธรรมเนียม (ตรงกับ op_fee_cat ในฐานข้อมูล) · ชื่อและคำอธิบายแยกตามแพลตฟอร์ม ไม่ปนกัน
+  const CATS = ['comm', 'svc', 'pay', 'aff', 'oth'];
+  const CATN = {
+    Shopee: { comm: 'ค่าคอมมิชชั่น', svc: 'ค่าบริการ', pay: 'ค่าธุรกรรมการชำระเงิน', aff: 'ค่าคอมมิชชั่น AMS', oth: 'ค่าจัดส่งและอื่น ๆ' },
+    TikTok: { comm: 'ค่าคอมมิชชั่น', svc: 'ค่าบริการโปรแกรม', pay: 'ค่าธรรมเนียมการทำธุรกรรม', aff: 'ค่าคอมมิชชั่นแอฟฟิลิเอต', oth: 'ค่าจัดส่งและอื่น ๆ' } };
+  const CATS_S = { Shopee: { comm: 'ค่าคอม', svc: 'ค่าบริการ', pay: 'ชำระเงิน', aff: 'AMS', oth: 'จัดส่ง/อื่น' }, TikTok: { comm: 'ค่าคอม', svc: 'ค่าบริการ', pay: 'ธุรกรรม', aff: 'แอฟฟิลิเอต', oth: 'จัดส่ง/อื่น' } };
+  const CATT = {
+    Shopee: { comm: '% จากราคาสินค้าที่ Shopee เก็บ', svc: 'ค่าบริการโปรแกรมและแคมเปญ (Shopee ส่งเป็นยอดรวม)', pay: 'ตามช่องทางที่ผู้ซื้อชำระเงิน', aff: 'ค่าคอมที่จ่ายให้ Affiliate', oth: 'ค่าจัดส่งสุทธิ · ค่าโครงสร้างพื้นฐาน · รายการปรับปรุง' },
+    TikTok: { comm: 'ค่าคอมมิชชั่นและค่าคอมมิชชั่นแบบไดนามิก', svc: 'ค่าบริการโปรแกรม เช่น LIVE Specials · Flash Sale', pay: 'ค่าธรรมเนียมการชำระเงิน', aff: 'ค่าคอมที่จ่ายให้ครีเอเตอร์', oth: 'ค่าจัดส่งสุทธิ · ค่าโครงสร้างพื้นฐาน · รายการปรับปรุง' } };
   const CAT_OF = k => {
     const s = k.replace(/^tax:/, '');
     if (['platform_commission_amount', 'dynamic_commission_amount', 'referral_fee_amount', 'fee_per_item_sold_amount', 'platform_semi_managed_commission_fee', 'commission_fee'].includes(s)) return 'comm';
-    if (['transaction_fee_amount', 'credit_card_handling_fee_amount', 'seller_paylater_handling_fee_amount', 'dt_handling_fee_amount', 'transaction_fee', 'processing_fee'].includes(s)) return 'pay';
+    if (['transaction_fee_amount', 'credit_card_handling_fee_amount', 'seller_paylater_handling_fee_amount', 'dt_handling_fee_amount', 'transaction_fee'].includes(s)) return 'pay';
     if (/affiliate|ams_commission|cofunded_creator|tap_shop_ads|shoppable_video|tsp_commission|brand_amplification_program_commission/.test(s)) return 'aff';
-    if (/live_specials|flash_sales|voucher_xtra|bonus_cashback|sfp_service|campaign_period|smart_promotion|cofunded_promotion|mall_service|seller_growth|pre_order|special_service|growth_package|brand_campaign|category_led|gmv_max|^service_fee$/.test(s)) return 'svc';
+    if (/live_specials|flash_sales|voucher_xtra|bonus_cashback|sfp_service|campaign_period|smart_promotion|cofunded_promotion|mall_service|seller_growth|pre_order|special_service|growth_package|brand_campaign|category_led|gmv_max|^service_fee$|^campaign_fee$|seller_coin_cash_back/.test(s)) return 'svc';
     return 'oth';
   };
-  const FEE_TH = {
-    platform_commission_amount: 'ค่าคอมมิชชั่นแพลตฟอร์ม', dynamic_commission_amount: 'ค่าคอมมิชชั่นตามแคมเปญ', transaction_fee_amount: 'ค่าธรรมเนียมธุรกรรม',
-    vn_fix_infrastructure_fee: 'ค่าบริการโครงสร้างพื้นฐาน', affiliate_commission_amount: 'ค่าคอม Affiliate', affiliate_ads_commission_amount: 'ค่าคอม Affiliate (โฆษณา)',
-    affiliate_partner_commission_amount: 'ค่าคอมพาร์ทเนอร์ Affiliate', sfp_service_fee_amount: 'ค่าบริการโปรแกรมส่งฟรี', voucher_xtra_service_fee_amount: 'ค่าบริการ Voucher Xtra',
-    bonus_cashback_service_fee_amount: 'ค่าบริการโบนัสเงินคืน', flash_sales_service_fee_amount: 'ค่าบริการ Flash Sale', live_specials_fee_amount: 'ค่าบริการ LIVE Specials',
-    campaign_period_fee_sp_amount: 'ค่าธรรมเนียมช่วงแคมเปญ', campaign_period_fee_cfp_amount: 'ค่าธรรมเนียมช่วงแคมเปญ (CFP)', gmv_max_ad_fee_amount: 'ค่าโฆษณา GMV Max',
-    mall_service_fee_amount: 'ค่าบริการ Mall', credit_card_handling_fee_amount: 'ค่าธรรมเนียมบัตรเครดิต', seller_paylater_handling_fee_amount: 'ค่าธรรมเนียม PayLater',
-    refund_administration_fee_amount: 'ค่าดำเนินการคืนเงิน', shipping_cost_amount: 'ค่าขนส่งสุทธิ', adjustment_amount: 'รายการปรับปรุง',
-    commission_fee: 'ค่าคอมมิชชั่น', service_fee: 'ค่าบริการโปรแกรม (ส่งฟรี / Coins Cashback)', transaction_fee: 'ค่าธรรมเนียมธุรกรรม', processing_fee: 'ค่าดำเนินการ',
-    ams_commission_fee: 'ค่าคอม Affiliate (AMS)', other: 'ส่วนลดร้าน · ค่าขนส่ง · รายการปรับปรุง'
-  };
-  const feeTh = k => k.startsWith('tax:') ? 'ภาษี: ' + (FEE_TH[k.slice(4)] || k.slice(4).replace(/_/g, ' ')) : (FEE_TH[k] || k.replace(/_amount$/, '').replace(/_/g, ' '));
+  // [ชื่อตาม Seller Centre, คำอธิบาย]
+  const FEE = {
+    Shopee: {
+      commission_fee: ['ค่าคอมมิชชั่น', '% จากราคาสินค้า'],
+      service_fee: ['ค่าบริการ', 'ยอดรวมค่าบริการโปรแกรม · แยกรายโปรแกรมดูได้ใน Seller Centre เท่านั้น'],
+      processing_fee: ['ค่าธรรมเนียมโครงสร้างพื้นฐานแพลตฟอร์ม', 'ค่าธรรมเนียมต่อคำสั่งซื้อ'],
+      transaction_fee: ['ค่าธุรกรรมการชำระเงิน', 'ตามช่องทางที่ผู้ซื้อชำระเงิน'],
+      ams_commission_fee: ['ค่าคอมมิชชั่น AMS', 'จ่ายให้ Affiliate ที่แนะนำสินค้า'],
+      campaign_fee: ['ค่าธรรมเนียมแคมเปญ', 'จากการเข้าร่วมแคมเปญ'],
+      seller_coin_cash_back: ['Coins Cashback ที่ร้านออก', 'Coins ที่ร้านให้ผู้ซื้อ'],
+      actual_shipping_fee: ['ค่าจัดส่งตามจริง คิดโดยผู้ให้บริการขนส่ง', 'ค่าขนส่งจริงของคำสั่งซื้อนี้'],
+      shopee_shipping_rebate: ['ค่าจัดส่งที่ Shopee ช่วยออก', 'ส่วนที่ Shopee ออกให้'],
+      reverse_shipping_fee: ['ค่าจัดส่งสินค้าคืน', 'กรณีผู้ซื้อส่งคืน'],
+      final_return_to_seller_shipping_fee: ['ค่าจัดส่งพัสดุตีกลับ', 'กรณีพัสดุตีกลับ'],
+      seller_lost_compensation: ['เงินชดเชยสินค้าสูญหาย', 'Shopee ชดเชยกรณีสินค้าหาย'],
+      other: ['รายการอื่น ๆ', 'ส่วนต่างที่ไม่อยู่ในรายการข้างต้น'] },
+    TikTok: {
+      platform_commission_amount: ['ค่าคอมมิชชั่น', '% ของยอดขาย ตามหมวดหมู่สินค้า'],
+      dynamic_commission_amount: ['ค่าคอมมิชชั่นแบบไดนามิก', 'ค่าคอมเพิ่มตามแคมเปญที่เข้าร่วม'],
+      transaction_fee_amount: ['ค่าธรรมเนียมการทำธุรกรรม', 'ค่าธรรมเนียมการชำระเงิน'],
+      vn_fix_infrastructure_fee: ['ค่าธรรมเนียมโครงสร้างพื้นฐาน', 'ค่าธรรมเนียมคงที่ต่อคำสั่งซื้อ'],
+      affiliate_commission_amount: ['ค่าคอมมิชชั่นแอฟฟิลิเอต', 'จ่ายให้ครีเอเตอร์ที่ขายสินค้า'],
+      affiliate_ads_commission_amount: ['ค่าคอมมิชชั่นโฆษณาแอฟฟิลิเอต', 'จากโฆษณาผ่านครีเอเตอร์'],
+      affiliate_partner_commission_amount: ['ค่าคอมมิชชั่นพาร์ทเนอร์แอฟฟิลิเอต', 'จ่ายให้พาร์ทเนอร์แอฟฟิลิเอต'],
+      live_specials_fee_amount: ['ค่าธรรมเนียมบริการ LIVE Specials', 'คำสั่งซื้อจากไลฟ์ในโปรแกรม LIVE Specials'],
+      flash_sales_service_fee_amount: ['ค่าธรรมเนียมบริการ Flash Sale', 'สินค้าที่ขายใน Flash Sale'],
+      voucher_xtra_service_fee_amount: ['ค่าธรรมเนียมบริการ Voucher Xtra', 'โปรแกรม Voucher Xtra'],
+      sfp_service_fee_amount: ['ค่าธรรมเนียมบริการโปรแกรมส่งฟรี', 'โปรแกรมส่งฟรี'],
+      bonus_cashback_service_fee_amount: ['ค่าธรรมเนียมบริการโบนัสแคชแบ็ก', 'โปรแกรมโบนัสแคชแบ็ก'],
+      campaign_period_fee_sp_amount: ['ค่าธรรมเนียมช่วงแคมเปญ', 'ช่วงแคมเปญที่เข้าร่วม'],
+      gmv_max_ad_fee_amount: ['ค่าโฆษณา GMV Max', 'หักจากยอดขาย'],
+      refund_administration_fee_amount: ['ค่าดำเนินการคืนเงิน', 'กรณีคืนเงิน'],
+      shipping_cost_amount: ['ค่าจัดส่ง (สุทธิ)', 'หลังหักส่วนที่ TikTok หรือผู้ซื้อจ่าย'],
+      adjustment_amount: ['รายการปรับปรุง', 'ปรับปรุงยอดจาก TikTok Shop'] } };
+  const feeOf = (ch, k) => { const b = k.replace(/^tax:/, ''), x = (FEE[ch] || {})[b]; const l = x ? x[0] : b.replace(/_amount$/, '').replace(/_/g, ' '); return [k.startsWith('tax:') ? 'ภาษี: ' + l : l, x ? x[1] : '']; };
+  const feeTh = k => feeOf(S.ch, k)[0];
+  const CAT = new Proxy({}, { get: (t, c) => (CATN[S.ch] || CATN.TikTok)[c], ownKeys: () => CATS, getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }) });
+  const CAT_S = new Proxy({}, { get: (t, c) => (CATS_S[S.ch] || CATS_S.TikTok)[c] });
+  const CAT_TIP = new Proxy({}, { get: (t, c) => (CATT[S.ch] || CATT.TikTok)[c] });
 
   async function rpc(name, params) { const j = await window.supaRpc(name, params); if (j && j.message && j.code) throw new Error(j.message); return j; }
 
@@ -188,7 +220,7 @@
     const rest = all - Object.values(cat).reduce((t, x) => t + x, 0); if (rest >= 0.5) cat.oth = (cat.oth || 0) + rest;
     el.querySelector('#opCat').innerHTML = `<div class="op-h"><span>ค่าธรรมเนียมแพลตฟอร์มแยกหมวด ${tip('ตามรายการที่แพลตฟอร์มส่งมา ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน · รายการย่อยดูที่แท็บ "ค่าธรรมเนียมแยกรายการ"')}</span></div>
       <table class="op-s" data-no-sort data-no-page><thead><tr><th>หมวด</th><th>จำนวนเงิน (บาท)</th><th>% ของยอดขาย</th></tr></thead><tbody>`
-      + Object.keys(CAT).filter(c => Math.abs(cat[c] || 0) >= 0.5).map(c => `<tr><td>${CAT[c]} ${tip(CAT_TIP[c])}</td><td>${n2(cat[c])}</td><td>${pc(cat[c], rev)}</td></tr>`).join('')
+      + CATS.filter(c => Math.abs(cat[c] || 0) >= 0.5).map(c => `<tr><td>${CAT[c]} ${tip(CAT_TIP[c])}</td><td>${n2(cat[c])}</td><td>${pc(cat[c], rev)}</td></tr>`).join('')
       + `<tr class="tot"><td>รวม</td><td>${n2(all)}</td><td>${pc(all, rev)}</td></tr></tbody></table>`;
   }
 
@@ -215,11 +247,12 @@
     const items = (s.fees || []).filter(x => Math.abs(+x[1]) >= 0.5), all = +k.fees || 0;
     const by = {}; items.forEach(([kk, v]) => { const c = CAT_OF(kk); (by[c] = by[c] || []).push([kk, -v]); });
     const rest = all - items.reduce((t, x) => t - (+x[1]), 0); if (rest >= 0.5) (by.oth = by.oth || []).push(['__rest', rest]);
-    const cats = Object.keys(CAT).filter(c => by[c]);
+    const cats = CATS.filter(c => by[c]);
     box.innerHTML = `<div class="fl h"><span>รายการ ${tip('ทุกคำสั่งซื้อในช่วงที่เลือก ตามรายการที่แพลตฟอร์มส่งมา ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน')}</span><span>บาท</span><span>% ยอดขาย</span></div>`
       + cats.map(c => { const tot = by[c].reduce((t, x) => t + x[1], 0);
           return `<div class="fl cat"><span>${CAT[c]} ${tip(CAT_TIP[c])}</span><span>${n0(tot)}</span><span>${pc(tot, rev)}</span></div>`
-            + by[c].sort((a, b) => b[1] - a[1]).map(([kk, v]) => `<div class="fl it"><span>${kk === '__rest' ? 'ยังไม่แยกรายการ' : esc(feeTh(kk))}</span><span>${n0(v)}</span><span>${pc(v, rev)}</span></div>`).join(''); }).join('')
+            + by[c].sort((a, b) => b[1] - a[1]).map(([kk, v]) => { const [l, t] = kk === '__rest' ? ['ยังไม่แยกรายการ', ''] : feeOf(S.ch, kk);
+                return `<div class="fl it"><span>${esc(l)}${t ? ' ' + tip(t) : ''}</span><span>${n0(v)}</span><span>${pc(v, rev)}</span></div>`; }).join(''); }).join('')
       + `<div class="fl cat"><span>รวมค่าธรรมเนียมแพลตฟอร์ม</span><span>${n0(all)}</span><span>${pc(all, rev)}</span></div>`;
   }
 
@@ -237,7 +270,7 @@
     box.querySelector('#opHead').innerHTML = `<tr class="g"><th class="stk"></th><th colspan="3"></th><th class="gf" colspan="6">ค่าธรรมเนียมแพลตฟอร์ม</th><th></th><th class="gc" colspan="${pk ? 6 : 5}">ต้นทุนและค่าใช้จ่ายของบริษัท</th><th class="pfh" colspan="2"></th></tr>
       <tr>${so('order_date', 'คำสั่งซื้อ', 'เลขคำสั่งซื้อและวันที่สั่งซื้อ · กดแถวเพื่อดูรายละเอียดทั้งหมด', 'l stk')}<th class="l">SKU ${tip('รหัสสินค้าในคำสั่งซื้อ (รวมของแถม) · กรองตามสินค้าได้ที่ช่อง "สินค้า" ด้านบน')}</th>
         <th class="l">สถานะ ${tip('สถานะคำสั่งซื้อจาก API ของแพลตฟอร์ม · "รอปิดยอด" = แพลตฟอร์มยังไม่โอนเงิน (ค่าธรรมเนียมเป็นค่าประมาณการ) · "คืนเงิน" = คืนเงินเต็มจำนวนตามข้อมูลการเงินจาก API')}</th>${so('rev', 'ยอดขาย', 'ยอดขายหลังส่วนลดร้าน (รวมภาษีมูลค่าเพิ่ม)')}
-        ${Object.keys(CAT).map(c => `<th class="f">${CAT_S[c]} ${tip(CAT[c] + ': ' + CAT_TIP[c])}</th>`).join('')}${so('fees', 'รวม', 'ค่าธรรมเนียมแพลตฟอร์มรวม = ยอดขาย − รายรับสุทธิ', 'f sum')}
+        ${CATS.map(c => `<th class="f">${CAT_S[c]} ${tip(CAT[c] + ': ' + CAT_TIP[c])}</th>`).join('')}${so('fees', 'รวม', 'ค่าธรรมเนียมแพลตฟอร์มรวม = ยอดขาย − รายรับสุทธิ', 'f sum')}
         ${so('settle', 'รายรับสุทธิ', 'เงินที่แพลตฟอร์มโอนเข้า (หรือจะโอน) สำหรับคำสั่งซื้อนี้ ตามข้อมูลจาก API')}
         ${so('vat', 'VAT', 'ภาษีมูลค่าเพิ่มที่ต้องนำส่ง = รายรับสุทธิ × 7/107 (ภาษีขายหักภาษีซื้อในค่าธรรมเนียม)', 'c')}${so('cogs', 'ต้นทุนขาย', 'จำนวนชิ้น × ต้นทุนต่อชิ้นเดือนนั้นจากไฟล์ต้นทุน (รวมของแถม)', 'c')}
         ${pk ? `<th class="c">บรรจุภัณฑ์ ${tip('ค่าบรรจุภัณฑ์ต่อคำสั่งซื้อที่ตั้งไว้')}</th>` : ''}
@@ -270,6 +303,19 @@
     box.querySelector('#opPg').innerHTML = `<span>${n0(total)} คำสั่งซื้อ · หน้า ${S.page + 1} / ${n0(pages)}</span><button type="button" ${S.page <= 0 ? 'disabled' : ''} onclick="OrdProfit.go(-1)">‹ ก่อนหน้า</button><button type="button" ${S.page >= pages - 1 ? 'disabled' : ''} onclick="OrdProfit.go(1)">ถัดไป ›</button>`;
   }
 
+  // รายการเงินของคำสั่งซื้อ จัดกลุ่มแบบ Seller Centre: ค่าจัดส่ง → ค่าธรรมเนียม (แต่ละรายการมีคำอธิบาย ⓘ และ % ของยอดขาย)
+  function feeBlock(o, fees, rev) {
+    const ch = o.ch || S.ch, ship = /shipping|reverse_shipping|return_to_seller|lost_compensation/;
+    const row = ([k, x]) => { const [l, t] = feeOf(ch, k);
+      let tt = t; if (ch === 'Shopee' && k === 'commission_fee' && rev > 0) tt += ` · คำสั่งซื้อนี้ ${(Math.abs(x) / rev * 100).toFixed(2)}%`;
+      if (ch === 'Shopee' && k === 'transaction_fee' && o.payment_method) tt += ` · คำสั่งซื้อนี้: ${o.payment_method}`;
+      if (ch === 'Shopee' && k === 'service_fee' && rev > 0) tt += ` · คำสั่งซื้อนี้ ${(Math.abs(x) / rev * 100).toFixed(2)}%`;
+      return `<div class="tr-ln"><span class="tr-sg">${x < 0 ? '−' : '+'}</span><div class="tr-lb">${esc(l)}${tt ? ' ' + tip(tt) : ''}<div class="tr-ref">${pc(Math.abs(x), rev)} ของยอดขาย</div></div><div class="tr-num">${n2(Math.abs(x))}</div></div>`; };
+    const grp = (title, list) => list.length ? `<div class="tr-ref" style="margin:8px 0 2px;font-weight:700;color:var(--text2);">${title}</div>` + list.map(row).join('') : '';
+    const shipL = fees.filter(([k]) => ship.test(k)), feeL = fees.filter(([k]) => !ship.test(k) && k !== 'other' && k !== 'adjustment_amount'), othL = fees.filter(([k]) => k === 'other' || k === 'adjustment_amount');
+    const ord = c => CATS.indexOf(CAT_OF(c[0]));
+    return grp('ค่าจัดส่ง', shipL) + grp('ค่าธรรมเนียม', feeL.sort((a, b) => ord(a) - ord(b) || Math.abs(b[1]) - Math.abs(a[1]))) + grp('อื่น ๆ', othL);
+  }
   async function openOrder(id, focus) {
     window.trOpenShell('รายละเอียดคำสั่งซื้อ');
     let j;
@@ -284,12 +330,14 @@
       <div class="tr-card-m"><span>${dLabel(o.order_date)} ${+String(o.order_date).slice(0, 4) + 543}</span><span>อัตรากำไรสุทธิ ${pc(+o.profit, rev)}</span><span>${o.settled ? 'ปิดยอดแล้ว' : 'รอปิดยอด'}</span>${o.full_refund ? '<span>คืนเงินเต็มจำนวน</span>' : ''}</div></div>`;
     h += `<div class="tr-fg"${focus ? '' : ''}><div class="tr-fg-h"><span>① ยอดขาย → รายรับสุทธิ</span><span class="tr-ref">${S.ch === 'TikTok' ? 'TikTok Finance API 202501' : 'Shopee API (escrow)'}</span></div>`
       + ln('', 'ยอดขาย (หลังส่วนลดร้าน)', n2(rev))
-      + (fees.length ? Object.keys(CAT).filter(c => byc[c]).map(c => byc[c].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).map(([kk, x]) => ln(x < 0 ? '−' : '+', esc(feeTh(kk)), n2(Math.abs(x)))).join('')).join('')
-        : ln('−', 'ค่าธรรมเนียมแพลตฟอร์มรวม', n2(o.fees)))
+      + (fees.length ? feeBlock(o, fees, rev) : ln('−', 'ค่าธรรมเนียมแพลตฟอร์มรวม', n2(o.fees)))
       + (fees.length && Math.abs(rev + feeSum - (+o.settle || 0)) >= 0.05 ? `<div class="tr-warn">ผลรวมรายการไม่เท่ารายรับสุทธิ (ต่าง ${n2(rev + feeSum - (+o.settle || 0))})</div>` : '')
       + `<div class="tr-eq"><span>รายรับสุทธิ${o.settled ? '' : ' (ประมาณการ)'}</span><b>${n2(o.settle)}</b></div></div>`;
     const rates = j.rates || [], est = o.estimate ? ` · ประมาณการ (อัตรา ${j.bi_last ? mLabel(String(j.bi_last).slice(0, 7)) : 'เดือนล่าสุด'})` : '';
-    const rs = key => rates.filter(r => r[key] != null).map(r => `${esc(r.name || r.p)}: ${(r[key] * 100).toFixed(2)}% × ยอดขายก่อนภาษี ${n2(r.rs / 1.07)}`).join('<br>');
+    // อัตราที่ใช้จริง = อัตราจาก Business Insight × ตัวปรับให้รวมทุกคำสั่งซื้อเท่างบ (แสดงอัตราหลังปรับ เพื่อให้คูณแล้วได้ตัวเลขในแถวพอดี)
+    const ACT = { ads: +o.ads || 0, dir: +o.mkt_direct || 0, oth: +o.mkt_other || 0, oh: +o.overhead || 0 };
+    const rs = key => { const L = rates.filter(r => r[key] != null && +r[key] !== 0), raw = L.reduce((t, r) => t + r[key] * r.rs / 1.07, 0), f = raw ? ACT[key] / raw : 1;
+      return L.map(r => `${esc(r.name || r.p)}: ${(r[key] * f * 100).toFixed(2)}% × ยอดขายก่อนภาษี ${n2(r.rs / 1.07)}`).join('<br>'); };
     const cl = o.cogs_lines || [];
     h += `<div class="tr-fg" id="opFocusCost"><div class="tr-fg-h"><span>② ต้นทุนและค่าใช้จ่ายของบริษัท</span><span class="tr-ref">ไฟล์ต้นทุน · Business Insight${est}</span></div>`
       + ln('−', 'ภาษีมูลค่าเพิ่ม', n2(o.vat), `รายรับสุทธิ ${n2(o.settle)} × 7/107 (ภาษีขายหักภาษีซื้อในค่าธรรมเนียม)`)
