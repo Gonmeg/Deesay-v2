@@ -836,7 +836,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-n</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-o</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -954,6 +954,13 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <option value="Lazada">Lazada</option>
           <option value="ตัวแทน">ตัวแทน</option>
           <option value="Modern Trade">Modern Trade</option>
+        </select>
+      </div>
+      <div class="filter-group" id="opChGroup" style="display:none;">   <!-- (2026-10-26) หน้ากำไรต่อคำสั่งซื้อ: เฉพาะช่องทางที่มีข้อมูลการเงินรายคำสั่งซื้อจาก API -->
+        <span class="filter-label">Channel</span>
+        <select id="opChSelect" onchange="window.OrdProfit && window.OrdProfit.pickCh(this.value)">
+          <option value="TikTok">TikTok</option>
+          <option value="Shopee">Shopee</option>
         </select>
       </div>
       <div class="filter-group" id="fbePageFilterGroup" style="display:none;">
@@ -2819,6 +2826,7 @@ function applyFilters() {
   const sub = document.getElementById('filterSubChannel').value;
 
   try { sessionStorage.setItem('deesay_last_filter', JSON.stringify({ from, to, ch, sub })); } catch (e) {}
+  if (currentPage === 'ordprofit') { if (window.OrdProfit) window.OrdProfit.render(); return; }   // (2026-10-26) หน้านี้ดึงจากฐานข้อมูลตามช่วงวันที่เอง
 
   filteredData = allData.filter(r => {
     if (from && r.date < from) return false;
@@ -2857,7 +2865,7 @@ const PAGE_INFO = {
 };
 const pageOrder = ['home','overview','kpi','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่า Ads ต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
-const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee','products','ordprofit']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
+const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee','products']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -2994,8 +3002,9 @@ function showPage(page, lockCh, el) {
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
-    const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = ['home', 'kpi', 'promo', 'exec', 'execfee', 'ordprofit', 'products'].includes(page) ? 'none' : '';
+    const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = ['home', 'kpi', 'promo', 'exec', 'execfee', 'products'].includes(page) ? 'none' : '';
     const kg = document.getElementById('kpMonthGroup'); if (kg) kg.style.display = page === 'kpi' ? 'flex' : 'none'; }   // (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนแถบบน เปลี่ยนแล้วโหลดทันที   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
+  { const og = document.getElementById('opChGroup'); if (og) og.style.display = page === 'ordprofit' ? 'flex' : 'none'; }   // (2026-10-26)
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
   const noDateFilter = NO_DATE_FILTER_PAGES.includes(page);
@@ -3106,7 +3115,7 @@ function loadOrdProfitPage() {
   if (window._opLoading) return;
   window._opLoading = true;
   const s = document.createElement('script');
-  s.src = 'ordprofit.js?v=20261026n';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
+  s.src = 'ordprofit.js?v=20261026o';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
   s.onload = () => { window._opLoading = false; if (currentPage === 'ordprofit') window.OrdProfit.render(); };
   s.onerror = () => { window._opLoading = false; const el = document.getElementById('page-ordprofit'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด ordprofit.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
