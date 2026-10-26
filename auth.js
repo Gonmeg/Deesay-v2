@@ -86,7 +86,7 @@ window.Auth = (function () {
 
   // (2026-09-28) 'home' (หน้าแรก) เปิดให้ทุกคนที่ใช้งานได้เสมอ — ในหน้าจะโชว์เฉพาะส่วนของหน้าที่คนนั้นมีสิทธิ์
   // (2026-10-15) execfee (ค่าธรรมเนียมช่องทาง) ใช้สิทธิ์เดียวกับ exec (หน้าผู้บริหาร)
-  function canPage(id) { if (id === 'execfee') id = 'exec'; return !!perm && perm.is_active && (id === 'home' || perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
+  function canPage(id) { if (id === 'execfee') id = 'exec'; if (id === 'ordprofit') id = 'cost'; /* (2026-10-26) กำไรต่อออเดอร์ ใช้สิทธิ์เดียวกับ Business Insight */ return !!perm && perm.is_active && (id === 'home' || perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
 
   // ด่านหลัก — where = 'dashboard' | 'upload' | 'admin' | 'health'
   async function require(where) {
