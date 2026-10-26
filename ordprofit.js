@@ -1,3 +1,4 @@
+// ordprofit.js (v20261026m) — ตัดคอลัมน์การตลาดอื่น / บริหาร (กำไรหักถึงค่าโฆษณา) · เพิ่ม ราคาก่อนส่วนลด · ส่วนลดร้าน · ค่าส่งที่ผู้ซื้อจ่าย · แยกที่มาค่าโฆษณาเดือนปัจจุบัน · TikTok ที่ยังไม่ปิดยอดประมาณค่าธรรมเนียม
 // ordprofit.js (v20261026k) — แผงที่มาของตัวเลขกระชับ: คำอธิบายย้ายเข้า ⓘ · ผลลัพธ์อยู่บรรทัดสุดท้ายของแต่ละส่วน · สรุปรวมท้ายแผง
 // ordprofit.js (v20261026j) — เดือนที่บัญชียังไม่ปิด: ค่าโฆษณาจริงจากแพลตฟอร์ม · KOL จากไฟล์ทีม KOL · ที่เหลือประมาณการจากเดือนล่าสุดที่ปิด
 // ordprofit.js (v20261026i) — แผงที่มาของตัวเลข: ตารางชัดเจน (ต้นทุนขาย: สินค้า · ต้นทุน/ชิ้น · จำนวน · รวม / ค่าใช้จ่ายปันส่วน: ทีละขั้น) + แหล่งข้อมูลไว้ล่างสุด
@@ -36,6 +37,7 @@
     Shopee: { comm: '% จากราคาสินค้าที่ Shopee เก็บ', svc: 'ค่าบริการโปรแกรมและแคมเปญ (Shopee ส่งเป็นยอดรวม)', pay: 'ตามช่องทางที่ผู้ซื้อชำระเงิน', aff: 'ค่าคอมที่จ่ายให้ Affiliate', oth: 'ค่าจัดส่งสุทธิ · ค่าโครงสร้างพื้นฐาน · รายการปรับปรุง' },
     TikTok: { comm: 'ค่าคอมมิชชั่นและค่าคอมมิชชั่นแบบไดนามิก', svc: 'ค่าบริการโปรแกรม เช่น LIVE Specials · Flash Sale', pay: 'ค่าธรรมเนียมการชำระเงิน', aff: 'ค่าคอมที่จ่ายให้ครีเอเตอร์', oth: 'ค่าจัดส่งสุทธิ · ค่าโครงสร้างพื้นฐาน · รายการปรับปรุง' } };
   const CAT_OF = k => {
+    if (k.startsWith('est:')) return k.slice(4);
     const s = k.replace(/^tax:/, '');
     if (['platform_commission_amount', 'dynamic_commission_amount', 'referral_fee_amount', 'fee_per_item_sold_amount', 'platform_semi_managed_commission_fee', 'commission_fee'].includes(s)) return 'comm';
     if (['transaction_fee_amount', 'credit_card_handling_fee_amount', 'seller_paylater_handling_fee_amount', 'dt_handling_fee_amount', 'transaction_fee'].includes(s)) return 'pay';
@@ -75,9 +77,10 @@
       campaign_period_fee_sp_amount: ['ค่าธรรมเนียมช่วงแคมเปญ', 'ช่วงแคมเปญที่เข้าร่วม'],
       gmv_max_ad_fee_amount: ['ค่าโฆษณา GMV Max', 'หักจากยอดขาย'],
       refund_administration_fee_amount: ['ค่าดำเนินการคืนเงิน', 'กรณีคืนเงิน'],
-      shipping_cost_amount: ['ค่าจัดส่ง (สุทธิ)', 'หลังหักส่วนที่ TikTok หรือผู้ซื้อจ่าย'],
+      shipping_cost_amount: ['ค่าจัดส่ง (สุทธิ)', 'ค่าจัดส่งที่ร้านจ่าย หลังหักส่วนที่ TikTok ช่วย (ค่าส่งที่ผู้ซื้อจ่ายอยู่ในยอดขาย)'],
       adjustment_amount: ['รายการปรับปรุง', 'ปรับปรุงยอดจาก TikTok Shop'] } };
-  const feeOf = (ch, k) => { const b = k.replace(/^tax:/, ''), x = (FEE[ch] || {})[b]; const l = x ? x[0] : b.replace(/_amount$/, '').replace(/_/g, ' '); return [k.startsWith('tax:') ? 'ภาษี: ' + l : l, x ? x[1] : '']; };
+  const feeOf = (ch, k) => { if (k.startsWith('est:')) return [`${(CATN[ch] || CATN.TikTok)[k.slice(4)] || 'อื่น ๆ'} (ประมาณการ)`, 'ยังไม่ปิดยอด ประมาณจากอัตราเฉลี่ยของคำสั่งซื้อที่ปิดยอดแล้ว 45 วันล่าสุด'];
+    const b = k.replace(/^tax:/, ''), x = (FEE[ch] || {})[b]; const l = x ? x[0] : b.replace(/_amount$/, '').replace(/_/g, ' '); return [k.startsWith('tax:') ? 'ภาษี: ' + l : l, x ? x[1] : '']; };
   const feeTh = k => feeOf(S.ch, k)[0];
   const CAT = new Proxy({}, { get: (t, c) => (CATN[S.ch] || CATN.TikTok)[c], ownKeys: () => CATS, getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }) });
   const CAT_S = new Proxy({}, { get: (t, c) => (CATS_S[S.ch] || CATS_S.TikTok)[c] });
@@ -128,7 +131,8 @@
       #page-ordprofit table.op-t { border-collapse:separate; border-spacing:0; width:100%; font-size:12px; }
       #page-ordprofit .op-t th { font-size:11px; color:var(--text3); font-weight:600; padding:7px 8px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--op-line); background:var(--bg2); }
       #page-ordprofit .op-t thead tr.g th { font-size:11px; color:var(--text2); font-weight:700; text-align:center; border-bottom:0; padding-bottom:2px; }
-      #page-ordprofit .op-t thead tr.g th.gf { background:rgba(239,68,68,.05); } #page-ordprofit .op-t thead tr.g th.gc { background:rgba(99,102,241,.05); }
+      #page-ordprofit .op-t thead tr.g th.gf { background:rgba(239,68,68,.05); } #page-ordprofit .op-t thead tr.g th.gs { background:rgba(34,197,94,.06); }
+      #page-ordprofit .op-t th.s, #page-ordprofit .op-t td.s { background:rgba(34,197,94,.025); } #page-ordprofit .op-t thead tr.g th.gc { background:rgba(99,102,241,.05); }
       #page-ordprofit .op-t th.f, #page-ordprofit .op-t td.f { background:rgba(239,68,68,.025); } #page-ordprofit .op-t th.c, #page-ordprofit .op-t td.c { background:rgba(99,102,241,.025); }
       #page-ordprofit .op-t td { padding:7px 7px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--op-line); font-variant-numeric:tabular-nums; color:var(--text); }
       #page-ordprofit .op-t th.l, #page-ordprofit .op-t td.l { text-align:left; }
@@ -195,17 +199,17 @@
     el.querySelectorAll('#opCh button').forEach(b => b.classList.toggle('on', b.dataset.v === S.ch));
     const other = CHS.find(c => c !== S.ch), ko = ((S.both[other] || {}).k) || {}, po = +ko.orders ? (+ko.profit || 0) / +ko.orders : null;
     const notes = [];
-    if (k.estimate) notes.push(`เดือนที่บัญชียังไม่ปิด: ค่าโฆษณาและ KOL ใช้ข้อมูลจริง · Presenter, Live · Brand และค่าใช้จ่ายบริหาร ประมาณการจากอัตรา ${s.bi_last ? mLabel(String(s.bi_last).slice(0, 7)) : 'เดือนล่าสุดที่ปิด'}`);
+    if (k.estimate) notes.push('เดือนที่บัญชียังไม่ปิด: ค่าโฆษณาใช้ข้อมูลจริงจากแพลตฟอร์ม');
     if (+k.pending) notes.push(`${n0(k.pending)} คำสั่งซื้อยังไม่ปิดยอด ค่าธรรมเนียมเป็นค่าประมาณการของแพลตฟอร์ม`);
     if (+k.no_cost) notes.push(`${n0(k.no_cost)} คำสั่งซื้อมีสินค้าที่ยังไม่มีต้นทุนในไฟล์ต้นทุน`);
     el.querySelector('#opNote').innerHTML = notes.length ? `<div class="op-note">${notes.join(' · ')}</div>` : '';
     const card = (l, t, v, d, cls, style) => `<div class="op-k ${cls || ''}"><div class="l">${l} ${tip(t)}</div><div class="v" style="${style || ''}">${v}</div><div class="d">${d}</div></div>`;
     el.querySelector('#opKpis').innerHTML =
-      card('กำไรสุทธิต่อคำสั่งซื้อ', 'กำไรสุทธิรวม ÷ จำนวนคำสั่งซื้อ (ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน)', n ? n2(p / n) : '—',
+      card('กำไรต่อคำสั่งซื้อ', 'กำไรรวม ÷ จำนวนคำสั่งซื้อ (ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน) · กำไร = รายรับสุทธิ − VAT − ต้นทุนขาย − ค่าบรรจุภัณฑ์ − ค่าโฆษณา (ยังไม่หักค่าการตลาดอื่นและค่าใช้จ่ายบริหาร)', n ? n2(p / n) : '—',
         `${n0(n)} คำสั่งซื้อ${po !== null ? ` · ${other} ${n2(po)}` : ''}`, 'hero', p < 0 ? 'color:var(--red);' : 'color:#15803d;')
-      + card('กำไรสุทธิรวม', 'รายรับสุทธิจากแพลตฟอร์ม หัก ภาษีมูลค่าเพิ่ม ต้นทุนขาย ค่าบรรจุภัณฑ์ ค่าโฆษณา ค่าการตลาดอื่น และค่าใช้จ่ายบริหาร', n0(p), `อัตรากำไรสุทธิ ${pc(p, rev)}`, '', p < 0 ? 'color:var(--red);' : '')
+      + card('กำไรรวม', 'รายรับสุทธิ − VAT − ต้นทุนขาย − ค่าบรรจุภัณฑ์ − ค่าโฆษณา (ยังไม่หักค่าการตลาดอื่นและค่าใช้จ่ายบริหาร)', n0(p), `อัตรากำไร ${pc(p, rev)}`, '', p < 0 ? 'color:var(--red);' : '')
       + card('ค่าธรรมเนียมแพลตฟอร์ม', 'ยอดขาย หัก รายรับสุทธิที่แพลตฟอร์มโอนเข้า', pc(+k.fees, rev), `${n0(k.fees)} จากยอดขาย ${n0(rev)}`)
-      + card('คำสั่งซื้อที่ขาดทุน', 'คำสั่งซื้อที่กำไรสุทธิติดลบ · ดูรายการได้ที่ตัวกรอง "ขาดทุน"', pc(+k.loss, n), `${n0(k.loss)} คำสั่งซื้อ`, '', +k.loss ? 'color:var(--red);' : '');
+      + card('คำสั่งซื้อที่ขาดทุน', 'คำสั่งซื้อที่กำไรติดลบ · ดูรายการได้ที่ตัวกรอง "ขาดทุน"', pc(+k.loss, n), `${n0(k.loss)} คำสั่งซื้อ`, '', +k.loss ? 'color:var(--red);' : '');
     // สรุปรายรับ–รายจ่าย (ตาราง) + ค่าธรรมเนียมแยกหมวด
     const mk2 = (+k.mkt_direct || 0) + (+k.mkt_other || 0), pr = (l, v, cls, t) => `<tr class="${cls || ''}"><td class="${cls ? '' : 'ind'}">${l}${t ? ' ' + tip(t) : ''}</td><td>${n2(v)}</td><td>${n ? n2((+v || 0) / n) : '—'}</td><td>${pc(+v, rev)}</td></tr>`;
     el.querySelector('#opSum').innerHTML = `<div class="op-h"><span>สรุปรายรับ–รายจ่าย ${tip('รวมทุกคำสั่งซื้อในช่วงที่เลือก ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน')}</span><span style="font-size:11.5px;font-weight:400;color:var(--text3);">${S.ch} · ${S.from === S.to ? mLabel(S.from) : mLabel(S.from) + ' – ' + mLabel(S.to)}</span></div>
@@ -217,9 +221,7 @@
       + pr('หัก ต้นทุนขาย', k.cogs, '', 'จำนวนชิ้น × ต้นทุนต่อชิ้นจากไฟล์ต้นทุน (รวมของแถม)')
       + (Math.abs(+k.packaging || 0) >= 0.5 ? pr('หัก ค่าบรรจุภัณฑ์', k.packaging) : '')
       + pr('หัก ค่าโฆษณา', k.ads, '', 'เดือนปิดแล้ว: Business Insight · เดือนปัจจุบัน: ค่าโฆษณาจริงจากแพลตฟอร์ม')
-      + pr('หัก ค่าการตลาดอื่น', mk2, '', 'KOL · Presenter · Live · Brand · เดือนปัจจุบัน: KOL จากไฟล์ทีม KOL ที่เหลือประมาณการ')
-      + pr('หัก ค่าใช้จ่ายบริหาร', k.overhead, '', 'เดือนปิดแล้ว: Business Insight · เดือนปัจจุบัน: ประมาณการจากเดือนล่าสุดที่ปิด')
-      + pr('กำไรสุทธิ', p, 'tot') + '</tbody></table>';
+      + pr('กำไร', p, 'tot', 'ยังไม่หักค่าการตลาดอื่นและค่าใช้จ่ายบริหาร') + '</tbody></table>';
     const fees = (s.fees || []).filter(x => Math.abs(+x[1]) >= 0.5), all = +k.fees || 0, by = {};
     fees.forEach(([kk, v]) => { const c = CAT_OF(kk); (by[c] = by[c] || []).push([kk, -(+v)]); });
     const rest = all - fees.reduce((t, x) => t - (+x[1]), 0); if (Math.abs(rest) >= 0.5) (by.oth = by.oth || []).push(['__rest', rest]);
@@ -243,7 +245,7 @@
   function drawProducts() {
     const s = S.both[S.ch] || {}, P = s.products || [], box = shell().querySelector('#opBody');
     box.innerHTML = `<div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead><tr><th class="l">สินค้า ${tip('จัดกลุ่มตามสินค้าหลักในคำสั่งซื้อ (ไม่นับของแถม) · คำสั่งซื้อที่มีหลายสินค้ารวมที่ "หลายสินค้า" · กดเพื่อดูคำสั่งซื้อของสินค้านั้น')}</th>
-      <th>คำสั่งซื้อ</th><th>ยอดขาย</th><th>กำไรสุทธิ</th><th>อัตรากำไรสุทธิ</th><th>กำไรสุทธิต่อคำสั่งซื้อ</th><th>คำสั่งซื้อที่ขาดทุน</th></tr></thead><tbody>`
+      <th>คำสั่งซื้อ</th><th>ยอดขาย</th><th>กำไร ${tip('หักถึงค่าโฆษณา ยังไม่หักค่าการตลาดอื่นและค่าใช้จ่ายบริหาร')}</th><th>อัตรากำไร</th><th>กำไรต่อคำสั่งซื้อ</th><th>คำสั่งซื้อที่ขาดทุน</th></tr></thead><tbody>`
       + (P.length ? P.map(x => `<tr onclick="OrdProfit.pickProduct('${esc(x.p === 'หลายสินค้า' ? '__multi' : x.p)}')"><td class="l">${x.p === 'หลายสินค้า' ? 'คำสั่งซื้อที่มีหลายสินค้า ' + tip('คำสั่งซื้อที่มีสินค้ามากกว่า 1 ชนิด (ไม่นับของแถม) จึงไม่จัดเข้าสินค้าใดสินค้าหนึ่ง') : esc(x.name || x.p) + ` <span class="sub mono">${esc(x.p)}</span>`}</td>
           <td>${n0(x.n)}</td><td>${n0(x.rev)}</td><td class="pf ${+x.profit < 0 ? 'neg' : ''}">${n0(x.profit)}</td><td class="${+x.profit < 0 ? 'neg' : ''}">${pc(+x.profit, +x.rev)}</td>
           <td class="${+x.profit < 0 ? 'neg' : ''}">${x.n ? n2(x.profit / x.n) : '—'}</td><td>${pc(+x.loss, +x.n)} <span class="sub">(${n0(x.loss)})</span></td></tr>`).join('')
@@ -256,21 +258,20 @@
       <select id="opSku"><option value="">สินค้า: ทั้งหมด</option><option value="__multi"${S.sku === '__multi' ? ' selected' : ''}>คำสั่งซื้อที่มีหลายสินค้า</option>${((S.both[S.ch] || {}).products || []).filter(x => x.p !== 'หลายสินค้า').sort((a, b) => String(a.name || a.p).localeCompare(String(b.name || b.p), 'th')).map(x => `<option value="${esc(x.p)}"${S.sku === x.p ? ' selected' : ''}>${esc(x.name || x.p)} (${esc(x.p)})</option>`).join('')}</select>
       <input type="search" id="opQ" placeholder="ค้นหาเลขคำสั่งซื้อ / รหัส SKU" style="width:200px;" value="${esc(S.q)}">
       <span style="margin-left:auto;font-size:11.5px;color:var(--text3);">ตัวเลขขีดเส้นใต้: กดดูที่มา · กดเลขคำสั่งซื้อ: ดูรายละเอียดทั้งหมด</span></div>
-      <div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead id="opHead"></thead><tbody id="opRows"><tr><td colspan="19" class="l z">กำลังโหลด…</td></tr></tbody></table></div><div class="op-pg" id="opPg"></div>`;
+      <div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead id="opHead"></thead><tbody id="opRows"><tr><td colspan="20" class="l z">กำลังโหลด…</td></tr></tbody></table></div><div class="op-pg" id="opPg"></div>`;
     box.querySelectorAll('#opFilt button').forEach(b => { b.classList.toggle('on', b.dataset.v === S.filter); b.onclick = () => { S.filter = b.dataset.v; S.page = 0; drawOrders(); }; });
     box.querySelector('#opSku').onchange = e => { S.sku = e.target.value; S.page = 0; loadRows(); };
     let tm; box.querySelector('#opQ').oninput = e => { clearTimeout(tm); tm = setTimeout(() => { S.q = e.target.value.trim(); S.page = 0; loadRows(); }, 350); };
     const so = (key, l, t, cls) => `<th class="${cls || ''}${key ? ' s' + (S.sort === key ? ' on' : '') : ''}"${key ? ` onclick="OrdProfit.sortBy('${key}')"` : ''}>${l}${t ? ' ' + tip(t) : ''}${S.sort === key ? (S.dir === 'asc' ? ' ▲' : ' ▼') : ''}</th>`;
-    box.querySelector('#opHead').innerHTML = `<tr class="g"><th class="stk"></th><th colspan="3"></th><th class="gf" colspan="6">ค่าธรรมเนียมแพลตฟอร์ม</th><th></th><th class="gc" colspan="${pk ? 6 : 5}">ต้นทุนและค่าใช้จ่ายของบริษัท</th><th class="pfh" colspan="2"></th></tr>
+    box.querySelector('#opHead').innerHTML = `<tr class="g"><th class="stk"></th><th colspan="2"></th><th class="gs" colspan="4">ยอดขาย</th><th class="gf" colspan="6">ค่าธรรมเนียมแพลตฟอร์ม</th><th></th><th class="gc" colspan="${pk ? 4 : 3}">ต้นทุนของบริษัท</th><th class="pfh" colspan="2"></th></tr>
       <tr>${so('order_date', 'คำสั่งซื้อ', 'เลขคำสั่งซื้อและวันที่สั่งซื้อ · กดแถวเพื่อดูรายละเอียดทั้งหมด', 'l stk')}<th class="l">SKU ${tip('รหัสสินค้าในคำสั่งซื้อ (รวมของแถม) · กรองตามสินค้าได้ที่ช่อง "สินค้า" ด้านบน')}</th>
-        <th class="l">สถานะ ${tip('สถานะคำสั่งซื้อจาก API ของแพลตฟอร์ม · "รอปิดยอด" = แพลตฟอร์มยังไม่โอนเงิน (ค่าธรรมเนียมเป็นค่าประมาณการ) · "คืนเงิน" = คืนเงินเต็มจำนวนตามข้อมูลการเงินจาก API')}</th>${so('rev', 'ยอดขาย', 'ยอดขายหลังส่วนลดร้าน (รวมภาษีมูลค่าเพิ่ม)')}
+        <th class="l">สถานะ ${tip('สถานะคำสั่งซื้อจาก API ของแพลตฟอร์ม · "รอปิดยอด" = แพลตฟอร์มยังไม่โอนเงิน (ค่าธรรมเนียมเป็นค่าประมาณการ) · "คืนเงิน" = คืนเงินเต็มจำนวนตามข้อมูลการเงินจาก API')}</th>${so('orig', 'ราคาก่อนส่วนลด', 'ราคาสินค้าก่อนส่วนลดของร้าน', 's')}${so('sdisc', 'ส่วนลดร้าน', 'ส่วนลดและโค้ดส่วนลดที่ร้านออกเอง', 's')}${so('bship', 'ค่าส่งผู้ซื้อจ่าย', 'ค่าจัดส่งที่ผู้ซื้อชำระ', 's')}${so('rev', 'ยอดขาย', 'ราคาก่อนส่วนลด − ส่วนลดร้าน + ค่าส่งผู้ซื้อจ่าย (− คืนเงิน) · รวมภาษีมูลค่าเพิ่ม', 's sum')}
         ${CATS.map(c => `<th class="f">${CAT_S[c]} ${tip(CAT[c] + ': ' + CAT_TIP[c])}</th>`).join('')}${so('fees', 'รวม', 'ค่าธรรมเนียมแพลตฟอร์มรวม = ยอดขาย − รายรับสุทธิ', 'f sum')}
         ${so('settle', 'รายรับสุทธิ', 'เงินที่แพลตฟอร์มโอนเข้า (หรือจะโอน) สำหรับคำสั่งซื้อนี้ ตามข้อมูลจาก API')}
         ${so('vat', 'VAT', 'ภาษีมูลค่าเพิ่มที่ต้องนำส่ง = รายรับสุทธิ × 7/107 (ภาษีขายหักภาษีซื้อในค่าธรรมเนียม)', 'c')}${so('cogs', 'ต้นทุนขาย', 'จำนวนชิ้น × ต้นทุนต่อชิ้นเดือนนั้นจากไฟล์ต้นทุน (รวมของแถม)', 'c')}
         ${pk ? `<th class="c">บรรจุภัณฑ์ ${tip('ค่าบรรจุภัณฑ์ต่อคำสั่งซื้อที่ตั้งไว้')}</th>` : ''}
-        ${so('ads', 'โฆษณา', 'ค่าโฆษณาตามยอดขายของสินค้าในช่องทางนี้ · เดือนปิดแล้ว: Business Insight · เดือนปัจจุบัน: ค่าโฆษณาจริงจากแพลตฟอร์ม', 'c')}<th class="c">การตลาดอื่น ${tip('KOL · Presenter · Live · Brand ตามยอดขายของสินค้า · เดือนปิดแล้ว: Business Insight · เดือนปัจจุบัน: KOL จากไฟล์ทีม KOL ที่เหลือประมาณการ')}</th>
-        ${so('oh', 'บริหาร', 'ค่าใช้จ่ายบริหารตามยอดขายของสินค้า · เดือนปิดแล้ว: Business Insight · เดือนปัจจุบัน: ประมาณการจากเดือนล่าสุดที่ปิด', 'c')}
-        ${so('profit', 'กำไรสุทธิ', 'รายรับสุทธิ − VAT − ต้นทุนขาย − บรรจุภัณฑ์ − โฆษณา − การตลาดอื่น − บริหาร', 'sum pfh')}${so('pct', '%', 'อัตรากำไรสุทธิ = กำไรสุทธิ ÷ ยอดขาย', 'pfh2')}</tr>`;
+        ${so('ads', 'โฆษณา', 'ค่าโฆษณาตามยอดขายของสินค้าในช่องทางนี้ · เดือนปิดแล้ว: Business Insight · เดือนปัจจุบัน: ค่าโฆษณาจริงจากแพลตฟอร์ม', 'c')}
+        ${so('profit', 'กำไร', 'รายรับสุทธิ − VAT − ต้นทุนขาย − ค่าบรรจุภัณฑ์ − ค่าโฆษณา (ยังไม่หักค่าการตลาดอื่นและค่าใช้จ่ายบริหาร)', 'sum pfh')}${so('pct', '%', 'อัตรากำไร = กำไร ÷ ยอดขาย', 'pfh2')}</tr>`;
     loadRows();
   }
 
@@ -283,14 +284,15 @@
     const v = x => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : n2(x);
     const cu = (id, x, what) => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : `<span class="u" title="กดดูที่มาของตัวเลขนี้" onclick="event.stopPropagation();OrdProfit.openCell('${esc(id)}','${what}')">${n2(x)}</span>`;
     body.innerHTML = rows.length ? rows.map(r => {
-      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, mk2, oh, st] = r;
+      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, , , st, orig, sdisc, bship, rfo] = r;
       const stx = refund ? '<span class="op-tag" style="color:#64748b;background:rgba(100,116,139,.14);">คืนเงิน</span>' : !settled ? '<span class="op-tag">รอปิดยอด</span>' : '';
       return `<tr onclick="OrdProfit.openOrder('${esc(id)}')"><td class="l stk"><span class="mono">${esc(id)}</span><div class="sub">${dLabel(d)}</div></td>
         <td class="l" style="white-space:normal;max-width:150px;"><span class="mono">${esc((skus || '—').replace(/,/g, ', '))}</span>${nocost ? '<span class="op-tag">ไม่มีต้นทุน</span>' : ''}</td>
         <td class="l">${esc(ST_TH[st] || st || '—')}${stx ? '<div>' + stx + '</div>' : ''}</td>
-        <td>${n2(rev)}</td><td class="f">${v(cComm)}</td><td class="f">${v(cSvc)}</td><td class="f">${v(cPay)}</td><td class="f">${v(cAff)}</td><td class="f">${v(cOth)}</td><td class="f sum">${n2(fees)}</td>
+        <td class="s">${v(orig)}</td><td class="s">${Math.abs(+sdisc || 0) < 0.005 ? '<span class="z">—</span>' : '−' + n2(sdisc)}</td><td class="s">${v(bship)}</td>
+        <td class="s sum">${n2(rev)}${Math.abs(+rfo || 0) >= 0.01 ? `<div class="sub">หักคืนเงิน ${n2(rfo)}</div>` : ''}</td><td class="f">${v(cComm)}</td><td class="f">${v(cSvc)}</td><td class="f">${v(cPay)}</td><td class="f">${v(cAff)}</td><td class="f">${v(cOth)}</td><td class="f sum">${n2(fees)}</td>
         <td>${n2(settle)}</td><td class="c">${v(vat)}</td><td class="c">${cu(id, cogs, 'cogs')}</td>${pk ? `<td class="c">${v(pack)}</td>` : ''}
-        <td class="c">${cu(id, ads, 'ads')}</td><td class="c">${cu(id, mk2, 'mkt')}</td><td class="c">${cu(id, oh, 'oh')}${est ? '<div class="sub">ประมาณการ</div>' : ''}</td>
+        <td class="c">${cu(id, ads, 'ads')}</td>
         <td class="pf pfc ${+prof < 0 ? 'neg' : ''}">${n2(prof)}</td><td class="pfc2 ${+prof < 0 ? 'neg' : ''}">${pc(+prof, +rev)}</td></tr>`; }).join('')
       : '<tr><td colspan="19" class="l z">ไม่มีคำสั่งซื้อตามเงื่อนไขนี้</td></tr>';
     const pages = Math.max(1, Math.ceil(total / S.size));
@@ -315,6 +317,7 @@
     .opx-t { width:100%; border-collapse:collapse; font-size:12.5px; table-layout:fixed; }
     .opx-t td, .opx-t th { white-space:nowrap; } .opx-t td:first-child { white-space:normal; }
     .opx-t.st td:first-child { width:68%; }
+    .opx-t.opx-w td, .opx-t.opx-w th { font-size:12px; padding:6px 4px; } .opx-t.opx-w th { white-space:normal; }
     .opx-t th { font-size:11px; color:var(--text3); font-weight:600; text-align:right; padding:6px 6px; border-bottom:1px solid var(--border); }
     .opx-t td { text-align:right; padding:7px 6px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; vertical-align:top; }
     .opx-t th:first-child, .opx-t td:first-child { text-align:left; }
@@ -368,8 +371,18 @@
         return [t, html]; };
       const blocks = [], parts = [];
       if (what === 'ads' && op) {
+        // ค่าโฆษณาทั้งเดือนของสินค้า แยกตามที่มา: Product Ads ของสินค้าเอง + ส่วนแบ่งจากก้อนที่ไม่ระบุสินค้า (ตามยอดขาย)
+        const PL = { direct: ['Product Ads ของสินค้านี้', 'โฆษณาที่ผูกกับสินค้านี้โดยตรง (รายแคมเปญจาก API)'],
+          api_rest: [S.ch === 'Shopee' ? 'Shopee Ads ที่ไม่ระบุสินค้า' : 'TikTok Ads ที่ไม่ระบุสินค้า', S.ch === 'Shopee' ? 'ยอด Shopee Ads ทั้งร้านที่ API ไม่ส่งรายแคมเปญ (เช่น GMV Max / โฆษณาอัตโนมัติ)' : 'ยอดโฆษณา TikTok ที่ไม่ผูกกับสินค้า'],
+          live_gmv: ['GMV Max LIVE', 'แบ่งตามยอดขายจากไลฟ์ของสินค้านี้'], 'Meta in-app': ['Meta in-app ผ่าน Shopee', 'อ่านจาก Seller Centre เป็นยอดรวม'],
+          CPAS: ['CPAS (Meta)', 'ทีมยิงใน Meta · ยังไม่ระบุสินค้า'], Live: ['Shopee Live', 'อ่านจาก Seller Centre เป็นยอดรวม'], Brand: ['Brand Ads', 'อ่านจาก Seller Centre เป็นยอดรวม'], Coins: ['Coins', 'เหรียญที่แจกในไลฟ์ · ยอดรวม'] };
+        rates.forEach(r => { const P = r.ads_parts || []; if (!P.length) return; const tot = P.reduce((t, x) => t + (+x.amt || 0), 0);
+          blocks.push(`<div class="tr-fg"><div class="opx-h">${lab('ค่าโฆษณาทั้งเดือนของสินค้านี้', `แยกตามที่มา · ก้อนที่ไม่ระบุสินค้าแบ่งตามยอดขายของสินค้านี้ใน ${S.ch}`)}${many ? ` <span class="opx-sub">${esc(r.name || r.p)}</span>` : ''}</div>
+            <table class="opx-t opx-w" data-no-sort data-no-page><thead><tr><th style="width:38%;">ที่มา</th><th style="width:23%;">ยอดทั้งเดือน</th><th style="width:16%;">ส่วน ${tip(`ส่วนของสินค้านี้ = ยอดขายของสินค้านี้ ÷ ยอดขายทั้งหมดบน ${S.ch} เดือนเดียวกัน`)}</th><th style="width:23%;">ค่าโฆษณา</th></tr></thead><tbody>`
+            + P.map(x => { const [l, t] = PL[x.k] || [x.k, '']; return `<tr class="op"><td>${lab(l, t)}</td><td>${n2(x.pool)}</td><td>${x.k === 'direct' ? 'ทั้งหมด' : ((+x.share || 0) * 100).toFixed(2) + '%'}</td><td>${n2(x.amt)}</td></tr>`; }).join('')
+            + `<tr class="tot"><td>รวม</td><td></td><td></td><td>${n2(tot)}</td></tr></tbody></table></div>`); });
         const f = fac(val, rates.reduce((t, r) => t + (r.sa_rev ? r.sa_ads / r.sa_rev : 0) * r.rs, 0));
-        rates.forEach(r => blocks.push(block('ค่าโฆษณา', 'ค่าโฆษณาจริงจากแพลตฟอร์ม ตามยอดขายของสินค้า', false, r, +r.sa_ads || 0, `ค่าโฆษณาจริง ${mo} (ถึงวันนี้)`, +r.sa_rev || 0, `ยอดขายของสินค้านี้บน ${S.ch} เดือนเดียวกัน`, +r.rs, '', f, `ปรับให้ยอดรวมทุกคำสั่งซื้อเท่ากับค่าโฆษณาจริงของ ${S.ch}`)[1]));
+        rates.forEach(r => blocks.push(block('ค่าโฆษณา', 'ค่าโฆษณาจริงจากแพลตฟอร์ม ตามยอดขายของสินค้า', false, r, +r.sa_ads || 0, `ค่าโฆษณาของสินค้านี้ ${mo} (ถึงวันนี้)`, +r.sa_rev || 0, `ยอดขายของสินค้านี้บน ${S.ch} เดือนเดียวกัน`, +r.rs, '', f, `ปรับให้ยอดรวมทุกคำสั่งซื้อเท่ากับค่าโฆษณาจริงของ ${S.ch}`)[1]));
         src = [['ค่าโฆษณา', 'API ของแพลตฟอร์ม (ชุดเดียวกับ MKT Tracking)'], ['ยอดขาย', `${S.ch} API`]];
       } else if (what === 'mkt' && op) {
         const kraw = rates.reduce((t, r) => t + (r.sk_rev ? r.sk_kol / r.sk_rev : 0) * r.rs, 0), eraw = rates.reduce((t, r) => t + (r.bi_rev ? ((+r.bi_dir || 0) - (+r.bi_kol || 0)) / r.bi_rev : 0) * r.rs / 1.07, 0);
@@ -410,10 +423,14 @@
     const fees = Object.entries(o.fee_items || {}).filter(([, x]) => Math.abs(+x) >= 0.005);
     const byc = {}; fees.forEach(([kk, x]) => { const c = CAT_OF(kk); (byc[c] = byc[c] || []).push([kk, +x]); });
     const feeSum = fees.reduce((t, [, x]) => t + (+x), 0);
-    let h = `<div class="tr-card"><div class="tr-card-t">${esc(S.ch)} · ${esc(o.order_id)}</div><div class="tr-card-v" style="${+o.profit < 0 ? 'color:var(--red);' : ''}">${n2(o.profit)} <span style="font-size:14px;font-weight:600;">กำไรสุทธิ</span></div>
-      <div class="tr-card-m"><span>${dLabel(o.order_date)} ${+String(o.order_date).slice(0, 4) + 543}</span><span>อัตรากำไรสุทธิ ${pc(+o.profit, rev)}</span><span>${o.settled ? 'ปิดยอดแล้ว' : 'รอปิดยอด'}</span>${o.full_refund ? '<span>คืนเงินเต็มจำนวน</span>' : ''}</div></div>`;
+    let h = `<div class="tr-card"><div class="tr-card-t">${esc(S.ch)} · ${esc(o.order_id)}</div><div class="tr-card-v" style="${+o.profit < 0 ? 'color:var(--red);' : ''}">${n2(o.profit)} <span style="font-size:14px;font-weight:600;">กำไร</span></div>
+      <div class="tr-card-m"><span>${dLabel(o.order_date)} ${+String(o.order_date).slice(0, 4) + 543}</span><span>อัตรากำไร ${pc(+o.profit, rev)}</span><span>${o.settled ? 'ปิดยอดแล้ว' : 'รอปิดยอด'}</span>${o.full_refund ? '<span>คืนเงินเต็มจำนวน</span>' : ''}</div></div>`;
     h += `<div class="tr-fg"${focus ? '' : ''}><div class="tr-fg-h"><span>① ยอดขาย → รายรับสุทธิ</span><span class="tr-ref">${S.ch === 'TikTok' ? 'TikTok Finance API 202501' : 'Shopee API (escrow)'}</span></div>`
-      + ln('', 'ยอดขาย (หลังส่วนลดร้าน)', n2(rev))
+      + ln('', 'ราคาก่อนส่วนลด', n2(o.orig))
+      + (Math.abs(+o.sdisc || 0) >= 0.005 ? ln('−', 'ส่วนลดร้าน', n2(o.sdisc)) : '')
+      + (Math.abs(+o.bship || 0) >= 0.005 ? ln('+', 'ค่าส่งที่ผู้ซื้อจ่าย', n2(o.bship)) : '')
+      + (Math.abs(+o.refund_other || 0) >= 0.01 ? ln('−', 'คืนเงิน / อื่น ๆ', n2(o.refund_other)) : '')
+      + `<div class="tr-eq"><span>ยอดขาย</span><b>${n2(rev)}</b></div>`
       + (fees.length ? feeBlock(o, fees, rev) : ln('−', 'ค่าธรรมเนียมแพลตฟอร์มรวม', n2(o.fees)))
       + (fees.length && Math.abs(rev + feeSum - (+o.settle || 0)) >= 0.05 ? `<div class="tr-warn">ผลรวมรายการไม่เท่ารายรับสุทธิ (ต่าง ${n2(rev + feeSum - (+o.settle || 0))})</div>` : '')
       + `<div class="tr-eq"><span>รายรับสุทธิ${o.settled ? '' : ' (ประมาณการ)'}</span><b>${n2(o.settle)}</b></div></div>`;
@@ -423,16 +440,14 @@
     const rs = key => { const L = rates.filter(r => r[key] != null && +r[key] !== 0), raw = L.reduce((t, r) => t + r[key] * r.rs / 1.07, 0), f = raw ? ACT[key] / raw : 1;
       return L.map(r => `${esc(r.name || r.p)}: ${(r[key] * f * 100).toFixed(2)}% × ยอดขายก่อนภาษี ${n2(r.rs / 1.07)}`).join('<br>'); };
     const cl = o.cogs_lines || [];
-    h += `<div class="tr-fg" id="opFocusCost"><div class="tr-fg-h"><span>② ต้นทุนและค่าใช้จ่ายของบริษัท</span><span class="tr-ref">ไฟล์ต้นทุน · Business Insight${est}</span></div>`
+    h += `<div class="tr-fg" id="opFocusCost"><div class="tr-fg-h"><span>② ต้นทุนของบริษัท</span><span class="tr-ref">${j.open ? 'ไฟล์ต้นทุน · ค่าโฆษณาจริงจากแพลตฟอร์ม' : 'ไฟล์ต้นทุน · Business Insight'}</span></div>`
       + ln('−', 'ภาษีมูลค่าเพิ่ม', n2(o.vat), `รายรับสุทธิ ${n2(o.settle)} × 7/107 (ภาษีขายหักภาษีซื้อในค่าธรรมเนียม)`)
       + ln('−', 'ต้นทุนขาย', n2(o.cogs), o.full_refund ? 'คืนเงินเต็มจำนวน สินค้ากลับเข้าคลัง ไม่นับต้นทุน' : cl.map(x => `${esc(names[x[0]] || x[0])} <span class="mono">${esc(x[0])}</span> ${n0(x[1])} ชิ้น × ${n2(x[2])}${x[3] ? ' (ของแถม)' : ''}`).join('<br>'))
       + ln('−', 'ค่าบรรจุภัณฑ์', n2(o.packaging), +o.packaging ? 'ตามที่ตั้งไว้ต่อคำสั่งซื้อ' : 'ยังไม่ได้ตั้งค่า')
-      + ln('−', 'ค่าโฆษณา', n2(o.ads), rs('ads'))
-      + ln('−', 'ค่าการตลาดอื่น', n2((+o.mkt_direct || 0) + (+o.mkt_other || 0)), [rs('dir') && 'KOL · Presenter — ' + rs('dir'), rs('oth') && 'Live · Brand — ' + rs('oth')].filter(Boolean).join('<br>'))
-      + ln('−', 'ค่าใช้จ่ายบริหาร', n2(o.overhead), rs('oh'))
-      + `<div class="tr-eq"><span>กำไรสุทธิ</span><b style="${+o.profit < 0 ? 'color:var(--red);' : ''}">${n2(o.profit)}</b></div></div>`;
+      + ln('−', 'ค่าโฆษณา', n2(o.ads), j.open ? rates.filter(r => +r.sa_rev).map(r => `${esc(r.name || r.p)}: ${(r.sa_ads / r.sa_rev * 100).toFixed(2)}% × ยอดขาย ${n2(r.rs)} (ค่าโฆษณาจริง ${mLabel(String(o.order_date).slice(0, 7))})`).join('<br>') + '<br>กดตัวเลขค่าโฆษณาในตารางเพื่อดูที่มา' : rs('ads'))
+      + `<div class="tr-eq"><span>กำไร (หักถึงค่าโฆษณา)</span><b style="${+o.profit < 0 ? 'color:var(--red);' : ''}">${n2(o.profit)}</b></div></div>`;
     h += `<div class="tr-src"><div class="tr-src-h">แหล่งข้อมูล</div><dl class="tr-dl"><dt>ค่าธรรมเนียม</dt><dd>${S.ch === 'TikTok' ? 'TikTok Shop Finance API รุ่น 202501 รายการเงินรายคำสั่งซื้อ' : 'Shopee API ข้อมูลเงินที่จะโอนรายคำสั่งซื้อ (escrow)'}</dd>
-      <dt>ต้นทุนขาย</dt><dd>ไฟล์ต้นทุนขายของฝ่ายบัญชี (ต้นทุนต่อชิ้นของเดือนนั้น)</dd><dt>ค่าใช้จ่ายปันส่วน</dt><dd>อัตราต่อยอดขาย (ก่อนภาษี) ของสินค้าในช่องทางนี้ จาก Business Insight</dd></dl></div>`;
+      <dt>ต้นทุนขาย</dt><dd>ไฟล์ต้นทุนขายของฝ่ายบัญชี (ต้นทุนต่อชิ้นของเดือนนั้น)</dd><dt>ค่าโฆษณา</dt><dd>${j.open ? 'ค่าโฆษณาจริงจากแพลตฟอร์ม (เดือนที่บัญชียังไม่ปิด)' : 'Business Insight (งบฝ่ายบัญชี)'} · คิดตามยอดขายของสินค้า</dd></dl></div>`;
     const b = document.getElementById('trBody'); if (b) { b.innerHTML = h; if (focus) { const x = b.querySelector('#opFocusCost'); if (x) x.scrollIntoView({ block: 'start' }); } }
   }
 
