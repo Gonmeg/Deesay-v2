@@ -1,3 +1,5 @@
+// ordprofit.js (v20261026q) — ช่อง SKU: แสดงสูงสุด 3 ตัวในบรรทัดเดียว เกินจากนั้นเป็น +N · ไม่แสดงป้ายไม่มีต้นทุนในช่องนี้
+// ordprofit.js (v20261026p) — เลือกช่องทางแล้วรอกดค้นหา (จุดแดงเหมือนหน้าอื่น) · แยกร้าน Shopee Mall / 24hr · หัวตารางล็อกตอนเลื่อน · เลือกจำนวนแถว 25/50/100 · SKU แสดงรายการแรก +N · รองรับหน้าจอหลายขนาด
 // ordprofit.js (v20261026o) — ช่องทางและช่วงวันที่ใช้ตัวกรองแถบบน (เหมือนหน้าอื่น) · หมายเหตุสินค้าไม่มีต้นทุนย้ายไปปุ่ม Alert · tooltip กระชับ · คอลัมน์ "เฉลี่ยต่อคำสั่งซื้อ"
 // ordprofit.js (v20261026n) — Ads + Coins: ค่าโฆษณาจริงจากแพลตฟอร์มทุกเดือน (เลิกใช้ Business Insight ในเดือนที่บัญชีปิด) รวม Coins และส่วนแบ่ง Ads PR · การ์ดที่มาใช้ยอดจากตารางแยกที่มา + แถวตัวปรับ · เอาค่าบรรจุภัณฑ์ออก
 // ordprofit.js (v20261026m) — ตัดคอลัมน์การตลาดอื่น / บริหาร (กำไรหักถึงค่าโฆษณา) · เพิ่ม ราคาก่อนส่วนลด · ส่วนลดร้าน · ค่าส่งที่ผู้ซื้อจ่าย · แยกที่มาค่าโฆษณาเดือนปัจจุบัน · TikTok ที่ยังไม่ปิดยอดประมาณค่าธรรมเนียม
@@ -15,7 +17,7 @@
 (function () {
   'use strict';
   const CHS = ['TikTok', 'Shopee'];
-  const S = { ch: 'TikTok', from: null, to: null, tab: 'orders', filter: 'all', q: '', sku: '', sort: 'order_date', dir: 'desc', page: 0, size: 50, both: {}, list: null, months: [] };
+  const S = { ch: 'TikTok', shop: null, from: null, to: null, tab: 'orders', filter: 'all', q: '', sku: '', sort: 'order_date', dir: 'desc', page: 0, size: 50, both: {}, list: null, months: [] };
   // สถานะคำสั่งซื้อจาก API ของแพลตฟอร์ม
   const ST_TH = { COMPLETED: 'สำเร็จ', DELIVERED: 'จัดส่งถึงแล้ว', IN_TRANSIT: 'ระหว่างจัดส่ง', SHIPPED: 'จัดส่งแล้ว', TO_CONFIRM_RECEIVE: 'รอยืนยันรับสินค้า',
     AWAITING_SHIPMENT: 'รอจัดส่ง', AWAITING_COLLECTION: 'รอขนส่งรับ', READY_TO_SHIP: 'พร้อมจัดส่ง', PROCESSED: 'กำลังเตรียมสินค้า', TO_RETURN: 'คืนสินค้า', UNPAID: 'ยังไม่ชำระ', IN_CANCEL: 'กำลังยกเลิก', PARTIALLY_SHIPPING: 'จัดส่งบางส่วน' };
@@ -24,6 +26,13 @@
   const n2 = v => (+v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const pc = (v, b) => (+b ? (v / b * 100).toFixed(1) + '%' : '—');
   const tip = t => `<span class="ui-i" data-tip="${esc(t)}">ⓘ</span>`;
+  // ร้าน Shopee (shop_id จาก Shopee Open API)
+  const SHOPS = { 566792331: 'Shopee Mall', 530338789: 'Shopee 24hr' }, SHOPS_S = { 566792331: 'Mall', 530338789: '24hr' };
+  const chName = () => S.ch !== 'Shopee' ? S.ch : S.shop ? (SHOPS[S.shop] || 'Shopee') : 'Shopee ทุกร้าน';
+  // SKU: แสดงสูงสุด 3 ตัวในบรรทัดเดียว เกินจากนั้นเป็น "+N" (ชี้เพื่อดูทั้งหมด)
+  const skuCell = skus => { const L = String(skus || '').split(',').map(x => x.trim()).filter(Boolean);
+    if (!L.length) return '<span class="z">—</span>';
+    return `<span class="mono">${L.slice(0, 3).map(esc).join(', ')}</span>${L.length > 3 ? ` <span class="op-more" data-tip="${esc(L.join(', '))}">+${L.length - 3}</span>` : ''}`; };
   const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   const mLabel = m => { const [y, mm] = String(m).split('-'); return `${TH_M[+mm - 1]} ${(+y + 543) % 100}`; };
   const dLabel = d => { const [, m, dd] = String(d).split('-'); return `${+dd} ${TH_M[+m - 1]}`; };
@@ -101,14 +110,14 @@
       #page-ordprofit .op-seg button { border:0; background:transparent; color:var(--text2); font:inherit; font-size:12.5px; padding:6px 14px; cursor:pointer; }
       #page-ordprofit .op-seg button.on { background:var(--accent, #b8862f); color:#fff; font-weight:700; }
       #page-ordprofit select, #page-ordprofit input[type=search] { font:inherit; font-size:12.5px; padding:6px 10px; border:1px solid var(--op-line); border-radius:8px; background:var(--bg2); color:var(--text); }
-      #page-ordprofit .op-kp { display:grid; grid-template-columns:1.25fr 1fr 1fr 1fr; gap:12px; margin-bottom:12px; }
-      #page-ordprofit .op-k { background:var(--bg2); border:1px solid var(--op-line); border-radius:12px; padding:14px 16px; }
+      #page-ordprofit .op-kp { display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px; margin-bottom:12px; }
+      #page-ordprofit .op-k { background:var(--bg2); border:1px solid var(--op-line); border-radius:12px; padding:14px 16px; min-width:0; }
       #page-ordprofit .op-k .l { font-size:12px; color:var(--text2); font-weight:600; }
-      #page-ordprofit .op-k .v { font-size:24px; font-weight:800; margin:4px 0 2px; font-variant-numeric:tabular-nums; letter-spacing:-.2px; }
-      #page-ordprofit .op-k.hero .v { font-size:30px; }
-      #page-ordprofit .op-k .d { font-size:11.5px; color:var(--text3); }
+      #page-ordprofit .op-k .v { font-size:clamp(20px, 1.9vw, 24px); font-weight:800; margin:4px 0 2px; font-variant-numeric:tabular-nums; letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      #page-ordprofit .op-k.hero .v { font-size:clamp(24px, 2.4vw, 30px); }
+      #page-ordprofit .op-k .d { font-size:11.5px; color:var(--text3); overflow-wrap:anywhere; }
       #page-ordprofit .op-sumg { display:grid; grid-template-columns:minmax(0, 1.35fr) minmax(0, 1fr); gap:12px; margin-bottom:16px; }
-      #page-ordprofit .op-h { font-size:13px; font-weight:700; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+      #page-ordprofit .op-h { font-size:13px; font-weight:700; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px 10px; }
       #page-ordprofit table.op-s { width:100%; border-collapse:collapse; font-size:12.5px; }
       #page-ordprofit .op-s th { font-size:11px; color:var(--text3); font-weight:600; text-align:right; padding:6px 8px; border-bottom:1px solid var(--op-line); }
       #page-ordprofit .op-s td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--op-line); font-variant-numeric:tabular-nums; }
@@ -127,9 +136,16 @@
       #page-ordprofit .op-tabs { display:flex; gap:20px; border-bottom:1px solid var(--op-line); margin-bottom:12px; }
       #page-ordprofit .op-tabs button { border:0; background:none; font:inherit; font-size:13px; color:var(--text3); padding:8px 0; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
       #page-ordprofit .op-tabs button.on { color:var(--text); font-weight:700; border-bottom-color:var(--accent, #b8862f); }
-      #page-ordprofit .op-card { background:var(--bg2); border:1px solid var(--op-line); border-radius:12px; padding:12px 14px; }
+      #page-ordprofit .op-card { background:var(--bg2); border:1px solid var(--op-line); border-radius:12px; padding:12px 14px; min-width:0; }
+      #page-ordprofit .op-s td:not(:first-child), #page-ordprofit .op-s th:not(:first-child) { white-space:nowrap; }
       #page-ordprofit .op-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
-      #page-ordprofit .op-scroll { overflow-x:auto; }
+      #page-ordprofit .op-scroll { overflow:auto; max-height:max(420px, calc(100vh - 230px)); }
+      #page-ordprofit .op-t thead th { position:sticky; top:0; z-index:3; background-color:var(--bg2); }
+      #page-ordprofit .op-t thead tr + tr th { top:var(--op-gh, 0px); }
+      #page-ordprofit .op-t thead th.stk, #page-ordprofit .op-t thead th.pfh, #page-ordprofit .op-t thead th.pfh2 { z-index:5; }
+      #page-ordprofit .op-t thead tr.g th.gf { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(239,68,68,.05); } #page-ordprofit .op-t thead tr.g th.gs { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(34,197,94,.06); } #page-ordprofit .op-t thead tr.g th.gc { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(99,102,241,.05); }
+      #page-ordprofit .op-t thead th.s { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(34,197,94,.025); } #page-ordprofit .op-t thead th.f { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(239,68,68,.025); } #page-ordprofit .op-t thead th.c { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(99,102,241,.025); }
+      #page-ordprofit .op-more { display:inline-block; font-size:10.5px; font-weight:700; color:var(--text2); background:var(--op-soft); border:1px solid var(--op-line); border-radius:9px; padding:0 6px; margin-left:2px; }
       #page-ordprofit table.op-t { border-collapse:separate; border-spacing:0; width:100%; font-size:12px; }
       #page-ordprofit .op-t th { font-size:11px; color:var(--text3); font-weight:600; padding:7px 8px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--op-line); background:var(--bg2); }
       #page-ordprofit .op-t thead tr.g th { font-size:11px; color:var(--text2); font-weight:700; text-align:center; border-bottom:0; padding-bottom:2px; }
@@ -151,7 +167,7 @@
       #page-ordprofit .op-t .z { color:var(--text3); }
       #page-ordprofit .sub { font-size:10.5px; color:var(--text3); font-weight:400; } #page-ordprofit .mono { font-family:'IBM Plex Mono', monospace; font-size:11px; }
       #page-ordprofit .op-tag { display:inline-block; font-size:10px; font-weight:700; border-radius:9px; padding:0 6px; margin-left:4px; color:#b45309; background:rgba(245,158,11,.14); }
-      #page-ordprofit .op-pg { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:10px; font-size:12px; color:var(--text3); }
+      #page-ordprofit .op-pg { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end; margin-top:10px; font-size:12px; color:var(--text3); }
       #page-ordprofit .op-pg button { font:inherit; font-size:12px; border:1px solid var(--op-line); background:var(--bg2); color:var(--text); border-radius:7px; padding:4px 10px; cursor:pointer; } #page-ordprofit .op-pg button:disabled { opacity:.45; cursor:default; }
       #page-ordprofit .fl { display:grid; grid-template-columns:1fr 110px 64px; gap:8px; font-size:12.4px; padding:6px 0; border-bottom:1px solid var(--op-line); }
       #page-ordprofit .fl span:nth-child(n+2) { text-align:right; font-variant-numeric:tabular-nums; } #page-ordprofit .fl.h { font-size:11px; color:var(--text3); font-weight:600; }
@@ -171,7 +187,8 @@
     const today = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
     const f = (document.getElementById('dateFrom') || {}).value, to = (document.getElementById('dateTo') || {}).value;
     S.from = f || today.slice(0, 8) + '01'; S.to = to || today; if (S.to < S.from) S.to = S.from;
-    const sel = document.getElementById('opChSelect'); if (sel) sel.value = S.ch;
+    const sel = document.getElementById('opChSelect'), v = sel && sel.value ? sel.value : 'TikTok', [c, sh] = v.split(':');
+    S.ch = c; S.shop = sh ? +sh : null; window._opChApplied = v;   // ใช้เทียบว่าเลือกช่องทางใหม่แล้วยังไม่กดค้นหา (จุดแดงที่ปุ่มค้นหา)
   }
   const yy = d => (+String(d).slice(0, 4) + 543) % 100;
   const rLabel = () => S.from === S.to ? `${dLabel(S.from)} ${yy(S.from)}` : `${dLabel(S.from)}${yy(S.from) !== yy(S.to) ? ' ' + yy(S.from) : ''} – ${dLabel(S.to)} ${yy(S.to)}`;
@@ -184,7 +201,7 @@
   async function load() {
     const el = shell();
     el.querySelector('#opKpis').innerHTML = '<div class="op-k" style="grid-column:1/-1;"><div class="d">กำลังโหลด…</div></div>';
-    try { const r = await Promise.all(CHS.map(c => rpc('order_profit_summary', { p_ch: c, p_from: S.from, p_to: S.to }))); S.both = {}; CHS.forEach((c, i) => { S.both[c] = r[i]; }); }
+    try { const r = await Promise.all(CHS.map(c => rpc('order_profit_summary', { p_ch: c, p_from: S.from, p_to: S.to, p_shop: c === 'Shopee' ? S.shop : null }))); S.both = {}; CHS.forEach((c, i) => { S.both[c] = r[i]; }); }
     catch (e) { el.querySelector('#opKpis').innerHTML = `<div class="error-banner" style="display:block;grid-column:1/-1;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     drawTop(); drawTab();
   }
@@ -193,7 +210,7 @@
     const el = shell(), s = S.both[S.ch] || {}, k = s.k || {}, rev = +k.rev || 0, n = +k.orders || 0, p = +k.profit || 0;
     const other = CHS.find(c => c !== S.ch), ko = ((S.both[other] || {}).k) || {}, po = +ko.orders ? (+ko.profit || 0) / +ko.orders : null;
     // คำสั่งซื้อที่รอปิดยอดเป็นเรื่องปกติ (สถานะในตารางบอกอยู่แล้ว) · แจ้งที่ปุ่ม Alert เฉพาะสินค้าที่ไม่มีต้นทุน ซึ่งต้องแก้ข้อมูล
-    if (window.pageNote) window.pageNote('ordprofit', 'nocost', +k.no_cost ? 'warn' : null, +k.no_cost ? `${S.ch}: ${n0(k.no_cost)} คำสั่งซื้อมีสินค้าที่ไม่มีต้นทุน` : '', 'นับต้นทุนเป็น 0 · เพิ่มต้นทุนในไฟล์ต้นทุนหรือหน้าสินค้า & ราคา');
+    if (window.pageNote) window.pageNote('ordprofit', 'nocost', +k.no_cost ? 'warn' : null, +k.no_cost ? `${chName()}: ${n0(k.no_cost)} คำสั่งซื้อมีสินค้าที่ไม่มีต้นทุน` : '', 'นับต้นทุนเป็น 0 · เพิ่มต้นทุนในไฟล์ต้นทุนหรือหน้าสินค้า & ราคา');
     const card = (l, t, v, d, cls, style) => `<div class="op-k ${cls || ''}"><div class="l">${l} ${tip(t)}</div><div class="v" style="${style || ''}">${v}</div><div class="d">${d}</div></div>`;
     el.querySelector('#opKpis').innerHTML =
       card('กำไรต่อคำสั่งซื้อ', 'กำไรรวม ÷ จำนวนคำสั่งซื้อ (ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน)', n ? n2(p / n) : '—',
@@ -203,7 +220,7 @@
       + card('คำสั่งซื้อที่ขาดทุน', 'สัดส่วนคำสั่งซื้อที่กำไรติดลบ', pc(+k.loss, n), `${n0(k.loss)} คำสั่งซื้อ`, '', +k.loss ? 'color:var(--red);' : '');
     // สรุปรายรับ–รายจ่าย (ตาราง) + ค่าธรรมเนียมแยกหมวด
     const mk2 = (+k.mkt_direct || 0) + (+k.mkt_other || 0), pr = (l, v, cls, t) => `<tr class="${cls || ''}"><td class="${cls ? '' : 'ind'}">${l}${t ? ' ' + tip(t) : ''}</td><td>${n2(v)}</td><td>${n ? n2((+v || 0) / n) : '—'}</td><td>${pc(+v, rev)}</td></tr>`;
-    el.querySelector('#opSum').innerHTML = `<div class="op-h"><span>สรุปรายรับ–รายจ่าย ${tip('ทุกคำสั่งซื้อในช่วงที่เลือก ยกเว้นคำสั่งซื้อที่คืนเงินเต็มจำนวน')}</span><span style="font-size:11.5px;font-weight:400;color:var(--text3);">${S.ch} · ${rLabel()}</span></div>
+    el.querySelector('#opSum').innerHTML = `<div class="op-h"><span>สรุปรายรับ–รายจ่าย ${tip('ทุกคำสั่งซื้อในช่วงที่เลือก ยกเว้นคำสั่งซื้อที่คืนเงินเต็มจำนวน')}</span><span style="font-size:11.5px;font-weight:400;color:var(--text3);">${chName()} · ${rLabel()}</span></div>
       <table class="op-s" data-no-sort data-no-page><thead><tr><th>รายการ</th><th>จำนวนเงิน (บาท)</th><th>เฉลี่ยต่อคำสั่งซื้อ ${tip('จำนวนเงิน ÷ จำนวนคำสั่งซื้อ')}</th><th>% ของยอดขาย</th></tr></thead><tbody>`
       + pr('ยอดขาย', rev, 'st', 'หลังหักส่วนลดร้าน · รวม VAT')
       + pr('หัก ค่าธรรมเนียมแพลตฟอร์ม', k.fees, '', 'รายละเอียดตามตารางแยกหมวด')
@@ -261,22 +278,23 @@
         ${so('vat', 'VAT', 'รายรับสุทธิ × 7/107 (ภาษีขายหักภาษีซื้อในค่าธรรมเนียม)', 'c')}${so('cogs', 'ต้นทุนขาย', 'จำนวนชิ้น × ต้นทุนต่อชิ้นของเดือน · รวมของแถม', 'c')}
         ${so('ads', 'Ads + Coins', 'ค่าโฆษณาจริงจากแพลตฟอร์ม รวม Coins และ Ads PR · แบ่งตามสัดส่วนยอดขายของสินค้า', 'c')}
         ${so('profit', 'กำไร', 'รายรับสุทธิ − VAT − ต้นทุนขาย − Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร', 'sum pfh')}${so('pct', '%', 'กำไร ÷ ยอดขาย', 'pfh2')}</tr>`;
+    const gh = box.querySelector('#opHead tr.g'); if (gh) box.querySelector('table.op-t').style.setProperty('--op-gh', gh.getBoundingClientRect().height + 'px');
     loadRows();
   }
 
   async function loadRows() {
     const box = shell().querySelector('#opBody'), body = box.querySelector('#opRows');
     if (!body) return;
-    try { S.list = await rpc('order_profit_list', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_sort: S.sort, p_dir: S.dir, p_offset: S.page * S.size, p_limit: S.size, p_filter: S.filter, p_q: S.q || null, p_sku: S.sku || null }); }
+    try { S.list = await rpc('order_profit_list', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_sort: S.sort, p_dir: S.dir, p_offset: S.page * S.size, p_limit: S.size, p_filter: S.filter, p_q: S.q || null, p_sku: S.sku || null, p_shop: S.ch === 'Shopee' ? S.shop : null }); }
     catch (e) { body.innerHTML = `<tr><td colspan="19" class="l z">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; return; }
     const rows = (S.list && S.list.rows) || [], total = (S.list && S.list.total) || 0;
     const v = x => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : n2(x);
     const cu = (id, x, what) => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : `<span class="u" title="กดดูที่มาของตัวเลขนี้" onclick="event.stopPropagation();OrdProfit.openCell('${esc(id)}','${what}')">${n2(x)}</span>`;
     body.innerHTML = rows.length ? rows.map(r => {
-      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, , , st, orig, sdisc, bship, rfo] = r;
+      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, , , st, orig, sdisc, bship, rfo, shop] = r;
       const stx = refund ? '<span class="op-tag" style="color:#64748b;background:rgba(100,116,139,.14);">คืนเงิน</span>' : !settled ? '<span class="op-tag">รอปิดยอด</span>' : '';
-      return `<tr onclick="OrdProfit.openOrder('${esc(id)}')"><td class="l stk"><span class="mono">${esc(id)}</span><div class="sub">${dLabel(d)}</div></td>
-        <td class="l" style="white-space:normal;max-width:150px;"><span class="mono">${esc((skus || '—').replace(/,/g, ', '))}</span>${nocost ? '<span class="op-tag">ไม่มีต้นทุน</span>' : ''}</td>
+      return `<tr onclick="OrdProfit.openOrder('${esc(id)}')"><td class="l stk"><span class="mono">${esc(id)}</span><div class="sub">${dLabel(d)}${S.ch === 'Shopee' && !S.shop && SHOPS_S[shop] ? ' · ' + SHOPS_S[shop] : ''}</div></td>
+        <td class="l">${skuCell(skus)}</td>
         <td class="l">${esc(ST_TH[st] || st || '—')}${stx ? '<div>' + stx + '</div>' : ''}</td>
         <td class="s">${v(orig)}</td><td class="s">${Math.abs(+sdisc || 0) < 0.005 ? '<span class="z">—</span>' : '−' + n2(sdisc)}</td><td class="s">${v(bship)}</td>
         <td class="s sum">${n2(rev)}${Math.abs(+rfo || 0) >= 0.01 ? `<div class="sub">หักคืนเงิน ${n2(rfo)}</div>` : ''}</td><td class="f">${v(cComm)}</td><td class="f">${v(cSvc)}</td><td class="f">${v(cPay)}</td><td class="f">${v(cAff)}</td><td class="f">${v(cOth)}</td><td class="f sum">${n2(fees)}</td>
@@ -285,7 +303,7 @@
         <td class="pf pfc ${+prof < 0 ? 'neg' : ''}">${n2(prof)}</td><td class="pfc2 ${+prof < 0 ? 'neg' : ''}">${pc(+prof, +rev)}</td></tr>`; }).join('')
       : '<tr><td colspan="19" class="l z">ไม่มีคำสั่งซื้อตามเงื่อนไขนี้</td></tr>';
     const pages = Math.max(1, Math.ceil(total / S.size));
-    box.querySelector('#opPg').innerHTML = `<span>${n0(total)} คำสั่งซื้อ · หน้า ${S.page + 1} / ${n0(pages)}</span><button type="button" ${S.page <= 0 ? 'disabled' : ''} onclick="OrdProfit.go(-1)">‹ ก่อนหน้า</button><button type="button" ${S.page >= pages - 1 ? 'disabled' : ''} onclick="OrdProfit.go(1)">ถัดไป ›</button>`;
+    box.querySelector('#opPg').innerHTML = `<span>แสดง</span><select onchange="OrdProfit.setSize(this.value)">${[25, 50, 100].map(x => `<option value="${x}"${S.size === x ? ' selected' : ''}>${x}</option>`).join('')}</select><span>รายการ</span><span style="margin-left:8px;">${n0(total)} คำสั่งซื้อ · หน้า ${S.page + 1} / ${n0(pages)}</span><button type="button" ${S.page <= 0 ? 'disabled' : ''} onclick="OrdProfit.go(-1)">‹ ก่อนหน้า</button><button type="button" ${S.page >= pages - 1 ? 'disabled' : ''} onclick="OrdProfit.go(1)">ถัดไป ›</button>`;
   }
 
   // รายการเงินของคำสั่งซื้อ จัดกลุ่มแบบ Seller Centre: ค่าจัดส่ง → ค่าธรรมเนียม (แต่ละรายการมีคำอธิบาย ⓘ และ % ของยอดขาย)
@@ -446,6 +464,7 @@
     pickCh(c) { if (c === S.ch) return; S.ch = c; S.page = 0; S.q = ''; S.sku = ''; drawTop(); drawTab(); },
     sortBy(k) { if (S.sort === k) S.dir = S.dir === 'asc' ? 'desc' : 'asc'; else { S.sort = k; S.dir = k === 'order_date' ? 'desc' : 'asc'; } S.page = 0; drawOrders(); },
     go(d) { S.page = Math.max(0, S.page + d); loadRows(); },
+    setSize(n) { S.size = Math.min(100, Math.max(25, +n || 50)); S.page = 0; loadRows(); },
     pickProduct(p) { S.sku = p; S.q = ''; S.page = 0; S.tab = 'orders'; drawTab(); },
     openOrder, openCell,
     toggleCat(c, tr) { const open = tr.dataset.open !== '1'; tr.dataset.open = open ? '1' : '';
