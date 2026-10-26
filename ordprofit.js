@@ -1,3 +1,4 @@
+// ordprofit.js (v20261026r) — หัวตารางพื้นทึบ (ตัวเลขไม่ทะลุตอนเลื่อน) · SKU แสดงจำนวนชิ้น (×n, รวมบรรทัดซ้ำ) · สถานะบรรทัดเดียว · มุมมอง สรุป / ละเอียด
 // ordprofit.js (v20261026q) — ช่อง SKU: แสดงสูงสุด 3 ตัวในบรรทัดเดียว เกินจากนั้นเป็น +N · ไม่แสดงป้ายไม่มีต้นทุนในช่องนี้
 // ordprofit.js (v20261026p) — เลือกช่องทางแล้วรอกดค้นหา (จุดแดงเหมือนหน้าอื่น) · แยกร้าน Shopee Mall / 24hr · หัวตารางล็อกตอนเลื่อน · เลือกจำนวนแถว 25/50/100 · SKU แสดงรายการแรก +N · รองรับหน้าจอหลายขนาด
 // ordprofit.js (v20261026o) — ช่องทางและช่วงวันที่ใช้ตัวกรองแถบบน (เหมือนหน้าอื่น) · หมายเหตุสินค้าไม่มีต้นทุนย้ายไปปุ่ม Alert · tooltip กระชับ · คอลัมน์ "เฉลี่ยต่อคำสั่งซื้อ"
@@ -17,7 +18,7 @@
 (function () {
   'use strict';
   const CHS = ['TikTok', 'Shopee'];
-  const S = { ch: 'TikTok', shop: null, from: null, to: null, tab: 'orders', filter: 'all', q: '', sku: '', sort: 'order_date', dir: 'desc', page: 0, size: 50, both: {}, list: null, months: [] };
+  const S = { ch: 'TikTok', shop: null, view: 'sum', from: null, to: null, tab: 'orders', filter: 'all', q: '', sku: '', sort: 'order_date', dir: 'desc', page: 0, size: 50, both: {}, list: null, months: [] };
   // สถานะคำสั่งซื้อจาก API ของแพลตฟอร์ม
   const ST_TH = { COMPLETED: 'สำเร็จ', DELIVERED: 'จัดส่งถึงแล้ว', IN_TRANSIT: 'ระหว่างจัดส่ง', SHIPPED: 'จัดส่งแล้ว', TO_CONFIRM_RECEIVE: 'รอยืนยันรับสินค้า',
     AWAITING_SHIPMENT: 'รอจัดส่ง', AWAITING_COLLECTION: 'รอขนส่งรับ', READY_TO_SHIP: 'พร้อมจัดส่ง', PROCESSED: 'กำลังเตรียมสินค้า', TO_RETURN: 'คืนสินค้า', UNPAID: 'ยังไม่ชำระ', IN_CANCEL: 'กำลังยกเลิก', PARTIALLY_SHIPPING: 'จัดส่งบางส่วน' };
@@ -29,10 +30,11 @@
   // ร้าน Shopee (shop_id จาก Shopee Open API)
   const SHOPS = { 566792331: 'Shopee Mall', 530338789: 'Shopee 24hr' }, SHOPS_S = { 566792331: 'Mall', 530338789: '24hr' };
   const chName = () => S.ch !== 'Shopee' ? S.ch : S.shop ? (SHOPS[S.shop] || 'Shopee') : 'Shopee ทุกร้าน';
-  // SKU: แสดงสูงสุด 3 ตัวในบรรทัดเดียว เกินจากนั้นเป็น "+N" (ชี้เพื่อดูทั้งหมด)
-  const skuCell = skus => { const L = String(skus || '').split(',').map(x => x.trim()).filter(Boolean);
+  // SKU: แสดงสูงสุด 3 ตัวในบรรทัดเดียว พร้อมจำนวนชิ้น (×n เมื่อเกิน 1) · เกินจากนั้นเป็น "+N" (ชี้เพื่อดูทั้งหมด)
+  const skuCell = (items, skus) => { const L = Array.isArray(items) && items.length ? items.map(([k, q]) => [String(k), +q || 0]) : String(skus || '').split(',').map(x => [x.trim(), 1]).filter(x => x[0]);
     if (!L.length) return '<span class="z">—</span>';
-    return `<span class="mono">${L.slice(0, 3).map(esc).join(', ')}</span>${L.length > 3 ? ` <span class="op-more" data-tip="${esc(L.join(', '))}">+${L.length - 3}</span>` : ''}`; };
+    const one = ([k, q], h) => h ? `${esc(k)}${q > 1 ? ` <span class="q">×${n0(q)}</span>` : ''}` : `${k}${q > 1 ? ' ×' + n0(q) : ''}`;
+    return `<span class="mono">${L.slice(0, 3).map(x => one(x, true)).join(', ')}</span>${L.length > 3 ? ` <span class="op-more" data-tip="${esc(L.map(x => one(x, false)).join(', '))}">+${L.length - 3}</span>` : ''}`; };
   const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   const mLabel = m => { const [y, mm] = String(m).split('-'); return `${TH_M[+mm - 1]} ${(+y + 543) % 100}`; };
   const dLabel = d => { const [, m, dd] = String(d).split('-'); return `${+dd} ${TH_M[+m - 1]}`; };
@@ -140,7 +142,8 @@
       #page-ordprofit .op-s td:not(:first-child), #page-ordprofit .op-s th:not(:first-child) { white-space:nowrap; }
       #page-ordprofit .op-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
       #page-ordprofit .op-scroll { overflow:auto; max-height:max(420px, calc(100vh - 230px)); }
-      #page-ordprofit .op-t thead th { position:sticky; top:0; z-index:3; background-color:var(--bg2); }
+      #page-ordprofit .op-t thead th { position:sticky; top:0; z-index:3; background-color:var(--bg2) !important; }   /* พื้นทึบเสมอ ไม่ให้แถวที่เลื่อนผ่านโผล่ทะลุ (สีหมวดใช้ box-shadow ด้านล่าง) */
+      #page-ordprofit .op-t .q { color:var(--text3); }
       #page-ordprofit .op-t thead tr + tr th { top:var(--op-gh, 0px); }
       #page-ordprofit .op-t thead th.stk, #page-ordprofit .op-t thead th.pfh, #page-ordprofit .op-t thead th.pfh2 { z-index:5; }
       #page-ordprofit .op-t thead tr.g th.gf { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(239,68,68,.05); } #page-ordprofit .op-t thead tr.g th.gs { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(34,197,94,.06); } #page-ordprofit .op-t thead tr.g th.gc { background:var(--bg2); box-shadow:inset 0 0 0 999px rgba(99,102,241,.05); }
@@ -264,16 +267,19 @@
     box.innerHTML = `<div class="op-tools"><div class="op-seg" id="opFilt"><button type="button" data-v="all">ทั้งหมด</button><button type="button" data-v="loss">ขาดทุน</button><button type="button" data-v="refund">คืนเงิน</button><button type="button" data-v="pending">รอปิดยอด</button></div>
       <select id="opSku"><option value="">สินค้า: ทั้งหมด</option><option value="__multi"${S.sku === '__multi' ? ' selected' : ''}>คำสั่งซื้อที่มีหลายสินค้า</option>${((S.both[S.ch] || {}).products || []).filter(x => x.p !== 'หลายสินค้า').sort((a, b) => String(a.name || a.p).localeCompare(String(b.name || b.p), 'th')).map(x => `<option value="${esc(x.p)}"${S.sku === x.p ? ' selected' : ''}>${esc(x.name || x.p)} (${esc(x.p)})</option>`).join('')}</select>
       <input type="search" id="opQ" placeholder="ค้นหาเลขคำสั่งซื้อ / รหัส SKU" style="width:200px;" value="${esc(S.q)}">
-      <span style="margin-left:auto;font-size:11.5px;color:var(--text3);">ตัวเลขขีดเส้นใต้: กดดูที่มา · กดเลขคำสั่งซื้อ: ดูรายละเอียดทั้งหมด</span></div>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--text3);">ตัวเลขขีดเส้นใต้: กดดูที่มา · กดเลขคำสั่งซื้อ: ดูรายละเอียดทั้งหมด</span>
+      <div class="op-seg" id="opView"><button type="button" data-v="sum">สรุป</button><button type="button" data-v="det">ละเอียด</button></div></div>
       <div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead id="opHead"></thead><tbody id="opRows"><tr><td colspan="20" class="l z">กำลังโหลด…</td></tr></tbody></table></div><div class="op-pg" id="opPg"></div>`;
     box.querySelectorAll('#opFilt button').forEach(b => { b.classList.toggle('on', b.dataset.v === S.filter); b.onclick = () => { S.filter = b.dataset.v; S.page = 0; drawOrders(); }; });
+    box.querySelectorAll('#opView button').forEach(b => { b.classList.toggle('on', b.dataset.v === S.view); b.onclick = () => { if (S.view === b.dataset.v) return; S.view = b.dataset.v; drawOrders(); }; });
     box.querySelector('#opSku').onchange = e => { S.sku = e.target.value; S.page = 0; loadRows(); };
     let tm; box.querySelector('#opQ').oninput = e => { clearTimeout(tm); tm = setTimeout(() => { S.q = e.target.value.trim(); S.page = 0; loadRows(); }, 350); };
+    const det = S.view === 'det';   // ละเอียด: เพิ่มรายละเอียดยอดขาย 3 คอลัมน์ + ค่าธรรมเนียมแยก 5 หมวด
     const so = (key, l, t, cls) => `<th class="${cls || ''}${key ? ' s' + (S.sort === key ? ' on' : '') : ''}"${key ? ` onclick="OrdProfit.sortBy('${key}')"` : ''}>${l}${t ? ' ' + tip(t) : ''}${S.sort === key ? (S.dir === 'asc' ? ' ▲' : ' ▼') : ''}</th>`;
-    box.querySelector('#opHead').innerHTML = `<tr class="g"><th class="stk"></th><th colspan="2"></th><th class="gs" colspan="4">ยอดขาย</th><th class="gf" colspan="6">ค่าธรรมเนียมแพลตฟอร์ม</th><th></th><th class="gc" colspan="3">ต้นทุนของบริษัท</th><th class="pfh" colspan="2"></th></tr>
+    box.querySelector('#opHead').innerHTML = `<tr class="g"><th class="stk"></th><th colspan="2"></th>${det ? '<th class="gs" colspan="4">ยอดขาย</th><th class="gf" colspan="6">ค่าธรรมเนียมแพลตฟอร์ม</th>' : '<th colspan="2"></th>'}<th></th><th class="gc" colspan="3">ต้นทุนของบริษัท</th><th class="pfh" colspan="2"></th></tr>
       <tr>${so('order_date', 'คำสั่งซื้อ', 'เลขและวันที่สั่งซื้อ · กดแถวเพื่อดูรายละเอียด', 'l stk')}<th class="l">SKU ${tip('รหัสสินค้าในคำสั่งซื้อ รวมของแถม')}</th>
-        <th class="l">สถานะ ${tip('จาก API ของแพลตฟอร์ม · รอปิดยอด: ค่าธรรมเนียมเป็นค่าประมาณการ · คืนเงิน: คืนเงินเต็มจำนวน')}</th>${so('orig', 'ราคาก่อนส่วนลด', 'ราคาสินค้าก่อนส่วนลดของร้าน', 's')}${so('sdisc', 'ส่วนลดร้าน', 'ส่วนลดและโค้ดที่ร้านออก', 's')}${so('bship', 'ค่าส่งผู้ซื้อจ่าย', 'ค่าจัดส่งที่ผู้ซื้อชำระ', 's')}${so('rev', 'ยอดขาย', 'ราคาก่อนส่วนลด − ส่วนลดร้าน + ค่าส่งผู้ซื้อจ่าย − คืนเงิน · รวม VAT', 's sum')}
-        ${CATS.map(c => `<th class="f">${CAT_S[c]} ${tip(CAT[c] + ': ' + CAT_TIP[c])}</th>`).join('')}${so('fees', 'รวม', 'ยอดขาย − รายรับสุทธิ', 'f sum')}
+        <th class="l">สถานะ ${tip('จาก API ของแพลตฟอร์ม · รอปิดยอด: ค่าธรรมเนียมเป็นค่าประมาณการ · คืนเงิน: คืนเงินเต็มจำนวน')}</th>${det ? so('orig', 'ราคาก่อนส่วนลด', 'ราคาสินค้าก่อนส่วนลดของร้าน', 's') + so('sdisc', 'ส่วนลดร้าน', 'ส่วนลดและโค้ดที่ร้านออก', 's') + so('bship', 'ค่าส่งผู้ซื้อจ่าย', 'ค่าจัดส่งที่ผู้ซื้อชำระ', 's') : ''}${so('rev', 'ยอดขาย', 'ราคาก่อนส่วนลด − ส่วนลดร้าน + ค่าส่งผู้ซื้อจ่าย − คืนเงิน · รวม VAT', 's sum')}
+        ${det ? CATS.map(c => `<th class="f">${CAT_S[c]} ${tip(CAT[c] + ': ' + CAT_TIP[c])}</th>`).join('') : ''}${so('fees', det ? 'รวม' : 'ค่าธรรมเนียม', 'ยอดขาย − รายรับสุทธิ', 'f sum')}
         ${so('settle', 'รายรับสุทธิ', 'ยอดที่แพลตฟอร์มโอนให้ร้าน ตามข้อมูลจาก API')}
         ${so('vat', 'VAT', 'รายรับสุทธิ × 7/107 (ภาษีขายหักภาษีซื้อในค่าธรรมเนียม)', 'c')}${so('cogs', 'ต้นทุนขาย', 'จำนวนชิ้น × ต้นทุนต่อชิ้นของเดือน · รวมของแถม', 'c')}
         ${so('ads', 'Ads + Coins', 'ค่าโฆษณาจริงจากแพลตฟอร์ม รวม Coins และ Ads PR · แบ่งตามสัดส่วนยอดขายของสินค้า', 'c')}
@@ -288,16 +294,17 @@
     try { S.list = await rpc('order_profit_list', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_sort: S.sort, p_dir: S.dir, p_offset: S.page * S.size, p_limit: S.size, p_filter: S.filter, p_q: S.q || null, p_sku: S.sku || null, p_shop: S.ch === 'Shopee' ? S.shop : null }); }
     catch (e) { body.innerHTML = `<tr><td colspan="19" class="l z">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; return; }
     const rows = (S.list && S.list.rows) || [], total = (S.list && S.list.total) || 0;
+    const det = S.view === 'det';
     const v = x => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : n2(x);
     const cu = (id, x, what) => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : `<span class="u" title="กดดูที่มาของตัวเลขนี้" onclick="event.stopPropagation();OrdProfit.openCell('${esc(id)}','${what}')">${n2(x)}</span>`;
     body.innerHTML = rows.length ? rows.map(r => {
-      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, , , st, orig, sdisc, bship, rfo, shop] = r;
+      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, , , st, orig, sdisc, bship, rfo, shop, items] = r;
       const stx = refund ? '<span class="op-tag" style="color:#64748b;background:rgba(100,116,139,.14);">คืนเงิน</span>' : !settled ? '<span class="op-tag">รอปิดยอด</span>' : '';
       return `<tr onclick="OrdProfit.openOrder('${esc(id)}')"><td class="l stk"><span class="mono">${esc(id)}</span><div class="sub">${dLabel(d)}${S.ch === 'Shopee' && !S.shop && SHOPS_S[shop] ? ' · ' + SHOPS_S[shop] : ''}</div></td>
-        <td class="l">${skuCell(skus)}</td>
-        <td class="l">${esc(ST_TH[st] || st || '—')}${stx ? '<div>' + stx + '</div>' : ''}</td>
-        <td class="s">${v(orig)}</td><td class="s">${Math.abs(+sdisc || 0) < 0.005 ? '<span class="z">—</span>' : '−' + n2(sdisc)}</td><td class="s">${v(bship)}</td>
-        <td class="s sum">${n2(rev)}${Math.abs(+rfo || 0) >= 0.01 ? `<div class="sub">หักคืนเงิน ${n2(rfo)}</div>` : ''}</td><td class="f">${v(cComm)}</td><td class="f">${v(cSvc)}</td><td class="f">${v(cPay)}</td><td class="f">${v(cAff)}</td><td class="f">${v(cOth)}</td><td class="f sum">${n2(fees)}</td>
+        <td class="l">${skuCell(items, skus)}</td>
+        <td class="l">${esc(ST_TH[st] || st || '—')}${stx ? ' ' + stx : ''}</td>
+        ${det ? `<td class="s">${v(orig)}</td><td class="s">${Math.abs(+sdisc || 0) < 0.005 ? '<span class="z">—</span>' : '−' + n2(sdisc)}</td><td class="s">${v(bship)}</td>` : ''}
+        <td class="s sum">${n2(rev)}${Math.abs(+rfo || 0) >= 0.01 ? `<div class="sub">หักคืนเงิน ${n2(rfo)}</div>` : ''}</td>${det ? `<td class="f">${v(cComm)}</td><td class="f">${v(cSvc)}</td><td class="f">${v(cPay)}</td><td class="f">${v(cAff)}</td><td class="f">${v(cOth)}</td>` : ''}<td class="f sum">${n2(fees)}</td>
         <td>${n2(settle)}</td><td class="c">${v(vat)}</td><td class="c">${cu(id, cogs, 'cogs')}</td>
         <td class="c">${cu(id, ads, 'ads')}</td>
         <td class="pf pfc ${+prof < 0 ? 'neg' : ''}">${n2(prof)}</td><td class="pfc2 ${+prof < 0 ? 'neg' : ''}">${pc(+prof, +rev)}</td></tr>`; }).join('')
