@@ -835,7 +835,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
   </nav>
   <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-a</span><br>
+    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-b</span><br>
     <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
     <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
     <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
@@ -3951,9 +3951,11 @@ async function loadMtSellout() {
   if (_mtRows && Date.now() - _mtRowsAt < 10 * 60 * 1000) return _mtRows;
   if (_mtLoading) return _mtLoading;
   const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
-  _mtLoading = fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mt_sellout?select=retailer,month,branch,parent_sku,qty,sales,synced_at&order=id.asc`, h)
+  _mtLoading = fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mt_sellout?select=retailer,month,branch,branch_id,parent_sku,qty,sales,synced_at&order=id.asc`, h)
     .then(rows => { _mtSyncedAt = rows.reduce((m, r) => r.synced_at > m ? r.synced_at : m, '');
-      _mtRows = rows.map(r => ({ retailer: r.retailer, month: String(r.month).slice(0, 10), branch: r.branch || '', parent_sku: r.parent_sku || '—', qty: +r.qty || 0, sales: +r.sales || 0 })); _mtRowsAt = Date.now(); return _mtRows; })
+      // (2026-10-26) สาขาที่ไฟล์ไม่มีชื่อแต่มีรหัส (เช่น Watsons 721 ก.ย. 69) → ใช้ชื่อจากเดือนอื่นของรหัสเดียวกัน ถ้าไม่มีเลยใช้ "สาขารหัส …"
+      const bn = {}; rows.forEach(r => { if (r.branch && r.branch_id) bn[r.retailer + '|' + r.branch_id] = r.branch; });
+      _mtRows = rows.map(r => ({ retailer: r.retailer, month: String(r.month).slice(0, 10), branch: r.branch || (r.branch_id ? (bn[r.retailer + '|' + r.branch_id] || `สาขารหัส ${r.branch_id}`) : ''), parent_sku: r.parent_sku || '—', qty: +r.qty || 0, sales: +r.sales || 0 })); _mtRowsAt = Date.now(); return _mtRows; })
     .finally(() => { _mtLoading = null; });
   return _mtLoading;
 }
