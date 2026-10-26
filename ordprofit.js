@@ -1,3 +1,4 @@
+// ordprofit.js (v20261026h) — กดตัวเลขแสดงเฉพาะที่มาของเลขนั้น · VAT ไม่ต้องกด · "คำสั่งซื้อที่มีหลายสินค้า" · ค่าธรรมเนียมรายการย่อยกางในตารางหมวด (เลิกแท็บซ้ำ)
 // ordprofit.js (v20261026g) — คำอธิบาย ⓘ สั้นลง
 // ordprofit.js (v20261026f) — ค่าบริการ Shopee: ไม่ระบุชื่อโปรแกรมตายตัว (API และรายงานรายรับส่งมาเป็นยอดรวม)
 // ordprofit.js (v20261026e) — ชื่อ / คำอธิบายค่าธรรมเนียมแยกตามแพลตฟอร์ม (ใช้คำเดียวกับ Seller Centre) · Shopee แยกค่าจัดส่ง
@@ -106,6 +107,7 @@
       #page-ordprofit .op-s th:first-child, #page-ordprofit .op-s td:first-child { text-align:left; }
       #page-ordprofit .op-s tr.st td { font-weight:700; background:var(--op-soft); } #page-ordprofit .op-s tr.tot td { font-weight:800; border-bottom:0; }
       #page-ordprofit .op-s td.ind { padding-left:20px; color:var(--text2); }
+      #page-ordprofit .op-s tr.op-sub td { font-size:12px; background:var(--op-soft); } #page-ordprofit .op-car { display:inline-block; width:10px; color:var(--text3); }
       @media (max-width:1100px) { #page-ordprofit .op-sumg { grid-template-columns:1fr; } }
       #page-ordprofit .op-mix { background:var(--bg2); border:1px solid var(--op-line); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
       #page-ordprofit .op-mix .t { font-size:12px; color:var(--text2); font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between; }
@@ -155,7 +157,7 @@
     <div id="opNote"></div>
     <div class="op-kp" id="opKpis"></div>
     <div class="op-sumg"><div class="op-card" id="opSum"></div><div class="op-card" id="opCat"></div></div>
-    <div class="op-tabs" id="opTabs"><button type="button" data-v="orders">รายคำสั่งซื้อ</button><button type="button" data-v="products">รายสินค้า</button><button type="button" data-v="fees">ค่าธรรมเนียมแยกรายการ</button></div>
+    <div class="op-tabs" id="opTabs"><button type="button" data-v="orders">รายคำสั่งซื้อ</button><button type="button" data-v="products">รายสินค้า</button></div>
     <div class="op-card" id="opBody"></div>`;
     el.querySelectorAll('#opCh button').forEach(b => b.onclick = () => window.OrdProfit.pickCh(b.dataset.v));
     el.querySelectorAll('#opTabs button').forEach(b => b.onclick = () => { S.tab = b.dataset.v; drawTab(); });
@@ -215,20 +217,23 @@
       + pr('หัก ค่าการตลาดอื่น', mk2, '', 'KOL · Presenter · Live · Brand ปันตามอัตราของสินค้าในช่องทางนี้')
       + pr('หัก ค่าใช้จ่ายบริหาร', k.overhead, '', 'ปันตามอัตราของสินค้าในช่องทางนี้ จาก Business Insight')
       + pr('กำไรสุทธิ', p, 'tot') + '</tbody></table>';
-    const fees = (s.fees || []), all = +k.fees || 0, cat = {};
-    fees.forEach(([kk, v]) => { const c = CAT_OF(kk); cat[c] = (cat[c] || 0) - (+v); });
-    const rest = all - Object.values(cat).reduce((t, x) => t + x, 0); if (rest >= 0.5) cat.oth = (cat.oth || 0) + rest;
-    el.querySelector('#opCat').innerHTML = `<div class="op-h"><span>ค่าธรรมเนียมแพลตฟอร์มแยกหมวด ${tip('ตามรายการที่แพลตฟอร์มส่งมา ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน · รายการย่อยดูที่แท็บ "ค่าธรรมเนียมแยกรายการ"')}</span></div>
-      <table class="op-s" data-no-sort data-no-page><thead><tr><th>หมวด</th><th>จำนวนเงิน (บาท)</th><th>% ของยอดขาย</th></tr></thead><tbody>`
-      + CATS.filter(c => Math.abs(cat[c] || 0) >= 0.5).map(c => `<tr><td>${CAT[c]} ${tip(CAT_TIP[c])}</td><td>${n2(cat[c])}</td><td>${pc(cat[c], rev)}</td></tr>`).join('')
-      + `<tr class="tot"><td>รวม</td><td>${n2(all)}</td><td>${pc(all, rev)}</td></tr></tbody></table>`;
+    const fees = (s.fees || []).filter(x => Math.abs(+x[1]) >= 0.5), all = +k.fees || 0, by = {};
+    fees.forEach(([kk, v]) => { const c = CAT_OF(kk); (by[c] = by[c] || []).push([kk, -(+v)]); });
+    const rest = all - fees.reduce((t, x) => t - (+x[1]), 0); if (Math.abs(rest) >= 0.5) (by.oth = by.oth || []).push(['__rest', rest]);
+    const rows = CATS.filter(c => by[c]).map(c => { const L = by[c].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])), tot = L.reduce((t, x) => t + x[1], 0);
+      const single = L.length === 1 && feeOf(S.ch, L[0][0])[0] === CAT[c];
+      const sub = single ? '' : L.map(([kk, v]) => { const [l, t] = kk === '__rest' ? ['ยังไม่แยกรายการ', ''] : feeOf(S.ch, kk);
+        return `<tr class="op-sub" data-c="${c}" style="display:none;"><td class="ind">${esc(l)}${t ? ' ' + tip(t) : ''}</td><td>${n2(v)}</td><td>${pc(v, rev)}</td></tr>`; }).join('');
+      return `<tr${single ? '' : ` style="cursor:pointer;" onclick="OrdProfit.toggleCat('${c}', this)"`}><td>${single ? '' : '<span class="op-car">▸</span> '}${CAT[c]} ${tip(CAT_TIP[c])}</td><td>${n2(tot)}</td><td>${pc(tot, rev)}</td></tr>` + sub; }).join('');
+    el.querySelector('#opCat').innerHTML = `<div class="op-h"><span>ค่าธรรมเนียมแพลตฟอร์มแยกหมวด ${tip('ตามรายการที่แพลตฟอร์มส่งมา ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน · กดหมวดที่มี ▸ เพื่อดูรายการย่อย')}</span></div>
+      <table class="op-s" data-no-sort data-no-page><thead><tr><th>หมวด</th><th>จำนวนเงิน (บาท)</th><th>% ของยอดขาย</th></tr></thead><tbody>${rows}
+      <tr class="tot"><td>รวม</td><td>${n2(all)}</td><td>${pc(all, rev)}</td></tr></tbody></table>`;
   }
 
   function drawTab() {
     const el = shell();
     el.querySelectorAll('#opTabs button').forEach(b => b.classList.toggle('on', b.dataset.v === S.tab));
     if (S.tab === 'products') return drawProducts();
-    if (S.tab === 'fees') return drawFees();
     return drawOrders();
   }
 
@@ -236,32 +241,18 @@
     const s = S.both[S.ch] || {}, P = s.products || [], box = shell().querySelector('#opBody');
     box.innerHTML = `<div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead><tr><th class="l">สินค้า ${tip('จัดกลุ่มตามสินค้าหลักในคำสั่งซื้อ (ไม่นับของแถม) · คำสั่งซื้อที่มีหลายสินค้ารวมที่ "หลายสินค้า" · กดเพื่อดูคำสั่งซื้อของสินค้านั้น')}</th>
       <th>คำสั่งซื้อ</th><th>ยอดขาย</th><th>กำไรสุทธิ</th><th>อัตรากำไรสุทธิ</th><th>กำไรสุทธิต่อคำสั่งซื้อ</th><th>คำสั่งซื้อที่ขาดทุน</th></tr></thead><tbody>`
-      + (P.length ? P.map(x => `<tr onclick="OrdProfit.pickProduct('${esc(x.p === 'หลายสินค้า' ? '' : x.p)}')"><td class="l">${esc(x.name || x.p)} <span class="sub mono">${x.p === 'หลายสินค้า' ? '' : esc(x.p)}</span></td>
+      + (P.length ? P.map(x => `<tr onclick="OrdProfit.pickProduct('${esc(x.p === 'หลายสินค้า' ? '__multi' : x.p)}')"><td class="l">${x.p === 'หลายสินค้า' ? 'คำสั่งซื้อที่มีหลายสินค้า ' + tip('คำสั่งซื้อที่มีสินค้ามากกว่า 1 ชนิด (ไม่นับของแถม) จึงไม่จัดเข้าสินค้าใดสินค้าหนึ่ง') : esc(x.name || x.p) + ` <span class="sub mono">${esc(x.p)}</span>`}</td>
           <td>${n0(x.n)}</td><td>${n0(x.rev)}</td><td class="pf ${+x.profit < 0 ? 'neg' : ''}">${n0(x.profit)}</td><td class="${+x.profit < 0 ? 'neg' : ''}">${pc(+x.profit, +x.rev)}</td>
           <td class="${+x.profit < 0 ? 'neg' : ''}">${x.n ? n2(x.profit / x.n) : '—'}</td><td>${pc(+x.loss, +x.n)} <span class="sub">(${n0(x.loss)})</span></td></tr>`).join('')
         : '<tr><td colspan="7" class="l z">ไม่มีข้อมูล</td></tr>') + '</tbody></table></div>';
   }
 
-  function drawFees() {
-    const s = S.both[S.ch] || {}, k = s.k || {}, rev = +k.rev || 0, box = shell().querySelector('#opBody');
-    const items = (s.fees || []).filter(x => Math.abs(+x[1]) >= 0.5), all = +k.fees || 0;
-    const by = {}; items.forEach(([kk, v]) => { const c = CAT_OF(kk); (by[c] = by[c] || []).push([kk, -v]); });
-    const rest = all - items.reduce((t, x) => t - (+x[1]), 0); if (rest >= 0.5) (by.oth = by.oth || []).push(['__rest', rest]);
-    const cats = CATS.filter(c => by[c]);
-    box.innerHTML = `<div class="fl h"><span>รายการ ${tip('ทุกคำสั่งซื้อในช่วงที่เลือก ตามรายการที่แพลตฟอร์มส่งมา ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน')}</span><span>บาท</span><span>% ยอดขาย</span></div>`
-      + cats.map(c => { const tot = by[c].reduce((t, x) => t + x[1], 0);
-          return `<div class="fl cat"><span>${CAT[c]} ${tip(CAT_TIP[c])}</span><span>${n0(tot)}</span><span>${pc(tot, rev)}</span></div>`
-            + by[c].sort((a, b) => b[1] - a[1]).map(([kk, v]) => { const [l, t] = kk === '__rest' ? ['ยังไม่แยกรายการ', ''] : feeOf(S.ch, kk);
-                return `<div class="fl it"><span>${esc(l)}${t ? ' ' + tip(t) : ''}</span><span>${n0(v)}</span><span>${pc(v, rev)}</span></div>`; }).join(''); }).join('')
-      + `<div class="fl cat"><span>รวมค่าธรรมเนียมแพลตฟอร์ม</span><span>${n0(all)}</span><span>${pc(all, rev)}</span></div>`;
-  }
-
   async function drawOrders() {
     const box = shell().querySelector('#opBody'), pk = +((S.both[S.ch] || {}).packaging || 0) > 0;
     box.innerHTML = `<div class="op-tools"><div class="op-seg" id="opFilt"><button type="button" data-v="all">ทั้งหมด</button><button type="button" data-v="loss">ขาดทุน</button><button type="button" data-v="refund">คืนเงิน</button><button type="button" data-v="pending">รอปิดยอด</button></div>
-      <select id="opSku"><option value="">สินค้า: ทั้งหมด</option>${((S.both[S.ch] || {}).products || []).filter(x => x.p !== 'หลายสินค้า').sort((a, b) => String(a.name || a.p).localeCompare(String(b.name || b.p), 'th')).map(x => `<option value="${esc(x.p)}"${S.sku === x.p ? ' selected' : ''}>${esc(x.name || x.p)} (${esc(x.p)})</option>`).join('')}</select>
+      <select id="opSku"><option value="">สินค้า: ทั้งหมด</option><option value="__multi"${S.sku === '__multi' ? ' selected' : ''}>คำสั่งซื้อที่มีหลายสินค้า</option>${((S.both[S.ch] || {}).products || []).filter(x => x.p !== 'หลายสินค้า').sort((a, b) => String(a.name || a.p).localeCompare(String(b.name || b.p), 'th')).map(x => `<option value="${esc(x.p)}"${S.sku === x.p ? ' selected' : ''}>${esc(x.name || x.p)} (${esc(x.p)})</option>`).join('')}</select>
       <input type="search" id="opQ" placeholder="ค้นหาเลขคำสั่งซื้อ / รหัส SKU" style="width:200px;" value="${esc(S.q)}">
-      <span style="margin-left:auto;font-size:11.5px;color:var(--text3);">ตัวเลขขีดเส้นใต้ = คำนวณ / ปันส่วน กดเพื่อดูวิธีคิด</span></div>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--text3);">ตัวเลขขีดเส้นใต้: กดดูที่มา · กดเลขคำสั่งซื้อ: ดูรายละเอียดทั้งหมด</span></div>
       <div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead id="opHead"></thead><tbody id="opRows"><tr><td colspan="19" class="l z">กำลังโหลด…</td></tr></tbody></table></div><div class="op-pg" id="opPg"></div>`;
     box.querySelectorAll('#opFilt button').forEach(b => { b.classList.toggle('on', b.dataset.v === S.filter); b.onclick = () => { S.filter = b.dataset.v; S.page = 0; drawOrders(); }; });
     box.querySelector('#opSku').onchange = e => { S.sku = e.target.value; S.page = 0; loadRows(); };
@@ -287,7 +278,7 @@
     catch (e) { body.innerHTML = `<tr><td colspan="19" class="l z">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; return; }
     const rows = (S.list && S.list.rows) || [], total = (S.list && S.list.total) || 0;
     const v = x => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : n2(x);
-    const cu = (id, x, what) => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : `<span class="u" onclick="event.stopPropagation();OrdProfit.openOrder('${esc(id)}','${what}')">${n2(x)}</span>`;
+    const cu = (id, x, what) => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : `<span class="u" title="กดดูที่มาของตัวเลขนี้" onclick="event.stopPropagation();OrdProfit.openCell('${esc(id)}','${what}')">${n2(x)}</span>`;
     body.innerHTML = rows.length ? rows.map(r => {
       const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, mk2, oh, st] = r;
       const stx = refund ? '<span class="op-tag" style="color:#64748b;background:rgba(100,116,139,.14);">คืนเงิน</span>' : !settled ? '<span class="op-tag">รอปิดยอด</span>' : '';
@@ -295,8 +286,8 @@
         <td class="l" style="white-space:normal;max-width:150px;"><span class="mono">${esc((skus || '—').replace(/,/g, ', '))}</span>${nocost ? '<span class="op-tag">ไม่มีต้นทุน</span>' : ''}</td>
         <td class="l">${esc(ST_TH[st] || st || '—')}${stx ? '<div>' + stx + '</div>' : ''}</td>
         <td>${n2(rev)}</td><td class="f">${v(cComm)}</td><td class="f">${v(cSvc)}</td><td class="f">${v(cPay)}</td><td class="f">${v(cAff)}</td><td class="f">${v(cOth)}</td><td class="f sum">${n2(fees)}</td>
-        <td>${n2(settle)}</td><td class="c">${cu(id, vat, 'vat')}</td><td class="c">${cu(id, cogs, 'cogs')}</td>${pk ? `<td class="c">${v(pack)}</td>` : ''}
-        <td class="c">${cu(id, ads, 'mkt')}${est ? '<div class="sub">ประมาณการ</div>' : ''}</td><td class="c">${cu(id, mk2, 'mkt')}</td><td class="c">${cu(id, oh, 'mkt')}</td>
+        <td>${n2(settle)}</td><td class="c">${v(vat)}</td><td class="c">${cu(id, cogs, 'cogs')}</td>${pk ? `<td class="c">${v(pack)}</td>` : ''}
+        <td class="c">${cu(id, ads, 'ads')}${est ? '<div class="sub">ประมาณการ</div>' : ''}</td><td class="c">${cu(id, mk2, 'mkt')}</td><td class="c">${cu(id, oh, 'oh')}</td>
         <td class="pf pfc ${+prof < 0 ? 'neg' : ''}">${n2(prof)}</td><td class="pfc2 ${+prof < 0 ? 'neg' : ''}">${pc(+prof, +rev)}</td></tr>`; }).join('')
       : '<tr><td colspan="19" class="l z">ไม่มีคำสั่งซื้อตามเงื่อนไขนี้</td></tr>';
     const pages = Math.max(1, Math.ceil(total / S.size));
@@ -315,6 +306,45 @@
     const shipL = fees.filter(([k]) => ship.test(k)), feeL = fees.filter(([k]) => !ship.test(k) && k !== 'other' && k !== 'adjustment_amount'), othL = fees.filter(([k]) => k === 'other' || k === 'adjustment_amount');
     const ord = c => CATS.indexOf(CAT_OF(c[0]));
     return grp('ค่าจัดส่ง', shipL) + grp('ค่าธรรมเนียม', feeL.sort((a, b) => ord(a) - ord(b) || Math.abs(b[1]) - Math.abs(a[1]))) + grp('อื่น ๆ', othL);
+  }
+  // กดตัวเลข: แสดงเฉพาะที่มาของตัวเลขนั้น
+  async function openCell(id, what) {
+    const T = { cogs: 'ต้นทุนขาย', ads: 'ค่าโฆษณา', mkt: 'ค่าการตลาดอื่น', oh: 'ค่าใช้จ่ายบริหาร' };
+    window.trOpenShell(T[what] || 'ที่มาของตัวเลข');
+    let j;
+    try { j = await rpc('order_profit_detail', { p_ch: S.ch, p_order: id }); if (!j || !j.o) throw new Error('ไม่พบคำสั่งซื้อ'); }
+    catch (e) { const b = document.getElementById('trBody'); if (b) b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    const o = j.o, names = j.names || {}, rates = j.rates || [], mo = mLabel(String(o.order_date).slice(0, 7));
+    const ln = (sg, lb, v, sub) => `<div class="tr-ln"><span class="tr-sg">${sg}</span><div class="tr-lb">${lb}${sub ? `<div class="tr-ref">${sub}</div>` : ''}</div><div class="tr-num">${v}</div></div>`;
+    const val = { cogs: +o.cogs || 0, ads: +o.ads || 0, mkt: (+o.mkt_direct || 0) + (+o.mkt_other || 0), oh: +o.overhead || 0 }[what];
+    let h = `<div class="tr-card"><div class="tr-card-t">${T[what]} · ${esc(S.ch)} · <span class="mono">${esc(o.order_id)}</span></div><div class="tr-card-v">${n2(val)}</div>
+      <div class="tr-card-m"><span>${dLabel(o.order_date)} ${+String(o.order_date).slice(0, 4) + 543}</span><span>${pc(val, +o.rev)} ของยอดขาย</span></div></div>`;
+    if (what === 'cogs') {
+      const cl = o.cogs_lines || [];
+      h += `<div class="tr-fg"><div class="tr-fg-h"><span>จำนวนชิ้น × ต้นทุนต่อชิ้น</span><span class="tr-ref">ไฟล์ต้นทุนขายของฝ่ายบัญชี · ${mo}</span></div>`
+        + (o.full_refund ? '<div class="tr-ref">คืนเงินเต็มจำนวน สินค้ากลับเข้าคลัง ไม่นับต้นทุน</div>'
+          : cl.map(x => ln('', `${esc(names[x[0]] || x[0])} <span class="mono">${esc(x[0])}</span>${x[3] ? ' <span class="op-tag">ของแถม</span>' : ''}`, n2(x[1] * x[2]), `${n0(x[1])} ชิ้น × ${n2(x[2])}`)).join(''))
+        + `<div class="tr-eq"><span>ต้นทุนขาย</span><b>${n2(val)}</b></div></div>`
+        + (o.cost_fallback ? `<div class="tr-warn">บางรายการไม่มีในไฟล์ต้นทุนเดือน ${mo} ใช้ต้นทุนจากหน้าสินค้า & ราคาแทน</div>` : '')
+        + (o.no_cost ? '<div class="tr-warn">มีสินค้าที่ยังไม่มีต้นทุน นับเป็น 0</div>' : '');
+    } else {
+      const parts = what === 'mkt' ? [['dir', 'bi_dir', 'KOL · Presenter', +o.mkt_direct || 0], ['oth', 'bi_oth', 'Live · Brand', +o.mkt_other || 0]]
+        : [[what, 'bi_' + what, '', val]];
+      const biM = rates.length && rates[0].m ? mLabel(String(rates[0].m).slice(0, 7)) : mo;
+      h += parts.map(([key, bk, sub, act]) => {
+        const L = rates.filter(r => r[key] != null && +r[key] !== 0), raw = L.reduce((t, r) => t + r[key] * r.rs / 1.07, 0), f = raw ? act / raw : 1;
+        return `<div class="tr-fg"><div class="tr-fg-h"><span>${sub || T[what]}</span><span class="tr-ref">Business Insight · ${S.ch} · ${biM}</span></div>`
+          + (L.length ? L.map(r => {
+              const share = r[key] * r.rs / 1.07 * f;
+              return ln('', `${esc(r.name || r.p)}`, n2(share),
+                `อัตรา ${(r[key] * 100).toFixed(2)}% = ${n2(r[bk])} ÷ ยอดขาย ${n2(r.bi_rev)} (ทั้งเดือน)<br>× ยอดขายก่อนภาษีในคำสั่งซื้อนี้ ${n2(r.rs / 1.07)}`
+                + (Math.abs(f - 1) >= 0.0005 ? `<br>× ${f.toFixed(4)} ปรับให้รวมทุกคำสั่งซื้อเท่ายอดใน Business Insight` : ''));
+            }).join('') : '<div class="tr-ref">สินค้านี้ไม่มีรายการนี้ในเดือนดังกล่าว</div>')
+          + `<div class="tr-eq"><span>${sub || T[what]}</span><b>${n2(act)}</b></div></div>`;
+      }).join('')
+        + (o.estimate ? `<div class="tr-warn">เดือนนี้ยังไม่ปิดบัญชี ใช้อัตราของ ${biM} เป็นค่าประมาณการ</div>` : '');
+    }
+    const b = document.getElementById('trBody'); if (b) b.innerHTML = h;
   }
   async function openOrder(id, focus) {
     window.trOpenShell('รายละเอียดคำสั่งซื้อ');
@@ -358,6 +388,9 @@
     sortBy(k) { if (S.sort === k) S.dir = S.dir === 'asc' ? 'desc' : 'asc'; else { S.sort = k; S.dir = k === 'order_date' ? 'desc' : 'asc'; } S.page = 0; drawOrders(); },
     go(d) { S.page = Math.max(0, S.page + d); loadRows(); },
     pickProduct(p) { S.sku = p; S.q = ''; S.page = 0; S.tab = 'orders'; drawTab(); },
-    openOrder
+    openOrder, openCell,
+    toggleCat(c, tr) { const open = tr.dataset.open !== '1'; tr.dataset.open = open ? '1' : '';
+      const car = tr.querySelector('.op-car'); if (car) car.textContent = open ? '▾' : '▸';
+      shell().querySelectorAll(`#opCat tr.op-sub[data-c="${c}"]`).forEach(x => { x.style.display = open ? '' : 'none'; }); }
   };
 })();
