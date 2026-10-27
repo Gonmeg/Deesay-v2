@@ -1,3 +1,4 @@
+// ordprofit.js (v20261027b) — ตารางรายสินค้ากดหัวคอลัมน์เพื่อเรียงได้ทุกคอลัมน์ (กดซ้ำกลับลำดับ)
 // ordprofit.js (v20261027a) — แผง Ads + Coins: สรุปตามสินค้าพร้อมแถวรวมของคำสั่งซื้อ · ที่มาของอัตรา Ads เลือกดูทีละสินค้า (ปุ่มชื่อสินค้า + รหัส) · บอกนิยามยอดขาย (หลังหักส่วนลดร้านค้า)
 // ordprofit.js (v20261026u) — โหลดเร็วขึ้น: ดึงสรุปของช่องทางที่เลือกก่อน อีกช่องทางตามมาเบื้องหลัง · ไม่เด้ง: ระหว่างโหลดคงข้อมูลเดิมไว้แบบจางลง ไม่ล้างเป็น "กำลังโหลด" และล็อกความสูงตารางไว้
 // ordprofit.js (v20261026t) — ตัวเลขในตารางอยู่กึ่งกลางคอลัมน์ (คอลัมน์ข้อความ คำสั่งซื้อ / SKU / สถานะ ยังชิดซ้าย)
@@ -22,7 +23,7 @@
 (function () {
   'use strict';
   const CHS = ['TikTok', 'Shopee'];
-  const S = { ch: 'TikTok', shop: null, view: 'sum', from: null, to: null, tab: 'orders', filter: 'all', q: '', sku: '', sort: 'order_date', dir: 'desc', page: 0, size: 50, both: {}, list: null, months: [] };
+  const S = { ch: 'TikTok', shop: null, view: 'sum', from: null, to: null, tab: 'orders', filter: 'all', q: '', sku: '', sort: 'order_date', dir: 'desc', page: 0, size: 50, both: {}, list: null, months: [], psort: 'rev', pdir: 'desc' };
   // สถานะคำสั่งซื้อจาก API ของแพลตฟอร์ม
   const ST_TH = { COMPLETED: 'สำเร็จ', DELIVERED: 'จัดส่งถึงแล้ว', IN_TRANSIT: 'ระหว่างจัดส่ง', SHIPPED: 'จัดส่งแล้ว', TO_CONFIRM_RECEIVE: 'รอยืนยันรับสินค้า',
     AWAITING_SHIPMENT: 'รอจัดส่ง', AWAITING_COLLECTION: 'รอขนส่งรับ', READY_TO_SHIP: 'พร้อมจัดส่ง', PROCESSED: 'กำลังเตรียมสินค้า', TO_RETURN: 'คืนสินค้า', UNPAID: 'ยังไม่ชำระ', IN_CANCEL: 'กำลังยกเลิก', PARTIALLY_SHIPPING: 'จัดส่งบางส่วน' };
@@ -171,6 +172,7 @@
       #page-ordprofit .op-t td.sum, #page-ordprofit .op-t th.sum { font-weight:700; }
       #page-ordprofit .op-t td.pf { font-weight:800; } #page-ordprofit .op-t td.neg { color:var(--red); }
       #page-ordprofit .op-t th.s { cursor:pointer; } #page-ordprofit .op-t th.s.on { color:var(--text); }
+      #page-ordprofit .op-t th.srt { cursor:pointer; user-select:none; } #page-ordprofit .op-t th.srt:hover, #page-ordprofit .op-t th.srt.on { color:var(--text); } #page-ordprofit .op-t th .ar { display:inline-block; min-width:12px; margin-left:3px; font-size:10px; }
       #page-ordprofit .op-t .u { text-decoration:underline dotted; text-underline-offset:3px; }
       #page-ordprofit .op-t .pfh, #page-ordprofit .op-t .pfc { position:sticky; right:46px; z-index:1; background:var(--bg2); box-shadow:-1px 0 0 var(--op-line); }
       #page-ordprofit .op-t .pfh2, #page-ordprofit .op-t .pfc2 { position:sticky; right:0; z-index:1; background:var(--bg2); min-width:46px; box-sizing:border-box; }
@@ -270,15 +272,25 @@
     return drawOrders();
   }
 
+  // (2026-10-27) ตารางรายสินค้า: กดหัวคอลัมน์เพื่อเรียง (กดซ้ำ = กลับลำดับ) · เริ่มต้นเรียงตามยอดขายมากไปน้อย
+  const PSORT = {
+    name: x => x.p === 'หลายสินค้า' ? 'คำสั่งซื้อที่มีหลายสินค้า' : String(x.name || x.p),
+    n: x => +x.n || 0, rev: x => +x.rev || 0, profit: x => +x.profit || 0,
+    margin: x => +x.rev ? (+x.profit || 0) / +x.rev : -Infinity,
+    ppo: x => +x.n ? (+x.profit || 0) / +x.n : -Infinity,
+    loss: x => (+x.n ? (+x.loss || 0) / +x.n : 0) + (+x.loss || 0) * 1e-9 };
   function drawProducts() {
-    const s = S.both[S.ch] || {}, P = s.products || [], box = shell().querySelector('#opBody');
-    box.innerHTML = `<div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead><tr><th class="l">สินค้า ${tip('จัดกลุ่มตามสินค้าหลัก (ไม่นับของแถม) · กดเพื่อดูคำสั่งซื้อ')}</th>
-      <th>คำสั่งซื้อ</th><th>ยอดขาย</th><th>กำไร ${tip('หลังหัก Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร')}</th><th>อัตรากำไร</th><th>กำไรต่อคำสั่งซื้อ</th><th>คำสั่งซื้อที่ขาดทุน</th></tr></thead><tbody>`
+    const s = S.both[S.ch] || {}, box = shell().querySelector('#opBody'), k = PSORT[S.psort] ? S.psort : 'rev', dir = S.pdir === 'asc' ? 1 : -1, f = PSORT[k];
+    const P = (s.products || []).slice().sort((a, b) => { const va = f(a), vb = f(b); return (k === 'name' ? String(va).localeCompare(String(vb), 'th') : va - vb) * dir; });
+    const ph = (key, l, t, cls) => `<th class="srt${cls ? ' ' + cls : ''}${k === key ? ' on' : ''}" onclick="OrdProfit.sortProd('${key}')">${l}${t ? ' ' + tip(t) : ''}<span class="ar">${k === key ? (dir > 0 ? '▲' : '▼') : ''}</span></th>`;
+    box.innerHTML = `<div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead><tr>${ph('name', 'สินค้า', 'จัดกลุ่มตามสินค้าหลัก (ไม่นับของแถม) · กดแถวเพื่อดูคำสั่งซื้อ', 'l')}
+      ${ph('n', 'คำสั่งซื้อ')}${ph('rev', 'ยอดขาย')}${ph('profit', 'กำไร', 'หลังหัก Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร')}${ph('margin', 'อัตรากำไร')}${ph('ppo', 'กำไรต่อคำสั่งซื้อ')}${ph('loss', 'คำสั่งซื้อที่ขาดทุน', 'สัดส่วนคำสั่งซื้อที่กำไรติดลบ (จำนวน)')}</tr></thead><tbody>`
       + (P.length ? P.map(x => `<tr onclick="OrdProfit.pickProduct('${esc(x.p === 'หลายสินค้า' ? '__multi' : x.p)}')"><td class="l">${x.p === 'หลายสินค้า' ? 'คำสั่งซื้อที่มีหลายสินค้า ' + tip('มีสินค้ามากกว่า 1 ชนิด (ไม่นับของแถม)') : esc(x.name || x.p) + ` <span class="sub mono">${esc(x.p)}</span>`}</td>
           <td>${n0(x.n)}</td><td>${n0(x.rev)}</td><td class="pf ${+x.profit < 0 ? 'neg' : ''}">${n0(x.profit)}</td><td class="${+x.profit < 0 ? 'neg' : ''}">${pc(+x.profit, +x.rev)}</td>
           <td class="${+x.profit < 0 ? 'neg' : ''}">${x.n ? n2(x.profit / x.n) : '—'}</td><td>${pc(+x.loss, +x.n)} <span class="sub">(${n0(x.loss)})</span></td></tr>`).join('')
         : '<tr><td colspan="7" class="l z">ไม่มีข้อมูล</td></tr>') + '</tbody></table></div>';
   }
+  function sortProd(key) { if (!PSORT[key]) return; if (S.psort === key) S.pdir = S.pdir === 'asc' ? 'desc' : 'asc'; else { S.psort = key; S.pdir = key === 'name' ? 'asc' : 'desc'; } drawProducts(); }
 
   async function drawOrders() {
     // ตารางเดิมยังแสดงระหว่างโหลด (ถ้ามุมมองเดียวกัน) และล็อกความสูงไว้ แทนการล้างเป็นแถว "กำลังโหลด…" ที่ทำให้หน้าเด้ง
@@ -513,7 +525,7 @@
   }
 
   window.OrdProfit = {
-    render, adsPane,
+    render, adsPane, sortProd,
     pickCh(c) { if (c === S.ch) return; S.ch = c; S.page = 0; S.q = ''; S.sku = ''; drawTop(); drawTab(); },
     sortBy(k) { if (S.sort === k) S.dir = S.dir === 'asc' ? 'desc' : 'asc'; else { S.sort = k; S.dir = k === 'order_date' ? 'desc' : 'asc'; } S.page = 0; drawOrders(); },
     go(d) { S.page = Math.max(0, S.page + d); loadRows(); },
