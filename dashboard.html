@@ -70,7 +70,7 @@
   .fbe-comment-row b { color: var(--text); }
   .fbe-post-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; flex-shrink: 0; cursor: pointer; }
 
-  .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
+  .main { margin-left: var(--sb-w, 208px); transition: margin-left .18s ease; flex: 1; min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }   /* (2026-10-26) ความกว้างเมนูซ้ายจาก sidebar.js */
   .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
   .page-title { font-size: 16px; font-weight: 700; color: var(--text); }
   .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -765,97 +765,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   </div>
 </div>
 
-<aside class="sidebar">
-  <div class="logo">
-    <div class="logo-text">Deesay</div>
-    <div class="logo-sub">Sales &amp; Marketing</div>
-  </div>
-  <nav class="nav">
-    <div class="nav-item" onclick="showPage('home',null,this)"><span class="nav-icon">🏠</span> หน้าแรก</div>
-    <div class="nav-item active" onclick="showPage('overview',null,this)"><span class="nav-icon">📊</span> ภาพรวมยอดขาย</div>
-    
-    <div class="nav-item" onclick="showPage('kpi',null,this)"><span class="nav-icon">🏁</span> เป้าหมาย KPI</div>
-    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('fb')" id="navGroupLabel-fb">
-      <span>Facebook</span><span class="nav-group-chevron" id="navGroupChevron-fb">▸</span>
-    </div>
-    <div id="navGroup-fb" style="display:none;">
-      <div class="nav-item nav-sub" onclick="showPage('fbhub',null,this)"><span class="nav-icon">🅕</span> ภาพรวม Facebook</div>
-      <!-- จังหวัด / ภูมิภาค (geo) ซ่อนไว้ — ไม่ค่อยได้ใช้งาน โค้ด renderGeo() ยังอยู่ครบ ไม่ได้ลบ -->
-      <div class="nav-item nav-sub" onclick="showPage('crm',null,this)"><span class="nav-icon">👥</span> CRM</div>
-      <div class="nav-item nav-sub" onclick="showPage('flow',null,this)"><span class="nav-icon">🔄</span> เส้นทางซื้อซ้ำ</div>
-      <div class="nav-item nav-sub" onclick="showPage('neverbought',null,this)"><span class="nav-icon">🔍</span> ลูกค้าที่ยังไม่ซื้อ</div>
-      <div class="nav-item nav-sub" onclick="showPage('fbengage',null,this)"><span class="nav-icon">📈</span> Engagement รายวัน</div>
-      <div class="nav-item nav-sub" onclick="showPage('fbads',null,this)"><span class="nav-icon">📢</span> Facebook Ads</div>
-    </div>
-    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('tt')" id="navGroupLabel-tt">
-      <span>TikTok</span><span class="nav-group-chevron" id="navGroupChevron-tt">▸</span>
-    </div>
-    <div id="navGroup-tt" style="display:none;">
-      <div class="nav-item nav-sub" onclick="showPage('tthub',null,this)"><span class="nav-icon">🎵</span> ภาพรวม TikTok</div>
-      <div class="nav-item nav-sub" onclick="showPage('ttcontent',null,this)"><span class="nav-icon">🎬</span> ผลงานคอนเทนต์</div>
-      <div class="nav-item nav-sub" onclick="showPage('ttkeyword',null,this)"><span class="nav-icon">🔎</span> ค้นหาคำบน TikTok</div>
-      <div class="nav-item nav-sub" onclick="showPage('ttads',null,this)"><span class="nav-icon">📢</span> TikTok Ads</div>
-      <div class="nav-item nav-sub" onclick="showPage('livesearch',null,this)"><span class="nav-icon">🔴</span> ค้นหา Live</div>
-      <div class="nav-item nav-sub" onclick="showPage('creatorperf',null,this)"><span class="nav-icon">👤</span> Creator Performance</div>
-    </div>
-    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('sh')" id="navGroupLabel-sh">
-      <span>Shopee / Lazada</span><span class="nav-group-chevron" id="navGroupChevron-sh">▸</span>
-    </div>
-    <div id="navGroup-sh" style="display:none;">
-      <div class="nav-item nav-sub" onclick="showPage('shhub',null,this)"><span class="nav-icon">🛍️</span> ภาพรวม Shopee</div>
-      <div class="nav-item nav-sub" onclick="showPage('shads',null,this)"><span class="nav-icon">📢</span> Shopee Ads</div>
-<div class="nav-item nav-sub" onclick="showPage('lzhub',null,this)"><span class="nav-icon">🅻</span> ภาพรวม Lazada</div>
-    </div>
-    <div class="nav-group-label nav-group-toggle" onclick="toggleNavGroup('mt')" id="navGroupLabel-mt">
-      <span>Modern Trade</span><span class="nav-group-chevron" id="navGroupChevron-mt">▸</span>
-    </div>
-    <div id="navGroup-mt" style="display:none;">
-      <div class="nav-item nav-sub" onclick="_mtRetailer='';showPage('mthub',null,this)"><span class="nav-icon">🏬</span> ภาพรวม Modern Trade</div>
-    </div>
-    <div class="nav-item" onclick="showPage('skurev',null,this)"><span class="nav-icon">📈</span> แนวโน้มสินค้า</div>
-    <div class="nav-item" onclick="showPage('mktlive',null,this)"><span class="nav-icon">📊</span> MKT Tracking</div>
-    <div class="nav-item" onclick="showPage('skuanalysis',null,this)"><span class="nav-icon">🔬</span> เจาะสินค้า</div>
-    <div class="nav-item" onclick="showPage('adperf',null,this)"><span class="nav-icon">📈</span> Ad Performance</div>
-    <div class="nav-item" onclick="showPage('kol',null,this)"><span class="nav-icon">🤝</span> KOL</div>
-    <div class="nav-item" onclick="showPage('supply',null,this)"><span class="nav-icon">📦</span> Supply Chain</div>
-    <div class="nav-item" onclick="showPage('products',null,this)"><span class="nav-icon">🧴</span> สินค้า & ราคา</div>
-    <div class="nav-item" onclick="showPage('promo',null,this)"><span class="nav-icon">🏷️</span> ขอ Promotion</div>
-    <!-- (2026-10-15) หน้าผู้บริหาร: เปิดที่ exec.html (dashboard.html?app=exec) · หน้าทีมไม่เห็นกลุ่มนี้ -->
-    <div class="nav-group-label exec-only" id="navExecLabel" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ผู้บริหาร</div>
-    <div class="nav-item exec-only" onclick="showPage('exec',null,this)"><span class="nav-icon">✅</span> Promotion · อนุมัติ</div>
-    <div class="nav-item exec-only" onclick="showPage('cost',null,this)"><span class="nav-icon">💼</span> Business Insight</div>
-    <div class="nav-item exec-only" onclick="showPage('ordprofit',null,this)"><span class="nav-icon">💹</span> กำไรต่อคำสั่งซื้อ</div>
-    <div class="nav-item exec-only" onclick="showPage('execfee',null,this)"><span class="nav-icon">🧾</span> ค่าธรรมเนียมช่องทาง</div>
-    <div class="nav-group-label" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">ระบบ</div>
-    <a class="nav-item nav-sub" id="navToExec" href="exec.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:none;"><span class="nav-icon">👔</span> Management ↗</a>
-    <a class="nav-item nav-sub" id="navToOps" href="dashboard.html" style="text-decoration:none;color:inherit;display:none;"><span class="nav-icon">↩</span> Team View</a>
-    <div class="nav-item nav-sub" onclick="openWhatsNew(false)" id="navWhatsNew"><span class="nav-icon">🆕</span> มีอะไรใหม่ <span class="wn-dot" id="wnDot" style="display:none;"></span></div>
-    <a class="nav-item nav-sub" href="upload.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">📤</span> อัปโหลดข้อมูล</a>
-    <a class="nav-item nav-sub" href="admin.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">⚙️</span> ตั้งค่า (Admin)</a>
-    <a class="nav-item nav-sub" href="health.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🩺</span> สุขภาพระบบ (Health)</a>
-    <a class="nav-item nav-sub" href="index.html" style="text-decoration:none;color:inherit;display:flex;"><span class="nav-icon">🏠</span> หน้าแรก</a>
-  </nav>
-  <div class="sidebar-footer">
-    <span class="status-dot"></span>Supabase Connected <span id="buildTag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" title="เวอร์ชันไฟล์ dashboard.html ที่กำลังรัน — ใช้เช็คว่า deploy ใหม่แล้วจริงไหม">v2026.10.26-t</span><br>
-    <span id="authUser" style="margin-top:6px;display:block;font-size:10px;color:var(--text2);word-break:break-all;"></span>
-    <button class="btn btn-ghost" onclick="Auth.signOut()" style="width:100%;margin-top:6px;justify-content:center;">🚪 ออกจากระบบ</button>
-    <span id="lastUpdate" style="margin-top:4px;display:block;">—</span>
-    <span id="cacheStatus" style="margin-top:4px;display:block;font-size:10px;"></span>
-    <button class="btn btn-ghost" id="btnRefreshMV" onclick="refreshDashboardData()" style="width:100%;margin-top:10px;justify-content:center;">🔄 รีเฟรชข้อมูล Dashboard</button>
-    <div style="width:100%;height:4px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px;display:none;" id="refreshMVBarWrap">
-      <div id="refreshMVBar" style="width:0%;height:100%;background:var(--accent);transition:width 0.3s ease;"></div>
-    </div>
-    <div id="refreshMVStatus" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
-    <!-- แถบโหลดเบื้องหลัง (TikTok Ads / ค่าจ้าง KOL) — โชว์เฉพาะตอนกำลังดึง -->
-    <div id="bgSyncWrap" style="display:none;margin-top:8px;">
-      <div id="bgSyncStatus" style="font-size:10px;color:var(--text3);line-height:1.4;margin-bottom:4px;"></div>
-      <div style="width:100%;height:4px;background:var(--bg3);border-radius:3px;overflow:hidden;">
-        <div id="bgSyncBar" style="width:0%;height:100%;background:#a78bfa;transition:width 0.3s ease;"></div>
-      </div>
-    </div>
-    <button class="btn btn-ghost" id="themeToggleBtn" onclick="toggleTheme()" style="width:100%;margin-top:8px;justify-content:center;">🌙 โหมดมืด</button>
-  </div>
-</aside>
+<!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.26-u"></div>
+<script src="sidebar.js?v=20261026a"></script>
 
 <div class="main">
   <div class="topbar">
@@ -3117,7 +3029,7 @@ function loadOrdProfitPage() {
   if (window._opLoading) return;
   window._opLoading = true;
   const s = document.createElement('script');
-  s.src = 'ordprofit.js?v=20261026t';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
+  s.src = 'ordprofit.js?v=20261026u';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต ordprofit.js
   s.onload = () => { window._opLoading = false; if (currentPage === 'ordprofit') window.OrdProfit.render(); };
   s.onerror = () => { window._opLoading = false; const el = document.getElementById('page-ordprofit'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด ordprofit.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
@@ -11221,6 +11133,6 @@ window._authP.then(p => {
   setInterval(() => { document.querySelectorAll('select[data-ux]').forEach(sel => { if (sel._uxBtn && sel._uxSig !== sigOf(sel)) sync(sel); }); }, 300);
 })();
 </script>
-<script src="ui.js?v=20261020b" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
+<script src="ui.js?v=20261026a" defer></script><!-- (2026-10-07) ตัวเลขพอดีการ์ด · ช่องวันที่แบบไทย · tooltip กราฟ -->
 </body>
 </html>
