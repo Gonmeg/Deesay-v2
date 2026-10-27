@@ -1,3 +1,4 @@
+// ordprofit.js (v20261026u) — โหลดเร็วขึ้น: ดึงสรุปของช่องทางที่เลือกก่อน อีกช่องทางตามมาเบื้องหลัง · ไม่เด้ง: ระหว่างโหลดคงข้อมูลเดิมไว้แบบจางลง ไม่ล้างเป็น "กำลังโหลด" และล็อกความสูงตารางไว้
 // ordprofit.js (v20261026t) — ตัวเลขในตารางอยู่กึ่งกลางคอลัมน์ (คอลัมน์ข้อความ คำสั่งซื้อ / SKU / สถานะ ยังชิดซ้าย)
 // ordprofit.js (v20261026s) — สถานะเงินเป็นจุดสีหน้าเลขคำสั่งซื้อ (เขียว = เงินเข้าแล้ว · แดง = เงินยังไม่เข้า · เทา = คืนเงินเต็มจำนวน) แทนป้ายในช่องสถานะ
 // ordprofit.js (v20261026r) — หัวตารางพื้นทึบ (ตัวเลขไม่ทะลุตอนเลื่อน) · SKU แสดงจำนวนชิ้น (×n, รวมบรรทัดซ้ำ) · สถานะบรรทัดเดียว · มุมมอง สรุป / ละเอียด
@@ -146,6 +147,8 @@
       #page-ordprofit .op-scroll { overflow:auto; max-height:max(420px, calc(100vh - 230px)); }
       #page-ordprofit .op-t thead th { position:sticky; top:0; z-index:3; background-color:var(--bg2) !important; }   /* พื้นทึบเสมอ ไม่ให้แถวที่เลื่อนผ่านโผล่ทะลุ (สีหมวดใช้ box-shadow ด้านล่าง) */
       #page-ordprofit .op-t .q { color:var(--text3); }
+      #page-ordprofit .op-kp, #page-ordprofit .op-sumg, #page-ordprofit .op-scroll { transition:opacity .15s; }
+      #page-ordprofit.op-busy .op-kp, #page-ordprofit.op-busy .op-sumg, #page-ordprofit.op-busy .op-scroll { opacity:.5; pointer-events:none; }
       #page-ordprofit .op-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:1px; flex:none; }
       #page-ordprofit .op-dot.ok { background:#16a34a; } #page-ordprofit .op-dot.w { background:#dc2626; } #page-ordprofit .op-dot.r { background:#94a3b8; }
       #page-ordprofit .op-leg2 { font-size:11.5px; color:var(--text3); display:inline-flex; align-items:center; gap:4px 12px; flex-wrap:wrap; }
@@ -206,12 +209,21 @@
     load();
   }
 
+  // ระหว่างโหลด: คงข้อมูลเดิมไว้แบบจางลง (ไม่ล้างหน้า → ไม่เด้ง) · นับซ้อนได้ (สรุป + ตารางโหลดพร้อมกัน)
+  let _busy = 0, _seq = 0;
+  const busy = d => { _busy = Math.max(0, _busy + d); const pg = document.getElementById('page-ordprofit'); if (pg) pg.classList.toggle('op-busy', _busy > 0); };
   async function load() {
-    const el = shell();
-    el.querySelector('#opKpis').innerHTML = '<div class="op-k" style="grid-column:1/-1;"><div class="d">กำลังโหลด…</div></div>';
-    try { const r = await Promise.all(CHS.map(c => rpc('order_profit_summary', { p_ch: c, p_from: S.from, p_to: S.to, p_shop: c === 'Shopee' ? S.shop : null }))); S.both = {}; CHS.forEach((c, i) => { S.both[c] = r[i]; }); }
-    catch (e) { el.querySelector('#opKpis').innerHTML = `<div class="error-banner" style="display:block;grid-column:1/-1;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-    drawTop(); drawTab();
+    const el = shell(), my = ++_seq, other = CHS.find(c => c !== S.ch);
+    const q = c => rpc('order_profit_summary', { p_ch: c, p_from: S.from, p_to: S.to, p_shop: c === 'Shopee' ? S.shop : null });
+    if (!el.querySelector('#opKpis .op-k')) el.querySelector('#opKpis').innerHTML = ['', '', '', ''].map((_, i) => `<div class="op-k${i ? '' : ' hero'}"><div class="l">&nbsp;</div><div class="v">—</div><div class="d">&nbsp;</div></div>`).join('');
+    busy(1);
+    let cur;   // ช่องทางที่เลือกก่อน แสดงผลได้ทันที · อีกช่องทาง (ใช้แค่ตัวเลขเปรียบเทียบในการ์ดแรก) ตามมาเบื้องหลัง
+    try { cur = await q(S.ch); }
+    catch (e) { busy(-1); el.querySelector('#opKpis').innerHTML = `<div class="error-banner" style="display:block;grid-column:1/-1;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    if (my !== _seq) { busy(-1); return; }
+    S.both = { [S.ch]: cur };
+    drawTop(); drawTab(); busy(-1);
+    q(other).then(x => { if (my !== _seq) return; S.both[other] = x; drawTop(); }).catch(() => {});
   }
 
   function drawTop() {
@@ -268,6 +280,8 @@
   }
 
   async function drawOrders() {
+    // ตารางเดิมยังแสดงระหว่างโหลด (ถ้ามุมมองเดียวกัน) และล็อกความสูงไว้ แทนการล้างเป็นแถว "กำลังโหลด…" ที่ทำให้หน้าเด้ง
+    const _old = shell().querySelector('#opBody'), _sc = _old && _old.querySelector('.op-scroll'), _prevH = _sc ? _sc.offsetHeight : 0, _prevRows = _old && _old.querySelector('#opRows') && S._rowsView === S.view ? _old.querySelector('#opRows').innerHTML : '';
     const box = shell().querySelector('#opBody');
     box.innerHTML = `<div class="op-tools"><div class="op-seg" id="opFilt"><button type="button" data-v="all">ทั้งหมด</button><button type="button" data-v="loss">ขาดทุน</button><button type="button" data-v="refund">คืนเงิน</button><button type="button" data-v="pending">เงินยังไม่เข้า</button></div>
       <select id="opSku"><option value="">สินค้า: ทั้งหมด</option><option value="__multi"${S.sku === '__multi' ? ' selected' : ''}>คำสั่งซื้อที่มีหลายสินค้า</option>${((S.both[S.ch] || {}).products || []).filter(x => x.p !== 'หลายสินค้า').sort((a, b) => String(a.name || a.p).localeCompare(String(b.name || b.p), 'th')).map(x => `<option value="${esc(x.p)}"${S.sku === x.p ? ' selected' : ''}>${esc(x.name || x.p)} (${esc(x.p)})</option>`).join('')}</select>
@@ -290,14 +304,20 @@
         ${so('ads', 'Ads + Coins', 'ค่าโฆษณาจริงจากแพลตฟอร์ม รวม Coins และ Ads PR · แบ่งตามสัดส่วนยอดขายของสินค้า', 'c')}
         ${so('profit', 'กำไร', 'รายรับสุทธิ − VAT − ต้นทุนขาย − Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร', 'sum pfh')}${so('pct', '%', 'กำไร ÷ ยอดขาย', 'pfh2')}</tr>`;
     const gh = box.querySelector('#opHead tr.g'); if (gh) box.querySelector('table.op-t').style.setProperty('--op-gh', gh.getBoundingClientRect().height + 'px');
+    if (_prevRows) box.querySelector('#opRows').innerHTML = _prevRows;
+    if (_prevH > 120) box.querySelector('.op-scroll').style.minHeight = _prevH + 'px';
+    S._rowsView = S.view;
     loadRows();
   }
 
   async function loadRows() {
     const box = shell().querySelector('#opBody'), body = box.querySelector('#opRows');
     if (!body) return;
+    const sc = box.querySelector('.op-scroll'); if (sc && sc.offsetHeight > 120) sc.style.minHeight = sc.offsetHeight + 'px';   // ล็อกความสูงไว้ระหว่างโหลด ตารางไม่ยุบ
+    busy(1);
     try { S.list = await rpc('order_profit_list', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_sort: S.sort, p_dir: S.dir, p_offset: S.page * S.size, p_limit: S.size, p_filter: S.filter, p_q: S.q || null, p_sku: S.sku || null, p_shop: S.ch === 'Shopee' ? S.shop : null }); }
-    catch (e) { body.innerHTML = `<tr><td colspan="19" class="l z">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; return; }
+    catch (e) { busy(-1); body.innerHTML = `<tr><td colspan="19" class="l z">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; return; }
+    busy(-1); if (sc) requestAnimationFrame(() => { sc.style.minHeight = ''; });
     const rows = (S.list && S.list.rows) || [], total = (S.list && S.list.total) || 0;
     const det = S.view === 'det';
     const v = x => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : n2(x);
