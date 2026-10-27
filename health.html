@@ -148,6 +148,8 @@ function cronState(j) {
   if (!j.last_start) return ['warn', 'ยังไม่เคยทำงาน']
   const exp = expectedMinutes(j.schedule)
   const lateMin = (Date.now() - new Date(j.last_start).getTime()) / 60000
+  if (j.last_status === 'running' || j.last_status === 'starting')   // (2026-10-27) กำลังทำงานอยู่ ไม่ใช่ล้มเหลว
+    return lateMin > 30 ? ['warn', `ทำงานนานผิดปกติ (เริ่ม ${ago(j.last_start)})`] : ['ok', 'กำลังทำงาน']
   if (j.last_status && j.last_status !== 'succeeded') return ['bad', 'ทำงานไม่สำเร็จในรอบล่าสุด']
   const hf = (j.schedule || '').trim().split(/\s+/)[1] || '*'
   const offHours = exp && exp < 60 && hf !== '*' && !inHours(hf, new Date().getUTCHours())   // (2026-10-27) งานที่ตั้งให้ทำเฉพาะบางช่วงเวลา (เช่น กลางคืน) ไม่นับว่าค้างนอกช่วงนั้น
@@ -277,6 +279,8 @@ async function render(d, unknown, extra) {
   const ACT = k => k === 'cron_fail' ? 'ดำเนินการ: ตรวจสอบรายละเอียดในแท็บงานตั้งเวลา'
     : (k === 'eq_ads_acct' || k === 'op_ads_acct') ? 'ดำเนินการ: ตรวจสอบยอดคงเหลือในบัญชีโฆษณาของแพลตฟอร์มที่ต่างเกินเกณฑ์'
     : k === 'http_fail' ? 'ไม่ต้องดำเนินการ หากจำนวนไม่เพิ่มขึ้น'
+    : /^orders_(Facebook|Lazada)$/.test(k) ? 'ดำเนินการ: อัปโหลดไฟล์ออเดอร์ของช่องทางนี้ที่หน้าอัปโหลดข้อมูล'
+    : /^orders_(ตัวแทน|Modern Trade)$/.test(k) ? 'ดำเนินการ: ตรวจสอบการอัปเดตชีทของช่องทางนี้'
     : /^orders_/.test(k) ? 'ดำเนินการ: ตรวจสอบการนำเข้าข้อมูลของช่องทางนี้'
     : 'ดำเนินการ: ตรวจสอบรายละเอียดในแท็บผลการตรวจสอบ'
   DG.filter(c => c.status !== 'ok').forEach(c => add(c.status === 'fail' ? 'bad' : 'warn', c.title, c.detail, ACT(c.k), c.since, c.k === 'cron_fail' && badCron.length ? cronList(badCron) : ''))
