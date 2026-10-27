@@ -1,3 +1,4 @@
+// kpi.js (v20261027a) — ชื่อหน้าไม่ซ้ำในหน้า · ปุ่มติดตามผล / ตั้งเป้า อยู่แถบบน
 // kpi.js (v20261021a) — วาดลงกล่อง #kpPaneMain (หน้า KPI มีแท็บ: เป้าสินค้า × ช่องทาง / TikTok GMV)
 // kpi.js (v20261013b) — หน้า "เป้าหมาย KPI" · โหลดครั้งแรกที่กดเมนู
 // เป้ารายเดือน ต่อสินค้า (parent) ต่อช่องทาง · กรอกเป็นชิ้น → เป้าเงิน = ชิ้น × ราคาเฉลี่ยต่อชิ้นจริง 3 เดือนก่อนเดือนเป้า (ล็อกเมื่อเดือนจบ: kpi_price_lock)
@@ -227,8 +228,10 @@
     const unitBtns_unused = `<div class="ui-presets" role="group" aria-label="หน่วย">
         <button type="button" data-u="rev" aria-pressed="${S.unit === 'rev'}">ยอดขาย (บาท)</button>
         <button type="button" data-u="qty" aria-pressed="${S.unit === 'qty'}">จำนวนชิ้น</button></div>`;
-    $('kpHead').innerHTML = `<div><h1>🏁 เป้าหมาย KPI <span class="ui-badge gold">${mLong(S.mo)}</span>${lock}</h1><p>${sub}</p></div>
-      <div class="kp-head-r">${modeBtns}</div>`;
+    // (2026-10-27) ชื่อหน้า + เดือน อยู่แถบบนแล้ว (ไม่ซ้ำในหน้า) · ปุ่มติดตามผล / ตั้งเป้า ย้ายไปแถบบน (#kpModeSlot) เพราะเปลี่ยนทั้งหน้า
+    const slot = document.getElementById('kpModeSlot');
+    if (slot) slot.innerHTML = modeBtns;
+    $('kpHead').innerHTML = `<div><p style="margin:0;">${sub}${lock ? ' ' + lock : ''}</p></div>${slot ? '' : `<div class="kp-head-r">${modeBtns}</div>`}`;
   }
   function renderNote(K) {
     let h = '';
