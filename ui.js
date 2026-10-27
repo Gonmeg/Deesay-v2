@@ -314,3 +314,36 @@
   window.uiAlert = (title, o = {}) => open({ ...o, title, single: true });
   window.uiPrompt = (title, o = {}) => open({ ...o, title, input: true });
 })();
+
+/* (2026-10-26) กันหน้าเด้งตอนโหลดข้อมูลใหม่ — ใช้ทุกหน้า (dashboard / upload / admin / health)
+   ต้นเหตุ: หลายหน้าเปลี่ยนกล่องเป็นข้อความ "กำลังโหลด…" ระหว่างรอข้อมูล กล่องจึงยุบเหลือบรรทัดเดียว แล้วยืดกลับตอนข้อมูลมา → ทั้งหน้าเด้ง
+   วิธีแก้กลาง: ตอนกล่องถูกเปลี่ยนเป็นข้อความกำลังโหลด ล็อกความสูงกล่องไว้เท่าเดิม (ถ้าเป็นแถวในตาราง ล็อกที่กรอบตาราง)
+   แล้วปล่อยคืนทันทีที่ข้อมูลจริงเขียนลงกล่องนั้น (หรือกล่องข้างใน / กล่องที่ครอบ) · กันค้าง: ปล่อยเองหลัง 12 วินาที */
+(function () {
+  const D = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+  if (!D || !D.set || Element.prototype.__uiHoldPatched) return;
+  Object.defineProperty(Element.prototype, '__uiHoldPatched', { value: true });
+  const PH = /กำลังโหลด|กำลังคำนวณ|กำลังดึง|loading/i, TBL = { TBODY: 1, THEAD: 1, TFOOT: 1, TR: 1, TABLE: 1 }, HELD = new Set();
+  const release = t => {
+    if (!HELD.has(t)) return; HELD.delete(t); clearTimeout(t.__uiHoldTimer);
+    const prev = t.__uiHoldPrev || ''; requestAnimationFrame(() => { t.style.minHeight = prev; });
+  };
+  Object.defineProperty(Element.prototype, 'innerHTML', {
+    configurable: true, enumerable: D.enumerable, get: D.get,
+    set(v) {
+      let hold = null;
+      try {
+        const s = typeof v === 'string' ? v : '';
+        if (s && s.length < 700 && PH.test(s) && this.isConnected) {
+          const t = TBL[this.tagName] ? (((this.closest && this.closest('table')) || this).parentElement || this) : this;
+          const h = t.offsetHeight;
+          if (h > 80 && !HELD.has(t)) { t.__uiHoldPrev = t.style.minHeight || ''; t.style.minHeight = h + 'px'; HELD.add(t); clearTimeout(t.__uiHoldTimer); t.__uiHoldTimer = setTimeout(() => release(t), 12000); }
+        } else if (HELD.size) {
+          hold = [...HELD].filter(t => t === this || t.contains(this) || this.contains(t));
+        }
+      } catch (e) { hold = null; }
+      D.set.call(this, v);
+      if (hold && hold.length) hold.forEach(release);
+    }
+  });
+})();
