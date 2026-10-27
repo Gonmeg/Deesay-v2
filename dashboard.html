@@ -774,7 +774,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.10.27-d"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.27-e"></div>
 <script src="sidebar.js?v=20261027a"></script>
 
 <div class="main">
@@ -816,6 +816,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             </div>
           </div>
         </div>
+      </div>
+      <!-- (2026-10-27) หน้าเป้าหมาย KPI: มุมมอง (เป้าสินค้า × ช่องทาง / เป้ายอดขายรายช่องทาง) + โหมด (ติดตามผล / ตั้งเป้า) อยู่แถบบน เพราะเปลี่ยนทั้งหน้า -->
+      <div class="filter-group" id="kpViewGroup" style="display:none;padding:0;background:transparent;border:none;gap:8px;">
+        <div class="ui-presets" role="group" aria-label="มุมมอง"><button type="button" data-t="main" aria-pressed="true" onclick="kpTab('main')">เป้าสินค้า × ช่องทาง</button><button type="button" data-t="tt" aria-pressed="false" onclick="kpTab('tt')">เป้ายอดขายรายช่องทาง</button></div>
+        <div id="kpModeSlot"></div>
       </div>
       <!-- (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนเดียว (โชว์เฉพาะหน้านี้ — ควบคุมใน showPage · ทำงานใน kpi.js) -->
       <div class="filter-group" id="kpMonthGroup" style="display:none;padding:0;background:transparent;border:none;">
@@ -1281,7 +1286,6 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 
     <div class="page" id="page-kpi">
       <!-- (2026-10-07) หน้าเป้าหมาย KPI — สร้างโดย kpi.js (โหลดครั้งแรกที่กดเมนู) · (2026-10-22) แท็บเป้ายอดขายรายช่องทาง = kpisales.js (ตั้งเป้าที่ admin.html#targets) -->
-      <div class="kp-tabs" id="kpTabs"><button type="button" class="on" data-t="main" onclick="kpTab('main')">เป้าสินค้า × ช่องทาง</button><button type="button" data-t="tt" onclick="kpTab('tt')">เป้ายอดขายรายช่องทาง</button></div>
       <div id="kpPaneMain"><div class="card"><div class="empty">กำลังโหลด...</div></div></div>
       <div id="kpPaneTt" style="display:none;"></div>
     </div>
@@ -2925,7 +2929,8 @@ function showPage(page, lockCh, el) {
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
     const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = ['home', 'kpi', 'promo', 'exec', 'execfee', 'products'].includes(page) ? 'none' : '';
-    const kg = document.getElementById('kpMonthGroup'); if (kg) kg.style.display = page === 'kpi' ? 'flex' : 'none'; }   // (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนแถบบน เปลี่ยนแล้วโหลดทันที   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
+    const kg = document.getElementById('kpMonthGroup'); if (kg) kg.style.display = page === 'kpi' ? 'flex' : 'none';
+    const vg = document.getElementById('kpViewGroup'); if (vg) { const kt = window.kpTabNow ? window.kpTabNow() : 'main'; vg.style.display = page === 'kpi' ? 'flex' : 'none'; vg.querySelectorAll('[data-t]').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === kt)); const ms = document.getElementById('kpModeSlot'); if (ms) ms.style.display = kt === 'main' ? '' : 'none'; } }   // (2026-10-27)   // (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนแถบบน เปลี่ยนแล้วโหลดทันที   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
   { const og = document.getElementById('opChGroup'); if (og) og.style.display = page === 'ordprofit' ? 'flex' : 'none'; }   // (2026-10-26)
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
   const isMonthOnly = MONTH_ONLY_PAGES.includes(page);
@@ -3065,9 +3070,11 @@ function loadPromoPage(page) {
 }
 // (2026-10-22) แท็บในหน้า KPI: เป้าสินค้า × ช่องทาง (kpi.js) / เป้ายอดขายรายช่องทาง (kpisales.js · ดูผล — ตั้งเป้าที่ Admin)
 let _kpTab = new URLSearchParams(location.search).get('tab') === 'sales' ? 'tt' : 'main';
+window.kpTabNow = () => _kpTab;
 function kpTab(t) {
   _kpTab = t === 'tt' ? 'tt' : 'main';
-  document.querySelectorAll('#kpTabs [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === _kpTab));
+  document.querySelectorAll('#kpViewGroup [data-t]').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === _kpTab));
+  const ms = document.getElementById('kpModeSlot'); if (ms) ms.style.display = _kpTab === 'main' ? '' : 'none';
   const a = document.getElementById('kpPaneMain'), b = document.getElementById('kpPaneTt');
   if (a) a.style.display = _kpTab === 'main' ? '' : 'none'; if (b) b.style.display = _kpTab === 'tt' ? '' : 'none';
   const mg = document.getElementById('kpMonthGroup'); if (mg && currentPage === 'kpi') mg.style.display = _kpTab === 'main' ? 'flex' : 'none';
@@ -3088,7 +3095,7 @@ function loadKpiPage(reload) {
   if (window._kpiLoading) return;
   window._kpiLoading = true;
   const s = document.createElement('script');
-  s.src = 'kpi.js?v=20261021a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
+  s.src = 'kpi.js?v=20261027a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
   s.onload = () => { window._kpiLoading = false; if (currentPage === 'kpi') window.renderKpiPage(true); };
   s.onerror = () => { window._kpiLoading = false; (document.getElementById('kpPaneMain') || document.getElementById('page-kpi')).innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
