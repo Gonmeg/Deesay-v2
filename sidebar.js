@@ -1,3 +1,4 @@
+// sidebar.js (v20261027a) — เมนูเป็น <div role="navigation"> แทนแท็ก <nav> (หน้า admin ซ่อนแท็ก nav ทั้งหมดด้วย !important ทำให้เมนูหายทั้งแถบ)
 // sidebar.js (v20261026a) — เมนูซ้ายกลาง ใช้ร่วมทุกหน้า: dashboard / upload / admin / health
 // วาง <div id="sbMount" data-page="dashboard|upload|admin|health" data-build="v…"></div> แล้วตามด้วย <script src="sidebar.js"></script>
 // · ขยาย 208px / ย่อเหลือไอคอน 64px (ปุ่ม « มุมบน · จำค่าไว้ใน localStorage 'sbMini' ใช้ทุกหน้า) · จอแคบกว่า 760px ย่ออัตโนมัติ
@@ -102,7 +103,7 @@
   const html = `<aside class="sb" id="sbAside">
     <div class="sb-h"><div class="sb-mark">D</div><div class="sb-brand"><b>Deesay</b><small>Sales &amp; Marketing</small></div>
       <button type="button" class="sb-tg" id="sbToggle" data-label="ย่อ / ขยายเมนู" aria-label="ย่อ / ขยายเมนู">${svg('collapse')}</button></div>
-    <nav class="nav sb-nav">${nav}</nav>
+    <div class="nav sb-nav" role="navigation">${nav}</div>
     <div class="sb-ft">
       <div class="sb-usr"><div class="sb-av" id="sbAv">·</div><div class="sb-who"><b id="sbName">—</b><small id="sbRole"></small></div></div>
       <div class="sb-st"><i class="sb-dot" data-label="เชื่อมต่อฐานข้อมูลแล้ว"></i><span class="sb-tx" id="lastUpdate">เชื่อมต่อแล้ว</span>${BUILD ? `<span class="sb-ver">เวอร์ชัน ${esc(BUILD.replace(/^v/, ''))}</span>` : ''}</div>
