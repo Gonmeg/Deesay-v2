@@ -1,3 +1,4 @@
+// ordprofit.js (v20261027a) — แผง Ads + Coins: สรุปตามสินค้าพร้อมแถวรวมของคำสั่งซื้อ · ที่มาของอัตรา Ads เลือกดูทีละสินค้า (ปุ่มชื่อสินค้า + รหัส) · บอกนิยามยอดขาย (หลังหักส่วนลดร้านค้า)
 // ordprofit.js (v20261026u) — โหลดเร็วขึ้น: ดึงสรุปของช่องทางที่เลือกก่อน อีกช่องทางตามมาเบื้องหลัง · ไม่เด้ง: ระหว่างโหลดคงข้อมูลเดิมไว้แบบจางลง ไม่ล้างเป็น "กำลังโหลด" และล็อกความสูงตารางไว้
 // ordprofit.js (v20261026t) — ตัวเลขในตารางอยู่กึ่งกลางคอลัมน์ (คอลัมน์ข้อความ คำสั่งซื้อ / SKU / สถานะ ยังชิดซ้าย)
 // ordprofit.js (v20261026s) — สถานะเงินเป็นจุดสีหน้าเลขคำสั่งซื้อ (เขียว = เงินเข้าแล้ว · แดง = เงินยังไม่เข้า · เทา = คืนเงินเต็มจำนวน) แทนป้ายในช่องสถานะ
@@ -365,6 +366,11 @@
     .opx-note { font-size:11.5px; color:var(--text2); margin:2px 0 8px; line-height:1.55; }
     .opx-h { font-size:12.5px; font-weight:700; margin:0 0 6px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
     .opx-sub { font-size:11px; font-weight:400; color:var(--text3); }
+    .opx-sku { display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text3); background:rgba(127,127,127,.08); border-radius:4px; padding:0 5px; margin-left:6px; }
+    .opx-seg { display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 10px; }
+    .opx-seg button { font:inherit; font-size:12px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); border-radius:15px; padding:4px 12px; cursor:pointer; }
+    .opx-seg button.on { border-color:var(--accent, #b8862f); color:var(--text); font-weight:700; background:rgba(184,134,47,.08); }
+    .opx-pane { display:none; } .opx-pane.on { display:block; }
   </style>`;
   async function openCell(id, what) {
     const T = { cogs: 'ต้นทุนขาย', ads: 'Ads + Coins', mkt: 'ค่าการตลาดอื่น', oh: 'ค่าใช้จ่ายบริหาร' };
@@ -374,7 +380,7 @@
     catch (e) { const b = document.getElementById('trBody'); if (b) b.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     const o = j.o, names = j.names || {}, rates = j.rates || [], mo = mLabel(String(o.order_date).slice(0, 7));
     const val = { cogs: +o.cogs || 0, ads: +o.ads || 0, mkt: (+o.mkt_direct || 0) + (+o.mkt_other || 0), oh: +o.overhead || 0 }[what];
-    let h = PX_CSS + `<div class="tr-card"><div class="tr-card-t">${T[what]} · ${esc(S.ch)} · <span class="mono">${esc(o.order_id)}</span>${what === 'cogs' ? '' : ' ' + tip('ยอดทั้งเดือน ÷ ยอดขายทั้งเดือน × ยอดขายคำสั่งซื้อนี้')}</div><div class="tr-card-v">${n2(val)}</div>
+    let h = PX_CSS + `<div class="tr-card"><div class="tr-card-t">${T[what]} · ${esc(S.ch)} · <span class="mono">${esc(o.order_id)}</span>${what === 'cogs' ? '' : ' ' + tip(what === 'ads' ? 'ยอดขายของแต่ละสินค้าในคำสั่งซื้อ × อัตรา Ads ทั้งเดือนของสินค้านั้น' : 'ยอดทั้งเดือน ÷ ยอดขายทั้งเดือน × ยอดขายคำสั่งซื้อนี้')}</div><div class="tr-card-v">${n2(val)}</div>
       <div class="tr-card-m"><span>${dLabel(o.order_date)} ${+String(o.order_date).slice(0, 4) + 543}</span><span>${pc(val, +o.rev)} ของยอดขาย</span></div></div>`;
     let src = [];
     if (what === 'cogs') {
@@ -410,7 +416,8 @@
         return [t, html]; };
       const blocks = [], parts = [];
       if (what === 'ads') {
-        // (2026-10-26) ทุกเดือนใช้ค่าโฆษณาจริง แยกตามที่มา: Product Ads ของสินค้าเอง + ก้อนที่ไม่ระบุสินค้า (แบ่งตามยอดขายในช่องทาง) + Ads PR (แบ่งตามยอดขายทุกช่องทาง)
+        // (2026-10-27) แผง Ads + Coins: สรุปตามสินค้า (มีแถวรวมของคำสั่งซื้อ) → ที่มาของอัตรา Ads แต่ละสินค้า (ปุ่มเลือกสินค้า แทนการ์ดเรียงยาวตามจำนวนสินค้า)
+        // ทุกเดือนใช้ค่าโฆษณาจริง แยกตามที่มา: Product Ads ของสินค้าเอง + ก้อนที่ไม่ระบุสินค้า (แบ่งตามยอดขายในช่องทาง) + Ads PR (แบ่งตามยอดขายทุกช่องทาง)
         const PL = { direct: ['Product Ads ของสินค้านี้', 'จาก API · ผูกกับสินค้านี้โดยตรง'],
           api_rest: [S.ch === 'Shopee' ? 'Shopee Ads ที่ไม่ระบุสินค้า' : 'TikTok Ads ที่ไม่ระบุสินค้า', S.ch === 'Shopee' ? 'จาก Shopee API · ไม่ระบุสินค้า' : 'จาก TikTok API · ไม่ระบุสินค้า ไม่รวมบัญชี PR'],
           live_gmv: ['GMV Max LIVE', 'จาก TikTok API · แบ่งตามยอดขายจากไลฟ์'], 'Meta in-app': ['Meta in-app ผ่าน Shopee', 'จาก Seller Centre'],
@@ -419,16 +426,29 @@
           pr_fb: ['Ads PR · Facebook', 'จาก Meta API · แบ่งให้ทุกช่องทางตามยอดขาย'],
           pr_tt: ['Ads PR · TikTok', 'จาก TikTok API · แบ่งให้ทุกช่องทางตามยอดขาย'] };
         let raw = 0;
-        rates.forEach(r => { const P = r.ads_parts || [], tot = P.length ? P.reduce((t, x) => t + (+x.amt || 0), 0) : +r.sa_ads || 0, rv = P.length ? +P[0].rev || 0 : +r.sa_rev || 0;
-          r._at = tot; r._ar = rv; raw += (rv ? tot / rv : 0) * r.rs;
-          if (!P.length) return;
-          blocks.push(`<div class="tr-fg"><div class="opx-h">${lab('Ads + Coins ทั้งเดือนของสินค้านี้', 'แยกตามแหล่งที่มา')}${many ? ` <span class="opx-sub">${esc(r.name || r.p)}</span>` : ''}</div>
-            <table class="opx-t opx-w" data-no-sort data-no-page><thead><tr><th style="width:38%;">ที่มา</th><th style="width:23%;">ยอดทั้งเดือน</th><th style="width:16%;">ส่วน ${tip(`ยอดขายสินค้านี้ ÷ ยอดขายทั้งหมดบน ${S.ch} · Ads PR: ÷ ยอดขายทุกช่องทาง`)}</th><th style="width:23%;">Ads + Coins</th></tr></thead><tbody>`
-            + P.map(x => { const [l, t] = PL[x.k] || [x.k, '']; return `<tr class="op"><td>${lab(l, t)}</td><td>${n2(x.pool)}</td><td>${x.k === 'direct' ? 'ทั้งหมด' : ((+x.share || 0) * 100).toFixed(2) + '%'}</td><td>${n2(x.amt)}</td></tr>`; }).join('')
-            + `<tr class="tot"><td>รวม</td><td></td><td></td><td>${n2(tot)}</td></tr></tbody></table></div>`); });
-        const f = fac(val, raw);
-        rates.forEach(r => blocks.push(block('Ads + Coins', '', false, r, r._at, `Ads + Coins ของสินค้านี้ ${mo}${j.open ? ' (ถึงวันนี้)' : ''}`, r._ar, `ยอดขายสินค้านี้บน ${S.ch} ทั้งเดือน`, +r.rs, '', f, `ปรับให้ผลรวมทุกคำสั่งซื้อเท่ากับค่าโฆษณาจริงของ ${S.ch} ทั้งเดือน`)[1]));
-        src = [['Ads + Coins', 'API ของแพลตฟอร์มและ Seller Centre · ชุดเดียวกับ MKT Tracking'], ['Ads PR', 'Meta API และ TikTok API · แบ่งให้ทุกช่องทางตามยอดขาย'], ['ยอดขาย', `${S.ch} API`]];
+        rates.forEach(r => { const P = r.ads_parts || []; r._P = P;
+          r._at = P.length ? P.reduce((t, x) => t + (+x.amt || 0), 0) : +r.sa_ads || 0; r._ar = P.length ? +P[0].rev || 0 : +r.sa_rev || 0;
+          r._rate = r._ar ? r._at / r._ar : 0; raw += r._rate * (+r.rs || 0); });
+        const f = fac(val, raw), adj = Math.abs(f - 1) >= 0.00005, revO = rates.reduce((t, r) => t + (+r.rs || 0), 0);
+        const pname = r => esc(r.name || names[r.p] || r.p), skuT = r => `<span class="opx-sku">${esc(r.p)}</span>`, per = mo + (j.open ? ' ถึงวันนี้' : '');
+        blocks.push(`<div class="tr-fg"><div class="opx-h">สรุปตามสินค้า</div>
+          <table class="opx-t opx-w" data-no-sort data-no-page><thead><tr><th style="width:40%;">สินค้า</th><th>ยอดขายในคำสั่งซื้อ</th><th>อัตรา Ads ทั้งเดือน ${tip('Ads + Coins ทั้งเดือนของสินค้า ÷ ยอดขายทั้งเดือนของสินค้า')}</th><th>Ads + Coins</th></tr></thead><tbody>`
+          + rates.map(r => `<tr class="op"><td>${pname(r)}${skuT(r)}</td><td>${n2(r.rs)}</td><td>${r._ar ? (r._rate * 100).toFixed(2) + '%' : '—'}</td><td>${n2(r._rate * (+r.rs || 0) * f)}</td></tr>`).join('')
+          + `<tr class="tot"><td>รวมคำสั่งซื้อนี้</td><td>${n2(revO)}</td><td>${revO ? (val / revO * 100).toFixed(2) + '%' : '—'}</td><td>${n2(val)}</td></tr></tbody></table>
+          <div class="opx-note" style="margin-top:6px;">อัตรา Ads ทั้งเดือน = Ads + Coins ทั้งเดือนของสินค้า ÷ ยอดขายทั้งเดือนของสินค้า (${esc(S.ch)} ${per}) · ยอดขาย = ราคาหลังหักส่วนลดร้านค้า${adj ? ` · รวมตัวปรับ × ${f.toFixed(4)} ${tip(`ปรับให้ผลรวมทุกคำสั่งซื้อเท่ากับค่าโฆษณาจริงของ ${S.ch} ทั้งเดือน`)}` : ''}</div></div>`);
+        const det = rates.filter(r => r._ar > 0 || r._P.length);
+        if (det.length) blocks.push(`<div class="tr-fg"><div class="opx-h">${det.length > 1 ? 'ที่มาของอัตรา Ads แต่ละสินค้า' : 'ที่มาของอัตรา Ads'}</div>`
+          + (det.length > 1 ? `<div class="opx-seg" id="opxSeg">${det.map((r, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="OrdProfit.adsPane(${i})">${pname(r)} · ${esc(r.p)}</button>`).join('')}</div>` : '')
+          + det.map((r, i) => `<div class="opx-pane${i ? '' : ' on'}" data-i="${i}">
+              <table class="opx-t st" data-no-sort data-no-page><tbody>
+                <tr class="op"><td>${lab('Ads + Coins ทั้งเดือนของสินค้านี้', `${S.ch} ${per}`)}</td><td>${n2(r._at)}</td></tr>
+                <tr class="op"><td>÷ ยอดขายทั้งเดือนของสินค้านี้</td><td>${n2(r._ar)}</td></tr>
+                <tr class="tot"><td>= อัตรา Ads ทั้งเดือน</td><td>${(r._rate * 100).toFixed(2)}%</td></tr></tbody></table>`
+            + (r._P.length ? `<table class="opx-t opx-w" style="margin-top:10px;" data-no-sort data-no-page><thead><tr><th style="width:38%;">ที่มา</th><th style="width:23%;">ยอดทั้งเดือน</th><th style="width:16%;">ส่วนของสินค้านี้ ${tip(`ยอดขายสินค้านี้ ÷ ยอดขายทั้งหมดบน ${S.ch} · Ads PR: ÷ ยอดขายทุกช่องทาง`)}</th><th style="width:23%;">Ads + Coins</th></tr></thead><tbody>`
+              + r._P.map(x => { const [l, t] = PL[x.k] || [x.k, '']; return `<tr class="op"><td>${lab(l, t)}</td><td>${n2(x.pool)}</td><td>${x.k === 'direct' ? 'ทั้งหมด' : ((+x.share || 0) * 100).toFixed(2) + '%'}</td><td>${n2(x.amt)}</td></tr>`; }).join('')
+              + `<tr class="tot"><td>รวม</td><td></td><td></td><td>${n2(r._at)}</td></tr></tbody></table>` : '')
+            + `</div>`).join('') + `</div>`);
+        src = [['Ads + Coins', 'API ของแพลตฟอร์มและ Seller Centre · ชุดเดียวกับ MKT Tracking'], ['Ads PR', 'Meta API และ TikTok API · แบ่งให้ทุกช่องทางตามยอดขาย'], ['ยอดขาย', `${S.ch} API · ราคาหลังหักส่วนลดร้านค้า`]];
       } else if (what === 'mkt' && op) {
         const kraw = rates.reduce((t, r) => t + (r.sk_rev ? r.sk_kol / r.sk_rev : 0) * r.rs, 0), eraw = rates.reduce((t, r) => t + (r.bi_rev ? ((+r.bi_dir || 0) - (+r.bi_kol || 0)) / r.bi_rev : 0) * r.rs / 1.07, 0);
         const fd = fac(+o.mkt_direct || 0, kraw + eraw);
@@ -458,6 +478,7 @@
     h += `<div class="tr-src"><div class="tr-src-h">แหล่งข้อมูล</div><dl class="tr-dl">${src.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl></div>`;
     const b = document.getElementById('trBody'); if (b) b.innerHTML = h;
   }
+  function adsPane(i) { const b = document.getElementById('trBody'); if (!b) return; b.querySelectorAll('#opxSeg button').forEach((x, k) => x.classList.toggle('on', k === i)); b.querySelectorAll('.opx-pane').forEach(p => p.classList.toggle('on', +p.dataset.i === i)); }
   async function openOrder(id, focus) {
     window.trOpenShell('รายละเอียดคำสั่งซื้อ');
     let j;
@@ -492,7 +513,7 @@
   }
 
   window.OrdProfit = {
-    render,
+    render, adsPane,
     pickCh(c) { if (c === S.ch) return; S.ch = c; S.page = 0; S.q = ''; S.sku = ''; drawTop(); drawTab(); },
     sortBy(k) { if (S.sort === k) S.dir = S.dir === 'asc' ? 'desc' : 'asc'; else { S.sort = k; S.dir = k === 'order_date' ? 'desc' : 'asc'; } S.page = 0; drawOrders(); },
     go(d) { S.page = Math.max(0, S.page + d); loadRows(); },
