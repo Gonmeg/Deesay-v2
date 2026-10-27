@@ -1,3 +1,4 @@
+// bizinsight.js (v20261027a) — หัวตารางรายสินค้าล็อกเสมอ (กรอบตารางเลื่อนเอง)
 // bizinsight.js (v20261022d) — เหลือเกณฑ์ต้นทุนตามคำสั่งซื้ออย่างเดียว (เอาทางบัญชี / วอลเลตออก)
 // bizinsight.js (v20261022c) — คอลัมน์ต้นทุนของแถม · ⓘ งบกำไรขาดทุนบอกแถวในแท็บสรุปไฟล์บัญชี
 // bizinsight.js (v20261022b) — หัว CM2 เอา ❗ ออก (ย้ายข้อความเข้า ⓘ) · หัวการตลาดอื่นไม่ตัดบรรทัดจริง (ชนะ .mkt-tbl th !important)
@@ -131,8 +132,9 @@
 .bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--row-sum)}
 .bi .flow .pl thead th{background:var(--bg2)}
 .bi .flow:has(.pl){border:0}
-#page-cost #plCard,#page-cost #plTableWrap{overflow:visible!important}
-#page-cost #tblPl thead th{position:sticky;top:var(--bi-top,0px);z-index:6;background:var(--bg2);box-shadow:0 1px 0 var(--border)}`;
+#page-cost #plCard{overflow:visible!important}
+#page-cost #plTableWrap{overflow:auto!important;max-height:calc(100vh - var(--bi-top,0px) - 24px);overscroll-behavior:contain}
+#page-cost #tblPl thead th{position:sticky;top:0;z-index:6;background:var(--bg2);box-shadow:0 1px 0 var(--border)}`;
   if (!document.getElementById('bi-css')) { const st = document.createElement('style'); st.id = 'bi-css'; st.textContent = CSS; document.head.appendChild(st); }
 
   const TH = m => MONTHS_TH[parseInt(m.slice(5, 7), 10) - 1];
