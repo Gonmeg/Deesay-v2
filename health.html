@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>สถานะระบบ | Deesay</title>
+<title>สถานะระบบข้อมูล | Deesay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -33,7 +33,30 @@
   .nav-link { font-size:12.5px; color:var(--muted); text-decoration:none; } .nav-link:hover { color:var(--text); }
   .btn-ghost { font-size:12px; font-weight:600; color:var(--muted); background:var(--surface2); border:1px solid var(--border); padding:6px 13px; border-radius:6px; cursor:pointer; font-family:'Sarabun',sans-serif; transition:all .15s; }
   .btn-ghost:hover { color:var(--text); border-color:var(--muted2); }
-  main { display:flex; justify-content:center; padding:28px 24px 60px; } .shell { width:100%; max-width:1180px; }
+  main { display:block; padding:22px 28px 48px; } .shell { width:100%; max-width:none; }   /* (2026-10-27) เต็มความกว้างจอ */
+  .hp-status { display:flex; flex-wrap:wrap; gap:6px 20px; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; margin-bottom:14px; font-size:13.5px; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; flex:none; vertical-align:0; }
+  .dot.bad { background:var(--danger); } .dot.warn { background:var(--orange); } .dot.ok { background:var(--success); }
+  .hp-status b { font-size:15px; } .hp-status .n { margin-left:auto; font-size:12px; color:var(--muted); }
+  .hp-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; margin-bottom:14px; }
+  .hp-h { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px; } .hp-h h2 { font-size:14px; font-weight:600; } .hp-h span { font-size:12px; color:var(--muted); }
+  .hp-it { border-top:1px solid var(--border); }
+  .hp-it > summary { list-style:none; cursor:pointer; display:grid; grid-template-columns:16px 1fr auto; gap:2px 8px; align-items:center; padding:10px 2px; font-size:13.5px; }
+  .hp-it > summary::-webkit-details-marker, .hp-info > summary::-webkit-details-marker { display:none; }
+  .hp-it .dot { margin:0; } .hp-it .t { font-weight:600; } .hp-it .since { font-size:11.5px; color:var(--muted2); white-space:nowrap; }
+  .hp-it .d { grid-column:2/4; font-size:12.5px; color:var(--muted); } .hp-it .act { grid-column:2/4; font-size:12.5px; color:var(--accent); }
+  .hp-dt { font-size:12.5px; color:var(--muted); padding:0 2px 12px 26px; line-height:1.7; }
+  .hp-info { border-top:1px solid var(--border); } .hp-info > summary { list-style:none; cursor:pointer; padding:10px 2px; font-size:12.5px; color:var(--muted); }
+  .hp-none { font-size:13px; color:var(--success); padding:10px 2px; }
+  .hp-tabs-card { padding:0; } .hp-tabs { display:flex; flex-wrap:wrap; gap:2px; border-bottom:1px solid var(--border); padding:0 10px; }
+  .hp-tabs button { font:inherit; font-size:13px; border:0; background:none; color:var(--muted); padding:11px 12px; border-bottom:2px solid transparent; margin-bottom:-1px; cursor:pointer; }
+  .hp-tabs button.on { color:var(--text); font-weight:600; border-bottom-color:var(--accent); }
+  .hp-tabs .c { font-size:10.5px; font-weight:700; padding:0 6px; border-radius:8px; background:rgba(251,146,60,.15); color:var(--orange); margin-left:5px; }
+  .hp-pane { padding:14px 16px; } .hp-pane .card { margin-bottom:14px; } .hp-pane > .card:last-child { margin-bottom:0; }
+  .hp-seg { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:12px; } .hp-seg button { font:inherit; font-size:12.5px; border:0; background:none; color:var(--muted); padding:6px 12px; cursor:pointer; } .hp-seg button.on { background:var(--surface2); color:var(--text); font-weight:600; }
+  .kpi-grid { gap:12px; margin-bottom:14px; } .kpi-card { padding:14px 16px; min-width:0; }
+  .kpi-label { text-transform:none; letter-spacing:0; font-family:'Sarabun',sans-serif; font-size:12px; margin-bottom:6px; }
+  .kpi-val { font-family:'Sarabun',sans-serif; font-size:clamp(18px,1.8vw,22px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .page-header { margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .page-header h1 { font-size:19px; font-weight:600; margin-bottom:5px; }
   .page-header p { font-size:12.5px; color:var(--muted); }
@@ -78,31 +101,20 @@
 <script src="sidebar.js?v=20261026a"></script>
 <main><div class="shell">
   <div class="page-header">
-    <div><h1>🩺 สถานะระบบ</h1><p>cron / MV / การ sync ข้อมูล / token Facebook / SKU ที่ระบบไม่รู้จัก — ดูที่เดียวว่าอะไรยังเดินอยู่ อะไรค้าง</p></div>
+    <div><h1>สถานะระบบข้อมูล</h1><p>สรุปการนำเข้าข้อมูล งานตั้งเวลา และผลการตรวจสอบตัวเลข</p></div>
     <div style="display:flex;gap:8px;align-items:center;"><span id="genAt" style="font-size:12px;color:var(--muted);"></span><button class="btn-ghost" id="refreshBtn">↻ รีเฟรช</button></div>
   </div>
-  <div id="banners"></div>
-  <div id="dgChecks"></div>
+  <div id="hpStatus" class="hp-status"><span class="muted">กำลังตรวจสอบ…</span></div>
+  <div id="hpActions"></div>
   <div class="kpi-grid" id="kpis"></div>
-  <div id="content"><div class="loading">กำลังโหลด...</div></div>
+  <div class="card hp-tabs-card"><div class="hp-tabs" id="hpTabs"></div><div id="content"><div class="loading">กำลังโหลด...</div></div></div>
 </div></main>
 
 <script type="module">
 await Auth.ready
 const createClient = () => Auth.client   // ใช้ client ตัวเดียวกับ auth.js — ถ้ามี 2 ตัวจะแย่งกันต่ออายุ token แล้วเด้งไปหน้า login วนไปมา
 await Auth.require('health')   // เมฆเท่านั้น
-// (2026-10-02) Data Guard — ผลตรวจตัวเลขอัตโนมัติทุกชั่วโมง (RPC data_status)
-;(async () => {
-  try {
-    const { data, error } = await createClient().rpc('data_status'); if (error) throw error;
-    const ord = { fail: 0, warn: 1, ok: 2 }, ic = s => s === 'fail' ? '🔴' : s === 'warn' ? '🟠' : '🟢';
-    const list = (data || []).slice().sort((a, b) => (ord[a.status] - ord[b.status]) || String(a.area).localeCompare(String(b.area)));
-    const nb = list.filter(c => c.status !== 'ok').length, at = list.length ? new Date(Math.max(...list.map(c => +new Date(c.at)))) : null;
-    document.getElementById('dgChecks').innerHTML = `<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:0 0 16px;">
-      <div style="font-weight:700;margin-bottom:6px;">🛡️ ตรวจตัวเลขอัตโนมัติ — ${nb ? nb + ' จุดต้องดู' : 'ปกติทุกจุด'} <span style="font-weight:400;font-size:12px;color:var(--muted);">· ตรวจทุกชั่วโมงที่นาที :50 · ล่าสุด ${at ? at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—'}</span></div>
-      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">${list.map(c => `<tr style="border-top:1px solid var(--border);"><td style="padding:5px 6px;width:22px;">${ic(c.status)}</td><td style="padding:5px 6px;white-space:nowrap;">${c.title}</td><td style="padding:5px 6px;color:var(--muted);">${c.detail || ''}</td><td style="padding:5px 6px;white-space:nowrap;color:var(--muted);font-size:11px;">${c.status !== 'ok' ? 'ตั้งแต่ ' + new Date(c.since).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</td></tr>`).join('')}</table></div>`;
-  } catch (e) { console.warn('data_status', e) }
-})();
+// (2026-10-27) ผลตรวจตัวเลขอัตโนมัติ (Data Guard · RPC data_status) โหลดพร้อมข้อมูลอื่นใน load() แล้วรวมไว้ในรายการที่ต้องดำเนินการ
 document.getElementById('logoutBtn').onclick = () => Auth.signOut()
 if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme')
 document.getElementById('themeBtn').onclick = () => { document.body.classList.toggle('light-theme'); localStorage.setItem('deesay_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark') }
@@ -129,14 +141,18 @@ function expectedMinutes(sched) {
   if (dow !== '*') return 10080
   return null
 }
+// ชั่วโมง (UTC) ปัจจุบันอยู่ในช่วงที่ตั้งให้ทำงานไหม เช่น "15-23" · "1,5,9" · "*/2"
+function inHours(f, h) { return String(f).split(',').some(p => p === '*' ? true : p.startsWith('*/') ? h % (+p.slice(2) || 1) === 0 : p.includes('-') ? (h >= +p.split('-')[0] && h <= +p.split('-')[1]) : +p === h) }
 function cronState(j) {
-  if (!j.active) return ['muted', 'ปิดอยู่']
-  if (!j.last_start) return ['warn', 'ยังไม่เคยรัน']
+  if (!j.active) return ['muted', 'ปิดใช้งาน']
+  if (!j.last_start) return ['warn', 'ยังไม่เคยทำงาน']
   const exp = expectedMinutes(j.schedule)
   const lateMin = (Date.now() - new Date(j.last_start).getTime()) / 60000
-  if (j.last_status && j.last_status !== 'succeeded') return ['bad', 'รอบล่าสุดล้มเหลว']
-  if (exp && lateMin > exp * 2 + 10) return ['bad', `ไม่ได้รันมา ${ago(j.last_start)} (ควรทุก ${exp >= 1440 ? (exp/1440)+' วัน' : exp >= 60 ? (exp/60)+' ชม.' : exp+' นาที'})`]
-  if (j.fails_24h > 0) return ['warn', `ล้ม ${j.fails_24h} ครั้งใน 24 ชม.`]
+  if (j.last_status && j.last_status !== 'succeeded') return ['bad', 'ทำงานไม่สำเร็จในรอบล่าสุด']
+  const hf = (j.schedule || '').trim().split(/\s+/)[1] || '*'
+  const offHours = exp && exp < 60 && hf !== '*' && !inHours(hf, new Date().getUTCHours())   // (2026-10-27) งานที่ตั้งให้ทำเฉพาะบางช่วงเวลา (เช่น กลางคืน) ไม่นับว่าค้างนอกช่วงนั้น
+  if (exp && !offHours && lateMin > exp * 2 + 10) return ['bad', `ไม่ได้ทำงานมา ${ago(j.last_start)} (กำหนดทุก ${exp >= 1440 ? (exp/1440)+' วัน' : exp >= 60 ? (exp/60)+' ชม.' : exp+' นาที'})`]
+  if (j.fails_24h > 0) return ['warn', `ไม่สำเร็จ ${j.fails_24h} ครั้งใน 24 ชม.`]
   return ['ok', 'ปกติ']
 }
 
@@ -221,114 +237,120 @@ const JOB_DESC = {
 }
 
 async function load() {
-  document.getElementById('content').innerHTML = '<div class="loading">กำลังโหลด...</div>'
-  const [health, unknown, extra, adsHealth] = await Promise.all([
+  const [health, unknown, extra, adsHealth, recon, dgr] = await Promise.all([
     DB.rpc('system_health'),
     DB.rpc('unknown_skus', { p_days: UNKNOWN_SKU_DAYS }),
     DB.rpc('system_health_extra'),
     DB.from('v_ads_health_summary').select('*'),   // (2026-09-19) ตรวจค่าแอดหายรายวัน
-    DB.rpc('recon_channel_monthly')   // (2026-10-12) ยอดขายระบบ vs งบบัญชี (เฉพาะแอดมิน / สิทธิ์ต้นทุน)
-  ]).then(r => { window._recon = r[4]; return r.slice(0, 4) })
-  window._adsHealth = adsHealth
-  if (health.error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(health.error.message)} — ถ้าขึ้น "function not found" แปลว่ายังไม่ได้รัน 27_system_health_rpc.sql</div>`; return }
-  render(health.data, unknown, extra)
+    DB.rpc('recon_channel_monthly'),   // (2026-10-12) ยอดขายระบบ vs งบบัญชี (เฉพาะแอดมิน / สิทธิ์ต้นทุน)
+    DB.rpc('data_status')   // Data Guard
+  ])
+  window._recon = recon; window._adsHealth = adsHealth
+  window._dg = (dgr && !dgr.error && Array.isArray(dgr.data)) ? dgr.data : []
+  if (health.error) { document.getElementById('content').innerHTML = `<div class="banner bad">โหลดไม่สำเร็จ: ${esc(health.error.message)}</div>`; return }
+  await render(health.data, unknown, extra)
 }
 
+let TAB = 'feed', CRON_ALL = false
+const thDate = d => d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'
+const sinceTxt = s => s ? 'ตั้งแต่ ' + new Date(s).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : ''
+// (2026-10-27) เพจ Facebook: เพจที่ไม่ได้โพสต์ไม่ใช่ปัญหา · ควรตรวจสอบ token เฉพาะเมื่อวันหมดอายุที่บันทึกไว้ผ่านแล้ว และไม่มีโพสต์ใหม่เข้าระบบเกิน 14 วัน
+function fbStatus(p) {
+  if (p['สถานะ'] === 'ปิดใช้งาน') return 'ปิดใช้งาน'
+  const exp = p['token_เหลือกี่วัน'], quiet = p['เงียบมากี่วัน']
+  return exp != null && exp < 0 && quiet != null && quiet > 14 ? 'ควรตรวจสอบ token' : 'ปกติ'
+}
+// (2026-10-27) หน้าสถานะระบบข้อมูลแบบใหม่: แถบสรุป → รายการที่ต้องดำเนินการ (รวมทุกแหล่ง ไม่ซ้ำ) → การ์ดตัวเลข → รายละเอียดแยกแท็บ
 async function render(d, unknown, extra) {
   const X = (extra && !extra.error) ? (extra.data || {}) : null
-  document.getElementById('genAt').textContent = `อัปเดต ${th(d.generated_at)}`
-  const banners = [], kpis = []
+  document.getElementById('genAt').textContent = `ข้อมูล ณ ${th(d.generated_at)}`
   const cron = d.cron || [], mv = d.mv || [], sync = d.sync || [], ch = d.channels || []
   const unkRows = (!unknown.error && Array.isArray(unknown.data)) ? unknown.data : []
   const unkErr = unknown.error ? unknown.error.message : null
+  const DG = window._dg || []
+  const items = [], info = []
+  const add = (sev, title, desc, act, since, detail) => (sev === 'info' ? info : items).push({ sev, title, desc: desc || '', act: act || '', since: since || null, detail: detail || '' })
+  const badCron = cron.filter(j => cronState(j)[0] === 'bad'), warnCron = cron.filter(j => cronState(j)[0] === 'warn')
+  const cronList = list => list.map(j => `• <b>${esc(j.jobname)}</b> — ${esc(cronState(j)[1])}${j.last_msg ? ' · ' + esc(String(j.last_msg).slice(0, 160)) : ''}`).join('<br>')
 
-  // --- KPI แถวบน ---
-  const bad = cron.filter(j => cronState(j)[0] === 'bad'), warn = cron.filter(j => cronState(j)[0] === 'warn')
-  kpis.push(['Cron jobs', `${cron.length}`, bad.length ? `<span class="bad">${bad.length} มีปัญหา</span>` : warn.length ? `<span class="warn">${warn.length} ควรดู</span>` : '<span class="ok">ทุกตัวปกติ</span>'])
-  kpis.push(['ขนาด Database', `${fmt(d.db_size_mb)} MB`, 'Pro plan: 8 GB'])
+  // ① ผลตรวจตัวเลขอัตโนมัติ (Data Guard)
+  const ACT = k => k === 'cron_fail' ? 'ดำเนินการ: ตรวจสอบรายละเอียดในแท็บงานตั้งเวลา'
+    : (k === 'eq_ads_acct' || k === 'op_ads_acct') ? 'ดำเนินการ: ตรวจสอบยอดคงเหลือในบัญชีโฆษณาของแพลตฟอร์มที่ต่างเกินเกณฑ์'
+    : k === 'http_fail' ? 'ไม่ต้องดำเนินการ หากจำนวนไม่เพิ่มขึ้น'
+    : /^orders_/.test(k) ? 'ดำเนินการ: ตรวจสอบการนำเข้าข้อมูลของช่องทางนี้'
+    : 'ดำเนินการ: ตรวจสอบรายละเอียดในแท็บผลการตรวจสอบ'
+  DG.filter(c => c.status !== 'ok').forEach(c => add(c.status === 'fail' ? 'bad' : 'warn', c.title, c.detail, ACT(c.k), c.since, c.k === 'cron_fail' && badCron.length ? cronList(badCron) : ''))
+  if (!DG.some(c => c.k === 'cron_fail' && c.status !== 'ok') && badCron.length)
+    add('bad', `งานตั้งเวลาทำงานไม่สำเร็จ ${badCron.length} งาน`, '', 'ดำเนินการ: ตรวจสอบรายละเอียดในแท็บงานตั้งเวลา', null, cronList(badCron))
+  // ② รหัสสินค้าที่ไม่มีในฐานข้อมูลสินค้า
+  if (unkRows.length) add('bad', `พบรหัสสินค้าที่ไม่มีในฐานข้อมูลสินค้า ${unkRows.length} รหัส`, 'ยอดขายของรหัสดังกล่าวไม่ถูกนับเข้าสินค้าใด',
+    'ดำเนินการ: แก้ไขรหัสสินค้าในร้าน หรือเพิ่มรหัสที่หน้าสินค้า & ราคา', unkRows.map(r => r.first_date).filter(Boolean).sort()[0],
+    unkRows.map(r => `• <span class="mono">${esc(r.parent_sku)}</span> — ${esc(r.channels)} ${fmt(r.orders)} คำสั่งซื้อ · ยอดเงิน ${fmt(r.revenue)} บาท · ล่าสุด ${esc(String(r.last_date || '').slice(0, 10))}`).join('<br>'))
+  // ③ ตารางสรุปว่าง
   const unpop = mv.filter(m => !m.populated)
-  kpis.push(['Materialized views', `${mv.length}`, unpop.length ? `<span class="bad">${unpop.length} ว่างเปล่า</span>` : `รวม ${fmt(mv.reduce((s,m)=>s+(+m.size_mb||0),0).toFixed(0))} MB`])
-  const stale = ch.filter(c => c.days_ago > 7)
-  kpis.push(['ข้อมูลยอดขายล่าสุด', ch.length ? Math.min(...ch.map(c=>c.days_ago)) + ' วันก่อน' : '—', stale.length ? `<span class="warn">${stale.map(c=>c.channel).join(', ')} เกิน 7 วัน</span>` : 'ทุกช่องทางไม่เกิน 7 วัน'])
-  // SKU ที่ระบบไม่รู้จัก
-  if (unkErr) kpis.push(['SKU ที่ไม่รู้จัก', '<span class="muted">—</span>', 'ยังไม่ได้รัน 52_unknown_skus.sql'])
-  else kpis.push(['SKU ที่ไม่รู้จัก', unkRows.length ? `<span class="bad">${unkRows.length}</span>` : '<span class="ok">0</span>', unkRows.length ? `ยอดขายไม่ถูกนับ ${fmt(unkRows.reduce((s,r)=>s+(+r.qty||0),0))} ชิ้น` : `ครบทุกตัวใน ${UNKNOWN_SKU_DAYS} วัน`])
-  // FB token
-  const pages = d.fb_pages || []
-  const expKey = pages.length ? Object.keys(pages[0]).find(k => /expir/i.test(k)) : null
-  const expDates = expKey ? pages.map(p => p[expKey]).filter(Boolean).map(x => String(x).slice(0,10)) : []
-  const tokenExp = expDates.length ? expDates.sort()[0] : FB_TOKEN_EXPIRY_FALLBACK
-  const dl = daysTo(tokenExp)
-  const tokCls = dl <= 7 ? 'bad' : dl <= 21 ? 'warn' : 'ok'
-  kpis.push(['Facebook Page Token', `<span class="${tokCls}">อีก ${dl} วัน</span>`, `หมด ${tokenExp}${expKey ? '' : ' (ค่าที่ตั้งไว้ในหน้านี้)'} · ${pages.length} เพจ`])
-  if (dl <= 21) banners.push(['warn', `🔑 Facebook Page Access Token จะหมดอายุ ${tokenExp} (อีก ${dl} วัน) — ต่ออายุผ่าน Graph API Explorer ตั้งแต่ 1 วันก่อนหมด แล้วอัปเดตในตาราง fb_pages ทั้ง ${pages.length || 3} เพจ ไม่งั้นการดึงโพสต์/Reels/Page stats จะหยุด`])
-  if (d.fb_thumbs) { const t = d.fb_thumbs; kpis.push(['Thumbnail FB รีเฟรชแล้ว', `${fmt(t.refreshed)} / ${fmt(t.total)}`, t.total ? `${Math.round(t.refreshed/t.total*100)}% · ล่าสุด ${ago(t.last)}` : '']) }
-  // token Meta Ads (meta_token_status — meta-ads-sync เช็คทุกรอบ)
+  if (unpop.length) add('bad', `ตารางสรุปไม่มีข้อมูล ${unpop.length} ตาราง`, unpop.map(m => m.name).join(', '), 'ดำเนินการ: แจ้งผู้ดูแลระบบให้คำนวณตารางสรุปใหม่')
+  // ④ Token
+  let metaTxt = '—', tokBad = false
   try {
     const { data: mt } = await DB.from('meta_token_status').select('*').eq('id', 1)
     const t = Array.isArray(mt) ? mt[0] : null
     if (t) {
-      if (t.error || t.is_valid === false) banners.push(['bad', `📢 <b>token Meta Ads ใช้ไม่ได้</b> — ${esc(t.error || 'is_valid=false')} · ตัวดึงค่าแอด Facebook หยุดจนกว่าจะใส่ token ใหม่ใน secret META_ADS_TOKEN`])
-      else if (t.days_left != null && t.days_left <= 14) banners.push([t.days_left <= 3 ? 'bad' : 'warn', `📢 <b>token Meta Ads จะหมดใน ${t.days_left} วัน</b> (${th(t.expires_at)}) — ต่ออายุ/สร้าง System User token แล้วใส่ใน secret META_ADS_TOKEN`])
-      else if (t.expires_at) banners.push(['info', `📢 token Meta Ads (${esc(t.token_type||'')} ${esc(t.user_name||'')}) หมด ${th(t.expires_at)} · เหลือ ${t.days_left} วัน · เช็คล่าสุด ${ago(t.checked_at)}`])
+      if (t.error || t.is_valid === false) { tokBad = true; metaTxt = 'ใช้งานไม่ได้'; add('bad', 'Token Meta Ads ใช้งานไม่ได้', esc(t.error || 'is_valid = false'), 'ดำเนินการ: สร้าง token ใหม่ แล้วบันทึกใน secret META_ADS_TOKEN', t.checked_at) }
+      else if (t.days_left != null) {
+        metaTxt = `เหลือ ${t.days_left} วัน`
+        if (t.days_left <= 14) { tokBad = true; add(t.days_left <= 3 ? 'bad' : 'warn', `Token Meta Ads หมดอายุใน ${t.days_left} วัน`, `หมดอายุ ${thDate(t.expires_at)}`, 'ดำเนินการ: ต่ออายุ token แล้วบันทึกใน secret META_ADS_TOKEN') }
+        else add('info', `Token Meta Ads หมดอายุ ${thDate(t.expires_at)} (เหลือ ${t.days_left} วัน) ระบบจะแจ้งเตือนเมื่อเหลือ 14 วัน`)
+      }
     }
   } catch (e) { console.warn('meta_token_status', e) }
-  // แถบเตือน SKU ที่ไม่รู้จัก (สำคัญกว่า cron เลยขึ้นก่อน)
-  if (unkRows.length) banners.push(['bad', `⚠️ มี ${unkRows.length} รหัสสินค้าที่ยังไม่มีในตาราง products — ยอดเงินของออเดอร์ที่มีรหัสพวกนี้ถูกคำนวณผิด (ไปกองที่สินค้าตัวอื่นในออเดอร์เดียวกัน หรือกลายเป็น 0) <b>วิธีแก้: เข้าหน้า Admin เพิ่มรหัสลูกให้ครบ แล้วอัปโหลดเดือนนั้นใหม่</b> — รายละเอียดในตารางด้านล่าง`])
-  bad.forEach(j => banners.push(['bad', `⛔ cron "${esc(j.jobname)}" ${cronState(j)[1]}${j.last_msg ? ' — ' + esc(j.last_msg) : ''}`]))
-  document.getElementById('banners').innerHTML = banners.map(([c,t]) => `<div class="banner ${c}">${t}</div>`).join('')
+  let ttTxt = '—', ttNormalLag = false
   if (X) {
-    const tk = X.tiktok_token || {}
-    const hrs = tk['เหลืออีกกี่ชั่วโมง']
-    const tkCls = hrs == null ? 'muted' : hrs < 6 ? 'bad' : hrs < 24 ? 'warn' : 'ok'
-    kpis.push(['TikTok token', hrs == null ? '<span class="muted">—</span>' : `<span class="${tkCls}">อีก ${fmt(hrs)} ชม.</span>`,
-      `ต่ออายุอัตโนมัติได้ถึง ${tk['ต่ออายุได้ถึง'] ? String(tk['ต่ออายุได้ถึง']).slice(0,10) : '—'}`])
-    const slow = (X.feeds || []).filter(f => f['สถานะ'] !== 'ปกติ')
-    kpis.push(['ความสดของข้อมูล', slow.length ? `<span class="bad">${slow.length} แหล่งช้า</span>` : '<span class="ok">ทุกแหล่งปกติ</span>',
-      slow.length ? slow.map(f => f['แหล่ง']).join(', ') : `ตรวจ ${(X.feeds || []).length} แหล่ง`])
-    const to = +X.timeouts_24h || 0, he = +X.http_errors_24h || 0
-    kpis.push(['งานที่ถูกตัดกลางคัน', to ? `<span class="bad">${fmt(to)} ครั้ง</span>` : '<span class="ok">0</span>',
-      `24 ชม. · error 4xx/5xx ${fmt(he)} ครั้ง`])
-    const pages2 = X.fb_pages || []
-    const quiet = pages2.filter(p2 => ['เงียบผิดปกติ', 'ไม่เคยมีโพสต์', 'token หมดอายุแล้ว'].includes(p2['สถานะ']))
-    if (pages2.length) kpis.push(['เพจ Facebook', quiet.length ? `<span class="bad">${quiet.length} / ${pages2.length} เงียบ</span>` : `<span class="ok">${pages2.length} เพจปกติ</span>`,
-      quiet.length ? quiet.map(p2 => p2['ชื่อเพจ']).join(', ') : 'ทุกเพจมีโพสต์เข้ามาใน 3 วัน'])
-    quiet.forEach(p2 => banners.push(['bad', `📘 เพจ <b>${esc(p2['ชื่อเพจ'])}</b> ${p2['โพสต์ล่าสุด'] ? `ไม่มีโพสต์ใหม่มา ${p2['เงียบมากี่วัน']} วัน (ล่าสุด ${th(p2['โพสต์ล่าสุด'])})` : 'ไม่เคยมีโพสต์เข้าระบบเลย'} — ตัวดึงข้ามเพจนี้แบบเงียบ ๆ เมื่อ token เพจหมดอายุ ให้เช็ค page token ในตาราง fb_pages`]))
-    if ((X.cron_no_timeout || []).length)
-      banners.push(['warn', `⏱ cron ${X.cron_no_timeout.length} ตัวยังไม่ได้ตั้งเวลารอ — เสี่ยงถูกตัดกลางคันโดยไม่มีใครรู้: ${X.cron_no_timeout.map(c => '<b>' + esc(c.jobname) + '</b>').join(', ')} (รัน 67_cron_timeouts.sql)`])
-    if ((X.rls_on || []).length)
-      banners.push(['bad', `🔒 ตาราง ${X.rls_on.length} ตัวเปิด RLS แต่ยังไม่มีสิทธิ์ให้อ่าน หน้าเว็บจะอ่านข้อมูลไม่ได้ (ระบบใส่สิทธิ์ให้เองภายใน 5 นาที ถ้ายังค้างให้แจ้ง Claude): ${X.rls_on.map(t2 => '<b>' + esc(t2) + '</b>').join(', ')}`])
-    // --- TikTok สถิติช่อง: แยกให้ชัดว่า "TikTok ยังไม่ส่ง" หรือ "ตัวดึงของเราไม่ได้รัน" ---
-    // วิธีดู: ดึงล่าสุด = วันนี้ แต่ข้อมูลถึงแค่เมื่อวานซืน → TikTok ยังนับไม่เสร็จ (ปกติ) · ดึงล่าสุดไม่ใช่วันนี้ → cron ไม่ทำงาน
+    const tk = X.tiktok_token || {}, until = tk['ต่ออายุได้ถึง'] ? String(tk['ต่ออายุได้ถึง']).slice(0, 10) : null
+    const dRen = until ? daysTo(until) : null
+    ttTxt = dRen == null ? '—' : dRen <= 14 ? `ต่ออายุได้อีก ${dRen} วัน` : 'ต่ออายุอัตโนมัติ'
+    if (dRen != null && dRen <= 14) { tokBad = true; add(dRen <= 3 ? 'bad' : 'warn', `การเชื่อมต่อ TikTok จะหมดอายุใน ${dRen} วัน`, `ต่ออายุอัตโนมัติได้ถึง ${thDate(until)}`, 'ดำเนินการ: เชื่อมต่อบัญชี TikTok ใหม่ก่อนวันหมดอายุ') }
+    (X.fb_pages || []).filter(p => fbStatus(p) === 'ควรตรวจสอบ token').forEach(p => { tokBad = true; add('warn', `ควรตรวจสอบ token ของเพจ ${p['ชื่อเพจ']}`, `ไม่มีโพสต์ใหม่เข้าระบบ ${p['เงียบมากี่วัน']} วัน และวันหมดอายุ token ที่บันทึกไว้ผ่านแล้ว`, 'ดำเนินการ: ตรวจสอบ token ของเพจในตาราง fb_pages') })
+    // ⑤ TikTok สถิติช่อง: ตัวดึงไม่ทำงาน / TikTok ไม่ส่งข้อมูล / ล่าช้าตามปกติ
     let ttHandled = false
     const acc = (X.feeds || []).find(f => f['ตาราง'] === 'tiktok_account_daily')
     if (acc && acc['ข้อมูลล่าสุด'] && acc['ช้าไปกี่วัน'] != null) {
-      const todayTH = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10)
-      const gap = +acc['ช้าไปกี่วัน']
+      const todayTH = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10), gap = +acc['ช้าไปกี่วัน']
       const pulledToday = acc['ดึงล่าสุด'] ? new Date(new Date(acc['ดึงล่าสุด']).getTime() + 7 * 3600000).toISOString().slice(0, 10) === todayTH : false
-      const pullTxt = acc['ดึงล่าสุด'] ? th(acc['ดึงล่าสุด']) : '—'
-      if (gap >= 2 && !pulledToday) {
-        banners.push(['bad', `🎵 <b>ตัวดึง TikTok ไม่ได้รันวันนี้</b> — ดึงครั้งล่าสุด ${pullTxt} ข้อมูลช่องถึงแค่ ${esc(String(acc['ข้อมูลล่าสุด']))} · เช็ค 3 อย่าง: cron <b>tiktok-organic-sync</b> (รอบ 07:30 / 19:30) ในตารางด้านล่าง · "งานที่ถูกตัดกลางคัน" ต้องเป็น 0 · TikTok token ต้องยังไม่หมด — แก้ชั่วคราวได้ด้วยการเปิดลิงก์ <span class="mono">tiktok-organic?mode=sync&amp;days=30</span>`])
-        ttHandled = true
-      } else if (gap === 2 && pulledToday) {
-        banners.push(['info', `🎵 <b>TikTok ยังไม่ส่งตัวเลขของเมื่อวานมา</b> — ระบบดึงแล้ว ${pullTxt} แต่ TikTok ยังนับไม่เสร็จ (ส่งแถวเปล่ามาให้) ปกติปล่อยช้า 1–2 วัน รอบ 19:30 จะลองใหม่เอง ไม่ต้องทำอะไร`])
-        ttHandled = true
-      } else if (gap > 2 && pulledToday) {
-        banners.push(['warn', `🎵 <b>TikTok ไม่ให้ข้อมูลมา ${gap - 1} วันแล้ว</b> ทั้งที่ระบบดึงทุกวัน (ล่าสุด ${pullTxt}) — ตัวดึงของเราปกติ ปัญหาอยู่ฝั่ง TikTok · ลองเปิดลิงก์ <span class="mono">tiktok-organic?mode=account</span> ดูว่าแถววันล่าสุดใน metrics ยังเป็น 0 ทั้งแถวไหม ถ้าใช่คือรอ TikTok ถ้าไม่ใช่ให้แจ้ง`])
-        ttHandled = true
-      }
+      if (gap >= 2 && !pulledToday) { add('bad', 'ตัวดึงข้อมูล TikTok ไม่ได้ทำงานวันนี้', `ดึงข้อมูลครั้งล่าสุด ${th(acc['ดึงล่าสุด'])} · ข้อมูลถึง ${esc(String(acc['ข้อมูลล่าสุด']))}`, 'ดำเนินการ: ตรวจสอบงาน tiktok-organic-sync ในแท็บงานตั้งเวลา'); ttHandled = true }
+      else if (gap > 2 && pulledToday) { add('warn', `TikTok ไม่ส่งข้อมูลมา ${gap - 1} วัน`, `ระบบดึงข้อมูลทุกวันตามปกติ (ล่าสุด ${th(acc['ดึงล่าสุด'])})`, 'ดำเนินการ: ตรวจสอบสถานะฝั่ง TikTok'); ttHandled = true }
+      else if (gap === 2 && pulledToday) { add('info', 'TikTok ยังไม่ส่งข้อมูลของเมื่อวาน ตามปกติล่าช้า 1–2 วัน ระบบจะดึงข้อมูลใหม่รอบ 19:30'); ttHandled = true; ttNormalLag = true }
     }
-    slow.filter(f => !(ttHandled && f['ตาราง'] === 'tiktok_account_daily'))
-        .forEach(f => banners.push(['warn', `🕒 <b>${esc(f['แหล่ง'])}</b> ข้อมูลล่าสุด ${esc(String(f['ข้อมูลล่าสุด'] || '—'))} (ช้าไป ${f['ช้าไปกี่วัน']} วัน)`]))
+    // ⑥ แหล่งข้อมูลล่าช้า · งานที่ไม่มีเวลารอ · ตารางที่อ่านไม่ได้
+    ;(X.feeds || []).filter(f => f['สถานะ'] !== 'ปกติ' && !(ttHandled && f['ตาราง'] === 'tiktok_account_daily'))
+      .forEach(f => add('warn', `แหล่งข้อมูลล่าช้า: ${f['แหล่ง']}`, `ข้อมูลล่าสุดถึง ${esc(String(f['ข้อมูลล่าสุด'] || '—'))} (ล่าช้า ${f['ช้าไปกี่วัน']} วัน)`, 'ดำเนินการ: ตรวจสอบตัวดึงข้อมูลของแหล่งนี้'))
+    if ((X.cron_no_timeout || []).length) add('warn', `งานตั้งเวลา ${X.cron_no_timeout.length} งานยังไม่ได้กำหนดเวลารอ`, X.cron_no_timeout.map(c => c.jobname).join(', '), 'ดำเนินการ: กำหนดเวลารอให้งานดังกล่าว')
+    if ((X.rls_on || []).length) add('bad', `ตาราง ${X.rls_on.length} ตารางยังไม่มีสิทธิ์อ่าน`, X.rls_on.join(', '), 'ระบบจะกำหนดสิทธิ์ให้ภายใน 5 นาที หากยังค้างให้แจ้งผู้ดูแลระบบ')
   }
-  document.getElementById('banners').innerHTML = banners.map(([c, t]) => `<div class="banner ${c}">${t}</div>`).join('')
-  document.getElementById('kpis').innerHTML = kpis.map(([l,v,s]) => `<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s||''}</div></div>`).join('')
+  items.sort((a, b) => (a.sev === 'bad' ? 0 : 1) - (b.sev === 'bad' ? 0 : 1))
+  const nBad = items.filter(i => i.sev === 'bad').length, nWarn = items.length - nBad, nOk = DG.filter(c => c.status === 'ok').length
+  document.getElementById('hpStatus').innerHTML = `<span><i class="dot bad"></i>ต้องดำเนินการ <b>${nBad}</b></span><span><i class="dot warn"></i>ควรติดตาม <b>${nWarn}</b></span><span><i class="dot ok"></i>ปกติ <b>${nOk}</b></span><span class="n">ตรวจสอบอัตโนมัติทุกชั่วโมง (นาทีที่ 50)</span>`
+  document.getElementById('hpActions').innerHTML = `<div class="hp-card"><div class="hp-h"><h2>รายการที่ต้องดำเนินการ</h2><span>เรียงตามความสำคัญ · คลิกเพื่อดูรายละเอียด</span></div>`
+    + (items.length ? items.map((it, i) => `<details class="hp-it"${i === 0 && it.sev === 'bad' ? ' open' : ''}><summary><i class="dot ${it.sev}"></i><span class="t">${esc(it.title)}</span><span class="since">${sinceTxt(it.since)}</span>${it.desc ? `<span class="d">${esc(it.desc)}</span>` : ''}${it.act ? `<span class="act">${esc(it.act)}</span>` : ''}</summary>${it.detail ? `<div class="hp-dt">${it.detail}</div>` : ''}</details>`).join('')
+      : '<div class="hp-none">✓ ไม่มีรายการที่ต้องดำเนินการ</div>')
+    + (info.length ? `<details class="hp-info"><summary>ข้อมูลประกอบ ไม่ต้องดำเนินการ (${info.length})</summary><div class="hp-dt">${info.map(x => '• ' + esc(x.title)).join('<br>')}</div></details>` : '') + `</div>`
 
-  let html = ''
+  // การ์ดตัวเลข
+  const feeds = X ? (X.feeds || []) : [], slowN = feeds.filter(f => f['สถานะ'] !== 'ปกติ' && !(ttNormalLag && f['ตาราง'] === 'tiktok_account_daily')).length, dgN = DG.filter(c => c.status !== 'ok').length
+  const kp = [
+    ['งานตั้งเวลา', fmt(cron.length), badCron.length ? `<span class="bad">ทำงานไม่สำเร็จ ${badCron.length} งาน</span>` : warnCron.length ? `<span class="warn">ควรตรวจสอบ ${warnCron.length} งาน</span>` : '<span class="ok">ทำงานปกติทั้งหมด</span>'],
+    ['แหล่งข้อมูล', fmt(feeds.length), slowN ? `<span class="warn">ล่าช้า ${slowN} แหล่ง</span>` : '<span class="ok">นำเข้าตามรอบทั้งหมด</span>'],
+    ['รายการตรวจสอบ', fmt(DG.length), dgN ? `<span class="warn">ควรติดตาม ${dgN} รายการ</span>` : '<span class="ok">ปกติทั้งหมด</span>'],
+    ['Token', tokBad ? '<span class="warn">ต้องตรวจสอบ</span>' : '<span class="ok">ใช้งานได้</span>', `Meta Ads ${metaTxt} · TikTok ${ttTxt}`],
+    ['ฐานข้อมูล', `${(+(d.db_size_mb || 0) / 1024).toFixed(1)} GB`, `จากโควตา 8 GB · ตารางสรุป ${mv.length}`],
+    ['รหัสสินค้าไม่รู้จัก', unkErr ? '—' : unkRows.length ? `<span class="bad">${unkRows.length}</span>` : '<span class="ok">0</span>', unkRows.length ? `ยอดขาย ${fmt(unkRows.reduce((s, r) => s + (+r.revenue || 0), 0))} บาท` : 'ครบทุกรหัส']]
+  document.getElementById('kpis').innerHTML = kp.map(([l, v, s]) => `<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s || ''}</div></div>`).join('')
+
+  const pages = d.fb_pages || []
+  let html = ''; const P = {}; const cut = k => { P[k] = (P[k] || '') + html; html = '' }
   // --- ความสดของข้อมูล + สิ่งที่ต้องทำ ---
   if (X) {
-    html += `<div class="card"><div class="card-head"><h2>🕒 ความสดของข้อมูลแต่ละแหล่ง</h2><span>ข้อมูลล่าสุดถึงวันไหน และดึงเข้าระบบครั้งสุดท้ายเมื่อไร</span></div><div class="tbl-wrap"><table>
-      <thead><tr><th>แหล่ง</th><th>ตาราง</th><th>แถว</th><th>ข้อมูลล่าสุด</th><th>ช้าไป</th><th>ดึงล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
+    html += `<div class="card"><div class="card-head"><h2>สถานะการนำเข้าข้อมูลแต่ละแหล่ง</h2><span>ข้อมูลล่าสุดถึงวันใด และนำเข้าระบบครั้งล่าสุดเมื่อใด</span></div><div class="tbl-wrap"><table>
+      <thead><tr><th>แหล่งข้อมูล</th><th>ตาราง</th><th>แถว</th><th>ข้อมูลล่าสุดถึง</th><th>ล่าช้า</th><th>นำเข้าล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
       (X.feeds || []).map(f => {
         const ok2 = f['สถานะ'] === 'ปกติ'
         return `<tr><td><b>${esc(f['แหล่ง'])}</b></td><td class="mono">${esc(f['ตาราง'])}</td><td>${fmt(f['แถว'])}</td>
@@ -339,23 +361,24 @@ async function render(d, unknown, extra) {
       }).join('') + `</tbody></table></div></div>`
 
     if ((X.fb_pages || []).length) {
-      html += `<div class="card"><div class="card-head"><h2>📘 เพจ Facebook แต่ละเพจ</h2><span>ตัวดึงจะข้ามเพจที่มีปัญหาแบบเงียบ ๆ — ตารางนี้จับตรงนั้น</span></div><div class="tbl-wrap"><table>
-        <thead><tr><th>เพจ</th><th>page_id</th><th>โพสต์ล่าสุด</th><th>เงียบมา</th><th>โพสต์ 30 วัน</th><th>token หมดอายุ</th><th>ดึงล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
+      html += `<div class="card"><div class="card-head"><h2>เพจ Facebook</h2><span>ระบบไม่ถือว่าเพจที่ไม่ได้โพสต์เป็นปัญหา · แจ้งเตือนเมื่อการดึงข้อมูลหยุด หรือ token ใช้งานไม่ได้</span></div><div class="tbl-wrap"><table>
+        <thead><tr><th>เพจ</th><th>page_id</th><th>โพสต์ล่าสุด</th><th>ไม่ได้โพสต์มา</th><th>โพสต์ 30 วัน</th><th>token (วันที่บันทึกไว้)</th><th>นำเข้าล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
         X.fb_pages.map(p2 => {
-          const st = p2['สถานะ']
-          const cls = st === 'ปกติ' ? 'ok' : st === 'ปิดใช้งาน' ? 'muted' : 'bad'
+          const st = fbStatus(p2)
+          const cls = st === 'ปกติ' ? 'ok' : st === 'ปิดใช้งาน' ? 'muted' : 'warn'
           return `<tr><td><b>${esc(p2['ชื่อเพจ'])}</b></td><td class="mono">${esc(p2.page_id)}</td>
             <td>${p2['โพสต์ล่าสุด'] ? th(p2['โพสต์ล่าสุด']) : '—'}</td>
-            <td class="${p2['เงียบมากี่วัน'] > 3 ? 'bad' : ''}">${p2['เงียบมากี่วัน'] == null ? '—' : p2['เงียบมากี่วัน'] + ' วัน'}</td>
+            <td>${p2['เงียบมากี่วัน'] == null ? '—' : p2['เงียบมากี่วัน'] + ' วัน'}</td>
             <td>${fmt(p2['โพสต์30วัน'])}</td>
-            <td class="${p2['token_เหลือกี่วัน'] != null && p2['token_เหลือกี่วัน'] <= 7 ? 'bad' : p2['token_เหลือกี่วัน'] != null && p2['token_เหลือกี่วัน'] <= 21 ? 'warn' : ''}">${p2['token_หมดอายุ'] ? esc(String(p2['token_หมดอายุ']).slice(0,10)) + (p2['token_เหลือกี่วัน'] != null ? ` <span style="font-size:10px;">(${p2['token_เหลือกี่วัน']} วัน)</span>` : '') : '—'}</td>
+            <td class="muted">${p2['token_หมดอายุ'] ? esc(String(p2['token_หมดอายุ']).slice(0,10)) + (p2['token_เหลือกี่วัน'] != null ? ` <span style="font-size:10px;">(${p2['token_เหลือกี่วัน']} วัน)</span>` : '') : '—'}</td>
             <td>${p2['ดึงล่าสุด'] ? th(p2['ดึงล่าสุด']) : '—'}</td>
             <td><span class="pill ${cls}">${esc(st)}</span></td></tr>`
         }).join('') + `</tbody></table></div></div>`
     }
 
+    cut('feed')
     const todo = X.todo || {}
-    html += `<div class="card"><div class="card-head"><h2>📝 ของที่รอเราจัดการ</h2><span>ไม่ใช่ระบบพัง แต่เป็นสิ่งที่ต้องกรอก/ตอบเอง</span></div><div class="tbl-wrap"><table>
+    html += `<div class="card"><div class="card-head"><h2>งานค้างที่ต้องกรอก</h2><span>รายการที่ต้องกรอกหรือตอบกลับโดยผู้ใช้ ไม่ใช่ความผิดพลาดของระบบ</span></div><div class="tbl-wrap"><table>
       <thead><tr><th>เรื่อง</th><th>ค้างอยู่</th><th>ทำที่ไหน</th></tr></thead><tbody>
       <tr><td>SKU ที่ยังไม่ตั้ง lead time</td><td class="${todo['SKU ที่ยังไม่ตั้ง lead time'] ? 'warn' : 'ok'}"><b>${fmt(todo['SKU ที่ยังไม่ตั้ง lead time'])}</b></td><td>Admin → แท็บ Supply Chain</td></tr>
       <tr><td>คอมเมนต์ TikTok ค้างตอบ</td><td class="${todo['คอมเมนต์ค้างตอบ'] ? 'warn' : 'ok'}"><b>${fmt(todo['คอมเมนต์ค้างตอบ'])}</b></td><td>แดชบอร์ด → ผลงานคอนเทนต์ → แท็บคอมเมนต์</td></tr>
@@ -363,6 +386,7 @@ async function render(d, unknown, extra) {
       </tbody></table></div></div>`
   }
 
+  cut('todo')
   // --- (2026-10-12) ยอดขายระบบ vs งบบัญชี — ไว้ดูเฉยๆ ไม่ขึ้นเตือน (Business Insight ใช้ยอดบัญชีเสมอ) ---
   const rc = (window._recon && !window._recon.error && Array.isArray(window._recon.data)) ? window._recon.data : []
   if (rc.length) {
@@ -375,14 +399,15 @@ async function render(d, unknown, extra) {
       const tip = `ระบบ ${fmt(Math.round(r.system_revenue))} · บัญชี ${fmt(Math.round(r.accounting_revenue))}${r.cn_in_system ? ' · ระบบหัก CN แล้ว ' + fmt(Math.round(r.cn_in_system)) : ''}`
       return `<td class="${cls}" title="${esc(tip)}">${r.diff > 0 ? '+' : ''}${fmt(Math.round(r.diff))}<br><span style="font-size:11px;color:#8b93a7">${p > 0 ? '+' : ''}${p.toFixed(2)}%</span></td>`
     }
-    html += `<div class="card"><div class="card-head"><h2>⚖️ ยอดขายระบบ vs งบบัญชี</h2><span>ไม่รวม VAT · เฉพาะเดือนที่บัญชีปิดแล้ว · ไว้ดูเฉยๆ ไม่ขึ้นเตือน — Business Insight ใช้ยอดบัญชีเสมอ ส่วนต่างนี้กระทบเฉพาะหน้าอื่น · ชี้ที่ตัวเลขเพื่อดูยอดเต็ม</span></div><div class="tbl-wrap"><table>
+    html += `<div class="card"><div class="card-head"><h2>ยอดขายในระบบเทียบงบบัญชี</h2><span>ไม่รวม VAT · เฉพาะเดือนที่บัญชีปิดแล้ว · ใช้เพื่อตรวจสอบเท่านั้น (Business Insight ใช้ยอดตามบัญชีเสมอ) · ชี้ที่ตัวเลขเพื่อดูยอดทั้งสองฝั่ง</span></div><div class="tbl-wrap"><table>
       <thead><tr><th>ช่องทาง</th>${months.map(m => `<th>${mLabel(m)}<br><span style="font-size:11px;font-weight:400">ระบบ − บัญชี</span></th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>` +
       chs.map(c => `<tr><td><b>${esc(c)}</b></td>${months.map(m => cell(rc.find(r => r.channel === c && r.month === m))).join('')}<td style="font-size:12px;color:#5b6475">${esc((rc.find(r => r.channel === c) || {}).note)}</td></tr>`).join('') +
       `</tbody></table></div></div>`
   }
 
+  cut('recon')
   // --- SKU ที่ระบบไม่รู้จัก ---
-  html += `<div class="card"><div class="card-head"><h2>🏷 SKU ที่สมุดสินค้าไม่รู้จัก</h2><span>เทียบ sku_revenue กับตาราง products · ย้อนหลัง ${UNKNOWN_SKU_DAYS} วัน</span></div>`
+  html += `<div class="card"><div class="card-head"><h2>รหัสสินค้าที่ไม่มีในฐานข้อมูลสินค้า</h2><span>เทียบ sku_revenue กับตาราง products · ย้อนหลัง ${UNKNOWN_SKU_DAYS} วัน</span></div>`
   if (unkErr) html += `<div class="loading">ยังใช้ไม่ได้ — รัน <b>52_unknown_skus.sql</b> ใน Supabase ก่อน<div class="muted" style="margin-top:6px;font-size:12px;">(${esc(unkErr)})</div></div>`
   else if (!unkRows.length) html += `<div class="loading"><span class="ok">✓ ทุกรหัสสินค้ามีในตาราง products ครบ</span></div>`
   else html += `<div class="tbl-wrap"><table>
@@ -393,11 +418,12 @@ async function render(d, unknown, extra) {
       `</tbody></table></div>`
   html += `</div>`
 
+  cut('todo')
   // --- ตรวจค่าแอดหายรายวัน (35 วันล่าสุด) — กันเคสแบบ LIVE GMV Max ที่หายเงียบ ม.ค.–ส.ค. 69 ---
   const ah = window._adsHealth
   const ahRows = (ah && !ah.error && Array.isArray(ah.data)) ? ah.data : []
   const ahBad = ahRows.filter(r => (r.bad_days || 0) > 0)
-  html += `<div class="card"><div class="card-head"><h2>💸 ค่าแอดครบทุกวันไหม <span style="font-weight:400;color:#8b93a7;font-size:13px;">(35 วันล่าสุด)</span></h2></div>`
+  html += `<div class="card"><div class="card-head"><h2>ความครบของค่าโฆษณารายวัน <span style="font-weight:400;color:#8b93a7;font-size:13px;">(35 วันล่าสุด)</span></h2></div>`
   if (ah && ah.error) html += `<div class="banner bad">อ่าน v_ads_health_summary ไม่ได้: ${esc(ah.error.message)}</div>`
   else if (!ahRows.length) html += `<div class="banner">ยังไม่มีข้อมูลตรวจค่าแอด</div>`
   else {
@@ -411,9 +437,10 @@ async function render(d, unknown, extra) {
           `<td>${Number(r.total_35d || 0).toLocaleString()}</td></tr>`).join('') +
       `</tbody></table></div>`
   }
-  html += `<div style="font-size:11px;color:#8b93a7;margin-top:8px;">ถ้าแถวไหนขึ้นวันที่ขาด: TikTok LIVE/GMV Max → cron tiktok-gmv-max-* · Facebook → meta-ads-sync · Shopee Brand/Live/Meta → สั่ง Cowork "รัน shopee ads offapi" (ตามเก็บย้อนหลัง 14 วันให้เอง)</div></div>`
+  html += `<div style="font-size:11px;color:#8b93a7;margin-top:8px;">หากพบวันที่ขาด: TikTok LIVE / GMV Max ตรวจสอบงาน tiktok-gmv-max-* · Facebook ตรวจสอบงาน meta-ads-sync · Shopee Brand / Live / Meta ให้ Cowork ดึงข้อมูล (shopee ads offapi)</div></div>`
 
 
+  cut('ads')
   // --- แหล่งข้อมูลของแต่ละหน้า (คงที่ — แก้ตรงนี้เมื่อเปลี่ยนแหล่ง) ---
   const PAGE_SOURCES = [
     ['ภาพรวมยอดขาย (รวมแยก Channel แล้ว) / SKU', 'ลูกค้า Facebook = mv_customer_daily (unique_customers / fb_customers_series) · orders + sku_revenue (upload.html: ออเดอร์รายวัน + ไฟล์บัญชีปิดเดือน) · TikTok ตั้งแต่ 1 ต.ค. 69 = TikTok Shop API (api-to-core ทุก 15 นาที · ไฟล์ที่ทีมอัปลง orders_upload_backup) · Shopee ตั้งแต่ 1 ต.ค. 69 = Shopee Open API ทั้ง 2 ร้าน (api-to-core ทุก 15 นาที · ไฟล์ที่ทีมอัปลง orders_upload_backup · สถานะได้เงิน + ยอดคืนจากวันที่ Shopee ปล่อยเงิน shopee_escrow_release)', 'mv_sales_daily / mv_sku_daily รีเฟรชรายชั่วโมง'],
@@ -440,21 +467,23 @@ async function render(d, unknown, extra) {
     ['Supply Chain', 'log น้องแพ็ค (inventory_movements 03:30) + sku_revenue + supply_params (Admin)', 'refresh-supply-views 04:00'],
     ['ชีท MKT Tracking (ขากลับ)', 'Apps Script เติม Mall K/Q/T/Y/AM + Data TT L/R/U จาก v_ads_sheet_daily', 'ทุกวัน 10:00–11:00']
   ]
-  html += `<div class="card"><div class="card-head"><h2>🗺️ แหล่งข้อมูลของแต่ละหน้า</h2><span>ไว้ดูว่าหน้าไหนพึ่งอะไร — ถ้าตัวดึงข้างล่างล้ม หน้าไหนกระทบ · แก้รายการนี้ใน health.html เมื่อเปลี่ยนแหล่ง</span></div><div class="tbl-wrap"><table>
+  html += `<div class="card"><div class="card-head"><h2>แหล่งข้อมูลของแต่ละหน้า</h2><span>แต่ละหน้าใช้ข้อมูลจากแหล่งใด และอัปเดตโดยงานใด</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>หน้า</th><th>ข้อมูลมาจาก</th><th>อัปเดตโดย</th></tr></thead><tbody>` +
     PAGE_SOURCES.map(([p, src, upd]) => `<tr><td><b>${esc(p)}</b></td><td style="font-size:11.5px;">${esc(src)}</td><td style="font-size:11px;color:var(--text3);">${esc(upd)}</td></tr>`).join('') + `</tbody></table></div></div>`
 
+  cut('src')
   // --- ตารางเวลาประจำวัน (เฉพาะ job ที่รันเป็นเวลาแน่นอน เรียงตามเวลาไทย) ---
   const daily = cron.filter(j => j.active && /^\d+ \d+(,\d+)* \* \* \*$/.test((j.schedule||'').trim()))
     .flatMap(j => j.schedule.trim().split(/\s+/)[1].split(',').map(h => ({ j, t: ((parseInt(h) + 7) % 24) * 60 + parseInt(j.schedule.trim().split(/\s+/)[0]) })))
     .sort((a, b) => a.t - b.t)
-  html += `<div class="card"><div class="card-head"><h2>📅 ลำดับรอบประจำวัน (เวลาไทย)</h2><span>อะไรดึงกี่โมง — ตัวรายชั่วโมง/ทุกกี่นาที ดูในตาราง Cron ด้านล่าง · ชีท MKT Tracking เติมค่าแอดเองตอน 10:00–11:00 หลังรอบเช้า TikTok 08:10–08:45</span></div><div class="tbl-wrap"><table>
+  html += `<div class="card"><div class="card-head"><h2>ลำดับรอบการทำงานประจำวัน (เวลาไทย)</h2><span>งานที่ทำงานตามเวลาแน่นอนในแต่ละวัน · งานที่ทำงานทุกชั่วโมงหรือทุกกี่นาทีดูได้ที่ตารางงานตั้งเวลาทั้งหมด</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>เวลาไทย</th><th>งาน</th><th>ทำอะไร</th><th>รอบล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
     daily.map(({ j, t }) => { const [c, st] = cronState(j); return `<tr><td class="mono"><b>${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}</b></td><td>${esc(j.jobname)}</td><td style="font-size:11.5px;">${esc(JOB_DESC[j.jobname] || j.target || '')}</td><td>${th(j.last_start)}</td><td><span class="pill ${c}">${st}</span></td></tr>` }).join('') +
     `</tbody></table></div></div>`
 
+  cut('daily')
   // --- cron ---
-  html += `<div class="card"><div class="card-head"><h2>⏱ Cron jobs (${cron.length})</h2><span>สถานะจากรอบรันล่าสุด · เวลาไทย</span></div><div class="tbl-wrap"><table>
+  html += `<div class="card"><div class="card-head"><h2>งานตั้งเวลาทั้งหมด (${cron.length})</h2><span>สถานะจากรอบรันล่าสุด · เวลาไทย</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>#</th><th>งาน</th><th>ทำอะไร</th><th>เวลาไทย</th><th>ประเภท</th><th>เป้าหมาย</th><th>ตาราง (UTC)</th><th>รันล่าสุด</th><th>ใช้เวลา</th><th>24 ชม.</th><th>สถานะ</th></tr></thead><tbody>` +
     cron.map(j => { const [c, t] = cronState(j); return `<tr><td class="mono">${j.jobid}</td><td><b>${esc(j.jobname||'(ไม่มีชื่อ)')}</b>${j.last_msg && c!=='ok' ? `<div class="muted" style="font-size:11px;">${esc(j.last_msg)}</div>` : ''}</td>
       <td style="font-size:11.5px;">${esc(JOB_DESC[j.jobname] || '')}</td><td style="white-space:nowrap;">${esc(thaiSched(j.schedule))}</td>
@@ -464,8 +493,9 @@ async function render(d, unknown, extra) {
     `</tbody></table></div></div>`
   if (d.cron_error) html += `<div class="banner bad">อ่าน cron ไม่ได้: ${esc(d.cron_error)}</div>`
 
+  cut('cron')
   // --- sync tables ---
-  html += `<div class="card"><div class="card-head"><h2>🔄 ข้อมูลที่ sync จากภายนอก</h2><span>วันที่ข้อมูลล่าสุด vs เวลาที่ sync ล่าสุด</span></div><div class="tbl-wrap"><table>
+  html += `<div class="card"><div class="card-head"><h2>ข้อมูลที่ซิงก์จากระบบภายนอก</h2><span>วันที่ของข้อมูลล่าสุดเทียบกับเวลาที่ซิงก์ล่าสุด</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>แหล่ง</th><th>ตาราง</th><th>แถว</th><th>ข้อมูลล่าสุด</th><th>sync ล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
     sync.map(s => { if (s.error) return `<tr><td>${esc(s.label)}</td><td class="mono">${esc(s.table)}</td><td colspan="4" class="bad">${esc(s.error)}</td></tr>`
       const dAgo = s.last_data ? Math.floor((Date.now() - new Date(s.last_data).getTime())/86400000) : null
@@ -474,24 +504,46 @@ async function render(d, unknown, extra) {
       return `<tr><td><b>${esc(s.label)}</b></td><td class="mono">${esc(s.table)}</td><td>${fmt(s.rows)}</td><td>${s.last_data ? esc(String(s.last_data).slice(0,10)) + `<div class="muted" style="font-size:11px;">${dAgo} วันก่อน</div>` : '—'}</td><td>${s.last_sync ? th(s.last_sync) + `<div class="muted" style="font-size:11px;">${ago(s.last_sync)}</div>` : '<span class="muted">ไม่มีคอลัมน์</span>'}</td><td><span class="pill ${cls}">${cls==='ok'?'ปกติ':'ควรดู'}</span></td></tr>` }).join('') +
     `</tbody></table></div></div>`
 
+  cut('feed')
   // --- channels ---
-  html += `<div class="card"><div class="card-head"><h2>📦 ยอดขายล่าสุดต่อช่องทาง</h2><span>จาก mv_sales_daily</span></div><div class="tbl-wrap"><table>
+  html += `<div class="card"><div class="card-head"><h2>ยอดขายล่าสุดของแต่ละช่องทาง</h2><span>จากตารางสรุปยอดขายรายวัน (mv_sales_daily)</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>ช่องทาง</th><th>วันที่ล่าสุด</th><th>ห่างจากวันนี้</th><th>ยอด 30 วัน</th></tr></thead><tbody>` +
     ch.map(c => `<tr><td><b>${esc(c.channel)}</b></td><td class="mono">${esc(c.last_date)}</td><td class="${c.days_ago > 14 ? 'bad' : c.days_ago > 7 ? 'warn' : ''}">${c.days_ago} วัน</td><td>${c.rev_30d != null ? fmt(c.rev_30d) : '—'}</td></tr>`).join('') + `</tbody></table></div></div>`
 
+  cut('feed')
   // --- MVs ---
-  html += `<div class="card"><div class="card-head"><h2>🧱 Materialized views (${mv.length})</h2><span>จำนวนแถวโดยประมาณ · เวลารีเฟรชดูจาก cron ด้านบน (refresh_all_views รายชั่วโมง)</span></div><div class="tbl-wrap"><table>
+  html += `<div class="card"><div class="card-head"><h2>ตารางสรุป (${mv.length})</h2><span>จำนวนแถวโดยประมาณ · เวลาคำนวณดูได้จากงานตั้งเวลา</span></div><div class="tbl-wrap"><table>
     <thead><tr><th>ชื่อ</th><th>แถว (ประมาณ)</th><th>ขนาด</th><th>สถานะ</th></tr></thead><tbody>` +
     mv.map(m => `<tr><td class="mono">${esc(m.name)}</td><td>${fmt(m.rows)}</td><td>${fmt(m.size_mb)} MB</td><td><span class="pill ${m.populated?'ok':'bad'}">${m.populated?'มีข้อมูล':'ว่าง — ต้อง REFRESH'}</span></td></tr>`).join('') + `</tbody></table></div></div>`
 
-  // --- fb pages ---
-  if (pages.length) {
-    const keys = Object.keys(pages[0]).slice(0, 8)
-    html += `<div class="card"><div class="card-head"><h2>📘 Facebook pages (${pages.length})</h2><span>token ไม่แสดง</span></div><div class="tbl-wrap"><table><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>` +
-      pages.map(p => `<tr>${keys.map(k=>`<td class="mono">${esc(typeof p[k]==='object'?JSON.stringify(p[k]):p[k])}</td>`).join('')}</tr>`).join('') + `</tbody></table></div></div>`
+  cut('mv')
+  cut('end')
+  // ผลการตรวจสอบ (Data Guard) ทั้งหมด: ที่ควรติดตามขึ้นก่อน ที่ปกติพับไว้
+  const icd = s => `<i class="dot ${s === 'fail' ? 'bad' : s === 'warn' ? 'warn' : 'ok'}"></i>`
+  const dgRow = c => `<tr><td style="width:24px;">${icd(c.status)}</td><td><b>${esc(c.title)}</b><div class="muted" style="font-size:12px;">${esc(c.detail || '')}</div></td><td class="muted" style="white-space:nowrap;font-size:12px;">${c.status !== 'ok' ? sinceTxt(c.since) : ''}</td></tr>`
+  const dgBad = DG.filter(c => c.status !== 'ok'), dgOk = DG.filter(c => c.status === 'ok')
+  P.dg = `<div class="tbl-wrap"><table><tbody>${dgBad.map(dgRow).join('') || '<tr><td colspan="3" class="ok">✓ ทุกรายการปกติ</td></tr>'}</tbody></table></div>`
+    + (dgOk.length ? `<details style="margin-top:10px;"><summary class="muted" style="cursor:pointer;font-size:12.5px;padding:6px 0;">รายการที่ปกติ (${dgOk.length})</summary><div class="tbl-wrap"><table><tbody>${dgOk.map(dgRow).join('')}</tbody></table></div></details>` : '')
+  // งานตั้งเวลา: เปิดมาเห็นเฉพาะงานที่มีปัญหา
+  const probs = [...badCron, ...warnCron]
+  const probTbl = probs.length ? `<div class="tbl-wrap"><table><thead><tr><th>งาน</th><th>อาการ</th><th>รอบ</th><th>ทำงานล่าสุด</th></tr></thead><tbody>${probs.map(j => { const [c, t] = cronState(j); return `<tr><td><b>${esc(j.jobname)}</b><div class="muted" style="font-size:11.5px;">${esc(JOB_DESC[j.jobname] || '')}</div></td><td><span class="pill ${c}">${esc(t)}</span>${j.last_msg ? `<div class="muted" style="font-size:11.5px;">${esc(String(j.last_msg).slice(0, 200))}</div>` : ''}</td><td>${esc(thaiSched(j.schedule))}</td><td>${th(j.last_start)}</td></tr>` }).join('')}</tbody></table></div>`
+    : '<div class="hp-none">✓ ไม่มีงานที่ทำงานไม่สำเร็จหรือหยุดทำงาน</div>'
+  P.cronView = `<div class="hp-seg"><button type="button" class="${CRON_ALL ? '' : 'on'}" onclick="hpCronAll(false)">เฉพาะที่มีปัญหา (${probs.length})</button><button type="button" class="${CRON_ALL ? 'on' : ''}" onclick="hpCronAll(true)">ทั้งหมด ${cron.length} งาน</button></div>`
+    + (CRON_ALL ? (P.cron || '') : probTbl) + (P.daily || '') + (P.mv || '')
+  const todoN = X ? Object.values(X.todo || {}).filter(v => +v > 0).length + (unkRows.length ? 1 : 0) : unkRows.length ? 1 : 0
+  const ahR = (window._adsHealth && !window._adsHealth.error && Array.isArray(window._adsHealth.data)) ? window._adsHealth.data : []
+  const TABS = [['feed', 'สถานะการนำเข้าข้อมูล', slowN], ['dg', 'ผลการตรวจสอบ', dgN], ['cron', 'งานตั้งเวลา', probs.length], ['ads', 'ความครบของค่าโฆษณา', ahR.filter(r => (r.bad_days || 0) > 0).length],
+    ['recon', 'ยอดขายระบบเทียบบัญชี', 0], ['todo', 'งานค้างที่ต้องกรอก', todoN], ['src', 'แหล่งข้อมูลของแต่ละหน้า', 0]]
+  const PANE = { feed: P.feed, dg: P.dg, cron: P.cronView, ads: P.ads, recon: P.recon || '<div class="loading">ไม่มีข้อมูลยอดขายเทียบบัญชี (เฉพาะผู้มีสิทธิ์ดูต้นทุน)</div>', todo: P.todo, src: P.src }
+  window._hpDraw = () => {
+    document.getElementById('hpTabs').innerHTML = TABS.map(([k, l, n]) => `<button type="button" class="${TAB === k ? 'on' : ''}" onclick="hpTab('${k}')">${l}${n ? `<span class="c">${n}</span>` : ''}</button>`).join('')
+    document.getElementById('content').innerHTML = `<div class="hp-pane">${PANE[TAB] || ''}</div>`
   }
-  document.getElementById('content').innerHTML = html
+  window._hpRedrawCron = () => { PANE.cron = `<div class="hp-seg"><button type="button" class="${CRON_ALL ? '' : 'on'}" onclick="hpCronAll(false)">เฉพาะที่มีปัญหา (${probs.length})</button><button type="button" class="${CRON_ALL ? 'on' : ''}" onclick="hpCronAll(true)">ทั้งหมด ${cron.length} งาน</button></div>` + (CRON_ALL ? (P.cron || '') : probTbl) + (P.daily || '') + (P.mv || ''); window._hpDraw() }
+  window._hpDraw()
 }
+window.hpTab = k => { TAB = k; window._hpDraw && window._hpDraw() }
+window.hpCronAll = v => { CRON_ALL = !!v; window._hpRedrawCron && window._hpRedrawCron() }
 document.getElementById('refreshBtn').onclick = load
 load()
 setInterval(load, 5 * 60 * 1000)
