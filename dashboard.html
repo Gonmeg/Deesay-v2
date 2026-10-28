@@ -774,7 +774,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-e"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-f"></div>
 <script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
@@ -816,6 +816,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             </div>
           </div>
         </div>
+      </div>
+      <!-- (2026-10-28) หน้ามูลค่าสินค้าคงคลัง: แสดงมูลค่า ไม่รวม VAT / รวม VAT (ใช้ทั้งหน้า) -->
+      <div class="filter-group" id="ivVatGroup" style="display:none;padding:0;background:transparent;border:none;">
+        <div class="ui-presets" role="group" aria-label="แสดงมูลค่า"><button type="button" data-vat="ex" aria-pressed="true" onclick="window.InvValue && InvValue.setVat('ex')">ไม่รวม VAT</button><button type="button" data-vat="in" aria-pressed="false" onclick="window.InvValue && InvValue.setVat('in')">รวม VAT</button></div>
       </div>
       <!-- (2026-10-27) หน้าเป้าหมาย KPI: มุมมอง (เป้าสินค้า × ช่องทาง / เป้ายอดขายรายช่องทาง) + โหมด (ติดตามผล / ตั้งเป้า) อยู่แถบบน เพราะเปลี่ยนทั้งหน้า -->
       <div class="filter-group" id="kpViewGroup" style="display:none;padding:0;background:transparent;border:none;gap:8px;">
@@ -2938,6 +2942,7 @@ function showPage(page, lockCh, el) {
   { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
     const sb = document.getElementById('topSearchBtn'); if (sb) sb.style.display = ['home', 'kpi', 'promo', 'exec', 'execfee', 'products'].includes(page) ? 'none' : '';
     const kg = document.getElementById('kpMonthGroup'); if (kg) kg.style.display = page === 'kpi' ? 'flex' : 'none';
+    { const ivg = document.getElementById('ivVatGroup'); if (ivg) ivg.style.display = page === 'invvalue' ? 'flex' : 'none'; }   // (2026-10-28)
     const vg = document.getElementById('kpViewGroup'); if (vg) { const kt = window.kpTabNow ? window.kpTabNow() : 'main'; vg.style.display = page === 'kpi' ? 'flex' : 'none'; vg.querySelectorAll('[data-t]').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === kt)); const ms = document.getElementById('kpModeSlot'); if (ms) ms.style.display = kt === 'main' ? '' : 'none'; } }   // (2026-10-27)   // (2026-10-07) หน้าเป้าหมาย KPI: เลือกเดือนแถบบน เปลี่ยนแล้วโหลดทันที   // (2026-10-07) ตัวเลือกวันของหน้าแรกอยู่แถบบน
   { const og = document.getElementById('opChGroup'); if (og) og.style.display = page === 'ordprofit' ? 'flex' : 'none'; }   // (2026-10-26)
   // สลับ filter: หน้า MONTH_ONLY_PAGES ใช้ตัวเลือก "เดือน" / หน้า NO_DATE_FILTER_PAGES ไม่มีตัวกรองวันที่เลย / หน้าอื่นใช้ช่วงวันที่ตามปกติ
@@ -2979,7 +2984,7 @@ function showPage(page, lockCh, el) {
     loadProductsPage();
   } else if (page === 'invvalue') {   // (2026-10-28) มูลค่าสินค้าคงคลัง (Management) — โค้ดอยู่ใน invvalue.js โหลดครั้งแรกที่เปิด
     if (window.InvValue) window.InvValue.render();
-    else if (!window._ivLoading) { window._ivLoading = true; const s = document.createElement('script'); s.src = 'invvalue.js?v=20261028a';
+    else if (!window._ivLoading) { window._ivLoading = true; const s = document.createElement('script'); s.src = 'invvalue.js?v=20261028b';
       s.onload = () => { window._ivLoading = false; if (currentPage === 'invvalue') window.InvValue.render(); };
       s.onerror = () => { window._ivLoading = false; const el = document.getElementById('page-invvalue'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด invvalue.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
       document.head.appendChild(s); }
