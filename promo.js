@@ -1,3 +1,4 @@
+// promo.js (v20261028c) — การ์ด Rank: เปลี่ยนชื่อคลาส hd/bd/sb (ชนกับเมนูซ้ายที่ใช้ .sb → ข้อความไปลอยบนเมนู)
 // promo.js (v20261028b) — ไม่ใช้เกณฑ์ 5% · หัวข้อ "รายละเอียดการคำนวณ" · คำอธิบายไปอยู่ใน ⓘ · แถวย่อยไม่ทับ · ปุ่มจำลองโปรอยู่ซ้าย · แก้จำลองโปรเลือกสินค้าแล้วคำนวณไม่ได้
 // promo.js (v20261028a) — รายละเอียดคำขอแบบอ่านง่าย (ผลก่อน · 3 ตัวเลข · เงินไปไหนบ้าง + วิธีคิด + บรรทัด VAT · ซ่อนกำไรเมื่อขาดต้นทุน) · แท็บ "จำลองโปร" ในหน้าอนุมัติ
 // promo.js (v20261020k) — โปรโมชั่น 3 หน้า
@@ -138,11 +139,11 @@
       .pr-pill.rk1 { background:rgba(34,197,94,.14); color:#15803d; } .pr-pill.rk2 { background:rgba(59,130,246,.13); color:#1d4ed8; }
       .pr-pill.rk3 { background:rgba(245,158,11,.16); color:#b45309; } .pr-pill.rkx { background:rgba(239,68,68,.13); color:#b91c1c; } .pr-pill.rk0 { background:var(--bg3); color:var(--text3); }
       .pr-rk { border-radius:12px; padding:16px 18px; border:1px solid var(--border); background:var(--bg2); margin-bottom:12px; }
-      .pr-rk .hd { display:flex; align-items:center; gap:12px; }
-      .pr-rk .bd { font-size:20px; font-weight:800; padding:5px 13px; border-radius:11px; white-space:nowrap; }
-      .pr-rk .bd.rk1 { background:rgba(34,197,94,.12); color:#15803d; } .pr-rk .bd.rk2 { background:rgba(59,130,246,.12); color:#1d4ed8; } .pr-rk .bd.rk3 { background:rgba(245,158,11,.14); color:#b45309; }
-      .pr-rk .bd.rkx { background:rgba(239,68,68,.11); color:#b91c1c; font-size:15px; } .pr-rk .bd.rk0 { background:var(--bg3); color:var(--text3); font-size:15px; }
-      .pr-rk .sb { font-size:12.5px; color:var(--text2); line-height:1.55; } .pr-rk .sb b { color:var(--text); }
+      .pr-rk .rk-hd { display:flex; align-items:center; gap:12px; }
+      .pr-rk .rk-bd { font-size:20px; font-weight:800; padding:5px 13px; border-radius:11px; white-space:nowrap; }
+      .pr-rk .rk-bd.rk1 { background:rgba(34,197,94,.12); color:#15803d; } .pr-rk .rk-bd.rk2 { background:rgba(59,130,246,.12); color:#1d4ed8; } .pr-rk .rk-bd.rk3 { background:rgba(245,158,11,.14); color:#b45309; }
+      .pr-rk .rk-bd.rkx { background:rgba(239,68,68,.11); color:#b91c1c; font-size:15px; } .pr-rk .rk-bd.rk0 { background:var(--bg3); color:var(--text3); font-size:15px; }
+      .pr-rk .rk-sb { font-size:12.5px; color:var(--text2); line-height:1.55; } .pr-rk .rk-sb b { color:var(--text); }
       .pr-rk .bar { position:relative; height:38px; margin:14px 6px 2px; }
       .pr-rk .bar .ln { position:absolute; left:0; right:0; top:9px; height:4px; border-radius:2px; background:var(--bg3); }
       .pr-rk .bar .tk { position:absolute; top:6px; transform:translateX(-50%); font-size:10.5px; color:var(--text3); white-space:nowrap; text-align:center; }
@@ -245,11 +246,11 @@
       : k.status === 'not_sold' ? '<span class="pr-pill rkx">ไม่ขายช่องทางนี้</span>' : '<span class="pr-pill rk0">ยังไม่มีราคา Rank</span>'; };
   function rankCard(k) {
     if (!k) return '';
-    if (k.status === 'no_rank') return `<div class="pr-rk"><div class="hd"><span class="bd rk0">ไม่เช็ค Rank</span><div class="sb">${esc(k.channel)} ไม่เช็ค Rank</div></div></div>`;
+    if (k.status === 'no_rank') return `<div class="pr-rk"><div class="rk-hd"><span class="rk-bd rk0">ไม่เช็ค Rank</span><div class="rk-sb">${esc(k.channel)} ไม่เช็ค Rank</div></div></div>`;
     const lines = k.lines || [], cat = k.category === 'สินค้าเซ็ต' ? `ราคาเซ็ต (${n0(k.pieces)} ชิ้น)` : 'ราคาเดี่ยว (1 ชิ้น)';
     const sub = `${esc(k.channel)} · ${cat} · ไม่นับของแถม`;
-    if (k.status === 'missing') return `<div class="pr-rk"><div class="hd"><span class="bd rk0">ยังไม่มีราคา Rank</span><div class="sb">${(k.missing || []).map(esc).join(', ')} ยังไม่มีราคา Rank ในหน้า สินค้า & ราคา<br>${sub}</div></div></div>`;
-    if (k.status === 'not_sold') return `<div class="pr-rk"><div class="hd"><span class="bd rkx">ไม่ขายช่องทางนี้</span><div class="sb">${(k.not_sold || []).map(esc).join(', ') || 'สินค้าในชุดนี้'} ไม่ได้ติ๊กขายใน ${esc(k.channel)}<br>${sub}</div></div></div>`;
+    if (k.status === 'missing') return `<div class="pr-rk"><div class="rk-hd"><span class="rk-bd rk0">ยังไม่มีราคา Rank</span><div class="rk-sb">${(k.missing || []).map(esc).join(', ')} ยังไม่มีราคา Rank ในหน้า สินค้า & ราคา<br>${sub}</div></div></div>`;
+    if (k.status === 'not_sold') return `<div class="pr-rk"><div class="rk-hd"><span class="rk-bd rkx">ไม่ขายช่องทางนี้</span><div class="rk-sb">${(k.not_sold || []).map(esc).join(', ') || 'สินค้าในชุดนี้'} ไม่ได้ติ๊กขายใน ${esc(k.channel)}<br>${sub}</div></div></div>`;
     const S = [k.sum1, k.sum2, k.sum3].map(v => v == null ? null : +v), price = +k.price, hit = k.rank || 0;
     const ok = k.status === 'ok';
     // แถบตำแหน่งราคา: ซ้าย = ต่ำ ขวา = สูง
@@ -264,7 +265,7 @@
       + `<tr class="sum"><td>รวม × จำนวน</td><td></td>${cell(S[0], 1)}${cell(S[1], 2)}${cell(S[2], 3)}</tr></tbody></table>`;
     const why = ok ? (hit === 1 ? `ราคาที่ขอ ${n0(price)} ≥ Rank 1 (${n0(S[0])})` : `ราคาที่ขอ ${n0(price)} ≥ Rank ${hit} (${n0(S[hit - 1])}) แต่ต่ำกว่า Rank ${hit - 1} (${n0(S[hit - 2])})`)
       : `ราคาที่ขอ ${n0(price)} ต่ำกว่า Rank 3 (${n0(S[2])}) ซึ่งเป็นราคาต่ำสุดที่ยอมให้ขาย`;
-    return `<div class="pr-rk"><div class="hd"><span class="bd ${ok ? 'rk' + hit : 'rkx'}">${ok ? 'Rank ' + hit : 'ต่ำกว่า Rank 3'}</span><div class="sb"><b>${ok ? 'ราคานี้อยู่ Rank ' + hit : 'ราคานี้ต่ำกว่าเกณฑ์'}</b><br>${sub}</div></div>
+    return `<div class="pr-rk"><div class="rk-hd"><span class="rk-bd ${ok ? 'rk' + hit : 'rkx'}">${ok ? 'Rank ' + hit : 'ต่ำกว่า Rank 3'}</span><div class="rk-sb"><b>${ok ? 'ราคานี้อยู่ Rank ' + hit : 'ราคานี้ต่ำกว่าเกณฑ์'}</b><br>${sub}</div></div>
       ${bar}${tbl}<div class="nt">${why}<span class="nt2"><br>ราคา Rank จากหน้า สินค้า & ราคา · ราคาต่อชิ้น${k.category === 'สินค้าเซ็ต' ? 'แบบเซ็ต เพราะมากกว่า 1 ชิ้น' : 'แบบเดี่ยว'}</span></div></div>`;
   }
   async function check() {
