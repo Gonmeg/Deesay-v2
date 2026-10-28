@@ -1,0 +1,41 @@
+# ระบบทดสอบ Deesay-v2: ทุกครั้งที่ push + ทุกเช้า 07:30 · ตรวจไวยากรณ์โค้ดทุกไฟล์ แล้วจำลองการใช้งานจริงทุกหน้า
+# ผลทดสอบ + ภาพหน้าจอ เก็บที่ branch "qa-report" (ไม่กระทบหน้าเว็บ) · ต้องตั้ง Secrets: QA_EMAIL, QA_PASSWORD
+name: QA ระบบทดสอบ
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['tests/qa-out/**']
+  schedule:
+    - cron: '30 0 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: qa, cancel-in-progress: true }
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: ตรวจไวยากรณ์โค้ดทุกไฟล์
+        run: node tests/syntax-check.mjs
+      - name: รอหน้าเว็บ (GitHub Pages) อัปเดตเป็นเวอร์ชันล่าสุด
+        if: github.event_name == 'push'
+        run: sleep 120
+      - name: ติดตั้งเบราว์เซอร์ทดสอบ
+        run: cd tests && npm install --no-audit --no-fund && npx playwright install --with-deps chromium
+      - name: จำลองการใช้งานทุกหน้า
+        env:
+          QA_EMAIL: ${{ secrets.QA_EMAIL }}
+          QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: cd tests && npx playwright test --reporter=line
+      - name: เก็บผลทดสอบไว้ที่ branch qa-report
+        if: always()
+        run: |
+          cd tests && mkdir -p qa-out && cd qa-out
+          git init -q && git checkout -q -b qa-report && git add -A
+          git -c user.name=qa-bot -c user.email=qa-bot@users.noreply.github.com commit -qm "QA ${GITHUB_SHA::7} $(date -u +%F_%H%M)" || exit 0
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" qa-report
