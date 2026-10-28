@@ -1,3 +1,4 @@
+// invvalue.js (v20261028c) — ไม่มีกรอบซ้อนรอบตาราง · ราคาต่อชิ้นแสดงเฉพาะแถว parent
 // invvalue.js (v20261028b) — มูลค่าสินค้าคงคลัง (Management)
 // (2026-10-28 b) แสดงมูลค่า ไม่รวม VAT / รวม VAT (ปุ่มที่แถบบน · ใช้ทั้งหน้า) · คอลัมน์ต่อชิ้น (ราคาทุน / RSP) · กดหัวคอลัมน์เพื่อเรียง · แสดงทุกสินค้า (ไม่แบ่งหน้า) หัวตารางล็อกตอนเลื่อน
 //                 คอลัมน์กว้างเท่ากัน ตัวเลขจัดกลาง · สีแยกกลุ่ม จำนวน / ราคาทุน / RSP · ระยะเวลาจำหน่าย 6–12 เดือนสีเหลือง เกิน 1 ปีสีส้ม
@@ -21,7 +22,7 @@
       #page-invvalue .iv-k .row b { font-size:18px; color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; } #page-invvalue .iv-k .row.sub b { font-size:14px; color:var(--text2); }
       #page-invvalue .iv-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px 16px 10px; }
       #page-invvalue .iv-card h3 { margin:0 0 10px; font-size:14px; font-weight:700; color:var(--text); }
-      #page-invvalue .iv-wrap { overflow:auto; max-height:calc(100vh - 230px); border:1px solid var(--border); border-radius:10px; }
+      #page-invvalue .iv-wrap { overflow:auto; max-height:calc(100vh - 230px); }   /* (2026-10-28 c) ไม่มีกรอบซ้อนในการ์ด */
       #page-invvalue table.iv { width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; min-width:1180px; table-layout:fixed; }
       #page-invvalue table.iv th { position:sticky; z-index:2; background:var(--bg2); font-size:11.5px; font-weight:600; color:var(--text3); padding:7px 6px; text-align:center; border-bottom:1px solid var(--border); white-space:normal; line-height:1.35; vertical-align:middle; }
       #page-invvalue table.iv thead tr.h1 th { top:0; } #page-invvalue table.iv thead tr.h2 th { top:var(--ivh1, 33px); }
@@ -95,8 +96,8 @@
       const kids = multi ? g.kids.map(k => { const c = k.cost == null ? null : k.cost * cm, r = k.rsp == null ? null : k.rsp * rm;
         return `<tr class="kid" data-pp="${esc(g.parent)}"${op ? '' : ' hidden'}><td class="nm"><span class="sku">${esc(k.sku)}</span>${k.name && k.name !== g.name ? ` ${esc(k.name)}` : ''}</td>
           <td class="gl">${k.fg ? n0(k.fg) : '<span class="dash">—</span>'}</td><td>${k.wip ? n0(k.wip) : '<span class="dash">—</span>'}</td>
-          <td class="gl cc">${c == null ? '<span class="dash">—</span>' : n2(c)}</td><td class="cc">${money(c == null ? null : c * k.fg)}</td><td class="cc">${money(c == null ? null : c * (k.fg + k.wip))}</td>
-          <td class="gl rc">${r == null ? '<span class="dash">—</span>' : n2(r)}</td><td class="rc">${money(r == null ? null : r * k.fg)}</td><td class="rc">${money(r == null ? null : r * (k.fg + k.wip))}</td>
+          <td class="gl cc"></td><td class="cc">${money(c == null ? null : c * k.fg)}</td><td class="cc">${money(c == null ? null : c * (k.fg + k.wip))}</td>
+          <td class="gl rc"></td><td class="rc">${money(r == null ? null : r * k.fg)}</td><td class="rc">${money(r == null ? null : r * (k.fg + k.wip))}</td>
           <td class="gl"></td>${coverCell(k.fg, k.avg)}</tr>`; }).join('') : '';
       return par + kids; }).join('');
   }
