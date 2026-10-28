@@ -774,7 +774,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-a"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-b"></div>
 <script src="sidebar.js?v=20261027a"></script>
 
 <div class="main">
@@ -3063,7 +3063,7 @@ function loadPromoPage(page) {
   if (window._promoLoading) return;
   window._promoLoading = true;
   const s = document.createElement('script');
-  s.src = 'promo.js?v=20261020k';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
+  s.src = 'promo.js?v=20261028a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
   s.onload = () => { window._promoLoading = false; if (['promo', 'exec', 'execfee'].includes(currentPage)) window.PromoUI.render(currentPage); };
   s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
