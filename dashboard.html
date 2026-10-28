@@ -774,7 +774,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-f"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-g"></div>
 <script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
@@ -2984,7 +2984,7 @@ function showPage(page, lockCh, el) {
     loadProductsPage();
   } else if (page === 'invvalue') {   // (2026-10-28) มูลค่าสินค้าคงคลัง (Management) — โค้ดอยู่ใน invvalue.js โหลดครั้งแรกที่เปิด
     if (window.InvValue) window.InvValue.render();
-    else if (!window._ivLoading) { window._ivLoading = true; const s = document.createElement('script'); s.src = 'invvalue.js?v=20261028b';
+    else if (!window._ivLoading) { window._ivLoading = true; const s = document.createElement('script'); s.src = 'invvalue.js?v=20261028c';
       s.onload = () => { window._ivLoading = false; if (currentPage === 'invvalue') window.InvValue.render(); };
       s.onerror = () => { window._ivLoading = false; const el = document.getElementById('page-invvalue'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด invvalue.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
       document.head.appendChild(s); }
