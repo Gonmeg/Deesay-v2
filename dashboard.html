@@ -774,8 +774,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-d"></div>
-<script src="sidebar.js?v=20261028a"></script>
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-e"></div>
+<script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
   <div class="topbar">
@@ -2145,7 +2145,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-cost"><!-- (2026-10-09) Business Insight: หน้าทั้งหมดสร้างโดย bizinsight.js --></div>
-<div class="page" id="page-promo"></div><div class="page" id="page-exec"></div><div class="page" id="page-execfee"></div><div class="page" id="page-ordprofit"></div><!-- (2026-10-15) promo.js -->
+<div class="page" id="page-promo"></div><div class="page" id="page-exec"></div><div class="page" id="page-execfee"></div><div class="page" id="page-ordprofit"></div><div class="page" id="page-invvalue"></div><!-- (2026-10-15) promo.js -->
 <div class="page" id="page-products"></div><!-- (2026-10-20) products.js -->
 
   </div>
@@ -2159,7 +2159,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   </div>
 </div>
 <script src="config.js"></script>
-<script src="auth.js?v=20261026a"></script>
+<script src="auth.js?v=20261028a"></script>
 <script>
 // ===== STATE =====
 let allData = [];
@@ -2759,7 +2759,8 @@ function applyFilters() {
   const sub = document.getElementById('filterSubChannel').value;
 
   try { sessionStorage.setItem('deesay_last_filter', JSON.stringify({ from, to, ch, sub })); } catch (e) {}
-  if (currentPage === 'ordprofit') { if (window.OrdProfit) window.OrdProfit.render(); return; }   // (2026-10-26) หน้านี้ดึงจากฐานข้อมูลตามช่วงวันที่เอง
+  if (currentPage === 'ordprofit') { if (window.OrdProfit) window.OrdProfit.render(); return; }
+  if (currentPage === 'invvalue') { if (window.InvValue) window.InvValue.render(); return; }   // (2026-10-28) มูลค่าสินค้าคงคลัง: ข้อมูล ณ ปัจจุบัน ไม่ใช้ช่วงวันที่   // (2026-10-26) หน้านี้ดึงจากฐานข้อมูลตามช่วงวันที่เอง
 
   filteredData = allData.filter(r => {
     if (from && r.date < from) return false;
@@ -2779,7 +2780,7 @@ function applyFilters() {
 
 // ===== NAVIGATION =====
 const pageTitles = {
-  promo: 'ขอ Promotion', exec: 'Promotion · อนุมัติ', execfee: 'ค่าธรรมเนียมช่องทาง', ordprofit: 'กำไรต่อคำสั่งซื้อ', products: 'สินค้า & ราคา',
+  promo: 'ขอ Promotion', exec: 'Promotion · อนุมัติ', execfee: 'ค่าธรรมเนียมช่องทาง', ordprofit: 'กำไรต่อคำสั่งซื้อ', invvalue: 'มูลค่าสินค้าคงคลัง', products: 'สินค้า & ราคา',
   overview: 'ภาพรวมยอดขาย', channel: 'แยกตาม Channel', kpi: 'เป้าหมาย KPI', promotarget: 'ตั้งเป้า Promotion', fbhub: 'ภาพรวม Facebook',
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttkeyword: 'ค้นหาคำบน TikTok', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
@@ -2798,7 +2799,7 @@ const PAGE_INFO = {
 };
 const pageOrder = ['home','overview','kpi','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่า Ads ต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
-const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee','products']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
+const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee','products', 'invvalue']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -2855,7 +2856,7 @@ function showPage(page, lockCh, el) {
   if (page === 'channel') page = 'overview';   // (2026-10-18) หน้าแยกตาม Channel รวมเข้าภาพรวมยอดขายแล้ว
   if (window.Auth && Auth.perm && !Auth.canPage(page) && !(page === 'overview' && Auth.canPage('channel'))) { uiAlert('ยังไม่มีสิทธิ์ดูหน้านี้', { text: 'ติดต่อผู้ดูแลระบบถ้าต้องใช้' }); return; }   // ด่านสิทธิ์รายหน้า
   // (2026-09-29) เปิดมาที่หน้าแรกแล้วกดไปหน้าอื่นก่อนข้อมูลก้อนหลักโหลดเสร็จ → โชว์ตัวโหลดไว้ก่อน
-  if (!['home', 'promo', 'exec', 'execfee', 'products', 'ordprofit'].includes(page) && !window._initDone) document.getElementById('loadingOverlay')?.classList.remove('hidden');
+  if (!['home', 'promo', 'exec', 'execfee', 'products', 'ordprofit', 'invvalue'].includes(page) && !window._initDone) document.getElementById('loadingOverlay')?.classList.remove('hidden');
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
@@ -2869,8 +2870,8 @@ function showPage(page, lockCh, el) {
   const chGroup = document.getElementById('channelFilterGroup');
   const subGroup = document.getElementById('subChannelGroup');
   const HUB_CHANNEL = { fbhub: 'Facebook', crm: 'Facebook', flow: 'Facebook', tthub: 'TikTok', shhub: 'Shopee', lzhub: 'Lazada', mthub: 'Modern Trade' };
-  const HIDE_CHANNEL_FILTER = ['promo', 'exec', 'execfee', 'ordprofit', 'products', 'fbads', 'fbhub', 'tthub', 'ttcontent', 'ttkeyword', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
-  const HIDE_SUBCHANNEL_FILTER = ['promo', 'exec', 'execfee', 'ordprofit', 'products', 'fbads', 'fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply', 'kpi']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
+  const HIDE_CHANNEL_FILTER = ['promo', 'exec', 'execfee', 'ordprofit', 'invvalue', 'products', 'fbads', 'fbhub', 'tthub', 'ttcontent', 'ttkeyword', 'ttads', 'shhub', 'shads', 'lzhub', 'mthub', 'fbengage', 'kol', 'supply']; // หน้ารวมของช่องทางเดียวอยู่แล้ว ไม่ต้องโชว์ Channel filter เลย
+  const HIDE_SUBCHANNEL_FILTER = ['promo', 'exec', 'execfee', 'ordprofit', 'invvalue', 'products', 'fbads', 'fbhub', 'fbengage', 'ttcontent', 'ttkeyword', 'ttads', 'kol', 'shads', 'supply', 'kpi']; // ย้ายไปเป็น filter เฉพาะของส่วน Promotion ในหน้านี้แทน
   if (chGroup) chGroup.style.display = HIDE_CHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   if (subGroup) subGroup.style.display = HIDE_SUBCHANNEL_FILTER.includes(page) ? 'none' : 'flex';
   { const g = document.getElementById('skdFilterGroup'); if (g) g.style.display = page === 'skuanalysis' ? 'flex' : 'none';   // (2026-09-30) เจาะสินค้า: เลือกสินค้าที่แถบด้านบน
@@ -2976,6 +2977,12 @@ function showPage(page, lockCh, el) {
     loadPromoPage(page);
   } else if (page === 'products') {
     loadProductsPage();
+  } else if (page === 'invvalue') {   // (2026-10-28) มูลค่าสินค้าคงคลัง (Management) — โค้ดอยู่ใน invvalue.js โหลดครั้งแรกที่เปิด
+    if (window.InvValue) window.InvValue.render();
+    else if (!window._ivLoading) { window._ivLoading = true; const s = document.createElement('script'); s.src = 'invvalue.js?v=20261028a';
+      s.onload = () => { window._ivLoading = false; if (currentPage === 'invvalue') window.InvValue.render(); };
+      s.onerror = () => { window._ivLoading = false; const el = document.getElementById('page-invvalue'); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด invvalue.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
+      document.head.appendChild(s); }
   } else if (page === 'ordprofit') {
     loadOrdProfitPage();
   } else {
