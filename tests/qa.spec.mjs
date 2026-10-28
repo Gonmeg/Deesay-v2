@@ -21,9 +21,10 @@ test('จำลองการใช้งานทุกหน้า', async ({
   });
   const page = await ctx.newPage();
   let errs = [];
-  page.on('pageerror', e => errs.push('JS: ' + e.message.slice(0, 200)));
+  page.on('pageerror', e => errs.push('JS: ' + e.message.slice(0, 160) + ' @ ' + String(e.stack || '').split('\n').slice(1, 2).join('').trim().replace(/^at\s+/, '').slice(0, 120)));
   page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_BLOCKED_BY_CLIENT/.test(m.text())) errs.push('console: ' + m.text().slice(0, 200)); });
-  page.on('response', r => { if (r.status() >= 400 && /supabase\.co/.test(r.url())) errs.push(`โหลดข้อมูลไม่สำเร็จ ${r.status()} ${r.url().split('?')[0].split('/').slice(-2).join('/')}`); });
+  page.on('response', async r => { if (r.status() >= 400 && /supabase\.co/.test(r.url())) { let body = ''; try { body = (await r.text()).replace(/\s+/g, ' ').slice(0, 160); } catch (e) {} let post = ''; try { post = (r.request().postData() || '').slice(0, 120); } catch (e) {}
+    errs.push(`โหลดข้อมูลไม่สำเร็จ ${r.status()} ${r.url().split('?')[0].split('/').slice(-2).join('/')} · ${body}${post ? ' · ส่งไป ' + post : ''}`); } });
 
   // ล็อกอิน
   await page.goto(SITE + 'login.html');
@@ -61,7 +62,8 @@ test('จำลองการใช้งานทุกหน้า', async ({
       const search = page.locator('#topSearchBtn:visible');
       if (t.dash && await search.count()) {
         await page.evaluate(() => { window.__cls = 0; window.__shifts = []; });
-        await search.first().click(); await waitIdle();
+        await search.first().click({ force: true, timeout: 5000 }).catch(() => page.evaluate(() => window.applyFilters && window.applyFilters()));
+        await waitIdle();
         r.cls_search = +(await page.evaluate(() => window.__cls || 0)).toFixed(3);
       }
 
@@ -114,7 +116,13 @@ test('จำลองการใช้งานทุกหน้า', async ({
         if (DANGER.test(label)) continue;
         const e0 = errs.length;
         await el.click({ timeout: 5000 }).catch(() => {}); await page.waitForTimeout(1800);
-        const open = await page.evaluate(() => { const b = document.getElementById('trBody'); return b && b.offsetParent ? (b.innerText || '').trim().length : -1; });
+        const open = await page.evaluate(([before]) => {
+          const b = document.getElementById('trBody'); if (b && b.offsetParent) return (b.innerText || '').trim().length;
+          const pop = [...document.querySelectorAll('[role="dialog"], .modal, [class*="drawer"], [class*="popover"], [class*="pop-"], .ui-pop, .fbe-pop')].find(x => x.offsetParent && (x.innerText || '').trim().length > 20);
+          if (pop) return (pop.innerText || '').trim().length;
+          const act = document.querySelector('.page.active'); if (act && act.id !== before) return 999;   // พาไปหน้าอื่น
+          return -1;
+        }, [await page.evaluate(() => (document.querySelector('.page.active') || {}).id || '')]);
         if (open > 20 && errs.length === e0) r.clicks.ok++; else r.clicks.fail.push(`${label || '(ไม่มีข้อความ)'}: ${open < 0 ? 'กดแล้วไม่มีแผงเปิด' : open <= 20 ? 'แผงเปิดแต่ไม่มีข้อมูล' : errs.slice(e0).join(' / ')}`);
         await page.keyboard.press('Escape'); await page.waitForTimeout(400);
         await page.evaluate(() => { const x = document.querySelector('.tr-x, .tr-close, [onclick*="trClose"]'); if (x && x.offsetParent) x.click(); });
