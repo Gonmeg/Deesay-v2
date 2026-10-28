@@ -1,4 +1,4 @@
-// sidebar.js (v20261028a) — กันพังเมื่อไม่มีกล่องชื่อผู้ใช้ · — เมนูเป็น <div role="navigation"> แทนแท็ก <nav> (หน้า admin ซ่อนแท็ก nav ทั้งหมดด้วย !important ทำให้เมนูหายทั้งแถบ)
+// sidebar.js (v20261028b) — เมนูมูลค่าสินค้าคงคลัง · — กันพังเมื่อไม่มีกล่องชื่อผู้ใช้ · — เมนูเป็น <div role="navigation"> แทนแท็ก <nav> (หน้า admin ซ่อนแท็ก nav ทั้งหมดด้วย !important ทำให้เมนูหายทั้งแถบ)
 // sidebar.js (v20261026a) — เมนูซ้ายกลาง ใช้ร่วมทุกหน้า: dashboard / upload / admin / health
 // วาง <div id="sbMount" data-page="dashboard|upload|admin|health" data-build="v…"></div> แล้วตามด้วย <script src="sidebar.js"></script>
 // · ขยาย 208px / ย่อเหลือไอคอน 64px (ปุ่ม « มุมบน · จำค่าไว้ใน localStorage 'sbMini' ใช้ทุกหน้า) · จอแคบกว่า 760px ย่ออัตโนมัติ
@@ -57,7 +57,7 @@
     ['skurev', 'แนวโน้มสินค้า', 'trend'], ['mktlive', 'MKT Tracking', 'pulse'], ['skuanalysis', 'เจาะสินค้า', 'search'], ['adperf', 'Ad Performance', 'mega'],
     ['kol', 'KOL', 'users'], ['supply', 'Supply Chain', 'box'], ['products', 'สินค้า & ราคา', 'layers'], ['promo', 'ขอ Promotion', 'pct'],
     { sec: 'ผู้บริหาร', exec: true },
-    ['exec', 'Promotion · อนุมัติ', 'check', true], ['cost', 'Business Insight', 'brief', true], ['ordprofit', 'กำไรต่อคำสั่งซื้อ', 'coin', true], ['execfee', 'ค่าธรรมเนียมช่องทาง', 'receipt', true],
+    ['exec', 'Promotion · อนุมัติ', 'check', true], ['cost', 'Business Insight', 'brief', true], ['ordprofit', 'กำไรต่อคำสั่งซื้อ', 'coin', true], ['invvalue', 'มูลค่าสินค้าคงคลัง', 'box', true], ['execfee', 'ค่าธรรมเนียมช่องทาง', 'receipt', true],
   ];
   const SYS = [['upload.html', 'อัปโหลดข้อมูล', 'upload', 'upload'], ['admin.html', 'ตั้งค่า (Admin)', 'sliders', 'admin'], ['health.html', 'สุขภาพระบบ', 'heart', 'health']];
 
