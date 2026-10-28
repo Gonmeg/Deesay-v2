@@ -1,4 +1,4 @@
-// sidebar.js (v20261027a) — เมนูเป็น <div role="navigation"> แทนแท็ก <nav> (หน้า admin ซ่อนแท็ก nav ทั้งหมดด้วย !important ทำให้เมนูหายทั้งแถบ)
+// sidebar.js (v20261028a) — กันพังเมื่อไม่มีกล่องชื่อผู้ใช้ · — เมนูเป็น <div role="navigation"> แทนแท็ก <nav> (หน้า admin ซ่อนแท็ก nav ทั้งหมดด้วย !important ทำให้เมนูหายทั้งแถบ)
 // sidebar.js (v20261026a) — เมนูซ้ายกลาง ใช้ร่วมทุกหน้า: dashboard / upload / admin / health
 // วาง <div id="sbMount" data-page="dashboard|upload|admin|health" data-build="v…"></div> แล้วตามด้วย <script src="sidebar.js"></script>
 // · ขยาย 208px / ย่อเหลือไอคอน 64px (ปุ่ม « มุมบน · จำค่าไว้ใน localStorage 'sbMini' ใช้ทุกหน้า) · จอแคบกว่า 760px ย่ออัตโนมัติ
@@ -234,9 +234,10 @@
     const p = window.Auth && Auth.perm;
     if (!p) { if (++tries < 120) setTimeout(waitPerm, 250); return; }
     const name = p.name || String(p.email || '').split('@')[0] || '—';
-    document.getElementById('sbName').textContent = name;
-    document.getElementById('sbRole').textContent = p.is_admin ? 'ผู้ดูแลระบบ' : (p.email || 'ผู้ใช้งาน');
-    document.getElementById('sbAv').textContent = (name.trim()[0] || '·').toUpperCase();
+    const setT = (id, v) => { const x = document.getElementById(id); if (x) x.textContent = v; };   // (2026-10-28) หน้าที่ไม่มีสิทธิ์อาจไม่มีกล่องนี้
+    setT('sbName', name);
+    setT('sbRole', p.is_admin ? 'ผู้ดูแลระบบ' : (p.email || 'ผู้ใช้งาน'));
+    setT('sbAv', (name.trim()[0] || '·').toUpperCase());
     if (DASH) return;   // dashboard กรองเมนูเองใน applyPermissions() (โค้ดเดิม)
     document.querySelectorAll('.sb-nav [data-page]').forEach(el => { if (Auth.canPage && !Auth.canPage(el.dataset.page)) el.remove(); });
     document.querySelectorAll('.sb-nav .sb-subs').forEach(g => { if (!g.querySelector('.nav-item')) { g.previousElementSibling && g.previousElementSibling.remove(); g.remove(); } });
