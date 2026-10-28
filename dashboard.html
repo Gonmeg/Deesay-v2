@@ -774,8 +774,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-b"></div>
-<script src="sidebar.js?v=20261027a"></script>
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.28-c"></div>
+<script src="sidebar.js?v=20261028a"></script>
 
 <div class="main">
   <div class="topbar">
@@ -2274,8 +2274,15 @@ function noteSalesStatus(page, R, P) {
 
 function getDateValue(suffix) {
   const el = document.getElementById('date' + suffix);
-  return el ? el.value : '';
+  if (el && el.value) return el.value;
+  // (2026-10-28) เปิดหน้าจากลิงก์ตรง (?page=…) ก่อนตัวเลือกวันที่ตั้งค่าเสร็จ → ใช้เดือนนี้ (เดิมส่งวันที่ว่างไปฐานข้อมูล → โหลดไม่สำเร็จ)
+  if (suffix !== 'From' && suffix !== 'To') return el ? el.value : '';
+  const n = new Date(), z = v => String(v).padStart(2, '0'), ymd = x => `${x.getFullYear()}-${z(x.getMonth() + 1)}-${z(x.getDate())}`;
+  const v = suffix === 'To' ? ymd(n) : ymd(new Date(n.getFullYear(), n.getMonth(), 1));
+  if (el) el.value = v;
+  return v;
 }
+['From', 'To'].forEach(s => { const el = document.getElementById('date' + s); if (el && !el.value) getDateValue(s); });
 
 // ===== Quick Date Preset (แบบ Shopee) — ใช้ร่วมกันทุกหน้าที่มีตัวกรองวันที่ =====
 // ⚠️ ห้ามใช้ .toISOString() กับวันที่ล้วนๆ (ไม่มีเวลา) เด็ดขาด — มันแปลงเป็น UTC เสมอ
@@ -3063,7 +3070,7 @@ function loadPromoPage(page) {
   if (window._promoLoading) return;
   window._promoLoading = true;
   const s = document.createElement('script');
-  s.src = 'promo.js?v=20261028a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
+  s.src = 'promo.js?v=20261028b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต promo.js
   s.onload = () => { window._promoLoading = false; if (['promo', 'exec', 'execfee'].includes(currentPage)) window.PromoUI.render(currentPage); };
   s.onerror = () => { window._promoLoading = false; const el = document.getElementById('page-' + page); if (el) el.innerHTML = '<div class="error-banner" style="display:block;">โหลด promo.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
