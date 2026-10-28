@@ -1,3 +1,4 @@
+// promo.js (v20261028b) — ไม่ใช้เกณฑ์ 5% · หัวข้อ "รายละเอียดการคำนวณ" · คำอธิบายไปอยู่ใน ⓘ · แถวย่อยไม่ทับ · ปุ่มจำลองโปรอยู่ซ้าย · แก้จำลองโปรเลือกสินค้าแล้วคำนวณไม่ได้
 // promo.js (v20261028a) — รายละเอียดคำขอแบบอ่านง่าย (ผลก่อน · 3 ตัวเลข · เงินไปไหนบ้าง + วิธีคิด + บรรทัด VAT · ซ่อนกำไรเมื่อขาดต้นทุน) · แท็บ "จำลองโปร" ในหน้าอนุมัติ
 // promo.js (v20261020k) — โปรโมชั่น 3 หน้า
 // (2026-10-20 i) กล่องยืนยัน / แจ้งเตือนเป็นของเว็บเอง (uiConfirm / uiAlert ใน ui.js) แทนกล่องของเบราว์เซอร์
@@ -452,8 +453,11 @@
       .pv-lad th { font-size:11px; font-weight:600; color:var(--text3); text-align:left; padding:6px 6px; border-bottom:1px solid var(--border); } .pv-lad th.num { text-align:right; width:24%; } .pv-lad th.how { width:40%; }
       .pv-lad td { padding:8px 6px; border-bottom:1px solid var(--border); vertical-align:top; } .pv-lad td.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; } .pv-lad td.how { font-size:11.5px; color:var(--text3); }
       .pv-lad tr.neg td.num { color:var(--red,#dc2626); } .pv-lad tr.tot td { background:var(--bg3); font-weight:700; } .pv-lad tr.tot.big td { font-size:14px; border-top:1px solid var(--text3); } .pv-lad tr.negv td.num { color:var(--red,#dc2626); }
-      .pv-lad tr.grp { cursor:pointer; } .pv-lad tr.grp:hover td { background:rgba(127,127,127,.05); } .pv-lad .car { display:inline-block; width:12px; color:var(--text3); transition:transform .15s; } .pv-lad tr.grp.open .car { transform:rotate(90deg); }
+      .pv-lad tr.grp { cursor:pointer; } .pv-lad tr.grp:hover td { background:rgba(127,127,127,.05); } .pv-lad .car { display:inline-block; width:12px; font-size:9px; color:var(--text3); transition:transform .15s; } .pv-lad tr.grp.open .car { transform:rotate(90deg); }
+      .pv-lad td { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .pv-lad td.how { white-space:nowrap; }
       .pv-lad tr.sub td { font-size:11.5px; color:var(--text2); padding:5px 6px 5px 22px; } .pv-lad tr.sub td.num { color:var(--text2); } .pv-lad .miss { color:#b45309; }
+      .pv-sim-f .pr-row { display:grid; grid-template-columns:minmax(0,1fr) 64px 30px; gap:6px; align-items:center; margin-bottom:6px; } .pv-sim-f .pr-row .pr-in { width:100%; box-sizing:border-box; }
+      .pv-simbtn[aria-pressed="true"] { background:var(--accent,#b8862f); color:#fff; border-color:transparent; }
       .pv-try { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 12px; font-size:12.5px; } .pv-try label { color:var(--text2); } .pv-try .pr-in { width:130px; } .pv-chg { font-size:11.5px; color:#b45309; }
       .pv-items summary { cursor:pointer; font-size:12.5px; font-weight:600; padding:2px 0 8px; color:var(--text2); }
       .pv-sim { display:grid; grid-template-columns:minmax(300px, 380px) minmax(0, 1fr); gap:16px; align-items:start; padding:16px 20px 20px; }
@@ -473,28 +477,27 @@
     const price = +c.price || 0, rex = +c.revenue_ex || 0, mm = pc(+c.min_markup || 0.05, 0), sum = a => a.reduce((t, x) => t + (+x || 0), 0);
     const fees = ly => (c.fees || []).filter(f => f.layer === ly), lines = c.lines || [], cogs = sum(lines.map(l => l.cost));
     const how = f => f.kind === 'pct' ? `${+(f.rate * 100).toFixed(2)}% × ${n2(price)} ÷ ${vf}` : `${n2(f.rate)} ÷ ${vf}`;
-    const ban = !price ? '' : !ok ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')} ในไฟล์ต้นทุนของบัญชี · แจ้งบัญชีให้เพิ่มต้นทุน แล้วกดคำนวณใหม่</span></div>`
-      : c.signal === 'green' ? `<div class="pv-ban good"><b>ผ่านเกณฑ์</b><span>กำไรสุทธิเกินต้นทุนทั้งหมดอีก ${pc(c.markup)} · เกณฑ์อย่างน้อย ${mm}</span></div>`
-      : `<div class="pv-ban bad"><b>ยังไม่ผ่านเกณฑ์</b><span>${c.target_price != null ? 'ต้องขายอย่างน้อย ' + n2(c.target_price) + ' (รวม VAT)' : 'ราคานี้ยังไม่ครอบคลุมต้นทุนทั้งหมด'} · เกณฑ์ กำไรเกินต้นทุนทั้งหมดอย่างน้อย ${mm}</span></div>`;
+    // (2026-10-28 b) ไม่ใช้เกณฑ์กำไรขั้นต่ำ (5%) แล้ว: แถบบนขึ้นเฉพาะตอนขาดต้นทุน · ขาดทุนดูจากกำไรสุทธิที่เป็นสีแดง
+    const ban = price && !ok ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')} ในไฟล์ต้นทุนของบัญชี</span></div>` : '';
     const dif = +c.rsp > 0 ? (price - +c.rsp) / +c.rsp : null;
     const tiles = `<div class="pv-k">
         <div><div class="l">ราคาขาย (รวม VAT)</div><div class="v">${n2(price)}</div><div class="s">${dif == null ? '&nbsp;' : (dif < 0 ? 'ต่ำกว่า' : dif > 0 ? 'สูงกว่า' : 'เท่า') + 'ราคาปกติ ' + (dif ? pc(Math.abs(dif)) : '') + tip('ราคาปกติ (RSP) ของทั้งเซ็ต ' + n2(c.rsp))}</div></div>
-        <div><div class="l">กำไรสุทธิ / ออเดอร์</div><div class="v${ok && +c.profit < 0 ? ' neg' : ''}">${ok ? n2(c.profit) : '—'}</div><div class="s">${ok ? pc(c.margin) + ' ของรายได้ไม่รวม VAT' : 'รอต้นทุนครบ'}</div></div>
-        <div><div class="l">ราคาต่ำสุดที่ผ่านเกณฑ์${tip('ราคาขาย (รวม VAT) ต่ำสุดที่กำไรสุทธิเกินต้นทุนทั้งหมด ' + mm)}</div><div class="v">${ok && c.target_price != null ? n2(c.target_price) : '—'}</div><div class="s">${ok && c.breakeven_price != null ? 'คุ้มทุนที่ ' + n2(c.breakeven_price) + ' (รวม VAT)' : '&nbsp;'}</div></div></div>`;
-    const row = (lbl, h, v, cls, id) => `<tr class="${cls || ''}"${id ? ` data-lad="${id}"` : ''}><td>${id ? '<span class="car">▸</span>' : ''}${lbl}</td><td class="how">${h}</td><td class="num">${v}</td></tr>`;
-    const subs = (id, rows) => rows.map(x => `<tr class="sub" data-ladp="${id}" hidden><td>${x[0]}</td><td class="how">${x[1]}</td><td class="num">${x[2] == null ? '—' : '−' + n2(x[2])}</td></tr>`).join('');
+        <div><div class="l">กำไรสุทธิ / ออเดอร์</div><div class="v${ok && +c.profit < 0 ? ' neg' : ''}">${ok ? n2(c.profit) : '—'}</div><div class="s">${ok ? (+c.profit < 0 ? 'ขาดทุน · ' : '') + pc(c.margin) + ' ของรายได้' : 'รอต้นทุนครบ'}</div></div>
+        <div><div class="l">ราคาคุ้มทุน (รวม VAT)${tip('ราคาขาย (รวม VAT) ที่กำไรสุทธิเท่ากับ 0 พอดี · ขายต่ำกว่านี้ขาดทุน')}</div><div class="v">${ok && c.breakeven_price != null ? n2(c.breakeven_price) : '—'}</div><div class="s">${ok && c.breakeven_price != null && price ? (price >= +c.breakeven_price ? 'สูงกว่าคุ้มทุน ' : 'ต่ำกว่าคุ้มทุน ') + n2(Math.abs(price - c.breakeven_price)) : '&nbsp;'}</div></div></div>`;
+    const row = (lbl, h, v, cls, id) => `<tr class="${cls || ''}"${id ? ` data-lad="${id}"` : ''}><td>${id ? '<span class="car">▶</span>' : ''}${lbl}</td><td class="how">${h}</td><td class="num">${v}</td></tr>`;
+    const subs = (id, rows) => rows.map(x => `<tr class="sub" data-ladp="${id}" hidden><td title="${esc(String(x[0]).replace(/<[^>]+>/g, ''))}">${x[0]}</td><td class="how" title="${esc(String(x[1]).replace(/<[^>]+>/g, ''))}">${x[1]}</td><td class="num">${x[2] == null ? '—' : '−' + n2(x[2])}</td></tr>`).join('');
     const feeGrp = (ly, title) => { const F = fees(ly); if (!F.length) return '';
-      return row(title, F.length === 1 ? how(F[0]) : `${F.length} รายการ · กดดูวิธีคิด`, '−' + n2(sum(F.map(f => f.amount_ex))), 'grp neg', ly) + subs(ly, F.map(f => [esc(f.item), how(f), f.amount_ex])); };
+      return row(title, F.length === 1 ? how(F[0]) : '', '−' + n2(sum(F.map(f => f.amount_ex))), 'grp neg', ly) + subs(ly, F.map(f => [esc(f.item), how(f), f.amount_ex])); };
     const costSubs = lines.map(l => [`${l.kind === 'gift' ? 'แถม · ' : ''}${esc(l.name || nm(l.sku))}`, l.unit_cost == null ? '<span class="miss">ไม่มีต้นทุน</span>' : `${n2(l.unit_cost)} × ${l.qty} ชิ้น`, l.unit_cost == null ? null : l.cost]);
     const table = `<table class="pv-lad" data-no-sort data-no-page><thead><tr><th>รายการ</th><th class="how">วิธีคิด</th><th class="num">บาท</th></tr></thead><tbody>
         ${row('ราคาขาย (รวม VAT)', 'ตามที่กรอก', n2(price))}
-        ${row(`− VAT ${vp}%`, `${n2(price)} × ${vp} ÷ ${100 + vp}`, '−' + n2(price - rex), 'neg')}
-        ${row('รายได้ไม่รวม VAT', 'ใช้ตัวเลขนี้คิดทุกรายการด้านล่าง', n2(rex), 'tot')}
-        ${row('− ต้นทุนสินค้า + ของแถม', `ต้นทุนไม่รวม VAT จากไฟล์บัญชี (${costMonthTxt(c)})${ok ? '' : ' · <span class="miss">ยังไม่ครบ</span>'}`, '−' + n2(cogs), 'grp neg', 'cost')}${subs('cost', costSubs)}
-        ${feeGrp('platform', '− ค่า Platform')}${feeGrp('selling', '− ค่าขาย')}${feeGrp('overhead', '− ค่าบริหาร / Marketing')}
-        ${row('กำไรสุทธิ / ออเดอร์', ok ? pc(c.margin) + ' ของรายได้ไม่รวม VAT' : 'ยังไม่รวมต้นทุนที่ขาด', ok ? n2(c.profit) : '—', 'tot big' + (ok && +c.profit < 0 ? ' negv' : ''))}
+        ${row(`VAT ${vp}%`, `${n2(price)} × ${vp} ÷ ${100 + vp}`, '−' + n2(price - rex), 'neg')}
+        ${row('รายได้ไม่รวม VAT' + tip('ใช้ตัวเลขนี้คิดทุกรายการด้านล่าง'), '', n2(rex), 'tot')}
+        ${row('ต้นทุนสินค้า + ของแถม', `ต้นทุนบัญชี ${costMonthTxt(c)}${ok ? '' : ' · <span class="miss">ยังไม่ครบ</span>'}`, '−' + n2(cogs), 'grp neg', 'cost')}${subs('cost', costSubs)}
+        ${feeGrp('platform', 'ค่า Platform')}${feeGrp('selling', 'ค่าขาย')}${feeGrp('overhead', 'ค่าบริหาร / Marketing')}
+        ${row('กำไรสุทธิ / ออเดอร์', ok ? pc(c.margin) + ' ของรายได้' : 'ยังไม่รวมต้นทุนที่ขาด', ok ? n2(c.profit) : '—', 'tot big' + (ok && +c.profit < 0 ? ' negv' : ''))}
       </tbody></table>`;
-    return ban + tiles + `<section class="tr-part pv-sec"><div class="pv-h">เงิน ${n2(price)} ไปไหนบ้าง<span>ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT</span></div>${table}</section>`;
+    return ban + tiles + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
   }
   const bindLad = root => root.querySelectorAll('.pv-lad tr.grp').forEach(tr => tr.onclick = () => { const open = !tr.classList.contains('open'); tr.classList.toggle('open', open); root.querySelectorAll(`.pv-lad tr[data-ladp="${tr.dataset.lad}"]`).forEach(x => { x.hidden = !open; }); });
 
@@ -502,7 +505,7 @@
   const SIM = { channel_id: '', items: [{ sku: '', qty: 1 }], gifts: [], price: '' };
   function renderSim(box, C) {
     box.innerHTML = `<div class="pv-sim"><div class="pv-sim-f">
-        <div class="pv-h">จำลองโปร<span>ลองใส่ช่องทาง สินค้า และราคา เพื่อดูว่าคุ้มไหม · ไม่ส่งเป็นคำขอ ไม่บันทึกอะไร</span></div>
+        <div class="pv-h">จำลองโปร${` <span class="pr-i" data-tip="ลองใส่ช่องทาง สินค้า ของแถม และราคา แล้วกดคำนวณ · ไม่ส่งเป็นคำขอ ไม่บันทึกอะไร">ⓘ</span>`}</div>
         <label>ช่องทาง</label><select class="pr-in" id="smCh"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+SIM.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
         <label>สินค้าใน 1 ออเดอร์ <small>ชื่อสินค้า · จำนวนชิ้น</small></label><div id="smItems">${rowsHtml('items', SIM.items, C)}</div><button type="button" class="pr-add" data-smadd="items">＋ เพิ่มสินค้า</button>
         <label>ของแถม <small>ถ้ามี</small></label><div id="smGifts">${rowsHtml('gifts', SIM.gifts, C)}</div><button type="button" class="pr-add" data-smadd="gifts">＋ เพิ่มของแถม</button>
@@ -521,8 +524,9 @@
     dd.onmousedown = e => { const b = e.target.closest('button[data-sk]'); if (!b || !ddFor) return; e.preventDefault(); const p = C.products.find(x => x.sku === b.dataset.sk);
       SIM[ddFor.dataset.k][+ddFor.dataset.i].sku = p.sku; ddFor.value = prodLabel(p); ddClose(); };
     const redrawRows = () => { document.getElementById('smItems').innerHTML = rowsHtml('items', SIM.items, C); document.getElementById('smGifts').innerHTML = rowsHtml('gifts', SIM.gifts, C); };
+    const skuFromLabel = v => { const s = skuOf(v); return C.products.some(p => p.sku === s) ? s : ''; };
     box.oninput = e => { const t = e.target;
-      if (t.classList.contains('pr-pick')) { SIM[t.dataset.k][+t.dataset.i].sku = ''; ddOpen(t); return; }
+      if (t.classList.contains('pr-pick')) { SIM[t.dataset.k][+t.dataset.i].sku = skuFromLabel(t.value); if (e.type === 'input') ddOpen(t); return; }
       if (t.dataset.f === 'qty') SIM[t.dataset.k][+t.dataset.i].qty = +t.value || 0;
       if (t.id === 'smPrice') SIM.price = t.value; if (t.id === 'smCh') SIM.channel_id = t.value; };
     box.onchange = box.oninput;
@@ -549,10 +553,12 @@
     el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     try { EX.list = await rpc('promo_list', { p_scope: 'all' }); await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     const L = EX.list, cnt = s => L.filter(r => r.status === s).length;
-    el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l"></div>
-        <div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length], ['sim', 'จำลองโปร', null]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div></div>
+    el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l"><button type="button" class="pr-btn ghost pv-simbtn" id="exSim" aria-pressed="${EX.filter === 'sim'}">จำลองโปร</button></div>
+        <div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div></div>
       <div class="pr-card" style="padding:6px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
-    el.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; el.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); EX.filter === 'sim' ? renderSim(document.getElementById('exList'), CAT) : listExec(); };
+    const simBtn = el.querySelector('#exSim');
+    el.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; el.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); simBtn.setAttribute('aria-pressed', 'false'); listExec(); };
+    simBtn.onclick = () => { EX.filter = 'sim'; el.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', 'false')); simBtn.setAttribute('aria-pressed', 'true'); renderSim(document.getElementById('exList'), CAT); };
     EX.filter === 'sim' ? renderSim(document.getElementById('exList'), CAT) : listExec();
   }
   function listExec() {
