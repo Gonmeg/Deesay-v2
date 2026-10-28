@@ -1,3 +1,4 @@
+// skudeep.js (v20261027a) — การ์ดยอดขายไม่เปิดแผง · มียอดแค่เดือนเดียวกราฟเป็นรายวัน · Facebook/TikTok สูงเท่ากัน · TikTok กระทบยอดค่า Ads + ปกคลิปสำรอง · เซ็ต/Promotion จัดอันดับแยกช่องทาง
 // skudeep.js — หน้า "เจาะสินค้า" (v20260930g: คำบนจอใช้ Ads / Live ตามกฎคำยืม)
 // (v20261002a: ปรับคำอธิบาย ⓘ / หมายเหตุให้สั้นลง · หัวตาราง KOL สั้นลง)
 // (v20261001b: ค่า Ads / ยอดขายของงาน KOL นับตามวันที่ใช้เงิน + ยอดขายถอด VAT เท่าหน้า KOL · การ์ดกำไรระบุว่าเป็นตัวเลขบัญชี)
@@ -41,6 +42,18 @@
       #page-skuanalysis .skd-badge.r { background:rgba(239,68,68,.14); color:var(--red); }
       #page-skuanalysis .skd-badge.o { background:rgba(245,158,11,.16); color:var(--orange); }
       #page-skuanalysis .skd-note { font-size:10.5px; color:var(--text3); margin-top:8px; }
+      #page-skuanalysis .skd-eq { align-items:stretch; } #page-skuanalysis .skd-eq > .skd-card { display:flex; flex-direction:column; } #page-skuanalysis .skd-eq > .skd-card > .table-wrap { flex:1; } #page-skuanalysis .skd-eq > .skd-card > .skd-note:last-child { margin-top:auto; padding-top:8px; }
+      #page-skuanalysis .skd-thumb.noimg::after { content:attr(data-ini); font-size:15px; font-weight:700; color:var(--text2); }
+      #page-skuanalysis .skd-recon { font-size:12px; color:var(--text2); background:var(--bg3); border-radius:8px; padding:8px 12px; margin-top:10px; line-height:1.6; }
+      #page-skuanalysis .skd-lanes { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
+      #page-skuanalysis .skd-lane { border:1px solid var(--border); border-radius:10px; padding:10px 12px; min-width:0; }
+      #page-skuanalysis .skd-lane-h { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; margin-bottom:6px; } #page-skuanalysis .skd-lane-h i { width:9px; height:9px; border-radius:50%; } #page-skuanalysis .skd-lane-h span { margin-left:auto; font-size:12px; font-weight:600; color:var(--text2); }
+      #page-skuanalysis .skd-pr { display:grid; grid-template-columns:18px minmax(0,1fr) auto; gap:1px 8px; align-items:center; padding:7px 0; border-top:1px solid var(--border); font-size:12.5px; min-height:52px; box-sizing:border-box; }
+      #page-skuanalysis .skd-pr .n { color:var(--text3); font-size:11px; } #page-skuanalysis .skd-pr .p { font-family:'IBM Plex Mono', monospace; font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #page-skuanalysis .skd-pr .v { text-align:right; font-weight:700; }
+      #page-skuanalysis .skd-pr .m { grid-column:2; font-size:10.5px; color:var(--text3); } #page-skuanalysis .skd-pr .s { text-align:right; font-size:11px; color:var(--text2); }
+      #page-skuanalysis .skd-pr .b { grid-column:2 / 4; height:4px; border-radius:2px; background:var(--bg3); overflow:hidden; } #page-skuanalysis .skd-pr .b i { display:block; height:100%; background:var(--text3); }
+      #page-skuanalysis .skd-pr-empty { border-top-color:transparent; }
+      #page-skuanalysis .skd-pr-pg { display:flex; align-items:center; justify-content:flex-end; gap:8px; font-size:11px; color:var(--text3); padding-top:6px; } #page-skuanalysis .skd-pr-pg button { font:inherit; border:1px solid var(--border); background:var(--bg2); color:var(--text2); border-radius:6px; width:26px; height:24px; cursor:pointer; } #page-skuanalysis .skd-pr-pg button:disabled { opacity:.4; cursor:default; }
       #page-skuanalysis .skd-thumb { width:40px; height:40px; border-radius:6px; overflow:hidden; background:var(--bg3); flex:0 0 auto; display:block; text-align:center; line-height:40px; }
       #page-skuanalysis td.num, #page-skuanalysis th.num { text-align:right; }
       #page-skuanalysis tr.skd-ch { cursor:pointer; }
@@ -166,7 +179,7 @@
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 14px;"><div style="font-size:18px;font-weight:700;">${esc(d.name || nameOf(d.sku))}</div>
         <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
       <div class="skd-kpis">
-        ${kpi('ยอดขาย ' + info, `<span class="pl-trace" data-tsales="|${getDateValue('From')}|${getDateValue('To')}|${esc(d.sku)}">${money(rev)}</span>`, `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
+        ${kpi('ยอดขาย ' + info, `${money(rev)}`, `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
         ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', (() => { const r = daily.filter(x => !BULK.includes(x.channel)); const q = r.reduce((t, x) => t + (+x.qty || 0), 0), v = r.reduce((t, x) => t + (+x.rev || 0), 0); return q ? `ราคาเฉลี่ย ${fmt(Math.round(v / q))} / ชิ้น (ไม่รวมตัวแทน / MT)` : ''; })())}
         ${kpi('ค่า Ads', m0(ads), `${pct(ads, rev)} ของยอดขาย · นับ ${mLbl}`)}
         ${kpi('ค่า KOL', m0(kol), `${fmt(new Set((d.kol || []).filter(x => x.in_range !== false).map(x => x.content_code)).size)} งาน · ตามวันโพสต์`)}
@@ -179,8 +192,9 @@
         <div class="toggle-group" id="skdModeSeg"><button class="toggle-btn${_mode === 'rev' ? ' active' : ''}" data-m="rev" onclick="skdMode('rev')">ยอดขาย</button><button class="toggle-btn${_mode === 'qty' ? ' active' : ''}" data-m="qty" onclick="skdMode('qty')">จำนวนชิ้น</button></div></div>
         <div class="chart-wrap chart-wrap-lg"><canvas id="chartSkd"></canvas></div><div class="skd-note" id="skdChartNote"></div></div>
       ${card('ยอดขายตามช่องทาง', `<div class="table-wrap"><table id="tblSkdCh" data-no-sort data-no-page><thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ชิ้น</th><th class="num">ออเดอร์</th><th class="num">ราคา / ชิ้น</th><th class="num">ค่า Ads</th><th class="num">ROAS</th></tr></thead><tbody id="tbodySkdCh"></tbody></table></div><div class="skd-note">กดแถวช่องทางเพื่อดูร้าน / เพจ / ห้าง · ตัวแทน / Modern Trade ไม่คิดราคาต่อชิ้น (สั่งเป็นก้อน) · ค่า Ads รายช่องทาง = ยิงสินค้านี้ตรงๆ + ส่วนแบ่งAds ทั่วไปของช่องทาง (ชุดเดียวกับ MKT Tracking)</div>`)}
-      <div class="skd-2">${fbAdsCard(d)}${ttCard(d)}</div>
-      <div class="skd-2">${kolCard(d)}${promoCard(d)}</div>
+      <div class="skd-2 skd-eq">${fbAdsCard(d)}${ttCard(d)}</div>
+      ${promoCard(d)}
+      ${kolCard(d)}
       ${kidsCard(d)}
       ${custCard(d)}`;
     renderChart(); renderChannels();
@@ -188,7 +202,8 @@
 
   function renderChart() {
     const d = _data, daily = d.daily || [], qm = _mode === 'qty', fld = qm ? 'qty' : 'rev';
-    const g = effGrain('month'), key = r => g === 'day' ? String(r.d).slice(0, 10) : String(r.d).slice(0, 7);
+    let g = effGrain('month'); { const ds = daily.map(r => String(r.d).slice(0, 10)).sort(); if (g !== 'day' && ds.length && (new Date(ds[ds.length - 1]) - new Date(ds[0])) / 864e5 <= 31) g = 'day'; }   // (2026-10-27) มียอดแค่เดือนเดียว → รายวัน
+    const key = r => g === 'day' ? String(r.d).slice(0, 10) : String(r.d).slice(0, 7);
     const keys = [...new Set(daily.map(key))].sort();
     const chs = CH_ORDER.filter(c => daily.some(r => r.channel === c)).concat([...new Set(daily.map(r => r.channel))].filter(c => !CH_ORDER.includes(c)));
     const ds = chs.map(c => ({ label: c, data: keys.map(k => daily.filter(r => r.channel === c && key(r) === k).reduce((t, r) => t + (+r[fld] || 0), 0)), backgroundColor: CH_COL[c] || '#94a3b8', stack: 's', borderRadius: 2, maxBarThickness: 44, yAxisID: 'y' }));
@@ -246,13 +261,16 @@
     const p = d.tt_product || {}, c = d.tt_clips || [];
     const box = (l, v) => `<div class="skd-mini"><div class="l">${l}</div><div class="v">${v}</div></div>`;
     const head = +p.cost ? `<div class="skd-minis">${box('ค่า Ads GMV Max', money(p.cost))}${box('ยอดขายจาก Ads', money(p.rev))}${box('ออเดอร์', fmt(Math.round(+p.orders || 0)))}${box('ROI', roas(p.rev, p.cost))}</div>` : '';
-    const rows = c.map(x => { const img = x.cover_url ? `<img src="${escA(x.cover_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='🎵'">` : '🎵';
+    const ini = x => esc((String(x.tt_account_name || x.title || '').replace(/^@/, '').trim().charAt(0) || '·').toUpperCase());
+    const rows = c.map(x => { const img = x.cover_url ? `<img src="${escA(x.cover_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.classList.add('noimg');this.remove()">` : '';
       const url = x.item_id ? `https://www.tiktok.com/@${encodeURIComponent(x.tt_account_name || 'tiktok')}/video/${x.item_id}` : '';
-      return `<tr><td><div style="display:flex;gap:8px;align-items:center;min-width:200px;"><a class="skd-thumb" ${url ? `href="${escA(url)}" target="_blank" rel="noopener"` : ''}>${img}</a><div style="min-width:0;"><div style="font-size:11.5px;font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.title)}">${esc(x.title || x.item_id)}</div><div style="font-size:10.5px;color:var(--text3);">@${esc(x.tt_account_name || '—')}</div></div></div></td>
+      return `<tr><td><div style="display:flex;gap:8px;align-items:center;min-width:200px;"><a class="skd-thumb${x.cover_url ? '' : ' noimg'}" data-ini="${ini(x)}" ${url ? `href="${escA(url)}" target="_blank" rel="noopener"` : ''}>${img}</a><div style="min-width:0;"><div style="font-size:11.5px;font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.title)}">${esc(x.title || x.item_id)}</div><div style="font-size:10.5px;color:var(--text3);">@${esc(x.tt_account_name || '—')}</div></div></div></td>
         <td class="num"><b>${money(x.cost)}</b></td><td class="num">${m0(x.rev)}</td><td class="num">${n0(x.orders)}</td><td class="num">${roas(x.rev, x.cost)}</td></tr>`; }).join('');
     const o = d.tt_other || {};
-    const other = +o.clips ? `<div class="skd-note" style="font-size:11.5px;color:var(--text2);background:var(--bg3);border-radius:8px;padding:8px 12px;margin-top:10px;">อีก <b>${fmt(o.clips)} คลิป</b> เป็นคลิปของสินค้าอื่น${(o.top || []).length ? ` (${(o.top || []).map(t => esc(t.name || t.main_sku)).join(', ')} ฯลฯ)` : ''} ที่ TikTok GMV Max เอามาขายสินค้านี้ด้วย — ค่า Ads ${money(o.cost)} · ยอดขาย ${money(o.rev)} · ${fmt(Math.round(+o.orders || 0))} ออเดอร์ (รวมอยู่ในตัวเลขด้านบนแล้ว ไม่แสดงในตาราง)</div>` : '';
-    return card('TikTok Ads (GMV Max) ของสินค้านี้', head + `<div class="table-wrap"><table id="tblSkdTt"><thead><tr><th>คลิปของสินค้านี้</th><th class="num">ค่า Ads</th><th class="num">ยอดขาย</th><th class="num">ออเดอร์</th><th class="num">ROI</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีคลิปของสินค้านี้ที่ยิง GMV Max</td></tr>'}</tbody></table></div>${other}<div class="skd-note">คลิป 15 อันดับตามค่า Ads · นับเป็นคลิปของสินค้าที่คลิปนั้นใช้ค่า Adsมากที่สุด · ตัวเลขจาก TikTok Ads (GMV Max)</div>`);
+    // (2026-10-27) กระทบยอด: ค่า Ads GMV Max ของสินค้า = คลิปที่สินค้านี้เป็นหลัก + คลิปที่สินค้าอื่นเป็นหลัก + ส่วนที่ TikTok ไม่ระบุคลิป (การ์ดสินค้า / LIVE)
+    const mainT = +d.tt_main_total || 0, othT = +o.cost || 0, prodT = +p.cost || 0, rest = prodT - mainT - othT;
+    const other = prodT ? `<div class="skd-recon">ค่า Ads ${money(prodT)} = คลิปของสินค้านี้ ${money(mainT)}${othT >= 0.5 ? ` + คลิปที่สินค้าอื่นเป็นหลัก ${money(othT)}` : ''}${rest >= 0.5 ? ` + ไม่ระบุคลิป (การ์ดสินค้า / LIVE) ${money(rest)}` : ''}${rest <= -0.5 ? ` · คลิปรวมมากกว่าค่า Ads ของสินค้า ${money(-rest)} (TikTok รายงานรายคลิปกับรายสินค้าไม่ตรงกัน)` : ''}</div>` : ''
+    return card('TikTok Ads (GMV Max) ของสินค้านี้', head + `<div class="table-wrap"><table id="tblSkdTt"><thead><tr><th>คลิปของสินค้านี้</th><th class="num">ค่า Ads</th><th class="num">ยอดขาย</th><th class="num">ออเดอร์</th><th class="num">ROI</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีคลิปของสินค้านี้ที่ยิง GMV Max</td></tr>'}</tbody></table></div>${other}<div class="skd-note">คลิป 15 อันดับตามค่า Ads · คลิปที่ใช้ขายหลายสินค้านับเป็นของสินค้าที่ใช้ค่า Ads มากที่สุด · ตัวเลขจาก TikTok Ads (GMV Max)</div>`);
   }
 
   function kolCard(d) {
@@ -275,14 +293,30 @@
     return card('งาน KOL ของสินค้านี้', `<div class="table-wrap"><table id="tblSkdKol"><thead><tr><th>วันโพสต์</th><th>ช่อง / KOL</th><th class="num">ค่าจ้าง</th><th class="num">ค่า Ads</th><th class="num">ยอดขาย (ถอด VAT)</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีงาน KOL ในช่วงนี้</td></tr>'}</tbody></table></div><div class="skd-note">ตรงกับหน้า KOL · ค่าจ้าง = งานที่โพสต์ในช่วง · Ads / ยอดขาย = ที่เกิดในช่วง · ใต้ค่าจ้าง = สถานะเบิกจ่าย · กดชื่อเปิดช่อง · ↗ เปิดโพสต์</div>`);
   }
 
-  function promoCard(d) {
-    const p = d.promos || [];
-    const chips = ch => Object.entries(ch || {}).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<span title="${escA(c)} ${fmt(v)}" style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--bg3);color:var(--text2);white-space:nowrap;"><i style="width:7px;height:7px;border-radius:50%;background:${CH_COL[c] || '#94a3b8'};display:inline-block;"></i>${esc(c)}</span>`).join(' ');
-    const rows = p.map((x, i) => `<tr><td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>
-      <td><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.promo)}">${esc(x.promo)}</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${chips(x.ch)}</div></td>
-      <td class="num">${n0(x.ord)}</td><td class="num">${n0(x.qty)}</td><td class="num"><b>${money(x.rev)}</b></td></tr>`).join('');
-    return card('ขายในโปร / เซ็ตไหน', `<div class="table-wrap"><table id="tblSkdPromo"><thead><tr><th>#</th><th>เซ็ต / โปร · ขายที่ช่องทาง</th><th class="num">ออเดอร์</th><th class="num">ชิ้น</th><th class="num">ยอดขาย</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">ไม่มีข้อมูลโปร</td></tr>'}</tbody></table></div><div class="skd-note">25 อันดับ · ยอดขายของสินค้านี้ในแต่ละเซ็ต (แกะจากโปรแล้ว) · ไม่นับตัวแทน / Modern Trade · ป้ายสี = ช่องทางที่ขายเซ็ตนั้น เรียงจากยอดมากไปน้อย (วางเมาส์ดูยอด)</div>`);
+  // (2026-10-27) เซ็ต / Promotion ที่ขายดี แยกตามช่องทาง: แต่ละช่องทางเรียงจากยอดขายมากไปน้อย · % = สัดส่วนในยอดขายของช่องทางนั้น (ตัวเลขชุดเดียวกับตารางยอดขายตามช่องทาง)
+  const PROMO_N = 5; let _promoPg = {}, _promoLanes = {};
+  function promoLane(c) {
+    const L = _promoLanes[c]; if (!L) return '';
+    const pages = Math.ceil(L.rows.length / PROMO_N), pg = Math.min(_promoPg[c] || 0, Math.max(0, pages - 1)), from = pg * PROMO_N, rows = L.rows.slice(from, from + PROMO_N);
+    const body = rows.map((x, i) => { const sh = L.tot > 0 ? x.rev / L.tot * 100 : 0;
+      return `<div class="skd-pr"><span class="n">${from + i + 1}</span><span class="p" title="${escA(x.promo)}">${esc(x.promo)}</span><span class="v">${money(x.rev)}</span>
+        <span class="m">${n0(x.ord)} ออเดอร์ · ${n0(x.qty)} ชิ้น</span><span class="s">${sh.toFixed(1)}%</span><div class="b"><i style="width:${Math.max(0, Math.min(100, sh))}%;"></i></div></div>`; }).join('')
+      + (pages > 1 ? Array.from({ length: PROMO_N - rows.length }, () => '<div class="skd-pr skd-pr-empty"></div>').join('') : '');
+    return body + (pages > 1 ? `<div class="skd-pr-pg"><button type="button" ${pg ? '' : 'disabled'} onclick="skdPromoPg('${escA(c)}',-1)">‹</button><span>${from + 1}–${Math.min(from + PROMO_N, L.rows.length)} จาก ${L.rows.length}</span><button type="button" ${pg < pages - 1 ? '' : 'disabled'} onclick="skdPromoPg('${escA(c)}',1)">›</button></div>` : '');
   }
+  window.skdPromoPg = (c, dir) => { _promoPg[c] = Math.max(0, (_promoPg[c] || 0) + dir); const el = [...document.querySelectorAll('#skdPromoLanes .skd-lane')].find(x => x.dataset.ch === c); if (el) el.querySelector('.skd-lane-b').innerHTML = promoLane(c); };
+  function promoCard(d) {
+    const pc = d.promos_ch || [], tot = {}; _promoPg = {}; _promoLanes = {};
+    (d.subs || []).forEach(s => { tot[s.channel] = (tot[s.channel] || 0) + (+s.rev || 0); });
+    pc.forEach(x => { (_promoLanes[x.channel] = _promoLanes[x.channel] || { rows: [], tot: tot[x.channel] || 0 }).rows.push({ promo: x.promo, rev: +x.rev || 0, qty: +x.qty || 0, ord: +x.ord || 0 }); });
+    const chs = Object.keys(_promoLanes).sort((a, b) => (tot[b] || 0) - (tot[a] || 0));
+    chs.forEach(c => _promoLanes[c].rows.sort((a, b) => b.rev - a.rev));
+    if (!chs.length) return card('เซ็ต / Promotion ที่ขายดี แยกตามช่องทาง', '<div class="empty">ไม่มียอดขายของสินค้านี้ในช่วงนี้</div>');
+    const tip = fbeInfoIcon('skd-info-promo', 'แต่ละช่องทางเรียงเซ็ต / Promotion จากยอดขายมากไปน้อย · % = ยอดขายของเซ็ตนั้น ÷ ยอดขายสินค้านี้ในช่องทางนั้น · ไม่นับตัวแทน / Modern Trade');
+    return card('เซ็ต / Promotion ที่ขายดี แยกตามช่องทาง ' + tip, `<div class="skd-lanes" id="skdPromoLanes">${chs.map(c => `<div class="skd-lane" data-ch="${escA(c)}">
+        <div class="skd-lane-h"><i style="background:${CH_COL[c] || '#94a3b8'};"></i>${esc(c)}<span>${money(tot[c] || 0)}</span></div><div class="skd-lane-b">${promoLane(c)}</div></div>`).join('')}</div>`);
+  }
+
 
   function kidsCard(d) {
     // ยอดราย สี/เบอร์ ใช้สัดส่วนจากของที่ขายจริงราย สี/เบอร์ แล้วปรับให้รวมเท่ากับยอดขาย / ชิ้นของสินค้า (ตัวเลขชุดเดียวกับการ์ดด้านบน)
