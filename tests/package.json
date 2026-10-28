@@ -1,0 +1,7 @@
+{
+  "name": "deesay-qa",
+  "private": true,
+  "type": "module",
+  "description": "ระบบทดสอบหน้าเว็บ Deesay-v2 — จำลองการใช้งานจริงทุกหน้า (GitHub Actions)",
+  "devDependencies": { "@playwright/test": "1.56.0" }
+}
