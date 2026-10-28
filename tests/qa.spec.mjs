@@ -87,11 +87,13 @@ test('จำลองการใช้งานทุกหน้า', async ({
           const rows = [...tb.querySelectorAll('tbody tr')].filter(x => x.offsetParent);
           const tot = rows.find(x => /\b(tot|total|pl-total|sum)\b/.test(x.className) || /^\s*รวม/.test(x.cells[0]?.innerText || '')); if (!tot) return;
           const body = rows.filter(x => x !== tot && !/\b(child|sub|pl-ch|op-sub|detail)\b/.test(x.className));
-          const heads = [...tb.querySelectorAll('thead th')].map(h => (h.innerText || '').trim());
-          [...tot.cells].forEach((c, i) => {
-            if (i === 0 || /%|อัตรา|ROAS|ROI|เฉลี่ย|ราคา|ต่อ|MER|CPA|CTR|สัดส่วน/.test(heads[i] || '')) return;
-            const tv = num(c.innerText); if (tv === null) return;
-            const vals = body.map(x => num(x.cells[i]?.innerText)); if (vals.some(v => v === null) || !vals.length) return;
+          const grid = tr => { const out = []; [...tr.cells].forEach(c => { out.push(c.innerText); for (let k = 1; k < (c.colSpan || 1); k++) out.push(null); }); return out; };   // ช่องที่รวมคอลัมน์ (colspan)
+          const hr = tb.querySelector('thead tr:last-child'), heads = hr ? grid(hr).map(h => (h || '').trim()) : [];
+          const T = grid(tot), Bs = body.map(grid);
+          T.forEach((cv, i) => {
+            if (i === 0 || cv == null || /%|อัตรา|ROAS|ROI|เฉลี่ย|ราคา|ต่อ|MER|CPA|CTR|สัดส่วน|AOV/i.test(heads[i] || '')) return;
+            const tv = num(cv); if (tv === null) return;
+            const vals = Bs.map(r => num(r[i])); if (vals.some(v => v === null) || !vals.length) return;
             const s = vals.reduce((a, b) => a + b, 0);
             if (Math.abs(s - tv) > Math.max(1.5, Math.abs(tv) * 0.002)) out.push(`ตาราง ${ti + 1} คอลัมน์ "${heads[i] || i}": ผลรวม ${Math.round(s).toLocaleString()} ≠ แถวรวม ${Math.round(tv).toLocaleString()}`);
           });
