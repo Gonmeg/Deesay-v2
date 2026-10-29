@@ -1,3 +1,4 @@
+// promo.js (v20261029a) — ที่มาต้นทุนบอกชัด (ไฟล์ต้นทุนขายรายเดือน / ไฟล์ต้นทุนสินค้า)
 // promo.js (v20261028c) — การ์ด Rank: เปลี่ยนชื่อคลาส hd/bd/sb (ชนกับเมนูซ้ายที่ใช้ .sb → ข้อความไปลอยบนเมนู)
 // promo.js (v20261028b) — ไม่ใช้เกณฑ์ 5% · หัวข้อ "รายละเอียดการคำนวณ" · คำอธิบายไปอยู่ใน ⓘ · แถวย่อยไม่ทับ · ปุ่มจำลองโปรอยู่ซ้าย · แก้จำลองโปรเลือกสินค้าแล้วคำนวณไม่ได้
 // promo.js (v20261028a) — รายละเอียดคำขอแบบอ่านง่าย (ผลก่อน · 3 ตัวเลข · เงินไปไหนบ้าง + วิธีคิด + บรรทัด VAT · ซ่อนกำไรเมื่อขาดต้นทุน) · แท็บ "จำลองโปร" ในหน้าอนุมัติ
@@ -471,7 +472,9 @@
     document.head.appendChild(st);
   }
   const PV_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-  const costMonthTxt = c => { const m = (c.lines || []).map(l => l.cost_month).filter(Boolean).sort().pop(); if (!m) return 'เดือนล่าสุด'; const d = new Date(m + 'T00:00:00'); return `${PV_M[d.getMonth()]} ${String(d.getFullYear() + 543).slice(2)}`; };
+  // (2026-10-29) สินค้าที่ยังไม่มีในไฟล์ต้นทุนขายรายเดือน (สินค้าใหม่) ใช้ราคาจากไฟล์ต้นทุนสินค้า → บอกที่มาให้ชัด
+  const costMonthTxt = c => { const L = (c.lines || []).filter(l => l.unit_cost != null), m = L.map(l => l.cost_month).filter(Boolean).sort().pop(), fb = L.some(l => !l.cost_month);
+    if (!m) return fb ? 'ไฟล์ต้นทุนสินค้า' : 'เดือนล่าสุด'; const d = new Date(m + 'T00:00:00'); return `${PV_M[d.getMonth()]} ${String(d.getFullYear() + 543).slice(2)}${fb ? ' + ไฟล์ต้นทุนสินค้า' : ''}`; };
   function calcView(c, C) {
     const nm = k => (C.products.find(p => p.sku === k) || { name: k }).name, tip = t => ` <span class="pr-i" data-tip="${esc(t)}">ⓘ</span>`;
     const miss = (c.missing_costs || []).map(nm), ok = !miss.length, vatR = +c.vat || 0.07, vp = Math.round(vatR * 100), vf = (1 + vatR).toFixed(2);
@@ -494,7 +497,7 @@
         ${row('ราคาขาย (รวม VAT)', 'ตามที่กรอก', n2(price))}
         ${row(`VAT ${vp}%`, `${n2(price)} × ${vp} ÷ ${100 + vp}`, '−' + n2(price - rex), 'neg')}
         ${row('รายได้ไม่รวม VAT' + tip('ใช้ตัวเลขนี้คิดทุกรายการด้านล่าง'), '', n2(rex), 'tot')}
-        ${row('ต้นทุนสินค้า + ของแถม', `ต้นทุนบัญชี ${costMonthTxt(c)}${ok ? '' : ' · <span class="miss">ยังไม่ครบ</span>'}`, '−' + n2(cogs), 'grp neg', 'cost')}${subs('cost', costSubs)}
+        ${row('ต้นทุนสินค้า + ของแถม', `ต้นทุน${costMonthTxt(c) === 'ไฟล์ต้นทุนสินค้า' ? 'จาก' : 'บัญชี '}${costMonthTxt(c)}${ok ? '' : ' · <span class="miss">ยังไม่ครบ</span>'}`, '−' + n2(cogs), 'grp neg', 'cost')}${subs('cost', costSubs)}
         ${feeGrp('platform', 'ค่า Platform')}${feeGrp('selling', 'ค่าขาย')}${feeGrp('overhead', 'ค่าบริหาร / Marketing')}
         ${row('กำไรสุทธิ / ออเดอร์', ok ? pc(c.margin) + ' ของรายได้' : 'ยังไม่รวมต้นทุนที่ขาด', ok ? n2(c.profit) : '—', 'tot big' + (ok && +c.profit < 0 ? ' negv' : ''))}
       </tbody></table>`;
