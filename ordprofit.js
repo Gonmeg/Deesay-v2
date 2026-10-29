@@ -1,3 +1,4 @@
+// ordprofit.js (v20261029a) — อัตรากำไรคิดจากยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย) · ค่า Ads / การตลาด / ค่าบริหาร ปันตามยอดขายสินค้า (ฝั่งฐานข้อมูล)
 // ordprofit.js (v20261028a) — ค่า Ads ของสินค้าที่เดือนนั้นไม่มียอดขาย แบ่งให้สินค้าที่ขาย (ป้าย direct_nosale)
 // ordprofit.js (v20261027b) — ตารางรายสินค้ากดหัวคอลัมน์เพื่อเรียงได้ทุกคอลัมน์ (กดซ้ำกลับลำดับ)
 // ordprofit.js (v20261027a) — แผง Ads + Coins: สรุปตามสินค้าพร้อมแถวรวมของคำสั่งซื้อ · ที่มาของอัตรา Ads เลือกดูทีละสินค้า (ปุ่มชื่อสินค้า + รหัส) · บอกนิยามยอดขาย (หลังหักส่วนลดร้านค้า)
@@ -231,7 +232,7 @@
   }
 
   function drawTop() {
-    const el = shell(), s = S.both[S.ch] || {}, k = s.k || {}, rev = +k.rev || 0, n = +k.orders || 0, p = +k.profit || 0;
+    const el = shell(), s = S.both[S.ch] || {}, k = s.k || {}, rev = +k.rev || 0, prevK = (+k.rev || 0) - (+k.bship || 0), n = +k.orders || 0, p = +k.profit || 0;
     const other = CHS.find(c => c !== S.ch), ko = ((S.both[other] || {}).k) || {}, po = +ko.orders ? (+ko.profit || 0) / +ko.orders : null;
     // คำสั่งซื้อที่รอปิดยอดเป็นเรื่องปกติ (สถานะในตารางบอกอยู่แล้ว) · แจ้งที่ปุ่ม Alert เฉพาะสินค้าที่ไม่มีต้นทุน ซึ่งต้องแก้ข้อมูล
     if (window.pageNote) window.pageNote('ordprofit', 'nocost', +k.no_cost ? 'warn' : null, +k.no_cost ? `${chName()}: ${n0(k.no_cost)} คำสั่งซื้อมีสินค้าที่ไม่มีต้นทุน` : '', 'นับต้นทุนเป็น 0 · เพิ่มต้นทุนในไฟล์ต้นทุนหรือหน้าสินค้า & ราคา');
@@ -239,7 +240,7 @@
     el.querySelector('#opKpis').innerHTML =
       card('กำไรต่อคำสั่งซื้อ', 'กำไรรวม ÷ จำนวนคำสั่งซื้อ (ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน)', n ? n2(p / n) : '—',
         `${n0(n)} คำสั่งซื้อ${po !== null ? ` · ${other} ${n2(po)}` : ''}`, 'hero', p < 0 ? 'color:var(--red);' : 'color:#15803d;')
-      + card('กำไรรวม', 'รายรับสุทธิ − VAT − ต้นทุนขาย − Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร', n0(p), `อัตรากำไร ${pc(p, rev)}`, '', p < 0 ? 'color:var(--red);' : '')
+      + card('กำไรรวม', 'รายรับสุทธิ − VAT − ต้นทุนขาย − Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร', n0(p), `อัตรากำไร ${pc(p, prevK)}`, '', p < 0 ? 'color:var(--red);' : '')
       + card('ค่าธรรมเนียมแพลตฟอร์ม', 'ยอดขาย − รายรับสุทธิ', pc(+k.fees, rev), `${n0(k.fees)} จากยอดขาย ${n0(rev)}`)
       + card('คำสั่งซื้อที่ขาดทุน', 'สัดส่วนคำสั่งซื้อที่กำไรติดลบ', pc(+k.loss, n), `${n0(k.loss)} คำสั่งซื้อ`, '', +k.loss ? 'color:var(--red);' : '');
     // สรุปรายรับ–รายจ่าย (ตาราง) + ค่าธรรมเนียมแยกหมวด
@@ -277,7 +278,7 @@
   const PSORT = {
     name: x => x.p === 'หลายสินค้า' ? 'คำสั่งซื้อที่มีหลายสินค้า' : String(x.name || x.p),
     n: x => +x.n || 0, rev: x => +x.rev || 0, profit: x => +x.profit || 0,
-    margin: x => +x.rev ? (+x.profit || 0) / +x.rev : -Infinity,
+    margin: x => (+x.prev || +x.rev) ? (+x.profit || 0) / (+x.prev || +x.rev) : -Infinity,
     ppo: x => +x.n ? (+x.profit || 0) / +x.n : -Infinity,
     loss: x => (+x.n ? (+x.loss || 0) / +x.n : 0) + (+x.loss || 0) * 1e-9 };
   function drawProducts() {
@@ -287,7 +288,7 @@
     box.innerHTML = `<div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead><tr>${ph('name', 'สินค้า', 'จัดกลุ่มตามสินค้าหลัก (ไม่นับของแถม) · กดแถวเพื่อดูคำสั่งซื้อ', 'l')}
       ${ph('n', 'คำสั่งซื้อ')}${ph('rev', 'ยอดขาย')}${ph('profit', 'กำไร', 'หลังหัก Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร')}${ph('margin', 'อัตรากำไร')}${ph('ppo', 'กำไรต่อคำสั่งซื้อ')}${ph('loss', 'คำสั่งซื้อที่ขาดทุน', 'สัดส่วนคำสั่งซื้อที่กำไรติดลบ (จำนวน)')}</tr></thead><tbody>`
       + (P.length ? P.map(x => `<tr onclick="OrdProfit.pickProduct('${esc(x.p === 'หลายสินค้า' ? '__multi' : x.p)}')"><td class="l">${x.p === 'หลายสินค้า' ? 'คำสั่งซื้อที่มีหลายสินค้า ' + tip('มีสินค้ามากกว่า 1 ชนิด (ไม่นับของแถม)') : esc(x.name || x.p) + ` <span class="sub mono">${esc(x.p)}</span>`}</td>
-          <td>${n0(x.n)}</td><td>${n0(x.rev)}</td><td class="pf ${+x.profit < 0 ? 'neg' : ''}">${n0(x.profit)}</td><td class="${+x.profit < 0 ? 'neg' : ''}">${pc(+x.profit, +x.rev)}</td>
+          <td>${n0(x.n)}</td><td>${n0(x.rev)}</td><td class="pf ${+x.profit < 0 ? 'neg' : ''}">${n0(x.profit)}</td><td class="${+x.profit < 0 ? 'neg' : ''}">${pc(+x.profit, +x.prev || +x.rev)}</td>
           <td class="${+x.profit < 0 ? 'neg' : ''}">${x.n ? n2(x.profit / x.n) : '—'}</td><td>${pc(+x.loss, +x.n)} <span class="sub">(${n0(x.loss)})</span></td></tr>`).join('')
         : '<tr><td colspan="7" class="l z">ไม่มีข้อมูล</td></tr>') + '</tbody></table></div>';
   }
