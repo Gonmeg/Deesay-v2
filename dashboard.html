@@ -774,7 +774,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.10.30-a"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.10.30-b"></div>
 <script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
@@ -3114,7 +3114,7 @@ function loadKpiPage(reload) {
   if (window._kpiLoading) return;
   window._kpiLoading = true;
   const s = document.createElement('script');
-  s.src = 'kpi.js?v=20261030a'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
+  s.src = 'kpi.js?v=20261030b'; // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต kpi.js
   s.onload = () => { window._kpiLoading = false; if (currentPage === 'kpi') window.renderKpiPage(true); };
   s.onerror = () => { window._kpiLoading = false; (document.getElementById('kpPaneMain') || document.getElementById('page-kpi')).innerHTML = '<div class="error-banner" style="display:block;">โหลด kpi.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(s);
