@@ -1,3 +1,4 @@
+// ordprofit.js (v20261030a) — ตัวกรองออเดอร์กำไรต่ำ (ปุ่ม "ตัวกรอง" + เกณฑ์แก้ได้ + ป้ายสาเหตุ) · % รายออเดอร์คิดจากยอดขายสินค้า
 // ordprofit.js (v20261029a) — อัตรากำไรคิดจากยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย) · ค่า Ads / การตลาด / ค่าบริหาร ปันตามยอดขายสินค้า (ฝั่งฐานข้อมูล)
 // ordprofit.js (v20261028a) — ค่า Ads ของสินค้าที่เดือนนั้นไม่มียอดขาย แบ่งให้สินค้าที่ขาย (ป้าย direct_nosale)
 // ordprofit.js (v20261027b) — ตารางรายสินค้ากดหัวคอลัมน์เพื่อเรียงได้ทุกคอลัมน์ (กดซ้ำกลับลำดับ)
@@ -106,6 +107,64 @@
   const CAT_S = new Proxy({}, { get: (t, c) => (CATS_S[S.ch] || CATS_S.TikTok)[c] });
   const CAT_TIP = new Proxy({}, { get: (t, c) => (CATT[S.ch] || CATT.TikTok)[c] });
 
+
+  // (2026-10-30) ตัวกรองออเดอร์กำไรต่ำ: ติ๊กได้กี่ข้อก็ได้ (แสดงออเดอร์ที่ตรงทุกข้อที่เลือก) · ตัวเลขเกณฑ์แก้ได้ · จำค่าไว้ในเบราว์เซอร์
+  const OP_RULES_DEF = { on: [], m: 35, small: 200, disc: 50, aff: 5, ads: 25, cogs: 40, ship: 10 };
+  const OP_RL = [['m', 'กำไรต่ำกว่า', '%'], ['small', 'ออเดอร์เล็กกว่า', 'บาท'], ['disc', 'ส่วนลดเกิน', '%'], ['aff', 'ค่าคอม Affiliate เกิน', '%'], ['ads', 'ค่า Ads เกิน', '%'], ['cogs', 'ต้นทุนสินค้าเกิน', '%'], ['ship', 'ร้านจ่ายค่าส่งเองเกิน', 'บาท'], ['loss', 'ขาดทุน (กำไรติดลบ)', '']];
+  function opRulesLoad() { if (S.rules) return; try { S.rules = Object.assign({}, OP_RULES_DEF, JSON.parse(localStorage.getItem('opRules') || '{}')); } catch (e) { S.rules = Object.assign({}, OP_RULES_DEF); } if (!Array.isArray(S.rules.on)) S.rules.on = []; }
+  function opRulesOn() { opRulesLoad(); return S.rules.on.length > 0; }
+  const opRuleTxt = k => { const d = OP_RL.find(x => x[0] === k); return d ? (d[2] ? `${d[1]} ${S.rules[k]}${d[2] === '%' ? '%' : ' ' + d[2]}` : d[1]) : k; };
+  function opFDraw(box) {
+    opRulesLoad();
+    const b = box.querySelector('#opFBtn'), s = box.querySelector('#opFS'); if (!b) return;
+    const n = S.rules.on.length;
+    b.innerHTML = `⚲ ตัวกรอง${n ? ` <span class="n">${n}</span>` : ''}`; b.classList.toggle('act', n > 0);
+    s.innerHTML = n ? `กำลังกรอง: ${S.rules.on.map(k => `<b>${esc(opRuleTxt(k))}</b>`).join(' · ')} <a href="javascript:void 0" id="opFClr">✕ ล้าง</a>` : '';
+    const c = s.querySelector('#opFClr'); if (c) c.onclick = () => { S.rules.on = []; opFSave(); S.page = 0; opFDraw(box); loadRows(); };
+  }
+  function opFSave() { try { localStorage.setItem('opRules', JSON.stringify(S.rules)); } catch (e) { /* ไม่มีที่เก็บ ใช้ค่าในหน้านี้ */ } }
+  function opFPanel(box) {
+    const P = box.querySelector('#opFP');
+    P.innerHTML = `<div class="op-fh">ตัวกรองออเดอร์</div><div class="op-fg">${OP_RL.map(([k, l, u]) => `<label class="op-fl"><input type="checkbox" data-k="${k}"${S.rules.on.includes(k) ? ' checked' : ''}>${l}</label>${u ? `<input class="op-fn" type="number" min="0" step="any" data-v="${k}" value="${esc(S.rules[k])}"><span class="op-fu">${u}</span>` : '<span></span><span></span>'}`).join('')}</div>
+      <div class="op-fhint">เลือกได้กี่ข้อก็ได้ · แสดงออเดอร์ที่ตรงทุกข้อที่เลือก</div>
+      <div class="op-ff"><a href="javascript:void 0" data-act="reset">คืนค่าเริ่มต้น</a><button type="button" data-act="apply">ใช้ตัวกรอง</button></div>`;
+    P.onclick = e => {
+      const a = e.target.closest('[data-act]'); if (!a) return;
+      if (a.dataset.act === 'reset') { Object.entries(OP_RULES_DEF).forEach(([k, v]) => { if (k === 'on') return; const i = P.querySelector(`[data-v="${k}"]`); if (i) i.value = v; }); P.querySelectorAll('[data-k]').forEach(c => { c.checked = false; }); return; }
+      S.rules.on = [...P.querySelectorAll('[data-k]')].filter(c => c.checked).map(c => c.dataset.k);
+      P.querySelectorAll('[data-v]').forEach(i => { const v = parseFloat(i.value); if (isFinite(v)) S.rules[i.dataset.v] = v; });
+      opFSave(); P.hidden = true; S.page = 0; opFDraw(box); loadRows();
+    };
+  }
+  function opFilterWire(box) {
+    opRulesLoad(); opFDraw(box);
+    const b = box.querySelector('#opFBtn'), P = box.querySelector('#opFP'); if (!b || !P) return;
+    b.onclick = e => { e.stopPropagation(); if (P.hidden) opFPanel(box); P.hidden = !P.hidden; };
+    P.addEventListener('click', e => e.stopPropagation());
+    document.addEventListener('click', () => { if (P && !P.hidden) P.hidden = true; });
+  }
+  const OP_TG = { small: v => 'ออเดอร์เล็ก', disc: v => `ส่วนลด ${v}%`, aff: v => `Affiliate ${v}%`, ads: v => `ค่า Ads ${v}%`, cogs: v => `ต้นทุน ${v}%`, ship: v => `ร้านจ่ายค่าส่ง ${v}` };
+  const tagsCell = tags => Array.isArray(tags) && tags.length ? tags.map(([k, v]) => OP_TG[k] ? `<span class="op-tg${k === 'ship' ? ' r' : ''}">${esc(OP_TG[k](v))}</span>` : '').join('') : '<span class="z">—</span>';
+  if (!document.getElementById('opFStyle')) { const st = document.createElement('style'); st.id = 'opFStyle'; st.textContent = `
+    .op-fwrap{position:relative;display:inline-block}
+    .op-fbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:5px 11px;font:inherit;font-size:12.5px;background:var(--bg2);color:var(--text);cursor:pointer}
+    .op-fbtn.act{border-color:var(--accent,#b8862f);color:var(--accent,#b8862f);font-weight:600}
+    .op-fbtn .n{background:var(--accent,#b8862f);color:#fff;border-radius:999px;font-size:11px;padding:0 6px;line-height:16px}
+    .op-fsum{font-size:12px;color:var(--text2)} .op-fsum b{color:var(--text)} .op-fsum a{color:var(--text3);margin-left:6px}
+    .op-fpnl{position:absolute;top:calc(100% + 6px);left:0;z-index:30;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:12px 14px}
+    .op-fh{font-weight:700;font-size:13px;margin-bottom:8px}
+    .op-fg{display:grid;grid-template-columns:auto 56px 30px;column-gap:8px;row-gap:7px;align-items:center}
+    .op-fl{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:12.5px;cursor:pointer}
+    .op-fl input{width:14px;height:14px;margin:0;accent-color:var(--accent,#b8862f)}
+    .op-fn{width:56px!important;height:26px;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text);text-align:right;padding:0 7px;font:inherit;font-size:12.5px;-moz-appearance:textfield}
+    .op-fn::-webkit-outer-spin-button,.op-fn::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .op-fu{font-size:12px;color:var(--text3)}
+    .op-fhint{font-size:11px;color:var(--text3);margin-top:8px}
+    .op-ff{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+    .op-ff a{font-size:12px;color:var(--text3)} .op-ff button{background:var(--accent,#b8862f);color:#fff;border:none;border-radius:8px;padding:6px 16px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+    .op-tg{display:inline-block;font-size:11px;border-radius:5px;padding:1px 7px;margin:1px 4px 1px 0;background:rgba(184,134,47,.14);color:#a47224;white-space:nowrap}
+    .op-tg.r{background:rgba(220,38,38,.12);color:#dc2626}
+    td.op-tgc{white-space:nowrap}`; document.head.appendChild(st); }
   async function rpc(name, params) { const j = await window.supaRpc(name, params); if (j && j.message && j.code) throw new Error(j.message); return j; }
 
   function shell() {
@@ -301,6 +360,7 @@
     box.innerHTML = `<div class="op-tools"><div class="op-seg" id="opFilt"><button type="button" data-v="all">ทั้งหมด</button><button type="button" data-v="loss">ขาดทุน</button><button type="button" data-v="refund">คืนเงิน</button><button type="button" data-v="pending">เงินยังไม่เข้า</button></div>
       <select id="opSku"><option value="">สินค้า: ทั้งหมด</option><option value="__multi"${S.sku === '__multi' ? ' selected' : ''}>คำสั่งซื้อที่มีหลายสินค้า</option>${((S.both[S.ch] || {}).products || []).filter(x => x.p !== 'หลายสินค้า').sort((a, b) => String(a.name || a.p).localeCompare(String(b.name || b.p), 'th')).map(x => `<option value="${esc(x.p)}"${S.sku === x.p ? ' selected' : ''}>${esc(x.name || x.p)} (${esc(x.p)})</option>`).join('')}</select>
       <input type="search" id="opQ" placeholder="ค้นหาเลขคำสั่งซื้อ / รหัส SKU" style="width:200px;" value="${esc(S.q)}">
+      <span class="op-fwrap"><button type="button" class="op-fbtn" id="opFBtn"></button><div class="op-fpnl" id="opFP" hidden></div></span><span class="op-fsum" id="opFS"></span>
       <span class="op-leg2" style="margin-left:auto;"><span><i class="op-dot ok"></i>เงินเข้าแล้ว</span><span><i class="op-dot w"></i>เงินยังไม่เข้า</span><span>ตัวเลขขีดเส้นใต้: กดดูที่มา</span></span>
       <div class="op-seg" id="opView"><button type="button" data-v="sum">สรุป</button><button type="button" data-v="det">ละเอียด</button></div></div>
       <div class="op-scroll"><table class="op-t" data-no-sort data-no-page><thead id="opHead"></thead><tbody id="opRows"><tr><td colspan="20" class="l z">กำลังโหลด…</td></tr></tbody></table></div><div class="op-pg" id="opPg"></div>`;
@@ -308,16 +368,17 @@
     box.querySelectorAll('#opView button').forEach(b => { b.classList.toggle('on', b.dataset.v === S.view); b.onclick = () => { if (S.view === b.dataset.v) return; S.view = b.dataset.v; drawOrders(); }; });
     box.querySelector('#opSku').onchange = e => { S.sku = e.target.value; S.page = 0; loadRows(); };
     let tm; box.querySelector('#opQ').oninput = e => { clearTimeout(tm); tm = setTimeout(() => { S.q = e.target.value.trim(); S.page = 0; loadRows(); }, 350); };
+    opFilterWire(box);
     const det = S.view === 'det';   // ละเอียด: เพิ่มรายละเอียดยอดขาย 3 คอลัมน์ + ค่าธรรมเนียมแยก 5 หมวด
     const so = (key, l, t, cls) => `<th class="${cls || ''}${key ? ' s' + (S.sort === key ? ' on' : '') : ''}"${key ? ` onclick="OrdProfit.sortBy('${key}')"` : ''}>${l}${t ? ' ' + tip(t) : ''}${S.sort === key ? (S.dir === 'asc' ? ' ▲' : ' ▼') : ''}</th>`;
-    box.querySelector('#opHead').innerHTML = `<tr class="g"><th class="stk"></th><th colspan="2"></th>${det ? '<th class="gs" colspan="4">ยอดขาย</th><th class="gf" colspan="6">ค่าธรรมเนียมแพลตฟอร์ม</th>' : '<th colspan="2"></th>'}<th></th><th class="gc" colspan="3">ต้นทุนของบริษัท</th><th class="pfh" colspan="2"></th></tr>
+    box.querySelector('#opHead').innerHTML = `<tr class="g"><th class="stk"></th><th colspan="2"></th>${det ? '<th class="gs" colspan="4">ยอดขาย</th><th class="gf" colspan="6">ค่าธรรมเนียมแพลตฟอร์ม</th>' : '<th colspan="2"></th>'}<th></th><th class="gc" colspan="3">ต้นทุนของบริษัท</th><th class="pfh" colspan="2"></th><th></th></tr>
       <tr>${so('order_date', 'คำสั่งซื้อ', 'จุดเขียว: เงินเข้าแล้ว · จุดแดง: เงินยังไม่เข้า (ค่าธรรมเนียมเป็นค่าประมาณการ) · จุดเทา: คืนเงินเต็มจำนวน · กดแถวเพื่อดูรายละเอียด', 'l stk')}<th class="l">SKU ${tip('รหัสสินค้าในคำสั่งซื้อ รวมของแถม')}</th>
         <th class="l">สถานะ ${tip('สถานะคำสั่งซื้อจาก API ของแพลตฟอร์ม')}</th>${det ? so('orig', 'ราคาก่อนส่วนลด', 'ราคาสินค้าก่อนส่วนลดของร้าน', 's') + so('sdisc', 'ส่วนลดร้าน', 'ส่วนลดและโค้ดที่ร้านออก', 's') + so('bship', 'ค่าส่งผู้ซื้อจ่าย', 'ค่าจัดส่งที่ผู้ซื้อชำระ', 's') : ''}${so('rev', 'ยอดขาย', 'ราคาก่อนส่วนลด − ส่วนลดร้าน + ค่าส่งผู้ซื้อจ่าย − คืนเงิน · รวม VAT', 's sum')}
         ${det ? CATS.map(c => `<th class="f">${CAT_S[c]} ${tip(CAT[c] + ': ' + CAT_TIP[c])}</th>`).join('') : ''}${so('fees', det ? 'รวม' : 'ค่าธรรมเนียม', 'ยอดขาย − รายรับสุทธิ', 'f sum')}
         ${so('settle', 'รายรับสุทธิ', 'ยอดที่แพลตฟอร์มโอนให้ร้าน ตามข้อมูลจาก API')}
         ${so('vat', 'VAT', 'รายรับสุทธิ × 7/107 (ภาษีขายหักภาษีซื้อในค่าธรรมเนียม)', 'c')}${so('cogs', 'ต้นทุนขาย', 'จำนวนชิ้น × ต้นทุนต่อชิ้นของเดือน · รวมของแถม', 'c')}
         ${so('ads', 'Ads + Coins', 'ค่าโฆษณาจริงจากแพลตฟอร์ม รวม Coins และ Ads PR · แบ่งตามสัดส่วนยอดขายของสินค้า', 'c')}
-        ${so('profit', 'กำไร', 'รายรับสุทธิ − VAT − ต้นทุนขาย − Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร', 'sum pfh')}${so('pct', '%', 'กำไร ÷ ยอดขาย', 'pfh2')}</tr>`;
+        ${so('profit', 'กำไร', 'รายรับสุทธิ − VAT − ต้นทุนขาย − Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร', 'sum pfh')}${so('pct', '%', 'กำไร ÷ ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย)', 'pfh2')}<th class="l">สาเหตุที่กำไรต่ำ ${tip('ติดป้ายตามเกณฑ์ในปุ่ม "ตัวกรอง" (แก้ตัวเลขเกณฑ์ได้) · สีแดง = เงินที่เสียจริง เช่น ร้านจ่ายค่าส่งเอง')}</th></tr>`;
     const gh = box.querySelector('#opHead tr.g'); if (gh) box.querySelector('table.op-t').style.setProperty('--op-gh', gh.getBoundingClientRect().height + 'px');
     if (_prevRows) box.querySelector('#opRows').innerHTML = _prevRows;
     if (_prevH > 120) box.querySelector('.op-scroll').style.minHeight = _prevH + 'px';
@@ -330,7 +391,7 @@
     if (!body) return;
     const sc = box.querySelector('.op-scroll'); if (sc && sc.offsetHeight > 120) sc.style.minHeight = sc.offsetHeight + 'px';   // ล็อกความสูงไว้ระหว่างโหลด ตารางไม่ยุบ
     busy(1);
-    try { S.list = await rpc('order_profit_list', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_sort: S.sort, p_dir: S.dir, p_offset: S.page * S.size, p_limit: S.size, p_filter: S.filter, p_q: S.q || null, p_sku: S.sku || null, p_shop: S.ch === 'Shopee' ? S.shop : null }); }
+    try { S.list = await rpc('order_profit_list', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_sort: S.sort, p_dir: S.dir, p_offset: S.page * S.size, p_limit: S.size, p_filter: S.filter, p_q: S.q || null, p_sku: S.sku || null, p_shop: S.ch === 'Shopee' ? S.shop : null, p_rules: opRulesOn() ? S.rules : null }); }
     catch (e) { busy(-1); body.innerHTML = `<tr><td colspan="19" class="l z">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; return; }
     busy(-1); if (sc) requestAnimationFrame(() => { sc.style.minHeight = ''; });
     const rows = (S.list && S.list.rows) || [], total = (S.list && S.list.total) || 0;
@@ -338,7 +399,7 @@
     const v = x => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : n2(x);
     const cu = (id, x, what) => Math.abs(+x || 0) < 0.005 ? '<span class="z">—</span>' : `<span class="u" title="กดดูที่มาของตัวเลขนี้" onclick="event.stopPropagation();OrdProfit.openCell('${esc(id)}','${what}')">${n2(x)}</span>`;
     body.innerHTML = rows.length ? rows.map(r => {
-      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, , , st, orig, sdisc, bship, rfo, shop, items] = r;
+      const [id, d, skus, rev, fees, settle, cogs, , prof, settled, refund, est, nocost, , cComm, cSvc, cPay, cAff, cOth, vat, pack, ads, , , st, orig, sdisc, bship, rfo, shop, items, tags] = r;
       const dot = refund ? ['r', 'คืนเงินเต็มจำนวน'] : settled ? ['ok', 'เงินเข้าแล้ว'] : ['w', 'เงินยังไม่เข้า'];
       return `<tr onclick="OrdProfit.openOrder('${esc(id)}')"><td class="l stk"><span class="op-dot ${dot[0]}" data-tip="${dot[1]}"></span><span class="mono">${esc(id)}</span><div class="sub">${dLabel(d)}${S.ch === 'Shopee' && !S.shop && SHOPS_S[shop] ? ' · ' + SHOPS_S[shop] : ''}</div></td>
         <td class="l">${skuCell(items, skus)}</td>
@@ -347,7 +408,7 @@
         <td class="s sum">${n2(rev)}${Math.abs(+rfo || 0) >= 0.01 ? `<div class="sub">หักคืนเงิน ${n2(rfo)}</div>` : ''}</td>${det ? `<td class="f">${v(cComm)}</td><td class="f">${v(cSvc)}</td><td class="f">${v(cPay)}</td><td class="f">${v(cAff)}</td><td class="f">${v(cOth)}</td>` : ''}<td class="f sum">${n2(fees)}</td>
         <td>${n2(settle)}</td><td class="c">${v(vat)}</td><td class="c">${cu(id, cogs, 'cogs')}</td>
         <td class="c">${cu(id, ads, 'ads')}</td>
-        <td class="pf pfc ${+prof < 0 ? 'neg' : ''}">${n2(prof)}</td><td class="pfc2 ${+prof < 0 ? 'neg' : ''}">${pc(+prof, +rev)}</td></tr>`; }).join('')
+        <td class="pf pfc ${+prof < 0 ? 'neg' : ''}">${n2(prof)}</td><td class="pfc2 ${+prof < 0 ? 'neg' : ''}">${pc(+prof, (+rev || 0) - (+bship || 0))}</td><td class="l op-tgc">${tagsCell(tags)}</td></tr>`; }).join('')
       : '<tr><td colspan="19" class="l z">ไม่มีคำสั่งซื้อตามเงื่อนไขนี้</td></tr>';
     const pages = Math.max(1, Math.ceil(total / S.size));
     box.querySelector('#opPg').innerHTML = `<span>แสดง</span><select onchange="OrdProfit.setSize(this.value)">${[25, 50, 100].map(x => `<option value="${x}"${S.size === x ? ' selected' : ''}>${x}</option>`).join('')}</select><span>รายการ</span><span style="margin-left:8px;">${n0(total)} คำสั่งซื้อ · หน้า ${S.page + 1} / ${n0(pages)}</span><button type="button" ${S.page <= 0 ? 'disabled' : ''} onclick="OrdProfit.go(-1)">‹ ก่อนหน้า</button><button type="button" ${S.page >= pages - 1 ? 'disabled' : ''} onclick="OrdProfit.go(1)">ถัดไป ›</button>`;
