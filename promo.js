@@ -1,3 +1,4 @@
+// promo.js (v20261030a) — หน้าค่าธรรมเนียมช่องทางแบบใหม่ (แท็บแพลตฟอร์ม · ค่าจริง vs ตั้งไว้ · สรุป 3 บรรทัด · Shopee/TikTok ค่าจริง 30 วัน) · ตารางเดิมยังเข้าได้
 // promo.js (v20261029a) — ที่มาต้นทุนบอกชัด (ไฟล์ต้นทุนขายรายเดือน / ไฟล์ต้นทุนสินค้า)
 // promo.js (v20261028c) — การ์ด Rank: เปลี่ยนชื่อคลาส hd/bd/sb (ชนกับเมนูซ้ายที่ใช้ .sb → ข้อความไปลอยบนเมนู)
 // promo.js (v20261028b) — ไม่ใช้เกณฑ์ 5% · หัวข้อ "รายละเอียดการคำนวณ" · คำอธิบายไปอยู่ใน ⓘ · แถวย่อยไม่ทับ · ปุ่มจำลองโปรอยู่ซ้าย · แก้จำลองโปรเลือกสินค้าแล้วคำนวณไม่ได้
@@ -753,7 +754,127 @@
         <dt>คอลัมน์</dt><dd>${d.scope === 'company' ? 'ทุกช่องทางรวมกัน' : esc((d.acct_channels || []).join(' + '))}</dd>
         <dt>บรรทัดบัญชี</dt><dd><div class="tr-chips">${(d.rev_lines || []).map(x => `<span>${esc((x[0] ? x[0] + ' ' : '') + x[1])}</span>`).join('')}${stds.map(x => `<span>${esc(x)}</span>`).join('')}</div></dd></dl></div>`;
   }
+
+  // ===================== (2026-10-30) หน้า ค่าธรรมเนียมช่องทาง แบบใหม่ =====================
+  // แท็บตามแพลตฟอร์ม → เลือกช่องทางย่อย → ตาราง "ค่าจริง vs ตั้งไว้" + สรุป 3 บรรทัด
+  // ค่าจริง: Shopee / TikTok = ออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด (fee_actuals_30d) · ช่องทางอื่น = งบบัญชี 3 เดือนล่าสุด (fee_actuals)
+  // แก้ "ตั้งไว้" ได้ในตาราง (บันทึกเมื่อออกจากช่อง) · เพิ่ม / ลบ รายการหรือช่องทาง ใช้ "ตารางแบบเดิม"
+  let FEE_MODE = 'new', FE2 = { tab: null, ch: null }, FA30 = null;
+  const fe2fmt = v => Math.round(+v || 0).toLocaleString('th-TH');
   async function renderFee() {
+    if (FEE_MODE === 'old') {
+      await renderFeeOld();
+      const el = document.getElementById('page-execfee');
+      if (el && !el.querySelector('.fe2-back')) { el.insertAdjacentHTML('afterbegin', '<div class="fe2-back"><button type="button" class="pr-btn ghost">← กลับหน้าค่าธรรมเนียมแบบใหม่</button></div>'); el.querySelector('.fe2-back button').onclick = () => { FEE_MODE = 'new'; renderFee(); }; }
+      return;
+    }
+    return renderFeeNew();
+  }
+  const FE2_TABS = [['Shopee', /shopee/i], ['TikTok', /tiktok/i], ['Lazada', /lazada/i], ['Facebook', /facebook|line|telesale/i], ['ตัวแทน', /ตัวแทน/], ['Modern Trade', /^mt|watsons|eve|konvy|cj|thaimart|modern/i]];
+  const fe2Tab = c => (FE2_TABS.find(([, re]) => re.test(c.name) || re.test(c.sys_channel || '')) || ['อื่น ๆ'])[0];
+  const fe2Grp = c => /shopee/i.test(c.name) ? (/24/.test(c.name) ? '530338789' : '566792331') : /tiktok/i.test(c.name) ? (/คลิป|creator/i.test(c.name) ? 'creator' : /affiliate/i.test(c.name) ? 'live_aff' : /live/i.test(c.name) ? 'live' : 'shop') : null;
+  const FE2_EXTRA = { shipping_net: 'ค่าส่งสุทธิ (ที่ร้านจ่ายจริง)', reverse_shipping_fee: 'ค่าส่งคืนสินค้า', flash_sales_service_fee_amount: 'ค่าบริการ Flash Sale', affiliate_ads_commission_amount: 'ค่าคอม Affiliate Ads', other: 'อื่น ๆ', commission_fee: 'ค่าคอมมิชชัน', service_fee: 'ค่าบริการ (ส่งฟรี + เงินคืน)', transaction_fee: 'ค่าธุรกรรม', transaction_fee_amount: 'ค่าธุรกรรม', ams_commission_fee: 'ค่าคอม Affiliate (AMS)', processing_fee: 'ค่าโครงสร้างพื้นฐาน', platform_commission_amount: 'Commission แพลตฟอร์ม', dynamic_commission_amount: 'Commerce Growth Fee', affiliate_commission_amount: 'ค่าคอม Creator', live_specials_fee_amount: 'ค่า LIVE Specials', vn_fix_infrastructure_fee: 'ค่าโครงสร้างพื้นฐาน' };
+  function fe2Key(it, isTT) {   // รายการที่ตั้งไว้ → ชื่อค่าธรรมเนียมที่แพลตฟอร์มส่งมาจริง
+    const n = String(it.name || '').toLowerCase();
+    if (/platform commission/.test(n)) return isTT ? 'platform_commission_amount' : 'commission_fee';
+    if (/mall program|bcd/.test(n)) return isTT ? 'merged' : null;
+    if (/fss|ccb/.test(n)) return 'service_fee';
+    if (/transaction/.test(n)) return isTT ? 'transaction_fee_amount' : 'transaction_fee';
+    if (/commerce growth/.test(n)) return 'dynamic_commission_amount';
+    if (/mall live|live extra/.test(n)) return 'live_specials_fee_amount';
+    if (n.trim() === 'commission') return isTT ? 'affiliate_commission_amount' : 'ams_commission_fee';
+    if (it.kind === 'per_order' && /โครงสร้าง|infra/.test(n)) return isTT ? 'vn_fix_infrastructure_fee' : 'processing_fee';
+    return null;
+  }
+  const fe2Co = it => { const k = String(it.actual_key || '').toLowerCase(), n = String(it.name || ''); return k === 'ads' || /ค่า ads/i.test(n) ? 'ads' : k === 'marketing' || /^marketing$/i.test(n) ? 'marketing' : k === 'admin' || /ค่าบริหาร/.test(n) ? 'admin' : null; };
+  async function renderFeeNew() {
+    const el = document.getElementById('page-execfee'); if (!el) return;
+    if (!FT) el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
+    try { [FT, FA, FA30] = await Promise.all([rpc('fee_table'), rpc('fee_actuals').catch(() => null), rpc('fee_actuals_30d').catch(() => null)]); }
+    catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    if (!FT) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
+    const A = FA || {}, AC = A.channels || {}, CO = A.company || {}, ms = A.months || [];
+    const G30 = {}; ((FA30 && FA30.groups) || []).forEach(g => { G30[g.grp] = g; });
+    const V = {}; FT.values.forEach(([i, c, v]) => { V[i + '|' + c] = v == null || v === '' ? null : +v; });
+    const chs = FT.channels.filter(c => c.active), items = FT.items.filter(it => it.active);
+    const tabs = FE2_TABS.map(x => x[0]).filter(tb => chs.some(c => fe2Tab(c) === tb));
+    if (!FE2.tab || !tabs.includes(FE2.tab)) FE2.tab = tabs[0];
+    const tabChs = chs.filter(c => fe2Tab(c) === FE2.tab);
+    if (!FE2.ch || !tabChs.some(c => c.id === FE2.ch)) FE2.ch = (tabChs[0] || {}).id;
+    const c = tabChs.find(x => x.id === FE2.ch); if (!c) { el.innerHTML = '<div class="pr-empty">ยังไม่มีช่องทาง</div>'; return; }
+    const isTT = /tiktok/i.test(c.name), grp = fe2Grp(c), g = grp ? G30[grp] : null, gi = (g && g.items) || {};
+    const accRange = ms.length ? `${mLbl(ms[0])} – ${mLbl(ms[ms.length - 1])}` : '3 เดือนล่าสุด';
+    const src = g ? `ค่าจริงจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ${fe2fmt(g.orders)} ออเดอร์ · ยอดขายสินค้าเฉลี่ย ${n2(g.aov)} บาท / ออเดอร์` : `ไม่มี API · ค่าจริงจากงบบัญชี ${accRange}`;
+    const pct = v => v == null ? '<span class="fe2-z">—</span>' : `${(+v).toFixed(2)}%`;
+    const dif = (a, s) => a == null || s == null ? '<span class="fe2-z">—</span>' : Math.abs(a - s) < 0.05 ? `<span class="fe2-z">${a - s >= 0 ? '+' : ''}${(a - s).toFixed(2)}</span>` : `<span class="${a > s ? 'fe2-up' : 'fe2-dn'}">${a > s ? '+' : ''}${(a - s).toFixed(2)}</span>`;
+    const rowsCh = [], rowsCo = [], used = new Set();
+    let sumSetCh = 0, sumActCh = 0, perSet = 0, perAct = 0, sumSetCo = 0, sumActCo = 0, hasActCh = false;
+    items.forEach(it => {
+      const sv = V[it.id + '|' + c.id]; if (sv == null) return;
+      const co = fe2Co(it), setPct = it.kind === 'pct' ? sv * 100 : null;
+      let act = null, tip = '';
+      if (co) { act = co === 'ads' ? (AC[c.id] || {}).ads : CO[co]; act = act == null ? null : act * 100; tip = `งบบัญชี ${accRange}`; }
+      else if (g) { const k = fe2Key(it, isTT); if (k === 'merged') act = 'merged'; else if (k && gi[k]) { used.add(k); act = it.kind === 'pct' ? +gi[k].pct : +gi[k].per_order; tip = `≈ ${n2(gi[k].per_order)} บาท / ออเดอร์`; } else if (k) act = 0; }
+      else { const k = /commission/i.test(it.name) && !/platform/i.test(it.name) ? 'commission' : /platform/i.test(it.name) ? 'platform' : null; const a = k ? (AC[c.id] || {})[k] : null; act = a == null ? null : a * 100; tip = `งบบัญชี ${accRange}`; }
+      const input = `<input class="fe2-in" type="number" step="any" data-item="${it.id}" data-kind="${it.kind}" value="${it.kind === 'pct' ? +(sv * 100).toFixed(4) : +sv}"><span class="fe2-u">${it.kind === 'pct' ? '%' : 'บาท'}</span>`;
+      const actTxt = act === 'merged' ? '<span class="fe2-z">รวมใน Platform Commission</span>' : it.kind === 'pct' ? pct(act) + (tip ? ` <span class="pr-i" data-tip="${esc(tip)}">ⓘ</span>` : '') : act == null ? '<span class="fe2-z">—</span>' : `${n2(act)} บาท`;
+      const row = `<tr><td class="l">${esc(it.name)}</td><td>${actTxt}</td><td>${input}</td><td>${it.kind === 'pct' && act !== 'merged' ? dif(act, setPct) : '<span class="fe2-z">—</span>'}</td></tr>`;
+      if (co) { rowsCo.push(row); sumSetCo += setPct || 0; if (act != null) sumActCo += act; }
+      else { rowsCh.push(row); if (it.kind === 'pct') { sumSetCh += setPct; if (act != null && act !== 'merged') { sumActCh += act; hasActCh = true; } } else { perSet += sv; if (typeof act === 'number') perAct += act; } }
+    });
+    if (g) Object.entries(gi).forEach(([k, v]) => { if (used.has(k) || +v.pct < 0.01) return; if (Object.values(['processing_fee', 'vn_fix_infrastructure_fee']).includes(k)) return;
+      rowsCh.push(`<tr class="fe2-x"><td class="l">${esc(FE2_EXTRA[k] || k)} <span class="fe2-z">· ไม่ได้ตั้งไว้</span></td><td>${pct(+v.pct)} <span class="pr-i" data-tip="≈ ${n2(v.per_order)} บาท / ออเดอร์">ⓘ</span></td><td><span class="fe2-z">—</span></td><td>${dif(+v.pct, 0)}</td></tr>`); sumActCh += +v.pct; hasActCh = true; });
+    const perTxt = (s, a) => s || a ? ` + ${n2(s)} บาท` : '';
+    const sumRow = (l, a, s, extra) => `<tr class="fe2-s"><td class="l">${l}</td><td>${a == null ? '<span class="fe2-z">—</span>' : a.toFixed(2) + '%'}</td><td>${s.toFixed(2)}%${extra || ''}</td><td>${a == null ? '' : dif(a, s)}</td></tr>`;
+    const actCh = hasActCh || !g ? sumActCh : null;
+    el.innerHTML = `<div class="fe2-top"><span class="pr-note" style="margin:0;">${esc(src)}</span><span style="flex:1"></span><button type="button" class="pr-btn ghost" id="fe2Old" data-tip="เพิ่ม / ลบ รายการหรือช่องทาง และตั้งเกณฑ์ไฟเขียว">ตารางแบบเดิม</button></div>
+      <div class="fe2-tabs">${tabs.map(tb => `<button type="button" data-tab="${esc(tb)}" class="${tb === FE2.tab ? 'on' : ''}">${esc(tb)}</button>`).join('')}</div>
+      ${tabChs.length > 1 ? `<div class="pr-seg fe2-sub">${tabChs.map(x => `<button type="button" data-ch="${x.id}" aria-pressed="${x.id === c.id}">${esc(x.name)}</button>`).join('')}</div>` : ''}
+      <div class="fe2-cards"><div><div class="l">ค่าธรรมเนียมช่องทาง</div><div class="v">${actCh == null ? '—' : actCh.toFixed(2) + '%'}</div><div class="s">ค่าจริง · ตั้งไว้ ${sumSetCh.toFixed(2)}%${perTxt(perSet, 0)}</div></div>
+        <div><div class="l">ค่าใช้จ่ายบริษัท</div><div class="v">${sumActCo.toFixed(2)}%</div><div class="s">ค่าจริง · ตั้งไว้ ${sumSetCo.toFixed(2)}%</div></div>
+        <div><div class="l">หักรวมก่อนต้นทุนสินค้า (ที่ใช้คิดโปรตอนนี้)</div><div class="v">${(sumSetCh + sumSetCo).toFixed(2)}%${perTxt(perSet, 0)}</div><div class="s">เหลือ ${(100 - sumSetCh - sumSetCo).toFixed(2)}% ไว้จ่ายต้นทุน + กำไร</div></div></div>
+      <div class="fe2-card"><div class="fe2-ch"><b>${esc(c.name)}</b></div>
+      <table class="fe2-t"><thead><tr><th class="l">รายการ</th><th>ค่าจริง</th><th>ตั้งไว้</th><th>ต่าง</th></tr></thead><tbody>
+        <tr class="fe2-g"><td colspan="4">ค่าธรรมเนียมจากช่องทาง</td></tr>${rowsCh.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
+        <tr class="fe2-g"><td colspan="4">ค่าใช้จ่ายของบริษัท · ตั้งเอง (ค่าจริงไว้ดูประกอบ)</td></tr>${rowsCo.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
+        ${sumRow('สรุป · ค่าธรรมเนียมช่องทาง', actCh, sumSetCh, perTxt(perSet, perAct)).replace('class="fe2-s"', 'class="fe2-s first"')}
+        ${sumRow('สรุป · ค่าใช้จ่ายบริษัท', sumActCo, sumSetCo)}
+        ${sumRow('สรุป · หักรวมก่อนต้นทุนสินค้า', actCh == null ? null : actCh + sumActCo, sumSetCh + sumSetCo, perTxt(perSet, perAct))}
+      </tbody></table>
+      <div class="fe2-note">ต่าง: <span class="fe2-up">สีแดง</span> = ค่าจริงสูงกว่าที่ตั้ง (โปรที่คิดไว้กำไรน้อยกว่าที่เห็น) · <span class="fe2-dn">สีเขียว</span> = ค่าจริงต่ำกว่า · แก้ตัวเลข "ตั้งไว้" ได้เลย บันทึกเมื่อออกจากช่อง · ตอนนี้การคิดโปรใช้ค่า "ตั้งไว้"</div></div>`;
+    el.querySelector('#fe2Old').onclick = () => { FEE_MODE = 'old'; renderFee(); };
+    el.querySelectorAll('.fe2-tabs [data-tab]').forEach(b => b.onclick = () => { FE2.tab = b.dataset.tab; FE2.ch = null; renderFeeNew(); });
+    el.querySelectorAll('.fe2-sub [data-ch]').forEach(b => b.onclick = () => { FE2.ch = +b.dataset.ch || b.dataset.ch; renderFeeNew(); });
+    el.querySelectorAll('.fe2-in').forEach(inp => inp.onchange = async () => {
+      const raw = inp.value.trim(), item_id = +inp.dataset.item;
+      if (await feeEdit({ op: 'value', item_id, channel_id: c.id, value: raw === '' ? '' : String(inp.dataset.kind === 'pct' ? +raw / 100 : +raw) })) renderFeeNew();
+    });
+  }
+  if (!document.getElementById('fe2Style')) { const st = document.createElement('style'); st.id = 'fe2Style'; st.textContent = `
+    #page-execfee .fe2-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    #page-execfee .fe2-back{margin-bottom:10px}
+    #page-execfee .fe2-tabs{display:flex;gap:20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+    #page-execfee .fe2-tabs button{background:none;border:none;border-bottom:2px solid transparent;padding:8px 0;font:inherit;font-size:13px;color:var(--text2);cursor:pointer}
+    #page-execfee .fe2-tabs button.on{color:var(--text);font-weight:700;border-bottom-color:var(--accent,#b8862f)}
+    #page-execfee .fe2-sub{margin-bottom:12px}
+    #page-execfee .fe2-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+    #page-execfee .fe2-cards>div{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+    #page-execfee .fe2-cards .l{font-size:12px;color:var(--text2)} #page-execfee .fe2-cards .v{font-size:20px;font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums} #page-execfee .fe2-cards .s{font-size:11.5px;color:var(--text3)}
+    #page-execfee .fe2-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+    #page-execfee .fe2-ch{margin-bottom:8px;font-size:14px}
+    #page-execfee table.fe2-t{width:100%;border-collapse:collapse;font-size:12.5px}
+    #page-execfee table.fe2-t th{font-size:11px;color:var(--text3);font-weight:600;text-align:right;padding:8px;border-bottom:1px solid var(--border)} #page-execfee table.fe2-t th.l{text-align:left}
+    #page-execfee table.fe2-t td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap} #page-execfee table.fe2-t td.l{text-align:left;white-space:normal}
+    #page-execfee tr.fe2-g td{background:var(--bg3);font-size:11.5px;font-weight:700;color:var(--text2);text-align:left}
+    #page-execfee tr.fe2-s td{background:rgba(184,134,47,.08);font-weight:700} #page-execfee tr.fe2-s.first td{border-top:2px solid var(--accent,#b8862f)}
+    #page-execfee .fe2-in{width:62px!important;height:26px;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text);text-align:right;padding:0 7px;font:inherit;font-size:12.5px;-moz-appearance:textfield}
+    #page-execfee .fe2-in::-webkit-outer-spin-button,#page-execfee .fe2-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    #page-execfee .fe2-u{display:inline-block;width:30px;text-align:left;margin-left:5px;font-size:12px;color:var(--text3)}
+    #page-execfee .fe2-up{color:#dc2626;font-weight:600} #page-execfee .fe2-dn{color:#16a34a} #page-execfee .fe2-z{color:var(--text3);font-weight:400}
+    #page-execfee .fe2-note{font-size:11.5px;color:var(--text3);margin-top:10px;line-height:1.6}
+    @media (max-width:900px){#page-execfee .fe2-cards{grid-template-columns:1fr}}`; document.head.appendChild(st); }
+
+  async function renderFeeOld() {
     const el = document.getElementById('page-execfee'); if (!el) return;
     if (!FT) el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     try { [FT, FA] = await Promise.all([rpc('fee_table'), rpc('fee_actuals').catch(() => null)]); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
