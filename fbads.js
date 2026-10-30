@@ -115,7 +115,7 @@
       el.dataset.built = '1';
       el.innerHTML = `
         <div class="card" style="margin-bottom:16px;padding:10px 16px;">
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:10.5px;color:var(--text3);line-height:1.6;"><span id="fba-last-sync" style="margin-left:auto;order:2;"></span><span style="order:1;"><b>ค่า Ads</b> = ตัวเลขจาก Meta ทุกบัญชีโฆษณา (เท่ากับ Ads Manager) · <b>ยอดขายจริง</b> = ออเดอร์ Facebook ในระบบเรา (ขายผ่านแชท Meta ไม่รู้) · <b>ทักแชท</b> = จำนวนคนที่เริ่มคุยจาก Ads (Meta นับ) · <b>ซื้อ (Meta นับ)</b> = ที่ pixel จับได้ ไว้ดูประกอบเท่านั้น · ตัวกรองบัญชี/objective อยู่แถบด้านบนข้างวันที่</span></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:10.5px;color:var(--text3);line-height:1.6;"><span id="fba-last-sync" style="margin-left:auto;order:2;"></span><span style="order:1;" id="fba-scope"></span> <span style="order:1;" class="pr-i" data-tip="<b>ค่า Ads</b> = ตัวเลขจาก Meta ทุกบัญชีโฆษณา (เท่ากับ Ads Manager)<br><b>ยอดขายจริง</b> = ออเดอร์ Facebook ในระบบเรา (ขายผ่านแชท Meta จึงไม่รู้)<br><b>ทักแชท</b> = จำนวนคนที่เริ่มคุยจาก Ads (Meta นับ)<br><b>ซื้อ (Meta นับ)</b> = ที่ pixel จับได้ ไว้ดูประกอบเท่านั้น<br><b>ทุกตัวเลขในหน้านี้ตามตัวกรอง</b> วันที่ · เพจ · Objective ที่แถบด้านบน">ⓘ</span></div>
         </div>
         <div id="fba-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
         <div class="card" style="margin-bottom:20px;">
@@ -244,15 +244,33 @@
     return c;
   }
 
+
+  // (2026-10-30) ทุกตัวเลขตามตัวกรอง: ไม่กรอง = daily เดิม · กรองเพจ/Objective = รวมจาก daily_po (รายวัน × เพจ × Objective)
+  // ยอดขาย: กรองเพจ = เฉพาะออเดอร์ของเพจนั้น (จับคู่ชื่อเพจกับช่องทางย่อยของออเดอร์ "NN. FB - X - ชื่อเพจ") · กรอง Objective = แยกไม่ได้ → null
+  const fbaEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fbaKey = s => String(s || '').toLowerCase().replace(/^\s*\d+\.\s*fb\s*-\s*[a-z]\s*-\s*/i, '').replace(/deesay/g, '').replace(/[^0-9a-z\u0E00-\u0E7F]/g, '');
+  const fbaSubMatch = (sub, page) => /(^|[^a-z])fb([^a-z]|$)/i.test(sub) && fbaKey(sub) !== '' && fbaKey(sub) === fbaKey(page);
+  function dailyRows() {
+    const d = _data; if (!d) return [];
+    if (!_filterAccount && !_filterObjective) return d.daily || [];
+    const M = {}, keys = ['spend', 'spend_conv', 'impressions', 'reach', 'clicks', 'link_clicks', 'msg_started', 'purchases', 'purchase_value'];
+    (d.daily || []).forEach(r => { M[r.d] = { d: r.d, revenue: 0 }; keys.forEach(k => { M[r.d][k] = 0; }); });
+    (d.daily_po || []).forEach(r => { if (_filterAccount && r.page !== _filterAccount) return; if (_filterObjective && (r.objective || 'ไม่ระบุ') !== _filterObjective) return;
+      const o = M[r.d] || (M[r.d] = { d: r.d, revenue: 0 }); keys.forEach(k => { o[k] = (+o[k] || 0) + (+r[k] || 0); }); });
+    const out = Object.values(M).sort((a, b) => a.d < b.d ? -1 : 1);
+    if (_filterObjective) out.forEach(o => { o.revenue = null; });
+    else (d.rev_sub || []).forEach(r => { if (!fbaSubMatch(r.sub, _filterAccount)) return; const o = M[r.d]; if (o) o.revenue += +r.rev || 0; });
+    return out;
+  }
   function render() {
     const d = _data; if (!d) return;
     const filtered = _filterAccount || _filterObjective;
     // KPI: ถ้ากรอง ใช้ผลรวมจากแคมเปญที่กรอง · ไม่กรอง ใช้ daily (มี revenue)
     const camps = filteredCampaigns();
     const T = filtered ? camps.reduce((s, c) => ({ spend: s.spend + +c.spend, impressions: s.impressions + +c.impressions, link_clicks: s.link_clicks + +c.link_clicks, msg_started: s.msg_started + +c.msg_started, purchases: s.purchases + +c.purchases, purchase_value: s.purchase_value + +c.purchase_value }), { spend: 0, impressions: 0, link_clicks: 0, msg_started: 0, purchases: 0, purchase_value: 0 })
-      : (d.daily || []).reduce((s, r) => ({ spend: s.spend + +r.spend, impressions: s.impressions + +r.impressions, link_clicks: s.link_clicks + +r.link_clicks, msg_started: s.msg_started + +r.msg_started, purchases: s.purchases + +r.purchases, purchase_value: s.purchase_value + +r.purchase_value }), { spend: 0, impressions: 0, link_clicks: 0, msg_started: 0, purchases: 0, purchase_value: 0 });
-    const rev = (d.daily || []).reduce((s, r) => s + +r.revenue, 0);
-    const conv = (d.daily || []).reduce((s, r) => s + (+r.spend_conv || 0), 0);
+      : dailyRows().reduce((s, r) => ({ spend: s.spend + +r.spend, impressions: s.impressions + +r.impressions, link_clicks: s.link_clicks + +r.link_clicks, msg_started: s.msg_started + +r.msg_started, purchases: s.purchases + +r.purchases, purchase_value: s.purchase_value + +r.purchase_value }), { spend: 0, impressions: 0, link_clicks: 0, msg_started: 0, purchases: 0, purchase_value: 0 });
+    const rev = dailyRows().reduce((s, r) => s + +r.revenue, 0);
+    const conv = dailyRows().reduce((s, r) => s + (+r.spend_conv || 0), 0);
     const bk = {}; (d.by_bucket || []).forEach(b => { bk[b.bucket] = +b.spend; });
     const fbSpend = (bk.Conversion || 0) + (bk.PR || 0);
     // (2026-10-02) Ads ที่ผูกกับงานในไฟล์ทีม KOL (แผนที่เดียวกับหน้า KOL → ตัวเลขเท่ากัน) + boost บัญชี/เพจ KOL ที่ยังผูกงานไม่ได้
@@ -265,11 +283,12 @@
     const kpi = (t, v, sub, style) => `<div class="card" style="flex:1;min-width:150px;${style || ''}"><div class="card-title">${t}</div><div class="kpi-value">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:3px;">${sub}</div>` : ''}</div>`;
     document.getElementById('fba-kpis').innerHTML =
       kpi('ค่า Ads Facebook รวม ' + fbeInfoIcon('fba-info-bk', '<b>แบ่ง 2 ประเภทตามเพจ</b><br>• Conversion = Ads ที่ยิงให้เพจขาย → ใช้คิด ROAS<br>• PR = ที่เหลือ (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade) → ไม่หารยอดขาย ดูส่วน PR ด้านล่าง<br>CPAS ไม่นับที่นี่ (อยู่หน้า Shopee Ads)<br><b>Ads งาน KOL</b> = Ads ที่ผูกกับงานในไฟล์ทีม KOL (ตรงกับหน้า KOL)<br><b>boost ที่ยังผูกงานไม่ได้</b> = Ads บัญชี/เพจ KOL ที่หางานไม่เจอ'), fmt(fbSpend), bucketLine, 'border-left:3px solid #60a5fa;') +
-      kpi('ยอดขายจริง Facebook ' + fbeInfoIcon('fba-info-rev', 'ออเดอร์ช่องทาง Facebook ในระบบเรา (ทุกเพจ) ช่วงเดียวกัน — ไม่แยกตามบัญชีโฆษณาได้ เพราะออเดอร์มาจากแชท ไม่รู้ว่ามาจาก Ads ไหน'), fmt(rev), filtered ? 'ทั้งช่องทาง (ไม่กรองตามเพจ)' : '', 'border-left:3px solid var(--green);') +
-      kpi('ROAS ' + fbeInfoIcon('fba-info-roas', 'ยอดขายจริง Facebook ÷ <b>ค่า Ads Conversion</b> (เฉพาะ Ads ที่ยิงให้เพจขาย — ไม่รวม PR/KOL, MT · CPAS อยู่หน้า Shopee Ads)<br>เขียว ≥ 2x · ทอง 1–2x · แดง < 1x'), roasCell(rev, conv), conv ? `ค่า Ads Conversion ${fmt(conv)} · ROI ${((rev - conv) / conv * 100).toFixed(0)}%` : '') +
+      kpi('ยอดขายจริง Facebook ' + fbeInfoIcon('fba-info-rev', 'ออเดอร์ Facebook ในระบบเรา (ขายผ่านแชท) ช่วงเดียวกัน<br><b>เลือกเพจ</b> = เฉพาะออเดอร์ของเพจนั้น (ไม่นับ Line, Telesales, รีวิว, ส่ง MT)<br><b>เลือก Objective</b> = แยกยอดขายไม่ได้ เพราะไม่รู้ว่าออเดอร์มาจากโฆษณาแบบไหน'), _filterObjective ? '—' : fmt(rev), _filterObjective ? 'ยอดขายไม่แยกตาม Objective' : _filterAccount ? 'เฉพาะออเดอร์ของเพจนี้' : 'ทุกเพจ', 'border-left:3px solid var(--green);') +
+      kpi('ROAS ' + fbeInfoIcon('fba-info-roas', 'ยอดขายจริง Facebook ÷ <b>ค่า Ads Conversion</b> (เฉพาะ Ads ที่ยิงให้เพจขาย — ไม่รวม PR/KOL, MT · CPAS อยู่หน้า Shopee Ads)<br>เขียว ≥ 2x · ทอง 1–2x · แดง < 1x'), _filterObjective ? '—' : roasCell(rev, conv), _filterObjective ? 'ดูเมื่อไม่ได้เลือก Objective' : conv ? `ค่า Ads Conversion ${fmt(conv)} · ROI ${((rev - conv) / conv * 100).toFixed(0)}%` : '') +
       kpi('ทักแชท', fmt(T.msg_started), `${T.msg_started ? fmt(T.spend / T.msg_started) : '—'} ต่อการทัก 1 ครั้ง · คลิกลิงก์ ${fmt(T.link_clicks)}`) +
       kpi('ซื้อ (Meta นับ) ' + fbeInfoIcon('fba-info-pur', 'จำนวนซื้อที่ Meta จับได้ — ต่ำกว่าจริงเพราะขายผ่านแชท ใช้ดูแนวโน้มเท่านั้น'), fmt(T.purchases), T.purchase_value ? `มูลค่าที่ Meta นับ ${fmt(T.purchase_value)}` : '');
 
+    const sc = document.getElementById('fba-scope'); if (sc) sc.innerHTML = `กำลังดู: <b>${_filterAccount ? fbaEsc(_filterAccount) : 'ทุกเพจ'}</b> · <b>${_filterObjective ? fbaEsc(_filterObjective) : 'ทุก Objective'}</b>`;
     renderMoneyChart(); renderTrafficChart(); renderFunnel(T, rev); renderDailyTable(); renderPr();
     // objective
     const totalSpend = (d.by_objective || []).reduce((s, o) => s + +o.spend, 0);
@@ -287,7 +306,7 @@
     return { rows: daily.slice(0, last + 1), cut: daily.length - 1 - last, lastDate: last >= 0 ? daily[last].d : null };
   }
   function renderMoneyChart() {
-    const cd = completeDaily(_data?.daily || []);
+    const cd = completeDaily(dailyRows());
     const daily = cd.rows; const labels = daily.map(r => thShort(r.d));
     const note = document.getElementById('fbaDailyTailNote');
     if (note) note.textContent = cd.cut > 0 ? `แสดงถึง ${thShort(cd.lastDate)} — ${cd.cut} วันล่าสุดยอดขาย Facebook ยังไม่ได้อัปโหลด จึงยังไม่นำมาเทียบ` : '';
@@ -308,7 +327,7 @@
     }
   }
   function renderTrafficChart() {
-    const daily = _data?.daily || []; const labels = daily.map(r => thShort(r.d));
+    const daily = dailyRows(); const labels = daily.map(r => thShort(r.d));
     const kl = document.getElementById('fbaTrafL')?.value || 'msg_started', kr = document.getElementById('fbaTrafR')?.value || 'cost_per_msg';
     const isMoney = k => ['spend','spend_conv','revenue','cpm','cpc','cost_per_msg','cpa','cpe','cpv'].includes(k), isPct = k => ['ctr','er','acos'].includes(k);
     const fmtv = (k, v) => v == null ? '—' : isMoney(k) ? fmt(v) : isPct(k) ? (v * (k === 'acos' ? 1 : 100)).toFixed(2) + '%' : k === 'roas' ? v.toFixed(2) + 'x' : k === 'frequency' ? v.toFixed(2) : fmt(v);
@@ -372,7 +391,7 @@
   function renderDailyTable() {
     const ks = cols('fbaDaily');
     const mode = 'conv';   // ตารางรายวัน = เฉพาะ Conversion (PR ดูที่ส่วน PR)
-    let daily = (_data?.daily || []).slice();
+    let daily = dailyRows().slice();
     const db = _data?.daily_bucket || [];
     if (!db.length) {
       // ยังไม่มีข้อมูลรายวันต่อประเภท (ต้องรัน SQL 95 ตัวล่าสุด) → ใช้ค่าแอด Conversion จาก daily และ metric อื่นแบบรวม พร้อมบอกไว้
