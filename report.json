@@ -1,0 +1,559 @@
+[
+  {
+    "id": "home",
+    "name": "หน้าแรก",
+    "issues": [],
+    "warn": [],
+    "load_s": 9.1,
+    "cls_load": 0.009,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 14,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "overview",
+    "name": "ภาพรวมยอดขาย",
+    "issues": [],
+    "warn": [
+      "หน้าเด้งเล็กน้อยตอนโหลด CLS 0.067"
+    ],
+    "load_s": 9.4,
+    "cls_load": 0.067,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "kpi",
+    "name": "เป้าหมาย KPI",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.9,
+    "cls_load": 0.008,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 104,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbhub",
+    "name": "ภาพรวม Facebook",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.685"
+    ],
+    "warn": [],
+    "load_s": 9.2,
+    "cls_load": 0.685,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "crm",
+    "name": "CRM",
+    "issues": [],
+    "warn": [
+      "โหลดช้า 29.5 วิ"
+    ],
+    "load_s": 29.5,
+    "cls_load": 0.01,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "flow",
+    "name": "เส้นทางซื้อซ้ำ",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.165"
+    ],
+    "warn": [],
+    "load_s": 9,
+    "cls_load": 0.165,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "neverbought",
+    "name": "ลูกค้าที่ยังไม่ซื้อ",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.7,
+    "cls_load": 0.006,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbengage",
+    "name": "Engagement รายวัน",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.18"
+    ],
+    "warn": [],
+    "load_s": 11.1,
+    "cls_load": 0.18,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbads",
+    "name": "Facebook Ads",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.11"
+    ],
+    "warn": [],
+    "load_s": 10,
+    "cls_load": 0.11,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 54,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "tthub",
+    "name": "ภาพรวม TikTok",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.575"
+    ],
+    "warn": [],
+    "load_s": 9.1,
+    "cls_load": 0.575,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "ttcontent",
+    "name": "ผลงานคอนเทนต์",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.5,
+    "cls_load": 0.009,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "ttkeyword",
+    "name": "ค้นหาคำบน TikTok",
+    "issues": [],
+    "warn": [],
+    "load_s": 10.3,
+    "cls_load": 0.005,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "ttads",
+    "name": "TikTok Ads",
+    "issues": [
+      "console: Failed to load resource: the server responded with a status of 403 ()",
+      "หน้าเด้งตอนโหลด CLS 0.912"
+    ],
+    "warn": [
+      "โหลดช้า 16.1 วิ"
+    ],
+    "load_s": 16.1,
+    "cls_load": 0.912,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 40,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": [
+      "console: Failed to load resource: the server responded with a status of 403 ()"
+    ]
+  },
+  {
+    "id": "livesearch",
+    "name": "ค้นหา Live",
+    "issues": [],
+    "warn": [],
+    "load_s": 10.2,
+    "cls_load": 0.01,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "creatorperf",
+    "name": "Creator Performance",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.134"
+    ],
+    "warn": [],
+    "load_s": 9.2,
+    "cls_load": 0.134,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "shhub",
+    "name": "ภาพรวม Shopee",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.482"
+    ],
+    "warn": [],
+    "load_s": 8.5,
+    "cls_load": 0.482,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "shads",
+    "name": "Shopee Ads",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.772"
+    ],
+    "warn": [],
+    "load_s": 9.4,
+    "cls_load": 0.772,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "lzhub",
+    "name": "ภาพรวม Lazada",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.485"
+    ],
+    "warn": [],
+    "load_s": 8.6,
+    "cls_load": 0.485,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "mthub",
+    "name": "ภาพรวม Modern Trade",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.324"
+    ],
+    "warn": [],
+    "load_s": 8.7,
+    "cls_load": 0.324,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 36,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "skurev",
+    "name": "แนวโน้มสินค้า",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.107"
+    ],
+    "warn": [],
+    "load_s": 8.7,
+    "cls_load": 0.107,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 20,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "mktlive",
+    "name": "MKT Tracking",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.12",
+      "กดตัวเลข: 18,733,149: กดแล้วไม่มีแผงเปิด",
+      "กดตัวเลข: (ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+      "กดตัวเลข: (ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+      "กดตัวเลข: (ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+      "กดตัวเลข: (ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+      "กดตัวเลข: (ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด"
+    ],
+    "warn": [],
+    "load_s": 8.4,
+    "cls_load": 0.12,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 56,
+      "ok": 0,
+      "fail": [
+        "18,733,149: กดแล้วไม่มีแผงเปิด",
+        "(ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+        "(ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+        "(ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+        "(ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด",
+        "(ไม่มีข้อความ): กดแล้วไม่มีแผงเปิด"
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "skuanalysis",
+    "name": "เจาะสินค้า",
+    "issues": [],
+    "warn": [],
+    "load_s": 10,
+    "cls_load": 0.006,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "adperf",
+    "name": "Ad Performance",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.6,
+    "cls_load": 0.006,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "kol",
+    "name": "KOL",
+    "issues": [
+      "หน้าเด้งตอนโหลด CLS 0.112"
+    ],
+    "warn": [],
+    "load_s": 8.7,
+    "cls_load": 0.112,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 25,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "supply",
+    "name": "Supply Chain",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.6,
+    "cls_load": 0.015,
+    "cls_search": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "products",
+    "name": "สินค้า & ราคา",
+    "issues": [],
+    "warn": [
+      "หน้าเด้งเล็กน้อยตอนโหลด CLS 0.099"
+    ],
+    "load_s": 9,
+    "cls_load": 0.099,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "promo",
+    "name": "ขอ Promotion",
+    "issues": [],
+    "warn": [
+      "หน้าเด้งเล็กน้อยตอนโหลด CLS 0.096"
+    ],
+    "load_s": 8.5,
+    "cls_load": 0.096,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "upload",
+    "name": "อัปโหลดข้อมูล",
+    "issues": [],
+    "warn": [],
+    "load_s": 2.1,
+    "cls_load": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "admin",
+    "name": "ตั้งค่า (Admin)",
+    "issues": [],
+    "warn": [],
+    "load_s": 2.1,
+    "cls_load": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "health",
+    "name": "สถานะระบบข้อมูล",
+    "issues": [],
+    "warn": [],
+    "load_s": 2,
+    "cls_load": 0,
+    "overflow": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  }
+]
