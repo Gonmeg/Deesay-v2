@@ -480,68 +480,62 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .kj-tag { display:inline-block; padding:1px 7px; border-radius:10px; font-size:10.5px; } .kj-ok { background:rgba(34,197,94,.14); color:#16a34a; } .kj-no { background:rgba(148,163,184,.18); color:var(--text3); }
   /* ===== หน้าแรก (สรุปประจำวัน) ===== */
   #page-home { font-family:'Sarabun',sans-serif; }
-  /* ===== หน้าแรก (2026-10-07 หน้าตาใหม่ตาม ui.css: ตัวเลขหลักแผงเดียว · ตารางช่องทาง · การ์ด Ads / สินค้า / สต็อก) ===== */
-  .hm-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
-  .hm-head h1 { margin:0; font-size:20px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; line-height:1.3; }
-  .hm-head p { margin:2px 0 0; font-size:13px; color:var(--text3); }
+  /* ===== หน้าแรก (2026-11-02 หน้าตาใหม่แบบ C: แถบสรุปขอบไล่สี · ป้ายเทียบ · ตารางช่องทางแบ่งกลุ่ม · สต็อกต้องจัดการ · สินค้า / Ads แบบตาราง) ===== */
   .hm-gap { height:16px; }
-  .hm-panel { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:16px 18px; min-width:0; }
-  .hm-panel-h { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
-  .hm-panel-h h2 { margin:0; font-size:16px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
-  .hm-grid2 { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
-  .hm-ch-name { display:inline-flex; align-items:center; font-weight:600; color:var(--text); }
-  .hm-ch-name.is-link { cursor:pointer; } .hm-ch-name.is-link:hover { color:var(--accent-text); text-decoration:underline; }
-  .hm-tbl td:first-child { white-space:nowrap; }
-  .hm-tbl tr.is-stale td { color:var(--text3); }
+  .hm-panel { background:var(--bg2); border:1px solid var(--panel-line, var(--border)); border-radius:12px; padding:14px 16px 8px; min-width:0; box-shadow:var(--sh, none); }
+  .hm-panel-h { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; flex-wrap:wrap; }
+  .hm-panel-h h2 { margin:0; font-size:15px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .hm-grid2 { display:grid; grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr); gap:16px; align-items:stretch; }   /* (2026-11-02) กล่องแถวเดียวกันสูงเท่ากัน ขอบล่างตรงกัน */
+  .hm-grid3 { display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); gap:16px; align-items:stretch; }
+  @media (max-width:1200px) { .hm-grid2, .hm-grid3 { grid-template-columns:1fr; } }
+  /* แถบสรุปบนสุด: ขอบไล่สีเงิน-ฟ้า · พื้นไล่แสง · เงา */
+  .hm-metrics { border:1.5px solid transparent !important; background:var(--hero) padding-box, var(--hero-line) border-box !important; box-shadow:var(--sh) !important; border-radius:14px !important; overflow:visible; }
+  .hm-metrics .ui-metric { background:transparent; box-shadow:1px 0 0 var(--border); padding:14px 18px 15px; }
+  body.light-theme .hm-metrics .ui-metric { box-shadow:1px 0 0 #EDF0F4; }
+  .hm-metrics .ui-metric:last-child { box-shadow:none; border-radius:0 12px 12px 0; }
+  .hm-metrics .ui-metric:first-child { border-radius:12px 0 0 12px; } .hm-metrics .ui-metric:first-child::before { border-top-left-radius:12px; }
+  .hm-metrics .ui-metric:hover { background:color-mix(in srgb, var(--bg3) 55%, transparent); }
+  .hm-metrics .ui-metric-v { font-size:clamp(22px, 2vw, 30px); }
+  .hm-metrics .ui-metric-l .ads-info-wrap { margin-left:2px; }
+  .hm-md { display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12.5px; color:var(--text3); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; }
+  /* ตารางในหน้าแรก */
+  .hm-tbl th, .hm-tbl td { padding:8px 10px; } .hm-tbl th.l, .hm-tbl td.l { text-align:left; } .hm-tbl td.w { white-space:normal; }
+  .hm-tbl td small { display:block; margin-top:1px; color:var(--text3); font-size:12px; font-weight:400; }
+  .hm-tbl tr.is-stale td, .hm-tbl tr.is-cum td { color:var(--text3); }
   .hm-tbl tr.hm-sub-row td { color:var(--text3); font-size:12.5px; }
-  .hm-msgsum { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--text2); margin:2px 0 8px; }
-  .hm-msgsum b { font-size:18px; color:var(--text); }
-  .hm-msgsum span { font-size:12px; color:var(--text3); }
-  .hm-m .hm-prod { color:var(--accent); font-weight:600; }
   .hm-tbl .ui-badge { margin-left:8px; font-weight:500; }
+  .hm-ch-name { display:inline-flex; align-items:center; font-weight:600; color:var(--text); }
+  .hm-ch-name.is-link { cursor:pointer; } .hm-ch-name.is-link:hover { text-decoration:underline; }
+  .hm-bar { display:inline-block; width:52px; height:6px; border-radius:3px; background:var(--bg3); vertical-align:middle; margin-right:8px; overflow:hidden; } .hm-bar b { display:block; height:100%; border-radius:3px; }
   .hm-roas { font-weight:700; font-variant-numeric:tabular-nums; }
-  .hm-roas.good { color:var(--good); } .hm-roas.mid { color:var(--accent-text); } .hm-roas.bad { color:var(--bad); }
-  .hm-sub { display:flex; align-items:center; gap:6px; margin:14px 0 2px; font-size:12px; font-weight:600; color:var(--text3); }
-  .hm-sub:first-child { margin-top:4px; }
-  .hm-it { display:grid; grid-template-columns:40px minmax(0, 1fr) auto; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--row-border); }
-  .hm-it.no-lead { grid-template-columns:minmax(0, 1fr) auto; }
-  .hm-it:last-child { border-bottom:0; }
-  .hm-thumb { width:40px; height:40px; border-radius:8px; background:var(--bg3); overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text3); }
-  .hm-thumb img { width:100%; height:100%; object-fit:cover; }
-  .hm-rank { text-align:center; font-size:15px; font-weight:700; color:var(--text3); font-variant-numeric:tabular-nums; }
-  .hm-rank.top { color:var(--accent-text); }
-  .hm-t { font-size:13px; font-weight:600; color:var(--text); }
-  .hm-m { display:flex; flex-wrap:wrap; gap:2px 12px; margin-top:1px; font-size:12px; color:var(--text3); font-variant-numeric:tabular-nums; }
-  .hm-r { text-align:right; font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; font-variant-numeric:tabular-nums; }
-  .hm-r small { display:block; margin-top:1px; font-size:12px; }
-  .hm-empty { padding:10px 0; font-size:13px; color:var(--text3); }
-  .hm-lv { display:flex; align-items:center; gap:10px; margin:4px 0 4px; font-size:13px; font-weight:600; color:var(--text); }
-  .hm-lv + .hm-lv, .hm-st + .hm-lv, .hm-none + .hm-lv { margin-top:16px; }
-  .hm-lv-n { flex:none; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; }
-  .hm-lv-n.l1 { background:var(--bad); } .hm-lv-n.l2 { background:var(--warn); }
-  .hm-st { display:grid; grid-template-columns:minmax(0, 1fr) 64px; gap:12px; align-items:center; padding:10px 0 10px 32px; border-bottom:1px solid var(--row-border); }
-  .hm-st-nm { font-size:13px; font-weight:600; color:var(--text); } .hm-st-nm .ui-code { color:var(--text3); font-weight:400; margin-left:6px; }
-  .hm-st-f { display:flex; flex-wrap:wrap; gap:2px 14px; margin-top:2px; font-size:12px; color:var(--text2); } .hm-st-f b { color:var(--text); font-weight:600; }
-  .hm-st-v { margin-top:4px; font-size:12px; line-height:1.6; color:var(--text2); }
-  .hm-st-v .bad { color:var(--bad); font-weight:600; } .hm-st-v .warn { color:var(--warn); font-weight:600; } .hm-st-v .ok { color:var(--good); font-weight:600; }
-  .hm-src { display:inline-flex; align-items:center; gap:4px; margin:2px 4px 0 0; padding:1px 8px; border-radius:999px; background:var(--bg3); font-size:12px; color:var(--text2); }
-  .hm-src b { color:var(--text); }
-  .hm-days { text-align:center; border-radius:10px; padding:6px 0; line-height:1.1; font-variant-numeric:tabular-nums; }
-  .hm-days b { display:block; font-size:22px; font-weight:700; } .hm-days small { font-size:11px; }
-  .hm-days.red { color:var(--bad); background:color-mix(in srgb, var(--bad) 12%, transparent); }
-  .hm-days.orange { color:var(--warn); background:color-mix(in srgb, var(--warn) 14%, transparent); }
-  .hm-none { padding:8px 0 8px 32px; font-size:13px; color:var(--good); }
+  .hm-roas.good { color:var(--good); } .hm-roas.mid { color:var(--warn); } .hm-roas.bad { color:var(--bad); }
+  .hm-rank { width:22px; color:var(--text3); }
+  .hm-adtbl { table-layout:fixed; } .hm-adtbl td.w small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hm-adn { display:block; max-width:100%; color:var(--text); cursor:default; }
+  .hm-msg { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12.5px; color:var(--text2); margin:0 0 6px; } .hm-msg b { font-size:15px; color:var(--text); } .hm-msg > span:last-child { color:var(--text3); }
+  .hm-daytag { margin-left:6px; font-size:12px; font-weight:400; color:var(--text3); }
+  /* สต็อกต้องจัดการ */
+  .hm-lv { display:flex; align-items:center; gap:6px; padding:9px 0 6px; margin-top:2px; border-bottom:1px solid var(--row-border); font-size:12.5px; font-weight:700; color:var(--text); }
+  .hm-ax { display:flex; justify-content:space-between; padding:6px 0 0; font-size:10.5px; color:var(--text3); } .hm-ax i { font-style:normal; }
+  .hm-st { padding:10px 0 11px; border-bottom:1px solid var(--row-border); } .hm-st:last-child { border-bottom:0; }
+  .hm-st-h { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+  .hm-st-nm { font-size:13.5px; font-weight:600; color:var(--text); } .hm-st-nm .ui-code { color:var(--text3); font-weight:400; margin-left:8px; font-size:11px; }
+  .hm-st-f { margin-top:2px; font-size:12px; color:var(--text3); }
+  .hm-dy { font-size:24px; font-weight:700; line-height:1; white-space:nowrap; font-variant-numeric:tabular-nums; } .hm-dy small { font-size:12px; font-weight:600; margin-left:3px; }
+  .hm-dy.red { color:var(--bad); } .hm-dy.orange { color:var(--warn); }
+  .hm-tl { position:relative; height:8px; margin:9px 0 7px; border-radius:99px; background:var(--bg3); }
+  .hm-tl .fill { position:absolute; left:0; top:0; bottom:0; border-radius:99px; } .hm-tl .fill.red { background:var(--bad); } .hm-tl .fill.orange { background:var(--warn); }
+  .hm-tl .gap { position:absolute; top:0; bottom:0; background:repeating-linear-gradient(135deg, var(--bad) 0 3px, transparent 3px 6px); opacity:.55; border-radius:0 99px 99px 0; }
+  .hm-tl .unk { position:absolute; top:0; bottom:0; right:0; background:repeating-linear-gradient(90deg, var(--text3) 0 4px, transparent 4px 8px); opacity:.35; }
+  .hm-tl .eta { position:absolute; top:-4px; width:3px; height:16px; border-radius:2px; background:var(--text); transform:translateX(-50%); }
+  .hm-st-v { font-size:12.5px; color:var(--text2); } .hm-st-v .bad { color:var(--bad); font-weight:700; } .hm-st-v .warn { color:var(--warn); font-weight:700; } .hm-st-v .ok { color:var(--good); font-weight:700; }
+  .hm-st-v2 { margin-top:6px; font-size:12.5px; color:var(--text2); } .hm-st-v2 .bad { color:var(--bad); font-weight:600; }
+  .hm-src { display:inline-block; margin:2px 4px 0 4px; padding:2px 9px; border-radius:6px; background:var(--bg3); color:var(--text); } .hm-src b { font-weight:700; }
+  .hm-none { padding:10px 0; font-size:13px; color:var(--text3); }
   .hm-info { font-size:12px; font-weight:400; color:var(--text3); cursor:pointer; }
   .hm-info-pop { display:none; position:absolute; top:20px; left:0; width:320px; z-index:50; padding:10px 12px; font-size:12.5px; line-height:1.65; white-space:normal; font-weight:400; text-align:left; }
   #homeBody.is-loading { opacity:.55; transition:opacity .15s; }
-  /* (2026-10-07 รอบ 3) ตัวเลขหลัก 6 ช่องแบบหน้าตัวอย่าง — ⓘ ในช่องต้องไม่โดนตัด จึงไม่ตัดขอบแผง */
-  .hm-metrics { overflow:visible; }
-  .hm-metrics .ui-metric:first-child { border-radius:9px 0 0 9px; } .hm-metrics .ui-metric:first-child::before { border-top-left-radius:9px; }
-  .hm-metrics .ui-metric:last-child { border-radius:0 9px 9px 0; }
-  .hm-metrics .ui-metric-l .ads-info-wrap { margin-left:2px; }
-  .hm-daytag { margin-left:8px; font-size:12px; font-weight:400; color:var(--text3); }
   .ui-badge.is-click { cursor:pointer; } .ui-badge.is-click:hover { color:var(--accent-text); background:var(--accent-soft); }
-  @media (max-width:1100px) { .hm-grid2 { grid-template-columns:1fr; } }
   /* กล่องแจกแจงยอด (กดที่ตัวเลข) */
   .bd { text-align:left; max-width:780px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'Sarabun',sans-serif; }
   .bd-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; }
@@ -631,7 +625,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   /* (2026-10-07) ตัวเลขหลักที่กดไม่ได้ ไม่ต้องเปลี่ยนสีตอนชี้เมาส์ */
   .ui-metric.is-static:hover { background: var(--bg2); }
 </style>
-<link rel="stylesheet" href="ui.css?v=20261020c"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
+<link rel="stylesheet" href="ui.css?v=20261102a"><!-- (2026-10-07) หน้าตากลางทุกหน้า — โหลดหลัง <style> ของหน้าเสมอ -->
 
 <style>
   /* (2026-10-14) แผง "ที่มาของตัวเลข" v3 — การ์ดสรุป · ตารางสะอาด (คำอธิบายอยู่ใน ⓘ / ชี้เมาส์) · แหล่งที่มา */
@@ -774,7 +768,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.02-c"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.02-e"></div>
 <script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
@@ -8775,9 +8769,10 @@ async function renderHome() {
   const rows = tr ? tr.rows : [];
   // (2026-10-08) ช่องทางที่ยอดยังเข้าไม่ครบถึงวันสุดท้ายของช่วง: ตัวเลขรวมแสดงเท่าที่มี · การเทียบใช้เฉพาะช่องทางที่ยอดเข้าครบ (ทั้งช่วงนี้และช่วงเทียบ)
   const CT = (tr && tr.complete) || {}, inc = HM_ONLINE.filter(c => CT[c] && CT[c] < B);
-  const cur = homeAgg(rows, A, B), curC = homeAgg(rows, A, B, null, inc);
+  const cmpX = inc.concat(HM_CUM);   // (2026-11-02) ป้ายเทียบนับเฉพาะออนไลน์ที่ยอดเข้าครบ — ตัวแทน / MT สั่งเป็นก้อน ทำให้ค่าปกติเพี้ยน
+  const cur = homeAgg(rows, A, B), curC = homeAgg(rows, A, B, null, cmpX);
   const pA = one ? homeAdd(A, -7) : homeAdd(A, -n), pB = homeAdd(A, -1), pd = one ? 7 : 1;
-  const prv0 = homeAgg(rows, pA, pB, null, inc), prv = { rev: prv0.rev / pd, ord: prv0.ord / pd, ads: prv0.ads / pd, aov: prv0.aov, roas: prv0.roas };
+  const prv0 = homeAgg(rows, pA, pB, null, cmpX), prv = { rev: prv0.rev / pd, ord: prv0.ord / pd, ads: prv0.ads / pd, aov: prv0.aov, roas: prv0.roas };
   const cmpTxt = one ? 'เทียบเฉลี่ย 7 วันก่อน' : 'เทียบช่วงก่อน';
   const cmpLong = one ? `เทียบค่าเฉลี่ยรายวัน ${dShort(pA)} – ${dLong(pB)}` : `เทียบกับ ${dShort(pA)} – ${dLong(pB)} (ช่วงก่อนหน้าที่ยาวเท่ากัน)`;
   const ch = b.channels || [];
@@ -8794,83 +8789,87 @@ async function renderHome() {
     const pe = homeAdd(pmS, +L.slice(8) - 1); t.mtd += homeAgg(rows, mS, L, c).rev; t.mtdp += homeAgg(rows, pmS, pe > pmE ? pmE : pe, c).rev; return t; }, { mtd: 0, mtdp: 0 });
   const prAds = homeAgg(rows, A, B, 'Facebook PR').ads;
 
-  const metric = (k, label, value, d, inf) => `<div class="ui-metric" role="button" tabindex="0" data-k="${k}" style="--m:var(${HM_MET[k].color});" onclick="homeToggleMetric('${k}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();homeToggleMetric('${k}')}">
-      <span class="ui-metric-l"><span class="ui-tick"></span>${label}${inf || ''}</span><span class="ui-metric-v">${value}</span><span class="ui-metric-d">${d} ${cmpTxt}</span></div>`;
+  // (2026-11-02) หน้าตาใหม่แบบ C: แถบสรุปขอบไล่สี · ป้ายเทียบสีเขียว/แดง · ตารางช่องทางแบ่งกลุ่ม + แถวรวมเส้นเข้ม · สต็อกต้องจัดการ (แถบเวลา) · สินค้า / Ads แบบตาราง
+  const chip = (p, inv) => p === null || !isFinite(p) ? '<span class="ui-chip">—</span>'
+    : `<span class="ui-chip ${Math.abs(p) < 3 ? '' : ((p > 0) !== !!inv ? 'up' : 'dn')}">${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p).toFixed(1)}%</span>`;
+  const baseTxt = v => `${one ? 'ปกติ' : 'ช่วงก่อน'} ${v}`;
+  const metric = (k, label, value, d, base, inf) => `<div class="ui-metric" role="button" tabindex="0" data-k="${k}" style="--m:var(${HM_MET[k].color});" onclick="homeToggleMetric('${k}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();homeToggleMetric('${k}')}">
+      <span class="ui-metric-l"><span class="ui-tick"></span>${label}${inf || ''}</span><span class="ui-metric-v">${value}</span><span class="hm-md">${d}<span>${base}</span></span></div>`;
 
-  // ตารางช่องทาง (แบบหน้าตัวอย่าง) — แถวรวม = ตัวเลขหลัก
+  // ตารางช่องทาง: กลุ่มออนไลน์ / ตัวแทน + Modern Trade · แถวรวม = ตัวเลขหลักเสมอ
   const chNames = Object.keys(HM_CH);
   const chData = chNames.map(c => ({ c, g: homeAgg(rows, A, B, c), p: homeAgg(rows, pA, pB, c) }));
-  const maxRev = Math.max(1, ...chData.map(x => x.g.rev));
-  const chRows = chData.map(({ c, g, p }) => {
+  const chRow = ({ c, g, p }) => {
     const cum = HM_CUM.includes(c), pg = HM_CH[c][1], sx = cum ? '' : stOf(c), st = !!sx;
-    const mute = v => cum && one ? `<span class="ui-muted">${v}</span>` : v;
     const name = `<span class="hm-ch-name${can(pg) ? ' is-link' : ''}"${can(pg) ? ` onclick="homeGo('${pg}')"` : ''}>${dot(c)}${esc(c)}</span>`;
     const tag = st ? `<span class="ui-badge warn" data-tip="${sx === 'pending' ? 'ยังไม่ได้อัปไฟล์ยอดของ ' + dShort(B) : 'ยอดของ ' + dShort(B) + ' ยังเข้าไม่ครบ (ไฟล์ที่อัปยังไม่ครอบทั้งวัน)'} · ไม่นับในการเทียบและ ROAS">${stName(sx)}</span>`
       : cum && one ? `<span class="ui-badge is-click" onclick="homePreset('m0')" data-tip="${c === 'Modern Trade' ? 'ห้างส่งรายงานยอดเป็นรายเดือน' : 'ตัวแทนสั่งเป็นก้อน ไม่ได้สั่งทุกวัน'} กดเพื่อดูยอดเดือนนี้">ดูยอดเดือนนี้</span>` : '';
     const share = cur.rev ? g.rev / cur.rev * 100 : 0, pp = one ? p.rev / 7 : p.rev;
-    return `<tr${st ? ' class="is-stale"' : ''}><td>${name}${tag}</td>
-      <td class="num">${g.rev ? `<span class="pl-trace" data-tsales="${c}|${A}|${B}">${mute(money(g.rev))}</span>` : mute(money(g.rev))}</td>
-      <td class="num"><span class="ui-share">${share.toFixed(1)}%<span class="ui-share-track"><b style="width:${(g.rev / maxRev * 100).toFixed(1)}%;--c:${HM_CH[c][0]};"></b></span></span></td>
-      <td class="num">${mute(fmt(g.ord))}</td>
-      <td class="num">${cum ? dash : g.aov ? money(g.aov) : dash}</td>
+    return `<tr class="${st ? 'is-stale' : cum && one ? 'is-cum' : ''}"><td class="l">${name}${tag}</td>
+      <td class="l"><span class="hm-bar"><b style="width:${Math.min(100, share).toFixed(1)}%;background:${HM_CH[c][0]};"></b></span>${share.toFixed(0)}%</td>
+      <td class="num">${g.rev ? `<span class="pl-trace" data-tsales="${c}|${A}|${B}">${money(g.rev)}</span>` : money(g.rev)}</td>
+      <td class="num ui-muted">${cum ? dash : money(pp)}</td>
+      <td class="num">${cum || (st && one) ? dash : chip(pct(g.rev, pp))}</td>
       <td class="num">${g.ads ? `<span class="pl-trace" data-tads="${c}|${A}|${B}">${money(g.ads)}</span>` : dash}</td>
       <td class="num">${g.ads && g.rev ? roasTxt(g.roas) : dash}</td>
-      <td class="num">${(cum && one) || (st && one) ? dash : delta(pct(g.rev, pp))}</td></tr>` + (c === 'Facebook' && prAds ? `<tr class="hm-sub-row"><td><span class="hm-ch-name">${dot('Facebook')}<span class="ui-muted">Facebook PR / KOL</span></span><span class="ui-badge" data-tip="ค่า Ads ที่ไม่ได้ขายของโดยตรง (PR / boost โพสต์ KOL) แสดงให้เห็นค่าใช้จ่าย แต่ไม่นับใน ROAS">ไม่นับ ROAS</span></td>
-      <td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num"><span class="pl-trace" data-tads="Facebook PR|${A}|${B}">${money(prAds)}</span></td><td class="num">${dash}</td><td class="num">${dash}</td></tr>` : '');
-  }).join('');
+      <td class="num">${fmt(g.ord)}</td></tr>` + (c === 'Facebook' && prAds ? `<tr class="hm-sub-row"><td class="l"><span class="hm-ch-name">${dot('Facebook')}Facebook PR / KOL</span><span class="ui-badge" data-tip="ค่า Ads ที่ไม่ได้ขายของโดยตรง (PR / boost โพสต์ KOL) แสดงให้เห็นค่าใช้จ่าย แต่ไม่นับใน ROAS">ไม่นับ ROAS</span></td>
+      <td class="l"></td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num"><span class="pl-trace" data-tads="Facebook PR|${A}|${B}">${money(prAds)}</span></td><td class="num">${dash}</td><td class="num">${dash}</td></tr>` : '');
+  };
+  const chRows = `<tr class="ui-grp"><td colspan="8">ออนไลน์</td></tr>${chData.filter(x => !HM_CUM.includes(x.c)).map(chRow).join('')}
+    <tr class="ui-grp"><td colspan="8">ตัวแทน / Modern Trade ${info('hm-i-cum', 'ห้างส่งยอดเป็นรายเดือน ตัวแทนสั่งเป็นก้อน ดูรายวันจะไม่สะท้อนจริง<br>กด "ดูยอดเดือนนี้" เพื่อดูทั้งเดือน · ไม่นับในการเทียบ ROAS และ AOV')}</td></tr>${chData.filter(x => HM_CUM.includes(x.c)).map(chRow).join('')}`;
 
-  const adItem = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, title = tt ? (x.title || x.item_id) : x.name;
-    return `<div class="hm-it"><div class="hm-thumb">${img ? `<img class="zoom-thumb" src="${esc(img)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${tt ? 'TT' : 'FB'}'">` : (tt ? 'TT' : 'FB')}</div>
-      <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(title)}</div><div class="hm-m"><span class="hm-prod">${esc(x.product || 'ยังไม่ได้ผูกสินค้า')}</span>${tt ? `<span>@${esc(x.acc || '—')}</span>` : ''}<span>ค่า Ads ${money(x.spend)}</span><span>ยอดขาย ${money(tt ? x.rev : x.pv)}</span>${!tt ? `<span>ทัก ${fmt(+x.msg || 0)}</span>` : ''}</div></div>
-      <div class="hm-r">${roasTxt(+x.roas)}</div></div>`; };
-  const adBlock = (best, worst, tt) => `<div class="hm-sub">ROAS ดีที่สุด</div>${(best || []).map(x => adItem(x, tt)).join('') || '<div class="hm-empty">ไม่มี Ads ที่มียอดขาย</div>'}
-    <div class="hm-sub">ใช้เงินมากแต่ ROAS ต่ำ</div>${(worst || []).map(x => adItem(x, tt)).join('') || '<div class="hm-empty">ไม่มี</div>'}`;
-  const adInfo = 'คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ 300 บาท ในวันนั้น · ยอดขายและ ROAS ตามที่ Meta / TikTok นับให้ Ads นั้น<br>กลุ่ม "ใช้เงินมากแต่ ROAS ต่ำ" คัด Ads ที่ใช้เงินตั้งแต่ 1,000 และ ROAS ต่ำกว่า 2x';
-  const fbInfo = adInfo + '<br><b>สินค้า</b> ตามชีทผูก Ads กับสินค้า · "หลายสินค้า" = Campaign รวม<br><b>ทัก</b> คนที่เริ่มแชทจาก Ads นั้นในวันนั้น ยอดขายอาจมาจากคนที่ทักไว้วันก่อน Ads บางตัวจึงมียอดขายแต่ทัก 0<br><b>คนทักทั้งหมด</b> รวมทุก Ads ทุกบัญชีในวันนั้น';
+  // Ads: ตาราง ชื่อ + สินค้า · ใช้ไป · ROAS · ภาพ / ยอดขาย / ทัก อยู่ตอนชี้เมาส์
+  const adRow = (x, tt) => { const img = tt ? x.cover : x.thumbnail_url, title = tt ? (x.title || x.item_id) : x.name;
+    const tip = `${tt ? '@' + (x.acc || '—') + '\n' : ''}ยอดขาย ${money(tt ? x.rev : x.pv)}${tt ? '' : ' · ทัก ' + fmt(+x.msg || 0)}`;
+    return `<tr><td class="l w"><span class="hm-adn ui-trunc"${img ? ` data-tip-img="${esc(img)}"` : ''} data-tip="${esc(tip)}">${esc(title)}</span><small>${esc(x.product || 'ยังไม่ได้ผูกสินค้า')}</small></td>
+      <td class="num">${money(x.spend)}</td><td class="num">${roasTxt(+x.roas)}</td></tr>`; };
+  const adTable = (best, worst, tt) => `<table class="ui-table hm-tbl hm-adtbl" data-no-sort data-no-page><colgroup><col><col style="width:76px"><col style="width:70px"></colgroup><thead><tr><th class="l">${tt ? 'คลิป' : 'Ads'}</th><th class="num">ใช้ไป</th><th class="num">ROAS</th></tr></thead><tbody>
+    <tr class="ui-grp good"><td colspan="3">ROAS ดีที่สุด</td></tr>${(best || []).map(x => adRow(x, tt)).join('') || '<tr><td colspan="3" class="l ui-muted">ไม่มี Ads ที่มียอดขาย</td></tr>'}
+    <tr class="ui-grp bad"><td colspan="3">ใช้เงินมากแต่ ROAS ต่ำ</td></tr>${(worst || []).map(x => adRow(x, tt)).join('') || '<tr><td colspan="3" class="l ui-muted">ไม่มี</td></tr>'}</tbody></table>`;
+  const adInfo = 'คัดเฉพาะ Ads ที่ใช้เงินตั้งแต่ 300 บาท ในวันนั้น · ยอดขายและ ROAS ตามที่ Meta / TikTok นับให้ Ads นั้น<br>กลุ่ม "ใช้เงินมากแต่ ROAS ต่ำ" คัด Ads ที่ใช้เงินตั้งแต่ 1,000 และ ROAS ต่ำกว่า 2x<br>ชี้ที่ชื่อเพื่อดูภาพและยอดขาย';
+  const fbInfo = adInfo + '<br><b>สินค้า</b> ตามชีทผูก Ads กับสินค้า · "หลายสินค้า" = Campaign รวม<br><b>ทัก</b> คนที่เริ่มแชทจาก Ads นั้นในวันนั้น ยอดขายอาจมาจากคนที่ทักไว้วันก่อน<br><b>คนทัก</b> รวมทุก Ads ทุกบัญชีในวันนั้น';
   const ttInfo = adInfo + '<br><b>สินค้า</b> สินค้าที่คลิปนั้นขายได้ในวันนั้น';
   const dayTag = one ? '' : `<span class="hm-daytag">ของวันที่ ${dShort(B)}</span>`;
 
+  // สต็อกต้องจัดการ: ตัวเลขวัน · แถบเวลา (มีของ / ช่วงขาดของ / วันของเข้า) · สรุปสั้น — เกณฑ์เดิมทุกข้อ
+  const AX = 40, px = d => (Math.max(0, Math.min(d, AX)) / AX * 100).toFixed(1);
   const stockL1 = (b.stock_l1 || []).map(x => { const cv = Math.max(0, +x.cover_total || 0), today = new Date(), lt = +x.lt || 0;
     const outDay = new Date(today.getTime() + cv * 86400000);
-    const eta = x.wip_eta ? new Date(x.wip_eta + 'T00:00:00') : null;
+    const eta = x.wip_eta ? new Date(x.wip_eta + 'T00:00:00') : null, etaD = eta ? (eta - today) / 86400000 : null;
     const gap = eta ? Math.round((eta - outDay) / 86400000) : (lt ? Math.round(lt - cv) : null);
-    const verdict = x.plan_mode === 'watch' && !eta
-      ? `<span class="ui-muted">ไม่มีแผนสั่งต่อ — ขายจนหมด</span>`
-      : (!eta && +x.wip > 0)
-      ? `<span class="warn">รอ ETA จากจัดซื้อ</span> · ต้องได้ของล็อตใหม่ก่อน ${dShort(homeIso(outDay))}`
-      : eta
-      ? (gap > 0 ? `<span class="bad">ขาดของ ~${gap} วัน</span> ก่อนของล็อตใหม่เข้า ${dShort(x.wip_eta)}` : `<span class="ok">ทัน</span> ของล็อตใหม่เข้า ${dShort(x.wip_eta)} ก่อนหมด`)
-      : (gap > 0 ? `<span class="bad">ยังไม่มี PO</span> · สั่งวันนี้ ผลิต ~${lt} วัน → ขาดของ ~${gap} วัน` : `<span class="warn">ยังไม่มี PO</span> · ผลิต ~${lt || '?'} วัน ควรสั่งเร็วๆ นี้`);
-    return `<div class="hm-st"><div style="min-width:0;"><div class="hm-st-nm">${esc(x.product_name || x.parent_sku)}<span class="ui-code">${esc(x.sku)}</span></div>
-      <div class="hm-st-f"><span>มี <b>${fmt(Math.round(+x.on_hand))}</b>${+x.fg ? ` + ฝากโรงงาน <b>${fmt(Math.round(+x.fg))}</b>` : ''}</span><span>ขายวันละ ~<b>${(+x.avg_day).toFixed(0)}</b></span>${+x.wip ? `<span>กำลังผลิต <b>${fmt(Math.round(+x.wip))}</b></span>` : ''}</div>
-      <div class="hm-st-v">${verdict}</div></div>
-      <div class="hm-days ${cv < 14 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="hm-none">✓ ทุกตัวพอขายเกิน 30 วัน</div>';
-  const stockL2 = (b.stock_l2 || []).map(x => { const cv = Math.max(0, +x.cover01 || 0), ad = +x.avg_day || 0, fgq = +x.fg || 0, sites = x.sites || [];
-    const days = q => ad ? ` · ขายได้อีก ~${Math.floor(q / ad)} วัน` : '';
+    const watch = x.plan_mode === 'watch' && !eta, waitEta = !eta && +x.wip > 0, cls = cv < 14 ? 'red' : 'orange';
+    const verdict = watch ? '<span class="ui-muted">ไม่มีแผนสั่งต่อ — ขายจนหมด</span>'
+      : waitEta ? `<span class="warn">รอ ETA จากจัดซื้อ</span> ต้องได้ของล็อตใหม่ก่อน ${dShort(homeIso(outDay))}`
+      : eta ? (gap > 0 ? `<span class="bad">ขาดของ ~${gap} วัน</span> หมดราว ${dShort(homeIso(outDay))} ของล็อตใหม่เข้า ${dShort(x.wip_eta)}` : `<span class="ok">ทัน</span> ของล็อตใหม่เข้า ${dShort(x.wip_eta)} ก่อนหมด (${dShort(homeIso(outDay))})`)
+      : (gap > 0 ? `<span class="bad">ยังไม่มี PO</span> สั่งวันนี้ ผลิต ~${lt} วัน ขาดของ ~${gap} วัน` : `<span class="warn">ยังไม่มี PO</span> ผลิต ~${lt || '?'} วัน ควรสั่งเร็ว ๆ นี้`);
+    const tl = `<div class="hm-tl"><b class="fill ${cls}" style="width:${px(cv)}%"></b>${eta ? (gap > 0 ? `<b class="gap" style="left:${px(cv)}%;width:${(px(etaD) - px(cv)).toFixed(1)}%"></b>` : '') + `<i class="eta" style="left:${px(etaD)}%" data-tip="ของล็อตใหม่เข้า ${dShort(x.wip_eta)}"></i>`
+      : watch ? '' : `<b class="unk" style="left:${px(cv)}%"></b>`}</div>`;
+    return `<div class="hm-st"><div class="hm-st-h"><div style="min-width:0;"><div class="hm-st-nm">${esc(x.product_name || x.parent_sku)}<span class="ui-code">${esc(x.sku)}</span></div>
+      <div class="hm-st-f">มี ${fmt(Math.round(+x.on_hand))}${+x.fg ? ` + ฝากโรงงาน ${fmt(Math.round(+x.fg))}` : ''} · ขายวันละ ~${(+x.avg_day).toFixed(0)}${+x.wip ? ` · กำลังผลิต ${fmt(Math.round(+x.wip))}` : ''}</div></div>
+      <div class="hm-dy ${cls}">${Math.floor(cv)}<small>วัน</small></div></div>${tl}<div class="hm-st-v">${verdict}</div></div>`; }).join('') || '<div class="hm-none">ทุกตัวพอขายเกิน 30 วัน</div>';
+  const stockL2 = (b.stock_l2 || []).map(x => { const cv = Math.max(0, +x.cover01 || 0), fgq = +x.fg || 0, sites = x.sites || [];
     // เรียกจากโรงงานก่อน (ของผลิตเสร็จฝากไว้) · โรงงานไม่มีค่อยเรียกจากคลังอื่น
-    const src = fgq > 0
-      ? `<span class="hm-src">โรงงาน (ผลิตเสร็จฝากไว้) <b>${fmt(Math.round(fgq))}</b> ชิ้น${days(fgq)}</span>`
-      : sites.length ? sites.map(z => `<span class="hm-src">${esc(String(z.site).replace(/^\d+\s*-\s*/, ''))} <b>${fmt(Math.round(+z.qty))}</b> ชิ้น${days(+z.qty)}</span>`).join('')
-      : '<span class="bad">โรงงานและคลังอื่นไม่มีของ — ดูระดับ 1</span>';
-    return `<div class="hm-st"><div style="min-width:0;"><div class="hm-st-nm">${esc(x.product_name || x.parent_sku)}<span class="ui-code">${esc(x.sku)}</span></div>
-      <div class="hm-st-f"><span>ที่ 111/53 + 44/1 มี <b>${fmt(Math.round(+x.s01))}</b></span><span>ขายวันละ ~<b>${ad.toFixed(0)}</b></span></div>
-      <div class="hm-st-v">เรียกของจาก ${src}</div></div>
-      <div class="hm-days ${cv < 3 ? 'red' : 'orange'}"><b>${Math.floor(cv)}</b><small>วัน</small></div></div>`; }).join('') || '<div class="hm-none">✓ คลัง 111/53 + 44/1 พอขายทุกตัว</div>';
+    const src = fgq > 0 ? `<span class="hm-src" data-tip="ของที่ผลิตเสร็จแล้ว ฝากไว้ที่โรงงาน">โรงงาน <b>${fmt(Math.round(fgq))}</b> ชิ้น</span>`
+      : sites.length ? sites.map(z => `<span class="hm-src">${esc(String(z.site).replace(/^\d+\s*-\s*/, ''))} <b>${fmt(Math.round(+z.qty))}</b> ชิ้น</span>`).join('')
+      : '<span class="bad">โรงงานและคลังอื่นไม่มีของ</span>';
+    return `<div class="hm-st"><div class="hm-st-h"><div style="min-width:0;"><div class="hm-st-nm">${esc(x.product_name || x.parent_sku)}<span class="ui-code">${esc(x.sku)}</span></div>
+      <div class="hm-st-f">มี ${fmt(Math.round(+x.s01))} · ขายวันละ ~${(+x.avg_day || 0).toFixed(0)}</div></div><div class="hm-dy ${cv < 3 ? 'red' : 'orange'}">${Math.floor(cv)}<small>วัน</small></div></div>
+      <div class="hm-st-v2">เรียกจาก ${src}</div></div>`; }).join('') || '<div class="hm-none">คลัง 111/53 + 44/1 พอขายทุกตัว</div>';
+  const nSt = (b.stock_l1 || []).length + (b.stock_l2 || []).length;
 
   el.classList.remove('is-loading'); el.dataset.loaded = '1';
   // (2026-10-16) วันที่ + ช่วงที่เทียบ อยู่บรรทัดเดียวกับชื่อหน้าด้านบน (ไม่ทำหัวข้อซ้ำในหน้า)
   const ps = document.getElementById('pageSub');
   if (ps && currentPage === 'home') ps.innerHTML = `· ${one ? new Date(B + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) + ' · เทียบเฉลี่ยรายวัน ' + dShort(pA) + ' – ' + dShort(pB)
-    : dShort(A) + ' – ' + dLong(B) + ' (' + n + ' วัน) · เทียบ ' + dShort(pA) + ' – ' + dShort(pB)} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน')}`;
+    : dShort(A) + ' – ' + dLong(B) + ' (' + n + ' วัน) · เทียบ ' + dShort(pA) + ' – ' + dShort(pB)} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน · นับเฉพาะออนไลน์ (ไม่นับตัวแทน / Modern Trade ที่สั่งเป็นก้อน)<br><b>ป้ายสี</b> เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3%')}`;
   el.innerHTML = `
-
     <section class="ui-metrics hm-metrics" aria-label="ตัวเลขหลัก">
-      ${metric('sales', 'ยอดขายรวม', money(cur.rev), delta(pct(curC.rev, prv.rev)))}
-      ${metric('orders', 'ออเดอร์', fmt(cur.ord), delta(pct(curC.ord, prv.ord)))}
-      ${metric('aov', 'AOV', cur.aov ? money(cur.aov) : '—', delta(pct(curC.aov, prv.aov)), info('hm-i-aov', '<b>AOV (Average Order Value)</b> ราคาเฉลี่ยต่อออเดอร์ = ยอดขาย ÷ ออเดอร์<br>ไม่นับตัวแทนและ Modern Trade เพราะสั่งเป็นก้อนใหญ่', true))}
-      ${metric('ads', 'ค่า Ads รวม', money(cur.ads), delta(pct(curC.ads, prv.ads), true), info('hm-i-ads', `ค่า Ads ทุกแหล่ง (Meta / TikTok / Shopee / Lazada)${prAds ? '<br>รวม Facebook PR / KOL ' + money(prAds) + ' ซึ่งไม่นับใน ROAS' : ''}`, true))}
-      ${metric('roas', 'ROAS', cur.roas ? cur.roas.toFixed(2) + 'x' : '—', delta(pct(curC.roas, prv.roas)), info('hm-i-roas', '<b>ROAS (Return on Ad Spend)</b> = ยอดขายออนไลน์ ÷ ค่า Ads ที่ใช้ขาย<br>ไม่นับยอดตัวแทนและ Modern Trade (สั่งเป็นก้อน) และไม่นับค่า Ads ของ Facebook PR / KOL และ Modern Trade<br>ช่องทางที่ยอดยังเข้าไม่ครบ ไม่นับทั้งยอดขายและค่า Ads', true))}
-      <div class="ui-metric is-static"><span class="ui-metric-l">สะสมเดือนนี้${info('hm-i-mtd', `ยอดขายออนไลน์ (Facebook / TikTok / Shopee / Lazada) ตั้งแต่วันที่ 1 เทียบเดือนก่อนช่วงวันเดียวกัน<br>ไม่นับตัวแทนและ Modern Trade เพราะลงยอดเป็นก้อนไม่ตรงวัน<br>แต่ละช่องทางนับถึงวันที่ยอดเข้าครบ`)}</span><span class="ui-metric-v">${money(T.mtd)}</span><span class="ui-metric-d">${delta(pct(T.mtd, T.mtdp))} เทียบเดือนก่อน</span></div>
+      ${metric('sales', 'ยอดขายรวม', money(cur.rev), chip(pct(curC.rev, prv.rev)), baseTxt(money(prv.rev)), info('hm-i-sales', 'ยอดขายทุกช่องทาง รวมตัวแทนและ Modern Trade<br>ป้ายเทียบและค่าปกตินับเฉพาะออนไลน์ เพราะตัวแทน / Modern Trade สั่งเป็นก้อน ไม่ตรงวัน', true))}
+      ${metric('orders', 'ออเดอร์', fmt(cur.ord), chip(pct(curC.ord, prv.ord)), baseTxt(fmt(Math.round(prv.ord))))}
+      ${metric('aov', 'AOV', cur.aov ? money(cur.aov) : '—', chip(pct(curC.aov, prv.aov)), baseTxt(prv.aov ? money(prv.aov) : '—'), info('hm-i-aov', '<b>AOV (Average Order Value)</b> ราคาเฉลี่ยต่อออเดอร์ = ยอดขาย ÷ ออเดอร์<br>ไม่นับตัวแทนและ Modern Trade เพราะสั่งเป็นก้อนใหญ่', true))}
+      ${metric('ads', 'ค่า Ads รวม', money(cur.ads), chip(pct(curC.ads, prv.ads), true), baseTxt(money(prv.ads)), info('hm-i-ads', `ค่า Ads ทุกแหล่ง (Meta / TikTok / Shopee / Lazada)${prAds ? '<br>รวม Facebook PR / KOL ' + money(prAds) + ' ซึ่งไม่นับใน ROAS' : ''}<br>ป้ายสีแดง = ใช้เงินมากกว่าปกติ`, true))}
+      ${metric('roas', 'ROAS', cur.roas ? cur.roas.toFixed(2) + 'x' : '—', chip(pct(curC.roas, prv.roas)), baseTxt(prv.roas ? prv.roas.toFixed(2) + 'x' : '—'), info('hm-i-roas', '<b>ROAS (Return on Ad Spend)</b> = ยอดขายออนไลน์ ÷ ค่า Ads ที่ใช้ขาย<br>ไม่นับยอดตัวแทนและ Modern Trade (สั่งเป็นก้อน) และไม่นับค่า Ads ของ Facebook PR / KOL และ Modern Trade<br>ช่องทางที่ยอดยังเข้าไม่ครบ ไม่นับทั้งยอดขายและค่า Ads', true))}
+      <div class="ui-metric is-static"><span class="ui-metric-l">สะสมเดือนนี้${info('hm-i-mtd', `ยอดขายออนไลน์ (Facebook / TikTok / Shopee / Lazada) ตั้งแต่วันที่ 1 เทียบเดือนก่อนช่วงวันเดียวกัน<br>ไม่นับตัวแทนและ Modern Trade เพราะลงยอดเป็นก้อนไม่ตรงวัน<br>แต่ละช่องทางนับถึงวันที่ยอดเข้าครบ`)}</span><span class="ui-metric-v">${money(T.mtd)}</span><span class="hm-md">${chip(pct(T.mtd, T.mtdp))}<span>เดือนก่อน ${money(T.mtdp)}</span></span></div>
     </section>
     <div class="ui-hint" id="homeMetricHint"></div>
     <section class="hm-panel">
@@ -8878,37 +8877,39 @@ async function renderHome() {
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;"><h2>${n > 31 ? 'แนวโน้มรายเดือน' : 'แนวโน้มรายวัน'}${one ? '<span class="hm-daytag">14 วันถึงวันที่เลือก</span>' : ''}</h2>
           <div class="ui-presets" id="hmView"><button type="button" data-v="m" onclick="homeChartView('m')">ตัวเลขที่เลือก</button><button type="button" data-v="ch" onclick="homeChartView('ch')">ยอดขายแยกช่องทาง</button></div></div>
         <div class="ui-legend" id="homeLegend"></div></div>
-      <div class="chart-wrap" id="homeTrendBox" style="height:280px;"></div>
-    </section>
-    <div class="hm-gap"></div>
-    <section class="hm-panel">
-      <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของช่วงวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>สัดส่วน</b> ยอดขายของช่องทาง ÷ ยอดขายรวม<br><b>AOV</b> ไม่นับตัวแทนและ Modern Trade<br><b>Modern Trade / ตัวแทน</b> ห้างส่งยอดรายเดือน ตัวแทนสั่งเป็นก้อน ดูรายวันจะไม่สะท้อนจริง กด "ดูยอดเดือนนี้" เพื่อดูทั้งเดือน<br><b>Pending upload</b> ยังไม่ได้อัปไฟล์ยอดของวันนั้น · <b>Partial</b> อัปแล้วแต่ไฟล์ยังไม่ครอบทั้งวัน — ทั้งสองแบบไม่นับในการเทียบและ ROAS<br><b>Facebook PR / KOL</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง แสดงค่าใช้จ่ายแต่ไม่นับใน ROAS<br><b>ROAS</b> ไม่นับยอดตัวแทนและ Modern Trade')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
-      <div class="table-wrap"><table class="ui-table hm-tbl" data-no-sort>
-        <thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ออเดอร์</th><th class="num">AOV</th><th class="num">ค่า Ads</th><th class="num">ROAS</th><th class="num">${one ? 'เทียบเฉลี่ย 7 วัน' : 'เทียบช่วงก่อน'}</th></tr></thead>
-        <tbody>${chRows}</tbody>
-        <tfoot><tr><td>รวม</td><td class="num">${money(cur.rev)}</td><td class="num">100%</td><td class="num">${fmt(cur.ord)}</td><td class="num">${cur.aov ? money(cur.aov) : '—'}</td><td class="num">${money(cur.ads)}</td><td class="num">${roasTxt(cur.roas)}</td><td class="num">${delta(pct(curC.rev, prv.rev))}</td></tr></tfoot>
-      </table></div>
+      <div class="chart-wrap" id="homeTrendBox" style="height:260px;"></div>
     </section>
     <div class="hm-gap"></div>
     <div class="hm-grid2">
-      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('Facebook')}Facebook Ads ${info('hm-i-fb', fbInfo)}${dayTag}</h2>${link('fbads', 'ดูทั้งหมด')}</div>${b.fb_msg && b.fb_msg.msg_d != null ? `<div class="hm-msgsum">คนทักทั้งหมด <b>${fmt(+b.fb_msg.msg_d)}</b> คน<span>เฉลี่ย 7 วันก่อน ${fmt(Math.round(+b.fb_msg.msg_avg7 || 0))} คน ${delta(pct(+b.fb_msg.msg_d, +b.fb_msg.msg_avg7))}</span></div>` : ''}${adBlock(b.fb_best, b.fb_worst, false)}</section>
-      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('TikTok')}TikTok Ads ${info('hm-i-tt', ttInfo)}${dayTag}</h2>${link('ttads', 'ดูทั้งหมด')}</div>${adBlock(b.tt_best, b.tt_worst, true)}</section>
-    </div>
-    <div class="hm-gap"></div>
-    <div class="hm-grid2">
-      <section class="hm-panel"><div class="hm-panel-h"><h2>สินค้าขายดี${dayTag} ${info('hm-i-top', `<b>ตัวเลขขวา</b> ยอดขายของ ${dShort(B)} · % เทียบกับยอดปกติ<br><b>ปกติวันละ</b> = ยอดขายเฉลี่ยต่อวันของ 7 วันก่อนหน้า (${dShort(homeAdd(B, -7))} – ${dShort(homeAdd(B, -1))}) คือยอดรวม 7 วัน ÷ 7<br>ช่องทางที่ยอดของวันนั้นยังเข้าไม่ครบ ไม่นับทั้งยอดวันนั้นและค่าเฉลี่ย`)}</h2>${link('skuanalysis', 'ดูทั้งหมด')}</div>
-        ${(b.top_products || []).map((x, i) => `<div class="hm-it"><div class="hm-rank${i < 3 ? ' top' : ''}">${i + 1}</div>
-          <div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>${fmt(Math.round(+x.qty_d || 0))} ชิ้น</span><span>ปกติวันละ ${money(x.avg7)}</span></div></div>
-          <div class="hm-r"><span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}">${money(x.rev_d)}</span><small>${delta(pct(+x.rev_d, +x.avg7))}</small></div></div>`).join('') || '<div class="hm-empty">ยังไม่มียอด</div>'}
-        <div class="hm-sub">ขยับแรง · เทียบยอดปกติต่อวัน (เฉลี่ย ${dShort(homeAdd(B, -7))} – ${dShort(homeAdd(B, -1))})</div>
-        ${(b.movers || []).map(x => `<div class="hm-it no-lead"><div style="min-width:0;"><div class="hm-t ui-trunc">${esc(x.product_name || x.parent_sku)}</div><div class="hm-m"><span>ปกติวันละ ${money(x.avg7)} → ${dShort(B)} ${money(x.rev_d)}</span></div></div><div class="hm-r">${delta(+x.chg * 100)}</div></div>`).join('') || '<div class="hm-empty">—</div>'}
+      <section class="hm-panel">
+        <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของช่วงวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>สัดส่วน</b> ยอดขายของช่องทาง ÷ ยอดขายรวม<br><b>' + (one ? 'ปกติวันละ' : 'ช่วงก่อน') + '</b> ' + (one ? 'ยอดเฉลี่ยต่อวันของ 7 วันก่อน' : 'ยอดของช่วงก่อนหน้าที่ยาวเท่ากัน') + ' · แถวรวมนับเฉพาะออนไลน์' + '<br><b>Pending upload</b> ยังไม่ได้อัปไฟล์ยอดของวันนั้น · <b>Partial</b> อัปแล้วแต่ไฟล์ยังไม่ครอบทั้งวัน — ทั้งสองแบบไม่นับในการเทียบและ ROAS<br><b>Facebook PR / KOL</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง แสดงค่าใช้จ่ายแต่ไม่นับใน ROAS<br><b>ROAS</b> ไม่นับยอดตัวแทนและ Modern Trade')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
+        <div class="table-wrap"><table class="ui-table hm-tbl" data-no-sort data-no-page>
+          <thead><tr><th class="l">ช่องทาง</th><th class="l">สัดส่วน</th><th class="num">ยอดขาย</th><th class="num">${one ? 'ปกติวันละ' : 'ช่วงก่อน'}</th><th class="num">เทียบ</th><th class="num">ค่า Ads</th><th class="num">ROAS</th><th class="num">ออเดอร์</th></tr></thead>
+          <tbody>${chRows}</tbody>
+          <tfoot><tr><td class="l">รวม</td><td class="l">100%</td><td class="num">${money(cur.rev)}</td><td class="num">${money(prv.rev)}</td><td class="num">${chip(pct(curC.rev, prv.rev))}</td><td class="num">${money(cur.ads)}</td><td class="num">${roasTxt(cur.roas)}</td><td class="num">${fmt(cur.ord)}</td></tr></tfoot>
+        </table></div>
       </section>
-      <section class="hm-panel"><div class="hm-panel-h"><h2>สต็อกต้องระวัง</h2>${link('supply', 'ไป Supply Chain')}</div>
-        <div class="hm-lv"><span class="hm-lv-n l1">1</span>ทั้งบริษัท — ต้องสั่งผลิต / ตามของ ${info('hm-i-l1', 'นับของทุกคลัง รวมของที่ผลิตเสร็จฝากไว้ที่โรงงาน<br>แสดงเฉพาะตัวที่พอขายได้ไม่ถึง 30 วัน')}</div>
+      <section class="hm-panel ui-alertbox"><div class="hm-panel-h"><h2>สต็อกต้องจัดการ${dayTag}</h2><span style="display:flex;align-items:center;gap:12px;">${nSt ? `<span class="ui-muted" style="font-size:12.5px;">${nSt} รายการ</span>` : ''}${link('supply', 'ไป Supply Chain')}</span></div>
+        <div class="hm-lv">ทั้งบริษัท · ต้องสั่งผลิต / ตามของ ${info('hm-i-l1', 'นับของทุกคลัง รวมของที่ผลิตเสร็จฝากไว้ที่โรงงาน<br>แสดงเฉพาะตัวที่พอขายได้ไม่ถึง 30 วัน<br><b>แถบ</b> สีทึบ = ช่วงที่ยังมีของ · ลายแดง = ช่วงที่ของจะขาด · ขีดดำ = วันของล็อตใหม่เข้า · เส้นประ = ยังไม่รู้วันของเข้า')}</div>
+        ${(b.stock_l1 || []).length ? '<div class="hm-ax"><i>วันนี้</i><i>+10 วัน</i><i>+20</i><i>+30</i><i>+40</i></div>' : ''}
         ${stockL1}
-        <div class="hm-lv"><span class="hm-lv-n l2">2</span>คลัง 111/53 + 44/1 — เรียกของจากที่อื่น ${info('hm-i-l2', 'แสดงเฉพาะตัวที่ของในคลัง 111/53 + 44/1 พอขายได้ไม่ถึง 7 วัน<br>แนะนำเรียกของจากโรงงานก่อน ถ้าโรงงานไม่มีค่อยเรียกจากคลังอื่น')}</div>
+        <div class="hm-lv">เรียกของเข้าคลัง 111/53 + 44/1 ${info('hm-i-l2', 'แสดงเฉพาะตัวที่ของในคลัง 111/53 + 44/1 พอขายได้ไม่ถึง 7 วัน<br>แนะนำเรียกของจากโรงงานก่อน (ของที่ผลิตเสร็จฝากไว้) ถ้าโรงงานไม่มีค่อยเรียกจากคลังอื่น')}</div>
         ${stockL2}
       </section>
+    </div>
+    <div class="hm-gap"></div>
+    <div class="hm-grid3">
+      <section class="hm-panel"><div class="hm-panel-h"><h2>สินค้า${dayTag} ${info('hm-i-top', `<b>ยอดขาย</b> ของ ${dShort(B)} · ป้ายสีเทียบกับยอดปกติ<br><b>ปกติวันละ</b> = ยอดขายเฉลี่ยต่อวันของ 7 วันก่อนหน้า (${dShort(homeAdd(B, -7))} – ${dShort(homeAdd(B, -1))}) คือยอดรวม 7 วัน ÷ 7<br>ช่องทางที่ยอดของวันนั้นยังเข้าไม่ครบ ไม่นับทั้งยอดวันนั้นและค่าเฉลี่ย`)}</h2>${link('skuanalysis', 'ดูทั้งหมด')}</div>
+        <table class="ui-table hm-tbl" data-no-sort data-no-page><thead><tr><th class="l" colspan="2">สินค้า</th><th class="num">ชิ้น</th><th class="num">ยอดขาย</th><th class="num">เทียบปกติ</th></tr></thead><tbody>
+          <tr class="ui-grp"><td colspan="5">ขายดี</td></tr>
+          ${(b.top_products || []).map((x, i) => `<tr><td class="l hm-rank">${i + 1}</td><td class="l w">${esc(x.product_name || x.parent_sku)}</td><td class="num">${fmt(Math.round(+x.qty_d || 0))}</td>
+            <td class="num"><span class="pl-trace" data-tsales="|${B}|${B}|${esc(x.parent_sku)}" data-tip="ปกติวันละ ${money(x.avg7)}">${money(x.rev_d)}</span></td><td class="num">${chip(pct(+x.rev_d, +x.avg7))}</td></tr>`).join('') || '<tr><td colspan="5" class="l ui-muted">ยังไม่มียอด</td></tr>'}
+          <tr class="ui-grp"><td colspan="5">ยอดเปลี่ยนแรง</td></tr>
+          ${(b.movers || []).map(x => `<tr><td class="l hm-rank"></td><td class="l w">${esc(x.product_name || x.parent_sku)}</td><td class="num"></td><td class="num" data-tip="ปกติวันละ ${money(x.avg7)}">${money(x.rev_d)}</td><td class="num">${chip(+x.chg * 100)}</td></tr>`).join('') || '<tr><td colspan="5" class="l ui-muted">—</td></tr>'}
+        </tbody></table></section>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('Facebook')}Ads Facebook ${info('hm-i-fb', fbInfo)}${dayTag}</h2>${link('fbads', 'ดูทั้งหมด')}</div>
+        ${b.fb_msg && b.fb_msg.msg_d != null ? `<div class="hm-msg">คนทักทั้งหมด <b>${fmt(+b.fb_msg.msg_d)}</b> ${chip(pct(+b.fb_msg.msg_d, +b.fb_msg.msg_avg7))}<span>ปกติ ${fmt(Math.round(+b.fb_msg.msg_avg7 || 0))}</span></div>` : ''}${adTable(b.fb_best, b.fb_worst, false)}</section>
+      <section class="hm-panel"><div class="hm-panel-h"><h2>${dot('TikTok')}Ads TikTok ${info('hm-i-tt', ttInfo)}${dayTag}</h2>${link('ttads', 'ดูทั้งหมด')}</div>${adTable(b.tt_best, b.tt_worst, true)}</section>
     </div>`;
   homeSyncChartUi(); renderHomeChart();
 }
