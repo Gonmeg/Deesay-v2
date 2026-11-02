@@ -1,3 +1,4 @@
+// promo.js (v20261102c) — ปุ่มเลือกค่าธรรมเนียมขึ้นทุกช่องทาง: ช่องทางที่ไม่มี API ปุ่ม "ค่าจริง" กดไม่ได้ พร้อมบอกเหตุผล
 // promo.js (v20261102b) — เลือก ค่าจริง / ค่าที่ตั้งไว้ ตอนจำลองโปรและดูคำขอ (ปุ่มบนผลคำนวณ) แทนคอลัมน์ "ใช้คิดโปร" ในหน้าค่าธรรมเนียม · การ์ด / หัวตารางมี ⓘ อธิบายตัวเลข
 // promo.js (v20261102a) — ค่าธรรมเนียมช่องทาง: คอลัมน์ "ใช้คิดโปร" เลือก ค่าจริง / ตั้งเอง ได้รายบรรทัด (สูตรคิดโปรใช้ตามที่เลือก · อัตราคำนวณที่ฐานข้อมูล fee_rates ที่เดียว) · TikTok มีมุมมอง "เทียบทุกประเภท" ในตารางเดียว
 // promo.js (v20261030a) — หน้าค่าธรรมเนียมช่องทางแบบใหม่ (แท็บแพลตฟอร์ม · ค่าจริง vs ตั้งไว้ · สรุป 3 บรรทัด · Shopee/TikTok ค่าจริง 30 วัน) · ตารางเดิมยังเข้าได้
@@ -485,7 +486,8 @@
     const fees = ly => (c.fees || []).filter(f => f.layer === ly), lines = c.lines || [], cogs = sum(lines.map(l => l.cost));
     const how = f => (f.kind === 'pct' ? `${+(f.rate * 100).toFixed(2)}% × ${n2(price)} ÷ ${vf}` : `${n2(f.rate)} ÷ ${vf}`) + (f.src === 'actual' ? ' · ค่าจริง 30 วัน' : '');
     // (2026-10-28 b) ไม่ใช้เกณฑ์กำไรขั้นต่ำ (5%) แล้ว: แถบบนขึ้นเฉพาะตอนขาดต้นทุน · ขาดทุนดูจากกำไรสุทธิที่เป็นสีแดง
-    const fm = c.fee_actual_ok ? `<div class="pv-fm"><span>ค่าธรรมเนียมแพลตฟอร์ม${tip('ค่าจริง 30 วัน = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด (อัปเดตทุกเช้า) รวมรายการที่แพลตฟอร์มหักแต่ไม่ได้ตั้งไว้\nค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง\nค่าใช้จ่ายบริษัท (Ads / ค่าบริหาร / Marketing) ใช้ค่าที่ตั้งไว้ทั้งสองแบบ')}</span><div class="pr-seg" data-fm><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div></div>` : '';
+    const fm = c.fee_actual_ok === false ? `<div class="pv-fm"><span>ค่าธรรมเนียมแพลตฟอร์ม</span><div class="pr-seg"><button type="button" disabled aria-pressed="false" style="opacity:.45;cursor:default">ค่าจริง 30 วัน</button><button type="button" aria-pressed="true">ค่าที่ตั้งไว้</button></div><span class="pv-fm-n">ช่องทางนี้ไม่มีค่าจริงจาก API จึงใช้ค่าที่ตั้งไว้ในหน้าค่าธรรมเนียมช่องทาง</span></div>`
+      : c.fee_actual_ok ? `<div class="pv-fm"><span>ค่าธรรมเนียมแพลตฟอร์ม${tip('ค่าจริง 30 วัน = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด (อัปเดตทุกเช้า) รวมรายการที่แพลตฟอร์มหักแต่ไม่ได้ตั้งไว้\nค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง\nค่าใช้จ่ายบริษัท (Ads / ค่าบริหาร / Marketing) ใช้ค่าที่ตั้งไว้ทั้งสองแบบ')}</span><div class="pr-seg" data-fm><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div></div>` : '';
     const ban = price && !ok ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')} ในไฟล์ต้นทุนของบัญชี</span></div>` : '';
     const dif = +c.rsp > 0 ? (price - +c.rsp) / +c.rsp : null;
     const tiles = `<div class="pv-k">
@@ -927,7 +929,7 @@
     #page-execfee .fe2-in::-webkit-outer-spin-button,#page-execfee .fe2-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
     #page-execfee .fe2-u{display:inline-block;width:30px;text-align:left;margin-left:5px;font-size:12px;color:var(--text3)}
     #page-execfee .fe2-up{color:#dc2626;font-weight:600} #page-execfee .fe2-dn{color:#16a34a} #page-execfee .fe2-z{color:var(--text3);font-weight:400}
-    .pv-fm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;font-size:12px;color:var(--text2)} .pv-fm .pr-seg button{padding:4px 12px;font-size:12px}
+    .pv-fm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;font-size:12px;color:var(--text2)} .pv-fm .pr-seg button{padding:4px 12px;font-size:12px} .pv-fm-n{font-size:11.5px;color:var(--text3)}
     #page-execfee .fe2-wide{overflow-x:auto}
     #page-execfee table.fe2-cmp th{vertical-align:bottom;white-space:nowrap} #page-execfee table.fe2-cmp td{vertical-align:top}
     #page-execfee .fe2-colh{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:4px 6px;margin:-4px -6px;border-radius:6px;display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px}
