@@ -43,7 +43,7 @@ window.DEESAY_PAGES = [
 window.DEESAY_STAFF_PAGES = ['overview', 'channel', 'fbhub', 'tthub', 'ttcontent', 'shhub', 'lzhub', 'skurev', 'skuanalysis'];
 
 window.Auth = (function () {
-  const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+  const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js';   // (2026-11-02) ล็อกเวอร์ชัน — เดิม @2 = ล่าสุดเสมอ ถ้าเขาออกเวอร์ชันใหม่ที่เปลี่ยนการทำงาน เว็บอาจพังเอง
   let client = null, session = null, perm = null;
 
   // โหลด supabase-js (UMD) ถ้าหน้านั้นยังไม่มี
