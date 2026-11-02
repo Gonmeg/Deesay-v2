@@ -13,11 +13,11 @@ permissions:
 concurrency: { group: qa, cancel-in-progress: true }
 jobs:
   qa:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # (2026-11-02) ล็อกไว้ — ubuntu-latest กำลังย้ายไป Ubuntu 26 ตัวติดตั้งเบราว์เซอร์ทดสอบอาจยังไม่รองรับ
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with: { node-version: 20 }
       - name: ตรวจไวยากรณ์โค้ดทุกไฟล์
         run: node tests/syntax-check.mjs
