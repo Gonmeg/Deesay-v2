@@ -34,11 +34,13 @@ test('จำลองการใช้งานทุกหน้า', async ({
 
   // รายการหน้า: อ่านจากเมนูซ้ายจริง (หน้าที่บัญชีทดสอบมีสิทธิ์)
   await page.goto(SITE + 'dashboard.html'); await page.waitForSelector('.sb .nav-item[data-page]', { timeout: 45000 });
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(3000); await dismissWhatsNew();
   const menu = await page.$$eval('.sb .nav-item[data-page]', els => els.map(e => ({ id: e.dataset.page, name: (e.dataset.label || e.textContent).trim() })));
   const targets = [...menu.map(m => ({ ...m, url: `dashboard.html?page=${m.id}`, dash: true })),
     { id: 'upload', name: 'อัปโหลดข้อมูล', url: 'upload.html' }, { id: 'admin', name: 'ตั้งค่า (Admin)', url: 'admin.html' }, { id: 'health', name: 'สถานะระบบข้อมูล', url: 'health.html' }];
 
+  // (2026-11-02) ปิดกล่อง "มีอะไรใหม่" ที่เด้งทับหน้า (ไม่งั้นกดตัวเลขไม่ได้ ทดสอบผิดเป็นกดแล้วไม่มีแผงเปิด)
+  const dismissWhatsNew = () => page.evaluate(() => { const o = document.getElementById('wnOverlay'); if (o && o.style.display === 'flex' && window.closeWhatsNew) window.closeWhatsNew(); }).catch(() => {});
   const waitIdle = async () => {
     try { await page.waitForLoadState('networkidle', { timeout: 30000 }); } catch (e) {}
     for (let i = 0; i < 40; i++) {   // รอข้อความ "กำลังโหลด" หายจากส่วนที่มองเห็น (ไม่เกิน 20 วิ)
@@ -46,6 +48,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
       if (!busy) break; await page.waitForTimeout(500);
     }
     await page.waitForTimeout(1200);
+    await dismissWhatsNew();
   };
   const scope = t => t.dash ? '.page.active' : 'main, body';
 
