@@ -13,7 +13,7 @@
 * ส่วนกลาง: `ui.css` (สี ฟอนต์ ชิ้นส่วนกลาง ทุกหน้าใช้) · `ui.js` (tooltip ⓘ ปฏิทิน กล่องยืนยัน ตัวเลขพอดีการ์ด) · `sidebar.js` (เมนูซ้าย) · `auth.js` (ล็อกอิน + สิทธิ์ + `Auth.rpc`) · `config.js` (URL + anon key ของ Supabase เท่านั้น)
 * โค้ดแยกรายหน้า (โหลดตอนเปิดหน้านั้น): `sales.js` ภาพรวมยอดขาย · `kpi.js` `kpisales.js` `admtargets.js` เป้าหมาย KPI · `fbads.js` Facebook Ads · `ttapi.js` `ttcontent.js` TikTok · `shsys.js` Shopee · `supply.js` Supply Chain · `skudeep.js` เจาะสินค้า · `products.js` สินค้า & ราคา · `promo.js` Promotion + ค่าธรรมเนียมช่องทาง · `ordprofit.js` กำไรต่อคำสั่งซื้อ · `bizinsight.js` Business Insight · `invvalue.js` มูลค่าสินค้าคงคลัง
 * ชื่อไฟล์ตัวพิมพ์เล็กทั้งหมด (GitHub Pages แยกตัวพิมพ์เล็ก-ใหญ่)
-* ทุกครั้งที่แก้ไฟล์ .js / .css ต้องเปลี่ยนเลข `?v=YYYYMMDDx` ทุกหน้าที่โหลดไฟล์นั้น (กันเบราว์เซอร์ใช้ของเก่า) — `ui.css` โหลดใน dashboard / admin / health / upload · `auth.js` โหลดใน dashboard / admin / health / upload / login
+* เลขเวอร์ชันไฟล์ (`?v=`) ระบบใส่ให้อัตโนมัติตอนเผยแพร่ (`.github/workflows/pages.yml` → `tests/stamp-versions.mjs` คิดจากเนื้อไฟล์) — ไม่ต้องเปลี่ยนเลขเอง และ push เฉพาะไฟล์ที่แก้ · ไฟล์ใหม่ให้เรียกแบบมี `?v=` เสมอ (เช่น `ใหม่.js?v=1`)
 * ทุกครั้งที่แก้ `dashboard.html` ให้ขยับ `data-build` (เช่น v2026.11.02-e → v2026.11.02-f / วันใหม่เริ่ม -a)
 * ไลบรารีภายนอกล็อกเลขเวอร์ชันเสมอ (Chart.js 4.4.1 · supabase-js 2.118.0 · xlsx 0.18.5) ห้ามใช้แบบ @latest / @2
 
