@@ -1,3 +1,5 @@
+// fbads.js v20261102b — ตัดการ์ด "กำลังดู" ด้านบน · กล่อง Funnel → % ระหว่างขั้นในแถบ Performance · ตัดตาราง Objective / ตามเพจ / Campaign (ซ่อน) ออก
+// fbads.js v20261102a — หน้าตาแบบ C: แถบบน (ยอดขายจริง · ค่า Ads รวม · % ค่า Ads · ROAS) + ส่วน Performance (ตัวเลขที่ Meta นับ) · หมายเหตุใต้กราฟ / ตารางย้ายเข้า ⓘ · ช่องตอนโหลดสูงเท่าของจริง (กันหน้าเด้ง)
 // fbads.js v20261015d — ROAS / % ไม่กดขยาย (สูตรอยู่หัวคอลัมน์) · แผงรายละเอียดยุบตามชื่อคอนเทนต์ 20 อันดับ + ทักแชท / ค่า Ads / ยอดขาย Meta / ROAS Meta · ตัดบรรทัดที่มาใต้ชื่อสินค้า
 // fbads.js v20261015c — ผูกสินค้าจากชื่อคอนเทนต์อย่างเดียว (ไม่ใช้ชื่อแคมเปญ) · ตารางสินค้ามีทั้งยอดจริงในระบบ และตัวเลขที่ Meta นับ (คำอธิบายที่หัวคอลัมน์)
 // fbads.js v20261015b — แผงที่มาแสดงเฉพาะตัวเลขที่กด + รูป Ads · ตารางสินค้า: ยอดขายจริง / ROAS แทนตัวเลขที่ Meta นับ · ที่มา = ชื่อคอนเทนต์
@@ -114,45 +116,32 @@
     if (!el.dataset.built) {
       el.dataset.built = '1';
       el.innerHTML = `
-        <div class="card" style="margin-bottom:16px;padding:10px 16px;">
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:10.5px;color:var(--text3);line-height:1.6;"><span id="fba-last-sync" style="margin-left:auto;order:2;"></span><span style="order:1;" id="fba-scope"></span> <span style="order:1;" class="pr-i" data-tip="<b>ค่า Ads</b> = ตัวเลขจาก Meta ทุกบัญชีโฆษณา (เท่ากับ Ads Manager)<br><b>ยอดขายจริง</b> = ออเดอร์ Facebook ในระบบเรา (ขายผ่านแชท Meta จึงไม่รู้)<br><b>ทักแชท</b> = จำนวนคนที่เริ่มคุยจาก Ads (Meta นับ)<br><b>ซื้อ (Meta นับ)</b> = ที่ pixel จับได้ ไว้ดูประกอบเท่านั้น<br><b>ทุกตัวเลขในหน้านี้ตามตัวกรอง</b> วันที่ · เพจ · Objective ที่แถบด้านบน">ⓘ</span></div>
-        </div>
-        <div id="fba-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
+        <section id="fba-kpis" class="ui-metrics sa-hero" aria-label="ตัวเลขหลัก"><div class="ui-metric is-static"><span class="ui-metric-l">ยอดขายจริง Facebook</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ค่า Ads Facebook รวม</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">% ค่า Ads ต่อยอดขาย</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ROAS</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div></section>
         <div class="card" style="margin-bottom:20px;">
-          <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ค่า Ads vs ยอดขายจริง Facebook รายวัน</div>
+          <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ค่า Ads vs ยอดขายจริง Facebook รายวัน <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="ROAS = ยอดขายจริง ÷ ค่า Ads Conversion · % ค่า Ads ต่อยอด = ค่า Ads Conversion ÷ ยอดขายจริง × 100 (ยิ่งต่ำยิ่งดี)<br>ยอดขายจริงคือทั้งช่องทาง Facebook ไม่แยกตามบัญชีโฆษณา · <b>ไม่รวม</b>ค่า Ads PR">ⓘ</span></div>
             <div class="toggle-group" id="fbaMoneyMode"><button class="toggle-btn active" data-m="money">ยอด (บาท)</button><button class="toggle-btn" data-m="ratio">ROAS & % ค่า Ads ต่อยอด</button></div></div>
           <div class="chart-wrap" style="height:280px;"><canvas id="chartFbaDaily"></canvas></div>
           <div id="fbaDailyTailNote" style="font-size:10.5px;color:#f59e0b;margin-top:4px;"></div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:6px;">ROAS = ยอดขายจริง ÷ ค่า Ads · % ค่า Ads ต่อยอด = ค่า Ads ÷ ยอดขายจริง × 100 (ยิ่งต่ำยิ่งดี) · ยอดขายจริงคือทั้งช่องทาง Facebook ไม่แยกตามบัญชีโฆษณา</div>
         </div>
+        <div class="sa-ph" style="margin:4px 0 10px;"><h2>Facebook Ads Performance <span class="sa-scope">ตัวเลขที่ Meta นับ · ตามตัวกรองวันที่ / เพจ / Objective ด้านบน</span> <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="ส่วนนี้ใช้ตัวเลขจาก Meta (ทักแชท · คลิก · ซื้อที่ pixel จับได้)<br>ยอดซื้อที่ Meta นับต่ำกว่าจริง เพราะขายผ่านแชท ใช้ดูแนวโน้มเท่านั้น · ยอดจริงอยู่ในแถบด้านบน">ⓘ</span></h2></div>
+        <div id="fba-perf" class="ui-metrics sa-strip2" style="grid-template-columns:repeat(4, minmax(0, 1fr)) !important;"><div class="ui-metric is-static"><span class="ui-metric-l">ทักแชท</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">คลิกลิงก์</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ซื้อ (Meta นับ)</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ROAS Meta</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div></div>
         <div class="grid-2" style="margin-bottom:20px;">
           <div class="card" style="grid-column:span 2;">
             <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">Traffic รายวัน — เลือกดู 2 เส้น</div>
               <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--text3);">ซ้าย <select class="ls-input" id="fbaTrafL" style="width:190px;padding:5px 8px;font-size:12px;"></select> ขวา <select class="ls-input" id="fbaTrafR" style="width:190px;padding:5px 8px;font-size:12px;"></select></div></div>
             <div class="chart-wrap" style="height:240px;"><canvas id="chartFbaTraffic"></canvas></div>
           </div>
-          <div class="card"><div class="section-header"><div class="section-title">Funnel — เห็น → คลิก → ทัก → ซื้อ</div></div><div id="fba-funnel"></div></div>
-          <div class="card"><div class="section-header"><div class="section-title">แยกตาม objective</div></div><div class="table-wrap"><table id="tblFbaObjective" data-no-page><thead><tr><th>objective</th><th>แคมเปญ</th><th>ค่า Ads</th><th>% งบ</th><th>ทักแชท</th><th>บาท/ทัก</th><th>ซื้อ (Meta นับ)</th></tr></thead><tbody id="tbodyFbaObjective"></tbody></table></div></div>
         </div>
-        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">รายงานรายวัน — เฉพาะ Ads Conversion (เพจขาย) <span id="fba-daily-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">รายงานรายวัน — เฉพาะ Ads Conversion (เพจขาย) <span id="fba-daily-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span> <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="เรียงวันล่าสุดขึ้นก่อน · คลิกตัวเลขที่มีเส้นประ เพื่อดูว่ามาจากเพจ / บัญชี / Campaign ไหน · แถวสุดท้ายคือผลรวมทั้งช่วง<br>ทุก metric = เฉพาะ Ads Conversion (ยิงให้เพจขาย) · <b>ไม่รวม</b>ค่า Ads PR (ดูส่วน PR)<br>ยอดขายจริงมาจากออเดอร์ Facebook ในระบบ (ทั้งช่องทาง)">ⓘ</span></div>
           <div style="display:flex;gap:8px;align-items:center;">
             <div style="position:relative;"><button class="btn btn-ghost" id="fbaDailyMetricsBtn" onclick="toggleMetricsPanel('fbaDaily')">⚙ Metrics <span id="fbaDaily-metric-count" style="color:var(--accent);"></span></button>
               <div id="fbaDaily-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaDaily-metrics-checks"></div>
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaDaily')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaDaily')">เลือกทั้งหมด</button></div></div></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaDaily')">⬇ Export CSV</button></div></div>
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaDaily"><thead id="theadFbaDaily"></thead><tbody id="tbodyFbaDaily"></tbody></table></div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">เรียงวันล่าสุดขึ้นก่อน · <b>คลิกตัวเลขที่มีเส้นประ</b> เพื่อดูว่ามาจากเพจ / บัญชี / Campaign ไหน · แถวสุดท้ายคือผลรวมทั้งช่วง · ทุก metric = เฉพาะ Ads Conversion (ยิงให้เพจขาย) · ยอดขายจริงมาจากออเดอร์ Facebook ในระบบ (ทั้งช่องทาง) · ค่า Ads PR ดูส่วน PR ด้านบน</div></div>
-        <div class="card" style="display:none;"><div class="section-header"><div class="section-title">ตามเพจ <span style="font-size:11px;font-weight:400;color:var(--text3);">· บัญชีที่ยิงเพจเดียวกันรวมเป็นแถวเดียว (ดูบัญชีใต้ชื่อเพจ)</span></div><button class="btn btn-ghost" onclick="exportTable('tblFbaAccount')">⬇ Export CSV</button></div>
-          <div class="table-wrap"><table id="tblFbaAccount" data-no-page><thead><tr><th>เพจ</th><th>Ads</th><th>ค่า Ads</th><th>% งบ</th><th>Impressions</th><th>Reach</th><th>CPM</th><th>คลิกลิงก์</th><th>บาท/คลิก</th><th>ทักแชท</th><th>บาท/ทัก</th><th>ซื้อ (Meta นับ)</th></tr></thead><tbody id="tbodyFbaAccount"></tbody></table></div></div>
-        <div class="card" style="display:none;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">Campaign <span id="fba-camp-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <div style="position:relative;"><button class="btn btn-ghost" id="fbaCampMetricsBtn" onclick="toggleMetricsPanel('fbaCamp')">⚙ Metrics <span id="fbaCamp-metric-count" style="color:var(--accent);"></span></button>
-              <div id="fbaCamp-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaCamp-metrics-checks"></div>
-                <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaCamp')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaCamp')">เลือกทั้งหมด</button></div></div></div>
-            <button class="btn btn-ghost" onclick="exportTable('tblFbaCampaign')">⬇ Export CSV</button></div></div>
-          <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaCampaign"><thead id="theadFbaCampaign"></thead><tbody id="tbodyFbaCampaign"></tbody></table></div></div>
+</div>
         <div class="card" style="margin-bottom:20px;border-left:3px solid #a78bfa;">
-          <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">PR / KOL — ใช้ต่อวันเท่าไร ได้อะไรกลับมา <span style="font-size:11px;font-weight:400;color:var(--text3);">(ไม่นับใน ROAS)</span></div>
+          <div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">PR / KOL — ใช้ต่อวันเท่าไร ได้อะไรกลับมา <span style="font-size:11px;font-weight:400;color:var(--text3);">(ไม่นับใน ROAS)</span> <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="PR = Ads ที่ไม่ได้ยิงให้เพจขาย (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade awareness) วัดผลด้วยการเห็น / มีส่วนร่วม ไม่ใช่ยอดขาย<br>เพจ = เพจของโพสต์ที่ Ads ใช้ (ถ้าไม่มีชื่อเพจ ใช้ชื่อ KOL จากชื่อ Ads) · เลือกคอลัมน์ได้ที่ ⚙ Metrics">ⓘ</span></div>
             <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:11px;color:var(--text3);">กราฟ:</span><select class="ls-input" id="fbaPrMetric" style="width:190px;padding:5px 8px;font-size:12px;"></select>
               <div style="position:relative;"><button class="btn btn-ghost" id="fbaPrMetricsBtn" onclick="toggleMetricsPanel('fbaPr')">⚙ Metrics <span id="fbaPr-metric-count" style="color:var(--accent);"></span></button>
                 <div id="fbaPr-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="fbaPr-metrics-checks"></div>
@@ -161,7 +150,6 @@
           <div id="fba-pr-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
           <div class="chart-wrap" style="height:220px;"><canvas id="chartFbaPr"></canvas></div>
           <div class="table-wrap" style="margin-top:12px;overflow-x:auto;"><table id="tblFbaPr"><thead id="theadFbaPr"></thead><tbody id="tbodyFbaPr"></tbody></table></div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;">PR = Ads ที่ไม่ได้ยิงให้เพจขาย (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade awareness) วัดผลด้วยการเห็น/มีส่วนร่วม ไม่ใช่ยอดขาย · เพจ = เพจของโพสต์ที่ Ads ใช้ (ถ้าไม่มีชื่อเพจ ใช้ชื่อ KOL จากชื่อ Ads) · เลือกคอลัมน์ได้ที่ ⚙ Metrics</div>
         </div>
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ประเภท Ads ไหนคุ้ม — วิดีโอ / ภาพ / อัลบั้ม <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('fba-info-type')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="fba-info-type" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">ประเภทมาจากชิ้นงานที่ Meta บอก: วิดีโอ / ภาพเดี่ยว / อัลบั้ม (หลายรูปเลื่อนดู) / ลิงก์<br><br>Ads ที่สร้างจากโพสต์เดิมบนเพจ Meta บอกได้แค่ "วิดีโอ" หรือ "ภาพ" — อัลบั้มจากโพสต์เดิมจึงอาจขึ้นเป็นภาพ · "ยังไม่ทราบ" = Ads เก่าที่ระบบยังไม่ได้อ่านประเภท (ทยอยเติมเอง)<br><br>ทุก Ads ในช่วง ไม่ใช่แค่ 1,500 ตัวที่แสดงในตารางล่าง</div></span></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaType')">⬇ Export CSV</button></div>
@@ -169,7 +157,7 @@
         <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ค่า Ads ต่อสินค้า <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="ที่มา: ค่า Ads จาก Meta (Conversion + PR) ช่วงวันที่ที่เลือก&#10;ผูกสินค้า: ชื่อคอนเทนต์ (ชื่อ Ads เช่น May26_006) เทียบกับชีท Ads ของทีมว่าเป็นสินค้าอะไร · คอนเทนต์ที่ยังไม่มีในชีท นับเป็น Ads รวม (เพิ่มลงชีทแล้วจะย้ายไปอยู่ที่สินค้าเอง)&#10;Ads ที่ผูกหลายสินค้า (เช่น รวมกันแดด) แบ่งให้แต่ละสินค้าตามยอดขาย Facebook ช่วงเดียวกัน&#10;Ads รวม = ชีทระบุว่า รวม หรือคอนเทนต์ยังไม่มีในชีท → MKT Tracking / Business Insight เฉลี่ยตามยอดขาย&#10;ยอดขายจริง = ออเดอร์ Facebook ของสินค้านั้นในระบบ · คอลัมน์ "Meta นับ" = ตัวเลขจาก Meta ไว้ดูประกอบ (ชี้ที่หัวคอลัมน์ดูคำอธิบาย)&#10;เป็นวิธีเดียวกับ MKT Tracking และ Business Insight · คลิกค่า Ads เพื่อดูรายชื่อ Ads ที่นับ">ⓘ</span></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaProduct')">⬇ Export CSV</button></div>
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaProduct" data-no-page><thead><tr><th>สินค้า</th><th>แคมเปญ</th><th>Ads</th><th>ค่า Ads</th><th>% งบ</th><th>Impressions</th><th>คลิกลิงก์</th><th>ทักแชท</th><th>บาท/ทัก</th><th data-tip="ยอดขายจริงในระบบเรา: ออเดอร์ Facebook ของสินค้านั้น (ไม่นับยกเลิก / ตีกลับ) ชุดเดียวกับหน้าภาพรวม">ยอดขายจริง ⓘ</th><th data-tip="ยอดขายจริงในระบบ ÷ ค่า Ads">ROAS ยอดจริง ⓘ</th><th data-tip="จำนวนที่ Meta นับว่าซื้อ (จาก Pixel / แชท) · ไม่ใช่ออเดอร์จริงในระบบ ไว้ดูประกอบ">ซื้อ (Meta นับ) ⓘ</th><th data-tip="ค่า Ads ÷ จำนวนซื้อที่ Meta นับ">บาท/ซื้อ (Meta) ⓘ</th><th data-tip="มูลค่าซื้อที่ Meta นับ ÷ ค่า Ads · มักไม่ตรงยอดจริงเพราะลูกค้าส่วนใหญ่ปิดการขายในแชท">ROAS Meta นับ ⓘ</th></tr></thead><tbody id="tbodyFbaProduct"></tbody></table></div></div>
-        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">Ads / โพสต์ที่ยิง <span id="fba-ads-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
+        <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">Ads / โพสต์ที่ยิง <span id="fba-ads-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span> <span class="pr-i" style="font-size:11px;color:var(--text3);font-weight:400;" data-tip="ER = มีส่วนร่วม ÷ Impressions · ความถี่ = Impressions ÷ Reach (คนเดิมเห็นกี่ครั้ง)<br>โพสต์ที่ยิงคือโพสต์จริงบนเพจ (ของเราหรือของ KOL) คลิกรูปเพื่อเปิด<br>KOL มาจากท้ายชื่อ Ads ที่ทีมตั้ง (…_KOLs_สินค้า_ชื่อKOL) · ปุ่ม ⚙ Metrics เลือก / เรียงคอลัมน์ได้ บันทึกเป็น preset ได้">ⓘ</span></div>
           <div style="display:flex;gap:8px;align-items:center;"><select class="ls-input" id="fbaAdsBucket" style="width:190px;padding:6px 10px;font-size:12px;"><option value="">ทุกประเภท Ads</option><option value="Conversion">Conversion — เพจขาย</option><option value="PR">PR — เพจอื่น / KOL</option></select>
             <select class="ls-input" id="fbaAdsKol" style="width:120px;padding:6px 10px;font-size:12px;" title="กรองตาม KOL · เลือก in-house + เรียงค่า Ads = ลิสต์โพสต์ที่ยังไม่ได้ระบุ KOL"><option value="">ทุก KOL</option><option value="kol">มี KOL</option><option value="house">in-house</option><option value="review">⚠️ ต้องตรวจ</option></select>
             <select class="ls-input" id="fbaAdsType" style="width:130px;padding:6px 10px;font-size:12px;"><option value="">ทุกชิ้นงาน</option><option value="video">🎬 วิดีโอ</option><option value="photo">🖼 ภาพ</option><option value="album">🗂 อัลบั้ม</option><option value="link">🔗 ลิงก์</option><option value="unknown">ยังไม่ทราบ</option></select><select class="ls-input" id="fbaAdsProduct" style="width:170px;padding:6px 10px;font-size:12px;"><option value="">ทุกสินค้า</option></select><input type="text" class="ls-input" id="fbaAdsSearch" placeholder="🔎 ชื่อ Ads / Campaign / KOL / สินค้า" style="width:220px;padding:6px 10px;font-size:12px;">
@@ -178,7 +166,7 @@
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('fbaAds')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('fbaAds')">เลือกทั้งหมด</button></div></div></div>
             <button class="btn btn-ghost" onclick="exportTable('tblFbaAds')">⬇ Export CSV</button></div></div>
           <div class="table-wrap" style="overflow-x:auto;"><table id="tblFbaAds"><thead id="theadFbaAds"></thead><tbody id="tbodyFbaAds"></tbody></table></div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">ER = มีส่วนร่วม ÷ Impressions · ความถี่ = Impressions ÷ Reach (คนเดิมเห็นกี่ครั้ง) · โพสต์ที่ยิงคือโพสต์จริงบนเพจ (ของเราหรือของ KOL) คลิกรูปเพื่อเปิด · "KOL" มาจากท้ายชื่อ Ads ที่ทีมตั้ง (…_KOLs_สินค้า_ชื่อKOL) · ปุ่ม ⚙ Metrics เลือก/เรียงคอลัมน์ได้ บันทึกเป็น preset ได้</div></div>`;
+</div>`;
       document.getElementById('fbaAdsSearch').oninput = () => renderAds();
       document.getElementById('fbaAdsBucket').onchange = () => renderAds();
       document.getElementById('fbaAdsType').onchange = () => renderAds();
@@ -203,7 +191,7 @@
     registerMetrics();
     const seq = ++_seq;
     const from = getDateValue('From'), to = getDateValue('To');
-    document.getElementById('fba-kpis').innerHTML = Array.from({ length: 5 }, () => `<div class="card" style="flex:1;min-width:150px;"><div class="card-title">&nbsp;</div><div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`).join('');
+    // (2026-11-02) ระหว่างโหลดใหม่ แถบตัวเลขคงโครงเดิมไว้ (สูงเท่าของจริง) ไม่วาดการ์ดโครงชุดใหม่ → หน้าไม่เด้ง
     try {
       // (2026-10-09) ช่วงที่ข้อมูลไม่เปลี่ยน ใช้ผลที่เก็บไว้ในเครื่อง ไม่ต้องดาวน์โหลดใหม่ (ถามแค่ลายนิ้วมือข้อมูลก่อน)
       const getPage = window.sigCachedRpc ? sigCachedRpc('fb_ads_page', { p_from: from, p_to: to }, 'fb_ads_page_check') : supaRpc('fb_ads_page', { p_from: from, p_to: to });
@@ -222,10 +210,10 @@
       }
       keep(objSel, (d.by_objective || []).map(o => ({ value: o.objective, label: `${obj(o.objective)} (${fmt(o.spend)})` })));
       _filterAccount = accSel ? accSel.value : ''; _filterObjective = objSel ? objSel.value : '';
-      document.getElementById('fba-last-sync').textContent = d.last_sync ? 'ดึงล่าสุด ' + new Date(d.last_sync).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '';
+      if (document.getElementById('fba-last-sync')) document.getElementById('fba-last-sync').textContent = d.last_sync ? 'ดึงล่าสุด ' + new Date(d.last_sync).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '';
       render();
     } catch (e) {
-      document.getElementById('fba-kpis').innerHTML = `<div class="card" style="flex:1;"><div style="color:var(--red);font-size:12px;">โหลดข้อมูลไม่สำเร็จ: ${ttcEsc(e.message)} — รัน 82 + 83 แล้วหรือยัง?</div></div>`;
+      document.getElementById('fba-kpis').innerHTML = `<div class="ui-metric is-static" style="grid-column:1/-1;"><span style="color:var(--red);font-size:12px;">โหลดข้อมูลไม่สำเร็จ: ${ttcEsc(e.message)}</span></div>`;
     }
   }
 
@@ -276,26 +264,30 @@
     // (2026-10-02) Ads ที่ผูกกับงานในไฟล์ทีม KOL (แผนที่เดียวกับหน้า KOL → ตัวเลขเท่ากัน) + boost บัญชี/เพจ KOL ที่ยังผูกงานไม่ได้
     const KOLP = 'KOL (boost โพสต์ KOL)', kjPage = (d.kol_job && d.kol_job.by_page) || {}, kjSpend = +((d.kol_job || {}).spend) || 0;
     const boostAll = +(((d.by_page || []).find(p => p.page === KOLP) || {}).spend) || 0, boostFree = Math.max(0, boostAll - (+kjPage[KOLP] || 0));
-    const kolLine = kjSpend || boostAll ? `<div style="margin-top:3px;">ในนี้เป็น Ads งาน KOL ${fmt(kjSpend)} (เท่าหน้า KOL)${boostFree >= 1 ? ` · boost ที่ยังผูกงานไม่ได้ ${fmt(boostFree)}` : ''}</div>` : '';
     const fbaKolNote = a => { const v = +kjPage[a.page] || 0; if (!v && a.page !== KOLP) return '';
       return `<div style="font-size:10.5px;color:var(--accent);margin-top:2px;">Ads งาน KOL ${fmt(v)}${a.page === KOLP ? ` · ยังผูกงานไม่ได้ ${fmt(Math.max(0, +a.spend - v))}` : ''}</div>`; };
-    const bucketLine = `Conversion ${fmt(bk.Conversion || 0)} · PR ${fmt(bk.PR || 0)} <span style="color:var(--text3);">· CPAS → Shopee ดูที่หน้า Shopee Ads</span>${kolLine}`;
-    const kpi = (t, v, sub, style) => `<div class="card" style="flex:1;min-width:150px;${style || ''}"><div class="card-title">${t}</div><div class="kpi-value">${v}</div>${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:3px;">${sub}</div>` : ''}</div>`;
+    // (2026-11-02) หน้าตาแบบ C (ชุดเดียวกับ Shopee / TikTok Ads): แถบบน = ยอดจริง · ส่วน Performance = ตัวเลขที่ Meta นับ · ทุก ⓘ บอกรวม / ไม่รวม
+    const cell = (label, value, d, inf, color) => `<div class="ui-metric is-static"><span class="ui-metric-l">${label}${inf || ''}</span><span class="ui-metric-v" data-fit${color ? ` style="color:${color};"` : ''}>${value}</span><span class="sa-md">${d}</span></div>`;
+    const kolTip = (kjSpend || boostAll) ? `<br><br>ในนี้เป็น Ads งาน KOL ${fmt(kjSpend)} (เท่าหน้า KOL)${boostFree >= 1 ? ` · boost ที่ยังผูกงานไม่ได้ ${fmt(boostFree)}` : ''}` : '';
+    const noRev = !!_filterObjective, pctAds = !noRev && rev > 0 && conv > 0 ? conv / rev * 100 : null;
+    const roasV = !noRev && conv > 0 ? rev / conv : null, roasCol = roasV === null ? '' : roasV >= 2 ? 'var(--green)' : roasV >= 1 ? 'var(--accent)' : 'var(--red)';
     document.getElementById('fba-kpis').innerHTML =
-      kpi('ค่า Ads Facebook รวม ' + fbeInfoIcon('fba-info-bk', '<b>แบ่ง 2 ประเภทตามเพจ</b><br>• Conversion = Ads ที่ยิงให้เพจขาย → ใช้คิด ROAS<br>• PR = ที่เหลือ (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade) → ไม่หารยอดขาย ดูส่วน PR ด้านล่าง<br>CPAS ไม่นับที่นี่ (อยู่หน้า Shopee Ads)<br><b>Ads งาน KOL</b> = Ads ที่ผูกกับงานในไฟล์ทีม KOL (ตรงกับหน้า KOL)<br><b>boost ที่ยังผูกงานไม่ได้</b> = Ads บัญชี/เพจ KOL ที่หางานไม่เจอ'), fmt(fbSpend), bucketLine, 'border-left:3px solid #60a5fa;') +
-      kpi('ยอดขายจริง Facebook ' + fbeInfoIcon('fba-info-rev', 'ออเดอร์ Facebook ในระบบเรา (ขายผ่านแชท) ช่วงเดียวกัน<br><b>เลือกเพจ</b> = เฉพาะออเดอร์ของเพจนั้น (ไม่นับ Line, Telesales, รีวิว, ส่ง MT)<br><b>เลือก Objective</b> = แยกยอดขายไม่ได้ เพราะไม่รู้ว่าออเดอร์มาจากโฆษณาแบบไหน'), _filterObjective ? '—' : fmt(rev), _filterObjective ? 'ยอดขายไม่แยกตาม Objective' : _filterAccount ? 'เฉพาะออเดอร์ของเพจนี้' : 'ทุกเพจ', 'border-left:3px solid var(--green);') +
-      kpi('ROAS ' + fbeInfoIcon('fba-info-roas', 'ยอดขายจริง Facebook ÷ <b>ค่า Ads Conversion</b> (เฉพาะ Ads ที่ยิงให้เพจขาย — ไม่รวม PR/KOL, MT · CPAS อยู่หน้า Shopee Ads)<br>เขียว ≥ 2x · ทอง 1–2x · แดง < 1x'), _filterObjective ? '—' : roasCell(rev, conv), _filterObjective ? 'ดูเมื่อไม่ได้เลือก Objective' : conv ? `ค่า Ads Conversion ${fmt(conv)} · ROI ${((rev - conv) / conv * 100).toFixed(0)}%` : '') +
-      kpi('ทักแชท', fmt(T.msg_started), `${T.msg_started ? fmt(T.spend / T.msg_started) : '—'} ต่อการทัก 1 ครั้ง · คลิกลิงก์ ${fmt(T.link_clicks)}`) +
-      kpi('ซื้อ (Meta นับ) ' + fbeInfoIcon('fba-info-pur', 'จำนวนซื้อที่ Meta จับได้ — ต่ำกว่าจริงเพราะขายผ่านแชท ใช้ดูแนวโน้มเท่านั้น'), fmt(T.purchases), T.purchase_value ? `มูลค่าที่ Meta นับ ${fmt(T.purchase_value)}` : '');
+      cell('ยอดขายจริง Facebook', noRev ? '—' : fmt(rev), `<span>${noRev ? 'ยอดขายไม่แยกตาม Objective' : _filterAccount ? 'เฉพาะออเดอร์ของเพจนี้' : 'ทุกเพจ'}</span>`, fbeInfoIcon('fba-info-rev', 'ออเดอร์ Facebook ในระบบเรา (ขายผ่านแชท) ช่วงเดียวกัน · <b>ไม่รวม</b>ออเดอร์ที่ยกเลิก / คืน<br><b>เลือกเพจ</b> = เฉพาะออเดอร์ของเพจนั้น (<b>ไม่รวม</b> Line, Telesales, รีวิว, ส่ง MT)<br><b>เลือก Objective</b> = แยกยอดขายไม่ได้ เพราะไม่รู้ว่าออเดอร์มาจากโฆษณาแบบไหน')) +
+      cell('ค่า Ads Facebook รวม', fmt(fbSpend), `<span>Conversion ${fmt(bk.Conversion || 0)} · PR ${fmt(bk.PR || 0)}</span>`, fbeInfoIcon('fba-info-bk', '<b>รวม</b> 2 ประเภทตามเพจ<br>• Conversion = Ads ที่ยิงให้เพจขาย → ใช้คิด ROAS<br>• PR = ที่เหลือ (boost โพสต์ KOL, เพจอื่น, บัญชี PR, Modern Trade) → ไม่หารยอดขาย ดูส่วน PR ด้านล่าง<br><b>ไม่รวม</b> CPAS (อยู่หน้า Shopee Ads)' + kolTip)) +
+      cell('% ค่า Ads ต่อยอดขาย', pctAds !== null ? pctAds.toFixed(1) + '%' : '—', `<span>${noRev ? 'ดูเมื่อไม่ได้เลือก Objective' : 'ค่า Ads Conversion ÷ ยอดขายจริง'}</span>`, fbeInfoIcon('fba-info-pct', 'ค่า Ads Conversion ÷ ยอดขายจริง Facebook (ยิ่งต่ำยิ่งดี)<br><b>ไม่รวม</b>ค่า Ads PR / KOL')) +
+      cell('ROAS', roasV !== null ? roasV.toFixed(2) + 'x' : '—', `<span>${noRev ? 'ดูเมื่อไม่ได้เลือก Objective' : conv ? `ค่า Ads Conversion ${fmt(conv)} · ROI ${((rev - conv) / conv * 100).toFixed(0)}%` : '&nbsp;'}</span>`, fbeInfoIcon('fba-info-roas', 'ยอดขายจริง Facebook ÷ <b>ค่า Ads Conversion</b> (เฉพาะ Ads ที่ยิงให้เพจขาย)<br><b>ไม่รวม</b> PR / KOL, Modern Trade · CPAS อยู่หน้า Shopee Ads<br>เขียว ≥ 2x · ทอง 1–2x · แดง < 1x'), roasCol);
+    const roasMeta = T.spend > 0 && T.purchase_value ? T.purchase_value / T.spend : null;
+    document.getElementById('fba-perf').innerHTML =
+      cell('ทักแชท', fmt(T.msg_started), `<span>${T.link_clicks ? (T.msg_started / T.link_clicks * 100).toFixed(1) + '% ของคนคลิก · ' : ''}${T.msg_started ? fmt(T.spend / T.msg_started) : '—'} / ทัก</span>`, fbeInfoIcon('fba-info-msg', 'จำนวนคนที่เริ่มคุยจาก Ads (Meta นับ) · <b>รวม</b>ทุกประเภท Ads ตามตัวกรอง')) +
+      cell('คลิกลิงก์', fmt(T.link_clicks), `<span>${T.impressions ? (T.link_clicks / T.impressions * 100).toFixed(2) : 0}% ของคนเห็น (${fmtB(T.impressions)}) · ${T.link_clicks ? fmt(T.spend / T.link_clicks) : '—'} / คลิก</span>`, fbeInfoIcon('fba-info-lc', 'คนเห็น (Impressions) → คลิกลิงก์ → ทักแชท → ซื้อ<br>บรรทัดเล็กของแต่ละช่อง = % ที่ไปต่อจากขั้นก่อนหน้า (แทนกล่อง Funnel เดิม)')) +
+      cell('ซื้อ (Meta นับ)', fmt(T.purchases), `<span>${T.msg_started ? (T.purchases / T.msg_started * 100).toFixed(1) + '% ของคนทัก · ' : ''}มูลค่า ${fmt(T.purchase_value || 0)}</span>`, fbeInfoIcon('fba-info-pur', 'จำนวนซื้อที่ pixel ของ Meta จับได้ — ต่ำกว่าจริงเพราะขายผ่านแชท ใช้ดูแนวโน้มเท่านั้น')) +
+      cell('ROAS Meta', roasMeta !== null ? roasMeta.toFixed(2) + 'x' : '—', '<span>มูลค่าที่ Meta นับ ÷ ค่า Ads</span>', fbeInfoIcon('fba-info-roasm', 'มูลค่าซื้อที่ Meta นับ ÷ ค่า Ads (ตามตัวกรอง)<br><b>ไม่ใช่</b> ROAS จริง (ROAS จริงใช้ยอดขายจริงในระบบ อยู่ในแถบด้านบน)'));
+    if (window.UI && UI.fit) UI.fit();
 
     const sc = document.getElementById('fba-scope'); if (sc) sc.innerHTML = `กำลังดู: <b>${_filterAccount ? fbaEsc(_filterAccount) : 'ทุกเพจ'}</b> · <b>${_filterObjective ? fbaEsc(_filterObjective) : 'ทุก Objective'}</b>`;
-    renderMoneyChart(); renderTrafficChart(); renderFunnel(T, rev); renderDailyTable(); renderPr();
-    // objective
-    const totalSpend = (d.by_objective || []).reduce((s, o) => s + +o.spend, 0);
-    document.getElementById('tbodyFbaObjective').innerHTML = (d.by_objective || []).map(o => `<tr><td><b>${ttcEsc(obj(o.objective))}</b><div class="muted" style="font-size:10px;color:var(--text3);">${ttcEsc(o.objective)}</div></td><td>${fmt(o.campaigns)}</td><td>${fmt(o.spend)}</td><td>${pct(o.spend, totalSpend)}</td><td>${fmt(o.msg_started)}</td><td>${per(o.spend, o.msg_started)}</td><td>${fmt(o.purchases)}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
-    // บัญชี
-    document.getElementById('tbodyFbaAccount').innerHTML = (d.by_page || []).map(a => `<tr><td><b>${ttcEsc(a.page)}</b><div style="font-size:10.5px;color:var(--text3);margin-top:2px;line-height:1.4;">${(a.accounts || []).map(x => `${ttcEsc(x.name)} ${fmt(+x.spend)}`).join(' · ')}</div>${fbaKolNote(a)}</td><td>${fmt(a.ads)}</td><td style="font-weight:600;">${fmt(a.spend)}</td><td>${pct(a.spend, totalSpend)}</td><td>${fmt(a.impressions)}</td><td>${fmt(a.reach)}</td><td>${a.impressions ? (a.spend / a.impressions * 1000).toFixed(0) : '—'}</td><td>${fmt(a.link_clicks)}</td><td>${per(a.spend, a.link_clicks)}</td><td>${fmt(a.msg_started)}</td><td>${per(a.spend, a.msg_started)}</td><td>${fmt(a.purchases)}</td></tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
-    renderCampaigns(); renderTypeProduct(); renderAds();
+    renderMoneyChart(); renderTrafficChart(); renderDailyTable(); renderPr();
+    // (2026-11-02) ตาราง Objective / ตามเพจ / Campaign ตัดออกจากหน้าแล้ว (ช่อง Objective / เพจที่แถบบนบอกค่า Ads ของแต่ละตัวอยู่แล้ว)
+    renderTypeProduct(); renderAds();
   }
 
   // (2026-09-21) วันท้ายที่มีค่าแอดแต่ยอดขายยังไม่อัปโหลด → ตัดออกจากกราฟ ไม่ให้ ROAS / % ค่าแอด พุ่งผิดปกติ
@@ -414,6 +406,7 @@
 
   function sortRows(rows, key, dir) { const v = M[key] ? M[key].val : (r => +r[key] || 0); return rows.slice().sort((a, b) => { const x = v(a), y = v(b); const c = typeof x === 'string' ? x.localeCompare(y) : x - y; return dir === 'asc' ? c : -c; }); }
   function renderCampaigns() {
+    if (!document.getElementById('tblFbaCampaign')) return;   // (2026-11-02) ตารางนี้ตัดออกจากหน้าแล้ว
     const ks = cols('fbaCamp');
     if (!M[_sortKey]) _sortKey = 'spend';
     const rows = sortRows(filteredCampaigns(), _sortKey, _sortDir);
