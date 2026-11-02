@@ -1,3 +1,4 @@
+// promo.js (v20261102a) — ค่าธรรมเนียมช่องทาง: คอลัมน์ "ใช้คิดโปร" เลือก ค่าจริง / ตั้งเอง ได้รายบรรทัด (สูตรคิดโปรใช้ตามที่เลือก · อัตราคำนวณที่ฐานข้อมูล fee_rates ที่เดียว) · TikTok มีมุมมอง "เทียบทุกประเภท" ในตารางเดียว
 // promo.js (v20261030a) — หน้าค่าธรรมเนียมช่องทางแบบใหม่ (แท็บแพลตฟอร์ม · ค่าจริง vs ตั้งไว้ · สรุป 3 บรรทัด · Shopee/TikTok ค่าจริง 30 วัน) · ตารางเดิมยังเข้าได้
 // promo.js (v20261029a) — ที่มาต้นทุนบอกชัด (ไฟล์ต้นทุนขายรายเดือน / ไฟล์ต้นทุนสินค้า)
 // promo.js (v20261028c) — การ์ด Rank: เปลี่ยนชื่อคลาส hd/bd/sb (ชนกับเมนูซ้ายที่ใช้ .sb → ข้อความไปลอยบนเมนู)
@@ -481,7 +482,7 @@
     const miss = (c.missing_costs || []).map(nm), ok = !miss.length, vatR = +c.vat || 0.07, vp = Math.round(vatR * 100), vf = (1 + vatR).toFixed(2);
     const price = +c.price || 0, rex = +c.revenue_ex || 0, mm = pc(+c.min_markup || 0.05, 0), sum = a => a.reduce((t, x) => t + (+x || 0), 0);
     const fees = ly => (c.fees || []).filter(f => f.layer === ly), lines = c.lines || [], cogs = sum(lines.map(l => l.cost));
-    const how = f => f.kind === 'pct' ? `${+(f.rate * 100).toFixed(2)}% × ${n2(price)} ÷ ${vf}` : `${n2(f.rate)} ÷ ${vf}`;
+    const how = f => (f.kind === 'pct' ? `${+(f.rate * 100).toFixed(2)}% × ${n2(price)} ÷ ${vf}` : `${n2(f.rate)} ÷ ${vf}`) + (f.src === 'actual' ? ' · ค่าจริง 30 วัน' : '');
     // (2026-10-28 b) ไม่ใช้เกณฑ์กำไรขั้นต่ำ (5%) แล้ว: แถบบนขึ้นเฉพาะตอนขาดต้นทุน · ขาดทุนดูจากกำไรสุทธิที่เป็นสีแดง
     const ban = price && !ok ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')} ในไฟล์ต้นทุนของบัญชี</span></div>` : '';
     const dif = +c.rsp > 0 ? (price - +c.rsp) / +c.rsp : null;
@@ -502,7 +503,7 @@
         ${feeGrp('platform', 'ค่า Platform')}${feeGrp('selling', 'ค่าขาย')}${feeGrp('overhead', 'ค่าบริหาร / Marketing')}
         ${row('กำไรสุทธิ / ออเดอร์', ok ? pc(c.margin) + ' ของรายได้' : 'ยังไม่รวมต้นทุนที่ขาด', ok ? n2(c.profit) : '—', 'tot big' + (ok && +c.profit < 0 ? ' negv' : ''))}
       </tbody></table>`;
-    return ban + tiles + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
+    return ban + tiles + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · ค่าธรรมเนียมแพลตฟอร์มใช้ค่าจริง (เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด) หรือค่าที่ตั้งไว้ ตามที่เลือกในหน้าค่าธรรมเนียมช่องทาง · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
   }
   const bindLad = root => root.querySelectorAll('.pv-lad tr.grp').forEach(tr => tr.onclick = () => { const open = !tr.classList.contains('open'); tr.classList.toggle('open', open); root.querySelectorAll(`.pv-lad tr[data-ladp="${tr.dataset.lad}"]`).forEach(x => { x.hidden = !open; }); });
 
@@ -591,7 +592,7 @@
       + subs.map(x => `<tr class="sub" data-ladp="${id}" hidden><td>${x[0]}</td><td class="num neg">−${n2(x[1])}</td></tr>`).join('');
     const tot = (t, v, extra) => `<tr class="sum"><td>${t}${extra ? ` <span class="xt">${extra}</span>` : ''}</td><td class="num" style="color:${v < 0 ? 'var(--red,#dc2626)' : 'var(--text)'}">${n2(v)}</td></tr>`;
     const costRows = lines.map(l => [`${l.kind === 'gift' ? 'แถม ' : ''}${esc(l.name || nm(l.sku))} ×${l.qty} <span class="xt">${l.unit_cost == null ? 'ไม่มีต้นทุน' : '@ ' + n2(l.unit_cost)}</span>`, l.cost]);
-    const feeRows = ly => fees(ly).map(f => [`${esc(f.item)} <span class="xt">${f.kind === 'pct' ? +(f.rate * 100).toFixed(2) + '%' : n2(f.rate) + ' ฿'}</span>`, f.amount_ex]);
+    const feeRows = ly => fees(ly).map(f => [`${esc(f.item)} <span class="xt">${f.kind === 'pct' ? +(f.rate * 100).toFixed(2) + '%' : n2(f.rate) + ' ฿'}${f.src === 'actual' ? ' · ค่าจริง' : ''}</span>`, f.amount_ex]);
     return `<table class="pr-tb pr-lad" data-no-sort data-no-page><tbody>
       <tr><td>ราคาขาย (รวม VAT)</td><td class="num">${n2(c.price)}</td></tr>
       ${tot('รายได้ไม่รวม VAT', c.revenue_ex)}
@@ -772,83 +773,139 @@
   }
   const FE2_TABS = [['Shopee', /shopee/i], ['TikTok', /tiktok/i], ['Lazada', /lazada/i], ['Facebook', /facebook|line|telesale/i], ['ตัวแทน', /ตัวแทน/], ['Modern Trade', /^mt|watsons|eve|konvy|cj|thaimart|modern/i]];
   const fe2Tab = c => (FE2_TABS.find(([, re]) => re.test(c.name) || re.test(c.sys_channel || '')) || ['อื่น ๆ'])[0];
-  const fe2Grp = c => /shopee/i.test(c.name) ? (/24/.test(c.name) ? '530338789' : '566792331') : /tiktok/i.test(c.name) ? (/คลิป|creator/i.test(c.name) ? 'creator' : /affiliate/i.test(c.name) ? 'live_aff' : /live/i.test(c.name) ? 'live' : 'shop') : null;
-  const FE2_EXTRA = { shipping_net: 'ค่าส่งสุทธิ (ที่ร้านจ่ายจริง)', reverse_shipping_fee: 'ค่าส่งคืนสินค้า', flash_sales_service_fee_amount: 'ค่าบริการ Flash Sale', affiliate_ads_commission_amount: 'ค่าคอม Affiliate Ads', other: 'อื่น ๆ', commission_fee: 'ค่าคอมมิชชัน', service_fee: 'ค่าบริการ (ส่งฟรี + เงินคืน)', transaction_fee: 'ค่าธุรกรรม', transaction_fee_amount: 'ค่าธุรกรรม', ams_commission_fee: 'ค่าคอม Affiliate (AMS)', processing_fee: 'ค่าโครงสร้างพื้นฐาน', platform_commission_amount: 'Commission แพลตฟอร์ม', dynamic_commission_amount: 'Commerce Growth Fee', affiliate_commission_amount: 'ค่าคอม Creator', live_specials_fee_amount: 'ค่า LIVE Specials', vn_fix_infrastructure_fee: 'ค่าโครงสร้างพื้นฐาน' };
-  function fe2Key(it, isTT) {   // รายการที่ตั้งไว้ → ชื่อค่าธรรมเนียมที่แพลตฟอร์มส่งมาจริง
-    const n = String(it.name || '').toLowerCase();
-    if (/platform commission/.test(n)) return isTT ? 'platform_commission_amount' : 'commission_fee';
-    if (/mall program|bcd/.test(n)) return isTT ? 'merged' : null;
-    if (/fss|ccb/.test(n)) return 'service_fee';
-    if (/transaction/.test(n)) return isTT ? 'transaction_fee_amount' : 'transaction_fee';
-    if (/commerce growth/.test(n)) return 'dynamic_commission_amount';
-    if (/mall live|live extra/.test(n)) return 'live_specials_fee_amount';
-    if (n.trim() === 'commission') return isTT ? 'affiliate_commission_amount' : 'ams_commission_fee';
-    if (it.kind === 'per_order' && /โครงสร้าง|infra/.test(n)) return isTT ? 'vn_fix_infrastructure_fee' : 'processing_fee';
-    return null;
-  }
+  // (2026-11-02) การจับคู่รายการกับค่าธรรมเนียมจริงย้ายไปฐานข้อมูล (fee_rates) ใช้ชุดเดียวกับสูตรคิดโปร
   const fe2Co = it => { const k = String(it.actual_key || '').toLowerCase(), n = String(it.name || ''); return k === 'ads' || /ค่า ads/i.test(n) ? 'ads' : k === 'marketing' || /^marketing$/i.test(n) ? 'marketing' : k === 'admin' || /ค่าบริหาร/.test(n) ? 'admin' : null; };
   async function renderFeeNew() {
     const el = document.getElementById('page-execfee'); if (!el) return;
     if (!FT) el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
-    try { [FT, FA, FA30] = await Promise.all([rpc('fee_table'), rpc('fee_actuals').catch(() => null), rpc('fee_actuals_30d').catch(() => null)]); }
+    let FR = null;
+    try { [FT, FA, FA30, FR] = await Promise.all([rpc('fee_table'), rpc('fee_actuals').catch(() => null), rpc('fee_actuals_30d').catch(() => null), rpc('fee_rates_all').catch(() => null)]); }
     catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     if (!FT) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
-    const A = FA || {}, AC = A.channels || {}, CO = A.company || {}, ms = A.months || [];
+    const A = FA || {}, ms = A.months || [];
     const G30 = {}; ((FA30 && FA30.groups) || []).forEach(g => { G30[g.grp] = g; });
-    const V = {}; FT.values.forEach(([i, c, v]) => { V[i + '|' + c] = v == null || v === '' ? null : +v; });
-    const chs = FT.channels.filter(c => c.active), items = FT.items.filter(it => it.active);
+    const IT = {}; FT.items.forEach(it => { IT[it.id] = it; });
+    const ctx = { AC: A.channels || {}, CO: A.company || {}, G30, IT, RT: (FR && FR.channels) || {}, accRange: ms.length ? `${mLbl(ms[0])} – ${mLbl(ms[ms.length - 1])}` : '3 เดือนล่าสุด' };
+    const chs = FT.channels.filter(c => c.active);
     const tabs = FE2_TABS.map(x => x[0]).filter(tb => chs.some(c => fe2Tab(c) === tb));
     if (!FE2.tab || !tabs.includes(FE2.tab)) FE2.tab = tabs[0];
     const tabChs = chs.filter(c => fe2Tab(c) === FE2.tab);
-    if (!FE2.ch || !tabChs.some(c => c.id === FE2.ch)) FE2.ch = (tabChs[0] || {}).id;
-    const c = tabChs.find(x => x.id === FE2.ch); if (!c) { el.innerHTML = '<div class="pr-empty">ยังไม่มีช่องทาง</div>'; return; }
-    const isTT = /tiktok/i.test(c.name), grp = fe2Grp(c), g = grp ? G30[grp] : null, gi = (g && g.items) || {};
-    const accRange = ms.length ? `${mLbl(ms[0])} – ${mLbl(ms[ms.length - 1])}` : '3 เดือนล่าสุด';
-    const src = g ? `ค่าจริงจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ${fe2fmt(g.orders)} ออเดอร์ · ยอดขายสินค้าเฉลี่ย ${n2(g.aov)} บาท / ออเดอร์` : `ไม่มี API · ค่าจริงจากงบบัญชี ${accRange}`;
+    const canAll = FE2.tab === 'TikTok' && tabChs.length > 1;
+    if (!(canAll && FE2.ch === 'all') && !tabChs.some(c => c.id === FE2.ch)) FE2.ch = canAll ? 'all' : (tabChs[0] || {}).id;
+    if (!tabChs.length) { el.innerHTML = '<div class="pr-empty">ยังไม่มีช่องทาง</div>'; return; }
+    const rng = FA30 && FA30.from ? `${dTh(FA30.from)} – ${dTh(FA30.to)}` : '30 วันล่าสุด';
+    const upd = FA30 && FA30.refreshed_at ? new Date(FA30.refreshed_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    const srcTip = `คำนวณใหม่ทุกวันเวลา 07:40 จากออเดอร์ที่แพลตฟอร์มโอนเงินแล้ว (หักค่าธรรมเนียมจริงแล้ว)${upd ? ' · คำนวณล่าสุด ' + upd : ''}`;
+    const useTip = 'เลือกได้ทีละบรรทัดว่าสูตรคิดโปรจะใช้ตัวเลขไหน\n• ค่าจริง = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด อัปเดตเองทุกเช้า\n• ตั้งเอง = ตัวเลขในช่อง "ตั้งไว้"\nค่าใช้จ่ายของบริษัท และช่องทางที่ไม่มี API ใช้ค่าที่ตั้งเองเสมอ';
+    const subSeg = tabChs.length > 1 ? `<div class="pr-seg fe2-sub">${canAll ? `<button type="button" data-ch="all" aria-pressed="${FE2.ch === 'all'}">เทียบทุกประเภท</button>` : ''}${tabChs.map(x => `<button type="button" data-ch="${x.id}" aria-pressed="${x.id === FE2.ch}">${esc(x.name)}</button>`).join('')}</div>` : '';
+    const top = src => `<div class="fe2-top"><span class="pr-note" style="margin:0;">${src}</span><span style="flex:1"></span><button type="button" class="pr-btn ghost" id="fe2Old" data-tip="เพิ่ม / ลบ รายการหรือช่องทาง">ตารางแบบเดิม</button></div>
+      <div class="fe2-tabs">${tabs.map(tb => `<button type="button" data-tab="${esc(tb)}" class="${tb === FE2.tab ? 'on' : ''}">${esc(tb)}</button>`).join('')}</div>${subSeg}`;
+    const bindNav = () => {
+      el.querySelector('#fe2Old').onclick = () => { FEE_MODE = 'old'; renderFee(); };
+      el.querySelectorAll('.fe2-tabs [data-tab]').forEach(b => b.onclick = () => { FE2.tab = b.dataset.tab; FE2.ch = null; renderFeeNew(); });
+      el.querySelectorAll('.fe2-sub [data-ch], [data-goch]').forEach(b => b.onclick = () => { const v = b.dataset.ch || b.dataset.goch; FE2.ch = v === 'all' ? 'all' : +v; renderFeeNew(); });
+    };
     const pct = v => v == null ? '<span class="fe2-z">—</span>' : `${(+v).toFixed(2)}%`;
+    const perTxt = v => v ? ` + ${n2(v)} บาท` : '';
+
+    // ---------- มุมมองเทียบทุกประเภท (TikTok) ----------
+    if (FE2.ch === 'all') {
+      const cols = tabChs.map(c => ({ c, ...fe2Lines(c, ctx) }));
+      const short = c => c.name.replace(/^TikTok\s*/i, '').replace(/^\((.*)\)$/, '$1');
+      const keyOf = L => L.item_id != null ? 'i' + L.item_id : 'x' + L.key;
+      const rowMap = new Map();
+      cols.forEach(col => col.rows.forEach(x => { const k = keyOf(x.L); if (!rowMap.has(k)) rowMap.set(k, { k, L: x.L, ord: [x.L.company ? 1 : 0, x.L.extra ? 1 : 0, +x.L.sort || 0, x.L.name] }); }));
+      const rowsAll = [...rowMap.values()].sort((a, b) => a.ord[0] - b.ord[0] || a.ord[1] - b.ord[1] || a.ord[2] - b.ord[2] || String(a.ord[3]).localeCompare(String(b.ord[3]), 'th'));
+      const grpShare = c => { const o = tabChs.filter(x => x.id !== c.id && x.actual_grp && x.actual_grp === c.actual_grp); return o.length ? `ค่าจริงชุดเดียวกับ ${o.map(short).join(', ')} เพราะ TikTok ไม่แยกว่าใครเป็นคน LIVE` : ''; };
+      const cell = (col, r) => {
+        const x = col.rows.find(y => keyOf(y.L) === r.k); if (!x) return '<td><span class="fe2-z">—</span></td>';
+        const L = x.L, fmt = v => x.isPct ? `${(+v * (L.kind === 'pct' ? 100 : 1)).toFixed(2)}%` : `${n2(v)} บาท`;
+        if (L.merged && L.use) return '<td><span class="fe2-z">รวมใน Commission</span></td>';
+        const main = fmt(L.rate);
+        const sub = L.use ? (L.extra ? 'ค่าจริง' : `ค่าจริง · ตั้งไว้ ${fmt(L.set)}`) : L.can && x.act != null && x.act !== 'merged' ? `ตั้งเอง · จริง ${x.isPct ? (+x.act).toFixed(2) + '%' : n2(x.act) + ' บาท'}` : 'ตั้งเอง';
+        return `<td><div class="fe2-cv">${main}</div><div class="fe2-cs">${sub}</div></td>`;
+      };
+      const body = (title, list) => list.length ? `<tr class="fe2-g"><td colspan="${cols.length + 1}">${title}</td></tr>` + list.map(r => `<tr><td class="l">${esc(r.L.name)}${r.L.extra ? ' <span class="fe2-z">· ไม่ได้ตั้งไว้</span>' : ''}</td>${cols.map(col => cell(col, r)).join('')}</tr>`).join('') : '';
+      const sumR = (l, f, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td>${cols.map(col => `<td>${f(col.S)}</td>`).join('')}</tr>`;
+      const tot = S => S.useCh + S.useCo;
+      el.innerHTML = top(`ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip)} · ตัวเลขในตาราง = ค่าที่ใช้คิดโปร`) + `
+        <div class="fe2-cards" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.map(col => `<div><div class="l">${esc(short(col.c))}</div><div class="v">${tot(col.S).toFixed(2)}%${perTxt(col.S.pUse)}</div><div class="s">TikTok หัก ${col.S.useCh.toFixed(2)}% · บริษัท ${col.S.useCo.toFixed(2)}%</div></div>`).join('')}</div>
+        <div class="fe2-card"><div class="fe2-wide"><table class="fe2-t fe2-cmp"><thead><tr><th class="l">รายการ</th>${cols.map(col => { const g = col.g, sh = grpShare(col.c);
+            return `<th><button type="button" class="fe2-colh" data-goch="${col.c.id}" data-tip="กดเพื่อดูรายละเอียด และแก้ค่าของประเภทนี้"><b>${esc(short(col.c))}</b><small>${g ? `${fe2fmt(g.orders)} ออเดอร์ · เฉลี่ย ${n2(g.aov)} บาท` : 'ยังไม่มีค่าจริง'}</small></button>${sh ? ' ' + info(sh) : ''}</th>`; }).join('')}</tr></thead><tbody>
+          ${body('ค่าธรรมเนียมจากแพลตฟอร์ม · TikTok หักจริง', rowsAll.filter(r => !r.L.company))}
+          ${body('ค่าใช้จ่ายของบริษัท · ตั้งเอง', rowsAll.filter(r => r.L.company))}
+          ${sumR('สรุป · ค่าธรรมเนียมช่องทาง', S => `${S.useCh.toFixed(2)}%${perTxt(S.pUse)}`, true)}
+          ${sumR('สรุป · ค่าใช้จ่ายบริษัท', S => `${S.useCo.toFixed(2)}%`)}
+          ${sumR('สรุป · หักรวมก่อนต้นทุนสินค้า', S => `${tot(S).toFixed(2)}%${perTxt(S.pUse)}`)}
+          ${sumR('เหลือไว้จ่ายต้นทุน + กำไร', S => `${(100 - tot(S)).toFixed(2)}%`)}
+        </tbody></table></div>
+        <div class="fe2-note">กดชื่อประเภทบนหัวตาราง เพื่อดูค่าจริงเทียบค่าที่ตั้งไว้ และเลือกค่าที่ใช้คิดโปรทีละบรรทัด</div></div>`;
+      bindNav(); return;
+    }
+
+    // ---------- มุมมองรายช่องทาง ----------
+    const c = tabChs.find(x => x.id === FE2.ch);
+    const { rows, S, g } = fe2Lines(c, ctx);
+    const src = g ? `ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip)} · ${fe2fmt(g.orders)} ออเดอร์ · ยอดขายสินค้าเฉลี่ย ${n2(g.aov)} บาท / ออเดอร์` : `ไม่มี API · ค่าจริงจากงบบัญชี ${esc(ctx.accRange)}`;
     const dif = (a, s) => a == null || s == null ? '<span class="fe2-z">—</span>' : Math.abs(a - s) < 0.05 ? `<span class="fe2-z">${a - s >= 0 ? '+' : ''}${(a - s).toFixed(2)}</span>` : `<span class="${a > s ? 'fe2-up' : 'fe2-dn'}">${a > s ? '+' : ''}${(a - s).toFixed(2)}</span>`;
-    const rowsCh = [], rowsCo = [], used = new Set();
-    let sumSetCh = 0, sumActCh = 0, perSet = 0, perAct = 0, sumSetCo = 0, sumActCo = 0, hasActCh = false;
-    items.forEach(it => {
-      const sv = V[it.id + '|' + c.id]; if (sv == null) return;
-      const co = fe2Co(it), setPct = it.kind === 'pct' ? sv * 100 : null;
-      let act = null, tip = '';
-      if (co) { act = co === 'ads' ? (AC[c.id] || {}).ads : CO[co]; act = act == null ? null : act * 100; tip = `งบบัญชี ${accRange}`; }
-      else if (g) { const k = fe2Key(it, isTT); if (k === 'merged') act = 'merged'; else if (k && gi[k]) { used.add(k); act = it.kind === 'pct' ? +gi[k].pct : +gi[k].per_order; tip = `≈ ${n2(gi[k].per_order)} บาท / ออเดอร์`; } else if (k) act = 0; }
-      else { const k = /commission/i.test(it.name) && !/platform/i.test(it.name) ? 'commission' : /platform/i.test(it.name) ? 'platform' : null; const a = k ? (AC[c.id] || {})[k] : null; act = a == null ? null : a * 100; tip = `งบบัญชี ${accRange}`; }
-      const input = `<input class="fe2-in" type="number" step="any" data-item="${it.id}" data-kind="${it.kind}" value="${it.kind === 'pct' ? +(sv * 100).toFixed(4) : +sv}"><span class="fe2-u">${it.kind === 'pct' ? '%' : 'บาท'}</span>`;
-      const actTxt = act === 'merged' ? '<span class="fe2-z">รวมใน Platform Commission</span>' : it.kind === 'pct' ? pct(act) + (tip ? ` <span class="pr-i" data-tip="${esc(tip)}">ⓘ</span>` : '') : act == null ? '<span class="fe2-z">—</span>' : `${n2(act)} บาท`;
-      const row = `<tr><td class="l">${esc(it.name)}</td><td>${actTxt}</td><td>${input}</td><td>${it.kind === 'pct' && act !== 'merged' ? dif(act, setPct) : '<span class="fe2-z">—</span>'}</td></tr>`;
-      if (co) { rowsCo.push(row); sumSetCo += setPct || 0; if (act != null) sumActCo += act; }
-      else { rowsCh.push(row); if (it.kind === 'pct') { sumSetCh += setPct; if (act != null && act !== 'merged') { sumActCh += act; hasActCh = true; } } else { perSet += sv; if (typeof act === 'number') perAct += act; } }
-    });
-    if (g) Object.entries(gi).forEach(([k, v]) => { if (used.has(k) || +v.pct < 0.01) return; if (Object.values(['processing_fee', 'vn_fix_infrastructure_fee']).includes(k)) return;
-      rowsCh.push(`<tr class="fe2-x"><td class="l">${esc(FE2_EXTRA[k] || k)} <span class="fe2-z">· ไม่ได้ตั้งไว้</span></td><td>${pct(+v.pct)} <span class="pr-i" data-tip="≈ ${n2(v.per_order)} บาท / ออเดอร์">ⓘ</span></td><td><span class="fe2-z">—</span></td><td>${dif(+v.pct, 0)}</td></tr>`); sumActCh += +v.pct; hasActCh = true; });
-    const perTxt = (s, a) => s || a ? ` + ${n2(s)} บาท` : '';
-    const sumRow = (l, a, s, extra) => `<tr class="fe2-s"><td class="l">${l}</td><td>${a == null ? '<span class="fe2-z">—</span>' : a.toFixed(2) + '%'}</td><td>${s.toFixed(2)}%${extra || ''}</td><td>${a == null ? '' : dif(a, s)}</td></tr>`;
-    const actCh = hasActCh || !g ? sumActCh : null;
-    el.innerHTML = `<div class="fe2-top"><span class="pr-note" style="margin:0;">${esc(src)}</span><span style="flex:1"></span><button type="button" class="pr-btn ghost" id="fe2Old" data-tip="เพิ่ม / ลบ รายการหรือช่องทาง และตั้งเกณฑ์ไฟเขียว">ตารางแบบเดิม</button></div>
-      <div class="fe2-tabs">${tabs.map(tb => `<button type="button" data-tab="${esc(tb)}" class="${tb === FE2.tab ? 'on' : ''}">${esc(tb)}</button>`).join('')}</div>
-      ${tabChs.length > 1 ? `<div class="pr-seg fe2-sub">${tabChs.map(x => `<button type="button" data-ch="${x.id}" aria-pressed="${x.id === c.id}">${esc(x.name)}</button>`).join('')}</div>` : ''}
-      <div class="fe2-cards"><div><div class="l">ค่าธรรมเนียมช่องทาง</div><div class="v">${actCh == null ? '—' : actCh.toFixed(2) + '%'}</div><div class="s">ค่าจริง · ตั้งไว้ ${sumSetCh.toFixed(2)}%${perTxt(perSet, 0)}</div></div>
-        <div><div class="l">ค่าใช้จ่ายบริษัท</div><div class="v">${sumActCo.toFixed(2)}%</div><div class="s">ค่าจริง · ตั้งไว้ ${sumSetCo.toFixed(2)}%</div></div>
-        <div><div class="l">หักรวมก่อนต้นทุนสินค้า (ที่ใช้คิดโปรตอนนี้)</div><div class="v">${(sumSetCh + sumSetCo).toFixed(2)}%${perTxt(perSet, 0)}</div><div class="s">เหลือ ${(100 - sumSetCh - sumSetCo).toFixed(2)}% ไว้จ่ายต้นทุน + กำไร</div></div></div>
+    const rowHtml = x => {
+      const L = x.L, act = x.act;
+      const input = L.extra ? '<span class="fe2-z">—</span>' : `<input class="fe2-in${L.use ? ' dim' : ''}" type="number" step="any" data-item="${L.item_id}" data-kind="${L.kind}" value="${x.isPct ? +(+L.set * 100).toFixed(4) : +L.set}"><span class="fe2-u">${x.isPct ? '%' : 'บาท'}</span>`;
+      const actTxt = act === 'merged' ? '<span class="fe2-z">รวมใน Platform Commission</span>' : x.isPct ? pct(act) + (x.tip && act != null ? ` <span class="pr-i" data-tip="${esc(x.tip)}">ⓘ</span>` : '') : act == null ? '<span class="fe2-z">—</span>' : `${n2(act)} บาท`;
+      const useCell = L.can ? `<div class="pr-seg fe2-use" data-item="${L.item_id ?? ''}" data-key="${esc(L.key || '')}"><button type="button" data-v="1" aria-pressed="${!!L.use}">ค่าจริง</button><button type="button" data-v="0" aria-pressed="${!L.use}">ตั้งเอง</button></div>` : '<span class="fe2-z">ตั้งเอง</span>';
+      return `<tr><td class="l">${esc(L.name)}${L.extra ? ' <span class="fe2-z">· ไม่ได้ตั้งไว้</span>' : ''}</td><td>${actTxt}</td><td>${input}</td><td>${x.isPct && act !== 'merged' ? dif(act, x.setPct) : '<span class="fe2-z">—</span>'}</td><td>${useCell}</td></tr>`;
+    };
+    const rowsCh = rows.filter(x => !x.L.company).map(rowHtml), rowsCo = rows.filter(x => x.L.company).map(rowHtml);
+    const sumRow = (l, a, aPer, s, sPer, u, uPer, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td><td>${a == null ? '<span class="fe2-z">—</span>' : a.toFixed(2) + '%' + perTxt(aPer)}</td><td>${s.toFixed(2)}%${perTxt(sPer)}</td><td>${a == null ? '' : dif(a, s)}</td><td>${u.toFixed(2)}%${perTxt(uPer)}</td></tr>`;
+    el.innerHTML = top(src) + `
+      <div class="fe2-cards"><div><div class="l">ค่าธรรมเนียมช่องทาง</div><div class="v">${S.actChV == null ? '—' : S.actChV.toFixed(2) + '%'}</div><div class="s">ค่าจริง · ตั้งไว้ ${S.setCh.toFixed(2)}%${perTxt(S.pSet)}</div></div>
+        <div><div class="l">ค่าใช้จ่ายบริษัท</div><div class="v">${S.actCo.toFixed(2)}%</div><div class="s">ค่าจริง · ตั้งไว้ ${S.setCo.toFixed(2)}%</div></div>
+        <div><div class="l">หักรวมก่อนต้นทุนสินค้า (ที่ใช้คิดโปร)</div><div class="v">${(S.useCh + S.useCo).toFixed(2)}%${perTxt(S.pUse)}</div><div class="s">เหลือ ${(100 - S.useCh - S.useCo).toFixed(2)}% ไว้จ่ายต้นทุน + กำไร</div></div></div>
       <div class="fe2-card"><div class="fe2-ch"><b>${esc(c.name)}</b></div>
-      <table class="fe2-t"><thead><tr><th class="l">รายการ</th><th>ค่าจริง</th><th>ตั้งไว้</th><th>ต่าง</th></tr></thead><tbody>
-        <tr class="fe2-g"><td colspan="4">ค่าธรรมเนียมจากช่องทาง</td></tr>${rowsCh.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
-        <tr class="fe2-g"><td colspan="4">ค่าใช้จ่ายของบริษัท · ตั้งเอง (ค่าจริงไว้ดูประกอบ)</td></tr>${rowsCo.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
-        ${sumRow('สรุป · ค่าธรรมเนียมช่องทาง', actCh, sumSetCh, perTxt(perSet, perAct)).replace('class="fe2-s"', 'class="fe2-s first"')}
-        ${sumRow('สรุป · ค่าใช้จ่ายบริษัท', sumActCo, sumSetCo)}
-        ${sumRow('สรุป · หักรวมก่อนต้นทุนสินค้า', actCh == null ? null : actCh + sumActCo, sumSetCh + sumSetCo, perTxt(perSet, perAct))}
+      <table class="fe2-t"><thead><tr><th class="l">รายการ</th><th>ค่าจริง</th><th>ตั้งไว้</th><th>ต่าง</th><th>ใช้คิดโปร ${info(useTip)}</th></tr></thead><tbody>
+        <tr class="fe2-g"><td colspan="5">ค่าธรรมเนียมจากช่องทาง</td></tr>${rowsCh.join('') || '<tr><td colspan="5" class="l fe2-z">ไม่มีรายการ</td></tr>'}
+        <tr class="fe2-g"><td colspan="5">ค่าใช้จ่ายของบริษัท · ตั้งเอง (ค่าจริงไว้ดูประกอบ)</td></tr>${rowsCo.join('') || '<tr><td colspan="5" class="l fe2-z">ไม่มีรายการ</td></tr>'}
+        ${sumRow('สรุป · ค่าธรรมเนียมช่องทาง', S.actChV, S.pAct, S.setCh, S.pSet, S.useCh, S.pUse, true)}
+        ${sumRow('สรุป · ค่าใช้จ่ายบริษัท', S.actCo, 0, S.setCo, 0, S.useCo, 0)}
+        ${sumRow('สรุป · หักรวมก่อนต้นทุนสินค้า', S.actChV == null ? null : S.actChV + S.actCo, S.pAct, S.setCh + S.setCo, S.pSet, S.useCh + S.useCo, S.pUse)}
       </tbody></table>
-      <div class="fe2-note">ต่าง: <span class="fe2-up">สีแดง</span> = ค่าจริงสูงกว่าที่ตั้ง (โปรที่คิดไว้กำไรน้อยกว่าที่เห็น) · <span class="fe2-dn">สีเขียว</span> = ค่าจริงต่ำกว่า · แก้ตัวเลข "ตั้งไว้" ได้เลย บันทึกเมื่อออกจากช่อง · ตอนนี้การคิดโปรใช้ค่า "ตั้งไว้"</div></div>`;
-    el.querySelector('#fe2Old').onclick = () => { FEE_MODE = 'old'; renderFee(); };
-    el.querySelectorAll('.fe2-tabs [data-tab]').forEach(b => b.onclick = () => { FE2.tab = b.dataset.tab; FE2.ch = null; renderFeeNew(); });
-    el.querySelectorAll('.fe2-sub [data-ch]').forEach(b => b.onclick = () => { FE2.ch = +b.dataset.ch || b.dataset.ch; renderFeeNew(); });
+      <div class="fe2-note">ต่าง: <span class="fe2-up">สีแดง</span> = ค่าจริงสูงกว่าที่ตั้ง (ถ้าคิดโปรด้วยค่าที่ตั้งไว้ กำไรจริงจะน้อยกว่าที่เห็น) · <span class="fe2-dn">สีเขียว</span> = ค่าจริงต่ำกว่า · แก้ตัวเลข "ตั้งไว้" ได้เลย บันทึกเมื่อออกจากช่อง</div></div>`;
+    bindNav();
     el.querySelectorAll('.fe2-in').forEach(inp => inp.onchange = async () => {
       const raw = inp.value.trim(), item_id = +inp.dataset.item;
       if (await feeEdit({ op: 'value', item_id, channel_id: c.id, value: raw === '' ? '' : String(inp.dataset.kind === 'pct' ? +raw / 100 : +raw) })) renderFeeNew();
     });
+    el.querySelectorAll('.fe2-use button').forEach(b => b.onclick = async () => {
+      if (b.getAttribute('aria-pressed') === 'true') return;
+      const box = b.closest('.fe2-use'), p = { channel_id: c.id, use_actual: b.dataset.v === '1' };
+      if (box.dataset.item) p.item_id = +box.dataset.item; else p.key = box.dataset.key;
+      box.querySelectorAll('button').forEach(x => { x.disabled = true; });
+      try { await rpc('fee_use_actual', { p }); toast('บันทึกแล้ว'); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
+      renderFeeNew();
+    });
+  }
+  // แถวของช่องทาง 1 ช่อง: อัตราที่ใช้คิดโปรมาจากฐานข้อมูล (fee_rates) ชุดเดียวกับสูตรคิดโปร · ค่าจริงของค่าใช้จ่ายบริษัท / ช่องทางที่ไม่มี API = งบบัญชี (ไว้ดูประกอบ)
+  function fe2Lines(c, ctx) {
+    const R = ctx.RT[c.id] || [], g = (c.actual_grp && ctx.G30[c.actual_grp]) || null;
+    const rows = R.map(L => {
+      let act = null, tip = '';
+      if (L.company) { const co = fe2Co(ctx.IT[L.item_id] || L); const a = co === 'ads' ? (ctx.AC[c.id] || {}).ads : ctx.CO[co]; act = a == null ? null : a * 100; tip = `งบบัญชี ${ctx.accRange}`; }
+      else if (L.extra || g) { if (L.merged) act = 'merged'; else if (L.act != null) { act = L.kind === 'pct' ? +L.act * 100 : +L.act; if (L.kind === 'pct' && L.per_order != null) tip = `≈ ${n2(L.per_order)} บาท / ออเดอร์`; } }
+      else { const k = /commission/i.test(L.name) && !/platform/i.test(L.name) ? 'commission' : /platform/i.test(L.name) ? 'platform' : null; const a = k ? (ctx.AC[c.id] || {})[k] : null; act = a == null ? null : a * 100; tip = `งบบัญชี ${ctx.accRange}`; }
+      const isPct = L.kind === 'pct';
+      return { L, act, tip, isPct, setPct: isPct ? +L.set * 100 : null, usePct: isPct ? +L.rate * 100 : null };
+    });
+    const S = { setCh: 0, actCh: 0, hasAct: false, useCh: 0, pSet: 0, pAct: 0, pUse: 0, setCo: 0, actCo: 0, useCo: 0 };
+    const PO = { set: { all: 0, single: 0, set: 0 }, act: { all: 0, single: 0, set: 0 }, use: { all: 0, single: 0, set: 0 } };   // บาท / ออเดอร์ แยกตามว่าใช้กับออเดอร์แบบไหน
+    rows.forEach(x => {
+      if (x.L.company) { S.setCo += x.setPct || 0; if (typeof x.act === 'number') S.actCo += x.act; S.useCo += x.usePct || 0; }
+      else if (x.isPct) { S.setCh += x.setPct; if (typeof x.act === 'number') { S.actCh += x.act; S.hasAct = true; } S.useCh += x.usePct; }
+      else { const ap = PO.set[x.L.apply] == null ? 'all' : x.L.apply; PO.set[ap] += +x.L.set || 0; if (typeof x.act === 'number') PO.act[ap] += x.act; PO.use[ap] += +x.L.rate || 0; }
+    });
+    const po = o => o.all + Math.max(o.single, o.set);   // 1 ออเดอร์เป็นสินค้าเดี่ยวหรือเซตอย่างใดอย่างหนึ่ง
+    S.pSet = po(PO.set); S.pAct = po(PO.act); S.pUse = po(PO.use);
+    S.actChV = S.hasAct || !g ? S.actCh : null;
+    return { rows, S, g };
   }
   if (!document.getElementById('fe2Style')) { const st = document.createElement('style'); st.id = 'fe2Style'; st.textContent = `
     #page-execfee .fe2-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -871,6 +928,13 @@
     #page-execfee .fe2-in::-webkit-outer-spin-button,#page-execfee .fe2-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
     #page-execfee .fe2-u{display:inline-block;width:30px;text-align:left;margin-left:5px;font-size:12px;color:var(--text3)}
     #page-execfee .fe2-up{color:#dc2626;font-weight:600} #page-execfee .fe2-dn{color:#16a34a} #page-execfee .fe2-z{color:var(--text3);font-weight:400}
+    #page-execfee .fe2-in.dim{opacity:.45} #page-execfee .fe2-in.dim:focus{opacity:1}
+    #page-execfee .fe2-use button{padding:3px 10px;font-size:11.5px} #page-execfee .fe2-use button:disabled{opacity:.5;cursor:default}
+    #page-execfee .fe2-wide{overflow-x:auto}
+    #page-execfee table.fe2-cmp th{vertical-align:bottom;white-space:nowrap} #page-execfee table.fe2-cmp td{vertical-align:top}
+    #page-execfee .fe2-colh{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:4px 6px;margin:-4px -6px;border-radius:6px;display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px}
+    #page-execfee .fe2-colh:hover{background:var(--bg3)} #page-execfee .fe2-colh b{font-size:12px;color:var(--text);font-weight:700} #page-execfee .fe2-colh small{font-size:10.5px;color:var(--text3);font-weight:400}
+    #page-execfee .fe2-cv{color:var(--text)} #page-execfee .fe2-cs{font-size:10.5px;color:var(--text3);margin-top:1px}
     #page-execfee .fe2-note{font-size:11.5px;color:var(--text3);margin-top:10px;line-height:1.6}
     @media (max-width:900px){#page-execfee .fe2-cards{grid-template-columns:1fr}}`; document.head.appendChild(st); }
 
