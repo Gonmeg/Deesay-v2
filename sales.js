@@ -1,3 +1,4 @@
+// sales.js — (2026-11-02) หน้าตาแบบ C: แผงตัวเลขขอบไล่สี · ป้ายเทียบ ui-chip + ค่าช่วงก่อน · กล่องลอย · แถวรวมล่างสุดเส้นเข้ม · แผงตัวเลขตอนโหลดสูงเท่าของจริง (กันหน้าเด้ง)
 // sales.js — (2026-10-21 b) หน้าภาพรวมรายช่องทาง: กลับเป็นกราฟบน ตารางล่าง (ยกเลิกวางคู่กัน)
 // sales.js — (2026-10-21 a) Facebook: การ์ด / กราฟ / แถวรวม "ค่า Ads" = Conversion + PR (เท่าหน้า Facebook Ads และหน้าแรก) · ROAS คิดจาก Conversion เท่านั้น · PR แยกแถวในตาราง
 // sales.js — (2026-10-20 a) หน้าภาพรวมรายช่องทาง: กราฟแนวโน้ม (ซ้าย) + ตารางแยกเพจ / ร้าน / ช่องทาง (ขวา) วางคู่กันใน .ov-row
@@ -12,17 +13,17 @@
 (function () {
   'use strict';
   const M = {
-    rev: { k: 'rev', name: 'ยอดขาย', c: '--accent', tip: 'ยอดขายทุกช่องทาง หักยกเลิก / คืน และ CN แล้ว · แหล่งเดียวกับทุกหน้า (ตารางสรุปยอดขาย)' },
-    ord: { k: 'ord', name: 'ออเดอร์', c: '--blue', tip: 'จำนวนออเดอร์ ไม่นับที่ยกเลิก / คืน' },
-    aov: { k: 'aov', name: 'AOV', c: '--purple', tip: '<b>AOV (Average Order Value)</b> ยอดขาย ÷ ออเดอร์<br>ไม่คิดของตัวแทน / Modern Trade เพราะสั่งลอตใหญ่' },
-    cust: { k: 'cust', name: 'ลูกค้า Facebook', c: '--cyan', tip: 'เบอร์โทรไม่ซ้ำ นับเฉพาะ Facebook / Line<br>TikTok / Shopee ไม่ส่งเบอร์โทรจริงมา จึงนับไม่ได้' },
+    rev: { k: 'rev', name: 'ยอดขาย', c: '--accent', tip: 'ยอดขายทุกช่องทาง <b>รวม</b>ตัวแทน / Modern Trade<br><b>ไม่รวม</b> ออเดอร์ที่ยกเลิก / คืน และ CN<br>ป้ายเทียบนับรวมทุกช่องทางเหมือนกัน · แหล่งเดียวกับทุกหน้า (ตารางสรุปยอดขาย)' },
+    ord: { k: 'ord', name: 'ออเดอร์', c: '--blue', tip: 'จำนวนออเดอร์ทุกช่องทาง <b>รวม</b>ตัวแทน / Modern Trade<br><b>ไม่รวม</b> ออเดอร์ที่ยกเลิก / คืน' },
+    aov: { k: 'aov', name: 'AOV', c: '--purple', tip: '<b>AOV (Average Order Value)</b> ยอดขาย ÷ ออเดอร์<br><b>ไม่รวม</b> ตัวแทน / Modern Trade เพราะสั่งลอตใหญ่' },
+    cust: { k: 'cust', name: 'ลูกค้า Facebook', c: '--cyan', tip: 'เบอร์โทรไม่ซ้ำ นับเฉพาะ Facebook / Line<br><b>ไม่รวม</b> TikTok / Shopee / Lazada (ไม่ส่งเบอร์โทรจริงมา) และตัวแทน / Modern Trade' },
     ads: { k: 'ads', name: 'ค่า Ads', c: '--red', tip: '' },
-    roas: { k: 'roas', name: 'ROAS', c: '--green', tip: '<b>ROAS (Return on Ad Spend)</b> ยอดขาย ÷ ค่า Ads<br>เส้นในกราฟหยุดที่วันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ' },
-    canc: { k: 'canc', name: 'ยกเลิก / คืน', c: '--orange', tip: 'ยอดออเดอร์ที่ยกเลิก / คืน<br>% = ยอดยกเลิก ÷ (ยอดขาย + ยอดยกเลิก)<br>Shopee / Lazada: ยอดยกเลิกของเดือนที่ยังไม่ปิดมากับไฟล์ปิดเดือนจากบัญชี' }
+    roas: { k: 'roas', name: 'ROAS', c: '--green', tip: '<b>ROAS (Return on Ad Spend)</b> ยอดขาย ÷ ค่า Ads<br><b>ไม่รวม</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง (Facebook PR / KOL)<br>เส้นในกราฟหยุดที่วันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ' },
+    canc: { k: 'canc', name: 'ยกเลิก / คืน', c: '--orange', tip: 'ยอดออเดอร์ที่ยกเลิก / คืน<br><b>ไม่รวม</b> ตัวแทน / Modern Trade<br>% = ยอดยกเลิก ÷ (ยอดขาย + ยอดยกเลิก)<br>Shopee / Lazada: ยอดยกเลิกของเดือนที่ยังไม่ปิดมากับไฟล์ปิดเดือนจากบัญชี' }
   };
   const metList = o => o.hub ? [M.rev, M.ord, M.aov, ...(o.ch === 'Facebook' ? [M.cust] : []), M.ads, M.roas, M.canc] : [M.rev, M.ord, M.aov, M.cust, M.canc];
   const tipOf = (o, m) => !o.hub ? m.tip
-    : m.k === 'rev' ? `ยอดขาย ${esc(o.ch)} หักยกเลิก / คืน และ CN แล้ว · แหล่งเดียวกับทุกหน้า (ตารางสรุปยอดขาย)`
+    : m.k === 'rev' ? `ยอดขาย ${esc(o.ch)} ทุก${o.ch === 'Facebook' ? 'เพจ' : 'ร้าน'}<br><b>ไม่รวม</b> ออเดอร์ที่ยกเลิก / คืน และ CN · แหล่งเดียวกับทุกหน้า (ตารางสรุปยอดขาย)`
     : m.k === 'ads' ? (o.adsTip || 'ค่า Ads ของช่องทางนี้').replace(/\n/g, '<br>') + '<br>% = ค่า Ads ÷ ยอดขาย'
     : m.k === 'aov' ? '<b>AOV (Average Order Value)</b> ยอดขาย ÷ ออเดอร์' : m.tip;
   const CH_ORDER = ['TikTok', 'Shopee', 'Facebook', 'ตัวแทน', 'Modern Trade', 'Lazada'];
@@ -38,6 +39,8 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const pct1 = v => (v * 100).toFixed(1) + '%';
   const roasTxt = (rev, ads) => ads > 0 ? (rev / ads).toFixed(2) + 'x' : '—';
+  // (2026-11-02) ป้ายเทียบแบบเดียวกับหน้าแรก: เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3% · inv = ยิ่งมากยิ่งไม่ดี (ค่า Ads)
+  const chipOf = (v, inv, tip) => `<span class="ui-chip ${Math.abs(v) < 3 ? '' : ((v > 0) !== !!inv ? 'up' : 'dn')}"${tip ? ` title="${esc(tip)}"` : ''}>${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}%</span>`;
   // id ของชิ้นส่วนในหน้า: หน้าภาพรวมยอดขายใช้ id เดิม · หน้าภาพรวมรายช่องทางเติมชื่อหน้าข้างหน้า (กัน id ซ้ำกันข้ามหน้า)
   const idOf = (o, s) => o.page === 'overview' ? s : o.page + '-' + s;
   const $ = (o, s) => document.getElementById(idOf(o, s));
@@ -47,9 +50,16 @@
     const st = document.createElement('style'); st.id = 'ov-css';
     st.textContent = `
 .ov{display:flex;flex-direction:column;gap:16px}
-.ov .ui-metrics{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.ov .ui-metrics{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));border:1.5px solid transparent;background:var(--hero,var(--bg2)) padding-box,var(--hero-line,var(--border)) border-box;box-shadow:var(--sh,none);border-radius:14px;overflow:visible}
+.ov .ui-metrics .ui-metric{background:transparent;box-shadow:1px 0 0 var(--border);padding:14px 18px 15px}
+body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
+.ov .ui-metrics .ui-metric:last-child{box-shadow:none;border-radius:0 12px 12px 0}.ov .ui-metrics .ui-metric:first-child{border-radius:12px 0 0 12px}.ov .ui-metrics .ui-metric:first-child::before{border-top-left-radius:12px}
+.ov .ui-metrics .ui-metric:hover{background:color-mix(in srgb,var(--bg3) 55%,transparent)}
+.ov .ui-metrics .ui-metric-v{font-size:clamp(22px,2vw,30px)}
+.ov .ui-metric-d{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12.5px;color:var(--text3);white-space:nowrap;overflow:hidden}
+.ov-sk .ui-metric-v{color:var(--text3);opacity:.5}
 .ov .ui-metric-d .badge-up,.ov .ui-metric-d .badge-down{font-size:12px;font-weight:600}
-.ov-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md,12px);padding:16px 18px}
+.ov-card{background:var(--bg2);border:1px solid var(--panel-line,var(--border));border-radius:var(--r-md,12px);padding:16px 18px;box-shadow:var(--sh,none)}
 .ov-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-bottom:10px}
 .ov-head h2{margin:0;font-size:15px;font-weight:700}
 .ov-seg{display:inline-flex;padding:3px;border-radius:9px;background:var(--bg3);border:1px solid var(--border)}
@@ -67,7 +77,7 @@
 .ov-tbl th{font-size:12px;font-weight:500;color:var(--text3);text-align:right;padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
 .ov-tbl th:first-child,.ov-tbl td:first-child{text-align:left}
 .ov-tbl td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--row-border,var(--border));white-space:nowrap}
-.ov-tbl tr.ov-tot td{font-weight:700;background:var(--row-sum);border-top:1px solid var(--row-sum-line);border-bottom:1px solid var(--row-sum-line)}
+.ov-tbl tr.ov-tot td{font-weight:700;background:transparent;box-shadow:inset 0 2px 0 var(--tot-line,var(--border));border-bottom:0;padding-top:12px;padding-bottom:12px}
 .ov-tbl tr.ov-sub td{background:color-mix(in srgb,var(--bg3) 55%,var(--bg2));font-size:13px;color:var(--text2);border-bottom:0;padding-top:7px;padding-bottom:7px}
 .ov-tbl tr.ov-sub td:first-child{position:relative;padding-left:62px;max-width:380px;overflow:hidden;text-overflow:ellipsis}
 .ov-tbl tr.ov-sub td:first-child::before{content:"";position:absolute;left:37px;top:0;bottom:0;width:1px;background:var(--border)}
@@ -204,8 +214,8 @@
   function cmpOfFn(R) {
     return (ch, s) => { if (R.none || R.noPrev) return { t: '—', cls: '' };
       const cu = sumOf(salesRows(R.cf, R.ct, ch, s), 'net_revenue'), pv = sumOf(salesRows(R.pf, R.pt, ch, s), 'net_revenue');
-      if (!pv) return { t: '—', cls: '' }; const v = (cu - pv) / pv * 100;
-      return { t: (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(1) + '%', cls: v >= 0 ? 'ov-up' : 'ov-down' }; };
+      if (!pv || pv < cu * 0.1) return { t: '—', cls: '' }; const v = (cu - pv) / pv * 100;
+      return { t: chipOf(v), cls: '' }; };
   }
   function cancCellFn(from, to, P) {
     const pendCh = ch => P && P.chs.includes(ch);
@@ -224,7 +234,8 @@
     rowsAll.forEach(r => { const g = byCh[r.channel] = byCh[r.channel] || { rows: [], subs: {} }; g.rows.push(r);
       const k = r.sub_channel || NOSUB; (g.subs[k] = g.subs[k] || []).push(r); });
     const chs = Object.keys(byCh).sort((a, b) => sumOf(byCh[b].rows, 'net_revenue') - sumOf(byCh[a].rows, 'net_revenue'));
-    let h = `<tr class="ov-tot"><td>รวม${c.ch ? ' ' + esc(c.ch) : 'ทุกช่องทาง'}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td><td class="${c.totCmp.cls}">${c.totCmp.t}</td><td>${fmt(total.cr)} · ${pct1(total.cpct)}</td></tr>`;
+    const totRow = `<tr class="ov-tot"><td>รวม${c.ch ? ' ' + esc(c.ch) : 'ทุกช่องทาง'}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td><td class="${c.totCmp.cls}">${c.totCmp.t}</td><td>${fmt(total.cr)} · ${pct1(total.cpct)}</td></tr>`;
+    let h = '';
     chs.forEach(ch => {
       const g = byCh[ch], t = tot(g.rows), subs = Object.keys(g.subs).sort((a, b) => sumOf(g.subs[b], 'net_revenue') - sumOf(g.subs[a], 'net_revenue'));
       const canOpen = subs.length > 1 || (subs.length === 1 && subs[0] !== NOSUB && subs[0] !== ch && !sub);
@@ -243,7 +254,7 @@
           <td>${fmt(st.ord)}</td><td>${isBulkChannel(ch) ? '—' : (st.ord && st.rev ? fmt(st.rev / st.ord) : '—')}</td>
           <td class="${sk.cls}">${sk.t}</td><td>${cancCell(ch, sname, st.cr, st.co, st.rev)}</td></tr>`; });
     });
-    return h;
+    return h + totRow;   // (2026-11-02) แถวรวมอยู่ล่างสุด เส้นเข้มด้านบน (แบบบรรทัดรวมในงบ / ชีท)
   }
 
   // ===== ตารางรายเพจ / ร้าน (หน้าภาพรวมรายช่องทาง) — แถว = เพจ / ร้านที่มียอดขายหรือมีค่า Ads ในช่วงนี้ · ผลรวมทุกแถว = แถวรวม = แผงตัวเลข =====
@@ -259,8 +270,9 @@
     const { o } = I;
     const { from, to, sub, R, P, rowsAll, total, totCmp, adsIn, totAds, SG } = c, totPR = c.totPR || 0;
     const cmpOf = cmpOfFn(R), cancCell = cancCellFn(from, to, P), ch = o.ch;
-    let h = `<tr class="ov-tot"><td>รวม ${esc(ch)}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td>
+    const totRow = `<tr class="ov-tot"><td>รวม ${esc(ch)}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td>
       <td>${fmt(totAds + totPR)}</td><td>${roasTxt(total.rev, totAds)}</td><td class="${totCmp.cls}">${totCmp.t}</td><td>${cancCell(ch, sub, total.cr, total.co, total.rev)}</td></tr>`;
+    let h = '';
     SG.keys.forEach(k => {
       // แถว "(ไม่ระบุ)" กดดูที่มา / เทียบช่วงก่อนไม่ได้ (ตัวกรองว่าง = ทั้งช่องทาง)
       const x = SG.g[k], t = tot(x.rows), named = k !== NOSUB && x.rows.length > 0, share = total.rev ? t.rev / total.rev : 0, cm = named ? cmpOf(ch, k) : { t: '—', cls: '' }, v = subVar(SG.keys, k);
@@ -274,7 +286,7 @@
         <td class="${cm.cls}">${cm.t}</td><td>${named ? cancCell(ch, k, t.cr, t.co, t.rev) : (t.cr ? fmt(t.cr) : '<span class="ov-mute">—</span>')}</td></tr>`;
     });
     if (totPR > 0) h += `<tr class="ov-mute"><td><span class="ov-nm" data-tip="Ads ที่ไม่ผูกยอดขาย: boost โพสต์ KOL · เพจอื่น · บัญชี PR&#10;นับในค่า Ads รวม แต่ไม่นับใน ROAS">PR (KOL / เพจอื่น) <span class="ui-i">ⓘ</span></span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>${fmt(totPR)}</td><td>—</td><td>—</td><td>—</td></tr>`;
-    return h;
+    return h + totRow;
   }
 
   // ===== โครงหน้า =====
@@ -289,7 +301,7 @@
          <th title="ยอดขาย ÷ ออเดอร์ · ตัวแทน / MT ไม่คิด">AOV</th><th id="${idOf(o, 'ovCmpTh')}">เทียบช่วงก่อน</th><th>ยกเลิก / คืน</th>`;
     const cols = o.hub ? 9 : 7;
     return `<div class="ov">
-      <section class="ui-metrics" id="${idOf(o, 'ovTiles')}" aria-label="ตัวเลขหลัก"><div class="empty" style="padding:22px;">กำลังโหลด...</div></section>
+      <section class="ui-metrics ov-sk" id="${idOf(o, 'ovTiles')}" aria-label="ตัวเลขหลัก">${metList(o).map(m => `<div class="ui-metric is-static"><span class="ui-metric-l">${m.name}</span><span class="ui-metric-v">—</span><span class="ui-metric-d">&nbsp;</span></div>`).join('') + (o.extraTiles || []).map(x => `<div class="ui-metric is-static"><span class="ui-metric-l">${x.name}</span><span class="ui-metric-v">—</span><span class="ui-metric-d">&nbsp;</span></div>`).join('')}</section>
       <div class="${o.hub ? 'ov-row' : ''}" style="${o.hub ? '' : 'display:contents;'}"><div class="ov-card"><div class="ov-head"><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;"><h2>แนวโน้ม<span id="${idOf(o, 'ovGrain')}">รายวัน</span></h2>
         <div class="ov-seg" role="group" aria-label="มุมมองกราฟ"><button type="button" data-ovmode="metric">ตัวเลขที่เลือก</button><button type="button" data-ovmode="channel">${segAlt}</button></div>${go}</div>
         <div class="ov-leg" id="${idOf(o, 'ovLegend')}"></div></div><div class="ov-chart"><canvas id="${idOf(o, 'ovChart')}"></canvas></div></div>
@@ -341,14 +353,17 @@
     noteSalesStatus(page, R, P);
     const noCmp = R.none || R.noPrev;   // (2026-10-19) noPrev = ช่วงก่อนอยู่ก่อนวันที่ระบบเริ่มมีข้อมูล
     const cC = noCmp ? null : tot(salesRows(R.cf, R.ct, ch, sub)), cP = noCmp ? null : tot(salesRows(R.pf, R.pt, ch, sub));
-    const badgeW = (a, b, none, tip) => { if (none) return `<span title="${esc(tip)}">—</span>`; const x = cmpBadge(a, b, tip); return `<span class="${x.cls}" title="${esc(x.tip || '')}">${x.text}</span> vs ช่วงก่อน`; };
-    const badge = (a, b) => badgeW(a, b, noCmp, R.tip);
+    // ป้ายเทียบ + ค่าของช่วงก่อน (ตัวเลขเต็ม) · ไม่มีช่วงก่อน / ช่วงก่อนน้อยกว่า 10% ของช่วงนี้ = "—" เหตุผลอยู่ใน tooltip
+    const badgeW = (a, b, none, tip, inv, fv) => { if (none) return `<span class="ui-chip" title="${esc(tip)}">—</span>`;
+      const x = cmpBadge(a, b, tip); if (x.text === '—') return `<span class="ui-chip" title="${esc(x.tip || '')}">—</span>`;
+      return chipOf((a - b) / b * 100, inv, x.tip) + `<span>ช่วงก่อน ${(fv || fmt)(b)}</span>`; };
+    const badge = (a, b, fv) => badgeW(a, b, noCmp, R.tip, false, fv);
     const custOk = !ch || ch === 'Facebook';
     const vals = { rev: fmt(total.rev), ord: fmt(total.ord), aov: total.aov ? fmt(total.aov) : '—', cust: custOk ? '…' : '—', canc: fmt(total.cr) };
     const deltas = { rev: badge(cC && cC.rev, cP && cP.rev), ord: badge(cC && cC.ord, cP && cP.ord), aov: badge(cC && cC.aov, cP && cP.aov),
-      cust: custOk ? '' : '<span title="ช่องทางนี้ไม่ส่งเบอร์โทรจริงมา">นับได้เฉพาะ Facebook</span>',
-      canc: `${pct1(total.cpct)} ของยอดก่อนตัดออก${P ? ` · <span class="ov-pend">ยังไม่รวม ${P.chs.join(' / ')} ${P.mon}</span>` : ''}` };
-    const totCmp = (() => { if (noCmp || !cP || !cP.rev) return { t: '—', cls: '' }; const v = (cC.rev - cP.rev) / cP.rev * 100; return { t: (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(1) + '%', cls: v >= 0 ? 'ov-up' : 'ov-down' }; })();
+      cust: custOk ? '&nbsp;' : '<span title="ช่องทางนี้ไม่ส่งเบอร์โทรจริงมา">นับได้เฉพาะ Facebook</span>',
+      canc: `<span>${pct1(total.cpct)} ของยอดก่อนตัดออก</span>${P ? `<span class="ov-pend">ยังไม่รวม ${P.chs.join(' / ')} ${P.mon}</span>` : ''}` };
+    const totCmp = (() => { if (noCmp || !cP || !cP.rev || cP.rev < cC.rev * 0.1) return { t: '—', cls: '' }; return { t: chipOf((cC.rev - cP.rev) / cP.rev * 100), cls: '' }; })();
 
     // ===== ค่า Ads + ROAS (เฉพาะหน้าภาพรวมรายช่องทาง) =====
     let A = null;
@@ -371,16 +386,16 @@
       const adsPct = total.rev > 0 && totAds > 0 ? `${pct1(totAds / total.rev)} ของยอดขาย` : '';
       const prCur = noneA ? 0 : sumAds(prBy(from, capC)), prPrev = noneA ? 0 : sumAds(prBy(pA.from, pA.to));
       const adsSub = totPR > 0 ? `Conversion ${fmt(totAds)} · PR ${fmt(totPR)}` : adsPct;
-      deltas.ads = noneA ? (adsSub || badgeW(0, 0, true, tipA)) : badgeW(aCur + prCur, aPrev + prPrev, false, tipA) + (adsSub ? ' · ' + adsSub : '');
+      deltas.ads = noneA ? (adsSub ? `<span>${adsSub}</span>` : badgeW(0, 0, true, tipA)) : (adsSub ? badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true).replace(/<span>ช่วงก่อน [^<]*<\/span>$/, '') + `<span>${adsSub}</span>` : badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true));
       vals.roas = roasTxt(total.rev, totAds);
-      deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ');
+      deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ', false, v => v.toFixed(2) + 'x');
       // ค่า Ads ที่เข้าช้ากว่ายอดขาย → แจ้งที่ปุ่มสถานะของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
       // (2026-10-19) ค่า Ads แต่ละแหล่งมีถึงวันไหน แจ้งที่ Data Guard ของหน้า (Ads …) ที่เดียว ไม่ซ้ำที่นี่
       if (window.pageNote) window.pageNote(page, 'adsstale', null);
       A = { adsAll, adsBy, adsIn, totAds, prBy, prIn, totPR, AC, capC, SG: subGroups(rowsAll, adsIn) };
     }
 
-    $(o, 'ovTiles').innerHTML = tilesHtml(I, { vals, deltas });
+    $(o, 'ovTiles').innerHTML = tilesHtml(I, { vals, deltas }); $(o, 'ovTiles').classList.remove('ov-sk');
     const th = $(o, 'ovCmpTh'); if (th) th.title = R.tip || '';
     const tbody = $(o, 'ovTbody');
     if (o.hub) {
@@ -426,7 +441,7 @@
           showPrev && I.ctx.prevLbl ? supaRpc('fb_customers_series', { p_from: getPrevPeriodRange(from, to).from, p_to: getPrevPeriodRange(from, to).to, p_sub: sub || null, p_month: false }) : null]);
         if (!alive()) return;
         const tile = $(o, 'ovTiles').querySelector('[data-ovk="cust"]');
-        if (tile) { tile.querySelector('.ui-metric-v').textContent = fmt(n); tile.querySelector('.ui-metric-d').innerHTML = badge(nc, np); }
+        if (tile) { tile.querySelector('.ui-metric-v').textContent = fmt(n); tile.querySelector('.ui-metric-d').innerHTML = noCmp ? '&nbsp;' : badge(nc, np); }
         const m = Object.fromEntries((ser || []).map(x => [x[0], x[1]]));
         I.ctx.cust = B.list.map((b, i) => i > I.ctx.capIdx ? null : (m[b] || 0));
         if (pser) { const pm = Object.fromEntries(pser.map(x => [x[0], x[1]])); const pr = getPrevPeriodRange(from, to); const pl = []; let d = pr.from; while (d <= pr.to) { pl.push(pm[d] || 0); d = dayAdd(d, 1); } I.ctx.prvCust = pl; }
