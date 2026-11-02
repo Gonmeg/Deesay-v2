@@ -1,3 +1,4 @@
+// promo.js (v20261102b) — เลือก ค่าจริง / ค่าที่ตั้งไว้ ตอนจำลองโปรและดูคำขอ (ปุ่มบนผลคำนวณ) แทนคอลัมน์ "ใช้คิดโปร" ในหน้าค่าธรรมเนียม · การ์ด / หัวตารางมี ⓘ อธิบายตัวเลข
 // promo.js (v20261102a) — ค่าธรรมเนียมช่องทาง: คอลัมน์ "ใช้คิดโปร" เลือก ค่าจริง / ตั้งเอง ได้รายบรรทัด (สูตรคิดโปรใช้ตามที่เลือก · อัตราคำนวณที่ฐานข้อมูล fee_rates ที่เดียว) · TikTok มีมุมมอง "เทียบทุกประเภท" ในตารางเดียว
 // promo.js (v20261030a) — หน้าค่าธรรมเนียมช่องทางแบบใหม่ (แท็บแพลตฟอร์ม · ค่าจริง vs ตั้งไว้ · สรุป 3 บรรทัด · Shopee/TikTok ค่าจริง 30 วัน) · ตารางเดิมยังเข้าได้
 // promo.js (v20261029a) — ที่มาต้นทุนบอกชัด (ไฟล์ต้นทุนขายรายเดือน / ไฟล์ต้นทุนสินค้า)
@@ -484,6 +485,7 @@
     const fees = ly => (c.fees || []).filter(f => f.layer === ly), lines = c.lines || [], cogs = sum(lines.map(l => l.cost));
     const how = f => (f.kind === 'pct' ? `${+(f.rate * 100).toFixed(2)}% × ${n2(price)} ÷ ${vf}` : `${n2(f.rate)} ÷ ${vf}`) + (f.src === 'actual' ? ' · ค่าจริง 30 วัน' : '');
     // (2026-10-28 b) ไม่ใช้เกณฑ์กำไรขั้นต่ำ (5%) แล้ว: แถบบนขึ้นเฉพาะตอนขาดต้นทุน · ขาดทุนดูจากกำไรสุทธิที่เป็นสีแดง
+    const fm = c.fee_actual_ok ? `<div class="pv-fm"><span>ค่าธรรมเนียมแพลตฟอร์ม${tip('ค่าจริง 30 วัน = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด (อัปเดตทุกเช้า) รวมรายการที่แพลตฟอร์มหักแต่ไม่ได้ตั้งไว้\nค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง\nค่าใช้จ่ายบริษัท (Ads / ค่าบริหาร / Marketing) ใช้ค่าที่ตั้งไว้ทั้งสองแบบ')}</span><div class="pr-seg" data-fm><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div></div>` : '';
     const ban = price && !ok ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')} ในไฟล์ต้นทุนของบัญชี</span></div>` : '';
     const dif = +c.rsp > 0 ? (price - +c.rsp) / +c.rsp : null;
     const tiles = `<div class="pv-k">
@@ -503,12 +505,13 @@
         ${feeGrp('platform', 'ค่า Platform')}${feeGrp('selling', 'ค่าขาย')}${feeGrp('overhead', 'ค่าบริหาร / Marketing')}
         ${row('กำไรสุทธิ / ออเดอร์', ok ? pc(c.margin) + ' ของรายได้' : 'ยังไม่รวมต้นทุนที่ขาด', ok ? n2(c.profit) : '—', 'tot big' + (ok && +c.profit < 0 ? ' negv' : ''))}
       </tbody></table>`;
-    return ban + tiles + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · ค่าธรรมเนียมแพลตฟอร์มใช้ค่าจริง (เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด) หรือค่าที่ตั้งไว้ ตามที่เลือกในหน้าค่าธรรมเนียมช่องทาง · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
+    return fm + ban + tiles + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · ค่าธรรมเนียมแพลตฟอร์มใช้ค่าจริง (เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด) หรือค่าที่ตั้งไว้ ตามที่เลือกในหน้าค่าธรรมเนียมช่องทาง · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
   }
+  const bindFm = (root, fn) => root.querySelectorAll('[data-fm] button').forEach(b => b.onclick = () => { if (b.getAttribute('aria-pressed') !== 'true') fn(b.dataset.v); });
   const bindLad = root => root.querySelectorAll('.pv-lad tr.grp').forEach(tr => tr.onclick = () => { const open = !tr.classList.contains('open'); tr.classList.toggle('open', open); root.querySelectorAll(`.pv-lad tr[data-ladp="${tr.dataset.lad}"]`).forEach(x => { x.hidden = !open; }); });
 
   // ===================== (2026-10-28) จำลองโปร (ผู้บริหาร): ลองใส่ช่องทาง สินค้า ราคา ดูว่าคุ้มไหม · ไม่ส่งเป็นคำขอ =====================
-  const SIM = { channel_id: '', items: [{ sku: '', qty: 1 }], gifts: [], price: '' };
+  const SIM = { channel_id: '', items: [{ sku: '', qty: 1 }], gifts: [], price: '', fee_mode: null };
   function renderSim(box, C) {
     box.innerHTML = `<div class="pv-sim"><div class="pv-sim-f">
         <div class="pv-h">จำลองโปร${` <span class="pr-i" data-tip="ลองใส่ช่องทาง สินค้า ของแถม และราคา แล้วกดคำนวณ · ไม่ส่งเป็นคำขอ ไม่บันทึกอะไร">ⓘ</span>`}</div>
@@ -544,10 +547,11 @@
       if (e.target.id !== 'smGo') return;
       const out = document.getElementById('smOut'), p = { channel_id: SIM.channel_id ? +SIM.channel_id : null, price: +SIM.price || 0, orders: 0,
         items: SIM.items.filter(x => x.sku).map(x => ({ sku: x.sku, qty: +x.qty || 0 })), gifts: SIM.gifts.filter(x => x.sku).map(x => ({ sku: x.sku, qty: +x.qty || 0 })) };
+      if (SIM.fee_mode) p.fee_mode = SIM.fee_mode;
       if (!p.channel_id || !p.price || !p.items.length) { out.innerHTML = '<div class="pr-empty">ใส่ช่องทาง สินค้า และราคาให้ครบก่อน</div>'; return; }
       e.target.disabled = true; e.target.textContent = 'กำลังคำนวณ…';
       try { const [c, k] = await Promise.all([rpc('promo_calc', { p }), rpc('promo_rank', { p }).catch(() => null)]);
-        out.innerHTML = calcView(c, C) + (k ? rankCard(k) : ''); bindLad(out); }
+        out.innerHTML = calcView(c, C) + (k ? rankCard(k) : ''); bindLad(out); bindFm(out, v => { SIM.fee_mode = v; document.getElementById('smGo').click(); }); }
       catch (err) { out.innerHTML = `<div class="pr-empty">คำนวณไม่สำเร็จ: ${esc(err.message)}</div>`; }
       e.target.disabled = false; e.target.textContent = 'คำนวณ';
     };
@@ -610,7 +614,7 @@
     const r = EX.list.find(x => x.id === id); if (!r) return;
     const C = await cat();
     trOpenShell('Promotion · รายละเอียด');
-    const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null };
+    const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null, fee_mode: null };
     const body = () => document.getElementById('trBody');
     const draw = (c) => {
       const st = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0), k = S.rank;
@@ -660,11 +664,12 @@
         body().querySelectorAll('[data-gi]').forEach(x => { S.gifts[+x.dataset.gi].qty = +x.value || 0; });
         body().querySelectorAll('[data-ii]').forEach(x => { S.items[+x.dataset.ii].qty = +x.value || 0; });
         const btn = document.getElementById('exCalc'); if (btn) { btn.disabled = true; btn.textContent = 'กำลังคำนวณ…'; }
-        try { const pp = { channel_id: r.channel_id, price: S.price, orders: 0, items: S.items, gifts: S.gifts };
+        try { const pp = { channel_id: r.channel_id, price: S.price, orders: 0, items: S.items, gifts: S.gifts }; if (S.fee_mode) pp.fee_mode = S.fee_mode;
           const [c2, k2] = await Promise.all([rpc('promo_calc', { p: pp }), rpc('promo_rank', { p: pp }).catch(() => null)]); S.rank = k2; draw(c2); }
         catch (e) { toast('คำนวณไม่สำเร็จ: ' + e.message); if (btn) { btn.disabled = false; btn.textContent = 'คำนวณ'; } }
       };
       document.getElementById('exCalc').onclick = recalc;
+      bindFm(body(), v => { S.fee_mode = v; recalc(); });
       body().querySelectorAll('#exPrice,[data-gi],[data-ii]').forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); recalc(); } }));
       const rs = document.getElementById('exReset');
       if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
@@ -796,7 +801,6 @@
     const rng = FA30 && FA30.from ? `${dTh(FA30.from)} – ${dTh(FA30.to)}` : '30 วันล่าสุด';
     const upd = FA30 && FA30.refreshed_at ? new Date(FA30.refreshed_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
     const srcTip = `คำนวณใหม่ทุกวันเวลา 07:40 จากออเดอร์ที่แพลตฟอร์มโอนเงินแล้ว (หักค่าธรรมเนียมจริงแล้ว)${upd ? ' · คำนวณล่าสุด ' + upd : ''}`;
-    const useTip = 'เลือกได้ทีละบรรทัดว่าสูตรคิดโปรจะใช้ตัวเลขไหน\n• ค่าจริง = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด อัปเดตเองทุกเช้า\n• ตั้งเอง = ตัวเลขในช่อง "ตั้งไว้"\nค่าใช้จ่ายของบริษัท และช่องทางที่ไม่มี API ใช้ค่าที่ตั้งเองเสมอ';
     const subSeg = tabChs.length > 1 ? `<div class="pr-seg fe2-sub">${canAll ? `<button type="button" data-ch="all" aria-pressed="${FE2.ch === 'all'}">เทียบทุกประเภท</button>` : ''}${tabChs.map(x => `<button type="button" data-ch="${x.id}" aria-pressed="${x.id === FE2.ch}">${esc(x.name)}</button>`).join('')}</div>` : '';
     const top = src => `<div class="fe2-top"><span class="pr-note" style="margin:0;">${src}</span><span style="flex:1"></span><button type="button" class="pr-btn ghost" id="fe2Old" data-tip="เพิ่ม / ลบ รายการหรือช่องทาง">ตารางแบบเดิม</button></div>
       <div class="fe2-tabs">${tabs.map(tb => `<button type="button" data-tab="${esc(tb)}" class="${tb === FE2.tab ? 'on' : ''}">${esc(tb)}</button>`).join('')}</div>${subSeg}`;
@@ -819,27 +823,27 @@
       const grpShare = c => { const o = tabChs.filter(x => x.id !== c.id && x.actual_grp && x.actual_grp === c.actual_grp); return o.length ? `ค่าจริงชุดเดียวกับ ${o.map(short).join(', ')} เพราะ TikTok ไม่แยกว่าใครเป็นคน LIVE` : ''; };
       const cell = (col, r) => {
         const x = col.rows.find(y => keyOf(y.L) === r.k); if (!x) return '<td><span class="fe2-z">—</span></td>';
-        const L = x.L, fmt = v => x.isPct ? `${(+v * (L.kind === 'pct' ? 100 : 1)).toFixed(2)}%` : `${n2(v)} บาท`;
-        if (L.merged && L.use) return '<td><span class="fe2-z">รวมใน Commission</span></td>';
-        const main = fmt(L.rate);
-        const sub = L.use ? (L.extra ? 'ค่าจริง' : `ค่าจริง · ตั้งไว้ ${fmt(L.set)}`) : L.can && x.act != null && x.act !== 'merged' ? `ตั้งเอง · จริง ${x.isPct ? (+x.act).toFixed(2) + '%' : n2(x.act) + ' บาท'}` : 'ตั้งเอง';
-        return `<td><div class="fe2-cv">${main}</div><div class="fe2-cs">${sub}</div></td>`;
+        const L = x.L, fmt = v => x.isPct ? `${(+v * 100).toFixed(2)}%` : `${n2(v)} บาท`;
+        if (L.merged) return `<td><div class="fe2-cv fe2-z">รวมใน Commission</div><div class="fe2-cs">ตั้งไว้ ${fmt(L.set)}</div></td>`;
+        if (L.company) return `<td><div class="fe2-cv">${fmt(L.set)}</div><div class="fe2-cs">ตั้งไว้</div></td>`;
+        if (L.can) return `<td><div class="fe2-cv">${fmt(L.act)}</div><div class="fe2-cs">${L.extra ? 'ไม่ได้ตั้งไว้' : 'ตั้งไว้ ' + fmt(L.set)}</div></td>`;
+        return `<td><div class="fe2-cv">${fmt(L.set)}</div><div class="fe2-cs">ตั้งไว้ · ไม่มีค่าจริง</div></td>`;
       };
       const body = (title, list) => list.length ? `<tr class="fe2-g"><td colspan="${cols.length + 1}">${title}</td></tr>` + list.map(r => `<tr><td class="l">${esc(r.L.name)}${r.L.extra ? ' <span class="fe2-z">· ไม่ได้ตั้งไว้</span>' : ''}</td>${cols.map(col => cell(col, r)).join('')}</tr>`).join('') : '';
       const sumR = (l, f, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td>${cols.map(col => `<td>${f(col.S)}</td>`).join('')}</tr>`;
-      const tot = S => S.useCh + S.useCo;
-      el.innerHTML = top(`ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip)} · ตัวเลขในตาราง = ค่าที่ใช้คิดโปร`) + `
-        <div class="fe2-cards" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.map(col => `<div><div class="l">${esc(short(col.c))}</div><div class="v">${tot(col.S).toFixed(2)}%${perTxt(col.S.pUse)}</div><div class="s">TikTok หัก ${col.S.useCh.toFixed(2)}% · บริษัท ${col.S.useCo.toFixed(2)}%</div></div>`).join('')}</div>
+      const tot = S => S.useCh + S.useCo, two = (a, b) => `<div class="fe2-cv">${a}</div><div class="fe2-cs">${b}</div>`;
+      el.innerHTML = top(`ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip)} · ตัวเลขใหญ่ = ค่าจริง (ค่าใช้จ่ายบริษัท = ค่าที่ตั้งไว้) · ตัวเล็ก = ค่าที่ตั้งไว้`) + `
+        <div class="fe2-cards" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.map(col => `<div><div class="l">${esc(short(col.c))} · สูตรคิดโปรหัก</div><div class="v">${tot(col.S).toFixed(2)}%${perTxt(col.S.pUse)}</div><div class="s">TikTok หักจริง ${col.S.useCh.toFixed(2)}% · บริษัทตั้งไว้ ${col.S.useCo.toFixed(2)}%</div></div>`).join('')}</div>
         <div class="fe2-card"><div class="fe2-wide"><table class="fe2-t fe2-cmp"><thead><tr><th class="l">รายการ</th>${cols.map(col => { const g = col.g, sh = grpShare(col.c);
             return `<th><button type="button" class="fe2-colh" data-goch="${col.c.id}" data-tip="กดเพื่อดูรายละเอียด และแก้ค่าของประเภทนี้"><b>${esc(short(col.c))}</b><small>${g ? `${fe2fmt(g.orders)} ออเดอร์ · เฉลี่ย ${n2(g.aov)} บาท` : 'ยังไม่มีค่าจริง'}</small></button>${sh ? ' ' + info(sh) : ''}</th>`; }).join('')}</tr></thead><tbody>
           ${body('ค่าธรรมเนียมจากแพลตฟอร์ม · TikTok หักจริง', rowsAll.filter(r => !r.L.company))}
           ${body('ค่าใช้จ่ายของบริษัท · ตั้งเอง', rowsAll.filter(r => r.L.company))}
-          ${sumR('สรุป · ค่าธรรมเนียมช่องทาง', S => `${S.useCh.toFixed(2)}%${perTxt(S.pUse)}`, true)}
-          ${sumR('สรุป · ค่าใช้จ่ายบริษัท', S => `${S.useCo.toFixed(2)}%`)}
-          ${sumR('สรุป · หักรวมก่อนต้นทุนสินค้า', S => `${tot(S).toFixed(2)}%${perTxt(S.pUse)}`)}
-          ${sumR('เหลือไว้จ่ายต้นทุน + กำไร', S => `${(100 - tot(S)).toFixed(2)}%`)}
+          ${sumR('สรุป · ค่าธรรมเนียมช่องทาง', S => two(`${S.useCh.toFixed(2)}%${perTxt(S.pUse)}`, `ตั้งไว้ ${S.setCh.toFixed(2)}%${perTxt(S.pSet)}`), true)}
+          ${sumR('สรุป · ค่าใช้จ่ายบริษัท (ตั้งไว้)', S => `${S.useCo.toFixed(2)}%`)}
+          ${sumR('สูตรคิดโปรหัก (ก่อนต้นทุนสินค้า) ' + info('ค่าธรรมเนียมช่องทาง + ค่าใช้จ่ายบริษัท\nตัวเลขใหญ่ = ตอนคิดโปรเลือก "ค่าจริง" · ตัวเล็ก = เลือก "ค่าที่ตั้งไว้"\nเลือกได้ตอนจำลองโปร หรือดูคำขอโปร'), S => two(`${tot(S).toFixed(2)}%${perTxt(S.pUse)}`, `ค่าที่ตั้งไว้ ${(S.setCh + S.setCo).toFixed(2)}%${perTxt(S.pSet)}`))}
+          ${sumR('เหลือไว้จ่ายต้นทุน + กำไร', S => two(`${(100 - tot(S)).toFixed(2)}%`, `ค่าที่ตั้งไว้ ${(100 - S.setCh - S.setCo).toFixed(2)}%`))}
         </tbody></table></div>
-        <div class="fe2-note">กดชื่อประเภทบนหัวตาราง เพื่อดูค่าจริงเทียบค่าที่ตั้งไว้ และเลือกค่าที่ใช้คิดโปรทีละบรรทัด</div></div>`;
+        <div class="fe2-note">กดชื่อประเภทบนหัวตาราง เพื่อดูรายละเอียดและแก้ค่าที่ตั้งไว้ของประเภทนั้น</div></div>`;
       bindNav(); return;
     }
 
@@ -850,38 +854,33 @@
     const dif = (a, s) => a == null || s == null ? '<span class="fe2-z">—</span>' : Math.abs(a - s) < 0.05 ? `<span class="fe2-z">${a - s >= 0 ? '+' : ''}${(a - s).toFixed(2)}</span>` : `<span class="${a > s ? 'fe2-up' : 'fe2-dn'}">${a > s ? '+' : ''}${(a - s).toFixed(2)}</span>`;
     const rowHtml = x => {
       const L = x.L, act = x.act;
-      const input = L.extra ? '<span class="fe2-z">—</span>' : `<input class="fe2-in${L.use ? ' dim' : ''}" type="number" step="any" data-item="${L.item_id}" data-kind="${L.kind}" value="${x.isPct ? +(+L.set * 100).toFixed(4) : +L.set}"><span class="fe2-u">${x.isPct ? '%' : 'บาท'}</span>`;
+      const input = L.extra ? '<span class="fe2-z">—</span>' : `<input class="fe2-in" type="number" step="any" data-item="${L.item_id}" data-kind="${L.kind}" value="${x.isPct ? +(+L.set * 100).toFixed(4) : +L.set}"><span class="fe2-u">${x.isPct ? '%' : 'บาท'}</span>`;
       const actTxt = act === 'merged' ? '<span class="fe2-z">รวมใน Platform Commission</span>' : x.isPct ? pct(act) + (x.tip && act != null ? ` <span class="pr-i" data-tip="${esc(x.tip)}">ⓘ</span>` : '') : act == null ? '<span class="fe2-z">—</span>' : `${n2(act)} บาท`;
-      const useCell = L.can ? `<div class="pr-seg fe2-use" data-item="${L.item_id ?? ''}" data-key="${esc(L.key || '')}"><button type="button" data-v="1" aria-pressed="${!!L.use}">ค่าจริง</button><button type="button" data-v="0" aria-pressed="${!L.use}">ตั้งเอง</button></div>` : '<span class="fe2-z">ตั้งเอง</span>';
-      return `<tr><td class="l">${esc(L.name)}${L.extra ? ' <span class="fe2-z">· ไม่ได้ตั้งไว้</span>' : ''}</td><td>${actTxt}</td><td>${input}</td><td>${x.isPct && act !== 'merged' ? dif(act, x.setPct) : '<span class="fe2-z">—</span>'}</td><td>${useCell}</td></tr>`;
+      return `<tr><td class="l">${esc(L.name)}${L.extra ? ' <span class="fe2-z">· ไม่ได้ตั้งไว้</span>' : ''}</td><td>${actTxt}</td><td>${input}</td><td>${x.isPct && act !== 'merged' ? dif(act, x.setPct) : '<span class="fe2-z">—</span>'}</td></tr>`;
     };
     const rowsCh = rows.filter(x => !x.L.company).map(rowHtml), rowsCo = rows.filter(x => x.L.company).map(rowHtml);
-    const sumRow = (l, a, aPer, s, sPer, u, uPer, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td><td>${a == null ? '<span class="fe2-z">—</span>' : a.toFixed(2) + '%' + perTxt(aPer)}</td><td>${s.toFixed(2)}%${perTxt(sPer)}</td><td>${a == null ? '' : dif(a, s)}</td><td>${u.toFixed(2)}%${perTxt(uPer)}</td></tr>`;
+    const sumRow = (l, a, aPer, s, sPer, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td><td>${a == null ? '<span class="fe2-z">—</span>' : a.toFixed(2) + '%' + perTxt(aPer)}</td><td>${s.toFixed(2)}%${perTxt(sPer)}</td><td>${a == null ? '' : dif(a, s)}</td></tr>`;
+    const calcA = S.useCh + S.useCo, calcS = S.setCh + S.setCo, hasApi = rows.some(x => x.L.can);
+    const actTip = g ? 'ค่าธรรมเนียมจากช่องทาง = ที่แพลตฟอร์มหักจริง ÷ ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย) ของออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ชี้ ⓘ ในแต่ละบรรทัดเพื่อดูเป็นบาทต่อออเดอร์\nค่าใช้จ่ายของบริษัท = งบบัญชี ' + ctx.accRange + ' (ไว้ดูประกอบ)' : 'ตามงบบัญชี ' + ctx.accRange + ' (ช่องทางนี้ไม่มี API)';
     el.innerHTML = top(src) + `
-      <div class="fe2-cards"><div><div class="l">ค่าธรรมเนียมช่องทาง</div><div class="v">${S.actChV == null ? '—' : S.actChV.toFixed(2) + '%'}</div><div class="s">ค่าจริง · ตั้งไว้ ${S.setCh.toFixed(2)}%${perTxt(S.pSet)}</div></div>
-        <div><div class="l">ค่าใช้จ่ายบริษัท</div><div class="v">${S.actCo.toFixed(2)}%</div><div class="s">ค่าจริง · ตั้งไว้ ${S.setCo.toFixed(2)}%</div></div>
-        <div><div class="l">หักรวมก่อนต้นทุนสินค้า (ที่ใช้คิดโปร)</div><div class="v">${(S.useCh + S.useCo).toFixed(2)}%${perTxt(S.pUse)}</div><div class="s">เหลือ ${(100 - S.useCh - S.useCo).toFixed(2)}% ไว้จ่ายต้นทุน + กำไร</div></div></div>
+      <div class="fe2-cards"><div><div class="l">ค่าธรรมเนียมช่องทาง · ค่าจริง ${info('รวมทุกบรรทัดในกลุ่ม "ค่าธรรมเนียมจากช่องทาง" คอลัมน์ค่าจริง\n% = คิดจากราคาขาย · บาท = ค่าที่คิดเป็นบาทต่อออเดอร์')}</div><div class="v">${S.actChV == null ? '—' : S.actChV.toFixed(2) + '%' + perTxt(S.pAct)}</div><div class="s">ตั้งไว้ ${S.setCh.toFixed(2)}%${perTxt(S.pSet)}</div></div>
+        <div><div class="l">ค่าใช้จ่ายบริษัท · ค่าจริงตามงบบัญชี ${info('ค่า Ads ของช่องทางนี้ + ค่าบริหาร + Marketing ทั้งบริษัท ÷ ยอดขาย ตามงบบัญชี ' + ctx.accRange + '\nไว้ดูประกอบ · สูตรคิดโปรใช้ค่าที่ตั้งไว้เสมอ')}</div><div class="v">${S.actCo.toFixed(2)}%</div><div class="s">ตั้งไว้ ${S.setCo.toFixed(2)}%</div></div>
+        <div><div class="l">สูตรคิดโปรหัก (ก่อนต้นทุนสินค้า) ${info('= ค่าธรรมเนียมช่องทาง + ค่าใช้จ่ายบริษัท (ใช้ค่าที่ตั้งไว้เสมอ)\nเลือก "ค่าจริง" หรือ "ค่าที่ตั้งไว้" ได้ตอนจำลองโปร หรือดูคำขอโปร · เริ่มต้น = ค่าจริง\nเหลือ ' + (100 - (hasApi ? calcA : calcS)).toFixed(2) + '% ของราคาขาย ไว้จ่ายต้นทุนสินค้า + กำไร')}</div>${hasApi
+          ? `<div class="v">${calcA.toFixed(2)}%${perTxt(S.pUse)}</div><div class="s">เลือกค่าจริง · ถ้าเลือกค่าที่ตั้งไว้ ${calcS.toFixed(2)}%${perTxt(S.pSet)}</div>`
+          : `<div class="v">${calcS.toFixed(2)}%${perTxt(S.pSet)}</div><div class="s">ช่องทางนี้ไม่มี API ใช้ค่าที่ตั้งไว้เสมอ</div>`}</div></div>
       <div class="fe2-card"><div class="fe2-ch"><b>${esc(c.name)}</b></div>
-      <table class="fe2-t"><thead><tr><th class="l">รายการ</th><th>ค่าจริง</th><th>ตั้งไว้</th><th>ต่าง</th><th>ใช้คิดโปร ${info(useTip)}</th></tr></thead><tbody>
-        <tr class="fe2-g"><td colspan="5">ค่าธรรมเนียมจากช่องทาง</td></tr>${rowsCh.join('') || '<tr><td colspan="5" class="l fe2-z">ไม่มีรายการ</td></tr>'}
-        <tr class="fe2-g"><td colspan="5">ค่าใช้จ่ายของบริษัท · ตั้งเอง (ค่าจริงไว้ดูประกอบ)</td></tr>${rowsCo.join('') || '<tr><td colspan="5" class="l fe2-z">ไม่มีรายการ</td></tr>'}
-        ${sumRow('สรุป · ค่าธรรมเนียมช่องทาง', S.actChV, S.pAct, S.setCh, S.pSet, S.useCh, S.pUse, true)}
-        ${sumRow('สรุป · ค่าใช้จ่ายบริษัท', S.actCo, 0, S.setCo, 0, S.useCo, 0)}
-        ${sumRow('สรุป · หักรวมก่อนต้นทุนสินค้า', S.actChV == null ? null : S.actChV + S.actCo, S.pAct, S.setCh + S.setCo, S.pSet, S.useCh + S.useCo, S.pUse)}
+      <table class="fe2-t"><thead><tr><th class="l">รายการ</th><th>ค่าจริง ${info(actTip)}</th><th>ตั้งไว้ ${info('ตัวเลขที่ตั้งไว้ใช้คิดโปร แก้ได้เลย บันทึกเมื่อออกจากช่อง')}</th><th>ต่าง ${info('ค่าจริง − ตั้งไว้ (หน่วย %)')}</th></tr></thead><tbody>
+        <tr class="fe2-g"><td colspan="4">ค่าธรรมเนียมจากช่องทาง</td></tr>${rowsCh.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
+        <tr class="fe2-g"><td colspan="4">ค่าใช้จ่ายของบริษัท · ค่าจริงไว้ดูประกอบ</td></tr>${rowsCo.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
+        ${sumRow('สรุป · ค่าธรรมเนียมช่องทาง', S.actChV, S.pAct, S.setCh, S.pSet, true)}
+        ${sumRow('สรุป · ค่าใช้จ่ายบริษัท', S.actCo, 0, S.setCo, 0)}
+        ${sumRow('สรุป · ทั้งหมดก่อนต้นทุนสินค้า', S.actChV == null ? null : S.actChV + S.actCo, S.pAct, S.setCh + S.setCo, S.pSet)}
       </tbody></table>
       <div class="fe2-note">ต่าง: <span class="fe2-up">สีแดง</span> = ค่าจริงสูงกว่าที่ตั้ง (ถ้าคิดโปรด้วยค่าที่ตั้งไว้ กำไรจริงจะน้อยกว่าที่เห็น) · <span class="fe2-dn">สีเขียว</span> = ค่าจริงต่ำกว่า · แก้ตัวเลข "ตั้งไว้" ได้เลย บันทึกเมื่อออกจากช่อง</div></div>`;
     bindNav();
     el.querySelectorAll('.fe2-in').forEach(inp => inp.onchange = async () => {
       const raw = inp.value.trim(), item_id = +inp.dataset.item;
       if (await feeEdit({ op: 'value', item_id, channel_id: c.id, value: raw === '' ? '' : String(inp.dataset.kind === 'pct' ? +raw / 100 : +raw) })) renderFeeNew();
-    });
-    el.querySelectorAll('.fe2-use button').forEach(b => b.onclick = async () => {
-      if (b.getAttribute('aria-pressed') === 'true') return;
-      const box = b.closest('.fe2-use'), p = { channel_id: c.id, use_actual: b.dataset.v === '1' };
-      if (box.dataset.item) p.item_id = +box.dataset.item; else p.key = box.dataset.key;
-      box.querySelectorAll('button').forEach(x => { x.disabled = true; });
-      try { await rpc('fee_use_actual', { p }); toast('บันทึกแล้ว'); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
-      renderFeeNew();
     });
   }
   // แถวของช่องทาง 1 ช่อง: อัตราที่ใช้คิดโปรมาจากฐานข้อมูล (fee_rates) ชุดเดียวกับสูตรคิดโปร · ค่าจริงของค่าใช้จ่ายบริษัท / ช่องทางที่ไม่มี API = งบบัญชี (ไว้ดูประกอบ)
@@ -928,8 +927,7 @@
     #page-execfee .fe2-in::-webkit-outer-spin-button,#page-execfee .fe2-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
     #page-execfee .fe2-u{display:inline-block;width:30px;text-align:left;margin-left:5px;font-size:12px;color:var(--text3)}
     #page-execfee .fe2-up{color:#dc2626;font-weight:600} #page-execfee .fe2-dn{color:#16a34a} #page-execfee .fe2-z{color:var(--text3);font-weight:400}
-    #page-execfee .fe2-in.dim{opacity:.45} #page-execfee .fe2-in.dim:focus{opacity:1}
-    #page-execfee .fe2-use button{padding:3px 10px;font-size:11.5px} #page-execfee .fe2-use button:disabled{opacity:.5;cursor:default}
+    .pv-fm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;font-size:12px;color:var(--text2)} .pv-fm .pr-seg button{padding:4px 12px;font-size:12px}
     #page-execfee .fe2-wide{overflow-x:auto}
     #page-execfee table.fe2-cmp th{vertical-align:bottom;white-space:nowrap} #page-execfee table.fe2-cmp td{vertical-align:top}
     #page-execfee .fe2-colh{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:4px 6px;margin:-4px -6px;border-radius:6px;display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px}
