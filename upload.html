@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="config.js"></script>
-  <script src="auth.js"></script>
+  <script src="auth.js?v=20261102a"></script>
   <style>
     /* ===== Upload — โฉมใหม่ 2026-09-16 (คลาส/ id เดิมทั้งหมด ไม่แตะ JS) ===== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -503,10 +503,7 @@ const createClient = () => Auth.client   // ใช้ client ตัวเดี�
 
 await Auth.require('upload')   // ต้องล็อกอินและมีสิทธิ์อัปโหลด (ถ้าไม่ผ่านจะเด้งออกก่อนถึงบรรทัดถัดไป)
 
-const DB = createClient(
-  window.SUPABASE_URL || 'https://plfdizmjdmhyjqraohfv.supabase.co',
-  window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmRpem1qZG1oeWpxcmFvaGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NjAyNTMsImV4cCI6MjA1OTIzNjI1M30.j1IqHbPJPADLCMHl4Z78BSYX-g8cCECGHJmtBIi6hBA'
-)
+const DB = createClient()   // (2026-11-02) ใช้ตัวเชื่อมจาก auth.js (รหัสอยู่ใน config.js ที่เดียว)
 
 // ===== Retry ช่วย request ที่หลุดเพราะปัญหา network ชั่วคราว (เช่น TypeError: Failed to fetch จากแท็บถูก throttle / เน็ตสะดุด) =====
 // ใช้ห่อ query ของ Supabase ที่ยิงทีละแถวจำนวนมาก (settlement matching, promotion matching ฯลฯ)
