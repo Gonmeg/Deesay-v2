@@ -6,19 +6,23 @@
 * ฐานข้อมูล / ตัวดึงข้อมูล / ตารางสรุป อยู่ที่ Supabase project `plfdizmjdmhyjqraohfv` (งานฝั่งฐานข้อมูลทำในแชต claude.ai Project "Sales Analysis and marketing intelligence system" — repo นี้แก้เฉพาะหน้าเว็บ)
 * ผู้ดูแล: Meg (ตอบเป็นภาษาไทย อธิบายแบบเข้าใจง่าย ถ้าไม่แน่ใจให้ถามก่อน)
 
-## ไฟล์
+## ไฟล์ (อัปเดต 2026-11-02)
 
-* `dashboard.html` (~1 MB) หน้าหลักทุกหน้า · `upload.html` อัปไฟล์ · `admin.html` · `health.html` (Data Guard) · `login.html` / `auth.js` / `config.js`
-* โค้ดแยกที่โหลดตอนเปิดหน้า: `fbads.js` `supply.js` `skudeep.js` `ttcontent.js` `ttapi.js` — ชื่อไฟล์ตัวพิมพ์เล็กทั้งหมด (GitHub Pages แยกตัวพิมพ์เล็ก-ใหญ่)
-* ทุกครั้งที่แก้ไฟล์ .js เหล่านี้ ต้องเปลี่ยนเลข `?v=YYYYMMDDx` ตรงที่ `dashboard.html` โหลดไฟล์นั้นด้วย (กันเบราว์เซอร์ใช้ของเก่า)
-* ทุกครั้งที่แก้ `dashboard.html` ให้ขยับ `buildTag` (เช่น v2026.10.06-d → v2026.10.06-e / วันใหม่เริ่ม -a)
+* `dashboard.html` (~1 MB) หน้าหลัก รวมหลายหน้าไว้ในไฟล์เดียว (กำลังทยอยแยกโค้ดแต่ละหน้าออกเป็นไฟล์ .js) · `exec.html` = เปิด dashboard โหมดผู้บริหาร (`?app=exec`)
+* หน้าอื่น: `upload.html` อัปไฟล์ · `admin.html` · `health.html` (สถานะระบบ / Data Guard) · `login.html` · `shopee-callback.html` (รับรหัสเชื่อมร้าน Shopee) · `index.html` = พาไป dashboard
+* ส่วนกลาง: `ui.css` (สี ฟอนต์ ชิ้นส่วนกลาง ทุกหน้าใช้) · `ui.js` (tooltip ⓘ ปฏิทิน กล่องยืนยัน ตัวเลขพอดีการ์ด) · `sidebar.js` (เมนูซ้าย) · `auth.js` (ล็อกอิน + สิทธิ์ + `Auth.rpc`) · `config.js` (URL + anon key ของ Supabase เท่านั้น)
+* โค้ดแยกรายหน้า (โหลดตอนเปิดหน้านั้น): `sales.js` ภาพรวมยอดขาย · `kpi.js` `kpisales.js` `admtargets.js` เป้าหมาย KPI · `fbads.js` Facebook Ads · `ttapi.js` `ttcontent.js` TikTok · `shsys.js` Shopee · `supply.js` Supply Chain · `skudeep.js` เจาะสินค้า · `products.js` สินค้า & ราคา · `promo.js` Promotion + ค่าธรรมเนียมช่องทาง · `ordprofit.js` กำไรต่อคำสั่งซื้อ · `bizinsight.js` Business Insight · `invvalue.js` มูลค่าสินค้าคงคลัง
+* ชื่อไฟล์ตัวพิมพ์เล็กทั้งหมด (GitHub Pages แยกตัวพิมพ์เล็ก-ใหญ่)
+* ทุกครั้งที่แก้ไฟล์ .js / .css ต้องเปลี่ยนเลข `?v=YYYYMMDDx` ทุกหน้าที่โหลดไฟล์นั้น (กันเบราว์เซอร์ใช้ของเก่า) — `ui.css` โหลดใน dashboard / admin / health / upload · `auth.js` โหลดใน dashboard / admin / health / upload / login
+* ทุกครั้งที่แก้ `dashboard.html` ให้ขยับ `data-build` (เช่น v2026.11.02-e → v2026.11.02-f / วันใหม่เริ่ม -a)
+* ไลบรารีภายนอกล็อกเลขเวอร์ชันเสมอ (Chart.js 4.4.1 · supabase-js 2.118.0 · xlsx 0.18.5) ห้ามใช้แบบ @latest / @2
 
 ## การส่งงาน
 
 * แก้เฉพาะที่ถูกขอ ไม่แก้อย่างอื่นเพิ่มเอง
 * ก่อน push ตรวจว่า script ใน HTML ไม่มี syntax error (`node -e` แยก `<script>` แล้ว `new vm.Script`)
 * commit message ภาษาไทยหรืออังกฤษสั้นๆ บอกว่าแก้อะไร แล้ว push ขึ้น `main` (ถ้า push ตรงไม่ได้ให้เปิด Pull Request)
-* ห้ามแก้ `config.js` (รหัสผ่านในไฟล์นี้จะย้ายไป Supabase Auth ทีหลังพร้อมเปิด RLS — ทำพร้อมกันทั้งฐานข้อมูลและหน้าเว็บ)
+* `config.js` มีแค่ URL + anon key (เปิดเผยได้ ความปลอดภัยอยู่ที่ RLS + สิทธิ์ใน Supabase) · ล็อกอินใช้ Supabase Auth แล้ว · ห้ามใส่ service role key หรือรหัสลับใด ๆ ในไฟล์ของ repo นี้
 
 ## กฎหน้าเว็บ (ใช้ทุกหน้า)
 
@@ -34,6 +38,11 @@
 * ตัวแทน และ Modern Trade ไม่นับใน AOV / ราคาเฉลี่ยต่อชิ้น / การวิเคราะห์ Promotion
 * dropdown ใช้หน้าตาแบบ dropdown สถานะในหน้า Supply Chain
 * ชื่อครีเอเตอร์: username TikTok เป็นหลัก ชื่อแสดงตัวเล็กข้างๆ
+* แก้หน้าตาต้องส่งรูปหน้าจริงให้เมฆดูก่อน อนุมัติแล้วค่อยส่งไฟล์ (ห้ามส่งไฟล์พร้อมรูป) · ต้องทำทั้งโหมดมืดและโหมดสว่าง
+* ไม่ใช้สัญลักษณ์ ฿ กับตัวเลขเงิน · ตัวเลขที่กดดูที่มาได้มีเส้นประใต้ · tooltip / ⓘ ทุกหน้าเปิดตอนชี้เมาส์ หน้าตาเดียวกัน
+* (2026-11-02) หน้าตาใหม่แบบ C (หน้าแรกเป็นต้นแบบ): กล่อง = พื้น `--bg2` + เงา `--sh` (โหมดสว่างไม่มีเส้นขอบ) · แถบสรุปบนสุดขอบไล่สี `--hero` / `--hero-line` · ป้ายเทียบ `.ui-chip.up/.dn` (เขียวดี แดงไม่ดี เทาเปลี่ยน < 3%) · หัวกลุ่มในตาราง `tr.ui-grp` (`.good` เขียว / `.bad` แดง / ไม่มี class = สีปกติ) · แถวรวม `tr.ui-sum` หรือ `tfoot` = เส้นเข้มด้านบน + ตัวหนา · กล่องเรื่องที่ต้องดู `.ui-alertbox` (แถบแดง→เหลืองซ้าย) · กล่องในแถวเดียวกันสูงเท่ากัน
+* สีเขียว / แดงใช้เฉพาะเมื่อหมายถึงดี / ไม่ดี · ป้ายเทียบยอดขายนับเฉพาะออนไลน์ (ไม่นับตัวแทน / Modern Trade ที่สั่งเป็นก้อน)
+* ทุกครั้งที่ส่งงานให้ลง `release_notes` ตามกฎ (หน้า / ปุ่ม / วิธีใช้ใหม่ = is_major true · เปลี่ยนสูตร = false · แก้บั๊ก / หน้าตา = ไม่ต้องลง)
 
 ## ข้อมูลที่เลิกใช้แล้ว ห้ามอ้างถึง
 
