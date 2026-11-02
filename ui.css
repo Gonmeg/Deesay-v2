@@ -1,4 +1,4 @@
-/* ui.css — หน้าตากลางของ Deesay-v2 (ใช้ร่วมกันทุกหน้า: dashboard / upload / admin / health)
+/* ui.css (v20261102a: หน้าตาใหม่แบบ C — สีพื้นอมน้ำเงิน · กล่องลอย · แถวรวมเส้นเข้ม · หัวกลุ่ม · ป้ายเทียบ) — หน้าตากลางของ Deesay-v2 (ใช้ร่วมกันทุกหน้า: dashboard / upload / admin / health)
    โหลดหลัง <style> ของแต่ละหน้า:  <link rel="stylesheet" href="ui.css?v=20261007a">
    ชั้น 1 = สี + ฟอนต์ (มีผลทุกหน้าทันที ไม่เปลี่ยนขนาด/ระยะ จึงไม่ขยับ layout ของหน้าที่ยังไม่ได้ปรับ)
    ชั้น 2 = ชิ้นส่วนใหม่ .ui-*  (ใช้ตอนปรับแต่ละหน้า)
@@ -7,15 +7,23 @@
 
 /* ───────── ชั้น 1: สี ───────── */
 :root {
-  --bg: #0F1014; --bg2: #17181E; --bg3: #20222A;
-  --border: #2C2E38; --row-border: rgba(255,255,255,.06);
-  --text: #ECEDF2; --text2: #A7AAB7; --text3: #6F7382;
+  --bg: #121820; --bg2: #19212C; --bg3: #202A37;   /* (2026-11-02) หน้าตาใหม่แบบ C: เทาอมน้ำเงิน มีชั้นชัด */
+  --border: #28323F; --row-border: rgba(255,255,255,.06);
+  --text: #E9EEF4; --text2: #9BA7B6; --text3: #6B7789;
   --accent: #D4B072; --accent2: #E6C88E; --accent-ink: #1B1408; --accent-text: #D9B678;
   --accent-soft: rgba(212,176,114,.14);
-  --green: #4ADE80; --red: #F87171; --blue: #60A5FA; --purple: #A78BFA; --orange: #FB923C; --pink: #F472B6; --cyan: #22D3EE;
-  --good: var(--green); --bad: var(--red); --warn: #FBBF24;
+  --green: #45D09A; --red: #FF7A6E; --blue: #60A5FA; --purple: #A78BFA; --orange: #FB923C; --pink: #F472B6; --cyan: #22D3EE;
+  --good: var(--green); --bad: var(--red); --warn: #F2B84B;
   --grid: rgba(255,255,255,.06);
   --shadow-pop: 0 14px 34px rgba(0,0,0,.5);
+  /* (2026-11-02) มิติ: พื้นหน้ามีแสงจากด้านบน · กล่องลอย (เงา 2 ชั้น) · แถบสรุปขอบไล่สีเงิน-ฟ้า · ป้ายเทียบสีเขียว/แดง */
+  --pg: radial-gradient(1200px 520px at 30% -120px, #1B2633 0%, rgba(18,24,32,0) 70%), #121820;
+  --sh: 0 1px 0 rgba(255,255,255,.05) inset, 0 14px 32px -14px rgba(0,0,0,.75);
+  --panel-line: var(--border);
+  --hero: linear-gradient(180deg, #1E2835, #19212C); --hero-line: linear-gradient(115deg, #3E5069, #93ACCF 32%, #3E5069 58%, #6F86A8);
+  --alert-edge: linear-gradient(180deg, var(--red), var(--warn));
+  --up-bg: rgba(69,208,154,.13); --dn-bg: rgba(255,122,110,.13); --warn-bg: rgba(242,184,75,.14);
+  --tot-line: #7F8B9B;   /* แถวรวม: เส้นเข้มด้านบน (แบบบรรทัดรวมในงบ / ชีท) */
   /* สีประจำช่องทาง — ใช้สีเดียวกันทุกกราฟ ทุกหน้า */
   /* TikTok ใช้สี CI จริง: Cyan #25F4EE · Red #FE2C55 · Black — โหมดมืดเส้นเป็น Cyan, โหมดสว่างเส้นเป็นดำ (Cyan บนพื้นขาวจะจางจนมองไม่เห็น) */
   --tt-cyan: #25F4EE; --tt-red: #FE2C55; --tt-ink: #000000;
@@ -33,15 +41,22 @@
   --font-code: 'IBM Plex Mono', ui-monospace, monospace;
 }
 body.light-theme, .ui-light {
-  --bg: #F3F4F6; --bg2: #FFFFFF; --bg3: #F1F2F5;
-  --border: #E2E4E9; --row-border: #EEF0F3;
-  --text: #15171E; --text2: #4C5160; --text3: #858A98;
+  --bg: #ECEFF4; --bg2: #FFFFFF; --bg3: #F2F4F7;   /* (2026-11-02) พื้นเทาอมฟ้าเข้มขึ้นนิด ให้กล่องขาวลอยเป็นชั้น */
+  --border: #E1E5EB; --row-border: #EDF0F4;
+  --text: #18222F; --text2: #5A6576; --text3: #8D97A6;
   --accent: #B8893A; --accent2: #A57A30; --accent-ink: #1B1408; --accent-text: #8A6320;
   --accent-soft: rgba(184,137,58,.15);
-  --green: #12833F; --red: #D02F2F; --blue: #2563EB; --purple: #7C3AED; --orange: #EA580C; --pink: #DB2777; --cyan: #0891B2;
-  --good: var(--green); --bad: var(--red); --warn: #B7791F;
+  --green: #0E7A45; --red: #CC2F36; --blue: #2563EB; --purple: #7C3AED; --orange: #EA580C; --pink: #DB2777; --cyan: #0891B2;
+  --good: var(--green); --bad: var(--red); --warn: #C9690A;
   --grid: rgba(15,23,42,.06);
   --shadow-pop: 0 12px 28px rgba(15,23,42,.14);
+  --pg: radial-gradient(1200px 520px at 30% -140px, #DCE4EF 0%, rgba(236,239,244,0) 70%), #ECEFF4;
+  --sh: 0 1px 2px rgba(24,34,47,.06), 0 16px 34px -18px rgba(24,34,47,.30);
+  --panel-line: transparent;   /* โหมดสว่าง: กล่องไม่มีเส้นขอบ ใช้เงาแทน */
+  --hero: linear-gradient(180deg, #FFFFFF, #F7F9FC); --hero-line: linear-gradient(115deg, #C9D3E2, #7F95B8 32%, #C9D3E2 58%, #9DAECA);
+  --up-bg: #DCF1E5; --dn-bg: #FBE1E2; --warn-bg: #FCEBD9;
+  --alert-edge: linear-gradient(180deg, #CC2F36, #C9690A);
+  --tot-line: #3A4555;
   --row-sum: #EAF0F8; --row-sum-line: #C9D5E6;   /* (2026-10-20) แถวสรุป / แถวรวม: ฟ้าเทาอ่อน (เดิมเทา กลืนกับพื้นหลังในธีมขาว) */
   /* (2026-10-19) สีช่องทางชุดเดียวทั้งเว็บ: TikTok / Facebook / Shopee / Lazada = สี CI ของแบรนด์ (Lazada = ชมพูจากโลโก้หัวใจ) · ตัวแทน = เขียวอมฟ้า · Modern Trade = ม่วง */
   --ch-shopee: #EE4D2D; --ch-tiktok: var(--tt-ink); --ch-facebook: #1877F2; --ch-lazada: #F0168C;
@@ -49,7 +64,7 @@ body.light-theme, .ui-light {
 }
 
 /* ───────── ชั้น 1: ฟอนต์ (กฎเมฆ: Sarabun ทุกอย่าง · IBM Plex Mono เฉพาะรหัส) ───────── */
-body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font); background: var(--pg, var(--bg)); color: var(--text); -webkit-font-smoothing: antialiased; }
 /* upload / admin / health ใช้ชื่อสีชุดเก่า (--surface, --muted …) → ชี้มาที่สีชุดเดียวกัน */
 :root, body.light-theme {
   --surface: var(--bg2); --surface2: var(--bg3); --muted: var(--text2); --muted2: var(--text3); --on-accent: var(--accent-ink);
@@ -260,7 +275,7 @@ th { font-family: var(--font) !important; letter-spacing: 0 !important; text-tra
 
 /* ===== (2026-10-15) หน้าตาเดียวกันทั้งเว็บ — ปรับส่วนประกอบของหน้าเดิมให้เข้าชุดกับหน้าใหม่ (แนว Seller Centre) =====
    ใช้ body นำหน้าเพื่อให้ชนะสไตล์เดิมในแต่ละหน้า โดยไม่ต้องแก้โครงหน้า · ตัวเลขใช้ฟอนต์เดียวกับข้อความ (เลขกว้างเท่ากัน อ่านง่าย) */
-body .card { border-radius: 12px; padding: 18px 20px; }
+body .card { border-radius: 12px; padding: 18px 20px; border-color: var(--panel-line); box-shadow: var(--sh); }   /* (2026-11-02) กล่องลอย */
 body .card-title { font-family: 'Sarabun', sans-serif; text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 500; color: var(--text3); margin-bottom: 8px; }
 body .kpi-value { font-family: 'Sarabun', sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; font-weight: 700; }
 body .section-title { font-weight: 700; font-size: 14.5px; }
@@ -271,7 +286,18 @@ body .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
 body .empty { font-size: 13px; color: var(--text3); }
 
 /* (2026-10-20) แถวสรุป / แถวรวมทุกตาราง: ใส่ class="ui-sum" ที่ <tr> */
-tr.ui-sum > td, tr.ui-sum > th { background: var(--row-sum); border-top: 1px solid var(--row-sum-line); font-weight: 700; color: var(--text); }
+tr.ui-sum > td, tr.ui-sum > th { background: transparent; box-shadow: inset 0 2px 0 var(--tot-line); border-top: 0; font-weight: 700; color: var(--text); }   /* (2026-11-02) เส้นเข้มด้านบน + ตัวหนา แทนพื้นฟ้าเทา */
+.ui-table tfoot td { box-shadow: inset 0 2px 0 var(--tot-line); border-top: 0; }
+/* (2026-11-02) หัวกลุ่มในตาราง: แถบซ้าย + ตัวหนา · .good = เขียว · .bad = แดง · ไม่มี class = สีปกติ (ไม่มีความหมายดี/ร้าย) */
+tr.ui-grp > td { background: var(--grp-bg, transparent); font-size: 12.5px; font-weight: 700; color: var(--grp, var(--text)); padding: 9px 10px 6px 12px; text-align: left;
+  box-shadow: inset 3px 0 0 var(--grp, var(--text3)); border-bottom: 1px solid var(--row-border); white-space: normal; }
+tr.ui-grp.good > td { --grp: var(--good); --grp-bg: var(--up-bg); } tr.ui-grp.bad > td { --grp: var(--bad); --grp-bg: var(--dn-bg); }
+tr.ui-grp:hover > td { background: var(--grp-bg, transparent) !important; }
+/* (2026-11-02) ป้ายเทียบ: เขียว = ดี · แดง = ไม่ดี · เทา = เปลี่ยนน้อย */
+.ui-chip { display: inline-block; padding: 1px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; background: var(--bg3); color: var(--text3); }
+.ui-chip.up { background: var(--up-bg); color: var(--good); } .ui-chip.dn { background: var(--dn-bg); color: var(--bad); }
+/* (2026-11-02) กล่องเรื่องที่ต้องดู: แถบไล่สีแดง→เหลืองด้านซ้าย */
+.ui-alertbox { position: relative; overflow: hidden; } .ui-alertbox::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--alert-edge); }
 
 /* (2026-10-20) กล่องยืนยัน / แจ้งเตือน ของเว็บเอง (uiConfirm / uiAlert / uiPrompt ใน ui.js) */
 .ui-dlg-bg { position: fixed; inset: 0; z-index: 9000; background: rgba(15,16,20,.38); backdrop-filter: blur(1.5px); display: flex; align-items: flex-start; justify-content: center; padding: 14vh 16px 16px; animation: uiDlgIn .12s ease-out; }
