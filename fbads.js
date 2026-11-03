@@ -427,7 +427,7 @@
   }
   // (2026-10-15 v2) แผงที่มาของตัวเลข: แสดงเฉพาะตัวเลขที่กด · Ads มีรูปปก (ชี้แล้วเห็นใหญ่) · ข้อความยาวขึ้นบรรทัดใหม่
   const W1 = 'style="white-space:normal;line-height:1.4;"';
-  const thumbHtml = u => u ? `<img src="${ttcEscAttr(u)}" data-tip-img="${ttcEscAttr(u)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:var(--bg3);" onerror="this.style.visibility='hidden'">` : '<span style="width:36px;height:36px;border-radius:6px;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;">📘</span>';
+  const thumbHtml = u => u ? `<img loading="lazy" decoding="async" src="${ttcEscAttr(u)}" data-tip-img="${ttcEscAttr(u)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:var(--bg3);" onerror="this.style.visibility='hidden'">` : '<span style="width:36px;height:36px;border-radius:6px;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;">📘</span>';
   const adCell = (name, sub, u) => `<div style="display:flex;gap:10px;align-items:center;">${thumbHtml(u)}<div style="min-width:0;white-space:normal;line-height:1.35;">${ttcEsc(name || '')}<div style="font-size:11px;color:var(--text3);">${ttcEsc(sub || '')}</div></div></div>`;
   async function openDayTrace(day, key) {
     trOpenShell('ที่มาของตัวเลข');
@@ -605,7 +605,7 @@
     document.getElementById('fba-ads-count').textContent = `(${fmt(rows.length)})`;
     document.getElementById('tbodyFbaAds').innerHTML = rows.map(a => {
       const link = postUrl(a.post_id);
-      const thumb = a.thumbnail_url ? `<img src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<span title=&quot;รูปปกโหลดไม่ได้ (Meta ยังไม่ส่งรูปใหม่)&quot;>📘</span>'">` : '📘';
+      const thumb = a.thumbnail_url ? `<img loading="lazy" decoding="async" src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<span title=&quot;รูปปกโหลดไม่ได้ (Meta ยังไม่ส่งรูปใหม่)&quot;>📘</span>'">` : '📘';
       return `<tr><td><div style="display:flex;align-items:center;gap:8px;"><a ${link ? `href="${ttcEscAttr(link)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${thumb}</a>
         <div style="font-size:10.5px;color:var(--text3);line-height:1.3;"><div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:${a.bucket === 'Conversion' ? 'rgba(34,197,94,0.15)' : a.bucket === 'CPAS' ? 'rgba(96,165,250,0.15)' : 'rgba(167,139,250,0.15)'};color:${a.bucket === 'Conversion' ? 'var(--green)' : a.bucket === 'CPAS' ? '#60a5fa' : '#a78bfa'};">${ttcEsc(a.bucket || '—')}</div>${a.page_name ? `<div style="color:var(--text2);">${ttcEsc(a.page_name)}</div>` : ''}</div></div></td>
         <td style="font-size:11.5px;white-space:nowrap;">${kolCell(a)}</td>
