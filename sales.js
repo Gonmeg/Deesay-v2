@@ -58,7 +58,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
 .ov .ui-metrics .ui-metric:last-child{box-shadow:none;border-radius:0 12px 12px 0}.ov .ui-metrics .ui-metric:first-child{border-radius:12px 0 0 12px}.ov .ui-metrics .ui-metric:first-child::before{border-top-left-radius:12px}
 .ov .ui-metrics .ui-metric:hover{background:color-mix(in srgb,var(--bg3) 55%,transparent)}
 .ov .ui-metrics .ui-metric-v{font-size:clamp(22px,2vw,30px)}
-.ov .ui-metric-d{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12.5px;color:var(--text3);white-space:nowrap;overflow:hidden}
+.ov .ui-metric-d{display:flex;align-items:center;gap:4px 8px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:var(--text3)}
 .ov-sk .ui-metric-v{color:var(--text3);opacity:.5}
 .ov .ui-metric-d .badge-up,.ov .ui-metric-d .badge-down{font-size:12px;font-weight:600}
 .ov-card{background:var(--bg2);border:1px solid var(--panel-line,var(--border));border-radius:var(--r-md,12px);padding:16px 18px;box-shadow:var(--sh,none)}
