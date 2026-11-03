@@ -18,7 +18,8 @@
 
   // ⓘ แบบเดียวกับทั้งเว็บ
   const info = (id, html) => `<span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('${id}')" aria-label="ดูคำอธิบายเพิ่มเติม" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">${html}</div></span>`;
-  const kpi = (title, value, sub, tip) => `<div class="card" style="flex:1;min-width:150px;"><div class="card-title">${title}${tip ? ' ' + tip : ''}</div><div class="kpi-value" style="font-family:'Sarabun',sans-serif;">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ''}</div>`;
+  // (2026-11-03) หน้าตาแบบ C: ช่องตัวเลขในแถบเดียว (ui-metric) แทนการ์ดแยก
+  const kpi = (title, value, sub, tip) => `<div class="ui-metric is-static"><span class="ui-metric-l">${title}${tip ? ' ' + tip : ''}</span><span class="ui-metric-v" data-fit>${value}</span><span class="sa-md"><span>${sub || '&nbsp;'}</span></span></div>`;
   const loading = cols => `<tr><td colspan="${cols}">${typeof skeletonRows === 'function' ? '' : 'กำลังโหลด...'}</td></tr>`;
   function box(pageId, id, beforeId) {
     let el = document.getElementById(id);
@@ -50,11 +51,12 @@
     const el = box('page-tthub', 'ttapi-traffic', document.getElementById('ttPromoDiv') ? 'ttPromoDiv' : 'tblTopSKUTt'); if (!el || !from || !to) return;   // (2026-10-20) วางก่อนหัวข้อ Promotion / SKU (เดิมไปแทรกใต้หัวข้อ)
     const seq = ++_trSeq;
     el.innerHTML = `
-      <div class="section-divider"><span>📈 TikTok Shop Traffic ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน · TikTok ให้ข้อมูลย้อนหลังได้ถึง 10 เม.ย. 69<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า · <b>CTR</b> = เข้าชม ÷ Impression<br>GMV แยกช่องทางดูที่มุมมอง "GMV ตาม TikTok" ด้านบน')} <span id="ttapi-tr-note" style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:normal;"></span></span></div>
-      <div id="ttapi-tr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
+      <div class="sa-ph" style="margin:6px 0 10px;"><h2>ทราฟฟิกร้าน TikTok <span class="sa-scope">ตัวเลขที่ TikTok นับ</span> ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน · TikTok ให้ข้อมูลย้อนหลังได้ถึง 10 เม.ย. 69<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า · <b>CTR</b> = เข้าชม ÷ Impression<br>GMV แยกช่องทางดูที่มุมมอง "GMV ตาม TikTok" ด้านบน')} <span id="ttapi-tr-note" class="sa-note"></span></h2></div>
+      <section class="ui-metrics sa-strip2" id="ttapi-tr-kpis" style="margin-bottom:16px;grid-template-columns:repeat(4, minmax(0, 1fr)) !important;">${['Impression สินค้า', 'เข้าชมหน้าสินค้า', 'ออเดอร์', 'คืนเงิน'].map(l => kpi(l, '—', '')).join('')}</section>
+      <div id="ttapi-tr-src" style="display:none;"></div>
       <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ผลงานรายรอบ Live ${info('ttapi-live-info', 'รอบ Live ที่ขายสินค้าของร้าน จาก TikTok Shop Analytics · เรียงจากรอบล่าสุด<br><b>CTR</b> = คลิกสินค้า ÷ การแสดงสินค้าใน Live · <b>คลิก→สั่ง</b> = สั่งซื้อ ÷ คลิกสินค้า · <b>ดูเฉลี่ย</b> = วินาทีต่อคนดู')}</div>
         <div class="toggle-group" id="ttapi-live-scope"><button class="toggle-btn ${_liveScope === 'own' ? 'active' : ''}" onclick="ttApi.setLiveScope('own')">บัญชีร้าน</button><button class="toggle-btn ${_liveScope === 'all' ? 'active' : ''}" onclick="ttApi.setLiveScope('all')">ทุกบัญชี</button></div></div>
-        <div class="table-wrap"><table><thead><tr><th>วันเวลา</th><th>บัญชี</th><th>นาน</th><th>GMV</th><th>คนซื้อ</th><th>ชิ้น</th><th>คนดู</th><th>คลิกสินค้า</th><th>CTR</th><th>คลิก→สั่ง</th><th>ดูเฉลี่ย</th><th>ผู้ติดตามใหม่</th></tr></thead><tbody id="ttapi-live-body"><tr><td colspan="12" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-live-pager"></div></div>`;
+        <div class="table-wrap"><table><thead><tr><th>วันเวลา</th><th>บัญชี</th><th>นาน</th><th>GMV</th><th>GMV / ชม.</th><th>คนซื้อ</th><th>ชิ้น</th><th>คนดู</th><th>คลิกสินค้า</th><th>CTR</th><th>คลิก→สั่ง</th><th>ดูเฉลี่ย</th><th>ผู้ติดตามใหม่</th></tr></thead><tbody id="ttapi-live-body"><tr><td colspan="13" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-live-pager"></div></div>`;
     try {
       const [rows, lives] = await Promise.all([supaRpc('tiktok_traffic_daily', { p_from: from, p_to: to }, true), supaRpc('tiktok_lives_list', { p_from: from, p_to: to, p_user: _liveScope === 'own' ? 'deesaythailand' : null, p_limit: 500 }, true)]);
       if (seq !== _trSeq) return;
@@ -64,15 +66,24 @@
       const last = rows.length ? rows[rows.length - 1].date : null, first = rows.length ? rows[0].date : null;
       const nt = document.getElementById('ttapi-tr-note'); if (nt) nt.textContent = first && first > from ? '· ข้อมูลเริ่ม ' + new Date(first + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '';
       document.getElementById('ttapi-tr-kpis').innerHTML =
-        kpi('Impression สินค้า', fmt(impr), last ? 'ข้อมูลถึง ' + last : '') +
+        kpi('Impression สินค้า', fmt(impr), last ? 'ข้อมูลถึง ' + new Date(last + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '') +
         kpi('เข้าชมหน้าสินค้า', fmt(pv), 'CTR ' + pctTxt(pv, impr, 2)) +
         kpi('ออเดอร์', fmt(T.orders), 'ต่อการเข้าชม ' + pctTxt(T.orders, pv)) +
         kpi('คืนเงิน', baht(T.refunds), pctTxt(T.refunds, T.gmv) + ' ของ GMV');
+      // (2026-11-03) แยกแหล่ง: เห็นว่าแหล่งไหนพาคนเข้าหน้าสินค้า / ขายได้
+      const srcEl = document.getElementById('ttapi-tr-src');
+      if (srcEl) { const g = SRC.reduce((a, s) => a + T['gmv_' + s.k], 0);
+        srcEl.style.display = ''; srcEl.className = 'card sa-panel'; srcEl.style.marginBottom = '16px';
+        srcEl.innerHTML = `<div class="sa-ph"><h2>ทราฟฟิกแยกแหล่ง ${info('ttapi-src-info', 'คนเห็นสินค้า (Impression) → เปิดหน้าสินค้า → GMV แยกตามแหล่งที่ลูกค้ามาเจอสินค้า · ตัวเลขที่ TikTok นับ (GMV ก่อนหักยกเลิก / คืน)')}</h2></div>
+          <table class="ui-table sa-tbl" style="width:100%;" data-no-sort data-no-page><thead><tr><th class="l">แหล่ง</th><th class="num">Impression</th><th class="num">เข้าชมหน้าสินค้า</th><th class="num">CTR</th><th class="num">GMV (TikTok)</th><th class="l">สัดส่วน GMV</th></tr></thead>
+          <tbody>${SRC.map(s => { const im = T['impr_' + s.k], pv = T['pv_' + s.k], gv = T['gmv_' + s.k], sh = g ? gv / g * 100 : 0;
+            return `<tr><td class="l"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;background:${s.color};"></span>${s.label}</td><td class="num">${fmt(im)}</td><td class="num">${fmt(pv)}</td><td class="num">${pctTxt(pv, im, 2)}</td><td class="num">${baht(gv)}</td><td class="l"><span class="sa-bar"><b style="width:${sh.toFixed(1)}%;background:${s.color};"></b></span>${sh.toFixed(0)}%</td></tr>`; }).join('')}</tbody>
+          <tfoot><tr><td class="l">รวม</td><td class="num">${fmt(impr)}</td><td class="num">${fmt(pv)}</td><td class="num">${pctTxt(pv, impr, 2)}</td><td class="num">${baht(g)}</td><td class="l">100%</td></tr></tfoot></table>`; }
       const liveRow = r => {
         const d = new Date(r.start_time), when = isNaN(d) ? '—' : d.toLocaleString('th-TH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
-        return `<tr><td style="white-space:nowrap;">${when}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">@${esc(r.username)}</td><td>${r.minutes != null ? fmt(r.minutes) + ' น.' : '—'}</td><td>${baht(r.gmv)}</td><td>${fmt(r.customers)}</td><td>${fmt(r.items_sold)}</td><td>${fmt(r.viewers)}</td><td>${fmt(r.product_clicks)}</td><td>${r.ctr != null ? num(r.ctr).toFixed(2) + '%' : '—'}</td><td>${r.click_to_order != null ? num(r.click_to_order).toFixed(2) + '%' : '—'}</td><td>${r.avg_watch_s != null ? fmt(r.avg_watch_s) + ' วิ' : '—'}</td><td>${fmt(r.new_followers)}</td></tr>`;
+        return `<tr><td style="white-space:nowrap;">${when}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">@${esc(r.username)}</td><td>${r.minutes != null ? fmt(r.minutes) + ' น.' : '—'}</td><td>${baht(r.gmv)}</td><td>${r.minutes > 0 ? baht(num(r.gmv) / r.minutes * 60) : '—'}</td><td>${fmt(r.customers)}</td><td>${fmt(r.items_sold)}</td><td>${fmt(r.viewers)}</td><td>${fmt(r.product_clicks)}</td><td>${r.ctr != null ? num(r.ctr).toFixed(2) + '%' : '—'}</td><td>${r.click_to_order != null ? num(r.click_to_order).toFixed(2) + '%' : '—'}</td><td>${r.avg_watch_s != null ? fmt(r.avg_watch_s) + ' วิ' : '—'}</td><td>${fmt(r.new_followers)}</td></tr>`;
       };
-      pagedTable('ttapi-live', (lives || []).slice().sort((a, b) => String(b.start_time).localeCompare(String(a.start_time))), liveRow, 12);   // (2026-10-21) รอบล่าสุดก่อน
+      pagedTable('ttapi-live', (lives || []).slice().sort((a, b) => String(b.start_time).localeCompare(String(a.start_time))), liveRow, 13);   // (2026-10-21) รอบล่าสุดก่อน
     } catch (e) {
       if (seq === _trSeq) el.querySelector('#ttapi-tr-kpis').innerHTML = `<div class="error-banner" style="display:block;">โหลดทราฟฟิกร้าน TikTok ไม่สำเร็จ: ${esc(e.message)}</div>`;
     }
@@ -166,7 +177,7 @@
       const money = v => tk ? fmt2(v) : baht(v);
       const adCells = (sales, a) => {
         if (!a || !(a.cost > 0)) return `<td class="tt-gl">${dash}</td><td>${dash}</td><td>${dash}</td><td class="tt-gl">${a && a.rev ? baht(a.rev) : dash}</td><td>${dash}</td>`;
-        return `<td class="tt-gl">${baht(a.cost)}</td><td>${sales > 0 ? (sales / a.cost).toFixed(2) + 'x' : dash}</td><td>${sales > 0 ? pctTxt(a.cost, sales) : dash}</td><td class="tt-gl">${a.rev == null ? dash : baht(a.rev)}</td><td>${a.rev == null ? dash : (a.rev / a.cost).toFixed(2) + 'x'}</td>`;
+        return `<td class="tt-gl">${baht(a.cost)}</td><td>${sales > 0 ? (sales / a.cost).toFixed(2) + 'x' : dash}</td><td>${sales > 0 ? `<span class="ui-chip ${a.cost / sales <= 0.15 ? 'up' : a.cost / sales > 0.25 ? 'dn' : ''}">${pctTxt(a.cost, sales)}</span>` : dash}</td><td class="tt-gl">${a.rev == null ? dash : baht(a.rev)}</td><td>${a.rev == null ? dash : (a.rev / a.cost).toFixed(2) + 'x'}</td>`;
       };
       const sumAd = keys => keys.reduce((o, k) => { const a = AD[k]; if (a) { o.cost += a.cost; if (a.rev != null) o.rev = (o.rev || 0) + a.rev; } return o; }, { cost: 0, rev: null });
       const cn = num(C['cn.cn']);
@@ -226,7 +237,7 @@
     const seq = ++_crSeq;
     el.innerHTML = `
       <div class="section-divider"><span>💰 ครีเอเตอร์ · Commission · คอนเทนต์ (TikTok API) ${info('ttapi-cr-info', '<b>ที่มา:</b> Affiliate API ของ TikTok Shop — ทุกออเดอร์ที่ TikTok จ่าย Commission ให้ครีเอเตอร์<br><b>ยอดขาย</b> = ยอดสุทธิของออเดอร์ (ไม่นับยกเลิก / คืน) · 1 ออเดอร์นับให้ครีเอเตอร์ที่ได้ Commission มากสุด<br><b>Commission</b> = ที่ TikTok จ่ายครีเอเตอร์ · <b>Ads Commission</b> = ส่วนที่จ่ายผ่าน GMV Max<br><b>ยอดต่อ 1</b> = ยอดขาย ÷ (Commission + Ads Commission)<br><b>กรองช่องทาง</b> (Live / คลิป / โชว์เคส): ยอดขายเป็นของช่องทางนั้น แต่ Commission เป็นของทั้งคน (TikTok ไม่แยกตามช่องทาง) จึงไม่คำนวณ % และยอดต่อ 1<br><b>เปิด (Open Collaboration)</b> = ครีเอเตอร์คนไหนก็หยิบสินค้าไปขายได้ ตามอัตรา Commission ที่ร้านเปิดไว้<br><b>ปิด (Target Collaboration)</b> = ร้านเชิญครีเอเตอร์เฉพาะคน ตั้งอัตราเฉพาะ (ส่วนใหญ่คือ KOL ที่จ้าง — Commission จึงต่ำ เพราะจ่ายค่าจ้างแยก ดูหน้า KOL)<br><b>ตัวกรองด้านบน</b> ทุกคน / KOL / Affiliate ใช้กับส่วนนี้ด้วย · ป้ายหลังชื่อ = กลุ่มของครีเอเตอร์ (KOL = มีงานในไฟล์ทีม KOL)')}</span></div>
-      <div id="ttapi-cr-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
+      <div id="ttapi-cr-kpis" class="ui-metrics sa-strip2" style="margin-bottom:16px;"></div>
       <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">เปิด vs ปิด</div></div>
         <div class="table-wrap"><table><thead><tr><th>แบบ</th><th>ครีเอเตอร์</th><th>ออเดอร์</th><th>ยอดขาย</th><th>สัดส่วนยอด</th><th>Commission</th><th>Ads Commission</th><th>% Commission</th><th>ยอดเฉลี่ย / คน</th><th>Commission เฉลี่ย / คน</th></tr></thead><tbody id="ttapi-ct-cmp"><tr><td colspan="10" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div>
       <div class="card" style="margin-bottom:16px;"><div class="section-header"><div class="section-title">ครีเอเตอร์ทั้งหมด (กดชื่อเพื่อดูรายละเอียด)</div>
