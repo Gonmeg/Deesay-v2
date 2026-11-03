@@ -799,7 +799,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.03-i"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.03-k"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1527,13 +1527,19 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <!-- (2026-11-03) รายงานรายวันแยกส่วน: ค่า Ads แต่ละประเภท คู่กับยอดขายจริงของช่องทางที่ Ads นั้นดัน (ข้อมูลชุดเดียวกับแถบบน: tta_daily_report) -->
       <style>
         .tdr-tbl { table-layout:fixed; border-collapse:separate; border-spacing:0; }
-        .tdr-tbl col.d { width:96px; } .tdr-tbl col.n { width:80px; } .tdr-tbl col.w { width:112px; }
+        .tdr-tbl col.d { width:92px; } .tdr-tbl col.n { width:76px; }
         .tdr-tbl th, .tdr-tbl td { padding:8px 8px; font-size:12.5px; }
         .tdr-tbl td.num, .tdr-tbl th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
         .tdr-tbl thead tr.tdr-g th { font-size:12px; font-weight:700; text-align:center; padding:6px 8px 5px; border-bottom:2px solid var(--gc, var(--border)); }
         .tdr-tbl thead tr.tdr-g th.sp { border-bottom:0; }
         .tdr-tbl thead tr.tdr-h th { top:33px; font-weight:600; color:var(--text3); }
-        .tdr-tbl th.gap, .tdr-tbl td.gap { padding-left:16px; }
+        .tdr-tbl th.gap, .tdr-tbl td.gap { padding-left:14px; border-left:1px solid var(--border); }
+        .tdr-tbl thead tr.tdr-g th.gap { background:color-mix(in srgb, var(--gc) 9%, var(--bg2)); }
+        .tdr-sum td.l .tdr-sub { color:var(--text2); }
+        .tdr-sum tr.tdr-child td { padding-top:6px; padding-bottom:6px; font-size:12.5px; }
+        .tdr-sum tr.tdr-child td.l { padding-left:40px; position:relative; }
+        .tdr-sum tr.tdr-child td.l::before { content:""; position:absolute; left:22px; top:0; bottom:50%; width:10px; border-left:1px solid var(--border); border-bottom:1px solid var(--border); border-bottom-left-radius:4px; }
+        .tdr-sum tr.tdr-parent td { font-weight:600; }
         .tdr-tbl tr > :first-child { position:sticky; left:0; z-index:1; background:var(--bg2); }
         .tdr-tbl thead tr > :first-child { z-index:3; }
         .tdr-roas { font-weight:700; }
@@ -9365,11 +9371,11 @@ const METRIC_CONFIGS = {
   }
 };
 METRIC_CONFIGS.ttaDailyRep = {   // (2026-11-03) กลุ่มคอลัมน์ของรายงานรายวัน + ตัวเลขเดิมเลือกเพิ่มได้
-  order: ['g_all','g_pgm','g_lgm','g_lin','g_laff','g_lpre','g_aw','g_oth','gmv_ads','roas_ads','ad_orders','cpo','impressions','cpm','clicks','ctr','orders'],
-  meta: { g_all:{label:'ทั้งร้าน: ยอดขายจริง · ค่า Ads · % Ads · ROAS',always:true}, g_pgm:{label:'Product GMV Max',default:true}, g_lgm:{label:'LIVE GMV Max รวม',default:true},
-    g_lin:{label:'Live - In House',default:true}, g_laff:{label:'Live - Affiliate',default:true}, g_lpre:{label:'Live - Presenter',default:true},
+  order: ['g_all','g_pgm','g_lgm','g_lin','g_laff','g_lpre','g_aw','g_oth','roas_all','gmv_ads','roas_ads','ad_orders','cpo','impressions','cpm','clicks','ctr','orders'],
+  meta: { g_all:{label:'ทั้งร้าน: ยอดขายจริง · ค่า Ads · % Ads',always:true}, g_pgm:{label:'Product GMV Max',default:true}, g_lgm:{label:'LIVE GMV Max รวม',default:true},
+    g_lin:{label:'LIVE · In House',default:true}, g_laff:{label:'LIVE · Affiliate',default:true}, g_lpre:{label:'LIVE · Presenter',default:true},
     g_aw:{label:'Ads สร้างการรับรู้',default:true}, g_oth:{label:'ยอดอื่น',default:true},
-    gmv_ads:{label:'ยอดขายจาก Ads (TikTok นับ)'}, roas_ads:{label:'ROAS Ads (TikTok นับ)'}, ad_orders:{label:'ออเดอร์จาก Ads (TikTok นับ)'},
+    roas_all:{label:'ROAS ทั้งร้าน (ยอดขายจริง ÷ ค่า Ads)'}, gmv_ads:{label:'ยอดขายจาก Ads (TikTok นับ)'}, roas_ads:{label:'ROAS Ads (TikTok นับ)'}, ad_orders:{label:'ออเดอร์จาก Ads (TikTok นับ)'},
     cpo:{label:'บาท / ออเดอร์จาก Ads'}, impressions:{label:'Impressions'}, cpm:{label:'CPM (บาท / 1,000 ครั้งที่เห็น)'}, clicks:{label:'คลิก'}, ctr:{label:'CTR'}, orders:{label:'ออเดอร์จริง TikTok'} }
 };
 METRIC_CONFIGS.ttaCreator = {
@@ -10027,7 +10033,10 @@ async function renderTtaHero(totalSpend, spendTip) {
 //   แคมเปญ LIVE แยกกลุ่มจากชื่อ: In House · Affiliate · Kambum (ข้อมูลรายแคมเปญ lg / camp) · กดตัวเลขที่มีเส้นประ = แผง "ที่มาของตัวเลข"
 const TDR_PGM_CH = ['หน้าสินค้า', 'หน้าสินค้า (ลิงก์ครีเอเตอร์)', 'คลิป (บัญชีร้าน)', 'คลิป (ครีเอเตอร์)'];
 const TDR_CH_ORDER = ['หน้าสินค้า', 'หน้าสินค้า (ลิงก์ครีเอเตอร์)', 'คลิป (บัญชีร้าน)', 'คลิป (ครีเอเตอร์)', 'Live (บัญชีร้าน)', 'Live (ครีเอเตอร์)', 'โชว์เคส / ลิงก์ (ครีเอเตอร์)', 'อื่นๆ', 'ลดหนี้ (CN)'];
-const TDR_LG = { in: 'Live - In House', aff: 'Live - Affiliate', pre: 'Live - Presenter', oth: 'Live - ชื่อไม่ตามรูปแบบ' };
+const TDR_LG = { in: 'LIVE · In House', aff: 'LIVE · Affiliate', pre: 'LIVE · Presenter', oth: 'LIVE · ชื่อแคมเปญไม่ตามรูปแบบ' };
+// ชื่อช่องทางในหน้านี้: ครีเอเตอร์ = Affiliate (Presenter แยกออกจาก Live ครีเอเตอร์)
+const TDR_CH_NAME = { 'หน้าสินค้า': 'หน้าสินค้า', 'หน้าสินค้า (ลิงก์ครีเอเตอร์)': 'หน้าสินค้า (ลิงก์ Affiliate)', 'คลิป (บัญชีร้าน)': 'คลิปร้าน', 'คลิป (ครีเอเตอร์)': 'คลิป Affiliate', 'Live (บัญชีร้าน)': 'Live ร้าน (In House)', 'โชว์เคส / ลิงก์ (ครีเอเตอร์)': 'โชว์เคส Affiliate', 'อื่นๆ': 'อื่น ๆ', 'ลดหนี้ (CN)': 'ลดหนี้ (CN) จากบัญชี' };
+const tdrOtherParts = r => r._otherParts || [['โชว์เคส Affiliate', tdrCh(r, 'โชว์เคส / ลิงก์ (ครีเอเตอร์)')], ['อื่น ๆ', tdrCh(r, 'อื่นๆ')], ['ลดหนี้ (CN) จากบัญชี', tdrCh(r, 'ลดหนี้ (CN)')]];
 const TDR_PCT_OK = 18, TDR_ROAS_OK = 100 / TDR_PCT_OK;   // เป้า TikTok: % Ads ไม่เกิน 18% (= ROAS 5.56x ขึ้นไป) — เกณฑ์เดียว สีสองช่องไม่ขัดกัน
 const tdrN = (r, k) => +r[k] || 0;
 const tdrCh = (r, k) => +((r.ch || {})[k]) || 0;
@@ -10037,10 +10046,10 @@ const tdrPgmSales = r => TDR_PGM_CH.reduce((a, k) => a + tdrCh(r, k), 0);
 const tdrLiveShop = r => tdrCh(r, 'Live (บัญชีร้าน)');
 const tdrLivePre = r => tdrN(r, 'live_pre');
 const tdrLiveAff = r => tdrCh(r, 'Live (ครีเอเตอร์)') - tdrLivePre(r);
-// ยอด Live ที่คู่กับ LIVE GMV Max: Live บัญชีร้าน + Live Affiliate / Presenter เฉพาะวันที่กลุ่มนั้นมีค่า Ads (วันที่ไม่มี Ads → อยู่ใน ยอดอื่น)
-const tdrLiveAds = r => r._liveAds !== undefined ? r._liveAds : tdrLiveShop(r) + (tdrLgC(r, 'aff') > 0 ? tdrLiveAff(r) : 0) + (tdrLgC(r, 'pre') > 0 ? tdrLivePre(r) : 0);
+const tdrLiveAds = r => tdrLiveShop(r) + tdrCh(r, 'Live (ครีเอเตอร์)');   // (รอบ j) Live ทั้งหมด = ร้าน + Affiliate + Presenter
+const tdrAffAds = r => tdrLiveAff(r), tdrPreAds = r => tdrLivePre(r);
 const tdrAware = r => tdrN(r, 'spend') - tdrN(r, 'pgm') - tdrN(r, 'lgm');           // Ads ทุกประเภทที่ไม่ใช่ GMV Max
-const tdrOther = r => tdrN(r, 'sales') - tdrPgmSales(r) - tdrLiveAds(r);             // Live ที่ไม่มี Ads · โชว์เคส / ลิงก์ · อื่น ๆ · ลดหนี้ (CN)
+const tdrOther = r => tdrN(r, 'sales') - tdrPgmSales(r) - tdrLiveAds(r);             // โชว์เคส Affiliate · อื่น ๆ · ลดหนี้ (CN)
 const tdrMuted = '<span class="ui-muted">—</span>';
 const tdrRoas = (s, a) => a > 0 && s > 0 ? `<span class="tdr-roas ${s / a >= TDR_ROAS_OK ? 'tdr-good' : 'tdr-bad'}">${(s / a).toFixed(2)}x</span>` : tdrMuted;
 const tdrPct = (a, s) => a > 0 && s > 0 ? `<span class="tdr-roas ${a / s * 100 <= TDR_PCT_OK ? 'tdr-good' : 'tdr-bad'}">${(a / s * 100).toFixed(1)}%</span>` : tdrMuted;
@@ -10048,6 +10057,7 @@ const tdrF = v => Math.round(v) ? fmt(Math.round(v)) : tdrMuted;
 const tdrTip = s => ` <span class="pr-i" data-tip="${s}">ⓘ</span>`;
 const tdrClk = (v, kind, d) => Math.round(v) ? `<span class="pl-trace" data-tdr="${kind}|${d}">${fmt(Math.round(v))}</span>` : tdrMuted;
 const TDR_X = {
+  roas_all: { h: 'ROAS', tip: 'ยอดขายจริงทั้งร้าน ÷ ค่า Ads รวม', f: r => tdrRoas(tdrN(r, 'sales'), tdrN(r, 'spend')) },
   gmv_ads: { h: 'ยอดจาก Ads', tip: 'ยอดขายที่ TikTok นับให้ Ads', f: r => tdrF(+r.gmv_ads) },
   roas_ads: { h: 'ROAS Ads', tip: 'ยอดที่ TikTok นับให้ Ads ÷ ค่า Ads', f: r => tdrRoas(+r.gmv_ads, +r.spend) },
   ad_orders: { h: 'ออเดอร์จาก Ads', f: r => tdrF(+r.ad_orders) },
@@ -10069,7 +10079,7 @@ function tdrSumRows(rows) {
     Object.entries(r.lg || {}).forEach(([k, v]) => { const x = T.lg[k] = T.lg[k] || { c: 0, t: 0 }; x.c += +v.c || 0; x.t += +v.t || 0; });
     (r.camp || []).forEach(x => T.camp.push(x)); (r.ads || []).forEach(x => T.ads.push(x)); (r.aff_live || []).forEach(x => T.aff_live.push(x));
   });
-  T._liveAds = rows.reduce((a, r) => a + tdrLiveAds(r), 0);   // คิดทีละวันแล้วรวม (วันที่มี / ไม่มี Ads ของแต่ละกลุ่มต่างกัน)
+  const op = {}; rows.forEach(r => tdrOtherParts(r).forEach(([l, v]) => op[l] = (op[l] || 0) + v)); T._otherParts = Object.entries(op);
   return T;
 }
 // แผง "ที่มาของตัวเลข" ของรายงานรายวัน (เฉพาะตัวเลขที่กด)
@@ -10081,21 +10091,20 @@ function tdrTrace(kind, d) {
   const SRC_ADS = '<dt>ค่า Ads</dt><dd>TikTok Ads API ทุกบัญชี (Fimiq B · Fimiq PR · Fimiq Awareness) = ยอดที่ TikTok ตัดจากบัญชีโฆษณาจริง</dd>';
   const SRC_SALES = '<dt>ยอดขายจริง</dt><dd>ออเดอร์ TikTok Shop API ไม่นับที่ยกเลิก · แยกช่องทางตาม Order Channel + บัญชีครีเอเตอร์ · ชุดเดียวกับหน้าภาพรวม TikTok</dd>';
   const SRC_CAMP = '<dt>แยกกลุ่ม</dt><dd>จากชื่อแคมเปญ LIVE GMV Max: มีคำว่า In House = In House · Affiliate = Affiliate · Kambum = Presenter</dd>';
-  const chRows = keys => keys.filter(k => Math.round(tdrCh(r, k))).map(k => [k, tdrCh(r, k)]);
+  const chRows = keys => keys.flatMap(k => k === 'Live (ครีเอเตอร์)' ? [['Live Affiliate', tdrLiveAff(r)], ['Live Presenter (kambum_live)', tdrLivePre(r)]] : [[TDR_CH_NAME[k] || k, tdrCh(r, k)]]).filter(x => Math.round(x[1]));
   const campRows = g => sumBy((r.camp || []).filter(x => !g || x[0] === g), x => `${g ? '' : grpOf(x[0]) + ' · '}${x[1]}`, x => +x[2] || 0);
   const K = {
     sales: ['ยอดขายจริง TikTok', tdrN(r, 'sales'), 'แยกตามช่องทาง', chRows(TDR_CH_ORDER), SRC_SALES],
     spend: ['ค่า Ads TikTok', tdrN(r, 'spend'), 'แยกตามประเภท · บัญชี', sumBy(r.ads || [], x => `${ttaTypeName(x[0])} · ${x[1]}`, x => +x[2] || 0), SRC_ADS],
     pgm_sales: ['ยอดขายที่คู่กับ Product GMV Max', tdrPgmSales(r), 'หน้าสินค้า + คลิป', chRows(TDR_PGM_CH), SRC_SALES],
     lgm_spend: ['ค่า Ads LIVE GMV Max', tdrN(r, 'lgm'), 'แยกตามแคมเปญ', campRows(null), SRC_ADS + SRC_CAMP],
-    lgm_sales: ['ยอดขาย Live ที่คู่กับ LIVE GMV Max', tdrLiveAds(r), 'แยกตามบัญชีที่ Live', d === 'all' ? [['Live - In House (บัญชีร้าน)', tdrLiveShop(r)], ['Live - Affiliate (วันที่มี Ads)', _tdrRows.reduce((a, x) => a + (tdrLgC(x, 'aff') > 0 ? tdrLiveAff(x) : 0), 0)], ['Live - Presenter (วันที่มี Ads)', _tdrRows.reduce((a, x) => a + (tdrLgC(x, 'pre') > 0 ? tdrLivePre(x) : 0), 0)]].filter(x => Math.round(x[1]))
-      : [['Live - In House (บัญชีร้าน)', tdrLiveShop(r)], ['Live - Affiliate (ครีเอเตอร์)', tdrLgC(r, 'aff') > 0 ? tdrLiveAff(r) : 0], ['Live - Presenter (kambum_live)', tdrLgC(r, 'pre') > 0 ? tdrLivePre(r) : 0]].filter(x => Math.round(x[1])), SRC_SALES + '<dt>นับเข้าเมื่อไร</dt><dd>Live Affiliate / Presenter นับเฉพาะวันที่กลุ่มนั้นมีค่า Ads · วันที่ไม่มี Ads อยู่ใน ยอดอื่น</dd>'],
-    laff_sales: ['ยอดขาย Live - Affiliate', tdrLiveAff(r), 'แยกตามครีเอเตอร์', sumBy(r.aff_live || [], x => '@' + x[0], x => +x[1] || 0), SRC_SALES + '<dt>Affiliate</dt><dd>ออเดอร์ Live ที่มีบัญชีครีเอเตอร์ ไม่ใช่บัญชีร้าน (deesaythailand · deesay_cosmetics) และไม่ใช่ Presenter (kambum_live)</dd>'],
-    lin_spend: ['ค่า Ads Live - In House', tdrLgC(r, 'in'), 'แยกตามแคมเปญ', campRows('in'), SRC_ADS + SRC_CAMP],
-    laff_spend: ['ค่า Ads Live - Affiliate', tdrLgC(r, 'aff'), 'แยกตามแคมเปญ', campRows('aff'), SRC_ADS + SRC_CAMP],
-    lpre_spend: ['ค่า Ads Live - Presenter', tdrLgC(r, 'pre'), 'แยกตามแคมเปญ', campRows('pre'), SRC_ADS + SRC_CAMP],
+    lgm_sales: ['ยอดขาย Live ทั้งหมด', tdrLiveAds(r), 'แยกตามบัญชีที่ Live', [['Live ร้าน (In House)', tdrLiveShop(r)], ['Live Affiliate', tdrLiveAff(r)], ['Live Presenter (kambum_live)', tdrLivePre(r)]].filter(x => Math.round(x[1])), SRC_SALES],
+    laff_sales: ['ยอดขาย Live Affiliate', tdrLiveAff(r), 'แยกตามครีเอเตอร์', sumBy(r.aff_live || [], x => '@' + x[0], x => +x[1] || 0), SRC_SALES + '<dt>Affiliate</dt><dd>ออเดอร์ Live ที่มีบัญชีครีเอเตอร์ ไม่ใช่บัญชีร้าน (deesaythailand · deesay_cosmetics) และไม่ใช่ Presenter (kambum_live)</dd>'],
+    lin_spend: ['ค่า Ads ' + TDR_LG.in, tdrLgC(r, 'in'), 'แยกตามแคมเปญ', campRows('in'), SRC_ADS + SRC_CAMP],
+    laff_spend: ['ค่า Ads ' + TDR_LG.aff, tdrLgC(r, 'aff'), 'แยกตามแคมเปญ', campRows('aff'), SRC_ADS + SRC_CAMP],
+    lpre_spend: ['ค่า Ads ' + TDR_LG.pre, tdrLgC(r, 'pre'), 'แยกตามแคมเปญ', campRows('pre'), SRC_ADS + SRC_CAMP],
     aw_spend: ['ค่า Ads สร้างการรับรู้', tdrAware(r), 'แยกตามประเภท · บัญชี', sumBy((r.ads || []).filter(x => !/GMV Max/.test(x[0])), x => `${ttaTypeName(x[0])} · ${x[1]}`, x => +x[2] || 0), SRC_ADS],
-    oth_sales: ['ยอดอื่น', tdrOther(r), 'แยกตามช่องทาง', [['Live Affiliate / Presenter วันที่ไม่มี Ads', tdrOther(r) - chRows(TDR_CH_ORDER.filter(k => !TDR_PGM_CH.includes(k) && !/^Live/.test(k))).reduce((a, x) => a + x[1], 0)]].concat(chRows(TDR_CH_ORDER.filter(k => !TDR_PGM_CH.includes(k) && !/^Live/.test(k)))).filter(x => Math.round(x[1])), SRC_SALES],
+    oth_sales: ['ยอดอื่น', tdrOther(r), 'แยกส่วน', tdrOtherParts(r).filter(x => Math.round(x[1])), SRC_SALES + '<dt>ลดหนี้ (CN)</dt><dd>ใบลดหนี้ที่บัญชีออกหลังปิดเดือน หักจากยอดขาย TikTok · ต้องรวมไว้ ยอดทุกกลุ่มจะได้เท่ายอดขายจริงทั้งร้าน</dd>'],
   }[kind]; if (!K) return;
   const [title, total, sec, list, src] = K;
   trOpenShell('ที่มาของตัวเลข');
@@ -10124,26 +10133,32 @@ async function renderTtaDailyReport() {
   const typeTot = {}; Object.entries(T.types).forEach(([k, v]) => { const n = ttaTypeName(k); typeTot[n] = (typeTot[n] || 0) + v; });
   const dot = n => `<span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;background:${(typeof TTA_TYPE_COLOR !== 'undefined' && TTA_TYPE_COLOR[n]) || '#94A3B8'};"></span>`;
   const share = v => spend > 0 && Math.round(v) ? (v / spend * 100).toFixed(1) + '%' : tdrMuted;
-  const line = (label, a, s, tt, opt = {}) => `<tr><td class="l"${opt.sub ? ' style="padding-left:34px;"' : ''}>${opt.dot ? dot(label) : ''}${label}${opt.note ? `<small${opt.dot ? ' style="padding-left:18px;"' : ''}>${opt.note}</small>` : ''}</td>
+  const row = (cls, label, a, sv, tt, info, isDot) => `<tr class="${cls}"><td class="l">${isDot ? dot(label) : ''}${label}${info ? tdrTip(info) : ''}</td>
       <td class="num">${a === null ? na : tdrF(a)}</td><td class="num">${a === null ? na : share(a)}</td>
-      <td class="num">${s === null ? '<span class="ui-muted">ไม่มียอดผูกตรง</span>' : tdrF(s)}</td><td class="num">${a === null || s === null ? na : tdrPct(a, s)}</td><td class="num">${a === null || s === null ? na : tdrRoas(s, a)}</td>
+      <td class="num">${sv === null ? na : tdrF(sv)}</td><td class="num">${a === null || sv === null ? na : tdrPct(a, sv)}</td><td class="num">${a === null || sv === null ? na : tdrRoas(sv, a)}</td>
       <td class="num">${tt === null ? na : tdrF(tt)}</td><td class="num">${tt === null || a === null ? na : tdrRoas(tt, a)}</td></tr>`;
-  const body = Object.keys(typeTot).filter(n => Math.round(typeTot[n])).sort((x, y) => typeTot[y] - typeTot[x]).map(n =>
-    n === 'Product GMV Max' ? line(n, typeTot[n], tdrPgmSales(T), T.pgm_tt, { dot: 1, note: 'คู่กับยอดหน้าสินค้า + คลิป' })
-    : n === 'LIVE GMV Max' ? line(n, typeTot[n], tdrLiveAds(T), T.lgm_tt, { dot: 1, note: 'คู่กับยอด Live ที่มี Ads ดัน' })
-        + line(TDR_LG.in, tdrLgC(T, 'in'), tdrLiveShop(T), tdrLgT(T, 'in'), { sub: 1, note: 'คู่กับยอด Live บัญชีร้าน' })
-        + line(TDR_LG.aff, tdrLgC(T, 'aff'), _tdrRows.reduce((a, x) => a + (tdrLgC(x, 'aff') > 0 ? tdrLiveAff(x) : 0), 0), tdrLgT(T, 'aff'), { sub: 1, note: 'คู่กับยอด Live ครีเอเตอร์ วันที่มี Ads' })
-        + line(TDR_LG.pre, tdrLgC(T, 'pre'), _tdrRows.reduce((a, x) => a + (tdrLgC(x, 'pre') > 0 ? tdrLivePre(x) : 0), 0), tdrLgT(T, 'pre'), { sub: 1, note: 'คู่กับยอด Live kambum_live วันที่มี Ads' })
-        + (Math.round(tdrLgC(T, 'oth')) ? line(TDR_LG.oth, tdrLgC(T, 'oth'), null, tdrLgT(T, 'oth'), { sub: 1 }) : '')
-    : line(n, typeTot[n], null, null, { dot: 1 })).join('')
-    + line('ยอดอื่น', null, tdrOther(T), null, { note: 'Live ครีเอเตอร์ / Presenter วันที่ไม่มี Ads · โชว์เคส · ลดหนี้ (CN)' });
+  const awKeys = Object.keys(typeTot).filter(n => n !== 'Product GMV Max' && n !== 'LIVE GMV Max' && Math.round(typeTot[n])).sort((x, y) => typeTot[y] - typeTot[x]);
+  let body = '';
+  if (Math.round(typeTot['Product GMV Max'] || 0) || Math.round(tdrPgmSales(T)))
+    body += row('tdr-parent', 'Product GMV Max', typeTot['Product GMV Max'] || 0, tdrPgmSales(T), T.pgm_tt, 'เทียบกับยอดขายจากหน้าสินค้า + คลิป (ร้านและ Affiliate)', 1);
+  if (Math.round(typeTot['LIVE GMV Max'] || 0) || Math.round(tdrLiveAds(T)))
+    body += row('tdr-parent', 'LIVE GMV Max', typeTot['LIVE GMV Max'] || 0, tdrLiveAds(T), T.lgm_tt, 'เทียบกับยอด Live ทั้งหมด (ร้าน + Affiliate + Presenter) · วันที่กลุ่มไหนไม่มีค่า Ads ยอด Live ของกลุ่มนั้นยังนับรวมอยู่', 1)
+      + row('tdr-child', TDR_LG.in, tdrLgC(T, 'in'), tdrLiveShop(T), tdrLgT(T, 'in'), 'แคมเปญที่ชื่อมีคำว่า In House · เทียบกับยอด Live ของบัญชีร้าน')
+      + row('tdr-child', TDR_LG.aff, tdrLgC(T, 'aff'), tdrAffAds(T), tdrLgT(T, 'aff'), 'แคมเปญที่ชื่อมีคำว่า Affiliate · เทียบกับยอด Live ของ Affiliate ทั้งหมด')
+      + row('tdr-child', TDR_LG.pre, tdrLgC(T, 'pre'), tdrPreAds(T), tdrLgT(T, 'pre'), 'แคมเปญที่ชื่อมีคำว่า Kambum · เทียบกับยอด Live ของ kambum_live ทั้งหมด')
+      + (Math.round(tdrLgC(T, 'oth')) ? row('tdr-child', TDR_LG.oth, tdrLgC(T, 'oth'), null, tdrLgT(T, 'oth'), 'แคมเปญที่ชื่อไม่มีคำว่า In House / Affiliate / Kambum') : '');
+  if (awKeys.length)
+    body += row('tdr-parent', 'Ads สร้างการรับรู้', awKeys.reduce((a, n) => a + typeTot[n], 0), null, null, 'Ads ที่ไม่ใช่ GMV Max ใช้สร้างการรู้จัก / ยอดวิว จึงไม่มียอดขายให้เทียบ', 0)
+      + awKeys.map(n => row('tdr-child', n, typeTot[n], null, null, '', 1)).join('');
+  body += row('tdr-parent', 'ยอดอื่น', null, tdrOther(T), null, 'ยอดขายที่ไม่ได้ผ่านหน้าสินค้า คลิป หรือ Live · รวมไว้ให้ยอดทุกกลุ่มรวมกันเท่ายอดขายจริงทั้งร้าน', 0)
+    + tdrOtherParts(T).filter(x => Math.round(x[1])).map(([l, v]) => row('tdr-child', l, null, v, null, /^ลดหนี้/.test(l) ? 'ใบลดหนี้ที่บัญชีออกหลังปิดเดือน หักจากยอดขาย TikTok' : /^โชว์เคส/.test(l) ? 'ลูกค้ากดซื้อจากหน้าโชว์เคส (ตะกร้าในโปรไฟล์) ของ Affiliate ไม่ได้ซื้อผ่าน Live หรือคลิป' : '', 0)).join('');
   const sumEl = document.getElementById('ttaDrSum');
   if (sumEl) sumEl.innerHTML = `
-    <table class="ui-table sa-tbl" data-no-sort data-no-page><thead><tr>
+    <table class="ui-table sa-tbl tdr-sum" data-no-sort data-no-page><thead><tr>
       <th class="l">ประเภท</th><th class="num">ค่า Ads</th><th class="num">สัดส่วนค่า Ads</th>
-      <th class="num">ยอดขายจริงที่คู่กัน${tdrTip('ยอดขายจริงของช่องทางที่ Ads ประเภทนั้นดัน (รวมยอดที่ไม่ได้มาจาก Ads ด้วย)')}</th>
-      <th class="num">% Ads${tdrTip('ค่า Ads ÷ ยอดขายจริงที่คู่กัน · เขียว = ไม่เกิน 18%')}</th>
-      <th class="num">ROAS จริง${tdrTip('ยอดขายจริงที่คู่กัน ÷ ค่า Ads · เขียว = 5.56x ขึ้นไป (= % Ads ไม่เกิน 18%)')}</th>
+      <th class="num">ยอดขายจริง${tdrTip('ยอดขายจริงของช่องทางที่ Ads กลุ่มนั้นดัน (ชี้ ⓘ ข้างชื่อแถวเพื่อดูว่าเทียบกับยอดไหน) · รวมยอดที่ไม่ได้มาจาก Ads ด้วย')}</th>
+      <th class="num">% Ads${tdrTip('ค่า Ads ÷ ยอดขายจริง · เขียว = ไม่เกิน 18%')}</th>
+      <th class="num">ROAS จริง${tdrTip('ยอดขายจริง ÷ ค่า Ads · เขียว = 5.56x ขึ้นไป (= % Ads ไม่เกิน 18%)')}</th>
       <th class="num">TikTok นับยอดให้${tdrTip('ยอดขายที่ TikTok นับให้ Ads (GMV Max) ตาม TikTok Ads Manager')}</th>
       <th class="num">ROAS ตาม TikTok${tdrTip('ยอดที่ TikTok นับให้ ÷ ค่า Ads')}</th></tr></thead><tbody>${body}</tbody>
     <tfoot><tr><td class="l">รวมทั้งร้าน</td><td class="num">${fmt(Math.round(spend))}</td><td class="num">${spend > 0 ? '100%' : '—'}</td><td class="num">${fmt(Math.round(sales))}</td><td class="num">${tdrPct(spend, sales)}</td><td class="num">${tdrRoas(sales, spend)}</td><td class="num">${tdrF(T.pgm_tt + T.lgm_tt)}</td><td class="num">${tdrRoas(T.pgm_tt + T.lgm_tt, spend)}</td></tr></tfoot></table>`;
@@ -10153,14 +10168,14 @@ async function renderTtaDailyReport() {
   const xs = (metricState.ttaDailyRep ? activeCols('ttaDailyRep') : []).filter(k => TDR_X[k]);
   const D = r => String(r.date).slice(0, 10) || 'all';
   const G = [
-    { k: 'g_all', c: 'var(--text2)', h: 'ทั้งร้าน', sub: [['ยอดขายจริง', r => tdrClk(r.sales, 'sales', D(r))], ['ค่า Ads', r => tdrClk(r.spend, 'spend', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'spend'), tdrN(r, 'sales'))], ['ROAS', r => tdrRoas(tdrN(r, 'sales'), tdrN(r, 'spend'))]] },
-    { k: 'g_pgm', c: 'var(--ch-tiktok, #fe2c55)', h: 'Product GMV Max', tip: 'ค่า Ads Product GMV Max คู่กับยอดขายจริงจากหน้าสินค้า + คลิป', sub: [['ค่า Ads', r => tdrF(tdrN(r, 'pgm'))], ['ยอดขาย', r => tdrClk(tdrPgmSales(r), 'pgm_sales', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'pgm'), tdrPgmSales(r))], ['ROAS', r => tdrRoas(tdrPgmSales(r), tdrN(r, 'pgm'))]] },
-    { k: 'g_lgm', c: '#7c3aed', h: 'LIVE GMV Max รวม', tip: 'ค่า Ads LIVE GMV Max ทุกแคมเปญ คู่กับยอด Live บัญชีร้าน + Live Affiliate / Presenter เฉพาะวันที่กลุ่มนั้นมีค่า Ads', sub: [['ค่า Ads', r => tdrClk(r.lgm, 'lgm_spend', D(r))], ['ยอดขาย', r => tdrClk(tdrLiveAds(r), 'lgm_sales', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'lgm'), tdrLiveAds(r))], ['ROAS', r => tdrRoas(tdrLiveAds(r), tdrN(r, 'lgm'))]] },
-    { k: 'g_lin', c: '#a78bfa', h: 'Live - In House', tip: 'แคมเปญที่ชื่อมีคำว่า In House คู่กับยอด Live ของบัญชีร้าน', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'in'), 'lin_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLiveShop(r))], ['ROAS', r => tdrRoas(tdrLiveShop(r), tdrLgC(r, 'in'))]] },
-    { k: 'g_laff', c: '#a78bfa', h: 'Live - Affiliate', tip: 'แคมเปญที่ชื่อมีคำว่า Affiliate คู่กับยอด Live ของครีเอเตอร์ (ไม่รวม Presenter)', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'aff'), 'laff_spend', D(r))], ['ยอดขาย', r => tdrClk(tdrLiveAff(r), 'laff_sales', D(r))], ['ROAS', r => tdrRoas(tdrLiveAff(r), tdrLgC(r, 'aff'))]] },
-    { k: 'g_lpre', c: '#a78bfa', h: 'Live - Presenter', tip: 'แคมเปญที่ชื่อมีคำว่า Kambum คู่กับยอด Live ของ kambum_live', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'pre'), 'lpre_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLivePre(r))], ['ROAS', r => tdrRoas(tdrLivePre(r), tdrLgC(r, 'pre'))]] },
+    { k: 'g_all', c: 'var(--text2)', h: 'ทั้งร้าน', tip: 'ยอดขายจริงทั้งร้าน TikTok · ค่า Ads รวมทุกประเภททุกบัญชี', sub: [['ยอดขาย', r => tdrClk(r.sales, 'sales', D(r))], ['ค่า Ads', r => tdrClk(r.spend, 'spend', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'spend'), tdrN(r, 'sales'))]] },
+    { k: 'g_pgm', c: 'var(--ch-tiktok, #fe2c55)', h: 'Product GMV Max', tip: 'ค่า Ads Product GMV Max คู่กับยอดขายจริงจากหน้าสินค้า + คลิป', sub: [['ค่า Ads', r => tdrF(tdrN(r, 'pgm'))], ['ยอดขาย', r => tdrClk(tdrPgmSales(r), 'pgm_sales', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'pgm'), tdrPgmSales(r))]] },
+    { k: 'g_lgm', c: '#7c3aed', h: 'LIVE GMV Max รวม', tip: 'ค่า Ads LIVE GMV Max ทุกแคมเปญ เทียบกับยอด Live ทั้งหมด (ร้าน + Affiliate + Presenter)', sub: [['ค่า Ads', r => tdrClk(r.lgm, 'lgm_spend', D(r))], ['ยอดขาย', r => tdrClk(tdrLiveAds(r), 'lgm_sales', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'lgm'), tdrLiveAds(r))]] },
+    { k: 'g_lin', c: '#a78bfa', h: TDR_LG.in, tip: 'แคมเปญที่ชื่อมีคำว่า In House คู่กับยอด Live ของบัญชีร้าน', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'in'), 'lin_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLiveShop(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'in'), tdrLiveShop(r))]] },
+    { k: 'g_laff', c: '#a78bfa', h: TDR_LG.aff, tip: 'แคมเปญที่ชื่อมีคำว่า Affiliate · ยอดขาย = Live ของ Affiliate ทั้งหมด (ไม่รวม Presenter)', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'aff'), 'laff_spend', D(r))], ['ยอดขาย', r => tdrClk(tdrLiveAff(r), 'laff_sales', D(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'aff'), tdrAffAds(r))]] },
+    { k: 'g_lpre', c: '#a78bfa', h: TDR_LG.pre, tip: 'แคมเปญที่ชื่อมีคำว่า Kambum · ยอดขาย = Live ของ kambum_live', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'pre'), 'lpre_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLivePre(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'pre'), tdrPreAds(r))]] },
     { k: 'g_aw', c: 'var(--text3)', h: 'Ads รับรู้', tip: 'Ads สร้างการรับรู้ = Ads ทุกประเภทที่ไม่ใช่ GMV Max เช่น Video views · Brand consideration · Traditional Ads — ไม่มียอดขายผูกตรง', sub: [['ค่า Ads', r => tdrClk(tdrAware(r), 'aw_spend', D(r))]] },
-    { k: 'g_oth', c: 'var(--text3)', h: 'ยอดอื่น', tip: 'ยอดที่ไม่มี Ads ของร้านดัน: Live ครีเอเตอร์ / Presenter วันที่ไม่มี Ads · โชว์เคส / ลิงก์ครีเอเตอร์ · ลดหนี้ (CN)', sub: [['ยอดขาย', r => tdrClk(tdrOther(r), 'oth_sales', D(r))]] },
+    { k: 'g_oth', c: 'var(--text3)', h: 'ยอดอื่น', tip: 'ยอดขายที่ไม่ได้ผ่านหน้าสินค้า คลิป หรือ Live: โชว์เคส Affiliate · ลดหนี้ (CN) — กดตัวเลขเพื่อดูแยกส่วน', sub: [['ยอดขาย', r => tdrClk(tdrOther(r), 'oth_sales', D(r))]] },
   ].filter(g => g.k === 'g_all' || on(g.k));
   if (xs.length) G.push({ k: 'g_x', c: 'var(--border)', h: 'ตัวเลขเพิ่มเติม', tip: 'เลือกเพิ่ม / ลดได้ที่ ⚙ Metrics', sub: xs.map(k => [TDR_X[k].h + (TDR_X[k].tip ? tdrTip(TDR_X[k].tip) : ''), TDR_X[k].f]) });
   const nCol = 1 + G.reduce((a, g) => a + g.sub.length, 0);
@@ -10169,9 +10184,9 @@ async function renderTtaDailyReport() {
   // คอลัมน์ตัวเลขกว้างเท่ากันทุกช่อง (กลุ่มที่มีช่องเดียวกว้างขึ้นให้พอดีชื่อกลุ่ม) · ความกว้างตารางคิดจากผลรวม → แถวหัว / แถวข้อมูล / แถวรวม ตรงกันเสมอ
   const cw = G.flatMap(g => g.sub.map(() => 'n'));
   cg.innerHTML = '<col class="d">' + cw.map(c => `<col class="${c}">`).join('');
-  tbl.style.width = (96 + cw.reduce((a, c) => a + (c === 'w' ? 112 : 80), 0)) + 'px';
+  tbl.style.width = '100%'; tbl.style.minWidth = (92 + cw.length * 76) + 'px';   // เต็มการ์ดเสมอ · จอแคบกว่านี้ = เลื่อนซ้ายขวา (คอลัมน์วันที่ติดอยู่)
   document.getElementById('theadTtaDailyRep').innerHTML =
-    `<tr class="tdr-g"><th class="l sp"></th>${G.map(g => `<th colspan="${g.sub.length}" class="gap" style="--gc:${g.c};${g.k === 'g_pgm' || g.k === 'g_lgm' ? `color:${g.c};` : ''}">${g.h}${g.tip ? tdrTip(g.tip) : ''}</th>`).join('')}</tr>
+    `<tr class="tdr-g"><th class="l sp"></th>${G.map(g => `<th colspan="${g.sub.length}" class="gap" style="--gc:${g.c};${['g_pgm', 'g_lgm'].includes(g.k) ? `color:${g.c};` : ['g_lin', 'g_laff', 'g_lpre'].includes(g.k) ? 'color:#8b5cf6;' : ''}">${g.h}${g.tip ? tdrTip(g.tip) : ''}</th>`).join('')}</tr>
      <tr class="tdr-h"><th class="l">วันที่</th>${G.map(g => g.sub.map((s, i) => `<th class="num${i ? '' : ' gap'}">${s[0]}</th>`).join('')).join('')}</tr>`;
   const cells = r => G.map(g => g.sub.map((s, i) => `<td class="num${i ? '' : ' gap'}">${s[1](r)}</td>`).join('')).join('');
   tb.innerHTML = rows.map(r => `<tr><td class="l" style="white-space:nowrap;">${dTH(r.date)}</td>${cells(r)}</tr>`).join('') || `<tr><td colspan="${nCol}" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>`;
