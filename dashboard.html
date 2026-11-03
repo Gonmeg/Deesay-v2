@@ -799,7 +799,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.03-d"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.03-e"></div>
 <script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
@@ -3648,7 +3648,7 @@ function fbeRenderPostListPage(pageNum) {
       const engagementTotal = (metric.reactions_total || 0) + comments.length + (metric.shares_count || 0);
       const postDate = meta.posted_at ? meta.posted_at.slice(0, 10) : null;
       const thumb = meta.thumbnail_url
-        ? `<img src="${meta.thumbnail_url}" class="fbe-post-thumb" onclick="event.stopPropagation(); window.open('${meta.permalink_url || '#'}','_blank');" onerror="this.style.display='none';">`
+        ? `<img loading="lazy" decoding="async" src="${meta.thumbnail_url}" class="fbe-post-thumb" onclick="event.stopPropagation(); window.open('${meta.permalink_url || '#'}','_blank');" onerror="this.style.display='none';">`
         : '';
       const rowId = `fbe-comments-${pageNum}-${idx}`;
       const previewCount = 5;
@@ -4035,7 +4035,7 @@ function shCpasTables() {
   // (2026-11-02) ตารางเดียว: แถว Campaign กดกางดู Ads ข้างใน (เดิมแยก 2 ตาราง ข้อมูลชุดเดียวกัน) · แถวรวมล่างสุด
   const byC = {}; (d.ads || []).forEach(a => { (byC[a.campaign_id] = byC[a.campaign_id] || []).push(a); });
   const adRow = (a, cid) => { const url = a.post_id ? `https://www.facebook.com/${a.post_id}` : '';
-    const img = a.thumbnail_url ? `<img src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
+    const img = a.thumbnail_url ? `<img loading="lazy" decoding="async" src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
     return `<tr class="ov-sub" data-cpc="${ttcEscAttr(cid)}" style="display:${_shCpasOpen[cid] ? '' : 'none'};"><td><div style="display:flex;gap:10px;align-items:center;padding-left:22px;min-width:240px;"><a ${url ? `href="${ttcEscAttr(url)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:36px;height:36px;border-radius:6px;overflow:hidden;flex:none;background:var(--bg3);display:grid;place-items:center;">${img}</a>
       <div style="min-width:0;font-size:12.5px;">${ttcEsc(a.name || a.ad_id)}</div></div></td><td></td>${kc.map(k => `<td>${CP_M[k].fmt(a)}</td>`).join('')}</tr>`; };
   document.getElementById('tbodyShCpasCamp').innerHTML = camps.map(c => { const ads = (byC[c.campaign_id] || []).slice().sort((x, y) => (+y.spend || 0) - (+x.spend || 0)), open = !!_shCpasOpen[c.campaign_id];
@@ -8370,7 +8370,7 @@ const TR_SALES_SRC = 'ออเดอร์ของช่องทางนี�
 const TR_ADS_SRC = { 'Facebook': 'Meta Marketing API · Ads Conversion (ยิงให้เพจขาย)', 'Facebook PR': 'Meta Marketing API · Ads PR / boost โพสต์ KOL (ไม่นับ ROAS)', 'TikTok': 'TikTok Ads API (GMV Max + Ads อื่น)',
   'Shopee': 'Shopee API (Product / Shop Ads) · Brand / Live / Meta in-app กรอกจาก Seller Centre · CPAS จาก Meta API', 'Lazada': 'ชีทค่า Ads Lazada ที่ทีมกรอก' };
 function trRange(a, b) { const f = v => new Date(v + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }); return a === b ? f(a) : `${f(a)} – ${f(b)}`; }
-function trThumb(u, fb) { return u ? `<img src="${trEsc(u)}" data-tip-img="${trEsc(u)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:var(--bg3);" onerror="this.style.visibility='hidden'">`
+function trThumb(u, fb) { return u ? `<img loading="lazy" decoding="async" src="${trEsc(u)}" data-tip-img="${trEsc(u)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:var(--bg3);" onerror="this.style.visibility='hidden'">`
   : `<span style="width:36px;height:36px;border-radius:6px;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:11px;color:var(--text3);">${fb ? 'FB' : 'TT'}</span>`; }
 async function traceSales(a, b, ch, sku, sub, mode) {
   trOpenShell('ที่มาของตัวเลข');
@@ -9677,7 +9677,7 @@ function ttcGoToPage(n) { ttcPage = n; renderTtcCurrentView(); }
 function ttcCellHtml(c, k) {
   switch(k) {
     case 'cover': return c.thumbnail
-      ? `<img src="${c.thumbnail}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+      ? `<img loading="lazy" decoding="async" src="${c.thumbnail}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
       : `<div style="color:var(--text3);font-size:24px;">🎬</div>`;
     case 'caption': return `<span title="${ttcEscAttr(c.caption)}" style="color:var(--text);display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span>`;
     case 'date': return c.date ? new Date(c.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}) : '—';
@@ -10253,7 +10253,7 @@ function renderTtaCreatorSummary() {
   document.getElementById('tbodyTtaCreator').innerHTML = show.map(c => {
     const slug = String(c.handle || '').replace(/^@/, '').replace(/\s+/g, '');
     const link = slug && slug !== '(ไม่ทราบชื่อ)' ? `https://www.tiktok.com/@${encodeURIComponent((TT_HANDLE_MAP || {})[String(c.handle).toLowerCase()] || slug)}` : '';
-    const thumb = c.top && c.top.thumb ? `<img src="${ttcEscAttr(c.top.thumb)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='🎵'">` : '🎵';
+    const thumb = c.top && c.top.thumb ? `<img loading="lazy" decoding="async" src="${ttcEscAttr(c.top.thumb)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='🎵'">` : '🎵';
     const tag = c.isDeesay ? `<div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:rgba(96,165,250,0.15);color:#60a5fa;">🏠 Deesay</div>` : `<div style="display:inline-block;font-size:9.5px;font-weight:700;padding:0 5px;border-radius:4px;background:rgba(167,139,250,0.15);color:#a78bfa;">🎭 KOL</div>`;
     return `<tr><td><div style="display:flex;align-items:center;gap:8px;"><a ${link ? `href="${ttcEscAttr(link)}" target="_blank" rel="noopener" title="เปิดช่อง TikTok"` : ''} style="display:block;width:44px;height:44px;border-radius:6px;overflow:hidden;background:var(--bg3);flex:0 0 auto;text-align:center;line-height:44px;">${thumb}</a>
       <div style="font-size:10.5px;color:var(--text3);line-height:1.35;">${tag}<div>${ttHandleHtml(c.handle, false)}</div></div></div></td>
@@ -10273,7 +10273,7 @@ function ttaCellHtml(c, k) {
   switch(k) {
     case 'clip': return `<div style="display:flex;align-items:center;gap:8px;">
       <div style="width:28px;height:28px;border-radius:5px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        ${c.thumbnail ? `<img src="${c.thumbnail}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : '🎬'}
+        ${c.thumbnail ? `<img loading="lazy" decoding="async" src="${c.thumbnail}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : '🎬'}
       </div><span title="${ttcEscAttr(c.caption)}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(c.caption)}</span></div>`;
     case 'source': return c.isDeesay ? '<span style="color:var(--blue);font-weight:700;font-size:10.5px;">🏠 Deesay</span>' : '<span style="color:#a78bfa;font-weight:700;font-size:10.5px;">🎭 KOL</span>';
     case 'handle': return ttHandleHtml(c.handle);
