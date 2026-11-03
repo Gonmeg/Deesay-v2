@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="config.js"></script>
-<script src="auth.js?v=20261102a"></script>
+<script src="auth.js?v=20261103a"></script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -98,7 +98,7 @@
 </nav>
 <!-- (2026-10-26) เมนูซ้ายกลาง (sidebar.js) · แถบเมนูบนเดิมซ่อนไว้ ปุ่มธีม / ออกจากระบบเดิมยังทำงานผ่านเมนูนี้ -->
 <div id="sbMount" data-page="health"></div>
-<script src="sidebar.js?v=20261028b"></script>
+<script src="sidebar.js?v=20261103a"></script>
 <main><div class="shell">
   <div class="page-header">
     <div><h1>สถานะระบบข้อมูล</h1><p>สรุปการนำเข้าข้อมูล งานตั้งเวลา และผลการตรวจสอบตัวเลข</p></div>
@@ -194,7 +194,6 @@ const JOB_DESC = {
   'fill-tiktok-creative-attributes': 'เติมชื่อคลิปที่ยังว่างจาก tiktok_videos / ปกคลิป',
   'tiktok-ad-covers-sync': 'ปกคลิปที่ยิงแอด (ทีละชุด identity)',
   'tiktok-organic-sync': 'คลิป/ยอดวิว TikTok ของช่องเรา (organic)',
-  'tiktok-hashtag-sync': 'คำค้น/แฮชแท็ก TikTok',
   'tiktok-creator-info-refresh-daily': 'ข้อมูล creator TikTok',
   'refresh-mv-tiktok-creative-performance': 'รีเฟรชสรุปผลแอดรายคลิป TikTok',
   'refresh-mv-tiktok-objective-summary': 'รีเฟรชสรุปค่าแอด TikTok ตาม objective (ตัวที่ชีท/หน้าเว็บอ่าน)',
@@ -454,7 +453,7 @@ async function render(d, unknown, extra) {
     ['Facebook Engagement / โพสต์', 'Facebook Graph API (social_posts, fb_pages)', 'ingest-facebook-* 07:xx'],
     ['Facebook Ads', 'Meta Marketing API 10 บัญชี (fb_ads_daily, fb_ads, fb_ad_campaigns) · ยอดขายจริงจาก orders', 'meta-ads-sync 08:00/20:00 · token หมด 14 พ.ย.'],
     ['ภาพรวม TikTok / TikTok Ads', 'TikTok Ads API (mv_tiktok_creative_performance, mv_tiktok_objective_summary) · ยอดขายจาก orders · (2026-10-18) แผงตัวเลข / ตารางในหน้าภาพรวม: ค่า Ads + ROAS อ่านจาก mv_ad_spend_daily (แหล่งเดียวกับ Ad Performance) แยกร้านตาม sub_channel', 'tiktok-*-sync 08:xx + 12:xx · MV รีเฟรชรายชั่วโมง'],
-    ['ผลงานคอนเทนต์ TikTok / ค้นหาคำ', 'TikTok Accounts API (tiktok_videos) + ปกคลิปจาก Ads API', 'tiktok-organic-sync 07:30/19:30 · covers ทุก 15 นาที'],
+    ['ผลงานคอนเทนต์ TikTok', 'TikTok Accounts API (tiktok_videos) + ปกคลิปจาก Ads API', 'tiktok-organic-sync 07:30/19:30 · covers ทุก 15 นาที'],
     ['Creator Performance', 'ยอดครีเอเตอร์: ⚡ API = TikTok Affiliate API (mv_creator_daily_api / creator_commission_api) ตั้งแต่ 1 ก.ย. 69 · 📄 วิธีเดิม = orders (creator_handle) · ป้าย/ตัวกรอง KOL–Affiliate = v_creator_type (มีงานในไฟล์ทีม KOL) + บัญชีร้าน deesaythailand / ช่องรอง deesay_cosmetics (creator_kind) · ค่า Ads = TikTok Ads API · ค่าจ้าง KOL = ไฟล์งานทีม KOL งาน TikTok ตามวันโพสต์ (mv_kol_plan_jobs)', 'mv_creator_daily รายชั่วโมง · refresh-creator-api ทุก 2 ชม.'],
     ['หน้าแรก', 'RPC home_trend: ยอด = mv_sales_daily · ค่า Ads = mv_ad_spend_daily (แยก Facebook PR / KOL ไม่นับ ROAS) · ROAS ไม่นับยอดตัวแทน / MT · ยอดเข้าครบ: ช่องทาง API = เมื่อวาน, ช่องทางอัปไฟล์ = วันก่อนวันที่อัปไฟล์ล่าสุด (ป้าย Pending upload / Partial) · RPC home_brief: วันเริ่มต้น = วันล่าสุดที่ Facebook มียอด · Ads ดี/แย่ (สินค้าจาก v_fb_ad_product / mv_tt_clips_by_product · ต่ำ = ROAS < 2x) · คนทักทั้งหมดจาก mv_fb_ads_daily_b · สินค้าขายดี · สต็อก', 'ตาม mv_sales_daily ทุก 30 นาที · home_brief cache 15 นาที'],
     ['พนักงานขาย (Facebook / Line)', 'RPC sales_admin_page: ยอด/ออเดอร์ = mv_fb_admin_daily (refresh พร้อม mv_sales_daily ทุกชั่วโมง + หลังอัปไฟล์ → เท่ายอด Facebook ทุกหน้าเสมอ) · ลูกค้า / สินค้าขายดี จาก orders + sku_revenue · ชื่อจากช่อง sales_admin = คอลัมน์ "พนักงานขาย" ในไฟล์ออเดอร์ Facebook (upload.html) · ส.ค.–ก.ย. 69 เติมจากไฟล์ export ที่เมฆส่ง · ตีกลับ = เลขออเดอร์ในคอลัมน์ C ของชีทตีกลับ (ทุกแท็บเดือน) → fb_return_orders ใช้หน้านี้หน้าเดียว', 'ตามการอัปไฟล์ Facebook · ตีกลับ fb-return-sync ทุก 5 นาที (ดึงทีละแท็บ แต่ละแท็บวันละครั้ง)'],
