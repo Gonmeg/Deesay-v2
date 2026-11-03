@@ -1,3 +1,6 @@
+// ttcontent.js (v20261103c) — กราฟมีส่วนร่วมเป็น Engagement rate รายวัน เทียบค่าเฉลี่ยวงการ
+// ttcontent.js (v20261103b) — ผู้ติดตามโตสุทธิจากยอดรวม (เชื่อถือได้กว่าตัวเลขรายวัน) · สรุปขั้น ยอดวิว → โปรไฟล์ → ลิงก์ไบโอ
+// ttcontent.js (v20261103a) — หน้าตาแบบ C: แถบตัวเลขเดียว · เทียบวงการเป็นป้ายสี · โน้ตใต้กล่องย้ายเข้า ⓘ
 // ttcontent.js — หน้า "ผลงานคอนเทนต์ (TikTok)" เวอร์ชันใหม่ ใช้ข้อมูลจาก TikTok API ตรง (เลิกใช้ Windsor)
 // ใช้ของกลางจาก dashboard.html: supaRpc, fmtDateISO, chartTickColor/chartGridColor, Chart.js, CSS
 // RPC: tiktok_content_page(p_days) จาก 66_tiktok_comments_benchmark.sql
@@ -164,13 +167,15 @@
 
     // ---- ตัวเลขช่วงนี้ ----
     const newFollow = daily.reduce((s, x) => s + (+x.daily_new_followers || 0), 0);
+    // (2026-11-03) โตสุทธิ = ยอดผู้ติดตามรวมวันสุดท้าย − วันแรกของช่วง (ตัวเลขติดตามใหม่ / เลิกตามรายวัน TikTok ส่งมาแค่บางวัน)
+    const fc = daily.map(x => +x.followers_count || 0).filter(Boolean), netFollow = fc.length > 1 ? fc[fc.length - 1] - fc[0] : null;
     const lostFollow = daily.reduce((s, x) => s + (+x.daily_lost_followers || 0), 0);
     const profileViews = daily.reduce((s, x) => s + (+x.profile_views || 0), 0);
     const bioClicks = daily.reduce((s, x) => s + (+x.bio_link_clicks || 0), 0);
     const engRate = t.views ? ((+t.likes + +t.comments + +t.shares) / +t.views) : null;
 
     const kpis = [
-      ['ผู้ติดตามตอนนี้', fmtN(p.followers_count), `${days} วันนี้ +${fmtN(newFollow)} · เลิกตาม ${fmtN(lostFollow)}`],
+      ['ผู้ติดตามตอนนี้', fmtN(p.followers_count), netFollow != null ? `${netFollow >= 0 ? '+' : '−'}${fmtN(Math.abs(netFollow))} ใน ${fc.length} วัน (สุทธิ)` : ''],
       ['คลิปในช่วงนี้', fmtN(t.clips), `ยอดวิวรวม ${fmtN(t.views)}`],
       ['Engagement rate', pct(engRate, 2), b.average_engagement_rate ? `ค่าเฉลี่ยวงการ ${pct(b.average_engagement_rate, 2)}` : ''],
       ['ดูจนจบเฉลี่ย', pct(t.avg_watched_rate, 1), `ดูเฉลี่ย ${fmtN(t.avg_time, 1)} วินาที`],
@@ -183,7 +188,7 @@
     if (b.average_engagement_rate != null) {
       const avgFollowDay = daily.length ? newFollow / daily.length - lostFollow / daily.length : null;
       cmp.push(['Engagement rate', engRate, b.average_engagement_rate, v => pct(v, 2)]);
-      cmp.push(['ผู้ติดตามโต/วัน', avgFollowDay, b.average_follower_growth, v => fmtN(v, 1) + ' คน']);
+      cmp.push(['ผู้ติดตามโต/วัน', netFollow != null && fc.length > 1 ? netFollow / (fc.length - 1) : avgFollowDay, b.average_follower_growth, v => fmtN(v, 1) + ' คน']);
       cmp.push(['จำนวนคลิปทั้งช่อง', p.videos_count, b.average_video_count, v => fmtN(v) + ' คลิป']);
       cmp.push(['ผู้ติดตาม', p.followers_count, b.average_follower_count, v => fmtN(v) + ' คน']);
     }
@@ -191,43 +196,43 @@
     root().innerHTML = `
       <div id="ttcDebug" style="display:none;"></div>
       ${freshnessNote()}
-      <div class="ttc-kpis">
-        ${kpis.map(([l, v, s]) => `<div class="card ttc-kpi"><div class="card-title">${l}</div><div class="kpi-value">${v}</div><div class="kpi-sub">${s}</div></div>`).join('')}
-      </div>
+      <section class="ui-metrics sa-hero" aria-label="ตัวเลขหลัก" style="grid-template-columns:repeat(6, minmax(0, 1fr)) !important;">
+        ${kpis.map(([l, v, s]) => `<div class="ui-metric is-static"><span class="ui-metric-l">${l}</span><span class="ui-metric-v" data-fit>${v}</span><span class="sa-md"><span>${s || '&nbsp;'}</span></span></div>`).join('')}
+      </section>
 
       <div class="ttc-grid2">
         <div class="card">
-          <div class="section-header"><div class="section-title">ยอดวิวมาจากไหน</div><span style="font-size:10.5px;color:var(--text3);">เฉลี่ยทุกคลิปในช่วงนี้</span></div>
+          <div class="section-header"><div class="section-title">ยอดวิวมาจากไหน <span class="pr-i" data-tip="ฟีดเยอะ = อัลกอริทึมดัน ได้คนใหม่ · ค้นหาเยอะ = คนตั้งใจหา Brand เรา · ผู้ติดตามเยอะแต่ฟีดน้อย = ไม่กระจายออกนอกกลุ่มเดิม" style="font-size:11px;color:var(--text3);font-weight:400;cursor:default;">ⓘ</span></div><span style="font-size:10.5px;color:var(--text3);">เฉลี่ยทุกคลิปในช่วงนี้</span></div>
           ${[['หน้าฟีด (For You)', t.foryou, 'var(--accent)'], ['ค้นหา', t.search, '#60a5fa'], ['ผู้ติดตาม', t.follow, '#4ade80'], ['โปรไฟล์', t.profile, '#c084fc']]
             .map(([l, v, c]) => `<div class="ttc-src"><span>${l}</span><div class="ttc-srcbar"><i style="width:${Math.min(100, (v || 0) * 100)}%;background:${c};"></i></div><b>${pct(v, 1)}</b></div>`).join('')}
-          <div style="font-size:10.5px;color:var(--text3);margin-top:10px;line-height:1.6;">ฟีดเยอะ = อัลกอริทึมดัน ได้คนใหม่ · ค้นหาเยอะ = คนตั้งใจหา Brand เรา · ผู้ติดตามเยอะแต่ฟีดน้อย = ไม่กระจายออกนอกกลุ่มเดิม</div>
         </div>
         <div class="card">
           <div class="section-header"><div class="section-title">เทียบกับวงการความงาม</div><span style="font-size:10.5px;color:var(--text3);">ค่าเฉลี่ยช่องหมวดเดียวกันในไทย</span></div>
           ${cmp.length ? cmp.map(([l, mine, avg, f]) => {
             const good = mine != null && avg != null && mine >= avg;
-            return `<div class="ttc-cmp"><span>${l}</span><b style="color:${good ? 'var(--green)' : 'var(--orange)'};">${f(mine)}</b><span class="ttc-cmp-avg">เฉลี่ย ${f(avg)}</span></div>`;
+            return `<div class="ttc-cmp"><span>${l}</span><span class="ui-chip ${mine == null || avg == null ? '' : good ? 'up' : 'dn'}">${f(mine)}</span><span class="ttc-cmp-avg">เฉลี่ย ${f(avg)}</span></div>`;   // (2026-11-03) ป้ายเขียว = ดีกว่าค่าเฉลี่ย · แดง = ต่ำกว่า
           }).join('') : '<div class="empty" style="padding:20px;">ยังไม่มีข้อมูลเทียบ</div>'}
         </div>
       </div>
 
       <div class="card" style="margin-bottom:16px;">
         <div class="section-header"><div class="section-title">คนเข้ามาที่ช่องเท่าไร</div><span style="font-size:10.5px;color:var(--text3);">เห็นคลิป → กดเข้าช่อง → กดลิงก์ไปซื้อ</span></div>
+        <div class="ttc-funnel">${(() => { const v = +t.views || 0, pv = profileViews, bc = bioClicks, st = (l, n, r) => `<div><span>${l}</span><b>${fmtN(n)}</b>${r != null ? `<em>${r}</em>` : ''}</div>`;
+          return st('ยอดวิวคลิป', v) + '<i>→</i>' + st('เข้าดูโปรไฟล์', pv, v ? (pv / v * 100).toFixed(2) + '% ของยอดวิว' : null) + '<i>→</i>' + st('กดลิงก์ในไบโอ', bc, pv ? (bc / pv * 100).toFixed(2) + '% ของคนเข้าโปรไฟล์' : null); })()}</div>
         <div class="chart-wrap" style="height:230px;"><canvas id="ttcTraffic"></canvas></div>
         <div class="ttc-legend" id="lgTraffic"></div>
       </div>
 
       <div class="ttc-grid2">
         <div class="card">
-          <div class="section-header"><div class="section-title">คนมีส่วนร่วมแค่ไหน</div><span style="font-size:10.5px;color:var(--text3);">ไลก์ · คอมเมนต์ · แชร์ ต่อวัน</span></div>
+          <div class="section-header"><div class="section-title">คนมีส่วนร่วมแค่ไหน <span class="pr-i" data-tip="Engagement rate = (ไลก์ + คอมเมนต์ + แชร์) ÷ ยอดวิว ของแต่ละวัน · เขียว = ถึงค่าเฉลี่ยช่องหมวดความงามในไทย · แดง = ต่ำกว่า · ชี้ที่แท่งเพื่อดูจำนวนไลก์ / คอมเมนต์ / แชร์" style="font-size:11px;color:var(--text3);font-weight:400;cursor:default;">ⓘ</span></div><span style="font-size:10.5px;color:var(--text3);">Engagement rate รายวัน เทียบวงการ</span></div>
           <div class="chart-wrap" style="height:210px;"><canvas id="ttcEngage"></canvas></div>
           <div class="ttc-legend" id="lgEngage"></div>
         </div>
         <div class="card">
-          <div class="section-header"><div class="section-title">ผู้ติดตาม</div><span style="font-size:10.5px;color:var(--text3);">ได้มา − เสียไป ต่อวัน</span></div>
+          <div class="section-header"><div class="section-title">ผู้ติดตาม <span class="pr-i" data-tip="แท่ง = ยอดผู้ติดตามรวมเปลี่ยนจากวันก่อนเท่าไร (ได้มา − เสียไป) · บางวัน TikTok ไม่ส่งตัวเลขคนติดตามใหม่มา (ขึ้นเป็น 0) ทั้งที่ยอดรวมขยับ — เป็นข้อจำกัดฝั่ง TikTok ไม่ใช่ข้อมูลหาย" style="font-size:11px;color:var(--text3);font-weight:400;cursor:default;">ⓘ</span></div><span style="font-size:10.5px;color:var(--text3);">โตสุทธิต่อวัน</span></div>
           <div class="chart-wrap" style="height:210px;"><canvas id="ttcFollow"></canvas></div>
           <div class="ttc-legend" id="lgFollow"></div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.6;">บางวัน TikTok ไม่ส่งตัวเลขคนติดตามใหม่มา (ขึ้นเป็น 0) ทั้งที่ยอดรวมขยับ — เป็นข้อจำกัดฝั่ง TikTok ไม่ใช่ข้อมูลหาย</div>
         </div>
       </div>
 
@@ -251,6 +256,10 @@
         #page-ttcontent .ttc-srcbar { flex:1; height:7px; border-radius:4px; background:var(--bg3); overflow:hidden; }
         #page-ttcontent .ttc-srcbar i { display:block; height:100%; border-radius:4px; }
         #page-ttcontent .ttc-cmp { display:flex; align-items:center; gap:10px; font-size:12px; margin:11px 0; }
+        #page-ttcontent .ttc-funnel { display:flex; align-items:stretch; gap:10px; margin:2px 0 12px; flex-wrap:wrap; }
+        #page-ttcontent .ttc-funnel > div { flex:1; min-width:150px; padding:10px 12px; border-radius:10px; background:var(--bg3); display:flex; flex-direction:column; gap:2px; }
+        #page-ttcontent .ttc-funnel span { font-size:12px; color:var(--text3); } #page-ttcontent .ttc-funnel b { font-size:20px; color:var(--text); font-variant-numeric:tabular-nums; } #page-ttcontent .ttc-funnel em { font-style:normal; font-size:12px; color:var(--text2); }
+        #page-ttcontent .ttc-funnel > i { align-self:center; font-style:normal; color:var(--text3); }
         #page-ttcontent .ttc-cmp span:first-child { flex:1; color:var(--text2); }
         #page-ttcontent .ttc-cmp b { font-size:13px; font-variant-numeric:tabular-nums; }
         #page-ttcontent .ttc-cmp-avg { font-size:10.5px; color:var(--text3); width:110px; text-align:right; }
@@ -340,16 +349,19 @@
     // 2) การมีส่วนร่วม
     const el2 = document.getElementById('ttcEngage');
     if (el2) {
+      // (2026-11-03) Engagement rate รายวัน เทียบค่าเฉลี่ยวงการ (เดิมแท่งซ้อน ไลก์บังคอมเมนต์ / แชร์ จนมองไม่เห็น และยอดดิบขึ้นลงตามยอดวิวอยู่แล้ว)
+      const er = daily.map(x => +x.video_views ? ((+x.likes || 0) + (+x.comments || 0) + (+x.shares || 0)) / +x.video_views * 100 : null);
+      const bmo = (DATA && DATA.benchmark) || {}, bm = bmo.average_engagement_rate != null ? +bmo.average_engagement_rate * 100 : null;
+      const dsE = [{ type: 'bar', label: 'Engagement rate', data: er, backgroundColor: er.map(v => bm == null || v == null ? 'rgba(200,169,110,.8)' : v >= bm ? 'rgba(74,222,128,.8)' : 'rgba(248,113,113,.75)'), borderRadius: 3 }];
+      if (bm != null) dsE.push({ type: 'line', label: 'ค่าเฉลี่ยวงการ', data: daily.map(() => bm), borderColor: tick, borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0 });
       charts.engage = new Chart(el2, {
-        type: 'bar',
-        data: { labels, datasets: [
-          { label: 'ไลก์', data: daily.map(x => +x.likes || 0), backgroundColor: 'rgba(200,169,110,.8)', stack: 'e' },
-          { label: 'คอมเมนต์', data: daily.map(x => +x.comments || 0), backgroundColor: 'rgba(96,165,250,.85)', stack: 'e' },
-          { label: 'แชร์', data: daily.map(x => +x.shares || 0), backgroundColor: 'rgba(192,132,252,.85)', stack: 'e' },
-        ] },
-        options: Object.assign({}, common, { scales: { x: Object.assign({}, xAxis, { stacked: true }), y: Object.assign({}, yA, { stacked: true }) } })
+        type: 'bar', data: { labels, datasets: dsE },
+        options: Object.assign({}, common, { plugins: Object.assign({}, common.plugins || {}, { legend: { display: false }, tooltip: { filter: c => c.dataset.type === 'bar', callbacks: {
+            label: c => `Engagement rate ${c.parsed.y != null ? c.parsed.y.toFixed(2) + '%' : '—'}`,
+            footer: it => { const x = daily[it[0].dataIndex] || {}; return `ไลก์ ${fmtN(x.likes)} · คอมเมนต์ ${fmtN(x.comments)} · แชร์ ${fmtN(x.shares)} · วิว ${fmtN(x.video_views)}`; } } } }),
+          scales: { x: xAxis, y: Object.assign({}, yA, { ticks: Object.assign({}, yA.ticks, { callback: v => v + '%' }) }) } })
       });
-      mkLegend('lgEngage', [['#c8a96e', 'ไลก์'], ['#60a5fa', 'คอมเมนต์'], ['#c084fc', 'แชร์']]);
+      mkLegend('lgEngage', bm != null ? [['#4ade80', 'ถึงค่าเฉลี่ยวงการ'], ['#f87171', 'ต่ำกว่าค่าเฉลี่ย'], [tick, 'ค่าเฉลี่ยวงการ ' + bm.toFixed(2) + '%']] : [['#c8a96e', 'Engagement rate']]);
     }
 
     // 3) ผู้ติดตาม
@@ -358,8 +370,7 @@
       charts.follow = new Chart(el3, {
         type: 'bar',
         data: { labels, datasets: [
-          { label: 'ติดตามใหม่', data: daily.map(x => +x.daily_new_followers || 0), backgroundColor: 'rgba(74,222,128,.8)', yAxisID: 'y' },
-          { label: 'เลิกติดตาม', data: daily.map(x => -(+x.daily_lost_followers || 0)), backgroundColor: 'rgba(248,113,113,.75)', yAxisID: 'y' },
+          { label: 'โตสุทธิต่อวัน', data: daily.map((x, i) => i && +x.followers_count && +daily[i - 1].followers_count ? +x.followers_count - +daily[i - 1].followers_count : null), backgroundColor: daily.map((x, i) => i && +x.followers_count - +daily[i - 1].followers_count < 0 ? 'rgba(248,113,113,.75)' : 'rgba(74,222,128,.8)'), yAxisID: 'y' },
           { type: 'line', label: 'ผู้ติดตามรวม', data: daily.map(x => +x.followers_count || null), borderColor: '#c8a96e', borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y2' },
         ] },
         options: Object.assign({}, common, {
@@ -369,7 +380,7 @@
             y: { grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, callback: v => fmtN(Math.abs(v)) } },
             y2: Object.assign({}, yA, { position: 'right', grid: { display: false }, beginAtZero: false }) } })
       });
-      mkLegend('lgFollow', [['#4ade80', 'ติดตามใหม่'], ['#f87171', 'เลิกติดตาม'], ['#c8a96e', 'ผู้ติดตามรวม (แกนขวา)']]);
+      mkLegend('lgFollow', [['#4ade80', 'โตสุทธิต่อวัน (ลด = แดง)'], ['#c8a96e', 'ผู้ติดตามรวม (แกนขวา)']]);
     }
   }
 
