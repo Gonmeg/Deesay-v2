@@ -20,7 +20,6 @@ window.DEESAY_PAGES = [
   { id: 'fbads',        name: 'Facebook Ads',          group: 'Facebook' },
   { id: 'tthub',        name: 'ภาพรวม TikTok',         group: 'TikTok' },
   { id: 'ttcontent',    name: 'ผลงานคอนเทนต์',         group: 'TikTok' },
-  { id: 'ttkeyword',    name: 'ค้นหาคำบน TikTok',      group: 'TikTok' },
   { id: 'ttads',        name: 'TikTok Ads',            group: 'TikTok' },
   { id: 'livesearch',   name: 'ค้นหา Live',            group: 'TikTok' },
   { id: 'creatorperf',  name: 'Creator Performance',   group: 'TikTok' },
