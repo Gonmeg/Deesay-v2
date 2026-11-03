@@ -95,7 +95,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
           const hr = tb.querySelector('thead tr:last-child'), heads = hr ? grid(hr).map(h => (h || '').trim()) : [];
           const T = grid(tot), Bs = body.map(grid);
           T.forEach((cv, i) => {
-            if (i === 0 || cv == null || /%|อัตรา|ROAS|ROI|เฉลี่ย|ราคา|ต่อ|MER|CPA|CTR|สัดส่วน|AOV/i.test(heads[i] || '')) return;
+            if (i === 0 || cv == null || /%|อัตรา|ROAS|ROI|เฉลี่ย|ราคา|ต่อ|MER|CPA|CPM|CPC|CPO|CTR|สัดส่วน|AOV|\//i.test(heads[i] || '')) return;
             const tv = num(cv); if (tv === null) return;
             const vals = Bs.map(r => num(r[i])); if (vals.some(v => v === null) || !vals.length) return;
             const s = vals.reduce((a, b) => a + b, 0);
