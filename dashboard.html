@@ -2,6 +2,21 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<script>
+// (2026-11-03) กันหน้าเด้งตอนเปิดหน้า (ทุกหน้า): ซ่อนเมนูซ้าย หัวหน้าเว็บ และเนื้อหาไว้ จนสิทธิ์โหลดเสร็จและหัวหน้าเว็บนิ่ง (ตัวกรองของหน้า / ป้ายสถานะขึ้นครบ) แล้วค่อยแสดงทีเดียว · นานสุด 1.5 วินาที
+(function () {
+  var d = document.documentElement, t0 = Date.now(), last = '', still = 0; d.classList.add('ui-boot');
+  function tick() {
+    var tb = document.querySelector('.topbar'), r = tb ? tb.getBoundingClientRect() : null, k = r ? Math.round(r.height) + 'x' + Math.round(r.width) : '';
+    var ok = !!(window.Auth && window.Auth.perm);
+    if (k === last && ok) still += 80; else { still = 0; last = k; }
+    if ((ok && still >= 320) || Date.now() - t0 > 1500) { d.classList.remove('ui-boot'); return; }
+    setTimeout(tick, 80);
+  }
+  setTimeout(tick, 80);
+})();
+</script>
+<style>html.ui-boot .content, html.ui-boot .topbar > *, html.ui-boot .sb-nav, html.ui-boot .sb-ft { visibility: hidden; }</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deesay Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -768,7 +783,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.02-k"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.03-a"></div>
 <script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
