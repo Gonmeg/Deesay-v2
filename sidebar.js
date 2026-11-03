@@ -51,7 +51,7 @@
   const MENU = [
     ['home', 'หน้าแรก', 'home'], ['overview', 'ภาพรวมยอดขาย', 'chart'], ['kpi', 'เป้าหมาย KPI', 'target'],
     { g: 'fb', label: 'Facebook', icon: 'fb', color: 'var(--ch-facebook)', items: [['fbhub', 'ภาพรวม Facebook'], ['crm', 'CRM'], ['flow', 'เส้นทางซื้อซ้ำ'], ['neverbought', 'ลูกค้าที่ยังไม่ซื้อ'], ['fbengage', 'Engagement รายวัน'], ['fbads', 'Facebook Ads']] },
-    { g: 'tt', label: 'TikTok', icon: 'tt', color: 'var(--ch-tiktok)', items: [['tthub', 'ภาพรวม TikTok'], ['ttcontent', 'ผลงานคอนเทนต์'], ['ttkeyword', 'ค้นหาคำบน TikTok'], ['ttads', 'TikTok Ads'], ['livesearch', 'ค้นหา Live'], ['creatorperf', 'Creator Performance']] },
+    { g: 'tt', label: 'TikTok', icon: 'tt', color: 'var(--ch-tiktok)', items: [['tthub', 'ภาพรวม TikTok'], ['ttcontent', 'ผลงานคอนเทนต์'], ['ttads', 'TikTok Ads'], ['livesearch', 'ค้นหา Live'], ['creatorperf', 'Creator Performance']] },
     { g: 'sh', label: 'Shopee / Lazada', icon: 'bag', color: 'var(--ch-shopee)', items: [['shhub', 'ภาพรวม Shopee'], ['shads', 'Shopee Ads'], ['lzhub', 'ภาพรวม Lazada']] },
     { g: 'mt', label: 'Modern Trade', icon: 'store', color: 'var(--ch-mt)', items: [['mthub', 'ภาพรวม Modern Trade', "_mtRetailer='';"]] },
     ['skurev', 'แนวโน้มสินค้า', 'trend'], ['mktlive', 'MKT Tracking', 'pulse'], ['skuanalysis', 'เจาะสินค้า', 'search'], ['adperf', 'Ad Performance', 'mega'],
