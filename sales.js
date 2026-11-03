@@ -38,6 +38,8 @@
   const num = v => parseFloat(v) || 0;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const pct1 = v => (v * 100).toFixed(1) + '%';
+  // (2026-11-03) ช่องทางที่มีร้านเดียว: ซ่อนตารางแยกร้านตั้งแต่แรก (เดิมแสดง "กำลังโหลด" แล้วค่อยซ่อน → ส่วนด้านล่างกระโดดขึ้น)
+  const _ovSingle = { TikTok: true };
   const roasTxt = (rev, ads) => ads > 0 ? (rev / ads).toFixed(2) + 'x' : '—';
   // (2026-11-02) ป้ายเทียบแบบเดียวกับหน้าแรก: เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3% · inv = ยิ่งมากยิ่งไม่ดี (ค่า Ads)
   const chipOf = (v, inv, tip) => `<span class="ui-chip ${Math.abs(v) < 3 ? '' : ((v > 0) !== !!inv ? 'up' : 'dn')}"${tip ? ` title="${esc(tip)}"` : ''}>${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}%</span>`;
@@ -305,7 +307,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       <div class="${o.hub ? 'ov-row' : ''}" style="${o.hub ? '' : 'display:contents;'}"><div class="ov-card"><div class="ov-head"><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;"><h2>แนวโน้ม<span id="${idOf(o, 'ovGrain')}">รายวัน</span></h2>
         <div class="ov-seg" role="group" aria-label="มุมมองกราฟ"><button type="button" data-ovmode="metric">ตัวเลขที่เลือก</button><button type="button" data-ovmode="channel">${segAlt}</button></div>${go}</div>
         <div class="ov-leg" id="${idOf(o, 'ovLegend')}"></div></div><div class="ov-chart"><canvas id="${idOf(o, 'ovChart')}"></canvas></div></div>
-      <div class="ov-card" id="${idOf(o, 'ovTblCard')}" style="padding:16px 0 4px;"><div class="ov-head" style="padding:0 18px;"><h2>${o.hub ? 'แยกตาม' + unit : 'แยกตามช่องทาง'}</h2><button class="btn btn-ghost" type="button" onclick="exportTable('${idOf(o, 'ovTbl')}')">⬇ Export</button></div>
+      <div class="ov-card" id="${idOf(o, 'ovTblCard')}" style="padding:16px 0 4px;${o.hub && _ovSingle[o.ch] ? 'display:none;' : ''}"><div class="ov-head" style="padding:0 18px;"><h2>${o.hub ? 'แยกตาม' + unit : 'แยกตามช่องทาง'}</h2><button class="btn btn-ghost" type="button" onclick="exportTable('${idOf(o, 'ovTbl')}')">⬇ Export</button></div>
         <div style="overflow-x:auto;"><table class="ov-tbl" id="${idOf(o, 'ovTbl')}" data-no-page><thead><tr>${head}</tr></thead>
           <tbody id="${idOf(o, 'ovTbody')}"><tr><td colspan="${cols}" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div></div></div>`;
   }
@@ -400,6 +402,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const tbody = $(o, 'ovTbody');
     if (o.hub) {
       const show = A.SG.keys.length > 1;   // ร้านเดียว (เช่น TikTok) = ซ้ำกับแผงตัวเลข → ไม่แสดงตาราง
+      _ovSingle[o.ch] = !show;   // (2026-11-03) จำไว้ เปิดหน้าครั้งถัดไปซ่อนตั้งแต่แรก ไม่ต้องแสดงแล้วค่อยซ่อน (หน้าเด้ง)
       $(o, 'ovTblCard').style.display = show ? '' : 'none';
       tbody.innerHTML = show ? hubTableHtml(I, { from, to, sub, R, P, rowsAll, total, totCmp, adsIn: A.adsIn, totAds: A.totAds, totPR: A.totPR, SG: A.SG }) : '';
       const alt = root.querySelector('[data-ovmode="channel"]'); if (alt) alt.hidden = !show;
