@@ -160,6 +160,21 @@ body.light-theme .sa-hero .ui-metric, body.light-theme .sa-strip2 .ui-metric { b
 .sa-sum { font-size:15px; font-weight:700; color:var(--text); cursor:pointer; display:flex; align-items:center; gap:8px; }
 .sa-tbl th, .sa-tbl td { padding:9px 10px; } .sa-tbl .l { text-align:left; } .sa-tbl td small { display:block; margin-top:1px; color:var(--text3); font-size:12px; font-weight:400; }
 .sa-bar { display:inline-block; width:64px; height:6px; border-radius:3px; background:var(--bg3); vertical-align:middle; margin-right:8px; overflow:hidden; } .sa-bar b { display:block; height:100%; border-radius:3px; background:var(--ch-shopee); }
+.crm-filter .crm-rec { display:flex; align-items:center; gap:8px; padding-left:14px; border-left:1px solid var(--border); font-size:13px; color:var(--text2); white-space:nowrap; }
+.nb-export { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text); }
+.crm-chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; } .crm-chips:empty { display:none; }
+.crm-gnote { margin-top:12px; padding:10px 12px; border-radius:8px; background:var(--bg3); font-size:13px; color:var(--text2); } .crm-gnote b { color:var(--text); }
+.fbe-mini { margin-top:10px; font-size:12.5px; color:var(--text3); display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.fbe-sub { font-size:13px; font-weight:700; color:var(--text); margin:4px 0 8px; display:flex; gap:8px; align-items:center; }
+tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, transparent); }
+.fbe-rep { display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid var(--row-border); color:var(--text); text-decoration:none; font-size:13px; }
+.fbe-rep:hover { background:var(--bg3); } .fbe-rep-m { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .fbe-rep-t { color:var(--text3); font-size:12px; white-space:nowrap; }
+.fbe-ptbl { width:100%; } .fbe-ptbl th, .fbe-ptbl td { padding:8px 6px; } .fbe-ptbl td.l { white-space:normal; min-width:120px; }
+.fm-tbl th, .fm-tbl td { padding:8px 8px; } .fm-tbl .fm-ch { font-size:11.5px; white-space:normal; max-width:84px; line-height:1.3; vertical-align:bottom; }
+.fm-tbl td.fm-rh { white-space:nowrap; font-weight:600; } .fm-tbl td.fm-rh small { display:block; font-weight:400; color:var(--text3); font-size:11.5px; }
+.fm-tbl td.fm-c { text-align:center; font-weight:600; min-width:62px; border-radius:6px; } .fm-tbl td.fm-o { color:var(--text3); font-weight:400; }
+.flow-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--bg3); color:var(--text); font-size:12.5px; cursor:pointer; border:1px solid var(--border); }
+.flow-chip:hover { border-color:var(--bad); } .flow-chip span { color:var(--text3) !important; font-size:10.5px !important; }
 #tblShCpasCamp .ov-ch { display:inline-flex; align-items:center; gap:8px; border:0; background:none; padding:0; color:var(--text); font:inherit; cursor:pointer; text-align:left; }
 #tblShCpasCamp .ov-ch .chev { display:inline-block; width:12px; color:var(--text3); transition:transform .15s; } #tblShCpasCamp .ov-ch[aria-expanded="true"] .chev { transform:rotate(90deg); }
 #tblShCpasCamp tr.ov-sub td { background:color-mix(in srgb, var(--bg3) 55%, var(--bg2)); font-size:12.5px; color:var(--text2); }
@@ -784,7 +799,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.03-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.03-d"></div>
 <script src="sidebar.js?v=20261028b"></script>
 
 <div class="main">
@@ -1174,29 +1189,28 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
     </div>
     <div class="page" id="page-crm">
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card crm-filter" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">ค้นหาสินค้า (ดูเฉพาะลูกค้าที่เคยซื้อสินค้าที่เลือก "ครบทุกตัว" ในประวัติ ไม่ต้องซื้อพร้อมกัน — เลือกได้หลายตัว):</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">กรองตามสินค้าที่เคยซื้อ <span class="pr-i" data-tip="ดูเฉพาะลูกค้าที่ในประวัติเคยซื้อสินค้าที่เลือก &quot;ครบทุกตัว&quot; (ไม่ต้องซื้อพร้อมกันในออเดอร์เดียว) · เลือกได้หลายตัว" style="font-size:11px;color:var(--text3);font-weight:400;cursor:default;">ⓘ</span></div>
           <div style="position:relative;flex:1;min-width:200px;">
-            <input type="text" id="crmProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="debouncedFilterCrmProductDropdown()" onfocus="showCrmProductDropdown()" onblur="setTimeout(hideCrmProductDropdown,200)" style="width:100%;padding:7px 12px;">
+            <input type="text" class="ls-input" id="crmProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือรหัส เช่น แป้งดำ / ZOL" oninput="debouncedFilterCrmProductDropdown()" onfocus="showCrmProductDropdown()" onblur="setTimeout(hideCrmProductDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="crmProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <button class="btn btn-ghost" onclick="clearCrmProduct()" id="crmProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
+          <div class="crm-rec"><span>ซื้อล่าสุดไม่เกิน</span>
+            <input type="number" class="ls-input" id="crmRecencyFilter" placeholder="ทั้งหมด" min="1" oninput="debouncedOnCrmRecencyChange()" style="width:84px;text-align:center;padding:6px 8px;">
+            <span>วัน</span> <span class="pr-i" data-tip="ดูเฉพาะลูกค้าที่ซื้อครั้งล่าสุดภายในกี่วัน · เว้นว่าง = ดูทั้งหมด" style="font-size:11px;color:var(--text3);cursor:default;">ⓘ</span>
+            <button class="btn btn-ghost" onclick="clearCrmRecency()" id="crmRecencyClearBtn" style="display:none;">✕ ล้าง</button></div>
         </div>
-        <div id="crmProductChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เฉพาะลูกค้าที่ซื้อล่าสุดไม่เกิน:</div>
-          <input type="number" id="crmRecencyFilter" placeholder="เช่น 60" min="1" oninput="debouncedOnCrmRecencyChange()" style="width:90px;text-align:center;">
-          <div style="font-size:13px;color:var(--text2);">วัน (เว้นว่าง = ดูทั้งหมด)</div>
-          <button class="btn btn-ghost" onclick="clearCrmRecency()" id="crmRecencyClearBtn" style="display:none;">✕ ล้าง</button>
-        </div>
+        <div id="crmProductChips" class="crm-chips"></div>
       </div>
-      <div class="grid-3">
-        <div class="card"><div class="card-title" id="crm-total-label">ลูกค้า Facebook ทั้งหมด</div><div class="kpi-value" id="crm-total">—</div><div class="kpi-sub">unique เบอร์โทร</div></div>
-        <div class="card"><div class="card-title">ลูกค้าซื้อซ้ำ (2+ ครั้ง)</div><div class="kpi-value" id="crm-repeat">—</div><div class="kpi-sub" id="crm-repeat-pct">—% ของทั้งหมด</div></div>
-        <div class="card" id="crm-max-card"><div class="card-title">ซื้อสูงสุด</div><div class="kpi-value" id="crm-max">—</div><div class="kpi-sub">ครั้ง (รายที่ซื้อบ่อยสุด)</div></div>
-      </div>
-      <div class="grid-2" id="crmAvgRepurchaseRow" style="display:none;">
+      <!-- (2026-11-03) หน้าตาแบบ C: แถบตัวเลข (คง id เดิม) -->
+      <section class="ui-metrics sa-hero" aria-label="ตัวเลขหลัก" style="grid-template-columns:repeat(3, minmax(0, 1fr)) !important;">
+        <div class="ui-metric is-static"><span class="ui-metric-l"><span id="crm-total-label">ลูกค้า Facebook ทั้งหมด</span> <span id="crmInfoTotal"></span></span><span class="ui-metric-v" id="crm-total">—</span><span class="sa-md"><span>นับคนละ 1 จากเบอร์โทร</span></span></div>
+        <div class="ui-metric is-static"><span class="ui-metric-l">ลูกค้าซื้อซ้ำ (2 ครั้งขึ้นไป)</span><span class="ui-metric-v" id="crm-repeat">—</span><span class="sa-md"><span id="crm-repeat-pct">—% ของทั้งหมด</span></span></div>
+        <div class="ui-metric is-static" id="crm-max-card"><span class="ui-metric-l">ยอดซื้อเฉลี่ยต่อลูกค้า <span class="pr-i" data-tip="ยอดซื้อรวมของลูกค้าในช่วงที่เลือก ÷ จำนวนลูกค้า · ไม่รวมออเดอร์ยกเลิก / ตีกลับ" style="font-size:11px;color:var(--text3);font-weight:400;cursor:default;">ⓘ</span></span><span class="ui-metric-v" id="crm-avg-rev">—</span><span class="sa-md"><span>ซื้อบ่อยสุด <span id="crm-max">—</span> ครั้ง</span></span></div>
+      </section>
+      <div class="grid-2" id="crmAvgRepurchaseRow" style="display:none;margin-top:16px;">
         <div class="card" style="border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.04);">
           <div class="card-title" style="color:var(--green);">อัตราการซื้อซ้ำเฉลี่ย (สินค้านี้)</div>
           <div class="kpi-value" id="crm-avg-repurchase" style="color:var(--green);">—</div>
@@ -1209,10 +1223,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         </div>
       </div>
       <div class="grid-2">
-        <div class="card"><div class="card-title" id="ttlCRMTrend">เทรนด์ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ (รายเดือน)</div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRMTrend"></canvas></div></div>
-        <div class="card">
-          <div class="card-title">แบ่งกลุ่มตามจำนวนซื้อ</div>
-          <div id="crmGroups" class="crm-groups-compact"></div>
+        <section class="card sa-panel"><div class="sa-ph"><h2 id="ttlCRMTrend">ลูกค้าใหม่ vs ลูกค้าเก่าที่กลับมาซื้อ (รายเดือน)</h2></div><div class="chart-wrap chart-wrap-lg"><canvas id="chartCRMTrend"></canvas></div></section>
+        <div class="card sa-panel">
+          <div class="sa-ph"><h2>แบ่งกลุ่มตามจำนวนครั้งที่ซื้อ <span class="sa-note">กดกลุ่มเพื่อดูรายชื่อ</span></h2></div>
+          <div id="crmGroups"></div>
         </div>
       </div>
       <div class="card" id="crmDetailCard" style="display:none;margin-top:20px;">
@@ -1227,25 +1241,26 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     </div>
 
     <div class="page" id="page-neverbought">
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card crm-filter" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">เลือกสินค้า:</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;">สินค้าที่อยากขายให้ลูกค้าเก่า <span class="pr-i" data-tip="หาลูกค้า Facebook ที่เคยซื้อกับเรา แต่ยังไม่เคยซื้อสินค้าที่เลือกเลยสักครั้ง (ดูประวัติทั้งหมด ไม่จำกัดช่วงวันที่) · เลือกหลายตัว = ยังไม่เคยซื้อทุกตัวที่เลือก" style="font-size:11px;color:var(--text3);font-weight:400;cursor:default;">ⓘ</span></div>
           <div style="position:relative;flex:1;min-width:200px;">
-            <input type="text" id="nbProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือ SKU เช่น แป้งดำ / ZOL..." oninput="debouncedFilterNbProductDropdown()" onfocus="showNbProductDropdown()" onblur="setTimeout(hideNbProductDropdown,200)" style="width:100%;padding:7px 12px;">
+            <input type="text" class="ls-input" id="nbProductSearch" placeholder="พิมพ์ชื่อสินค้าหรือรหัส เช่น แป้งดีเซ้ย์เอ็กซ์ตร้า / NDSP" oninput="debouncedFilterNbProductDropdown()" onfocus="showNbProductDropdown()" onblur="setTimeout(hideNbProductDropdown,200)" style="width:100%;padding:7px 12px;">
             <div id="nbProductDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <button class="btn btn-ghost" onclick="clearNbProduct()" id="nbProductClearBtn" style="display:none;">✕ ล้างตัวกรอง</button>
         </div>
-        <div id="nbProductChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
+        <div id="nbProductChips" class="crm-chips"></div>
+        <div id="nbExportBar" class="nb-export" style="display:none;"></div>
       </div>
       <div id="nb-empty-state" class="card" style="text-align:center;color:var(--text3);padding:40px;">
-        เลือกสินค้าด้านบน แล้วกด "🔍 ค้นหา" มุมขวาบนเพื่อดูรายชื่อลูกค้าที่ยังไม่เคยซื้อ
+        เลือกสินค้าที่อยากขายด้านบน ระบบจะหารายชื่อลูกค้าเก่าที่ยังไม่เคยซื้อสินค้านั้นให้ทันที
       </div>
-      <div id="nb-kpis" style="display:none;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <section class="ui-metrics sa-hero" id="nb-kpis" style="display:none;grid-template-columns:repeat(3, minmax(0, 1fr)) !important;" aria-label="ตัวเลขหลัก"><div class="ui-metric is-static"><span class="ui-metric-l">ยังไม่เคยซื้อ</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ยังซื้อกับเราใน 90 วัน</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ยอดซื้อสะสมเฉลี่ย</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div></section>
       <div class="card" id="nb-result-card" style="display:none;">
         <div class="section-header">
-          <div class="section-title">ลูกค้าที่ยังไม่เคยซื้อสินค้าที่เลือก</div>
-          <button class="btn btn-ghost" onclick="exportNbCSV()">⬇ Export CSV</button>
+          <div class="section-title">รายชื่อลูกค้าที่ยังไม่เคยซื้อ <span class="sa-note">เรียงตามยอดซื้อสะสม · ลูกค้าที่ซื้อใน 90 วันมีป้ายสีเขียว</span></div>
+          <button class="btn btn-ghost" onclick="exportNbCSV(false)">⬇ Export CSV</button>
         </div>
         <div id="nb-display-note" style="font-size:11px;color:var(--text3);margin-bottom:8px;"></div>
         <div class="table-wrap">
@@ -1402,65 +1417,49 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <div id="flowSkuDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:220px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
           </div>
           <button class="btn btn-ghost btn-sm" onclick="resetFlowTopSKUs()" style="white-space:nowrap;">↺ Top 10 อัตโนมัติ</button>
+          <label class="kp-chk" data-tip="ของแถม = สินค้าที่ตั้งสถานะ ของแถม (GWP) ในหน้าสินค้า &amp; ราคา เช่น แปรงคาบูกิ ลิปกลอสสีใส คุชชั่นแถม · ปกติไม่นับ เพราะลูกค้าไม่ได้เลือกซื้อเอง" style="font-size:13px;color:var(--text2);display:inline-flex;gap:6px;align-items:center;white-space:nowrap;"><input type="checkbox" id="flowGift" onchange="flowIncludeGifts=this.checked;flowSelectedSKUs=[];renderFlowPage()"> รวมของแถม</label>
           <button class="btn btn-primary" onclick="renderFlowPage()">🔍 วิเคราะห์</button>
         </div>
         <div id="flowSkuChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);min-height:32px;"></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;">เลือกได้หลายตัว (ต้องมีอย่างน้อย 2) — คลิก chip เพื่อยกเลิก</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">เลือกได้หลายตัว (ต้องมีอย่างน้อย 2) — กดที่ชื่อเพื่อเอาออก · เริ่มต้น = 10 สินค้าที่ลูกค้ากลับมาซื้อบ่อยสุด</div>
       </div>
-      <div class="grid-3" id="flowKPIs" style="margin-bottom:20px;"></div>
-      <div class="card" style="margin-bottom:16px;">
-        <div class="section-header"><div class="section-title">Sankey — เส้นทางการซื้อต่อเนื่อง</div></div>
-        <div id="flowSankeyWrap"><div class="empty">กด "วิเคราะห์" เพื่อโหลดข้อมูล</div></div>
-      </div>
-      <div class="card">
-        <div class="section-header">
-          <div class="section-title">รายละเอียด Transition ทั้งหมด</div>
-          <button class="btn btn-ghost" onclick="exportTable('tblFlowDetail')">⬇ Export CSV</button>
-        </div>
+      <!-- (2026-11-03) หน้าตาแบบ C: แถบตัวเลข (ภาษาง่าย) · ตาราง "ซื้อแล้วซื้ออะไรต่อ" แบบสีเข้ม-อ่อน แทน Sankey · ตาราง "แนะนำขายต่อ" แทนรายการ Transition -->
+      <section class="ui-metrics sa-hero" id="flowKPIs" aria-label="ตัวเลขหลัก"><div class="ui-metric is-static"><span class="ui-metric-l">ครั้งที่ลูกค้ากลับมาซื้อ</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ซื้อสินค้าเดิมซ้ำ</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">กลับมาซื้อตัวเดิมมากสุด</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">ซื้อต่อกันบ่อยสุด</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div></section>
+      <section class="card sa-panel" style="margin-bottom:16px;">
+        <div class="sa-ph"><h2>ซื้อแล้ว ครั้งต่อไปซื้ออะไร <span id="flowMxInfo"></span></h2><button class="btn btn-ghost" onclick="exportTable('tblFlowMx')">⬇ Export CSV</button></div>
+        <div id="flowSankeyWrap"><div class="empty">กำลังโหลด…</div></div>
+      </section>
+      <section class="card sa-panel">
+        <div class="sa-ph"><h2>แนะนำขายต่อ <span class="sa-scope">ลูกค้าที่ซื้อสินค้านี้ ครั้งต่อไปมักซื้ออะไร (ไม่นับตัวเดิม)</span> <span id="flowRecInfo"></span></h2><button class="btn btn-ghost" onclick="exportTable('tblFlowDetail')">⬇ Export CSV</button></div>
         <div class="table-wrap">
-          <table id="tblFlowDetail">
-            <thead><tr><th>#</th><th>สินค้าที่ซื้อก่อน</th><th></th><th>สินค้าที่ซื้อต่อ</th><th>จำนวนครั้ง</th><th>% ของ SKU ต้นทาง</th><th>หมายเหตุ</th></tr></thead>
-            <tbody id="tbodyFlowDetail"><tr><td colspan="7" class="empty">—</td></tr></tbody>
+          <table id="tblFlowDetail" class="ui-table" data-no-page>
+            <thead><tr><th class="l">สินค้าที่ซื้อ</th><th class="num">กลับมาซื้อ (ครั้ง)</th><th class="num">ซื้อตัวเดิมซ้ำ</th><th class="l">ซื้อต่อบ่อยสุด อันดับ 1</th><th class="l">อันดับ 2</th><th class="l">อันดับ 3</th></tr></thead>
+            <tbody id="tbodyFlowDetail"><tr><td colspan="6" class="empty">—</td></tr></tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
 
 
     <div class="page" id="page-fbengage">
-      <div id="fbeKpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
-          <div class="section-title">เทรนด์ Engagement รายวัน — เทียบเพจ</div>
-          <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:10px;">
-            Engagement = Reactions (Facebook Insights API) + คอมเมนต์ (social_comments) + แชร์ (field shares.count จาก Facebook)
-            — Reels ไม่มี Reactions/แชร์จาก API นับได้แค่คอมเมนต์
-          </div>
-          <canvas id="fbeTrendChart" style="max-height:280px;"></canvas>
-        </div>
-
-        <div class="card">
-          <div class="section-title">โพสต์ล่าสุด แยกตามประเภท</div>
-          <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:10px;">นับจาก social_posts.post_type ที่บันทึกไว้ตอนดึงจาก Facebook (กรอง video เงาของ Reel ออกแล้ว)</div>
-          <div id="fbePostTypeBreakdown"></div>
-        </div>
+      <!-- (2026-11-03) หน้าตาแบบ C: แถบตัวเลขรวมทั้งช่วงที่เลือก (เดิมเป็นวันล่าสุดวันเดียว) · กราฟเส้นไม่ระบายทับกัน · ตารางแยกตามเพจ แทนการ์ด "เพจต่ำสุด" · คำอธิบายเทคนิคย้ายเข้า ⓘ -->
+      <section class="ui-metrics sa-hero" id="fbeKpis" aria-label="ตัวเลขหลัก"><div class="ui-metric is-static"><span class="ui-metric-l">Engagement รวม</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">โพสต์</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">คอมเมนต์</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div><div class="ui-metric is-static"><span class="ui-metric-l">คอมเมนต์ถามซื้อ</span><span class="ui-metric-v">—</span><span class="sa-md">&nbsp;</span></div></section>
+      <div class="sa-grid2">
+        <section class="card sa-panel"><div class="sa-ph"><h2>Engagement รายวัน แยกเพจ <span id="fbeTrendInfo"></span></h2></div>
+          <div class="chart-wrap" style="height:280px;"><canvas id="fbeTrendChart"></canvas></div></section>
+        <section class="card sa-panel"><div class="sa-ph"><h2>แยกตามเพจ <span id="fbePageInfo"></span></h2></div>
+          <table class="ui-table sa-tbl fbe-ptbl" data-no-sort data-no-page><thead><tr><th class="l">เพจ</th><th class="num">โพสต์</th><th class="num">Engagement</th><th class="num">ต่อโพสต์</th><th class="num">คอมเมนต์</th></tr></thead>
+            <tbody id="fbePostTypeBreakdown"><tr><td colspan="5" class="empty">กำลังโหลด...</td></tr></tbody><tfoot id="fbePageFoot"></tfoot></table></section>
       </div>
-
       <div class="card">
-        <div class="section-title">💬 คนพูดถึงอะไรบ้าง — วิเคราะห์คอมเมนต์</div>
-        <div class="section-sub" id="fbeCommentSub" style="font-size:11px;color:var(--text3);margin-bottom:14px;"></div>
-
-        <div id="fbeTagPills" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
-        <div id="fbeSentimentBar" style="margin-bottom:16px;"></div>
-
-        <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:6px;">
-          คำที่พบบ่อยในคอมเมนต์จริง — ยิ่งตัวใหญ่ยิ่งพบบ่อย
-          <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('fbe-info-keywords')" style="cursor:pointer;color:var(--text3);font-size:11px;">ⓘ</span><div id="fbe-info-keywords" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">นับจาก list คำที่ตั้งไว้ในตาราง comment_keywords เท่านั้น (ไม่ใช่ตัดคำภาษาไทยอัตโนมัติ) — ถ้าคำไหนไม่อยู่ใน list จะไม่ถูกนับ เพิ่ม/ลบคำได้ที่ตารางนี้โดยตรง ไม่ต้องแก้โค้ด</div></span>
+        <!-- (2026-11-03) คอมเมนต์: ตารางหัวข้อ (กดเพื่อกรอง) + คอมเมนต์ล่าสุดที่ควรตอบ · คำอธิบายเข้า ⓘ · ตัด word cloud เหลือเป็นแถบคำที่พบบ่อย -->
+        <div class="sa-ph"><h2>คอมเมนต์ลูกค้า — พูดถึงอะไร <span id="fbeComInfo"></span></h2><span class="sa-note" id="fbeCommentSub"></span></div>
+        <div class="sa-grid2" style="margin-bottom:12px;">
+          <div><table class="ui-table sa-tbl" data-no-sort data-no-page><thead><tr><th class="l">หัวข้อ <span class="sa-note">กดเพื่อกรอง</span></th><th class="num">คอมเมนต์</th><th class="l">สัดส่วน</th></tr></thead><tbody id="fbeTagPills"></tbody></table>
+            <div id="fbeSentimentBar" class="fbe-mini"></div><div id="fbeKeywordCloud" class="fbe-mini"></div></div>
+          <div><div class="fbe-sub">คอมเมนต์ล่าสุดที่ควรตอบ <span class="sa-note">อยากซื้อ · ถามราคา · ถามเรื่องสินค้า</span></div><div id="fbeToReply"></div></div>
         </div>
-        <div id="fbeKeywordCloud" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;"></div>
-
-        <div class="section-sub" style="font-size:11px;color:var(--text3);margin-bottom:8px;">โพสต์ที่มีคนคอมเมนต์บ่อยสุด — กดเปิดดูคอมเมนต์ได้</div>
+        <div class="fbe-sub">โพสต์ที่มีคนคอมเมนต์มากสุด <span class="sa-note">กดเปิดดูคอมเมนต์ได้</span></div>
         <div id="fbeTopCommentedPosts"></div>
         <div id="fbePostListPager"></div>
       </div>
@@ -2787,7 +2786,7 @@ const PAGE_INFO = {
 };
 const pageOrder = ['home','overview','kpi','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttkeyword','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
 const MONTH_ONLY_PAGES = ['cost', 'mktlive']; // Business Insight / MKT Tracking ใช้ตัวเลือก "เดือน" ด้านบน (ข้อมูลเป็นรายเดือน) — // MKT Tracking ยังต้องเลือกเป็นเดือน เพราะข้อมูลค่าใช้จ่ายการตลาด/ค่า Ads ต้นทางเก็บเป็นรายเดือน ไม่มีรายวันให้ดึง — promotion/geo/skurev ปรับเป็นรายวันแล้ว
-const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee','products', 'invvalue']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
+const NO_DATE_FILTER_PAGES = ['promotarget','supply','home','kpi','promo','exec','execfee','products', 'invvalue', 'neverbought']; // supply: แผนสต็อกคำนวณจากวันปัจจุบันเสมอ // หน้านี้ล็อกใช้ "วันล่าสุดที่มีข้อมูลจริง" เสมอ (เมื่อวาน/3วัน/7วัน) ไม่ผูกกับตัวกรองวันที่บนสุดแล้ว
 let currentPage = 'overview';
 let selectedMonthFrom = null; // 'YYYY-MM'
 let selectedMonthTo = null;   // 'YYYY-MM'
@@ -2920,7 +2919,7 @@ function showPage(page, lockCh, el) {
 
   // (2026-09-22) MKT Tracking ดูทุกช่องทางรวม (แยกช่องทางดูในหน้า) → ซ่อน Channel / Sub-channel
   // (2026-09-25) Business Insight / MKT Tracking ใช้ตัวเลือกเดือนด้านบน + ปุ่มค้นหา · ไม่มี Channel / Sub-channel (แยกช่องทางดูในหน้า)
-  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis';   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
+  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis' || page === 'neverbought';   // (2026-11-03) ลูกค้าที่ยังไม่ซื้อ ใช้ประวัติทั้งหมด ไม่ใช้ตัวกรองช่องทาง / วันที่   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
@@ -3444,10 +3443,9 @@ async function renderFbEngagePage() {
     return;
   }
 
-  renderFbeKpis();
   renderFbeTrendChart();
-  renderFbePostTypeBreakdown();
   renderFbeCommentSection();
+  renderFbeKpis();
 }
 
 function fbeOnPageChange() {
@@ -3456,27 +3454,27 @@ function fbeOnPageChange() {
 }
 
 function renderFbeKpis() {
-  const dates = [...new Set(fbeEngagementCache.map(r => r.post_date))].sort();
-  const latestDate = dates[dates.length - 1];
-  const prevDate = dates[dates.length - 2];
-  const todayRows = fbeEngagementCache.filter(r => r.post_date === latestDate);
-  const prevRows = fbeEngagementCache.filter(r => r.post_date === prevDate);
-  const engToday = todayRows.reduce((s, r) => s + r.engagement_total, 0);
-  const engPrev = prevRows.reduce((s, r) => s + r.engagement_total, 0);
-  const postsToday = todayRows.reduce((s, r) => s + r.post_count, 0);
-  const commentsToday = todayRows.reduce((s, r) => s + r.comments_total, 0);
-
-  const byPage = {};
-  fbeEngagementCache.forEach(r => { byPage[r.page_name] = (byPage[r.page_name] || 0) + r.engagement_total; });
-  const pageEntries = Object.entries(byPage);
-  const lowestPage = pageEntries.length ? pageEntries.sort((a, b) => a[1] - b[1])[0][0] : '—';
-
-  document.getElementById('fbeKpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:170px;"><div class="card-title">Engagement วันล่าสุดในช่วงที่เลือก ${fbeInfoIcon('fbe-info-eng', 'วันล่าสุด: ' + (latestDate || '—') + '<br>Engagement = Reactions + คอมเมนต์ + แชร์ (ทุกเพจที่เลือก)<br>⚠️ ถ้าวันล่าสุดคือวันนี้ ตัวเลขยังไม่ครบ — ดู "เมื่อวาน" ด้านล่างแทน')}</div><div class="kpi-value" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmt(engToday)}</div>${prevDate ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">เมื่อวาน (${fbeThaiDateShort(prevDate)}): ${fmt(engPrev)}</div>` : ''}</div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">โพสต์วันล่าสุด</div><div class="kpi-value" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmt(postsToday)}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">คอมเมนต์วันล่าสุด</div><div class="kpi-value" style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmt(commentsToday)}</div></div>
-    <div class="card" style="flex:1;min-width:170px;"><div class="card-title">เพจ engagement ต่ำสุดในช่วงนี้ ${fbeInfoIcon('fbe-info-low', 'รวม engagement ทุกวันในช่วงที่เลือก แล้วเทียบว่าเพจไหนน้อยที่สุด — อาจต้องดูก่อนเพจอื่น')}</div><div class="kpi-value" style="font-size:15px;font-weight:700;color:var(--red);">${lowestPage}</div></div>
-  `;
+  // (2026-11-03) รวมทั้งช่วงที่เลือก (เดิมโชว์เฉพาะวันล่าสุดวันเดียว ไม่ตรงกับช่วงวันที่ที่เลือก)
+  const S = k => fbeEngagementCache.reduce((s, r) => s + (+r[k] || 0), 0);
+  const eng = S('engagement_total'), posts = S('post_count'), com = S('comments_total'), sh = S('shares_total'), re = S('reactions_total');
+  const byType = {}; fbePostCountCache.forEach(r => { byType[r.post_type] = (byType[r.post_type] || 0) + r.post_count; });
+  const TL = { reel: 'Reel', video: 'วิดีโอ', photo: 'รูป', album: 'อัลบั้ม', status: 'ข้อความ', link: 'ลิงก์' };
+  const typeTxt = Object.entries(byType).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${TL[k] || k} ${fmt(v)}`).join(' · ');
+  const want = (fbeCommentTagsCache || []).filter(c => c.tag_want_to_buy).length;
+  const cell = (label, value, sub, inf) => `<div class="ui-metric is-static"><span class="ui-metric-l">${label}${inf || ''}</span><span class="ui-metric-v" data-fit>${value}</span><span class="sa-md"><span>${sub}</span></span></div>`;
+  document.getElementById('fbeKpis').innerHTML =
+    cell('Engagement รวม', fmt(eng), `เฉลี่ย ${posts ? (eng / posts).toFixed(1) : '—'} / โพสต์`, fbeInfoIcon('fbe-info-eng', `Engagement = Reactions ${fmt(re)} + คอมเมนต์ ${fmt(com)} + แชร์ ${fmt(sh)} ของโพสต์ที่โพสต์ในช่วงที่เลือก<br><b>ไม่รวม</b> Reactions / แชร์ของ Reels (Facebook ไม่ส่งตัวเลขนี้ให้) · Reels นับได้แค่คอมเมนต์`)) +
+    cell('โพสต์', fmt(posts), typeTxt || '&nbsp;', fbeInfoIcon('fbe-info-posts', 'จำนวนโพสต์ที่โพสต์ในช่วงที่เลือก แยกตามประเภท (ประเภทจาก Facebook ตอนดึงโพสต์)')) +
+    cell('คอมเมนต์', fmt(com), `แชร์ ${fmt(sh)}`) +
+    cell('คอมเมนต์ถามซื้อ', fmt(want), 'ดูรายการด้านล่าง', fbeInfoIcon('fbe-info-want', 'คอมเมนต์ที่ระบบจับคำได้ว่าอยากซื้อ / ถามวิธีสั่ง (ป้าย "อยากซื้อ" ในส่วนวิเคราะห์คอมเมนต์) · ควรมีคนตอบ'));
+  // ตารางแยกตามเพจ (แทนการ์ด "เพจต่ำสุด") — แถวรวม = แถบตัวเลขด้านบน
+  const byP = {}; fbeEngagementCache.forEach(r => { const x = byP[r.page_name] = byP[r.page_name] || { p: 0, e: 0, c: 0 }; x.p += +r.post_count || 0; x.e += +r.engagement_total || 0; x.c += +r.comments_total || 0; });
+  const rows = Object.entries(byP).sort((a, b) => b[1].e - a[1].e);
+  const tb = document.getElementById('fbePostTypeBreakdown'), tf = document.getElementById('fbePageFoot');
+  if (tb) tb.innerHTML = rows.map(([n, x]) => `<tr><td class="l">${ttcEsc(n)}</td><td class="num">${fmt(x.p)}</td><td class="num">${fmt(x.e)}</td><td class="num">${x.p ? (x.e / x.p).toFixed(1) : '—'}</td><td class="num">${fmt(x.c)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">ไม่มีโพสต์ในช่วงที่เลือก</td></tr>';
+  if (tf) tf.innerHTML = rows.length ? `<tr><td class="l">รวม</td><td class="num">${fmt(posts)}</td><td class="num">${fmt(eng)}</td><td class="num">${posts ? (eng / posts).toFixed(1) : '—'}</td><td class="num">${fmt(com)}</td></tr>` : '';
+  const pi = document.getElementById('fbePageInfo'); if (pi) pi.innerHTML = fbeInfoIcon('fbe-info-page', 'นับตามวันที่โพสต์ · ต่อโพสต์ = Engagement ÷ จำนวนโพสต์ (ใช้เทียบเพจที่โพสต์จำนวนไม่เท่ากัน)');
+  const ti = document.getElementById('fbeTrendInfo'); if (ti) ti.innerHTML = fbeInfoIcon('fbe-info-trend', 'Engagement ของโพสต์ที่โพสต์ในแต่ละวัน แยกเพจ · Engagement = Reactions + คอมเมนต์ + แชร์ · Reels มีแค่คอมเมนต์');
 }
 
 function renderFbeTrendChart() {
@@ -3490,8 +3488,8 @@ function renderFbeTrendChart() {
       return row ? row.engagement_total : 0;
     }),
     borderColor: COLORS[i % COLORS.length],
-    backgroundColor: COLORS[i % COLORS.length] + '22',
-    tension: 0.35, fill: true, pointRadius: 2
+    backgroundColor: COLORS[i % COLORS.length],
+    tension: 0.35, fill: false, pointRadius: 2, borderWidth: 2   // (2026-11-03) ไม่ระบายพื้นทับกัน
   }));
 
   if (window._fbeTrendChart) window._fbeTrendChart.destroy();
@@ -3499,7 +3497,7 @@ function renderFbeTrendChart() {
     type: 'line',
     data: { labels: dates.map(d => fbeThaiDateShort(d)), datasets },
     options: {
-      responsive: true,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 10 } } },
       scales: {
         x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
@@ -3516,6 +3514,7 @@ function fbeThaiDateShort(isoDate) {
 }
 
 function renderFbePostTypeBreakdown() {
+  return;   // (2026-11-03) ประเภทโพสต์ย้ายไปอยู่ในแถบตัวเลข (โพสต์) · กล่องนี้เป็นตารางแยกตามเพจ (วาดใน renderFbeKpis)
   const byType = {};
   fbePostCountCache.forEach(r => { byType[r.post_type] = (byType[r.post_type] || 0) + r.post_count; });
   const total = Object.values(byType).reduce((a, b) => a + b, 0) || 1;
@@ -3562,40 +3561,17 @@ function renderFbeCommentSection() {
   const quality = countTag('tag_quality');
   const question = countTag('tag_is_question');
 
-  const filterNote = fbeActiveTagFilter ? ` · 🔍 กรองเฉพาะแท็กที่เลือก — กดป้ายซ้ำเพื่อยกเลิก` : '';
-  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์ (กรองคอมเมนต์ของเพจเองออกแล้ว) · เฉพาะโพสต์ที่ตีพิมพ์ในช่วงวันที่เลือกไว้ด้านบน${filterNote}`;
-
-  const pillDef = [
-    { key: 'tag_want_to_buy', label: 'อยากซื้อ/สนใจ', count: wantBuy, color: 'green', rgb: '74,222,128' },
-    { key: 'tag_service', label: 'บริการ/การตอบ', count: service, color: 'blue', rgb: '96,165,250' },
-    { key: 'tag_price', label: 'ถามราคา', count: price, color: 'orange', rgb: '251,146,60' },
-    { key: 'tag_quality', label: 'คุณภาพสินค้า', count: quality, color: 'purple', rgb: '167,139,250' },
-    { key: 'tag_is_question', label: `เป็นคำถาม (${total ? (question/total*100).toFixed(0) : 0}%)`, count: question, color: 'red', rgb: '248,113,113' },
-  ];
-  document.getElementById('fbeTagPills').innerHTML = pillDef.map(p => {
-    const active = fbeActiveTagFilter === p.key;
-    return `<span class="tag-pill" onclick="fbeToggleTagFilter('${p.key}')" style="cursor:pointer;user-select:none;border:1.5px solid ${active ? `rgb(${p.rgb})` : `rgba(${p.rgb},0.3)`};border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;background:rgba(${p.rgb},${active ? 0.28 : 0.12});color:var(--${p.color});transition:all 0.15s;">${active ? '✓ ' : ''}${p.label} ${p.count}</span>`;
-  }).join('');
-
-  // Sentiment คอมเมนต์ (บวก/กลาง/ลบ) — วิเคราะห์แบบ keyword ง่ายๆ ดูรายละเอียดเกณฑ์ได้ที่ fbeSentimentOf()
+  // (2026-11-03) ตารางหัวข้อ (กดแถวเพื่อกรอง) · ความรู้สึก / คำที่พบบ่อย เป็นบรรทัดสั้น · คอมเมนต์ล่าสุดที่ควรตอบ
+  document.getElementById('fbeCommentSub').textContent = `${fmt(total)} คอมเมนต์${fbeActiveTagFilter ? ' · กรองอยู่ (กดหัวข้อเดิมซ้ำเพื่อยกเลิก)' : ''}`;
+  const ci = document.getElementById('fbeComInfo'); if (ci) ci.innerHTML = fbeInfoIcon('fbe-info-com', 'คอมเมนต์ของลูกค้าบนโพสต์ที่โพสต์ในช่วงวันที่เลือก · <b>ไม่รวม</b>คอมเมนต์ของเพจเอง<br>หัวข้อจับจากคำในคอมเมนต์ (1 คอมเมนต์อยู่ได้หลายหัวข้อ) · ความรู้สึกประมาณจากคำสำคัญ ไม่ใช่ AI วิเคราะห์');
+  const other = fbeCommentTagsCache.filter(c => !c.tag_want_to_buy && !c.tag_service && !c.tag_price && !c.tag_quality && !c.tag_is_question).length;
+  const topics = [['tag_want_to_buy', 'อยากซื้อ / สนใจ', wantBuy], ['tag_price', 'ถามราคา', price], ['tag_is_question', 'ถามเรื่องสินค้า', question], ['tag_quality', 'พูดถึงคุณภาพสินค้า', quality], ['tag_service', 'บริการ / การตอบ', service], [null, 'อื่น ๆ (ชม / ทั่วไป)', other]];
+  document.getElementById('fbeTagPills').innerHTML = topics.map(([k, l, n]) => { const on = k && fbeActiveTagFilter === k, sh = total ? n / total * 100 : 0;
+    return `<tr${k ? ` style="cursor:pointer;" onclick="fbeToggleTagFilter('${k}')"` : ''}${on ? ' class="fbe-on"' : ''}><td class="l">${on ? '🔍 ' : ''}${l}</td><td class="num">${fmt(n)}</td><td class="l"><span class="sa-bar"><b style="width:${Math.min(100, sh).toFixed(1)}%;background:var(--ch-facebook,#1877F2);"></b></span>${Math.round(sh)}%</td></tr>`; }).join('');
   const posCount = fbeCommentTagsCache.filter(c => fbeSentimentOf(c.message) === 'positive').length;
   const negCount = fbeCommentTagsCache.filter(c => fbeSentimentOf(c.message) === 'negative').length;
   const neuCount = total - posCount - negCount;
-  const sentBarHtml = total ? `
-    <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text3);margin-bottom:4px;">
-      <span>Sentiment คอมเมนต์ (ประมาณการจากคำสำคัญ ไม่ใช่ AI วิเคราะห์จริง)</span>
-    </div>
-    <div style="display:flex;height:20px;border-radius:6px;overflow:hidden;">
-      <div style="width:${(posCount/total*100)}%;background:var(--green);" title="บวก ${posCount} (${(posCount/total*100).toFixed(0)}%)"></div>
-      <div style="width:${(neuCount/total*100)}%;background:var(--text3);opacity:0.4;" title="กลาง ${neuCount} (${(neuCount/total*100).toFixed(0)}%)"></div>
-      <div style="width:${(negCount/total*100)}%;background:var(--red);" title="ลบ ${negCount} (${(negCount/total*100).toFixed(0)}%)"></div>
-    </div>
-    <div style="display:flex;gap:14px;font-size:10.5px;margin-top:4px;color:var(--text2);">
-      <span>🟢 บวก ${fmt(posCount)} (${(posCount/total*100).toFixed(0)}%)</span>
-      <span>⚪ กลาง ${fmt(neuCount)} (${(neuCount/total*100).toFixed(0)}%)</span>
-      <span>🔴 ลบ ${fmt(negCount)} (${(negCount/total*100).toFixed(0)}%)</span>
-    </div>` : '';
-  document.getElementById('fbeSentimentBar').innerHTML = sentBarHtml;
+  document.getElementById('fbeSentimentBar').innerHTML = total ? `ความรู้สึก: <span class="ui-chip up">บวก ${fmt(posCount)} · ${(posCount / total * 100).toFixed(0)}%</span> <span class="ui-chip">กลาง ${fmt(neuCount)}</span> <span class="ui-chip dn">ลบ ${fmt(negCount)} · ${(negCount / total * 100).toFixed(0)}%</span>` : '';
 
   // กรองด้วย tag ที่เลือกไว้ (ถ้ามี) ก่อนไปคำนวณคำที่พบบ่อย + ลิสต์โพสต์
   const scopedComments = fbeActiveTagFilter
@@ -3608,11 +3584,11 @@ function renderFbeCommentSection() {
   })).filter(x => x.count > 0).sort((a, b) => b.count - a.count).slice(0, 12);
 
   const maxCount = freq.length ? freq[0].count : 1;
-  document.getElementById('fbeKeywordCloud').innerHTML = freq.length ? freq.map(f => {
-    const size = 12 + (f.count / maxCount) * 14;
-    const color = f.count / maxCount > 0.6 ? 'var(--accent)' : f.count / maxCount > 0.3 ? 'var(--accent2)' : 'var(--text3)';
-    return `<span style="font-size:${size.toFixed(0)}px;font-weight:${f.count/maxCount > 0.5 ? 700 : 500};color:${color};">${f.kw} ${f.count}</span>`;
-  }).join('') : '<div class="empty" style="padding:8px 0;">ไม่พบคำที่ตั้งไว้ในช่วงนี้</div>';
+  document.getElementById('fbeKeywordCloud').innerHTML = freq.length ? 'คำที่พบบ่อย: ' + freq.slice(0, 8).map(f => `<span class="ui-chip">${ttcEsc(f.kw)} ${fmt(f.count)}</span>`).join(' ') : '';
+  // คอมเมนต์ล่าสุดที่ควรตอบ (อยากซื้อ / ถามราคา / ถามเรื่องสินค้า) — ใหม่สุดก่อน
+  const need = scopedComments.filter(c => c.tag_want_to_buy || c.tag_price || c.tag_is_question).sort((a, b) => String(b.commented_at).localeCompare(String(a.commented_at))).slice(0, 8);
+  const tagOf = c => c.tag_price ? 'ถามราคา' : c.tag_want_to_buy ? 'อยากซื้อ' : 'ถามสินค้า';
+  document.getElementById('fbeToReply').innerHTML = need.map(c => `<a class="fbe-rep" href="https://www.facebook.com/${ttcEsc(c.post_id)}" target="_blank" rel="noopener"><span class="ui-chip">${tagOf(c)}</span><span class="fbe-rep-m">${ttcEsc(c.message || '—')}</span><span class="fbe-rep-t">${ttcEsc(String(c.commented_at || '').slice(5, 16).replace('T', ' '))}</span></a>`).join('') || '<div class="empty" style="padding:10px 0;">ไม่มีคอมเมนต์ที่ต้องตอบในช่วงนี้</div>';
 
   const byPost = {};
   scopedComments.forEach(c => { (byPost[c.post_id] = byPost[c.post_id] || []).push(c); });
@@ -4823,7 +4799,20 @@ async function incrementalHistory(cacheKey, makeUrl, keyCols, label, mapRows, si
     return all;
   }
   setBgSync(`${label}...`, 10);
-  let rows = await fetchKeyset(makeUrl(null), headers, keyCols, 1000, n => setBgSync(`${label} (${fmt(n)} แถว)...`, Math.min(90, 10 + n / 1000)));
+  let rows;
+  const months = srv ? Object.keys(srv).filter(m => /^\d{4}-\d{2}$/.test(m)).sort() : [];
+  if (months.length > 1) {
+    // (2026-11-03) ครั้งแรก / ครบ 30 วัน: ดึงทีละเดือนพร้อมกันสูงสุด 6 เดือน (เร็วกว่าดึงต่อกันทีละ 1,000 แถว หลายเท่า) + แถวที่ไม่มีวันที่ (ถ้ามี)
+    const out = new Array(months.length); let next = 0, got = 0;
+    const one = async i => { const m = months[i], [y, mo] = m.split('-').map(Number), end = `${m}-${String(new Date(y, mo, 0).getDate()).padStart(2, '0')}`;
+      out[i] = await fetchKeyset(makeUrl(m + '-01') + '&date=lte.' + end, headers, keyCols, 1000); got += out[i].length;
+      setBgSync(`${label} (${fmt(got)} แถว)...`, Math.min(90, 10 + 80 * (i + 1) / months.length)); };
+    await Promise.all(Array.from({ length: Math.min(6, months.length) }, async () => { while (next < months.length) await one(next++); }));
+    let nul = []; try { nul = await fetchKeyset(makeUrl(null) + '&date=is.null', headers, keyCols, 1000); } catch (e) { nul = []; }
+    rows = out.flat().concat(nul).sort(cmp);
+  } else {
+    rows = await fetchKeyset(makeUrl(null), headers, keyCols, 1000, n => setBgSync(`${label} (${fmt(n)} แถว)...`, Math.min(90, 10 + n / 1000)));
+  }
   if (mapRows) rows = mapRows(rows);
   idbSet(cacheKey, { rows, sigs: srv || null, cachedAt: now, fullAt: now });
   setBgSync(`${label} ${fmt(rows.length)} แถว พร้อมแล้ว`, null);
@@ -5970,14 +5959,16 @@ function addNbProduct(sku) {
   const inp = document.getElementById('nbProductSearch'); if (inp) inp.value = '';
   renderNbProductChips();
   filterNbProductDropdown();
+  renderNeverBoughtPage();   // (2026-11-03) แสดงผลทันที ไม่ต้องกดค้นหา
 }
 function removeNbProduct(sku) {
   nbSelectedSKUs = nbSelectedSKUs.filter(s => s !== sku);
   renderNbProductChips();
+  renderNeverBoughtPage();
 }
 function renderNbProductChips() {
   const el = document.getElementById('nbProductChips'); if (!el) return;
-  el.innerHTML = nbSelectedSKUs.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i%COLORS.length]};" onclick="removeNbProduct('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span> ✕</span>`).join('');
+  el.innerHTML = nbSelectedSKUs.map(sku => `<span class="flow-chip" onclick="removeNbProduct('${sku}')" title="${sku} · กดเพื่อเอาออก">${skuToName(sku)} <span>✕</span></span>`).join('');
   document.getElementById('nbProductClearBtn').style.display = nbSelectedSKUs.length ? 'inline-flex' : 'none';
 }
 function clearNbProduct() {
@@ -6000,7 +5991,7 @@ function renderNeverBoughtPage() {
     return;
   }
   emptyEl.style.display = 'none';
-  kpiEl.style.display = 'flex';
+  kpiEl.style.display = '';
   resultEl.style.display = 'block';
 
   if (!_fbCustomerCache) buildFbCustomerCache();
@@ -6013,17 +6004,23 @@ function renderNeverBoughtPage() {
   const pct = totalCustomers ? (neverBought.length/totalCustomers*100).toFixed(1) : 0;
   _nbFullResult = neverBought; // เก็บ full list ไว้ให้ export CSV ใช้ (ไม่จำกัดเหมือนที่โชว์บนจอ)
 
-  kpiEl.innerHTML = `
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ยังไม่เคยซื้อ</div><div class="kpi-value">${fmt(neverBought.length)} คน</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">ลูกค้าทั้งหมด</div><div class="kpi-value">${fmt(totalCustomers)} คน</div></div>
-    <div class="card" style="flex:1;min-width:160px;"><div class="card-title">สัดส่วนที่ยังไม่เคยซื้อ</div><div class="kpi-value" style="color:var(--accent);">${pct}%</div></div>
-  `;
+  // (2026-11-03) แถบตัวเลข: ยังไม่เคยซื้อ · ในนั้นยังซื้อกับเราใน 90 วัน (ทักก่อน โอกาสสูงกว่า) · ยอดซื้อสะสมเฉลี่ย
+  const d90 = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10), active = neverBought.filter(([, v]) => (v.lastDate || '') >= d90).length;
+  const avgRev = neverBought.length ? neverBought.reduce((a, [, v]) => a + (+v.rev || 0), 0) / neverBought.length : 0;
+  const cellN = (label, value, sub, tip) => `<div class="ui-metric is-static"><span class="ui-metric-l">${label}${tip ? ` <span class="pr-i" data-tip="${tip}" style="font-size:11px;color:var(--text3);font-weight:400;cursor:default;">ⓘ</span>` : ''}</span><span class="ui-metric-v" data-fit>${value}</span><span class="sa-md"><span>${sub}</span></span></div>`;
+  kpiEl.innerHTML = cellN('ยังไม่เคยซื้อ', fmt(neverBought.length) + ' คน', `${pct}% ของลูกค้า Facebook ${fmt(totalCustomers)} คน`, 'ลูกค้าที่เคยซื้อกับเราอย่างน้อย 1 ครั้ง แต่ยังไม่เคยซื้อสินค้าที่เลือก · นับจากเบอร์โทร · ไม่รวมออเดอร์ยกเลิก / ตีกลับ')
+    + cellN('ยังซื้อกับเราใน 90 วัน', fmt(active) + ' คน', neverBought.length ? `${(active / neverBought.length * 100).toFixed(0)}% ของกลุ่มนี้ · ควรทักก่อน` : '&nbsp;', 'ในกลุ่มที่ยังไม่เคยซื้อ มีกี่คนที่ซื้อสินค้าอื่นกับเราภายใน 90 วันที่ผ่านมา (ยังเป็นลูกค้าที่เคลื่อนไหว)')
+    + cellN('ยอดซื้อสะสมเฉลี่ย', fmt(avgRev), 'ต่อคน ในกลุ่มนี้');
+  if (window.UI && UI.fit) UI.fit();
+  const xb = document.getElementById('nbExportBar');
+  if (xb) { xb.style.display = neverBought.length ? '' : 'none';
+    xb.innerHTML = `<span>ส่งรายชื่อให้ทีม Ads</span><button class="btn btn-primary" onclick="exportNbCSV(true)">⬇ เฉพาะซื้อใน 90 วัน (${fmt(active)} คน)</button><button class="btn btn-ghost" onclick="exportNbCSV(false)">⬇ ทุกคน (${fmt(neverBought.length)} คน)</button><span class="pr-i" data-tip="ไฟล์ CSV มีคอลัมน์ &quot;phone (สำหรับ Facebook)&quot; เป็นเบอร์แบบ +66 อัปโหลดเป็น Custom Audience ใน Meta Ads ได้เลย (Meta จะเข้ารหัสเบอร์ให้เองตอนอัปโหลด)" style="font-size:11px;color:var(--text3);cursor:default;">ⓘ</span>`; }
   const DISPLAY_CAP = 300;
   const shown = neverBought.slice(0, DISPLAY_CAP);
   document.getElementById('tbodyNb').innerHTML = shown.length ? shown.map(([phone,v],i) => `
     <tr>
       <td>${i+1}</td><td>${phone}</td><td>${v.name || '—'}</td>
-      <td>${fmt(v.orders)}</td><td>${fmt(v.rev)}</td><td>${v.lastDate || '—'}</td>
+      <td>${fmt(v.orders)}</td><td>${fmt(v.rev)}</td><td>${v.lastDate ? ((v.lastDate >= d90 ? '<span class="ui-chip up">' : '<span class="ui-chip">') + thDateShort(v.lastDate) + '</span>') : '—'}</td>
     </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีลูกค้าที่เข้าเงื่อนไข</td></tr>';
   document.getElementById('nb-display-note').textContent = neverBought.length > DISPLAY_CAP
     ? `แสดง ${fmt(DISPLAY_CAP)} จาก ${fmt(neverBought.length)} คนแรก (เรียงตามยอดซื้อสะสม) — กด Export CSV เพื่อดูครบทุกคน`
@@ -6032,10 +6029,16 @@ function renderNeverBoughtPage() {
 
 // export ตรงจาก full array ที่คำนวณไว้ ไม่ใช่จากตารางบนจอที่โดนจำกัดไว้ 500 แถว
 let _nbFullResult = [];
-function exportNbCSV() {
-  const rows = [['#','เบอร์โทร','ชื่อลูกค้า','จำนวนออเดอร์ (ทั้งหมด)','ยอดซื้อสะสม','ซื้อล่าสุด']];
-  _nbFullResult.forEach(([phone,v],i) => rows.push([i+1, phone, v.name||'—', v.orders, v.rev, v.lastDate||'—']));
-  downloadCSV(rows, 'ลูกค้าที่ยังไม่ซื้อ.csv');
+const thDateShort = iso => { const d = new Date(iso + 'T00:00:00'); return isNaN(d) ? iso : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }); };
+// (2026-11-03) หน้านี้ใช้ส่งรายชื่อให้ทีม Ads ยิงแอดต่อ: Export ได้ 2 แบบ (ทุกคน / เฉพาะซื้อใน 90 วัน) · มีคอลัมน์เบอร์แบบ +66 สำหรับอัปโหลด Facebook Custom Audience
+function exportNbCSV(onlyActive) {
+  const d90 = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10);
+  const list = _nbFullResult.filter(([, v]) => !onlyActive || (v.lastDate || '') >= d90);
+  const e164 = p => { const x = String(p || '').replace(/\D/g, ''); return x.startsWith('66') ? '+' + x : x.startsWith('0') ? '+66' + x.slice(1) : x ? '+66' + x : ''; };
+  const rows = [['phone (สำหรับ Facebook)', 'เบอร์โทร', 'ชื่อลูกค้า', 'จำนวนออเดอร์ (ทั้งหมด)', 'ยอดซื้อสะสม', 'ซื้อล่าสุด']];
+  list.forEach(([phone, v]) => rows.push([e164(phone), phone, v.name || '', v.orders, v.rev, v.lastDate || '']));
+  const prod = nbSelectedSKUs.map(skuToName).join('+').replace(/[\\/:*?"<>|]/g, '');
+  downloadCSV(rows, `ลูกค้ายังไม่ซื้อ_${prod}${onlyActive ? '_ซื้อใน90วัน' : ''}.csv`);
 }
 
 function renderCRM() {
@@ -6120,12 +6123,13 @@ function renderCRM() {
   });
   const groupLabels = { '1':'ซื้อ 1 ครั้ง','2':'ซื้อ 2 ครั้ง','3':'ซื้อ 3 ครั้ง','4':'ซื้อ 4 ครั้ง','5':'ซื้อ 5 ครั้ง','6-10':'ซื้อ 6-10 ครั้ง','11-20':'ซื้อ 11-20 ครั้ง','21+':'ซื้อ 21+ ครั้ง' };
 
-  document.getElementById('crmGroups').innerHTML = sortedKeys.map((k, i) => `
-    <div class="crm-group-row" onclick="showCRMDetail('${k}')">
-      <div class="crm-count" style="color:${COLORS[i%COLORS.length]}">${fmt(groups[k].length)}</div>
-      <div class="crm-label"><div class="crm-label-main">${groupLabels[k] || 'ซื้อ '+k+' ครั้ง'}</div><div class="crm-label-sub">คน — กดเพื่อดูรายชื่อ</div></div>
-      <div class="crm-pct">${fmtPct(groups[k].length, totalCustomers)}</div>
-    </div>`).join('') || '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKUs.length ? 'ที่ซื้อสินค้านี้' : ' Facebook') + (crmMaxDaysSince !== null ? ` (ในช่วง ${crmMaxDaysSince} วัน)` : '') + '</div>';
+  // (2026-11-03) กล่องสีหลายใบ → ตารางเดียว (กลุ่ม · ลูกค้า · สัดส่วน) กดแถวเพื่อดูรายชื่อ · แถวรวมล่างสุด = ลูกค้าทั้งหมด
+  const gRev = k => groups[k].reduce((a, c) => a + (c.orders || []).reduce((b, o) => b + (+o.revenue || 0), 0), 0), allRev = sortedKeys.reduce((a, k) => a + gRev(k), 0);
+  document.getElementById('crmGroups').innerHTML = sortedKeys.length ? `<table class="ui-table sa-tbl" style="width:100%;" data-no-sort data-no-page><thead><tr><th class="l">กลุ่ม</th><th class="num">ลูกค้า (คน)</th><th class="l">สัดส่วนลูกค้า</th><th class="num">ยอดซื้อรวม</th><th class="num">% ของยอด</th></tr></thead><tbody>${sortedKeys.map(k => { const n = groups[k].length, sh = totalCustomers ? n / totalCustomers * 100 : 0, rv = gRev(k);
+      return `<tr style="cursor:pointer;" onclick="showCRMDetail('${k}')" title="กดเพื่อดูรายชื่อ"><td class="l">${groupLabels[k] || 'ซื้อ ' + k + ' ครั้ง'}</td><td class="num">${fmt(n)}</td><td class="l"><span class="sa-bar"><b style="width:${Math.min(100, sh).toFixed(1)}%;background:var(--ch-facebook,#1877F2);"></b></span>${sh.toFixed(1)}%</td><td class="num">${fmt(rv)}</td><td class="num">${allRev ? (rv / allRev * 100).toFixed(1) + '%' : '—'}</td></tr>`; }).join('')}</tbody>
+    <tfoot><tr><td class="l">รวม</td><td class="num">${fmt(totalCustomers)}</td><td class="l">100%</td><td class="num">${fmt(allRev)}</td><td class="num">100%</td></tr></tfoot></table>
+    <div class="crm-gnote">${(() => { const av = document.getElementById('crm-avg-rev'); if (av) av.textContent = totalCustomers ? fmt(allRev / totalCustomers) : '—'; const rep = sortedKeys.filter(k => k !== '1'), rc = rep.reduce((a, k) => a + groups[k].length, 0), rr = rep.reduce((a, k) => a + gRev(k), 0);
+      return totalCustomers && allRev ? `ลูกค้าที่ซื้อซ้ำ <b>${(rc / totalCustomers * 100).toFixed(0)}%</b> ของลูกค้า สร้างยอด <b>${(rr / allRev * 100).toFixed(0)}%</b> ของยอดซื้อทั้งหมดในช่วงนี้` : ''; })()}</div>` : '<div class="empty">ไม่มีข้อมูลลูกค้า' + (crmSelectedSKUs.length ? 'ที่ซื้อสินค้านี้' : ' Facebook') + (crmMaxDaysSince !== null ? ` (ในช่วง ${crmMaxDaysSince} วัน)` : '') + '</div>';
 
   window._crmGroups = groups;
   window._crmGroupLabels = groupLabels;
@@ -6945,6 +6949,16 @@ let _flowTransitions = null;
 let _flowTopSKUs = [];
 let _flowAllSKUs = [];
 
+// (2026-11-03) ของแถม (สถานะ GWP ในหน้าสินค้า & ราคา) ไม่นับเป็นสินค้าที่ลูกค้าเลือกซื้อ — เดิมแปรงคาบูกิ / ลิปกลอสสีใส / คุชชั่นแถม ติดอันดับ ทำให้ผลเพี้ยน
+let _giftSkus = null, flowIncludeGifts = false;
+function giftSkusReady(cb) {
+  if (_giftSkus) return true;
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
+  fetch(`${window.SUPABASE_URL}/rest/v1/products?select=parent_sku,child_sku&status=eq.GWP`, { headers }).then(r => r.ok ? r.json() : [])
+    .then(rows => { _giftSkus = new Set(); (rows || []).forEach(r => { if (r.parent_sku) _giftSkus.add(r.parent_sku); if (r.child_sku) _giftSkus.add(r.child_sku); }); cb(); })
+    .catch(() => { _giftSkus = new Set(); cb(); });
+  return false;
+}
 function computeFlowTransitions(fromDate, toDate) {
   const fbRows = fbOrders.filter(r => r.phone && r.phone.length >= 5 && shouldIncludeRow(r));   // เฟส 4
   const byPhone = {};
@@ -6956,10 +6970,11 @@ function computeFlowTransitions(fromDate, toDate) {
 
   function getSkus(str) {
     if (!str) return [];
-    return [...new Set(str.split('+').map(p => { const m = p.trim().match(/^(.+?)x\d+$/i); return (m?m[1]:p).trim(); }).filter(Boolean))];
+    return [...new Set(str.split('+').map(p => { const m = p.trim().match(/^(.+?)x\d+$/i); return (m?m[1]:p).trim(); }).filter(Boolean))].filter(s => flowIncludeGifts || !_giftSkus || !_giftSkus.has(s));
   }
 
-  const skuFreq = {}, transitions = {};
+  // (2026-11-03) 1 ครั้ง = ลูกค้าคนเดิมกลับมาสั่งออเดอร์ถัดไป · ออเดอร์ที่มีหลายสินค้า: นับทุกคู่ (สินค้าในออเดอร์ก่อน × สินค้าในออเดอร์ถัดไป) แต่ตัวหาร % = จำนวนครั้งที่กลับมาซื้อ (ไม่ใช่จำนวนคู่)
+  const skuFreq = {}, transitions = {}, custs = new Set(); let nTrans = 0, repeatAny = 0;
   Object.values(byPhone).forEach(orders => {
     for (let i = 0; i < orders.length - 1; i++) {
       const curr = orders[i], next = orders[i+1];
@@ -6967,6 +6982,8 @@ function computeFlowTransitions(fromDate, toDate) {
       if (toDate && next.date > toDate) continue;
       const srcSkus = getSkus(curr.sku_promotion);
       const tgtSkus = getSkus(next.sku_promotion);
+      if (!srcSkus.length || !tgtSkus.length) continue;   // ออเดอร์ที่มีแต่ของแถม ไม่นับ
+      nTrans++; custs.add(curr.phone); if (srcSkus.some(s => tgtSkus.includes(s))) repeatAny++;
       srcSkus.forEach(src => {
         skuFreq[src] = (skuFreq[src]||0) + 1;
         tgtSkus.forEach(tgt => {
@@ -6978,7 +6995,7 @@ function computeFlowTransitions(fromDate, toDate) {
   });
   const allSkus = Object.entries(skuFreq).sort((a,b)=>b[1]-a[1]).map(([s])=>s);
   const topSKUs = allSkus.slice(0,10);
-  return { transitions, topSKUs, allSkus };
+  return { transitions, topSKUs, allSkus, freq: skuFreq, nTrans, repeatAny, nCust: custs.size };
 }
 
 function filterFlowSkuDropdown() {
@@ -7019,7 +7036,7 @@ function renderFlowSkuChips() {
   if (!flowSelectedSKUs.length) { el.innerHTML = '<span style="font-size:11px;color:var(--text3);">ยังไม่ได้เลือกสินค้า</span>'; return; }
   el.innerHTML = flowSelectedSKUs.map((sku, i) => {
     const c = COLORS[i % COLORS.length];
-    return `<span class="sku-chip selected" style="background:${c};color:#0a0a0f;border-color:transparent;cursor:pointer;" onclick="removeFlowSKU('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.7;">${sku}</span> ✕</span>`;
+    return `<span class="flow-chip" onclick="removeFlowSKU('${sku}')" title="${sku} · กดเพื่อเอาออก">${skuToName(sku)} <span>✕</span></span>`;
   }).join('');
 }
 
@@ -7031,12 +7048,15 @@ function removeFlowSKU(sku) {
 }
 
 
+const dShortTh = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
+let _flowFreq = {};
 function renderFlowPage() {
+  if (!giftSkusReady(renderFlowPage)) return;
   if (!fbPageReady('flow', renderFlowPage)) { const k = document.getElementById('flowKPIs'); if (k) k.innerHTML = '<div class="card">⏳ กำลังโหลดออเดอร์ Facebook (ครั้งแรกของ session)...</div>'; return; }
   const from = getDateValue('From');
   const to = getDateValue('To');
-  const { transitions, topSKUs, allSkus } = computeFlowTransitions(from, to);
-  _flowTransitions = transitions;
+  const { transitions, topSKUs, allSkus, freq, nTrans, repeatAny, nCust } = computeFlowTransitions(from, to);
+  _flowTransitions = transitions; _flowFreq = freq || {};
   _flowTopSKUs = topSKUs;
   _flowAllSKUs = allSkus;
 
@@ -7044,22 +7064,18 @@ function renderFlowPage() {
   flowSelectedSKUs = validSelected.length >= 2 ? validSelected : [...topSKUs];
   renderFlowSkuChips();
 
-  let total = 0, selfCnt = 0;
-  topSKUs.forEach(src => { if (!transitions[src]) return;
-    Object.entries(transitions[src]).forEach(([tgt,cnt]) => { total+=cnt; if(src===tgt) selfCnt+=cnt; }); });
-  const retRate = total ? Math.round(selfCnt/total*100) : 0;
-  let bestSku='', bestRate=0;
-  topSKUs.forEach(sku => {
-    const self = transitions[sku]?.[sku]||0;
-    const tot = Object.values(transitions[sku]||{}).reduce((a,b)=>a+b,0);
-    const r = tot ? self/tot : 0;
-    if (r > bestRate) { bestRate=r; bestSku=sku; }
-  });
-  document.getElementById('flowKPIs').innerHTML = `
-    <div class="card"><div class="card-title">Transitions ทั้งหมด</div><div class="kpi-value">${fmt(total)}</div><div class="kpi-sub">คู่การซื้อต่อเนื่อง (Facebook)</div></div>
-    <div class="card"><div class="card-title">อัตราซื้อซ้ำเฉลี่ย</div><div class="kpi-value" style="color:var(--green);">${retRate}%</div><div class="kpi-sub">กลับมาซื้อสินค้าเดิม</div></div>
-    <div class="card"><div class="card-title">Retention สูงสุด</div><div class="kpi-value" style="color:var(--accent);font-size:18px;">${bestSku?skuToName(bestSku):'—'}</div><div class="kpi-sub">${bestSku?Math.round(bestRate*100)+'% ซื้อซ้ำ':''}</div></div>`;
-
+  // (2026-11-03) แถบตัวเลข: หน่วย = ครั้งที่กลับมาซื้อ (ออเดอร์ถัดไป) ไม่ใช่จำนวนคู่สินค้า
+  const fq = s => _flowFreq[s] || 0;
+  let bestSku = '', bestRate = 0; topSKUs.forEach(s => { const r = fq(s) >= 30 ? ((transitions[s] || {})[s] || 0) / fq(s) : 0; if (r > bestRate) { bestRate = r; bestSku = s; } });
+  let bestPair = null; topSKUs.forEach(a => Object.entries(transitions[a] || {}).forEach(([b, c]) => { if (a !== b && (!bestPair || c > bestPair.c)) bestPair = { a, b, c }; }));
+  const cellF = (label, value, sub, inf) => `<div class="ui-metric is-static"><span class="ui-metric-l">${label}${inf ? ' ' + fbeInfoIcon(inf[0], inf[1]) : ''}</span><span class="ui-metric-v" data-fit>${value}</span><span class="sa-md"><span>${sub}</span></span></div>`;
+  const howTip = '<b>นับยังไง</b> เรียงออเดอร์ของลูกค้าแต่ละคน (เบอร์โทรเดียวกัน) ตามวันที่ แล้วดูคู่ "ออเดอร์ก่อน → ออเดอร์ถัดไป" · 1 ครั้ง = ลูกค้ากลับมาสั่งออเดอร์ถัดไป 1 ออเดอร์ (นับตามวันที่ของออเดอร์ถัดไป ในช่วงที่เลือก)<br>ออเดอร์ที่มีหลายสินค้า: เช่น ครั้งก่อนซื้อ แป้งดำ + ลิปฟิกซ์ ครั้งต่อไปซื้อ แป้งดำ → นับ แป้งดำ→แป้งดำ และ ลิปฟิกซ์→แป้งดำ อย่างละ 1 ครั้ง<br><b>ไม่รวม</b> ออเดอร์ยกเลิก / ตีกลับ · เพจที่ไม่นับยอด · ของแถม (ติ๊ก "รวมของแถม" ถ้าต้องการนับ) · Facebook / Line เท่านั้น';
+  document.getElementById('flowKPIs').innerHTML =
+    cellF('ครั้งที่ลูกค้ากลับมาซื้อ', fmt(nTrans || 0), `ลูกค้า ${fmt(nCust || 0)} คน · ${dShortTh(from)} – ${dShortTh(to)}`, ['flow-i-n', howTip]) +
+    cellF('ซื้อสินค้าเดิมซ้ำ', nTrans ? Math.round(repeatAny / nTrans * 100) + '%' : '—', `${fmt(repeatAny || 0)} ครั้ง จาก ${fmt(nTrans || 0)}`, ['flow-i-r', 'จากครั้งที่ลูกค้ากลับมาซื้อทั้งหมด มีกี่ % ที่ออเดอร์ถัดไปมีสินค้าอย่างน้อย 1 ตัวเหมือนออเดอร์ก่อน']) +
+    cellF('กลับมาซื้อตัวเดิมมากสุด', bestSku ? skuToName(bestSku) : '—', bestSku ? `${Math.round(bestRate * 100)}% ของครั้งที่กลับมาซื้อหลังซื้อตัวนี้` : '&nbsp;', ['flow-i-b', 'เทียบเฉพาะสินค้าที่มีลูกค้ากลับมาซื้อตั้งแต่ 30 ครั้ง กันสินค้าที่ขายน้อยแล้ว % สูงเกินจริง']) +
+    cellF('ซื้อต่อกันบ่อยสุด', bestPair ? `${skuToName(bestPair.a)} → ${skuToName(bestPair.b)}` : '—', bestPair ? `${fmt(bestPair.c)} ครั้ง · ${Math.round(bestPair.c / (fq(bestPair.a) || 1) * 100)}% ของคนที่ซื้อ ${skuToName(bestPair.a)}` : '&nbsp;', ['flow-i-p', 'คู่สินค้าต่างกันที่ลูกค้าซื้อครั้งก่อน แล้วครั้งต่อไปซื้ออีกตัว บ่อยที่สุด (ไม่นับซื้อตัวเดิมซ้ำ)']);
+  if (window.UI && UI.fit) UI.fit();
   renderFlowSankey();
   renderFlowTable();
 }
@@ -7088,120 +7104,35 @@ window._moveFlowTip = function(e) {
 };
 window._hideFlowTip = function() { const tip = document.getElementById('flowTooltip'); if (tip) tip.style.display = 'none'; };
 
+// (2026-11-03) แทน Sankey: ตาราง "ซื้อแล้ว ครั้งต่อไปซื้ออะไร" — แถว = สินค้าที่ซื้อครั้งก่อน · คอลัมน์ = สินค้าที่ซื้อครั้งต่อไป · % ของแถว (รวมแถวละ 100% กับคอลัมน์ "สินค้าอื่น")
+// สีเข้ม = % สูง · กรอบเขียว = ซื้อตัวเดิมซ้ำ · ชี้ที่ช่องเพื่อดูจำนวนครั้ง
 function renderFlowSankey() {
-  const wrap = document.getElementById('flowSankeyWrap'); if (!wrap||!_flowTransitions) return;
+  const wrap = document.getElementById('flowSankeyWrap'); if (!wrap || !_flowTransitions) return;
   const skus = flowSelectedSKUs;
-  if (skus.length < 2) { wrap.innerHTML='<div class="empty">เลือกอย่างน้อย 2 สินค้า</div>'; return; }
-
-  const NODE_W=130, GAP=6, PAD_Y=16, W=800;
-  const MAX_NODE_H = 38;
-  const RX = W - NODE_W;
-
-  const srcTotals={}, tgtTotals={};
-  skus.forEach(src => { skus.forEach(tgt => {
-    const cnt = _flowTransitions[src]?.[tgt]||0;
-    if (cnt) { srcTotals[src]=(srcTotals[src]||0)+cnt; tgtTotals[tgt]=(tgtTotals[tgt]||0)+cnt; }
-  }); });
-
-  const total = Object.values(srcTotals).reduce((a,b)=>a+b,0);
-  if (!total) { wrap.innerHTML='<div class="empty">ไม่พบ transition ในช่วงที่เลือก — ลองขยายช่วงวันที่</div>'; return; }
-
-  const srcSorted = [...skus].filter(id=>srcTotals[id]).sort((a,b)=>(srcTotals[b]||0)-(srcTotals[a]||0));
-  const tgtSorted = [...skus].filter(id=>tgtTotals[id]).sort((a,b)=>(tgtTotals[b]||0)-(tgtTotals[a]||0));
-
-  const lNodes=[], rNodes=[];
-  let lY=PAD_Y, rY=PAD_Y;
-  srcSorted.forEach(id => {
-    const h=Math.min(MAX_NODE_H, Math.max(24,(srcTotals[id]/total)*400));
-    lNodes.push({id,y:lY,h,total:srcTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
-    lY+=h+GAP;
-  });
-  tgtSorted.forEach(id => {
-    const h=Math.min(MAX_NODE_H, Math.max(24,(tgtTotals[id]/total)*400));
-    rNodes.push({id,y:rY,h,total:tgtTotals[id],color:COLORS[skus.indexOf(id)%COLORS.length]});
-    rY+=h+GAP;
-  });
-
-  const H = Math.max(lY, rY) + PAD_Y;
-  const hAvail = H - PAD_Y*2;
-
-  const lo={}, ro={};
-  lNodes.forEach(n=>lo[n.id]=0); rNodes.forEach(n=>ro[n.id]=0);
-
-  window._flowPathData = {};
-  let flowSvg='', nodeSvg='', idx=0;
-
-  srcSorted.forEach(src => {
-    tgtSorted.forEach(tgt => {
-      const cnt=_flowTransitions[src]?.[tgt]||0; if(!cnt) return;
-      const ln=lNodes.find(n=>n.id===src), rn=rNodes.find(n=>n.id===tgt); if(!ln||!rn) return;
-      const fh=(cnt/total)*hAvail;
-      const ly1=ln.y+lo[src], ly2=Math.min(ly1+fh, ln.y+ln.h);
-      const ry1=rn.y+ro[tgt], ry2=Math.min(ry1+fh, rn.y+rn.h);
-      lo[src]+=fh; ro[tgt]+=fh;
-      const cx=(NODE_W+RX)/2, op=src===tgt?.52:.22;
-      const key=`fp${idx++}`;
-      const pctSrc=srcTotals[src]?Math.round(cnt/srcTotals[src]*100):0;
-      window._flowPathData[key] = { srcName:skuToName(src), tgtName:skuToName(tgt), cnt, pct:pctSrc, isSelf:src===tgt, srcColor:ln.color, tgtColor:rn.color };
-      flowSvg+=`<path d="M${NODE_W} ${ly1} C${cx} ${ly1},${cx} ${ry1},${RX} ${ry1} L${RX} ${ry2} C${cx} ${ry2},${cx} ${ly2},${NODE_W} ${ly2}Z"
-        fill="${ln.color}" opacity="${op}" style="cursor:pointer;transition:opacity .15s;"
-        onmouseenter="this.style.opacity='.72';_showFlowTip(event,'${key}')"
-        onmousemove="_moveFlowTip(event)"
-        onmouseleave="this.style.opacity='${op}';_hideFlowTip()" />`;
-    });
-  });
-
-  function splitNodeName(name) {
-    const spaceIdx = name.indexOf(' ');
-    if (spaceIdx > 0 && spaceIdx < name.length - 1) return [name.substring(0, spaceIdx), name.substring(spaceIdx+1)];
-    return [name, ''];
-  }
-
-  [lNodes, rNodes].forEach((nodes, side) => {
-    nodes.forEach(n => {
-      const x = side===0 ? 0 : RX;
-      const [l1, l2] = splitNodeName(skuToName(n.id));
-      const twoLine = l2.length > 0;
-      nodeSvg+=`<rect x="${x}" y="${n.y}" width="${NODE_W}" height="${n.h}" rx="4" fill="${n.color}" opacity="${side===0?.88:.82}"/>`;
-      const cy = n.y + n.h/2;
-      nodeSvg+=`<text x="${x+NODE_W/2}" y="${twoLine ? cy-6 : cy}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="9" font-weight="600" font-family="Sarabun,sans-serif">${l1}</text>`;
-      if (twoLine) nodeSvg+=`<text x="${x+NODE_W/2}" y="${cy+7}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="9" font-weight="600" font-family="Sarabun,sans-serif">${l2}</text>`;
-    });
-  });
-
-  wrap.innerHTML = `
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding:0 ${NODE_W+10}px;">
-      <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อก่อนหน้า</span>
-      <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">สินค้าที่ซื้อครั้งต่อไป</span>
-    </div>
-    <div style="overflow-x:auto;">
-      <svg width="800" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;">${flowSvg}${nodeSvg}</svg>
-    </div>`;
+  if (skus.length < 2) { wrap.innerHTML = '<div class="empty">เลือกอย่างน้อย 2 สินค้า</div>'; return; }
+  const rowTot = s => _flowFreq[s] || 0;
+  const rows = skus.filter(s => rowTot(s) > 0).sort((a, b) => rowTot(b) - rowTot(a));
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">ไม่พบการกลับมาซื้อในช่วงที่เลือก — ลองขยายช่วงวันที่</div>'; return; }
+  const cols = rows.slice();
+  const heat = (p, self) => { const a = Math.min(0.85, p / 40); return `background:color-mix(in srgb, var(--ch-facebook, #1877F2) ${Math.round(a * 100)}%, transparent);${a > 0.45 ? 'color:#fff;' : ''}${self ? 'box-shadow:inset 0 0 0 2px var(--good);' : ''}`; };
+  const short = s => ttcEsc(skuToName(s));
+  const body = rows.map(r => { const tot = rowTot(r);
+    return `<tr><td class="l fm-rh">${short(r)}<small>กลับมาซื้อ ${fmt(tot)} ครั้ง</small></td>${cols.map(c => { const n = _flowTransitions[r][c] || 0, p = tot ? n / tot * 100 : 0;
+      return `<td class="num fm-c" style="${n ? heat(p, r === c) : ''}" data-tip="${ttcEsc('ซื้อ ' + skuToName(r) + ' แล้วกลับมาซื้อ ' + fmt(tot) + ' ครั้ง · ออเดอร์ถัดไปมี ' + skuToName(c) + ' ' + fmt(n) + ' ครั้ง (' + p.toFixed(1) + '%)')}">${n ? Math.round(p) + '%' : '<span class="ui-muted">·</span>'}</td>`; }).join('')}</tr>`; }).join('');
+  wrap.innerHTML = `<div class="table-wrap"><table id="tblFlowMx" class="ui-table fm-tbl" data-no-sort data-no-page>
+    <thead><tr><th class="l">ซื้อครั้งก่อน ↓ · ครั้งต่อไป →</th>${cols.map(c => `<th class="num fm-ch">${short(c)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+  const mi = document.getElementById('flowMxInfo'); if (mi) mi.innerHTML = fbeInfoIcon('flow-i-mx', 'อ่านทีละแถว: ทุกครั้งที่ลูกค้าซื้อสินค้าในแถวนั้นแล้วกลับมาซื้อ ออเดอร์ถัดไปมีสินค้าในคอลัมน์กี่ %<br>ออเดอร์ถัดไปมีได้หลายสินค้า แต่ละแถวจึงรวมกันเกิน 100% ได้<br>สีเข้ม = ซื้อต่อกันบ่อย · กรอบเขียว = ซื้อตัวเดิมซ้ำ · ชี้ที่ช่องเพื่อดูจำนวนครั้ง');
 }
 
+// (2026-11-03) แนะนำขายต่อ: ต่อสินค้า 1 แถว — กลับมาซื้อกี่ครั้ง · ซื้อตัวเดิมซ้ำกี่ % · 3 สินค้าที่ซื้อต่อบ่อยสุด (นับทุกสินค้า ไม่จำกัดเฉพาะที่เลือก)
 function renderFlowTable() {
-  const rows=[];
-  flowSelectedSKUs.forEach(src => {
-    if (!_flowTransitions[src]) return;
-    const srcTotal=Object.values(_flowTransitions[src]).reduce((a,b)=>a+b,0);
-    Object.entries(_flowTransitions[src])
-      .filter(([tgt])=>flowSelectedSKUs.includes(tgt))
-      .sort((a,b)=>b[1]-a[1])
-      .forEach(([tgt,cnt])=>{
-        rows.push({src,tgt,cnt,pct:srcTotal?((cnt/srcTotal)*100).toFixed(1):'0',isSelf:src===tgt});
-      });
-  });
-  rows.sort((a,b)=>b.cnt-a.cnt);
-  document.getElementById('tbodyFlowDetail').innerHTML = rows.slice(0,30).map((r,i)=>`
-    <tr>
-      <td class="rank">${i+1}</td>
-      <td><span style="color:var(--text);">${skuToName(r.src)}</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${r.src}</span></td>
-      <td style="color:var(--text3);">→</td>
-      <td><span style="color:var(--text);">${skuToName(r.tgt)}</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${r.tgt}</span></td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(r.cnt)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${r.pct}%</td>
-      <td>${r.isSelf?'<span style="color:var(--green);font-size:12px;">🔄 ซื้อซ้ำ</span>':''}</td>
-    </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
+  const tb = document.getElementById('tbodyFlowDetail'); if (!tb || !_flowTransitions) return;
+  const pick = (t, n) => { const p = n.tot ? t[1] / n.tot * 100 : 0; return `<td class="l">${ttcEsc(skuToName(t[0]))} <span class="ui-chip">${p.toFixed(0)}%</span></td>`; };
+  tb.innerHTML = flowSelectedSKUs.filter(s => _flowTransitions[s]).map(s => { const m = _flowTransitions[s], tot = _flowFreq[s] || 0, self = m[s] || 0;
+    const top = Object.entries(m).filter(([k]) => k !== s).sort((a, b) => b[1] - a[1]).slice(0, 3), n = { tot };
+    return { s, tot, row: `<tr><td class="l"><b>${ttcEsc(skuToName(s))}</b><small class="ui-muted" style="margin-left:6px;">${ttcEsc(s)}</small></td><td class="num">${fmt(tot)}</td><td class="num">${tot ? (self / tot * 100).toFixed(0) + '%' : '—'}</td>${[0, 1, 2].map(i => top[i] ? pick(top[i], n) : '<td class="l ui-muted">—</td>').join('')}</tr>` }; })
+    .sort((a, b) => b.tot - a.tot).map(x => x.row).join('') || '<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>';
+  const ri = document.getElementById('flowRecInfo'); if (ri) ri.innerHTML = fbeInfoIcon('flow-i-rec', '% = ทุกครั้งที่ลูกค้าซื้อสินค้านั้นแล้วกลับมาซื้อ ออเดอร์ถัดไปมีสินค้านี้กี่ %<br>ใช้ดูว่าควรเสนอสินค้าอะไรต่อให้ลูกค้าที่เพิ่งซื้อ (เช่น ทักไปเสนอ / จัดเซ็ต / ตั้งโปรซื้อคู่)');
 }
 
 // ===== (2026-10-02) Data Guard — ทุกหน้าบอกว่าข้อมูลที่ใช้มาครบไหม (ผลตรวจอัตโนมัติทุกชั่วโมงจาก RPC data_status) =====
