@@ -257,7 +257,7 @@
   function fbAdsCard(d) {
     const a = d.fb_ads || [];
     const rows = a.map(x => { const url = x.post_id ? `https://www.facebook.com/${x.post_id}` : '';
-      const img = x.thumbnail_url ? `<img src="${escA(x.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
+      const img = x.thumbnail_url ? `<img loading="lazy" decoding="async" src="${escA(x.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
       return `<tr><td><div style="display:flex;gap:8px;align-items:center;min-width:200px;"><a class="skd-thumb" ${url ? `href="${escA(url)}" target="_blank" rel="noopener"` : ''}>${img}</a><div style="min-width:0;"><div style="font-size:11.5px;font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(x.name)}">${esc(x.name || x.ad_id)}</div><div style="font-size:10.5px;color:var(--text3);">${esc(x.bucket || '')} · ${thShort(x.first_date)}${x.last_date !== x.first_date ? ' – ' + thShort(x.last_date) : ''}</div></div></div></td>
         <td class="num"><b>${money(x.spend)}</b></td><td class="num">${n0(x.msg_started)}</td><td class="num">${n0(x.purchases)}</td><td class="num">${+x.spend && +x.purchase_value ? (x.purchase_value / x.spend).toFixed(2) + 'x' : dash}</td></tr>`; }).join('');
     // (2026-10-28) โครงเดียวกับการ์ด TikTok: สรุป 4 ช่อง (ทุก Ads ของสินค้า) → ตาราง 15 อันดับ → กระทบยอด → หมายเหตุ
@@ -274,7 +274,7 @@
     const head = +p.cost ? `<div class="skd-minis">${box('ค่า Ads GMV Max', money(p.cost))}${box('ยอดขายจาก Ads', money(p.rev))}${box('ออเดอร์', fmt(Math.round(+p.orders || 0)))}${box('ROI', roas(p.rev, p.cost))}</div>` : '';
     const noMeta = x => { const tt = String(x.title ?? '').trim(); return !tt || tt === '0' || /^\d{12,}$/.test(tt); };   // (2026-10-28) TikTok ไม่มีชื่อคลิป / ชื่อช่อง
     const ini = x => noMeta(x) ? '▶' : esc((String(x.tt_account_name || x.title || '').replace(/^@/, '').trim().charAt(0) || '·').toUpperCase());
-    const rows = c.map(x => { const img = x.cover_url ? `<img src="${escA(x.cover_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.classList.add('noimg');this.remove()">` : '';
+    const rows = c.map(x => { const img = x.cover_url ? `<img loading="lazy" decoding="async" src="${escA(x.cover_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.classList.add('noimg');this.remove()">` : '';
       const url = x.item_id ? `https://www.tiktok.com/@${encodeURIComponent(x.tt_account_name || 'tiktok')}/video/${x.item_id}` : '';
       return `<tr><td><div style="display:flex;gap:8px;align-items:center;min-width:200px;"><a class="skd-thumb${x.cover_url ? '' : ' noimg'}" data-ini="${ini(x)}" ${url ? `href="${escA(url)}" target="_blank" rel="noopener"` : ''}>${img}</a><div style="min-width:0;"><div style="font-size:11.5px;font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escA(noMeta(x) ? x.item_id : x.title)}">${noMeta(x) ? 'คลิป ' + esc(x.item_id) : esc(x.title)}</div><div style="font-size:10.5px;color:var(--text3);">${noMeta(x) ? 'ไม่มีข้อมูลชื่อคลิป' : '@' + esc(x.tt_account_name || '—')}</div></div></div></td>
         <td class="num"><b>${money(x.cost)}</b></td><td class="num">${m0(x.rev)}</td><td class="num">${n0(x.orders)}</td><td class="num">${roas(x.rev, x.cost)}</td></tr>`; }).join('');
