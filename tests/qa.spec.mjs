@@ -1,128 +1,162 @@
-// auth.js — ด่านล็อกอินใช้ร่วมทุกหน้า (dashboard / upload / admin / health)
-// วิธีใช้: ใส่ <script src="config.js"></script><script src="auth.js"></script> ใน <head>
-//   แล้วเรียก  Auth.require('dashboard')  (หรือ 'upload' / 'admin' / 'health') ก่อนโหลดข้อมูล
-//   - ยังไม่ล็อกอิน → เด้งไป login.html (กลับมาหน้าเดิมหลังล็อกอิน)
-//   - ล็อกอินแล้วแต่ยังไม่มีสิทธิ์หน้านี้ → หน้า "รอเมฆเปิดสิทธิ์" (ออกจากระบบได้)
-//   - ผ่านแล้ว → คืนค่าสิทธิ์ { email, name, is_admin, pages, can_upload, can_admin }
-// ฟังก์ชันอื่น: Auth.canPage('overview') · Auth.perm · Auth.token() · Auth.signOut() · Auth.client (supabase-js)
+// ระบบทดสอบหน้าเว็บ (จำลองการใช้งานจริง) — Deesay-v2
+// ล็อกอินด้วยบัญชีทดสอบ → เปิดทุกหน้าในเมนู → รอโหลด → กดค้นหา → กดตัวเลขที่กดได้ (แผงที่มาของตัวเลข) → ตรวจ:
+//   1) error ในหน้า / โหลดข้อมูลไม่สำเร็จ      2) หน้าเด้ง (Layout Shift) ตอนโหลดและหลังกดค้นหา
+//   3) ข้อความล้นหรือถูกตัดในการ์ด / ตาราง     4) ตารางที่มีแถวรวม: ผลรวมแต่ละคอลัมน์ = แถวรวม
+//   5) กดตัวเลขแล้วแผงเปิดได้และมีข้อมูล       6) เวลาโหลดแต่ละหน้า + ภาพหน้าจอทุกหน้า (ไว้ตรวจหน้าตา)
+// ผลอยู่ที่ tests/qa-out/ (README.md + report.json + shots/*.png) → GitHub Actions เก็บไว้ที่ branch qa-report
+import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
+const SITE = (process.env.SITE_URL || 'https://gonmeg.github.io/Deesay-v2/').replace(/\/?$/, '/');
+const OUT = 'qa-out'; fs.mkdirSync(`${OUT}/shots`, { recursive: true });
+const SAFE_CLICK_MAX = 6;                       // กดตัวเลขต่อหน้าไม่เกินกี่จุด
+const CLS_WARN = 0.03, CLS_FAIL = 0.1;          // เกณฑ์หน้าเด้ง (Cumulative Layout Shift) เข้มกว่ามาตรฐาน Google (0.1) — เด้งนิดเดียวก็ขึ้นเตือน
+const DANGER = /ลบ|บันทึก|อนุมัติ|ไม่อนุมัติ|ส่ง|อัปโหลด|ออกจากระบบ|ยกเลิก|ใช้งานลิงก์|รีเฟรชข้อมูล|ตั้งเป้า|แก้ไข|เพิ่ม/;
 
-// รายชื่อหน้าใน dashboard.html (ใช้ทั้งกรองเมนูซ้าย และตารางติ๊กสิทธิ์ใน admin.html) — เพิ่มหน้าใหม่ที่นี่ที่เดียว
-window.DEESAY_PAGES = [
-  { id: 'home',         name: 'หน้าแรก (สรุปประจำวัน)', group: 'ยอดขาย' },
-  { id: 'overview',     name: 'ภาพรวมยอดขาย',        group: 'ยอดขาย' },
-  { id: 'channel',      name: 'แยกตาม Channel',       group: 'ยอดขาย' },
-  { id: 'kpi',          name: 'เป้าหมาย KPI',          group: 'ยอดขาย' },
-  { id: 'fbhub',        name: 'ภาพรวม Facebook',       group: 'Facebook' },
-  { id: 'crm',          name: 'CRM',                   group: 'Facebook' },
-  { id: 'flow',         name: 'เส้นทางซื้อซ้ำ',        group: 'Facebook' },
-  { id: 'neverbought',  name: 'ลูกค้าที่ยังไม่ซื้อ',     group: 'Facebook' },
-  { id: 'fbengage',     name: 'Engagement รายวัน',     group: 'Facebook' },
-  { id: 'fbads',        name: 'Facebook Ads',          group: 'Facebook' },
-  { id: 'tthub',        name: 'ภาพรวม TikTok',         group: 'TikTok' },
-  { id: 'ttcontent',    name: 'ผลงานคอนเทนต์',         group: 'TikTok' },
-  { id: 'ttkeyword',    name: 'ค้นหาคำบน TikTok',      group: 'TikTok' },
-  { id: 'ttads',        name: 'TikTok Ads',            group: 'TikTok' },
-  { id: 'livesearch',   name: 'ค้นหา Live',            group: 'TikTok' },
-  { id: 'creatorperf',  name: 'Creator Performance',   group: 'TikTok' },
-  { id: 'shhub',        name: 'ภาพรวม Shopee',         group: 'Shopee / Lazada' },
-  { id: 'shads',        name: 'Shopee Ads',            group: 'Shopee / Lazada' },
-  { id: 'lzhub',        name: 'ภาพรวม Lazada',         group: 'Shopee / Lazada' },
-  { id: 'mthub',        name: 'ภาพรวม Modern Trade',   group: 'Modern Trade' },
-  { id: 'skurev',       name: 'แนวโน้มสินค้า',          group: 'สินค้า / การตลาด' },
-  { id: 'cost',         name: 'Business Insight',      group: 'สินค้า / การตลาด' },
-  { id: 'mktlive',      name: 'MKT Tracking',          group: 'สินค้า / การตลาด' },
-  { id: 'skuanalysis',  name: 'เจาะสินค้า',             group: 'สินค้า / การตลาด' },
-  { id: 'adperf',       name: 'Ad Performance',        group: 'สินค้า / การตลาด' },
-  { id: 'kol',          name: 'KOL',                   group: 'สินค้า / การตลาด' },
-  { id: 'supply',       name: 'Supply Chain',          group: 'สินค้า / การตลาด' },
-  { id: 'products',     name: 'สินค้า & ราคา (แก้ได้เฉพาะคนที่มีสิทธิ์จัดการสินค้า)', group: 'สินค้า / การตลาด' },
-  { id: 'promo',        name: 'ขอโปรโมชั่น',            group: 'สินค้า / การตลาด' },
-  { id: 'exec',         name: 'ผู้บริหาร: อนุมัติโปร + ค่าธรรมเนียมช่องทาง (เห็นต้นทุน)', group: 'ผู้บริหาร' },
-];
-// ปุ่มลัด "ให้แบบพนักงานทั่วไป" ใน admin.html = หน้าชุดนี้ (แก้ได้ตามใจ)
-window.DEESAY_STAFF_PAGES = ['overview', 'channel', 'fbhub', 'tthub', 'ttcontent', 'shhub', 'lzhub', 'skurev', 'skuanalysis'];
-
-window.Auth = (function () {
-  const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js';   // (2026-11-02) ล็อกเวอร์ชัน — เดิม @2 = ล่าสุดเสมอ ถ้าเขาออกเวอร์ชันใหม่ที่เปลี่ยนการทำงาน เว็บอาจพังเอง
-  let client = null, session = null, perm = null;
-
-  // โหลด supabase-js (UMD) ถ้าหน้านั้นยังไม่มี
-  const ready = new Promise((resolve, reject) => {
-    const make = () => { client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } }); resolve(client); };
-    if (window.supabase?.createClient) return make();
-    const s = document.createElement('script'); s.src = LIB; s.onload = make; s.onerror = () => reject(new Error('โหลด supabase-js ไม่ได้')); document.head.appendChild(s);
+test('จำลองการใช้งานทุกหน้า', async ({ browser }) => {
+  test.skip(!process.env.QA_EMAIL || !process.env.QA_PASSWORD, 'ยังไม่ได้ตั้ง QA_EMAIL / QA_PASSWORD ใน GitHub Secrets');
+  const ctx = await browser.newContext();
+  await ctx.addInitScript(() => {
+    window.__cls = 0; window.__shifts = [];
+    try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) { window.__cls += e.value; window.__shifts.push(e.value); } }).observe({ type: 'layout-shift', buffered: true }); } catch (e) {}
   });
+  const page = await ctx.newPage();
+  // (2026-11-02) ประกาศก่อนใช้ครั้งแรก (เดิมประกาศไว้หลังจุดที่เรียก → ระบบทดสอบหยุดหลังล็อกอิน ไม่มีรายงานออก)
+  // ปิดกล่อง "มีอะไรใหม่" ที่เด้งทับหน้า (ไม่งั้นกดตัวเลขไม่ได้ ทดสอบผิดเป็นกดแล้วไม่มีแผงเปิด)
+  const dismissWhatsNew = () => page.evaluate(() => { const o = document.getElementById('wnOverlay'); if (o && o.style.display === 'flex' && window.closeWhatsNew) window.closeWhatsNew(); }).catch(() => {});
+  let errs = [];
+  page.on('pageerror', e => errs.push('JS: ' + e.message.slice(0, 160) + ' @ ' + String(e.stack || '').split('\n').slice(1, 2).join('').trim().replace(/^at\s+/, '').slice(0, 120)));
+  page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_BLOCKED_BY_CLIENT/.test(m.text())) errs.push('console: ' + m.text().slice(0, 200)); });
+  page.on('response', async r => { if (r.status() >= 400 && /supabase\.co/.test(r.url())) { let body = ''; try { body = (await r.text()).replace(/\s+/g, ' ').slice(0, 160); } catch (e) {} let post = ''; try { post = (r.request().postData() || '').slice(0, 120); } catch (e) {}
+    errs.push(`โหลดข้อมูลไม่สำเร็จ ${r.status()} ${r.url().split('?')[0].split('/').slice(-2).join('/')} · ${body}${post ? ' · ส่งไป ' + post : ''}`); } });
 
-  function thisPageUrl() { return (location.pathname.split('/').pop() || 'dashboard.html') + location.search + location.hash; }
-  function goLogin() { location.replace('login.html?redirect=' + encodeURIComponent(thisPageUrl())); return new Promise(() => {}); } // ค้างไว้ ไม่ให้โค้ดหลังจากนี้รันต่อ
+  // ล็อกอิน
+  await page.goto(SITE + 'login.html');
+  await page.fill('#email', process.env.QA_EMAIL); await page.fill('#password', process.env.QA_PASSWORD);
+  await page.click('#btnGo');
+  await page.waitForURL(u => !/login\.html/.test(String(u)), { timeout: 45000 });
 
-  // หน้าบอกว่ายังไม่มีสิทธิ์ / ถูกปิดใช้งาน (ธีมเดียวกับ dashboard)
-  function showBlocked(title, msg) {
-    document.documentElement.style.background = '#0a0a0f';
-    const light = (() => { try { return localStorage.getItem('deesay_theme') === 'light'; } catch (e) { return false; } })();
-    const bg = light ? '#f5f5f7' : '#0a0a0f', bg2 = light ? '#ffffff' : '#111118', border = light ? '#d8d8e0' : '#2a2a3a',
-          text = light ? '#1a1a2e' : '#e8e8f0', text2 = light ? '#4a4a6a' : '#9090a8', accent = light ? '#b8892e' : '#c8a96e';
-    document.body.innerHTML = `
-      <div style="position:fixed;inset:0;background:${bg};display:flex;align-items:center;justify-content:center;font-family:'Sarabun',sans-serif;color:${text};z-index:99999;">
-        <div style="background:${bg2};border:1px solid ${border};border-radius:16px;padding:36px 40px;max-width:420px;width:92%;text-align:center;">
-          <div style="font-size:22px;font-weight:700;letter-spacing:2px;color:${accent};">DEESAY</div>
-          <div style="font-size:18px;font-weight:600;margin:18px 0 8px;">${title}</div>
-          <div style="font-size:14px;color:${text2};line-height:1.6;">${msg}</div>
-          <div style="font-size:12px;color:${text2};margin-top:14px;">บัญชี: ${perm?.email || ''}</div>
-          <div style="display:flex;gap:8px;justify-content:center;margin-top:22px;">
-            <button onclick="location.reload()" style="padding:9px 16px;border-radius:8px;border:1px solid ${border};background:transparent;color:${text};font-family:inherit;font-size:13px;cursor:pointer;">ลองใหม่</button>
-            <button onclick="Auth.signOut()" style="padding:9px 16px;border-radius:8px;border:none;background:${accent};color:#0a0a0f;font-weight:600;font-family:inherit;font-size:13px;cursor:pointer;">ออกจากระบบ</button>
-          </div>
-        </div>
-      </div>`;
-    return new Promise(() => {});
-  }
+  // รายการหน้า: อ่านจากเมนูซ้ายจริง (หน้าที่บัญชีทดสอบมีสิทธิ์)
+  await page.goto(SITE + 'dashboard.html'); await page.waitForSelector('.sb .nav-item[data-page]', { timeout: 45000 });
+  await page.waitForTimeout(3000); await dismissWhatsNew();
+  const menu = await page.$$eval('.sb .nav-item[data-page]', els => els.map(e => ({ id: e.dataset.page, name: (e.dataset.label || e.textContent).trim() })));
+  const targets = [...menu.map(m => ({ ...m, url: `dashboard.html?page=${m.id}`, dash: true })),
+    { id: 'upload', name: 'อัปโหลดข้อมูล', url: 'upload.html' }, { id: 'admin', name: 'ตั้งค่า (Admin)', url: 'admin.html' }, { id: 'health', name: 'สถานะระบบข้อมูล', url: 'health.html' }];
 
-  async function rpc(name, args) {
-    const { data, error } = await client.rpc(name, args || {});
-    if (error) throw new Error(error.message);
-    return data;
-  }
-
-  // (2026-09-28) 'home' (หน้าแรก) เปิดให้ทุกคนที่ใช้งานได้เสมอ — ในหน้าจะโชว์เฉพาะส่วนของหน้าที่คนนั้นมีสิทธิ์
-  // (2026-10-15) execfee (ค่าธรรมเนียมช่องทาง) ใช้สิทธิ์เดียวกับ exec (หน้าผู้บริหาร)
-  function canPage(id) { if (id === 'execfee') id = 'exec'; if (id === 'ordprofit' || id === 'invvalue') id = 'cost'; /* (2026-10-26) กำไรต่อออเดอร์ ใช้สิทธิ์เดียวกับ Business Insight */ return !!perm && perm.is_active && (id === 'home' || perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
-
-  // ด่านหลัก — where = 'dashboard' | 'upload' | 'admin' | 'health'
-  async function require(where) {
-    await ready;
-    const { data } = await client.auth.getSession();
-    session = data.session;
-    if (!session) return goLogin();
-    client.auth.onAuthStateChange((ev, s) => { session = s; if (ev === 'SIGNED_OUT' || !s) goLogin(); });
-    // อ่านสิทธิ์ — ถ้าเซิร์ฟเวอร์สะดุดชั่วคราว (เช่น กำลังโหลด schema ใหม่) ลองซ้ำเองก่อน ไม่เด้งคนออก
-    let lastErr = null;
-    for (const wait of [0, 1500, 3000, 5000, 8000]) {
-      if (wait) await new Promise(r => setTimeout(r, wait));
-      try { perm = await rpc('my_permissions'); lastErr = null; break; } catch (e) { lastErr = e; }
+  const waitIdle = async () => {
+    try { await page.waitForLoadState('networkidle', { timeout: 30000 }); } catch (e) {}
+    for (let i = 0; i < 40; i++) {   // รอข้อความ "กำลังโหลด" หายจากส่วนที่มองเห็น (ไม่เกิน 20 วิ)
+      const busy = await page.evaluate(() => [...document.querySelectorAll('.page.active, main, body')].slice(0, 1).some(r => /กำลังโหลด|กำลังคำนวณ/.test(r.innerText || '')));
+      if (!busy) break; await page.waitForTimeout(500);
     }
-    if (lastErr) { setTimeout(() => location.reload(), 15000); return showBlocked('เชื่อมต่อไม่ได้ชั่วคราว', 'เซิร์ฟเวอร์ตอบช้า จะลองใหม่ให้เองใน 15 วินาที — หรือกด "ลองใหม่" ได้เลย<br><span style="font-size:11px;opacity:.7;">' + lastErr.message + '</span>'); }
-    if (!perm.logged_in) return goLogin();
-    perm.pages = perm.pages || [];
-    if (!perm.is_active) return showBlocked('บัญชีถูกปิดใช้งาน', 'ติดต่อผู้ดูแลระบบถ้าต้องการใช้งานต่อ');
-    const ok = where === 'upload' ? (perm.is_admin || perm.can_upload)
-             : where === 'admin'  ? (perm.is_admin || perm.can_admin || perm.can_edit_kpi)   // (2026-10-22) คนแก้ KPI เข้าได้เฉพาะแท็บตั้งเป้ายอดขาย
-             : where === 'health' ? perm.is_admin
-             : (perm.is_admin || perm.pages.length > 0);
-    // (2026-11-02) คนที่มีสิทธิ์แค่อัปโหลด / ตั้งค่า (ไม่มีหน้า dashboard) เปิดลิงก์หลักแล้วพาไปหน้าที่ใช้ได้เลย — ไม่ขึ้น "รอเปิดสิทธิ์"
-    //   (ลิงก์หลักของเว็บพาไป dashboard ตั้งแต่ 2026-11-02 เดิมเป็นหน้าเมนูให้เลือกเอง)
-    if (!ok && where === 'dashboard') {
-      if (perm.can_upload) { location.replace('upload.html'); return new Promise(() => {}); }
-      if (perm.can_admin || perm.can_edit_kpi) { location.replace('admin.html'); return new Promise(() => {}); }
-    }
-    if (!ok) return showBlocked('รอเปิดสิทธิ์ใช้งาน', where === 'dashboard'
-      ? 'สมัครเรียบร้อยแล้ว — รอผู้ดูแลระบบเปิดสิทธิ์ให้ แล้วกด "ลองใหม่"'
-      : 'บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าหน้านี้ — ติดต่อผู้ดูแลระบบถ้าต้องใช้');
-    return perm;
+    await page.waitForTimeout(1200);
+    await dismissWhatsNew();
+  };
+  const scope = t => t.dash ? '.page.active' : 'main, body';
+
+  const report = [];
+  for (const t of targets) {
+    errs = []; const r = { id: t.id, name: t.name, issues: [], warn: [] };
+    const t0 = Date.now();
+    try {
+      await page.goto(SITE + t.url); await waitIdle();
+      r.load_s = +((Date.now() - t0) / 1000).toFixed(1);
+      r.cls_load = +(await page.evaluate(() => window.__cls || 0)).toFixed(3);
+
+      // กดค้นหา (ถ้ามี) แล้ววัดหน้าเด้งเฉพาะหลังกด
+      const search = page.locator('#topSearchBtn:visible');
+      if (t.dash && await search.count()) {
+        await page.evaluate(() => { window.__cls = 0; window.__shifts = []; });
+        await search.first().click({ force: true, timeout: 5000 }).catch(() => page.evaluate(() => window.applyFilters && window.applyFilters()));
+        await waitIdle();
+        r.cls_search = +(await page.evaluate(() => window.__cls || 0)).toFixed(3);
+      }
+
+      // ข้อความล้น / ถูกตัด (ตัวเลขในการ์ด ป้าย หัวตาราง)
+      r.overflow = await page.evaluate(sel => {
+        const root = document.querySelector(sel) || document.body, out = [];
+        root.querySelectorAll('.kpi-val, .kpi-label, .ui-metric *, .hm-metric *, [class*="card"] [class*="v"], th, .ui-badge, button').forEach(el => {
+          if (!el.offsetParent || el.children.length > 2) return;
+          if (el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0) out.push((el.innerText || '').trim().slice(0, 40));
+        });
+        return [...new Set(out)].slice(0, 8);
+      }, scope(t));
+
+      // ตารางที่มีแถวรวม: ผลรวมแต่ละคอลัมน์ต้องเท่าแถวรวม (ข้ามตารางที่แบ่งหน้า และคอลัมน์ % / อัตรา / ROAS / เฉลี่ย)
+      r.totals = await page.evaluate(sel => {
+        const root = document.querySelector(sel) || document.body, out = [];
+        const num = s => { const m = String(s || '').replace(/,/g, '').match(/^\s*(-?\d+(?:\.\d+)?)/); return m ? +m[1] : null; };
+        root.querySelectorAll('table').forEach((tb, ti) => {
+          if (!tb.offsetParent) return;
+          const card = tb.closest('.card, section, .sec, div'); if (card && /ถัดไป|ต่อหน้า/.test(card.innerText || '')) return;
+          const rows = [...tb.querySelectorAll('tbody tr')].filter(x => x.offsetParent);
+          const tot = rows.find(x => /\b(tot|total|pl-total|sum)\b/.test(x.className) || /^\s*รวม/.test(x.cells[0]?.innerText || '')); if (!tot) return;
+          const body = rows.filter(x => x !== tot && !/\b(child|sub|pl-ch|op-sub|detail)\b/.test(x.className));
+          const grid = tr => { const out = []; [...tr.cells].forEach(c => { out.push(c.innerText); for (let k = 1; k < (c.colSpan || 1); k++) out.push(null); }); return out; };   // ช่องที่รวมคอลัมน์ (colspan)
+          const hr = tb.querySelector('thead tr:last-child'), heads = hr ? grid(hr).map(h => (h || '').trim()) : [];
+          const T = grid(tot), Bs = body.map(grid);
+          T.forEach((cv, i) => {
+            if (i === 0 || cv == null || /%|อัตรา|ROAS|ROI|เฉลี่ย|ราคา|ต่อ|MER|CPA|CTR|สัดส่วน|AOV/i.test(heads[i] || '')) return;
+            const tv = num(cv); if (tv === null) return;
+            const vals = Bs.map(r => num(r[i])); if (vals.some(v => v === null) || !vals.length) return;
+            const s = vals.reduce((a, b) => a + b, 0);
+            if (Math.abs(s - tv) > Math.max(1.5, Math.abs(tv) * 0.002)) out.push(`ตาราง ${ti + 1} คอลัมน์ "${heads[i] || i}": ผลรวม ${Math.round(s).toLocaleString()} ≠ แถวรวม ${Math.round(tv).toLocaleString()}`);
+          });
+        });
+        return out.slice(0, 8);
+      }, scope(t));
+
+      // กดตัวเลขที่กดได้ (ขีดเส้นใต้จุด) → แผงที่มาต้องเปิดและมีข้อมูล → ปิด
+      const cands = await page.evaluate(sel => {
+        const root = document.querySelector(sel) || document.body, out = [];
+        root.querySelectorAll('td, span, b, div, a').forEach((el, i) => {
+          if (!el.offsetParent || el.children.length > 1) return;
+          const cs = getComputedStyle(el);
+          if ((cs.textDecorationStyle === 'dotted' || cs.borderBottomStyle === 'dotted') && cs.cursor === 'pointer') { el.setAttribute('data-qa-click', String(i)); out.push(String(i)); }
+        });
+        return out;
+      }, scope(t));
+      r.clicks = { found: cands.length, ok: 0, fail: [] };
+      for (const id of cands.slice(0, SAFE_CLICK_MAX)) {
+        const el = page.locator(`[data-qa-click="${id}"]`).first();
+        const label = ((await el.innerText().catch(() => '')) || '').trim().slice(0, 30);
+        if (DANGER.test(label)) continue;
+        const e0 = errs.length;
+        await el.click({ timeout: 5000 }).catch(() => {}); await page.waitForTimeout(1800);
+        const open = await page.evaluate(([before]) => {
+          const b = document.getElementById('trBody'); if (b && b.offsetParent) return (b.innerText || '').trim().length;
+          const pop = [...document.querySelectorAll('[role="dialog"], .modal, [class*="drawer"], [class*="popover"], [class*="pop-"], .ui-pop, .fbe-pop')].find(x => x.offsetParent && (x.innerText || '').trim().length > 20);
+          if (pop) return (pop.innerText || '').trim().length;
+          const act = document.querySelector('.page.active'); if (act && act.id !== before) return 999;   // พาไปหน้าอื่น
+          return -1;
+        }, [await page.evaluate(() => (document.querySelector('.page.active') || {}).id || '')]);
+        if (open > 20 && errs.length === e0) r.clicks.ok++; else r.clicks.fail.push(`${label || '(ไม่มีข้อความ)'}: ${open < 0 ? 'กดแล้วไม่มีแผงเปิด' : open <= 20 ? 'แผงเปิดแต่ไม่มีข้อมูล' : errs.slice(e0).join(' / ')}`);
+        await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+        await page.evaluate(() => { const x = document.querySelector('.tr-x, .tr-close, [onclick*="trClose"]'); if (x && x.offsetParent) x.click(); });
+        await page.waitForTimeout(300);
+      }
+
+      await page.screenshot({ path: `${OUT}/shots/${t.id}.png`, fullPage: true, timeout: 30000 }).catch(() => page.screenshot({ path: `${OUT}/shots/${t.id}.png` }));
+    } catch (e) { r.issues.push('ทดสอบไม่จบ: ' + String(e.message || e).slice(0, 200)); }
+
+    r.errors = [...new Set(errs)].slice(0, 10);
+    if (r.errors.length) r.issues.push(...r.errors);
+    if ((r.cls_load || 0) > CLS_FAIL) r.issues.push(`หน้าเด้งตอนโหลด CLS ${r.cls_load}`); else if ((r.cls_load || 0) > CLS_WARN) r.warn.push(`หน้าเด้งเล็กน้อยตอนโหลด CLS ${r.cls_load}`);
+    if ((r.cls_search || 0) > CLS_FAIL) r.issues.push(`หน้าเด้งหลังกดค้นหา CLS ${r.cls_search}`); else if ((r.cls_search || 0) > CLS_WARN) r.warn.push(`หน้าเด้งเล็กน้อยหลังกดค้นหา CLS ${r.cls_search}`);
+    (r.totals || []).forEach(x => r.issues.push(x));
+    (r.clicks?.fail || []).forEach(x => r.issues.push('กดตัวเลข: ' + x));
+    if ((r.overflow || []).length) r.warn.push('ข้อความล้นกล่อง: ' + r.overflow.join(' · '));
+    if ((r.load_s || 0) > 15) r.warn.push(`โหลดช้า ${r.load_s} วิ`);
+    report.push(r);
   }
 
-  async function signOut() { try { await ready; await client.auth.signOut(); } catch (e) {} location.replace('login.html'); }
-
-  return { require, canPage, signOut, ready, rpc,
-    get perm() { return perm; }, get client() { return client; }, token() { return session?.access_token || null; } };
-})();
+  // รายงาน
+  const bad = report.filter(r => r.issues.length), warn = report.filter(r => !r.issues.length && r.warn.length);
+  const md = [`# ผลทดสอบหน้าเว็บ — ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, '',
+    `ทดสอบ ${report.length} หน้า · ❌ ต้องแก้ ${bad.length} · ⚠️ ควรดู ${warn.length} · ✅ ผ่าน ${report.length - bad.length - warn.length}`, '',
+    '| หน้า | ผล | โหลด (วิ) | เด้งตอนโหลด | เด้งหลังค้นหา | กดตัวเลข | รายละเอียด |', '|---|---|---|---|---|---|---|',
+    ...report.map(r => `| ${r.name} | ${r.issues.length ? '❌' : r.warn.length ? '⚠️' : '✅'} | ${r.load_s ?? '—'} | ${r.cls_load ?? '—'} | ${r.cls_search ?? '—'} | ${r.clicks ? `${r.clicks.ok}/${Math.min(r.clicks.found, SAFE_CLICK_MAX)}` : '—'} | ${[...r.issues, ...r.warn].join('<br>').replace(/\|/g, '/') || '—'} |`),
+    '', 'ภาพหน้าจอทุกหน้าอยู่ในโฟลเดอร์ shots/'].join('\n');
+  fs.writeFileSync(`${OUT}/README.md`, md); fs.writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 2));
+  console.log(md);
+  expect(bad.map(r => `${r.name}: ${r.issues[0]}`), 'หน้าที่ต้องแก้').toEqual([]);
+});
