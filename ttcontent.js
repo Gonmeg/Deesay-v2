@@ -450,7 +450,7 @@
   function renderMetricPanel(panel) {
     const order = [...cols, ...Object.keys(M).filter(k => !cols.includes(k))];
     panel.innerHTML = `
-      <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด · ชี้ที่ชื่อเพื่อดูคำอธิบาย</div>
+      <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด · ชี้ที่ชื่อเพื่อดูคำอธิบาย</div>
       <div id="ttcMetricRows">
         ${order.map(k => {
           const on = cols.includes(k);
