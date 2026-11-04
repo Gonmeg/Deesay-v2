@@ -24,6 +24,15 @@
 * commit message ภาษาไทยหรืออังกฤษสั้นๆ บอกว่าแก้อะไร แล้ว push ขึ้น `main` (ถ้า push ตรงไม่ได้ให้เปิด Pull Request)
 * `config.js` มีแค่ URL + anon key (เปิดเผยได้ ความปลอดภัยอยู่ที่ RLS + สิทธิ์ใน Supabase) · ล็อกอินใช้ Supabase Auth แล้ว · ห้ามใส่ service role key หรือรหัสลับใด ๆ ในไฟล์ของ repo นี้
 
+## เครื่องมือทำรูป + เช็คลิสต์ 8 ข้อ (ใช้ชุดเดียวกันทุกแชท · อัปเดต 2026-11-04)
+
+* ครั้งแรกของแชท: `bash tests/preview/setup.sh` (โหลด Chart.js 4.4.1 + ฟอนต์ Sarabun ลง `tests/preview/.cache/` ไม่ commit)
+* หน้านี้ดึงข้อมูลอะไร: `python3 tests/preview/preview.py calls <id หน้า>` → ดึงจาก Supabase แบบสรุปเฉพาะที่หน้าใช้ เก็บเป็น JSON นอก repo (เช่น `/home/claude/fx/`)
+* รูปหน้าจริง: `python3 tests/preview/preview.py shot <id หน้า> --data <ไฟล์ json> --themes dark,light` → รูปเต็มหน้าจอ 1440 + 1920 ที่ `tests/preview/out/` + ผลตรวจ
+* ก่อนส่งไฟล์ทุกครั้ง: `python3 tests/preview/checklist.py <แผน>.local.json` → ตาราง 8 ข้อ แปะในข้อความส่งงาน (วิธีเขียนแผนอยู่หัวไฟล์ checklist.py)
+* เกณฑ์ตรวจอยู่ที่ `tests/checks.js` ไฟล์เดียว — ระบบทดสอบบน GitHub (`tests/qa.spec.mjs`) โหลดไฟล์เดียวกัน · จะเปลี่ยนเกณฑ์ แก้ที่ไฟล์นี้ที่เดียว
+* ห้าม commit ข้อมูลบริษัท: ไฟล์ข้อมูล / รูป / ของที่โหลด อยู่นอก repo หรือในโฟลเดอร์ที่ `.gitignore` กันไว้
+
 ## กฎหน้าเว็บ (ใช้ทุกหน้า)
 
 * ช่วงวันที่ไม่เกิน 1 เดือน = กราฟรายวันเสมอ · หลายเดือน = รายเดือน
