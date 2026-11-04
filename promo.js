@@ -472,7 +472,7 @@
       .pv-sim-f .pr-row { margin-bottom:6px; }
       .pv-dd { position:fixed; z-index:1300; max-height:300px; overflow:auto; background:var(--bg2); border:1px solid var(--border); border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,.16); padding:4px; }
       .pv-dd button { display:flex; gap:8px; align-items:baseline; width:100%; text-align:left; border:0; background:none; font:inherit; font-size:12.5px; padding:7px 9px; border-radius:7px; cursor:pointer; color:var(--text); }
-      .pv-dd button:hover { background:var(--bg3); } .pv-dd small { color:var(--text3); font-family:'IBM Plex Mono', monospace; font-size:11px; } .pv-dd .none { padding:10px; font-size:12px; color:var(--text3); }`;
+      .pv-dd button:hover { background:var(--bg3); } .pv-dd small { color:var(--text3); font-family:'Sarabun', sans-serif; font-size:11px; } .pv-dd .none { padding:10px; font-size:12px; color:var(--text3); }`;
     document.head.appendChild(st);
   }
   const PV_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
