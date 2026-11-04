@@ -229,7 +229,7 @@
         <div id="supSkuBody"><div class="empty">เลือก SKU จากตารางด้านบน</div></div>
       </div>
       <style>
-        /* หน้านี้ใช้ Sarabun ทั้งหมด เว้นรหัสสินค้าที่คงเป็น monospace ให้อ่านรหัสง่าย */
+        /* หน้านี้ใช้ Sarabun ทั้งหมด (2026-11-04 ทั้งเว็บใช้ฟอนต์เดียว รวมรหัสสินค้า) */
         #page-supply .card-title { font-family:'Sarabun',sans-serif; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:8px; }
         #page-supply .section-title { font-family:'Sarabun',sans-serif; }
         #page-supply .sup-top { display:grid; grid-template-columns:minmax(0,1fr) minmax(400px,38%); gap:16px; align-items:stretch; margin-bottom:20px; }
@@ -262,10 +262,10 @@
         #page-supply td.t-left { text-align:left; }
         #page-supply td.t-center { text-align:center; }
         #page-supply tbody tr:hover td { background:var(--bg3); }
-        #page-supply .sup-parent { font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:700; color:var(--accent); }
-        #page-supply .sup-skucode { font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; }
+        #page-supply .sup-parent { font-family:'Sarabun',sans-serif; font-size:11.5px; font-weight:700; color:var(--accent); }
+        #page-supply .sup-skucode { font-family:'Sarabun',sans-serif; font-size:11.5px; font-weight:600; }
         #page-supply .sup-sub { font-size:10px; color:var(--text3); line-height:1.45; margin-top:3px; font-variant-numeric:normal; }
-        #page-supply .sup-chip { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600;
+        #page-supply .sup-chip { display:inline-block; font-family:'Sarabun',sans-serif; font-size:10.5px; font-weight:600;
           padding:3px 8px; border-radius:6px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); }
         #page-supply .sup-bar { height:3px; border-radius:2px; background:var(--bg3); margin:5px 0 0 auto; width:60px; overflow:hidden; }
         #page-supply .sup-bar i { display:block; height:100%; border-radius:2px; }
@@ -780,7 +780,7 @@
       : (d.by_location || []).map(l => pill('var(--text3)', `${esc(l.location)} ${fmtN(l.on_hand)}`)).join(' ');
     const po = (d.po || []).length ? `<div style="font-size:11px;margin-top:8px;">PO ค้าง: ${d.po.map(x => pill('var(--blue)', `${esc(x.po_no || '(ไม่มีเลข)')} ${fmtN(x.qty)} ชิ้น${x.eta ? ' เข้า ' + dTH(x.eta) : ' ไม่มี ETA'}`)).join(' ')}</div>` : '';
     document.getElementById('supSkuBody').innerHTML = `
-      <div style="font-size:13px;margin-bottom:10px;"><b>${esc(r.product_name || d.sku)}</b> <span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:11px;">${esc(r.parent_sku || '')} · ${esc(d.sku)}</span></div>
+      <div style="font-size:13px;margin-bottom:10px;"><b>${esc(r.product_name || d.sku)}</b> <span style="color:var(--text3);font-family:'Sarabun',sans-serif;font-size:11px;">${esc(r.parent_sku || '')} · ${esc(d.sku)}</span></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-bottom:14px;">${facts.map(([l, v]) => `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 11px;"><div style="font-size:9.5px;color:var(--text3);letter-spacing:.2px;margin-bottom:3px;">${l}</div><div style="font-size:14px;font-weight:600;line-height:1.2;">${v}</div></div>`).join('')}</div>
       <div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:7px;flex-wrap:wrap;"><span>สต็อกตามคลัง</span>${locs || '—'}</div>${po}
       <div class="chart-wrap" style="height:340px;margin-top:16px;"><canvas id="supChart"></canvas></div>
