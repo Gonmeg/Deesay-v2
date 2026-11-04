@@ -36,7 +36,7 @@
       #page-invvalue tr.par .car { display:inline-block; width:14px; font-size:9px; color:var(--text3); transition:transform .15s; } #page-invvalue tr.par.open .car { transform:rotate(90deg); }
       #page-invvalue tr.kid td { font-size:12px; font-weight:400; color:var(--text2); } #page-invvalue tr.kid td.nm { padding-left:32px; }
       #page-invvalue tr.kid td:not(.cc):not(.rc) { background:var(--bg3); }
-      #page-invvalue .sku { font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text3); margin-left:6px; } #page-invvalue tr.kid .sku { margin-left:0; color:var(--text2); font-size:11.5px; }
+      #page-invvalue .sku { font-family:'Sarabun', sans-serif; font-size:11px; color:var(--text3); margin-left:6px; } #page-invvalue tr.kid .sku { margin-left:0; color:var(--text2); font-size:11.5px; }
       #page-invvalue .cnt { font-size:11px; font-weight:400; color:var(--text3); margin-left:6px; }
       #page-invvalue .dash { color:var(--text3); font-weight:400; } #page-invvalue .part { color:#b45309; }
       #page-invvalue .shr { display:inline-flex; align-items:center; gap:6px; } #page-invvalue .shr i { display:block; width:48px; height:4px; border-radius:2px; background:var(--bg3); overflow:hidden; } #page-invvalue .shr i b { display:block; height:100%; background:rgba(59,130,246,.65); }
