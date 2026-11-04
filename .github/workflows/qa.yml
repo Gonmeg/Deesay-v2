@@ -38,4 +38,13 @@ jobs:
           cd tests && mkdir -p qa-out && cd qa-out
           git init -q && git checkout -q -b qa-report && git add -A
           git -c user.name=qa-bot -c user.email=qa-bot@users.noreply.github.com commit -qm "QA ${GITHUB_SHA::7} $(date -u +%F_%H%M)" || exit 0
-          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" qa-report
+          # (2026-11-04) GitHub ปฏิเสธการส่งเป็นครั้งคราว (fatal error in commit_refs / Internal Server Error) → ลองส่งซ้ำ 4 ครั้ง รอนานขึ้นทีละรอบ
+          for i in 1 2 3 4; do git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" qa-report && exit 0; echo "ส่งรายงานไม่สำเร็จ รอบ $i — ลองใหม่"; sleep $((i * 30)); done; exit 1
+      # (2026-11-04) สำรอง: ตารางผลทดสอบขึ้นที่หน้าสรุปของรอบนี้ (Summary) + เก็บไฟล์รายงานและรูปไว้ 7 วัน — ถึงส่งเข้า branch qa-report ไม่ได้ ผลก็ไม่หาย
+      - name: แสดงผลทดสอบที่หน้าสรุปของรอบนี้
+        if: always()
+        run: '[ -f tests/qa-out/README.md ] && cat tests/qa-out/README.md >> "$GITHUB_STEP_SUMMARY" || echo "ไม่มีไฟล์รายงาน (ระบบทดสอบหยุดก่อนเขียนรายงาน)" >> "$GITHUB_STEP_SUMMARY"'
+      - name: เก็บไฟล์รายงานและรูปไว้ดาวน์โหลด (7 วัน)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: qa-report, path: tests/qa-out, retention-days: 7, if-no-files-found: ignore }
