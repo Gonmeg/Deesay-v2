@@ -799,7 +799,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.04-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.04-c"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1675,11 +1675,94 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         #lsCreatorDropdown .ls-ddi:hover { background:var(--bg3); }
         .ls-row2 { display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
         .ls-hero { grid-template-columns:repeat(6, minmax(0, 1fr)) !important; }
+        .ls-board { border:1.5px solid transparent; background:var(--hero) padding-box, var(--hero-line) border-box; box-shadow:var(--sh); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+        .ls-board .ui-metrics { background:transparent; border:0; border-radius:0; }
+        .ls-board .ui-metric { background:transparent; box-shadow:1px 0 0 var(--border); padding:14px 18px 15px; }
+        body.light-theme .ls-board .ui-metric { box-shadow:1px 0 0 #EDF0F4; }
+        .ls-board .ui-metric:last-child { box-shadow:none; }
+        .ls-board .ui-metric-v { font-size:clamp(22px, 2vw, 30px); }
+        .ls-board .ls-eng .ui-metric { padding:10px 18px 13px; }
+        .ls-board .ls-eng .ui-metric-v { font-size:clamp(18px, 1.5vw, 23px); }
+        .ls-sub { display:flex; align-items:center; gap:8px; border-top:1px solid var(--border); padding:10px 18px 0; font-size:13px; font-weight:700; color:var(--text2); }
+        body.light-theme .ls-sub { border-top-color:#EDF0F4; }
+        .ls-grid2 { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; align-items:start; margin-bottom:16px; }
+        .ls-grid2 > .card { margin:0; min-width:0; }
+        .ls-tbl td small { white-space:nowrap; }
+        .ls-tbl td.l { white-space:normal; min-width:150px; line-height:1.35; }
+        .ls-tbl th { white-space:nowrap; }
+        @media (max-width:1200px) { .ls-grid2 { grid-template-columns:1fr; } }
         @media (max-width:1300px) { .ls-form { grid-template-columns:1fr 1fr; } .ls-hero { grid-template-columns:repeat(3, minmax(0, 1fr)) !important; } }
       </style>
 
-      <section class="card sa-panel" style="margin-bottom:16px;">
-        <div class="sa-ph"><h2>รอบ Live ในช่วงที่เลือก <span id="lsLiveCount" class="sa-note"></span> <span class="pr-i" data-tip="รอบ Live ทุกบัญชีที่ขายสินค้า Deesay ตามช่วงวันที่ด้านบน (ข้อมูล TikTok LIVE มีตั้งแต่ 9 เม.ย. 69) · แสดงเฉพาะรอบที่มียอดขาย · กดแถวเพื่อค้นยอดขายจริงของรอบนั้น">ⓘ</span></h2>
+      <section class="card sa-panel" id="lsSearchCard" style="margin-bottom:16px;">
+        <div class="sa-ph"><h2>ค้นหายอดขาย <span class="pr-i" data-tip="ดึงออเดอร์ TikTok ของ Creator ที่เลือก ภายในช่วงเวลาที่กำหนด (ตรงวินาที) · กดรอบ Live ด้านบนเพื่อใส่ให้อัตโนมัติ หรือกำหนดเองได้ เช่น Live ก่อน 9 เม.ย. 69 หรือรวมหลายบัญชี · เวลาแบบ 24 ชั่วโมง">ⓘ</span>
+          <span id="lsPicked" class="sa-note">เลือกรอบ Live จากตารางด้านล่าง หรือกำหนด Creator และเวลาเอง</span></h2></div>
+        <div class="ls-form">
+          <div><div class="ls-lb">Creator</div>
+            <div class="ls-input ls-cr" onclick="document.getElementById('lsCreatorSearch').focus()">
+              <span id="lsCreatorChips" style="display:contents;"></span>
+              <input type="text" id="lsCreatorSearch" placeholder="พิมพ์ชื่อ creator" autocomplete="off" oninput="debouncedFilterLsCreatorDropdown()" onfocus="filterLsCreatorDropdown()" onblur="setTimeout(hideLsCreatorDropdown,200)">
+              <div id="lsCreatorDropdown" style="display:none;"></div>
+            </div></div>
+          <div><div class="ls-lb">ตั้งแต่</div><div class="ls-dt"><input type="date" id="lsFromD" aria-label="วันที่เริ่ม"><input type="text" class="ls-input ls-time" id="lsFromT" placeholder="00:00:00" inputmode="numeric" maxlength="8" aria-label="เวลาเริ่ม" onchange="lsFixTime(this)"></div></div>
+          <div><div class="ls-lb">ถึง</div><div class="ls-dt"><input type="date" id="lsToD" aria-label="วันที่ถึง"><input type="text" class="ls-input ls-time" id="lsToT" placeholder="23:59:59" inputmode="numeric" maxlength="8" aria-label="เวลาถึง" onchange="lsFixTime(this)"></div></div>
+          <div><div class="ls-lb">Order Channel <span class="pr-i" data-tip="LIVE = ออเดอร์จาก Live · Videos = จากคลิป · Product cards = จากหน้าสินค้า">ⓘ</span></div><select class="ls-input" id="lsOrderChannel" style="width:100%;"><option value="">ทั้งหมด</option></select></div>
+          <div><button class="btn btn-primary" id="lsSearchBtn" onclick="runLiveSearch()" style="height:34px;min-width:96px;justify-content:center;">ค้นหา</button></div>
+        </div>
+      </section>
+
+      <div id="lsResults" style="display:none;">
+        <div class="sa-ph" style="margin:4px 0 10px;"><h2>ผลการค้นหา <span id="lsResScope" class="sa-scope"></span> <span id="lsResInfo"></span></h2></div>
+        <!-- (2026-11-04) ตัวเลขเงิน + คนดู Live อยู่ในกล่องเดียว 2 แถว (แถวคนดูขึ้นเฉพาะ Live ของบัญชีร้านที่ TikTok ส่งตัวเลขมา) -->
+        <section class="ls-board" aria-label="ตัวเลขหลัก">
+          <div id="ls-hero" class="ui-metrics ls-hero"></div>
+          <div id="lsEngWrap" style="display:none;">
+            <div class="ls-sub">คนดู Live <span class="sa-scope">ตามที่ TikTok นับ</span> <span class="pr-i" data-tip="ตัวเลขคนดูของรอบ Live ที่เลือก จาก TikTok LIVE · TikTok ส่งให้เฉพาะ Live ของบัญชีร้าน · ใช้ดูว่าขายน้อยเพราะคนดูน้อย หรือคนดูเยอะแต่ไม่กดซื้อ">ⓘ</span></div>
+            <div id="ls-eng" class="ui-metrics ls-hero ls-eng"></div>
+          </div>
+        </section>
+        <section class="card sa-panel" style="margin-bottom:16px;">
+          <div class="sa-ph"><h2>ยอดขายระหว่าง Live <span id="lsChartStep" class="sa-note"></span> <span class="pr-i" data-tip="ยอดขายจริงและยอดยกเลิก / ตีกลับ ตามเวลาที่ลูกค้าสั่งซื้อ · ชี้ที่กราฟเพื่อดูจำนวนออเดอร์ของช่วงนั้น">ⓘ</span></h2></div>
+          <div class="chart-wrap" style="height:240px;"><canvas id="chartLsTime"></canvas></div>
+        </section>
+        <div class="ls-grid2">
+        <section class="card sa-panel">
+          <div class="sa-ph"><h2>Promotion ที่ลูกค้าสั่ง <span id="lsPromoCount" class="sa-note"></span> <span class="pr-i" data-tip="รูปแบบที่ลูกค้าสั่งจริง · 1 ออเดอร์ = 1 Promotion · ยกเลิก / ตีกลับ = ออเดอร์ Promotion เดียวกันที่ไม่สำเร็จ (ไม่นับในยอดขาย) · % ตีกลับ = ยกเลิก ÷ (ขายได้ + ยกเลิก) · อันดับเรียงตามยอดขายเสมอ">ⓘ</span></h2>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" class="ls-input" id="lsPromoFilter" placeholder="กรอง Promotion / สินค้า" oninput="_lsPromoPage=1; renderLsPromoTable()" style="width:180px;padding:6px 10px;">
+              <button class="btn btn-ghost" onclick="exportTable('tblLsPromo')">⬇ Export CSV</button>
+            </div></div>
+          <div class="table-wrap" style="overflow-x:auto;">
+            <table id="tblLsPromo" class="ui-table sa-tbl ls-tbl">
+              <thead><tr><th class="l">#</th>
+                <th class="l sortable-th" onclick="lsPromoSort('name')">Promotion <span class="sort-ind" id="lsps-name"></span></th>
+                <th class="num sortable-th" onclick="lsPromoSort('ord')">ออเดอร์ <span class="sort-ind" id="lsps-ord"></span></th>
+                <th class="num sortable-th" onclick="lsPromoSort('rev')">ยอดขาย <span class="pr-i" data-tip="ยอดขายจริงของออเดอร์ที่สั่ง Promotion นี้ · บรรทัดล่าง = เฉลี่ยต่อออเดอร์ (AOV = ยอดขาย ÷ ออเดอร์)">ⓘ</span> <span class="sort-ind" id="lsps-rev"></span></th>
+                <th class="num sortable-th" onclick="lsPromoSort('share')">สัดส่วน <span class="sort-ind" id="lsps-share"></span></th>
+                <th class="num sortable-th" onclick="lsPromoSort('canc')">ยกเลิก <span class="pr-i" data-tip="จำนวนออเดอร์ที่ยกเลิก / ตีกลับ · บรรทัดล่าง = % ของออเดอร์ Promotion นี้ทั้งหมด (สีแดงเมื่อ 30% ขึ้นไป)">ⓘ</span> <span class="sort-ind" id="lsps-canc"></span></th></tr></thead>
+              <tbody id="tbodyLsPromo"></tbody>
+            </table>
+          </div>
+          <div id="lsPromoPager"></div>
+        </section>
+        <section class="card sa-panel">
+          <div class="sa-ph"><h2>สินค้าใน Live นี้ <span id="lsSkuCount" class="sa-note"></span> <span class="pr-i" data-tip="แยกตามสินค้าในออเดอร์ · ขายได้ = ออเดอร์ที่ขายได้ · ยกเลิก / ตีกลับ = ออเดอร์ที่ไม่สำเร็จ · ยอดต่อสินค้าแบ่งจากยอดออเดอร์ตามราคาสินค้า (สูตรเดียวกับทั้ง dashboard) · ของแถมยอด 0">ⓘ</span></h2>
+            <button class="btn btn-ghost" onclick="exportTable('tblLsSku')">⬇ Export CSV</button></div>
+          <div class="table-wrap" style="overflow-x:auto;">
+            <table id="tblLsSku" class="ui-table sa-tbl ls-tbl">
+              <thead><tr><th class="l">#</th><th class="l">สินค้า</th><th class="num">ขายได้ (ชิ้น)</th><th class="num">ยอดขาย</th>
+                <th class="num">ยกเลิก (ชิ้น) <span class="pr-i" data-tip="จำนวนชิ้นที่ยกเลิก / ตีกลับ · บรรทัดล่าง = มูลค่าที่หลุด · % ยกเลิก&#10;ชิ้นที่ยกเลิก / ตีกลับ ÷ (ชิ้นที่ขายได้ + ชิ้นที่ยกเลิก)">ⓘ</span></th></tr></thead>
+              <tbody id="tbodyLsSku"></tbody><tfoot id="tfootLsSku"></tfoot>
+            </table>
+          </div>
+        </section>
+        </div>
+      </div>
+        </section>
+      </div>
+
+      <section class="card sa-panel" id="lsLivesCard" style="margin-bottom:16px;">
+        <div class="sa-ph"><h2>เลือกรอบ Live <span class="sa-scope">ตามช่วงวันที่ด้านบน · กดแถวเพื่อค้นหา</span> <span id="lsLiveCount" class="sa-note"></span> <span class="pr-i" data-tip="รอบ Live ทุกบัญชีที่ขายสินค้า Deesay ตามช่วงวันที่ด้านบน (ข้อมูล TikTok LIVE มีตั้งแต่ 9 เม.ย. 69) · แสดงเฉพาะรอบที่มียอดขาย · กดแถวเพื่อดูยอดขายจริงของรอบนั้นด้านบน">ⓘ</span></h2>
           <input type="text" class="ls-input" id="lsLiveFilter" placeholder="ค้นหา creator" oninput="lsRenderLives()" style="width:220px;padding:6px 10px;"></div>
         <div class="table-wrap" style="overflow-x:auto;">
           <table id="tblLsLives" class="ui-table sa-tbl ls-pick">
@@ -1696,186 +1779,60 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           </table>
         </div>
       </section>
-
-      <section class="card sa-panel" id="lsSearchCard" style="margin-bottom:16px;">
-        <div class="sa-ph"><h2>ค้นหายอดขาย <span class="pr-i" data-tip="ดึงออเดอร์ TikTok ของ Creator ที่เลือก ภายในช่วงเวลาที่กำหนด (ตรงวินาที) · กดรอบ Live ด้านบนเพื่อใส่ให้อัตโนมัติ หรือกำหนดเองได้ เช่น Live ก่อน 9 เม.ย. 69 หรือรวมหลายบัญชี · เวลาแบบ 24 ชั่วโมง">ⓘ</span>
-          <span id="lsPicked" class="sa-note">เลือกรอบ Live จากตารางด้านบน หรือกำหนด Creator และเวลาเอง</span></h2></div>
-        <div class="ls-form">
-          <div><div class="ls-lb">Creator</div>
-            <div class="ls-input ls-cr" onclick="document.getElementById('lsCreatorSearch').focus()">
-              <span id="lsCreatorChips" style="display:contents;"></span>
-              <input type="text" id="lsCreatorSearch" placeholder="พิมพ์ชื่อ creator" autocomplete="off" oninput="debouncedFilterLsCreatorDropdown()" onfocus="filterLsCreatorDropdown()" onblur="setTimeout(hideLsCreatorDropdown,200)">
-              <div id="lsCreatorDropdown" style="display:none;"></div>
-            </div></div>
-          <div><div class="ls-lb">ตั้งแต่</div><div class="ls-dt"><input type="date" id="lsFromD" aria-label="วันที่เริ่ม"><input type="text" class="ls-input ls-time" id="lsFromT" placeholder="00:00:00" inputmode="numeric" maxlength="8" aria-label="เวลาเริ่ม" onchange="lsFixTime(this)"></div></div>
-          <div><div class="ls-lb">ถึง</div><div class="ls-dt"><input type="date" id="lsToD" aria-label="วันที่ถึง"><input type="text" class="ls-input ls-time" id="lsToT" placeholder="23:59:59" inputmode="numeric" maxlength="8" aria-label="เวลาถึง" onchange="lsFixTime(this)"></div></div>
-          <div><div class="ls-lb">Order Channel <span class="pr-i" data-tip="LIVE = ออเดอร์จาก Live · Videos = จากคลิป · Product cards = จากหน้าสินค้า">ⓘ</span></div><select class="ls-input" id="lsOrderChannel" style="width:100%;"><option value="">ทั้งหมด</option></select></div>
-          <div><button class="btn btn-primary" id="lsSearchBtn" onclick="runLiveSearch()" style="height:34px;min-width:96px;justify-content:center;">ค้นหา</button></div>
-        </div>
-        <div class="ls-row2">
-          <div><div class="ls-lb">ค่า Ads Live นี้ <span class="pr-i" data-tip="เลือกรอบ Live แล้ว ระบบใช้ค่า Ads LIVE GMV Max ของรอบนั้นจาก TikTok ให้เอง (เห็นในช่องเป็นตัวจาง) · กรอกเองเมื่อมี Ads อื่นเพิ่ม หรือค้นช่วงเวลาเอง — ตัวเลขที่กรอกจะใช้แทนค่าจาก TikTok">ⓘ</span></div>
-            <input type="number" class="ls-input" id="lsAdSpend" placeholder="0" min="0" step="1" style="width:140px;" oninput="lsRenderAdsKpi()" onchange="lsAdSpendChanged()"></div>
-          <div style="flex:1;min-width:200px;max-width:340px;"><div class="ls-lb">โน้ต</div><input type="text" class="ls-input" id="lsNote" placeholder="ไม่บังคับ" style="width:100%;" onchange="lsAdSpendChanged()"></div>
-          <button class="btn btn-ghost" onclick="lsSaveSearch()" data-tip="เซฟ Creator + ช่วงเวลา + Order Channel + ค่า Ads ไว้เปิดซ้ำ (ทั้งทีมเห็นชุดเดียวกัน)" style="height:34px;">💾 เซฟการค้นหานี้</button>
-          <div style="position:relative;">
-            <button class="btn btn-ghost" id="lsSavedBtn" onclick="lsToggleSaved(event)" style="height:34px;">📂 ที่เซฟไว้ <span id="lsSavedCount" style="color:var(--text3);">(0)</span> ▾</button>
-            <div id="lsSavedMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:200;min-width:360px;max-height:320px;overflow-y:auto;padding:6px;"></div>
-          </div>
-          <span id="lsSavedActive" class="sa-note" style="align-self:center;"></span>
-        </div>
-      </section>
-
-      <div id="lsResults" style="display:none;">
-        <div class="sa-ph" style="margin:4px 0 10px;"><h2>ผลการค้นหา <span id="lsResScope" class="sa-scope"></span> <span id="lsResInfo"></span></h2></div>
-        <section id="ls-hero" class="ui-metrics sa-hero ls-hero" aria-label="ตัวเลขหลัก"></section>
-        <div id="lsEngWrap" style="display:none;">
-          <div class="sa-ph" style="margin:2px 0 8px;"><h2 style="font-size:14px;">คนดู Live <span class="sa-scope">ตามที่ TikTok นับ</span> <span class="pr-i" data-tip="ตัวเลขคนดูของรอบ Live ที่เลือก จาก TikTok LIVE · TikTok ส่งให้เฉพาะ Live ของบัญชีร้าน · ใช้ดูว่าขายน้อยเพราะคนดูน้อย หรือคนดูเยอะแต่ไม่กดซื้อ">ⓘ</span></h2></div>
-          <section id="ls-eng" class="ui-metrics sa-strip2" aria-label="คนดู Live"></section>
-        </div>
-        <section class="card sa-panel" style="margin-bottom:16px;">
-          <div class="sa-ph"><h2>ยอดขายระหว่าง Live <span id="lsChartStep" class="sa-note"></span> <span class="pr-i" data-tip="ยอดขายจริงและยอดยกเลิก / ตีกลับ ตามเวลาที่ลูกค้าสั่งซื้อ · ชี้ที่กราฟเพื่อดูจำนวนออเดอร์ของช่วงนั้น">ⓘ</span></h2></div>
-          <div class="chart-wrap" style="height:240px;"><canvas id="chartLsTime"></canvas></div>
-        </section>
-        <section class="card sa-panel" style="margin-bottom:16px;">
-          <div class="sa-ph"><h2>Promotion ที่ลูกค้าสั่ง <span id="lsPromoCount" class="sa-note"></span> <span class="pr-i" data-tip="รูปแบบที่ลูกค้าสั่งจริง · 1 ออเดอร์ = 1 Promotion · ยกเลิก / ตีกลับ = ออเดอร์ Promotion เดียวกันที่ไม่สำเร็จ (ไม่นับในยอดขาย) · % ตีกลับ = ยกเลิก ÷ (ขายได้ + ยกเลิก) · อันดับเรียงตามยอดขายเสมอ">ⓘ</span></h2>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="text" class="ls-input" id="lsPromoFilter" placeholder="กรอง Promotion / ชื่อสินค้า" oninput="_lsPromoPage=1; renderLsPromoTable()" style="width:220px;padding:6px 10px;">
-              <button class="btn btn-ghost" onclick="exportTable('tblLsPromo')">⬇ Export CSV</button>
-            </div></div>
-          <div class="table-wrap" style="overflow-x:auto;">
-            <table id="tblLsPromo" class="ui-table sa-tbl">
-              <thead><tr><th>#</th>
-                <th class="l sortable-th" onclick="lsPromoSort('promo')">Promotion (SKU) <span class="sort-ind" id="lsps-promo"></span></th>
-                <th class="l sortable-th" onclick="lsPromoSort('name')">ชื่อสินค้า <span class="sort-ind" id="lsps-name"></span></th>
-                <th class="num sortable-th" onclick="lsPromoSort('ord')">ออเดอร์ <span class="sort-ind" id="lsps-ord"></span></th>
-                <th class="num sortable-th" onclick="lsPromoSort('rev')">ยอดขาย <span class="sort-ind" id="lsps-rev"></span></th>
-                <th class="num sortable-th" onclick="lsPromoSort('aov')">AOV <span class="sort-ind" id="lsps-aov"></span></th>
-                <th class="num sortable-th" onclick="lsPromoSort('share')">สัดส่วน <span class="sort-ind" id="lsps-share"></span></th>
-                <th class="num sortable-th" onclick="lsPromoSort('canc')">ยกเลิก / ตีกลับ <span class="sort-ind" id="lsps-canc"></span></th>
-                <th class="num sortable-th" onclick="lsPromoSort('cancPct')">% ตีกลับ <span class="sort-ind" id="lsps-cancPct"></span></th></tr></thead>
-              <tbody id="tbodyLsPromo"></tbody>
-            </table>
-          </div>
-          <div id="lsPromoPager"></div>
-        </section>
-        <section class="card sa-panel" style="margin-bottom:16px;">
-          <div class="sa-ph"><h2>สินค้าใน Live นี้ <span id="lsSkuCount" class="sa-note"></span> <span class="pr-i" data-tip="แยกตามสินค้าในออเดอร์ · ขายได้ = ออเดอร์ที่ขายได้ · ยกเลิก / ตีกลับ = ออเดอร์ที่ไม่สำเร็จ · ยอดต่อสินค้าแบ่งจากยอดออเดอร์ตามราคาสินค้า (สูตรเดียวกับทั้ง dashboard) · ของแถมยอด 0">ⓘ</span></h2>
-            <button class="btn btn-ghost" onclick="exportTable('tblLsSku')">⬇ Export CSV</button></div>
-          <div class="table-wrap" style="overflow-x:auto;">
-            <table id="tblLsSku" class="ui-table sa-tbl">
-              <thead><tr><th>#</th><th class="l">สินค้า</th><th class="num">ขายได้ (ชิ้น)</th><th class="num">ยอดขาย</th><th class="num">ยกเลิก / ตีกลับ (ชิ้น)</th><th class="num">มูลค่าที่หลุด</th>
-                <th class="num">% ยกเลิก <span class="pr-i" data-tip="ชิ้นที่ยกเลิก / ตีกลับ ÷ (ชิ้นที่ขายได้ + ชิ้นที่ยกเลิก)">ⓘ</span></th></tr></thead>
-              <tbody id="tbodyLsSku"></tbody><tfoot id="tfootLsSku"></tfoot>
-            </table>
-          </div>
-        </section>
-      </div>
     </div>
 
     <div class="page" id="page-creatorperf">
       <div id="cp-content">
+        <!-- (2026-11-04) หน้าตาแบบ C: ตาราง Creator 6 ตาราง (มาแรง 7 วัน × 3 + Top 10 × 3) + ตาราง LIVE vs Videos → ตาราง "Creator ทั้งหมด" ตารางเดียว
+             แถบช่องทาง 5 ช่อง = กดกรองตาราง (แทนตาราง LIVE vs Videos) · ปุ่มเรียง ยอดขายสูงสุด / มาแรง 7 วัน (แทนตารางมาแรง) -->
+        <style>
+          #cp-kpis { grid-template-columns:repeat(4, minmax(0, 1fr)) !important; }
+          .cp-lg { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--text3); }
+          .cp-lg i { display:inline-block; width:14px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px; }
+          .cp-oc { grid-template-columns:repeat(5, minmax(0, 1fr)) !important; margin:4px 0 14px; border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:none; }
+          .cp-oc .ui-metric { padding:12px 16px 13px; border:0; box-shadow:1px 0 0 var(--border); cursor:pointer; }
+          .cp-oc .ui-metric:last-child { box-shadow:none; }
+          .cp-oc .ui-metric.is-on { background:color-mix(in srgb, var(--m) 9%, var(--bg2)); }
+          .cp-oc .ui-metric-v { font-size:clamp(18px, 1.5vw, 22px); }
+          .cp-mix { display:flex; width:110px; height:8px; border-radius:4px; overflow:hidden; background:var(--bg3); vertical-align:middle; }
+          .cp-mix span { display:block; height:100%; }
+          #tblCpCreators td.num, #tblCpCreators th.num, #tblCpSku td.num, #tblCpSku th.num { text-align:right; font-variant-numeric:tabular-nums; }
+          #tblCpCreators td.rk, #tblCpSku td.rk { color:var(--text3); width:36px; }
+          #tblCpCreators a.cp-h { color:inherit; text-decoration:none; cursor:pointer; }
+          #tblCpCreators a.cp-h:hover { color:var(--accent); }
+          .cp-new { color:var(--purple, #a78bfa); font-weight:700; }
+          @media (max-width:1300px) { .cp-oc { grid-template-columns:repeat(3, minmax(0, 1fr)) !important; } }
+        </style>
         <div id="cpSrcNote" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;border:1px solid rgba(96,165,250,0.35);background:rgba(96,165,250,0.08);font-size:12px;line-height:1.6;color:var(--text2);"></div>
-        <div id="cp-kpis" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-        <div class="card" style="margin-bottom:20px;">
-          <div class="section-header" style="flex-wrap:wrap;gap:8px;">
-            <div class="section-title" id="cp-trend-title">ยอดขาย vs ต้นทุน รายวัน</div>
-            <div style="font-size:10.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap;">
-              <span><span style="display:inline-block;width:14px;height:3px;background:#2a78d6;vertical-align:middle;border-radius:2px;"></span> ยอดขาย (ออเดอร์จริง)</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(96,165,250,0.55);vertical-align:middle;border-radius:2px;"></span> ค่า Ads</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:rgba(167,139,250,0.75);vertical-align:middle;border-radius:2px;"></span> ค่าจ้าง KOL (วันโพสต์)</span>
-              <span><span style="display:inline-block;color:#a78bfa;font-size:12px;vertical-align:middle;">▼</span> วันที่มีโพสต์ — ชี้ดูรายละเอียด</span>
+        <section id="cp-kpis" class="ui-metrics sa-hero" aria-label="ตัวเลขหลัก"></section>
+        <section class="card sa-panel" style="margin-bottom:16px;">
+          <div class="sa-ph"><h2 id="cp-trend-title">ยอดขาย vs ต้นทุน รายวัน</h2>
+            <div class="cp-lg"><span><i style="background:#2a78d6;"></i>ยอดขาย (ออเดอร์จริง)</span><span><i style="background:#ef4444;"></i>ค่า Ads</span><span><i style="background:#a78bfa;"></i>ค่าจ้าง KOL (วันโพสต์)</span><span><b style="color:#a78bfa;">▼</b> วันที่มีโพสต์ KOL</span></div></div>
+          <div class="chart-wrap" style="height:320px;"><canvas id="chartCpTrend"></canvas></div>
+        </section>
+        <div id="cp-overview-section">
+          <section class="card sa-panel" id="cpCrCard" style="margin-bottom:16px;">
+            <div class="sa-ph"><h2>Creator ทั้งหมด <span id="cpCrCount" class="sa-note"></span> <span class="pr-i" data-tip="ยอดขาย TikTok ต่อ Creator ตามช่วงวันที่ด้านบน (ออเดอร์จริง หักยกเลิก / คืนแล้ว) · รวมบัญชีร้านด้วย จึงรวมทุกแถวเท่าการ์ดยอดขายรวม&#10;กดช่องทางด้านล่างเพื่อกรองตาราง · กดชื่อเพื่อดูรายละเอียดของคนนั้น&#10;ตัวกรอง ทุกคน / KOL / Affiliate ด้านบนใช้กับตารางนี้ด้วย">ⓘ</span></h2>
+              <div class="cp-seg" id="cpCrSortSeg"><button class="on" data-s="rev" onclick="cpCrSetSort('rev')">ยอดขายสูงสุด</button><button data-s="trend" onclick="cpCrSetSort('trend')">มาแรง 7 วัน</button></div></div>
+            <div id="cpOcTiles" class="ui-metrics cp-oc" role="tablist" aria-label="กรองตามช่องทาง"></div>
+            <div class="table-wrap" style="overflow-x:auto;">
+              <table id="tblCpCreators" class="ui-table sa-tbl" data-no-sort data-no-page>
+                <thead id="theadCpCreators"></thead>
+                <tbody id="tbodyCpCreators"><tr><td colspan="8" class="empty">กำลังโหลด...</td></tr></tbody>
+              </table>
             </div>
-          </div>
-          <div class="chart-wrap" style="height:340px;"><canvas id="chartCpTrend"></canvas></div>
+            <div id="cpCrPager"></div>
+          </section>
         </div>
-      <div id="cp-overview-section">
-        <div class="section-divider"><span>🔥 มาแรงช่วง 7 วันล่าสุด <span style="font-size:11px;font-weight:400;color:var(--text3);" id="cp-trending-daterange"></span></span></div>
-        <div class="grid-3" style="margin-bottom:20px;">
-          <div class="card">
-            <div class="section-header"><div class="section-title">รวมทุกประเภท <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleFbeInfo('cp-info-trend-all')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="cp-info-trend-all" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:16px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;">เทียบยอดขาย 7 วันล่าสุด กับ 7 วันก่อนหน้านั้น (นับจากวันสุดท้ายของตัวกรองวันที่ด้านบน)<br><br>เรียงตาม % เติบโต ไม่ใช่ยอดขายสูงสุด — เพื่อเห็น creator ที่กระแสกำลังมา ไม่ใช่แค่ตัวท็อปเดิม<br><br>แสดงเฉพาะ creator ที่มียอดขาย 7 วันล่าสุด ≥ 1,000 กันสัญญาณรบกวนจากยอดน้อยเกินไป<br><br>เป็นไปตามตัวกรอง ทุกคน / KOL / Affiliate ด้านบน</div></span></div></div>
-            <div class="table-wrap">
-              <table id="tblCpTrendAll">
-                <thead><tr><th>Creator</th><th>7 วันล่าสุด</th><th>เติบโต</th></tr></thead>
-                <tbody id="tbodyCpTrendAll"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
+        <section class="card sa-panel" style="margin-bottom:16px;">
+          <div class="sa-ph"><h2 id="cp-sku-title">Top SKU</h2><button class="btn btn-ghost" onclick="exportTable('tblCpSku')">⬇ Export CSV</button></div>
+          <div class="table-wrap">
+            <table id="tblCpSku" class="ui-table sa-tbl">
+              <thead><tr><th class="l">#</th><th class="l">สินค้า</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ชิ้น</th></tr></thead>
+              <tbody id="tbodyCpSku"></tbody>
+            </table>
           </div>
-          <div class="card">
-            <div class="section-header"><div class="section-title">LIVE</div></div>
-            <div class="table-wrap">
-              <table id="tblCpTrendLive">
-                <thead><tr><th>Creator</th><th>7 วันล่าสุด</th><th>เติบโต</th></tr></thead>
-                <tbody id="tbodyCpTrendLive"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-header"><div class="section-title">Videos</div></div>
-            <div class="table-wrap">
-              <table id="tblCpTrendVideo">
-                <thead><tr><th>Creator</th><th>7 วันล่าสุด</th><th>เติบโต</th></tr></thead>
-                <tbody id="tbodyCpTrendVideo"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="section-divider" id="cp-top10-divider"><span>Top Creator (ตาม Live/Video) — ทั้งช่วงที่เลือก</span></div>
-        <div class="grid-3" style="margin-bottom:20px;" id="cp-top10-grid">
-          <div class="card">
-            <div class="section-header"><div class="section-title">Top 10 Creator (รวมทุกประเภท)</div></div>
-            <div class="table-wrap">
-              <table id="tblTtCreatorAll">
-                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-                <tbody id="tbodyTtCreatorAll"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-header"><div class="section-title">Top 10 Creator (Live)</div></div>
-            <div class="table-wrap">
-              <table id="tblTtCreatorLive">
-                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-                <tbody id="tbodyTtCreatorLive"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-header"><div class="section-title">Top 10 Creator (Video)</div></div>
-            <div class="table-wrap">
-              <table id="tblTtCreatorVideo">
-                <thead><tr><th>Creator</th><th>ยอดขาย</th><th>ออเดอร์</th></tr></thead>
-                <tbody id="tbodyTtCreatorVideo"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="section-header">
-              <div class="section-title" id="cp-sku-title">Top SKU ของ creator นี้</div>
-              <button class="btn btn-ghost" onclick="exportTable('tblCpSku')">⬇ Export CSV</button>
-            </div>
-            <div class="table-wrap">
-              <table id="tblCpSku">
-                <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th><th>ยอดขาย</th><th>ชิ้น</th></tr></thead>
-                <tbody id="tbodyCpSku"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-header"><div class="section-title">LIVE vs Videos</div></div>
-            <div class="table-wrap">
-              <table id="tblCpOrderChannel">
-                <thead><tr><th>Order Channel</th><th>ยอดขาย</th><th>ออเดอร์</th><th>สัดส่วน %</th></tr></thead>
-                <tbody id="tbodyCpOrderChannel"></tbody>
-              </table>
-            </div>
-            <div id="cp-oc-note" style="font-size:11px;color:var(--text3);margin-top:8px;display:none;"></div>
-          </div>
-        </div>
+        </section>
       </div>
 
       <!-- มุมมองสินค้า (สลับด้วยปุ่ม ครีเอเตอร์ | สินค้า บน topbar) -->
@@ -3818,7 +3775,6 @@ async function renderLzHub() {
 
 // ===== LIVE SEARCH (TikTok) =====
 let lsSelectedCreators = [];
-document.addEventListener('DOMContentLoaded', () => { (window._authP || Promise.resolve()).then(() => { if (typeof lsLoadSavedList === 'function') lsLoadSavedList(); }); });   // (2026-10-06) รอล็อกอินเสร็จก่อน ไม่งั้นคำขอแรกหลุดไปเป็นสิทธิ์ anon
 let _lsAllCreators = [];
 
 // ===== MODERN TRADE HUB =====
@@ -4375,74 +4331,57 @@ function renderCppDetail() {
     </tr>`).join('') : '<tr><td colspan="7" class="empty">ไม่มี — creator ที่ขายได้ในช่วงนี้เคยขายสินค้านี้แล้วทุกคน</td></tr>';
 }
 
-function renderCpTopCreatorTables(dAllTypes) {
-  // dAllTypes = แถวสรุปจาก creator_summary (creator_handle × order_channel) — เฟส 3
-  function buildCreatorTable(rows, tbodyId) {
-    const byCreator = {};
-    rows.forEach(r => {
-      const k = r.creator_handle || 'deesaythailand';
-      if (!byCreator[k]) byCreator[k] = { rev: 0, ord: 0 };
-      byCreator[k].rev += parseFloat(r.revenue) || 0;
-      byCreator[k].ord += parseInt(r.orders) || 0;
-    });
-    const sorted = Object.entries(byCreator).sort((a,b) => b[1].rev - a[1].rev).slice(0, 10);
-    document.getElementById(tbodyId).innerHTML = sorted.length ? sorted.map(([k,v]) => `
-      <tr><td>${k}${cpKindBadge(k)}</td><td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td></tr>
-    `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>';
-  }
-  buildCreatorTable(dAllTypes, 'tbodyTtCreatorAll');
-  buildCreatorTable(dAllTypes.filter(r => r.order_channel === 'LIVE'), 'tbodyTtCreatorLive');
-  buildCreatorTable(dAllTypes.filter(r => r.order_channel === 'Videos'), 'tbodyTtCreatorVideo');
-}
-
-function renderCpTrendingCreators(to) {
-  // จุดยึดคือวันสุดท้ายของตัวกรองวันที่ด้านบน (ไม่ใช่วันนี้จริง) ตามที่ตกลงกันไว้
-  const toDate = new Date(to + 'T00:00:00');
-  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-  const fmtISO = d => fmtDateISO(d);   // (2026-10-18) วันที่ท้องถิ่น — เดิม toISOString เลื่อนไป 1 วัน (ช่วง 7 วันกลายเป็น 8 วัน)
-
-  const last7Start = fmtISO(addDays(toDate, -6));
-  const last7End = to;
-  const prev7Start = fmtISO(addDays(toDate, -13));
-  const prev7End = fmtISO(addDays(toDate, -7));
-
-  document.getElementById('cp-trending-daterange').textContent =
-    `(${last7Start} ถึง ${last7End} เทียบกับ ${prev7Start} ถึง ${prev7End})`;
-
-  const ttAll = cpCreator.trend.filter(r => cpTypeOk(r.creator_handle || 'deesaythailand'));   // (2026-10-06) ตามตัวกรอง KOL / Affiliate   // เฟส 3: จาก RPC creator_trend (7 วันล่าสุด vs 7 วันก่อน ต่อ creator × order_channel)
-
-  function buildTrendTable(rows, tbodyId) {
-    const last7Map = {}, prev7Map = {};
-    rows.forEach(r => { const k = r.creator_handle || 'deesaythailand'; last7Map[k] = (last7Map[k]||0) + (parseFloat(r.last7_revenue)||0); prev7Map[k] = (prev7Map[k]||0) + (parseFloat(r.prev7_revenue)||0); });
-
-    const rowsOut = Object.entries(last7Map)
-      .filter(([k, rev]) => rev >= 1000) // กันสัญญาณรบกวนจากยอดน้อยเกินไป
-      .map(([k, rev]) => {
-        const prevRev = prev7Map[k] || 0;
-        const growth = prevRev > 0 ? ((rev - prevRev) / prevRev * 100) : null; // null = ไม่มียอดช่วงก่อนหน้าเลย (ใหม่)
-        return { creator: k, rev, growth };
-      })
-      .sort((a, b) => {
-        // ตัวที่ "ใหม่" (growth=null) ไว้บนสุดถ้ายอดสูงพอ ตามด้วยเรียง % เติบโตมาก->น้อย
-        if (a.growth === null && b.growth === null) return b.rev - a.rev;
-        if (a.growth === null) return -1;
-        if (b.growth === null) return 1;
-        return b.growth - a.growth;
-      })
-      .slice(0, 8);
-
-    document.getElementById(tbodyId).innerHTML = rowsOut.length ? rowsOut.map(r => `
-      <tr>
-        <td>${r.creator}${cpKindBadge(r.creator)}</td>
-        <td>${fmt(r.rev)}</td>
-        <td>${r.growth === null ? '<span style="color:var(--purple);font-weight:600;">🆕 ใหม่</span>' : `<span style="color:${r.growth >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:600;">${r.growth >= 0 ? '▲' : '▼'} ${Math.abs(r.growth).toFixed(0)}%</span>`}</td>
-      </tr>
-    `).join('') : '<tr><td colspan="3" class="empty">ไม่มีข้อมูลเพียงพอในช่วงนี้</td></tr>';
-  }
-
-  buildTrendTable(ttAll, 'tbodyCpTrendAll');
-  buildTrendTable(ttAll.filter(r => r.order_channel === 'LIVE'), 'tbodyCpTrendLive');
-  buildTrendTable(ttAll.filter(r => r.order_channel === 'Videos'), 'tbodyCpTrendVideo');
+// ===== ตาราง "Creator ทั้งหมด" (2026-11-04: รวมตาราง มาแรง 7 วัน × 3 + Top 10 × 3 + LIVE vs Videos เป็นตารางเดียว) =====
+// ข้อมูลชุดเดิม: creator_summary (ช่วงที่เลือก · creator × order_channel) + creator_trend (7 วันล่าสุด vs 7 วันก่อน นับจากวันสุดท้ายของตัวกรอง)
+// แถบช่องทาง = กรองตาราง (กดซ้ำ = กลับเป็นทั้งหมด) · เรียง ยอดขายสูงสุด / มาแรง 7 วัน (กติกาเดิม: ยอด 7 วันล่าสุด ≥ 1,000 · คนใหม่ขึ้นก่อน แล้วเรียง % เติบโต)
+const CP_OC = [['all', 'ทั้งหมด', 'var(--accent)'], ['LIVE', 'Live', '#f472b6'], ['Videos', 'คลิป', '#60a5fa'], ['Creator showcase', 'โชว์เคส', '#c8a96e'], ['Product cards', 'หน้าสินค้า', '#2dd4bf']];
+let cpCrCh = 'all', cpCrSort = 'rev', cpCrPage = 1;
+const cpPct = (a, b) => (b > 0 ? (a / b * 100).toFixed(1) + '%' : '—');
+function cpCrSetCh(c) { cpCrCh = (cpCrCh === c && c !== 'all') ? 'all' : c; cpCrPage = 1; renderCpCreatorTable(); }
+function cpCrSetSort(v) { cpCrSort = v; cpCrPage = 1; document.querySelectorAll('#cpCrSortSeg button').forEach(b => b.classList.toggle('on', b.dataset.s === v)); renderCpCreatorTable(); }
+function cpCrGo(p) { cpCrPage = p; renderCpCreatorTable(); }
+function renderCpCreatorTable() {
+  const tb = document.getElementById('tbodyCpCreators'); if (!tb) return;
+  const to = getDateValue('To'), toD = new Date(to + 'T00:00:00'), addD = n => { const x = new Date(toD); x.setDate(x.getDate() + n); return fmtDateISO(x); };
+  const w7 = `${thShort(addD(-6))} – ${thShort(to)}`, w7p = `${thShort(addD(-13))} – ${thShort(addD(-7))}`;
+  const H = r => r.creator_handle || 'deesaythailand';
+  const sum = cpCreator.summary.filter(r => cpTypeOk(H(r))), tr = cpCreator.trend.filter(r => cpTypeOk(H(r)));
+  // แถบช่องทาง
+  const T = { all: { rev: 0, ord: 0 } };
+  sum.forEach(r => { const k = r.order_channel || 'ไม่ระบุ', o = T[k] = T[k] || { rev: 0, ord: 0 }; o.rev += +r.revenue || 0; o.ord += +r.orders || 0; T.all.rev += +r.revenue || 0; T.all.ord += +r.orders || 0; });
+  document.getElementById('cpOcTiles').innerHTML = CP_OC.map(([k, l, c]) => { const o = T[k] || { rev: 0, ord: 0 };
+    return `<button type="button" class="ui-metric${cpCrCh === k ? ' is-on' : ''}" style="--m:${c};" onclick="cpCrSetCh('${k}')" aria-pressed="${cpCrCh === k}"><span class="ui-metric-l"><span class="ui-tick"></span>${l}</span><span class="ui-metric-v" data-fit>${fmt(o.rev)}</span><span class="sa-md"><span>${k === 'all' ? fmt(o.ord) + ' ออเดอร์' : cpPct(o.rev, T.all.rev) + ' · ' + fmt(o.ord) + ' ออเดอร์'}</span></span></button>`; }).join('');
+  // ต่อคน (ตามช่องทางที่เลือก)
+  const by = {}, get = h => (by[h] = by[h] || { h, rev: 0, ord: 0, oc: {}, l7: 0, p7: 0 });
+  sum.forEach(r => { if (cpCrCh !== 'all' && r.order_channel !== cpCrCh) return; const x = get(H(r)); x.rev += +r.revenue || 0; x.ord += +r.orders || 0; x.oc[r.order_channel] = (x.oc[r.order_channel] || 0) + (+r.revenue || 0); });
+  tr.forEach(r => { if (cpCrCh !== 'all' && r.order_channel !== cpCrCh) return; const x = by[H(r)]; if (x) { x.l7 += +r.last7_revenue || 0; x.p7 += +r.prev7_revenue || 0; } });
+  const all = Object.values(by).filter(x => x.rev > 0);
+  all.forEach(x => { x.g = x.p7 > 0 ? (x.l7 - x.p7) / x.p7 * 100 : null; });
+  const tot = all.reduce((t, x) => ({ rev: t.rev + x.rev, ord: t.ord + x.ord, l7: t.l7 + x.l7, p7: t.p7 + x.p7 }), { rev: 0, ord: 0, l7: 0, p7: 0 });
+  let rows = all;
+  if (cpCrSort === 'trend') rows = all.filter(x => x.l7 >= 1000).sort((a, b) => (a.g === null) !== (b.g === null) ? (a.g === null ? -1 : 1) : a.g === null ? b.l7 - a.l7 : b.g - a.g);
+  else rows = all.slice().sort((a, b) => b.rev - a.rev);
+  document.getElementById('cpCrCount').textContent = cpCrSort === 'trend' ? `${fmt(rows.length)} คนที่ยอด 7 วันล่าสุดตั้งแต่ 1,000 · จาก ${fmt(all.length)} คน` : `${fmt(all.length)} คน`;
+  const mixCol = cpCrCh === 'all';
+  document.getElementById('theadCpCreators').innerHTML = `<tr><th class="l">#</th><th class="l">Creator</th><th class="num">ยอดขาย</th><th class="num">% ของยอด</th><th class="num">ออเดอร์</th>`
+    + (mixCol ? `<th class="l">ช่องทางขาย <span class="pr-i" data-tip="สัดส่วนยอดขายของคนนั้นตามช่องทาง · สี: Live ชมพู · คลิป ฟ้า · โชว์เคส ทอง · หน้าสินค้า เขียวน้ำทะเล · ชี้แถบเพื่อดูยอด">ⓘ</span></th>` : '')
+    + `<th class="num">7 วันล่าสุด <span class="pr-i" data-tip="ยอดขาย ${w7} (7 วันนับถึงวันสุดท้ายของตัวกรองวันที่)">ⓘ</span></th><th class="num">เทียบ 7 วันก่อน <span class="pr-i" data-tip="7 วันล่าสุด เทียบกับ ${w7p} · ใหม่ = ช่วงก่อนไม่มียอดเลย&#10;มาแรง 7 วัน: แสดงเฉพาะคนที่ยอด 7 วันล่าสุดตั้งแต่ 1,000 (กันยอดน้อยเกินไป) เรียงคนใหม่ก่อน แล้วตาม % เติบโต">ⓘ</span></th></tr>`;
+  const chip = (l7, p7) => p7 > 0 ? `<span class="ui-chip ${l7 >= p7 ? 'up' : 'dn'}">${l7 >= p7 ? '▲' : '▼'} ${Math.abs((l7 - p7) / p7 * 100).toFixed(0)}%</span>` : (l7 > 0 ? '<span class="cp-new">ใหม่</span>' : '<span class="ui-muted">—</span>');
+  const mix = x => { const parts = CP_OC.slice(1).filter(([k]) => x.oc[k] > 0);
+    return `<div class="cp-mix" data-tip="${parts.map(([k, l]) => `${l} ${fmt(x.oc[k])}`).join(' · ')}">${parts.map(([k, , c]) => `<span style="width:${(x.oc[k] / x.rev * 100).toFixed(1)}%;background:${c};"></span>`).join('')}</div>`; };
+  const size = pgSize(), pages = Math.max(1, Math.ceil(rows.length / size)); if (cpCrPage > pages) cpCrPage = pages;
+  const start = (cpCrPage - 1) * size;
+  const cols = mixCol ? 8 : 7;
+  tb.innerHTML = rows.length ? rows.slice(start, start + size).map((x, i) => `<tr>
+      <td class="rk">${start + i + 1}</td>
+      <td class="l"><a class="cp-h mono" onclick="selectCpCreator(decodeURIComponent('${encodeURIComponent(x.h)}'))" data-tip="ดูรายละเอียดของ ${ttcEsc(x.h)}">${ttcEsc(x.h)}</a>${cpKindBadge(x.h)}</td>
+      <td class="num"><b>${fmt(x.rev)}</b></td><td class="num">${cpPct(x.rev, tot.rev)}</td><td class="num">${fmt(x.ord)}</td>
+      ${mixCol ? `<td class="l">${mix(x)}</td>` : ''}
+      <td class="num">${x.l7 ? fmt(x.l7) : '<span class="ui-muted">—</span>'}</td><td class="num">${chip(x.l7, x.p7)}</td></tr>`).join('')
+    + `<tr class="ui-sum"><td></td><td class="l">รวม ${fmt(all.length)} คน</td><td class="num">${fmt(tot.rev)}</td><td class="num">100%</td><td class="num">${fmt(tot.ord)}</td>${mixCol ? '<td></td>' : ''}<td class="num">${fmt(tot.l7)}</td><td class="num">${chip(tot.l7, tot.p7)}</td></tr>`
+    : `<tr><td colspan="${cols}" class="empty">${all.length ? 'ยังไม่มี Creator ที่ยอด 7 วันล่าสุดตั้งแต่ 1,000' : 'ไม่มีข้อมูลในช่วงนี้'}</td></tr>`;
+  renderPagerHtml('cpCrPager', cpCrPage, pages, 'cpCrGo');
+  if (window.UI && UI.fit) UI.fit();
 }
 
 async function renderCreatorPerf() {
@@ -4452,8 +4391,6 @@ async function renderCreatorPerf() {
   if (cpView === 'product') return renderCpProductView();   // มุมมองสินค้า (สลับจาก topbar)
   const overviewEl = document.getElementById('cp-overview-section');
   if (overviewEl) overviewEl.style.display = cpSelectedCreator ? 'none' : 'block';
-  { const apiOn = cpUseApi(getDateValue('From'));   // (2026-10-06) โหมด API: Top 10 สามตารางรวมเป็น "ครีเอเตอร์ทั้งหมด" ในส่วน API (กรอง Live / คลิป / โชว์เคส และ เปิด / ปิด ได้)
-    ['cp-top10-divider', 'cp-top10-grid'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = apiOn ? 'none' : ''; }); }
 
   const from = getDateValue('From'), to = getDateValue('To');
   // เฟส 3: จาก mv_creator_daily ผ่าน RPC (สรุปต่อคน / มาแรง / Top SKU / รายวัน) — ไม่แตะ allData
@@ -4471,10 +4408,7 @@ async function renderCreatorPerf() {
   const dailyRows = cpSelectedCreator ? detail.daily : cpCreator.daily;
   const topSkuRows = cpSelectedCreator ? detail.topSku : cpCreator.topSku;
 
-  if (!cpSelectedCreator) {
-    renderCpTopCreatorTables(d);
-    renderCpTrendingCreators(to);
-  }
+  if (!cpSelectedCreator) renderCpCreatorTable();
 
   const cancelledRev = d.reduce((s,r) => s + (parseFloat(r.cancelled_revenue)||0), 0);
   const cancelledOrd = d.reduce((s,r) => s + (parseInt(r.cancelled_orders)||0), 0); // RPC creator_summary อาจไม่มีคอลัมน์นี้ → 0 แล้วโชว์ % แทน (เดิมอ้าง cancelledRows ที่ไม่มีแล้วหลัง Phase 4 → หน้าพัง)
@@ -4483,18 +4417,17 @@ async function renderCreatorPerf() {
   const aov = totalOrd ? totalRev/totalOrd : 0;
 
   const skel = '<span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span>';
-  document.getElementById('cp-kpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดขายรวม</div><div class="kpi-value">${fmt(totalRev)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">${fmt(totalOrd)} ออเดอร์ · เฉลี่ย ${fmt(aov)}</div></div>
-    <div class="card" id="cp-kpi-roi" style="flex:1.2;min-width:150px;"><div class="card-title">ROAS</div><div class="kpi-value">${skel}</div></div>
-    <div class="card" id="cp-kpi-cost" style="flex:1;min-width:150px;"><div class="card-title">ต้นทุนรวม</div><div class="kpi-value">${skel}</div></div>
-    <div class="card" style="flex:1;min-width:140px;"><div class="card-title">ยอดยกเลิก/คืน ${fbeInfoIcon('cp-info-cancel', 'ยอดของออเดอร์ที่ยกเลิก / คืนเงิน — ไม่รวมใน "ยอดขายรวม" ด้านซ้าย แยกไว้ให้ดู')}</div><div class="kpi-value" style="color:var(--red);">${fmt(cancelledRev)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">${cancelledOrd ? fmt(cancelledOrd) + ' ออเดอร์' : ((totalRev + cancelledRev) ? (cancelledRev / (totalRev + cancelledRev) * 100).toFixed(1) + '% ของยอดก่อนหักยกเลิก' : '—')}</div></div>
-  `;
+  document.getElementById('cp-kpis').innerHTML =
+    `<div class="ui-metric is-static">${cpMetricInner('ยอดขายรวม', fmt(totalRev), `<span>${fmt(totalOrd)} ออเดอร์ · เฉลี่ย ${fmt(aov)}</span>`, 'ยอดขาย TikTok ที่มี Creator / บัญชีร้านกำกับ ตามช่วงวันที่ด้านบน · ออเดอร์จริง หักยกเลิก / คืนแล้ว · รวมทุกแถวของตาราง Creator ทั้งหมด')}</div>`
+    + `<div class="ui-metric is-static" id="cp-kpi-roi">${cpMetricInner('ROAS', skel, '<span>&nbsp;</span>')}</div>`
+    + `<div class="ui-metric is-static" id="cp-kpi-cost">${cpMetricInner('ต้นทุนรวม', skel, '<span>&nbsp;</span>')}</div>`
+    + `<div class="ui-metric is-static">${cpMetricInner('ยอดยกเลิก / คืน', fmt(cancelledRev), `<span>${cancelledOrd ? fmt(cancelledOrd) + ' ออเดอร์' : ((totalRev + cancelledRev) ? (cancelledRev / (totalRev + cancelledRev) * 100).toFixed(1) + '% ของยอดก่อนหักยกเลิก' : '—')}</span>`, 'ยอดของออเดอร์ที่ยกเลิก / คืนเงิน · ไม่รวมในยอดขายรวม แยกไว้ให้ดู', cancelledRev ? 'var(--red)' : '')}</div>`;
   document.getElementById('cp-trend-title').textContent = cpSelectedCreator
     ? `ยอดขาย vs ต้นทุน รายวัน — ${cpSelectedCreator}`
     : 'ยอดขาย vs ต้นทุน รายวัน — ' + (cpType === 'all' ? 'รวมทุก creator' : 'เฉพาะ ' + cpType);
   document.getElementById('cp-sku-title').textContent = cpSelectedCreator
     ? `Top SKU ของ ${cpSelectedCreator}`
-    : (cpType === 'all' ? 'Top SKU รวมทุก Creator' : 'Top SKU — เฉพาะ ' + cpType);
+    : (cpType === 'all' ? 'Top SKU' : 'Top SKU — เฉพาะ ' + cpType);
 
   // เทรนด์รายวัน (ยอดขายจริง + ค่าแอด/ค่าจ้าง + จุดที่โพสต์) — วาดด้วยข้อมูลเท่าที่มี แล้ววาดซ้ำเมื่อฝั่ง Ads/KOL โหลดเสร็จ
   _cpTrendByDay = {};
@@ -4504,14 +4437,12 @@ async function renderCreatorPerf() {
 
   // Top SKU (เฟส 3: จาก RPC creator_top_sku บน mv_creator_sku_daily — revenue_share ต่อ SKU)
   const sortedSku = topSkuRows.map(r => [r.parent_sku || '—', { rev: parseFloat(r.revenue) || 0, qty: parseFloat(r.qty) || 0 }]).sort((a,b) => b[1].rev - a[1].rev).slice(0,15);
-  document.getElementById('tbodyCpSku').innerHTML = sortedSku.length ? sortedSku.map(([sku,v],i) => `
-    <tr>
-      <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
-      <td>${skuToName(sku)}</td><td>${fmt(v.rev)}</td><td>${fmt(v.qty)}</td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
+  const skuTot = topSkuRows.reduce((t, r) => t + (parseFloat(r.revenue) || 0), 0);
+  document.getElementById('tbodyCpSku').innerHTML = sortedSku.length ? sortedSku.map(([sku, v], i) => `
+    <tr><td class="rk">${i + 1}</td><td class="l"><b>${ttcEsc(skuToName(sku))}</b><small class="mono">${ttcEsc(sku)}</small></td>
+      <td class="num"><b>${fmt(v.rev)}</b></td><td class="num">${cpPct(v.rev, skuTot)}</td><td class="num">${fmt(v.qty)}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
 
-  // LIVE vs Videos
+  // ยอดแยก Order Channel (ใช้กับการ์ด ROAS · ตาราง LIVE vs Videos เดิมย้ายไปเป็นแถบช่องทางเหนือตาราง Creator)
   const byOC = {};
   d.forEach(r => {
     const k = r.order_channel || 'ไม่ระบุ';
@@ -4519,10 +4450,6 @@ async function renderCreatorPerf() {
     byOC[k].rev += parseFloat(r.revenue) || 0;
     byOC[k].ord += parseInt(r.orders) || 0;
   });
-  const ocSorted = Object.entries(byOC).sort((a,b) => b[1].rev - a[1].rev);
-  document.getElementById('tbodyCpOrderChannel').innerHTML = ocSorted.length ? ocSorted.map(([k,v]) => `
-    <tr><td>${k}</td><td>${fmt(v.rev)}</td><td>${fmt(v.ord)}</td><td>${totalRev ? (v.rev/totalRev*100).toFixed(1) : 0}%</td></tr>
-  `).join('') : '<tr><td colspan="4" class="empty">ไม่มีข้อมูล</td></tr>';
 
   // เก็บยอด Videos จากออเดอร์จริงไว้ให้ส่วนคลิปยิงแอดใช้เทียบ/กำกับ
   _cpVideosRev = byOC['Videos'] ? byOC['Videos'].rev : 0;
@@ -4659,7 +4586,7 @@ async function loadCpCosts() {
   } catch (e) {
     console.error('loadCpCosts fetch failed:', e);
     if (seq !== _cpAdsLoadSeq) return;
-    ['cp-kpi-roi', 'cp-kpi-cost'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="card-title">${id.endsWith('roi') ? 'ROAS' : 'ต้นทุนรวม'}</div><div style="font-size:11px;color:var(--red);">โหลดไม่สำเร็จ</div>`; });
+    ['cp-kpi-roi', 'cp-kpi-cost'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = cpMetricInner(id.endsWith('roi') ? 'ROAS' : 'ต้นทุนรวม', '—', '<span style="color:var(--red);">โหลดไม่สำเร็จ</span>'); });
     return;
   }
   apply();
@@ -5008,22 +4935,23 @@ function renderCpTrendChart() {
   const datasets = [
     { type: 'line', label: 'ยอดขาย (ออเดอร์จริง)', data: days.map(dt => _cpTrendByDay[dt] || 0), yAxisID: 'y', order: 1,
       borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', borderWidth: 2, pointRadius: many ? 0 : 3, pointHoverRadius: 5, fill: true, tension: 0.3 },
-    { type: 'bar', label: 'ค่า Ads', data: days.map(dt => adByDay[dt] || 0), yAxisID: 'y2', order: 3, stack: 'cost',
-      backgroundColor: 'rgba(96,165,250,0.55)', borderWidth: 0, borderRadius: 2, barPercentage: many ? 1 : 0.7, categoryPercentage: 0.9 },
-    { type: 'bar', label: 'ค่าจ้าง KOL', data: days.map(dt => feeByDay[dt] || 0), yAxisID: 'y2', order: 2, stack: 'cost',
-      backgroundColor: 'rgba(167,139,250,0.75)', borderWidth: 0, borderRadius: 2, barPercentage: many ? 1 : 0.7, categoryPercentage: 0.9 },
+    { type: 'line', label: 'ค่า Ads', data: days.map(dt => adByDay[dt] || 0), yAxisID: 'y2', order: 3,
+      borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.10)', borderWidth: 2, pointRadius: many ? 0 : 3, pointHoverRadius: 5, tension: 0.3 },
+    { type: 'line', label: 'ค่าจ้าง KOL', data: days.map(dt => feeByDay[dt] || 0), yAxisID: 'y2', order: 2,
+      borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.10)', borderWidth: 2, borderDash: [5, 4], pointRadius: many ? 0 : 3, pointHoverRadius: 5, tension: 0.3,
+      hidden: !days.some(dt => feeByDay[dt]) },   // ไม่มีค่าจ้าง KOL ในช่วงนี้ → ไม่วาดเส้นศูนย์
     { type: 'line', label: 'โพสต์', data: days.map(dt => postsByDay[dt] ? 1 : null), yAxisID: 'yMark', order: 0, spanGaps: false,
       pointStyle: 'triangle', rotation: 180, pointRadius: many ? 6 : 8, pointHoverRadius: 10,
       backgroundColor: '#a78bfa', borderColor: '#7c5cff', borderWidth: 1, showLine: false }
   ];
   const thD = dt => new Date(dt + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-  makeChart('chartCpTrend', 'bar', days, datasets, {
+  makeChart('chartCpTrend', 'line', days, datasets, {
     legend: { display: false }, // ใช้ legend ที่หัวการ์ดแทน (ไม่ซ้ำ)
     options: { interaction: { mode: 'index', intersect: false } },
     scales: {
-      x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 14, callback: (v, i) => thD(days[i]) }, grid: { color: chartGridColor() }, stacked: true },
+      x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 14, callback: (v, i) => thD(days[i]) }, grid: { display: false } },
       y: { position: 'left', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() }, title: { display: true, text: 'ยอดขาย', color: chartTickColor(), font: { family: 'Sarabun', size: 10 } } },
-      y2: { position: 'right', stacked: true, beginAtZero: true, ticks: { color: '#a78bfa', font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { drawOnChartArea: false }, title: { display: true, text: 'ต้นทุน (Ads + ค่าจ้าง)', color: '#a78bfa', font: { family: 'Sarabun', size: 10 } } },
+      y2: { position: 'right', beginAtZero: true, ticks: { color: '#ef4444', font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { drawOnChartArea: false }, title: { display: true, text: 'ต้นทุน (Ads / ค่าจ้าง)', color: '#ef4444', font: { family: 'Sarabun', size: 10 } } },
       yMark: { display: false, min: 0, max: 1.08 }
     },
     tooltip: {
@@ -5046,21 +4974,25 @@ function renderCpTrendChart() {
     }
   });
 }
+function cpMetricInner(label, value, d, tip, col) {
+  return `<span class="ui-metric-l">${label}${tip ? ` <span class="pr-i" data-tip="${tip}">ⓘ</span>` : ''}</span><span class="ui-metric-v" data-fit${col ? ` style="color:${col};"` : ''}>${value}</span><span class="sa-md">${d}</span>`;
+}
 function fillCpCostKpis(fee, spend, rev, subtitle) {
   const roiEl = document.getElementById('cp-kpi-roi'), costEl = document.getElementById('cp-kpi-cost');
   if (!roiEl || !costEl) return;
   const total = fee + spend, roi = total ? rev / total : null;
   const roiCol = roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--accent)' : 'var(--red)';
   const roiTag = roi === null ? 'ยังไม่มีต้นทุน' : roi >= 3 ? 'คุ้มมาก' : roi >= 1 ? 'คุ้ม' : 'ยังไม่คุ้ม';
-  roiEl.style.border = `1px solid ${roiCol}`;
-  roiEl.innerHTML = `<div class="card-title">ROAS ${fbeInfoIcon('cp-info-roi', 'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม · ROI = ROAS − 1<br>ต้นทุนรวม = ค่าจ้าง KOL งาน TikTok (ไฟล์ทีม KOL ตามวันโพสต์ ตรงกับหน้า KOL) + ค่า Ads ที่ยิงคลิป (ตามวันที่ใช้เงิน)<br>ไม่รวม LIVE · ยังไม่หักต้นทุนสินค้า<br>ตัวกรอง KOL / Affiliate ด้านบน: ค่าจ้าง KOL นับเฉพาะตอนเลือก ทุกคน / KOL · ค่า Ads นับเฉพาะคลิปของคนในกลุ่มนั้น<br>เขียว ≥ 3x · ทอง 1–3x · แดง &lt; 1x')}</div><div class="kpi-value" style="color:${roiCol};">${roi !== null ? roi.toFixed(2) + 'x' : '—'}</div><div style="font-size:11px;color:${roiCol};margin-top:4px;font-weight:600;">${roiTag}${roi !== null ? ` <span style="color:var(--text3);font-weight:400;">· ${kolRoiPct(roi)}</span>` : ''}</div>`;
-  costEl.innerHTML = `<div class="card-title">ต้นทุนรวม</div><div class="kpi-value">${fmt(total)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px;"><span style="color:#a78bfa;">●</span> ค่าจ้าง ${fmt(fee)} · <span style="color:#60a5fa;">●</span> ค่า Ads ${fmt(spend)}</div>`;
+  roiEl.innerHTML = cpMetricInner('ROAS', roi !== null ? roi.toFixed(2) + 'x' : '—', `<span style="color:${roiCol};font-weight:600;">${roiTag}</span>${roi !== null ? `<span>${kolRoiPct(roi)}</span>` : ''}`,
+    'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม · ROI = ROAS − 1&#10;ต้นทุนรวม = ค่าจ้าง KOL งาน TikTok (ไฟล์ทีม KOL ตามวันโพสต์ ตรงกับหน้า KOL) + ค่า Ads ที่ยิงคลิป (ตามวันที่ใช้เงิน)&#10;ไม่รวม LIVE · ยังไม่หักต้นทุนสินค้า&#10;เขียว ≥ 3x · ทอง 1–3x · แดง < 1x', roi !== null ? roiCol : '');
+  costEl.innerHTML = cpMetricInner('ต้นทุนรวม', fmt(total), `<span><span style="color:#a78bfa;">●</span> ค่าจ้าง ${fmt(fee)}</span><span><span style="color:#ef4444;">●</span> ค่า Ads ${fmt(spend)}</span>`);
+  if (window.UI && UI.fit) UI.fit();
 }
 
 // ===== ค้นหา Live (2026-11-04 หน้าตาใหม่) =====
 // 1) รอบ Live จริงจาก TikTok (RPC tiktok_lives_list ตัวเดียวกับหน้าภาพรวม TikTok) ตามช่วงวันที่ด้านบน · เฉพาะรอบที่มียอดขาย
 // 2) กดรอบไหน → ใส่ creator + เวลาเริ่ม/จบตรงวินาทีให้เอง แล้วค้นยอดขายจริงจากออเดอร์ (live_search_orders_json สูตรเดิม)
-// 3) ยังกำหนด creator / เวลาเองได้ (Live ก่อน 9 เม.ย. 69 หรือรวมหลายบัญชี) · เซฟการค้นหา + ค่า Ads ทั้งทีมเห็นชุดเดียวกัน (ตาราง live_sessions)
+// 3) ยังกำหนด creator / เวลาเองได้ (Live ก่อน 9 เม.ย. 69 หรือรวมหลายบัญชี) · ค่า Ads = TikTok อัตโนมัติ (รอบที่เลือก หรือรวมทุกรอบ Live ของ Creator ในช่วงเวลา)
 // ช่องวันที่ = ปุ่มวันที่แบบไทยของเว็บ (เดิม datetime-local โชว์ mm/dd/yyyy ต่างกันแต่ละเครื่อง) · เวลา = ช่อง 24 ชั่วโมง HH:MM:SS
 const LS_OWN = ['deesaythailand', 'deesay_cosmetics'];   // บัญชีร้าน (รายชื่อเดียวกับ creator_kind ในฐานข้อมูล)
 const LS_PRESENTER = ['kambum_live'];                    // Presenter (เหมือนหน้า TikTok Ads)
@@ -5146,15 +5078,8 @@ function lsPickLive(id) {
   const to = lsLiveEnd(r);
   _lsPicked = { ...r, from: r.st, to };
   lsSelectedCreators = [r.username]; renderLsCreatorChips();
-  document.getElementById('lsAdSpend').placeholder = +r.ads_cost > 0 ? `${fmt(r.ads_cost)} (TikTok)` : '0';
   lsSetDT('From', r.st); lsSetDT('To', to);
   const oc = document.getElementById('lsOrderChannel'); if (oc) oc.value = 'LIVE';
-  // เคยเซฟรอบนี้ไว้ (creator เดียวกัน เริ่มเวลาเดียวกัน) → ดึงค่า Ads / โน้ตที่ทีมกรอกไว้มาใส่
-  const sv = _lsSaved.find(s => (s.creators || []).length === 1 && String(s.creators[0]).toLowerCase() === String(r.username).toLowerCase() && String(s.from_ts).slice(0, 19).replace(' ', 'T') === r.st);
-  _lsSavedActive = sv || null;
-  document.getElementById('lsAdSpend').value = sv ? (sv.ad_spend || '') : '';
-  document.getElementById('lsNote').value = sv ? (sv.note || '') : '';
-  document.getElementById('lsSavedActive').textContent = sv ? `เปิดจากที่เซฟไว้: ${sv.name}` : '';
   document.querySelectorAll('#tbodyLsLives tr[data-id]').forEach(tr => tr.classList.toggle('is-on', tr.dataset.id === id));   // ไฮไลต์แถวเดิม ไม่วาดตารางใหม่ (ไม่เด้งหน้า)
   document.getElementById('lsSearchCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   runLiveSearch();
@@ -5212,119 +5137,33 @@ function renderLsPromoTable() {
   document.getElementById('lsPromoCount').textContent = _lsPromoRows.length ? `${fmt(rows.length)}${q ? ' จาก ' + fmt(_lsPromoRows.length) : ''} แบบ` : '';
   document.getElementById('tbodyLsPromo').innerHTML = page.length ? page.map(r => { const rk = rank[r.promo]; return `
     <tr><td class="rank ${rk === 1 ? 'rank-1' : rk === 2 ? 'rank-2' : rk === 3 ? 'rank-3' : ''}">${rk}</td>
-      <td class="l mono" style="font-size:12px;">${ttcEsc(r.promo)}</td><td class="l">${ttcEsc(r.name)}</td>
-      <td class="num">${fmt(r.ord)}</td><td class="num"><b>${fmt(r.rev)}</b></td><td class="num">${fmt(r.aov)}</td><td class="num">${r.share.toFixed(1)}%</td>
-      <td class="num">${r.canc ? `<span style="color:var(--red);">${fmt(r.canc)}</span>` : '—'}</td>
-      <td class="num">${r.canc ? `<span style="color:${r.cancPct >= 30 ? 'var(--red)' : 'var(--text2)'};">${r.cancPct.toFixed(1)}%</span>` : '—'}</td></tr>`; }).join('')
-    : `<tr><td colspan="9" class="empty">${_lsPromoRows.length ? 'ไม่มี Promotion ที่ตรงกับคำค้น' : 'ไม่มีข้อมูล'}</td></tr>`;
+      <td class="l"><b>${ttcEsc(r.name)}</b><small class="mono">${ttcEsc(r.promo)}</small></td>
+      <td class="num">${fmt(r.ord)}</td><td class="num"><b>${fmt(r.rev)}</b>${r.ord ? `<small>เฉลี่ย ${fmt(r.aov)}</small>` : ''}</td><td class="num">${r.share.toFixed(1)}%</td>
+      <td class="num">${r.canc ? `<span style="color:var(--red);">${fmt(r.canc)}</span><small style="color:${r.cancPct >= 30 ? 'var(--red)' : ''};">${r.cancPct.toFixed(1)}%</small>` : '—'}</td></tr>`; }).join('')
+    : `<tr><td colspan="6" class="empty">${_lsPromoRows.length ? 'ไม่มี Promotion ที่ตรงกับคำค้น' : 'ไม่มีข้อมูล'}</td></tr>`;
   renderPagerHtml('lsPromoPager', _lsPromoPage, totalPages, 'lsPromoGoToPage');
 }
 
-// ---- เซฟการค้นหา (creator + ช่วงเวลา + Order Channel + ค่า Ads + โน้ต) — ตาราง Supabase `live_sessions` ทั้งทีมเห็นชุดเดียวกัน ----
-let _lsSaved = [], _lsSavedActive = null, _lsLastResult = null;
-const lsHeaders = () => ({ apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json', Prefer: 'return=representation' });
-async function lsLoadSavedList() {
-  try {
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/live_sessions?select=*&order=from_ts.desc&limit=300`, { headers: lsHeaders() });
-    _lsSaved = res.ok ? await res.json() : [];
-    if (!res.ok) console.warn('live_sessions:', await res.text());
-  } catch (e) { _lsSaved = []; console.warn('live_sessions load failed:', e.message); }
-  lsRenderSavedMenu();
+// (2026-11-04) เลิกช่องกรอกค่า Ads / โน้ต / เซฟการค้นหา — ค่า Ads มาจาก TikTok อัตโนมัติ (ค่า Ads LIVE GMV Max รายรอบ)
+//   ข้อมูลที่เคยเซฟไว้ยังอยู่ในตาราง live_sessions (ไม่ได้ลบ)
+let _lsLastResult = null;
+// ค่า Ads ที่ใช้คิด ROAS: รอบที่เลือก = ค่า Ads ของรอบนั้น · กำหนดเอง = รวมค่า Ads ของทุกรอบ Live ของ Creator ที่เลือกที่เริ่มในช่วงเวลานั้น
+function lsAdUsed(R) {
+  if (R && R.pick) { const a = +R.pick.ads_cost || 0; return a > 0 ? { ad: a, src: 'จาก TikTok' } : { ad: 0, src: '' }; }
+  const A = R && R.adAuto; return A && A.ad > 0 ? { ad: A.ad, src: `จาก TikTok · ${fmt(A.n)} รอบ Live` } : { ad: 0, src: '' };
 }
-function lsCurrentAdSpend() { return parseFloat(document.getElementById('lsAdSpend')?.value) || 0; }
-// ค่า Ads ที่ใช้คิด ROAS: ที่กรอกเอง (ถ้ามี) ไม่งั้นใช้ค่า Ads LIVE GMV Max ของรอบที่เลือกจาก TikTok
-function lsAdUsed(R) { const typed = lsCurrentAdSpend(); if (typed > 0) return { ad: typed, src: 'กรอกเอง' }; const a = +(R && R.pick && R.pick.ads_cost) || 0; return a > 0 ? { ad: a, src: 'จาก TikTok' } : { ad: 0, src: '' }; }
-function lsCurrentNote() { return (document.getElementById('lsNote')?.value || '').trim(); }
-async function lsSaveSearch() {
-  const fromV = lsGetDT('From'), toV = lsGetDT('To');
-  if (!lsSelectedCreators.length || !fromV || !toV) { uiAlert('เซฟ', { text: 'เลือก Creator และช่วงเวลาให้ครบก่อนเซฟ' }); return; }
-  const suggested = `${lsSelectedCreators[0]}${lsSelectedCreators.length > 1 ? ' +' + (lsSelectedCreators.length - 1) : ''} · ${thShort(fromV.slice(0, 10))} ${fromV.slice(11, 16)}`;
-  const name = await uiPrompt('ตั้งชื่อ Live นี้', { text: 'ไว้กดเปิดซ้ำ', value: _lsSavedActive?.name || suggested, ok: 'บันทึก' });
-  if (name === null) return;
-  const rec = { name: (name.trim() || suggested), creators: [...lsSelectedCreators], from_ts: fromV, to_ts: toV, order_channel: document.getElementById('lsOrderChannel').value || null,
-    ad_spend: lsCurrentAdSpend(), note: lsCurrentNote() || null,
-    // เก็บผลล่าสุดไว้ด้วย เพื่อให้รายการ "ที่เซฟไว้" โชว์ยอด/ROAS ได้โดยไม่ต้องค้นใหม่
-    last_revenue: _lsLastResult?.soldAmount ?? null, last_orders: _lsLastResult?.soldOrders ?? null, last_run_at: _lsLastResult ? new Date().toISOString() : null, updated_at: new Date().toISOString() };
-  const existing = _lsSavedActive && _lsSavedActive.name === rec.name ? _lsSavedActive : _lsSaved.find(x => x.name === rec.name);
-  try {
-    let res;
-    if (existing) {
-      if (existing !== _lsSavedActive && !(await uiConfirm(`มีชื่อ "${rec.name}" อยู่แล้ว`, { text: 'เขียนทับของเดิม?', ok: 'เขียนทับ', tone: 'bad' }))) return;
-      res = await fetch(`${window.SUPABASE_URL}/rest/v1/live_sessions?id=eq.${existing.id}`, { method: 'PATCH', headers: lsHeaders(), body: JSON.stringify(rec) });
-    } else {
-      res = await fetch(`${window.SUPABASE_URL}/rest/v1/live_sessions`, { method: 'POST', headers: lsHeaders(), body: JSON.stringify(rec) });
-    }
-    if (!res.ok) { uiAlert('เซฟไม่สำเร็จ', { text: await res.text(), tone: 'bad' }); return; }
-    const saved = (await res.json())[0];
-    _lsSavedActive = saved;
-    document.getElementById('lsSavedActive').textContent = `เซฟแล้ว: ${saved.name}`;
-    await lsLoadSavedList();
-  } catch (e) { uiAlert('เซฟไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
-}
-// แก้ค่า Ads/โน้ตหลังเปิดจากที่เซฟไว้ → อัปเดตให้เลย ไม่ต้องกดเซฟซ้ำ
-async function lsAdSpendChanged() {
-  lsRenderAdsKpi();
-  if (!_lsSavedActive) return;
-  const body = { ad_spend: lsCurrentAdSpend(), note: lsCurrentNote() || null, updated_at: new Date().toISOString() };
-  try {
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/live_sessions?id=eq.${_lsSavedActive.id}`, { method: 'PATCH', headers: lsHeaders(), body: JSON.stringify(body) });
-    if (res.ok) { Object.assign(_lsSavedActive, body); document.getElementById('lsSavedActive').textContent = `อัปเดตค่า Ads ของ "${_lsSavedActive.name}" แล้ว`; lsRenderSavedMenu(); }
-  } catch (e) { console.warn('update ad_spend failed', e); }
-}
-function lsToggleSaved(ev) { ev.stopPropagation(); const m = document.getElementById('lsSavedMenu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
-document.addEventListener('click', e => { const m = document.getElementById('lsSavedMenu'); if (m && m.style.display !== 'none' && !e.target.closest('#lsSavedMenu') && !e.target.closest('#lsSavedBtn')) m.style.display = 'none'; });
 function lsRoasColor(r) { return r === null ? 'var(--text3)' : r >= 3 ? 'var(--green)' : r >= 1 ? 'var(--accent)' : 'var(--red)'; }
-function lsRenderSavedMenu() {
-  const cnt = document.getElementById('lsSavedCount'); if (cnt) cnt.textContent = `(${_lsSaved.length})`;
-  const m = document.getElementById('lsSavedMenu'); if (!m) return;
-  if (!_lsSaved.length) { m.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3);">ยังไม่มี Live ที่เซฟไว้</div>'; return; }
-  m.style.minWidth = '460px';
-  m.innerHTML = _lsSaved.map(r => {
-    const roas = r.ad_spend > 0 && r.last_revenue != null ? r.last_revenue / r.ad_spend : null;
-    return `
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-      <div style="flex:1;cursor:pointer;min-width:0;" onclick="lsLoadSaved(${r.id})">
-        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ttcEsc(r.name)}</div>
-        <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ttcEsc((r.creators || []).join(', '))} · ${thShort(String(r.from_ts).slice(0, 10))} ${String(r.from_ts).slice(11, 16)} → ${thShort(String(r.to_ts).slice(0, 10))} ${String(r.to_ts).slice(11, 16)}${r.order_channel ? ' · ' + ttcEsc(r.order_channel) : ''}</div>
-      </div>
-      <div style="text-align:right;white-space:nowrap;font-size:11px;">
-        <div>Ads ${fmt(r.ad_spend || 0)}${r.last_revenue != null ? ` · ยอด ${fmt(r.last_revenue)}` : ''}</div>
-        <div style="color:${lsRoasColor(roas)};font-weight:700;">${roas !== null ? 'ROAS ' + roas.toFixed(2) + 'x' : (r.ad_spend > 0 ? 'ROAS — (ยังไม่ค้น)' : 'ไม่มีค่า Ads')}</div>
-      </div>
-      <span onclick="lsDeleteSaved(${r.id}, event)" data-tip="ลบ" style="cursor:pointer;color:var(--text3);padding:2px 6px;">🗑</span>
-    </div>`; }).join('');
-}
-async function lsLoadSaved(id) {
-  const r = _lsSaved.find(x => x.id === id); if (!r) return;
-  lsSelectedCreators = [...(r.creators || [])]; renderLsCreatorChips();
-  const f = String(r.from_ts).slice(0, 19).replace(' ', 'T'), t = String(r.to_ts).slice(0, 19).replace(' ', 'T');
-  lsSetDT('From', f); lsSetDT('To', t);
-  const oc = document.getElementById('lsOrderChannel'); if ([...oc.options].some(o => o.value === (r.order_channel || ''))) oc.value = r.order_channel || '';
-  document.getElementById('lsAdSpend').value = r.ad_spend || '';
-  document.getElementById('lsNote').value = r.note || '';
-  // ตรงกับรอบ Live ในรายการพอดี → ไฮไลต์ + โชว์ GMV ตาม TikTok คู่กันได้
-  const lv = (r.creators || []).length === 1 ? _lsLives.find(x => String(x.username).toLowerCase() === String(r.creators[0]).toLowerCase() && x.st === f) : null;
-  _lsPicked = lv ? { ...lv, from: lv.st, to: lsLiveEnd(lv) } : null;
-  document.getElementById('lsAdSpend').placeholder = lv && +lv.ads_cost > 0 ? `${fmt(lv.ads_cost)} (TikTok)` : '0';
-  document.querySelectorAll('#tbodyLsLives tr[data-id]').forEach(tr => tr.classList.toggle('is-on', !!lv && tr.dataset.id === lv.live_id));
-  _lsSavedActive = r;
-  document.getElementById('lsSavedActive').textContent = `เปิดจากที่เซฟไว้: ${r.name}`;
-  document.getElementById('lsSavedMenu').style.display = 'none';
-  runLiveSearch();
-}
-async function lsDeleteSaved(id, ev) {
-  ev?.stopPropagation();
-  const r = _lsSaved.find(x => x.id === id); if (!r) return;
-  if (!(await uiConfirm('ลบ', { text: r.name, ok: 'ลบ', tone: 'bad' }))) return;
-  try {
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/live_sessions?id=eq.${id}`, { method: 'DELETE', headers: lsHeaders() });
-    if (!res.ok) { uiAlert('ลบไม่สำเร็จ', { text: await res.text(), tone: 'bad' }); return; }
-  } catch (e) { uiAlert('ลบไม่สำเร็จ', { text: e.message, tone: 'bad' }); return; }
-  if (_lsSavedActive?.id === id) { _lsSavedActive = null; document.getElementById('lsSavedActive').textContent = ''; }
-  await lsLoadSavedList();
+const _lsAdCache = {};
+async function lsAutoAds(creators, fromV, toV, oc) {
+  if (oc && oc !== 'LIVE') return { ad: 0, n: 0, na: true };   // ค่า Ads รายรอบมีเฉพาะ Live
+  const k = fromV.slice(0, 10) + '|' + toV.slice(0, 10);
+  if (!_lsAdCache[k]) _lsAdCache[k] = supaRpc('tiktok_lives_list', { p_from: fromV.slice(0, 10), p_to: toV.slice(0, 10), p_user: null, p_limit: 500 }).catch(() => []);
+  const rows = await _lsAdCache[k], cs = creators.map(c => String(c).toLowerCase());
+  const hit = (Array.isArray(rows) ? rows : []).map(r => ({ ...r, st: lsLocal(r.start_time) })).filter(r => cs.includes(String(r.username || '').toLowerCase()) && r.st >= fromV && r.st <= toV && +r.ads_cost > 0);
+  return { ad: hit.reduce((t, r) => t + (+r.ads_cost || 0), 0), n: hit.length };
 }
 
-// ---- ตัวเลขหลัก 6 ช่อง (แถบเดียวกับหน้า TikTok Ads) — ROAS วาดใหม่ทันทีที่แก้ค่า Ads ไม่ต้องค้นซ้ำ ----
+// ---- ตัวเลขหลัก 6 ช่อง (แถบเดียวกับหน้า TikTok Ads) ----
 function lsRenderHero() {
   const el = document.getElementById('ls-hero'), R = _lsLastResult; if (!el || !R) return;
   const AU = lsAdUsed(R), ad = AU.ad, roas = ad > 0 && R.soldAmount ? R.soldAmount / ad : null, cpo = ad > 0 && R.soldOrders ? ad / R.soldOrders : null;
@@ -5339,11 +5178,10 @@ function lsRenderHero() {
       fbeInfoIcon('ls-h-lost', 'ยอดของออเดอร์ที่ยกเลิก / ตีกลับ<br>มูลค่ารวม = ยอดขายจริง + มูลค่าที่หลุด = ' + fmt(R.totalAmt)), R.cancelledAmount ? 'var(--red)' : '') +
     cell('GMV ตาม TikTok', P ? fmt(P.gmv) : '—', P ? `<span>${P.mins > 0 ? fmt(P.gmv / P.mins * 60) + ' ต่อชั่วโมง · ' : ''}ลูกค้า ${lsNum(P.customers)}</span>` : '<span>เลือกรอบ Live เพื่อดู</span>',
       fbeInfoIcon('ls-h-gmv', 'ยอดที่ TikTok นับให้ Live รอบนี้ (ตัวเลขเดียวกับ TikTok LIVE Center)<br>นับคนละแบบกับยอดขายจริงของระบบ จึงไม่เท่ากัน<br>แสดงเมื่อค้นตรงกับรอบ Live ที่เลือก (Creator · เวลา · Order Channel = LIVE)')) +
-    cell('ROAS Live นี้', roas !== null ? roas.toFixed(2) + 'x' : '—', ad > 0 ? `<span>Ads ${fmt(ad)} ${AU.src}</span>` : `<span>${P ? 'รอบนี้ไม่ได้ยิง Ads' : 'กรอกค่า Ads ด้านบน'}</span>`,
-      fbeInfoIcon('ls-h-roas', 'ยอดขายจริง ÷ ค่า Ads<br>ค่า Ads = ค่า Ads LIVE GMV Max ของรอบที่เลือก (จาก TikTok) หรือที่กรอกเอง (ใช้แทน)' + (cpo !== null ? '<br>ค่า Ads ต่อออเดอร์ที่ขายได้ = ' + fmt(cpo) : '') + '<br>เขียว ≥ 3x · ทอง 1–3x · แดง &lt; 1x'), roas !== null ? lsRoasColor(roas) : '');
+    cell('ROAS Live นี้', roas !== null ? roas.toFixed(2) + 'x' : '—', ad > 0 ? `<span>Ads ${fmt(ad)} ${AU.src}</span>` : `<span>${R.adAuto && R.adAuto.na ? 'ค่า Ads มีเฉพาะ Order Channel LIVE' : P ? 'รอบนี้ไม่ได้ยิง Ads' : 'ไม่มีค่า Ads Live ในช่วงนี้'}</span>`,
+      fbeInfoIcon('ls-h-roas', 'ยอดขายจริง ÷ ค่า Ads<br>ค่า Ads = ค่า Ads LIVE GMV Max จาก TikTok · เลือกรอบ Live = ของรอบนั้น · กำหนดเอง = รวมทุกรอบ Live ของ Creator ที่เลือกที่เริ่มในช่วงเวลานั้น (TikTok มีข้อมูล Live ตั้งแต่ 9 เม.ย. 69)' + (cpo !== null ? '<br>ค่า Ads ต่อออเดอร์ที่ขายได้ = ' + fmt(cpo) : '') + '<br>เขียว ≥ 3x · ทอง 1–3x · แดง &lt; 1x'), roas !== null ? lsRoasColor(roas) : '');
   if (window.UI && UI.fit) UI.fit();
 }
-function lsRenderAdsKpi() { lsRenderHero(); }
 // แถวคนดู Live: เฉพาะตอนค้นตรงกับรอบที่เลือก และ TikTok ส่งตัวเลขคนดูมา (Live ของบัญชีร้าน) · แยกจากตัวเลขเงิน
 function lsRenderEng() {
   const wrap = document.getElementById('lsEngWrap'), el = document.getElementById('ls-eng'), P = _lsLastResult && _lsLastResult.pick;
@@ -5433,7 +5271,9 @@ async function runLiveSearch() {
     else { cancelledIds.add(r.order_id); cancelledAmount += parseFloat(r.revenue) || 0; }
   });
   const totalN = matched.length, pick = lsPickedMatch(fromV, toV, ocFilter);
-  _lsLastResult = { soldAmount, soldOrders: soldIds.size, totalN, cancelledN: cancelledIds.size, cancelledAmount, totalAmt: soldAmount + cancelledAmount, pick };
+  const adAuto = pick ? null : await lsAutoAds(creators, fromV, toV, ocFilter);
+  if (seq !== _lsSeq) return;
+  _lsLastResult = { soldAmount, soldOrders: soldIds.size, totalN, cancelledN: cancelledIds.size, cancelledAmount, totalAmt: soldAmount + cancelledAmount, pick, adAuto };
 
   // หัวผลค้นหา: ขอบเขต + ที่มาของออเดอร์ (ใน ⓘ)
   const lsTt = matched.filter(r => r.src === 'api').length, withSku = new Set(skuRowsLs.map(r => r.order_id)), noDetail = matched.filter(r => !withSku.has(r.order_id)).length;
@@ -5447,11 +5287,6 @@ async function runLiveSearch() {
   lsRenderHero();
   lsRenderEng();
   lsRenderChart(matched, soldIds, fromV, toV);
-
-  if (_lsSavedActive) { // เก็บผลล่าสุดกับ Live ที่เปิดอยู่ ให้รายการ "ที่เซฟไว้" โชว์ ROAS ได้
-    fetch(`${window.SUPABASE_URL}/rest/v1/live_sessions?id=eq.${_lsSavedActive.id}`, { method: 'PATCH', headers: lsHeaders(), body: JSON.stringify({ last_revenue: soldAmount, last_orders: soldIds.size, last_run_at: new Date().toISOString() }) })
-      .then(r => { if (r.ok) { Object.assign(_lsSavedActive, { last_revenue: soldAmount, last_orders: soldIds.size }); lsRenderSavedMenu(); } }).catch(() => {});
-  }
 
   // ---- Promotion ที่ลูกค้าสั่ง (ช่อง sku_promotion ของออเดอร์) ----
   const promoBy = {};
@@ -5477,12 +5312,11 @@ async function runLiveSearch() {
   document.getElementById('lsSkuCount').textContent = skuRows.length ? `${fmt(skuRows.length)} รายการ` : '';
   document.getElementById('tbodyLsSku').innerHTML = skuRows.length ? skuRows.map(([k, v], i) => `<tr><td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>
       <td class="l"><b>${ttcEsc(skuToName(k))}</b><small class="mono">${ttcEsc(k)}</small></td>
-      <td class="num">${fmt(v.sq)}</td><td class="num">${fmt(v.sr)}</td>
-      <td class="num">${v.cq ? `<span style="color:var(--red);">${fmt(v.cq)}</span>` : '—'}</td><td class="num">${v.cq ? fmt(v.cr) : '—'}</td>
-      <td class="num">${v.cq ? cp(v.cq, v.sq) : '—'}</td></tr>`).join('')
-    : '<tr><td colspan="7" class="empty">ไม่มีข้อมูลสินค้า</td></tr>';
+      <td class="num">${fmt(v.sq)}</td><td class="num"><b>${fmt(v.sr)}</b></td>
+      <td class="num">${v.cq ? `<span style="color:var(--red);">${fmt(v.cq)}</span><small>${fmt(v.cr)} · ${cp(v.cq, v.sq)}</small>` : '—'}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">ไม่มีข้อมูลสินค้า</td></tr>';
   const T = skuRows.reduce((a, [, v]) => ({ sq: a.sq + v.sq, sr: a.sr + v.sr, cq: a.cq + v.cq, cr: a.cr + v.cr }), { sq: 0, sr: 0, cq: 0, cr: 0 });
-  document.getElementById('tfootLsSku').innerHTML = skuRows.length ? `<tr><td></td><td class="l">รวม</td><td class="num">${fmt(T.sq)}</td><td class="num">${fmt(T.sr)}</td><td class="num">${fmt(T.cq)}</td><td class="num">${fmt(T.cr)}</td><td class="num">${cp(T.cq, T.sq)}</td></tr>` : '';
+  document.getElementById('tfootLsSku').innerHTML = skuRows.length ? `<tr><td></td><td class="l">รวม</td><td class="num">${fmt(T.sq)}</td><td class="num">${fmt(T.sr)}</td><td class="num">${fmt(T.cq)}<small>${fmt(T.cr)} · ${cp(T.cq, T.sq)}</small></td></tr>` : '';
 }
 
 
