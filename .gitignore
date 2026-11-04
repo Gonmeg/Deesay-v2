@@ -1,0 +1,5 @@
+# เครื่องมือทำรูป: ของที่โหลด / รูป / ไฟล์ข้อมูล อยู่ในเครื่องเท่านั้น (ห้าม commit ข้อมูลบริษัท)
+tests/preview/.cache/
+tests/preview/out/
+*.local.json
+tests/node_modules/
