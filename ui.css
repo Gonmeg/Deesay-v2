@@ -38,7 +38,7 @@
   /* ความโค้งมุม: ปุ่ม/ช่องกรอก < การ์ด < เม็ดยา */
   --r-sm: 6px; --r-md: 10px; --r-pill: 999px;
   --font: 'Sarabun', system-ui, -apple-system, sans-serif;
-  --font-code: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-code: var(--font);   /* (2026-11-04) ฟอนต์เดียวทั้งเว็บ: Sarabun (เลิก IBM Plex Mono) */
 }
 body.light-theme, .ui-light {
   --bg: #ECEFF4; --bg2: #FFFFFF; --bg3: #F2F4F7;   /* (2026-11-02) พื้นเทาอมฟ้าเข้มขึ้นนิด ให้กล่องขาวลอยเป็นชั้น */
@@ -63,7 +63,7 @@ body.light-theme, .ui-light {
   --ch-dealer: #0D9488; --ch-mt: #7C3AED; --ch-ads: #DC2626;
 }
 
-/* ───────── ชั้น 1: ฟอนต์ (กฎเมฆ: Sarabun ทุกอย่าง · IBM Plex Mono เฉพาะรหัส) ───────── */
+/* ───────── ชั้น 1: ฟอนต์ (กฎเมฆ 2026-11-04: Sarabun ฟอนต์เดียวทั้งเว็บ รวมรหัส / ชื่อบัญชี / เวอร์ชัน) ───────── */
 body { font-family: var(--font); background: var(--pg, var(--bg)); color: var(--text); -webkit-font-smoothing: antialiased; }
 /* upload / admin / health ใช้ชื่อสีชุดเก่า (--surface, --muted …) → ชี้มาที่สีชุดเดียวกัน */
 :root, body.light-theme {
@@ -78,6 +78,7 @@ th { font-family: var(--font) !important; letter-spacing: 0 !important; text-tra
 .kpi-value { font-weight: 700; }
 .num, td.num, th.num, .kpi-value, [class*="ui-metric-v"], .ui-num { font-variant-numeric: tabular-nums; }
 .mono, .code, .ui-code { font-family: var(--font-code); font-size: .92em; }
+code, kbd, pre, samp { font-family: var(--font); }   /* (2026-11-04) แท็กโค้ดของเบราว์เซอร์ก็ใช้ Sarabun */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 
