@@ -49,14 +49,14 @@
       #page-skuanalysis .skd-ptabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; } #page-skuanalysis .skd-ptabs button i { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; } #page-skuanalysis .skd-ptabs button span { font-size:11px; opacity:.8; margin-left:2px; }
       #page-skuanalysis table.skd-pt { width:100%; border-collapse:collapse; font-size:12.5px; } #page-skuanalysis table.skd-pt th { font-size:11px; font-weight:600; color:var(--text3); text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); } #page-skuanalysis table.skd-pt th.num, #page-skuanalysis table.skd-pt td.num { text-align:right; }
       #page-skuanalysis table.skd-pt td { padding:8px; border-bottom:1px solid var(--border); vertical-align:middle; height:44px; box-sizing:border-box; } #page-skuanalysis table.skd-pt .rk { width:28px; color:var(--text3); }
-      #page-skuanalysis table.skd-pt .p { font-family:'IBM Plex Mono', monospace; font-size:11.5px; } #page-skuanalysis table.skd-pt .b { height:3px; border-radius:2px; background:var(--bg3); margin-top:4px; overflow:hidden; max-width:220px; } #page-skuanalysis table.skd-pt .b i { display:block; height:100%; background:var(--text3); }
+      #page-skuanalysis table.skd-pt .p { font-family:'Sarabun', sans-serif; font-size:11.5px; } #page-skuanalysis table.skd-pt .b { height:3px; border-radius:2px; background:var(--bg3); margin-top:4px; overflow:hidden; max-width:220px; } #page-skuanalysis table.skd-pt .b i { display:block; height:100%; background:var(--text3); }
       #page-skuanalysis .skd-pt-pg { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding-top:8px; font-size:11.5px; color:var(--text3); } #page-skuanalysis .skd-pt-pg button { font:inherit; border:1px solid var(--border); background:var(--bg2); color:var(--text2); border-radius:6px; width:28px; height:26px; cursor:pointer; } #page-skuanalysis .skd-pt-pg button:disabled { opacity:.4; cursor:default; } #page-skuanalysis .skd-pt-pg select { font:inherit; border:1px solid var(--border); background:var(--bg2); color:var(--text); border-radius:6px; height:26px; margin-left:4px; }
       #page-skuanalysis .skd-recon { font-size:12px; color:var(--text2); background:var(--bg3); border-radius:8px; padding:8px 12px; margin-top:10px; line-height:1.6; }
       #page-skuanalysis .skd-lanes { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
       #page-skuanalysis .skd-lane { border:1px solid var(--border); border-radius:10px; padding:10px 12px; min-width:0; }
       #page-skuanalysis .skd-lane-h { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; margin-bottom:6px; } #page-skuanalysis .skd-lane-h i { width:9px; height:9px; border-radius:50%; } #page-skuanalysis .skd-lane-h span { margin-left:auto; font-size:12px; font-weight:600; color:var(--text2); }
       #page-skuanalysis .skd-pr { display:grid; grid-template-columns:18px minmax(0,1fr) auto; gap:1px 8px; align-items:center; padding:7px 0; border-top:1px solid var(--border); font-size:12.5px; min-height:52px; box-sizing:border-box; }
-      #page-skuanalysis .skd-pr .n { color:var(--text3); font-size:11px; } #page-skuanalysis .skd-pr .p { font-family:'IBM Plex Mono', monospace; font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #page-skuanalysis .skd-pr .v { text-align:right; font-weight:700; }
+      #page-skuanalysis .skd-pr .n { color:var(--text3); font-size:11px; } #page-skuanalysis .skd-pr .p { font-family:'Sarabun', sans-serif; font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #page-skuanalysis .skd-pr .v { text-align:right; font-weight:700; }
       #page-skuanalysis .skd-pr .m { grid-column:2; font-size:10.5px; color:var(--text3); } #page-skuanalysis .skd-pr .s { text-align:right; font-size:11px; color:var(--text2); }
       #page-skuanalysis .skd-pr .b { grid-column:2 / 4; height:4px; border-radius:2px; background:var(--bg3); overflow:hidden; } #page-skuanalysis .skd-pr .b i { display:block; height:100%; background:var(--text3); }
       #page-skuanalysis .skd-pr-empty { border-top-color:transparent; }
@@ -184,7 +184,7 @@
     const warn = '';
     body.innerHTML = `
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 14px;"><div style="font-size:18px;font-weight:700;">${esc(d.name || nameOf(d.sku))}</div>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
+        <span style="font-family:'Sarabun',sans-serif;font-size:12px;color:var(--text3);margin-left:4px;">${esc(d.sku)}</span>${badges}</div>${warn}
       <div class="skd-kpis">
         ${kpi('ยอดขาย ' + info, `${money(rev)}`, `${fmt(daily.reduce((t, r) => t + (+r.ord || 0), 0))} ออเดอร์ · ถอด VAT ${money(rev / VAT_DIV)}`)}
         ${kpi('จำนวนขาย', fmt(Math.round(qty)) + ' ชิ้น', (() => { const r = daily.filter(x => !BULK.includes(x.channel)); const q = r.reduce((t, x) => t + (+x.qty || 0), 0), v = r.reduce((t, x) => t + (+x.rev || 0), 0); return q ? `ราคาเฉลี่ย ${fmt(Math.round(v / q))} / ชิ้น (ไม่รวมตัวแทน / MT)` : ''; })())}
@@ -339,7 +339,7 @@
     const daily = d.daily || [], R = daily.reduce((t, r) => t + (+r.rev || 0), 0), Q = daily.reduce((t, r) => t + (+r.qty || 0), 0);
     const k0 = d.children || [], sr = k0.reduce((t, r) => t + (+r.rev || 0), 0), sq = k0.reduce((t, r) => t + (+r.qty || 0), 0);
     const k = k0.map(r => ({ ...r, rev: sr > 0 ? (+r.rev || 0) / sr * R : 0, qty: sq > 0 ? (+r.qty || 0) / sq * Q : 0 }));
-    const rows = k.map(x => `<tr><td><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;">${esc(x.sku)}</span><div style="font-size:10.5px;color:var(--text3);">${esc(x.name || '')}</div></td>
+    const rows = k.map(x => `<tr><td><span style="font-family:'Sarabun',sans-serif;font-weight:600;">${esc(x.sku)}</span><div style="font-size:10.5px;color:var(--text3);">${esc(x.name || '')}</div></td>
       <td class="num">${n0(x.qty)}</td><td class="num">${m0(x.rev)}</td><td class="num"><b>${n0(x.on_hand)}</b></td><td class="num">${+x.avg_day ? (+x.avg_day).toFixed(1) : dash}</td>
       <td class="num">${+x.avg_day > 0 ? fmt(Math.floor(Math.max(+x.on_hand || 0, 0) / x.avg_day)) + ' วัน' : dash}</td>
       <td class="num">${x.next_eta ? `${thShort(x.next_eta)}<div style="font-size:10.5px;color:var(--text3);">${n0(x.next_eta_qty)} ชิ้น</div>` : dash}</td>
