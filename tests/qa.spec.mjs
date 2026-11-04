@@ -70,6 +70,22 @@ test('จำลองการใช้งานทุกหน้า', async ({
       r.load_s = +((Date.now() - t0) / 1000).toFixed(1);
       r.cls_load = +(await page.evaluate(() => window.__cls || 0)).toFixed(3);
 
+      // (2026-11-04) ฟอนต์ + คำต้องห้าม: ทุกข้อความที่เห็นต้องเป็น Sarabun · ห้าม ฿ · ใช้ Ads ไม่ใช่ "แอด" (แอดมิน ได้) · ตัวเลขในการ์ด/ตารางไม่ย่อเป็น k / M
+      const tx = await page.evaluate(sel => {
+        const root = document.querySelector(sel) || document.body;
+        const own = e => [...e.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        const vis = [...root.querySelectorAll('*')].filter(e => e.offsetParent !== null && !e.closest('svg') && own(e));
+        const uniq = a => [...new Set(a)].slice(0, 5);
+        return {
+          fonts: uniq(vis.filter(e => !/^["']?Sarabun/.test(getComputedStyle(e).fontFamily)).map(e => `«${own(e).slice(0, 20)}» ${getComputedStyle(e).fontFamily.split(',')[0]}`)),
+          words: uniq(vis.filter(e => /฿|แอด(?!มิน)/.test(own(e))).map(e => `«${own(e).slice(0, 30)}»`)),
+          abbr: uniq([...root.querySelectorAll('.ui-metric-v, .kpi-value, td')].filter(e => e.offsetParent !== null && /\d\s?[kKM]\b/.test(e.textContent) && !/ml\b/i.test(e.textContent)).map(e => `«${e.textContent.trim().slice(0, 24)}»`))
+        };
+      }, scope(t));
+      if (tx.fonts.length) r.issues.push('ฟอนต์ไม่ใช่ Sarabun: ' + tx.fonts.join(' · '));
+      if (tx.words.length) r.warn.push('คำต้องห้าม (฿ / แอด): ' + tx.words.join(' · '));
+      if (tx.abbr.length) r.warn.push('ตัวเลขย่อ k / M: ' + tx.abbr.join(' · '));
+
       // กดค้นหา (ถ้ามี) แล้ววัดหน้าเด้งเฉพาะหลังกด
       const search = page.locator('#topSearchBtn:visible');
       if (t.dash && await search.count()) {
