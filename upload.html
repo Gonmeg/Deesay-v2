@@ -6,7 +6,7 @@
   <title>Upload | Deesay</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="config.js"></script>
   <script src="auth.js?v=20261102a"></script>
@@ -53,7 +53,7 @@
     .history-item:last-child { border-bottom: none; }
     .history-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
     .history-item-channel { font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .history-item-time { font-size: 0.66rem; color: var(--muted2); font-family: 'IBM Plex Mono', monospace; }
+    .history-item-time { font-size: 0.66rem; color: var(--muted2); font-family: 'Sarabun', sans-serif; }
     .history-item-detail { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
     .history-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 0.62rem; padding: 1px 7px; border-radius: 99px; font-weight: 600; }
     .history-badge-order { background: rgba(99,102,241,0.15); color: #818cf8; }
@@ -108,11 +108,11 @@
     .drop-icon { font-size: 1.8rem; margin-bottom: 8px; }
     .drop-main { font-size: 0.84rem; color: var(--muted); }
     .drop-main strong { color: var(--accent2); }
-    .drop-sub { font-size: 0.7rem; color: var(--muted2); margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
+    .drop-sub { font-size: 0.7rem; color: var(--muted2); margin-top: 4px; font-family: 'Sarabun', sans-serif; }
     .file-row { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 0.78rem; margin-top: 8px; }
     .file-row-icon { font-size: 0.9rem; flex-shrink: 0; }
     .file-row-name { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .file-row-size { color: var(--muted2); font-size: 0.7rem; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+    .file-row-size { color: var(--muted2); font-size: 0.7rem; flex-shrink: 0; font-family: 'Sarabun', sans-serif; }
     .file-row-remove { color: var(--muted2); cursor: pointer; flex-shrink: 0; font-size: 0.9rem; padding: 0 4px; }
     .file-row-remove:hover { color: var(--danger); }
     .map-info { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; line-height: 1.55; }
@@ -2087,7 +2087,7 @@ async function handleConfirm() {
                   <td style="padding:6px 10px;text-align:center;color:#fb923c;font-weight:600;">${orders.length}</td>
                   <td style="padding:6px 10px;text-align:right;color:${hasAmt?'#ef4444':'var(--muted)'};font-weight:${hasAmt?'600':'400'};">${totalAmt.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
                   <td style="padding:6px 10px;color:${statusColor};font-size:0.7rem;font-weight:600;">${statusText}</td>
-                  <td style="padding:6px 10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.7rem;">${orders.slice(0,2).map(o=>o.order_id).join(', ')}${orders.length>2?' ...':''}</td>
+                  <td style="padding:6px 10px;color:var(--muted);font-family:'Sarabun',sans-serif;font-size:0.7rem;">${orders.slice(0,2).map(o=>o.order_id).join(', ')}${orders.length>2?' ...':''}</td>
                 </tr>`
               }).join('')}
             </tbody>
@@ -2098,7 +2098,7 @@ async function handleConfirm() {
         <div style="margin-top:16px;padding:12px 14px;border-radius:8px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.3);">
           <div style="font-size:0.78rem;color:#ef4444;font-weight:600;margin-bottom:6px;">🚨 ${failedRows.length.toLocaleString()} ออเดอร์ update ไม่สำเร็จแม้ retry แล้ว (เน็ต/เซิร์ฟเวอร์หลุดยาวจริงๆ) — ไม่กระทบออเดอร์อื่นที่เหลือ</div>
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">แก้ได้ง่ายๆ: กด "อัพรับเงินต่อ" แล้วเลือกไฟล์เดิมอัพซ้ำอีกรอบ — ระบบจะ update ทับค่าเดิมแค่ ${failedRows.length.toLocaleString()} แถวนี้ ไม่ซ้ำซ้อนกับที่ทำสำเร็จไปแล้ว</div>
-          <div style="max-height:120px;overflow-y:auto;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--muted);">
+          <div style="max-height:120px;overflow-y:auto;font-family:'Sarabun',sans-serif;font-size:0.7rem;color:var(--muted);">
             ${failedRows.slice(0,50).map(r => `${r.order_id} — ${r.error}`).join('<br>')}
             ${failedRows.length > 50 ? `<br>...และอีก ${failedRows.length - 50} รายการ` : ''}
           </div>
