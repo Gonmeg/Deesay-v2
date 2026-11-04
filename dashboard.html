@@ -22,7 +22,7 @@
 <title>Deesay Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* (2026-11-02) สีทั้งหมดอยู่ใน ui.css (โหมดมืด :root · โหมดสว่าง body.light-theme) */
   body.light-theme .loading-overlay { background: var(--bg); }
@@ -109,7 +109,7 @@
   select.ls-input { cursor: pointer; }
   .ls-input:focus { border-color: var(--accent) !important; outline: none; }
   .section-divider { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 8px; margin-top: 12px; margin-bottom: 14px; border-top: 1px solid var(--border); }
-  .filter-label { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+  .filter-label { font-size: 11px; color: var(--text3); font-family: 'Sarabun', sans-serif; white-space: nowrap; }
   select, input[type="date"], input[type="datetime-local"] { background: transparent; border: none; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 12px; outline: none; cursor: pointer; color-scheme: dark; }
   select option { background: var(--bg3); color: var(--text); }
   .btn { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: 'Sarabun', sans-serif; display: flex; align-items: center; gap: 6px; }
@@ -138,8 +138,8 @@
   @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2,1fr); } .grid-2 { grid-template-columns: 1fr; } }
 
   .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
-  .card-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; }
-  .kpi-value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; font-family: 'IBM Plex Mono', monospace; }
+  .card-title { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: .3px; font-family: 'Sarabun', sans-serif; margin-bottom: 10px; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; font-family: 'Sarabun', sans-serif; }
   .kpi-sub { font-size: 12px; color: var(--text2); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
   /* Shopee Ads — การ์ด KPI ส่วนบน: หัวข้อภาษาไทยอ่านง่าย (ไม่ใช้ตัวพิมพ์ใหญ่/monospace) */
   /* (2026-11-02) Shopee Ads หน้าตาแบบ C */
@@ -203,13 +203,13 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
 
   .table-wrap { overflow-x: auto; margin-top: 4px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 10px 12px; color: var(--text3); font-size: 11px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 400; }
+  th { text-align: left; padding: 10px 12px; color: var(--text3); font-size: 11px; font-family: 'Sarabun', sans-serif; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 400; }
   body.light-theme { --row-border: rgba(0,0,0,0.08); }
   body:not(.light-theme) { --row-border: rgba(42,42,58,0.5); }
   td { padding: 9px 12px; border-bottom: 1px solid var(--row-border); color: var(--text2); white-space: nowrap; }
   tr:hover td { background: var(--bg3); color: var(--text); }
   td:first-child { color: var(--text); font-weight: 500; }
-  .rank { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); }
+  .rank { font-family: 'Sarabun', sans-serif; font-size: 11px; color: var(--text3); }
   .rank-1 { color: var(--accent); } .rank-2 { color: var(--text2); } .rank-3 { color: #cd7f32; }
   .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
   .section-title { font-size: 14px; font-weight: 600; color: var(--text); }
@@ -220,16 +220,16 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
   .prog-label { font-size: 12px; color: var(--text2); width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
   .prog-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
   .prog-bar { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
-  .prog-val { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; width: 80px; text-align: right; flex-shrink: 0; }
+  .prog-val { font-size: 11px; color: var(--text3); font-family: 'Sarabun', sans-serif; width: 80px; text-align: right; flex-shrink: 0; }
   .crm-groups-compact { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   @media (max-width: 700px) { .crm-groups-compact { grid-template-columns: 1fr; } }
   .crm-group-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0; cursor: pointer; transition: all 0.15s; }
   .crm-group-row:hover { border-color: var(--accent); background: rgba(200,169,110,0.05); }
   .crm-group-row.selected { border-color: var(--accent); background: rgba(200,169,110,0.08); }
-  .crm-count { font-size: 22px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: var(--accent); min-width: 60px; flex-shrink: 0; text-align: right; padding-right: 4px; }
+  .crm-count { font-size: 22px; font-weight: 700; font-family: 'Sarabun', sans-serif; color: var(--accent); min-width: 60px; flex-shrink: 0; text-align: right; padding-right: 4px; }
   .crm-label { flex: 1; } .crm-label-main { font-size: 13px; font-weight: 600; } .crm-label-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .crm-pct { font-size: 12px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; width: 50px; text-align: right; }
-  .sku-chip { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); transition: all 0.15s; font-family: 'IBM Plex Mono', monospace; }
+  .crm-pct { font-size: 12px; color: var(--text3); font-family: 'Sarabun', sans-serif; width: 50px; text-align: right; }
+  .sku-chip { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); transition: all 0.15s; font-family: 'Sarabun', sans-serif; }
   .sku-chip.selected { color: #0a0a0f; border-color: transparent; }
   .toggle-group { display:flex; gap:2px; background:var(--bg3); border-radius:6px; padding:3px; border:1px solid var(--border); }
   .toggle-btn { padding:5px 14px; border-radius:4px; font-size:12px; font-weight:600; cursor:pointer; border:none; background:transparent; color:var(--text3); font-family:'Sarabun',sans-serif; transition:all 0.15s; }
@@ -247,14 +247,14 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
   .pt-editable-th { background: rgba(200,169,110,0.10) !important; border-bottom: 2px solid var(--accent) !important; }
   .pt-editable-td { background: rgba(200,169,110,0.04); padding: 4px 6px !important; }
   .pt-input {
-    width: 60px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
+    width: 60px; text-align: right; font-family: 'Sarabun', sans-serif; font-size: 12px; font-weight: 600;
     background: rgba(200,169,110,0.08); color: var(--accent2); border: 1px solid rgba(200,169,110,0.35);
     border-radius: 6px; padding: 5px 7px; outline: none; transition: all 0.15s;
   }
   .pt-input::placeholder { color: var(--text3); font-family: 'Sarabun', sans-serif; font-weight: 400; }
   .pt-input:hover { border-color: rgba(200,169,110,0.6); }
   .pt-input:focus { border-color: var(--accent); background: rgba(200,169,110,0.14); box-shadow: 0 0 0 3px rgba(200,169,110,0.15); }
-  .pt-window-cell { text-align: center; font-family: 'IBM Plex Mono', monospace; padding: 6px 8px !important; }
+  .pt-window-cell { text-align: center; font-family: 'Sarabun', sans-serif; padding: 6px 8px !important; }
   .pt-window-actual { font-size: 13.5px; font-weight: 700; }
   .pt-window-gap { font-size: 10px; margin-top: 3px; font-family: 'Sarabun', sans-serif; }
 
@@ -277,7 +277,7 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
   .ttc-card-body { padding: 9px; }
   .ttc-card-title { font-size: 11px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
   .ttc-card-date { font-size: 9.5px; color: var(--text3); margin-bottom: 5px; }
-  .ttc-card-pills { font-size: 10px; display: flex; flex-wrap: wrap; gap: 6px; font-family: 'IBM Plex Mono', monospace; }
+  .ttc-card-pills { font-size: 10px; display: flex; flex-wrap: wrap; gap: 6px; font-family: 'Sarabun', sans-serif; }
 
   .creator-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; border-left-width: 3px; border-left-style: solid; }
 
@@ -291,7 +291,7 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
   .wn-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .wn-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 560px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
   .wn-head { padding: 18px 22px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-  .wn-head .t { font-size: 15px; font-weight: 700; color: var(--text); } .wn-head .s { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; margin-left: auto; }
+  .wn-head .t { font-size: 15px; font-weight: 700; color: var(--text); } .wn-head .s { font-size: 11px; color: var(--text3); font-family: 'Sarabun', sans-serif; margin-left: auto; }
   .wn-body { padding: 6px 22px 10px; overflow-y: auto; }
   .wn-note { padding: 14px 0; border-bottom: 1px solid var(--border); } .wn-note:last-child { border-bottom: none; }
   .wn-note .d { font-size: 11px; color: var(--text3); }
@@ -322,11 +322,11 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
   .cpp-conc { font-family: 'Sarabun', sans-serif; font-size: 11.5px; }
   .cpp-conc.hi { color: #fb923c; } .cpp-conc.lo { color: #4ade80; } body.light-theme .cpp-conc.lo { color: #16a34a; }
   .cpp-row { cursor: pointer; } .cpp-row:hover td { background: var(--bg3); }
-  .cpp-sku { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); }
+  .cpp-sku { font-family: 'Sarabun', sans-serif; font-size: 11px; color: var(--text3); }
   .cpp-handle { color: var(--text); font-weight: 600; } .cpp-handle:hover { color: var(--accent); }
   .cpp-heat th, .cpp-heat td { padding: 6px 8px; text-align: center; font-family: 'Sarabun', sans-serif; font-size: 11px; white-space: nowrap; }
   .cpp-heat th:first-child, .cpp-heat td:first-child { text-align: left; position: sticky; left: 0; background: var(--bg2); z-index: 2; font-family: 'Sarabun', sans-serif; font-size: 12px; min-width: 170px; }
-  .cpp-heat th { color: var(--text3); font-size: 10.5px; letter-spacing: 0; font-family: 'IBM Plex Mono', monospace; }
+  .cpp-heat th { color: var(--text3); font-size: 10.5px; letter-spacing: 0; font-family: 'Sarabun', sans-serif; }
   .cpp-heat td.cell { border-radius: 4px; color: var(--text2); transition: transform .1s; }
   .cpp-heat td.cell.hot { color: #fff; font-weight: 600; }
   .cpp-heat td.cell.zero { color: var(--text3); opacity: .35; }
@@ -350,12 +350,12 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
   .tta-obj-cards { width: 190px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; min-height: 240px; }   /* (2026-11-02) จองที่ไว้ กันหน้าเด้งตอนการ์ดขึ้น */
   .tta-obj-card { border-left: 4px solid; border-radius: 0 6px 6px 0; padding: 9px 12px; }
   .tta-obj-card .tta-obj-label { font-size: 11.5px; font-weight: 600; }
-  .tta-obj-card .tta-obj-value { font-size: 16px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; margin-top: 2px; }
+  .tta-obj-card .tta-obj-value { font-size: 16px; font-family: 'Sarabun', sans-serif; font-weight: 600; margin-top: 2px; }
   .tta-obj-card .tta-obj-pct { font-size: 10.5px; color: var(--text3); }
   @media (max-width: 720px) { .tta-obj-row { flex-direction: column; } .tta-obj-cards { width: 100%; } }
   .funnel-tier { display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 10px 12px; border-radius: 4px; color: #0a0a0f; font-weight: 600; transition: width 0.3s; }
   .funnel-tier .funnel-label { font-size: 11.5px; font-weight: 700; }
-  .funnel-tier .funnel-value { font-size: 13px; font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+  .funnel-tier .funnel-value { font-size: 13px; font-family: 'Sarabun', sans-serif; margin-top: 2px; }
   .funnel-tier .funnel-pct { font-size: 10px; opacity: 0.75; }
   .trend-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-top: 6px; }
   /* ปกคลิป: เอาเมาส์วางแล้วขยายใหญ่ (ใช้ class zoom-thumb กับ <img> — ทำงานทุกตารางที่วาดใหม่ได้เพราะจับที่ document) */
@@ -373,7 +373,7 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
 .mkt-ch-card { padding:2px 16px; border-left:1px solid var(--border); }
 .mkt-ch-card:first-child { border-left:none; padding-left:0; }
 .mkt-ch-name { font-size:11px; color:var(--text3); }
-.mkt-ch-roi { font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; margin-top:2px; }
+.mkt-ch-roi { font-size:20px; font-weight:700; font-family:'Sarabun',sans-serif; margin-top:2px; }
 .mkt-ch-roi small { font-size:12px; margin-left:1px; color:var(--text3); }
 .mkt-ch-sub { font-size:10.5px; color:var(--text3); margin-top:2px; }
 .mkt-caret { display:inline-block; width:14px; color:var(--text3); font-size:10px; }
@@ -390,7 +390,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 .mkt-ch-bar { flex:0 0 110px; height:6px; border-radius:3px; background:var(--border); overflow:hidden; }
 .mkt-ch-bar i { display:block; height:6px; border-radius:3px; background:#60a5fa; }
 .mkt-ch-grid em { display:block; font-style:normal; font-size:10.5px; color:var(--text3); }
-.mkt-ch-roi2 { font-weight:700; font-family:'IBM Plex Mono',monospace; display:flex; align-items:center; gap:8px; }
+.mkt-ch-roi2 { font-weight:700; font-family:'Sarabun',sans-serif; display:flex; align-items:center; gap:8px; }
 .mkt-ch-na { color:var(--text3); font-weight:400; }
 .mkt-ch-best { font-family:'Sarabun',sans-serif; font-size:10px; font-weight:700; color:#16a34a; background:rgba(34,197,94,.12); padding:2px 7px; border-radius:4px; }
 @media (max-width: 1100px) { .mkt-top-kpis { grid-template-columns:repeat(2,1fr); } }
@@ -412,9 +412,9 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 .mkt-tbl td { font-size:12.5px; font-variant-numeric:tabular-nums; }
 .mkt-tbl tr.mkt-roi-row { cursor:pointer; }
 .mkt-tbl tr.mkt-roi-row:hover > td { background:rgba(96,165,250,0.05); }
-.mkt-sku { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); }
+.mkt-sku { font-family:'Sarabun',sans-serif; font-size:10px; color:var(--text3); }
 .mkt-sub { font-size:10.5px; color:var(--text3); margin-top:2px; }
-.mkt-roi-v { font-family:'IBM Plex Mono',monospace; }
+.mkt-roi-v { font-family:'Sarabun',sans-serif; }
 .mkt-mix { position:relative; height:14px; }
 .mkt-mix-bar { display:flex; height:14px; border-radius:4px; overflow:hidden; background:var(--border); }
 .mkt-mix-bar i { display:block; height:100%; }
@@ -474,7 +474,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 #tblTtProduct tr.ttp-basket.first > td { box-shadow:inset 0 6px 6px -6px rgba(0,0,0,.35); }
 #tblTtProduct tr.ttp-basket.first > td:first-child { box-shadow:inset 3px 0 0 #60a5fa, inset 0 6px 6px -6px rgba(0,0,0,.35); }
 #tblTtProduct tr.ttp-basket.last > td { border-bottom:2px solid var(--border); }
-#tblTtProduct td.ttp-roi { font-family:'IBM Plex Mono',monospace; font-weight:600; }
+#tblTtProduct td.ttp-roi { font-family:'Sarabun',sans-serif; font-weight:600; }
 .ttp-of { font-size:11px; color:var(--text3); }
 .ttp-cell { display:flex; gap:10px; align-items:center; }
 .ttp-img { width:44px; height:44px; border-radius:8px; object-fit:cover; flex:0 0 44px; background:var(--bg3); border:1px solid var(--border); }
@@ -675,7 +675,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-card-v { font-size:30px; font-weight:700; color:var(--text); margin:4px 0 6px; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
   .tr-card-m { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text3); }
   .tr-card-m > span + span::before { content:'·'; margin-right:14px; color:var(--border); }
-  .tr-sku { font-family:'IBM Plex Mono',monospace; font-size:11px; }
+  .tr-sku { font-family:'Sarabun',sans-serif; font-size:11px; }
   .tr-i { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; font-size:11px; color:var(--text3); cursor:default; vertical-align:1px; font-weight:400; }
   .tr-i:hover { color:var(--text); }
   /* (2026-10-27) % ของยอดขายข้างตัวเลขใหญ่ · ขั้นตอนการคิด 3 ขั้น */
@@ -799,7 +799,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.04-d"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.04-f"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1346,7 +1346,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <div class="card"><div class="card-title">% ค่า Ads / GMV</div><div class="kpi-value" id="adp-pct">—</div><div class="kpi-sub">ค่า Ads ต่อยอดขาย</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <span style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">ช่วงเวลา:</span>
+        <span style="font-size:11px;color:var(--text3);font-family:'Sarabun',sans-serif;">ช่วงเวลา:</span>
         <div class="toggle-group">
           <button class="toggle-btn" id="adp-yr" onclick="setAdpView('year',this)">ทั้งปี</button>
           <button class="toggle-btn active" id="adp-mo" onclick="setAdpView('month',this)">รายเดือน</button>
@@ -1551,7 +1551,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div class="section-title">รายงานรายวัน — ค่า Ads เทียบยอดขายจริง TikTok <span id="tta-dr-count" class="sa-note"></span> <span class="pr-i" data-tip="แยกค่า Ads ตามประเภท แล้วจับคู่กับยอดขายจริงของช่องทางที่ Ads นั้นดัน · ROAS = ยอดขายจริง ÷ ค่า Ads · % Ads = ค่า Ads ÷ ยอดขายจริง · เขียว = % Ads ไม่เกิน 18% (ROAS 5.56x ขึ้นไป) · กดตัวเลขที่มีเส้นประเพื่อดูที่มา">ⓘ</span></div>
           <div style="display:flex;gap:8px;align-items:center;">
             <div style="position:relative;"><button class="btn btn-ghost" id="ttaDailyRepMetricsBtn" onclick="toggleMetricsPanel('ttaDailyRep')">⚙ Metrics <span id="ttaDailyRep-metric-count" style="color:var(--accent);"></span></button>
-              <div id="ttaDailyRep-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaDailyRep-metrics-checks"></div>
+              <div id="ttaDailyRep-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaDailyRep-metrics-checks"></div>
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('ttaDailyRep')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('ttaDailyRep')">เลือกทั้งหมด</button></div></div></div>
             <button class="btn btn-ghost" onclick="exportTable('tblTtaDailyRep')">⬇ Export CSV</button>
           </div></div>
@@ -1567,7 +1567,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <select class="ls-input" id="ttaCreatorSrc" style="width:130px;padding:6px 10px;font-size:12px;" onchange="_ttaCrShow=50;renderTtaCreatorSummary()"><option value="">ทุกแหล่ง</option><option value="deesay">🏠 Deesay</option><option value="kol">🎭 KOL</option></select>
             <input type="text" class="ls-input" id="ttaCreatorSearch" placeholder="🔎 ค้นหา creator เช่น @beam_reviews" oninput="debouncedTtaCreatorAndTable()" style="width:220px;padding:6px 10px;font-size:12px;">
             <div style="position:relative;"><button class="btn btn-ghost" id="ttaCreatorMetricsBtn" onclick="toggleMetricsPanel('ttaCreator')">⚙ Metrics <span id="ttaCreator-metric-count" style="color:var(--accent);"></span></button>
-              <div id="ttaCreator-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaCreator-metrics-checks"></div>
+              <div id="ttaCreator-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaCreator-metrics-checks"></div>
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('ttaCreator')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('ttaCreator')">เลือกทั้งหมด</button></div></div></div>
             <button class="btn btn-ghost" onclick="exportTable('tblTtaCreator')">⬇ Export CSV</button>
           </div></div>
@@ -1590,7 +1590,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               ⚙ Metrics <span id="tta-metric-count" style="color:var(--accent);"></span>
             </button>
             <div id="tta-metrics-panel" class="metrics-panel" style="display:none;">
-              <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
+              <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
               <div id="tta-metrics-checks"></div>
               <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
                 <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('tta')">ค่าแนะนำ</button>
@@ -1659,7 +1659,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         .ls-tag { display:inline-block; margin-left:8px; padding:1px 7px; border-radius:6px; font-size:11.5px; font-weight:600; font-family:'Sarabun',sans-serif; color:var(--text2); background:var(--bg3); border:1px solid var(--border); }
         .ls-tag.is-pre { color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, var(--border)); }
         #lsSearchCard { scroll-margin-top:72px; }
-        .ls-form { display:grid; grid-template-columns:minmax(240px, 1.7fr) minmax(220px, 1.15fr) minmax(220px, 1.15fr) minmax(130px, .7fr) auto; gap:12px; align-items:end; }
+        .ls-form { display:grid; grid-template-columns:minmax(240px, 1.6fr) minmax(220px, 1.15fr) minmax(220px, 1.15fr) minmax(130px, .7fr) auto; gap:12px; align-items:end; }
         .ls-lb { display:flex; align-items:center; gap:6px; height:20px; font-size:12.5px; line-height:20px; color:var(--text3); font-weight:600; margin-bottom:6px; white-space:nowrap; }
         .ls-lb .pr-i { line-height:1; display:inline-flex; align-items:center; height:20px; }
         .ls-dt { display:flex; gap:6px; } .ls-dt .ui-datebtn { flex:1; min-width:0; }
@@ -1667,11 +1667,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         .ls-time.is-bad { border-color:var(--red) !important; }
         .ls-cr { position:relative; display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-height:34px; padding:3px 8px !important; cursor:text; }
         .ls-cr input { flex:1; min-width:120px; border:0; background:transparent; outline:none; color:var(--text); font:inherit; font-size:12.5px; padding:4px 2px; }
-        .ls-chip { display:inline-flex; align-items:center; gap:4px; background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:1px 4px 1px 10px; font-size:12px; font-family:'IBM Plex Mono',monospace; color:var(--text); }
-        .ls-chip button { border:0; background:none; color:var(--text3); cursor:pointer; padding:0 4px; font-size:12px; line-height:1; }
+        .ls-chip { display:inline-flex; align-items:center; gap:4px; background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:1px 4px 1px 10px; font-size:12px; font-family:'Sarabun',sans-serif; color:var(--text); }
+        .ls-chip button { border:0; background:none; color:var(--text3); cursor:pointer; padding:0 4px; font-size:12px; line-height:1; font-family:'Sarabun',sans-serif; }
         .ls-chip button:hover { color:var(--red); }
         #lsCreatorDropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--bg2); border:1px solid var(--border); border-radius:8px; max-height:240px; overflow-y:auto; z-index:300; box-shadow:0 8px 24px rgba(0,0,0,.25); padding:4px; }
-        #lsCreatorDropdown .ls-ddi { padding:7px 10px; border-radius:6px; cursor:pointer; font-size:12.5px; font-family:'IBM Plex Mono',monospace; color:var(--text); }
+        #lsCreatorDropdown .ls-ddi { padding:7px 10px; border-radius:6px; cursor:pointer; font-size:12.5px; font-family:'Sarabun',sans-serif; color:var(--text); }
         #lsCreatorDropdown .ls-ddi:hover { background:var(--bg3); }
         .ls-row2 { display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
         .ls-hero { grid-template-columns:repeat(6, minmax(0, 1fr)) !important; }
@@ -1707,7 +1707,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div><div class="ls-lb">ตั้งแต่</div><div class="ls-dt"><input type="date" id="lsFromD" aria-label="วันที่เริ่ม"><input type="text" class="ls-input ls-time" id="lsFromT" placeholder="00:00:00" inputmode="numeric" maxlength="8" aria-label="เวลาเริ่ม" onchange="lsFixTime(this)"></div></div>
           <div><div class="ls-lb">ถึง</div><div class="ls-dt"><input type="date" id="lsToD" aria-label="วันที่ถึง"><input type="text" class="ls-input ls-time" id="lsToT" placeholder="23:59:59" inputmode="numeric" maxlength="8" aria-label="เวลาถึง" onchange="lsFixTime(this)"></div></div>
           <div><div class="ls-lb">Order Channel <span class="pr-i" data-tip="LIVE = ออเดอร์จาก Live · Videos = จากคลิป · Product cards = จากหน้าสินค้า">ⓘ</span></div><select class="ls-input" id="lsOrderChannel" style="width:100%;"><option value="">ทั้งหมด</option></select></div>
-          <div><button class="btn btn-primary" id="lsSearchBtn" onclick="runLiveSearch()" style="height:34px;min-width:96px;justify-content:center;">ค้นหา</button></div>
+          <div style="display:flex;gap:8px;"><button class="btn btn-primary" id="lsSearchBtn" onclick="runLiveSearch()" style="height:34px;min-width:96px;justify-content:center;">ค้นหา</button>
+            <button class="btn btn-ghost" id="lsResetBtn" onclick="lsReset()" data-tip="ล้าง Creator · วันเวลา · Order Channel และผลการค้นหา เพื่อเริ่มค้นใหม่" style="height:34px;justify-content:center;">ล้างค่า</button></div>
         </div>
       </section>
 
@@ -1805,12 +1806,12 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <section id="cp-kpis" class="ui-metrics sa-hero" aria-label="ตัวเลขหลัก"></section>
         <section class="card sa-panel" style="margin-bottom:16px;">
           <div class="sa-ph"><h2 id="cp-trend-title">ยอดขาย vs ต้นทุน รายวัน</h2>
-            <div class="cp-lg"><span><i style="background:#2a78d6;"></i>ยอดขาย (ออเดอร์จริง)</span><span><i style="background:#ef4444;"></i>ค่า Ads</span><span><i style="background:#a78bfa;"></i>ค่าจ้าง KOL (วันโพสต์)</span><span><b style="color:#a78bfa;">▼</b> วันที่มีโพสต์ KOL</span></div></div>
+            <div class="cp-lg"><span><i style="background:#2a78d6;"></i>ยอดขาย (ออเดอร์จริง)</span><span><i style="background:#ef4444;"></i>ค่า Ads</span><span><i style="background:#a78bfa;"></i>ค่าจ้าง KOL (วันโพสต์)</span><span class="pr-i" data-tip="ช่วงไม่เกิน 1 เดือน = รายวัน · ยาวกว่านั้น = รายเดือน (เดือนที่ยังไม่จบเป็นเส้นประ นับถึงวันสุดท้ายของตัวกรอง)&#10;ยอดขายและต้นทุนใช้แกนเงินเดียวกัน · เส้นต้นทุนยิ่งต่ำกว่าเส้นยอดขายมาก ยิ่งคุ้ม&#10;ค่าจ้าง KOL นับตามวันโพสต์ (ไฟล์ทีม KOL) · ค่า Ads ตามวันที่ใช้เงิน&#10;ชี้เมาส์เพื่อดูต้นทุนรวม % ของยอดขาย และงาน KOL ที่โพสต์">ⓘ</span></div></div>
           <div class="chart-wrap" style="height:320px;"><canvas id="chartCpTrend"></canvas></div>
         </section>
         <div id="cp-overview-section">
           <section class="card sa-panel" id="cpCrCard" style="margin-bottom:16px;">
-            <div class="sa-ph"><h2>Creator ทั้งหมด <span id="cpCrCount" class="sa-note"></span> <span class="pr-i" data-tip="ยอดขาย TikTok ต่อ Creator ตามช่วงวันที่ด้านบน (ออเดอร์จริง หักยกเลิก / คืนแล้ว) · รวมบัญชีร้านด้วย จึงรวมทุกแถวเท่าการ์ดยอดขายรวม&#10;กดช่องทางด้านล่างเพื่อกรองตาราง · กดชื่อเพื่อดูรายละเอียดของคนนั้น&#10;ตัวกรอง ทุกคน / KOL / Affiliate ด้านบนใช้กับตารางนี้ด้วย">ⓘ</span></h2>
+            <div class="sa-ph"><h2>Creator ทั้งหมด <span id="cpCrCount" class="sa-note"></span> <span class="pr-i" data-tip="ยอดขาย TikTok ต่อ Creator ตามช่วงวันที่ด้านบน (ออเดอร์จริง หักยกเลิก / คืนแล้ว) · รวมบัญชีร้านด้วย · เลือกช่อง ทั้งหมด แถวรวมจะเท่าการ์ดยอดขายรวม&#10;กดช่องทางด้านล่างเพื่อกรองตาราง · กดชื่อเพื่อดูรายละเอียดของคนนั้น&#10;ตัวกรอง ทุกคน / KOL / Affiliate ด้านบนใช้กับตารางนี้ด้วย">ⓘ</span></h2>
               <div class="cp-seg" id="cpCrSortSeg"><button class="on" data-s="rev" onclick="cpCrSetSort('rev')">ยอดขายสูงสุด</button><button data-s="trend" onclick="cpCrSetSort('trend')">มาแรง 7 วัน</button></div></div>
             <div id="cpOcTiles" class="ui-metrics cp-oc" role="tablist" aria-label="กรองตามช่องทาง"></div>
             <div class="table-wrap" style="overflow-x:auto;">
@@ -2043,7 +2044,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
             <div style="position:relative;">
               <button class="btn btn-ghost" id="shadsMetricsBtn" onclick="toggleMetricsPanel('shads')" style="white-space:nowrap;">⚙ Metrics <span id="shads-metric-count" style="color:var(--accent);"></span></button>
               <div id="shads-metrics-panel" class="metrics-panel" style="display:none;">
-                <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
+                <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div>
                 <div id="shads-metrics-checks"></div>
                 <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
                   <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('shads')">ค่าแนะนำ</button>
@@ -3494,7 +3495,7 @@ function renderFbeTrendChart() {
       plugins: { legend: { labels: { color: chartLegendColor(), font: { family: 'Sarabun', size: 11 }, boxWidth: 10 } } },
       scales: {
         x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
-        y: { ticks: { color: chartTickColor(), font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: chartGridColor() } }
+        y: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } }
       }
     }
   });
@@ -3520,7 +3521,7 @@ function renderFbePostTypeBreakdown() {
       <span style="width:8px;height:8px;border-radius:50%;background:${typeColorMap[type] || '#9090a8'};flex-shrink:0;"></span>
       <span style="width:60px;">${typeLabels[type] || type}</span>
       <div class="fbe-bar-track"><div class="fbe-bar-fill" style="width:${(count/total*100).toFixed(0)}%;background:${typeColorMap[type] || '#9090a8'};"></div></div>
-      <span style="font-family:'IBM Plex Mono',monospace;">${count}</span>
+      <span style="font-family:'Sarabun',sans-serif;">${count}</span>
     </div>
   `).join('') : '<div class="empty" style="padding:16px 0;">ไม่มีโพสต์ในช่วงที่เลือก</div>';
 }
@@ -3915,7 +3916,7 @@ async function renderMtHub() {
   const prods = Object.entries(byProd).sort((a, b) => b[1].sales - a[1].sales);
   const pct = v => tSales ? (v / tSales * 100).toFixed(1) + '%' : '—';
   const rank = i => `<td class="rank ${i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''}">${i + 1}</td>`;
-  const prodCell = sku => `<td>${ttcEsc(skuToName(sku))} <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${ttcEsc(sku)}</span></td>`;
+  const prodCell = sku => `<td>${ttcEsc(skuToName(sku))} <span style="font-family:'Sarabun',sans-serif;font-size:10.5px;color:var(--text3);">${ttcEsc(sku)}</span></td>`;
   if (!R) {
     document.getElementById('ttlMtSide').textContent = 'ยอดขายแยกห้าง';
     document.getElementById('theadMtSide').innerHTML = `<tr><th>ห้าง</th><th class="num">ยอดขาย</th><th class="num">ชิ้น ${mtTip('จำนวนชิ้นที่ห้างขายออก')}</th><th class="num">สาขา ${mtTip('จำนวนสาขาที่มียอด · — = ห้างส่งเป็นยอดรวม')}</th><th class="num">สัดส่วน ${mtTip('ยอดขายห้างนี้ ÷ ยอด Modern Trade ทั้งหมดในช่วงที่เลือก')}</th><th class="num">ข้อมูลถึง ${mtTip('เดือนล่าสุดที่ห้างส่งไฟล์รายงานมา')}</th></tr>`;
@@ -3992,7 +3993,7 @@ const CP_M = {
   purchases:      { label: 'ซื้อ (pixel)', fmt: r => CP_NUM(+r.purchases), val: r => +r.purchases },
   purchase_value: { label: 'มูลค่าซื้อ (pixel)', fmt: r => CP_MONEY(+r.purchase_value), val: r => +r.purchase_value },
   days:           { label: 'จำนวนวันที่รัน', fmt: r => fmt(+r.days || 0), val: r => +r.days || 0 },
-  period:         { label: 'ช่วงที่รัน', fmt: r => `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;white-space:nowrap;">${thShort(r.first_date)}${r.last_date !== r.first_date ? ' – ' + thShort(r.last_date) : ''}</span>`, val: r => r.first_date || '' }
+  period:         { label: 'ช่วงที่รัน', fmt: r => `<span style="font-family:'Sarabun',sans-serif;font-size:10.5px;white-space:nowrap;">${thShort(r.first_date)}${r.last_date !== r.first_date ? ' – ' + thShort(r.last_date) : ''}</span>`, val: r => r.first_date || '' }
 };
 const CP_ORDER = ['spend','impressions','reach','frequency','cpm','link_clicks','ctr','cpc','lpv','cost_lpv','vc','atc','cost_atc','sh_pur','sh_val','roas_sh','cpa_sh','aov_sh','purchases','purchase_value','days','period'];
 function shCpasRegister() {
@@ -4005,7 +4006,7 @@ function shCpasRegister() {
   try { applyMetricPrefs(['shCpasCamp', 'shCpasAds']); } catch (e) { console.warn('cpas prefs', e.message); }
 }
 const cpMetricsBtn = pg => `<div style="position:relative;"><button class="btn btn-ghost" id="${pg}MetricsBtn" onclick="toggleMetricsPanel('${pg}')">⚙ Metrics <span id="${pg}-metric-count" style="color:var(--accent);"></span></button>
-  <div id="${pg}-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="${pg}-metrics-checks"></div>
+  <div id="${pg}-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="${pg}-metrics-checks"></div>
     <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('${pg}')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('${pg}')">เลือกทั้งหมด</button></div></div></div>`;
 // (2026-10-02) ตาราง CPAS กดหัวคอลัมน์เพื่อเรียงได้ (เดิมเรียงตามค่า Ads อย่างเดียว)
 const _shCpasSort = { shCpasCamp: { k: 'spend', d: 'desc' }, shCpasAds: { k: 'spend', d: 'desc' } };
@@ -4420,9 +4421,6 @@ async function renderCreatorPerf() {
     + `<div class="ui-metric is-static" id="cp-kpi-roi">${cpMetricInner('ROAS', skel, '<span>&nbsp;</span>')}</div>`
     + `<div class="ui-metric is-static" id="cp-kpi-cost">${cpMetricInner('ต้นทุนรวม', skel, '<span>&nbsp;</span>')}</div>`
     + `<div class="ui-metric is-static">${cpMetricInner('ยอดยกเลิก / คืน', fmt(cancelledRev), `<span>${cancelledOrd ? fmt(cancelledOrd) + ' ออเดอร์' : ((totalRev + cancelledRev) ? (cancelledRev / (totalRev + cancelledRev) * 100).toFixed(1) + '% ของยอดก่อนหักยกเลิก' : '—')}</span>`, 'ยอดของออเดอร์ที่ยกเลิก / คืนเงิน · ไม่รวมในยอดขายรวม แยกไว้ให้ดู', cancelledRev ? 'var(--red)' : '')}</div>`;
-  document.getElementById('cp-trend-title').textContent = cpSelectedCreator
-    ? `ยอดขาย vs ต้นทุน รายวัน — ${cpSelectedCreator}`
-    : 'ยอดขาย vs ต้นทุน รายวัน — ' + (cpType === 'all' ? 'รวมทุก creator' : 'เฉพาะ ' + cpType);
   document.getElementById('cp-sku-title').textContent = cpSelectedCreator
     ? `Top SKU ของ ${cpSelectedCreator}`
     : (cpType === 'all' ? 'Top SKU' : 'Top SKU — เฉพาะ ' + cpType);
@@ -4572,7 +4570,8 @@ async function loadCpCosts() {
     // (2026-10-06) ตัวกรอง KOL / Affiliate: ค่าจ้าง KOL ไม่นับตอนดูเฉพาะ Affiliate · ค่า Ads เฉพาะคลิปของคนในกลุ่มที่เลือก
     const posts = (target || cpType !== 'Affiliate') ? kolPostsInRange(from, to).filter(p => !target || p.handle === target) : [];
     const fee = posts.reduce((s, p) => s + p.budget, 0);
-    const spend = target ? (cpTta.clipsByHandle[target] || []).reduce((s, c) => s + (c.spend || 0), 0) : cpTta.handles.filter(r => cpTypeOk(r.handle)).reduce((s, r) => s + (+r.spend || 0), 0);
+    // (2026-11-04) ค่า Ads บนการ์ด = ผลรวมชุดเดียวกับเส้นค่า Ads ในกราฟ (เดิมการ์ดไม่นับคลิปที่ไม่รู้ชื่อ Creator → การ์ดกับกราฟไม่เท่ากัน)
+    const spend = Object.values(cpDailyAdSpend(from, to, target)).reduce((s, v) => s + v, 0);
     fillCpCostKpis(fee, spend, _cpVideosRev);
     renderCpTrendChart();
   };
@@ -4916,6 +4915,8 @@ function cpDailyAdSpend(from, to, target) {
   return m;
 }
 function renderCpTrendChart() {
+  // (2026-11-04) อ่านง่ายขึ้น: ช่วงไม่เกิน 1 เดือน = รายวัน · ยาวกว่า = รายเดือน (กฎเดียวกับทุกหน้า — เดิมรายวันเสมอ ทั้งปีเลยเป็นยึกยือ 300 จุด)
+  //   ยอดขายกับต้นทุนใช้แกนเงินเดียวกัน (เดิมแยก 2 แกน ทำให้เส้นค่า Ads ดูสูงเกือบเท่ายอดขาย) · เลิกแถวสามเหลี่ยมวันโพสต์ — รายชื่องาน KOL อยู่ในกล่องตอนชี้เมาส์
   const from = getDateValue('From'), to = getDateValue('To');
   const target = cpSelectedCreator ? cpNormHandle(cpSelectedCreator) : null;
   const feeByDay = {}, postsByDay = {};
@@ -4926,52 +4927,56 @@ function renderCpTrendChart() {
     });
   }
   const adByDay = cpTta.rangeKey ? cpDailyAdSpend(from, to, target) : {};
-  // แกน x = ทุกวันที่มีอย่างใดอย่างหนึ่ง (ยอด/ค่าแอด/โพสต์) เรียงตามวัน
-  const days = [...new Set([...Object.keys(_cpTrendByDay), ...Object.keys(feeByDay), ...Object.keys(adByDay)])].sort();
-  if (!days.length) { makeChart('chartCpTrend', 'line', [], []); return; }
-  const many = days.length > 60;
+  const daily = isShortRange(from, to), bk = d => daily ? d : d.slice(0, 7);
+  const B = {}, get = k => (B[k] = B[k] || { s: 0, a: 0, f: 0, p: [] });
+  Object.entries(_cpTrendByDay).forEach(([d, v]) => { get(bk(d)).s += v; });
+  Object.entries(adByDay).forEach(([d, v]) => { get(bk(d)).a += v; });
+  Object.entries(feeByDay).forEach(([d, v]) => { get(bk(d)).f += v; });
+  Object.entries(postsByDay).forEach(([d, ps]) => { get(bk(d)).p.push(...ps); });
+  const keys = Object.keys(B).filter(k => k >= bk(from) && k <= bk(to)).sort();
+  const tEl = document.getElementById('cp-trend-title');
+  if (tEl) tEl.textContent = `ยอดขาย vs ต้นทุน ${daily ? 'รายวัน' : 'รายเดือน'} — ` + (cpSelectedCreator || (cpType === 'all' ? 'รวมทุก creator' : 'เฉพาะ ' + cpType));
+  if (!keys.length) { makeChart('chartCpTrend', 'line', [], []); return; }
+  const thD = d => new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  const endOfMonth = m => { const x = new Date(+m.slice(0, 4), +m.slice(5, 7), 0); return fmtDateISO(x); };
+  const lab = k => daily ? thD(k) : MONTHS_TH[+k.slice(5, 7) - 1] + ' ' + k.slice(2, 4) + (k === bk(to) && to < endOfMonth(k) ? ` (ถึง ${+to.slice(8, 10)})` : '');
+  const many = keys.length > 40, pr = many ? 0 : 3;
+  // เดือนล่าสุดที่ยังไม่จบ (รายเดือน) → เส้นช่วงสุดท้ายเป็นเส้นประ จะได้ไม่ดูเหมือนยอดตก
+  const partial = !daily && to < endOfMonth(keys[keys.length - 1]);
+  const seg = { borderDash: c => partial && c.p1DataIndex === keys.length - 1 ? [5, 5] : undefined };
   const datasets = [
-    { type: 'line', label: 'ยอดขาย (ออเดอร์จริง)', data: days.map(dt => _cpTrendByDay[dt] || 0), yAxisID: 'y', order: 1,
-      borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', borderWidth: 2, pointRadius: many ? 0 : 3, pointHoverRadius: 5, fill: true, tension: 0.3 },
-    { type: 'line', label: 'ค่า Ads', data: days.map(dt => adByDay[dt] || 0), yAxisID: 'y2', order: 3,
-      borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.10)', borderWidth: 2, pointRadius: many ? 0 : 3, pointHoverRadius: 5, tension: 0.3 },
-    { type: 'line', label: 'ค่าจ้าง KOL', data: days.map(dt => feeByDay[dt] || 0), yAxisID: 'y2', order: 2,
-      borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.10)', borderWidth: 2, borderDash: [5, 4], pointRadius: many ? 0 : 3, pointHoverRadius: 5, tension: 0.3,
-      hidden: !days.some(dt => feeByDay[dt]) },   // ไม่มีค่าจ้าง KOL ในช่วงนี้ → ไม่วาดเส้นศูนย์
-    { type: 'line', label: 'โพสต์', data: days.map(dt => postsByDay[dt] ? 1 : null), yAxisID: 'yMark', order: 0, spanGaps: false,
-      pointStyle: 'triangle', rotation: 180, pointRadius: many ? 6 : 8, pointHoverRadius: 10,
-      backgroundColor: '#a78bfa', borderColor: '#7c5cff', borderWidth: 1, showLine: false }
+    { label: 'ยอดขาย (ออเดอร์จริง)', data: keys.map(k => B[k].s), borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', fill: true, borderWidth: 2.5, pointRadius: pr, pointHoverRadius: 5, tension: 0.3, segment: seg },
+    { label: 'ค่า Ads', data: keys.map(k => B[k].a), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.10)', borderWidth: 2, pointRadius: pr, pointHoverRadius: 5, tension: 0.3, segment: seg },
+    { label: 'ค่าจ้าง KOL', data: keys.map(k => B[k].f), borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.10)', borderWidth: 2, borderDash: [5, 4], pointRadius: pr, pointHoverRadius: 5, tension: 0.3,
+      hidden: !keys.some(k => B[k].f) }   // ไม่มีค่าจ้าง KOL ในช่วงนี้ → ไม่วาดเส้นศูนย์
   ];
-  const thD = dt => new Date(dt + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-  makeChart('chartCpTrend', 'line', days, datasets, {
-    legend: { display: false }, // ใช้ legend ที่หัวการ์ดแทน (ไม่ซ้ำ)
-    options: { interaction: { mode: 'index', intersect: false } },
+  makeChart('chartCpTrend', 'line', keys.map(lab), datasets, {
+    legend: { display: false },   // ใช้ legend ที่หัวการ์ด
     scales: {
-      x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 14, callback: (v, i) => thD(days[i]) }, grid: { display: false } },
-      y: { position: 'left', ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() }, title: { display: true, text: 'ยอดขาย', color: chartTickColor(), font: { family: 'Sarabun', size: 10 } } },
-      y2: { position: 'right', beginAtZero: true, ticks: { color: '#ef4444', font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v) }, grid: { drawOnChartArea: false }, title: { display: true, text: 'ต้นทุน (Ads / ค่าจ้าง)', color: '#ef4444', font: { family: 'Sarabun', size: 10 } } },
-      yMark: { display: false, min: 0, max: 1.08 }
+      x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: daily ? 16 : 12 }, grid: { display: false }, border: { display: false } },
+      y: { beginAtZero: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 }, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } }
     },
     tooltip: {
-      filter: item => !(item.dataset.yAxisID === 'y2' && !item.raw) && !(item.dataset.label === 'โพสต์' && item.raw === null) && !(!target && item.dataset.label === 'ค่าจ้าง KOL'),
+      filter: item => !(item.dataset.label === 'ค่าจ้าง KOL' && !item.raw),
       callbacks: {
-        title: items => items.length ? thD(days[items[0].dataIndex]) : '',
-        label: item => {
-          if (item.dataset.label === 'โพสต์') {
-            const ps = postsByDay[days[item.dataIndex]] || [];
-            const lines = ps.slice(0, 10).map(p => target
-              ? `▼ ${p.products || p.content_name} · ${fmt(p.budget)}${p.clip ? ' · boost แล้ว' : ''}`
-              : `▼ ${p.kol_name || p.handle}${p.products ? ' — ' + p.products : ''}`);
-            if (ps.length > 10) lines.push(`…และอีก ${ps.length - 10} โพสต์`);
-            return lines;
+        label: item => ` ${item.dataset.label}: ${fmt(item.raw || 0)}`,
+        footer: items => {
+          if (!items.length) return [];
+          const i0 = items[0].dataIndex, b = B[keys[i0]], cost = b.a + b.f, out = [];
+          if (partial && i0 === keys.length - 1) out.push(`เดือนนี้ยังไม่จบ (นับถึง ${thD(to)})`);
+          if (cost > 0) out.push(`ต้นทุนรวม ${fmt(cost)}${b.s > 0 ? ` · ${(cost / b.s * 100).toFixed(1)}% ของยอดขาย` : ''}`);
+          if (b.p.length) {
+            out.push(`งาน KOL ที่โพสต์ ${fmt(b.p.length)} งาน`);
+            b.p.slice().sort((x, y) => (y.budget || 0) - (x.budget || 0)).slice(0, 5).forEach(p => out.push(`• ${target ? (p.products || p.content_name || '') : (p.kol_name || p.handle || '')}${p.budget ? ' · ' + fmt(p.budget) : ''}`));
+            if (b.p.length > 5) out.push(`…และอีก ${fmt(b.p.length - 5)} งาน`);
           }
-          return `${item.dataset.label}: ${fmt(item.raw || 0)}`;
-        },
-        afterBody: () => []
+          return out;
+        }
       }
     }
   });
 }
+
 function cpMetricInner(label, value, d, tip, col) {
   return `<span class="ui-metric-l">${label}${tip ? ` <span class="pr-i" data-tip="${tip}">ⓘ</span>` : ''}</span><span class="ui-metric-v" data-fit${col ? ` style="color:${col};"` : ''}>${value}</span><span class="sa-md">${d}</span>`;
 }
@@ -4982,7 +4987,7 @@ function fillCpCostKpis(fee, spend, rev, subtitle) {
   const roiCol = roi === null ? 'var(--text3)' : roi >= 3 ? 'var(--green)' : roi >= 1 ? 'var(--accent)' : 'var(--red)';
   const roiTag = roi === null ? 'ยังไม่มีต้นทุน' : roi >= 3 ? 'คุ้มมาก' : roi >= 1 ? 'คุ้ม' : 'ยังไม่คุ้ม';
   roiEl.innerHTML = cpMetricInner('ROAS', roi !== null ? roi.toFixed(2) + 'x' : '—', `<span style="color:${roiCol};font-weight:600;">${roiTag}</span>${roi !== null ? `<span>${kolRoiPct(roi)}</span>` : ''}`,
-    'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม · ROI = ROAS − 1&#10;ต้นทุนรวม = ค่าจ้าง KOL งาน TikTok (ไฟล์ทีม KOL ตามวันโพสต์ ตรงกับหน้า KOL) + ค่า Ads ที่ยิงคลิป (ตามวันที่ใช้เงิน)&#10;ไม่รวม LIVE · ยังไม่หักต้นทุนสินค้า&#10;เขียว ≥ 3x · ทอง 1–3x · แดง < 1x', roi !== null ? roiCol : '');
+    'ROAS = ยอดขาย Videos (ออเดอร์จริง) ÷ ต้นทุนรวม · ROI = ROAS − 1&#10;ต้นทุนรวม = ค่าจ้าง KOL งาน TikTok (ไฟล์ทีม KOL ตามวันโพสต์ ตรงกับหน้า KOL) + ค่า Ads ที่ยิงคลิป (ตามวันที่ใช้เงิน รวมคลิปที่ไม่รู้ชื่อ Creator · เท่าเส้นค่า Ads ในกราฟ)&#10;ไม่รวม LIVE · ยังไม่หักต้นทุนสินค้า&#10;เขียว ≥ 3x · ทอง 1–3x · แดง < 1x', roi !== null ? roiCol : '');
   costEl.innerHTML = cpMetricInner('ต้นทุนรวม', fmt(total), `<span><span style="color:#a78bfa;">●</span> ค่าจ้าง ${fmt(fee)}</span><span><span style="color:#ef4444;">●</span> ค่า Ads ${fmt(spend)}</span>`);
   if (window.UI && UI.fit) UI.fit();
 }
@@ -5070,6 +5075,19 @@ function lsLiveEnd(r) {
   if (r.et) return r.et;
   const nx = _lsLives.filter(x => x.username === r.username && x.st > r.st).sort((a, b) => a.st.localeCompare(b.st))[0];
   return nx ? lsShift(nx.st, -1) : [lsShift(r.st, 6 * 3600), lsLocal(new Date().toISOString())].sort()[0];
+}
+// (2026-11-04) ปุ่มล้างค่า: เคลียร์ช่องค้นหาทั้งหมด + ผลการค้นหา + แถวรอบ Live ที่เลือก (เดิมเลือกรอบแล้วค่าค้างอยู่ ต้องลบทีละช่อง)
+function lsReset() {
+  _lsSeq++;   // ผลค้นหาที่ยังโหลดอยู่ไม่ต้องแสดง
+  _lsPicked = null; _lsLastResult = null;
+  lsSelectedCreators = []; renderLsCreatorChips();
+  const cs = document.getElementById('lsCreatorSearch'); if (cs) cs.value = '';
+  lsSetDT('From', ''); lsSetDT('To', '');
+  const oc = document.getElementById('lsOrderChannel'); if (oc) oc.value = '';
+  const btn = document.getElementById('lsSearchBtn'); if (btn) { btn.disabled = false; btn.textContent = 'ค้นหา'; }
+  const pk = document.getElementById('lsPicked'); if (pk) pk.textContent = 'เลือกรอบ Live จากตารางด้านล่าง หรือกำหนด Creator และเวลาเอง';
+  document.getElementById('lsResults').style.display = 'none';
+  document.querySelectorAll('#tbodyLsLives tr.is-on').forEach(tr => tr.classList.remove('is-on'));
 }
 function lsPickLive(id) {
   const r = _lsLives.find(x => x.live_id === id); if (!r) return;
@@ -5382,12 +5400,12 @@ function renderPromotion(idSuffix, forceChannel) {
   const byRev = [...top20].sort((a, b) => { const av = promoGetVal(a), bv = promoGetVal(b); const c = typeof av === 'string' ? av.localeCompare(bv) : av - bv; return _promoSortDir === 'asc' ? c : -c; });
   tbP.innerHTML = byRev.map(([k, v], i) => `<tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${k}</td>
+      <td style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--text3);">${k}</td>
       <td style="color:var(--text);">${thaiNameForPromo(k)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.rev)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.ord)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--blue);">${fmt(Math.round(v.ord ? v.rev / v.ord : 0))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${totalRev ? (v.rev / totalRev * 100).toFixed(1) : '0.0'}%</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(v.rev)}</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(v.ord)}</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--blue);">${fmt(Math.round(v.ord ? v.rev / v.ord : 0))}</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--accent);">${totalRev ? (v.rev / totalRev * 100).toFixed(1) : '0.0'}%</td>
       <td>${cmpCell(v.rev, v.prev)}</td><td>${rankCell(v.prevRank, v.rank)}</td>
     </tr>`).join('') || '<tr><td colspan="9" class="empty">ไม่มีข้อมูล</td></tr>';
 
@@ -5399,10 +5417,10 @@ function renderPromotion(idSuffix, forceChannel) {
   const sortedProd = [...top20Prod].sort((a, b) => { const av = prodGetVal(a), bv = prodGetVal(b); const c = typeof av === 'string' ? av.localeCompare(bv) : av - bv; return _prodSortDir === 'asc' ? c : -c; });
   tbQ.innerHTML = sortedProd.map(([sku, v], i) => `<tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
+      <td style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--text3);">${sku}</td>
       <td style="color:var(--text);">${skuToName(sku)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.qty)} ชิ้น</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${totalQty ? (v.qty / totalQty * 100).toFixed(1) : '0.0'}%</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(v.qty)} ชิ้น</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--accent);">${totalQty ? (v.qty / totalQty * 100).toFixed(1) : '0.0'}%</td>
       <td>${cmpCell(v.qty, v.prev)}</td><td>${rankCell(v.prevRank, v.rank)}</td>
     </tr>`).join('') || '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 
@@ -5437,11 +5455,11 @@ function renderRealPromoAndUpsell() {
     const promoName = promotionsMap[sku] || '(ไม่พบชื่อโปรใน Google Sheet)';
     return `<tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
+      <td style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--text3);">${sku}</td>
       <td style="color:var(--text);">${promoName}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(v.rev))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.ord)}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${sharePct}%</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(Math.round(v.rev))}</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(v.ord)}</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--accent);">${sharePct}%</td>
     </tr>`;
   }).join('') || '<tr><td colspan="6" class="empty">ไม่มีออเดอร์ที่ match โปรในเดือนนี้</td></tr>';
 
@@ -5464,11 +5482,11 @@ function renderRealPromoAndUpsell() {
   document.getElementById('tbodyTopUpsell').innerHTML = sortedUpsell.map(([sku, v], i) => `
     <tr>
       <td class="rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${sku}</td>
+      <td style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--text3);">${sku}</td>
       <td style="color:var(--text);">${skuToName(sku)}</td>
       <td style="color:var(--text3);">— (ไม่แยกราคาต่อ SKU)</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(v.qty)} ชิ้น</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${fmt(v.count)} ครั้ง</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(v.qty)} ชิ้น</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--accent);">${fmt(v.count)} ครั้ง</td>
     </tr>`).join('') || '<tr><td colspan="6" class="empty">ไม่มีข้อมูล upsell ในเดือนนี้</td></tr>';
 }
 
@@ -5603,7 +5621,7 @@ function filterPtAddDropdown() {
   list.innerHTML = matches.slice(0,50).map(p => `
     <div onclick="addPtPromoRow('${p}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <div style="font-size:13px;">${thaiNameForPromoGlobal(p)}</div>
-      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${p}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Sarabun',sans-serif;">${p}</div>
     </div>`).join('') || '<div style="padding:8px 10px;color:var(--text3);font-size:12px;">ไม่พบโปรที่ขึ้นต้นด้วยคำนี้</div>';
 }
 
@@ -5689,8 +5707,8 @@ function renderPromoTargets() {
     const profitPct = aov ? profitPerBill / aov : 0;
 
     return `<tr>
-      <td style="font-size:12px;">${thaiNameForPromoGlobal(sku)}<br><span style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${sku}</span></td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--blue);">${fmt(Math.round(aov))}</td>
+      <td style="font-size:12px;">${thaiNameForPromoGlobal(sku)}<br><span style="font-size:9px;color:var(--text3);font-family:'Sarabun',sans-serif;">${sku}</span></td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--blue);">${fmt(Math.round(aov))}</td>
       ${editableCell(sku, 'target_close_rate', t.target_close_rate, '%')}
       ${editableCell(sku, 'target_cost_pct', t.target_cost_pct, '%')}
       ${editableCell(sku, 'target_ad_pct', t.target_ad_pct, '%')}
@@ -5698,13 +5716,13 @@ function renderPromoTargets() {
       ${windowCell(w.d1, targetQty)}
       ${windowCell(w.d3, targetQty * 3)}
       ${windowCell(w.d7, targetQty * 7)}
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(adPerOrder))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(cpl))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(leadPerDay))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(targetRevPerDay))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(Math.round(productCostBaht))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--green);">${fmt(Math.round(profitPerBill))}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--green);">${(profitPct*100).toFixed(1)}%</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(Math.round(adPerOrder))}</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(Math.round(cpl))}</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(Math.round(leadPerDay))}</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(Math.round(targetRevPerDay))}</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(Math.round(productCostBaht))}</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--green);">${fmt(Math.round(profitPerBill))}</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--green);">${(profitPct*100).toFixed(1)}%</td>
       <td><button class="btn btn-ghost" style="padding:2px 8px;font-size:11px;" onclick="removePtRow(${rowId})">✕</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="16" class="empty">ยังไม่มีโปรที่ติดตาม — กด "+ เพิ่มแถว" ด้านบน</td></tr>';
@@ -5951,7 +5969,7 @@ function filterNbProductDropdown() {
   list.innerHTML = filtered.slice(0,25).map(sku => `
     <div onclick="addNbProduct('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <div style="font-size:13px;color:var(--text);">${skuToName(sku)}</div>
-      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px;">${sku}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Sarabun',sans-serif;margin-top:1px;">${sku}</div>
     </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
 }
 function showNbProductDropdown() { const l=document.getElementById('nbProductDropdown'); if(l) l.style.display='block'; }
@@ -6183,7 +6201,7 @@ function showCRMDetail(key) {
   document.getElementById('tbodyCRMDetail').innerHTML = crmDetailData.slice(0,300).map((c, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${c.phone}</td>
+      <td style="font-family:'Sarabun',sans-serif;font-size:11px;">${c.phone}</td>
       <td>${c.name || '—'}</td>
       <td>${fmt(c.count)} ครั้ง</td>
       <td style="font-size:11px;white-space:normal;max-width:420px;">${c.history}</td>
@@ -6224,7 +6242,7 @@ function filterCrmProductDropdown() {
   list.innerHTML = filtered.slice(0,25).map(sku => `
     <div onclick="addCrmProduct('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <div style="font-size:13px;color:var(--text);">${skuToName(sku)}</div>
-      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px;">${sku}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Sarabun',sans-serif;margin-top:1px;">${sku}</div>
     </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
 }
 function showCrmProductDropdown() { const l=document.getElementById('crmProductDropdown'); if(l) l.style.display='block'; }
@@ -6245,7 +6263,7 @@ function removeCrmProduct(sku) {
 }
 function renderCrmProductChips() {
   const el = document.getElementById('crmProductChips'); if (!el) return;
-  el.innerHTML = crmSelectedSKUs.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i%COLORS.length]};" onclick="removeCrmProduct('${sku}')">${skuToName(sku)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;">(${sku})</span> ✕</span>`).join('');
+  el.innerHTML = crmSelectedSKUs.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i%COLORS.length]};" onclick="removeCrmProduct('${sku}')">${skuToName(sku)} <span style="font-family:'Sarabun',sans-serif;font-size:10px;opacity:0.8;">(${sku})</span> ✕</span>`).join('');
   document.getElementById('crmProductClearBtn').style.display = crmSelectedSKUs.length ? 'inline-flex' : 'none';
 }
 
@@ -6302,7 +6320,7 @@ function renderSkuDropdown(query) {
   if (!list) return;
   const all = window._skuAllSKUs || [], selected = window._selectedSKUs || [];
   const filtered = all.filter(s => s.toLowerCase().includes(query.toLowerCase()) && !selected.includes(s));
-  list.innerHTML = filtered.slice(0,20).map(sku => `<div onclick="addSkuChip('${sku}')" style="padding:7px 12px;cursor:pointer;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--text2);border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${sku}</div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบ SKU</div>';
+  list.innerHTML = filtered.slice(0,20).map(sku => `<div onclick="addSkuChip('${sku}')" style="padding:7px 12px;cursor:pointer;font-size:12px;font-family:'Sarabun',sans-serif;color:var(--text2);border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${sku}</div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบ SKU</div>';
 }
 
 function filterSkuDropdown() { showSkuDropdown(); renderSkuDropdown(document.getElementById('skuSearchInput')?.value || ''); }
@@ -6458,12 +6476,12 @@ function renderMomentumTable() {
   const chTag = (c, up) => c ? `<span style="font-size:10.5px;color:${up ? 'var(--green)' : 'var(--red)'};white-space:nowrap;">${up ? '▲' : '▼'} ${ttcEsc(c.channel)} ${up ? '+' : '−'}${fmt(Math.abs(c.diff))}</span>` : '';
   document.getElementById('tbodySkuRev').innerHTML = rows.map(r => `<tr style="cursor:pointer;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')" title="คลิกเพื่อเจาะสินค้านี้">
       <td class="rank">${rankOf[r.sku]}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);">${ttcEsc(r.sku)}</td>
+      <td style="font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;color:var(--accent);">${ttcEsc(r.sku)}</td>
       <td>${ttcEsc(skuToName(r.sku))}</td>
       <td style="font-weight:600;"><span class="pl-trace" onclick="event.stopPropagation();traceSales(getDateValue('From'),getDateValue('To'),null,'${ttcEscAttr(r.sku)}')">${fmt(Math.round(r.rev_cur))}</span></td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${fmt(r.qty_cur)}</td>
+      <td style="font-family:'Sarabun',sans-serif;">${fmt(r.qty_cur)}</td>
       <td style="color:var(--text2);">${(r.qty_retail != null ? +r.qty_retail : +r.qty_cur) ? fmt(Math.round((r.rev_retail != null ? +r.rev_retail : +r.rev_cur) / (r.qty_retail != null ? +r.qty_retail : +r.qty_cur))) : '—'}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${r.share.toFixed(1)}%</td>
+      <td style="font-family:'Sarabun',sans-serif;color:var(--accent);">${r.share.toFixed(1)}%</td>
       <td>${pctCell(r.chg, r.rev_prev > 0)}<div style="font-size:9.5px;color:var(--text3);">ก่อน ${fmt(r.rev_prev)}</div></td>
       <td>${pctCell(r.chg3, r.rev_avg3 > 0)}<div style="font-size:9.5px;color:var(--text3);">เฉลี่ย ${fmt(r.rev_avg3)}</div></td>
       <td>${sparkline(r.weekly, r.st.key === 'down' ? '#ef4444' : r.st.key === 'up' ? '#22c55e' : '#c8a96e')}</td>
@@ -6473,7 +6491,7 @@ function renderMomentumTable() {
   const withBase = rows0.filter(r => r.rev_prev > 0 && mmCur(r) > 0);
   const ups = withBase.filter(r => r.chg >= MOMENTUM_UP).sort((a, b) => (mmCur(b) - b.rev_prev) - (mmCur(a) - a.rev_prev));
   const downs = withBase.filter(r => r.chg <= MOMENTUM_DOWN).sort((a, b) => (mmCur(a) - a.rev_prev) - (mmCur(b) - b.rev_prev));
-  const li = (r, up) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(skuToName(r.sku))} <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${ttcEsc(r.sku)}</span></span><span style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '+' : '−'}${fmt(Math.abs(mmCur(r) - r.rev_prev))} <span style="font-weight:400;color:var(--text3);">(${up ? '▲' : '▼'}${Math.abs(r.chg).toFixed(0)}%)</span></span></div>`;
+  const li = (r, up) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(skuToName(r.sku))} <span style="font-size:10px;color:var(--text3);font-family:'Sarabun',sans-serif;">${ttcEsc(r.sku)}</span></span><span style="white-space:nowrap;font-family:'Sarabun',sans-serif;font-size:12px;color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '+' : '−'}${fmt(Math.abs(mmCur(r) - r.rev_prev))} <span style="font-weight:400;color:var(--text3);">(${up ? '▲' : '▼'}${Math.abs(r.chg).toFixed(0)}%)</span></span></div>`;
   const chAgg = {}; rows0.forEach(r => (r.channels || []).forEach(c => { chAgg[c.channel] = chAgg[c.channel] || { cur: 0, prev: 0 }; chAgg[c.channel].cur += +c.cur || 0; chAgg[c.channel].prev += +c.prev || 0; }));
   const chLine = Object.entries(chAgg).map(([k, v]) => ({ k, diff: v.cur - v.prev, pct: v.prev ? (v.cur - v.prev) / v.prev * 100 : null })).sort((a, b) => a.diff - b.diff);
   const totCur = _momentum.total_cur_cmp != null ? +_momentum.total_cur_cmp : +_momentum.total_cur;
@@ -7014,7 +7032,7 @@ function filterFlowSkuDropdown() {
   list.innerHTML = filtered.slice(0,25).map(sku => `
     <div onclick="addFlowSKU('${sku}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <div style="font-size:12px;color:var(--text);">${skuToName(sku)}</div>
-      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">${sku}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Sarabun',sans-serif;">${sku}</div>
     </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบสินค้า</div>';
 }
 function showFlowSkuDropdown() { const l=document.getElementById('flowSkuDropdown'); if(l) l.style.display='block'; }
@@ -7393,7 +7411,7 @@ function renderTtProductPicker() {
     _ttProductRows.map(a => `<label style="display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:6px;cursor:pointer;font-size:11.5px;" onmouseover="this.style.background='rgba(96,165,250,0.08)'" onmouseout="this.style.background='none'">
         <input type="checkbox" ${picked.has(a.sku) ? 'checked' : ''} onclick="event.stopPropagation();ttProductTogglePick('${ttcEscAttr(a.sku)}')" style="cursor:pointer;">
         <span style="flex:1;">${ttcEsc(a.name)}</span>
-        <span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:10px;">${fmt(a.ads)}</span>
+        <span style="color:var(--text3);font-family:'Sarabun',sans-serif;font-size:10px;">${fmt(a.ads)}</span>
       </label>`).join('');
 }
 function renderTtProductChart() {
@@ -7476,11 +7494,11 @@ function renderTtProductTable() {
   document.getElementById('ttProductSummary').innerHTML =
     `รวม ${fmt(rows.length)} สินค้า · ค่า Ads ${fmt(Math.round(total.ads))} · ยอดขาย ${fmt(Math.round(total.gmv))} · ${fmt(Math.round(total.orders))} ออเดอร์ · ROI รวม ${total.ads > 0 ? (total.gmv / total.ads).toFixed(2) + 'x' : '—'}`;
   document.getElementById('tbodyTtProduct').innerHTML = rows.map(a => { const nb = (_ttProductBaskets[a.sku] || []).length, open = _ttProductOpen.has(a.sku); return `<tr ${nb ? `onclick="ttProductToggle('${ttcEscAttr(a.sku)}')" data-sku="${ttcEscAttr(a.sku)}" class="ttp-prod${open ? ' open' : ''}" style="cursor:pointer;"` : ''}>
-      <td>${nb ? `<span class="ttp-caret" style="display:inline-block;width:14px;color:var(--text3);">${open ? '▾' : '▸'}</span>` : '<span style="display:inline-block;width:14px;"></span>'}<b>${ttcEsc(a.name)}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span>${nb ? ` <span style="font-size:10.5px;color:var(--text3);">· ${nb} ตะกร้า</span>` : ''}</td>
+      <td>${nb ? `<span class="ttp-caret" style="display:inline-block;width:14px;color:var(--text3);">${open ? '▾' : '▸'}</span>` : '<span style="display:inline-block;width:14px;"></span>'}<b>${ttcEsc(a.name)}</b> <span style="font-family:'Sarabun',sans-serif;font-size:10px;color:var(--text3);">${ttcEsc(a.sku)}</span>${nb ? ` <span style="font-size:10.5px;color:var(--text3);">· ${nb} ตะกร้า</span>` : ''}</td>
       <td style="font-weight:600;">${fmt(Math.round(a.ads))}</td>
       <td>${fmt(Math.round(a.gmv))}</td>
       <td>${fmt(Math.round(a.orders))}</td>
-      <td style="font-weight:700;font-family:'IBM Plex Mono',monospace;">${a.roi !== null ? a.roi.toFixed(2) + 'x' : '—'}</td>
+      <td style="font-weight:700;font-family:'Sarabun',sans-serif;">${a.roi !== null ? a.roi.toFixed(2) + 'x' : '—'}</td>
       <td>${a.cpo !== null ? fmt(Math.round(a.cpo)) : '—'}</td>
       <td style="min-width:110px;">${a.share.toFixed(1)}%
         <div style="height:4px;border-radius:2px;background:var(--border);margin-top:3px;"><div style="height:4px;border-radius:2px;width:${Math.min(100, a.share).toFixed(0)}%;background:#22c55e;"></div></div></td>
@@ -7553,7 +7571,7 @@ function renderPlMatrix() {
       ${plTip('tip-pl-mx', 'ยอดขาย ค่า Ads และค่าช่องทาง เป็นของช่องทางนั้นจริงตามงบ<br>ค่าการตลาดตรง (KOL, Presenter) ใช้สัดส่วนที่บัญชีแบ่งให้แต่ละช่องทาง ซึ่งคงที่ทุกเดือน ไม่ได้ตามยอดขายจริง<br>สีเขียว = เหลือมาก · เหลือง/ส้ม = เหลือน้อย · แดง = ติดลบ')}</div>
     <table class="pl-mx"><thead><tr><th style="text-align:left;">สินค้า</th><th>รวมทุกช่องทาง</th>${chs.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>
       <tr style="border-bottom:1px solid var(--border);"><td class="nm"><b>ทุกสินค้า</b></td>${cell({ rev: all.rev, cm1: all.cm1, cm2: all.cm2, ads: 0, chc: 0 }).replace(/title="[^"]*"/, '')}${chs.map(c => cell(totCh[c])).join('')}</tr>
-      ${skus.map(s => { const o = _plView.find(v => v.sku === s); return `<tr><td class="nm" title="${o.name}"><b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${s}</span></td>${cell({ rev: o.rev, cm1: o.cm1, cm2: o.cm2, ads: o.ads, chc: o.ch, dir: o.dir })}${chs.map(c => cell(bySku[s] && bySku[s][c])).join('')}</tr>`; }).join('')}
+      ${skus.map(s => { const o = _plView.find(v => v.sku === s); return `<tr><td class="nm" title="${o.name}"><b>${o.name}</b> <span style="font-family:'Sarabun',sans-serif;font-size:10px;color:var(--text3);">${s}</span></td>${cell({ rev: o.rev, cm1: o.cm1, cm2: o.cm2, ads: o.ads, chc: o.ch, dir: o.dir })}${chs.map(c => cell(bySku[s] && bySku[s][c])).join('')}</tr>`; }).join('')}
     </tbody></table>`;
 }
 const plTip = (id, html, side = 'left') => `<span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;${side}:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">${html}</div></span>`;
@@ -8176,7 +8194,7 @@ function renderPlTable() {
   const cell = (o, key, v) => v ? `<td><div>${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, o.rev)}</div></td>` : '<td><span style="color:var(--text3);">—</span></td>';
   document.getElementById('tbodyPl').innerHTML = rows.map(o => `
     <tr class="pl-prow${op(o.sku) ? ' open' : ''}" onclick="plToggle('${o.sku}')" title="${op(o.sku) ? 'คลิกเพื่อหุบ' : 'คลิกเพื่อดูแยกตามช่องทาง'}">
-      <td class="c-left"><span class="pl-car">${op(o.sku) ? '▾' : '▸'}</span><b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
+      <td class="c-left"><span class="pl-car">${op(o.sku) ? '▾' : '▸'}</span><b>${o.name}</b> <span style="font-family:'Sarabun',sans-serif;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
       <td><span class="pl-n">${fmt(Math.round(o.rev))}</span></td>${cell(o, 'dir', o.dir)}${cell(o, 'ads', o.ads)}
       <td class="pl-cm">${cm(o.cm1, o.cm1p)}</td>${cell(o, 'ch', o.ch)}<td class="pl-cm">${cm(o.cm2, o.cm2p)}</td>
       ${cell(o, 'br', o.br)}<td class="pl-cm">${cm(o.cm3, o.cm3p)}</td>${cell(o, 'oh', o.oh)}${o.cogs == null ? '<td></td><td></td>' : `<td>${money(o.cogsOwn, o.rev)}</td><td class="pl-gift">${o.gift >= 0.5 ? money(o.gift, o.rev) : '<span style="color:var(--text3);">—</span>'}</td>`}<td class="pl-cm">${cmN(o.net, o.netp)}</td>
@@ -8689,7 +8707,7 @@ function renderMlTable() {
   const op = sku => _mlOpen.get(sku);
   const cell = (o, key, v) => v ? `<td class="pl-amt${op(o.sku) === key ? ' on' : ''}" onclick="event.stopPropagation();mlToggle('${o.sku}','${key}')" title="คลิกเพื่อดูรายละเอียด"><div>${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, o.rev)}</div></td>` : '<td><span style="color:var(--text3);">—</span></td>';
   document.getElementById('tbodyMl').innerHTML = rows.map(o => `
-    <tr><td class="c-left pl-amt${op(o.sku) === 'chan' ? ' on' : ''}" onclick="mlToggle('${o.sku}','chan')" title="กดเพื่อดูผลแยกตามช่องทาง"><span style="color:var(--text3);font-size:10px;">${op(o.sku) ? '▼' : '▶'}</span> <b>${o.name}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
+    <tr><td class="c-left pl-amt${op(o.sku) === 'chan' ? ' on' : ''}" onclick="mlToggle('${o.sku}','chan')" title="กดเพื่อดูผลแยกตามช่องทาง"><span style="color:var(--text3);font-size:10px;">${op(o.sku) ? '▼' : '▶'}</span> <b>${o.name}</b> <span style="font-family:'Sarabun',sans-serif;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
       <td class="pl-amt${op(o.sku) === 'rev' ? ' on' : ''}" onclick="event.stopPropagation();mlToggle('${o.sku}','rev')" title="กดเพื่อดูว่ายอดขายมาจากช่องทางไหน"><div>${fmt(Math.round(o.rev))}</div><div style="font-size:10.5px;color:var(--text3);">แยกช่องทาง</div></td>${cell(o, 'kol', o.kol)}${cell(o, 'ads', o.ads)}
       <td class="pl-cm"><div style="font-weight:700;font-size:13px;${o.cm1 < 0 ? 'color:var(--red);' : ''}">${isFinite(o.cm1p) ? o.cm1p.toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(Math.round(o.cm1))}</div></td>
       <td class="pl-cm"><b>${o.roi > 0 ? o.roi.toFixed(2) + 'x' : '—'}</b></td></tr>
@@ -8849,7 +8867,7 @@ function renderKolCal() {
   el.innerHTML = `<div style="font-size:11.5px;color:var(--text2);margin:0 0 8px;">ปี ${+year + 543} · แต่ละช่อง = ${({ amount: 'ค่าจ้าง KOL', spend: 'ค่าจ้าง + ค่า Ads', sales: 'ยอดขายที่ผูกได้', mer: 'MER' })[_kjCalMetric]} ของสินค้าในเดือนนั้น · สีเข้ม = มาก · ลายเส้น = เดือนที่ยังไม่ถึง · กดช่องเพื่อดูงาน
       ${plTip('tip-kjcal', 'ดูว่าแต่ละเดือนลงงบ KOL กับสินค้าไหนเท่าไร ใช้วางแผนเดือนถัดไป<br>ค่าจ้าง = เดือนที่โพสต์ · ค่า Ads / ยอดขาย = เดือนที่ใช้เงิน<br>แสดงทั้งปี (ปีของวันที่สิ้นสุดด้านบน) · ตัวกรองอื่นใช้ได้ ยกเว้นช่วงวันที่')}</div>
     <table class="kj-cal"><thead><tr><th style="text-align:left;">สินค้า</th>${months.map(m => `<th>${MONTHS_TH[+m.slice(5) - 1]}</th>`).join('')}<th>รวมทั้งปี</th></tr></thead><tbody>
-      ${skus.map(k => `<tr><td class="nm"><b>${_kjNames[k] || k}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);">${k}</span></td>${months.map(m => td(cell[k + '|' + m], k + '|' + m, m)).join('')}<td style="--h:transparent;"><div class="v">${show(val(skuT[k]))}</div><div class="n">${skuT[k].n} งาน</div></td></tr>`).join('')}
+      ${skus.map(k => `<tr><td class="nm"><b>${_kjNames[k] || k}</b> <span style="font-family:'Sarabun',sans-serif;font-size:10px;color:var(--text3);">${k}</span></td>${months.map(m => td(cell[k + '|' + m], k + '|' + m, m)).join('')}<td style="--h:transparent;"><div class="v">${show(val(skuT[k]))}</div><div class="n">${skuT[k].n} งาน</div></td></tr>`).join('')}
       <tr class="tot"><td class="nm">รวมทุกสินค้า</td>${months.map(m => `<td style="--h:transparent;">${mT[m] && (val(mT[m]) > 0 || mT[m].n > 0) ? `<div class="v">${show(val(mT[m]))}</div>${mT[m].n ? `<div class="n">${mT[m].n} งาน</div>` : ''}` : (m > nowM ? '<div class="n">ยังไม่ถึง</div>' : '')}</td>`).join('')}<td style="--h:transparent;"><div class="v">${show(val(Object.values(mT).reduce((t, o) => { t.amount += o.amount; t.ads += o.ads; t.sales += o.sales; t.n += o.n; return t; }, blank())))}</div></td></tr>
     </tbody></table><div id="kjCalPick" style="margin-top:12px;"></div>`;
 }
@@ -8989,7 +9007,7 @@ function renderKolTable() {
   { const box = document.getElementById('kjProdSum'); if (box) {   // (2026-10-01) เลือกสินค้า → สรุปว่าจ้างใคร กี่งาน ช่องทาง / ประเภทไหน
     if (!prod) box.style.display = 'none';
     else { const kols = new Set(J.map(r => kjDisplay(r))), cntBy = (f) => { const o = {}; J.forEach(r => { const k = f(r); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${fmt(v)}`).join(' · '); };
-      box.style.display = ''; box.innerHTML = `<b style="font-size:14px;">${_kjNames[prod] || prod}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">${prod}</span>
+      box.style.display = ''; box.innerHTML = `<b style="font-size:14px;">${_kjNames[prod] || prod}</b> <span style="font-family:'Sarabun',sans-serif;font-size:11px;color:var(--text3);">${prod}</span>
         <span style="margin-left:10px;">จ้าง <b>${fmt(kols.size)} KOL</b> · <b>${fmt(J.length)} งาน</b></span>
         <span style="margin-left:10px;color:var(--text2);">ช่องทาง: ${cntBy(r => { const p = kjPlat(r.platform); return p === 'other' ? 'อื่นๆ' : p; })}</span>
         <span style="margin-left:10px;color:var(--text2);">ประเภท: ${cntBy(r => /^conv/i.test(r.kol_type || '') ? 'Conversion' : /^pr/i.test(r.kol_type || '') ? 'PR' : 'อื่นๆ')}</span>
@@ -9063,7 +9081,7 @@ function renderKolTable() {
     { const tbl = document.getElementById('theadKj').closest('table'); if (tbl) tbl.style.tableLayout = 'fixed'; }   // (2026-10-02) คุมความกว้างคอลัมน์
     document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1, '17%')}${th('plat', 'ช่องทาง', 1, '6%')}${th('sku', 'สินค้า', 1, '13%')}${th('type', 'ประเภท', 0, '7%')}${th('date', 'วันโพสต์', 0, '8%')}${th('amount', 'ค่าจ้าง', 0, '8%')}${th('ads', 'ค่า Ads', 0, '7%')}${th('sales', 'ยอดขาย ' + plTip('tip-kjh-vat' + _kjView, 'ยอดขายจาก Ads ของคลิป/โพสต์ · ถอด VAT แล้ว', 'right'), 0, '8%')}${th('mer', 'MER ' + plTip('tip-kjh-mer', 'ยอดขาย ÷ (ค่าจ้าง + ค่า Ads)', 'right'), 0, '6%')}<th style="white-space:nowrap;width:9%;">Ads ของงาน</th>${th('payRank', 'เบิกจ่าย ' + plTip('tip-kjh-pay', KJ_PAY_TIP, 'right'), 0, '11%')}</tr>`;
     document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr>
-      <td class="c-left"><b>${o.kol}</b>${o.channel_link ? ` <a href="${o.channel_link}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;font-size:11px;">👤</a>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}<div style="color:var(--text3);font-size:10px;font-family:'IBM Plex Mono',monospace;word-break:break-all;">${o.content_code || ''}</div></td>
+      <td class="c-left"><b>${o.kol}</b>${o.channel_link ? ` <a href="${o.channel_link}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;font-size:11px;">👤</a>` : ''}${o.post_link ? ` <a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" style="text-decoration:none;">🔗</a>` : ''}<div style="color:var(--text3);font-size:10px;font-family:'Sarabun',sans-serif;word-break:break-all;">${o.content_code || ''}</div></td>
       <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${o.sku}${o.n > 1 ? `<div style="font-size:10px;color:var(--accent);" title="งานนี้รีวิวหลายสินค้า — ค่าจ้าง ค่า Ads และยอดขายถูกแบ่งเท่าๆ กันให้แต่ละสินค้า (กติกาเดียวกับ MKT Tracking)">แบ่ง ${o.n} สินค้า</div>` : ''}</td><td>${o.type}</td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}${o.progress && o.match_status === 'not_posted' ? `<div style="font-size:10.5px;color:var(--text3);">${o.progress}</div>` : ''}${o.inRange ? '' : '<div style="font-size:10.5px;color:var(--orange);" title="ค่าจ้างนับในเดือนที่โพสต์ — แถวนี้ขึ้นเพราะยังมีค่า Ads / ยอดขายในช่วงนี้">โพสต์ก่อนช่วงนี้</div>'}</td>
       <td>${money(o.amount)}</td><td>${o.ads >= 1 ? `<span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'ads')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.ads))}</span>` : money(o.ads)}</td><td>${o.sales >= 1 ? `<span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'sales')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.sales))}</span>` : money(o.sales)}</td><td>${mer(o)}</td>
@@ -10124,7 +10142,7 @@ function tdrTrace(kind, d) {
   trOpenShell('ที่มาของตัวเลข');
   document.getElementById('trBody').innerHTML = `<div class="tr-card"><div class="tr-card-t">${title}</div><div class="tr-card-v">${fmt(Math.round(total))}</div><div class="tr-card-m"><span>${when}</span></div></div>
     <section class="tr-part"><div class="tr-sec"><span>${sec}</span></div><table class="tr-tb" data-no-sort data-no-page><tbody>
-      ${list.map(([l, v]) => `<tr><td>${/^@/.test(l) ? `<span style="font-family:'IBM Plex Mono',monospace;">${trEsc(l)}</span>` : trEsc(l)}</td><td>${fmt(Math.round(v))}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">ไม่มี</td></tr>'}
+      ${list.map(([l, v]) => `<tr><td>${/^@/.test(l) ? `<span style="font-family:'Sarabun',sans-serif;">${trEsc(l)}</span>` : trEsc(l)}</td><td>${fmt(Math.round(v))}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">ไม่มี</td></tr>'}
       <tr class="tr-tot"><td>รวม</td><td>${fmt(Math.round(list.reduce((a, x) => a + x[1], 0)))}</td></tr></tbody></table></section>
     <div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">${src}</dl></div>`;
 }
@@ -10446,7 +10464,7 @@ function ttaCellHtml(c, k) {
     case 'source': return c.isDeesay ? '<span style="color:var(--blue);font-weight:700;font-size:10.5px;">🏠 Deesay</span>' : '<span style="color:#a78bfa;font-weight:700;font-size:10.5px;">🎭 KOL</span>';
     case 'handle': return ttHandleHtml(c.handle);
     case 'date': return (c.dateMin && c.dateMax)
-      ? `<span style="color:var(--text2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;">${new Date(c.dateMin).toLocaleDateString('th-TH',{day:'numeric',month:'short'})} – ${new Date(c.dateMax).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`
+      ? `<span style="color:var(--text2);font-family:'Sarabun',sans-serif;font-size:10.5px;">${new Date(c.dateMin).toLocaleDateString('th-TH',{day:'numeric',month:'short'})} – ${new Date(c.dateMax).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`
       : '—';
     case 'objective': return c.hasFunnelData ? `<span style="color:var(--text2);">${objectiveLabel(c.objective)}</span>` : OUT_OF_RANGE_HTML;
     case 'campaign': return ttcEsc(c.campaign||'—');
@@ -10797,7 +10815,7 @@ function renderShAdsTable() {
       case 'cpo': case 'cpdc': return `<td>${r[k] !== null ? fmt(r[k]) : '—'}</td>`;
       case 'cpc': return `<td>${money2(r.cpc)}</td>`;
       case 'ctr': case 'cr': case 'direct_cr': case 'broad_cir': case 'direct_cir': return `<td>${pct(r[k])}</td>`;
-      case 'last_active': return `<td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${r.last_active ? thShort(r.last_active) : '—'}</td>`;
+      case 'last_active': return `<td style="font-family:'Sarabun',sans-serif;font-size:11px;">${r.last_active ? thShort(r.last_active) : '—'}</td>`;
       default: return `<td>${ttcEsc(String(r[k] ?? '—'))}</td>`;
     }
   };
