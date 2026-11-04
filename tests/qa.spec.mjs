@@ -39,6 +39,13 @@ test('จำลองการใช้งานทุกหน้า', async ({
   await page.goto(SITE + 'dashboard.html'); await page.waitForSelector('.sb .nav-item[data-page]', { timeout: 45000 });
   await page.waitForTimeout(3000); await dismissWhatsNew();
   const menu = await page.$$eval('.sb .nav-item[data-page]', els => els.map(e => ({ id: e.dataset.page, name: (e.dataset.label || e.textContent).trim() })));
+  // (2026-11-04) โครงหน้าเว็บ: ทุกหน้าต้องอยู่ในกรอบเนื้อหา และไม่มีกล่องหลุดนอกหน้า (กล่องหลุด = ขึ้นทุกหน้า และหน้าที่หลุดกรอบจะเด้งตอนโหลด)
+  const structIssues = await page.evaluate(() => {
+    const c = document.querySelector('.content'); if (!c) return ['ไม่พบกรอบเนื้อหา (.content)'];
+    const out = [...document.querySelectorAll('.page')].filter(p => p.parentElement !== c).map(p => 'หน้าหลุดออกนอกกรอบเนื้อหา: ' + p.id);
+    [...c.children].filter(e => !e.classList.contains('page') && !['errorBanner', 'dgBanner'].includes(e.id)).forEach(e => out.push('มีกล่องหลุดนอกหน้า (ขึ้นทุกหน้า): ' + (e.id || e.className || e.tagName)));
+    return out;
+  });
   const targets = [...menu.map(m => ({ ...m, url: `dashboard.html?page=${m.id}`, dash: true })),
     { id: 'upload', name: 'อัปโหลดข้อมูล', url: 'upload.html' }, { id: 'admin', name: 'ตั้งค่า (Admin)', url: 'admin.html' }, { id: 'health', name: 'สถานะระบบข้อมูล', url: 'health.html' }];
 
@@ -54,6 +61,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
   const scope = t => t.dash ? '.page.active' : 'main, body';
 
   const report = [];
+  report.push({ id: 'structure', name: 'โครงหน้าเว็บ (dashboard.html)', issues: structIssues, warn: [], errors: [] });
   for (const t of targets) {
     errs = []; const r = { id: t.id, name: t.name, issues: [], warn: [] };
     const t0 = Date.now();
