@@ -6,7 +6,7 @@
 <title>สถานะระบบข้อมูล | Deesay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="config.js"></script>
 <script src="auth.js?v=20261103a"></script>
 <style>
@@ -28,7 +28,7 @@
   }
   body { font-family:'Sarabun',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
   nav { border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 28px; height:54px; position:sticky; top:0; background:var(--bg); z-index:10; }
-  .nav-logo { font-size:13px; font-weight:700; letter-spacing:3px; color:var(--accent); font-family:'IBM Plex Mono',monospace; }
+  .nav-logo { font-size:13px; font-weight:700; letter-spacing:3px; color:var(--accent); font-family:'Sarabun',sans-serif; }
   .nav-right { display:flex; align-items:center; gap:16px; }
   .nav-link { font-size:12.5px; color:var(--muted); text-decoration:none; } .nav-link:hover { color:var(--text); }
   .btn-ghost { font-size:12px; font-weight:600; color:var(--muted); background:var(--surface2); border:1px solid var(--border); padding:6px 13px; border-radius:6px; cursor:pointer; font-family:'Sarabun',sans-serif; transition:all .15s; }
@@ -62,18 +62,18 @@
   .page-header p { font-size:12.5px; color:var(--muted); }
   .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:20px; }
   .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
-  .kpi-label { font-size:11px; color:var(--muted2); text-transform:uppercase; letter-spacing:1.5px; font-family:'IBM Plex Mono',monospace; margin-bottom:10px; }
-  .kpi-val { font-size:24px; font-weight:700; line-height:1; font-family:'IBM Plex Mono',monospace; }
+  .kpi-label { font-size:11px; color:var(--muted2); text-transform:uppercase; letter-spacing:1.5px; font-family:'Sarabun',sans-serif; margin-bottom:10px; }
+  .kpi-val { font-size:24px; font-weight:700; line-height:1; font-family:'Sarabun',sans-serif; }
   .kpi-sub { font-size:12px; color:var(--muted); margin-top:7px; line-height:1.4; }
   .ok { color:var(--success); } .warn { color:var(--orange); } .bad { color:var(--danger); } .muted { color:var(--muted); }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:20px; }
   .card-head { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
   .card-head h2 { font-size:14px; font-weight:600; } .card-head span { font-size:12px; color:var(--muted); }
   .tbl-wrap { overflow-x:auto; } table { width:100%; border-collapse:collapse; font-size:13px; }
-  th { background:var(--surface2); padding:10px 12px; text-align:left; color:var(--muted2); font-weight:400; white-space:nowrap; font-size:11px; font-family:'IBM Plex Mono',monospace; letter-spacing:.5px; text-transform:uppercase; }
+  th { background:var(--surface2); padding:10px 12px; text-align:left; color:var(--muted2); font-weight:400; white-space:nowrap; font-size:11px; font-family:'Sarabun',sans-serif; letter-spacing:.5px; text-transform:uppercase; }
   td { padding:9px 12px; border-top:1px solid var(--border); vertical-align:middle; color:var(--text); }
   tbody tr:hover td { background:var(--surface2); }
-  .mono { font-family:'IBM Plex Mono',monospace; font-size:12px; }
+  .mono { font-family:'Sarabun',sans-serif; font-size:12px; }
   .pill { display:inline-block; font-size:11px; padding:3px 9px; border-radius:99px; font-weight:600; white-space:nowrap; }
   .pill.ok { background:rgba(74,222,128,.15); } .pill.warn { background:rgba(251,146,60,.15); } .pill.bad { background:rgba(248,113,113,.15); } .pill.muted { background:rgba(144,144,168,.18); }
   .banner { padding:13px 16px; border-radius:var(--radius-sm); margin-bottom:14px; font-size:13px; line-height:1.55; border:1px solid transparent; }
