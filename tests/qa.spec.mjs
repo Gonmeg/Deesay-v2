@@ -6,6 +6,9 @@
 // ผลอยู่ที่ tests/qa-out/ (README.md + report.json + shots/*.png) → GitHub Actions เก็บไว้ที่ branch qa-report
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+// (2026-11-04) เกณฑ์ตรวจทุกข้ออยู่ใน checks.js ไฟล์เดียว — เครื่องมือทำรูปในแชท (tests/preview) ใช้ไฟล์เดียวกัน ผลตรวจจึงเป็นชุดเดียวกัน
+const CHECKS = fileURLToPath(new URL('./checks.js', import.meta.url));
 const SITE = (process.env.SITE_URL || 'https://gonmeg.github.io/Deesay-v2/').replace(/\/?$/, '/');
 const OUT = 'qa-out'; fs.mkdirSync(`${OUT}/shots`, { recursive: true });
 const SAFE_CLICK_MAX = 6;                       // กดตัวเลขต่อหน้าไม่เกินกี่จุด
@@ -15,10 +18,7 @@ const DANGER = /ลบ|บันทึก|อนุมัติ|ไม่อน�
 test('จำลองการใช้งานทุกหน้า', async ({ browser }) => {
   test.skip(!process.env.QA_EMAIL || !process.env.QA_PASSWORD, 'ยังไม่ได้ตั้ง QA_EMAIL / QA_PASSWORD ใน GitHub Secrets');
   const ctx = await browser.newContext();
-  await ctx.addInitScript(() => {
-    window.__cls = 0; window.__shifts = [];
-    try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) { window.__cls += e.value; window.__shifts.push(e.value); } }).observe({ type: 'layout-shift', buffered: true }); } catch (e) {}
-  });
+  await ctx.addInitScript({ path: CHECKS });   // เริ่มวัดหน้าเด้ง + ดักกล่อง alert ตั้งแต่ก่อนหน้าเว็บโหลด
   const page = await ctx.newPage();
   // (2026-11-02) ประกาศก่อนใช้ครั้งแรก (เดิมประกาศไว้หลังจุดที่เรียก → ระบบทดสอบหยุดหลังล็อกอิน ไม่มีรายงานออก)
   // ปิดกล่อง "มีอะไรใหม่" ที่เด้งทับหน้า (ไม่งั้นกดตัวเลขไม่ได้ ทดสอบผิดเป็นกดแล้วไม่มีแผงเปิด)
@@ -40,12 +40,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
   await page.waitForTimeout(3000); await dismissWhatsNew();
   const menu = await page.$$eval('.sb .nav-item[data-page]', els => els.map(e => ({ id: e.dataset.page, name: (e.dataset.label || e.textContent).trim() })));
   // (2026-11-04) โครงหน้าเว็บ: ทุกหน้าต้องอยู่ในกรอบเนื้อหา และไม่มีกล่องหลุดนอกหน้า (กล่องหลุด = ขึ้นทุกหน้า และหน้าที่หลุดกรอบจะเด้งตอนโหลด)
-  const structIssues = await page.evaluate(() => {
-    const c = document.querySelector('.content'); if (!c) return ['ไม่พบกรอบเนื้อหา (.content)'];
-    const out = [...document.querySelectorAll('.page')].filter(p => p.parentElement !== c).map(p => 'หน้าหลุดออกนอกกรอบเนื้อหา: ' + p.id);
-    [...c.children].filter(e => !e.classList.contains('page') && !['errorBanner', 'dgBanner'].includes(e.id)).forEach(e => out.push('มีกล่องหลุดนอกหน้า (ขึ้นทุกหน้า): ' + (e.id || e.className || e.tagName)));
-    return out;
-  });
+  const structIssues = await page.evaluate(() => window.__deesayQA.structure());
   const targets = [...menu.map(m => ({ ...m, url: `dashboard.html?page=${m.id}`, dash: true })),
     { id: 'upload', name: 'อัปโหลดข้อมูล', url: 'upload.html' }, { id: 'admin', name: 'ตั้งค่า (Admin)', url: 'admin.html' }, { id: 'health', name: 'สถานะระบบข้อมูล', url: 'health.html' }];
 
@@ -68,77 +63,34 @@ test('จำลองการใช้งานทุกหน้า', async ({
     try {
       await page.goto(SITE + t.url); await waitIdle();
       r.load_s = +((Date.now() - t0) / 1000).toFixed(1);
-      r.cls_load = +(await page.evaluate(() => window.__cls || 0)).toFixed(3);
+      r.cls_load = await page.evaluate(() => window.__deesayQA.cls());
 
       // (2026-11-04) ฟอนต์ + คำต้องห้าม: ทุกข้อความที่เห็นต้องเป็น Sarabun · ห้าม ฿ · ใช้ Ads ไม่ใช่ "แอด" (แอดมิน ได้) · ตัวเลขในการ์ด/ตารางไม่ย่อเป็น k / M
-      const tx = await page.evaluate(sel => {
-        const root = document.querySelector(sel) || document.body;
-        const own = e => [...e.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
-        const vis = [...root.querySelectorAll('*')].filter(e => e.offsetParent !== null && !e.closest('svg') && own(e));
-        const uniq = a => [...new Set(a)].slice(0, 5);
-        return {
-          fonts: uniq(vis.filter(e => !/^["']?Sarabun/.test(getComputedStyle(e).fontFamily)).map(e => `«${own(e).slice(0, 20)}» ${getComputedStyle(e).fontFamily.split(',')[0]}`)),
-          words: uniq(vis.filter(e => /฿|แอด(?!มิน)/.test(own(e))).map(e => `«${own(e).slice(0, 30)}»`)),
-          abbr: uniq([...root.querySelectorAll('.ui-metric-v, .kpi-value, td')].filter(e => e.offsetParent !== null && /\d\s?[kKM]\b/.test(e.textContent) && !/ml\b/i.test(e.textContent)).map(e => `«${e.textContent.trim().slice(0, 24)}»`))
-        };
-      }, scope(t));
+      const tx = await page.evaluate(sel => window.__deesayQA.text(sel), scope(t));
       if (tx.fonts.length) r.issues.push('ฟอนต์ไม่ใช่ Sarabun: ' + tx.fonts.join(' · '));
       if (tx.words.length) r.warn.push('คำต้องห้าม (฿ / แอด): ' + tx.words.join(' · '));
       if (tx.abbr.length) r.warn.push('ตัวเลขย่อ k / M: ' + tx.abbr.join(' · '));
+      if (tx.dialogs.length) r.issues.push('ใช้กล่อง alert ของเบราว์เซอร์: ' + tx.dialogs.join(' · '));
 
       // กดค้นหา (ถ้ามี) แล้ววัดหน้าเด้งเฉพาะหลังกด
       const search = page.locator('#topSearchBtn:visible');
       if (t.dash && await search.count()) {
-        await page.evaluate(() => { window.__cls = 0; window.__shifts = []; });
+        await page.evaluate(() => window.__deesayQA.resetCls());
         await search.first().click({ force: true, timeout: 5000 }).catch(() => page.evaluate(() => window.applyFilters && window.applyFilters()));
         await waitIdle();
-        r.cls_search = +(await page.evaluate(() => window.__cls || 0)).toFixed(3);
+        r.cls_search = await page.evaluate(() => window.__deesayQA.cls());
       }
 
       // ข้อความล้น / ถูกตัด (ตัวเลขในการ์ด ป้าย หัวตาราง)
-      r.overflow = await page.evaluate(sel => {
-        const root = document.querySelector(sel) || document.body, out = [];
-        root.querySelectorAll('.kpi-val, .kpi-label, .ui-metric *, .hm-metric *, [class*="card"] [class*="v"], th, .ui-badge, button').forEach(el => {
-          if (!el.offsetParent || el.children.length > 2) return;
-          if (el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0) out.push((el.innerText || '').trim().slice(0, 40));
-        });
-        return [...new Set(out)].slice(0, 8);
-      }, scope(t));
+      r.overflow = await page.evaluate(sel => window.__deesayQA.overflow(sel), scope(t));
+      r.wide = await page.evaluate(sel => window.__deesayQA.wide(sel), scope(t));
+      r.align = await page.evaluate(sel => window.__deesayQA.align(sel), scope(t));   // (2026-11-04) หัวคอลัมน์กับตัวเลขชิดคนละด้าน
 
       // ตารางที่มีแถวรวม: ผลรวมแต่ละคอลัมน์ต้องเท่าแถวรวม (ข้ามตารางที่แบ่งหน้า และคอลัมน์ % / อัตรา / ROAS / เฉลี่ย)
-      r.totals = await page.evaluate(sel => {
-        const root = document.querySelector(sel) || document.body, out = [];
-        const num = s => { const m = String(s || '').replace(/,/g, '').match(/^\s*(-?\d+(?:\.\d+)?)/); return m ? +m[1] : null; };
-        root.querySelectorAll('table').forEach((tb, ti) => {
-          if (!tb.offsetParent) return;
-          const card = tb.closest('.card, section, .sec, div'); if (card && /ถัดไป|ต่อหน้า/.test(card.innerText || '')) return;
-          const rows = [...tb.querySelectorAll('tbody tr')].filter(x => x.offsetParent);
-          const tot = rows.find(x => /\b(tot|total|pl-total|sum)\b/.test(x.className) || /^\s*รวม/.test(x.cells[0]?.innerText || '')); if (!tot) return;
-          const body = rows.filter(x => x !== tot && !/\b(child|sub|pl-ch|op-sub|detail)\b/.test(x.className));
-          const grid = tr => { const out = []; [...tr.cells].forEach(c => { out.push(c.innerText); for (let k = 1; k < (c.colSpan || 1); k++) out.push(null); }); return out; };   // ช่องที่รวมคอลัมน์ (colspan)
-          const hr = tb.querySelector('thead tr:last-child'), heads = hr ? grid(hr).map(h => (h || '').trim()) : [];
-          const T = grid(tot), Bs = body.map(grid);
-          T.forEach((cv, i) => {
-            if (i === 0 || cv == null || /%|อัตรา|ROAS|ROI|เฉลี่ย|ราคา|ต่อ|MER|CPA|CPM|CPC|CPO|CTR|สัดส่วน|AOV|\//i.test(heads[i] || '')) return;
-            const tv = num(cv); if (tv === null) return;
-            const vals = Bs.map(r => num(r[i])); if (vals.some(v => v === null) || !vals.length) return;
-            const s = vals.reduce((a, b) => a + b, 0);
-            if (Math.abs(s - tv) > Math.max(1.5, Math.abs(tv) * 0.002)) out.push(`ตาราง ${ti + 1} คอลัมน์ "${heads[i] || i}": ผลรวม ${Math.round(s).toLocaleString()} ≠ แถวรวม ${Math.round(tv).toLocaleString()}`);
-          });
-        });
-        return out.slice(0, 8);
-      }, scope(t));
+      r.totals = await page.evaluate(sel => window.__deesayQA.totals(sel), scope(t));
 
       // กดตัวเลขที่กดได้ (ขีดเส้นใต้จุด) → แผงที่มาต้องเปิดและมีข้อมูล → ปิด
-      const cands = await page.evaluate(sel => {
-        const root = document.querySelector(sel) || document.body, out = [];
-        root.querySelectorAll('td, span, b, div, a').forEach((el, i) => {
-          if (!el.offsetParent || el.children.length > 1) return;
-          const cs = getComputedStyle(el);
-          if ((cs.textDecorationStyle === 'dotted' || cs.borderBottomStyle === 'dotted') && cs.cursor === 'pointer') { el.setAttribute('data-qa-click', String(i)); out.push(String(i)); }
-        });
-        return out;
-      }, scope(t));
+      const cands = await page.evaluate(sel => window.__deesayQA.clickables(sel), scope(t));
       r.clicks = { found: cands.length, ok: 0, fail: [] };
       for (const id of cands.slice(0, SAFE_CLICK_MAX)) {
         const el = page.locator(`[data-qa-click="${id}"]`).first();
@@ -146,16 +98,10 @@ test('จำลองการใช้งานทุกหน้า', async ({
         if (DANGER.test(label)) continue;
         const e0 = errs.length;
         await el.click({ timeout: 5000 }).catch(() => {}); await page.waitForTimeout(1800);
-        const open = await page.evaluate(([before]) => {
-          const b = document.getElementById('trBody'); if (b && b.offsetParent) return (b.innerText || '').trim().length;
-          const pop = [...document.querySelectorAll('[role="dialog"], .modal, [class*="drawer"], [class*="popover"], [class*="pop-"], .ui-pop, .fbe-pop')].find(x => x.offsetParent && (x.innerText || '').trim().length > 20);
-          if (pop) return (pop.innerText || '').trim().length;
-          const act = document.querySelector('.page.active'); if (act && act.id !== before) return 999;   // พาไปหน้าอื่น
-          return -1;
-        }, [await page.evaluate(() => (document.querySelector('.page.active') || {}).id || '')]);
+        const open = await page.evaluate(before => window.__deesayQA.panelOpen(before), await page.evaluate(() => (document.querySelector('.page.active') || {}).id || ''));
         if (open > 20 && errs.length === e0) r.clicks.ok++; else r.clicks.fail.push(`${label || '(ไม่มีข้อความ)'}: ${open < 0 ? 'กดแล้วไม่มีแผงเปิด' : open <= 20 ? 'แผงเปิดแต่ไม่มีข้อมูล' : errs.slice(e0).join(' / ')}`);
         await page.keyboard.press('Escape'); await page.waitForTimeout(400);
-        await page.evaluate(() => { const x = document.querySelector('.tr-x, .tr-close, [onclick*="trClose"]'); if (x && x.offsetParent) x.click(); });
+        await page.evaluate(() => window.__deesayQA.closePanel());
         await page.waitForTimeout(300);
       }
 
@@ -169,6 +115,8 @@ test('จำลองการใช้งานทุกหน้า', async ({
     (r.totals || []).forEach(x => r.issues.push(x));
     (r.clicks?.fail || []).forEach(x => r.issues.push('กดตัวเลข: ' + x));
     if ((r.overflow || []).length) r.warn.push('ข้อความล้นกล่อง: ' + r.overflow.join(' · '));
+    if ((r.align || []).length) r.warn.push('คอลัมน์ไม่ตรงแนว: ' + r.align.join(' · '));
+    if (r.wide?.page) r.issues.push('ทั้งหน้าเลื่อนซ้ายขวาได้ (มีกล่องกว้างเกินจอ): ' + (r.wide.boxes.join(' · ') || '—'));
     if ((r.load_s || 0) > 15) r.warn.push(`โหลดช้า ${r.load_s} วิ`);
     report.push(r);
   }
