@@ -240,7 +240,7 @@
       #page-ordprofit .op-t tbody tr:hover td.pfc, #page-ordprofit .op-t tbody tr:hover td.pfc2, #page-ordprofit .op-t tbody tr:hover td.stk { background:#f7f1e6; }
       #page-ordprofit .op-t thead tr.g th.pfh { right:0; }
       #page-ordprofit .op-t .z { color:var(--text3); }
-      #page-ordprofit .sub { font-size:10.5px; color:var(--text3); font-weight:400; } #page-ordprofit .mono { font-family:'IBM Plex Mono', monospace; font-size:11px; }
+      #page-ordprofit .sub { font-size:10.5px; color:var(--text3); font-weight:400; } #page-ordprofit .mono { font-family:'Sarabun', sans-serif; font-size:11px; }
       #page-ordprofit .op-tag { display:inline-block; font-size:10px; font-weight:700; border-radius:9px; padding:0 6px; margin-left:4px; color:#b45309; background:rgba(245,158,11,.14); }
       #page-ordprofit .op-pg { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end; margin-top:10px; font-size:12px; color:var(--text3); }
       #page-ordprofit .op-pg button { font:inherit; font-size:12px; border:1px solid var(--op-line); background:var(--bg2); color:var(--text); border-radius:7px; padding:4px 10px; cursor:pointer; } #page-ordprofit .op-pg button:disabled { opacity:.45; cursor:default; }
@@ -441,7 +441,7 @@
     .opx-note { font-size:11.5px; color:var(--text2); margin:2px 0 8px; line-height:1.55; }
     .opx-h { font-size:12.5px; font-weight:700; margin:0 0 6px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
     .opx-sub { font-size:11px; font-weight:400; color:var(--text3); }
-    .opx-sku { display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text3); background:rgba(127,127,127,.08); border-radius:4px; padding:0 5px; margin-left:6px; }
+    .opx-sku { display:inline-block; font-family:'Sarabun', sans-serif; font-size:10.5px; color:var(--text3); background:rgba(127,127,127,.08); border-radius:4px; padding:0 5px; margin-left:6px; }
     .opx-seg { display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 10px; }
     .opx-seg button { font:inherit; font-size:12px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); border-radius:15px; padding:4px 12px; cursor:pointer; }
     .opx-seg button.on { border-color:var(--accent, #b8862f); color:var(--text); font-weight:700; background:rgba(184,134,47,.08); }
