@@ -800,7 +800,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.05-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.05-c"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -2087,31 +2087,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
     <!-- (2026-09-28) หน้าแรก: สรุปเหตุการณ์ประจำวันจากทุกหน้า (home_brief) -->
     <div class="page" id="page-home"><div id="homeBody"></div></div>
 
-    <!-- (2026-09-25) MKT Tracking แบบวันต่อวัน — CM1 เท่านั้น: ค่า KOL จากชีทเบิกเงิน + ค่า Ads จริง (ไม่ใช้ไฟล์บัญชี) -->
-    <div class="page" id="page-mktlive">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><span id="mlNote" style="font-size:11.5px;color:var(--text2);"></span></div>
-      <div class="mkt-top-kpis" id="mlKpis"></div>
-      <div class="card mkt-trend" id="mlTrendBox"><div class="mkt-ch-title">แนวโน้มรายเดือน <span>แท่ง = ยอดขาย / ค่า KOL + Ads · เส้น = MER</span></div><div class="chart-wrap" style="height:230px;"><canvas id="chartMlTrend"></canvas></div></div>
-      <div id="mlCh"></div>
-      <div class="card" style="margin-bottom:20px;overflow:hidden;">
-        <div class="section-header"><div class="section-title">การตลาดต่อสินค้า (CM1)</div>
-          <button class="btn btn-ghost" style="white-space:nowrap;padding:6px 12px;font-size:12px;" onclick="exportMl()">⬇ Export CSV</button></div>
-        <div style="overflow-x:auto;">
-          <table id="tblMl" class="mkt-tbl" data-no-sort style="table-layout:fixed;min-width:900px;">
-            <colgroup><col style="width:28%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:15%"><col style="width:15%"></colgroup>
-            <thead><tr>
-              <th class="sortable-th c-left" onclick="mlSort('name')">สินค้า <span class="sort-ind" id="mls-name"></span></th>
-              <th class="sortable-th" onclick="mlSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">ยอดขาย<b>ถอด VAT 7%</b> แล้ว (ยอดขาย ÷ 1.07) เพื่อเทียบกับค่า KOL/ค่า Ads ที่ไม่รวม VAT</div></span> <span class="sort-ind" id="mls-rev"></span></th>
-              <th class="sortable-th" onclick="mlSort('kol')">ค่า KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-kol')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-kol" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">งบในไฟล์ทีม KOL (Conversion + PR) ตามเดือนที่โพสต์ — ตรงกับหน้า KOL<br>Business Insight ใช้ยอดบัญชี จึงอาจต่างกัน<br>👆 กดตัวเลขเพื่อดูแยก Conversion / PR และช่องทาง</div></span> <span class="sort-ind" id="mls-kol"></span></th>
-              <th class="sortable-th" onclick="mlSort('ads')">ค่า Ads <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-mlh-ads')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-mlh-ads" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>Product Ads</b> = ยิงสินค้านี้ตรงๆ · <b>Shared Ads</b> = Ads ที่ไม่ผูกสินค้า ปันตามยอดขายในช่องทาง · Ads PR ปันตามยอดขายทุกช่องทาง<br>👆 กดที่ตัวเลขเพื่อดูแยกช่องทาง</div></span> <span class="sort-ind" id="mls-ads"></span></th>
-              <th class="sortable-th pl-cm" onclick="mlSort('cm1p')">CM1 <span class="sort-ind" id="mls-cm1p"></span></th>
-              <th class="sortable-th pl-cm" onclick="mlSort('roi')">MER <span class="sort-ind" id="mls-roi"></span></th>
-            </tr></thead>
-            <tbody id="tbodyMl"><tr><td colspan="6" class="empty">กำลังโหลด…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <!-- (2026-11-05) MKT Tracking — สร้างโดย mktlive.js (โหลดครั้งแรกที่กดเมนู) · ข้อมูล = RPC mkt_tracking_page -->
+    <div class="page" id="page-mktlive"><div id="mktlive-root"></div></div>
 
     <div class="page" id="page-cost"><!-- (2026-10-09) Business Insight: หน้าทั้งหมดสร้างโดย bizinsight.js --></div>
 <div class="page" id="page-promo"></div><div class="page" id="page-exec"></div><div class="page" id="page-execfee"></div><div class="page" id="page-ordprofit"></div><div class="page" id="page-invvalue"></div><!-- (2026-10-15) promo.js -->
@@ -8229,147 +8206,19 @@ async function renderHome() {
   homeSyncChartUi(); renderHomeChart();
 }
 
-// ===== MKT Tracking แบบวันต่อวัน (mv_mkt_live_monthly) — ค่า KOL จากชีทเบิกเงิน + ค่า Ads จริง · CM1 เท่านั้น =====
-let _mlRows = null, _mlCh = null, _mlKol = null, _mlView = [], _mlSortCol = 'rev', _mlSortDir = 'desc', _mlOpen = new Map();
-async function loadMl() {
-  if (_mlRows) return;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
-  const [a, b, c] = await Promise.all([
-    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_mkt_live_monthly?select=*&order=month.asc,parent_sku.asc`, h),
-    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_mkt_channel_monthly?select=month,parent_sku,channel,revenue,ads_direct,ads_allocated&month=gte.2026-01-01&order=month.asc,parent_sku.asc,channel.asc`, h),   // (2026-10-08) Facebook หักตีกลับแล้ว
-    fetchAllRows(`${window.SUPABASE_URL}/rest/v1/v_kol_plan_alloc_detail?select=cost_month,parent_sku,kol_type,kol_name,platform,amount&order=cost_month.asc`, h)]);   // (2026-10-01) งบจากไฟล์ทีม KOL ตามเดือนที่โพสต์
-  _mlRows = a.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));   // ยอดขายถอด VAT
-  _mlCh = b.map(r => ({ ...r, month: String(r.month).slice(0, 7), revenue: (+r.revenue || 0) / VAT_DIV }));
-  _mlKol = c.map(r => ({ ...r, month: String(r.cost_month || '').slice(0, 7) }));
-}
-function mlRange() { return topMonthsFor('mktlive', [...new Set(_mlRows.map(r => r.month))].sort()); }
-function mlSort(c) { if (_mlSortCol === c) _mlSortDir = _mlSortDir === 'asc' ? 'desc' : 'asc'; else { _mlSortCol = c; _mlSortDir = c === 'name' ? 'asc' : 'desc'; } renderMlTable(); }
-async function renderMktLive() {
-  const tb = document.getElementById('tbodyMl'); if (!tb) return;
-  try { await loadMl(); } catch (e) { tb.innerHTML = `<tr><td colspan="6" class="empty">โหลดไม่สำเร็จ: ${e.message}</td></tr>`; return; }
-  const [from, to] = mlRange();
-  if (!from || !to) { tb.innerHTML = '<tr><td colspan="6" class="empty">ยังไม่มีข้อมูล</td></tr>'; return; }   // (2026-10-18) กันหน้าพังเมื่อยังไม่มีเดือนให้เลือก
-  const by = {}, byM = {};
-  _mlRows.filter(r => r.month >= from && r.month <= to).forEach(r => {
-    const o = (by[r.parent_sku] = by[r.parent_sku] || { sku: r.parent_sku, name: r.product_name || r.parent_sku, rev: 0, kc: 0, kp: 0, ko: 0, ad: 0, aa: 0 });
-    o.rev += +r.revenue || 0; o.kc += +r.kol_conversion || 0; o.kp += +r.kol_pr || 0; o.ko += +r.kol_other || 0; o.ad += +r.ads_direct || 0; o.aa += +r.ads_allocated || 0;
+// ===== MKT Tracking (2026-11-05: ย้ายไป mktlive.js · ข้อมูล = RPC mkt_tracking_page) =====
+function loadMktLiveJs() {
+  if (window.mktLive) return Promise.resolve();
+  if (window._mktLiveJsP) return window._mktLiveJsP;
+  window._mktLiveJsP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'mktlive.js?v=1';
+    s.onload = res; s.onerror = () => { window._mktLiveJsP = null; rej(new Error('โหลด mktlive.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
+    document.body.appendChild(s);
   });
-  _mlRows.forEach(r => { const m = (byM[r.month] = byM[r.month] || { rev: 0, cost: 0 }); m.rev += +r.revenue || 0; m.cost += (+r.kol_conversion || 0) + (+r.kol_pr || 0) + (+r.kol_other || 0) + (+r.ads_direct || 0) + (+r.ads_allocated || 0); });
-  // (2026-10-01) งาน KOL ที่ไฟล์ทีม KOL ระบุสินค้าไม่ได้ → แถว "ยังไม่ระบุสินค้า" ให้ค่า KOL รวมเท่าหน้า KOL เสมอ (แก้สินค้าในไฟล์ทีม KOL แล้วแถวนี้หายเอง)
-  (_mlKol || []).filter(r => !r.parent_sku && byM[r.month]).forEach(r => {
-    byM[r.month].cost += +r.amount || 0;
-    if (r.month < from || r.month > to) return;
-    const t = /^conv/i.test(r.kol_type || '') ? 'kc' : /^pr/i.test(r.kol_type || '') ? 'kp' : 'ko';
-    const o = (by.NOSKU = by.NOSKU || { sku: 'NOSKU', name: '⚠️ งาน KOL ที่ยังไม่ระบุสินค้า', rev: 0, kc: 0, kp: 0, ko: 0, ad: 0, aa: 0 }); o[t] += +r.amount || 0; });
-  _mlView = Object.values(by).filter(o => o.rev > 0 || o.kc + o.kp + o.ko + o.ad + o.aa > 0).map(o => {
-    o.kol = o.kc + o.kp + o.ko; o.ads = o.ad + o.aa; o.cm1 = o.rev - o.kol - o.ads;
-    o.cm1p = o.rev > 0 ? o.cm1 / o.rev * 100 : -Infinity; o.roi = (o.kol + o.ads) > 0 ? o.rev / (o.kol + o.ads) : 0; return o; });
-  const T = _mlView.reduce((t, o) => { ['rev', 'kc', 'kp', 'ko', 'ad', 'aa', 'kol', 'ads', 'cm1'].forEach(k => t[k] = (t[k] || 0) + o[k]); return t; }, {});
-  const last = Object.keys(byM).sort().pop();
-  document.getElementById('mlNote').textContent = `${from === to ? PL_TH_M(from) : 'ยอดสะสม ' + PL_TH_M(from) + ' – ' + PL_TH_M(to)} · ข้อมูลถึงปัจจุบัน · ค่า KOL = งบจากไฟล์ทีม KOL ตามเดือนที่โพสต์ · ค่า Ads ยอดจริง`;
-  const all = (T.kol || 0) + (T.ads || 0);
-  document.getElementById('mlKpis').innerHTML = `
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ยอดขาย (ถอด VAT) ${plTip('tip-ml-vat', ML_REV_TIP)}</div><div class="kpi-value">${fmt(Math.round(T.rev || 0))}</div><div style="font-size:10.5px;color:var(--text3);">${PL_TH_M(from)}${from !== to ? ' – ' + PL_TH_M(to) : ''}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า KOL</div><div class="kpi-value">${fmt(Math.round(T.kol || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Conversion ${fmt(Math.round(T.kc || 0))} · PR ${fmt(Math.round(T.kp || 0))}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">ค่า Ads</div><div class="kpi-value">${fmt(Math.round(T.ads || 0))}</div><div style="font-size:10.5px;color:var(--text3);">Product Ads ${fmt(Math.round(T.ad || 0))} · Shared Ads ${fmt(Math.round(T.aa || 0))}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">CM1 ${plTip('tip-ml-cm1', '<b>CM1 · Contribution Margin 1</b><br>ยอดขาย − ค่า KOL − ค่า Ads<br>เงินที่เหลือหลังจ่ายค่าการตลาดที่ใช้กับสินค้า')}</div><div class="kpi-value">${T.rev > 0 ? (T.cm1 / T.rev * 100).toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(Math.round(T.cm1 || 0))}</div></div>
-    <div class="card" style="flex:1;min-width:150px;"><div class="card-title">MER ${plTip('tip-ml-mer', '<b>MER · Marketing Efficiency Ratio</b><br>ยอดขาย ÷ (ค่า KOL + ค่า Ads)<br>ลงการตลาด 1 บาท ได้ยอดขายกี่บาท')}</div><div class="kpi-value">${all > 0 ? (T.rev / all).toFixed(2) + 'x' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">ค่า KOL + Ads = ${T.rev > 0 ? (all / T.rev * 100).toFixed(1) + '%' : '—'} ของยอดขาย</div></div>`;
-  const ms = Object.keys(byM).sort();
-  if (ms.length > 1) makeChart('chartMlTrend', 'bar', ms.map(PL_TH_M),
-    [{ type: 'bar', label: 'ยอดขาย', data: ms.map(m => byM[m].rev), backgroundColor: 'rgba(96,165,250,0.65)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 40 },
-     { type: 'bar', label: 'ค่า KOL + Ads', data: ms.map(m => byM[m].cost), backgroundColor: 'rgba(248,113,113,0.55)', borderColor: '#f87171', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 40 },
-     { type: 'line', label: 'MER', data: ms.map(m => byM[m].cost > 0 ? +(byM[m].rev / byM[m].cost).toFixed(2) : null), borderColor: '#22c55e', backgroundColor: '#22c55e', borderWidth: 2, pointRadius: 3, tension: 0.35, yAxisID: 'y2' }],
-    { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => c.dataset.yAxisID === 'y2' ? `MER: ${c.raw}x` : `${c.dataset.label}: ${fmt(Math.round(+c.raw || 0))}` } },
-      scales: { y2: { position: 'right', ticks: { color: '#22c55e', callback: v => v + 'x', maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } } } });
-  const chT = {}; _mlCh.filter(r => r.month >= from && r.month <= to).forEach(r => { const t = (chT[r.channel] = chT[r.channel] || { rev: 0, ads: 0 }); t.rev += +r.revenue || 0; t.ads += (+r.ads_direct || 0) + (+r.ads_allocated || 0); });
-  const cards = PL_CH_ORDER.filter(c => chT[c] && chT[c].ads > 0).map(c => `<div class="mkt-ch-card"><div class="mkt-ch-name">${c}</div><div class="mkt-ch-roi">${(chT[c].rev / chT[c].ads).toFixed(2)}<small>x</small></div><div class="mkt-ch-sub">ขาย ${fmt(Math.round(chT[c].rev))} · Ads ${fmt(Math.round(chT[c].ads))}</div></div>`).join('');
-  document.getElementById('mlCh').innerHTML = cards ? `<div class="card mkt-ch-panel"><div class="mkt-ch-title">ROAS ตามช่องทาง <span>ยอดขายช่องทาง ÷ ค่า Ads ช่องทาง (Return on Ad Spend) · ไม่รวมค่า KOL</span></div><div class="mkt-ch-row">${cards}</div></div>` : '';
-  renderMlTable();
+  return window._mktLiveJsP;
 }
-function renderMlTable() {
-  const rows = [..._mlView].sort((a, b) => { const av = a[_mlSortCol], bv = b[_mlSortCol]; const c = typeof av === 'string' ? av.localeCompare(bv, 'th') : av - bv; return _mlSortDir === 'asc' ? c : -c; });
-  document.querySelectorAll('[id^="mls-"]').forEach(el => el.textContent = '');
-  const ind = document.getElementById('mls-' + _mlSortCol); if (ind) ind.textContent = _mlSortDir === 'asc' ? '▲' : '▼';
-  const pc = (v, b) => b > 0 ? (v / b * 100).toFixed(1) + '%' : '—';
-  const op = sku => _mlOpen.get(sku);
-  const cell = (o, key, v) => v ? `<td class="pl-amt${op(o.sku) === key ? ' on' : ''}" onclick="event.stopPropagation();mlToggle('${o.sku}','${key}')" title="คลิกเพื่อดูรายละเอียด"><div>${fmt(Math.round(v))}</div><div style="font-size:10.5px;color:var(--text3);">${pc(v, o.rev)}</div></td>` : '<td><span style="color:var(--text3);">—</span></td>';
-  document.getElementById('tbodyMl').innerHTML = rows.map(o => `
-    <tr><td class="c-left pl-amt${op(o.sku) === 'chan' ? ' on' : ''}" onclick="mlToggle('${o.sku}','chan')" title="กดเพื่อดูผลแยกตามช่องทาง"><span style="color:var(--text3);font-size:10px;">${op(o.sku) ? '▼' : '▶'}</span> <b>${o.name}</b> <span style="font-family:'Sarabun',sans-serif;font-size:10.5px;color:var(--text3);">${o.sku}</span></td>
-      <td class="pl-amt${op(o.sku) === 'rev' ? ' on' : ''}" onclick="event.stopPropagation();mlToggle('${o.sku}','rev')" title="กดเพื่อดูว่ายอดขายมาจากช่องทางไหน"><div>${fmt(Math.round(o.rev))}</div><div style="font-size:10.5px;color:var(--text3);">แยกช่องทาง</div></td>${cell(o, 'kol', o.kol)}${cell(o, 'ads', o.ads)}
-      <td class="pl-cm"><div style="font-weight:700;font-size:13px;${o.cm1 < 0 ? 'color:var(--red);' : ''}">${isFinite(o.cm1p) ? o.cm1p.toFixed(1) + '%' : '—'}</div><div style="font-size:10.5px;color:var(--text3);">${fmt(Math.round(o.cm1))}</div></td>
-      <td class="pl-cm"><b>${o.roi > 0 ? o.roi.toFixed(2) + 'x' : '—'}</b></td></tr>
-    ${op(o.sku) ? `<tr class="pl-detail"><td colspan="6" style="padding:0;"><div id="mld-${o.sku}" style="padding:12px 20px;background:var(--bg2);"></div></td></tr>` : ''}`).join('')
-    || '<tr><td colspan="6" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>';
-  _mlOpen.forEach((m, sku) => mlDetail(sku));
-}
-// (2026-09-30) ยอดขายรายร้าน / เพจ ของสินค้า (mv_sku_daily — แหล่งเดียวกับยอดขาย) ถอด VAT ให้ตรงกับตาราง
-const _mlSub = {};
-async function mlLoadSub(sku, from, to) {
-  const key = `${sku}|${from}|${to}`; if (_mlSub[key]) return _mlSub[key];
-  const [y, m] = to.split('-').map(Number), end = `${to}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`;
-  const h = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
-  const rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_sku_daily?select=channel,sub_channel,revenue&parent_sku=eq.${encodeURIComponent(sku)}&date=gte.${from}-01&date=lte.${end}`, h);
-  const o = {}; rows.forEach(r => { const c = r.channel === 'Facebook' || /^Modern/i.test(r.channel) ? (/^Modern/i.test(r.channel) ? 'Modern Trade' : 'Facebook') : r.channel;
-    const x = (o[c] = o[c] || {}); const sc = r.sub_channel || ''; x[sc] = (x[sc] || 0) + (+r.revenue || 0) / VAT_DIV; });
-  _mlSub[key] = o; return o;
-}
-function mlSubName(ch, sc) {
-  if (!sc) return ch === 'ตัวแทน' ? 'ตัวแทนทั้งหมด' : 'ไม่ระบุ';
-  if (ch === 'Modern Trade') return mtStoreName(sc);
-  return String(sc).replace(/^\d+\.\s*(FB|Line)\s*-\s*[A-Z]\s*-\s*/i, '').replace(/^\d+\.\s*/, '');
-}
-function mlToggle(sku, metric) { if (_mlOpen.get(sku) === metric) _mlOpen.delete(sku); else _mlOpen.set(sku, metric); renderMlTable(); }
-const ML_PLAT = ['TikTok', 'Facebook', 'Instagram', 'Lemon8', 'Twitter', 'Youtube'];
-function mlPlatforms(p) { const out = String(p || '').split(',').map(x => x.trim()).map(x => ML_PLAT.find(k => k.toLowerCase() === x.toLowerCase()) || (x ? 'อื่นๆ' : null)).filter(Boolean); return out.length ? [...new Set(out)] : ['ไม่ระบุ']; }
-function mlDetail(sku) {
-  const el = document.getElementById('mld-' + sku); const o = _mlView.find(x => x.sku === sku); if (!el || !o) return;
-  const [from, to] = mlRange(), metric = _mlOpen.get(sku);
-  if (metric === 'chan') {   // (2026-10-08) กดชื่อสินค้า = เทียบผลแต่ละช่องทาง แบบหน้า Business Insight · ค่า KOL ไม่ผูกช่องทาง จึงแบ่งตามสัดส่วนยอดขาย
-    const m = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { const c = (m[r.channel] = m[r.channel] || { ch: r.channel, rev: 0, ads: 0 }); c.rev += +r.revenue || 0; c.ads += (+r.ads_direct || 0) + (+r.ads_allocated || 0); });
-    const chs = Object.values(m).filter(x => Math.abs(x.rev) >= 0.5 || x.ads >= 0.5).map(x => { x.kol = o.rev > 0 ? (o.kol || 0) * Math.max(x.rev, 0) / o.rev : 0; x.cm1 = x.rev - x.ads - x.kol; x.mer = (x.ads + x.kol) > 0 ? x.rev / (x.ads + x.kol) : 0; return x; }).sort((a, b) => b.rev - a.rev);
-    const p2 = (v, b) => b > 0 ? (v / b * 100).toFixed(1) + '%' : '—';
-    const bar = v => `<div style="height:5px;background:var(--border);border-radius:3px;margin-top:3px;"><div style="height:5px;width:${o.rev > 0 ? Math.max(0, Math.min(100, v / o.rev * 100)) : 0}%;background:var(--accent);border-radius:3px;"></div></div>`;
-    const cmc = (v, b) => { const p = b > 0 ? v / b * 100 : NaN; return `<td style="--h:${plHeat(p)};border-radius:6px;"><b style="${p < 0 ? 'color:var(--red);' : ''}">${isFinite(p) ? p.toFixed(1) + '%' : '—'}</b><div style="font-size:10.5px;color:var(--text3);">${fmt(Math.round(v))}</div></td>`; };
-    const T = chs.reduce((t, x) => { ['rev', 'ads', 'kol', 'cm1'].forEach(k => t[k] += x[k]); return t; }, { rev: 0, ads: 0, kol: 0, cm1: 0 });
-    el.innerHTML = `<div style="font-weight:700;margin-bottom:8px;">${o.name} แยกตามช่องทาง</div><table class="pl-mx" style="max-width:1000px;"><thead><tr><th style="text-align:left;">ช่องทาง</th><th>ยอดขาย</th><th>ค่า Ads</th><th>ค่า KOL ${plTip('tip-mlc-kol-' + sku, 'ค่า KOL ไม่ได้ผูกช่องทางขาย จึงแบ่งตามสัดส่วนยอดขายของสินค้าในแต่ละช่องทาง')}</th><th>CM1</th><th>MER</th></tr></thead><tbody>`
-      + chs.map(x => `<tr><td class="nm"><b>${x.ch}</b></td><td style="text-align:right;">${fmt(Math.round(x.rev))} <span style="color:var(--text3);font-size:10.5px;">${p2(x.rev, o.rev)}</span>${bar(x.rev)}</td><td>${fmt(Math.round(x.ads))}<div style="font-size:10.5px;color:var(--text3);">${p2(x.ads, x.rev)}</div></td><td>${fmt(Math.round(x.kol))}<div style="font-size:10.5px;color:var(--text3);">${p2(x.kol, x.rev)}</div></td>${cmc(x.cm1, x.rev)}<td><b>${x.mer > 0 ? x.mer.toFixed(2) + 'x' : '—'}</b></td></tr>`).join('')
-      + `<tr style="border-top:1px solid var(--border);"><td class="nm"><b>รวม</b></td><td style="text-align:right;"><b>${fmt(Math.round(T.rev))}</b></td><td><b>${fmt(Math.round(T.ads))}</b></td><td><b>${fmt(Math.round(T.kol))}</b></td>${cmc(T.cm1, T.rev)}<td><b>${(T.ads + T.kol) > 0 ? (T.rev / (T.ads + T.kol)).toFixed(2) + 'x' : '—'}</b></td></tr></tbody></table>`;
-    return;
-  }
-  if (metric === 'rev') {   // (2026-09-30) ยอดขายมาจากช่องทางไหน → ร้าน / เพจ / ห้าง
-    const chs = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { chs[r.channel] = (chs[r.channel] || 0) + (+r.revenue || 0); });
-    const key = `${sku}|${from}|${to}`, subs = _mlSub[key];
-    const groups = Object.entries(chs).map(([c, v]) => {
-      if (!(subs && subs[c])) return { label: c, amount: v, children: [] };
-      const ent = Object.entries(subs[c]).map(([sc, a]) => [mlSubName(c, sc), a]);
-      if (c === 'Facebook') { const s = ent.reduce((t, x) => t + x[1], 0); if (Math.abs(v - s) > 1) ent.push(['หักออเดอร์ตีกลับ', v - s]); }   // (2026-10-08) รายเพจยังเป็นยอดก่อนหักตีกลับ
-      return { label: c, amount: v, children: bdTop(bdFrom(ent), 8) }; });
-    el.innerHTML = bdRender({ title: `ยอดขายแยกตามช่องทาง · ${o.name}`, total: o.rev, rev: 0, groups, tipId: 'tip-mld-rev-' + sku,
-      tip: 'ยอดขายถอด VAT ชุดเดียวกับคอลัมน์ยอดขาย<br>บรรทัดย่อย = ร้าน / เพจ / ห้าง ในช่องทางนั้น<br>Facebook หักออเดอร์ตีกลับแล้ว (บรรทัด "หักออเดอร์ตีกลับ")<br>Modern Trade = ยอดที่ห้างขายออก (ไฟล์รายงานห้าง)', note: subs ? '' : 'กำลังโหลดรายร้าน / เพจ...' });
-    if (!subs) mlLoadSub(sku, from, to).then(() => { if (_mlOpen.get(sku) === 'rev') mlDetail(sku); }).catch(e => console.warn('ml sub', e.message));
-    return;
-  }
-  if (metric === 'kol') {
-    const g = {};
-    _mlKol.filter(r => (r.parent_sku || 'NOSKU') === sku && r.month >= from && r.month <= to).forEach(r => {
-      const t = /^conv/i.test(r.kol_type || '') ? 'KOL Conversion' : /^pr/i.test(r.kol_type || '') ? 'KOL PR' : 'KOL อื่นๆ';
-      const ps = mlPlatforms(r.platform), share = (+r.amount || 0) / ps.length;
-      const x = (g[t] = g[t] || { label: t, amount: 0, n: 0, ch: {} }); x.amount += +r.amount || 0; x.n++;
-      ps.forEach(p => x.ch[p] = (x.ch[p] || 0) + share);
-    });
-    const groups = Object.values(g).map(x => ({ label: `${x.label} (${x.n} งาน)`, amount: x.amount, children: bdFrom(Object.entries(x.ch)) }));
-    el.innerHTML = bdRender({ title: `ค่า KOL · ${o.name}`, total: o.kol, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'งบจากไฟล์ทีม KOL ตามเดือนที่โพสต์ (งานที่รีวิวหลายสินค้าแบ่งเท่าๆ กัน)<br>บรรทัดย่อย = ช่องทางที่ KOL ลงงาน · งานที่ลงหลายช่องทางแบ่งยอดเท่าๆ กันให้แต่ละช่องทาง' });
-  } else {
-    const chs = {}; _mlCh.filter(r => r.parent_sku === sku && r.month >= from && r.month <= to).forEach(r => { const c = (chs[r.channel] = chs[r.channel] || { ad: 0, aa: 0 }); c.ad += +r.ads_direct || 0; c.aa += +r.ads_allocated || 0; });
-    const groups = Object.entries(chs).map(([c, v]) => ({ label: c, amount: v.ad + v.aa, fixed: true, children: [{ label: 'Product Ads', amount: v.ad }, { label: 'Shared Ads (ปันตามยอดขาย)', amount: v.aa }] }));
-    el.innerHTML = bdRender({ title: `ค่า Ads แยกตามช่องทาง · ${o.name}`, total: o.ads, rev: o.rev, groups, tipId: 'tip-mld-' + sku, tip: 'ยอดใช้จ่ายจริง<br><b>Product Ads</b> = Ads ที่ยิงสินค้านี้ตรงๆ<br><b>Shared Ads</b> = Ads ที่ไม่ได้ผูกสินค้า (awareness, เพจ, Live, Promotion, Shop Ads) ของช่องทางนั้น ปันตามยอดขายของสินค้าในช่องทาง<br><b>Ads PR</b> (Facebook PR + บัญชี TikTok PR) ปันให้ทุกช่องทางตามยอดขาย รวมอยู่ใน Shared Ads' });
-  }
-}
-function exportMl() {
-  const head = ['SKU', 'สินค้า', 'ยอดขาย', 'KOL Conversion', 'KOL PR', 'KOL อื่นๆ', 'Product Ads', 'Shared Ads', 'CM1', 'MER'];
-  const lines = [head.join(',')].concat(_mlView.map(o => [o.sku, `"${o.name}"`, o.rev, o.kc, o.kp, o.ko, o.ad, o.aa, o.cm1, o.roi].map(v => typeof v === 'number' ? v.toFixed(2) : v).join(',')));
-  const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `MKT_Tracking_${mlRange().join('_')}.csv`; a.click();
+function renderMktLive() {
+  loadMktLiveJs().then(() => { if (currentPage === 'mktlive') window.mktLive.render(); }).catch(e => showError(e.message));
 }
 
 
@@ -10732,7 +10581,8 @@ window._authP.then(p => {
     if (q) { q.addEventListener('input', () => { list.innerHTML = render(q.value); hl = -1; }); q.focus(); }
     else { menu.tabIndex = -1; menu.focus({ preventScroll: true }); setHl(Math.max(0, items().findIndex(x => x.classList.contains('on')))); }
   }
-  document.addEventListener('mousedown', () => close());
+  // (2026-11-05) กดปุ่มที่เปิดอยู่ซ้ำ = ปิด (เดิม mousedown ปิดก่อน แล้ว click เปิดใหม่ทันที → กดซ้ำแล้วไม่ปิด)
+  document.addEventListener('mousedown', e => { if (openSel && openSel._uxBtn && openSel._uxBtn.contains(e.target)) return; close(); });
   window.addEventListener('resize', () => close());
   document.addEventListener('scroll', e => { if (menu && !menu.contains(e.target)) close(); }, true);
   let scheduled = false;
