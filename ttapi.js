@@ -1,3 +1,4 @@
+// ttapi.js (v20261105a) — ทราฟฟิกร้าน: วางโครงครั้งเดียวตั้งแต่เปิดหน้า (ตารางแยกแหล่งแสดงตั้งแต่แรก) · โหลดซ้ำ / เปลี่ยนช่วง แทนตัวเลขในที่เดิม — กันหน้าเด้ง
 // ttapi.js (v20261021f) — คอลัมน์เป้าดูอย่างเดียว (tt_gmv_target_range) · ตั้งเป้าที่หน้าเป้าหมาย KPI › TikTok GMV
 // ttapi.js (v20261021e) — เป้า GMV เป็นคอลัมน์ "เป้า" หน้าคอลัมน์ GMV (กดตัวเลขเพื่อแก้ เฉพาะผู้ดูแล) · เอาการ์ดเป้าออก
 // ttapi.js (v20261021c) — เอาตาราง "ประสิทธิภาพแต่ละช่องทาง" ออก (ซ้ำกับมุมมอง GMV) · รอบ Live เรียงล่าสุดก่อน
@@ -47,13 +48,26 @@
 
   // ================= ภาพรวม TikTok: ทราฟฟิกร้าน + รอบ Live =================
   let _trSeq = 0, _liveScope = 'own';
+  // (2026-11-05) ตารางทราฟฟิกแยกแหล่ง · T = null → โครงตอนโหลด (แถวเท่าของจริง ค่า "—")
+  function srcHtml(T) {
+    const g = T ? SRC.reduce((a, s) => a + T['gmv_' + s.k], 0) : 0;
+    const impr = T ? SRC.reduce((a, s) => a + T['impr_' + s.k], 0) : 0, pv = T ? SRC.reduce((a, s) => a + T['pv_' + s.k], 0) : 0;
+    const v = (x, f) => T ? f(x) : '—';
+    return `<div class="sa-ph"><h2>ทราฟฟิกแยกแหล่ง ${info('ttapi-src-info', 'คนเห็นสินค้า (Impression) → เปิดหน้าสินค้า → GMV แยกตามแหล่งที่ลูกค้ามาเจอสินค้า · ตัวเลขที่ TikTok นับ (GMV ก่อนหักยกเลิก / คืน)')}</h2></div>
+          <table class="ui-table sa-tbl" style="width:100%;" data-no-sort data-no-page><thead><tr><th class="l">แหล่ง</th><th class="num">Impression</th><th class="num">เข้าชมหน้าสินค้า</th><th class="num">CTR</th><th class="num">GMV (TikTok)</th><th class="l">สัดส่วน GMV</th></tr></thead>
+          <tbody>${SRC.map(s => { const im = T ? T['impr_' + s.k] : 0, p = T ? T['pv_' + s.k] : 0, gv = T ? T['gmv_' + s.k] : 0, sh = g ? gv / g * 100 : 0;
+            return `<tr><td class="l"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;background:${s.color};"></span>${s.label}</td><td class="num">${v(im, fmt)}</td><td class="num">${v(p, fmt)}</td><td class="num">${T ? pctTxt(p, im, 2) : '—'}</td><td class="num">${v(gv, baht)}</td><td class="l"><span class="sa-bar"><b style="width:${sh.toFixed(1)}%;background:${s.color};"></b></span>${T ? sh.toFixed(0) + '%' : '—'}</td></tr>`; }).join('')}</tbody>
+          <tfoot><tr><td class="l">รวม</td><td class="num">${v(impr, fmt)}</td><td class="num">${v(pv, fmt)}</td><td class="num">${T ? pctTxt(pv, impr, 2) : '—'}</td><td class="num">${v(g, baht)}</td><td class="l">${T ? '100%' : '—'}</td></tr></tfoot></table>`;
+  }
   async function renderTraffic(from, to) {
     const el = box('page-tthub', 'ttapi-traffic', document.getElementById('ttPromoDiv') ? 'ttPromoDiv' : 'tblTopSKUTt'); if (!el || !from || !to) return;   // (2026-10-20) วางก่อนหัวข้อ Promotion / SKU (เดิมไปแทรกใต้หัวข้อ)
     const seq = ++_trSeq;
-    el.innerHTML = `
+    // (2026-11-05) วางโครงครั้งเดียว · เรียกซ้ำ (เปลี่ยนช่วง / โหลดใหม่) แทนตัวเลขในที่เดิม ไม่ล้างกลับเป็น "กำลังโหลด" (หน้าไม่หด-ขยาย)
+    if (el.querySelector('#ttapi-tr-kpis')) el.querySelectorAll('#ttapi-live-scope .toggle-btn').forEach((b, i) => b.classList.toggle('active', (i === 0) === (_liveScope === 'own')));
+    else el.innerHTML = `
       <div class="sa-ph" style="margin:6px 0 10px;"><h2>ทราฟฟิกร้าน TikTok <span class="sa-scope">ตัวเลขที่ TikTok นับ</span> ${info('ttapi-tr-info', '<b>ที่มา:</b> TikTok Shop Analytics (API) รายวัน · TikTok ให้ข้อมูลย้อนหลังได้ถึง 10 เม.ย. 69<br><b>Impression</b> = จำนวนครั้งที่สินค้าถูกแสดง · <b>เข้าชม</b> = จำนวนครั้งที่เปิดหน้าสินค้า · <b>CTR</b> = เข้าชม ÷ Impression<br>GMV แยกช่องทางดูที่มุมมอง "GMV ตาม TikTok" ด้านบน')} <span id="ttapi-tr-note" class="sa-note"></span></h2></div>
       <section class="ui-metrics sa-strip2" id="ttapi-tr-kpis" style="margin-bottom:16px;grid-template-columns:repeat(4, minmax(0, 1fr)) !important;">${['Impression สินค้า', 'เข้าชมหน้าสินค้า', 'ออเดอร์', 'คืนเงิน'].map(l => kpi(l, '—', '')).join('')}</section>
-      <div id="ttapi-tr-src" style="display:none;"></div>
+      <div id="ttapi-tr-src" class="card sa-panel" style="margin-bottom:16px;">${srcHtml(null)}</div>
       <div class="card" style="margin-bottom:20px;"><div class="section-header" style="flex-wrap:wrap;gap:8px;"><div class="section-title">ผลงานรายรอบ Live ${info('ttapi-live-info', 'รอบ Live ที่ขายสินค้าของร้าน จาก TikTok Shop Analytics · เรียงจากรอบล่าสุด<br><b>CTR</b> = คลิกสินค้า ÷ การแสดงสินค้าใน Live · <b>คลิก→สั่ง</b> = สั่งซื้อ ÷ คลิกสินค้า · <b>ดูเฉลี่ย</b> = วินาทีต่อคนดู')}</div>
         <div class="toggle-group" id="ttapi-live-scope"><button class="toggle-btn ${_liveScope === 'own' ? 'active' : ''}" onclick="ttApi.setLiveScope('own')">บัญชีร้าน</button><button class="toggle-btn ${_liveScope === 'all' ? 'active' : ''}" onclick="ttApi.setLiveScope('all')">ทุกบัญชี</button></div></div>
         <div class="table-wrap"><table><thead><tr><th>วันเวลา</th><th>บัญชี</th><th>นาน</th><th>GMV</th><th>GMV / ชม.</th><th>คนซื้อ</th><th>ชิ้น</th><th>คนดู</th><th>คลิกสินค้า</th><th>CTR</th><th>คลิก→สั่ง</th><th>ดูเฉลี่ย</th><th>ผู้ติดตามใหม่</th></tr></thead><tbody id="ttapi-live-body"><tr><td colspan="13" class="empty">กำลังโหลด...</td></tr></tbody></table></div><div id="ttapi-live-pager"></div></div>`;
@@ -72,13 +86,7 @@
         kpi('คืนเงิน', baht(T.refunds), pctTxt(T.refunds, T.gmv) + ' ของ GMV');
       // (2026-11-03) แยกแหล่ง: เห็นว่าแหล่งไหนพาคนเข้าหน้าสินค้า / ขายได้
       const srcEl = document.getElementById('ttapi-tr-src');
-      if (srcEl) { const g = SRC.reduce((a, s) => a + T['gmv_' + s.k], 0);
-        srcEl.style.display = ''; srcEl.className = 'card sa-panel'; srcEl.style.marginBottom = '16px';
-        srcEl.innerHTML = `<div class="sa-ph"><h2>ทราฟฟิกแยกแหล่ง ${info('ttapi-src-info', 'คนเห็นสินค้า (Impression) → เปิดหน้าสินค้า → GMV แยกตามแหล่งที่ลูกค้ามาเจอสินค้า · ตัวเลขที่ TikTok นับ (GMV ก่อนหักยกเลิก / คืน)')}</h2></div>
-          <table class="ui-table sa-tbl" style="width:100%;" data-no-sort data-no-page><thead><tr><th class="l">แหล่ง</th><th class="num">Impression</th><th class="num">เข้าชมหน้าสินค้า</th><th class="num">CTR</th><th class="num">GMV (TikTok)</th><th class="l">สัดส่วน GMV</th></tr></thead>
-          <tbody>${SRC.map(s => { const im = T['impr_' + s.k], pv = T['pv_' + s.k], gv = T['gmv_' + s.k], sh = g ? gv / g * 100 : 0;
-            return `<tr><td class="l"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;background:${s.color};"></span>${s.label}</td><td class="num">${fmt(im)}</td><td class="num">${fmt(pv)}</td><td class="num">${pctTxt(pv, im, 2)}</td><td class="num">${baht(gv)}</td><td class="l"><span class="sa-bar"><b style="width:${sh.toFixed(1)}%;background:${s.color};"></b></span>${sh.toFixed(0)}%</td></tr>`; }).join('')}</tbody>
-          <tfoot><tr><td class="l">รวม</td><td class="num">${fmt(impr)}</td><td class="num">${fmt(pv)}</td><td class="num">${pctTxt(pv, impr, 2)}</td><td class="num">${baht(g)}</td><td class="l">100%</td></tr></tfoot></table>`; }
+      if (srcEl) srcEl.innerHTML = srcHtml(T);
       const liveRow = r => {
         const d = new Date(r.start_time), when = isNaN(d) ? '—' : d.toLocaleString('th-TH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
         return `<tr><td style="white-space:nowrap;">${when}</td><td style="font-family:'Sarabun',sans-serif;font-size:11px;">@${esc(r.username)}</td><td>${r.minutes != null ? fmt(r.minutes) + ' น.' : '—'}</td><td>${baht(r.gmv)}</td><td>${r.minutes > 0 ? baht(num(r.gmv) / r.minutes * 60) : '—'}</td><td>${fmt(r.customers)}</td><td>${fmt(r.items_sold)}</td><td>${fmt(r.viewers)}</td><td>${fmt(r.product_clicks)}</td><td>${r.ctr != null ? num(r.ctr).toFixed(2) + '%' : '—'}</td><td>${r.click_to_order != null ? num(r.click_to_order).toFixed(2) + '%' : '—'}</td><td>${r.avg_watch_s != null ? fmt(r.avg_watch_s) + ' วิ' : '—'}</td><td>${fmt(r.new_followers)}</td></tr>`;
