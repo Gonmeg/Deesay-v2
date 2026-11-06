@@ -4,6 +4,7 @@
 //   ช่วงนี้ vs ช่วงเทียบ (วันเดียวกันของเดือนก่อน หรือช่วงก่อนหน้าติดกัน) vs เฉลี่ย 3 ช่วง · 12 สัปดาห์ · แยกช่องทาง
 //   % เทียบคิดจากวันที่ข้อมูลครบเท่านั้น (rev_cur_cmp / total_cur_cmp — ทั้ง 2 ช่วงตัดให้ยาวเท่ากันรายช่องทาง) · ตัวเลขหลักโชว์ทั้งช่วง (ตรงกับหน้าอื่น)
 // กันหน้าเด้ง: วางโครงทั้งหน้าก่อนข้อมูลมา · กล่องขึ้น / ลง สูงคงที่ 10 แถว (ดูทั้งหมด = ผู้ใช้กดเอง) · ตารางอยู่ล่างสุด
+// (2026-11-05 c) ตาราง "ทุกสินค้า" แสดงครบทุกแถว (ไม่แบ่งหน้า) + ล็อคหัวคอลัมน์ไว้บนสุดตอนเลื่อน
 // (2026-11-05 b) ออกแบบใหม่: รายการขึ้น / ลงมีแถบขนาดสเกลเดียวกัน + ช่องทางที่พาขึ้น / ลง · ตารางเดียวมีช่องสีรายช่องทาง (แทนกล่องช่องทางและรายการข้อความ) · แถวรวม = ยอดรวมแต่ละช่องทาง
 (function () {
   'use strict';
@@ -100,7 +101,11 @@ body.light-theme .sr .ui-metric{box-shadow:1px 0 0 #EDF0F4}
 .sr-seg button{border:0;border-radius:7px;padding:5px 10px;font:inherit;font-size:12.5px;cursor:pointer;background:transparent;color:var(--text3);white-space:nowrap}
 .sr-seg button[aria-pressed="true"]{background:var(--bg2);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.2)}
 .sr-q{height:32px;width:210px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font:inherit;font-size:13px}
-.sr-tw{overflow-x:auto}
+.sr-tw{overflow-x:clip}
+.sr-tw.box{overflow:auto;max-height:calc(100vh - 140px)}
+.sr-tbl thead th{position:sticky;top:var(--sr-top,0px);z-index:3;background:var(--bg2);box-shadow:inset 0 -1px 0 var(--border)}
+.sr-tbl thead tr:nth-child(2) th{top:calc(var(--sr-top,0px) + var(--sr-h1,0px))}
+.sr-tw.box .sr-tbl thead th{top:0}.sr-tw.box .sr-tbl thead tr:nth-child(2) th{top:var(--sr-h1,0px)}
 .sr-tbl{min-width:1240px;font-variant-numeric:tabular-nums}
 .sr-tbl th.hg{text-align:center;border-bottom:0;padding-bottom:0;color:var(--text3);font-weight:500}
 .sr-tbl th.hc{text-align:center;min-width:74px}
@@ -145,7 +150,7 @@ body.light-theme .sr .ui-metric{box-shadow:1px 0 0 #EDF0F4}
             <button class="btn btn-ghost" type="button" id="srExport" data-tip="ทุกสินค้าตามที่กรองอยู่ พร้อมยอดแต่ละช่องทาง (ช่วงนี้ / ช่วงเทียบ)">⬇ Export</button></div></div>
         <div class="sr-tw"><table class="ui-table sr-tbl" id="srTbl" data-no-sort data-no-page><thead id="srHead"></thead>
           <tbody id="srBody"><tr><td colspan="13" class="empty">กำลังโหลด...</td></tr></tbody><tfoot id="srFoot"></tfoot></table></div>
-        <div id="srPager" style="padding:0 18px;"></div></div>
+      </div>
     </div>`;
     root.addEventListener('click', e => {
       const th = e.target.closest('th[data-sort]'); if (th && !e.target.closest('.ads-info-wrap')) { const k = th.dataset.sort; if (sortK === k) sortD = sortD === 'desc' ? 'asc' : 'desc'; else { sortK = k; sortD = k === 'rank' ? 'asc' : 'desc'; } page = 1; drawTable(); return; }
@@ -219,9 +224,8 @@ body.light-theme .sr .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       ${th('', '12 สัปดาห์ <span id="srIWk"></span>')}${th('rank', 'สถานะ <span id="srISt"></span>', 'l')}<th class="hg" colspan="${CH.length}">แต่ละช่องทาง (% เทียบช่วงเทียบ) <span id="srICh"></span></th></tr>
       <tr>${CH.map(c => `<th class="hc"${CH_SHORT[c] ? ` data-tip="${esc(c)}"` : ''}><span class="sr-dot" style="display:inline-block;vertical-align:1px;margin-right:5px;background:var(${CH_VAR[c] || '--text3'})"></span>${esc(CH_SHORT[c] || c)}</th>`).join('')}</tr>`;
     $('srCount').textContent = `${fmt(R.length)} สินค้า`;
-    const size = pgSize(), pages = Math.max(1, Math.ceil(R.length / size)); if (page > pages) page = pages;
     const cmap = r => Object.fromEntries((r.channels || []).map(c => [c.channel, c]));
-    $('srBody').innerHTML = R.slice((page - 1) * size, page * size).map(r => { const m = cmap(r);
+    $('srBody').innerHTML = R.map(r => { const m = cmap(r);
       return `<tr data-sku="${esc(r.sku)}" title="กดเพื่อเจาะสินค้านี้">
       <td class="num ui-muted">${rankOf[r.sku]}</td>
       <td class="pn"><span class="ui-trunc" style="display:block;">${esc(skuToName(r.sku))}</span><small>${esc(r.sku)}</small></td>
@@ -239,8 +243,15 @@ body.light-theme .sr .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       <td class="num"><span style="color:var(${cc - pv >= 0 ? '--good' : '--bad'});">${cc - pv >= 0 ? '+' : '−'}${fmt(Math.round(Math.abs(cc - pv)))}</span> ${chip(pct(cc, pv))}<span class="sm">ช่วงเทียบ ${fmt(Math.round(pv))}</span></td>
       <td class="num">${chip(pct(cc, a3))}<span class="sm">เฉลี่ย ${fmt(Math.round(a3))}</span></td><td></td><td></td>
       ${CH.map(c => { const t = chT(c); return `<td class="ht">${heat(t.cur, t.prev, c)}</td>`; }).join('')}</tr>` : '';
-    renderPagerHtml('srPager', page, pages, 'skuRev.go');
-    drawInfo();
+    drawInfo(); lockHead();
+  }
+  // ล็อคหัวคอลัมน์: ตารางพอดีจอ = หัวติดใต้แถบบนตอนเลื่อนทั้งหน้า · ตารางกว้างเกินจอ = เลื่อนในกล่อง (หัวติดบนกล่อง + เลื่อนซ้ายขวาได้)
+  function lockHead() {
+    const tw = $('srTbl').parentElement, hg = $('srTbl').querySelector('th.hg'), tb = document.querySelector('.topbar');
+    tw.classList.remove('box');
+    tw.style.setProperty('--sr-h1', (hg ? hg.offsetHeight : 0) + 'px');
+    tw.style.setProperty('--sr-top', (tb && getComputedStyle(tb).position === 'sticky' || tb && getComputedStyle(tb).position === 'fixed' ? tb.offsetHeight : 0) + 'px');
+    if ($('srTbl').offsetWidth > tw.clientWidth + 2) tw.classList.add('box');
   }
   function drawInfo() {
     const cur = `${thShort(M.from)} – ${thShort(M.to)}`, prv = `${thShort(M.prev_from)} – ${thShort(M.prev_to)}`, n = num(M.period_days) || 1;
@@ -299,5 +310,6 @@ body.light-theme .sr .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       $('srBody').innerHTML = `<tr><td colspan="11" class="empty">โหลดข้อมูลไม่สำเร็จ: ${esc(e.message)}</td></tr>`;
     }
   }
-  window.skuRev = { render, reload: () => { KEY = null; render(); }, go: p => { page = p; drawTable(); } };
+  window.skuRev = { render, reload: () => { KEY = null; render(); } };
+  window.addEventListener('resize', () => { if (M && $('srTbl')) lockHead(); });
 })();
