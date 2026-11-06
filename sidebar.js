@@ -155,6 +155,7 @@
   .sb-ib:hover { background: var(--bg3); color: var(--text); } .sb-ib .sb-ic { width: 16px; height: 16px; }
   .sb-fly { position: fixed; z-index: 1200; display: none; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 6px; min-width: 180px; font-family: 'Sarabun', sans-serif; color: var(--text); }
   .sb-fly.tip { min-width: 0; padding: 5px 10px; font-size: 12px; white-space: nowrap; }
+  .sb-fly:not(.tip)::before { content: ''; position: absolute; left: -16px; top: -8px; bottom: -8px; width: 16px; }   /* (2026-11-05) สะพานล่องหนระหว่างไอคอนกับเมนูย่อย — เลื่อนเมาส์ข้ามช่องว่างแล้วเมนูไม่หาย */
   .sb-fly .t { font-size: 12px; font-weight: 600; padding: 5px 8px 6px; }
   .sb-fly a, .sb-fly button { display: block; width: 100%; text-align: left; padding: 6px 8px; border: 0; border-radius: 7px; background: none; font: inherit; font-size: 12.5px; color: var(--text2); text-decoration: none; cursor: pointer; white-space: nowrap; }
   .sb-fly a:hover, .sb-fly button:hover { background: var(--bg3); color: var(--text); }
@@ -193,16 +194,21 @@
       fly.innerHTML = `<div class="t">${esc(el.dataset.label)}</div>`;
       g.querySelectorAll('.nav-item').forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.dataset.label || it.textContent.trim(); b.onclick = () => { hideFly(); it.click(); }; fly.appendChild(b); });
     } else { fly.className = 'sb-fly tip'; fly.textContent = el.dataset.label || el.textContent.trim(); }
-    fly.style.display = 'block';
+    fly.style.display = 'block'; fly._for = el;
     const top = fly.classList.contains('tip') ? r.top + (r.height - fly.offsetHeight) / 2 : r.top - 6;
     fly.style.left = (r.right + 8) + 'px'; fly.style.top = Math.max(8, Math.min(top, innerHeight - fly.offsetHeight - 8)) + 'px';
   };
+  // (2026-11-05) เมนูย่อยเปิดอยู่ แล้วเมาส์ผ่านไอคอนอื่นระหว่างทางไปเมนูย่อย → รอ 300 มิลลิวินาทีก่อนเปลี่ยน (เดิมเปลี่ยนทันที เมนูย่อยหายก่อนเลือกทัน)
+  let swT = null;
   aside.addEventListener('mouseover', e => {
     const el = e.target.closest('.nav-item, .nav-group-toggle, .sb-ib, .sb-tg, .sb-dot');
-    if (el && aside.contains(el) && el.offsetParent !== null) showFor(el);
+    if (!el || !aside.contains(el) || el.offsetParent === null) return;
+    clearTimeout(swT);
+    if (fly.style.display === 'block' && !fly.classList.contains('tip') && fly._for !== el) { swT = setTimeout(() => showFor(el), 300); return; }
+    showFor(el);
   });
-  aside.addEventListener('mouseout', e => { if (!aside.contains(e.relatedTarget) || !e.relatedTarget.closest('.nav-item, .nav-group-toggle, .sb-ib, .sb-tg, .sb-dot')) flyT = setTimeout(hideFly, 180); });
-  fly.addEventListener('mouseenter', () => clearTimeout(flyT)); fly.addEventListener('mouseleave', () => { flyT = setTimeout(hideFly, 150); });
+  aside.addEventListener('mouseout', e => { if (!aside.contains(e.relatedTarget) || !e.relatedTarget.closest('.nav-item, .nav-group-toggle, .sb-ib, .sb-tg, .sb-dot')) flyT = setTimeout(hideFly, 350); });
+  fly.addEventListener('mouseenter', () => { clearTimeout(flyT); clearTimeout(swT); }); fly.addEventListener('mouseleave', () => { flyT = setTimeout(hideFly, 350); });
   // ตอนย่อ: กดไอคอนกลุ่ม = เปิดเมนูย่อยลอย (ใช้ได้บนจอสัมผัสที่ไม่มีการชี้) แทนการกางกลุ่มในแถบแคบ
   aside.addEventListener('click', e => { const g = e.target.closest('.nav-group-toggle'); if (B.classList.contains('sb-mini') && g) { e.stopPropagation(); showFor(g); } }, true);
 
