@@ -800,7 +800,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.04-g"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.05-b"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -950,7 +950,12 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
       <div class="filter-group mm-filter" id="momentumModeGroup" style="display:none;">
         <span class="filter-label">เทียบกับ</span>
-        <select id="momentumMode" onchange="_momentumKey=null;loadMomentum()"><option value="month">วันเดียวกันของเดือนก่อน</option><option value="adjacent">ช่วงก่อนหน้าติดกัน (ยาวเท่ากัน)</option></select>
+        <select id="momentumMode" onchange="document.getElementById('topSearchBtn')?.classList.add('is-pending')"><option value="month">เดือนก่อน (วันเดียวกัน)</option><option value="adjacent">ช่วงก่อนหน้าติดกัน</option></select>
+      </div>
+      <!-- (2026-11-05) หน้าแนวโน้มสินค้า: นับเฉพาะช่องทางออนไลน์ หรือทุกช่องทาง · เปลี่ยนแล้วกดค้นหา (เหมือนตัวกรองอื่นบนแถบ) -->
+      <div class="filter-group mm-filter" id="skuScopeGroup" style="display:none;">
+        <span class="filter-label">นับ</span>
+        <select id="skuScope" onchange="document.getElementById('topSearchBtn')?.classList.add('is-pending')"><option value="retail">ออนไลน์</option><option value="all">ทุกช่องทาง</option></select>
       </div>
       <div class="filter-group" id="skdFilterGroup" style="display:none;">
         <span class="filter-label">สินค้า</span>
@@ -1273,40 +1278,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
     </div>
     <div class="page" id="page-skurev">
-      <div class="grid-2" id="skurev-kpis" style="margin-bottom:16px;">
-        <div class="card"><div class="card-title">ยอดขายรวม (SKU)</div><div class="kpi-value" id="skurev-total-rev">—</div><div class="kpi-sub"><span id="skurev-rev-cmp" class="badge-up">—</span> vs ช่วงก่อน</div></div>
-        <div class="card"><div class="card-title">จำนวนชิ้นรวม</div><div class="kpi-value" id="skurev-total-qty">—</div><div class="kpi-sub"><span id="skurev-qty-cmp" class="badge-up">—</span> vs ช่วงก่อน</div></div>
-      </div>
-      <div class="card" style="margin-bottom:16px;padding:10px 16px;font-size:10.5px;color:var(--text3);line-height:1.6;">
-        <b>อะไรขึ้น อะไรลง</b> — เทียบช่วงวันที่ที่เลือก กับ <b>ช่วงเทียบ</b> (เลือกได้: วันเดียวกันของเดือนก่อน เช่น 1–16 ก.ย. vs 1–16 ส.ค. · หรือช่วงก่อนหน้าติดกัน 16–31 ส.ค.) และ <b>เฉลี่ย 3 ช่วง</b> แบบเดียวกัน · ป้ายสถานะคิดจาก % vs ช่วงเทียบ: 🔺 Upturn ≥ +15% · 🔻 Downturn ≤ −15% · ➖ ทรงตัว · 🆕 ใหม่ · 💤 หยุดขาย (กด ⓘ ที่หัวคอลัมน์ดูรายละเอียด) · คลิกแถวเพื่อเจาะสินค้านั้น
-      </div>
-      <div id="momentum-cards" class="grid-2" style="margin-bottom:20px;"></div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="section-header" style="flex-wrap:wrap;gap:8px;">
-          <div class="section-title">ทุกสินค้า — ช่วงนี้ vs ช่วงก่อน <span id="momentum-count" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <select class="ls-input" id="momentumStatusFilter" onchange="renderMomentumTable()" style="width:150px;padding:6px 10px;font-size:12px;"><option value="">ทุกสถานะ</option><option value="up">🔺 Upturn</option><option value="down">🔻 Downturn</option><option value="flat">➖ ทรงตัว</option><option value="new">🆕 ใหม่</option><option value="dead">💤 หยุดขาย</option></select>
-            <input type="text" id="skurevSearch" placeholder="ค้นหา SKU หรือชื่อสินค้า..." onkeyup="renderMomentumTable()" style="width:200px;">
-            <button class="btn btn-ghost" onclick="exportTable('tblSkuRev')">⬇ Export CSV</button>
-            <button class="btn btn-ghost" onclick="exportSkuRevWithChannel()" title="Export แบบยาวลงล่าง แยกเดือน x SKU x ช่องทาง">⬇ Export (แยกช่องทาง+เดือน)</button>
-          </div>
-        </div>
-        <div class="table-wrap" style="overflow-x:auto;">
-          <table id="tblSkuRev">
-            <thead><tr><th>#</th><th>SKU</th><th>ชื่อสินค้า</th>
-              <th class="sortable-th" onclick="momentumSort('rev_cur')">ยอดขาย <span class="sort-ind" id="mms-rev_cur"></span></th>
-              <th class="sortable-th" onclick="momentumSort('qty_cur')">ชิ้น <span class="sort-ind" id="mms-qty_cur"></span></th>
-              <th data-tip="ยอดขาย ÷ ชิ้น ไม่นับตัวแทน / Modern Trade">ราคา/ชิ้น</th><th>สัดส่วน</th>
-              <th class="sortable-th" onclick="momentumSort('chg')">vs ช่วงเทียบ <span class="sort-ind" id="mms-chg"></span> <span id="mm-info-chg"></span></th>
-              <th class="sortable-th" onclick="momentumSort('chg3')">vs เฉลี่ย 3 ช่วง <span class="sort-ind" id="mms-chg3"></span> <span id="mm-info-chg3"></span></th>
-              <th>12 สัปดาห์ <span id="mm-info-wk"></span></th><th class="sortable-th" onclick="momentumSort('rank')">สถานะ <span class="sort-ind" id="mms-rank"></span> <span id="mm-info-st"></span></th><th>เปลี่ยนแปลงแต่ละช่องทาง <span id="mm-info-ch"></span></th></tr></thead>
-            <tbody id="tbodySkuRev"><tr><td colspan="12"><span class="skeleton" style="display:inline-block;width:60%;height:14px;border-radius:4px;"></span></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      
-
-      
+      <!-- (2026-11-05) หน้าแนวโน้มสินค้า — สร้างโดย skurev.js (โหลดครั้งแรกที่กดเมนู) · ข้อมูล = RPC sku_trend_page -->
+      <div id="skurev-root"></div>
     </div>
 
     <div class="page" id="page-skuanalysis">
@@ -2199,7 +2172,6 @@ const debouncedFilterPtAddDropdown = debounce(() => filterPtAddDropdown());
 const debouncedFilterCrmProductDropdown = debounce(() => filterCrmProductDropdown());
 const debouncedOnCrmRecencyChange = debounce(() => onCrmRecencyChange());
 const debouncedFilterNbProductDropdown = debounce(() => filterNbProductDropdown());
-const debouncedFilterSkuDropdown = debounce(() => filterSkuDropdown());
 const debouncedFilterFlowSkuDropdown = debounce(() => filterFlowSkuDropdown());
 const debouncedTtaCreatorAndTable = debounce(() => { renderTtaCreatorSummary(); renderTtaTable(); });
 const debouncedRenderTtaCampaignTable = debounce(() => renderTtaCampaignTable());
@@ -2781,7 +2753,7 @@ const pageTitles = {
   /* geo: 'จังหวัด / ภูมิภาค' — ซ่อนชั่วคราว */ crm: 'CRM (Facebook)', flow: 'เส้นทางซื้อซ้ำ (Facebook)', neverbought: 'ลูกค้าที่ยังไม่ซื้อ (Facebook)',
   tthub: 'ภาพรวม TikTok', ttcontent: 'ผลงานคอนเทนต์ (TikTok)', ttads: 'TikTok Ads', livesearch: 'ค้นหา Live (TikTok)', creatorperf: 'Creator Performance (TikTok)', shhub: 'ภาพรวม Shopee', shads: 'Shopee Ads', lzhub: 'ภาพรวม Lazada',
   mthub: 'ภาพรวม Modern Trade',
-  skurev: 'แนวโน้มสินค้า — อะไรขึ้น อะไรลง', skuanalysis: 'เจาะสินค้า', adperf: 'Ad Performance',
+  skurev: 'แนวโน้มสินค้า', skuanalysis: 'เจาะสินค้า', adperf: 'Ad Performance',
   cost: 'Business Insight', mktlive: 'MKT Tracking', home: 'หน้าแรก — สรุปประจำวัน', fbengage: 'Engagement รายวัน (Facebook)', fbads: 'Facebook Ads (Meta)', kol: 'KOL',
   supply: 'Supply Chain — สต็อก / แผนสั่งซื้อ'
 };
@@ -3336,7 +3308,9 @@ async function renderChannel() {
 // หมายเหตุ: ค่าโฆษณามีระดับความละเอียดแค่ channel รวม (Facebook/TikTok/Shopee/Lazada)
 // Google Sheet ต้นทางไม่มีคอลัมน์ sub_channel เลยแสดงค่าโฆษณา/ROAS ได้แค่ระดับ Facebook รวม ไม่ใช่รายsub-channel
 async function renderFbHub() {
+  const shell = hubShell('fbhub');   // (2026-11-05) โครงหน้าก่อน (พร้อมกับโหลดยอดขาย)
   if (!(await hubPrepare('fbhub'))) return;
+  await shell;
   // (2026-10-18) แม่แบบ 1: แผงตัวเลข + กราฟ + ตารางรายเพจ อยู่ใน sales.js (กราฟ / ตาราง Sub-Channel เดิมเอาออกแล้ว)
   renderHubOverview('fbhub');
   const subSel = document.getElementById('fbPromoSubChannel');
@@ -3703,11 +3677,16 @@ function fbeRenderPostListPage(pageNum) {
 
 // ===== TIKTOK HUB =====
 async function renderTtHub() {
+  const shell = hubShell('tthub');   // (2026-11-05) โครงหน้าก่อน (พร้อมกับโหลดยอดขาย)
+  // (2026-11-05) ทราฟฟิกร้านไม่ต้องรอยอดขาย — วางโครงพร้อมกันตั้งแต่เปิดหน้า (เดิมแทรกเข้ามาทีหลัง ดันส่วน Promotion ลง)
+  const f0 = getDateValue('From'), t0 = getDateValue('To');
+  const api0 = ensureTtApi().then(api => { if (currentPage === 'tthub') api.renderTraffic(f0, t0); return api; }).catch(e => { console.warn('ttapi', e); return null; });
   if (!(await hubPrepare('tthub'))) return;
+  await shell;
   const from = getDateValue('From'), to = getDateValue('To');
   // (2026-10-18) แม่แบบ 1 (sales.js) · TikTok มีร้านเดียว จึงไม่มีตารางรายร้าน — ใช้ตาราง "ยอดขายแยกตามช่องทาง" แทน (ออเดอร์ชุดเดียวกับแผงตัวเลข)
   renderHubOverview('tthub', [ttFreeSampleTile(from, to)]);   // (2026-10-21) ตาราง "ยอดขายแยกตามช่องทาง" อยู่ใต้กราฟตามเดิม
-  ensureTtApi().then(api => { api.renderOrderChannel(from, to); api.renderTraffic(from, to); }).catch(e => console.warn('ttapi', e));
+  api0.then(api => { if (!api) return; api.renderOrderChannel(from, to); if (from !== f0 || to !== t0) api.renderTraffic(from, to); });
   renderPromotion('Tt', 'TikTok');
 }
 // (2026-10-21) สลับมุมมองหน้าภาพรวม TikTok: ยอดขายจริง (ตามคำสั่งซื้อ) / GMV ตาม TikTok (ตรง Seller Center)
@@ -3763,7 +3742,9 @@ function ttFreeSampleTile(from, to) {
 // ค่า Ads Shopee รวมทุกประเภทของช่วง — แหล่งเดียวกับหน้า Shopee Ads (shopee_ads_daily + shopee_ads_manual) ตัวเลขจึงตรงกันเสมอ
 const _shHubAds = { key: null, total: 0, days: 0 };
 async function renderShHub() {
+  const shell = hubShell('shhub');   // (2026-11-05) โครงหน้าก่อน (พร้อมกับโหลดยอดขาย)
   if (!(await hubPrepare('shhub'))) return;
+  await shell;
   // (2026-10-18) แม่แบบ 1 (sales.js) · ค่า Ads จาก mv_ad_spend_daily — ยอดเท่ากับ 4 แหล่งเดิม (API + Brand / Live / Coins + CPAS + ชีท 24hr) ทุกเดือน
   renderHubOverview('shhub');
   if (_shView === 'system') ensureShSys().then(m => m.render(getDateValue('From'), getDateValue('To'))).catch(e => console.warn('shsys', e));
@@ -3773,7 +3754,9 @@ async function renderShHub() {
 
 // ===== LAZADA HUB =====
 async function renderLzHub() {
+  const shell = hubShell('lzhub');   // (2026-11-05) โครงหน้าก่อน (พร้อมกับโหลดยอดขาย)
   if (!(await hubPrepare('lzhub'))) return;
+  await shell;
   renderHubOverview('lzhub');   // (2026-10-18) แม่แบบ 1 (sales.js)
   renderPromotion('Lz', 'Lazada');
 }
@@ -4467,6 +4450,13 @@ const HUB_OV = {
   shhub: { ch: 'Shopee', key: 'sh', adsPage: 'shads', adsName: 'Shopee Ads' },
   lzhub: { ch: 'Lazada', key: 'lz' },
 };
+// (2026-11-05) วางโครงหน้า (แผงตัวเลข / กราฟ / ตาราง) ทันทีที่เปิดหน้า ไม่รอยอดขาย / ค่า Ads — เดิมช่องนี้ว่างจนข้อมูลมา ส่วน Promotion ด้านล่างจึงถูกดันลงทีหลัง (หน้าเด้ง)
+async function hubShell(page) {
+  const C = HUB_OV[page], root = document.getElementById(page + '-ov'); if (!C || !root || root.querySelector('.ov')) return;
+  try { await loadSalesJs(); } catch (e) { return; }
+  if (currentPage !== page || !window.salesOverviewShell) return;
+  window.salesOverviewShell({ root, page, hub: true, ch: C.ch, adsPage: C.adsPage, adsName: C.adsName, extraTiles: page === 'tthub' ? [{ name: 'ตัวอย่างฟรี' }] : [] });
+}
 async function renderHubOverview(page, extraTiles) {
   const C = HUB_OV[page], root = document.getElementById(page + '-ov'); if (!C || !root) return;
   try {
@@ -6121,246 +6111,24 @@ function downloadCSV(rows, filename) {
   a.click();
 }
 
-// ===== SKU REVENUE PAGE =====
+// ===== แนวโน้มสินค้า (2026-11-05: ย้ายไป skurev.js) =====
+function loadSkuRevJs() {
+  if (window.skuRev) return Promise.resolve();
+  if (window._skuRevJsP) return window._skuRevJsP;
+  window._skuRevJsP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'skurev.js?v=1';
+    s.onload = res; s.onerror = () => { window._skuRevJsP = null; rej(new Error('โหลด skurev.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
+    document.body.appendChild(s);
+  });
+  return window._skuRevJsP;
+}
 function renderSkuRev() {
-  // (2026-09-16) ทั้งหน้าใช้ข้อมูลชุดเดียว = RPC sku_momentum (ช่วงวันที่ + ช่องทาง + ช่วงเทียบ จากแถบบน) — ไม่ใช้ตารางรายเดือนแล้ว
-  loadMomentum();
-}
-
-function renderSkuChips() {
-  const selector = document.getElementById('skuTrendSelector');
-  if (!selector) return;
-  const selected = window._selectedSKUs || [];
-  selector.innerHTML = selected.map((sku, i) => `<span class="sku-chip selected" style="background:${COLORS[i]};" onclick="removeSkuChip('${sku}')">${sku} ✕</span>`).join('');
-}
-
-function renderSkuDropdown(query) {
-  const list = document.getElementById('skuDropdownList');
-  if (!list) return;
-  const all = window._skuAllSKUs || [], selected = window._selectedSKUs || [];
-  const filtered = all.filter(s => s.toLowerCase().includes(query.toLowerCase()) && !selected.includes(s));
-  list.innerHTML = filtered.slice(0,20).map(sku => `<div onclick="addSkuChip('${sku}')" style="padding:7px 12px;cursor:pointer;font-size:12px;font-family:'Sarabun',sans-serif;color:var(--text2);border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${sku}</div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px;">ไม่พบ SKU</div>';
-}
-
-function filterSkuDropdown() { showSkuDropdown(); renderSkuDropdown(document.getElementById('skuSearchInput')?.value || ''); }
-function showSkuDropdown() { const l=document.getElementById('skuDropdownList'); if(l) l.style.display='block'; }
-
-function addSkuChip(sku) {
-  if (!window._selectedSKUs) window._selectedSKUs = [];
-  if (window._selectedSKUs.length >= 5 || window._selectedSKUs.includes(sku)) return;
-  window._selectedSKUs.push(sku);
-  const inp = document.getElementById('skuSearchInput'); if (inp) inp.value = '';
-  renderSkuChips(); renderSkuDropdown(''); renderSkuTrend();
-}
-function removeSkuChip(sku) {
-  if (!window._selectedSKUs || window._selectedSKUs.length <= 1) return;
-  window._selectedSKUs = window._selectedSKUs.filter(s => s !== sku);
-  renderSkuChips(); renderSkuTrend();
-}
-
-function renderSkuTrend() {
-  const d = window._skuTrendAllData || [];
-  const selectedSKUs = window._selectedSKUs || [];
-  const trendMode = document.getElementById('skurevTrendMode')?.value || 'revenue';
-  const trendData = {};
-  d.forEach(r => {
-    const k = r.parent_sku || '—';
-    if (!selectedSKUs.includes(k)) return;
-    const day = r.date;
-    if (!trendData[k]) trendData[k] = {};
-    if (!trendData[k][day]) trendData[k][day] = { rev: 0, qty: 0 };
-    trendData[k][day].rev += parseFloat(r.total_revenue)||0;
-    trendData[k][day].qty += parseFloat(r.total_qty)||0;
-  });
-  const days = [...new Set(d.map(r => r.date))].sort();
-  const datasets = selectedSKUs.map((sku, i) => ({
-    label: sku, data: days.map(dt => trendData[sku]?.[dt]?.[trendMode === 'revenue' ? 'rev' : 'qty'] || 0),
-    borderColor: COLORS[i], backgroundColor: COLORS[i] + '20', borderWidth: 2, pointRadius: days.length > 60 ? 0 : 3, tension: 0.3, fill: false
-  }));
-  makeChart('chartSkuTrend', 'line', days, datasets);
-}
-
-// ===== Momentum (2026-09-16): ทุก SKU ช่วงนี้ vs ช่วงก่อน vs เฉลี่ย 3 ช่วง — RPC sku_momentum (mv_sku_daily) =====
-const MOMENTUM_UP = 15, MOMENTUM_DOWN = -15;
-let _momentum = null, _momentumKey = null, _mmSortKey = 'rev_cur', _mmSortDir = 'desc';
-// (2026-10-21) เทียบด้วย rev_cur_cmp = ยอดช่วงนี้เฉพาะวันที่ข้อมูลครบ (ยาวเท่าช่วงเทียบ) · rev_cur = ยอดทั้งช่วงที่โชว์ (ตรงกับหน้าอื่น)
-const mmCur = r => r.rev_cur_cmp != null ? +r.rev_cur_cmp : +r.rev_cur;
-function momentumStatus(r) {
-  const cur = mmCur(r);
-  if (cur <= 0 && r.rev_prev > 0) return { key: 'dead', label: '💤 หยุดขาย', color: 'var(--text3)', rank: 5 };
-  if (r.rev_prev <= 0 && r.rev_cur > 0) return { key: 'new', label: '🆕 ใหม่', color: 'var(--accent)', rank: 3 };
-  const chg = r.rev_prev > 0 ? (cur - r.rev_prev) / r.rev_prev * 100 : 0;
-  if (chg >= MOMENTUM_UP) return { key: 'up', label: '🔺 Upturn', color: 'var(--green)', rank: 1 };
-  if (chg <= MOMENTUM_DOWN) return { key: 'down', label: '🔻 Downturn', color: 'var(--red)', rank: 2 };
-  return { key: 'flat', label: '➖ ทรงตัว', color: 'var(--text2)', rank: 4 };
-}
-// (2026-09-22) บรรทัดอธิบายใต้สถานะ — นับจากช่องทางจริง บอกว่าลง/ขึ้นกี่ช่องทาง และช่องไหนดึงมากสุด
-function momentumWhy(r) {
-  const chs = (r.channels || []).map(c => ({ ch: c.channel || c.ch || c.name, diff: (+c.cur || 0) - (+c.prev || 0), prev: +c.prev || 0 }))
-    .filter(c => c.prev > 0 || c.diff !== 0);
-  if (!chs.length || r.st.key === 'new' || r.st.key === 'dead') return '';
-  const dn = chs.filter(c => c.diff < 0), up = chs.filter(c => c.diff > 0);
-  const worst = dn.slice().sort((a, b) => a.diff - b.diff)[0], best = up.slice().sort((a, b) => b.diff - a.diff)[0];
-  const n = chs.length, sub = t => `<div style="font-size:10px;color:var(--text3);font-weight:400;line-height:1.45;white-space:normal;max-width:190px;">${t}</div>`;
-  if (r.st.key === 'down') return sub(`ลง ${dn.length} จาก ${n} ช่องทาง${worst ? ` · ลงมากสุด ${worst.ch} −${fmt(-worst.diff)}` : ''}${dn.length === n ? '<br>ลงทุกช่องทาง → น่าจะเป็นที่ตัวสินค้า/ฤดูกาล' : ''}`);
-  if (r.st.key === 'up') return sub(`ขึ้น ${up.length} จาก ${n} ช่องทาง${best ? ` · ขึ้นมากสุด ${best.ch} +${fmt(best.diff)}` : ''}`);
-  // ทรงตัว: ยอดรวมไม่เปลี่ยนมาก แต่ข้างในอาจมีช่องทางชดเชยกัน
-  if (dn.length > up.length && best) return sub(`ยอดรวมทรงตัว เพราะ ${best.ch} +${fmt(best.diff)} ชดเชยอีก ${dn.length} ช่องทางที่ลง`);
-  if (up.length > dn.length && worst) return sub(`ยอดรวมทรงตัว เพราะ ${worst.ch} −${fmt(-worst.diff)} กินส่วนที่ ${up.length} ช่องทางขึ้น`);
-  return '';
-}
-function sparkline(arr, color) {
-  const v = (arr || []).map(Number); if (!v.length) return '';
-  const max = Math.max(...v, 1), w = 84, h = 22, step = w / Math.max(v.length - 1, 1);
-  const pts = v.map((y, i) => `${(i * step).toFixed(1)},${(h - 2 - (y / max) * (h - 4)).toFixed(1)}`).join(' ');
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;"><polyline fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" points="${pts}"/></svg>`;
-}
-function pctCell(chg, hasBase) {
-  if (!hasBase) return '<span style="color:var(--text3);">—</span>';
-  const col = chg >= MOMENTUM_UP ? 'var(--green)' : chg <= MOMENTUM_DOWN ? 'var(--red)' : 'var(--text2)';
-  return `<span style="color:${col};font-weight:600;">${chg >= 0 ? '▲' : '▼'}${Math.abs(chg).toFixed(1)}%</span>`;
-}
-async function loadMomentum() {
-  const ch = document.getElementById('filterChannel').value || null, sub = document.getElementById('filterSubChannel').value || null;
-  const from = getDateValue('From'), to = getDateValue('To');
-  const mode = document.getElementById('momentumMode')?.value || 'month';
-  const key = [from, to, ch, sub, mode].join('|');
-  if (_momentumKey === key && _momentum) { renderMomentumTable(); return; }
-  try {
-    const d = await supaRpc('sku_momentum', { p_from: from, p_to: to, p_channel: ch, p_sub: sub, p_mode: mode });
-    _momentum = d; _momentumKey = key;
-  } catch (e) {
-    document.getElementById('tbodySkuRev').innerHTML = `<tr><td colspan="12" class="empty">โหลด momentum ไม่สำเร็จ: ${ttcEsc(e.message)} — รัน SQL 92 หรือยัง?</td></tr>`; return;
-  }
-  renderMomentumTable();
-}
-function momentumSort(k) { if (_mmSortKey === k) _mmSortDir = _mmSortDir === 'desc' ? 'asc' : 'desc'; else { _mmSortKey = k; _mmSortDir = k === 'rank' ? 'asc' : 'desc'; } renderMomentumTable(); }
-function momentumRows() {
-  const d = _momentum; if (!d) return [];
-  const total = +d.total_cur || 1;
-  return (d.skus || []).map(r => {
-    const st = momentumStatus(r);
-    const cur = mmCur(r);
-    const chg = r.rev_prev > 0 ? (cur - r.rev_prev) / r.rev_prev * 100 : (r.rev_cur > 0 ? 999 : 0);
-    const chg3 = r.rev_avg3 > 0 ? (cur - r.rev_avg3) / r.rev_avg3 * 100 : (r.rev_cur > 0 ? 999 : 0);
-    const chs = (r.channels || []).map(c => ({ ...c, diff: (+c.cur || 0) - (+c.prev || 0) }));
-    const drag = chs.filter(c => c.diff < 0).sort((a, b) => a.diff - b.diff)[0] || null;
-    const lift = chs.filter(c => c.diff > 0).sort((a, b) => b.diff - a.diff)[0] || null;
-    const allDown = chs.length > 1 && chs.every(c => c.diff <= 0) && r.rev_prev > 0 && chg <= MOMENTUM_DOWN;
-    return { ...r, st, rank: st.rank, chg, chg3, share: (+r.rev_cur || 0) / total * 100, drag, lift, allDown };
-  });
-}
-function renderMomentumTable() {
-  const rows0 = momentumRows(); if (!_momentum) return;
-  const search = (document.getElementById('skurevSearch')?.value || '').toLowerCase();
-  const stF = document.getElementById('momentumStatusFilter')?.value || '';
-  let rows = rows0.filter(r => (!search || r.sku.toLowerCase().includes(search) || skuToName(r.sku).toLowerCase().includes(search)) && (!stF || r.st.key === stF));
-  const v = r => _mmSortKey === 'rank' ? r.rank : +r[_mmSortKey] || 0;
-  rows.sort((a, b) => (_mmSortDir === 'asc' ? 1 : -1) * (v(a) - v(b)));
-  document.querySelectorAll('[id^="mms-"]').forEach(el => el.textContent = ''); const ind = document.getElementById('mms-' + _mmSortKey); if (ind) ind.textContent = _mmSortDir === 'asc' ? '▲' : '▼';
-  // (2026-10-21) ช่องทางที่ข้อมูลยังไม่ครบถึงวันสุดท้ายที่เลือก → เทียบเฉพาะวันที่ครบ (จัดกลุ่มตามวันที่)
-  const capTxt = (() => { const g = {}; (_momentum.cmp_caps || []).forEach(c => { (g[c.to] = g[c.to] || []).push(c.channel); });
-    return Object.entries(g).sort().map(([dt, chs]) => `${chs.join(' · ')} ถึง ${thShort(dt)}`).join(' · '); })();
-  document.getElementById('momentum-count').textContent = `(${fmt(rows.length)} SKU · เทียบกับ ${thShort(_momentum.prev_from)} – ${thShort(_momentum.prev_to)}${capTxt ? ' · เทียบเฉพาะวันที่ข้อมูลครบ: ' + capTxt : ''})`;
-  // ⓘ อธิบายคอลัมน์ (ครั้งเดียว)
-  { const M = _momentum; const mode = M.mode === 'month' ? 'วันเดียวกันของเดือนก่อน' : 'ช่วงก่อนหน้าติดกัน';
-    const put = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };   // (2026-10-21) อัปเดตทุกครั้ง (เดิมค้างข้อความของช่วงแรก)
-    const cur = `${thShort(M.from)} – ${thShort(M.to)}`, prv = `${thShort(M.prev_from)} – ${thShort(M.prev_to)}`;
-    // 3 ช่วงเทียบจริง (คำนวณแบบเดียวกับ RPC) เพื่อบอกวันที่ในกล่อง ⓘ
-    const addM = (s, k) => { const dt = new Date(s + 'T00:00:00'); const day = dt.getDate(); dt.setDate(1); dt.setMonth(dt.getMonth() - k); const last = new Date(dt.getFullYear(), dt.getMonth() + 1, 0).getDate(); dt.setDate(Math.min(day, last)); return fmtDateISO(dt); };
-    const addD = (s, n) => { const dt = new Date(s + 'T00:00:00'); dt.setDate(dt.getDate() + n); return fmtDateISO(dt); };   // (2026-10-18) วันที่ท้องถิ่น — เดิมใน ⓘ เร็วไป 1 วัน
-    const n = +M.period_days || 1;
-    const per = k => M.mode === 'month' ? [addM(M.from, k), addM(M.to, k)] : [addD(M.from, -k * n), addD(M.from, -(k - 1) * n - 1)];
-    const three = [1, 2, 3].map(k => { const [a, b] = per(k); return `${thShort(a)} – ${thShort(b)}`; }).join(' / ');
-    const capNote = (M.cmp_caps || []).length ? '<br>วันที่ข้อมูลยังไม่ครบ (เช่น วันนี้) ไม่นับในการเทียบ — ทั้ง 2 ช่วงตัดให้ยาวเท่ากัน' : '';
-    put('mm-info-chg', fbeInfoIcon('mmi-chg', `<b>vs ช่วงเทียบ</b><br>ช่วงที่เลือก (${cur}) ขายได้มากหรือน้อยกว่า <b>${prv}</b> กี่ %<br>เช่น ▼8.6% = ช่วงนี้ขายได้น้อยกว่าช่วงเทียบ 8.6%${capNote}<br><span style="color:var(--text3);">เปลี่ยนช่วงเทียบได้ที่แถบบน "เทียบกับ"</span>`));
-    put('mm-info-chg3', fbeInfoIcon('mmi-chg3', `<b>vs เฉลี่ย 3 ช่วง</b><br>เทียบช่วงที่เลือก (${cur}) กับค่าเฉลี่ยของ 3 ช่วงเทียบ (${three})<br>• ▼ ช่วงเทียบ แต่ ▲ เฉลี่ย → ช่วงเทียบแค่สูงผิดปกติ (เช่น ตัวแทนสั่งลอต)<br>• ▼ ทั้งคู่ → ลงจริง ควรดู`));
-    put('mm-info-wk', fbeInfoIcon('mmi-wk', `<b>12 สัปดาห์</b><br>ยอดขายรายสัปดาห์ 12 สัปดาห์ จบที่ ${thShort(M.week_end || M.to)} (วันสุดท้ายที่ข้อมูลครบ)<br>ซ้าย = เก่า · ขวา = ล่าสุด · สีเส้นตามสถานะ`));
-    put('mm-info-st', fbeInfoIcon('mmi-st', `<b>สถานะ</b> (จาก % vs ช่วงเทียบ)<br>🔺 Upturn = ขึ้นเกิน ${MOMENTUM_UP}% · 🔻 Downturn = ลงเกิน ${Math.abs(MOMENTUM_DOWN)}%<br>➖ ทรงตัว · 🆕 ใหม่ (ช่วงเทียบไม่มียอด) · 💤 หยุดขาย (ช่วงนี้ไม่มียอด)<br>บรรทัดเล็ก = ขึ้น/ลงกี่ช่องทาง และช่องที่เปลี่ยนมากสุด<br>ลงทุกช่อง → มักเป็นที่ตัวสินค้า · ลงบางช่อง → มักเป็นที่ช่องนั้น (Ads / ราคา / ของหมด)`));
-    put('mm-info-ch', fbeInfoIcon('mmi-ch', '<b>เปลี่ยนแปลงแต่ละช่องทาง</b><br>สินค้านี้ในแต่ละช่องทาง ขึ้นหรือลงกี่ % vs ช่วงเทียบ (เรียงจากหายมากสุด) · เอาเมาส์วางเห็นตัวเลขบาท')); }
-  // สัดส่วน (วงกลม 2 อัน) + ข้อมูลให้ปุ่ม "วิเคราะห์ใหม่" — จากชุดเดียวกัน
-  { const sorted = rows0.slice().sort((a, b) => b.rev_cur - a.rev_cur).map(r => [r.sku, { rev: +r.rev_cur, qty: +r.qty_cur }]);
-    window._skuSorted = sorted; window._skuTotalRev = +_momentum.total_cur || 1; window._skuAllSKUs = sorted.map(([k]) => k);
-  }
-  // KPI 4 ใบบนสุด — ใช้ตัวเลขรายวันชุดเดียวกับตาราง (เดิมคิดจากตารางรายเดือน ทำให้ % เพี้ยนเมื่อเลือกช่วงไม่เต็มเดือน)
-  { const M = _momentum; const tc = +M.total_cur || 0, tp = +M.total_prev || 0, qc = +M.qty_cur || 0, qp = +M.qty_prev || 0;
-    const tcc = M.total_cur_cmp != null ? +M.total_cur_cmp : tc, qcc = M.qty_cur_cmp != null ? +M.qty_cur_cmp : qc;
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('skurev-total-rev', fmt(tc)); set('skurev-total-qty', fmt(qc) + ' ชิ้น');
-    const rr = +M.rev_cur_retail || 0, qr = +M.qty_cur_retail || 0; set('skurev-avg-price', qr ? fmt(Math.round(rr / qr)) : '—');
-    const rC = cmpBadge(tcc, tp), qC = cmpBadge(qcc, qp);
-    const rEl = document.getElementById('skurev-rev-cmp'); if (rEl) { rEl.textContent = rC.text; rEl.className = rC.cls; }
-    const qEl = document.getElementById('skurev-qty-cmp'); if (qEl) { qEl.textContent = qC.text; qEl.className = qC.cls; } }
-  const rankOf = {}; rows0.slice().sort((a, b) => b.rev_cur - a.rev_cur).forEach((r, i) => { rankOf[r.sku] = i + 1; });
-  const chTag = (c, up) => c ? `<span style="font-size:10.5px;color:${up ? 'var(--green)' : 'var(--red)'};white-space:nowrap;">${up ? '▲' : '▼'} ${ttcEsc(c.channel)} ${up ? '+' : '−'}${fmt(Math.abs(c.diff))}</span>` : '';
-  document.getElementById('tbodySkuRev').innerHTML = rows.map(r => `<tr style="cursor:pointer;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')" title="คลิกเพื่อเจาะสินค้านี้">
-      <td class="rank">${rankOf[r.sku]}</td>
-      <td style="font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;color:var(--accent);">${ttcEsc(r.sku)}</td>
-      <td>${ttcEsc(skuToName(r.sku))}</td>
-      <td style="font-weight:600;"><span class="pl-trace" onclick="event.stopPropagation();traceSales(getDateValue('From'),getDateValue('To'),null,'${ttcEscAttr(r.sku)}')">${fmt(Math.round(r.rev_cur))}</span></td>
-      <td style="font-family:'Sarabun',sans-serif;">${fmt(r.qty_cur)}</td>
-      <td style="color:var(--text2);">${(r.qty_retail != null ? +r.qty_retail : +r.qty_cur) ? fmt(Math.round((r.rev_retail != null ? +r.rev_retail : +r.rev_cur) / (r.qty_retail != null ? +r.qty_retail : +r.qty_cur))) : '—'}</td>
-      <td style="font-family:'Sarabun',sans-serif;color:var(--accent);">${r.share.toFixed(1)}%</td>
-      <td>${pctCell(r.chg, r.rev_prev > 0)}<div style="font-size:9.5px;color:var(--text3);">ก่อน ${fmt(r.rev_prev)}</div></td>
-      <td>${pctCell(r.chg3, r.rev_avg3 > 0)}<div style="font-size:9.5px;color:var(--text3);">เฉลี่ย ${fmt(r.rev_avg3)}</div></td>
-      <td>${sparkline(r.weekly, r.st.key === 'down' ? '#ef4444' : r.st.key === 'up' ? '#22c55e' : '#c8a96e')}</td>
-      <td style="white-space:nowrap;color:${r.st.color};font-weight:600;">${r.st.label}${momentumWhy(r)}</td>
-      <td style="font-size:11px;line-height:1.55;white-space:nowrap;">${(r.channels || []).map(c => ({ ...c, diff: (+c.cur || 0) - (+c.prev || 0), pct: +c.prev > 0 ? ((+c.cur || 0) - (+c.prev || 0)) / +c.prev * 100 : null })).sort((a, b) => a.diff - b.diff).map(c => { const col = c.diff > 0 ? 'var(--green)' : c.diff < 0 ? 'var(--red)' : 'var(--text3)'; const pctTxt = c.pct === null ? (c.cur > 0 ? 'ใหม่' : '—') : (c.pct >= 0 ? '+' : '−') + Math.abs(c.pct).toFixed(0) + '%'; return `<div title="ก่อน ${fmt(Math.round(c.prev))} → ตอนนี้ ${fmt(Math.round(c.cur))} (${c.diff >= 0 ? '+' : '−'}${fmt(Math.round(Math.abs(c.diff)))})"><span style="color:${col};font-weight:700;display:inline-block;width:12px;">${c.diff > 0 ? '▲' : c.diff < 0 ? '▼' : '—'}</span> ${ttcEsc(c.channel)} <span style="color:${col};font-weight:600;">${pctTxt}</span></div>`; }).join('') || '—'}</td>
-    </tr>`).join('') || '<tr><td colspan="12" class="empty">ไม่มีข้อมูล</td></tr>';
-  const withBase = rows0.filter(r => r.rev_prev > 0 && mmCur(r) > 0);
-  const ups = withBase.filter(r => r.chg >= MOMENTUM_UP).sort((a, b) => (mmCur(b) - b.rev_prev) - (mmCur(a) - a.rev_prev));
-  const downs = withBase.filter(r => r.chg <= MOMENTUM_DOWN).sort((a, b) => (mmCur(a) - a.rev_prev) - (mmCur(b) - b.rev_prev));
-  const li = (r, up) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;" onclick="openSkuAnalysis('${ttcEscAttr(r.sku)}')"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ttcEsc(skuToName(r.sku))} <span style="font-size:10px;color:var(--text3);font-family:'Sarabun',sans-serif;">${ttcEsc(r.sku)}</span></span><span style="white-space:nowrap;font-family:'Sarabun',sans-serif;font-size:12px;color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '+' : '−'}${fmt(Math.abs(mmCur(r) - r.rev_prev))} <span style="font-weight:400;color:var(--text3);">(${up ? '▲' : '▼'}${Math.abs(r.chg).toFixed(0)}%)</span></span></div>`;
-  const chAgg = {}; rows0.forEach(r => (r.channels || []).forEach(c => { chAgg[c.channel] = chAgg[c.channel] || { cur: 0, prev: 0 }; chAgg[c.channel].cur += +c.cur || 0; chAgg[c.channel].prev += +c.prev || 0; }));
-  const chLine = Object.entries(chAgg).map(([k, v]) => ({ k, diff: v.cur - v.prev, pct: v.prev ? (v.cur - v.prev) / v.prev * 100 : null })).sort((a, b) => a.diff - b.diff);
-  const totCur = _momentum.total_cur_cmp != null ? +_momentum.total_cur_cmp : +_momentum.total_cur;
-  const totChg = _momentum.total_prev ? (totCur - _momentum.total_prev) / _momentum.total_prev * 100 : null;
-  // (2026-10-18) รายการยาวไม่ใช้กล่องเลื่อน: โชว์ 10 อันดับแรก + ปุ่มดูทั้งหมด
-  const mmList = (arr, k) => !arr.length ? '<div class="empty">ไม่มี</div>' : arr.slice(0, 10).join('') + (arr.length > 10
-    ? `<div id="mm-more-${k}" style="display:none;">${arr.slice(10).join('')}</div><button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="const m=document.getElementById('mm-more-${k}'),o=m.style.display==='none';m.style.display=o?'':'none';this.textContent=o?'ย่อ':'ดูทั้งหมด (${arr.length})';">ดูทั้งหมด (${arr.length})</button>` : '');
-  document.getElementById('momentum-cards').innerHTML = `
-    <div class="card"><div class="section-header"><div class="section-title">🔺 ขึ้น (เรียงตามบาทที่เพิ่ม)</div><span style="font-size:11px;color:var(--text3);">${fmt(ups.length)} SKU</span></div>${mmList(ups.map(r => li(r, true)), 'up')}</div>
-    <div class="card"><div class="section-header"><div class="section-title">🔻 ลง (เรียงตามบาทที่หาย)</div><span style="font-size:11px;color:var(--text3);">${fmt(downs.length)} SKU</span></div>${mmList(downs.map(r => li(r, false)), 'down')}</div>
-    <div class="card" style="grid-column:span 2;"><div class="section-header"><div class="section-title">ยอดรวมที่เปลี่ยน มาจากช่องทางไหน (ทุกสินค้า เทียบช่วงเทียบ)</div><span style="font-size:11px;color:var(--text3);">รวม ${totChg === null ? '—' : (totChg >= 0 ? '▲' : '▼') + Math.abs(totChg).toFixed(1) + '%'} vs ช่วงก่อน</span></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">${chLine.map(c => `<div style="flex:1;min-width:140px;background:var(--bg3);border-radius:8px;padding:10px 12px;"><div style="font-size:11px;color:var(--text3);">${ttcEsc(c.k)}</div><div style="font-size:15px;font-weight:700;color:${c.diff >= 0 ? 'var(--green)' : 'var(--red)'};">${c.diff >= 0 ? '+' : '−'}${fmt(Math.abs(c.diff))}</div><div style="font-size:10px;color:var(--text3);">${c.pct === null ? 'ใหม่' : (c.pct >= 0 ? '▲' : '▼') + Math.abs(c.pct).toFixed(1) + '%'}</div></div>`).join('')}</div></div>`;
+  loadSkuRevJs().then(() => { if (currentPage === 'skurev') window.skuRev.render(); }).catch(e => showError(e.message));
 }
 function openSkuAnalysis(sku) {   // (2026-09-30) เปิดหน้าเจาะสินค้าใหม่ที่สินค้านี้
   window._skdSkuNext = sku;
   const nav = document.querySelector('.nav-item[onclick*="skuanalysis"]');
   showPage('skuanalysis', null, nav);
-}
-
-// ===== Export SKU revenue แบบ "ยาวลงล่าง" (tidy/long format) แยกตามเดือน x SKU x ช่องทาง — เอาไปทำ Pivot Table ต่อได้ง่าย
-function exportSkuRevWithChannel() {
-  const rawRows = window._skuTrendAllData || []; // จาก mv_sku_parent_monthly: มี date(รายเดือน), channel, parent_sku, total_qty, total_revenue ติดมาอยู่แล้ว
-  const search = (document.getElementById('skurevSearch')?.value || '').toLowerCase();
-  const filteredRows = rawRows.filter(r => {
-    const k = r.parent_sku || '—';
-    return !search || k.toLowerCase().includes(search) || skuToName(k).toLowerCase().includes(search);
-  });
-
-  // รวมยอดต่อ (เดือน x SKU x ช่องทาง) — เผื่อข้อมูลดิบมีแยกย่อยตาม sub_channel อีกชั้นซ่อนอยู่ ป้องกันแถวซ้ำเดือน/SKU/ช่องทางเดียวกัน
-  const grouped = {};
-  filteredRows.forEach(r => {
-    const month = (r.date || '').slice(0, 7); // YYYY-MM ให้ pivot ง่าย
-    const sku = r.parent_sku || '—';
-    const channel = r.channel || 'ไม่ระบุ';
-    const key = month + '|' + sku + '|' + channel;
-    if (!grouped[key]) grouped[key] = { month, sku, channel, qty: 0, rev: 0 };
-    grouped[key].qty += parseFloat(r.total_qty) || 0;
-    grouped[key].rev += parseFloat(r.total_revenue) || 0;
-  });
-
-  const rowsArr = Object.values(grouped).sort((a, b) => {
-    if (a.month !== b.month) return a.month < b.month ? -1 : 1;
-    if (a.sku !== b.sku) return a.sku < b.sku ? -1 : 1;
-    return a.channel.localeCompare(b.channel);
-  });
-
-  const header = ['เดือน', 'SKU', 'ชื่อสินค้า', 'ช่องทาง', 'จำนวนชิ้น', 'ยอดขาย (บาท)'];
-  const rows = [header, ...rowsArr.map(r => [r.month, r.sku, skuToName(r.sku), r.channel, Math.round(r.qty), Math.round(r.rev)])];
-
-  downloadCSV(rows, 'ยอดขายแยก_SKU_รายเดือน_ช่องทาง.csv');
 }
 
 // ===== AD PERFORMANCE =====
