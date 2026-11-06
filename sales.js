@@ -1,3 +1,4 @@
+// sales.js — (2026-11-05) หน้าภาพรวมรายช่องทาง: วางโครงหน้า (แผงตัวเลข / กราฟ / ตาราง) ทันทีที่เปิดหน้า ก่อนรอข้อมูล + ตารางตอนโหลดสูงเท่าครั้งก่อน (จำไว้ในเครื่อง) — กันหน้าเด้ง
 // sales.js — (2026-11-02) หน้าตาแบบ C: แผงตัวเลขขอบไล่สี · ป้ายเทียบ ui-chip + ค่าช่วงก่อน · กล่องลอย · แถวรวมล่างสุดเส้นเข้ม · แผงตัวเลขตอนโหลดสูงเท่าของจริง (กันหน้าเด้ง)
 // sales.js — (2026-10-21 b) หน้าภาพรวมรายช่องทาง: กลับเป็นกราฟบน ตารางล่าง (ยกเลิกวางคู่กัน)
 // sales.js — (2026-10-21 a) Facebook: การ์ด / กราฟ / แถวรวม "ค่า Ads" = Conversion + PR (เท่าหน้า Facebook Ads และหน้าแรก) · ROAS คิดจาก Conversion เท่านั้น · PR แยกแถวในตาราง
@@ -38,8 +39,16 @@
   const num = v => parseFloat(v) || 0;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const pct1 = v => (v * 100).toFixed(1) + '%';
-  // (2026-11-03) ช่องทางที่มีร้านเดียว: ซ่อนตารางแยกร้านตั้งแต่แรก (เดิมแสดง "กำลังโหลด" แล้วค่อยซ่อน → ส่วนด้านล่างกระโดดขึ้น)
-  const _ovSingle = { TikTok: true };
+  // (2026-11-05) ความสูงแผงตัวเลข (t) และตารางรายเพจ / ร้าน (w · 0 = ไม่มีตาราง เช่น TikTok ร้านเดียว) ครั้งล่าสุด จำไว้ในเครื่อง
+  //   โครงตอนโหลดสูงเท่าของจริง ส่วนด้านล่างจึงไม่กระโดด · ยังไม่เคยเปิด = ค่าประมาณของช่องทางนั้น (จอ 1440)
+  const LAY_KEY = 'ovLayout_v1';
+  const layMem = (() => { try { return JSON.parse(localStorage.getItem(LAY_KEY) || '{}') || {}; } catch (e) { return {}; } })();
+  const LAY_DEF = { Facebook: { t: 148, n: 11 }, Shopee: { t: 116, n: 2 }, Lazada: { t: 139, n: 2 }, TikTok: { t: 137, n: 0 } };   // n = จำนวนแถวไม่รวมแถวรวม
+  const ROW_H = 45, HEAD_H = 35;   // ความสูงแถว / หัวตาราง (px)
+  const layGet = o => { const v = layMem[o.page]; if (v && typeof v === 'object') return v;
+    const d = LAY_DEF[o.ch]; return d ? { t: d.t, w: d.n ? HEAD_H + (d.n + 1) * ROW_H : 0 } : null; };
+  const laySet = (o, t, w) => { const v = { t: Math.round(t), w: Math.round(w) }, c = layMem[o.page];
+    if (c && c.t === v.t && c.w === v.w) return; layMem[o.page] = v; try { localStorage.setItem(LAY_KEY, JSON.stringify(layMem)); } catch (e) {} };
   const roasTxt = (rev, ads) => ads > 0 ? (rev / ads).toFixed(2) + 'x' : '—';
   // (2026-11-02) ป้ายเทียบแบบเดียวกับหน้าแรก: เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3% · inv = ยิ่งมากยิ่งไม่ดี (ค่า Ads)
   const chipOf = (v, inv, tip) => `<span class="ui-chip ${Math.abs(v) < 3 ? '' : ((v > 0) !== !!inv ? 'up' : 'dn')}"${tip ? ` title="${esc(tip)}"` : ''}>${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}%</span>`;
@@ -302,15 +311,19 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       : `<th>ช่องทาง</th><th>ยอดขาย</th><th title="ยอดขายของแถว ÷ ยอดรวมทุกช่องทาง">สัดส่วน</th><th>ออเดอร์</th>
          <th title="ยอดขาย ÷ ออเดอร์ · ตัวแทน / MT ไม่คิด">AOV</th><th id="${idOf(o, 'ovCmpTh')}">เทียบช่วงก่อน</th><th>ยกเลิก / คืน</th>`;
     const cols = o.hub ? 9 : 7;
-    return `<div class="ov">
-      <section class="ui-metrics ov-sk" id="${idOf(o, 'ovTiles')}" aria-label="ตัวเลขหลัก">${metList(o).map(m => `<div class="ui-metric is-static"><span class="ui-metric-l">${m.name}</span><span class="ui-metric-v">—</span><span class="ui-metric-d">&nbsp;</span></div>`).join('') + (o.extraTiles || []).map(x => `<div class="ui-metric is-static"><span class="ui-metric-l">${x.name}</span><span class="ui-metric-v">—</span><span class="ui-metric-d">&nbsp;</span></div>`).join('')}</section>
+    const L = o.hub ? layGet(o) : null, mode = stateOf(o).mode, noTbl = !!(L && L.w === 0);
+    return `<div class="ov" data-mode="${mode}">
+      <section class="ui-metrics ov-sk" id="${idOf(o, 'ovTiles')}" aria-label="ตัวเลขหลัก"${L ? ` style="min-height:${L.t}px;"` : ''}>${metList(o).map(m => `<div class="ui-metric is-static"><span class="ui-metric-l">${m.name}</span><span class="ui-metric-v">—</span><span class="ui-metric-d">&nbsp;</span></div>`).join('') + (o.extraTiles || []).map(x => `<div class="ui-metric is-static"><span class="ui-metric-l">${x.name}</span><span class="ui-metric-v">—</span><span class="ui-metric-d">&nbsp;</span></div>`).join('')}</section>
       <div class="${o.hub ? 'ov-row' : ''}" style="${o.hub ? '' : 'display:contents;'}"><div class="ov-card"><div class="ov-head"><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;"><h2>แนวโน้ม<span id="${idOf(o, 'ovGrain')}">รายวัน</span></h2>
-        <div class="ov-seg" role="group" aria-label="มุมมองกราฟ"><button type="button" data-ovmode="metric">ตัวเลขที่เลือก</button><button type="button" data-ovmode="channel">${segAlt}</button></div>${go}</div>
+        <div class="ov-seg" role="group" aria-label="มุมมองกราฟ"><button type="button" data-ovmode="metric" aria-pressed="${mode === 'metric'}">ตัวเลขที่เลือก</button><button type="button" data-ovmode="channel" aria-pressed="${mode === 'channel'}"${noTbl ? ' hidden' : ''}>${segAlt}</button></div>${go}</div>
         <div class="ov-leg" id="${idOf(o, 'ovLegend')}"></div></div><div class="ov-chart"><canvas id="${idOf(o, 'ovChart')}"></canvas></div></div>
-      <div class="ov-card" id="${idOf(o, 'ovTblCard')}" style="padding:16px 0 4px;${o.hub && _ovSingle[o.ch] ? 'display:none;' : ''}"><div class="ov-head" style="padding:0 18px;"><h2>${o.hub ? 'แยกตาม' + unit : 'แยกตามช่องทาง'}</h2><button class="btn btn-ghost" type="button" onclick="exportTable('${idOf(o, 'ovTbl')}')">⬇ Export</button></div>
-        <div style="overflow-x:auto;"><table class="ov-tbl" id="${idOf(o, 'ovTbl')}" data-no-page><thead><tr>${head}</tr></thead>
+      <div class="ov-card" id="${idOf(o, 'ovTblCard')}" style="padding:16px 0 4px;${noTbl ? 'display:none;' : ''}"><div class="ov-head" style="padding:0 18px;"><h2>${o.hub ? 'แยกตาม' + unit : 'แยกตามช่องทาง'}</h2><button class="btn btn-ghost" type="button" onclick="exportTable('${idOf(o, 'ovTbl')}')">⬇ Export</button></div>
+        <div style="overflow-x:auto;${L && L.w ? `min-height:${L.w}px;` : ''}"><table class="ov-tbl" id="${idOf(o, 'ovTbl')}" data-no-page><thead><tr>${head}</tr></thead>
           <tbody id="${idOf(o, 'ovTbody')}"><tr><td colspan="${cols}" class="empty">กำลังโหลด...</td></tr></tbody></table></div></div></div></div>`;
   }
+
+  // (2026-11-05) วางโครงหน้าอย่างเดียว (ยังไม่มีข้อมูล) — dashboard.html เรียกทันทีที่เปิดหน้าภาพรวมรายช่องทาง ก่อนรอยอดขาย / ค่า Ads
+  window.salesOverviewShell = function (o) { injectCss(); if (o && o.root && !o.root.querySelector('.ov')) o.root.innerHTML = shell(o); };
 
   // ===== หน้า =====
   // o = { root, from, to, ch, sub, page, hub?, skipEnsure?, ads? (แถวค่า Ads ของช่องทาง: date, subChannel, ads, source), adsTip?, adsPage?, adsName?, extraTiles? }
@@ -402,7 +415,6 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const tbody = $(o, 'ovTbody');
     if (o.hub) {
       const show = A.SG.keys.length > 1;   // ร้านเดียว (เช่น TikTok) = ซ้ำกับแผงตัวเลข → ไม่แสดงตาราง
-      _ovSingle[o.ch] = !show;   // (2026-11-03) จำไว้ เปิดหน้าครั้งถัดไปซ่อนตั้งแต่แรก ไม่ต้องแสดงแล้วค่อยซ่อน (หน้าเด้ง)
       $(o, 'ovTblCard').style.display = show ? '' : 'none';
       tbody.innerHTML = show ? hubTableHtml(I, { from, to, sub, R, P, rowsAll, total, totCmp, adsIn: A.adsIn, totAds: A.totAds, totPR: A.totPR, SG: A.SG }) : '';
       const alt = root.querySelector('[data-ovmode="channel"]'); if (alt) alt.hidden = !show;
@@ -433,6 +445,10 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     I.ctx = { B, cur, prv, cust: null, prvCust: null, capIdx, showPrev, prevLbl, dashAt, subLines };
     drawChart(I);
     if (window.UI && UI.fit) UI.fit();
+    // (2026-11-05) ข้อมูลมาแล้ว: ปล่อยความสูงที่จองไว้ตอนโหลด แล้วจำความสูงจริงไว้ใช้กับโครงครั้งถัดไป
+    if (o.hub) { const ts = $(o, 'ovTiles'), wr = tbody.closest('table').parentElement, card = $(o, 'ovTblCard');
+      ts.style.minHeight = ''; wr.style.minHeight = '';
+      laySet(o, ts.offsetHeight, card.style.display === 'none' ? 0 : wr.offsetHeight); }
 
     // ลูกค้า Facebook: ยอดรวม (ไม่ซ้ำทั้งช่วง) + เส้นรายวัน / รายเดือน — ขึ้นทีหลังไม่บล็อกส่วนอื่น
     if (custOk && metList(o).includes(M.cust)) {
