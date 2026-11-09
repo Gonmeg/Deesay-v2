@@ -185,6 +185,22 @@
     .shell-sidebar { width: 340px; }
     .page-header { align-items: center; margin-bottom: 12px; }
     .page-header .mode-toggle { margin-bottom: 0; }
+    /* (2026-11-10) แถบบนแบบหน้า Dashboard: เต็มความกว้าง ติดบนตอนเลื่อน · ชื่อหน้า + คำอธิบายสั้นต่อท้าย · แท็บเดือนชิดขวา */
+    main { display: block !important; padding: 0 0 48px !important; }
+    main > .shell { margin: 20px auto 0; padding: 0 24px; }
+    .page-header.up-topbar { position: sticky; top: 0; z-index: 40; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 28px !important; margin: 0 !important; display: flex; align-items: center !important; justify-content: space-between; gap: 12px; min-height: 54px; flex-wrap: wrap; }
+    .up-topbar .ph-text { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap; }
+    .up-topbar h1 { font-size: 16px !important; font-weight: 700; margin: 0 !important; letter-spacing: 0; }
+    .up-topbar p { font-size: 12.5px !important; color: var(--muted2) !important; }
+    .shell-sidebar { top: 74px !important; }
+    .ph-tabs { display: none; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); }
+    .ph-tab { border: 0; background: none; font-family: inherit; color: var(--muted); padding: 5px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+    .ph-tab b { font-size: 13px; color: var(--text); font-weight: 600; } .ph-tab small { font-size: 11.5px; }
+    .ph-tab.on { background: var(--surface); box-shadow: var(--shadow); } .ph-tab.on b { color: var(--accent2); }
+    .ph-tab small.ok { color: var(--success); }
+    .cl-up:not(:empty) { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border2); }
+    .cl-up #stepWizard .step-track { margin-bottom: 12px; } .cl-up .card { box-shadow: none; border-color: var(--border); }
+    .cl-up .step1-left > .up-lbl, .cl-up #upTiles { display: none !important; } .cl-up .up-lbl i { display: none; }   /* อัปในขั้นปิดเดือน: รู้ช่องทางอยู่แล้ว ไม่ต้องเลือก */
     /* (2026-11-09) เมนูงานย้ายไปเมนูซ้าย (sidebar.js) — แถบปุ่มบนหน้าซ่อนเมื่อมีเมนูซ้าย */
     body.has-sb .mode-toggle { display: none !important; }
     #modeBtnExport { display: none !important; }
@@ -301,13 +317,12 @@
 <div id="sbMount" data-page="upload"></div>
 <script src="sidebar.js?v=20261028b"></script>
 <main>
-<div class="shell">
-<div class="shell-main">
-  <div class="page-header">
+  <div class="page-header up-topbar"><!-- (2026-11-10) แถบบนเต็มความกว้างแบบหน้า Dashboard -->
     <div class="ph-text">
       <h1 id="pageTitle">อัปคำสั่งซื้อ</h1>
       <p id="pageDesc">นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
     </div>
+    <div class="ph-tabs" id="clMonths"></div><!-- (2026-11-10) แท็บเดือน (หน้าปิดเดือน) -->
     <div class="mode-toggle">
     <button class="mode-btn active" id="modeBtnOrder">📦 อัพคำสั่งซื้อ</button>
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
@@ -319,6 +334,8 @@
   </div>
   </div>
   
+<div class="shell">
+<div class="shell-main">
   <div id="upAcctBanner" style="display:none;"></div><!-- (2026-11-09) อัปไฟล์บัญชีปิดเดือน (เข้าจากหน้าปิดเดือนเท่านั้น) -->
   <div id="stepWizard">
   <div class="step-track">
@@ -440,10 +457,10 @@
   <!-- (2026-11-09) ปิดเดือน — งานปิดเดือนทั้งหมดในหน้าเดียว ทำตามลำดับ · สถานะจาก RPC month_close_status · Shopee / TikTok ปิดด้วย RPC month_close_apply -->
   <div id="closePanel" style="display:none;">
     <div class="card">
-      <div class="cl-months" id="clMonths"></div>
       <input type="month" id="closeMonth" hidden>
       <div class="cl-hero" id="clHero"><div class="cl-ring"><span>–</span></div><div><h3>กำลังโหลด…</h3><p>&nbsp;</p></div></div>
       <div id="clList" style="min-height:330px;"></div>
+      <div id="clHold" hidden></div><!-- ที่พักฟอร์มอัปโหลด / ลบ ระหว่างวาดรายการใหม่ -->
       <div id="closeAlert" class="alert alert-error" style="display:none;margin-top:12px;"></div>
     </div>
   </div>
@@ -1421,7 +1438,7 @@ function showDeleteToast(msg) {
 }
 
 async function logUpload(entry) {
-  try { await DB.from('upload_logs').insert(entry); loadUploadHistory() } catch(e) { console.error('logUpload failed:', e) }
+  try { await DB.from('upload_logs').insert(entry); loadUploadHistory(); if (_clUpKey && typeof closeLoadStatus === 'function') setTimeout(closeLoadStatus, 400) } catch(e) { console.error('logUpload failed:', e) }   // (2026-11-10) อัปจากหน้าปิดเดือน → อัปเดตสถานะทันที
 }
 
 loadUploadHistory()
@@ -1591,7 +1608,9 @@ const CHANNEL_OPTIONS_SETTLEMENT = [
 ]
 
 function setUploadMode(mode) {
+  if (typeof clUnInline === 'function' && !_clInlining) clUnInline()   // ฟอร์มที่ยืมไปใช้ในหน้าปิดเดือน → คืนที่เดิม
   uploadMode = mode
+  const tabs = document.getElementById('clMonths'); if (tabs) tabs.style.display = mode === 'close' ? 'flex' : 'none'
   _upAcct = _upAcctNext; _upAcctNext = null   // อัปไฟล์บัญชีปิดเดือน: เข้าจากหน้าปิดเดือนเท่านั้น · กดเมนูอื่น = กลับเป็นงานประจำวัน
   if (typeof upTilesRender === 'function') setTimeout(upTilesRender, 0)
   const ab = document.getElementById('upAcctBanner')
@@ -1744,6 +1763,35 @@ function clGo(mode, ch) {   // ไปทำงานในโหมดอื่�
   if (ch) { const c = document.getElementById('channelSelect'); if (c) { c.value = ch; c.dispatchEvent(new Event('change')) } }
 }
 let _clOpen = null   // ขั้นที่กางอยู่
+// (2026-11-10) อัปไฟล์ / ลบเดือน ในขั้นนั้นเลย ไม่เปลี่ยนหน้า: ยืมฟอร์มเดิม (stepWizard / deletePanel) มาวางในขั้น แล้วคืนที่เดิมเมื่อออกจากหน้าปิดเดือน
+let _clUpKey = null, _clInlining = false
+const _clHome = {}
+function clUnInline() {
+  ['stepWizard', 'deletePanel'].forEach(id => { const el = document.getElementById(id), h = _clHome[id]; if (el && h && el.parentNode !== h.parent) { h.parent.insertBefore(el, h.next); el.style.display = 'none' } })
+  _clUpKey = null
+}
+window.clUpload = function (mode, ch, key) {
+  const id = mode === 'delete' ? 'deletePanel' : 'stepWizard', el = document.getElementById(id)
+  if (!_clHome[id]) _clHome[id] = { parent: el.parentNode, next: el.nextSibling }
+  clUnInline()
+  _clInlining = true
+  if (mode !== 'delete') _upAcctNext = ch
+  setUploadMode(mode)
+  _clInlining = false
+  // อยู่หน้าปิดเดือนต่อ
+  document.getElementById('closePanel').style.display = 'block'
+  document.getElementById('clMonths').style.display = 'flex'
+  document.getElementById('upAcctBanner').style.display = 'none'
+  document.getElementById('pageTitle').textContent = 'ปิดเดือน'
+  document.getElementById('pageDesc').textContent = 'งานปิดเดือนทั้งหมดในหน้าเดียว ทำตามลำดับ · ขึ้น ✓ เมื่อเสร็จ'
+  ;['modeBtnOrder', 'modeBtnSettlement', 'modeBtnDelete'].forEach(b => document.getElementById(b).classList.remove('active')); document.getElementById('modeBtnClose').classList.add('active')
+  uploadMode = mode === 'delete' ? 'delete' : mode
+  _clUpKey = key; _clOpen = key
+  document.querySelectorAll('.cl-step').forEach(x => x.classList.toggle('open', x.dataset.k === key))
+  const host = document.getElementById('clUp-' + key)
+  if (host) { host.appendChild(el); el.style.display = 'block'; setTimeout(() => host.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50) }
+  if (mode === 'delete') { const d = document.getElementById('bulkDeleteChannel'); if (d && ch) { d.value = ch; d.dispatchEvent(new Event('change')) } }
+}
 const clMonthsList = () => { const d = new Date(Date.now() + 7 * 3600e3); d.setUTCDate(1); return [3, 2, 1].map(k => { const x = new Date(d); x.setUTCMonth(x.getUTCMonth() - k); return x.toISOString().slice(0, 7) }) }
 function clBuild(d) {   // ขั้นตอนปิดเดือนจากสถานะ
   const steps = [], CC = { Shopee: 'var(--ch-shopee)', TikTok: 'var(--ch-tiktok)', Lazada: 'var(--ch-lazada)' }
@@ -1753,17 +1801,21 @@ function clBuild(d) {   // ขั้นตอนปิดเดือนจา�
       s: a.closed ? '<span class="cl-ok">✓ ปิดแล้ว · ยอดตามไฟล์บัญชี ล็อคไว้ API แก้ไม่ได้</span>'
         : `อัปไฟล์คำสั่งซื้อที่บัญชีส่งมา ครบทุกร้าน แล้วกดตรวจ → ปิดเดือน<br>${shops.map(x => `${x.sub} ${x.file_ok ? `<span class="cl-ok">✓ ไฟล์บัญชี ${clDt(x.file_at)}</span>` : '<span class="cl-no">ยังไม่อัปไฟล์บัญชี</span>'}`).join(' · ') || 'ยังไม่มีออเดอร์เดือนนี้'}`,
       act: a.closed ? (Auth.perm && Auth.perm.is_admin ? `<button class="cl-btn" onclick="clReopen('${a.channel}')">เปิดเดือนกลับ (อัปไฟล์ผิด)</button>` : '')
-        : `<button class="cl-btn${ready ? '' : ' pri'}" onclick="clGo('order','${a.channel}')">อัปไฟล์</button><button class="cl-btn${ready ? ' pri' : ''}" onclick="clCheck('${a.channel}')">ตรวจ &amp; ปิดเดือน</button>`,
-      det: `<div class="cl-det" id="clDet-${a.channel}"></div>` })
+        : `<button class="cl-btn${ready ? '' : ' pri'}" onclick="clUpload('order','${a.channel}','${a.channel}')">อัปไฟล์</button><button class="cl-btn${ready ? ' pri' : ''}" onclick="clCheck('${a.channel}')">ตรวจ &amp; ปิดเดือน</button>`,
+      det: `<div class="cl-up" id="clUp-${a.channel}"></div><div class="cl-det" id="clDet-${a.channel}"></div>` })
   })
   const lz = d.lazada || [], end = new Date(d.month_end).getTime()
-  const lzOrd = lz.length && lz.every(x => new Date(x.last_load).getTime() >= end), lzPaid = lz.length && lz.every(x => x.orders && x.paid / x.orders >= 0.95)
+  const lzOrd = lz.length && lz.every(x => new Date(x.last_load).getTime() >= end)
+  const lzPct = x => x.payable ? Math.round(x.paid / x.payable * 100) : 100   // ไม่นับออเดอร์ยกเลิก / คืน (ไม่มีวันได้เงิน)
+  const lzPaid = !!d.lz_settle_at || (lz.length && lz.every(x => lzPct(x) >= 95))   // อัปไฟล์รับเงินหลังจบเดือนแล้ว = ขั้นนี้เสร็จ
   steps.push({ key: 'lzo', c: CC.Lazada, st: lzOrd ? 'done' : 'todo', t: 'Lazada · ลบเดือนแล้วอัปไฟล์คำสั่งซื้อจากบัญชีทับ',
     s: `ไม่มี API จึงต้องลบเดือนเดิมก่อน แล้วอัปไฟล์บัญชีทับ<br>${lz.map(x => `${x.sub} ${clNf(x.orders)} ออเดอร์ · อัปล่าสุด ${clDt(x.last_load)}`).join(' · ') || 'ยังไม่มีออเดอร์เดือนนี้'}`,
-    act: `<button class="cl-btn" onclick="clGo('delete','Lazada')">1. ลบเดือน</button><button class="cl-btn${lzOrd ? '' : ' pri'}" onclick="clGo('order','Lazada')">2. อัปไฟล์</button>` })
+    act: `<button class="cl-btn" onclick="clUpload('delete','Lazada','lzo')">1. ลบเดือน</button><button class="cl-btn${lzOrd ? '' : ' pri'}" onclick="clUpload('order','Lazada','lzo')">2. อัปไฟล์</button>`, det: '<div class="cl-up" id="clUp-lzo"></div>' })
   steps.push({ key: 'lzp', c: CC.Lazada, st: lzPaid ? 'done' : 'todo', t: 'Lazada · อัปรายงานรับเงิน',
-    s: lz.map(x => `${x.sub} ได้เงินแล้ว <span class="${x.orders && x.paid / x.orders >= 0.95 ? 'cl-ok' : 'cl-no'}">${x.orders ? Math.round(x.paid / x.orders * 100) : 0}%</span>`).join(' · ') || '—',
-    act: `<button class="cl-btn${lzPaid ? '' : ' pri'}" onclick="clGo('settlement','Lazada')">อัปไฟล์รับเงิน</button>` })
+    s: (d.lz_settle_at ? `<span class="cl-ok">✓ อัปไฟล์รับเงินแล้ว ${clDt(d.lz_settle_at)}</span><br>` : 'อัปรายงานรับเงินของเดือนนี้ที่บัญชีส่งมา (Lazada 2 ร้าน)<br>')
+      + (lz.map(x => `${x.sub} ได้เงินแล้ว <span class="${lzPct(x) >= 95 ? 'cl-ok' : 'cl-no'}">${lzPct(x)}%</span>`).join(' · ') || '—')
+      + (lz.some(x => x.payable > x.paid) && d.lz_settle_at ? ` <span class="cl-s">· ที่เหลือ ${clNf(lz.reduce((t, x) => t + x.payable - x.paid, 0))} ออเดอร์ มักได้เงินเดือนถัดไป จะครบเมื่ออัปไฟล์รับเงินเดือนหน้า</span>` : '') + ' <span class="cl-s">(ไม่นับออเดอร์ยกเลิก / คืน)</span>',
+    act: `<button class="cl-btn${lzPaid ? '' : ' pri'}" onclick="clUpload('settlement','Lazada','lzp')">อัปไฟล์รับเงิน</button>`, det: '<div class="cl-up" id="clUp-lzp"></div>' })
   steps.push({ key: 'acct', st: d.acct_link ? 'done' : 'todo', t: 'งบบัญชีเดือนนี้',
     s: d.acct_link ? '<span class="cl-ok">✓ มีงบเดือนนี้ในลิงก์งบบัญชีแล้ว</span>' : 'วางลิงก์งบเมื่อบัญชีส่งงบเดือนนี้ — ใช้กับ Business Insight',
     act: `<button class="cl-btn${d.acct_link ? '' : ' pri'}" onclick="clGo('acctlink')">วางลิงก์งบ</button>` })
@@ -1777,8 +1829,8 @@ async function clMonthsRender(cur) {
   const ms = clMonthsList()
   const res = await Promise.all(ms.map(m => DB.rpc('month_close_status', { p_month: m + '-01' }).then(r => r.data).catch(() => null)))
   box.innerHTML = ms.map((m, i) => { const d = res[i], st = d ? clBuild(d).filter(x => x.st !== 'last') : [], n = st.filter(x => x.st === 'done').length
-    return `<button type="button" class="cl-mo${m === cur ? ' on' : ''}" data-m="${m}"><b>${closeMonLbl(m)}</b><small class="${st.length && n === st.length ? 'ok' : ''}">${!d ? '—' : n === st.length ? '✓ ปิดครบแล้ว' : `เสร็จ ${n} / ${st.length}`}</small></button>` }).join('')
-  box.querySelectorAll('.cl-mo').forEach(b => b.onclick = () => { const mi = document.getElementById('closeMonth'); mi.value = b.dataset.m; _clOpen = null; _clCheck = null; closeLoadStatus() })
+    return `<button type="button" class="ph-tab${m === cur ? ' on' : ''}" data-m="${m}"><b>${closeMonLbl(m)}</b><small class="${st.length && n === st.length ? 'ok' : ''}">${!d ? '—' : n === st.length ? '✓ ครบ' : `${n} / ${st.length}`}</small></button>` }).join('')
+  box.querySelectorAll('.ph-tab').forEach(b => b.onclick = () => { if (_clUpKey) clUnInline(); const mi = document.getElementById('closeMonth'); mi.value = b.dataset.m; _clOpen = null; _clCheck = null; closeLoadStatus() })
 }
 async function closeLoadStatus() {
   const mo = document.getElementById('closeMonth').value, list = document.getElementById('clList'), al = document.getElementById('closeAlert')
@@ -1794,10 +1846,14 @@ async function closeLoadStatus() {
     document.getElementById('clHero').innerHTML = `<div class="cl-ring" style="--p:${pct}"><span>${nDone}/${tasks.length}</span></div>
       <div><h3>ปิดเดือน ${closeMonLbl(d.month)}${nDone === tasks.length ? ' · ✓ ครบแล้ว' : ''}</h3><p>${next ? `ถัดไป: <b>${next.t}</b>` : 'ทุกขั้นเสร็จแล้ว'}</p></div>`
     const PL = { done: 'เสร็จ', ready: 'พร้อมปิด', todo: 'รอทำ', last: 'ทำหลังสุด' }
+    const keepEl = _clUpKey ? document.getElementById(document.getElementById('clUp-' + _clUpKey) && document.getElementById('clUp-' + _clUpKey).contains(document.getElementById('deletePanel')) ? 'deletePanel' : 'stepWizard') : null
+    if (keepEl) document.getElementById('clHold').appendChild(keepEl)
+    if (_clUpKey) _clOpen = _clUpKey
     list.innerHTML = steps.map((x, i) => `<div class="cl-step ${x.st === 'done' ? 'done' : ''}${x === next ? ' cur' : ''}${x.key === _clOpen ? ' open' : ''}" data-k="${x.key}">
       <div class="cl-head" onclick="clToggle('${x.key}')"><div class="cl-ic">${x.st === 'done' ? '✓' : i + 1}</div>
         <div class="cl-t">${x.c ? `<i style="background:${x.c}"></i>` : ''}${x.t}</div><span class="cl-pill ${x.st}">${PL[x.st]}</span></div>
       <div class="cl-body"><div class="cl-s">${x.s}</div>${x.act ? `<div class="cl-act">${x.act}</div>` : ''}${x.det || ''}</div></div>`).join('')
+    if (keepEl) { const h = document.getElementById('clUp-' + _clUpKey); if (h) h.appendChild(keepEl); else clUnInline() }
     if (_clCheck) clCheck(_clCheck, true)
   } catch (e) { list.innerHTML = ''; al.textContent = 'โหลดสถานะไม่สำเร็จ: ' + e.message; al.style.display = 'block' }
 }
