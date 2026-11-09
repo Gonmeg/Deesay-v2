@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.10-c"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.10-d"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -4276,7 +4276,7 @@ async function ensureTtaDataForRange(from, to, onFresh) {
   if (ttaLastRange === rangeKey && ttaByClip.length) return;
   const cached = await idbGet('tta:' + rangeKey);
   if (cached && (cached.rollup || (cached.rows && cached.rows.length))) {
-    await loadTtaThumbs();
+    await loadTtaThumbs(ttaIdsOf(cached.rollup || cached.rows));
     if (cached.rollup) applyTtaRollup(cached.rollup); else buildTtaByClip(cached.rows);
     ttaLastRange = rangeKey;
     if (Date.now() - (cached.cachedAt || 0) > TTA_CACHE_MAX_AGE) {
@@ -8901,7 +8901,7 @@ async function fetchTtaData(fromDate, toDate) {
       const rollup = await rpcRes.json();
       if (getDateValue('From') + '|' + getDateValue('To') !== fromDate + '|' + toDate) return;   // (2026-10-16) ช่วงเปลี่ยนระหว่างโหลด → ไม่เอาผลช่วงเก่ามาทับ
       if (rollup && Array.isArray(rollup.clips) && Array.isArray(rollup.cols)) {
-        await loadTtaThumbs();
+        await loadTtaThumbs(ttaIdsOf(rollup));
         applyTtaRollup(rollup);
         window._ttaFailedChunks = [];
         setBgSync(`TikTok Ads ${fmt(rollup.clips.length)} คลิป อัปเดตแล้ว`, null);
@@ -8938,7 +8938,7 @@ async function fetchTtaData(fromDate, toDate) {
   const ttaRaw = chunks.flat();
   setBgSync(`TikTok Ads ${fmt(ttaRaw.length)} แถว อัปเดตแล้ว`, null);
   window._ttaFailedChunks = [];
-  await loadTtaThumbs();
+  await loadTtaThumbs(ttaIdsOf(ttaRaw));
   buildTtaByClip(ttaRaw);
   // เก็บแคชแถวดิบไว้ใน IndexedDB ตามช่วงวันที่ — เปิดหน้าครั้งถัดไปโชว์ทันทีไม่ต้องรอ Supabase (MV รีเฟรชทุกชั่วโมง)
   idbSet('tta:' + fromDate + '|' + toDate, { rows: ttaRaw, cachedAt: Date.now() });
@@ -8947,29 +8947,32 @@ async function fetchTtaData(fromDate, toDate) {
 let TTA_THUMBS = null;   // item_id → { thumb, url }
 // (2026-11-10) ลิงก์รูปจาก TikTok มีวันหมดอายุ (x-expires) — หมดแล้วโหลดไม่ได้ (403) · ข้ามลิงก์ที่หมดอายุ ใช้รูปที่เก็บไว้ใน Supabase แทนถ้ามี
 const ttaFreshUrl = u => { const m = /[?&]x-expires=(\d+)/.exec(u || ''); return !!u && (!m || +m[1] > Date.now() / 1000 + 300); };
-async function loadTtaThumbs() {
-  if (TTA_THUMBS) return;
-  TTA_THUMBS = {};
+// (2026-11-10) หน้า TikTok Ads โหลดช้า ~20 วิ (QA): เดิมดึงปกคลิปจาก tiktok_ad_covers ทั้งตาราง (~36,000 แถว ทีละ 1,000 ต่อคิว)
+//   ตอนนี้ดึงเฉพาะคลิปที่อยู่ในช่วงที่เลือก (ทีละ 200 คลิป ยิงพร้อมกัน) · คลิปที่ขอไปแล้วไม่ขอซ้ำ · tiktok_videos (~400 แถว) โหลดครั้งเดียวเหมือนเดิม
+let _ttaCoverAsked = new Set(), _ttaVideosLoaded = false;
+const ttaIdsOf = x => !x ? [] : x.cols && Array.isArray(x.clips) ? (i => i >= 0 ? x.clips.map(a => a[i]) : [])(x.cols.indexOf('item_id')) : Array.isArray(x) ? x.map(r => r && r.item_id) : [];
+async function loadTtaThumbs(ids) {
+  if (!TTA_THUMBS) TTA_THUMBS = {};
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() };
-  try {
-    const base = `${window.SUPABASE_URL}/rest/v1/tiktok_videos`;
-    const probe = await fetch(`${base}?select=*&limit=1`, { headers }).then(r => r.json());
-    const cols = Array.isArray(probe) && probe[0] ? Object.keys(probe[0]) : [];
-    const idCol = ['item_id','video_id','id'].find(c => cols.includes(c));
-    if (idCol && cols.includes('thumbnail_url')) {
-      const rows = await fetchAllRows(`${base}?select=${idCol},thumbnail_url${cols.includes('share_url') ? ',share_url' : ''}&order=${idCol}.asc`, headers);
-      (Array.isArray(rows) ? rows : []).forEach(v => { if (v[idCol] && ttaFreshUrl(v.thumbnail_url)) TTA_THUMBS[String(v[idCol])] = { thumb: v.thumbnail_url, url: v.share_url || null }; });
-    }
-  } catch {}
-  try {
-    const base = `${window.SUPABASE_URL}/rest/v1/tiktok_ad_covers?select=item_id,cover_url&found=eq.true&order=item_id`;
-    for (let off = 0; ; off += 1000) {
-      const rows = await fetch(base, { headers: { ...headers, Range: `${off}-${off + 999}` } }).then(r => r.json());
-      if (!Array.isArray(rows)) break;
-      rows.forEach(v => { if (v.item_id && ttaFreshUrl(v.cover_url) && !TTA_THUMBS[String(v.item_id)]) TTA_THUMBS[String(v.item_id)] = { thumb: v.cover_url, url: `https://www.tiktok.com/@tiktok/video/${v.item_id}` }; });
-      if (rows.length < 1000) break;
-    }
-  } catch {}
+  if (!_ttaVideosLoaded) {
+    _ttaVideosLoaded = true;
+    try {
+      const base = `${window.SUPABASE_URL}/rest/v1/tiktok_videos`;
+      const probe = await fetch(`${base}?select=*&limit=1`, { headers }).then(r => r.json());
+      const cols = Array.isArray(probe) && probe[0] ? Object.keys(probe[0]) : [];
+      const idCol = ['item_id','video_id','id'].find(c => cols.includes(c));
+      if (idCol && cols.includes('thumbnail_url')) {
+        const rows = await fetchAllRows(`${base}?select=${idCol},thumbnail_url${cols.includes('share_url') ? ',share_url' : ''}&order=${idCol}.asc`, headers);
+        (Array.isArray(rows) ? rows : []).forEach(v => { if (v[idCol] && ttaFreshUrl(v.thumbnail_url)) TTA_THUMBS[String(v[idCol])] = { thumb: v.thumbnail_url, url: v.share_url || null }; });
+      }
+    } catch {}
+  }
+  const need = [...new Set((ids || []).map(v => String(v == null ? '' : v)))].filter(id => /^\d+$/.test(id) && !TTA_THUMBS[id] && !_ttaCoverAsked.has(id));
+  need.forEach(id => _ttaCoverAsked.add(id));
+  const parts = []; for (let i = 0; i < need.length; i += 200) parts.push(need.slice(i, i + 200));
+  await Promise.all(parts.map(p => fetch(`${window.SUPABASE_URL}/rest/v1/tiktok_ad_covers?select=item_id,cover_url&found=eq.true&item_id=in.(${p.join(',')})`, { headers })
+    .then(r => r.json()).then(rows => { (Array.isArray(rows) ? rows : []).forEach(v => { if (v.item_id && ttaFreshUrl(v.cover_url) && !TTA_THUMBS[String(v.item_id)]) TTA_THUMBS[String(v.item_id)] = { thumb: v.cover_url, url: `https://www.tiktok.com/@tiktok/video/${v.item_id}` }; }); })
+    .catch(() => {})));
 }
 // ผลจาก RPC tta_clip_rollup → ttaByClip (รูปเดียวกับ rpcClipToObj) + แถว funnel ต่อ objective (ให้ renderTtaFunnel ใช้ได้เหมือนเดิม)
 // ===== (2026-09-22) ชื่อ creator 2 แบบ: @username จริง (จาก oEmbed) ตัวหลัก + ชื่อที่แสดงตัวเล็ก =====
