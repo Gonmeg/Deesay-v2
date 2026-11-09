@@ -74,7 +74,7 @@
   if (PAGE === 'admin') {
     const tabs = [...document.querySelectorAll('.side .side-item[data-tab]')];
     if (tabs.length) {
-      const ic = { fbads: 'mega', targets: 'target', perms: 'lock' };
+      const ic = { fbads: 'mega', targets: 'target', perms: 'lock', export: 'receipt' };
       const txt = b => [...b.childNodes].filter(n => !(n.classList && n.classList.contains('ico'))).map(n => n.textContent).join('').trim();   // ไม่เอาอีโมจิของปุ่มเดิม
       nav += `<div class="nav-group-label sb-sec">ตั้งค่า (Admin)</div>` + tabs.map(b => `<button type="button" class="nav-item sb-proxy" data-proxy="${esc(b.dataset.tab)}" data-label="${esc(txt(b))}"><span class="nav-icon">${svg(ic[b.dataset.tab] || 'sliders')}</span><span class="sb-tx">${esc(txt(b))}</span></button>`).join('')
         + `<div class="nav-group-label sb-sec">Dashboard</div>`;
