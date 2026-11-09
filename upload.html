@@ -1438,7 +1438,7 @@ function showDeleteToast(msg) {
 }
 
 async function logUpload(entry) {
-  try { await DB.from('upload_logs').insert(entry); loadUploadHistory(); if (_clUpKey && typeof closeLoadStatus === 'function') setTimeout(closeLoadStatus, 400) } catch(e) { console.error('logUpload failed:', e) }   // (2026-11-10) อัปจากหน้าปิดเดือน → อัปเดตสถานะทันที
+  try { await DB.from('upload_logs').insert(entry); loadUploadHistory(); if (_clUpKey && typeof closeLoadStatus === 'function') { clAfterUpload(entry); setTimeout(closeLoadStatus, 400) } } catch(e) { console.error('logUpload failed:', e) }   // (2026-11-10) อัปจากหน้าปิดเดือน → อัปเดตสถานะทันที
 }
 
 loadUploadHistory()
@@ -1690,6 +1690,7 @@ function setUploadMode(mode) {
   channel = ''; handleChannelChange('')
   rawHeaders = []; rawData = []; mappings = {}; processed = []
   fileInput.value = ''; selectedFiles = []; renderFileRows(); goStep(1)
+  if (typeof resetBtnRow3 === 'function') resetBtnRow3()
 }
 
 document.getElementById('logoutBtn').addEventListener('click', () => Auth.signOut())
@@ -1769,6 +1770,13 @@ const _clHome = {}
 function clUnInline() {
   ['stepWizard', 'deletePanel'].forEach(id => { const el = document.getElementById(id), h = _clHome[id]; if (el && h && el.parentNode !== h.parent) { h.parent.insertBefore(el, h.next); el.style.display = 'none' } })
   _clUpKey = null
+}
+function clAfterUpload(entry) {   // อัปจากหน้าปิดเดือนเสร็จ: บอกขั้นต่อไปแทนปุ่ม "อัพโหลดต่อ / ดู Dashboard / หน้าแรก"
+  if (!entry || entry.status === 'error') return
+  const api = (_upApi || []).includes(entry.channel)
+  const sub = document.querySelector('#btnRow3 .success-banner-sub'), div = document.querySelector('#btnRow3 .success-divider')
+  if (sub && api) sub.textContent = `เก็บไฟล์บัญชี ${entry.sub_channel || entry.channel} แล้ว · ยอดในระบบจะเปลี่ยนเมื่อกดปิดเดือน`
+  if (div) div.innerHTML = `<div class="cl-s" style="padding-top:4px;">${api ? `ร้านอื่นของ ${entry.channel} กด <b>อัปไฟล์</b> อีกครั้ง · อัปครบทุกร้านแล้วกด <b>ตรวจ &amp; ปิดเดือน</b> ด้านบน` : 'เสร็จขั้นนี้แล้ว · ทำขั้นถัดไปในรายการด้านบน'}</div>`
 }
 window.clUpload = function (mode, ch, key) {
   const id = mode === 'delete' ? 'deletePanel' : 'stepWizard', el = document.getElementById(id)
@@ -2016,6 +2024,14 @@ document.getElementById('btnStep2').addEventListener('click', handleStep2)
 document.getElementById('btnBack2').addEventListener('click', () => goStep(1))
 document.getElementById('btnBack3').addEventListener('click', () => goStep(2))
 document.getElementById('btnConfirm').addEventListener('click', handleConfirm)
+// (2026-11-10) อัปเสร็จ ปุ่มยืนยันถูกแทนด้วยกล่อง "Upload สำเร็จ" → อัปไฟล์ถัดไปโดยไม่โหลดหน้าใหม่ (หน้าปิดเดือน) ต้องคืนปุ่มเดิม
+const _btnRow3Orig = document.getElementById('btnRow3').innerHTML
+function resetBtnRow3() {
+  const r = document.getElementById('btnRow3'); if (!r || r.querySelector('#btnConfirm')) return
+  r.innerHTML = _btnRow3Orig
+  document.getElementById('btnBack3').addEventListener('click', () => goStep(2))
+  document.getElementById('btnConfirm').addEventListener('click', handleConfirm)
+}
 
 const fileInput = document.getElementById('fileInput')
 const dropLabel = document.getElementById('dropLabel')
