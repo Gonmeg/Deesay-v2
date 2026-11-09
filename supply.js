@@ -1,3 +1,5 @@
+// supply.js v20261110a — หน้าตาชุดเดียวกับหน้าที่ปรับแล้ว: การ์ดสถานะเป็นแถบเดียว (ตัวเลขสีเดียว) · ⓘ ชี้แล้วขึ้น · บรรทัดเวลาอัปเดตไปอยู่ปุ่มสถานะข้อมูล
+//   ตาราง: รหัสสีปกติ + ชื่อสินค้าอ่านง่าย · ABC-XYZ เป็นป้ายเล็ก · Days of cover ไม่มีแถบเล็ก · แนวโน้ม Avg/day สีเทา · ช่อง Forecast โปร่งจนกว่าจะชี้ / พิมพ์ · ลำดับเดิม (ตามรหัสแม่)
 // supply.js v20261002a — ⓘ ABC × XYZ สั้นลง (ตัดส่วนอธิบายเหตุผลการออกแบบตาราง)
 // supply.js — หน้า Supply Chain ของ dashboard.html (โหลดตอนกดเมนูครั้งแรกเท่านั้น)
 // ใช้ของกลางจาก dashboard.html: supaRpc, fmtDateISO, chartTickColor/chartGridColor, Chart.js, CSS (.card/.section-header/.table-wrap/.btn/.ls-input)
@@ -38,6 +40,7 @@
     const el = document.getElementById(id); if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
   };
   function infoIcon(id, html, align) {
+    if (typeof fbeInfoIcon === 'function') return fbeInfoIcon(id, html);   // (2026-11-10) ⓘ แบบเดียวกับทั้งเว็บ (ชี้แล้วขึ้น)
     return `<span style="position:relative;display:inline-block;vertical-align:middle;">`
       + `<span onclick="window._supInfo('${id}')" style="cursor:pointer;color:var(--text3);font-size:13px;font-weight:400;font-family:'Sarabun',sans-serif;padding:0 4px;">&#9432;</span>`
       + `<div id="${id}" class="sup-info" style="display:none;position:absolute;top:24px;${align === 'right' ? 'right:0;' : 'left:0;'}background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.8;width:380px;max-width:min(380px,82vw);z-index:200;box-shadow:0 6px 22px rgba(0,0,0,.45);color:var(--text2);font-weight:400;text-align:left;white-space:normal;font-family:'Sarabun',sans-serif;text-transform:none;letter-spacing:normal;">${html}</div></span>`;
@@ -160,7 +163,7 @@
       ['nosale', '', 'No sales', noSale.length, 'var(--text2)', `90 วันขายไม่ได้เลย · ${fmtN(sumQ(noSale))} ชิ้น`],
     ];
     const kpis = STATS.map(([f, ic, l, n, c, sub]) => [(ic ? ic + ' ' : '') + l,
-      `<span style="color:${n ? c : (f === 'order_now' ? 'var(--green)' : 'var(--text3)')};">${fmtN(n)} SKU</span>`, sub, f]);
+      `<span style="color:${n ? 'var(--text)' : 'var(--text3)'};">${fmtN(n)}</span><span class="sup-kunit">SKU</span>`, sub, f]);
     const cellOf = (a, x) => m.find(c => c.abc === a && c.xyz === x) || { n: 0 };
     const cur = STATS.find(x => x[0] === filt.status);
     const ddIcon = ic => ic ? `<span class="ic">${ic}</span>` : '<span class="ic"><i class="dot"></i></span>';
@@ -178,14 +181,14 @@
     const locs = locList();
     root().innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-        <div style="font-size:11.5px;color:var(--text3);">สต็อกจาก log ทีมแพ็ค · ความต้องการจากยอดขายจริง · คำนวณใหม่ทุกคืน 04:00 · แผน ณ <b>${dTH(d.as_of)}</b> · log ล่าสุด ${dTH(d.ledger_last)} · ยอดขายล่าสุด ${dTH(d.sales_last)} · ไฟล์ PO ดึงล่าสุด <b>${PO_SYNCED ? new Date(PO_SYNCED).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</b></div>
-        <button class="btn btn-ghost" id="supRefresh" title="ดึง log ทีมแพ็ค + ไฟล์ PO ของจัดซื้อใหม่ทันที แล้วคำนวณใหม่ทั้งหน้า (ราว 10–60 วินาที)">↻ รีเฟรช (ดึงข้อมูลล่าสุด)</button>
+        <div></div>
+        <button class="btn btn-ghost" id="supRefresh" title="ดึง log ทีมแพ็ค + ไฟล์ PO ของจัดซื้อใหม่ทันที แล้วคำนวณใหม่ทั้งหน้า (ราว 10–60 วินาที) · แผน ณ ${dTH(d.as_of)} · log ล่าสุด ${dTH(d.ledger_last)} · ยอดขายล่าสุด ${dTH(d.sales_last)} · ไฟล์ PO ดึงล่าสุด ${PO_SYNCED ? new Date(PO_SYNCED).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}">↻ รีเฟรช (ดึงข้อมูลล่าสุด)</button>
       </div>
       
 
       <div class="sup-top">
         <div class="sup-kpis" id="supKpis">
-          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};${f && filt.status === f ? 'border-color:var(--accent);' : ''}"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:19px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
+          ${kpis.map(([l, v, s, f]) => `<div class="card sup-kpi${f && filt.status === f ? ' on' : ''}" data-f="${f}" style="cursor:${f ? 'pointer' : 'default'};"><div class="card-title">${l}</div><div class="kpi-value" style="font-size:19px;">${v}</div><div class="kpi-sub" style="display:block;">${s}</div></div>`).join('')}
         </div>
         <div class="card sup-abc">
           <div class="section-header"><div class="section-title">ABC × XYZ ${infoIcon('supAbc', ABC_INFO, 'right')}</div><span style="font-size:10.5px;color:var(--text3);">กดช่องเพื่อกรอง</span></div>
@@ -225,7 +228,7 @@
       </div>
 
       <div class="card" id="supSkuCard">
-        <div class="section-header"><div class="section-title" id="supSkuTitle">กราฟ SKU</div><span style="font-size:10.5px;color:var(--text3);">กดแถวในตารางเพื่อดู ยอดขายจริง · สต็อกคงเหลือ · ROP · คาดการณ์ 60 วัน</span></div>
+        <div class="section-header"><div class="section-title" id="supSkuTitle">กราฟ SKU</div><span style="font-size:11.5px;color:var(--text3);">กดแถวในตารางด้านบนเพื่อดูสต็อกที่ผ่านมา + คาดการณ์ของสินค้านั้น</span></div>
         <div id="supSkuBody"><div class="empty">เลือก SKU จากตารางด้านบน</div></div>
       </div>
       <style>
@@ -397,10 +400,11 @@
       const [p, st, po] = await Promise.all([
         fetch(`${window.SUPABASE_URL}/rest/v1/supply_order_plans?select=*`, { headers: H() }).then(r => r.ok ? r.json() : []),
         fetch(`${window.SUPABASE_URL}/rest/v1/supply_settings?key=eq.review_days&select=value`, { headers: H() }).then(r => r.ok ? r.json() : []),
-        fetch(`${window.SUPABASE_URL}/rest/v1/purchase_orders?status=neq.closed&select=sku,po_no,qty_ordered,qty_received,qty_wip,qty_hold_factory,eta,note,created_at&order=eta.asc`, { headers: H() }).then(r => r.ok ? r.json() : [])
+        fetch(`${window.SUPABASE_URL}/rest/v1/purchase_orders?status=neq.closed&select=sku,po_no,qty_ordered,qty_received,qty_wip,qty_hold_factory,eta,note,created_at,ordered_at&order=eta.asc`, { headers: H() }).then(r => r.ok ? r.json() : [])
       ]);
-      OPEN_PO = {}; HOLD = {}; PO_SYNCED = null;
+      OPEN_PO = {}; HOLD = {}; PO_SYNCED = null; PO_ALL = {};
       (po || []).forEach(x => {
+        if (x.sku && +x.qty_ordered > 0) (PO_ALL[x.sku] = PO_ALL[x.sku] || []).push({ po: x.po_no || '', ordered: x.ordered_at ? String(x.ordered_at).slice(0, 10) : null, qty: +x.qty_ordered });   // (2026-11-10) ไว้หัก Forecast
         if (String(x.note || '').indexOf('sheet:') === 0 && x.created_at && (!PO_SYNCED || x.created_at > PO_SYNCED)) PO_SYNCED = x.created_at;
         const q = (+x.qty_ordered || 0) - (+x.qty_received || 0); if (q <= 0) return;
         if (+x.qty_hold_factory > 0 && !(+x.qty_wip > 0)) { HOLD[x.sku] = (HOLD[x.sku] || 0) + q; return; }   // ผลิตเสร็จแล้ว ฝากโรงงาน
@@ -412,6 +416,26 @@
       if (st && st[0]) REVIEW_DAYS = +st[0].value || 14;
     } catch (e) { console.warn('loadPlans', e.message); }
   }
+  // (2026-11-10) Forecast ที่สั่งจริงแล้ว ไม่นับซ้ำ: PO ที่สั่ง (วันที่ในไฟล์ PO) ตั้งแต่วันที่กรอก Forecast = ล็อตจาก Forecast → หักออก เหลือเท่าไหร่ค่อยนับ
+  //   PO ที่สั่งก่อนวันกรอกไม่เกิน 14 วัน = อาจเป็นล็อตเดียวกัน → ขึ้นป้ายเตือนให้กดยืนยันลบเอง (ไม่หักให้อัตโนมัติ)
+  let PO_ALL = {};
+  function fcUse(sku) {
+    const pl = PLANS[sku]; if (!pl || !(+pl.plan_qty > 0)) return null;
+    const pd = pl.updated_at ? iso(new Date(pl.updated_at)) : null, L = PO_ALL[sku] || [];
+    const after = pd ? L.filter(x => x.ordered && x.ordered >= pd) : [];
+    const near = pd && pl.note !== 'extra' ? L.filter(x => x.ordered && x.ordered < pd && x.ordered >= iso(new Date(toD(pd).getTime() - 14 * DAY))) : [];   // กด "ไม่ใช่ สั่งเพิ่ม" แล้ว (note = extra) ไม่ถามอีก
+    const used = after.reduce((t, x) => t + x.qty, 0);
+    return { qty: +pl.plan_qty, used, left: Math.max(0, +pl.plan_qty - used), after, near, pd };
+  }
+  window._supFcClear = async sku => {
+    if (typeof uiConfirm === 'function' && !(await uiConfirm('ลบ Forecast', { text: `${sku} · ล็อตเดียวกับ PO ที่เปิดแล้ว ลบตัวเลข Forecast ออก`, ok: 'ลบ' }))) return;
+    try { await savePlan(sku, 0); renderAll(); } catch (e) { if (typeof uiAlert === 'function') uiAlert('ลบไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
+  };
+  window._supFcExtra = async sku => {   // Forecast นี้ตั้งใจสั่งเพิ่มจาก PO ที่มีแล้ว → ไม่ถามซ้ำ นับต่อท้ายตามปกติ
+    try { const r = await fetch(`${window.SUPABASE_URL}/rest/v1/supply_order_plans?sku=eq.${encodeURIComponent(sku)}`, { method: 'PATCH', headers: { ...H(), Prefer: 'return=representation' }, body: JSON.stringify({ note: 'extra' }) });
+      if (!r.ok) throw new Error('บันทึกไม่สำเร็จ ' + r.status); const row = (await r.json())[0]; if (row) PLANS[sku] = row; renderAll(); }
+    catch (e) { if (typeof uiAlert === 'function') uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
+  };
   async function savePlan(sku, qty, arrive) {
     const url = `${window.SUPABASE_URL}/rest/v1/supply_order_plans`;
     if (!qty) {   // ลบตัวเลขออก = ยกเลิกแผน
@@ -453,18 +477,19 @@
     const base = { end: new Date(Math.max(base0.end, today) + Math.floor(nodateQty / avg) * DAY), gap: base0.gap };
     out.withPoEnd = base.end; out.gapDays = base.gap;
     out.orderBy = new Date(base.end.getTime() - lt * DAY);  // ก้อนถัดไปต้องสั่งภายใน (นับหลัง PO ที่มีแล้ว)
-    if (pl && pl.plan_qty > 0) {
+    const fc = fcUse(r.sku); out.fc = fc;
+    if (fc && fc.left > 0) {
       if (false && pl.arrive_date) {                         // (ปิดแล้ว 2026-09-22) ไม่ใช้วันที่ของ forecast — นับต่อท้ายเสมอ
         const r2 = runOut(stock, avg, today, [...pos, { d: toD(pl.arrive_date), q: +pl.plan_qty }].sort((a, b) => a.d - b.d));
         out.newEnd = new Date(Math.max(r2.end, today) + Math.floor(nodateQty / avg) * DAY); out.gapDays = r2.gap;
       } else {                                               // ไม่กรอก → ต่อท้ายหลังของเดิม + PO หมด
         const b0 = base.end > today ? base.end : today;
-        out.newEnd = new Date(b0.getTime() + Math.floor(pl.plan_qty / avg) * DAY);
+        out.newEnd = new Date(b0.getTime() + Math.floor(fc.left / avg) * DAY);   // นับเฉพาะส่วนที่ยังไม่ได้เปิด PO
       }
     }
     const meetNext = new Date(today.getTime() + REVIEW_DAYS * DAY);
     if (out.gapDays > 0) out.meet = ['⚫', 'Stockout risk ~' + out.gapDays + ' d', 'var(--text)'];
-    else if (pl && pl.plan_qty > 0) out.meet = ['✅', 'Planned', 'var(--green)'];
+    else if (fc && fc.left > 0) out.meet = ['✅', 'Planned', 'var(--green)'];
     else if (out.orderBy < meetNext) out.meet = ['🔴', 'Order now', 'var(--red)'];
     else if (out.orderBy < new Date(meetNext.getTime() + REVIEW_DAYS * DAY)) out.meet = ['🟡', 'Next review', 'var(--orange)'];
     else out.meet = ['🟢', 'OK', 'var(--text3)'];
@@ -475,9 +500,14 @@
     const c = planCalc(r), pl = c.pl || {};
     const stamp = pl.updated_at ? new Date(pl.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
     return `<td class="t-center sup-plan" onclick="event.stopPropagation()">
-        <input type="text" inputmode="numeric" class="sup-in sup-plan-qty${pl.plan_qty ? ' on' : ''}" data-sku="${esc(r.sku)}"
+        <input type="text" inputmode="numeric" class="sup-in sup-plan-qty${pl.plan_qty ? ' on' : ''}${c.fc && c.fc.used > 0 && !c.fc.left ? ' done' : ''}" data-sku="${esc(r.sku)}"
           value="${pl.plan_qty ? Number(pl.plan_qty).toLocaleString() : ''}" placeholder="">
-        ${stamp ? `<div class="sup-sub">Saved ${stamp}</div>` : ''}
+        ${(() => { const fc = c.fc; if (!fc) return stamp ? `<div class="sup-sub">Saved ${stamp}</div>` : '';
+          if (fc.used > 0) return fc.left > 0
+            ? `<div class="sup-sub" style="color:var(--green);">PO แล้ว ${fmtN(fc.used)} · นับต่อ ${fmtN(fc.left)}</div>`
+            : `<div class="sup-sub" style="color:var(--green);">✓ Ordered · ${esc(fc.after.map(x => x.po).filter(Boolean).join(', ') || 'PO')}</div>`;
+          if (fc.near.length) return `<div class="sup-sub" style="color:var(--orange);">PO ${fmtN(fc.near.reduce((t, x) => t + x.qty, 0))} สั่ง ${dTH(fc.near[0].ordered)} · ล็อตเดียวกัน?</div><div class="sup-fcb"><button type="button" class="sup-fcx" onclick="event.stopPropagation();window._supFcClear('${esc(r.sku)}')">ใช่ ลบ</button><button type="button" class="sup-fcx alt" onclick="event.stopPropagation();window._supFcExtra('${esc(r.sku)}')">ไม่ใช่ สั่งเพิ่ม</button></div>`;
+          return stamp ? `<div class="sup-sub">Saved ${stamp}</div>` : ''; })()}
       </td>
       <td class="t-center">
         <div class="sup-meet" style="color:${c.meet[2]};">${c.meet[0]} ${c.meet[1]}</div>
@@ -507,7 +537,52 @@
       .sup-calloff { display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.3px; padding:1px 6px; border-radius:4px;
         color:#b45309; background:rgba(245,158,11,.14); border:1px solid rgba(245,158,11,.35); white-space:nowrap; }
       /* หัวตารางค้างไว้ด้านบนเวลาเลื่อน (แบบ Google Sheets / Excel) */
-      #supTbl thead th { position:sticky; top:0; z-index:3; background:var(--bg2); box-shadow:0 1px 0 var(--border); }`;
+      #supTbl thead th { position:sticky; top:0; z-index:3; background:var(--bg2); box-shadow:0 1px 0 var(--border); }
+      /* (2026-11-10) หน้าตาใหม่ — การ์ดสถานะเป็นแถบเดียว · ตารางอ่านง่ายขึ้น */
+      #page-supply .sup-kpis { gap:0 !important; border:1.5px solid transparent; background:var(--hero,var(--bg2)) padding-box,var(--hero-line,var(--border)) border-box; box-shadow:var(--sh,none); border-radius:14px; overflow:hidden; }
+      #page-supply .sup-kpi { background:transparent !important; border:0 !important; border-radius:0 !important; box-shadow:inset -1px 0 0 var(--border), inset 0 -1px 0 var(--border) !important; }
+      #page-supply .sup-kpi:nth-child(4n) { box-shadow:inset 0 -1px 0 var(--border) !important; }
+      #page-supply .sup-kpi:nth-child(n+5) { box-shadow:inset -1px 0 0 var(--border) !important; } #page-supply .sup-kpi:nth-child(8) { box-shadow:none !important; }
+      #page-supply .sup-kpi.on { background:color-mix(in srgb, var(--accent) 12%, transparent) !important; }
+      #page-supply .sup-kpi:hover { background:color-mix(in srgb, var(--accent) 6%, transparent) !important; }
+      #page-supply .sup-kpi .kpi-value { font-size:24px !important; } #page-supply .sup-kunit { font-size:12px; font-weight:500; color:var(--text3); margin-left:5px; }
+      #page-supply .sup-kpi .kpi-sub { font-size:11px !important; }
+      #page-supply table.sup-main td { padding-top:10px; padding-bottom:10px; vertical-align:middle; }
+      #page-supply .sup-code { font-family:'Sarabun',sans-serif; font-size:12.5px; font-weight:700; color:var(--text); }
+      #page-supply .sup-abc { display:inline-block !important; width:auto !important; max-width:none !important; margin-left:6px; font-size:10px; font-weight:600; padding:0 5px; border-radius:4px; background:var(--bg3); color:var(--text3); vertical-align:1px; }
+      #page-supply .sup-nm { font-size:12px; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      #page-supply .sup-sub { font-size:11px !important; }
+      #page-supply tr.sup-group td { background:var(--bg3) !important; border-top:1px solid var(--border) !important; }
+      #page-supply tr.sup-group:hover td { background:color-mix(in srgb, var(--accent) 8%, var(--bg3)) !important; }
+      #page-supply .sup-parent { color:var(--text) !important; }   /* รหัสสินค้าสีปกติทั้งหน้า (ตารางหลัก + สต็อกแยกคลัง) */
+      .sup-plan-qty:not(.on):not(:focus) { background:transparent; border-color:transparent; }
+      #page-supply td.sup-runc { min-width:150px; }
+      #page-supply .sup-runt { display:flex; align-items:baseline; justify-content:center; gap:6px; white-space:nowrap; } #page-supply .sup-runt span { font-size:11px; color:var(--text3); }
+      #page-supply .sup-run { position:relative; height:6px; border-radius:3px; background:var(--bg3); margin:6px auto 0; width:100%; max-width:170px; overflow:hidden; }
+      #page-supply .sup-run i { position:absolute; top:0; bottom:0; left:0; display:block; }
+      #page-supply .sup-run i.z { background:color-mix(in srgb, var(--red) 22%, transparent); }
+      #page-supply .sup-run i.f { border-radius:3px; }
+      #page-supply .sup-run i.w { background:repeating-linear-gradient(45deg, color-mix(in srgb, var(--green) 55%, transparent) 0 3px, transparent 3px 6px); }
+      #page-supply .sup-run i.more { left:auto; right:2px; font-style:normal; font-size:9px; line-height:6px; color:#fff; }
+      #page-supply .sup-pill { display:inline-block; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:99px; white-space:nowrap; color:var(--c); background:color-mix(in srgb, var(--c) 14%, transparent); }
+      #page-supply .sup-pill.mute { background:transparent; padding-left:0; padding-right:0; font-weight:500; }
+      #page-supply table.sup-loc td { padding-top:8px; padding-bottom:8px; }
+      #page-supply .sl-pn { display:flex; align-items:baseline; gap:8px; min-width:0; } #page-supply .sl-nm { font-size:12px; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      #page-supply .sup-loc .sl-q { display:inline; font-weight:600; } #page-supply .sl-dd { margin-left:6px; font-size:10.5px; color:var(--text3); }
+      #page-supply .sup-loc td.sl-low { background:color-mix(in srgb, var(--red) 12%, transparent); } #page-supply .sup-loc td.sl-low .sl-q, #page-supply .sup-loc td.sl-low .sl-dd { color:var(--red); }
+      #page-supply .sup-loc tr.sl-par td { background:var(--bg3) !important; }
+      #page-supply .sup-loc .sl-d { display:none; }
+      #page-supply .sup-facts { display:flex; flex-wrap:wrap; border:1px solid var(--border); border-radius:10px; margin-bottom:10px; }
+      #page-supply .sup-facts > div { flex:1 1 0; min-width:120px; padding:10px 14px; } #page-supply .sup-facts > div + div { border-left:1px solid var(--border); }
+      #page-supply .sup-facts > div > span:first-child { display:block; font-size:11px; color:var(--text3); } #page-supply .sup-facts b { display:block; font-size:16px; margin-top:3px; font-variant-numeric:tabular-nums; }
+      #page-supply .sup-facts i { display:block; font-style:normal; font-size:11px; color:var(--text3); margin-top:2px; } #page-supply .sup-facts .sup-pill { font-size:12px; display:inline-block; }
+      #page-supply .sup-locline { font-size:12px; color:var(--text3); margin:0 2px 14px; } #page-supply .sup-locline b { color:var(--text2); font-weight:600; }
+      #page-supply .sup-ch-h { display:flex; align-items:baseline; gap:8px; margin:4px 2px 6px; } #page-supply .sup-ch-h b { font-size:13px; } #page-supply .sup-ch-h span { font-size:11.5px; color:var(--text3); }
+      #page-supply .sup-leg { display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--text3); margin-top:8px; } #page-supply .sup-leg span { display:inline-flex; align-items:center; gap:6px; } #page-supply .sup-leg i { display:inline-block; }
+      tr.sup-row:hover .sup-plan-qty:not(.on):not(:focus) { border-color:var(--border); border-style:dashed; }
+      .sup-plan-qty.done { text-decoration:line-through; opacity:.55; }
+      .sup-fcb { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-top:4px; } .sup-fcb .sup-fcx { white-space:nowrap; padding:2px 7px !important; } .sup-fcx.alt { border-color:var(--border); background:transparent; color:var(--text2); }
+      .sup-fcx { font:inherit; font-size:11px; padding:2px 8px; border-radius:6px; border:1px solid color-mix(in srgb, var(--orange) 45%, transparent); background:color-mix(in srgb, var(--orange) 10%, transparent); color:var(--orange); cursor:pointer; }`;
     document.head.appendChild(st);
   })();
   function bindPlanInputs() {
@@ -546,11 +621,12 @@
     avg_day: 'ขายต่อวัน (จากยอดขาย)<br>วันปกติ: เฉลี่ย 7 วัน 50% · 30 วัน 30% · 90 วัน 20%<br>+ ออเดอร์ก้อนใหญ่ (ตัวแทน / ห้าง) เฉลี่ย 90 วัน นับครึ่งเดียว<br>ไม่นับวันก่อนเริ่มขาย และวันที่ของหมด<br>▲▼ ตัวเล็ก = 7 วันล่าสุดเทียบ 30 วัน',
     po_due_date: 'วันสุดท้ายที่สั่งล็อตถัดไปแล้วของยังมาทัน<br>= วันที่ของหมด − Lead time<br>วันที่ของหมดนับ PO ที่สั่งไว้ตามวันที่ของถึงจริง',
     lt: 'Lead time = สั่งผลิตแล้วกี่วันของถึง (ตั้งในหน้า สินค้า & ราคา) · ใช้คิด Order by และสีของ Days of cover · ตัวจาง = ยังไม่ได้ตั้ง ใช้ 60 วัน',
-    plan_qty: 'Forecast = จำลองยอดที่จะสั่งในอนาคต — กรอกแล้วบันทึกทันที · ช่อง Status จะเปลี่ยนเป็น Planned และบอกว่าขายได้ถึงวันไหน (Until)'
+    plan_qty: 'Forecast = จำลองยอดที่จะสั่งในอนาคต · เปิด PO หลังวันที่กรอกแล้ว ระบบหักออกให้เอง (ไม่นับซ้ำ) · PO ที่สั่งก่อนวันกรอกไม่เกิน 14 วัน ขึ้นป้ายให้กดยืนยันลบ — กรอกแล้วบันทึกทันที · ช่อง Status จะเปลี่ยนเป็น Planned และบอกว่าขายได้ถึงวันไหน (Until)'
   };
   function colTip(k) {
     let t = COL_TIPS[k]; if (!t) return ''; if (typeof t === 'function') t = t();
     const id = 'suptip-' + k;
+    if (typeof fbeInfoIcon === 'function') return ' ' + fbeInfoIcon(id, t);   // (2026-11-10) ชี้แล้วขึ้น
     return ` <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()">`
       + `<span onclick="event.stopPropagation();toggleTip('${id}')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span>`
       + `<div id="${id}" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;position:absolute;top:18px;${['plan_qty','po_due_date','avg_day','plan_end'].includes(k) ? 'right:0;' : 'left:0;'}background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;text-align:left;">${t}</div></span>`;
@@ -562,7 +638,7 @@
   const covTxt = n => n == null ? '—' : n <= 60 ? fmtN(n) + ' d' : n <= 365 ? Math.max(3, Math.round(n / 30.4)) + ' mo' : (n >= 730 ? Math.round(n / 365) : Math.round(n / 36.5) / 10).toLocaleString('en-US') + ' yr';
   // ชื่อสถานะชุดเดียวกับการ์ดด้านบน (Order now / Stockout risk / Next review / Planned) และปุ่มกรอง
   const SPILL = {
-    risk:        ['var(--text)',   '⚫ Stockout risk'],
+    risk:        ['#a855f7',       '⚫ Stockout risk'],
     order_now:   ['var(--red)',    '🔴 Order now'],
     next_review: ['#d4a017',       '🟡 Next review'],
     planned:     ['var(--green)',  '✅ Planned'],
@@ -581,11 +657,12 @@
     let sub = '';
     if (k === 'risk' || k === 'planned' || k === 'ok') {
       const pc = planCalc(r);
-      if (k === 'risk') return `<div class="sup-st" style="color:${c};">${t} ~${fmtN(pc.gapDays)} d</div><div class="sup-sub">Runs out before WIP arrives</div>`;
+      if (k === 'risk') return `<span class="sup-pill" style="--c:${c};">Stockout risk ~${fmtN(pc.gapDays)} d</span><div class="sup-sub">Runs out before WIP arrives</div>`;
       if (k === 'planned' && pc.newEnd) sub = `Until <b style="color:var(--accent2,var(--accent));">${dY(iso(pc.newEnd))}</b>`;
       if (k === 'ok' && pc.poQty && pc.withPoEnd) sub = `With WIP: until ${dY(iso(pc.withPoEnd))}`;
     }
-    return `<div class="sup-st" style="color:${c};">${t}</div>` + (sub ? `<div class="sup-sub">${sub}</div>` : '');
+    const tt = t.replace(/^[^A-Za-z]+\s/, '');   // (2026-11-10) ป้ายสี แทนอีโมจิ + ตัวหนังสือสี
+    return `<span class="sup-pill${k === 'watch' || k === 'nosale' ? ' mute' : ''}" style="--c:${c};">${tt}</span>` + (sub ? `<div class="sup-sub">${sub}</div>` : '');
   }
 
   function cols() {
@@ -650,19 +727,22 @@
         if (_nextWip) lines.push(`ETA ${dY(_nextWip)}`);
         if (_nodateQty) lines.push(_callQty ? `<span class="sup-calloff" title="ยอดคงเหลือ PO ที่ยังไม่ได้เรียกผลิต — ถ้าเรียกวันนี้ได้ของในราว 30 วัน">Call-off${_callQty !== _wip ? ' ' + fmtN(_callQty) : ''}</span>` : '<span title="จัดซื้อยังไม่ได้ลงวันคาดว่าจะผลิตเสร็จในไฟล์ PO">No ETA yet</span>');
         if (_needBy) lines.push(`Need by ${dY(iso(_needBy))}`);
-        inc = `${fmtN(_wip)}${lines.map(x => `<div class="sup-sub">${x}</div>`).join('')}`;
+        inc = `<b>${fmtN(_wip)}</b>${lines.map(x => `<div class="sup-sub">${x}</div>`).join('')}`;
       }
       const pc2 = planCells(r).split('</td>');
       return groupHead + `<tr class="sup-row${planned ? '' : ' sup-noplan'}${grouped ? ' sup-child' : ''}" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}">
-        <td class="t-left"><span class="${grouped ? 'sup-skucode' : 'sup-parent'}">${esc(r.sku)}</span>
-          <div class="sup-sub">${esc(r.product_name)}${r.abc ? ` · <span title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span>` : ''}</div></td>
+        <td class="t-left"><span class="sup-code">${esc(r.sku)}</span>${r.abc ? `<span class="sup-abc" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span>` : ''}
+          <div class="sup-nm">${esc(r.product_name)}</div></td>
         <td class="t-center"><span class="sup-lt${r.has_params === false ? ' def' : ''}"${r.has_params === false ? ' title="ยังไม่ได้ตั้งในหน้า Admin — ใช้ค่ากลาง 60 วัน"' : ''}>${fmtN(_lt)} d</span></td>
-        <td>${cov == null ? '<span class="sup-dash">—</span>' : `<b style="color:${covCol};">${covTxt(cov)}</b>
-          <div class="sup-bar"><i style="width:${covPct}%;background:${covCol};"></i></div>
-          <div class="sup-sub">Out ${dY(_soDate)}</div>`}</td>
+        <td class="sup-runc">${cov == null ? '<span class="sup-dash">—</span>' : (() => {   // (2026-11-10) แถบอายุสต็อก: แถบแดงจาง = ช่วง Lead time + รอบประชุม · แถบสี = ของที่มีพอขาย · ลายขีด = ของกำลังผลิต (WIP) ต่อจากนั้น
+            const SC = 180, pctOf = d => Math.max(0, Math.min(100, d / SC * 100));
+            const zone = pctOf(_lt + REVIEW_DAYS), fill = Math.max(cov > 0 ? 2 : 0, pctOf(cov));
+            const wEnd = r.stockout_date_with_po && _wip ? daysFrom(r.stockout_date_with_po) : null, wip = wEnd != null && wEnd > cov ? pctOf(wEnd) - fill : 0;
+            return `<div class="sup-runt"><b style="color:${covCol};">${covTxt(cov)}</b><span>Out ${dY(_soDate)}</span></div>
+              <div class="sup-run" title="แถบแดงจาง = Lead time ${_lt} d + รอบประชุม ${REVIEW_DAYS} d · แถบสี = ของที่มีพอขาย ${fmtN(cov)} วัน${wip ? ' · ลายขีด = ของกำลังผลิตพอขายต่อถึง ' + dY(r.stockout_date_with_po) : ''} · เต็มแถบ = 6 เดือน"><i class="z" style="width:${zone}%"></i><i class="f" style="width:${fill}%;background:${covCol};"></i>${wip > 0 ? `<i class="w" style="left:${fill}%;width:${wip}%;"></i>` : ''}${cov > SC ? '<i class="more">›</i>' : ''}</div>`; })()}</td>
         <td>${_stk ? `<b style="font-size:13px;">${fmtN(_stk)}</b>` : '<span class="sup-dash">—</span>'}${_hold ? `<div class="sup-sub">WH ${fmtN(r.on_hand)} · Hold ${fmtN(_hold)}</div>` : ''}</td>
         <td>${inc}</td>
-        <td>${!_avg ? '<span class="sup-dash">—</span>' : fmtN(_avg, _avg < 10 ? 1 : 0)}${tr == null || !_avg ? '' : `<div class="sup-sub" style="color:${tr > 0.2 ? 'var(--green)' : tr < -0.2 ? 'var(--red)' : 'var(--text3)'};">${tr > 0 ? '▲' : tr < 0 ? '▼' : ''} ${fmtN(Math.abs(tr * 100))}%</div>`}</td>
+        <td>${!_avg ? '<span class="sup-dash">—</span>' : fmtN(_avg, _avg < 10 ? 1 : 0)}${tr == null || !_avg ? '' : `<div class="sup-sub" title="7 วันล่าสุด เทียบเฉลี่ย 30 วัน">${tr > 0 ? '▲' : tr < 0 ? '▼' : ''} ${fmtN(Math.abs(tr * 100))}%</div>`}</td>
         <td>${!due ? '<span class="sup-dash">—</span>' : `<b style="color:${dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text)'};">${dY(due)}</b><div class="sup-sub"${dueIn < 0 ? ' style="color:var(--red);"' : ''}>${dueIn < 0 ? fmtN(-dueIn) + ' d late' : 'in ' + fmtN(dueIn) + ' d'}</div>`}</td>
         ${pc2[0]}</td>
         <td class="t-left">${statusCell(r)}</td>
@@ -705,9 +785,9 @@
     const cellCh = (r, l, i) => {
       const qn = (r.by_loc || {})[l] || 0, used = ((LOC_USE || {})[r.sku] || {})[l] || 0, c = locCover(r, l);
       if (qn <= 0) return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${EMPTY}</td>`;   // 0 = เว้นว่างเหมือนช่องอื่น
-      const chip = used > 0 ? `<span class="sl-d${c < LOC_LOW ? ' red' : ''}">${covTxt(c)}</span>` : '';
-      const q = `<div class="sl-q">${fmtN(qn)}</div>`;
-      return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${q}${chip}</td>`;
+      // (2026-11-10) บรรทัดเดียว: จำนวน + พอขายกี่วัน (เล็ก) · พอขายไม่ถึง 14 วัน = ช่องแดง
+      const lowC = used > 0 && c < LOC_LOW;
+      return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}${lowC ? ' sl-low' : ''}"${used > 0 ? ` title="ขายออกจากคลังนี้ ${fmtN(used)} ชิ้นใน 30 วัน → พอขาย ${covTxt(c)}"` : ''}><span class="sl-q">${fmtN(qn)}</span>${used > 0 ? `<span class="sl-dd">${covTxt(c)}</span>` : ''}</td>`;
     };
     const cellSt = (r, l, i) => { const qn = (r.by_loc || {})[l] || 0; return `<td class="sl-c${i === 0 ? ' sl-sep' : ''}">${qn ? `<div class="sl-q">${fmtN(qn)}</div>` : EMPTY}</td>`; };
     const gSize = {}; list.forEach(r => { gSize[r.parent_sku] = (gSize[r.parent_sku] || 0) + 1; });
@@ -724,8 +804,8 @@
         ${chs.map((l, i) => sumCell(g.loc[l], i)).join('')}${other.map((l, i) => sumCell(g.loc[l], i)).join('')}${sumCell(g.hold, 0)}</tr>` : '';
       last = r.parent_sku;
       const hold = HOLD[r.sku] || 0;
-      return sep + `<tr class="${grouped ? 'sup-child' : ''}"><td class="t-left"><span class="${grouped ? 'sup-skucode' : 'sup-parent'}">${esc(r.sku)}</span><div class="sup-sub">${esc(r.product_name)}</div></td>
-        <td class="sl-c sl-totc"><div class="sl-q sl-tot">${fmtN(stockAll(r))}</div></td>
+      return sep + `<tr class="${grouped ? 'sup-child' : ''}"><td class="t-left"><div class="sl-pn"><span class="sup-code">${esc(r.sku)}</span><span class="sl-nm">${esc(r.product_name)}</span></div></td>
+        <td class="sl-c sl-totc">${stockAll(r) ? `<div class="sl-q sl-tot">${fmtN(stockAll(r))}</div>` : EMPTY}</td>
         ${chs.map((l, i) => cellCh(r, l, i)).join('')}
         ${other.map((l, i) => cellSt(r, l, i)).join('')}
         <td class="sl-c sl-sep">${hold ? `<div class="sl-q">${fmtN(hold)}</div>` : EMPTY}</td></tr>`;
@@ -765,67 +845,91 @@
     lastSeries = data; renderSku(data);
   }
 
+  // (2026-11-10) การ์ดกราฟ SKU แบบใหม่ — เดิมกราฟ 2 แกน (แท่งขาย + เส้นสต็อก + ROP) ดูงง · ตัวเลขข้างบนเป็นคำเก่า (ROP / แนะสั่ง / สายแล้ว) ไม่ตรงกับตาราง
+  //   ใหม่: แถวตัวเลขชุดเดียวกับตาราง (On hand · Avg/day · Days of cover · LT · Order by · Incoming · Status)
+  //   กราฟ 1 = สต็อก (แกนเดียว): 90 วันที่ผ่านมา (เส้นทึบ) → คาดการณ์ (เส้นประ) นับ PO ตามวันของเข้า · WIP ไม่มีวัน = เข้าตอนของหมด (กติกาเดียวกับตาราง)
+  //            เส้นตั้ง: Today · Order by · Out · จุด PO เข้า   กราฟ 2 (เล็ก) = ยอดขายต่อวัน 90 วัน
   function renderSku(d) {
-    const p = d.plan || {}, r = rows.find(x => x.sku === d.sku) || {};
-    const [oc2, ot2] = ORDER[r.order_status] || ['var(--text3)', '—'];
-    const facts = [
-      ['ABC-XYZ', `${r.abc || '—'}${r.xyz || ''}`], ['การสั่งซื้อ', r.plan_mode === 'plan' ? pill(oc2, ot2) : '—'], ['สต็อกขายได้', fmtN(p.on_hand) + ' ชิ้น'], ['ขาย/วัน', fmtN(p.avg_day, 1)], ['ขายได้อีก', r.cover_days != null ? fmtN(r.cover_days) + ' วัน' : '—'],
-      ['คาดว่าหมด', p.stockout_date ? dTH(p.stockout_date) : '—'], ['ROP', fmtN(p.reorder_point)], ['ของเผื่อ', fmtN(p.safety_stock) + (r.ss_days != null ? ` (${fmtN(r.ss_days, 1)} วัน)` : '')], ['แนะสั่ง', p.suggested_qty ? fmtN(p.suggested_qty) + ' ชิ้น' : '—'],
-      ['ต้องเปิด PO', r.po_due_date ? dTH(r.po_due_date) : '—'],
-      ['lead time', `${p.lt ?? '—'} วัน`], ['PO ค้าง', p.on_order ? `${fmtN(p.on_order)} ชิ้น` : '—'],
-    ];
-    const byLoc = r.by_loc || {};
-    const locs = Object.keys(byLoc).length
-      ? Object.entries(byLoc).sort((a, b) => b[1] - a[1]).map(([L, qty]) => pill('var(--text3)', `${esc(L)} ${fmtN(qty)}`)).join(' ')
-      : (d.by_location || []).map(l => pill('var(--text3)', `${esc(l.location)} ${fmtN(l.on_hand)}`)).join(' ');
-    const po = (d.po || []).length ? `<div style="font-size:11px;margin-top:8px;">PO ค้าง: ${d.po.map(x => pill('var(--blue)', `${esc(x.po_no || '(ไม่มีเลข)')} ${fmtN(x.qty)} ชิ้น${x.eta ? ' เข้า ' + dTH(x.eta) : ' ไม่มี ETA'}`)).join(' ')}</div>` : '';
+    const r = rows.find(x => x.sku === d.sku) || {}, k = statusKey(r);
+    const stk = stockAll(r), hold = HOLD[r.sku] || 0, avg = +r.avg_day || 0, lt = +r.lt || 60;
+    const today0 = toD(iso(new Date())), cov = avg > 0 ? Math.floor(stk / avg) : null;
+    const so = cov != null ? iso(new Date(today0.getTime() + cov * DAY)) : null;
+    const pc = r.plan_mode === 'plan' && avg > 0 ? planCalc(r) : null, due = pc && pc.orderBy ? iso(pc.orderBy) : null, dueIn = due ? daysFrom(due) : null;
+    const pos = OPEN_PO[r.sku] || [], wip = pos.reduce((t, x) => t + x.q, 0), etaNext = pos.filter(x => !x.nodate).map(x => x.eta).sort()[0];
+    const covCol = cov == null ? 'var(--text3)' : cov > 180 ? '#60a5fa' : r.plan_mode !== 'plan' ? 'var(--text)' : cov < lt + REVIEW_DAYS ? 'var(--red)' : 'var(--green)';
+    const f = (l, v, sub) => `<div><span>${l}</span><b>${v}</b>${sub ? `<i>${sub}</i>` : ''}</div>`;
+    const locs = Object.entries(r.by_loc || {}).filter(([, q]) => q > 0).sort((a, b) => b[1] - a[1]).map(([L, q]) => `${esc(LOC_LABEL[L] || L)} <b>${fmtN(q)}</b>`).join(' · ');
+    document.getElementById('supSkuTitle').innerHTML = `${esc(r.product_name || d.sku)} <span style="font-size:12px;font-weight:500;color:var(--text3);margin-left:6px;">${esc(d.sku)}${r.abc ? ' · ' + r.abc + r.xyz : ''}</span>`;
     document.getElementById('supSkuBody').innerHTML = `
-      <div style="font-size:13px;margin-bottom:10px;"><b>${esc(r.product_name || d.sku)}</b> <span style="color:var(--text3);font-family:'Sarabun',sans-serif;font-size:11px;">${esc(r.parent_sku || '')} · ${esc(d.sku)}</span></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-bottom:14px;">${facts.map(([l, v]) => `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 11px;"><div style="font-size:9.5px;color:var(--text3);letter-spacing:.2px;margin-bottom:3px;">${l}</div><div style="font-size:14px;font-weight:600;line-height:1.2;">${v}</div></div>`).join('')}</div>
-      <div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:7px;flex-wrap:wrap;"><span>สต็อกตามคลัง</span>${locs || '—'}</div>${po}
-      <div class="chart-wrap" style="height:340px;margin-top:16px;"><canvas id="supChart"></canvas></div>
-      <div id="supLegend" style="font-size:10.5px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;"></div>
-      </div>`;
-    drawChart(d);
+      <div class="sup-facts">
+        ${f('Status', statusCell(r).replace(/<div class="sup-sub">.*$/s, ''))}
+        ${f('On hand', stk ? fmtN(stk) : '—', hold ? `WH ${fmtN(r.on_hand)} · Hold ${fmtN(hold)}` : '')}
+        ${f('Avg/day', avg ? fmtN(avg, avg < 10 ? 1 : 0) : '—')}
+        ${f('Days of cover', cov == null ? '—' : `<span style="color:${covCol};">${covTxt(cov)}</span>`, so ? 'Out ' + dY(so) : '')}
+        ${f('Lead time', lt + ' d')}
+        ${f('Order by', due ? `<span style="color:${dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text)'};">${dY(due)}</span>` : '—', due ? (dueIn < 0 ? fmtN(-dueIn) + ' d late' : 'in ' + fmtN(dueIn) + ' d') : '')}
+        ${f('Incoming', wip ? fmtN(wip) : '—', wip ? (etaNext ? 'ETA ' + dY(etaNext) : 'No ETA yet') : '')}
+      </div>
+      ${locs ? `<div class="sup-locline">Stock by location: ${locs}</div>` : ''}
+      <div class="sup-ch-h"><b>Stock</b><span>ผ่านมา 90 วัน · คาดการณ์ต่อจากวันนี้</span></div>
+      <div class="chart-wrap" style="height:280px;"><canvas id="supChart"></canvas></div>
+      <div id="supLegend" class="sup-leg"></div>
+      <div class="sup-ch-h" style="margin-top:14px;"><b>Sales / day</b><span>ยอดขายจริงต่อวัน 90 วันที่ผ่านมา</span></div>
+      <div class="chart-wrap" style="height:110px;"><canvas id="supChart2"></canvas></div>`;
+    drawChart(d, { r, stk, avg, so, due, pos });
   }
 
-  function drawChart(d) {
-    const p = d.plan || {}, s = d.series || [];
-    const tick = chartTickColor(), grid = chartGridColor();
-    const labels = s.map(x => x.d), lastStock = s.length ? Number(s[s.length - 1].stock) : 0;
-    const fut = [], futLabels = []; let st = lastStock;
-    const base = s.length ? new Date(s[s.length - 1].d + 'T00:00:00') : new Date();
-    for (let i = 1; i <= 60; i++) {
-      const dt = new Date(base.getTime() + i * 86400000), iso = fmtDateISO(dt);
-      st -= Number(p.avg_day || 0); (d.po || []).forEach(x => { if (x.eta === iso) st += Number(x.qty || 0); });
-      futLabels.push(iso); fut.push(Math.max(0, Math.round(st)));
+  let chart2 = null;
+  function drawChart(d, ctx) {
+    ctx = ctx || {}; const s = d.series || [], r = ctx.r || {}, avg = ctx.avg || 0;
+    const tick = chartTickColor(), grid = chartGridColor(), css = v => getComputedStyle(document.body).getPropertyValue(v).trim();
+    const C_STOCK = css('--accent') || '#c8a96e', C_RED = css('--red') || '#ef4444', C_OR = css('--orange') || '#f59e0b', C_GREEN = css('--green') || '#22c55e';
+    // คาดการณ์: จากสต็อกวันนี้ (ทุกคลัง + Hold) ลดวันละ Avg/day · PO มีวัน = บวกวันของเข้า · WIP ไม่มีวัน = บวกตอนของหมด · ไปจนหมดหลัง PO สุดท้าย (สูงสุด 365 วัน)
+    const t0 = toD(iso(new Date())), posD = (ctx.pos || []).filter(x => !x.nodate).map(x => ({ d: x.eta, q: x.q })), noDate = (ctx.pos || []).filter(x => x.nodate).reduce((t, x) => t + x.q, 0);
+    const lastPo = posD.map(x => x.d).sort().pop();
+    const fut = [], futL = [], poMark = {}; let st = ctx.stk || 0, nd = noDate;
+    for (let i = 0; i <= 365 && avg > 0; i++) {
+      const di = iso(new Date(t0.getTime() + i * DAY));
+      posD.filter(x => x.d === di).forEach(x => { st += x.q; poMark[di] = (poMark[di] || 0) + x.q; });
+      if (st <= 0 && nd > 0) { st += nd; poMark[di] = (poMark[di] || 0) + nd; nd = 0; }
+      futL.push(di); fut.push(Math.max(0, Math.round(st)));
+      if (st <= 0 && i > 30 && (!lastPo || di > lastPo) && nd <= 0) break;
+      st -= avg;
     }
-    const allLabels = [...labels, ...futLabels], n = labels.length;
-    const pad = (arr, before, after) => [...Array(before).fill(null), ...arr, ...Array(after).fill(null)];
+    if (!futL.length) { futL.push(iso(t0)); fut.push(ctx.stk || 0); }
+    const past = s.filter(x => x.d < futL[0]);
+    const labels = [...past.map(x => x.d), ...futL], np = past.length;
+    const pastSt = [...past.map(x => Number(x.stock)), fut[0]];
+    const idx = dd => dd ? labels.indexOf(dd) : -1;
+    const marks = [[idx(futL[0]), 'Today', tick], [idx(ctx.due), 'Order by', C_OR], [idx(ctx.so), 'Out', C_RED]].filter(m => m[0] >= 0);
+    const vlines = { id: 'supV', afterDatasetsDraw(c) { const { ctx: g, chartArea: a, scales: { x } } = c; g.save(); g.font = "600 10.5px Sarabun, sans-serif";
+      marks.forEach(([i, t, col], j) => { const px = x.getPixelForValue(i); g.strokeStyle = col; g.setLineDash([4, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(px, a.top); g.lineTo(px, a.bottom); g.stroke();
+        g.setLineDash([]); g.fillStyle = col; g.textAlign = px > a.right - 60 ? 'right' : 'left'; g.fillText(t, px + (g.textAlign === 'left' ? 4 : -4), a.top + 10 + j * 13); });
+      Object.entries(poMark).forEach(([di, q]) => { const i = idx(di); if (i < 0) return; const px = x.getPixelForValue(i); g.fillStyle = C_GREEN; g.textAlign = 'center'; g.fillText('PO +' + fmtN(q), px, a.bottom - 6); });
+      g.restore(); } };
     if (chart) chart.destroy();
     chart = new Chart(document.getElementById('supChart'), {
-      type: 'bar',
-      data: { labels: allLabels, datasets: [
-        { type: 'bar', label: 'ยอดขายจริง/วัน', data: pad(s.map(x => Number(x.sales)), 0, 60), backgroundColor: 'rgba(200,169,110,.75)', yAxisID: 'y', order: 3 },
-        { type: 'line', label: 'สต็อกคงเหลือ', data: pad(s.map(x => Number(x.stock)), 0, 60), borderColor: '#4ade80', borderWidth: 2, pointRadius: 0, tension: .2, yAxisID: 'y2', order: 1 },
-        { type: 'line', label: 'คาดการณ์ 60 วัน', data: pad([lastStock, ...fut], n - 1, 0), borderColor: 'rgba(74,222,128,.6)', borderDash: [5, 4], borderWidth: 2, pointRadius: 0, yAxisID: 'y2', order: 1 },
-        { type: 'line', label: 'ROP (จุดสั่งซ้ำ)', data: allLabels.map(() => Number(p.reorder_point || 0)), borderColor: '#f87171', borderDash: [3, 3], borderWidth: 1, pointRadius: 0, yAxisID: 'y2', order: 2 },
+      type: 'line',
+      data: { labels, datasets: [
+        { label: 'Stock (past 90 days)', data: [...pastSt, ...Array(Math.max(0, futL.length - 1)).fill(null)], borderColor: C_STOCK, backgroundColor: 'transparent', borderWidth: 2.2, pointRadius: 0, tension: .15, spanGaps: true },
+        { label: 'Projected stock', data: [...Array(np).fill(null), ...fut], borderColor: C_STOCK, borderDash: [6, 4], borderWidth: 2, pointRadius: 0, tension: 0, stepped: false },
       ] },
       options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { title: it => dTH(it[0].label), label: it => `${it.dataset.label}: ${fmtN(it.raw, it.dataset.label === 'ยอดขายจริง/วัน' ? 1 : 0)}` } } },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 12, callback: (v, i) => dTH(allLabels[i]) } },
-          y: { position: 'left', beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 } }, title: { display: true, text: 'ยอดขาย (ชิ้น/วัน)', color: tick, font: { family: 'Sarabun', size: 10 } } },
-          y2: { position: 'right', beginAtZero: true, grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 } }, title: { display: true, text: 'สต็อก (ชิ้น)', color: tick, font: { family: 'Sarabun', size: 10 } } },
-        } }
+        plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, filter: it => it.raw != null,
+          callbacks: { title: it => dY(it[0].label), label: it => `${it.dataset.label}: ${fmtN(it.raw)}`, afterBody: it => { const q = poMark[it[0].label]; return q ? `PO เข้า +${fmtN(q)}` : ''; } } } },
+        scales: { x: { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 10, callback: (v, i) => dY(labels[i]) } },
+          y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, callback: v => fmtN(v) }, title: { display: true, text: 'ชิ้น', color: tick, font: { family: 'Sarabun', size: 10 } } } } },
+      plugins: [vlines]
     });
-    // คำอธิบายสี — ดึงสีจากกราฟจริง ไม่ได้พิมพ์ทับเอง จึงตรงกันเสมอ
     const lg = document.getElementById('supLegend');
-    if (lg) lg.innerHTML = chart.data.datasets.map(ds => {
-      const col = ds.type === 'bar' ? ds.backgroundColor : ds.borderColor;
-      const dash = ds.borderDash ? 'border-top:2px dashed ' + col + ';height:0;width:14px;' : 'background:' + col + ';width:11px;height:11px;border-radius:2px;';
-      return `<span style="display:inline-flex;align-items:center;gap:6px;"><i style="display:inline-block;${dash}"></i>${ds.label}</span>`;
-    }).join('');
+    if (lg) lg.innerHTML = `<span><i style="background:${C_STOCK};height:2px;width:16px;"></i>Stock 90 วันที่ผ่านมา</span><span><i style="border-top:2px dashed ${C_STOCK};width:16px;"></i>คาดการณ์ (ขายวันละ ${fmtN(avg, avg < 10 ? 1 : 0)} · นับ PO ตามวันของเข้า)</span><span><i style="border-top:1px dashed ${C_OR};width:16px;"></i>Order by</span><span><i style="border-top:1px dashed ${C_RED};width:16px;"></i>Out (ของเดิมหมด)</span>`;
+    if (chart2) chart2.destroy();
+    chart2 = new Chart(document.getElementById('supChart2'), {
+      type: 'bar', data: { labels: s.map(x => x.d), datasets: [{ label: 'Sales / day', data: s.map(x => Number(x.sales) || 0), backgroundColor: 'rgba(148,163,184,.55)', borderRadius: 2, maxBarThickness: 10 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { title: it => dY(it[0].label), label: it => `ขาย ${fmtN(it.raw)} ชิ้น` } } },
+        scales: { x: { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 8, callback: (v, i) => dY(s[i] && s[i].d) } },
+          y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 3, callback: v => fmtN(v) } } } }
+    });
   }
 
   // เรียกจาก dashboard.html ตอนกดเมนู / สลับธีม
