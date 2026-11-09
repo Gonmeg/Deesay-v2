@@ -185,6 +185,59 @@
     .shell-sidebar { width: 340px; }
     .page-header { align-items: center; margin-bottom: 12px; }
     .page-header .mode-toggle { margin-bottom: 0; }
+    /* (2026-11-09) เมนูงานย้ายไปเมนูซ้าย (sidebar.js) — แถบปุ่มบนหน้าซ่อนเมื่อมีเมนูซ้าย */
+    body.has-sb .mode-toggle { display: none !important; }
+    #modeBtnExport { display: none !important; }
+    /* (2026-11-09) หน้าปิดเดือน แบบคู่มือทีละขั้น (เลือกเดือน → ความคืบหน้า → ขั้นปัจจุบันกางอยู่ ขั้นอื่นพับ) */
+    #closeMonth, #closeMonth + * { display: none !important; }   /* เลือกเดือนผ่านปุ่มเดือนด้านบน */
+    .cl-months { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .cl-mo { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 12px; padding: 9px 16px; cursor: pointer; font-family: inherit; color: var(--text); text-align: left; min-width: 130px; }
+    .cl-mo b { display: block; font-size: 0.9rem; } .cl-mo small { display: block; font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .cl-mo.on { border-color: var(--accent); background: var(--accent-soft); } .cl-mo small.ok { color: var(--success); }
+    .cl-hero { display: flex; align-items: center; gap: 18px; padding: 18px 20px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border); margin-bottom: 14px; }
+    .cl-ring { --p: 0; width: 64px; height: 64px; border-radius: 50%; flex: none; background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--surface3) 0); display: flex; align-items: center; justify-content: center; }
+    .cl-ring span { width: 50px; height: 50px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; }
+    .cl-hero h3 { font-size: 1.05rem; font-weight: 700; } .cl-hero p { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
+    .cl-hero p b { color: var(--text); font-weight: 600; }
+    .cl-step { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; background: var(--surface); overflow: hidden; }
+    .cl-step.open { border-color: var(--border2); box-shadow: var(--shadow); }
+    .cl-head { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; padding: 12px 16px; cursor: pointer; }
+    .cl-ic { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; border: 1.5px solid var(--border2); color: var(--muted); }
+    .cl-step.done .cl-ic { background: var(--success); border-color: var(--success); color: #0a0a0f; }
+    .cl-step.cur .cl-ic { border-color: var(--accent); color: var(--accent2); }
+    .cl-t { font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; } .cl-t i { width: 8px; height: 8px; border-radius: 3px; display: inline-block; flex: none; }
+    .cl-step.done .cl-t { color: var(--muted); }
+    .cl-pill { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; white-space: nowrap; background: var(--surface3); color: var(--muted); }
+    .cl-pill.done { background: rgba(74,222,128,.14); color: var(--success); } .cl-pill.ready { background: var(--accent-soft); color: var(--accent2); } .cl-pill.todo { background: rgba(251,146,60,.14); color: #fb923c; }
+    .cl-body { display: none; padding: 0 16px 16px 56px; } .cl-step.open .cl-body { display: block; }
+    .cl-s { font-size: 0.8rem; color: var(--muted); line-height: 1.65; } .cl-ok { color: var(--success); } .cl-no { color: #fb923c; }
+    .cl-act { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .cl-btn { background: none; border: 1px solid var(--border2); color: var(--text); padding: 8px 16px; border-radius: 9px; font-size: 0.82rem; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; }
+    .cl-btn:hover { border-color: var(--accent); } .cl-btn.pri { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .cl-det { margin-top: 10px; }
+    /* (2026-11-09) เลือกช่องทางเป็นการ์ด + ช่องวางไฟล์ใหญ่ (แบบหน้า import ทั่วไป: เลือกแหล่ง → วางไฟล์ → ถัดไป) */
+    .step1-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+    .step1-left > div:has(> #channelSelect) { display: none; }   /* select เดิม (ยังใช้งานผ่านการ์ด) */
+    #panel1 > .card > .section-title { display: none; }
+    .up-lbl { font-size: 0.8rem; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .up-lbl i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent2); display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
+    .up-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .up-tile { position: relative; text-align: left; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 14px 12px 16px; cursor: pointer; font-family: inherit; color: var(--text); overflow: hidden; transition: border-color .15s, background .15s; min-height: 70px; }
+    .up-tile::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c, var(--accent)); }
+    .up-tile:hover { border-color: var(--border2); }
+    .up-tile.on { border-color: var(--accent); background: var(--accent-soft); }
+    .up-tile b { display: block; font-size: 0.9rem; font-weight: 700; }
+    .up-tile small { display: block; font-size: 0.72rem; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+    .up-tile small.auto { color: var(--success); }
+    #storeWrap { max-width: 320px; }
+    #upAcctBanner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin-bottom: 14px; border-radius: 12px; background: var(--accent-soft); border: 1px solid var(--accent); font-size: 0.85rem; }
+    #upAcctBanner b { color: var(--accent2); } #upAcctBanner button { background: none; border: 1px solid var(--accent); color: var(--accent2); padding: 6px 14px; border-radius: 8px; font-family: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .drop-label { display: flex !important; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 150px; padding: 26px 20px !important; border-width: 1.5px !important; }
+    .drop-label::after { content: none !important; }
+    .drop-label .drop-icon { font-size: 0 !important; color: transparent !important; margin: 0 0 10px !important; width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft); display: inline-block !important; position: relative; overflow: hidden; text-indent: 200%; white-space: nowrap; }
+    .drop-label .drop-icon::before { content: ''; position: absolute; left: 11px; top: 11px; width: 22px; height: 22px; background: var(--accent2); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4'/%3E%3Cpath d='M7 9l5-5 5 5'/%3E%3Cpath d='M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4'/%3E%3Cpath d='M7 9l5-5 5 5'/%3E%3Cpath d='M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3'/%3E%3C/svg%3E") center / contain no-repeat; }
+    .drop-label .drop-main { font-size: 0.92rem !important; } .drop-label .drop-sub { margin-top: 4px !important; }
+    @media (max-width: 1100px) { .up-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     .ph-text h1 { margin-bottom: 2px; }
     .info-line { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.74rem; color: var(--muted); margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
     .info-line b { color: var(--text); font-weight: 600; margin-right: 4px; }
@@ -252,7 +305,7 @@
 <div class="shell-main">
   <div class="page-header">
     <div class="ph-text">
-      <h1 id="pageTitle">Upload ข้อมูลยอดขาย</h1>
+      <h1 id="pageTitle">อัปคำสั่งซื้อ</h1>
       <p id="pageDesc">นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ</p>
     </div>
     <div class="mode-toggle">
@@ -260,11 +313,13 @@
     <button class="mode-btn" id="modeBtnSettlement">💰 อัพรายรับเงิน</button>
     <button class="mode-btn" id="modeBtnCost">📊 อัพต้นทุนสินค้า</button>
 <button class="mode-btn" id="modeBtnDelete">🗑 ลบข้อมูล</button>
+<button class="mode-btn" id="modeBtnClose">🔒 ปิดเดือน</button><!-- (2026-11-09) Shopee / TikTok: ยอดเดือนตามไฟล์บัญชี แล้วล็อค -->
 <button class="mode-btn" id="modeBtnExport">📤 ส่งออกให้บัญชี</button>
 <button class="mode-btn" id="modeBtnAcctLink">📑 ลิงก์งบบัญชี</button>
   </div>
   </div>
   
+  <div id="upAcctBanner" style="display:none;"></div><!-- (2026-11-09) อัปไฟล์บัญชีปิดเดือน (เข้าจากหน้าปิดเดือนเท่านั้น) -->
   <div id="stepWizard">
   <div class="step-track">
     <div class="step-item"><div class="step-num active" id="snum1">1</div><div class="step-label active" id="slabel1">เลือกไฟล์</div></div>
@@ -279,6 +334,8 @@
       <div class="section-title">เลือก Channel และไฟล์</div>
       <div class="step1-grid">
         <div class="step1-left">
+          <div class="up-lbl"><i>1</i>เลือกช่องทาง</div>
+          <div class="up-tiles" id="upTiles"></div>
           <div>
             <label class="field-label">Channel <span class="req">*</span></label>
             <select id="channelSelect">
@@ -296,7 +353,7 @@
           </div>
         </div>
         <div id="fileWrap">
-          <label class="field-label">ไฟล์ <span class="req">*</span></label>
+          <div class="up-lbl"><i>2</i>เลือกไฟล์</div>
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple>
           <label class="drop-label" id="dropLabel" for="fileInput">
             <span class="drop-icon" id="dropIcon">📂</span>
@@ -377,6 +434,17 @@
       </div>
       <div id="exportAlert" class="alert alert-error" style="display:none;"></div>
       <div id="exportResult" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- (2026-11-09) ปิดเดือน — งานปิดเดือนทั้งหมดในหน้าเดียว ทำตามลำดับ · สถานะจาก RPC month_close_status · Shopee / TikTok ปิดด้วย RPC month_close_apply -->
+  <div id="closePanel" style="display:none;">
+    <div class="card">
+      <div class="cl-months" id="clMonths"></div>
+      <input type="month" id="closeMonth" hidden>
+      <div class="cl-hero" id="clHero"><div class="cl-ring"><span>–</span></div><div><h3>กำลังโหลด…</h3><p>&nbsp;</p></div></div>
+      <div id="clList" style="min-height:330px;"></div>
+      <div id="closeAlert" class="alert alert-error" style="display:none;margin-top:12px;"></div>
     </div>
   </div>
 
@@ -1524,10 +1592,18 @@ const CHANNEL_OPTIONS_SETTLEMENT = [
 
 function setUploadMode(mode) {
   uploadMode = mode
+  _upAcct = _upAcctNext; _upAcctNext = null   // อัปไฟล์บัญชีปิดเดือน: เข้าจากหน้าปิดเดือนเท่านั้น · กดเมนูอื่น = กลับเป็นงานประจำวัน
+  if (typeof upTilesRender === 'function') setTimeout(upTilesRender, 0)
+  const ab = document.getElementById('upAcctBanner')
+  if (ab) { ab.style.display = _upAcct ? 'flex' : 'none'; ab.innerHTML = _upAcct ? `<span>${mode === 'settlement' ? 'อัปรายงานรับเงินจากบัญชี' : 'อัปไฟล์คำสั่งซื้อจากบัญชี'} เพื่อปิดเดือน · <b>${_upAcct}</b>${mode === 'settlement' ? '' : _upAcct === 'Lazada' ? ' (ลบเดือนเดิมก่อนอัป)' : ' · อัปครบทุกร้านแล้วกลับไปกดตรวจ &amp; ปิดเดือน'}</span><button type="button" onclick="setUploadMode('close')">← กลับหน้าปิดเดือน</button>` : '' }
   document.getElementById('modeBtnOrder').classList.toggle('active', mode === 'order')
   document.getElementById('modeBtnSettlement').classList.toggle('active', mode === 'settlement')
   document.getElementById('modeBtnCost').classList.toggle('active', mode === 'cost')
   document.getElementById('modeBtnDelete').classList.toggle('active', mode === 'delete')
+  document.getElementById('modeBtnClose').classList.toggle('active', mode === 'close')
+  const closePanel = document.getElementById('closePanel')
+  if (closePanel) closePanel.style.display = mode === 'close' ? 'block' : 'none'
+  if (_upAcct) { ['modeBtnOrder', 'modeBtnSettlement'].forEach(id => document.getElementById(id).classList.remove('active')); document.getElementById('modeBtnClose').classList.add('active') }   // อัปไฟล์บัญชี = งานของเมนูปิดเดือน
   document.getElementById('modeBtnExport').classList.toggle('active', mode === 'export')
   document.getElementById('modeBtnAcctLink').classList.toggle('active', mode === 'acctlink')
   const acctLinkPanel = document.getElementById('acctLinkPanel')
@@ -1557,6 +1633,16 @@ function setUploadMode(mode) {
     if (em && !em.value) { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); em.value = d.toISOString().slice(0, 7) }
     return
   }
+  if (mode === 'close') {
+    if (stepWizard) stepWizard.style.display = 'none'
+    if (costPanel) costPanel.style.display = 'none'
+    document.getElementById('pageTitle').textContent = 'ปิดเดือน'
+    document.getElementById('pageDesc').textContent = 'งานปิดเดือนทั้งหมดในหน้าเดียว ทำตามลำดับ · ขึ้น ✓ เมื่อเสร็จ'
+    const cm = document.getElementById('closeMonth')
+    if (cm && !cm.value) { const d = new Date(Date.now() + 7 * 3600e3); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1); cm.value = d.toISOString().slice(0, 7) }
+    closeLoadStatus()
+    return
+  }
   if (mode === 'delete') {
     if (stepWizard) stepWizard.style.display = 'none'
     if (costPanel) costPanel.style.display = 'none'
@@ -1575,7 +1661,7 @@ function setUploadMode(mode) {
   if (stepWizard) stepWizard.style.display = 'block'
   if (costPanel) costPanel.style.display = 'none'
 
-  document.getElementById('pageTitle').textContent = mode === 'order' ? 'Upload ข้อมูลยอดขาย' : 'Upload รายรับเงิน (Settlement)'
+  document.getElementById('pageTitle').textContent = _upAcct ? `อัปไฟล์บัญชี · ${_upAcct}` : mode === 'order' ? 'อัปคำสั่งซื้อ' : 'อัปรายรับเงิน'
   document.getElementById('pageDesc').textContent = mode === 'order'
     ? 'นำเข้าไฟล์รายงานจากแต่ละช่องทาง ระบบจะจับคู่คอลัมน์และบันทึกเข้าฐานข้อมูลให้อัตโนมัติ'
     : 'นำเข้าไฟล์รายรับเงินจากแต่ละ platform ระบบจะจับคู่กับออเดอร์และอัพเดทสถานะ settled อัตโนมัติ'
@@ -1609,6 +1695,165 @@ document.getElementById('modeBtnCost').addEventListener('click', () => setUpload
 document.getElementById('modeBtnDelete').addEventListener('click', () => setUploadMode('delete'))
 document.getElementById('modeBtnExport').addEventListener('click', () => setUploadMode('export'))
 document.getElementById('modeBtnAcctLink').addEventListener('click', () => setUploadMode('acctlink'))
+document.getElementById('modeBtnClose').addEventListener('click', () => setUploadMode('close'))
+
+// ===== (2026-11-09) การ์ดเลือกช่องทาง (แทน dropdown) · บอกอัปล่าสุด / ดึงจาก API อัตโนมัติ =====
+// งานประจำวันเห็นเฉพาะช่องทางที่ต้องอัปเอง (Facebook / Lazada) · Shopee / TikTok ดึงจาก API → อัปเฉพาะไฟล์บัญชีผ่านหน้าปิดเดือน · ตัวแทน / MT ซิงก์จากชีทเองอัตโนมัติ
+const UP_CH = [['Facebook', 'Facebook', 'var(--ch-facebook)'], ['TikTok', 'TikTok', 'var(--ch-tiktok)'], ['Shopee', 'Shopee', 'var(--ch-shopee)'], ['Lazada', 'Lazada', 'var(--ch-lazada)']]
+let _upLast = null, _upApi = ['TikTok', 'Shopee'], _upAcct = null, _upAcctNext = null   // _upAcct = ช่องทางที่กำลังอัปไฟล์บัญชีปิดเดือน
+async function upTilesLoad() {
+  try {
+    const [{ data: logs }, { data: sw }] = await Promise.all([
+      DB.from('upload_logs').select('channel,upload_type,created_at,status').order('created_at', { ascending: false }).limit(300),
+      DB.from('api_core_switch').select('channel')])
+    _upLast = {}; (logs || []).forEach(l => { if (l.status === 'error') return; const k = l.channel + '|' + (l.upload_type || 'order'); if (!_upLast[k]) _upLast[k] = l.created_at })
+    if (sw && sw.length) _upApi = sw.map(r => r.channel)
+  } catch (e) { _upLast = {} }
+  upTilesRender()
+}
+function upTilesRender() {
+  const box = document.getElementById('upTiles'); if (!box) return
+  const cur = document.getElementById('channelSelect').value, type = uploadMode === 'settlement' ? 'settlement' : 'order'
+  const fmtD = t => new Date(t).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const opts = new Set([...document.getElementById('channelSelect').options].map(o => o.value))   // โหมดรับเงินมีช่องทางไม่ครบ → แสดงเฉพาะที่เลือกได้
+  const show = UP_CH.filter(([v]) => opts.has(v) && (_upAcct ? v === _upAcct : !_upApi.includes(v)))
+  box.style.gridTemplateColumns = `repeat(${Math.max(show.length, 2)}, minmax(0, 220px))`
+  if (show.length === 1 && cur !== show[0][0]) { const sel = document.getElementById('channelSelect'); sel.value = show[0][0]; sel.dispatchEvent(new Event('change')); return }   // เหลือช่องทางเดียว → เลือกให้เลย
+  box.innerHTML = show.map(([v, l, c]) => {
+    const api = _upApi.includes(v), last = _upLast && (_upLast[v + '|' + type] || (v === 'ตัวแทน/MT' && (_upLast['ตัวแทน|' + type] || _upLast['Modern Trade|' + type])))
+    const sub = _upAcct ? '<small>ไฟล์คำสั่งซื้อจากบัญชี (ทุกร้าน)</small>' : `<small>${last ? 'อัปล่าสุด ' + fmtD(last) : 'ยังไม่มีประวัติ'}</small>`
+    return `<button type="button" class="up-tile${cur === v ? ' on' : ''}" style="--c:${c}" data-ch="${v}"><b>${l}</b>${sub}</button>`
+  }).join('')
+  box.querySelectorAll('.up-tile').forEach(b => b.onclick = () => { const s = document.getElementById('channelSelect'); s.value = b.dataset.ch; s.dispatchEvent(new Event('change')); upTilesRender() })
+}
+document.getElementById('channelSelect').addEventListener('change', () => upTilesRender())
+upTilesLoad()
+
+// ===== (2026-11-09) หน้าปิดเดือน: งานปิดเดือนทั้งหมด ทำตามลำดับ =====
+// 1-2 Shopee / TikTok: อัปไฟล์คำสั่งซื้อบัญชีทุกร้าน → ตรวจ → ปิดเดือน (ยอดตามไฟล์ แล้วล็อค) · 3-4 Lazada: ลบเดือนแล้วอัปไฟล์บัญชีทับ + อัปรับเงิน
+// 5 ลิงก์งบบัญชีเดือนนี้ · 6 ส่งออกต้นทุนวอลเล็ทให้บัญชี (ทำหลังสุด)
+const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+const closeMonLbl = d => { if (!d) return '—'; const [y, m] = String(d).slice(0, 7).split('-'); return `${TH_M[+m - 1]} ${(+y + 543) % 100}` }
+const clDt = t => t ? new Date(t).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+const clNf = v => (Math.round((+v || 0) * 100) / 100).toLocaleString('th-TH')
+let _clCheck = null   // ช่องทางที่กดตรวจอยู่
+function clGo(mode, ch) {   // ไปทำงานในโหมดอื่น พร้อมเลือกช่องทางให้
+  if (ch && (mode === 'order' || mode === 'settlement')) _upAcctNext = ch
+  setUploadMode(mode)
+  if (ch && mode === 'delete') { const d = document.getElementById('bulkDeleteChannel'); if (d) { d.value = ch; d.dispatchEvent(new Event('change')) } return }
+  if (ch) { const c = document.getElementById('channelSelect'); if (c) { c.value = ch; c.dispatchEvent(new Event('change')) } }
+}
+let _clOpen = null   // ขั้นที่กางอยู่
+const clMonthsList = () => { const d = new Date(Date.now() + 7 * 3600e3); d.setUTCDate(1); return [3, 2, 1].map(k => { const x = new Date(d); x.setUTCMonth(x.getUTCMonth() - k); return x.toISOString().slice(0, 7) }) }
+function clBuild(d) {   // ขั้นตอนปิดเดือนจากสถานะ
+  const steps = [], CC = { Shopee: 'var(--ch-shopee)', TikTok: 'var(--ch-tiktok)', Lazada: 'var(--ch-lazada)' }
+  ;(d.api || []).forEach(a => {
+    const shops = a.shops || [], ready = shops.length && shops.every(x => x.file_ok)
+    steps.push({ key: a.channel, c: CC[a.channel], st: a.closed ? 'done' : ready ? 'ready' : 'todo', t: `${a.channel} · ปิดเดือนด้วยไฟล์บัญชี`,
+      s: a.closed ? '<span class="cl-ok">✓ ปิดแล้ว · ยอดตามไฟล์บัญชี ล็อคไว้ API แก้ไม่ได้</span>'
+        : `อัปไฟล์คำสั่งซื้อที่บัญชีส่งมา ครบทุกร้าน แล้วกดตรวจ → ปิดเดือน<br>${shops.map(x => `${x.sub} ${x.file_ok ? `<span class="cl-ok">✓ ไฟล์บัญชี ${clDt(x.file_at)}</span>` : '<span class="cl-no">ยังไม่อัปไฟล์บัญชี</span>'}`).join(' · ') || 'ยังไม่มีออเดอร์เดือนนี้'}`,
+      act: a.closed ? (Auth.perm && Auth.perm.is_admin ? `<button class="cl-btn" onclick="clReopen('${a.channel}')">เปิดเดือนกลับ (อัปไฟล์ผิด)</button>` : '')
+        : `<button class="cl-btn${ready ? '' : ' pri'}" onclick="clGo('order','${a.channel}')">อัปไฟล์</button><button class="cl-btn${ready ? ' pri' : ''}" onclick="clCheck('${a.channel}')">ตรวจ &amp; ปิดเดือน</button>`,
+      det: `<div class="cl-det" id="clDet-${a.channel}"></div>` })
+  })
+  const lz = d.lazada || [], end = new Date(d.month_end).getTime()
+  const lzOrd = lz.length && lz.every(x => new Date(x.last_load).getTime() >= end), lzPaid = lz.length && lz.every(x => x.orders && x.paid / x.orders >= 0.95)
+  steps.push({ key: 'lzo', c: CC.Lazada, st: lzOrd ? 'done' : 'todo', t: 'Lazada · ลบเดือนแล้วอัปไฟล์คำสั่งซื้อจากบัญชีทับ',
+    s: `ไม่มี API จึงต้องลบเดือนเดิมก่อน แล้วอัปไฟล์บัญชีทับ<br>${lz.map(x => `${x.sub} ${clNf(x.orders)} ออเดอร์ · อัปล่าสุด ${clDt(x.last_load)}`).join(' · ') || 'ยังไม่มีออเดอร์เดือนนี้'}`,
+    act: `<button class="cl-btn" onclick="clGo('delete','Lazada')">1. ลบเดือน</button><button class="cl-btn${lzOrd ? '' : ' pri'}" onclick="clGo('order','Lazada')">2. อัปไฟล์</button>` })
+  steps.push({ key: 'lzp', c: CC.Lazada, st: lzPaid ? 'done' : 'todo', t: 'Lazada · อัปรายงานรับเงิน',
+    s: lz.map(x => `${x.sub} ได้เงินแล้ว <span class="${x.orders && x.paid / x.orders >= 0.95 ? 'cl-ok' : 'cl-no'}">${x.orders ? Math.round(x.paid / x.orders * 100) : 0}%</span>`).join(' · ') || '—',
+    act: `<button class="cl-btn${lzPaid ? '' : ' pri'}" onclick="clGo('settlement','Lazada')">อัปไฟล์รับเงิน</button>` })
+  steps.push({ key: 'acct', st: d.acct_link ? 'done' : 'todo', t: 'งบบัญชีเดือนนี้',
+    s: d.acct_link ? '<span class="cl-ok">✓ มีงบเดือนนี้ในลิงก์งบบัญชีแล้ว</span>' : 'วางลิงก์งบเมื่อบัญชีส่งงบเดือนนี้ — ใช้กับ Business Insight',
+    act: `<button class="cl-btn${d.acct_link ? '' : ' pri'}" onclick="clGo('acctlink')">วางลิงก์งบ</button>` })
+  steps.push({ key: 'exp', st: 'last', t: 'ส่งออกต้นทุนวอลเล็ทให้บัญชี',
+    s: 'ทำหลังสุด — จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย ไฟล์หน้าตาเดียวกับที่ส่งทุกเดือน',
+    act: `<button class="cl-btn pri" id="clExportBtn" onclick="clExport()">Export Excel</button>`, det: '<div class="cl-det" id="clExportOut" style="display:none;"></div>' })
+  return steps
+}
+async function clMonthsRender(cur) {
+  const box = document.getElementById('clMonths'); if (!box) return
+  const ms = clMonthsList()
+  const res = await Promise.all(ms.map(m => DB.rpc('month_close_status', { p_month: m + '-01' }).then(r => r.data).catch(() => null)))
+  box.innerHTML = ms.map((m, i) => { const d = res[i], st = d ? clBuild(d).filter(x => x.st !== 'last') : [], n = st.filter(x => x.st === 'done').length
+    return `<button type="button" class="cl-mo${m === cur ? ' on' : ''}" data-m="${m}"><b>${closeMonLbl(m)}</b><small class="${st.length && n === st.length ? 'ok' : ''}">${!d ? '—' : n === st.length ? '✓ ปิดครบแล้ว' : `เสร็จ ${n} / ${st.length}`}</small></button>` }).join('')
+  box.querySelectorAll('.cl-mo').forEach(b => b.onclick = () => { const mi = document.getElementById('closeMonth'); mi.value = b.dataset.m; _clOpen = null; _clCheck = null; closeLoadStatus() })
+}
+async function closeLoadStatus() {
+  const mo = document.getElementById('closeMonth').value, list = document.getElementById('clList'), al = document.getElementById('closeAlert')
+  if (!mo) return
+  al.style.display = 'none'
+  clMonthsRender(mo)
+  try {
+    const { data: d, error } = await DB.rpc('month_close_status', { p_month: mo + '-01' })
+    if (error) throw new Error(error.message)
+    const steps = clBuild(d), tasks = steps.filter(x => x.st !== 'last'), nDone = tasks.filter(x => x.st === 'done').length
+    const next = steps.find(x => x.st !== 'done'), pct = Math.round(nDone / tasks.length * 100)
+    if (!_clOpen || !steps.some(x => x.key === _clOpen)) _clOpen = next ? next.key : null
+    document.getElementById('clHero').innerHTML = `<div class="cl-ring" style="--p:${pct}"><span>${nDone}/${tasks.length}</span></div>
+      <div><h3>ปิดเดือน ${closeMonLbl(d.month)}${nDone === tasks.length ? ' · ✓ ครบแล้ว' : ''}</h3><p>${next ? `ถัดไป: <b>${next.t}</b>` : 'ทุกขั้นเสร็จแล้ว'}</p></div>`
+    const PL = { done: 'เสร็จ', ready: 'พร้อมปิด', todo: 'รอทำ', last: 'ทำหลังสุด' }
+    list.innerHTML = steps.map((x, i) => `<div class="cl-step ${x.st === 'done' ? 'done' : ''}${x === next ? ' cur' : ''}${x.key === _clOpen ? ' open' : ''}" data-k="${x.key}">
+      <div class="cl-head" onclick="clToggle('${x.key}')"><div class="cl-ic">${x.st === 'done' ? '✓' : i + 1}</div>
+        <div class="cl-t">${x.c ? `<i style="background:${x.c}"></i>` : ''}${x.t}</div><span class="cl-pill ${x.st}">${PL[x.st]}</span></div>
+      <div class="cl-body"><div class="cl-s">${x.s}</div>${x.act ? `<div class="cl-act">${x.act}</div>` : ''}${x.det || ''}</div></div>`).join('')
+    if (_clCheck) clCheck(_clCheck, true)
+  } catch (e) { list.innerHTML = ''; al.textContent = 'โหลดสถานะไม่สำเร็จ: ' + e.message; al.style.display = 'block' }
+}
+window.clToggle = k => { _clOpen = _clOpen === k ? null : k; document.querySelectorAll('.cl-step').forEach(el => el.classList.toggle('open', el.dataset.k === _clOpen)) }
+function clDetail(ch, d, applied) {
+  const td = 'padding:6px 8px;border-bottom:1px solid var(--border2);', r = 'text-align:right;'
+  const shops = d.shops || [], ok = !applied && shops.length && !shops.some(x => x.problem)
+  const el = document.getElementById('clDet-' + ch); if (!el) return
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.8rem;font-variant-numeric:tabular-nums;margin-top:6px;">
+      <thead><tr><th style="${td}text-align:left;">ร้าน</th><th style="${td}${r}">ออเดอร์</th><th style="${td}${r}">ยอดสุทธิ</th><th style="${td}${r}">ยกเลิก / คืน</th><th style="${td}text-align:left;">จะเปลี่ยนในระบบ</th></tr></thead>
+      <tbody>${shops.map(x => `<tr><td style="${td}">${x.sub || '—'}</td>
+        <td style="${td}${r}">${clNf(x.file.n)}<div style="font-size:0.7rem;color:var(--muted);">ตอนนี้ ${clNf(x.now.n)}</div></td>
+        <td style="${td}${r}">${clNf(x.file.net)}<div style="font-size:0.7rem;color:var(--muted);">ตอนนี้ ${clNf(x.now.net)}</div></td>
+        <td style="${td}${r}">${clNf(x.file.cancel)} / ${clNf(x.file.returned)}<div style="font-size:0.7rem;color:var(--muted);">ตอนนี้ ${clNf(x.now.cancel)} / ${clNf(x.now.returned)}</div></td>
+        <td style="${td}">แก้ ${clNf(x.change)} · เพิ่ม ${clNf(x.add)} · ลบ ${clNf(x.remove)}${x.problem ? `<div style="color:var(--red,#ef4444);margin-top:2px;">⚠️ ${x.problem}</div>` : ''}</td></tr>`).join('') || `<tr><td colspan="5" style="${td}">ยังไม่มีไฟล์บัญชีของเดือนนี้</td></tr>`}</tbody></table>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">${ok ? `<button class="cl-btn pri" onclick="clApply('${ch}')">🔒 ปิดเดือน ${ch}</button><span class="cl-s">ตัวเลขซ้าย = ตามไฟล์บัญชี · "ตอนนี้" = ในระบบ</span>` : applied ? `<span class="cl-ok" style="font-size:0.85rem;">✓ ปิดเดือนแล้ว · แก้ ${clNf(d.updated)} · เพิ่ม ${clNf(d.added)} · ลบ ${clNf(d.removed)} ออเดอร์ · ตัวเลขบน Dashboard อัปเดตภายใน 1 ชั่วโมง</span>` : '<span class="cl-s">แก้ตามข้อ ⚠️ ก่อน แล้วกดตรวจอีกครั้ง</span>'}</div>`
+}
+window.clCheck = async function (ch, silent) {
+  _clCheck = ch; _clOpen = ch; document.querySelectorAll('.cl-step').forEach(el => el.classList.toggle('open', el.dataset.k === ch))
+  const mo = document.getElementById('closeMonth').value, al = document.getElementById('closeAlert'), el = document.getElementById('clDet-' + ch)
+  if (!el) return
+  if (!silent) el.innerHTML = '<div class="cl-s" style="padding:8px 0;">กำลังตรวจ…</div>'
+  try {
+    const { data, error } = await DB.rpc('month_close_apply', { p_channel: ch, p_month: mo + '-01', p_apply: false })
+    if (error) throw new Error(error.message)
+    clDetail(ch, data, false)
+  } catch (e) { el.innerHTML = ''; al.textContent = 'ตรวจไม่สำเร็จ: ' + e.message; al.style.display = 'block' }
+}
+window.clApply = async function (ch) {
+  const mo = document.getElementById('closeMonth').value, al = document.getElementById('closeAlert'); al.style.display = 'none'
+  if (!(await uiConfirm(`ปิดเดือน ${closeMonLbl(mo)} ของ ${ch}?`, { text: 'ยอด ยกเลิก คืนสินค้า ของเดือนนี้จะเป็นตามไฟล์บัญชี แล้วล็อคไว้ API แก้ไม่ได้อีก (ยกเว้นสถานะได้เงิน)', ok: 'ปิดเดือน' }))) return
+  try {
+    const { data, error } = await DB.rpc('month_close_apply', { p_channel: ch, p_month: mo + '-01', p_apply: true })
+    if (error) throw new Error(error.message)
+    _clCheck = null; await closeLoadStatus()
+    const det = document.getElementById('clDet-' + ch); if (det) clDetail(ch, data, true)
+  } catch (e) { al.textContent = 'ปิดเดือนไม่สำเร็จ: ' + e.message; al.style.display = 'block' }
+}
+window.clReopen = async function (ch) {
+  const mo = document.getElementById('closeMonth').value, al = document.getElementById('closeAlert')
+  if (!(await uiConfirm(`เปิดเดือน ${closeMonLbl(mo)} ของ ${ch} กลับ?`, { text: 'ใช้เมื่ออัปไฟล์ผิด: ปลดล็อคเดือนนี้ (และเดือนหลังจากนี้) แล้วอัปไฟล์บัญชีใหม่ กดปิดเดือนอีกครั้ง', ok: 'เปิดเดือนกลับ', tone: 'bad' }))) return
+  const { error } = await DB.rpc('month_close_reopen', { p_channel: ch, p_month: mo + '-01' })
+  if (error) { al.textContent = error.message; al.style.display = 'block'; return }
+  closeLoadStatus()
+}
+window.clExport = function () {
+  const out = document.getElementById('clExportOut'); out.style.display = 'block'
+  window.AcctExport && AcctExport.childQty({ db: DB, month: document.getElementById('closeMonth').value, btn: document.getElementById('clExportBtn'), alert: document.getElementById('closeAlert'), out })
+}
+window.clGo = clGo
+window.setUploadMode = setUploadMode   // ปุ่ม "กลับหน้าปิดเดือน" บนแถบไฟล์บัญชี
+document.getElementById('closeMonth').addEventListener('change', () => { _clCheck = null; closeLoadStatus() })
+// เมนู "ปิดเดือน" (upload.html#close) จากทุกหน้า
+if (location.hash === '#close') setTimeout(() => setUploadMode('close'), 0)
+window.addEventListener('hashchange', () => { if (location.hash === '#close') setUploadMode('close') })
+
 // ===== (2026-10-15) ลิงก์งบกำไรขาดทุนจากบัญชี: วางลิงก์ → ระบบตรวจ (acct_source_step) → สรุปผล → กดใช้งาน (acct_source_activate) =====
 const AL_TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
 const alM = m => m ? `${AL_TH[+m.slice(5, 7) - 1]} ${(+m.slice(0, 4) + 543) % 100}` : ''
