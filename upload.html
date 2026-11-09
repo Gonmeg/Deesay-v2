@@ -1824,12 +1824,13 @@ function clBuild(d) {   // ขั้นตอนปิดเดือนจา�
       + (lz.map(x => `${x.sub} ได้เงินแล้ว <span class="${lzPct(x) >= 95 ? 'cl-ok' : 'cl-no'}">${lzPct(x)}%</span>`).join(' · ') || '—')
       + (lz.some(x => x.payable > x.paid) && d.lz_settle_at ? ` <span class="cl-s">· ที่เหลือ ${clNf(lz.reduce((t, x) => t + x.payable - x.paid, 0))} ออเดอร์ มักได้เงินเดือนถัดไป จะครบเมื่ออัปไฟล์รับเงินเดือนหน้า</span>` : '') + ' <span class="cl-s">(ไม่นับออเดอร์ยกเลิก / คืน)</span>',
     act: `<button class="cl-btn${lzPaid ? '' : ' pri'}" onclick="clUpload('settlement','Lazada','lzp')">อัปไฟล์รับเงิน</button>`, det: '<div class="cl-up" id="clUp-lzp"></div>' })
-  steps.push({ key: 'acct', st: d.acct_link ? 'done' : 'todo', t: 'งบบัญชีเดือนนี้',
-    s: d.acct_link ? '<span class="cl-ok">✓ มีงบเดือนนี้ในลิงก์งบบัญชีแล้ว</span>' : 'วางลิงก์งบเมื่อบัญชีส่งงบเดือนนี้ — ใช้กับ Business Insight',
-    act: `<button class="cl-btn${d.acct_link ? '' : ' pri'}" onclick="clGo('acctlink')">วางลิงก์งบ</button>` })
   steps.push({ key: 'exp', st: 'last', t: 'ส่งออกต้นทุนวอลเล็ทให้บัญชี',
-    s: 'ทำหลังสุด — จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย ไฟล์หน้าตาเดียวกับที่ส่งทุกเดือน',
+    s: 'ทำเมื่อปิดเดือนทุกช่องทางแล้ว — จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย ไฟล์หน้าตาเดียวกับที่ส่งทุกเดือน',
     act: `<button class="cl-btn pri" id="clExportBtn" onclick="clExport()">Export Excel</button>`, det: '<div class="cl-det" id="clExportOut" style="display:none;"></div>' })
+  // (2026-11-10) งบบัญชีเป็นขั้นสุดท้าย (บัญชีทำงบหลังได้ไฟล์ต้นทุนวอลเล็ท)
+  steps.push({ key: 'acct', st: d.acct_link ? 'done' : 'todo', t: 'งบบัญชีเดือนนี้',
+    s: d.acct_link ? '<span class="cl-ok">✓ มีงบเดือนนี้ในลิงก์งบบัญชีแล้ว</span>' : 'ขั้นสุดท้าย — วางลิงก์เมื่อบัญชีส่งงบเดือนนี้กลับมา · ใช้กับ Business Insight',
+    act: `<button class="cl-btn${d.acct_link ? '' : ' pri'}" onclick="clGo('acctlink')">วางลิงก์งบ</button>` })
   return steps
 }
 async function clMonthsRender(cur) {
@@ -1853,7 +1854,7 @@ async function closeLoadStatus() {
     if (!_clOpen || !steps.some(x => x.key === _clOpen)) _clOpen = next ? next.key : null
     document.getElementById('clHero').innerHTML = `<div class="cl-ring" style="--p:${pct}"><span>${nDone}/${tasks.length}</span></div>
       <div><h3>ปิดเดือน ${closeMonLbl(d.month)}${nDone === tasks.length ? ' · ✓ ครบแล้ว' : ''}</h3><p>${next ? `ถัดไป: <b>${next.t}</b>` : 'ทุกขั้นเสร็จแล้ว'}</p></div>`
-    const PL = { done: 'เสร็จ', ready: 'พร้อมปิด', todo: 'รอทำ', last: 'ทำหลังสุด' }
+    const PL = { done: 'เสร็จ', ready: 'พร้อมปิด', todo: 'รอทำ', last: 'ส่งบัญชี' }
     const keepEl = _clUpKey ? document.getElementById(document.getElementById('clUp-' + _clUpKey) && document.getElementById('clUp-' + _clUpKey).contains(document.getElementById('deletePanel')) ? 'deletePanel' : 'stepWizard') : null
     if (keepEl) document.getElementById('clHold').appendChild(keepEl)
     if (_clUpKey) _clOpen = _clUpKey
