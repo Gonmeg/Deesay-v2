@@ -800,7 +800,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.05-c"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.06-b"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -952,7 +952,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <span class="filter-label">เทียบกับ</span>
         <select id="momentumMode" onchange="document.getElementById('topSearchBtn')?.classList.add('is-pending')"><option value="month">เดือนก่อน (วันเดียวกัน)</option><option value="adjacent">ช่วงก่อนหน้าติดกัน</option></select>
       </div>
-      <!-- (2026-11-05) หน้าแนวโน้มสินค้า: นับเฉพาะช่องทางออนไลน์ หรือทุกช่องทาง · เปลี่ยนแล้วกดค้นหา (เหมือนตัวกรองอื่นบนแถบ) -->
+      <!-- (2026-11-05) หน้าแนวโน้มสินค้า + MKT Tracking (2026-11-06): นับเฉพาะช่องทางออนไลน์ หรือทุกช่องทาง · เปลี่ยนแล้วกดค้นหา (เหมือนตัวกรองอื่นบนแถบ) -->
       <div class="filter-group mm-filter" id="skuScopeGroup" style="display:none;">
         <span class="filter-label">นับ</span>
         <select id="skuScope" onchange="document.getElementById('topSearchBtn')?.classList.add('is-pending')"><option value="retail">ออนไลน์</option><option value="all">ทุกช่องทาง</option></select>
@@ -2827,7 +2827,7 @@ function showPage(page, lockCh, el) {
   if (fbePageGroup) fbePageGroup.style.display = (page === 'fbengage') ? 'flex' : 'none';
   document.querySelectorAll('.fba-filter').forEach(el => { el.style.display = (page === 'fbads') ? 'flex' : 'none'; });
   document.querySelectorAll('.kj-filter').forEach(el => { el.style.display = (page === 'kol') ? 'flex' : 'none'; });   // (2026-10-01) ตัวกรองหน้า KOL
-  document.querySelectorAll('.mm-filter').forEach(el => { el.style.display = (page === 'skurev') ? 'flex' : 'none'; });
+  document.querySelectorAll('.mm-filter').forEach(el => { el.style.display = (page === 'skurev' || (page === 'mktlive' && el.id === 'skuScopeGroup')) ? 'flex' : 'none'; });   // (2026-11-06) "นับ: ออนไลน์ / ทุกช่องทาง" ใช้ร่วมกับหน้า MKT Tracking
   document.querySelectorAll('.tt-filter').forEach(el => { el.style.display = (page === 'tthub') ? 'flex' : 'none'; });
   document.querySelectorAll('.sh-filter').forEach(el => { el.style.display = (page === 'shhub') ? 'flex' : 'none'; });   // (2026-10-22) มุมมอง Shopee
   { const cg = document.getElementById('filterChannel')?.closest('.filter-group'); if (cg && page !== 'kpi') cg.style.visibility = ''; }   // (2026-10-21) มุมมอง ยอดขายจริง / GMV ตาม TikTok
@@ -8320,6 +8320,9 @@ let _kjAds = {};
 // (2026-10-06) ยอดขายแบบ Commission ของ KOL ที่จ้าง (ครีเอเตอร์ในไฟล์ทีม KOL รวม Presenter) — ชุดเดียวกับการ์ดยอดขายของ Creator Performance (⚡ API, กรอง KOL)
 //   แสดงแยก ไม่บวกเข้ายอดที่ผูกได้ / MER (บางออเดอร์ซ้ำกับยอดจาก Ads ของคลิปงาน) · มีข้อมูลตั้งแต่ CP_API_START
 let _kjCom = {};
+// (2026-11-06) การ์ด "บัญชีลงค่าใช้จ่าย" = ยอดที่บัญชีลงเป็นค่าใช้จ่ายในเดือนนั้น (ชีทเบิกเงิน KOL: คอลัมน์ AB เดือนที่ลง × AR จำนวนตั้งหนี้ EX.VAT) — เท่ากับชีทบัญชี · RPC kol_acct_expense
+const _kjAcctE = {};
+function kjLoadAcct(from, to) { const k = from + '|' + to; return supaRpc('kol_acct_expense', { p_from: from, p_to: to }).then(d => { _kjAcctE[k] = d || {}; return _kjAcctE[k]; }); }
 async function kjLoadCom(from, to) {
   const key = from + '|' + to; if (_kjCom[key]) return _kjCom[key];
   if (to < CP_API_START) return (_kjCom[key] = { none: true, m: {} });
@@ -8421,6 +8424,8 @@ function renderKolTable() {
   // (2026-10-06) ยอด Commission: ไม่ได้กรองอะไรนอกจากวันที่ = KOL ทุกคนในไฟล์ทีม KOL (ตรงกับ Creator Performance กรอง KOL) · มีตัวกรองอื่น = เฉพาะ KOL ในแถวที่เห็น
   const C = _kjCom[dFrom + '|' + dTo];
   if (!C) kjLoadCom(dFrom, dTo).then(() => { if (currentPage === 'kol') renderKolTable(); }).catch(e => { _kjCom[dFrom + '|' + dTo] = { err: e.message, m: {} }; if (currentPage === 'kol') renderKolTable(); });
+  const AE = _kjAcctE[dFrom + '|' + dTo];
+  if (!AE) kjLoadAcct(dFrom, dTo).then(() => { if (currentPage === 'kol') renderKolTable(); }).catch(e => { _kjAcctE[dFrom + '|' + dTo] = { err: e.message }; if (currentPage === 'kol') renderKolTable(); });
   const comNA = !!plat && plat !== 'TikTok', comAll = !prod && !q && !st && !typ && !comNA;
   const hOf = r => cpNormHandle(r.tt_handle || '');
   const comOf = hs => { const t = { rev: 0, live: 0, video: 0, other: 0, n: 0 }; if (C && C.m) hs.forEach(h => { const x = C.m[h]; if (x && x.rev) { t.rev += x.rev / VAT_DIV; t.live += x.live / VAT_DIV; t.video += x.video / VAT_DIV; t.other += x.other / VAT_DIV; t.n++; } }); return t; };
@@ -8439,7 +8444,7 @@ function renderKolTable() {
   T.n = J.length; T.m = cnt(r => r.match_status === 'matched'); T.na = cnt(r => r.match_status === 'no_ads'); T.nf = cnt(r => r.match_status === 'not_found'); T.np = cnt(r => r.match_status === 'not_posted');
   const P = { acct: cnt(r => r.pay_status === 'acct' || r.pay_status === 'partial'), claimed: cnt(r => r.pay_status === 'claimed'), none: cnt(r => r.pay_status === 'none' && +r.budget_total > 0) };
   const fd = d => new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
-  document.getElementById('kjNote').textContent = `${fd(dFrom)} – ${fd(dTo)} · ค่าจ้างนับตามวันโพสต์ · ค่า Ads / ยอดขายนับตามวันที่เกิดจริง`;
+  document.getElementById('kjNote').textContent = `${fd(dFrom)} – ${fd(dTo)} · ค่าจ้างนับตามวันโพสต์ · ค่า Ads / ยอดขายนับตามวันที่เกิดจริง · บัญชีลงค่าใช้จ่ายนับตามเดือนที่บัญชีลง`;
   { const box = document.getElementById('kjProdSum'); if (box) {   // (2026-10-01) เลือกสินค้า → สรุปว่าจ้างใคร กี่งาน ช่องทาง / ประเภทไหน
     if (!prod) box.style.display = 'none';
     else { const kols = new Set(J.map(r => kjDisplay(r))), cntBy = (f) => { const o = {}; J.forEach(r => { const k = f(r); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${fmt(v)}`).join(' · '); };
@@ -8473,7 +8478,8 @@ function renderKolTable() {
     <div class="card"><div class="card-title">ยอดขายที่ผูกได้ ${plTip('tip-kj-vat', 'ยอดขายที่ Ads ของคลิป/โพสต์งาน KOL นับได้<br>• TikTok = ยอดขาย GMV Max ของคลิป<br>• Facebook = ยอดซื้อที่ Meta นับ<br>ถอด VAT 7% แล้ว ให้เทียบกับค่าจ้าง / ค่า Ads')}</div><div class="kpi-value">${fmt(Math.round(T.sales))}${kUnit('ถอด VAT')}</div>${kBar([[T.sTT, C_TT, 'TikTok'], [T.sFB, C_FB, 'Facebook']], 1)}${kSub(kDot(C_TT, 'TikTok ' + fmt(Math.round(T.sTT))) + kDot(C_FB, 'Facebook ' + fmt(Math.round(T.sFB))))}</div>
     <div class="card"><div class="card-title">MER ${plTip('tip-kj-mer', 'ยอดขายที่ผูกได้ ÷ (ค่าจ้าง + ค่า Ads)<br>เขียว ≥ 2x · ทอง 1–2x · แดง &lt; 1x (แถบเต็ม = 2x)')}</div><div class="kpi-value" style="${all > 0 ? 'color:' + merC(merV) + ';' : ''}">${all > 0 ? merV.toFixed(2) + 'x' : '—'}</div><div style="height:6px;border-radius:3px;overflow:hidden;background:rgba(148,163,184,.18);margin:8px 0 6px;"><div style="height:100%;width:${Math.min(100, merV / 2 * 100).toFixed(0)}%;background:${merC(merV)};"></div></div>${kSub(all > 0 ? `ลง 1 ได้ยอดขาย ${merV.toFixed(2)}` : '')}</div>
     <div class="card"><div class="card-title">งานที่เจอ Ads ${plTip('tip-kj-match', '• เจอ Ads = เจอ Ads ของคลิป/โพสต์<br>• ไม่ได้ยิง Ads = เจอคลิป แต่ไม่มี Ads<br>• หาไม่เจอ = ลิงก์ผิด / ไม่ใช่ TikTok หรือชื่อไม่ตรงกับ Ads → ควรแก้ไฟล์<br>• ยังไม่โพสต์ = ยังไม่มีลิงก์ / ยังไม่ถึงวันโพสต์<br>• ช่องทางอื่น = IG / Lemon8 / FB group (ไม่มีข้อมูล Ads)')}</div><div class="kpi-value">${fmt(T.m)}${kUnit('/ ' + fmt(T.n) + ' งาน')}</div>${kBar([[T.m, 'var(--green)', 'เจอ Ads'], [T.na, '#94a3b8', 'ไม่ได้ยิง Ads'], [T.nf, 'var(--red)', 'หาไม่เจอ'], [T.np, C_FB, 'ยังไม่โพสต์'], [nOther, 'rgba(148,163,184,.4)', 'ช่องทางอื่น']])}${kSub(kDot('var(--red)', 'หาไม่เจอ ' + fmt(T.nf)) + kDot(C_FB, 'ยังไม่โพสต์ ' + fmt(T.np)))}</div>
-    <div class="card"><div class="card-title">บัญชีลงแล้ว ${plTip('tip-kj-pay', 'ยอดที่บัญชีลงแล้ว ของงานที่โพสต์ในช่วงนี้ (จากฟอร์มเบิกเงิน)<br>แถบ: เขียว = บัญชีลงแล้ว · เทา = รอบัญชี · ส้ม = ยังไม่กรอกเบิก<br>ดูอย่างเดียว ไม่บวกเข้าค่าจ้าง', 'right')}</div><div class="kpi-value">${fmt(Math.round(T.acct))}</div>${kBar([[P.acct, 'var(--green)', 'บัญชีลงแล้ว'], [P.claimed, '#94a3b8', 'รอบัญชี'], [P.none, 'var(--orange)', 'ยังไม่กรอกเบิก']])}${kSub(kDot('var(--green)', fmt(P.acct) + ' งาน') + kDot('var(--orange)', 'ยังไม่กรอกเบิก ' + fmt(P.none)) + (P.claimed ? kDot('#94a3b8', 'รอบัญชี ' + fmt(P.claimed)) : ''))}</div>${comCard}`;
+    <div class="card"><div class="card-title">บัญชีลงค่าใช้จ่าย ${plTip('tip-kj-pay', `ยอดที่บัญชีลงเป็นค่าใช้จ่าย KOL ${AE && AE.from ? (AE.from === AE.to ? 'เดือน ' + PL_TH_M(AE.from) : PL_TH_M(AE.from) + ' – ' + PL_TH_M(AE.to)) : ''} — <b>เท่ากับชีทเบิกเงิน KOL</b><br>คอลัมน์ AB = เดือนที่บัญชีลง · คอลัมน์ AR = จำนวนตั้งหนี้ EX.VAT บัญชีลง<br>นับตามเดือนที่บัญชีลง ไม่ใช่วันโพสต์ จึงต่างจากค่าจ้าง KOL ได้ (งานที่จ่ายก่อน / หลังเดือนที่โพสต์)<br>เลือกช่วงไม่เต็มเดือน = นับทั้งเดือนของวันแรกถึงวันสุดท้าย · ไม่ขึ้นกับตัวกรองอื่น<br>บรรทัดส้ม = งานที่โพสต์ในช่วงนี้แต่ยังไม่กรอกเบิก`, 'right')}</div>
+      <div class="kpi-value">${!AE ? '…' : AE.err ? '—' : fmt(Math.round(+AE.total || 0))}${AE && !AE.err ? kUnit(fmt(+AE.n || 0) + ' ใบ') : ''}</div>${AE && !AE.err ? kBar([[+AE.conv || 0, C_CONV, 'Conversion'], [+AE.pr || 0, C_PR, 'PR'], [+AE.other || 0, '#94a3b8', 'อื่น ๆ']], 1) : kBar([])}${kSub((AE && !AE.err ? kDot(C_CONV, 'Conversion ' + fmt(Math.round(+AE.conv || 0))) + kDot(C_PR, 'PR ' + fmt(Math.round(+AE.pr || 0))) : AE && AE.err ? 'โหลดไม่สำเร็จ' : '') + (P.none ? kDot('var(--orange)', 'ยังไม่กรอกเบิก ' + fmt(P.none) + ' งาน') : ''))}</div>${comCard}`;
   // รวมตามมุมมอง
   let list;
   if (_kjView === 'cal') { renderKolCal(); return; }
