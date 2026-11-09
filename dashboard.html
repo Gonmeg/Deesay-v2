@@ -800,7 +800,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.10-a"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.10-b"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1312,74 +1312,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       </div>
     </div>
     <div class="page" id="page-adperf">
-
-      <div class="grid-4" style="margin-bottom:20px;">
-        <div class="card"><div class="card-title">ยอดขาย GMV</div><div class="kpi-value" id="adp-gmv" style="color:var(--blue);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
-        <div class="card"><div class="card-title">ค่า Ads รวม</div><div class="kpi-value" id="adp-ads" style="color:var(--red);">—</div><div class="kpi-sub">ทุกช่องทาง</div></div>
-        <div class="card"><div class="card-title">ROAS</div><div class="kpi-value" id="adp-roas" style="color:var(--green);">—</div><div class="kpi-sub">GMV ÷ ค่า Ads</div></div>
-        <div class="card"><div class="card-title">% ค่า Ads / GMV</div><div class="kpi-value" id="adp-pct">—</div><div class="kpi-sub">ค่า Ads ต่อยอดขาย</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <span style="font-size:11px;color:var(--text3);font-family:'Sarabun',sans-serif;">ช่วงเวลา:</span>
-        <div class="toggle-group">
-          <button class="toggle-btn" id="adp-yr" onclick="setAdpView('year',this)">ทั้งปี</button>
-          <button class="toggle-btn active" id="adp-mo" onclick="setAdpView('month',this)">รายเดือน</button>
-          <button class="toggle-btn" id="adp-dy" onclick="setAdpView('day',this)">รายวัน</button>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:16px;">
-        <div class="section-header">
-          <div class="section-title">ภาพรวมทุกช่องทาง</div>
-          <div style="display:flex;gap:14px;align-items:center;font-size:11px;color:var(--text2);">
-            <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:rgba(96,165,250,0.65);border-radius:2px;display:inline-block;"></span>GMV</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:rgba(248,113,113,0.55);border-radius:2px;display:inline-block;"></span>ค่า Ads</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:2px;background:#f87171;display:inline-block;"></span>%ค่า Ads (แกนขวา)</span>
-          </div>
-        </div>
-        <div class="chart-wrap chart-wrap-lg"><canvas id="adpChartOverall"></canvas></div>
-      </div>
-      <div class="grid-2" style="margin-bottom:16px;">
-        <div class="card">
-          <div class="section-header">
-            <div class="section-title">Facebook / Online <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('fb','adperf-fb-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-fb-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:320px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-            <select id="adp-sel-fb" onchange="renderAdpChannel('adpChartFB','adp-sub-fb','fb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;max-width:170px;">
-              <option value="all">รวมทุกเพจ</option>
-            </select>
-          </div>
-          <div class="kpi-sub" id="adp-sub-fb" style="margin-bottom:10px;">—</div>
-          <div class="chart-wrap"><canvas id="adpChartFB"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="section-header"><div class="section-title">TikTok Shop <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('tt','adperf-tt-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-tt-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:260px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div></div>
-          <div class="kpi-sub" id="adp-sub-tt" style="margin-bottom:10px;">—</div>
-          <div class="chart-wrap"><canvas id="adpChartTT"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="section-header">
-            <div class="section-title">Shopee <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('sh','adperf-sh-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-sh-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-            <select id="adp-sel-sh" onchange="renderAdpChannel('adpChartSH','adp-sub-sh','sh')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Shopee 24hr">Shopee 24hr</option><option value="Shopee Mall">Shopee Mall</option>
-            </select>
-          </div>
-          <div class="kpi-sub" id="adp-sub-sh" style="margin-bottom:10px;">—</div>
-          <div class="chart-wrap"><canvas id="adpChartSH"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="section-header">
-            <div class="section-title">Lazada <span class="ads-info-wrap" style="position:relative;display:inline-block;"><span onclick="toggleAdsPopover('lz','adperf-lz-ads-popover')" style="cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;">ⓘ</span><div id="adperf-lz-ads-popover" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:20px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.6;white-space:normal;width:280px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);font-weight:400;"></div></span></div>
-            <select id="adp-sel-lz" onchange="renderAdpChannel('adpChartLZ','adp-sub-lz','lz')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:5px;font-size:11px;">
-              <option value="all">รวม 2 ร้าน</option><option value="Lazada 24hr">Lazada 24hr</option><option value="Lazada Mall">Lazada Mall</option>
-            </select>
-          </div>
-          <div class="kpi-sub" id="adp-sub-lz" style="margin-bottom:10px;">—</div>
-          <div class="chart-wrap"><canvas id="adpChartLZ"></canvas></div>
-        </div>
-        <div class="card" style="grid-column:1/-1;">
-          <div class="section-header"><div class="section-title">Modern Trade</div><div style="font-size:10.5px;color:var(--text3);">ค่า Ads = Ads Awareness บัญชี Meta Modern Trade · ยอดขาย = ยอดที่ห้างขายออก (ห้างส่งรายเดือน ลงวันที่ 1)</div></div>
-          <div class="kpi-sub" id="adp-sub-mt" style="margin-bottom:10px;">—</div>
-          <div class="chart-wrap"><canvas id="adpChartMT"></canvas></div>
-        </div>
-      </div>
+      <!-- (2026-11-10) Ad Performance แบบ C — สร้างโดย adperf.js (RPC adperf_page) -->
+      <div id="adperf-root"></div>
     </div>
 
     <div class="page" id="page-flow">
@@ -2715,7 +2649,7 @@ function applyFilters() {
   });
 
   if (currentPage === 'adperf') {
-    renderAdpAll();
+    renderAdPerf();
   } else {
     renderCurrentPage();
   }
@@ -2737,7 +2671,7 @@ const PAGE_INFO = {
   overview: `ยอดขายทุกช่องทาง หักยกเลิก / คืน และ CN แล้ว · แหล่งเดียวกับทุกหน้า (ตารางสรุปยอดขาย)<br>กดช่องตัวเลขด้านบนเพื่อเลือกเส้นในกราฟ · กดชื่อช่องทางในตารางเพื่อดูรายเพจ / ร้าน · ตัวเลขที่มีเส้นประกดดูที่มาได้`,
   crm: `CRM วิเคราะห์เฉพาะช่องทาง <strong>Facebook</strong> โดยใช้ <strong>เบอร์โทร</strong> เป็นตัวระบุลูกค้า`,
   neverbought: `ค้นหาเฉพาะช่องทาง <strong>Facebook</strong> โดยใช้ <strong>เบอร์โทร</strong> เป็นตัวระบุลูกค้า — เช็คจากประวัติการซื้อทั้งหมด ไม่จำกัดแค่ช่วงวันที่ที่เลือกด้านบน`,
-  adperf: `ยอดขาย (GMV) ดึงจากออเดอร์จริงในระบบ · ค่าโฆษณา Facebook = เฉพาะ Conversion (Ads ที่ยิงให้เพจขาย) — PR/KOL แยกออก, CPAS ไปอยู่ Shopee · TikTok / Shopee / Modern Trade จาก API · Lazada ยังมาจากชีท — ใช้ filter วันที่จากแถบด้านบน`,
+  adperf: `ยอดขาย vs ค่า Ads ของช่องทางที่ยิง Ads เอง (TikTok · Facebook · Shopee · Lazada) · ยอดขายชุดเดียวกับหน้าภาพรวมยอดขาย · ค่า Ads ชุดเดียวกับหน้าภาพรวม / MKT Tracking (Facebook รวมบัญชี PR · Shopee รวม CPAS) · ใช้ช่วงวันที่จากแถบด้านบน`,
   flow: `วิเคราะห์เฉพาะช่องทาง <strong>Facebook</strong> — ดูว่าลูกค้าซื้อสินค้าอะไร แล้วซื้ออะไรต่อในครั้งถัดไป · ใช้ช่วงวันที่จาก filter ด้านบน`
 };
 const pageOrder = ['home','overview','kpi','fbhub','crm','flow','neverbought','fbengage','fbads','tthub','ttcontent','ttads','livesearch','creatorperf','shhub','shads','lzhub','mthub','skurev','cost','mktlive','skuanalysis','adperf','kol','supply']; // geo ซ่อนชั่วคราว
@@ -2875,7 +2809,7 @@ function showPage(page, lockCh, el) {
 
   // (2026-09-22) MKT Tracking ดูทุกช่องทางรวม (แยกช่องทางดูในหน้า) → ซ่อน Channel / Sub-channel
   // (2026-09-25) Business Insight / MKT Tracking ใช้ตัวเลือกเดือนด้านบน + ปุ่มค้นหา · ไม่มี Channel / Sub-channel (แยกช่องทางดูในหน้า)
-  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis' || page === 'neverbought';   // (2026-11-03) ลูกค้าที่ยังไม่ซื้อ ใช้ประวัติทั้งหมด ไม่ใช้ตัวกรองช่องทาง / วันที่   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
+  { const hideCh = page === 'cost' || page === 'mktlive' || page === 'kol' || page === 'home' || page === 'skuanalysis' || page === 'neverbought' || page === 'adperf';   // (2026-11-10) Ad Performance แยกช่องทางในตารางเอง   // (2026-11-03) ลูกค้าที่ยังไม่ซื้อ ใช้ประวัติทั้งหมด ไม่ใช้ตัวกรองช่องทาง / วันที่   // ซ่อนเฉพาะหน้าที่ไม่ใช้ — หน้าอื่นคงตาม HIDE_CHANNEL_FILTER ด้านบน
     const cg = document.getElementById('channelFilterGroup'), sg = document.getElementById('subChannelGroup');
     if (hideCh) { if (cg) cg.style.display = 'none'; if (sg) sg.style.display = 'none'; } }
   { const hd = document.getElementById('homeDayGroup'); if (hd) hd.style.display = page === 'home' ? 'flex' : 'none';
@@ -2896,7 +2830,7 @@ function showPage(page, lockCh, el) {
   }
 
   if (page === 'adperf') {
-    renderAdpAll();
+    renderAdPerf();
   } else if (page === 'cost') {
     renderCostPage();
   } else if (page === 'livesearch') {
@@ -3059,7 +2993,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20261110a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20261110b';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -8214,6 +8148,20 @@ function loadMktLiveJs() {
     document.body.appendChild(s);
   });
   return window._mktLiveJsP;
+}
+// (2026-11-10) Ad Performance: โค้ดอยู่ใน adperf.js (โหลดครั้งแรกที่เปิดหน้า)
+function loadAdPerfJs() {
+  if (window.adPerf) return Promise.resolve();
+  if (window._adPerfJsP) return window._adPerfJsP;
+  window._adPerfJsP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'adperf.js?v=1';
+    s.onload = res; s.onerror = () => { window._adPerfJsP = null; rej(new Error('โหลด adperf.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว')); };
+    document.body.appendChild(s);
+  });
+  return window._adPerfJsP;
+}
+function renderAdPerf() {
+  loadAdPerfJs().then(() => { if (currentPage === 'adperf') window.adPerf.render(); }).catch(e => showError(e.message));
 }
 function renderMktLive() {
   loadMktLiveJs().then(() => { if (currentPage === 'mktlive') window.mktLive.render(); }).catch(e => showError(e.message));
