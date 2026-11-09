@@ -64,7 +64,7 @@
   ];
   const SYS = [['upload.html', 'อัปโหลดข้อมูล', 'upload', 'upload'], ['upload.html#close', 'บัญชี · ปิดเดือน', 'lock', 'upload'], ['admin.html', 'ตั้งค่า (Admin)', 'sliders', 'admin'], ['health.html', 'สุขภาพระบบ', 'heart', 'health']];
   // (2026-11-09) หน้าอัปโหลด: งานของหน้า (กดแล้วไปกดปุ่มโหมดเดิมที่ซ่อนไว้)
-  const UP_MENU = [['งานประจำวัน', [['modeBtnOrder', 'อัปคำสั่งซื้อ', 'upload'], ['modeBtnSettlement', 'อัปรายรับเงิน', 'coin']]],
+  const UP_MENU = [['งานประจำวัน', [['modeBtnOrder', 'อัปคำสั่งซื้อ', 'upload']]],   // (2026-11-10) รับเงิน Lazada อัปเฉพาะตอนปิดเดือน → อยู่ในหน้าปิดเดือน
     ['บัญชี (สิ้นเดือน)', [['modeBtnClose', 'ปิดเดือน', 'lock'], ['modeBtnAcctLink', 'ลิงก์งบบัญชี', 'receipt'], ['modeBtnCost', 'อัปต้นทุนสินค้า', 'box']]],
     ['เครื่องมือ', [['modeBtnDelete', 'ลบข้อมูล', 'trash']]]];
 
