@@ -1,3 +1,5 @@
+// sidebar.js (v20261109b) — หน้าระบบ (อัปโหลด / ตั้งค่า / สุขภาพระบบ): เมนูซ้ายเหลือแค่ "← กลับ Dashboard" + เมนูของหน้านั้น + สลับไปหน้าระบบอื่น (ไม่โชว์เมนู Dashboard ทั้งหมด)
+// sidebar.js (v20261109a) — หน้าอัปโหลด: เมนูงานย้ายมาเมนูซ้าย แบ่ง งานประจำวัน / บัญชี (สิ้นเดือน) / เครื่องมือ · Shopee / TikTok / ตัวแทน-MT ไม่อยู่ในงานประจำวัน (แทนแถบปุ่ม 7 ปุ่มบนหน้า) · เมนู "ปิดเดือน" ใต้ ระบบ เข้าได้จากทุกหน้า
 // sidebar.js (v20261028b) — เมนูมูลค่าสินค้าคงคลัง · — กันพังเมื่อไม่มีกล่องชื่อผู้ใช้ · — เมนูเป็น <div role="navigation"> แทนแท็ก <nav> (หน้า admin ซ่อนแท็ก nav ทั้งหมดด้วย !important ทำให้เมนูหายทั้งแถบ)
 // sidebar.js (v20261026a) — เมนูซ้ายกลาง ใช้ร่วมทุกหน้า: dashboard / upload / admin / health
 // วาง <div id="sbMount" data-page="dashboard|upload|admin|health" data-build="v…"></div> แล้วตามด้วย <script src="sidebar.js"></script>
@@ -39,6 +41,7 @@
     heart: '<path d="M20.8 8.6a5 5 0 0 0-8.8-3.2 5 5 0 0 0-8.8 3.2c0 5.4 8.8 11.4 8.8 11.4s8.8-6 8.8-11.4z"/><path d="M3.5 12h4l2-3 3 6 2-3h6"/>',
     ext: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v6H4V6h6"/>',
     back: '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+    trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>',
     lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
     moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
@@ -59,7 +62,11 @@
     { sec: 'ผู้บริหาร', exec: true },
     ['exec', 'Promotion · อนุมัติ', 'check', true], ['cost', 'Business Insight', 'brief', true], ['ordprofit', 'กำไรต่อคำสั่งซื้อ', 'coin', true], ['invvalue', 'มูลค่าสินค้าคงคลัง', 'box', true], ['execfee', 'ค่าธรรมเนียมช่องทาง', 'receipt', true],
   ];
-  const SYS = [['upload.html', 'อัปโหลดข้อมูล', 'upload', 'upload'], ['admin.html', 'ตั้งค่า (Admin)', 'sliders', 'admin'], ['health.html', 'สุขภาพระบบ', 'heart', 'health']];
+  const SYS = [['upload.html', 'อัปโหลดข้อมูล', 'upload', 'upload'], ['upload.html#close', 'บัญชี · ปิดเดือน', 'lock', 'upload'], ['admin.html', 'ตั้งค่า (Admin)', 'sliders', 'admin'], ['health.html', 'สุขภาพระบบ', 'heart', 'health']];
+  // (2026-11-09) หน้าอัปโหลด: งานของหน้า (กดแล้วไปกดปุ่มโหมดเดิมที่ซ่อนไว้)
+  const UP_MENU = [['งานประจำวัน', [['modeBtnOrder', 'อัปคำสั่งซื้อ', 'upload'], ['modeBtnSettlement', 'อัปรายรับเงิน', 'coin']]],
+    ['บัญชี (สิ้นเดือน)', [['modeBtnClose', 'ปิดเดือน', 'lock'], ['modeBtnAcctLink', 'ลิงก์งบบัญชี', 'receipt'], ['modeBtnCost', 'อัปต้นทุนสินค้า', 'box']]],
+    ['เครื่องมือ', [['modeBtnDelete', 'ลบข้อมูล', 'trash']]]];
 
   // ── สร้างรายการ ──
   const pageItem = (id, label, icon, sub, exec, pre) => {
@@ -70,6 +77,7 @@
       : `<a class="${cls}" href="dashboard.html?page=${id}" data-label="${esc(label)}" data-page="${id}">${ic}<span class="sb-tx">${esc(label)}</span></a>`;
   };
   let nav = '';
+  if (!DASH) nav += `<a class="nav-item sb-back" href="dashboard.html" data-label="กลับ Dashboard"><span class="nav-icon">${svg('back')}</span><span class="sb-tx">กลับ Dashboard</span></a>`;
   // หน้า admin: แท็บของหน้าอยู่บนสุด (กดแล้วไปกดปุ่มแท็บเดิมของหน้าให้)
   if (PAGE === 'admin') {
     const tabs = [...document.querySelectorAll('.side .side-item[data-tab]')];
@@ -77,10 +85,15 @@
       const ic = { fbads: 'mega', targets: 'target', perms: 'lock', export: 'receipt' };
       const txt = b => [...b.childNodes].filter(n => !(n.classList && n.classList.contains('ico'))).map(n => n.textContent).join('').trim();   // ไม่เอาอีโมจิของปุ่มเดิม
       nav += `<div class="nav-group-label sb-sec">ตั้งค่า (Admin)</div>` + tabs.map(b => `<button type="button" class="nav-item sb-proxy" data-proxy="${esc(b.dataset.tab)}" data-label="${esc(txt(b))}"><span class="nav-icon">${svg(ic[b.dataset.tab] || 'sliders')}</span><span class="sb-tx">${esc(txt(b))}</span></button>`).join('')
-        + `<div class="nav-group-label sb-sec">Dashboard</div>`;
+        ;
     }
   }
-  for (const m of MENU) {
+  if (PAGE === 'upload') {   // ปุ่มโหมดเดิมอยู่ใต้เมนูนี้ในหน้า → ผูกปุ่มตอนหน้าโหลดเสร็จ (ด้านล่าง)
+    nav += UP_MENU.map(([sec, items]) => `<div class="nav-group-label sb-sec">${esc(sec)}</div>` + items
+      .map(([id, l, ic]) => `<button type="button" class="nav-item sb-proxy-up" data-btn="${id}" data-label="${esc(l)}"><span class="nav-icon">${svg(ic)}</span><span class="sb-tx">${esc(l)}</span></button>`).join('')).join('')
+      ;
+  }
+  for (const m of (DASH ? MENU : [])) {   // หน้าระบบไม่โชว์เมนู Dashboard (มีปุ่มกลับ Dashboard ด้านบนแทน)
     if (Array.isArray(m)) { nav += pageItem(m[0], m[1], m[2], false, m[3]); continue; }
     if (m.sec) { nav += `<div class="nav-group-label sb-sec${m.exec ? ' exec-only' : ''}"${m.exec ? ' id="navExecLabel"' : ''}>${esc(m.sec)}</div>`; continue; }
     nav += `<div class="nav-group-label nav-group-toggle" onclick="${DASH ? `toggleNavGroup('${m.g}')` : `SB.toggle('${m.g}')`}" id="navGroupLabel-${m.g}" data-g="${m.g}" data-label="${esc(m.label)}">`
@@ -91,7 +104,7 @@
   if (DASH) nav += `<a class="nav-item nav-sub" id="navToExec" href="exec.html" target="_blank" rel="noopener" style="display:none;" data-label="Management">${'<span class="nav-icon">' + svg('ext') + '</span>'}<span class="sb-tx">Management ↗</span></a>`
     + `<a class="nav-item nav-sub" id="navToOps" href="dashboard.html" style="display:none;" data-label="Team View"><span class="nav-icon">${svg('back')}</span><span class="sb-tx">Team View</span></a>`
     + `<div class="nav-item nav-sub" onclick="openWhatsNew(false)" id="navWhatsNew" data-label="มีอะไรใหม่"><span class="nav-icon">${svg('spark')}</span><span class="sb-tx">มีอะไรใหม่</span><span class="wn-dot" id="wnDot" style="display:none;"></span></div>`;
-  nav += SYS.map(([h, l, ic]) => `<a class="nav-item nav-sub${h === PAGE + '.html' ? ' active' : ''}" href="${h}" data-label="${esc(l)}" data-sys="${h}"><span class="nav-icon">${svg(ic)}</span><span class="sb-tx">${esc(l)}</span></a>`).join('');
+  nav += SYS.filter(([h, , , pg]) => DASH || pg !== PAGE).map(([h, l, ic]) => `<a class="nav-item nav-sub${h === PAGE + '.html' && PAGE !== 'upload' ? ' active' : ''}" href="${h}" data-label="${esc(l)}" data-sys="${h.split('#')[0]}"><span class="nav-icon">${svg(ic)}</span><span class="sb-tx">${esc(l)}</span></a>`).join('');
 
   // ── ส่วนล่าง: ผู้ใช้ · สถานะ · เวอร์ชัน · ปุ่ม ──
   const legacy = DASH ? `<span id="authUser" hidden></span><span id="buildTag" hidden>${esc(BUILD)}</span>
@@ -138,6 +151,7 @@
   .sb .nav-group-label { display: flex; align-items: center; gap: 10px; padding: 7px 10px; margin: 0; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text2); white-space: nowrap; }
   .sb .nav-group-toggle { cursor: pointer; } .sb .nav-group-toggle:hover { background: var(--bg3); color: var(--text); }
   .sb .nav-group-chevron { margin-left: auto; font-size: 10px; color: var(--text3); transition: transform .15s; } .sb .nav-group-chevron.open { transform: rotate(90deg); }
+  .sb .sb-back { color: var(--text2); border: 1px solid var(--border); margin: 2px 0 6px; }   /* หน้าระบบ: ปุ่มกลับ Dashboard */
   .sb .sb-sec { display: block; margin: 12px 10px 4px; padding: 10px 0 0; border-top: 1px solid var(--border); border-radius: 0; font-size: 11px; font-weight: 600; color: var(--text3); }
   .sb .wn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red, #ef4444); margin-left: auto; flex: none; }
   .sb-ft { border-top: 1px solid var(--border); padding: 10px; }
@@ -226,6 +240,14 @@
     if (window.Auth && Auth.signOut) Auth.signOut();
   };
 
+  // ── upload: เมนูงานของหน้า → กดปุ่มโหมดเดิม · active ตามปุ่มเดิม ──
+  const bindUp = () => document.querySelectorAll('.sb-proxy-up').forEach(p => {
+    const o = document.getElementById(p.dataset.btn); if (!o) { p.remove(); return; }
+    const sync = () => p.classList.toggle('active', o.classList.contains('active'));
+    p.onclick = () => o.click(); sync();
+    new MutationObserver(sync).observe(o, { attributes: true, attributeFilter: ['class'] });
+  });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindUp); else bindUp();
   // ── admin: แท็บในเมนูนี้ → กดปุ่มแท็บเดิม · สถานะ active / ซ่อน ตามปุ่มเดิม ──
   document.querySelectorAll('.sb-proxy').forEach(p => {
     const o = document.querySelector(`.side .side-item[data-tab="${p.dataset.proxy}"]`); if (!o) return;
