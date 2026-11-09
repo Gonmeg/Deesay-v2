@@ -500,7 +500,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #page-kol .card-title { font-size:12px; color:var(--text2); font-weight:600; } #tblKj th { white-space:nowrap; font-size:11.5px; }
   #tblKj th { white-space:nowrap; } #tblKj td.pl-amt { cursor:pointer; } #tblKj td.pl-amt > span:first-child { text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--text3); } #tblKj td.pl-amt:hover > span:first-child { text-decoration-color:var(--text); } #tblKj td.pl-amt.on { box-shadow: inset 0 -2px 0 var(--accent); }
   #tblKj tr.pl-detail > td, #tblKj tr.pl-detail:hover > td { background:transparent !important; }
-  .kj-ic { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 4px; border-radius:5px; font:700 10.5px/1 Arial, sans-serif; margin-right:3px; vertical-align:middle; }
+  .kj-ic { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 4px; border-radius:5px; font:700 10.5px/1 'Sarabun', sans-serif; margin-right:3px; vertical-align:middle; }
   #tblKj td { overflow:hidden; text-overflow:ellipsis; } #tblKj td.kj-icons { white-space:nowrap; overflow:visible; text-overflow:clip; }
   .kj-cal { width:100%; border-collapse:separate; border-spacing:3px; font-family:'Sarabun',sans-serif; }
   .kj-cal th { font-size:11.5px; color:var(--text2); font-weight:600; padding:6px 4px; text-align:center; white-space:nowrap; }
@@ -800,7 +800,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.06-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.10-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -2155,11 +2155,9 @@ const debouncedRenderTtaCampaignTable = debounce(() => renderTtaCampaignTable())
 const debouncedTtaClipSearch = debounce(() => { ttaPage = 1; renderTtaTable(); });
 const debouncedFilterLsCreatorDropdown = debounce(() => filterLsCreatorDropdown());
 const debouncedFilterCpCreatorDropdown = debounce(() => filterCpCreatorDropdown());
-const fmtB = n => {
+const fmtB = n => {   // (2026-11-10) เลิกย่อ K / M ตามกฎหน้าเว็บ — แสดงเต็ม
   if (isNaN(n) || n === null) return '—';
-  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
-  return fmt(n);
+  return fmt(Math.round(n));
 };
 const fmtPct = (a, b) => b ? ((a/b)*100).toFixed(1) + '%' : '—';
 
@@ -2827,7 +2825,7 @@ function showPage(page, lockCh, el) {
   if (fbePageGroup) fbePageGroup.style.display = (page === 'fbengage') ? 'flex' : 'none';
   document.querySelectorAll('.fba-filter').forEach(el => { el.style.display = (page === 'fbads') ? 'flex' : 'none'; });
   document.querySelectorAll('.kj-filter').forEach(el => { el.style.display = (page === 'kol') ? 'flex' : 'none'; });   // (2026-10-01) ตัวกรองหน้า KOL
-  document.querySelectorAll('.mm-filter').forEach(el => { el.style.display = (page === 'skurev' || (page === 'mktlive' && el.id === 'skuScopeGroup')) ? 'flex' : 'none'; });   // (2026-11-06) "นับ: ออนไลน์ / ทุกช่องทาง" ใช้ร่วมกับหน้า MKT Tracking
+  document.querySelectorAll('.mm-filter').forEach(el => { el.style.display = (page === 'skurev' || ((page === 'mktlive' || page === 'skuanalysis') && el.id === 'skuScopeGroup')) ? 'flex' : 'none'; });   // (2026-11-06) "นับ: ออนไลน์ / ทุกช่องทาง" ใช้ร่วมกับหน้า MKT Tracking
   document.querySelectorAll('.tt-filter').forEach(el => { el.style.display = (page === 'tthub') ? 'flex' : 'none'; });
   document.querySelectorAll('.sh-filter').forEach(el => { el.style.display = (page === 'shhub') ? 'flex' : 'none'; });   // (2026-10-22) มุมมอง Shopee
   { const cg = document.getElementById('filterChannel')?.closest('.filter-group'); if (cg && page !== 'kpi') cg.style.visibility = ''; }   // (2026-10-21) มุมมอง ยอดขายจริง / GMV ตาม TikTok
@@ -3061,7 +3059,7 @@ function loadSkuDeepPage() {
   if (window._skdLoading) return;
   window._skdLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'skudeep.js?v=20261028a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
+  sc.src = 'skudeep.js?v=20261110a';   // เปลี่ยนเลขนี้ทุกครั้งที่อัปเดต skudeep.js
   sc.onload = () => { window._skdLoading = false; if (currentPage === 'skuanalysis') window.renderSkuDeepPage(); };
   sc.onerror = () => { window._skdLoading = false; document.getElementById('page-skuanalysis').innerHTML = '<div class="error-banner" style="display:block;">โหลด skudeep.js ไม่สำเร็จ — เช็คว่า push ไฟล์ขึ้น GitHub แล้ว</div>'; };
   document.body.appendChild(sc);
@@ -9270,6 +9268,8 @@ async function fetchTtaData(fromDate, toDate) {
 }
 // รูปหน้าปกคลิป: 2 แหล่ง เชื่อมด้วยเลขคลิป (item_id) — 1) tiktok_videos = คลิปช่อง Deesay เอง · 2) tiktok_ad_covers = คลิปที่ยิงแอด (KOL ที่ให้สิทธิ์ Spark Ads) ดึงใหม่ทุกวันโดย tiktok-ad-covers-sync
 let TTA_THUMBS = null;   // item_id → { thumb, url }
+// (2026-11-10) ลิงก์รูปจาก TikTok มีวันหมดอายุ (x-expires) — หมดแล้วโหลดไม่ได้ (403) · ข้ามลิงก์ที่หมดอายุ ใช้รูปที่เก็บไว้ใน Supabase แทนถ้ามี
+const ttaFreshUrl = u => { const m = /[?&]x-expires=(\d+)/.exec(u || ''); return !!u && (!m || +m[1] > Date.now() / 1000 + 300); };
 async function loadTtaThumbs() {
   if (TTA_THUMBS) return;
   TTA_THUMBS = {};
@@ -9281,7 +9281,7 @@ async function loadTtaThumbs() {
     const idCol = ['item_id','video_id','id'].find(c => cols.includes(c));
     if (idCol && cols.includes('thumbnail_url')) {
       const rows = await fetchAllRows(`${base}?select=${idCol},thumbnail_url${cols.includes('share_url') ? ',share_url' : ''}&order=${idCol}.asc`, headers);
-      (Array.isArray(rows) ? rows : []).forEach(v => { if (v[idCol] && v.thumbnail_url) TTA_THUMBS[String(v[idCol])] = { thumb: v.thumbnail_url, url: v.share_url || null }; });
+      (Array.isArray(rows) ? rows : []).forEach(v => { if (v[idCol] && ttaFreshUrl(v.thumbnail_url)) TTA_THUMBS[String(v[idCol])] = { thumb: v.thumbnail_url, url: v.share_url || null }; });
     }
   } catch {}
   try {
@@ -9289,7 +9289,7 @@ async function loadTtaThumbs() {
     for (let off = 0; ; off += 1000) {
       const rows = await fetch(base, { headers: { ...headers, Range: `${off}-${off + 999}` } }).then(r => r.json());
       if (!Array.isArray(rows)) break;
-      rows.forEach(v => { if (v.item_id && v.cover_url && !TTA_THUMBS[String(v.item_id)]) TTA_THUMBS[String(v.item_id)] = { thumb: v.cover_url, url: `https://www.tiktok.com/@tiktok/video/${v.item_id}` }; });
+      rows.forEach(v => { if (v.item_id && ttaFreshUrl(v.cover_url) && !TTA_THUMBS[String(v.item_id)]) TTA_THUMBS[String(v.item_id)] = { thumb: v.cover_url, url: `https://www.tiktok.com/@tiktok/video/${v.item_id}` }; });
       if (rows.length < 1000) break;
     }
   } catch {}
@@ -10036,14 +10036,14 @@ const kolBoost = { rangeKey: null, byKey: {}, total: 0, unmatched: [], unmatched
 
 let _kolSortCol = 'cost', _kolSortDir = 'desc';
 
-// ===== ปกคลิปขยายเมื่อเอาเมาส์วาง (img.zoom-thumb ทุกที่ในหน้า) =====
+// ===== ปกคลิปขยายเมื่อเอาเมาส์วาง (img.zoom-thumb ทุกที่ในหน้า · (2026-11-10) หรือชื่อที่มี data-zoom = ลิงก์รูป — ไม่ต้องวางรูปในแถว) =====
 (function () {
   let box = null;
   const ensure = () => { if (!box) { box = document.createElement('div'); box.id = 'thumbPreview'; box.innerHTML = '<img alt="">'; document.body.appendChild(box); } return box; };
   const move = e => { const b = ensure(); const w = 340, h = b.offsetHeight || 320; let x = e.clientX + 18, y = e.clientY - h / 2; if (x + w > window.innerWidth - 8) x = e.clientX - w - 18; y = Math.max(8, Math.min(y, window.innerHeight - h - 8)); b.style.left = x + 'px'; b.style.top = y + 'px'; };
-  document.addEventListener('mouseover', e => { const img = e.target.closest && e.target.closest('img.zoom-thumb'); if (!img || !img.src) return; const b = ensure(); b.querySelector('img').src = img.src; b.style.display = 'block'; move(e); });
+  document.addEventListener('mouseover', e => { const img = e.target.closest && e.target.closest('img.zoom-thumb, [data-zoom]'); const src = img && (img.dataset.zoom || img.src); if (!src) return; const b = ensure(); b.querySelector('img').src = src; b.style.display = 'block'; move(e); });
   document.addEventListener('mousemove', e => { if (box && box.style.display === 'block') move(e); });
-  document.addEventListener('mouseout', e => { const img = e.target.closest && e.target.closest('img.zoom-thumb'); if (img && box) box.style.display = 'none'; });
+  document.addEventListener('mouseout', e => { const img = e.target.closest && e.target.closest('img.zoom-thumb, [data-zoom]'); if (img && box) box.style.display = 'none'; });
   document.addEventListener('scroll', () => { if (box) box.style.display = 'none'; }, true);
 })();
 
