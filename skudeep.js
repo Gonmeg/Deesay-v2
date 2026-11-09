@@ -34,6 +34,13 @@
   // (2026-11-10) นับ: ออนไลน์ (ค่าเริ่ม) = ไม่รวมตัวแทน / Modern Trade · ทุกช่องทาง = รวม — ตัวเลือกบนแถบบน (ใช้ร่วมกับแนวโน้มสินค้า / MKT Tracking)
   const isAll = () => (document.getElementById('skuScope') || {}).value === 'all';
   const scoped = d => { if (isAll()) return d; const ok = r => !BULK.includes(r.channel); return { ...d, daily: (d.daily || []).filter(ok), subs: (d.subs || []).filter(ok), ads_month: (d.ads_month || []).filter(ok) }; };
+  // (2026-11-10) ช่วงก่อน: เลือกเต็มเดือน → เดือนก่อนหน้าเต็มเดือน (แบบแนวโน้มสินค้า / MKT Tracking) · ช่วงอื่น → จำนวนวันเท่ากันถอยหลัง (getPrevPeriodRange)
+  const prevRange = (from, to) => {
+    const f = new Date(from + 'T00:00:00'), t = new Date(to + 'T00:00:00'), nx = new Date(t); nx.setDate(t.getDate() + 1);
+    if (f.getDate() === 1 && nx.getDate() === 1) { const n = (t.getFullYear() - f.getFullYear()) * 12 + t.getMonth() - f.getMonth() + 1;
+      return { from: fmtDateISO(new Date(f.getFullYear(), f.getMonth() - n, 1)), to: fmtDateISO(new Date(f.getFullYear(), f.getMonth(), 0)), label: n === 1 ? 'เดือนก่อน' : 'ช่วงก่อน' }; }
+    const p = getPrevPeriodRange(from, to); return { from: p.from, to: p.to, label: 'ช่วงก่อน' };
+  };
   let _view = null, _prev = null;
   const chipP = (a, b, neutral) => { if (!(+b > 0) || !isFinite(+a)) return ''; const v = (a - b) / b * 100; return `<span class="ui-chip ${neutral || Math.abs(v) < 3 ? '' : v > 0 ? 'up' : 'dn'}">${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}%</span>`; };
   const stat = (l, v) => `<div><span>${l}</span><b>${v}</b></div>`;
@@ -167,11 +174,11 @@
     skeleton();
     let d;
     // ช่วงก่อนหน้าที่ยาวเท่ากัน (ไว้ทำป้ายเทียบบนการ์ด) — โหลดพร้อมกัน ตัวเลขสรุปอย่างเดียว
-    const nd = Math.round((new Date(to) - new Date(from)) / 864e5) + 1, pTo = fmtDateISO(new Date(new Date(from).getTime() - 864e5)), pFrom = fmtDateISO(new Date(new Date(from).getTime() - nd * 864e5));
-    const pP = supaRpc('sku_deep_totals', { p_sku: sku, p_from: pFrom, p_to: pTo }).catch(() => null);
+    const pr = prevRange(from, to);
+    const pP = supaRpc('sku_deep_totals', { p_sku: sku, p_from: pr.from, p_to: pr.to }).catch(() => null);
     try { d = await supaRpc('sku_deep', { p_sku: sku, p_from: from, p_to: to }); }
     catch (e) { body.innerHTML = `<div class="card"><div style="color:var(--red);font-size:12px;">โหลดไม่สำเร็จ: ${esc(e.message)}</div></div>`; return; }
-    _prev = await pP; if (_prev) _prev.label = nd > 27 && nd < 32 ? 'เดือนก่อน' : 'ช่วงก่อน';
+    _prev = await pP; if (_prev) _prev.label = pr.label;
     if (seq !== _seq || currentPage !== 'skuanalysis') return;
     if (!d || d.message) { body.innerHTML = `<div class="card"><div style="color:var(--red);font-size:12px;">โหลดไม่สำเร็จ: ${esc(d && d.message)}</div></div>`; return; }
     _data = d; draw();
