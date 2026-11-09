@@ -359,6 +359,7 @@
   <button class="side-item active" data-tab="fbads"><span class="ico">📣</span>แอด Facebook</button>
   <button class="side-item" data-tab="targets" id="sideTargets"><span class="ico">🎯</span>ตั้งเป้ายอดขาย</button><!-- (2026-10-22) เป้ายอดขายรายช่องทาง: admtargets.js -->
   <button class="side-item" data-tab="perms" id="sidePerms" style="display:none;"><span class="ico">🔐</span>สิทธิ์ผู้ใช้</button>
+  <button class="side-item" data-tab="export"><span class="ico">📤</span>Export</button><!-- (2026-11-09) ไฟล์ส่งบัญชี: acctexport.js -->
 
   <div class="side-sec">ไปหน้าอื่น</div>
   <a class="side-item" href="dashboard.html"><span class="ico">📊</span>Dashboard</a>
@@ -392,6 +393,7 @@
     <button class="tab-btn" data-tab="fbads">📣 แอด Facebook</button>
     <button class="tab-btn" data-tab="perms">🔐 สิทธิ์ผู้ใช้</button>
     <button class="tab-btn" data-tab="targets">🎯 ตั้งเป้ายอดขาย</button>
+    <button class="tab-btn" data-tab="export">📤 Export</button>
   </div>
 
   <div id="tab-products" class="tabpane">
@@ -548,6 +550,22 @@
       </table></div>
     </div>
   </div><!-- /tab-perms -->
+
+  <!-- (2026-11-09) Export — ไฟล์ส่งบัญชี (ใช้ acctexport.js ตัวเดียวกับหน้าอัปโหลดข้อมูล) · เพิ่มไฟล์อื่นเป็นการ์ดใหม่ในแท็บนี้ -->
+  <div id="tab-export" class="tabpane" style="display:none;">
+    <div class="card">
+      <div class="pm-head">จำนวนชิ้นที่ได้เงินแล้ว ระดับสินค้าย่อย <span class="pm-sub">ส่งบัญชีทุกเดือน · ใช้คิดต้นทุนวอลเล็ท</span></div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:6px 0 14px;">ออเดอร์ที่<b>ได้เงินแล้ว</b> นับตาม<b>เดือนที่สั่งซื้อ</b> · แตกโปรโมชั่นเป็นสินค้าย่อย (child SKU) · ตัดเพจที่ไม่ใช่การขาย (เคลม · รีวิว · สินค้าเสียหาย · พนักงานสั่งซื้อ · ชาฟ้าใส · FM-ตัวแทน · Moderntrade) · แยกประเภทการชำระเฉพาะ Facebook · Modern Trade = ใบกำกับที่ส่งให้ห้าง<br>
+        ไฟล์: month · channel · sub_channel · payment_type · child_sku · total_qty — หน้าตาเดียวกับไฟล์ที่ส่งบัญชีทุกเดือน</p>
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;">
+        <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">เดือนที่สั่งซื้อ</label>
+          <input type="month" id="axMonth" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:8px 12px;font-size:14px;font-family:inherit;"></div>
+        <button class="btn-primary" id="axBtnQty" type="button" style="padding:9px 20px;white-space:nowrap;">📥 Export Excel</button>
+      </div>
+      <div id="axAlert" style="display:none;margin-bottom:12px;padding:10px 12px;border-radius:8px;background:rgba(248,113,113,.12);color:var(--danger);font-size:13px;"></div>
+      <div id="axOut" style="display:none;"></div>
+    </div>
+  </div><!-- /tab-export -->
 
   <div id="tab-targets" class="tabpane" style="display:none;">
     <div class="card"><div id="atBody"><div class="at-empty">กำลังโหลด…</div></div></div>
@@ -1476,6 +1494,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById('tab-perms').style.display = tab === 'perms' ? '' : 'none'
     document.getElementById('tab-fbads').style.display = tab === 'fbads' ? '' : 'none'
     document.getElementById('tab-targets').style.display = tab === 'targets' ? '' : 'none'
+    document.getElementById('tab-export').style.display = tab === 'export' ? '' : 'none'
     document.getElementById('btnShowNewRow').style.display = tab === 'products' ? '' : 'none'
     if (tab === 'supply') loadSupplyTab()
     if (tab === 'perms') loadPermsTab()
@@ -1518,6 +1537,7 @@ if (!_fullAdmin) {
       supply: ['🚚 Supply Chain', 'ตั้ง Lead time และเลือกว่าสินค้าไหนต้องวางแผนสั่งของ — จำนวนที่จะสั่งกรอกในหน้า Supply Chain ของ Dashboard'],
       fbads: ['📣 แอด Facebook', 'กฎอ่านชื่อแคมเปญ → สินค้า (ต้นทุนแอดต่อสินค้าในหน้า Facebook Ads / MKT Tracking) · จับคู่รหัสแอด → KOL ด้วยลิงก์ Facebook'],
       targets: ['🎯 ตั้งเป้ายอดขาย', 'เป้าทั้งปีต่อช่องทางย่อย (TikTok · เพจ Facebook · ร้าน Shopee / Lazada) → แบ่งรายเดือนตามจำนวนวัน แก้รายเดือนได้ · ส่วนที่ขาดยกไปเดือนถัดไป · ดูผลที่หน้าเป้าหมาย KPI'],
+      export: ['📤 Export', 'ไฟล์สำหรับส่งบัญชี — ดึงจากระบบได้เองทุกเมื่อ หน้าตาไฟล์เหมือนที่ส่งทุกเดือน'],
       perms: ['🔐 สิทธิ์ผู้ใช้', 'ติ๊กว่าใครเห็นหน้าไหน อัปโหลดได้ไหม จัดการสินค้าได้ไหม · ตั้งรหัสผ่านใหม่ให้คนที่ลืม · ปิด/ลบบัญชี']
     };
     document.querySelectorAll('.side-item[data-tab]').forEach(el => el.addEventListener('click', () => {
@@ -1540,6 +1560,15 @@ if (!_fullAdmin) {
   })();
 </script>
 <script src="ui.js?v=20261026a" defer></script>
-<script src="admtargets.js?v=20261022c"></script><!-- (2026-10-22) แท็บตั้งเป้ายอดขาย --><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
+<script src="admtargets.js?v=20261022c"></script>
+<script src="acctexport.js?v=1"></script><!-- (2026-11-09) แท็บ Export -->
+<script>
+  // (2026-11-09) แท็บ Export: เดือนเริ่มต้น = เดือนที่แล้ว (เดือนที่ส่งบัญชี)
+  (function () {
+    const mi = document.getElementById('axMonth'); if (!mi) return;
+    const d = new Date(Date.now() + 7 * 3600e3); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1); mi.value = d.toISOString().slice(0, 7);
+    document.getElementById('axBtnQty').addEventListener('click', () => window.AcctExport && AcctExport.childQty({ db: Auth.client, month: mi.value, btn: document.getElementById('axBtnQty'), alert: document.getElementById('axAlert'), out: document.getElementById('axOut') }));
+  })();
+</script><!-- (2026-10-22) แท็บตั้งเป้ายอดขาย --><!-- (2026-10-07) ช่องวันที่/เดือนแบบไทย · ตัวเลขพอดีการ์ด · tooltip -->
 </body>
 </html>
