@@ -335,3 +335,8 @@ body.light-theme :is(input:not([type=checkbox]):not([type=radio]), select, texta
 body.light-theme :is(input, textarea)::placeholder { color: #98A2B0; }
 /* (2026-11-10) โหมดสว่าง: การ์ดซ้อนในการ์ด (เช่น ตัวเลข PR ในหน้า Facebook Ads) = พื้นเทาอ่อน + ขอบ แยกจากการ์ดแม่ (เดิมขาวบนขาว กลืนกัน) */
 body.light-theme .card .card { background: var(--bg3) !important; border: 1px solid var(--border) !important; box-shadow: none !important; }
+/* (2026-11-10) โหมดสว่าง: หัวตาราง + แถวหัวกลุ่ม อ่านชัด (เดิมหัวตารางสีเทาจาง #8D97A6 บนขาว · แถวหัวกลุ่มเทาอ่อนกลืนพื้น) */
+body.light-theme th { color: var(--text2) !important; }
+body.light-theme tr.fe2-g td, body.light-theme tr.ex-g td, body.light-theme tr.sup-group td, body.light-theme tr.grp-row td {
+  background: color-mix(in srgb, var(--accent) 9%, #FFFFFF) !important; color: var(--text) !important;
+}
