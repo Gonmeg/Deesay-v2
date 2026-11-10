@@ -210,7 +210,7 @@
     // (2026-11-10) ตัวกรองทั้งหมดอยู่แถบบน (แบบหน้าอื่น) · ในหน้าเหลือตารางอย่างเดียว
     let top = document.getElementById('ppTopCtl');
     if (!top) { const f = document.querySelector('.topbar .filters'); top = document.createElement('div'); top.id = 'ppTopCtl'; top.className = 'ex-topctl'; if (f) f.prepend(top); }
-    top.style.display = '';
+    top.style.display = (typeof currentPage === 'undefined' || currentPage === 'products') ? '' : 'none';
     top.innerHTML = `<div class="filter-group pp-q"><span class="filter-label">ค้นหา</span><input id="ppQ" placeholder="SKU รหัสลูก หรือชื่อสินค้า" value="${esc(S.q)}"></div>
       <div class="filter-group"><span class="filter-label">สถานะ</span><select id="ppChip">${chips.map(([k, t, n]) => `<option value="${k}"${S.chip === k ? ' selected' : ''}>${t} (${n})</option>`).join('')}</select></div>
       <div class="filter-group"><span class="filter-label">การวางแผน</span><select id="ppPlan"><option value="">ทั้งหมด</option>${Object.entries(PLAN).filter(([k]) => k !== 'hidden').map(([k, v]) => `<option value="${k}" ${S.plan === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select></div>
