@@ -3,7 +3,7 @@
 
   1. โค้ดไม่มี error                       5. ไม่มีคำต้องห้าม: ฿ · "แอด" · ตัวย่อ k / M · กล่อง alert ของเบราว์เซอร์
   2. ทุกหน้าอยู่ในกรอบ ไม่มีกล่องหลุด         6. หน้าที่แก้: การ์ด = แถวรวมของตาราง = ผลรวมในกราฟ
-  3. ไม่เด้งตอนโหลด / หลังกดค้นหา            7. จอ 1440 / 1920 ทั้งธีมมืดและสว่าง ไม่มีอะไรล้นกล่อง
+  3. ไม่เด้งตอนโหลด / หลังกดค้นหา            7. จอ 1440 / 1920 ทั้งธีมมืดและสว่าง ไม่มีอะไรล้นกล่อง · โหมดสว่างกล่อง / ช่องกรอกไม่กลืนพื้น
   4. ฟอนต์เป็น Sarabun ทุกข้อความที่เห็น        8. ⓘ ทุกอันที่แก้ อ่านเทียบสูตรในโค้ด (คนอ่าน — สคริปต์ลิสต์ให้)
 
 ข้อ 2–7 ใช้เกณฑ์จาก tests/checks.js ชุดเดียวกับระบบทดสอบบน GitHub
@@ -95,6 +95,12 @@ def main(plan_file):
                     for x in c['overflow']: bad(7, f'{tag}: ข้อความล้น «{x}»')
                     for x in c.get('align', []): bad(7, f'{tag}: {x}')
                     for x in c['wide']['tables']: bad(7, f'{tag}: ตารางต้องเลื่อนในกล่อง {x}', True)
+                    if th == 'light':   # (2026-11-10) โหมดสว่าง: กล่อง / ช่องกรอกกลืนพื้น · ตัวเลขจาง (contrast.js)
+                        try:
+                            cc = pg.evaluate(open(os.path.join(os.path.dirname(__file__), 'contrast.js'), encoding='utf-8').read())
+                            for x in cc['boxes']: bad(7, f'{tag}: กล่องกลืนพื้น {x}')
+                            for x in cc['text']: bad(7, f'{tag}: ตัวหนังสือจาง {x}', True)
+                        except Exception as e: bad(7, f'{tag}: เช็คสีไม่ได้ {str(e)[:80]}', True)
                     ctx.close()
             if pg_plan.get('eq') and R[6]['s'] == '✅': R[6]['n'].append(f"{pg_plan.get('name', pid)}: ตรงกันทุกจอ")
         b.close()
@@ -103,7 +109,7 @@ def main(plan_file):
     else: R[8]['n'].append('งานนี้ไม่ได้แก้ข้อความ ⓘ')
 
     names = {1: 'โค้ดไม่มี error', 2: 'ทุกหน้าอยู่ในกรอบ ไม่มีกล่องหลุด', 3: 'ไม่เด้งตอนโหลด / หลังค้นหา', 4: 'ฟอนต์ Sarabun ทุกข้อความ',
-             5: 'ไม่มีคำต้องห้าม (฿ / แอด / k M / alert)', 6: 'การ์ด = แถวรวม = กราฟ', 7: f'จอ {" / ".join(map(str, widths))} {" + ".join({"dark": "มืด", "light": "สว่าง"}.get(t, t) for t in themes)} ไม่ล้น', 8: 'คำอธิบาย ⓘ ตรงสูตร'}
+             5: 'ไม่มีคำต้องห้าม (฿ / แอด / k M / alert)', 6: 'การ์ด = แถวรวม = กราฟ', 7: f'จอ {" / ".join(map(str, widths))} {" + ".join({"dark": "มืด", "light": "สว่าง"}.get(t, t) for t in themes)} ไม่ล้น · สว่างไม่กลืนพื้น', 8: 'คำอธิบาย ⓘ ตรงสูตร'}
     md = ['| ข้อ | ผล | หมายเหตุ |', '|---|---|---|'] + [f'| {i}. {names[i]} | {R[i]["s"]} | {" · ".join(R[i]["n"][:4]) or "—"} |' for i in range(1, 9)]
     os.makedirs(P.OUT, exist_ok=True)
     json.dump({'items': R, 'tips': tips, 'pages': detail}, open(os.path.join(P.OUT, 'checklist.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
