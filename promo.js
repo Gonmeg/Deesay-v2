@@ -598,6 +598,11 @@
         </tbody></table>
         <div class="exd-hint">ติ๊กออก = ไม่นับรายการนั้น · กด ▸ ดูรายการย่อย · ชี้แถวดูวิธีคิด</div></div>`;
   }
+  // (2026-11-10 c) วาดใหม่หลังติ๊ก / คำนวณ: คงกลุ่มที่กางไว้ + ตำแหน่งเลื่อนเดิม (เดิมกลุ่มพับเอง และแผงเด้งขึ้นบนสุด)
+  const scrollerOf = el => { for (let e = el; e && e !== document.body; e = e.parentElement) { const o = getComputedStyle(e).overflowY; if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight) return e; } return document.scrollingElement; };
+  const ladOpen = root => new Set([...root.querySelectorAll('.pv-lad tr.grp.open')].map(tr => tr.dataset.lad));
+  const ladRestore = (root, open) => open.forEach(id => { const tr = root.querySelector(`.pv-lad tr.grp[data-lad="${id}"]`); if (!tr) return; tr.classList.add('open'); root.querySelectorAll(`.pv-lad tr[data-ladp="${id}"]`).forEach(x => { x.hidden = false; }); });
+  const keepView = (root, render) => { const sc = scrollerOf(root), top = sc ? sc.scrollTop : 0, open = ladOpen(root); render(); ladRestore(root, open); if (sc) sc.scrollTop = top; };
   // (2026-11-10) ติ๊กรายการออก → fn(รายชื่อที่ไม่นับ) · ติ๊กที่หัวกลุ่ม = ทั้งกลุ่ม
   const bindEx = (root, fn) => {
     root.querySelectorAll('.pv-lad input.pv-x').forEach(cb => { cb.addEventListener('click', e => e.stopPropagation()); cb.addEventListener('change', () => {
@@ -650,7 +655,7 @@
       if (!p.channel_id || !p.price || !p.items.length) { out.innerHTML = '<div class="pr-empty">ใส่ช่องทาง สินค้า และราคาให้ครบก่อน</div>'; return; }
       e.target.disabled = true; e.target.textContent = 'กำลังคำนวณ…';
       try { const [c, k] = await Promise.all([rpc('promo_calc', { p }), rpc('promo_rank', { p }).catch(() => null)]);
-        out.innerHTML = calcView(c, C) + (k ? rankCard(k) : ''); bindLad(out); bindFm(out, v => { SIM.fee_mode = v; document.getElementById('smGo').click(); });
+        keepView(out, () => { out.innerHTML = calcView(c, C) + (k ? rankCard(k) : ''); }); bindLad(out); bindFm(out, v => { SIM.fee_mode = v; document.getElementById('smGo').click(); });
         bindEx(out, list => { SIM.exclude = list; document.getElementById('smGo').click(); }); }
       catch (err) { out.innerHTML = `<div class="pr-empty">คำนวณไม่สำเร็จ: ${esc(err.message)}</div>`; }
       e.target.disabled = false; e.target.textContent = 'คำนวณ';
@@ -743,7 +748,9 @@
     trOpenShell('Promotion · รายละเอียด');
     const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null, fee_mode: null, exclude: [] };
     const body = () => document.getElementById('trBody');
-    const draw = (c) => {
+    let firstDraw = true;
+    const draw = (c) => { if (firstDraw) { firstDraw = false; return drawInner(c); } keepView(body(), () => drawInner(c)); };
+    const drawInner = (c) => {
       const st = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0), k = S.rank;
       const changed = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []) || S.exclude.length > 0;
       const pnm = x => (C.products.find(p => p.sku === x) || { name: x }).name;
