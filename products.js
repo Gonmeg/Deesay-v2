@@ -1,3 +1,5 @@
+// products.js (v20261110a) — (2026-11-10) ตัวกรองย้ายขึ้นแถบบน (ค้นหา · สถานะ ▾ มีจำนวน · การวางแผน ▾ · + เพิ่มสินค้า) · สถานะ / การวางแผนเป็นจุดสี + ตัวหนังสือ
+//   ป้ายเตือนส้มท้ายรหัส → จุดส้มเล็ก (ชี้ดูว่าขาดอะไร) · ⓘ หัว Rank อธิบายเส้นประ
 // products.js (v20261020d) — หน้า "สินค้า & ราคา" (page id: products)
 // (2026-10-20) รวมข้อมูลสินค้า · Mock / RSP · Rank ราคา · ช่องทางที่ขาย · การวางแผน / Lead time ไว้หน้าเดียว
 //   แทนแท็บสินค้าใน admin.html และชีท Google "Price Rank" (ย้ายข้อมูลมาแล้ว · เลิกดึงชีท)
@@ -55,6 +57,15 @@
       .pp-st.gwp { background:rgba(168,85,247,.12); color:#7e22ce; } .pp-st.off, .pp-pl.p3 { background:var(--bg3); color:var(--text3); }
       .pp-st.eol { background:rgba(234,88,12,.11); color:#c2410c; } body:not(.light-theme) .pp-st.eol { color:#fdba74; }
       .pp-pl.p2 { background:rgba(245,158,11,.15); color:#b45309; } .pp-wb { background:#fff1e3; color:#c2410c; margin-left:6px; font-size:11px; }
+      /* (2026-11-10) สถานะ / การวางแผน = จุดสี + ตัวหนังสือ (ลดป้ายสีในแถว) · จุดส้มเตือนข้อมูลขาด */
+      .pp-st, .pp-pl { background:none !important; padding:0 !important; font-weight:600; } .pp-st::before, .pp-pl::before { content:''; display:inline-block; width:7px; height:7px; border-radius:50%; background:currentColor; margin-right:7px; vertical-align:1px; }
+      .pp-pl.p2, .pp-pl.p3, .pp-st.off { color:var(--text3) !important; } .pp-pl.p1 { color:var(--text2) !important; }
+      .pp-dotw { color:var(--orange,#f59e0b); font-size:10px; margin-left:6px; vertical-align:2px; cursor:help; }
+      .pp-tags .pp-tadd { background:transparent !important; border:0 !important; box-shadow:none !important; outline:none; }   /* ช่องพิมพ์รหัสลูกอยู่ในกรอบรวมแล้ว ไม่ต้องมีกรอบซ้อน */
+      #ppTopCtl { display:flex; align-items:center; gap:8px; flex-wrap:nowrap; }
+      #ppTopCtl .pp-q input { min-width:210px; border:0 !important; background:transparent !important; outline:none; font:inherit; font-size:13px; color:var(--text); padding:0; }
+      #ppTopCtl .pp-addb { white-space:nowrap; height:36px; padding:0 14px; border-radius:9px; border:0; background:var(--accent); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+      #ppTopCtl .pp-addb:hover { filter:brightness(1.05); }
       body:not(.light-theme) .pp-st.ok, body:not(.light-theme) .pp-pl.p1 { color:#4ade80; } body:not(.light-theme) .pp-st.npd { color:#93c5fd; }
       body:not(.light-theme) .pp-st.gwp { color:#d8b4fe; } body:not(.light-theme) .pp-pl.p2 { color:#fbbf24; } body:not(.light-theme) .pp-wb { background:rgba(234,88,12,.15); color:#fdba74; }
       .pp-i { display:inline-flex; width:15px; height:15px; border-radius:50%; border:1px solid var(--text3); color:var(--text3); font-size:9.5px; font-weight:700; align-items:center; justify-content:center; font-style:normal; cursor:default; vertical-align:1px; }
@@ -174,7 +185,7 @@
     const rk = (cat, i) => { const v = (b[cat] || {})[i], d = dif[cat + '|' + i];
       return `<td class="rk${i === 1 ? ' gl' : ''}">${!v ? dash : d ? `<button type="button" class="pp-dv" data-dv="${esc(p.sku)}|${cat}|${i}">${n0(v)}</button>` : n0(v)}</td>`; };
     const st = ST[p.status] || [p.status || '—', 'off'], pl = PLAN[p.plan || 'plan'] || PLAN.plan;
-    return `<tr data-sku="${esc(p.sku)}"><td><div class="pp-sku">${esc(p.sku)}${p.hasRank ? '' : '<span class="pp-wb">ยังไม่มีราคา Rank</span>'}</div><div class="pp-nm">${esc(p.name || '')}</div></td>
+    return `<tr data-sku="${esc(p.sku)}"><td><div class="pp-sku">${esc(p.sku)}${(() => { const w = [p.noPrice ? 'ยังไม่มี RSP / Mock' : '', p.hasRank ? '' : 'ยังไม่มีราคา Rank'].filter(Boolean); return w.length ? `<span class="pp-dotw" title="${w.join(' · ')}">●</span>` : ''; })()}</div><div class="pp-nm">${esc(p.name || '')}</div></td>
       <td><span class="pp-st ${st[1]}">${st[0]}</span></td><td>${+p.mock > 0 ? n0(p.mock) : dash}</td><td>${+p.rsp > 0 ? n0(p.rsp) : dash}</td>
       ${[1, 2, 3].map(i => rk('สินค้าเดี่ยว', i)).join('')}${[1, 2, 3].map(i => rk('สินค้าเซ็ต', i)).join('')}
       <td><span class="pp-pl ${pl[1]}">${pl[0]}</span></td><td>${p.lead == null ? dash : p.lead}</td></tr>`;
@@ -183,7 +194,7 @@
     const box = document.getElementById('ppList'); if (!box) return;
     const L = visible();
     box.innerHTML = L.length ? `<table class="pp-t" data-no-sort data-no-page>
-      <thead><tr><th rowspan="2">สินค้า</th><th rowspan="2">สถานะ</th><th rowspan="2">Mock</th><th rowspan="2">RSP</th><th colspan="3" class="grp gl">Rank เดี่ยว</th><th colspan="3" class="grp gl">Rank เซ็ต</th><th rowspan="2">การวางแผน</th><th rowspan="2">Lead time</th></tr>
+      <thead><tr><th rowspan="2">สินค้า</th><th rowspan="2">สถานะ</th><th rowspan="2">Mock</th><th rowspan="2">RSP</th><th colspan="3" class="grp gl">Rank เดี่ยว ${typeof fbeInfoIcon === 'function' ? fbeInfoIcon('pp-i-rk1', 'ราคากลางทุกช่องทาง ต่อ 1 ชิ้น<br>ตัวเลขขีดเส้นประ = บางช่องทางตั้งราคาต่าง · กดเพื่อดูว่าช่องทางไหนราคาเท่าไร') : ''}</th><th colspan="3" class="grp gl">Rank เซ็ต ${typeof fbeInfoIcon === 'function' ? fbeInfoIcon('pp-i-rk2', 'ราคาต่อชิ้นเมื่อซื้อมากกว่า 1 ชิ้น (เซ็ต)<br>ตัวเลขขีดเส้นประ = บางช่องทางตั้งราคาต่าง · กดเพื่อดู') : ''}</th><th rowspan="2">การวางแผน</th><th rowspan="2">Lead time</th></tr>
       <tr><th class="sub gl">R1</th><th class="sub">R2</th><th class="sub">R3</th><th class="sub gl">R1</th><th class="sub">R2</th><th class="sub">R3</th></tr></thead>
       <tbody>${L.map(rowHtml).join('')}</tbody></table>` : '<div class="pp-empty">ไม่มีสินค้าที่ตรงกับตัวกรอง</div>';
     box.querySelectorAll('tr[data-sku]').forEach(tr => tr.onclick = e => { const dv = e.target.closest('.pp-dv'); if (dv) { e.stopPropagation(); showDiff(dv); return; } closeDiff(); openEdit(tr.dataset.sku); });
@@ -196,17 +207,19 @@
       ['noprice', 'ยังไม่มี RSP / Mock', cnt(p => p.noPrice), 'w'], ['norank', 'ยังไม่มีราคา Rank', cnt(p => !p.hasRank), 'w']];
     chips.push(['Inactive', 'หยุดขาย', nStop, 'h']);
     if (S.data.can_edit) chips.push(['hidden', 'ซ่อน', nHid, 'h2']);
-    el.innerHTML = `<div class="pp-chips" id="ppChips">${chips.map(([k, t, n, w]) => `<button type="button" class="pp-chip ${w || ''}" data-c="${k}" aria-pressed="${S.chip === k}">${t}<b>${n}</b></button>`).join('')}</div>
-      <div class="pp-bar"><input class="pp-in" id="ppQ" style="flex:1;min-width:220px;" placeholder="ค้นหา SKU รหัสลูก หรือชื่อสินค้า…" value="${esc(S.q)}">
-        <select class="pp-in" id="ppPlan"><option value="">การวางแผน: ทั้งหมด</option>${Object.entries(PLAN).filter(([k]) => k !== 'hidden').map(([k, v]) => `<option value="${k}" ${S.plan === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select>
-        ${S.data.can_edit ? '<button type="button" class="pp-btn" id="ppAdd">+ เพิ่มสินค้า</button>' : ''}</div>
-      <div class="pp-card" id="ppList"></div>`;
-    el.querySelector('#ppChips').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return;
-      S.chip = S.chip === b.dataset.c ? 'all' : b.dataset.c;   // กดแท็บที่เลือกอยู่ซ้ำ = ยกเลิก กลับเป็นทั้งหมด
-      el.querySelectorAll('#ppChips [data-c]').forEach(x => x.setAttribute('aria-pressed', x.dataset.c === S.chip)); closeDiff(); renderList(); };
-    el.querySelector('#ppQ').oninput = e => { S.q = e.target.value; renderList(); };
-    el.querySelector('#ppPlan').onchange = e => { S.plan = e.target.value; renderList(); };
-    const add = el.querySelector('#ppAdd'); if (add) add.onclick = () => openEdit(null);
+    // (2026-11-10) ตัวกรองทั้งหมดอยู่แถบบน (แบบหน้าอื่น) · ในหน้าเหลือตารางอย่างเดียว
+    let top = document.getElementById('ppTopCtl');
+    if (!top) { const f = document.querySelector('.topbar .filters'); top = document.createElement('div'); top.id = 'ppTopCtl'; top.className = 'ex-topctl'; if (f) f.prepend(top); }
+    top.style.display = '';
+    top.innerHTML = `<div class="filter-group pp-q"><span class="filter-label">ค้นหา</span><input id="ppQ" placeholder="SKU รหัสลูก หรือชื่อสินค้า" value="${esc(S.q)}"></div>
+      <div class="filter-group"><span class="filter-label">สถานะ</span><select id="ppChip">${chips.map(([k, t, n]) => `<option value="${k}"${S.chip === k ? ' selected' : ''}>${t} (${n})</option>`).join('')}</select></div>
+      <div class="filter-group"><span class="filter-label">การวางแผน</span><select id="ppPlan"><option value="">ทั้งหมด</option>${Object.entries(PLAN).filter(([k]) => k !== 'hidden').map(([k, v]) => `<option value="${k}" ${S.plan === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select></div>
+      ${S.data.can_edit ? '<button type="button" class="pp-addb" id="ppAdd">＋ เพิ่มสินค้า</button>' : ''}`;
+    el.innerHTML = `<div class="pp-card" id="ppList"></div>`;
+    top.querySelector('#ppChip').onchange = e => { S.chip = e.target.value; closeDiff(); renderList(); };
+    top.querySelector('#ppQ').oninput = e => { S.q = e.target.value; renderList(); };
+    top.querySelector('#ppPlan').onchange = e => { S.plan = e.target.value; renderList(); };
+    const add = top.querySelector('#ppAdd'); if (add) add.onclick = () => openEdit(null);
     renderList();
   }
 
@@ -238,7 +251,7 @@
               <div class="pp-seg" id="ppSt">${Object.entries(ST).map(([k, v]) => `<button type="button" data-v="${k}" aria-pressed="${E.status === k}" ${dis}>${v[0]}</button>`).join('')}</div></div></div>
           <div class="pp-lb" style="margin-top:12px;">รหัสลูก (สี / เบอร์)${tip('รหัสที่อยู่ในไฟล์ออเดอร์ของแต่ละสี / เบอร์ · ลบแล้วยอดขายเก่าไม่หาย แต่ไฟล์ออเดอร์ใหม่ที่ใช้รหัสนั้นจะจับคู่ไม่เจอ')}</div>
           <div class="pp-tags" id="ppKids">${E.kids.map((k, i) => `<span class="pp-tag">${esc(k)}${can ? `<button type="button" data-rmk="${i}" aria-label="ลบ">✕</button>` : ''}</span>`).join('')}
-            ${can ? '<input class="pp-tadd" id="ppKidIn" placeholder="พิมพ์รหัสแล้วกด Enter…">' : (E.kids.length ? '' : '<span class="pp-mu" style="font-size:12.5px;padding:3px 6px;">ไม่มี</span>')}</div></div>
+            ${can ? '<input class="pp-tadd" id="ppKidIn" data-keep-bg placeholder="พิมพ์รหัสแล้วกด Enter…">' : (E.kids.length ? '' : '<span class="pp-mu" style="font-size:12.5px;padding:3px 6px;">ไม่มี</span>')}</div></div>
         <div class="pp-sec"><div class="pp-sh">ราคา</div><div class="pp-g2">
           <div><div class="pp-lb">Mock (หน้ากล่อง)</div><input class="pp-f" type="number" step="0.01" id="ppMock" value="${E.mock == null ? '' : E.mock}" ${dis}></div>
           <div><div class="pp-lb">RSP (ราคาขายปกติ)</div><input class="pp-f" type="number" step="0.01" id="ppRsp" value="${E.rsp == null ? '' : E.rsp}" ${dis}></div></div></div>
