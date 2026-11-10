@@ -41,8 +41,8 @@
   --font-code: var(--font);   /* (2026-11-04) ฟอนต์เดียวทั้งเว็บ: Sarabun (เลิก IBM Plex Mono) */
 }
 body.light-theme, .ui-light {
-  --bg: #ECEFF4; --bg2: #FFFFFF; --bg3: #F2F4F7;   /* (2026-11-02) พื้นเทาอมฟ้าเข้มขึ้นนิด ให้กล่องขาวลอยเป็นชั้น */
-  --border: #E1E5EB; --row-border: #EDF0F4;
+  --bg: #ECEFF4; --bg2: #FFFFFF; --bg3: #EDF0F4;   /* (2026-11-10) ชั้นรอง (bg3) เข้มขึ้น — เดิม #F2F4F7 แทบเท่ากล่องขาว ทำให้กล่อง / ช่องกรอกกลืนพื้นในโหมดสว่าง */
+  --border: #D8DEE6; --row-border: #E8ECF1;   /* (2026-11-10) เส้นเข้มขึ้น (เดิม #E1E5EB จางจนมองไม่เห็นขอบกล่อง) */
   --text: #18222F; --text2: #5A6576; --text3: #8D97A6;
   --accent: #B8893A; --accent2: #A57A30; --accent-ink: #1B1408; --accent-text: #8A6320;
   --accent-soft: rgba(184,137,58,.15);
@@ -324,3 +324,14 @@ tr.ui-grp:hover > td { background: var(--grp-bg, transparent) !important; }
 .ads-info-wrap > span:first-child, .pr-i, .pp-i, .ui-i { color: var(--text3) !important; font-size: 12px !important; font-weight: 400 !important; cursor: help !important;
   font-style: normal; border: 0 !important; width: auto !important; height: auto !important; display: inline !important; vertical-align: baseline !important; }
 .ads-info-wrap > span:first-child:hover, .pr-i:hover, .pp-i:hover, .ui-i:hover { color: var(--text2) !important; }
+
+
+/* (2026-11-10) โหมดสว่าง: ช่องกรอก / dropdown / กล่องข้อความ = พื้นขาว + ขอบชัด ทุกหน้า
+   (เดิมหลายหน้าใช้พื้นเทาอ่อน var(--bg3) เท่ากับพื้นกล่อง → ช่องกรอกกลืนหาย) · ยกเว้นช่องที่ตั้งใจให้โปร่ง (Forecast ใน Supply Chain) */
+body.light-theme :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]), select, textarea):not(.sup-plan-qty):not([data-keep-bg]) {
+  background-color: #FFFFFF !important; border: 1px solid #C9D1DC !important; color: var(--text) !important;
+}
+body.light-theme :is(input:not([type=checkbox]):not([type=radio]), select, textarea):not(.sup-plan-qty):focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important; outline: none; }
+body.light-theme :is(input, textarea)::placeholder { color: #98A2B0; }
+/* (2026-11-10) โหมดสว่าง: การ์ดซ้อนในการ์ด (เช่น ตัวเลข PR ในหน้า Facebook Ads) = พื้นเทาอ่อน + ขอบ แยกจากการ์ดแม่ (เดิมขาวบนขาว กลืนกัน) */
+body.light-theme .card .card { background: var(--bg3) !important; border: 1px solid var(--border) !important; box-shadow: none !important; }
