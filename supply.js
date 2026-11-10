@@ -549,7 +549,7 @@
       #page-supply .sup-kpi .kpi-sub { font-size:11px !important; }
       #page-supply table.sup-main td { padding-top:10px; padding-bottom:10px; vertical-align:middle; }
       #page-supply .sup-code { font-family:'Sarabun',sans-serif; font-size:12.5px; font-weight:700; color:var(--text); }
-      #page-supply .sup-abc { display:inline-block !important; width:auto !important; max-width:none !important; margin-left:6px; font-size:10px; font-weight:600; padding:0 5px; border-radius:4px; background:var(--bg3); color:var(--text3); vertical-align:1px; }
+      #page-supply .sup-abct { display:inline-block; margin-left:6px; font-size:10px; font-weight:600; padding:0 5px; border-radius:4px; background:var(--bg3); color:var(--text3); vertical-align:1px; }
       #page-supply .sup-nm { font-size:12px; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       #page-supply .sup-sub { font-size:11px !important; }
       #page-supply tr.sup-group td { background:var(--bg3) !important; border-top:1px solid var(--border) !important; }
@@ -731,7 +731,7 @@
       }
       const pc2 = planCells(r).split('</td>');
       return groupHead + `<tr class="sup-row${planned ? '' : ' sup-noplan'}${grouped ? ' sup-child' : ''}" data-sku="${esc(r.sku)}" style="cursor:pointer;${selSku === r.sku ? 'background:var(--bg3);' : ''}">
-        <td class="t-left"><span class="sup-code">${esc(r.sku)}</span>${r.abc ? `<span class="sup-abc" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span>` : ''}
+        <td class="t-left"><span class="sup-code">${esc(r.sku)}</span>${r.abc ? `<span class="sup-abct" title="${r.abc} = ${ABC_TXT[r.abc] || ''} · ${r.xyz} = ${XYZ_TXT[r.xyz] || ''}">${r.abc}${r.xyz}</span>` : ''}
           <div class="sup-nm">${esc(r.product_name)}</div></td>
         <td class="t-center"><span class="sup-lt${r.has_params === false ? ' def' : ''}"${r.has_params === false ? ' title="ยังไม่ได้ตั้งในหน้า Admin — ใช้ค่ากลาง 60 วัน"' : ''}>${fmtN(_lt)} d</span></td>
         <td class="sup-runc">${cov == null ? '<span class="sup-dash">—</span>' : (() => {   // (2026-11-10) แถบอายุสต็อก: แถบแดงจาง = ช่วง Lead time + รอบประชุม · แถบสี = ของที่มีพอขาย · ลายขีด = ของกำลังผลิต (WIP) ต่อจากนั้น
