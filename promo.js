@@ -710,7 +710,7 @@
     // (2026-11-10) ปุ่มสถานะ + จำลองโปร ย้ายไปแถบบน (ข้างตัวกรองแบบหน้าอื่น) · ในหน้าเหลือแต่ตาราง
     let top = document.getElementById('exTopCtl');
     if (!top) { const f = document.querySelector('.topbar .filters'); top = document.createElement('div'); top.id = 'exTopCtl'; top.className = 'ex-topctl'; if (f) f.prepend(top); }
-    top.style.display = '';
+    top.style.display = (typeof currentPage === 'undefined' || currentPage === 'exec') ? '' : 'none';   // (2026-11-10) โหลดเสร็จช้ากว่าการสลับหน้า → ไม่โชว์บนหน้าอื่น
     top.innerHTML = `<div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div>
       <button type="button" class="pr-btn ghost pv-simbtn" id="exSim" aria-pressed="${EX.filter === 'sim'}">จำลองโปร</button>`;
     el.innerHTML = `<div class="pr-card" style="padding:4px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
@@ -974,7 +974,7 @@
     // (2026-11-10) แท็บช่องทาง + ร้าน / ประเภท อยู่แถบบน (แบบหน้าอื่น) · ในหน้าเหลือตัวเลข + ตาราง · ที่มาของค่าจริงอยู่หัวตาราง
     let tb0 = document.getElementById('feTopCtl');
     if (!tb0) { const f = document.querySelector('.topbar .filters'); tb0 = document.createElement('div'); tb0.id = 'feTopCtl'; tb0.className = 'ex-topctl'; if (f) f.prepend(tb0); }
-    tb0.style.display = '';
+    tb0.style.display = (typeof currentPage === 'undefined' || currentPage === 'execfee') ? '' : 'none';
     // (2026-11-10 b) ตัวเลือกช่องทางแบบ dropdown เดียว (จัดกลุ่มตามแพลตฟอร์ม) แทนแท็บ + ปุ่มร้านที่โผล่ทีหลังแล้วแถบบนเด้ง
     const optOf = tb => { const L = chs.filter(c => fe2Tab(c) === tb), all = tb === 'TikTok' && L.length > 1;
       return `<optgroup label="${esc(tb)}">${all ? `<option value="all:${esc(tb)}"${FE2.tab === tb && FE2.ch === 'all' ? ' selected' : ''}>${esc(tb)} · เทียบทุกประเภท</option>` : ''}${L.map(c => `<option value="${c.id}"${FE2.tab === tb && FE2.ch === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup>`; };
