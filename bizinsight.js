@@ -1,3 +1,4 @@
+// bizinsight.js (v20261110a) — แท็บรายช่องทาง: ช่องทางที่รายได้ติดลบไม่คิด % (เดิม CJ ขึ้น 892%) · ค่า Platform รายช่องทางแก้ใน Supabase แล้ว
 // bizinsight.js (v20261027a) — หัวตารางรายสินค้าล็อกเสมอ (กรอบตารางเลื่อนเอง)
 // bizinsight.js (v20261022d) — เหลือเกณฑ์ต้นทุนตามคำสั่งซื้ออย่างเดียว (เอาทางบัญชี / วอลเลตออก)
 // bizinsight.js (v20261022c) — คอลัมน์ต้นทุนของแถม · ⓘ งบกำไรขาดทุนบอกแถวในแท็บสรุปไฟล์บัญชี
@@ -293,9 +294,9 @@
       o.rev += r.rev; o.cogs += r.cogs; o.exp += split === 'a' ? r.sa + r.aa : r.ss + r.as; o.ads += r.ads; o.plat += r.plat; });
     const rows = Object.entries(by).filter(([, o]) => Math.abs(o.rev) + Math.abs(o.exp) > 1).map(([ch, o]) => ({ ch, ...o, gp: o.rev - o.cogs, pr: o.rev - o.cogs - o.exp }));
     const T = rows.reduce((s, r) => s + r.rev, 0);
-    const mp = (pr, rev) => { const p = rev ? pr / rev * 100 : 0; return `<span class="mpill ${p < 0 ? 'n' : 'p'}">${rev ? p.toFixed(1) + '%' : '—'}</span>`; };
+    const mp = (pr, rev) => { if (!(rev > 0)) return '<span class="pct">—</span>'; const p = pr / rev * 100; return `<span class="mpill ${p < 0 ? 'n' : 'p'}">${p.toFixed(1)}%</span>`; };   // (2026-11-10) รายได้ติดลบ (มีแต่รับคืน) ไม่คิด % — เดิมขึ้น 892%
     const tr = (r, cls = '') => `<tr class="${cls}"><td>${r.dot || ''}${esc(r.ch)}</td><td>${fmt(r.rev)}</td><td><div class="share"><span class="pct">${pctf(r.rev, T)}</span><div class="bar"><i style="width:${T ? Math.max(r.rev, 0) / T * 100 : 0}%"></i></div></div></td>
-      <td>${fmt(r.cogs)}</td><td>${fmt(r.gp)} <span class="pct">${pctf(r.gp, r.rev, 0)}</span></td><td>${r.ads ? fmt(r.ads) : '—'}</td><td>${r.plat ? fmt(r.plat) : '—'}</td><td>${fmt(r.exp)}</td>
+      <td>${fmt(r.cogs)}</td><td>${fmt(r.gp)} <span class="pct">${r.rev > 0 ? pctf(r.gp, r.rev, 0) : ''}</span></td><td>${r.ads ? fmt(r.ads) : '—'}</td><td>${r.plat ? fmt(r.plat) : '—'}</td><td>${fmt(r.exp)}</td>
       <td class="${r.pr < 0 ? 'neg' : 'pos'}" style="font-weight:700">${fmt(r.pr)}</td><td>${mp(r.pr, r.rev)}</td></tr>`;
     let h = `<thead><tr><th>ช่องทาง</th><th>รายได้สุทธิ</th><th>สัดส่วนรายได้</th><th>ต้นทุนสินค้า</th><th>กำไรขั้นต้น</th><th>Ads</th><th>ค่า Platform</th><th>ค่าใช้จ่ายรวม</th><th>กำไร (ขาดทุน)</th><th>อัตรากำไร</th></tr></thead><tbody>`;
     const all = { ch: 'รวมทุกช่องทาง', rev: 0, cogs: 0, gp: 0, ads: 0, plat: 0, exp: 0, pr: 0 };
