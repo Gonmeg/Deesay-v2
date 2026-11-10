@@ -135,6 +135,19 @@
       .exd-lad tr.tot td { background:transparent !important; font-weight:700; } .exd-lad tr.tot.big td { font-size:15px; border-top:2px solid var(--text2); border-bottom:0; padding-top:10px !important; }
       .exd-lad tr.sub td { font-size:12.5px; color:var(--text2); padding-left:26px !important; } .exd-lad tr.grp td.neg { color:var(--text); } .exd-lad tr.grp.off td { color:var(--text3); }
       .exd-lad .pv-sp { display:inline-block; width:19px; } .exd-hint { margin-top:8px; font-size:11px; color:var(--text3); }
+      .sm2 { display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:16px; align-items:start; }
+      .sm2-f .exd-card { margin-bottom:12px; } .sm2-l { display:block; font-size:12.5px; font-weight:600; color:var(--text); margin:0 0 6px; } .sm2-l small { font-weight:400; color:var(--text3); margin-left:4px; }
+      .sm2-f select.pr-in, #smPrice { width:100%; } .sm2-f .pr-row { display:grid; grid-template-columns:minmax(0,1fr) 64px 30px; gap:6px; align-items:center; margin-bottom:6px; } .sm2-f .pr-row .pr-in { width:100%; box-sizing:border-box; } .sm2-f .pr-row .pr-x { height:32px; }
+      .pr-card:has(> #exList > .sm2) { background:transparent !important; border:0 !important; box-shadow:none !important; padding:0 !important; } .pr-card:has(> #exList > .sm2) > #exList { overflow:visible !important; } .sm2-f .pr-add { margin-top:6px; }
+      .sm2-p { background:color-mix(in srgb, var(--accent) 10%, var(--bg2)) !important; border-color:color-mix(in srgb, var(--accent) 35%, var(--border)) !important; }
+      .sm2-p input.pr-in { font-size:20px; font-weight:700; padding:8px 12px; } .sm2-p .pr-btn { width:100%; justify-content:center; margin-top:10px; padding:10px 0; font-size:14px; }
+      .sm2-empty { color:var(--text3); font-size:13px; text-align:center; padding:40px 16px !important; }
+      .sm2-rk .pr-rk { background:var(--bg2); border:1px solid var(--border); border-radius:12px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+      .exd-ov { display:inline-flex; align-items:center; gap:3px; margin-left:10px; font-size:12px; color:var(--text3); text-decoration:none !important; }
+      .exd-ov input.exd-pct { width:56px; padding:2px 6px; text-align:right; font-size:12.5px; border-radius:6px; }
+      .exd-ov.on input.exd-pct { border-color:var(--accent) !important; background:color-mix(in srgb, var(--accent) 10%, var(--bg2)) !important; font-weight:700; }
+      .exd-lad tr.sub.off .exd-ov { opacity:.4; pointer-events:none; }
+      @media (max-width:1100px) { .sm2 { grid-template-columns:1fr; } }
       .exd-act { position:sticky; bottom:-16px; margin:4px -16px -16px; padding:12px 16px 16px; background:var(--bg2); border-top:1px solid var(--border); box-shadow:0 -6px 16px rgba(15,23,42,.06); z-index:2; }
       .exd-act textarea { width:100%; } .exd-btns { display:flex; gap:8px; margin-top:10px; } .exd-btns .pr-btn { flex:1; justify-content:center; padding:10px 0; font-size:13.5px; }
       .ex-topctl { display:flex; align-items:center; gap:8px; } .ex-topctl .pr-seg { margin:0; } .ex-topctl .pv-simbtn { white-space:nowrap; }
@@ -316,7 +329,7 @@
     const ticks = []; S.forEach((v, i) => { if (v == null) return; const t = ticks.find(x => Math.abs(pos(x.v) - pos(v)) < 9); if (t) t.r.push(i + 1); else ticks.push({ v, r: [i + 1] }); });
     const bar = `<div class="bar"><div class="ln"></div>${ticks.map(t => `<div class="tk" style="left:${pos(t.v).toFixed(1)}%"><i></i>${t.r.length > 1 ? 'R' + t.r[0] + '–R' + t.r[t.r.length - 1] : 'R' + t.r[0]} · ${n0(t.v)}</div>`).join('')}<div class="me" style="left:${pos(price).toFixed(1)}%" title="ราคาที่ขอ ${n2(price)}"></div></div>`;
     const cell = (v, r) => `<td class="${hit === r ? 'hit' : ''}">${v == null || +v === 0 ? '—' : n0(v)}</td>`;
-    const tbl = `<table><thead><tr><th>สินค้า</th><th>จำนวน</th><th>Rank 1</th><th>Rank 2</th><th>Rank 3</th></tr></thead><tbody>`
+    const tbl = `<table data-no-sort data-no-page><thead><tr><th>สินค้า</th><th>จำนวน</th><th>Rank 1</th><th>Rank 2</th><th>Rank 3</th></tr></thead><tbody>`
       + lines.map(l => `<tr><td>${esc(l.name)}</td><td>${n0(l.qty)}</td>${cell(l.p1, 1)}${cell(l.p2, 2)}${cell(l.p3, 3)}</tr>`).join('')
       + `<tr class="sum"><td>รวม × จำนวน</td><td></td>${cell(S[0], 1)}${cell(S[1], 2)}${cell(S[2], 3)}</tr></tbody></table>`;
     const why = ok ? (hit === 1 ? `ราคาที่ขอ ${n0(price)} ≥ Rank 1 (${n0(S[0])})` : `ราคาที่ขอ ${n0(price)} ≥ Rank ${hit} (${n0(S[hit - 1])}) แต่ต่ำกว่า Rank ${hit - 1} (${n0(S[hit - 2])})`)
@@ -575,11 +588,15 @@
     const cb = (key, on) => `<input type="checkbox" class="pv-x" data-x="${esc(key)}"${on ? ' checked' : ''} title="ติ๊กออก = ไม่นับรายการนี้">`;
     const amt = (v, off) => off ? '<span class="pv-off">0.00</span>' : '−' + n2(v);   // ติ๊กออก = 0
     const grp = (id, title, v, off, key, hw) => `<tr class="grp${off ? ' off' : ''}" data-lad="${id}" title="${esc(hw || '')}"><td>${cb(key, !off)}<span class="car">▸</span>${title}</td><td class="num neg">${amt(v, off)}</td></tr>`;
-    const sub = (id, label, v, off, key, hw) => `<tr class="sub${off ? ' off' : ''}" data-ladp="${id}" hidden title="${esc(hw || '')}"><td>${key ? cb(key, !off) : '<span class="pv-sp"></span>'}${label}</td><td class="num">${v == null ? '—' : amt(v, off)}</td></tr>`;
+    const sub = (id, label, v, off, key, hw, extra) => `<tr class="sub${off ? ' off' : ''}" data-ladp="${id}" hidden title="${esc(hw || '')}"><td>${key ? cb(key, !off) : '<span class="pv-sp"></span>'}${label}${extra || ''}</td><td class="num">${v == null ? '—' : amt(v, off)}</td></tr>`;
+    // (2026-11-10) ค่าบริหาร / Marketing (ค่าที่บริษัทกำหนดเอง) ปรับ % ได้ในช่อง · คิดเฉพาะครั้งนี้ ไม่แก้ค่าที่ตั้งไว้
+    const ovIn = f => f.layer === 'overhead' && f.kind === 'pct' ? `<span class="exd-ov${f.overridden ? ' on' : ''}"><input type="number" class="exd-pct" step="0.5" min="0" data-ov="${esc(f.item)}" data-base="${+(+(f.base_rate != null ? f.base_rate : f.rate) * 100).toFixed(2)}" value="${+(+f.rate * 100).toFixed(2)}" title="ปรับ % เอง (ตั้งไว้ ${+(+(f.base_rate != null ? f.base_rate : f.rate) * 100).toFixed(2)}%)">%</span>` : '';
     const feeG = (ly, title) => { const F = fees(ly); if (!F.length) return ''; const on = F.filter(f => !f.excluded);
-      return grp(ly, title, sum(on.map(f => f.amount_ex)), !on.length, 'ly:' + ly, F.length === 1 ? how(F[0]) : '') + F.map(f => sub(ly, esc(f.item), f.amount_ex, f.excluded, f.item, how(f))).join(''); };
+      return grp(ly, title, sum(on.map(f => f.amount_ex)), !on.length, 'ly:' + ly, F.length === 1 ? how(F[0]) : '') + F.map(f => sub(ly, esc(f.item), f.amount_ex, f.excluded, f.item, how(f), ovIn(f))).join(''); };
     const fm = c.fee_actual_ok ? `<div class="pr-seg exd-fm" data-fm title="ค่าธรรมเนียมแพลตฟอร์ม: ค่าจริง = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง"><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div>` : '';
-    const exN = EXC.size ? `<div class="exd-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')}<button type="button" data-xreset title="กลับไปนับทุกรายการ">✕</button></div>` : '';
+    const OVL = (c.fees || []).filter(f => f.overridden).map(f => `${esc(f.item)} ${+(+f.rate * 100).toFixed(2)}%`);
+    const exN = (EXC.size ? `<div class="exd-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')}<button type="button" data-xreset title="กลับไปนับทุกรายการ">✕</button></div>` : '')
+      + (OVL.length ? `<div class="exd-exn">ปรับ ${OVL.join(' · ')}<button type="button" data-ovreset title="กลับไปใช้ค่าที่ตั้งไว้">✕</button></div>` : '');
     const neg = ok && +c.profit < 0;
     return `${!ok && price ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')}</span></div>` : ''}
       <div class="exd-kpi">
@@ -596,7 +613,7 @@
           ${feeG('platform', 'ค่า Platform')}${feeG('selling', 'ค่าขาย')}${feeG('overhead', 'ค่าบริหาร / Marketing')}
           <tr class="tot big${neg ? ' negv' : ''}"><td>กำไรสุทธิ / ออเดอร์</td><td class="num">${ok ? n2(c.profit) : '—'}</td></tr>
         </tbody></table>
-        <div class="exd-hint">ติ๊กออก = ไม่นับรายการนั้น · กด ▸ ดูรายการย่อย · ชี้แถวดูวิธีคิด</div></div>`;
+        <div class="exd-hint">ติ๊กออก = ไม่นับรายการนั้น · กด ▸ ดูรายการย่อย · ค่าบริหาร / Marketing แก้ % ในช่องได้ (คิดเฉพาะครั้งนี้) · ชี้แถวดูวิธีคิด</div></div>`;
   }
   // (2026-11-10 c) วาดใหม่หลังติ๊ก / คำนวณ: คงกลุ่มที่กางไว้ + ตำแหน่งเลื่อนเดิม (เดิมกลุ่มพับเอง และแผงเด้งขึ้นบนสุด)
   const scrollerOf = el => { for (let e = el; e && e !== document.body; e = e.parentElement) { const o = getComputedStyle(e).overflowY; if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight) return e; } return document.scrollingElement; };
@@ -604,6 +621,11 @@
   const ladRestore = (root, open) => open.forEach(id => { const tr = root.querySelector(`.pv-lad tr.grp[data-lad="${id}"]`); if (!tr) return; tr.classList.add('open'); root.querySelectorAll(`.pv-lad tr[data-ladp="${id}"]`).forEach(x => { x.hidden = false; }); });
   const keepView = (root, render) => { const sc = scrollerOf(root), top = sc ? sc.scrollTop : 0, open = ladOpen(root); render(); ladRestore(root, open); if (sc) sc.scrollTop = top; };
   // (2026-11-10) ติ๊กรายการออก → fn(รายชื่อที่ไม่นับ) · ติ๊กที่หัวกลุ่ม = ทั้งกลุ่ม
+  const bindOv = (root, fn) => {   // (2026-11-10) ช่อง % ค่าบริหาร / Marketing → fn({ชื่อ: อัตรา}) เฉพาะที่ต่างจากค่าที่ตั้งไว้
+    const collect = () => { const o = {}; root.querySelectorAll('input.exd-pct').forEach(x => { const v = parseFloat(x.value); if (isFinite(v) && Math.abs(v - +x.dataset.base) > 1e-9) o[x.dataset.ov] = +(v / 100).toFixed(6); }); return o; };
+    root.querySelectorAll('input.exd-pct').forEach(x => { x.addEventListener('click', e => e.stopPropagation()); x.addEventListener('change', () => fn(collect())); x.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); x.blur(); } }); });
+    const r = root.querySelector('[data-ovreset]'); if (r) r.onclick = () => fn({});
+  };
   const bindEx = (root, fn) => {
     root.querySelectorAll('.pv-lad input.pv-x').forEach(cb => { cb.addEventListener('click', e => e.stopPropagation()); cb.addEventListener('change', () => {
       const k = cb.dataset.x;
@@ -616,14 +638,15 @@
   // ===================== (2026-10-28) จำลองโปร (ผู้บริหาร): ลองใส่ช่องทาง สินค้า ราคา ดูว่าคุ้มไหม · ไม่ส่งเป็นคำขอ =====================
   const SIM = { channel_id: '', items: [{ sku: '', qty: 1 }], gifts: [], price: '', fee_mode: null };
   function renderSim(box, C) {
-    box.innerHTML = `<div class="pv-sim"><div class="pv-sim-f">
-        <div class="pv-h">จำลองโปร${` <span class="pr-i" data-tip="ลองใส่ช่องทาง สินค้า ของแถม และราคา แล้วกดคำนวณ · ไม่ส่งเป็นคำขอ ไม่บันทึกอะไร">ⓘ</span>`}</div>
-        <label>ช่องทาง</label><select class="pr-in" id="smCh"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+SIM.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
-        <label>สินค้าใน 1 ออเดอร์ <small>ชื่อสินค้า · จำนวนชิ้น</small></label><div id="smItems">${rowsHtml('items', SIM.items, C)}</div><button type="button" class="pr-add" data-smadd="items">＋ เพิ่มสินค้า</button>
-        <label>ของแถม <small>ถ้ามี</small></label><div id="smGifts">${rowsHtml('gifts', SIM.gifts, C)}</div><button type="button" class="pr-add" data-smadd="gifts">＋ เพิ่มของแถม</button>
-        <label>ราคาขายต่อออเดอร์ <small>รวม VAT หลังส่วนลด</small></label><input class="pr-in" type="number" id="smPrice" min="0" step="0.01" value="${esc(SIM.price)}" placeholder="0.00">
-        <div style="margin-top:14px;"><button type="button" class="pr-btn" id="smGo">คำนวณ</button></div></div>
-      <div id="smOut"><div class="pr-empty">ใส่ช่องทาง สินค้า และราคา แล้วกด คำนวณ</div></div></div>`;
+    // (2026-11-10) หน้าตาใหม่แบบเดียวกับแผงรายละเอียดคำขอ: ฟอร์มเป็นการ์ด 3 ส่วน (ช่องทาง · สินค้า · ราคา) · ผลใช้ calcPanel (ตัวเลขหลัก + การคำนวณ ติ๊กออก / ปรับ % ได้) + Rank
+    box.innerHTML = `<div class="sm2"><div class="sm2-f">
+        <div class="exd-card"><div class="exd-ch"><b>จำลองโปร</b><span class="pr-i" data-tip="ลองใส่ช่องทาง สินค้า ของแถม และราคา แล้วกดคำนวณ · ไม่ส่งเป็นคำขอ ไม่บันทึกอะไร">ⓘ</span></div>
+          <label class="sm2-l">ช่องทาง</label><select class="pr-in" id="smCh"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+SIM.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+        <div class="exd-card"><label class="sm2-l">สินค้าใน 1 ออเดอร์ <small>ชื่อสินค้า · จำนวนชิ้น</small></label><div id="smItems">${rowsHtml('items', SIM.items, C)}</div><button type="button" class="pr-add" data-smadd="items">＋ เพิ่มสินค้า</button>
+          <label class="sm2-l" style="margin-top:14px;">ของแถม <small>ถ้ามี</small></label><div id="smGifts">${rowsHtml('gifts', SIM.gifts, C)}</div><button type="button" class="pr-add" data-smadd="gifts">＋ เพิ่มของแถม</button></div>
+        <div class="exd-card sm2-p"><label class="sm2-l" for="smPrice">ราคาขายต่อออเดอร์ <small>รวม VAT หลังส่วนลด</small></label><input class="pr-in" type="number" id="smPrice" min="0" step="0.01" value="${esc(SIM.price)}" placeholder="0.00">
+          <button type="button" class="pr-btn" id="smGo">คำนวณ</button></div></div>
+      <div id="smOut" class="sm2-out"><div class="exd-card sm2-empty">ใส่ช่องทาง สินค้า และราคา แล้วกด คำนวณ</div></div></div>`;
     const dd = document.getElementById('pvDD') || Object.assign(document.body.appendChild(document.createElement('div')), { id: 'pvDD', className: 'pv-dd', hidden: true });
     const nz = t => String(t || '').toLowerCase().replace(/[\s\-._·]/g, '');
     const find = q => { const toks = String(q || '').trim().toLowerCase().split(/\s+/).filter(Boolean).map(nz);
@@ -652,12 +675,14 @@
         items: SIM.items.filter(x => x.sku).map(x => ({ sku: x.sku, qty: +x.qty || 0 })), gifts: SIM.gifts.filter(x => x.sku).map(x => ({ sku: x.sku, qty: +x.qty || 0 })) };
       if (SIM.fee_mode) p.fee_mode = SIM.fee_mode;
       if (SIM.exclude && SIM.exclude.length) p.exclude = SIM.exclude;
-      if (!p.channel_id || !p.price || !p.items.length) { out.innerHTML = '<div class="pr-empty">ใส่ช่องทาง สินค้า และราคาให้ครบก่อน</div>'; return; }
+      if (SIM.override && Object.keys(SIM.override).length) p.override = SIM.override;
+      if (!p.channel_id || !p.price || !p.items.length) { out.innerHTML = '<div class="exd-card sm2-empty">ใส่ช่องทาง สินค้า และราคาให้ครบก่อน</div>'; return; }
       e.target.disabled = true; e.target.textContent = 'กำลังคำนวณ…';
       try { const [c, k] = await Promise.all([rpc('promo_calc', { p }), rpc('promo_rank', { p }).catch(() => null)]);
-        keepView(out, () => { out.innerHTML = calcView(c, C) + (k ? rankCard(k) : ''); }); bindLad(out); bindFm(out, v => { SIM.fee_mode = v; document.getElementById('smGo').click(); });
-        bindEx(out, list => { SIM.exclude = list; document.getElementById('smGo').click(); }); }
-      catch (err) { out.innerHTML = `<div class="pr-empty">คำนวณไม่สำเร็จ: ${esc(err.message)}</div>`; }
+        keepView(out, () => { out.innerHTML = calcPanel(c, C) + (k ? `<div class="sm2-rk">${rankCard(k)}</div>` : ''); }); bindLad(out); bindFm(out, v => { SIM.fee_mode = v; document.getElementById('smGo').click(); });
+        bindEx(out, list => { SIM.exclude = list; document.getElementById('smGo').click(); });
+        bindOv(out, o => { SIM.override = o; document.getElementById('smGo').click(); }); }
+      catch (err) { out.innerHTML = `<div class="exd-card sm2-empty">คำนวณไม่สำเร็จ: ${esc(err.message)}</div>`; }
       e.target.disabled = false; e.target.textContent = 'คำนวณ';
     };
     box.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'smPrice') { e.preventDefault(); document.getElementById('smGo').click(); } });
@@ -746,13 +771,13 @@
     const r = EX.list.find(x => x.id === id); if (!r) return;
     const C = await cat();
     trOpenShell('Promotion · รายละเอียด');
-    const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null, fee_mode: null, exclude: [] };
+    const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null, fee_mode: null, exclude: [], override: {} };
     const body = () => document.getElementById('trBody');
     let firstDraw = true;
     const draw = (c) => { if (firstDraw) { firstDraw = false; return drawInner(c); } keepView(body(), () => drawInner(c)); };
     const drawInner = (c) => {
       const st = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0), k = S.rank;
-      const changed = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []) || S.exclude.length > 0;
+      const changed = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []) || S.exclude.length > 0 || Object.keys(S.override).length > 0;
       const pnm = x => (C.products.find(p => p.sku === x) || { name: x }).name;
       const sig = c.signal === 'green' ? ['g', 'ผ่าน'] : c.signal === 'red' ? ['r', 'ไม่ผ่าน'] : ['', 'ขาดต้นทุน'];
       const miss = (c.missing_costs || []).map(pnm);
@@ -798,19 +823,20 @@
         body().querySelectorAll('[data-gi]').forEach(x => { S.gifts[+x.dataset.gi].qty = +x.value || 0; });
         body().querySelectorAll('[data-ii]').forEach(x => { S.items[+x.dataset.ii].qty = +x.value || 0; });
         const btn = document.getElementById('exCalc'); if (btn) { btn.disabled = true; btn.textContent = 'กำลังคำนวณ…'; }
-        try { const pp = { channel_id: r.channel_id, price: S.price, orders: 0, items: S.items, gifts: S.gifts }; if (S.fee_mode) pp.fee_mode = S.fee_mode; if (S.exclude.length) pp.exclude = S.exclude;
+        try { const pp = { channel_id: r.channel_id, price: S.price, orders: 0, items: S.items, gifts: S.gifts }; if (S.fee_mode) pp.fee_mode = S.fee_mode; if (S.exclude.length) pp.exclude = S.exclude; if (Object.keys(S.override).length) pp.override = S.override;
           const [c2, k2] = await Promise.all([rpc('promo_calc', { p: pp }), rpc('promo_rank', { p: pp }).catch(() => null)]); S.rank = k2; draw(c2); }
         catch (e) { toast('คำนวณไม่สำเร็จ: ' + e.message); if (btn) { btn.disabled = false; btn.textContent = 'คำนวณ'; } }
       };
       document.getElementById('exCalc').onclick = recalc;
       bindFm(body(), v => { S.fee_mode = v; recalc(); });
       bindEx(body(), list => { S.exclude = list; recalc(); });
+      bindOv(body(), o => { S.override = o; recalc(); });
       body().querySelectorAll('#exPrice,[data-gi],[data-ii]').forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); recalc(); } }));
       const rs = document.getElementById('exReset');
-      if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.exclude = []; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
+      if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.exclude = []; S.override = {}; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
       body().querySelectorAll('[data-dec]').forEach(b => b.onclick = async () => {
         const d = b.dataset.dec; if (d !== 'pending' && !(await uiConfirm(d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', { text: `${r.title} · ${r.channel || ''} · ${n0(r.price)}`, ok: d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', tone: d === 'approved' ? 'good' : 'bad', icon: d === 'approved' ? '✓' : '✕' }))) return;
-        const exTxt = S.exclude.length ? `คิดแบบไม่นับ ${S.exclude.map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : x).join(', ')}` : '';   // (2026-11-10) ติ๊กออกตอนตัดสินใจ → บันทึกไว้ใน Feedback ให้ทีมเห็น
+        const exTxt = [S.exclude.length ? `คิดแบบไม่นับ ${S.exclude.map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : x).join(', ')}` : '', Object.keys(S.override).length ? `คิด ${Object.entries(S.override).map(([k, v]) => k + ' ' + +(v * 100).toFixed(2) + '%').join(', ')}` : ''].filter(Boolean).join(' · ');   // (2026-11-10) ติ๊กออกตอนตัดสินใจ → บันทึกไว้ใน Feedback ให้ทีมเห็น
         const note0 = document.getElementById('exNote').value.trim(), noteF = exTxt && !note0.includes(exTxt) ? (note0 ? note0 + ' · ' : '') + exTxt : note0;
         try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: noteF }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
       });
@@ -904,17 +930,9 @@
   // แก้ "ตั้งไว้" ได้ในตาราง (บันทึกเมื่อออกจากช่อง) · เพิ่ม / ลบ รายการหรือช่องทาง ใช้ "ตารางแบบเดิม"
   let FEE_MODE = 'new', FE2 = { tab: null, ch: null }, FA30 = null;
   const fe2fmt = v => Math.round(+v || 0).toLocaleString('th-TH');
-  async function renderFee() {
-    if (FEE_MODE === 'old') {
-      await renderFeeOld();
-      const el = document.getElementById('page-execfee');
-      if (el && !el.querySelector('.fe2-back')) { el.insertAdjacentHTML('afterbegin', '<div class="fe2-back"><button type="button" class="pr-btn ghost">← กลับหน้าค่าธรรมเนียมแบบใหม่</button></div>'); el.querySelector('.fe2-back button').onclick = () => { FEE_MODE = 'new'; renderFee(); }; }
-      return;
-    }
-    return renderFeeNew();
-  }
-  const FE2_TABS = [['Shopee', /shopee/i], ['TikTok', /tiktok/i], ['Lazada', /lazada/i], ['Facebook', /facebook|line|telesale/i], ['ตัวแทน', /ตัวแทน/], ['Modern Trade', /^mt|watsons|eve|konvy|cj|thaimart|modern/i]];
-  const fe2Tab = c => (FE2_TABS.find(([, re]) => re.test(c.name) || re.test(c.sys_channel || '')) || ['อื่น ๆ'])[0];
+  async function renderFee() { return renderFeeNew(); }   // (2026-11-10) เลิกใช้ตารางแบบเดิมแล้ว
+  const FE2_TABS = [['Shopee', /shopee/i], ['TikTok', /tiktok/i], ['Lazada', /lazada/i], ['Telesale', /telesale/i], ['Facebook', /facebook|line/i], ['ตัวแทน', /ตัวแทน/], ['Modern Trade', /^mt|watsons|eve|konvy|cj|thaimart|modern/i]];
+  const fe2Tab = c => (FE2_TABS.find(([, re]) => re.test(c.name)) || FE2_TABS.find(([, re]) => re.test(c.sys_channel || '')) || ['อื่น ๆ'])[0];   // (2026-11-10) จับจากชื่อก่อน (Telesale ใช้ระบบ Facebook แต่แยกแท็บ)
   // (2026-11-02) การจับคู่รายการกับค่าธรรมเนียมจริงย้ายไปฐานข้อมูล (fee_rates) ใช้ชุดเดียวกับสูตรคิดโปร
   const fe2Co = it => { const k = String(it.actual_key || '').toLowerCase(), n = String(it.name || ''); return k === 'ads' || /ค่า ads/i.test(n) ? 'ads' : k === 'marketing' || /^marketing$/i.test(n) ? 'marketing' : k === 'admin' || /ค่าบริหาร/.test(n) ? 'admin' : null; };
   async function renderFeeNew() {
@@ -939,12 +957,15 @@
     const upd = FA30 && FA30.refreshed_at ? new Date(FA30.refreshed_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
     const srcTip = `คำนวณใหม่ทุกวันเวลา 07:40 จากออเดอร์ที่แพลตฟอร์มโอนเงินแล้ว (หักค่าธรรมเนียมจริงแล้ว)${upd ? ' · คำนวณล่าสุด ' + upd : ''}`;
     const subSeg = tabChs.length > 1 ? `<div class="pr-seg fe2-sub">${canAll ? `<button type="button" data-ch="all" aria-pressed="${FE2.ch === 'all'}">เทียบทุกประเภท</button>` : ''}${tabChs.map(x => `<button type="button" data-ch="${x.id}" aria-pressed="${x.id === FE2.ch}">${esc(x.name)}</button>`).join('')}</div>` : '';
-    const top = src => `<div class="fe2-top"><span class="pr-note" style="margin:0;">${src}</span><span style="flex:1"></span><button type="button" class="pr-btn ghost" id="fe2Old" data-tip="เพิ่ม / ลบ รายการหรือช่องทาง">ตารางแบบเดิม</button></div>
-      <div class="fe2-tabs">${tabs.map(tb => `<button type="button" data-tab="${esc(tb)}" class="${tb === FE2.tab ? 'on' : ''}">${esc(tb)}</button>`).join('')}</div>${subSeg}`;
+    // (2026-11-10) แท็บช่องทาง + ร้าน / ประเภท อยู่แถบบน (แบบหน้าอื่น) · ในหน้าเหลือตัวเลข + ตาราง · ที่มาของค่าจริงอยู่หัวตาราง
+    let tb0 = document.getElementById('feTopCtl');
+    if (!tb0) { const f = document.querySelector('.topbar .filters'); tb0 = document.createElement('div'); tb0.id = 'feTopCtl'; tb0.className = 'ex-topctl'; if (f) f.prepend(tb0); }
+    tb0.style.display = '';
+    tb0.innerHTML = `<div class="pr-seg fe2-tabs2">${tabs.map(tb => `<button type="button" data-tab="${esc(tb)}" aria-pressed="${tb === FE2.tab}">${esc(tb)}</button>`).join('')}</div>${subSeg}`;
+    const top = () => '';
     const bindNav = () => {
-      el.querySelector('#fe2Old').onclick = () => { FEE_MODE = 'old'; renderFee(); };
-      el.querySelectorAll('.fe2-tabs [data-tab]').forEach(b => b.onclick = () => { FE2.tab = b.dataset.tab; FE2.ch = null; renderFeeNew(); });
-      el.querySelectorAll('.fe2-sub [data-ch], [data-goch]').forEach(b => b.onclick = () => { const v = b.dataset.ch || b.dataset.goch; FE2.ch = v === 'all' ? 'all' : +v; renderFeeNew(); });
+      tb0.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { FE2.tab = b.dataset.tab; FE2.ch = null; renderFeeNew(); });
+      [...tb0.querySelectorAll('.fe2-sub [data-ch]'), ...el.querySelectorAll('[data-goch]')].forEach(b => b.onclick = () => { const v = b.dataset.ch || b.dataset.goch; FE2.ch = v === 'all' ? 'all' : +v; renderFeeNew(); });
     };
     const pct = v => v == null ? '<span class="fe2-z">—</span>' : `${(+v).toFixed(2)}%`;
     const perTxt = v => v ? ` + ${n2(v)} บาท` : '';
@@ -969,9 +990,9 @@
       const body = (title, list) => list.length ? `<tr class="fe2-g"><td colspan="${cols.length + 1}">${title}</td></tr>` + list.map(r => `<tr><td class="l">${esc(r.L.name)}${r.L.extra ? ' <span class="fe2-z">· ไม่ได้ตั้งไว้</span>' : ''}</td>${cols.map(col => cell(col, r)).join('')}</tr>`).join('') : '';
       const sumR = (l, f, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td>${cols.map(col => `<td>${f(col.S)}</td>`).join('')}</tr>`;
       const tot = S => S.useCh + S.useCo, two = (a, b) => `<div class="fe2-cv">${a}</div><div class="fe2-cs">${b}</div>`;
-      el.innerHTML = top(`ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip)} · ตัวเลขใหญ่ = ค่าจริง (ค่าใช้จ่ายบริษัท = ค่าที่ตั้งไว้) · ตัวเล็ก = ค่าที่ตั้งไว้`) + `
+      el.innerHTML = `
         <div class="fe2-cards" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.map(col => `<div><div class="l">${esc(short(col.c))} · สูตรคิดโปรหัก</div><div class="v">${tot(col.S).toFixed(2)}%${perTxt(col.S.pUse)}</div><div class="s">TikTok หักจริง ${col.S.useCh.toFixed(2)}% · บริษัทตั้งไว้ ${col.S.useCo.toFixed(2)}%</div></div>`).join('')}</div>
-        <div class="fe2-card"><div class="fe2-wide"><table class="fe2-t fe2-cmp"><thead><tr><th class="l">รายการ</th>${cols.map(col => { const g = col.g, sh = grpShare(col.c);
+        <div class="fe2-card"><div class="fe2-ch"><b>เทียบทุกประเภท</b><span class="fe2-src">ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip + '\nตัวเลขใหญ่ = ค่าจริง (ค่าใช้จ่ายบริษัท = ค่าที่ตั้งไว้) · ตัวเล็ก = ค่าที่ตั้งไว้')}</span></div><div class="fe2-wide"><table class="fe2-t fe2-cmp" data-no-sort data-no-page><thead><tr><th class="l">รายการ</th>${cols.map(col => { const g = col.g, sh = grpShare(col.c);
             return `<th><button type="button" class="fe2-colh" data-goch="${col.c.id}" data-tip="กดเพื่อดูรายละเอียด และแก้ค่าของประเภทนี้"><b>${esc(short(col.c))}</b><small>${g ? `${fe2fmt(g.orders)} ออเดอร์ · เฉลี่ย ${n2(g.aov)} บาท` : 'ยังไม่มีค่าจริง'}</small></button>${sh ? ' ' + info(sh) : ''}</th>`; }).join('')}</tr></thead><tbody>
           ${body('ค่าธรรมเนียมจากแพลตฟอร์ม · TikTok หักจริง', rowsAll.filter(r => !r.L.company))}
           ${body('ค่าใช้จ่ายของบริษัท · ตั้งเอง', rowsAll.filter(r => r.L.company))}
@@ -999,21 +1020,21 @@
     const sumRow = (l, a, aPer, s, sPer, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td><td>${a == null ? '<span class="fe2-z">—</span>' : a.toFixed(2) + '%' + perTxt(aPer)}</td><td>${s.toFixed(2)}%${perTxt(sPer)}</td><td>${a == null ? '' : dif(a, s)}</td></tr>`;
     const calcA = S.useCh + S.useCo, calcS = S.setCh + S.setCo, hasApi = rows.some(x => x.L.can);
     const actTip = g ? 'ค่าธรรมเนียมจากช่องทาง = ที่แพลตฟอร์มหักจริง ÷ ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย) ของออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ชี้ ⓘ ในแต่ละบรรทัดเพื่อดูเป็นบาทต่อออเดอร์\nค่าใช้จ่ายของบริษัท = งบบัญชี ' + ctx.accRange + ' (ไว้ดูประกอบ)' : 'ตามงบบัญชี ' + ctx.accRange + ' (ช่องทางนี้ไม่มี API)';
-    el.innerHTML = top(src) + `
+    el.innerHTML = `
       <div class="fe2-cards"><div><div class="l">ค่าธรรมเนียมช่องทาง · ค่าจริง ${info('รวมทุกบรรทัดในกลุ่ม "ค่าธรรมเนียมจากช่องทาง" คอลัมน์ค่าจริง\n% = คิดจากราคาขาย · บาท = ค่าที่คิดเป็นบาทต่อออเดอร์')}</div><div class="v">${S.actChV == null ? '—' : S.actChV.toFixed(2) + '%' + perTxt(S.pAct)}</div><div class="s">ตั้งไว้ ${S.setCh.toFixed(2)}%${perTxt(S.pSet)}</div></div>
         <div><div class="l">ค่าใช้จ่ายบริษัท · ค่าจริงตามงบบัญชี ${info('ค่า Ads ของช่องทางนี้ + ค่าบริหาร + Marketing ทั้งบริษัท ÷ ยอดขาย ตามงบบัญชี ' + ctx.accRange + '\nไว้ดูประกอบ · สูตรคิดโปรใช้ค่าที่ตั้งไว้เสมอ')}</div><div class="v">${S.actCo.toFixed(2)}%</div><div class="s">ตั้งไว้ ${S.setCo.toFixed(2)}%</div></div>
         <div><div class="l">สูตรคิดโปรหัก (ก่อนต้นทุนสินค้า) ${info('= ค่าธรรมเนียมช่องทาง + ค่าใช้จ่ายบริษัท (ใช้ค่าที่ตั้งไว้เสมอ)\nเลือก "ค่าจริง" หรือ "ค่าที่ตั้งไว้" ได้ตอนจำลองโปร หรือดูคำขอโปร · เริ่มต้น = ค่าจริง\nเหลือ ' + (100 - (hasApi ? calcA : calcS)).toFixed(2) + '% ของราคาขาย ไว้จ่ายต้นทุนสินค้า + กำไร')}</div>${hasApi
           ? `<div class="v">${calcA.toFixed(2)}%${perTxt(S.pUse)}</div><div class="s">เลือกค่าจริง · ถ้าเลือกค่าที่ตั้งไว้ ${calcS.toFixed(2)}%${perTxt(S.pSet)}</div>`
           : `<div class="v">${calcS.toFixed(2)}%${perTxt(S.pSet)}</div><div class="s">ช่องทางนี้ไม่มี API ใช้ค่าที่ตั้งไว้เสมอ</div>`}</div></div>
-      <div class="fe2-card"><div class="fe2-ch"><b>${esc(c.name)}</b></div>
-      <table class="fe2-t"><thead><tr><th class="l">รายการ</th><th>ค่าจริง ${info(actTip)}</th><th>ตั้งไว้ ${info('ตัวเลขที่ตั้งไว้ใช้คิดโปร แก้ได้เลย บันทึกเมื่อออกจากช่อง')}</th><th>ต่าง ${info('ค่าจริง − ตั้งไว้ (หน่วย %)')}</th></tr></thead><tbody>
+      <div class="fe2-card"><div class="fe2-ch"><b>${esc(c.name)}</b><span class="fe2-src">${src}</span></div>
+      <table class="fe2-t" data-no-sort data-no-page><thead><tr><th class="l">รายการ</th><th>ค่าจริง ${info(actTip)}</th><th>ตั้งไว้ ${info('ตัวเลขที่ตั้งไว้ใช้คิดโปร แก้ได้เลย บันทึกเมื่อออกจากช่อง')}</th><th>ต่าง ${info('ค่าจริง − ตั้งไว้ (หน่วย %)\nสีแดง = ค่าจริงสูงกว่าที่ตั้ง (ถ้าคิดโปรด้วยค่าที่ตั้งไว้ กำไรจริงจะน้อยกว่าที่เห็น) · สีเขียว = ค่าจริงต่ำกว่า')}</th></tr></thead><tbody>
         <tr class="fe2-g"><td colspan="4">ค่าธรรมเนียมจากช่องทาง</td></tr>${rowsCh.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
         <tr class="fe2-g"><td colspan="4">ค่าใช้จ่ายของบริษัท · ค่าจริงไว้ดูประกอบ</td></tr>${rowsCo.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}
         ${sumRow('สรุป · ค่าธรรมเนียมช่องทาง', S.actChV, S.pAct, S.setCh, S.pSet, true)}
         ${sumRow('สรุป · ค่าใช้จ่ายบริษัท', S.actCo, 0, S.setCo, 0)}
         ${sumRow('สรุป · ทั้งหมดก่อนต้นทุนสินค้า', S.actChV == null ? null : S.actChV + S.actCo, S.pAct, S.setCh + S.setCo, S.pSet)}
       </tbody></table>
-      <div class="fe2-note">ต่าง: <span class="fe2-up">สีแดง</span> = ค่าจริงสูงกว่าที่ตั้ง (ถ้าคิดโปรด้วยค่าที่ตั้งไว้ กำไรจริงจะน้อยกว่าที่เห็น) · <span class="fe2-dn">สีเขียว</span> = ค่าจริงต่ำกว่า · แก้ตัวเลข "ตั้งไว้" ได้เลย บันทึกเมื่อออกจากช่อง</div></div>`;
+      <div class="fe2-note">แก้ตัวเลขช่อง "ตั้งไว้" ได้เลย บันทึกเมื่อออกจากช่อง</div></div>`;
     bindNav();
     el.querySelectorAll('.fe2-in').forEach(inp => inp.onchange = async () => {
       const raw = inp.value.trim(), item_id = +inp.dataset.item;
@@ -1050,8 +1071,16 @@
     #page-execfee .fe2-tabs button{background:none;border:none;border-bottom:2px solid transparent;padding:8px 0;font:inherit;font-size:13px;color:var(--text2);cursor:pointer}
     #page-execfee .fe2-tabs button.on{color:var(--text);font-weight:700;border-bottom-color:var(--accent,#b8862f)}
     #page-execfee .fe2-sub{margin-bottom:12px}
-    #page-execfee .fe2-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
-    #page-execfee .fe2-cards>div{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+    #page-execfee .fe2-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-bottom:14px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    #page-execfee .fe2-cards>div{padding:14px 18px;min-width:0} #page-execfee .fe2-cards>div+div{border-left:1px solid var(--border)}
+    .fe2-tabs2 button{white-space:nowrap} #feTopCtl .fe2-sub{margin:0}
+    #page-execfee .fe2-ch{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap} #page-execfee .fe2-src{font-size:12px;color:var(--text3);font-weight:400}
+    #page-execfee .fe2-card{padding:16px 0 10px !important} #page-execfee .fe2-card .fe2-ch, #page-execfee .fe2-card .fe2-note{padding:0 18px}
+    #page-execfee table.fe2-t{table-layout:fixed} #page-execfee table.fe2-t:not(.fe2-cmp) col.c1{width:auto}
+    #page-execfee table.fe2-t th, #page-execfee table.fe2-t td{padding-left:18px;padding-right:18px}
+    #page-execfee table.fe2-t:not(.fe2-cmp) th:not(.l), #page-execfee table.fe2-t:not(.fe2-cmp) td:not(.l){width:17%}
+    #page-execfee tr.fe2-g td{font-size:12px;letter-spacing:0;padding-top:8px;padding-bottom:8px}
+    #page-execfee tr.fe2-s td{background:transparent !important} #page-execfee tr.fe2-s.first td{border-top:2px solid var(--tot-line, var(--text2)) !important}
     #page-execfee .fe2-cards .l{font-size:12px;color:var(--text2)} #page-execfee .fe2-cards .v{font-size:20px;font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums} #page-execfee .fe2-cards .s{font-size:11.5px;color:var(--text3)}
     #page-execfee .fe2-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
     #page-execfee .fe2-ch{margin-bottom:8px;font-size:14px}
@@ -1059,7 +1088,7 @@
     #page-execfee table.fe2-t th{font-size:11px;color:var(--text3);font-weight:600;text-align:right;padding:8px;border-bottom:1px solid var(--border)} #page-execfee table.fe2-t th.l{text-align:left}
     #page-execfee table.fe2-t td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap} #page-execfee table.fe2-t td.l{text-align:left;white-space:normal}
     #page-execfee tr.fe2-g td{background:var(--bg3);font-size:11.5px;font-weight:700;color:var(--text2);text-align:left}
-    #page-execfee tr.fe2-s td{background:rgba(184,134,47,.08);font-weight:700} #page-execfee tr.fe2-s.first td{border-top:2px solid var(--accent,#b8862f)}
+    #page-execfee tr.fe2-s td{font-weight:700}
     #page-execfee .fe2-in{width:62px!important;height:26px;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text);text-align:right;padding:0 7px;font:inherit;font-size:12.5px;-moz-appearance:textfield}
     #page-execfee .fe2-in::-webkit-outer-spin-button,#page-execfee .fe2-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
     #page-execfee .fe2-u{display:inline-block;width:30px;text-align:left;margin-left:5px;font-size:12px;color:var(--text3)}
