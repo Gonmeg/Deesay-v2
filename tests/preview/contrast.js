@@ -20,6 +20,7 @@
     }
     // ตัวเลข / ข้อความหลัก: มีข้อความตรง ๆ ตัวใหญ่ ≥ 14px แต่คอนทราสต์ < 3
     const direct = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 0);
+    if (direct && el.tagName === 'TH') { const c = parse(s.color); if (c && cr(c, bgOf(el)) < 3.5) out.text.push(`หัวตาราง "${el.textContent.trim().slice(0, 16)}" (${cr(c, bgOf(el)).toFixed(2)})`); }
     if (direct && parseFloat(s.fontSize) >= 14) { const c = parse(s.color); if (c && cr(c, bgOf(el)) < 3) out.text.push(`${name(el)} "${el.textContent.trim().slice(0, 16)}" (${cr(c, bgOf(el)).toFixed(2)})`); }
   });
   out.boxes = [...new Set(out.boxes)].slice(0, 25); out.text = [...new Set(out.text)].slice(0, 25);
