@@ -87,7 +87,7 @@
       .pr-mc-ev.cl { margin-left:0; border-top-left-radius:0; border-bottom-left-radius:0; } .pr-mc-ev.cr { margin-right:0; border-top-right-radius:0; border-bottom-right-radius:0; }
       .pr-mc-more { z-index:1; margin:0 6px; font-size:11px; color:var(--text3); line-height:22px; }
       .pr-cal-empty { padding:22px; text-align:center; color:var(--text3); font-size:13px; }
-      .pr-x { border:1px solid var(--border); background:none; border-radius:8px; color:var(--text3); cursor:pointer; font-size:14px; }
+      .pr-x { border:1px solid var(--border); background:none; border-radius:8px; color:var(--text2); cursor:pointer; font-size:14px; }
       .pr-x:hover { color:var(--red, #ef4444); border-color:var(--red, #ef4444); }
       .pr-add { border:1px dashed var(--border); background:none; border-radius:8px; color:var(--text2); padding:6px 12px; cursor:pointer; font:inherit; font-size:12px; }
       .pr-add:hover { color:var(--accent); border-color:var(--accent); }
@@ -106,6 +106,57 @@
       .pr-tb td { padding:10px; border-bottom:1px solid var(--row-border, rgba(127,127,127,.12)); color:var(--text2); vertical-align:top; }
       .pr-tb td.num, .pr-tb th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
       .pr-tb.pr-mine { table-layout:fixed; min-width:1140px; }
+      .pr-tb.pr-ex2 { table-layout:fixed; min-width:1180px; width:100%; }
+      /* (2026-11-10 b) แผงรายละเอียด: การ์ดขาวบนพื้นเทา · ตัวหนังสือน้อย · 2 คอลัมน์ */
+      .exd-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:12px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+      .exd-hd .exd-t { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:18px; font-weight:700; color:var(--text); }
+      .exd-hd .exd-m { margin-top:4px; font-size:12.5px; color:var(--text2); } .exd-note { margin-top:8px; padding:8px 10px; border-radius:8px; background:var(--bg3); font-size:12.5px; color:var(--text2); }
+      .exd-ch { display:flex; align-items:center; gap:8px; margin-bottom:8px; } .exd-ch b { font-size:13.5px; color:var(--text); } .exd-cs { margin-left:auto; font-size:12.5px; color:var(--text2); font-variant-numeric:tabular-nums; }
+      .exd-it { width:100%; border-collapse:collapse; font-size:13px; } .exd-it td { padding:6px 0; border-bottom:1px solid var(--border); color:var(--text); } .exd-it tr:last-child td { border-bottom:0; }
+      .exd-pc { display:grid; grid-template-columns:minmax(0,1fr) 200px; gap:0; padding:0 !important; }
+      .exd-pl { padding:14px 16px; min-width:0; } .exd-pr { padding:14px 16px; border-left:1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); display:flex; flex-direction:column; gap:8px; background:color-mix(in srgb, var(--accent) 10%, var(--bg2)); border-radius:0 12px 12px 0; }   /* (2026-11-10) พื้นทองอ่อน แยกจากกล่องขาวชัด (เดิมเทาอ่อนกลืน) */
+      .exd-pr label { font-size:12px; font-weight:600; color:var(--text); } .exd-pr input { width:100%; font-size:18px; font-weight:700; padding:6px 10px; } .exd-pr .pr-btn { justify-content:center; } .exd-pr span { font-size:11px; color:var(--text3); line-height:1.4; }
+      .exd-it td.u { width:80px; text-align:right; font-size:12px; color:var(--text3); white-space:nowrap; } .exd-it tr.sum td { font-weight:700; border-top:1px solid var(--border); border-bottom:0; padding-top:8px; }
+      .exd-it td:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:0; width:100%; }
+      .exd-it td.q { width:70px; text-align:center; } .exd-it td.num { padding-left:10px; } .exd-it td.q input { width:52px; text-align:center; padding:3px 6px; } .exd-it td.num { width:72px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+      .exd-gift { display:inline-block; font-size:10px; font-weight:700; padding:0 6px; border-radius:4px; margin-right:6px; background:color-mix(in srgb, var(--accent) 16%, transparent); color:var(--accent); }
+      .exd-try { display:flex; align-items:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); flex-wrap:wrap; }
+      .exd-try label { font-size:12.5px; color:var(--text2); } .exd-try input { width:110px; font-weight:700; } .exd-try span { font-size:11.5px; color:var(--text3); }
+      .exd-kpi { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); background:var(--bg2); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+      .exd-kpi > div { padding:12px 14px; min-width:0; } .exd-kpi > div + div { border-left:1px solid var(--border); }
+      .exd-kpi span { display:block; font-size:11.5px; color:var(--text2); } .exd-kpi b { display:block; font-size:22px; font-weight:700; color:var(--text); margin-top:2px; font-variant-numeric:tabular-nums; }
+      .exd-kpi i { display:block; font-style:normal; font-size:11.5px; color:var(--text3); margin-top:1px; }
+      .exd-kpi .pos b { color:var(--green,#16a34a); } .exd-kpi .neg b { color:var(--red,#dc2626); }
+      .exd-fm { margin-left:auto !important; } .exd-fm button { font-size:11px !important; padding:3px 9px !important; }
+      .exd-exn { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; padding:2px 4px 2px 9px; border-radius:99px; background:color-mix(in srgb, var(--accent) 14%, transparent); color:var(--text); }
+      .exd-exn button { border:0; background:transparent; color:var(--text2); cursor:pointer; font-size:11px; padding:0 4px; }
+      .exd-lad { table-layout:auto !important; } .exd-lad td { padding:8px 4px !important; vertical-align:middle !important; color:var(--text); border-bottom:1px solid var(--border); white-space:nowrap; }
+      .exd-lad td.num { width:110px; text-align:right; } .exd-lad tr.muted td { color:var(--text2); font-size:12.5px; }
+      .exd-lad tr.tot td { background:transparent !important; font-weight:700; } .exd-lad tr.tot.big td { font-size:15px; border-top:2px solid var(--text2); border-bottom:0; padding-top:10px !important; }
+      .exd-lad tr.sub td { font-size:12.5px; color:var(--text2); padding-left:26px !important; } .exd-lad tr.grp td.neg { color:var(--text); } .exd-lad tr.grp.off td { color:var(--text3); }
+      .exd-lad .pv-sp { display:inline-block; width:19px; } .exd-hint { margin-top:8px; font-size:11px; color:var(--text3); }
+      .exd-act { position:sticky; bottom:-16px; margin:4px -16px -16px; padding:12px 16px 16px; background:var(--bg2); border-top:1px solid var(--border); box-shadow:0 -6px 16px rgba(15,23,42,.06); z-index:2; }
+      .exd-act textarea { width:100%; } .exd-btns { display:flex; gap:8px; margin-top:10px; } .exd-btns .pr-btn { flex:1; justify-content:center; padding:10px 0; font-size:13.5px; }
+      .ex-topctl { display:flex; align-items:center; gap:8px; } .ex-topctl .pr-seg { margin:0; } .ex-topctl .pv-simbtn { white-space:nowrap; }
+      .pr-tb.pr-ex2 td.ctr, .pr-tb.pr-ex2 th.ctr { text-align:center; } .pr-tb.pr-ex2 .ex-m { color:var(--text3); } .pr-tb.pr-ex2 .ex-n { color:var(--red,#dc2626); }
+      .pr-tb.pr-ex2 tbody td { border-bottom:1px solid var(--border); } .pr-tb.pr-ex2 th { font-size:11.5px; color:var(--text3); font-weight:600; text-align:left; padding:10px 12px; }
+      .pr-tb.pr-ex2 td { vertical-align:middle; padding:10px 12px; text-align:left; } .pr-tb.pr-ex2 .tn { text-align:right; font-variant-numeric:tabular-nums; } .pr-tb.pr-ex2 th.tn { text-align:right; }
+      .pr-tb.pr-ex2 .ex-c1 { padding-left:20px; } .pr-tb.pr-ex2 tr.ex-r .ex-c1 { padding-left:38px; }
+      .pr-tb.pr-ex2 tr.ex-r:hover td { background:color-mix(in srgb, var(--accent) 6%, transparent); }
+      .pr-tb.pr-ex2 tr.ex-g td { background:var(--bg3); cursor:pointer; padding:9px 20px; border-top:1px solid var(--border); } .pr-tb.pr-ex2 tr.ex-g:hover td { background:color-mix(in srgb, var(--accent) 8%, var(--bg3)); }
+      .ex-car { display:inline-block; width:16px; color:var(--text3); font-size:11px; } .ex-gm { margin-left:10px; font-size:12px; color:var(--text3); } .ex-neg { color:var(--red,#dc2626); font-weight:600; }
+      .ex-pds { display:flex; flex-wrap:wrap; gap:4px 6px; margin-top:2px; } .ex-pd { font-size:12.5px; color:var(--text); } .ex-pd b { font-weight:600; color:var(--text2); }
+      .ex-pd + .ex-pd::before { content:'+'; color:var(--text3); margin-right:6px; }
+      .ex-pd.gift { color:var(--text2); } .ex-pd.gift i { font-style:normal; font-size:10px; font-weight:600; padding:0 5px; border-radius:4px; margin-right:4px; background:color-mix(in srgb, var(--accent) 16%, transparent); color:var(--accent); }
+      .ex-pf { font-weight:700; font-variant-numeric:tabular-nums; } .ex-pf.neg { color:var(--red,#dc2626); }
+      .ex-pc { padding-left:28px !important; padding-right:40px !important; } .ex-pl { display:flex; align-items:baseline; gap:8px; } .ex-pl .ex-sub { margin:0; }
+      .ex-bar { position:relative; height:5px; border-radius:3px; background:var(--bg3); margin-top:6px; } .ex-bar::after { content:''; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:var(--text3); opacity:.5; }
+      .ex-bar i { position:absolute; top:0; bottom:0; display:block; border-radius:3px; } .ex-bar i.p { left:50%; background:var(--green,#16a34a); } .ex-bar i.n { right:50%; background:var(--red,#dc2626); }
+      .ex-by { font-size:12.5px; } .ex-sub { font-size:11px; color:var(--text3); margin-top:2px; } .ex-mute { color:var(--text3); opacity:.5; }
+      .pv-lad input.pv-x { width:13px; height:13px; margin:0 6px 0 0; vertical-align:-2px; accent-color:var(--accent); cursor:pointer; }
+      .pv-lad tr.off td, .pv-lad tr.sub.off td { color:var(--text3) !important; } .pv-lad tr.off td:first-child, .pv-lad tr.sub.off td:first-child { text-decoration:line-through; text-decoration-color:var(--text3); }
+      .pv-off { font-size:11px; font-weight:600; color:var(--text3); } .pv-exn { margin:0 0 10px; padding:8px 12px; border-radius:8px; font-size:12px; background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--text2); }
+      .pv-exr { margin-left:8px; font:inherit; font-size:11.5px; padding:2px 8px; border-radius:6px; border:1px solid var(--border); background:var(--bg2); color:var(--text); cursor:pointer; }
       .pr-tb.pr-ex { table-layout:fixed; min-width:1100px; } .pr-tb.pr-ex th, .pr-tb.pr-ex td { text-align:center; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .pr-tb.pr-ex th:first-child, .pr-tb.pr-ex td:first-child { text-align:left; } .pr-tb.pr-ex td.tn { font-variant-numeric:tabular-nums; }
       .ex-big { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0 8px; }
@@ -494,22 +545,67 @@
         <div><div class="l">ราคาขาย (รวม VAT)</div><div class="v">${n2(price)}</div><div class="s">${dif == null ? '&nbsp;' : (dif < 0 ? 'ต่ำกว่า' : dif > 0 ? 'สูงกว่า' : 'เท่า') + 'ราคาปกติ ' + (dif ? pc(Math.abs(dif)) : '') + tip('ราคาปกติ (RSP) ของทั้งเซ็ต ' + n2(c.rsp))}</div></div>
         <div><div class="l">กำไรสุทธิ / ออเดอร์</div><div class="v${ok && +c.profit < 0 ? ' neg' : ''}">${ok ? n2(c.profit) : '—'}</div><div class="s">${ok ? (+c.profit < 0 ? 'ขาดทุน · ' : '') + pc(c.margin) + ' ของรายได้' : 'รอต้นทุนครบ'}</div></div>
         <div><div class="l">ราคาคุ้มทุน (รวม VAT)${tip('ราคาขาย (รวม VAT) ที่กำไรสุทธิเท่ากับ 0 พอดี · ขายต่ำกว่านี้ขาดทุน')}</div><div class="v">${ok && c.breakeven_price != null ? n2(c.breakeven_price) : '—'}</div><div class="s">${ok && c.breakeven_price != null && price ? (price >= +c.breakeven_price ? 'สูงกว่าคุ้มทุน ' : 'ต่ำกว่าคุ้มทุน ') + n2(Math.abs(price - c.breakeven_price)) : '&nbsp;'}</div></div></div>`;
-    const row = (lbl, h, v, cls, id) => `<tr class="${cls || ''}"${id ? ` data-lad="${id}"` : ''}><td>${id ? '<span class="car">▶</span>' : ''}${lbl}</td><td class="how">${h}</td><td class="num">${v}</td></tr>`;
-    const subs = (id, rows) => rows.map(x => `<tr class="sub" data-ladp="${id}" hidden><td title="${esc(String(x[0]).replace(/<[^>]+>/g, ''))}">${x[0]}</td><td class="how" title="${esc(String(x[1]).replace(/<[^>]+>/g, ''))}">${x[1]}</td><td class="num">${x[2] == null ? '—' : '−' + n2(x[2])}</td></tr>`).join('');
-    const feeGrp = (ly, title) => { const F = fees(ly); if (!F.length) return '';
-      return row(title, F.length === 1 ? how(F[0]) : '', '−' + n2(sum(F.map(f => f.amount_ex))), 'grp neg', ly) + subs(ly, F.map(f => [esc(f.item), how(f), f.amount_ex])); };
+    // (2026-11-10) ติ๊กออก = ไม่นับรายการนั้นในกำไร (เช่น สินค้าเดท ไม่คิดค่า Marketing) · คำนวณใหม่ใน Supabase (p.exclude)
+    const EXC = new Set((c.exclude || []).map(String)), xbox = (key, on, title) => `<input type="checkbox" class="pv-x" data-x="${esc(key)}"${on ? ' checked' : ''} title="${esc(title || 'ติ๊กออก = ไม่นับรายการนี้')}">`;
+    const row = (lbl, h, v, cls, id, xk) => `<tr class="${cls || ''}"${id ? ` data-lad="${id}"` : ''}><td>${xk || ''}${id ? '<span class="car">▶</span>' : ''}${lbl}</td><td class="how">${h}</td><td class="num">${v}</td></tr>`;
+    const subs = (id, rows) => rows.map(x => `<tr class="sub${x[4] ? ' off' : ''}" data-ladp="${id}" hidden><td title="${esc(String(x[0]).replace(/<[^>]+>/g, ''))}">${x[3] || ''}${x[0]}</td><td class="how" title="${esc(String(x[1]).replace(/<[^>]+>/g, ''))}">${x[1]}</td><td class="num">${x[4] ? '<span class="pv-off">0.00</span>' : x[2] == null ? '—' : '−' + n2(x[2])}</td></tr>`).join('');
+    const feeGrp = (ly, title) => { const F = fees(ly); if (!F.length) return ''; const on = F.filter(f => !f.excluded), allOff = !on.length;
+      return row(title, F.length === 1 ? how(F[0]) : (on.length < F.length ? `ไม่นับ ${F.length - on.length} รายการ` : ''), allOff ? '<span class="pv-off">0.00</span>' : '−' + n2(sum(on.map(f => f.amount_ex))), 'grp neg' + (allOff ? ' off' : ''), ly, xbox('ly:' + ly, !allOff, 'ติ๊กออก = ไม่นับทั้งกลุ่ม'))
+        + subs(ly, F.map(f => [esc(f.item), how(f), f.amount_ex, xbox(f.item, !f.excluded), f.excluded])); };
     const costSubs = lines.map(l => [`${l.kind === 'gift' ? 'แถม · ' : ''}${esc(l.name || nm(l.sku))}`, l.unit_cost == null ? '<span class="miss">ไม่มีต้นทุน</span>' : `${n2(l.unit_cost)} × ${l.qty} ชิ้น`, l.unit_cost == null ? null : l.cost]);
     const table = `<table class="pv-lad" data-no-sort data-no-page><thead><tr><th>รายการ</th><th class="how">วิธีคิด</th><th class="num">บาท</th></tr></thead><tbody>
         ${row('ราคาขาย (รวม VAT)', 'ตามที่กรอก', n2(price))}
         ${row(`VAT ${vp}%`, `${n2(price)} × ${vp} ÷ ${100 + vp}`, '−' + n2(price - rex), 'neg')}
         ${row('รายได้ไม่รวม VAT' + tip('ใช้ตัวเลขนี้คิดทุกรายการด้านล่าง'), '', n2(rex), 'tot')}
-        ${row('ต้นทุนสินค้า + ของแถม', `ต้นทุน${costMonthTxt(c) === 'ไฟล์ต้นทุนสินค้า' ? 'จาก' : 'บัญชี '}${costMonthTxt(c)}${ok ? '' : ' · <span class="miss">ยังไม่ครบ</span>'}`, '−' + n2(cogs), 'grp neg', 'cost')}${subs('cost', costSubs)}
+        ${row('ต้นทุนสินค้า + ของแถม', `ต้นทุน${costMonthTxt(c) === 'ไฟล์ต้นทุนสินค้า' ? 'จาก' : 'บัญชี '}${costMonthTxt(c)}${ok ? '' : ' · <span class="miss">ยังไม่ครบ</span>'}`, c.cogs_excluded ? '<span class="pv-off">0.00</span>' : '−' + n2(cogs), 'grp neg' + (c.cogs_excluded ? ' off' : ''), 'cost', xbox('cogs', !c.cogs_excluded, 'ติ๊กออก = ไม่นับต้นทุนสินค้า'))}${subs('cost', costSubs)}
         ${feeGrp('platform', 'ค่า Platform')}${feeGrp('selling', 'ค่าขาย')}${feeGrp('overhead', 'ค่าบริหาร / Marketing')}
         ${row('กำไรสุทธิ / ออเดอร์', ok ? pc(c.margin) + ' ของรายได้' : 'ยังไม่รวมต้นทุนที่ขาด', ok ? n2(c.profit) : '—', 'tot big' + (ok && +c.profit < 0 ? ' negv' : ''))}
       </tbody></table>`;
-    return fm + ban + tiles + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · ค่าธรรมเนียมแพลตฟอร์มใช้ค่าจริง (เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด) หรือค่าที่ตั้งไว้ ตามที่เลือกในหน้าค่าธรรมเนียมช่องทาง · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
+    const exN = EXC.size ? `<div class="pv-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')} — ตัวเลขด้านบนคิดแบบไม่นับรายการเหล่านี้แล้ว <button type="button" class="pv-exr" data-xreset>นับทั้งหมด</button></div>` : '';
+    return fm + ban + tiles + exN + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ติ๊กช่องหน้ารายการออก = ไม่นับรายการนั้นในกำไร (เช่น สินค้าเดท ไม่คิดค่า Marketing) แล้วระบบคำนวณใหม่ทันที · ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · ค่าธรรมเนียมแพลตฟอร์มใช้ค่าจริง (เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด) หรือค่าที่ตั้งไว้ ตามที่เลือกในหน้าค่าธรรมเนียมช่องทาง · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
   }
   const bindFm = (root, fn) => root.querySelectorAll('[data-fm] button').forEach(b => b.onclick = () => { if (b.getAttribute('aria-pressed') !== 'true') fn(b.dataset.v); });
+  // (2026-11-10 b) แผงรายละเอียดผู้บริหาร: การคำนวณแบบอ่านง่าย — 2 คอลัมน์ (รายการ | บาท) · วิธีคิดอยู่ในตัวชี้ (hover) แทนคอลัมน์ · ติ๊กออกได้ · โหมดค่าธรรมเนียมอยู่หัวการ์ด
+  function calcPanel(c, C) {
+    const nm = k => (C.products.find(p => p.sku === k) || { name: k }).name, sum = a => a.reduce((t, x) => t + (+x || 0), 0);
+    const miss = (c.missing_costs || []).map(nm), ok = !miss.length, vatR = +c.vat || 0.07, vp = Math.round(vatR * 100), vf = (1 + vatR).toFixed(2);
+    const price = +c.price || 0, rex = +c.revenue_ex || 0, lines = c.lines || [], cogs = sum(lines.map(l => l.cost)), fees = ly => (c.fees || []).filter(f => f.layer === ly);
+    const how = f => (f.kind === 'pct' ? `${+(f.rate * 100).toFixed(2)}% × ${n2(price)} ÷ ${vf}` : `${n2(f.rate)} ÷ ${vf}`) + (f.src === 'actual' ? ' · ค่าจริง 30 วัน' : '');
+    const EXC = new Set((c.exclude || []).map(String));
+    const cb = (key, on) => `<input type="checkbox" class="pv-x" data-x="${esc(key)}"${on ? ' checked' : ''} title="ติ๊กออก = ไม่นับรายการนี้">`;
+    const amt = (v, off) => off ? '<span class="pv-off">0.00</span>' : '−' + n2(v);   // ติ๊กออก = 0
+    const grp = (id, title, v, off, key, hw) => `<tr class="grp${off ? ' off' : ''}" data-lad="${id}" title="${esc(hw || '')}"><td>${cb(key, !off)}<span class="car">▸</span>${title}</td><td class="num neg">${amt(v, off)}</td></tr>`;
+    const sub = (id, label, v, off, key, hw) => `<tr class="sub${off ? ' off' : ''}" data-ladp="${id}" hidden title="${esc(hw || '')}"><td>${key ? cb(key, !off) : '<span class="pv-sp"></span>'}${label}</td><td class="num">${v == null ? '—' : amt(v, off)}</td></tr>`;
+    const feeG = (ly, title) => { const F = fees(ly); if (!F.length) return ''; const on = F.filter(f => !f.excluded);
+      return grp(ly, title, sum(on.map(f => f.amount_ex)), !on.length, 'ly:' + ly, F.length === 1 ? how(F[0]) : '') + F.map(f => sub(ly, esc(f.item), f.amount_ex, f.excluded, f.item, how(f))).join(''); };
+    const fm = c.fee_actual_ok ? `<div class="pr-seg exd-fm" data-fm title="ค่าธรรมเนียมแพลตฟอร์ม: ค่าจริง = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง"><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div>` : '';
+    const exN = EXC.size ? `<div class="exd-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')}<button type="button" data-xreset title="กลับไปนับทุกรายการ">✕</button></div>` : '';
+    const neg = ok && +c.profit < 0;
+    return `${!ok && price ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')}</span></div>` : ''}
+      <div class="exd-kpi">
+        <div><span>ราคาขาย</span><b>${n2(price)}</b>${+c.rsp > 0 ? `<i>ปกติ ${n2(c.rsp)}</i>` : ''}</div>
+        <div class="${neg ? 'neg' : 'pos'}"><span>กำไรสุทธิ / ออเดอร์</span><b>${ok ? n2(c.profit) : '—'}</b>${ok ? `<i>${pc(c.margin)} ของรายได้</i>` : ''}</div>
+        <div><span>ราคาคุ้มทุน</span><b>${ok && c.breakeven_price != null ? n2(c.breakeven_price) : '—'}</b><i>รวม VAT</i></div>
+      </div>
+      <div class="exd-card"><div class="exd-ch"><b>การคำนวณ</b>${exN}${fm}</div>
+        <table class="pv-lad exd-lad" data-no-sort data-no-page><tbody>
+          <tr><td>ราคาขาย (รวม VAT)</td><td class="num">${n2(price)}</td></tr>
+          <tr class="muted" title="${n2(price)} × ${vp} ÷ ${100 + vp}"><td>VAT ${vp}%</td><td class="num">−${n2(price - rex)}</td></tr>
+          <tr class="tot"><td>รายได้ไม่รวม VAT</td><td class="num">${n2(rex)}</td></tr>
+          ${grp('cost', 'ต้นทุนสินค้า + ของแถม', cogs, !!c.cogs_excluded, 'cogs')}${lines.map(l => sub('cost', `${l.kind === 'gift' ? 'แถม · ' : ''}${esc(l.name || nm(l.sku))} ×${l.qty}`, l.unit_cost == null ? null : l.cost, !!c.cogs_excluded, null, l.unit_cost == null ? 'ยังไม่มีต้นทุน' : `${n2(l.unit_cost)} × ${l.qty}`)).join('')}
+          ${feeG('platform', 'ค่า Platform')}${feeG('selling', 'ค่าขาย')}${feeG('overhead', 'ค่าบริหาร / Marketing')}
+          <tr class="tot big${neg ? ' negv' : ''}"><td>กำไรสุทธิ / ออเดอร์</td><td class="num">${ok ? n2(c.profit) : '—'}</td></tr>
+        </tbody></table>
+        <div class="exd-hint">ติ๊กออก = ไม่นับรายการนั้น · กด ▸ ดูรายการย่อย · ชี้แถวดูวิธีคิด</div></div>`;
+  }
+  // (2026-11-10) ติ๊กรายการออก → fn(รายชื่อที่ไม่นับ) · ติ๊กที่หัวกลุ่ม = ทั้งกลุ่ม
+  const bindEx = (root, fn) => {
+    root.querySelectorAll('.pv-lad input.pv-x').forEach(cb => { cb.addEventListener('click', e => e.stopPropagation()); cb.addEventListener('change', () => {
+      const k = cb.dataset.x;
+      if (k.startsWith('ly:')) root.querySelectorAll(`.pv-lad tr[data-ladp="${k.slice(3)}"] input.pv-x`).forEach(x => { x.checked = cb.checked; });
+      fn([...root.querySelectorAll('.pv-lad input.pv-x')].filter(x => !x.checked && !x.dataset.x.startsWith('ly:')).map(x => x.dataset.x)); }); });
+    const r = root.querySelector('[data-xreset]'); if (r) r.onclick = () => fn([]);
+  };
   const bindLad = root => root.querySelectorAll('.pv-lad tr.grp').forEach(tr => tr.onclick = () => { const open = !tr.classList.contains('open'); tr.classList.toggle('open', open); root.querySelectorAll(`.pv-lad tr[data-ladp="${tr.dataset.lad}"]`).forEach(x => { x.hidden = !open; }); });
 
   // ===================== (2026-10-28) จำลองโปร (ผู้บริหาร): ลองใส่ช่องทาง สินค้า ราคา ดูว่าคุ้มไหม · ไม่ส่งเป็นคำขอ =====================
@@ -550,10 +646,12 @@
       const out = document.getElementById('smOut'), p = { channel_id: SIM.channel_id ? +SIM.channel_id : null, price: +SIM.price || 0, orders: 0,
         items: SIM.items.filter(x => x.sku).map(x => ({ sku: x.sku, qty: +x.qty || 0 })), gifts: SIM.gifts.filter(x => x.sku).map(x => ({ sku: x.sku, qty: +x.qty || 0 })) };
       if (SIM.fee_mode) p.fee_mode = SIM.fee_mode;
+      if (SIM.exclude && SIM.exclude.length) p.exclude = SIM.exclude;
       if (!p.channel_id || !p.price || !p.items.length) { out.innerHTML = '<div class="pr-empty">ใส่ช่องทาง สินค้า และราคาให้ครบก่อน</div>'; return; }
       e.target.disabled = true; e.target.textContent = 'กำลังคำนวณ…';
       try { const [c, k] = await Promise.all([rpc('promo_calc', { p }), rpc('promo_rank', { p }).catch(() => null)]);
-        out.innerHTML = calcView(c, C) + (k ? rankCard(k) : ''); bindLad(out); bindFm(out, v => { SIM.fee_mode = v; document.getElementById('smGo').click(); }); }
+        out.innerHTML = calcView(c, C) + (k ? rankCard(k) : ''); bindLad(out); bindFm(out, v => { SIM.fee_mode = v; document.getElementById('smGo').click(); });
+        bindEx(out, list => { SIM.exclude = list; document.getElementById('smGo').click(); }); }
       catch (err) { out.innerHTML = `<div class="pr-empty">คำนวณไม่สำเร็จ: ${esc(err.message)}</div>`; }
       e.target.disabled = false; e.target.textContent = 'คำนวณ';
     };
@@ -565,29 +663,56 @@
     el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     try { EX.list = await rpc('promo_list', { p_scope: 'all' }); await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     const L = EX.list, cnt = s => L.filter(r => r.status === s).length;
-    el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l"><button type="button" class="pr-btn ghost pv-simbtn" id="exSim" aria-pressed="${EX.filter === 'sim'}">จำลองโปร</button></div>
-        <div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div></div>
-      <div class="pr-card" style="padding:6px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
-    const simBtn = el.querySelector('#exSim');
-    el.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; el.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); simBtn.setAttribute('aria-pressed', 'false'); listExec(); };
-    simBtn.onclick = () => { EX.filter = 'sim'; el.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', 'false')); simBtn.setAttribute('aria-pressed', 'true'); renderSim(document.getElementById('exList'), CAT); };
+    // (2026-11-10) ปุ่มสถานะ + จำลองโปร ย้ายไปแถบบน (ข้างตัวกรองแบบหน้าอื่น) · ในหน้าเหลือแต่ตาราง
+    let top = document.getElementById('exTopCtl');
+    if (!top) { const f = document.querySelector('.topbar .filters'); top = document.createElement('div'); top.id = 'exTopCtl'; top.className = 'ex-topctl'; if (f) f.prepend(top); }
+    top.style.display = '';
+    top.innerHTML = `<div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div>
+      <button type="button" class="pr-btn ghost pv-simbtn" id="exSim" aria-pressed="${EX.filter === 'sim'}">จำลองโปร</button>`;
+    el.innerHTML = `<div class="pr-card" style="padding:4px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
+    const simBtn = top.querySelector('#exSim');
+    top.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); simBtn.setAttribute('aria-pressed', 'false'); listExec(); };
+    simBtn.onclick = () => { EX.filter = 'sim'; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', 'false')); simBtn.setAttribute('aria-pressed', 'true'); renderSim(document.getElementById('exList'), CAT); };
     EX.filter === 'sim' ? renderSim(document.getElementById('exList'), CAT) : listExec();
   }
+  // (2026-11-10) รายการคำขอแบบใหม่: จัดกลุ่มตามชื่อโปร + ช่องทาง (หัวกลุ่มบอกจำนวน / ขาดทุนกี่รายการ · กดย่อได้) · มีคอลัมน์สินค้าในโปร (ของแถมติดป้าย)
+  //   กำไรติดลบสีแดง · % ใต้ตัวเลข = กำไรเทียบต้นทุน · ขอโดย + วันที่ส่งอยู่ช่องเดียว
+  const EXCOL = new Set();
   function listExec() {
     const box = document.getElementById('exList'); if (!box) return;
+    const C = CAT || { products: [] }, pnm = k => (C.products.find(p => p.sku === k) || { name: k }).name;
     const L = EX.list.filter(r => EX.filter === 'all' ? r.status !== 'cancelled' : r.status === EX.filter);
-    box.innerHTML = L.length ? `<table class="pr-tb pr-ex" data-no-sort data-no-page>
-        <colgroup><col style="width:17%"><col style="width:8%"><col style="width:10%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:7%"></colgroup>
-        <thead><tr><th style="padding-left:20px;">ชื่อโปร</th><th>ขอโดย</th><th>ช่องทาง</th><th>วันเริ่ม</th><th>วันจบ</th><th>ราคา</th><th>กำไร / ออเดอร์</th><th>กำไรเทียบต้นทุน</th><th>Rank</th><th>สถานะ</th><th>ส่งเมื่อ</th></tr></thead><tbody>`
-      + L.map(r => { const c = r.calc || {}, s = ST[r.status] || [r.status, ''];
-        return `<tr class="click" data-id="${r.id}"><td style="padding-left:20px;"><div class="t1">${esc(r.title)}</div></td>
-          <td>${esc(r.requested_name || '—')}</td><td>${esc(r.channel || '')}</td>
-          <td>${r.start_date ? dTh(r.start_date) : '—'}</td><td>${r.end_date ? dTh(r.end_date) : '—'}</td>
-          <td class="tn">${n2(r.price)}</td>
-          <td class="tn" style="color:${+c.profit < 0 ? 'var(--red,#dc2626)' : 'var(--text)'};font-weight:600;">${c.profit == null ? '—' : n2(c.profit)}</td>
-          <td class="tn">${pc(c.markup)}</td><td>${rkPill(r.rank)}</td><td><span class="pr-pill ${s[1]}">${s[0]}</span></td><td>${dTh(r.requested_at)}</td></tr>`; }).join('') + '</tbody></table>'
-      : '<div class="pr-empty">ไม่มีรายการ</div>';
+    if (!L.length) { box.innerHTML = '<div class="pr-empty">ไม่มีรายการ</div>'; return; }
+    const prod = r => (r.items || []).map(x => `<span class="ex-pd">${esc(pnm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`).join('')
+      + (r.gifts || []).map(x => `<span class="ex-pd gift"><i>แถม</i>${esc(pnm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`).join('');
+    const prodTxt = r => [...(r.items || []).map(x => pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : '')), ...(r.gifts || []).map(x => 'แถม ' + pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : ''))].join(' · ');
+    const dr = r => !r.start_date ? '—' : r.end_date && r.end_date !== r.start_date ? `${dTh(r.start_date)} – ${dTh(r.end_date)}` : dTh(r.start_date);
+    const groups = []; const gi = {};
+    L.forEach(r => { const k = (r.title || '') + '|' + (r.channel || ''); if (gi[k] == null) { gi[k] = groups.length; groups.push({ k, rows: [] }); } groups[gi[k]].rows.push(r); });
+    const pcs = v => v == null || !isFinite(+v) ? '—' : `<span class="${+v < 0 ? 'ex-n' : ''}">${(+v * 100).toFixed(1)}%</span>`;
+    const rowHtml = r => { const c = r.calc || {}, s = ST[r.status] || [r.status, ''], neg = +c.profit < 0, disc = +c.discount_vs_rsp;
+      return `<tr class="click ex-r" data-id="${r.id}">
+        <td class="ex-c1"><div class="ex-pds" title="${esc(prodTxt(r))}">${prod(r) || '<span class="ex-pd">—</span>'}</div></td>
+        <td class="tn"><b>${n2(r.price)}</b></td>
+        <td class="tn ex-m">${+c.rsp > 0 ? n2(c.rsp) : '—'}</td>
+        <td class="tn ex-m">${+c.rsp > 0 && disc ? (disc > 0 ? '−' : '+') + (Math.abs(disc) * 100).toFixed(1) + '%' : '—'}</td>
+        <td class="tn"><span class="ex-pf${neg ? ' neg' : ''}">${c.profit == null ? '—' : n2(c.profit)}</span></td>
+        <td class="tn">${pcs(c.margin)}</td>
+        <td class="tn">${pcs(c.markup)}</td>
+        <td class="ctr">${rkPill(r.rank)}</td><td class="ctr"><span class="pr-pill ${s[1]}">${s[0]}</span></td>
+        <td>${esc(r.requested_name || '—')}</td><td class="ex-m">${dTh(r.requested_at)}</td></tr>`; };
+    const body = groups.map(g => {
+      const r0 = g.rows[0], nNeg = g.rows.filter(r => r.calc && +r.calc.profit < 0).length, col = EXCOL.has(g.k);
+      const head = `<tr class="ex-g" data-g="${esc(g.k)}"><td colspan="11"><span class="ex-car">${col ? '▸' : '▾'}</span><b>${esc(r0.title)}</b><span class="ex-gm">${esc(r0.channel || '')}${r0.start_date ? ' · ' + dr(r0) : ''} · ${g.rows.length} รายการ${nNeg ? ` · <span class="ex-neg">ขาดทุน ${nNeg}</span>` : ''}</span></td></tr>`;
+      return head + (col ? '' : g.rows.map(rowHtml).join(''));
+    }).join('');
+    box.innerHTML = `<table class="pr-tb pr-ex2" data-no-sort data-no-page>
+        <colgroup><col><col style="width:96px"><col style="width:96px"><col style="width:78px"><col style="width:110px"><col style="width:96px"><col style="width:96px"><col style="width:90px"><col style="width:104px"><col style="width:96px"><col style="width:96px"></colgroup>
+        <thead><tr><th class="ex-c1">สินค้าในโปร</th><th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
+          <th class="tn">% ของรายได้ <span class="pr-i" data-tip="กำไรสุทธิ ÷ รายได้ไม่รวม VAT">ⓘ</span></th><th class="tn">% ของต้นทุน <span class="pr-i" data-tip="กำไรสุทธิ ÷ ต้นทุนทั้งหมด (สินค้า + ค่า Platform + ค่าขาย + ค่าบริหาร / Marketing)">ⓘ</span></th>
+          <th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>ขอโดย</th><th>ส่งเมื่อ</th></tr></thead><tbody>${body}</tbody></table>`;
     box.querySelectorAll('tr[data-id]').forEach(tr => tr.onclick = () => openReq(+tr.dataset.id));
+    box.querySelectorAll('tr.ex-g').forEach(tr => tr.onclick = () => { const k = tr.dataset.g; EXCOL.has(k) ? EXCOL.delete(k) : EXCOL.add(k); listExec(); });
   }
   function ladder(c, C) {
     const nm = k => (C.products.find(p => p.sku === k) || { name: k }).name;
@@ -616,11 +741,11 @@
     const r = EX.list.find(x => x.id === id); if (!r) return;
     const C = await cat();
     trOpenShell('Promotion · รายละเอียด');
-    const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null, fee_mode: null };
+    const S = { price: r.price, items: JSON.parse(JSON.stringify(r.items || [])), gifts: JSON.parse(JSON.stringify(r.gifts || [])), rank: r.rank, note: null, fee_mode: null, exclude: [] };
     const body = () => document.getElementById('trBody');
     const draw = (c) => {
       const st = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0), k = S.rank;
-      const changed = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []);
+      const changed = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []) || S.exclude.length > 0;
       const pnm = x => (C.products.find(p => p.sku === x) || { name: x }).name;
       const sig = c.signal === 'green' ? ['g', 'ผ่าน'] : c.signal === 'red' ? ['r', 'ไม่ผ่าน'] : ['', 'ขาดต้นทุน'];
       const miss = (c.missing_costs || []).map(pnm);
@@ -642,21 +767,21 @@
       const sumRow = `<tr class="ui-sum"><td>รวม</td><td></td><td></td><td class="num">${n2(costTot)}${costMiss.length ? tip('ไม่รวม ' + costMiss.join(', ') + ' (ยังไม่มีต้นทุน)') : ''}</td>${showRank ? rc(k.sum1, 1) + rc(k.sum2, 2) + rc(k.sum3, 3) : ''}</tr>`;
       const rkTip = 'ราคาที่ขอ ≥ ผลรวม Rank ไหน (ไล่จาก Rank 1) = Rank นั้น · ต่ำกว่า Rank 3 = ไม่ผ่าน\nมากกว่า 1 ชิ้นใช้ราคาเซ็ต · ไม่นับของแถม · ราคาจากหน้า สินค้า & ราคา';
       // (2026-10-28) หน้าตาใหม่: ผลก่อน → ตัวเลข 3 ช่อง → เงินไปไหนบ้าง (มีวิธีคิด + VAT) → สินค้าในโปร (พับได้) → Feedback
+      // (2026-11-10) แผงรายละเอียดแบบใหม่: หัว (ชื่อ · สถานะ · Rank · ช่องทาง / วันที่ / ผู้ขอ) → สินค้าในโปร (เปิดตลอด) → ลองราคา → ตัวเลขหลัก + การคำนวณ (ติ๊กออกได้) → Feedback + ปุ่ม (ติดล่างแผง)
+      const itRows = [...S.items.map((g, i) => ({ g, i, kind: 'item' })), ...S.gifts.map((g, i) => ({ g, i, kind: 'gift' }))].map(({ g, i, kind }) => { const l = cl[kind + '|' + g.sku];
+        return `<tr><td>${kind === 'gift' ? '<span class="exd-gift">แถม</span>' : ''}${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" ${kind === 'gift' ? 'data-gi' : 'data-ii'}="${i}" value="${g.qty}"></td><td class="num" title="${l && l.unit_cost != null ? 'ต้นทุน ' + n2(l.unit_cost) + ' × ' + g.qty + ' ชิ้น' : ''}">${l && l.unit_cost != null ? n2(l.cost) : '<span class="miss">ไม่มีต้นทุน</span>'}</td></tr>`; }).join('');
+      const rkTxt = showRank ? `Rank 1 ${n0(k.sum1)} · Rank 2 ${n0(k.sum2)} · Rank 3 ${n0(k.sum3)}` : '';
       body().innerHTML = `
-        <div class="tr-card ex-hd"><div class="tr-card-t">${esc(r.title)} <span class="pr-pill ${st[1]}" style="margin-left:6px;">${st[0]}</span></div>
-          <div class="tr-card-m"><span>${esc(r.channel || '')}</span>${r.start_date ? `<span>${dTh(r.start_date)}${r.end_date ? ' – ' + dTh(r.end_date) : ''}</span>` : ''}<span>ขอโดย ${esc(r.requested_name || '')}</span><span>${rkPill(k)}${tip(rkTip)}</span></div></div>
-        <div class="pv-try"><label>ลองราคา (รวม VAT)</label><input class="pr-in" type="number" step="0.01" id="exPrice" value="${S.price}"><button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button><span class="pv-chg">ตัวเลขที่ลองปรับ ยังไม่แก้คำขอ</span>' : ''}</div>
-        ${calcView(c, C)}
-        <details class="tr-part pv-items" style="padding:12px 14px;"${changed ? ' open' : ''}><summary>สินค้าในโปร (${S.items.length + S.gifts.length} รายการ) · ปรับจำนวนแล้วกดคำนวณ</summary>
-          <table class="ex-it"><thead><tr><th>รายการ</th><th class="q">จำนวน</th><th class="num">ต้นทุน/ชิ้น</th><th class="num">ต้นทุนรวม</th>${showRank ? '<th class="num rk">Rank 1</th><th class="num rk">Rank 2</th><th class="num rk">Rank 3</th>' : ''}</tr></thead>
-            <tbody>${itemRows}${giftRows}${sumRow}</tbody></table>
-          ${k && !showRank ? `<div class="ex-chg" style="color:var(--text3);">${k.status === 'no_rank' ? 'ช่องทางนี้ไม่เช็ค Rank' : k.status === 'not_sold' ? 'มีสินค้าที่ไม่ได้ติ๊กขายในช่องทางนี้ จึงเทียบ Rank ไม่ได้' : 'ยังไม่มีราคา Rank ของ ' + esc((k.missing || []).join(', '))}</div>` : ''}</details>
-        <section class="tr-part" style="padding:12px 14px;"><label style="font-size:12px;font-weight:600;color:var(--text2);">Feedback ถึงทีม</label>
-          <textarea class="pr-in" id="exNote" rows="2" style="margin-top:6px;" placeholder="เช่น อนุมัติถ้าขึ้นราคาเป็น ${c.target_price ? n0(Math.ceil(c.target_price)) : '…'}">${esc(S.note != null ? S.note : (r.decision_note || ''))}</textarea>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            ${r.status === 'pending' ? '<button class="pr-btn good" data-dec="approved">✓ อนุมัติ</button><button class="pr-btn bad" data-dec="rejected">✕ ไม่อนุมัติ</button>' : '<button class="pr-btn ghost" data-dec="pending">กลับเป็นรออนุมัติ</button>'}
-          </div></section>
-        ${r.note ? `<div class="pr-note">หมายเหตุจากทีม: ${esc(r.note)}</div>` : ''}`;
+        <div class="exd-card exd-hd"><div class="exd-t">${esc(r.title)}<span class="pr-pill ${st[1]}">${st[0]}</span><span title="${esc(rkTxt || rkTip)}">${rkPill(k)}</span></div>
+          <div class="exd-m">${esc(r.channel || '')}${r.start_date ? ` · ${dTh(r.start_date)}${r.end_date ? ' – ' + dTh(r.end_date) : ''}` : ''} · ${esc(r.requested_name || '')}</div>
+          ${r.note ? `<div class="exd-note">${esc(r.note)}</div>` : ''}</div>
+        <div class="exd-card exd-pc"><div class="exd-pl"><div class="exd-ch"><b>สินค้าในโปร</b></div>
+            <table class="exd-it" data-no-sort data-no-page><tbody>${itRows}<tr class="sum"><td>ต้นทุนรวม</td><td></td><td class="num">${n2(costTot)}</td></tr></tbody></table></div>
+          <div class="exd-pr"><label for="exPrice">ราคาขาย (รวม VAT)</label><input class="pr-in" type="number" step="0.01" id="exPrice" value="${S.price}">
+            <button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button><span>กำลังลองปรับ · ยังไม่แก้คำขอ</span>' : '<span>ลองเปลี่ยนราคา / จำนวน แล้วกดคำนวณ</span>'}</div></div>
+        ${calcPanel(c, C)}
+        <section class="exd-act"><textarea class="pr-in" id="exNote" rows="2" placeholder="Feedback ถึงทีม เช่น อนุมัติถ้าขึ้นราคาเป็น ${c.target_price ? n0(Math.ceil(c.target_price)) : '…'}">${esc(S.note != null ? S.note : (r.decision_note || ''))}</textarea>
+          <div class="exd-btns">${r.status === 'pending' ? '<button class="pr-btn good" data-dec="approved">✓ อนุมัติ</button><button class="pr-btn bad" data-dec="rejected">✕ ไม่อนุมัติ</button>' : '<button class="pr-btn ghost" data-dec="pending">กลับเป็นรออนุมัติ</button>'}</div></section>`;
       // ขั้นบันไดกำไร: กดแถวกลุ่มเพื่อดูรายการย่อย
       bindLad(body());
       // ลองปรับ: คำนวณเมื่อกด "คำนวณ" หรือ Enter
@@ -666,18 +791,21 @@
         body().querySelectorAll('[data-gi]').forEach(x => { S.gifts[+x.dataset.gi].qty = +x.value || 0; });
         body().querySelectorAll('[data-ii]').forEach(x => { S.items[+x.dataset.ii].qty = +x.value || 0; });
         const btn = document.getElementById('exCalc'); if (btn) { btn.disabled = true; btn.textContent = 'กำลังคำนวณ…'; }
-        try { const pp = { channel_id: r.channel_id, price: S.price, orders: 0, items: S.items, gifts: S.gifts }; if (S.fee_mode) pp.fee_mode = S.fee_mode;
+        try { const pp = { channel_id: r.channel_id, price: S.price, orders: 0, items: S.items, gifts: S.gifts }; if (S.fee_mode) pp.fee_mode = S.fee_mode; if (S.exclude.length) pp.exclude = S.exclude;
           const [c2, k2] = await Promise.all([rpc('promo_calc', { p: pp }), rpc('promo_rank', { p: pp }).catch(() => null)]); S.rank = k2; draw(c2); }
         catch (e) { toast('คำนวณไม่สำเร็จ: ' + e.message); if (btn) { btn.disabled = false; btn.textContent = 'คำนวณ'; } }
       };
       document.getElementById('exCalc').onclick = recalc;
       bindFm(body(), v => { S.fee_mode = v; recalc(); });
+      bindEx(body(), list => { S.exclude = list; recalc(); });
       body().querySelectorAll('#exPrice,[data-gi],[data-ii]').forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); recalc(); } }));
       const rs = document.getElementById('exReset');
-      if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
+      if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.exclude = []; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
       body().querySelectorAll('[data-dec]').forEach(b => b.onclick = async () => {
         const d = b.dataset.dec; if (d !== 'pending' && !(await uiConfirm(d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', { text: `${r.title} · ${r.channel || ''} · ${n0(r.price)}`, ok: d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', tone: d === 'approved' ? 'good' : 'bad', icon: d === 'approved' ? '✓' : '✕' }))) return;
-        try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: document.getElementById('exNote').value }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
+        const exTxt = S.exclude.length ? `คิดแบบไม่นับ ${S.exclude.map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : x).join(', ')}` : '';   // (2026-11-10) ติ๊กออกตอนตัดสินใจ → บันทึกไว้ใน Feedback ให้ทีมเห็น
+        const note0 = document.getElementById('exNote').value.trim(), noteF = exTxt && !note0.includes(exTxt) ? (note0 ? note0 + ' · ' : '') + exTxt : note0;
+        try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: noteF }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
       });
     };
     draw(r.calc || await rpc('promo_calc', { p: { channel_id: r.channel_id, price: r.price, orders: r.orders, items: r.items, gifts: r.gifts } }));
