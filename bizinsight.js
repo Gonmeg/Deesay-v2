@@ -1,3 +1,4 @@
+// bizinsight.js (v20261111a) — งบกำไรขาดทุน: ปุ่ม บาท / % ของยอดขายสุทธิ · จอโน้ตบุ๊กไม่ล้นการ์ด (ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ)
 // bizinsight.js (v20261110a) — แท็บรายช่องทาง: ช่องทางที่รายได้ติดลบไม่คิด % (เดิม CJ ขึ้น 892%) · ค่า Platform รายช่องทางแก้ใน Supabase แล้ว
 // bizinsight.js (v20261027a) — หัวตารางรายสินค้าล็อกเสมอ (กรอบตารางเลื่อนเอง)
 // bizinsight.js (v20261022d) — เหลือเกณฑ์ต้นทุนตามคำสั่งซื้ออย่างเดียว (เอาทางบัญชี / วอลเลตออก)
@@ -130,6 +131,11 @@
 .bi tr.co td{color:var(--text2)}
 @media (max-width:1200px){.bi .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.bi .row2{grid-template-columns:1fr}.bi .det-grid{grid-template-columns:1fr}}
 .bi .flow{overflow:visible;border:1px solid var(--border);border-radius:10px}
+    /* (2026-11-11) จอโน้ตบุ๊ก: ตารางงบไม่ล้นการ์ด — ตารางกว้างพอดีการ์ด ตัวเลขเล็กลง ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ */
+    .bi table.pl{width:100%;table-layout:auto} .bi .pl-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .bi .seg.pl-unit{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden} .bi .seg.pl-unit button{border:0;background:transparent;padding:6px 12px;font:inherit;font-size:12.5px;color:var(--text2);cursor:pointer} .bi .seg.pl-unit button.on{background:var(--accent);color:#fff;font-weight:700}
+    @media (max-width:1700px){ .bi table.pl th,.bi table.pl td{padding-left:6px !important;padding-right:6px !important;font-size:12px} .bi table.pl .lab{font-size:12.5px} }
+    @media (max-width:1500px){ .bi table.pl .spk{display:none} }
 .bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--row-sum)}
 .bi .flow .pl thead th{background:var(--bg2)}
 .bi .flow:has(.pl){border:0}
@@ -148,7 +154,7 @@
   const tip = t => `<span class="i">i<span class="tip">${t}</span></span>`;
 
   let D = null, ISS = [], M = [], LINES = [], CH = [], A = 0, B = 0;
-  let basis = 'order', split = 'a', metric = 'op', tab = 'prod', openAll = false, chart = null;
+  let basis = 'order', split = 'a', metric = 'op', tab = 'prod', openAll = false, chart = null, plPct = false;   // plPct = งบกำไรขาดทุนแสดงเป็น % ของยอดขายสุทธิ
   const COSTCAT = [['ต้นทุนสินค้า', '#94A3B8'], ['Ads', '#EF4444'], ['ค่า Platform', '#F2643F'], ['KOL และ Affiliate', '#A78BFA'], ['Presenter และ Live', '#22D3EE'], ['ค่าใช้จ่ายขายอื่น', '#FBBF24'], ['ค่าใช้จ่ายบริหาร', '#60A5FA']];
   const CHMETA = { 'TikTok': ['var(--ch-tiktok)', 'ช่องทางออนไลน์'], 'Shopee Mall': ['var(--ch-shopee)', 'ช่องทางออนไลน์'], 'Shopee 24': ['var(--ch-shopee)', 'ช่องทางออนไลน์'],
     'Lazada Mall': ['var(--ch-lazada)', 'ช่องทางออนไลน์'], 'Lazada 24': ['var(--ch-lazada)', 'ช่องทางออนไลน์'], 'FB-COD': ['var(--ch-facebook)', 'ช่องทางออนไลน์'],
@@ -260,9 +266,11 @@
     const ps = R.map(P), tot = sumP(A, B), multi = R.length > 1, cols = R.length + 2 + (multi ? 1 : 0);
     const SEC = { 'รายได้': '#16A34A', 'ต้นทุนสินค้า': '#64748B', 'ค่าใช้จ่ายในการขาย': '#EA580C', 'ค่าใช้จ่ายในการบริหาร': '#2563EB', 'ภาษีมูลค่าเพิ่ม': '#7C3AED' };
     let SC = 'var(--text3)', id = 0;
-    const num = (v, cls = '') => `<td class="${cls}${v < -.004 ? ' neg' : ''}">${Math.abs(v) < .005 ? '<span class="pct">—</span>' : fmt(v)}</td>`;
-    const row = (cls, lab, vals, total, o = {}) => `<tr class="${cls}" style="--c:${SC};${o.hide ? 'display:none' : ''}" ${o.attr || ''}><td><div class="lab"><span class="chev">${o.chev ? '▸' : ''}</span>${lab}</div></td>${vals.map(v => num(v)).join('')}${num(total, 'tot')}${multi ? `<td>${spark(vals, o.tone || css('--text3'))}</td>` : ''}</tr>`;
-    let h = `<thead><tr><th style="text-align:left">รายการ</th>${R.map(i => `<th>${TH(M[i])}</th>`).join('')}<th class="tot">รวม</th>${multi ? '<th>แนวโน้ม</th>' : ''}</tr></thead><tbody>`;
+    // (2026-11-11) โหมด % : ทุกช่อง = จำนวนเงิน ÷ ยอดขายสุทธิของเดือนนั้น (ช่องรวม ÷ ยอดขายสุทธิรวม) ดูว่าค่าใช้จ่ายไหนบวม
+    const bases = ps.map(p => p.rev), tbase = tot.rev;
+    const num = (v, cls = '', b) => `<td class="${cls}${v < -.004 ? ' neg' : ''}">${Math.abs(v) < .005 ? '<span class="pct">—</span>' : plPct ? (b ? (v / b * 100).toFixed(1) + '%' : '—') : fmt(v)}</td>`;
+    const row = (cls, lab, vals, total, o = {}) => `<tr class="${cls}" style="--c:${SC};${o.hide ? 'display:none' : ''}" ${o.attr || ''}><td><div class="lab"><span class="chev">${o.chev ? '▸' : ''}</span>${lab}</div></td>${vals.map((v, k) => num(v, '', bases[k])).join('')}${num(total, 'tot', tbase)}${multi ? `<td class="spk">${spark(vals, o.tone || css('--text3'))}</td>` : ''}</tr>`;
+    let h = `<thead><tr><th style="text-align:left">รายการ</th>${R.map(i => `<th>${TH(M[i])}</th>`).join('')}<th class="tot">รวม</th>${multi ? '<th class="spk">แนวโน้ม</th>' : ''}</tr></thead><tbody>`;
     const sec = label => { SC = SEC[label]; h += `<tr class="secrow"><td colspan="${cols}"><span class="chip" style="--c:${SC}">${label}</span></td></tr>`; };
     const group = kinds => { const cats = [...new Set(LINES.filter(l => kinds.includes(l.kind)).map(l => l.cat))];
       cats.forEach(c => { const ls = LINES.filter(l => kinds.includes(l.kind) && l.cat === c && R.some(i => Math.abs(l.v[i]) > .004)); if (!ls.length) return;
@@ -284,7 +292,8 @@
     res('กำไร (ขาดทุน) หลังหัก ภพ.30 / ภพ.36', ps.map(p => p.after), tot.after);
     return `<div class="card"><div class="ch"><div><div class="ct">งบกำไรขาดทุน (Profit &amp; Loss) ${tip('กดชื่อกลุ่มที่มีลูกศรเพื่อดูรายการย่อย<br>แถบสีอ่อน = ยอดรวมของหมวด · แถบสีทอง = กำไร (ขาดทุน) จากการดำเนินงาน<br>ค่า Platform ตามใบแจ้งหนี้ ส่วนต่างตามวอลเลตอยู่ในหมายเหตุท้ายตาราง')}</div>
       <div class="cs">ทุกจำนวนเงินมาจากไฟล์บัญชีและตรงกับไฟล์ทุกบรรทัด</div></div>
-      <button class="btn" onclick="BI.expandAll()">${openAll ? 'ย่อรายการย่อยทั้งหมด' : 'แสดงรายการย่อยทั้งหมด'}</button></div>
+      <div class="pl-tools"><div class="seg pl-unit"><button type="button" class="${plPct ? '' : 'on'}" onclick="BI.setPlUnit(0)">บาท</button><button type="button" class="${plPct ? 'on' : ''}" onclick="BI.setPlUnit(1)">% ของยอดขายสุทธิ</button></div>
+      <button class="btn" onclick="BI.expandAll()">${openAll ? 'ย่อรายการย่อยทั้งหมด' : 'แสดงรายการย่อยทั้งหมด'}</button></div></div>
       <div class="flow"><table class="pl" data-no-sort data-no-page>${h}</tbody></table></div></div>`;
   }
 
@@ -394,6 +403,7 @@
     setTab: t => { tab = t; drawTab(); },
     setSplit: s => { split = s; drawTab(); },
     expandAll: () => { openAll = !openAll; drawTab(); },
+    setPlUnit: u => { plPct = !!u; drawTab(); },
     tog: tr => { const gid = tr.dataset.g; if (!gid) return; const o = !tr.classList.contains('open'); tr.classList.toggle('open', o); document.querySelectorAll(`.bi tr[data-p="${gid}"]`).forEach(r => r.style.display = o ? '' : 'none'); },
     togAlert: () => { const el = document.getElementById('biAlert'); if (el.dataset.open) delete el.dataset.open; else el.dataset.open = '1'; alerts(); }
   };
