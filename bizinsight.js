@@ -1,3 +1,4 @@
+// bizinsight.js (v20261111d) — งบกำไรขาดทุน: % ของยอดขายสุทธิแสดงคู่กับยอดในทุกช่อง (เลิกปุ่มสลับ)
 // bizinsight.js (v20261111b) — ตารางงบวัดความกว้างจริงหลังวาด: ล้นการ์ด → ซ่อนแนวโน้ม → ย่อช่องไฟ (แทนเกณฑ์ความกว้างจอตายตัว)
 // bizinsight.js (v20261111a) — งบกำไรขาดทุน: ปุ่ม บาท / % ของยอดขายสุทธิ · จอโน้ตบุ๊กไม่ล้นการ์ด (ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ)
 // bizinsight.js (v20261110a) — แท็บรายช่องทาง: ช่องทางที่รายได้ติดลบไม่คิด % (เดิม CJ ขึ้น 892%) · ค่า Platform รายช่องทางแก้ใน Supabase แล้ว
@@ -135,7 +136,7 @@
     /* (2026-11-11) จอโน้ตบุ๊ก: ตารางงบไม่ล้นการ์ด — ตารางกว้างพอดีการ์ด ตัวเลขเล็กลง ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ */
     .bi table.pl{width:100%;table-layout:auto} .bi .pl-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .bi .seg.pl-unit{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden} .bi .seg.pl-unit button{border:0;background:transparent;padding:6px 12px;font:inherit;font-size:12.5px;color:var(--text2);cursor:pointer} .bi .seg.pl-unit button.on{background:var(--accent);color:#fff;font-weight:700}
-    .bi table.pl.nospk .spk{display:none} .bi table.pl.tight th,.bi table.pl.tight td{padding-left:5px !important;padding-right:5px !important;font-size:11.5px} .bi table.pl.tight .lab{font-size:12px}
+    .bi table.pl td .pc{font-size:10.5px;font-weight:500;color:var(--text3);line-height:1.2;margin-top:1px} .bi table.pl tr.res td .pc,.bi table.pl tr.sub td .pc{color:var(--text2);font-weight:600} .bi table.pl td.neg .pc{color:var(--text3)} .bi table.pl.nospk .spk{display:none} .bi table.pl.tight th,.bi table.pl.tight td{padding-left:5px !important;padding-right:5px !important;font-size:11.5px} .bi table.pl.tight .lab{font-size:12px}
 .bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--row-sum)}
 .bi .flow .pl thead th{background:var(--bg2)}
 .bi .flow:has(.pl){border:0}
@@ -268,7 +269,8 @@
     let SC = 'var(--text3)', id = 0;
     // (2026-11-11) โหมด % : ทุกช่อง = จำนวนเงิน ÷ ยอดขายสุทธิของเดือนนั้น (ช่องรวม ÷ ยอดขายสุทธิรวม) ดูว่าค่าใช้จ่ายไหนบวม
     const bases = ps.map(p => p.rev), tbase = tot.rev;
-    const num = (v, cls = '', b) => `<td class="${cls}${v < -.004 ? ' neg' : ''}">${Math.abs(v) < .005 ? '<span class="pct">—</span>' : plPct ? (b ? (v / b * 100).toFixed(1) + '%' : '—') : fmt(v)}</td>`;
+    // (2026-11-11 d) ทุกช่องแสดงยอด + % ของยอดขายสุทธิเดือนนั้นตัวเล็กใต้ยอด (ไม่ต้องกดสลับ)
+    const num = (v, cls = '', b) => `<td class="${cls}${v < -.004 ? ' neg' : ''}">${Math.abs(v) < .005 ? '<span class="pct">—</span>' : `${fmt(v)}${b ? `<div class="pc">${(v / b * 100).toFixed(1)}%</div>` : ''}`}</td>`;
     const row = (cls, lab, vals, total, o = {}) => `<tr class="${cls}" style="--c:${SC};${o.hide ? 'display:none' : ''}" ${o.attr || ''}><td><div class="lab"><span class="chev">${o.chev ? '▸' : ''}</span>${lab}</div></td>${vals.map((v, k) => num(v, '', bases[k])).join('')}${num(total, 'tot', tbase)}${multi ? `<td class="spk">${spark(vals, o.tone || css('--text3'))}</td>` : ''}</tr>`;
     let h = `<thead><tr><th style="text-align:left">รายการ</th>${R.map(i => `<th>${TH(M[i])}</th>`).join('')}<th class="tot">รวม</th>${multi ? '<th class="spk">แนวโน้ม</th>' : ''}</tr></thead><tbody>`;
     const sec = label => { SC = SEC[label]; h += `<tr class="secrow"><td colspan="${cols}"><span class="chip" style="--c:${SC}">${label}</span></td></tr>`; };
@@ -290,10 +292,9 @@
     res('กำไร (ขาดทุน) จากการดำเนินงาน', ps.map(p => p.op), tot.op, true);
     sec('ภาษีมูลค่าเพิ่ม'); h += row('cat', 'หัก ภพ.30 + ภพ.36', ps.map(p => p.vat), tot.vat);
     res('กำไร (ขาดทุน) หลังหัก ภพ.30 / ภพ.36', ps.map(p => p.after), tot.after);
-    return `<div class="card"><div class="ch"><div><div class="ct">งบกำไรขาดทุน (Profit &amp; Loss) ${tip('กดชื่อกลุ่มที่มีลูกศรเพื่อดูรายการย่อย<br>แถบสีอ่อน = ยอดรวมของหมวด · แถบสีทอง = กำไร (ขาดทุน) จากการดำเนินงาน<br>ค่า Platform ตามใบแจ้งหนี้ ส่วนต่างตามวอลเลตอยู่ในหมายเหตุท้ายตาราง')}</div>
+    return `<div class="card"><div class="ch"><div><div class="ct">งบกำไรขาดทุน (Profit &amp; Loss) ${tip('ตัวเลขเล็กใต้ยอด = % ของยอดขายสุทธิของเดือนนั้น (ช่องรวม = เทียบยอดขายสุทธิรวม)<br>กดชื่อกลุ่มที่มีลูกศรเพื่อดูรายการย่อย<br>แถบสีอ่อน = ยอดรวมของหมวด · แถบสีทอง = กำไร (ขาดทุน) จากการดำเนินงาน<br>ค่า Platform ตามใบแจ้งหนี้ ส่วนต่างตามวอลเลตอยู่ในหมายเหตุท้ายตาราง')}</div>
       <div class="cs">ทุกจำนวนเงินมาจากไฟล์บัญชีและตรงกับไฟล์ทุกบรรทัด</div></div>
-      <div class="pl-tools"><div class="seg pl-unit"><button type="button" class="${plPct ? '' : 'on'}" onclick="BI.setPlUnit(0)">บาท</button><button type="button" class="${plPct ? 'on' : ''}" onclick="BI.setPlUnit(1)">% ของยอดขายสุทธิ</button></div>
-      <button class="btn" onclick="BI.expandAll()">${openAll ? 'ย่อรายการย่อยทั้งหมด' : 'แสดงรายการย่อยทั้งหมด'}</button></div></div>
+      <div class="pl-tools"><button class="btn" onclick="BI.expandAll()">${openAll ? 'ย่อรายการย่อยทั้งหมด' : 'แสดงรายการย่อยทั้งหมด'}</button></div></div>
       <div class="flow"><table class="pl" data-no-sort data-no-page>${h}</tbody></table></div></div>`;
   }
 
