@@ -1,3 +1,6 @@
+// ordprofit.js (v20261110e) — แผงคำสั่งซื้อของเซ็ต: แยกคอลัมน์วันที่ / คำสั่งซื้อ · บรรทัดเซ็ตใต้เลขคำสั่งซื้อไม่ซ้ำราคา
+// ordprofit.js (v20261110d) — หัวคอลัมน์ / ตัวเลขอยู่กลางคอลัมน์ · แถว "เซ็ต / ราคาอื่น ๆ" กดดูคำสั่งซื้อได้ (บอกเซ็ตของแต่ละคำสั่งซื้อ)
+// ordprofit.js (v20261110c) — ตามสินค้า / โปร: คอลัมน์กว้างคงที่ (กางแล้วไม่ขยับ) · กดแถวเซ็ตเปิดแผงคำสั่งซื้อของเซ็ตนั้น · โหลดพร้อมสรุป + จำไว้ 5 นาที
 // ordprofit.js (v20261110b) — แท็บใหม่ "ตามสินค้า / โปร" (เปิดมาเจอก่อน แทนรายสินค้า) · กำไรก่อน / หลัง Ads · ค่า Ads เฉลี่ย 3 วันรอบวันขาย (ฐานข้อมูล) · ป้ายสาเหตุเป็นจุดสี
 // ordprofit.js (v20261110a) — จองความสูงส่วนสรุปก่อนตัวเลขมา (เดิมหน้าขยับ 0.074 ตอนเปิด)
 // ordprofit.js (v20261030a) — ตัวกรองออเดอร์กำไรต่ำ (ปุ่ม "ตัวกรอง" + เกณฑ์แก้ได้ + ป้ายสาเหตุ) · % รายออเดอร์คิดจากยอดขายสินค้า
@@ -167,8 +170,17 @@
     .op-tg{display:inline-block;font-size:11px;border-radius:5px;padding:1px 7px;margin:1px 4px 1px 0;background:rgba(184,134,47,.14);color:#a47224;white-space:nowrap}
     .op-tg.r{background:rgba(220,38,38,.12);color:#dc2626}
     td.op-tgc{white-space:nowrap}
+    #page-ordprofit .op-set-t{table-layout:fixed;width:100%} #page-ordprofit .op-set-t td.l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #page-ordprofit .op-go{display:none;margin-left:10px;font-size:11.5px;color:var(--accent);font-weight:600} #page-ordprofit tr.op-st:hover .op-go{display:inline}
+    .op-sd-h{margin-bottom:12px} .op-sd-t{font-size:15px;font-weight:700;color:var(--text)} .op-sd-t .op-sp b{font-weight:600} .op-sd-m{font-size:12.5px;color:var(--text2);margin-top:4px}
+    .op-sd-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;background:var(--bg2)} .op-sd-k>div{padding:10px 12px} .op-sd-k>div+div{border-left:1px solid var(--border)}
+    .op-sd-k span{display:block;font-size:11px;color:var(--text2)} .op-sd-k b{display:block;font-size:17px;margin-top:2px;font-variant-numeric:tabular-nums} .op-sd-k b.neg,.op-sd-tb .neg{color:var(--red,#dc2626)}
+    .op-sd-tb{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden} .op-sd-tb{table-layout:fixed} .op-sd-tb th{font-size:11.5px;color:var(--text2);font-weight:600;padding:8px 8px;text-align:center;border-bottom:1px solid var(--border)}
+    .op-sd-tb td{padding:8px 8px;text-align:center;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums} .op-sd-tb tr[data-oid]{cursor:pointer} .op-sd-tb tr[data-oid]:hover td{background:var(--bg3)} .op-sd-tb .mono{color:var(--text3);font-size:11.5px}
+    .op-sd-id{font-size:12px;color:var(--text);word-break:break-all} .op-sd-d{white-space:nowrap;color:var(--text2)} .op-sd-sg{font-size:11px;color:var(--text3);margin-top:3px;white-space:normal} .op-sd-sg .op-sp b{font-weight:600} .op-sd-sg .op-plus{margin:0 3px} .op-sd-sg .op-gift{font-size:9.5px}
+    .op-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px} .op-dot.ok{background:#16a34a} .op-dot.wait{background:#dc2626} .op-sd-n{font-size:11.5px;color:var(--text3);margin-top:8px}
     #page-ordprofit .op-sh{display:flex;align-items:baseline;gap:12px;padding:14px 16px 10px;flex-wrap:wrap} #page-ordprofit .op-sh b{font-size:14.5px} #page-ordprofit .op-sh span{font-size:12px;color:var(--text3)} #page-ordprofit .op-sh-r{margin-left:auto}
-    #page-ordprofit .op-set-t td,#page-ordprofit .op-set-t th{padding:9px 14px} #page-ordprofit .op-set-t td.n,#page-ordprofit .op-set-t th:not(.l){text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+    #page-ordprofit .op-set-t td,#page-ordprofit .op-set-t th{padding:9px 14px} #page-ordprofit .op-set-t td.n,#page-ordprofit .op-set-t th:not(.l){text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}   /* (2026-11-10 c) หัวคอลัมน์ + ตัวเลขอยู่กลางคอลัมน์ */
     #page-ordprofit tr.op-gp{cursor:pointer} #page-ordprofit tr.op-gp.open td{background:color-mix(in srgb,var(--accent) 7%,var(--bg2))} #page-ordprofit tr.op-st td{font-size:12.5px;color:var(--text2)} #page-ordprofit tr.op-st td.l{padding-left:40px;color:var(--text)} #page-ordprofit tr.op-st{cursor:pointer}
     #page-ordprofit tr.op-st:hover td{background:var(--bg3)} #page-ordprofit tr.op-oth td.l{color:var(--text3)} #page-ordprofit .op-car{display:inline-block;width:18px;color:var(--text3);font-size:11px}
     #page-ordprofit .op-plus{color:var(--text3);margin:0 6px} #page-ordprofit .op-sp b{font-weight:600;color:var(--text2)} #page-ordprofit .op-gift{font-style:normal;font-size:10px;font-weight:700;padding:0 5px;border-radius:4px;margin-right:4px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
@@ -293,13 +305,16 @@
   async function load() {
     const el = shell(), my = ++_seq, other = CHS.find(c => c !== S.ch);
     const q = c => rpc('order_profit_summary', { p_ch: c, p_from: S.from, p_to: S.to, p_shop: c === 'Shopee' ? S.shop : null });
+    const lk = [S.ch, S.from, S.to, S.shop].join('|');
+    if (S._lk === lk && S.both[S.ch] && Date.now() - (S._lt || 0) < 5 * 60e3) { drawTop(); drawTab(); return; }   // (2026-11-10 b) เปิดเมนูซ้ำภายใน 5 นาที ใช้ตัวเลขเดิม ไม่ต้องรอโหลด
+    if (S.tab === 'sets') fetchSets().catch(() => {});
     if (!el.querySelector('#opKpis .op-k')) el.querySelector('#opKpis').innerHTML = ['', '', '', ''].map((_, i) => `<div class="op-k${i ? '' : ' hero'}"><div class="l">&nbsp;</div><div class="v">—</div><div class="d">&nbsp;</div></div>`).join('');
     busy(1);
     let cur;   // ช่องทางที่เลือกก่อน แสดงผลได้ทันที · อีกช่องทาง (ใช้แค่ตัวเลขเปรียบเทียบในการ์ดแรก) ตามมาเบื้องหลัง
     try { cur = await q(S.ch); }
     catch (e) { busy(-1); el.querySelector('#opKpis').innerHTML = `<div class="error-banner" style="display:block;grid-column:1/-1;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     if (my !== _seq) { busy(-1); return; }
-    S.both = { [S.ch]: cur };
+    S.both = { [S.ch]: cur }; S._lk = lk; S._lt = Date.now();
     drawTop(); drawTab(); busy(-1);
     q(other).then(x => { if (my !== _seq) return; S.both[other] = x; drawTop(); }).catch(() => {});
   }
@@ -368,14 +383,17 @@
   }
   // (2026-11-10) มุมมอง "ตามสินค้า / โปร": สินค้าหลัก → กางดูทุกเซ็ต / ราคาที่ขาย · กำไรก่อน / หลังค่า Ads ต่อออเดอร์ · ใช้ดูว่าราคา / โปรไหนเหลือกำไร
   //   ข้อมูล: RPC order_profit_by_set (รวมในฐานข้อมูล) · เซ็ตที่มีออเดอร์น้อยกว่า 5 รวมเป็น "เซ็ต / ราคาอื่น ๆ"
-  const SETS = { key: '', data: null, open: new Set(), min: 5 };
+  const SETS = { key: '', data: null, p: null, pk: '', open: new Set(), min: 5 };
+  const setsKey = () => [S.ch, S.from, S.to, S.ch === 'Shopee' ? S.shop : ''].join('|');
+  // (2026-11-10 b) ดึงข้อมูลมุมมองนี้พร้อมกับตัวเลขสรุป (ไม่รอคิว) และจำไว้ในหน้า · เปิดเมนูซ้ำ / สลับแท็บไม่ต้องโหลดใหม่
+  function fetchSets() { const key = setsKey(); if (SETS.key === key && SETS.data) return Promise.resolve(SETS.data); if (SETS.pk === key && SETS.p) return SETS.p;
+    SETS.pk = key; SETS.p = rpc('order_profit_by_set', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_shop: S.ch === 'Shopee' ? S.shop : null }).then(d => { if (SETS.pk === key) { SETS.data = d; SETS.key = key; } return d; }); return SETS.p; }
   async function drawSets() {
-    const box = shell().querySelector('#opBody'), key = [S.ch, S.from, S.to, S.ch === 'Shopee' ? S.shop : ''].join('|');
+    const box = shell().querySelector('#opBody'), key = setsKey();
     if (SETS.key !== key || !SETS.data) {
-      if (!box.querySelector('.op-sets')) box.innerHTML = '<div class="op-sets"><div class="op-z" style="padding:40px;text-align:center;color:var(--text3);">กำลังโหลด…</div></div>';
-      try { SETS.data = await rpc('order_profit_by_set', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_shop: S.ch === 'Shopee' ? S.shop : null }); SETS.key = key; }
-      catch (e) { box.innerHTML = `<div class="op-z" style="padding:30px;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-      if (S.tab !== 'sets') return;
+      if (!box.querySelector('.op-sets')) box.innerHTML = '<div class="op-sets"><div class="op-z" style="padding:40px;text-align:center;color:var(--text3);min-height:420px;">กำลังโหลด…</div></div>';
+      try { await fetchSets(); } catch (e) { box.innerHTML = `<div class="op-z" style="padding:30px;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+      if (S.tab !== 'sets' || setsKey() !== key) return;
     }
     const NM = SETS.data.names || {}, rows = SETS.data.rows || [];
     const nmOf = c => NM[c] || c;
@@ -393,14 +411,34 @@
       const oth = rest.length ? rest.reduce((t, x) => ({ n: t.n + x.n, rev: t.rev + x.rev, profit: t.profit + x.profit, ads: t.ads + x.ads, loss: t.loss + x.loss }), { n: 0, rev: 0, profit: 0, ads: 0, loss: 0 }) : null;
       const title = g.main === 'หลายสินค้า' ? 'หลายสินค้า (เซ็ตผสม)' : esc(g.name || g.main) + ` <span class="sub mono">${esc(g.main)}</span>`;
       return `<tr class="op-gp${open ? ' open' : ''}" data-g="${esc(g.main)}"><td class="l"><span class="op-car">${open ? '▾' : '▸'}</span><b>${title}</b></td><td class="n op-m">${n0(g.rev / g.n)} <span class="sub">เฉลี่ย</span></td>${cells(g)}</tr>`
-        + (open ? big.map(x => `<tr class="op-st" onclick="OrdProfit.pickProduct('${esc(g.main === 'หลายสินค้า' ? '__multi' : g.main)}')" title="กดเพื่อดูคำสั่งซื้อของสินค้านี้"><td class="l">${sigHtml(x.sig)}</td><td class="n"><b>${n0(x.price)}</b></td>${cells(x)}</tr>`).join('')
-          + (oth ? `<tr class="op-st op-oth"><td class="l">เซ็ต / ราคาอื่น ๆ <span class="sub">(${rest.length} แบบ · น้อยกว่า ${SETS.min} ออเดอร์ต่อแบบ)</span></td><td class="n op-m">—</td>${cells(oth)}</tr>` : '') : '');
+        + (open ? big.map(x => `<tr class="op-st" data-main="${esc(g.main)}" data-sig="${esc(x.sig)}" data-price="${x.price}" data-st="${x.n},${x.profit},${x.ads},${x.loss}" title="กดดูคำสั่งซื้อของเซ็ตนี้"><td class="l">${sigHtml(x.sig)}<span class="op-go">ดูคำสั่งซื้อ ›</span></td><td class="n"><b>${n0(x.price)}</b></td>${cells(x)}</tr>`).join('')
+          + (oth ? `<tr class="op-st op-oth" data-main="${esc(g.main)}" data-multi="${esc(JSON.stringify(rest.map(x => [x.sig, x.price])))}" data-st="${oth.n},${oth.profit},${oth.ads},${oth.loss}"><td class="l">เซ็ต / ราคาอื่น ๆ <span class="sub">(${rest.length} แบบ · น้อยกว่า ${SETS.min} ออเดอร์ต่อแบบ)</span><span class="op-go">ดูคำสั่งซื้อ ›</span></td><td class="n op-m">—</td>${cells(oth)}</tr>` : '') : '');
     }).join('');
     box.innerHTML = `<div class="op-sets"><div class="op-sh"><b>กำไรตามสินค้า / เซ็ต / ราคา</b><span>กด ▸ ดูทุกเซ็ต / ราคาที่ขาย · กดแถวเซ็ต = ดูคำสั่งซื้อของสินค้านั้น</span>
         <span class="op-sh-r">${tip('กำไรก่อน Ads = ยอดขาย − ค่าธรรมเนียมแพลตฟอร์ม − VAT − ต้นทุนสินค้า (บอกว่าราคา / โปรนี้แข็งแรงไหม)<br>กำไรหลัง Ads = หักค่า Ads + Coins แล้ว (บอกว่ายิง Ads แล้วยังเหลือกำไรไหม)<br>ค่า Ads ต่อออเดอร์ใช้อัตราเฉลี่ย 3 วันรอบวันขาย (ช่วงโปรที่ยิงหนักได้ค่า Ads ตามจริง · ยอดรวมทั้งเดือนเท่าเดิม)<br>ไม่หักค่าบริหาร / การตลาดอื่น · ไม่นับคำสั่งซื้อที่คืนเงินเต็ม')}</span></div>
-      <div class="op-scroll"><table class="op-t op-set-t" data-no-sort data-no-page><thead><tr><th class="l">สินค้า / เซ็ตที่ขาย</th><th>ราคาขาย</th><th>ออเดอร์</th><th>ยอดขาย</th><th>กำไรก่อน Ads / ออเดอร์</th><th>% ค่า Ads</th><th>กำไรหลัง Ads / ออเดอร์</th><th>% กำไร</th><th>ออเดอร์ขาดทุน</th></tr></thead>
+      <div class="op-scroll"><table class="op-t op-set-t" data-no-sort data-no-page><colgroup><col><col style="width:96px"><col style="width:82px"><col style="width:110px"><col style="width:132px"><col style="width:84px"><col style="width:132px"><col style="width:80px"><col style="width:118px"></colgroup><thead><tr><th class="l">สินค้า / เซ็ตที่ขาย</th><th>ราคาขาย</th><th>ออเดอร์</th><th>ยอดขาย</th><th>กำไรก่อน Ads / ออเดอร์</th><th>% ค่า Ads</th><th>กำไรหลัง Ads / ออเดอร์</th><th>% กำไร</th><th>ออเดอร์ขาดทุน</th></tr></thead>
       <tbody>${body || '<tr><td colspan="9" class="l z">ไม่มีข้อมูล</td></tr>'}</tbody></table></div></div>`;
     box.querySelectorAll('tr.op-gp').forEach(tr => tr.onclick = () => { const k = tr.dataset.g; SETS.open.has(k) ? SETS.open.delete(k) : SETS.open.add(k); drawSets(); });
+    box.querySelectorAll('tr.op-st[data-sig]').forEach(tr => tr.onclick = () => openSet([[tr.dataset.sig, +tr.dataset.price]], tr.querySelector('td.l').innerHTML.replace(/<span class="op-go">.*?<\/span>/, ''), tr.dataset.st.split(',').map(Number), `ราคา ${n0(+tr.dataset.price)}`));
+    box.querySelectorAll('tr.op-st[data-multi]').forEach(tr => tr.onclick = () => { const L = JSON.parse(tr.dataset.multi), g = by.get(tr.dataset.main);
+      openSet(L, `${esc(g && g.main !== 'หลายสินค้า' ? (g.name || g.main) : 'หลายสินค้า')} · เซ็ต / ราคาอื่น ๆ`, tr.dataset.st.split(',').map(Number), `${L.length} แบบ`, sigHtml); });
+  }
+  // (2026-11-10 b) แผงคำสั่งซื้อของเซ็ต: สรุปตัวเลข 4 ช่อง + รายการคำสั่งซื้อ (กดแต่ละรายการ = รายละเอียดคำสั่งซื้อเดิม)
+  async function openSet(sets, labelHtml, st, subTxt, sigFn) {
+    // (2026-11-10 c) 1 เซ็ต = กดแถวเซ็ต · หลายเซ็ต = กดแถว "เซ็ต / ราคาอื่น ๆ" (แต่ละคำสั่งซื้อบอกเซ็ต + ราคาของตัวเองใต้เลขคำสั่งซื้อ)
+    window.trOpenShell('คำสั่งซื้อของเซ็ตนี้');
+    const b = () => document.getElementById('trBody'), multi = sets.length > 1;
+    let j; try { j = await rpc('order_profit_set_orders2', { p_ch: S.ch, p_from: S.from, p_to: S.to, p_shop: S.ch === 'Shopee' ? S.shop : null, p_sets: sets }); }
+    catch (e) { if (b()) b().innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    // ตัวเลขสรุปใช้ของทั้งเซ็ต (ทุกคำสั่งซื้อ ตรงกับแถวในตาราง) ไม่ใช่เฉพาะที่แสดง
+    const R = j.rows || [], n = (st && st[0]) || R.length || 1, t = st ? { pf: st[1], ads: st[2], loss: st[3] } : { pf: 0, ads: 0, loss: 0 };
+    if (!b()) return;
+    b().innerHTML = `<div class="op-sd"><div class="op-sd-h"><div class="op-sd-t">${labelHtml}</div><div class="op-sd-m">${esc(S.ch)} · ${esc(subTxt || '')} · ${n0(j.total || 0)} คำสั่งซื้อ${(j.total || 0) > R.length ? ` (แสดงล่าสุด ${R.length})` : ''}</div></div>
+      <div class="op-sd-k"><div><span>กำไรก่อน Ads / ออเดอร์</span><b>${n2((t.pf + t.ads) / n)}</b></div><div><span>ค่า Ads / ออเดอร์</span><b>${n2(t.ads / n)}</b></div><div><span>กำไรหลัง Ads / ออเดอร์</span><b class="${t.pf < 0 ? 'neg' : ''}">${n2(t.pf / n)}</b></div><div><span>ขาดทุน</span><b class="${t.loss ? 'neg' : ''}">${n0(t.loss)}</b></div></div>
+      <table class="op-sd-tb" data-no-sort data-no-page><colgroup><col style="width:58px"><col style="width:${multi ? 32 : 27}%"><col style="width:13%"><col style="width:15%"><col style="width:12%"><col style="width:12%"><col style="width:13%"></colgroup><thead><tr><th>วันที่</th><th>คำสั่งซื้อ</th><th>ยอดขาย</th><th>ค่าธรรมเนียม</th><th>ต้นทุน</th><th>ค่า Ads</th><th>กำไร</th></tr></thead><tbody>
+      ${R.map(r => `<tr data-oid="${esc(r[0])}"><td class="op-sd-d"><span class="op-dot ${r[9] ? 'ok' : 'wait'}" title="${r[9] ? 'เงินเข้าแล้ว' : 'เงินยังไม่เข้า'}"></span>${esc(String(r[1]).slice(8, 10) + '/' + String(r[1]).slice(5, 7))}</td><td><div class="op-sd-id">${esc(r[0])}</div>${multi && sigFn ? `<div class="op-sd-sg">${sigFn(r[10])}</div>` : ''}</td><td>${n2(r[2])}</td><td>${n2(r[3])}</td><td>${n2(r[5])}</td><td>${n2(r[6])}</td><td class="${+r[7] < 0 ? 'neg' : ''}"><b>${n2(r[7])}</b></td></tr>`).join('') || '<tr><td colspan="7">ไม่มีคำสั่งซื้อ</td></tr>'}</tbody></table>
+      <div class="op-sd-n">กดคำสั่งซื้อเพื่อดูรายละเอียดทุกบรรทัด</div></div>`;
+    b().querySelectorAll('tr[data-oid]').forEach(tr => tr.onclick = () => openOrder(tr.dataset.oid));
   }
   function sortProd(key) { if (!PSORT[key]) return; if (S.psort === key) S.pdir = S.pdir === 'asc' ? 'desc' : 'asc'; else { S.psort = key; S.pdir = key === 'name' ? 'asc' : 'desc'; } drawProducts(); }
 
