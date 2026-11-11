@@ -1,3 +1,4 @@
+// bizinsight.js (v20261111b) — ตารางงบวัดความกว้างจริงหลังวาด: ล้นการ์ด → ซ่อนแนวโน้ม → ย่อช่องไฟ (แทนเกณฑ์ความกว้างจอตายตัว)
 // bizinsight.js (v20261111a) — งบกำไรขาดทุน: ปุ่ม บาท / % ของยอดขายสุทธิ · จอโน้ตบุ๊กไม่ล้นการ์ด (ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ)
 // bizinsight.js (v20261110a) — แท็บรายช่องทาง: ช่องทางที่รายได้ติดลบไม่คิด % (เดิม CJ ขึ้น 892%) · ค่า Platform รายช่องทางแก้ใน Supabase แล้ว
 // bizinsight.js (v20261027a) — หัวตารางรายสินค้าล็อกเสมอ (กรอบตารางเลื่อนเอง)
@@ -134,8 +135,7 @@
     /* (2026-11-11) จอโน้ตบุ๊ก: ตารางงบไม่ล้นการ์ด — ตารางกว้างพอดีการ์ด ตัวเลขเล็กลง ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ */
     .bi table.pl{width:100%;table-layout:auto} .bi .pl-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .bi .seg.pl-unit{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden} .bi .seg.pl-unit button{border:0;background:transparent;padding:6px 12px;font:inherit;font-size:12.5px;color:var(--text2);cursor:pointer} .bi .seg.pl-unit button.on{background:var(--accent);color:#fff;font-weight:700}
-    @media (max-width:1700px){ .bi table.pl th,.bi table.pl td{padding-left:6px !important;padding-right:6px !important;font-size:12px} .bi table.pl .lab{font-size:12.5px} }
-    @media (max-width:1500px){ .bi table.pl .spk{display:none} }
+    .bi table.pl.nospk .spk{display:none} .bi table.pl.tight th,.bi table.pl.tight td{padding-left:5px !important;padding-right:5px !important;font-size:11.5px} .bi table.pl.tight .lab{font-size:12px}
 .bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--row-sum)}
 .bi .flow .pl thead th{background:var(--bg2)}
 .bi .flow:has(.pl){border:0}
@@ -363,7 +363,12 @@
     const el = document.getElementById('biTab');
     if (tab === 'prod') { el.innerHTML = PROD_HTML; if (window.renderPl) window.renderPl(); return; }
     el.innerHTML = tab === 'ch' ? chTable() : plTable();
+    if (tab === 'pl') fitPl();
   }
+  // (2026-11-11 b) ตารางงบให้พอดีการ์ดทุกจอ (วัดจริงหลังวาด): ล้น → ซ่อนคอลัมน์แนวโน้ม · ยังล้น → ตัวเลขเล็กลง / ช่องไฟแคบลง
+  function fitPl() { requestAnimationFrame(() => { const f = document.querySelector('.bi .flow'), t = f && f.querySelector('table.pl'); if (!t) return;
+    t.classList.remove('nospk', 'tight'); if (t.scrollWidth > f.clientWidth + 1) t.classList.add('nospk'); if (t.scrollWidth > f.clientWidth + 1) t.classList.add('tight'); }); }
+  window.addEventListener('resize', () => { if (tab === 'pl') fitPl(); });
   const LAYOUT = `<div class="bi">
     <div class="bar-top"><div class="src" id="biSrc"></div>
       <span class="src">ต้นทุนสินค้าตามคำสั่งซื้อ (ม.ค.–พ.ค. ตาม Shipment)</span></div>
