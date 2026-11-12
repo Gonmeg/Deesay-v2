@@ -1,3 +1,4 @@
+// ttapi.js (v20261112a) — แถว Ads สร้างการรับรู้: มี %Ads เทียบยอดขายรวม + ยอดแยกตามบัญชี Ads · กราฟ GMV แสดงแกนตัวเลขซ้าย / ขวา
 // ttapi.js (v20261105a) — ทราฟฟิกร้าน: วางโครงครั้งเดียวตั้งแต่เปิดหน้า (ตารางแยกแหล่งแสดงตั้งแต่แรก) · โหลดซ้ำ / เปลี่ยนช่วง แทนตัวเลขในที่เดิม — กันหน้าเด้ง
 // ttapi.js (v20261021f) — คอลัมน์เป้าดูอย่างเดียว (tt_gmv_target_range) · ตั้งเป้าที่หน้าเป้าหมาย KPI › TikTok GMV
 // ttapi.js (v20261021e) — เป้า GMV เป็นคอลัมน์ "เป้า" หน้าคอลัมน์ GMV (กดตัวเลขเพื่อแก้ เฉพาะผู้ดูแล) · เอาการ์ดเป้าออก
@@ -148,7 +149,8 @@
         { label: 'ค่า Ads', data: keys.map(k => Math.round(am[k] || 0)), borderColor: '#dc2626', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y1' }] },
       options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}  ${fmt(c.raw)}` } } },
-        scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { display: false, beginAtZero: true }, y1: { display: false, beginAtZero: true, position: 'right' } } } });
+        scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { beginAtZero: true, border: { display: false }, grid: { color: 'rgba(127,127,127,.12)' }, ticks: { color: '#b8862f', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => fmt(v) } },
+          y1: { beginAtZero: true, position: 'right', border: { display: false }, grid: { display: false }, ticks: { color: '#dc2626', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => fmt(v) } } } } });   // (2026-11-12) แสดงแกนตัวเลข: ซ้าย = GMV (ทอง) · ขวา = ค่า Ads (แดง)
   }
   // ===== (2026-10-21 c) คอลัมน์ "เป้า" (มุมมอง GMV ตาม TikTok · ดูอย่างเดียว) — ตั้งเป้าที่หน้าเป้าหมาย KPI › แท็บ TikTok GMV =====
   //   เลือกในเดือนเดียว = เป้าจริงของเดือน (แผน + ยกมา) · หลายเดือน / ทั้งปี = แผนรวมตามวันที่ทับช่วง ถึงวันล่าสุดที่ TikTok ปล่อย
@@ -165,7 +167,7 @@
     if (tbl && tbl.tHead) tbl.tHead.innerHTML = `<tr><th class="l">ช่องทาง</th>`
       + (tk ? `<th>${thTip(from.slice(0, 7) === to.slice(0, 7) ? 'เป้า ' + tgMonth(to) : 'เป้า (ช่วงที่เลือก)', 'ตั้งเป้าที่หน้าเป้าหมาย KPI › แท็บ TikTok GMV (เป้าทั้งปี → รายเดือน → ยกยอดขาด / เกิน)\nเลือกในเดือนเดียว = เป้าจริงของเดือนนั้น (แผน + ยกมา) · % เทียบกับจำนวนวันที่ผ่านไป (เมื่อเลือกตั้งแต่วันที่ 1)\nเลือกหลายเดือน / ทั้งปี = แผนรวมของช่วงนั้น นับถึงวันล่าสุดที่ TikTok ปล่อยข้อมูล\nสี: เขียว ทัน · ส้ม ช้าไม่เกิน 10% · แดง ช้ามาก')}</th><th>${thTip('GMV', 'GMV ตามที่ TikTok นับ (ก่อนหักยกเลิก / คืน) = GMV ตรง + GMV โดยอ้อม')}</th><th>${thTip('GMV โดยอ้อม', 'ยอดที่ลูกค้าซื้อหลังดูไลฟ์ / วิดีโอ แต่ไม่ได้ซื้อตรงจากคอนเทนต์นั้น')}</th>`
             : `<th>${thTip('ยอดขาย', 'ยอดขายจริง หักยกเลิก / คืนแล้ว')}</th><th>ออเดอร์</th>`)
-      + `<th>สัดส่วน</th><th class="tt-gl tt-ad">ค่า Ads</th><th class="tt-ad">${thTip('ROAS', tk ? 'GMV ÷ ค่า Ads (ค่า Ads ถึงวันเดียวกับ GMV)' : 'ยอดขายจริง ÷ ค่า Ads')}</th><th class="tt-ad">${thTip('%Ads', tk ? 'ค่า Ads ÷ GMV' : 'ค่า Ads ÷ ยอดขายจริง')}</th>`
+      + `<th>สัดส่วน</th><th class="tt-gl tt-ad">ค่า Ads</th><th class="tt-ad">${thTip('ROAS', tk ? 'GMV ÷ ค่า Ads (ค่า Ads ถึงวันเดียวกับ GMV)' : 'ยอดขายจริง ÷ ค่า Ads')}</th><th class="tt-ad">${thTip('%Ads', (tk ? 'ค่า Ads ÷ GMV' : 'ค่า Ads ÷ ยอดขายจริง') + '\nแถวรวม = ค่า Ads ทุกแถว รวม Ads สร้างการรับรู้แล้ว')}</th>`
       + `<th class="tt-gl tt-ad">${thTip('ยอดขายจาก Ads (TikTok)', 'ยอดขายที่ TikTok บอกว่ามาจาก Ads\nTikTok นับตอนลูกค้ากดสั่ง (ก่อนหักยกเลิก / คืน) และนับยอดทั้งไลฟ์ที่มี Ads วิ่ง')}</th><th class="tt-ad">${thTip('ROI (TikTok)', 'ROI ที่ TikTok คำนวณ = ยอดขายจาก Ads (TikTok) ÷ ค่า Ads\nแถวรวมไม่นับ Ads สร้างการรับรู้')}</th></tr>`;
     try {
       let C = {}, ord = {}, ind = {}, est = {}, adTo = to, V = null;
@@ -178,7 +180,8 @@
         const rows = await supaRpc('tt_channel_grid', { p_from: from, p_to: to }, true);
         (rows || []).forEach(r => { const k = r.grp + '.' + r.typ; C[k] = num(r.revenue); ord[k] = num(r.orders); est[k] = !!r.est; });
       }
-      const adRows = adTo >= from ? await supaRpc('tt_channel_ads', { p_from: from, p_to: adTo }, true).catch(() => []) : [];
+      // (2026-11-12) แถว Ads สร้างการรับรู้: แยกยอดตามบัญชี Ads (tt_awareness_accounts) ไว้เช็คย้อนกับ TikTok Ads Manager
+      const [adRows, awAcc] = adTo >= from ? await Promise.all([supaRpc('tt_channel_ads', { p_from: from, p_to: adTo }, true).catch(() => []), supaRpc('tt_awareness_accounts', { p_from: from, p_to: adTo }, true).catch(() => [])]) : [[], []];
       if (seq !== _ocSeq) return;
       const AD = {}; (adRows || []).forEach(a => { const k = AD_KEY[a.label]; if (k) AD[k] = { cost: num(a.ad_cost), rev: a.ad_rev == null ? null : num(a.ad_rev) }; });
       const dash = '<span style="color:var(--text3);">—</span>';
@@ -218,7 +221,10 @@
         });
       });
       if (!tk && cn) h += `<tr style="color:var(--text3);"><td class="l">ลดหนี้ (CN)</td><td>${baht(cn)}</td><td>${dash}</td><td>${pctTxt(cn, tot)}</td>${adCells(0, null)}</tr>`;
-      if (AD.aw) h += `<tr style="color:var(--text3);"><td class="l">Ads สร้างการรับรู้${iTip('Ads แบบ Reach / Video views / Brand ที่ไม่ผูกกับยอดขาย · แยกแถวไว้ ไม่ให้ ROAS ของช่องทางอื่นเพี้ยน')}</td>${tk ? `<td>${dash}</td>` : ''}<td>${dash}</td><td>${dash}</td><td>${dash}</td>${adCells(0, { cost: AD.aw.cost, rev: null })}</tr>`;
+      if (AD.aw) { const acc = (awAcc || []).filter(a => +a.cost), base = tk ? 'GMV รวม' : 'ยอดขายรวมทั้งร้าน';
+        h += `<tr><td class="l" style="color:var(--text2);">Ads สร้างการรับรู้${iTip('Ads แบบ Reach / Video views / Brand ที่ไม่ผูกกับยอดขาย · แยกแถวไว้ ไม่ให้ ROAS ของช่องทางอื่นเพี้ยน\nตัวเล็กใต้ค่า Ads = ยอดของแต่ละบัญชี Ads · %Ads ของแถวนี้ = ค่า Ads สร้างการรับรู้ ÷ ' + base)}</td>${tk ? `<td>${dash}</td>` : ''}<td>${dash}</td><td>${dash}</td><td>${dash}</td>
+          <td class="tt-gl">${baht(AD.aw.cost)}${acc.length ? `<div style="margin-top:3px;font-size:11px;font-weight:400;color:var(--text3);line-height:1.5;">${acc.map(a => `<div>${esc(a.account)} <b style="font-weight:600;color:var(--text2);">${baht(a.cost)}</b></div>`).join('')}</div>` : ''}</td><td>${dash}</td>
+          <td>${tot > 0 ? `<span data-tip="ค่า Ads สร้างการรับรู้ ÷ ${base}">${pctTxt(AD.aw.cost, tot)}</span>` : dash}</td><td class="tt-gl">${dash}</td><td>${dash}</td></tr>`; }
       const adCost = Object.values(AD).reduce((a, x) => a + x.cost, 0), adRev = Object.values(AD).reduce((a, x) => a + (x.rev || 0), 0);
       const roiCost = Object.values(AD).filter(x => x.rev != null).reduce((a, x) => a + x.cost, 0);
       const t2 = tk ? fmt2(Object.values(ind).reduce((a, x) => a + (x || 0), 0)) : fmt(Object.values(ord).reduce((a, x) => a + num(x), 0));
