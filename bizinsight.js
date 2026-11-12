@@ -1,3 +1,4 @@
+// bizinsight.js (v20261111e) — กราฟไม่ย่อ M (ตัวเลขเต็ม · แก้ป้ายแกนซ้ำ 1M 1M) · ตัวเลขทุกตารางอยู่กลางคอลัมน์
 // bizinsight.js (v20261111d) — งบกำไรขาดทุน: % ของยอดขายสุทธิแสดงคู่กับยอดในทุกช่อง (เลิกปุ่มสลับ)
 // bizinsight.js (v20261111b) — ตารางงบวัดความกว้างจริงหลังวาด: ล้นการ์ด → ซ่อนแนวโน้ม → ย่อช่องไฟ (แทนเกณฑ์ความกว้างจอตายตัว)
 // bizinsight.js (v20261111a) — งบกำไรขาดทุน: ปุ่ม บาท / % ของยอดขายสุทธิ · จอโน้ตบุ๊กไม่ล้นการ์ด (ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ)
@@ -136,7 +137,9 @@
     /* (2026-11-11) จอโน้ตบุ๊ก: ตารางงบไม่ล้นการ์ด — ตารางกว้างพอดีการ์ด ตัวเลขเล็กลง ซ่อนคอลัมน์แนวโน้มเมื่อจอแคบ */
     .bi table.pl{width:100%;table-layout:auto} .bi .pl-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .bi .seg.pl-unit{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden} .bi .seg.pl-unit button{border:0;background:transparent;padding:6px 12px;font:inherit;font-size:12.5px;color:var(--text2);cursor:pointer} .bi .seg.pl-unit button.on{background:var(--accent);color:#fff;font-weight:700}
-    .bi table.pl td .pc{font-size:10.5px;font-weight:500;color:var(--text3);line-height:1.2;margin-top:1px} .bi table.pl tr.res td .pc,.bi table.pl tr.sub td .pc{color:var(--text2);font-weight:600} .bi table.pl td.neg .pc{color:var(--text3)} .bi table.pl.nospk .spk{display:none} .bi table.pl.tight th,.bi table.pl.tight td{padding-left:5px !important;padding-right:5px !important;font-size:11.5px} .bi table.pl.tight .lab{font-size:12px}
+    .bi table.pl td .pc{font-size:10.5px;font-weight:500;color:var(--text3);line-height:1.2;margin-top:1px} .bi table.pl tr.res td .pc,.bi table.pl tr.sub td .pc{color:var(--text2);font-weight:600} .bi table.pl td.neg .pc{color:var(--text3)} .bi table.pl.nospk .spk{display:none}
+    /* (2026-11-11 e) กติกาทั้งเว็บ: หัวคอลัมน์ + ตัวเลขอยู่กลางคอลัมน์ (ยกเว้นคอลัมน์ชื่อรายการ) — ทุกตารางในหน้า Business Insight */
+    .bi table th:not(:first-child),.bi table td:not(:first-child){text-align:center !important} .bi table.pl.tight th,.bi table.pl.tight td{padding-left:5px !important;padding-right:5px !important;font-size:11.5px} .bi table.pl.tight .lab{font-size:12px}
 .bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--row-sum)}
 .bi .flow .pl thead th{background:var(--bg2)}
 .bi .flow:has(.pl){border:0}
@@ -228,8 +231,8 @@
       <div class="d">${sub[k] ? sub[k] + ' · ' : ''}${cmp(k)}</div></div>`).join('');
   }
   const labelPlugin = { id: 'biLabels', afterDatasetsDraw(c) { const { ctx } = c; c.data.datasets.forEach((ds, di) => { if (ds.type === 'line') return;
-    c.getDatasetMeta(di).data.forEach((bar, i) => { const v = ds.data[i]; if (v == null) return; ctx.save(); ctx.font = '600 11px Sarabun'; ctx.fillStyle = css('--text2'); ctx.textAlign = 'center';
-      ctx.fillText(fmtM(v), bar.x, v >= 0 ? bar.y - 6 : bar.y + 14); ctx.restore(); }); }); } };
+    c.getDatasetMeta(di).data.forEach((bar, i) => { const v = ds.data[i]; if (v == null) return; ctx.save(); ctx.font = '600 10px Sarabun'; ctx.fillStyle = css('--text2'); ctx.textAlign = 'center';
+      ctx.fillText(fmt(v), bar.x, v >= 0 ? bar.y - 6 : bar.y + 14); ctx.restore(); }); }); } };
   function trend() {
     const [label, , sign] = MET[metric], ps = M.map((_, i) => P(i)), vals = ps.map(p => p[metric]);
     document.getElementById('biTrTitle').textContent = `${label} รายเดือน`;
@@ -242,7 +245,7 @@
     chart = new Chart(document.getElementById('biTrend'), { data: { labels: M.map(TH), datasets: ds }, plugins: [labelPlugin],
       options: { maintainAspectRatio: false, layout: { padding: { top: 18 } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.type === 'line' ? ` อัตรากำไร ${c.raw}%` : ` ${label} ${fmt(c.raw)}` } } },
         scales: { x: { ticks: { color: css('--text2'), font: { family: 'Sarabun' } }, grid: { display: false } },
-          y: { ticks: { color: css('--text3'), callback: v => (v / 1e6).toFixed(0) + 'M' }, grid: { color: 'rgba(128,128,128,.12)' } },
+          y: { ticks: { color: css('--text3'), callback: v => (v < 0 ? '−' : '') + Math.round(Math.abs(v)).toLocaleString('en-US') }, grid: { color: 'rgba(128,128,128,.12)' } },
           y2: { display: sign, position: 'right', ticks: { color: css('--blue'), callback: v => v + '%' }, grid: { display: false } } } } });
   }
   function costStruct() {
