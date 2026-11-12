@@ -91,7 +91,8 @@
         { label: 'ค่า Ads', data: keys.map(k => Math.round(am[k] || 0)), borderColor: '#dc2626', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y1' }] },
       options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}  ${n0(c.raw)}` } } },
-        scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { display: false, beginAtZero: true }, y1: { display: false, beginAtZero: true, position: 'right' } } } });
+        scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { beginAtZero: true, border: { display: false }, grid: { color: 'rgba(127,127,127,.12)' }, ticks: { color: '#b8862f', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => n0(v) } },
+          y1: { beginAtZero: true, position: 'right', border: { display: false }, grid: { display: false }, ticks: { color: '#dc2626', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => n0(v) } } } } });   // (2026-11-12) แสดงแกนตัวเลข: ซ้าย = ยอดขาย (ทอง) · ขวา = ค่า Ads (แดง)
   }
 
   window.shSys = { setView, render, apply, getView: () => _view };
