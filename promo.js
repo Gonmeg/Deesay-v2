@@ -1,3 +1,4 @@
+// promo.js (v20261112a) — หน้าขอ Promotion แบบตาราง: 1 แถว = 1 ชุดสินค้า · เลือก Platform + ช่องทางจากตัวกรองด้านบน · ช่องราคาเดียว + เทียบ Rank 1 / 2 / 3 · ส่งหลายรายการครั้งเดียว (แทนฟอร์มทีละโปร)
 // promo.js (v20261102c) — ปุ่มเลือกค่าธรรมเนียมขึ้นทุกช่องทาง: ช่องทางที่ไม่มี API ปุ่ม "ค่าจริง" กดไม่ได้ พร้อมบอกเหตุผล
 // promo.js (v20261102b) — เลือก ค่าจริง / ค่าที่ตั้งไว้ ตอนจำลองโปรและดูคำขอ (ปุ่มบนผลคำนวณ) แทนคอลัมน์ "ใช้คิดโปร" ในหน้าค่าธรรมเนียม · การ์ด / หัวตารางมี ⓘ อธิบายตัวเลข
 // promo.js (v20261102a) — ค่าธรรมเนียมช่องทาง: คอลัมน์ "ใช้คิดโปร" เลือก ค่าจริง / ตั้งเอง ได้รายบรรทัด (สูตรคิดโปรใช้ตามที่เลือก · อัตราคำนวณที่ฐานข้อมูล fee_rates ที่เดียว) · TikTok มีมุมมอง "เทียบทุกประเภท" ในตารางเดียว
@@ -57,6 +58,44 @@
       .pr-f { max-width:900px; }
       .pr-pickw { position:relative; min-width:0; }
       .pr-pick { padding-right:30px; background-image:linear-gradient(45deg, transparent 50%, var(--text3) 50%), linear-gradient(135deg, var(--text3) 50%, transparent 50%); background-position:calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+      /* (2026-11-12) ขอ Promotion แบบตาราง */
+      .pg-top { display:flex; flex-wrap:wrap; gap:14px 18px; align-items:end; margin-bottom:18px; } .pg-top .pg-f1 { flex:1 1 260px; min-width:220px; max-width:520px; } .pg-top .pg-f2 { flex:0 0 250px; }
+      .pg-seg { display:inline-flex; flex-wrap:wrap; border:1px solid var(--border); border-radius:9px; overflow:hidden; background:var(--bg); }
+      .pg-seg button { border:0; background:none; font:inherit; font-size:12.5px; color:var(--text2); padding:8px 13px; cursor:pointer; white-space:nowrap; }
+      .pg-seg button[aria-pressed="true"] { background:var(--accent-soft); color:var(--accent); font-weight:700; box-shadow:inset 0 -2px 0 var(--accent); }
+      .pg-wrap { overflow-x:auto; margin:0 -4px; }
+      table.pg { width:100%; border-collapse:collapse; font-size:13px; }
+      table.pg th { font-size:12px; font-weight:600; color:var(--text3); padding:4px 10px 9px; text-align:center; border-bottom:1px solid var(--border); white-space:nowrap; }
+      table.pg td { padding:12px 10px; border-bottom:1px solid var(--row-border, var(--border)); text-align:center; vertical-align:middle; }
+      table.pg tbody tr:last-child td { border-bottom:0; } table.pg td.l { text-align:left; }
+      table.pg tbody tr:focus-within td { background:color-mix(in srgb, var(--accent) 5%, transparent); }
+      table.pg .pg-n { width:30px; color:var(--text3); font-size:12px; }
+      table.pg .pg-rsp { width:90px; font-variant-numeric:tabular-nums; color:var(--text2); }
+      table.pg td.pg-p { width:130px; } table.pg .pg-price { text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; padding:8px 6px; }
+      table.pg td.pg-rkc { width:300px; }
+      .pg-rk { min-height:42px; display:flex; flex-direction:column; gap:4px; justify-content:center; align-items:center; }   /* จองสูง 2 บรรทัด ผล Rank มาแล้วแถวไม่ขยับ */
+      .pg-steps { display:inline-flex; gap:12px; font-size:11.5px; color:var(--text3); white-space:nowrap; } .pg-steps b { font-weight:600; color:var(--text2); } .pg-steps .on, .pg-steps .on b { color:var(--green,#16a34a); font-weight:700; }
+      .pg-link { border:0; background:none; font:inherit; font-size:12px; color:var(--text3); cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:0; } .pg-link:hover { color:var(--red,#ef4444); }
+      .pg-m { font-size:10.5px; color:var(--text3); white-space:nowrap; } .pg-m b { font-weight:600; color:var(--text2); }
+      table.pg td.pg-c1 { width:36%; } table.pg th.pg-h1 > div { display:grid; grid-template-columns:minmax(0,1fr) 104px; align-items:center; } table.pg th.pg-h1 .pg-hq { text-align:center; }
+      .pg-lines { display:grid; gap:2px; }
+      .pg-ln { display:grid; grid-template-columns:minmax(0,1fr) auto 12px 46px 22px; align-items:center; column-gap:6px; min-height:34px; padding:0 0 0 10px; border-radius:8px; }
+      .pg-ln:hover, .pg-ln:focus-within { background:var(--bg3); }
+      .pg-ln .pg-nm { font-size:13px; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .pg-qx { color:var(--text3); font-size:12px; text-align:center; }
+      .pg-q { width:46px; box-sizing:border-box; border:1px solid var(--border) !important; background:var(--bg) !important; box-shadow:none !important; color:var(--text) !important; font:inherit; font-weight:700; font-size:13.5px; text-align:center; padding:4px 2px !important; outline:none; border-radius:7px; -moz-appearance:textfield; }
+      .pg-q::-webkit-outer-spin-button, .pg-q::-webkit-inner-spin-button, .pg-price::-webkit-outer-spin-button, .pg-price::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+      .pg-q:focus { border-color:var(--accent) !important; box-shadow:0 0 0 2px var(--accent-soft) !important; }
+      .pg-gf { font-family:inherit; font-size:11px; font-weight:600; border:1px dashed var(--border); background:none; color:var(--text3); border-radius:999px; padding:1px 9px; cursor:pointer; opacity:0; white-space:nowrap; }
+      .pg-ln:hover .pg-gf, .pg-ln:focus-within .pg-gf { opacity:1; } .pg-gf:hover { color:var(--accent); border-color:var(--accent); }
+      .pg-gf[aria-pressed="true"] { opacity:1; border:1px solid transparent; background:var(--accent-soft); color:var(--accent); }
+      .pg-cx { font-family:inherit; border:0; background:none; color:var(--text3); cursor:pointer; font-size:16px; line-height:1; padding:0; opacity:0; } .pg-ln:hover .pg-cx, .pg-cx:focus { opacity:1; } .pg-cx:hover { color:var(--red,#ef4444); }
+      .pg-lines .pg-pick { width:100%; border-color:transparent !important; background:transparent !important; box-shadow:none !important; padding:7px 10px; font-size:12.5px; min-height:34px; }
+      .pg-lines .pg-pick:hover { background:var(--bg3) !important; } .pg-lines .pg-pick:focus { border-color:var(--accent) !important; background:var(--bg) !important; }
+      table.pg .pg-note { border-color:transparent !important; background:transparent !important; box-shadow:none !important; } table.pg .pg-note:hover { border-color:var(--border) !important; } table.pg .pg-note:focus { border-color:var(--accent) !important; background:var(--bg) !important; }
+      table.pg .pg-del { font-family:inherit; width:28px; height:28px; font-size:17px; line-height:1; border-color:transparent; } table.pg tr:hover .pg-del { border-color:var(--border); } table.pg td.pg-c3 { width:17%; }
+      .pg-foot { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; } .pg-foot .pg-hint { font-size:12px; color:var(--text3); flex:1; min-width:240px; } .pg-foot .pr-btn { min-width:190px; }
+      @media (max-width:1100px) { .pg-top { grid-template-columns:1fr; } }
       .pr-dd { position:fixed; z-index:3000; max-height:300px; overflow-y:auto; background:var(--bg2); border:1px solid var(--border); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.14); padding:4px; }
       .pr-dd[hidden] { display:none; }
       .pr-dd button { display:flex; align-items:center; gap:10px; width:100%; border:0; background:none; padding:8px 10px; border-radius:7px; font:inherit; font-size:13px; color:var(--text); text-align:left; cursor:pointer; }
@@ -349,50 +388,107 @@
     return `<div class="pr-rk"><div class="rk-hd"><span class="rk-bd ${ok ? 'rk' + hit : 'rkx'}">${ok ? 'Rank ' + hit : 'ต่ำกว่า Rank 3'}</span><div class="rk-sb"><b>${ok ? 'ราคานี้อยู่ Rank ' + hit : 'ราคานี้ต่ำกว่าเกณฑ์'}</b> <span class="pr-i" data-tip="${esc(tip)}">ⓘ</span><br>${esc(k.channel)} · ${cat}</div></div>
       ${bar}${lines.length > 1 ? tbl : ''}</div>`;
   }
-  async function check() {
-    const C = await cat(), p = payload(), seq = ++chkSeq, box = document.getElementById('prSig');
-    if (!box) return;
-    const show = h => { box.innerHTML = h || '<div class="exd-card tm2-ph"><b>เช็ค Rank ราคา</b><span>เลือกช่องทาง ใส่สินค้า และราคา แล้วระบบบอกทันทีว่าราคาผ่าน Rank ไหม</span></div>'; };   // (2026-11-10) ช่องขวาคงที่ ไม่หุบ / ขยาย (กันหน้าเด้ง)
-    if (!p.channel_id || !p.price || !p.items.length) { show(sigHtml(null, C)); return; }
-    try { const k = await rpc('promo_rank', { p }); if (seq === chkSeq) show(rankCard(k)); }   // (2026-10-20 e) ทีมเห็นแค่ Rank · ต้นทุนผู้บริหารดูในหน้าอนุมัติ
-    catch (e) { show(`<div class="pr-sig"><div class="t">ตรวจไม่สำเร็จ</div><div class="s">${esc(e.message)}</div></div>`); }
-  }
-  const later = () => { clearTimeout(chkTimer); chkTimer = setTimeout(check, 350); };
   function rowsHtml(key, list, C) {
     return list.map((x, i) => `<div class="pr-row"><div class="pr-pickw"><input class="pr-in pr-pick" autocomplete="off" data-k="${key}" data-i="${i}" data-f="sku" placeholder="ค้นหาชื่อสินค้าหรือรหัส" value="${esc(x.sku ? prodLabel(C.products.find(p => p.sku === x.sku) || { name: x.sku, sku: x.sku }) : '')}"></div>
       <input class="pr-in" type="number" min="1" step="1" data-k="${key}" data-i="${i}" data-f="qty" value="${esc(x.qty)}" title="จำนวนชิ้นต่อ 1 ออเดอร์">
       <button type="button" class="pr-x" data-del="${key}" data-i="${i}" aria-label="ลบ">✕</button></div>`).join('');
   }
+  // (2026-11-12) หน้าขอ Promotion แบบตาราง (ทีมคุ้นกับชีทราคา): 1 แถว = 1 ชุดสินค้า · คอลัมน์ราคาแยกตามช่องทางย่อยของ Platform ที่เลือก
+  //   หลักการเดิม: เช็ค Rank ทันที (promo_rank) · ส่งขออนุมัติทีละราคา (promo_submit) · คำขอของฉัน / ปฏิทิน เหมือนเดิม · งานที่กรอกค้างเก็บไว้ในเครื่อง
+  const PG_KEY = 'deesay_promo_grid_v1';
+  const pgRow = () => ({ items: [], gifts: [], prices: {}, note: '' });
+  let G = { title: '', sys: '', start_date: '', end_date: '', rows: [pgRow(), pgRow(), pgRow()] };
+  const pgLoad = () => { try { const d = JSON.parse(localStorage.getItem(PG_KEY) || 'null'); if (d && Array.isArray(d.rows) && d.rows.length) G = Object.assign(G, d, { rows: d.rows.map(r => Object.assign(pgRow(), r)) }); } catch (e) {} };
+  const pgSave = () => { try { localStorage.setItem(PG_KEY, JSON.stringify(G)); } catch (e) {} };
+  const pgRank = new Map(); let pgT = {};
   async function renderPromo() {
     let el = document.getElementById('page-promo'); if (!el) return;
-    // (2026-10-20) เปิดหน้าซ้ำ = เปลี่ยนกล่องหน้าใหม่ ล้างตัวดักเหตุการณ์ของรอบก่อน (กันกดเพิ่มสินค้าแล้วได้ 2 แถว / ปุ่มลูกศรเลื่อน 2 ขั้น)
+    // (2026-10-20) เปิดหน้าซ้ำ = เปลี่ยนกล่องหน้าใหม่ ล้างตัวดักเหตุการณ์ของรอบก่อน
     { const fresh = el.cloneNode(false); el.replaceWith(fresh); el = fresh; }
     if (window._prDDOff) window._prDDOff();
     el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     let C; try { C = await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     if (!C) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
+    pgLoad();   // งานที่กรอกค้างไว้ในเครื่องนี้
+    const SYS = [...new Set(C.channels.map(c => c.sys || c.name))];
+    if (!SYS.includes(G.sys)) G.sys = SYS.includes('TikTok') ? 'TikTok' : SYS[0];
+    // (2026-11-12 b) ช่องทางเลือกจากตัวกรองด้านบน (Platform → ช่องทาง) · ตารางมีช่องราคาเดียว = ราคาของช่องทางที่เลือก
+    const sysChs = () => C.channels.filter(c => (c.sys || c.name) === G.sys);
+    G.chBy = G.chBy || {};
+    const curCh = () => { const l = sysChs(); return l.find(c => c.id === +G.chBy[G.sys]) || l[0]; };
+    const chs = () => [curCh()];
+    const chLabel = c => { const n = String(c.name).replace(/^MT\s*·\s*/, ''); const t = n.replace(new RegExp('^' + G.sys.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*'), '').replace(/^\((.*)\)$/, '$1').trim(); return t || n; };
+    const P = s => C.products.find(p => p.sku === s) || { name: s, sku: s, rsp: 0 };
+    const rspOf = r => r.items.reduce((s, x) => s + (+P(x.sku).rsp || 0) * (+x.qty || 0), 0);
+    const rankP = (r, chId, price) => ({ title: '', channel_id: chId, start_date: '', end_date: '', price: +price || 0, orders: 0, note: '', items: r.items.map(x => ({ sku: x.sku, qty: +x.qty || 0 })), gifts: r.gifts.map(x => ({ sku: x.sku, qty: +x.qty || 0 })) });
+    // (2026-11-12 c) สินค้า 1 ตัว = 1 บรรทัด: ชื่อ · ปุ่ม "แถม" · จำนวนชิ้น (ช่องตรงกันทุกบรรทัดแบบคอลัมน์ SKU / QTY ของชีท) · ของแถมอยู่รายการเดียวกัน กด "แถม" เพื่อสลับ
+    const lines = (list, k, i) => list.map((x, j) => `<div class="pg-ln${k === 'gifts' ? ' gift' : ''}"><span class="pg-nm">${esc(P(x.sku).name)}</span>
+      <button type="button" class="pg-gf" data-gift data-k="${k}" data-r="${i}" data-i="${j}" aria-pressed="${k === 'gifts'}" data-tip="${k === 'gifts' ? 'เป็นของแถม · กดเพื่อเปลี่ยนเป็นสินค้าที่ขาย' : 'กดถ้าตัวนี้เป็นของแถม (ไม่นับในราคา Rank)'}">แถม</button>
+      <span class="pg-qx">×</span><input class="pg-q" type="number" min="1" step="1" value="${esc(x.qty)}" data-k="${k}" data-r="${i}" data-i="${j}" aria-label="จำนวนชิ้น">
+      <button type="button" class="pg-cx" data-k="${k}" data-r="${i}" data-i="${j}" aria-label="เอาออก">×</button></div>`).join('');
+    const rkHtml = (r, c) => {
+      if (!r.items.length) return '';
+      const price = +r.prices[c.id] || 0, k = pgRank.get(JSON.stringify(rankP(r, c.id, price)));
+      if (!k) return '<span class="pg-m">…</span>';
+      if (k.status === 'no_rank') return price ? '<span class="pr-pill rk0">ไม่เช็ค Rank</span>' : '';
+      if (k.status === 'missing') return '<span class="pr-pill rk0">ยังไม่มีราคา Rank</span>';
+      if (k.status === 'not_sold') return '<span class="pr-pill rkx">ไม่ขายช่องทางนี้</span>';
+      const S = [k.sum1, k.sum2, k.sum3].map(v => +v || 0), hit = k.status === 'ok' ? +k.rank : 0;
+      const steps = `<span class="pg-steps">${S.map((v, j) => `<span class="${hit === j + 1 ? 'on' : ''}">Rank ${j + 1} <b>${v ? n0(v) : '—'}</b></span>`).join('')}</span>`;
+      if (!price) return steps;
+      return (hit ? `<span class="pr-pill rk${hit}">Rank ${hit}</span>` : `<span class="pr-pill rkx">ต่ำกว่า Rank 3 อยู่ ${n0(S[2] - price)}</span>`) + steps;
+    };
+    const rowHtml = (r, i) => `<tr data-r="${i}"><td class="pg-n">${i + 1}</td>
+      <td class="l pg-c1"><div class="pg-lines">${lines(r.items, 'items', i)}${lines(r.gifts, 'gifts', i)}<input class="pr-in pr-pick pg-pick" autocomplete="off" data-k="items" data-r="${i}" placeholder="${r.items.length + r.gifts.length ? '＋ เพิ่มสินค้าหรือของแถม' : 'พิมพ์ชื่อสินค้าหรือรหัส'}"></div></td>
+      <td class="pg-rsp">${r.items.length ? n0(rspOf(r)) : '<span class="pg-m">—</span>'}</td>
+      ${chs().map(c => `<td class="pg-p"><input class="pr-in pg-price" type="number" min="0" step="1" inputmode="decimal" data-r="${i}" data-ch="${c.id}" value="${esc(r.prices[c.id] || '')}" placeholder="0" aria-label="ราคาที่ขอ ${esc(c.name)}"></td><td class="pg-rkc"><div class="pg-rk" data-rk="${i}-${c.id}">${rkHtml(r, c)}</div></td>`).join('')}
+ <td class="l pg-c3"><input class="pr-in pg-note" data-r="${i}" value="${esc(r.note || '')}" placeholder="ไม่บังคับ"></td>
+      <td><button type="button" class="pr-x pg-del" data-pgdel="${i}" aria-label="ลบแถว">×</button></td></tr>`;
+    const todo = () => { const out = []; G.rows.forEach((r, i) => { if (r.items.length) chs().forEach(c => { if (+r.prices[c.id] > 0) out.push([r, c, i]); }); }); return out; };
+    const foot = () => { const n = todo().length, b = document.getElementById('prSubmit'); if (b) { b.textContent = n ? `ส่งขออนุมัติ ${n} รายการ · ${curCh().name}` : 'ส่งขออนุมัติ'; b.disabled = !n; } };
+    const drawRk = (i) => { const r = G.rows[i]; if (!r) return; chs().forEach(c => { const d = el.querySelector(`[data-rk="${i}-${c.id}"]`); if (d) d.innerHTML = rkHtml(r, c); }); };
+    function askRank(i) {   // เช็ค Rank ของแถว (ทุกช่องทางที่แสดง) · ผลเดิมเก็บไว้ ไม่ถามซ้ำ
+      const r = G.rows[i]; if (!r || !r.items.length) { drawRk(i); return; }
+      chs().forEach(async c => { const p = rankP(r, c.id, r.prices[c.id]), key = JSON.stringify(p); if (pgRank.has(key)) return;
+        try { pgRank.set(key, await rpc('promo_rank', { p })); } catch (e) { pgRank.set(key, { status: 'no_rank' }); } drawRk(i); });
+      drawRk(i);
+    }
+    const later = i => { clearTimeout(pgT[i]); pgT[i] = setTimeout(() => askRank(i), 350); };
+    const drawBody = () => { document.getElementById('pgBody').innerHTML = G.rows.map(rowHtml).join(''); G.rows.forEach((_, i) => askRank(i)); foot(); };
+    const drawGrid = () => {
+      document.getElementById('pgGrid').innerHTML = `<table class="pg" data-no-sort data-no-page><thead><tr><th class="pg-n">#</th><th class="pg-h1"><div><span>สินค้าใน 1 ออเดอร์ <span class="pr-i" data-tip="พิมพ์ชื่อสินค้าหรือรหัสแล้วเลือก จากนั้นพิมพ์จำนวนชิ้นแล้วกด Enter เพื่อเพิ่มตัวถัดไป · ตัวไหนเป็นของแถมให้กด แถม ที่บรรทัดนั้น">ⓘ</span></span><span class="pg-hq">จำนวนชิ้น</span></div></th>
+        <th>ราคาปกติ <span class="pr-i" data-tip="ราคาปกติ (RSP) จากหน้า สินค้า & ราคา × จำนวนชิ้น · ไม่นับของแถม">ⓘ</span></th>
+        <th>ราคาที่ขอ <span class="pr-i" data-tip="ราคาขายต่อ 1 ออเดอร์ รวม VAT หลังส่วนลด ของช่องทางที่เลือกด้านบน · ไม่ใส่ราคา = ไม่ส่งแถวนั้น">ⓘ</span></th><th class="l">เทียบ Rank <span class="pr-i" data-tip="ราคา Rank 1 / 2 / 3 ของชุดสินค้านั้นในช่องทางที่เลือก จากหน้า สินค้า & ราคา (ไม่นับของแถม) · ใส่ราคาแล้วระบบบอกว่าถึง Rank ไหน">ⓘ</span></th><th class="l">หมายเหตุ</th><th></th></tr></thead><tbody id="pgBody"></tbody></table>`;
+      drawBody();
+    };
     el.innerHTML = `
       <div class="pr-dd" id="prDD" hidden></div>
-      <div class="tm2"><div class="tm2-f">
-        <div class="exd-card"><div class="exd-ch"><b>รายละเอียดโปร</b><span class="pr-i" data-tip="กรอกโปรที่อยากทำ ระบบบอก Rank ราคาทันทีจากหน้า สินค้า & ราคา แล้วส่งให้ผู้บริหารอนุมัติ">ⓘ</span></div>
-          <label class="sm2-l">ชื่อโปร</label><input class="pr-in tm2-w" data-f="title" value="${esc(F.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1">
-          <div class="tm2-2"><div><label class="sm2-l">ช่องทาง</label><select class="pr-in tm2-w" data-f="channel_id"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+F.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
-            <div><label class="sm2-l">ช่วงเวลา</label><div class="tm2-dates"><input class="pr-in" type="date" data-f="start_date" value="${esc(F.start_date)}"><span>–</span><input class="pr-in" type="date" data-f="end_date" value="${esc(F.end_date)}"></div></div></div></div>
-        <div class="exd-card sm2-f"><label class="sm2-l">สินค้าที่ขายใน 1 ออเดอร์ <small>ชื่อสินค้า · จำนวนชิ้น</small></label><div class="pr-rows" id="prItems">${rowsHtml('items', F.items, C)}</div><button type="button" class="pr-add" data-addrow="items">＋ เพิ่มสินค้า</button>
-          <label class="sm2-l" style="margin-top:14px;">ของแถมใน 1 ออเดอร์ <small>ถ้ามี</small></label><div class="pr-rows" id="prGifts">${rowsHtml('gifts', F.gifts, C)}</div><button type="button" class="pr-add" data-addrow="gifts">＋ เพิ่มของแถม</button></div>
-        <div class="exd-card sm2-p"><label class="sm2-l">ราคาขายต่อออเดอร์ <small>รวม VAT หลังส่วนลด</small></label><input class="pr-in tm2-w tm2-price" type="number" min="0" step="0.01" data-f="price" value="${esc(F.price)}" placeholder="0.00">
-          <label class="sm2-l" style="margin-top:12px;">หมายเหตุ <small>ไม่บังคับ</small></label><textarea class="pr-in tm2-w" rows="2" data-f="note" placeholder="เช่น เงื่อนไขพิเศษของ Platform">${esc(F.note)}</textarea>
-          <button class="pr-btn tm2-send" id="prSubmit">ส่งขออนุมัติ</button><span class="pr-note" id="prMsg"></span></div></div>
-      <div class="tm2-r"><div id="prSig"></div></div></div>
+      <div class="pr-card pg-card">
+        <div class="pg-top">
+          <div class="pg-f pg-f1"><label class="sm2-l">ชื่อโปร</label><input class="pr-in" data-g="title" value="${esc(G.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1"></div>
+          <div class="pg-f pg-f2"><label class="sm2-l">ช่องทาง</label><select class="pr-in" id="pgChSel">${C.channels.map(c => `<option value="${c.id}"${c.id === curCh().id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+          <div class="pg-f"><label class="sm2-l">ช่วงเวลา</label><div class="tm2-dates"><input class="pr-in" type="date" data-g="start_date" value="${esc(G.start_date)}"><span>–</span><input class="pr-in" type="date" data-g="end_date" value="${esc(G.end_date)}"></div></div>
+        </div>
+        <div class="pg-wrap" id="pgGrid"></div>
+        <div class="pg-foot"><button type="button" class="pr-add" data-pgadd>＋ เพิ่มแถว</button><button type="button" class="pg-link" data-pgclear>ล้างตาราง</button><span class="pg-hint"></span>
+          <span class="pr-note" id="prMsg"></span><button class="pr-btn" id="prSubmit" disabled>ส่งขออนุมัติ</button></div>
+      </div>
       <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>
       <div class="pr-card"><h3><span>ปฏิทินโปรโมชั่น <span class="pr-i" data-tip="โปรที่อนุมัติแล้วและรออนุมัติของทุกคน แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
         <span class="pr-cal-leg"><span><i></i>อนุมัติแล้ว</span><span><i class="p"></i>รออนุมัติ</span></span>
         <span class="pr-cal-nav"><button type="button" data-calmv="-1" aria-label="เดือนก่อน">‹</button><span id="prCalM"></span><button type="button" data-calmv="1" aria-label="เดือนถัดไป">›</button></span></h3>
         <div class="pr-cal" id="prCal"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
-    const sync = t => { const k = t.dataset.k, i = +t.dataset.i, f = t.dataset.f; if (!f) return;
-      if (k) F[k][i][f] = f === 'sku' ? (C.products.some(p => p.sku === skuOf(t.value)) ? skuOf(t.value) : '') : t.value; else F[f] = t.value; later(); };
-    el.addEventListener('input', e => { if (e.target.classList.contains('pr-pick')) { if (!e.target.value.trim()) sync(e.target); pickOpen(e.target); return; } sync(e.target); });
-    el.addEventListener('change', e => { if (!e.target.classList.contains('pr-pick')) sync(e.target); });
+    drawGrid();
+    const onField = t => {
+      if (t.id === 'pgChSel') { const c = C.channels.find(x => x.id === +t.value); if (c && c.id !== curCh().id) { G.sys = c.sys || c.name; G.chBy[G.sys] = c.id; pgSave(); drawGrid(); } return; }
+      if (t.dataset.g) { G[t.dataset.g] = t.value; pgSave(); return; }
+      const i = +t.dataset.r, r = G.rows[i]; if (!r) return;
+      if (t.classList.contains('pg-price')) { r.prices[t.dataset.ch] = t.value; pgSave(); foot(); later(i); }
+      else if (t.classList.contains('pg-q')) { const x = r[t.dataset.k][+t.dataset.i]; if (x) { x.qty = Math.max(1, Math.round(+t.value || 1)); pgSave(); const c = el.querySelector(`tr[data-r="${i}"] .pg-rsp`); if (c) c.textContent = n0(rspOf(r)); later(i); } }
+      else if (t.classList.contains('pg-note')) { r.note = t.value; pgSave(); }
+    };
+    el.addEventListener('input', e => { if (e.target.classList.contains('pr-pick')) { pickOpen(e.target); return; } onField(e.target); });
+    el.addEventListener('change', e => { if (!e.target.classList.contains('pr-pick')) onField(e.target); });
     // ---- กล่องค้นหาสินค้า ----
     const dd = document.getElementById('prDD'); let ddFor = null, ddList = [], ddOn = 0;
     const nz = t => String(t || '').toLowerCase().replace(/[\s\-._·]/g, '');
@@ -408,24 +504,26 @@
       if (!ddFor) return;
       dd.innerHTML = ddList.length ? ddList.slice(0, 80).map((p, i) => `<button type="button" data-pick="${esc(p.sku)}" class="${i === ddOn ? 'on' : ''}"><span>${esc(p.name)}</span><small>${esc(p.sku)}</small>${p.status === 'Discontinued' ? '<em>เลิกผลิต</em>' : p.status === 'NPD' ? '<em>ใหม่</em>' : ''}</button>`).join('')
         : '<div class="none">ไม่เจอสินค้าที่ตรงกับคำค้น · ลองพิมพ์รหัสสินค้า หรือคำสั้นลง</div>';
-      const r = ddFor.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.width = r.width + 'px';
+      const r = ddFor.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.width = Math.max(r.width, 300) + 'px';
       const below = window.innerHeight - r.bottom; dd.style.top = (below < 240 && r.top > below ? Math.max(8, r.top - Math.min(300, dd.scrollHeight) - 4) : r.bottom + 4) + 'px';
       const on = dd.querySelector('button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
     }
-    function pickOpen(inp) {
-      ddFor = inp; const v = inp.value, cur = C.products.find(p => prodLabel(p) === v);
-      ddList = cur ? prodMatch('') : prodMatch(v); ddOn = cur ? Math.max(0, ddList.indexOf(cur)) : 0;
-      dd.hidden = false; pickDraw();
-    }
+    function pickOpen(inp) { ddFor = inp; ddList = prodMatch(inp.value); ddOn = 0; dd.hidden = false; pickDraw(); }
     const pickClose = () => { dd.hidden = true; ddFor = null; };
-    function pickSet(p) { if (!ddFor || !p) return; const inp = ddFor; inp.value = prodLabel(p); sync(inp); pickClose(); }
-    el.addEventListener('focusin', e => { if (e.target.classList.contains('pr-pick')) { e.target.select(); pickOpen(e.target); } });
-    el.addEventListener('focusout', e => { if (e.target === ddFor) setTimeout(() => { if (document.activeElement !== ddFor) { const inp = ddFor; pickClose(); if (inp && !C.products.some(p => prodLabel(p) === inp.value)) { const k = inp.dataset.k, i = +inp.dataset.i; const keep = F[k][i] && F[k][i].sku ? C.products.find(p => p.sku === F[k][i].sku) : null; inp.value = keep ? prodLabel(keep) : ''; } } }, 120); });
+    function pickSet(p) {   // เลือกสินค้า = เพิ่มเข้าแถวนั้น (ซ้ำตัวเดิม = บวกจำนวน) แล้วพร้อมพิมพ์ตัวถัดไปในช่องเดิม
+      if (!ddFor || !p) return; const i = +ddFor.dataset.r, k = ddFor.dataset.k, r = G.rows[i]; pickClose(); if (!r) return;
+      const ex = r[k].find(x => x.sku === p.sku); if (ex) ex.qty = (+ex.qty || 0) + 1; else r[k].push({ sku: p.sku, qty: 1 });
+      pgSave(); const tr = el.querySelector(`tr[data-r="${i}"]`); if (tr) tr.outerHTML = rowHtml(r, i); askRank(i); foot();
+      const q = el.querySelector(`tr[data-r="${i}"] .pg-q[data-k="${k}"][data-i="${r[k].findIndex(x => x.sku === p.sku)}"]`); if (q) { q.focus(); q.select(); }
+    }
+    el.addEventListener('focusin', e => { if (e.target.classList.contains('pr-pick')) pickOpen(e.target); });
+    el.addEventListener('focusout', e => { if (e.target === ddFor) setTimeout(() => { if (document.activeElement !== ddFor) { const inp = ddFor; pickClose(); if (inp) inp.value = ''; } }, 120); });
     el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.classList.contains('pg-q')) { const t = e.target, nx = el.querySelector(`tr[data-r="${t.dataset.r}"] .pg-pick`); onField(t); if (nx) nx.focus(); e.preventDefault(); return; }
       if (!ddFor || e.target !== ddFor || dd.hidden) return;
       if (e.key === 'ArrowDown') { ddOn = Math.min(ddList.length - 1, ddOn + 1); pickDraw(); e.preventDefault(); }
       else if (e.key === 'ArrowUp') { ddOn = Math.max(0, ddOn - 1); pickDraw(); e.preventDefault(); }
-      else if (e.key === 'Enter') { pickSet(ddList[ddOn]); e.preventDefault(); }
+      else if (e.key === 'Enter') { if (ddFor.value.trim()) pickSet(ddList[ddOn]); e.preventDefault(); }
       else if (e.key === 'Escape') { pickClose(); }
     });
     dd.addEventListener('mousedown', e => { e.preventDefault(); const b = e.target.closest('[data-pick]'); if (b) pickSet(C.products.find(p => p.sku === b.dataset.pick)); });
@@ -433,22 +531,36 @@
     window.addEventListener('scroll', onMove, true); window.addEventListener('resize', onMove);
     window._prDDOff = () => { window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
     el.addEventListener('click', async e => {
-      const a = e.target.closest('[data-addrow]'), d = e.target.closest('[data-del]'), cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]'), rm = e.target.closest('[data-rm]');
+      const cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]'), rm = e.target.closest('[data-rm]');
+      const add = e.target.closest('[data-pgadd]'), del = e.target.closest('[data-pgdel]'), chip = e.target.closest('.pg-cx');
       if (rm) { if (await uiConfirm('ลบคำขอ', { text: (rm.closest('tr')?.querySelector('.t1')?.textContent || '') + ' · ลบแล้วกู้คืนไม่ได้', ok: 'ลบ', tone: 'bad' })) { try { await rpc('promo_delete', { p_id: +rm.dataset.rm }); loadMine(); } catch (er) { uiAlert('ลบไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
       if (mv) { const [y, m] = CAL.m.split('-').map(Number); const dt = new Date(y, m - 1 + (+mv.dataset.calmv), 1); CAL.m = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`; loadCal(C); return; }
-      if (a) { F[a.dataset.addrow].push({ sku: '', qty: 1 }); document.getElementById(a.dataset.addrow === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(a.dataset.addrow, F[a.dataset.addrow], C); }
-      if (d) { F[d.dataset.del].splice(+d.dataset.i, 1); if (d.dataset.del === 'items' && !F.items.length) F.items.push({ sku: '', qty: 1 }); document.getElementById(d.dataset.del === 'items' ? 'prItems' : 'prGifts').innerHTML = rowsHtml(d.dataset.del, F[d.dataset.del], C); later(); }
+      const clr = e.target.closest('[data-pgclear]'), gf = e.target.closest('[data-gift]');
+      if (gf) { const i = +gf.dataset.r, r = G.rows[i], from = gf.dataset.k, to = from === 'items' ? 'gifts' : 'items', x = r[from].splice(+gf.dataset.i, 1)[0];
+        if (x) { const ex = r[to].find(y => y.sku === x.sku); if (ex) ex.qty = (+ex.qty || 0) + (+x.qty || 0); else r[to].push(x); }
+        pgSave(); const tr = el.querySelector(`tr[data-r="${i}"]`); if (tr) tr.outerHTML = rowHtml(r, i); askRank(i); foot(); return; }
+      if (clr) { if (await uiConfirm('ล้างตาราง', { text: 'ลบสินค้าและราคาที่กรอกไว้ทุกแถว · คำขอที่ส่งไปแล้วไม่ถูกลบ', ok: 'ล้างตาราง', tone: 'bad' })) { G.rows = [pgRow(), pgRow(), pgRow()]; pgSave(); drawBody(); } return; }
+      if (add) { G.rows.push(pgRow()); pgSave(); drawBody(); return; }
+      if (del) { G.rows.splice(+del.dataset.pgdel, 1); if (!G.rows.length) G.rows.push(pgRow()); pgSave(); drawBody(); return; }
+      if (chip) { const i = +chip.dataset.r, r = G.rows[i]; r[chip.dataset.k].splice(+chip.dataset.i, 1); pgSave(); const tr = el.querySelector(`tr[data-r="${i}"]`); if (tr) tr.outerHTML = rowHtml(r, i); askRank(i); foot(); return; }
       if (cx && await uiConfirm('ยกเลิกคำขอ', { text: cx.closest('tr')?.querySelector('.t1')?.textContent || '', ok: 'ยกเลิกคำขอ', cancel: 'ปิด', tone: 'bad' })) { try { await rpc('promo_cancel', { p_id: +cx.dataset.cancel }); loadMine(); } catch (er) { uiAlert('ยกเลิกไม่สำเร็จ', { text: er.message, tone: 'bad' }); } }
     });
     document.getElementById('prSubmit').onclick = async () => {
-      const p = payload(), msg = document.getElementById('prMsg');
-      if (!p.title.trim() || !p.channel_id || !p.price || !p.items.length) { msg.textContent = 'กรอกชื่อโปร ช่องทาง ราคาขาย และสินค้าให้ครบก่อน'; return; }
-      const b = document.getElementById('prSubmit'); b.disabled = true; msg.textContent = 'กำลังส่ง…';
-      try { const r = await rpc('promo_submit', { p }); msg.textContent = ''; toast('ส่งขออนุมัติแล้ว · ' + (r.signal === 'green' ? 'ผ่านเกณฑ์ต้นทุน' : r.signal === 'red' ? 'ยังไม่ผ่านเกณฑ์ต้นทุน' : 'ยังไม่มีต้นทุนบางรายการ'));
-        Object.assign(F, { title: '', items: [{ sku: '', qty: 1 }], gifts: [], price: '', orders: '', note: '' }); renderPromo(); }
-      catch (er) { msg.textContent = 'ส่งไม่สำเร็จ: ' + er.message; b.disabled = false; }
+      const list = todo(), msg = document.getElementById('prMsg'), b = document.getElementById('prSubmit');
+      if (!G.title.trim()) { msg.textContent = 'ใส่ชื่อโปรก่อนส่ง'; el.querySelector('[data-g="title"]').focus(); return; }
+      if (!list.length) return;
+      b.disabled = true; let ok = 0; const fail = [];
+      for (const [r, c, i] of list) {
+        msg.textContent = `กำลังส่ง ${ok + fail.length + 1} / ${list.length}…`;
+        try { await rpc('promo_submit', { p: { title: G.title, channel_id: c.id, start_date: G.start_date, end_date: G.end_date, price: +r.prices[c.id] || 0, orders: 0, note: r.note || '',
+            items: r.items.map(x => ({ sku: x.sku, qty: +x.qty || 0 })), gifts: r.gifts.map(x => ({ sku: x.sku, qty: +x.qty || 0 })) } }); ok++; delete r.prices[c.id]; }
+        catch (er) { fail.push(`แถว ${i + 1} · ${c.name}: ${er.message}`); }
+      }
+      pgSave(); drawBody(); loadMine(); loadCal(C);
+      msg.textContent = fail.length ? `ส่งแล้ว ${ok} รายการ · ไม่สำเร็จ ${fail.length}: ${fail[0]}` : '';
+      if (ok) toast(`ส่งขออนุมัติแล้ว ${ok} รายการ · สินค้าในตารางยังอยู่ เลือกช่องทางอื่นแล้วใส่ราคาต่อได้`);
     };
-    check(); loadMine(); loadCal(C);
+    loadMine(); loadCal(C);
   }
   // ---------- ปฏิทินโปรโมชั่น (เดือนละหน้า) ----------
   const CAL = { m: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })() };
