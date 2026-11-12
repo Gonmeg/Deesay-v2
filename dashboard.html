@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.11-e"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.12-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -7951,7 +7951,7 @@ async function traceAds(a, b, ch) {
     + (src.map(x => `<tr><td style="white-space:normal;">${ch ? '' : trEsc(x[0]) + ' · '}${trEsc(x[1])}${x[2] ? ` <span style="color:var(--text3);">· ${trEsc(x[2])}</span>` : ''}</td><td>${m(x[4])}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">ไม่มี</td></tr>') + '</tbody></table></section>';
   const fbOn = !ch || ch === 'Facebook' || ch === 'Facebook PR', ttOn = !ch || ch === 'TikTok';
   if (fbOn && (d.fb_top || []).length) h += `<section class="tr-part"><div class="tr-sec"><span>Facebook · คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">10 อันดับแรก · รวม Conversion + PR</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>คอนเทนต์</th><th data-tip="คนที่เริ่มคุยจาก Ads (Meta นับ)">ทักแชท</th><th>ค่า Ads</th><th data-tip="มูลค่าซื้อที่ Meta นับ">ยอดขาย Meta</th><th>ROAS Meta</th></tr></thead><tbody>`
-    + d.fb_top.map(x => `<tr><td style="white-space:normal;"><div style="display:flex;gap:10px;align-items:center;">${trThumb(x[5], true)}<div>${trEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${fmt(x[1])} Ads</div></div></div></td><td>${fmt(x[3])}</td><td><b>${m(x[2])}</b></td><td>${+x[4] ? m(x[4]) : '—'}</td><td>${+x[2] ? (+x[4] / +x[2]).toFixed(2) + 'x' : '—'}</td></tr>`).join('') + '</tbody></table></section>';
+    + d.fb_top.map(x => `<tr><td style="white-space:normal;"><div style="display:flex;gap:10px;align-items:center;">${trThumb(x[5], true)}<div>${trEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${x[6] ? trEsc(x[6]) + ' · ' : ''}${fmt(x[1])} Ads</div></div></div></td><td>${fmt(x[3])}</td><td><b>${m(x[2])}</b></td><td>${+x[4] ? m(x[4]) : '—'}</td><td>${+x[2] ? (+x[4] / +x[2]).toFixed(2) + 'x' : '—'}</td></tr>`).join('') + '</tbody></table></section>';
   if (ttOn && (d.tt_top || []).length) h += `<section class="tr-part"><div class="tr-sec"><span>TikTok · คลิปที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">10 อันดับแรก</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>คลิป · Campaign</th><th>ค่า Ads</th><th data-tip="ยอดขายที่ TikTok นับให้คลิปนี้ (GMV Max)">ยอดขาย TikTok</th><th>ROAS</th></tr></thead><tbody>`
     + d.tt_top.map(x => `<tr><td style="white-space:normal;"><div style="display:flex;gap:10px;align-items:center;">${trThumb(x[4], false)}<div>${trEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${trEsc(x[1] || '')}</div></div></div></td><td><b>${m(x[2])}</b></td><td>${+x[3] ? m(x[3]) : '—'}</td><td>${+x[2] && +x[3] ? (+x[3] / +x[2]).toFixed(2) + 'x' : '—'}</td></tr>`).join('') + '</tbody></table></section>';
   h += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">${(ch ? [ch] : Object.keys(TR_ADS_SRC)).filter(k => TR_ADS_SRC[k]).map(k => `<dt>${trEsc(k)}</dt><dd>${TR_ADS_SRC[k]}</dd>`).join('')}<dt>วันที่</dt><dd>นับตามวันที่ใช้เงินจริง</dd></dl></div>`;
@@ -10109,7 +10109,10 @@ window._authP.then(p => {
     if (th.hasAttribute('data-k') || th.classList.contains('sortable-th') || th.onclick) return;
     const tbody = table.tBodies[0];
     if (!tbody) return;
-    const rows = [...tbody.rows].filter(r => r.cells.length > 1);   // ข้ามแถว "ไม่มีข้อมูล" ที่ใช้ colspan
+    // (2026-11-12) แถวรวมไม่เข้าเรียง อยู่ท้ายตารางเสมอ (เดิมถูกเรียงปนกับแถวข้อมูล)
+    const isSum = r => /(^|\s)(ui-sum|sum|tot|total|pl-total)(\s|$)/.test(r.className) || /^\s*รวม/.test(cellText(r.cells[0]));
+    const all = [...tbody.rows].filter(r => r.cells.length > 1);   // ข้ามแถว "ไม่มีข้อมูล" ที่ใช้ colspan
+    const pinned = all.filter(isSum), rows = all.filter(r => !isSum(r));
     if (rows.length < 2) return;
 
     const idx = [...th.parentElement.cells].indexOf(th);
@@ -10136,6 +10139,7 @@ window._authP.then(p => {
       return String(x).localeCompare(String(y), 'th') * mul;
     });
     rows.forEach(r => tbody.appendChild(r));
+    pinned.forEach(r => tbody.appendChild(r));
   }, true);
 
   // ใส่เครื่องหมายให้หัวคอลัมน์ที่กดเรียงได้ — ตรวจซ้ำเรื่อย ๆ เพราะตารางถูกสร้างใหม่ตลอด
