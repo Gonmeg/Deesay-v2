@@ -1,3 +1,4 @@
+// bizinsight.js (v20261112a) — กล่องแท็บโหมดสว่างไม่กลืนพื้น · ตารางรายสินค้าพอดีการ์ดจอโน้ตบุ๊ก · บรรทัดที่มาข้อมูลย้ายขึ้นแถบบนข้างชื่อหน้า · โครงสร้างต้นทุนมีคอลัมน์ % ของรายได้ · รายช่องทางจัดกลุ่มตาม Platform (กางดูรายร้าน) + % ของรายได้ใต้ทุกช่องต้นทุน · ตัวเลขแท็บรายสินค้าเป็นแถบเดียว
 // bizinsight.js (v20261111e) — กราฟไม่ย่อ M (ตัวเลขเต็ม · แก้ป้ายแกนซ้ำ 1M 1M) · ตัวเลขทุกตารางอยู่กลางคอลัมน์
 // bizinsight.js (v20261111d) — งบกำไรขาดทุน: % ของยอดขายสุทธิแสดงคู่กับยอดในทุกช่อง (เลิกปุ่มสลับ)
 // bizinsight.js (v20261111b) — ตารางงบวัดความกว้างจริงหลังวาด: ล้นการ์ด → ซ่อนแนวโน้ม → ย่อช่องไฟ (แทนเกณฑ์ความกว้างจอตายตัว)
@@ -41,10 +42,12 @@
 .bi .tip{display:none;position:absolute;z-index:30;top:20px;left:-12px;width:320px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-weight:400;font-size:12.5px;line-height:1.6;box-shadow:0 14px 34px rgba(0,0,0,.35);text-align:left;white-space:normal}
 .bi .stack{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:4px 0 14px;background:var(--grid)}
 .bi .stack i{display:block;height:100%}
-.bi .cl{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px 10px;align-items:center;font-size:13px}
+.bi .cl{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px 18px;align-items:center;font-size:13px}
+.bi .cl .h{color:var(--text3);font-size:11.5px;font-weight:600}
+.bi .cl .h.c{text-align:center}
 .bi .cl .sw{width:10px;height:10px;border-radius:3px}
-.bi .cl .n{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
-.bi .cl .a{font-variant-numeric:tabular-nums;text-align:right;color:var(--text3);font-size:12px;min-width:110px}
+.bi .cl .n{font-variant-numeric:tabular-nums;text-align:center;font-weight:600;min-width:84px}
+.bi .cl .a{font-variant-numeric:tabular-nums;text-align:center;min-width:110px}
 .bi .cl .tot{border-top:1px solid var(--border);padding-top:8px;margin-top:2px}
 .bi .callout{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.55;background:var(--bg3);border:1px solid var(--border);color:var(--text2)}
 .bi table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
@@ -120,9 +123,9 @@
 .bi .bar-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .bi .src{color:var(--text3);font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .bi .okp{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;color:var(--green);border:1px solid color-mix(in srgb,var(--green) 35%,transparent);background:color-mix(in srgb,var(--green) 9%,transparent)}
-.bi .tabs{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg3);margin:4px 0 12px}
+.bi .tabs{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg2);box-shadow:var(--sh);margin:4px 0 12px}
 .bi .tabs button{font-family:inherit;font-size:13.5px;border:0;background:transparent;color:var(--text2);padding:8px 16px;cursor:pointer}
-.bi .tabs button.on{background:var(--bg2);color:var(--accent);font-weight:700;box-shadow:inset 0 -2px 0 var(--accent)}
+.bi .tabs button.on{background:var(--accent-soft);color:var(--accent);font-weight:700;box-shadow:inset 0 -2px 0 var(--accent)}
 .bi .prod td{padding:9px 12px;border-bottom:1px solid var(--row)}
 .bi .prod tbody tr.pr{cursor:pointer}.bi .prod tbody tr.pr:hover td{background:color-mix(in srgb,var(--text) 4%,var(--bg2))}
 .bi .prod tr.det td{background:var(--bg3);padding:14px 18px;white-space:normal}
@@ -143,6 +146,25 @@
 .bi .flow table thead th{position:sticky;top:var(--bi-top,0px);z-index:5;background:var(--row-sum)}
 .bi .flow .pl thead th{background:var(--bg2)}
 .bi .flow:has(.pl){border:0}
+/* (2026-11-12) รายช่องทาง: แถว Platform กางดูรายร้าน · % ของรายได้ตัวเล็กใต้ยอด */
+.bi td .pc{font-size:10.5px;font-weight:500;color:var(--text3);line-height:1.2;margin-top:1px}
+.bi table.chg .lab{display:flex;align-items:center;gap:6px}
+.bi table.chg .chev{width:14px;flex:0 0 14px;color:var(--text3);font-size:10px;text-align:center;transition:transform .15s}
+.bi table.chg tr.grp td{font-weight:600}
+.bi table.chg tr.grp.has td:first-child{cursor:pointer}
+.bi table.chg tr.grp.open .chev{transform:rotate(90deg)}
+.bi table.chg tr.grp.open td{border-bottom-color:transparent}
+.bi table.chg tr.shop td,.bi table.chg tr.shop td:first-child{background:var(--bg3);color:var(--text2);font-size:12.5px;font-weight:400}
+.bi table.chg tr.shop .lab{padding-left:28px}
+.bi table.chg tr.sum.big td{border-top:2px solid var(--border)}
+/* (2026-11-12) แท็บรายสินค้า: ตัวเลขสรุปเป็นแถบเดียวแบบส่วนบนของหน้า */
+#page-cost #plKpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+#page-cost #plKpis>.card{min-width:0!important;margin:0!important;border:0!important;border-right:1px solid var(--border)!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;padding:14px 16px!important}
+#page-cost #plKpis>.card:last-child{border-right:0!important}
+@media (max-width:1200px){#page-cost #plKpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* (2026-11-12) ตารางรายสินค้าพอดีการ์ดทุกจอ (เดิมกว้างตายตัว 1360 ล้นการ์ดจอโน้ตบุ๊ก หัวคอลัมน์ยาวล้นช่อง) — ช่องไฟแคบลง + ความกว้างคอลัมน์ตามความยาวหัว */
+#page-cost #tblPl th,#page-cost #tblPl td{padding-left:6px!important;padding-right:6px!important}
+#page-cost #tblPl th:first-child,#page-cost #tblPl td:first-child{padding-left:12px!important}
 #page-cost #plCard{overflow:visible!important}
 #page-cost #plTableWrap{overflow:auto!important;max-height:calc(100vh - var(--bi-top,0px) - 24px);overscroll-behavior:contain}
 #page-cost #tblPl thead th{position:sticky;top:0;z-index:6;background:var(--bg2);box-shadow:0 1px 0 var(--border)}`;
@@ -165,6 +187,11 @@
     'FB-โอนเงิน': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Line my shop': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Telesales': ['var(--ch-facebook)', 'ช่องทางออนไลน์'], 'Eve&Boy': ['var(--ch-mt)', 'Modern Trade'],
     'Konvy': ['var(--ch-mt)', 'Modern Trade'], 'Watsons': ['var(--ch-mt)', 'Modern Trade'], 'CJ': ['var(--ch-mt)', 'Modern Trade'], 'Thaimart': ['var(--ch-mt)', 'Modern Trade'],
     'ตัวแทน': ['var(--ch-dealer)', 'ตัวแทนจำหน่าย'] };
+
+  // (2026-11-12) รายช่องทางจัดกลุ่มตาม Platform — แถว Platform = ผลรวมของร้านในกลุ่ม · Telesale อยู่ท้ายสุด
+  const CHGRP = [['TikTok', 'var(--ch-tiktok)', ['TikTok']], ['Facebook', 'var(--ch-facebook)', ['FB-COD', 'FB-โอนเงิน', 'Line my shop']], ['Shopee', 'var(--ch-shopee)', ['Shopee Mall', 'Shopee 24']],
+    ['Lazada', 'var(--ch-lazada)', ['Lazada Mall', 'Lazada 24']], ['Modern Trade', 'var(--ch-mt)', ['Eve&Boy', 'Konvy', 'Watsons', 'Thaimart', 'CJ']], ['ตัวแทนจำหน่าย', 'var(--ch-dealer)', ['ตัวแทน']], ['Telesale', 'var(--text3)', ['Telesales']]];
+  const chOpen = new Set();
 
   // ---------- ข้อมูล ----------
   const g = (kinds, i) => LINES.filter(l => kinds.includes(l.kind)).reduce((s, l) => s + l.v[i], 0);
@@ -254,8 +281,10 @@
     const per = vals.map(v => ni ? v / ni * 100 : 0), tot = per.reduce((a, b) => a + b, 0), profit = 100 - tot, scale = Math.max(100, tot);
     document.getElementById('biCsSub').textContent = `${TH(M[A])}${A !== B ? '–' + TH(M[B]) : ''} · รายได้สุทธิ ${fmt(ni)}`;
     document.getElementById('biCsStack').innerHTML = COSTCAT.map(([n, c], i) => `<i title="${n} ${per[i].toFixed(1)} บาท" style="width:${Math.max(per[i], 0) / scale * 100}%;background:${c}"></i>`).join('') + (profit > 0 ? `<i style="width:${profit / scale * 100}%;background:var(--green)"></i>` : '');
-    document.getElementById('biCsList').innerHTML = COSTCAT.map(([n, c], i) => `<span class="sw" style="background:${c}"></span><span>${n}</span><span class="n">${per[i].toFixed(1)} บาท</span><span class="a">${fmt(vals[i])}</span>`).join('') +
-      `<span class="sw tot" style="background:${profit < 0 ? 'var(--red)' : 'var(--green)'}"></span><span class="tot" style="font-weight:700">${profit < 0 ? 'ขาดทุน' : 'กำไร'}</span><span class="n tot ${profit < 0 ? 'neg' : 'pos'}">${profit.toFixed(1)} บาท</span><span class="a tot">${fmt(t.op)}</span>`;
+    // (2026-11-12) คอลัมน์ จำนวนเงิน + % ของรายได้ (เดิมเขียนเป็น "x บาท" ต่อรายได้ 100 บาท ซึ่งเป็นตัวเลขเดียวกัน)
+    document.getElementById('biCsList').innerHTML = `<span></span><span class="h">รายการ</span><span class="h c">จำนวนเงิน</span><span class="h c">% ของรายได้</span>` +
+      COSTCAT.map(([n, c], i) => `<span class="sw" style="background:${c}"></span><span>${n}</span><span class="a">${fmt(vals[i])}</span><span class="n">${per[i].toFixed(1)}%</span>`).join('') +
+      `<span class="sw tot" style="background:${profit < 0 ? 'var(--red)' : 'var(--green)'}"></span><span class="tot" style="font-weight:700">${profit < 0 ? 'ขาดทุน' : 'กำไร'}</span><span class="a tot ${profit < 0 ? 'neg' : 'pos'}" style="font-weight:700">${fmt(t.op)}</span><span class="n tot ${profit < 0 ? 'neg' : 'pos'}">${profit.toFixed(1)}%</span>`;
     const top = COSTCAT.map(([n], i) => [n, per[i]]).slice(1).sort((a, b) => b[1] - a[1]).slice(0, 2);
     document.getElementById('biCsNote').innerHTML = profit < 0
       ? `ทุก 100 บาทที่ขายได้ มีค่าใช้จ่ายรวม <b>${tot.toFixed(1)} บาท</b> จึงขาดทุน <b class="neg">${Math.abs(profit).toFixed(1)} บาท</b> · ค่าใช้จ่ายที่สูงที่สุดรองจากต้นทุนสินค้าคือ ${top.map(x => `${x[0]} (${x[1].toFixed(1)} บาท)`).join(' และ ')}`
@@ -306,23 +335,30 @@
     const by = {}; CH.filter(r => r.m >= A && r.m <= B).forEach(r => { const o = by[r.ch] || (by[r.ch] = { rev: 0, cogs: 0, exp: 0, ads: 0, plat: 0 });
       o.rev += r.rev; o.cogs += r.cogs; o.exp += split === 'a' ? r.sa + r.aa : r.ss + r.as; o.ads += r.ads; o.plat += r.plat; });
     const rows = Object.entries(by).filter(([, o]) => Math.abs(o.rev) + Math.abs(o.exp) > 1).map(([ch, o]) => ({ ch, ...o, gp: o.rev - o.cogs, pr: o.rev - o.cogs - o.exp }));
-    const T = rows.reduce((s, r) => s + r.rev, 0);
-    const mp = (pr, rev) => { if (!(rev > 0)) return '<span class="pct">—</span>'; const p = pr / rev * 100; return `<span class="mpill ${p < 0 ? 'n' : 'p'}">${p.toFixed(1)}%</span>`; };   // (2026-11-10) รายได้ติดลบ (มีแต่รับคืน) ไม่คิด % — เดิมขึ้น 892%
-    const tr = (r, cls = '') => `<tr class="${cls}"><td>${r.dot || ''}${esc(r.ch)}</td><td>${fmt(r.rev)}</td><td><div class="share"><span class="pct">${pctf(r.rev, T)}</span><div class="bar"><i style="width:${T ? Math.max(r.rev, 0) / T * 100 : 0}%"></i></div></div></td>
-      <td>${fmt(r.cogs)}</td><td>${fmt(r.gp)} <span class="pct">${r.rev > 0 ? pctf(r.gp, r.rev, 0) : ''}</span></td><td>${r.ads ? fmt(r.ads) : '—'}</td><td>${r.plat ? fmt(r.plat) : '—'}</td><td>${fmt(r.exp)}</td>
+    const T = rows.reduce((s, r) => s + r.rev, 0), KEYS = ['rev', 'cogs', 'gp', 'ads', 'plat', 'exp', 'pr'];
+    const mp = (pr, rev) => { if (!(rev > 0) || Math.abs(pr / rev) > 9.99) return '<span class="pct">—</span>'; const p = pr / rev * 100; return `<span class="mpill ${p < 0 ? 'n' : 'p'}">${p.toFixed(1)}%</span>`; };   // (2026-11-10) รายได้ติดลบ (มีแต่รับคืน) ไม่คิด % — เดิมขึ้น 892%
+    // (2026-11-12) ทุกช่องต้นทุน = ยอด + % ของรายได้สุทธิของแถวนั้นตัวเล็กใต้ยอด · ช่องรายได้ = สัดส่วนของรายได้รวมทุกช่องทาง
+    const pc = (v, base) => base > 0 && Math.abs(v) >= .5 && Math.abs(v / base) <= 9.99 ? `<div class="pc">${(v / base * 100).toFixed(1)}%</div>` : '';   // รายได้น้อยมากจน % เกิน 999% ไม่แสดง (เช่น CJ รายได้ 3 บาท)
+    const cell = (v, rev, dash) => dash && Math.abs(v) < .5 ? '<td><span class="pct">—</span></td>' : `<td>${fmt(v)}${pc(v, rev)}</td>`;
+    const tr = (r, cls, o = {}) => `<tr class="${cls}" ${o.attr || ''}${o.hide ? ' style="display:none"' : ''}><td><div class="lab">${o.noChev ? '' : `<span class="chev">${o.chev ? '▸' : ''}</span>`}${o.dot ? `<span class="chdot" style="background:${o.dot}"></span>` : ''}${esc(r.ch)}</div></td>
+      <td>${fmt(r.rev)}${pc(r.rev, T)}</td>${cell(r.cogs, r.rev)}${cell(r.gp, r.rev)}${cell(r.ads, r.rev, true)}${cell(r.plat, r.rev, true)}${cell(r.exp, r.rev)}
       <td class="${r.pr < 0 ? 'neg' : 'pos'}" style="font-weight:700">${fmt(r.pr)}</td><td>${mp(r.pr, r.rev)}</td></tr>`;
-    let h = `<thead><tr><th>ช่องทาง</th><th>รายได้สุทธิ</th><th>สัดส่วนรายได้</th><th>ต้นทุนสินค้า</th><th>กำไรขั้นต้น</th><th>Ads</th><th>ค่า Platform</th><th>ค่าใช้จ่ายรวม</th><th>กำไร (ขาดทุน)</th><th>อัตรากำไร</th></tr></thead><tbody>`;
-    const all = { ch: 'รวมทุกช่องทาง', rev: 0, cogs: 0, gp: 0, ads: 0, plat: 0, exp: 0, pr: 0 };
-    ['ช่องทางออนไลน์', 'Modern Trade', 'ตัวแทนจำหน่าย'].forEach(gn => { const rs = rows.filter(r => (CHMETA[r.ch] || [])[1] === gn).sort((a, b) => b.rev - a.rev); if (!rs.length) return;
-      const sg = { ch: 'รวม' + gn, rev: 0, cogs: 0, gp: 0, ads: 0, plat: 0, exp: 0, pr: 0 };
-      rs.forEach(r => { r.dot = `<span class="chdot" style="background:${CHMETA[r.ch][0]}"></span>`; for (const k in sg) if (k !== 'ch') sg[k] += r[k]; });
-      if (rs.length > 1) { rs.forEach(r => h += tr(r)); h += tr(sg, 'sum'); } else { const r = { ...rs[0], ch: gn }; h += tr(r, 'sum'); }
-      for (const k in all) if (k !== 'ch') all[k] += sg[k]; });
-    h += tr(all, 'sum big');
-    return `<div class="card"><div class="ch"><div><div class="ct">กำไร (ขาดทุน) แยกตามช่องทาง ${tip('ค่าใช้จ่ายที่ฝ่ายบัญชีลงตรงช่องทาง (เช่น Ads Facebook, ค่า Live TikTok) อยู่ที่ช่องทางนั้นเสมอ<br><b>ตามสัดส่วนฝ่ายบัญชี</b> ค่าใช้จ่ายส่วนกลางปันส่วนด้วย % คงที่ เช่น TikTok 36.62%<br><b>ตามยอดขายจริง</b> ปันส่วนใหม่ตามรายได้ของแต่ละเดือน<br>ทั้งสองแบบยอดรวมเท่ากัน · ใช้ต้นทุนตามคำสั่งซื้อ / Shipment<br>ช่องรายช่องทางในไฟล์บัญชีปัดเศษ 2 ตำแหน่ง ผลรวมจึงอาจต่างจากยอดรวมบริษัทไม่เกิน 1 บาท')}</div>
+    let h = `<thead><tr><th>ช่องทาง</th><th>รายได้สุทธิ</th><th>ต้นทุนสินค้า</th><th>กำไรขั้นต้น</th><th>Ads</th><th>ค่า Platform</th><th>ค่าใช้จ่ายรวม</th><th>กำไร (ขาดทุน)</th><th>อัตรากำไร</th></tr></thead><tbody>`;
+    const all = { ch: 'รวมทุกช่องทาง' }; KEYS.forEach(k => all[k] = 0);
+    const known = new Set(CHGRP.flatMap(x => x[2]));
+    const groups = CHGRP.concat(rows.filter(r => !known.has(r.ch)).map(r => [r.ch, 'var(--text3)', [r.ch]]));   // ช่องทางใหม่ที่ยังไม่อยู่ในกลุ่ม = แถวของตัวเอง (ยอดรวมไม่ตกหล่น)
+    let anyMulti = false;
+    groups.forEach(([gn, color, members], gi) => { const rs = members.map(m => rows.find(r => r.ch === m)).filter(Boolean); if (!rs.length) return;
+      const sg = { ch: gn }; KEYS.forEach(k => sg[k] = rs.reduce((s, r) => s + r[k], 0)); KEYS.forEach(k => all[k] += sg[k]);
+      const many = rs.length > 1, gid = 'cg' + gi, open = many && chOpen.has(gn); if (many) anyMulti = true;
+      h += tr(sg, 'grp' + (many ? ' has' : '') + (open ? ' open' : ''), { dot: color, chev: many, attr: many ? `data-g="${gid}" data-ch="${esc(gn)}" onclick="BI.togCh(this)"` : '' });
+      if (many) rs.forEach(r => h += tr(r, 'shop child', { attr: `data-p="${gid}"`, hide: !open })); });
+    h += tr(all, 'sum big', { noChev: false });
+    const allOpen = CHGRP.filter(x => x[2].filter(m => rows.some(r => r.ch === m)).length > 1).every(x => chOpen.has(x[0]));
+    return `<div class="card"><div class="ch"><div><div class="ct">กำไร (ขาดทุน) แยกตามช่องทาง ${tip('<b>ตัวเลขเล็กใต้ยอด</b> = % ของรายได้สุทธิของแถวนั้น ใช้ดูว่าค่าใช้จ่ายใดสูงในแต่ละช่องทาง (ใต้รายได้สุทธิ = สัดส่วนของรายได้รวมทุกช่องทาง)<br>ช่องทางที่รายได้ติดลบ หรือน้อยจน % เกิน 999% ไม่แสดง %<br><b>แถว Platform</b> = ผลรวมของร้านในกลุ่ม กดชื่อที่มีลูกศรเพื่อดูรายร้าน<br>ค่าใช้จ่ายที่ฝ่ายบัญชีลงตรงช่องทาง (เช่น Ads Facebook, ค่า Live TikTok) อยู่ที่ช่องทางนั้นเสมอ<br><b>ตามสัดส่วนฝ่ายบัญชี</b> ค่าใช้จ่ายส่วนกลางปันส่วนด้วย % คงที่ เช่น TikTok 36.62%<br><b>ตามยอดขายจริง</b> ปันส่วนใหม่ตามรายได้ของแต่ละเดือน<br>ทั้งสองแบบยอดรวมเท่ากัน · ใช้ต้นทุนตามคำสั่งซื้อ / Shipment<br>ช่องรายช่องทางในไฟล์บัญชีปัดเศษ 2 ตำแหน่ง ผลรวมจึงอาจต่างจากยอดรวมบริษัทไม่เกิน 1 บาท')}</div>
       <div class="cs">${TH(M[A])}${A !== B ? '–' + TH(M[B]) : ''} · ${split === 'a' ? 'ค่าใช้จ่ายส่วนกลางปันส่วนด้วยสัดส่วนคงที่ของฝ่ายบัญชี' : 'ค่าใช้จ่ายส่วนกลางปันส่วนตามรายได้จริงของแต่ละเดือน'}</div></div>
-      <div class="seg"><button class="${split === 'a' ? 'on' : ''}" onclick="BI.setSplit('a')">ปันส่วนตามสัดส่วนฝ่ายบัญชี</button><button class="${split === 's' ? 'on' : ''}" onclick="BI.setSplit('s')">ปันส่วนตามยอดขายจริง</button></div></div>
-      <div class="flow"><table data-no-sort data-no-page>${h}</tbody></table></div></div>`;
+      <div class="pl-tools">${anyMulti ? `<button class="btn" onclick="BI.chAll(${allOpen ? 0 : 1})">${allOpen ? 'ย่อรายร้านทั้งหมด' : 'แสดงรายร้านทั้งหมด'}</button>` : ''}<div class="seg"><button class="${split === 'a' ? 'on' : ''}" onclick="BI.setSplit('a')">ปันส่วนตามสัดส่วนฝ่ายบัญชี</button><button class="${split === 's' ? 'on' : ''}" onclick="BI.setSplit('s')">ปันส่วนตามยอดขายจริง</button></div></div></div>
+      <div class="flow"><table class="chg" data-no-sort data-no-page>${h}</tbody></table></div></div>`;
   }
 
   // ---------- แท็บ: รายสินค้า (ตารางเดิม) ----------
@@ -336,11 +372,11 @@
           </div>
         </div>
         <div id="plNote" style="font-size:11.5px;color:var(--text2);margin:-4px 0 12px;"></div>
-        <div id="plKpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
+        <div id="plKpis"></div>
         <div id="plMatrix" style="display:none;overflow-x:auto;"></div>
         <div id="plTableWrap">
-          <table id="tblPl" class="mkt-tbl" data-no-sort data-no-page style="table-layout:fixed;min-width:1360px;">
-            <colgroup><col style="width:15%"><col style="width:8%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"></colgroup>
+          <table id="tblPl" class="mkt-tbl" data-no-sort data-no-page style="table-layout:fixed;width:100%;">
+            <colgroup><col style="width:18.5%"><col style="width:7.5%"><col style="width:8%"><col style="width:5.5%"><col style="width:5.5%"><col style="width:7%"><col style="width:5.5%"><col style="width:9.5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:7.5%"><col style="width:8%"><col style="width:5.5%"></colgroup>
             <thead><tr>
               <th class="sortable-th c-left" onclick="plSort('name')">สินค้า <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-pl-row')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-pl-row" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;">คลิก<b>ยอดขาย</b>: ดูผลแยกตามช่องทาง<br>คลิก<b>ตัวเลขค่าใช้จ่าย</b>: ดูรายการที่รวมอยู่<br>ตัวเลขที่มีเส้นประใต้: คลิกเพื่อดูที่มาของตัวเลข (ก้อนในงบ × สัดส่วน)<br>ตัวเลขใหญ่ในช่อง CM คือ % ของยอดขาย · สีแดง = ติดลบ</div></span> <span class="sort-ind" id="pls-name"></span></th>
               <th class="sortable-th" onclick="plSort('rev')">ยอดขาย <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-plh-vat')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-plh-vat" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:280px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>ที่มา:</b> งบกำไรขาดทุน บรรทัด "รวมรายได้สุทธิ" ของแต่ละช่องทาง (ไม่รวม VAT)<br><b>วิธีคิด:</b> ยอดของช่องทาง × สัดส่วนยอดขายสินค้านี้ในช่องทางนั้นจากระบบ คิดทีละเดือนแล้วรวมกัน<br>รวมทุกสินค้าเท่ายอดในงบ</div></span> <span class="sort-ind" id="pls-rev"></span></th>
@@ -374,8 +410,6 @@
     t.classList.remove('nospk', 'tight'); if (t.scrollWidth > f.clientWidth + 1) t.classList.add('nospk'); if (t.scrollWidth > f.clientWidth + 1) t.classList.add('tight'); }); }
   window.addEventListener('resize', () => { if (tab === 'pl') fitPl(); });
   const LAYOUT = `<div class="bi">
-    <div class="bar-top"><div class="src" id="biSrc"></div>
-      <span class="src">ต้นทุนสินค้าตามคำสั่งซื้อ (ม.ค.–พ.ค. ตาม Shipment)</span></div>
     <div id="biAlert"></div>
     <div class="kpis" id="biKpis"></div>
     <div class="row2">
@@ -391,6 +425,8 @@
     if (!page.dataset.bi) { page.innerHTML = LAYOUT; page.dataset.bi = '1';
       }   // (2026-10-22) เอาปุ่มเกณฑ์ทางบัญชี / วอลเลตออก — ใช้ตามคำสั่งซื้ออย่างเดียว
     const seq = (render._seq = (render._seq || 0) + 1);
+    // (2026-11-12) ขึ้นบรรทัดที่มาข้อมูลรอบก่อนทันที (กันแถบบนขยับตอนข้อมูลมาถึง) แล้วค่อยอัปเดตเมื่อโหลดเสร็จ
+    try { const ps0 = document.getElementById('pageSub'), c = localStorage.getItem('bi_src_note'); if (ps0 && c && !ps0.innerHTML && (typeof currentPage === 'undefined' || currentPage === 'cost')) ps0.textContent = c; } catch (e) {}
     try {
       const [d, iss] = await Promise.all([Auth.rpc('biz_insight_data', { p_from: '2026-01-01' }), Auth.rpc('biz_insight_issues', {}).catch(() => [])]);
       if (seq !== render._seq) return;   // มีการโหลดรอบใหม่แล้ว
@@ -402,8 +438,10 @@
     const setTop = () => { const tb = document.querySelector('.topbar'); page.style.setProperty('--bi-top', (tb ? Math.round(tb.getBoundingClientRect().height) : 0) + 'px'); };
     setTop(); if (!window._biResize) { window._biResize = true; window.addEventListener('resize', () => { const p = document.getElementById('page-cost'); if (p && p.dataset.bi) { const tb = document.querySelector('.topbar'); p.style.setProperty('--bi-top', (tb ? Math.round(tb.getBoundingClientRect().height) : 0) + 'px'); } }); }
     const sync = D.synced_at ? new Date(D.synced_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
-    const bad = (D.checks || []).filter(c => +c.bad > 0).length, nm = (D.checks || []).length;
-    document.getElementById('biSrc').innerHTML = `<span>งบกำไรขาดทุนตามไฟล์บัญชี · ไม่รวม VAT · ไม่รวม MO</span>${bad ? `<span class="okp" style="color:var(--red);">⚠ ไม่ตรงกับไฟล์บัญชี ${bad}/${nm} เดือน</span>` : ''}<span>ข้อมูลบัญชีถึง ${PL_TH_M(M[M.length - 1])} · ดึงจากไฟล์ล่าสุด ${sync}</span>`;
+    // (2026-11-12) บรรทัดที่มาข้อมูลอยู่แถบบนข้างชื่อหน้า (ไม่ทำซ้ำในหน้า) · เดือนที่ไม่ตรงกับไฟล์บัญชีแจ้งที่ปุ่ม Alerts ที่เดียว
+    const ps = document.getElementById('pageSub'), note = `· ข้อมูลบัญชีถึง ${PL_TH_M(M[M.length - 1])} · ดึงไฟล์ล่าสุด ${sync} · ไม่รวม VAT · ไม่รวม MO`;
+    if (ps && (typeof currentPage === 'undefined' || currentPage === 'cost') && ps.innerHTML !== note) ps.innerHTML = note;
+    try { localStorage.setItem('bi_src_note', note); } catch (e) {}
     drawTop(); drawTab();
   }
 
@@ -411,6 +449,10 @@
     setMetric: k => { metric = k; kpis(); trend(); },
     setTab: t => { tab = t; drawTab(); },
     setSplit: s => { split = s; drawTab(); },
+    togCh: tr => { const gid = tr.dataset.g; if (!gid) return; const o = !tr.classList.contains('open'); tr.classList.toggle('open', o); if (o) chOpen.add(tr.dataset.ch); else chOpen.delete(tr.dataset.ch);
+      document.querySelectorAll(`.bi tr[data-p="${gid}"]`).forEach(r => r.style.display = o ? '' : 'none'); const b = document.querySelector('.bi .pl-tools .btn[onclick^="BI.chAll"]');
+      if (b) { const allOpen = !document.querySelector('.bi table.chg tr.grp.has:not(.open)'); b.textContent = allOpen ? 'ย่อรายร้านทั้งหมด' : 'แสดงรายร้านทั้งหมด'; b.setAttribute('onclick', `BI.chAll(${allOpen ? 0 : 1})`); } },
+    chAll: on => { document.querySelectorAll('.bi table.chg tr.grp.has').forEach(tr => { if (tr.classList.contains('open') !== !!on) window.BI.togCh(tr); }); },
     expandAll: () => { openAll = !openAll; drawTab(); },
     setPlUnit: u => { plPct = !!u; drawTab(); },
     tog: tr => { const gid = tr.dataset.g; if (!gid) return; const o = !tr.classList.contains('open'); tr.classList.toggle('open', o); document.querySelectorAll(`.bi tr[data-p="${gid}"]`).forEach(r => r.style.display = o ? '' : 'none'); },
