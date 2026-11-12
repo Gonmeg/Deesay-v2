@@ -188,14 +188,16 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     if (S.mode === 'metric') {
       const data = { rev: cur.rev, ord: cur.ord, aov: cur.aov, cust, canc: cur.canc, ads: cur.ads, roas: cur.roas };
       const pdata = prv ? { rev: prv.rev, ord: prv.ord, aov: prv.aov, cust: prvCust, canc: prv.canc, ads: prv.ads, roas: prv.roas } : {};
-      metList(o).filter(m => S.sel[m.k]).forEach(m => {
+      // (2026-11-12) แสดงแกนตัวเลข: ตัวชี้วัดแรกที่เลือก = แกนซ้าย · ตัวที่สอง = แกนขวา (ตัวเลขสีเดียวกับเส้น) · ตัวที่ 3 ขึ้นไปดูค่าได้ตอนชี้
+      metList(o).filter(m => S.sel[m.k]).forEach((m, mi) => {
         const col = css(m.c), ax = 'y_' + m.k;
-        scales[ax] = { display: false, beginAtZero: true, grid: { color: css('--grid') || 'rgba(127,127,127,.12)' } };
+        scales[ax] = { display: mi < 2, position: mi === 1 ? 'right' : 'left', beginAtZero: true, border: { display: false }, grid: { color: css('--grid') || 'rgba(127,127,127,.12)' },
+          ticks: { color: col, maxTicksLimit: 6, callback: v => m.k === 'roas' ? (+v).toFixed(1) + 'x' : fmt(v) } };
         ds.push({ label: m.name, data: data[m.k] || [], yAxisID: ax, borderColor: col, backgroundColor: col, borderWidth: 2.2, pointRadius: 0, pointHoverRadius: 4, tension: .25, spanGaps: false, segment: { borderDash: dashFor(m.k) }, _k: m.k });
         if (showPrev && S.cmp && pdata[m.k]) ds.push({ label: 'ช่วงก่อน · ' + m.name, data: pdata[m.k], yAxisID: ax, borderColor: col, borderWidth: 1.3, borderDash: [3, 5], pointRadius: 0, pointHoverRadius: 3, tension: .25, _prev: true, _opacity: .55, _k: m.k });
         legend.push(`<span><i style="background:var(${m.c})"></i>${m.name}</span>`);
       });
-      const first = Object.keys(scales).find(k => k.startsWith('y_')); if (first) scales[first].grid.display = true;
+      Object.keys(scales).filter(k => k.startsWith('y_')).forEach((k, i) => { scales[k].grid.display = i === 0; });   // เส้นตารางตามแกนซ้ายแกนเดียว
     } else {
       scales.y = { beginAtZero: true, grid: { color: css('--grid') || 'rgba(127,127,127,.12)' }, ticks: { color: css('--text3'), callback: v => fmt(v) } };
       const lines = o.hub ? ctx.subLines.map(s => [s.name, s.data, s.v]) : CH_ORDER.filter(c => cur.ch[c] && cur.ch[c].some(v => v)).map(c => [c, cur.ch[c], CH_VAR[c] || '--text2']);
