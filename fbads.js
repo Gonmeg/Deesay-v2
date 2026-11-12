@@ -1,3 +1,4 @@
+// fbads.js v20261112a — แผงที่มา: คอนเทนต์ชื่อเดียวกันคนละเพจแยกแถว + บอกชื่อเพจ (ฐานข้อมูลยุบตาม เพจ + ชื่อคอนเทนต์)
 // fbads.js v20261102b — ตัดการ์ด "กำลังดู" ด้านบน · กล่อง Funnel → % ระหว่างขั้นในแถบ Performance · ตัดตาราง Objective / ตามเพจ / Campaign (ซ่อน) ออก
 // fbads.js v20261102a — หน้าตาแบบ C: แถบบน (ยอดขายจริง · ค่า Ads รวม · % ค่า Ads · ROAS) + ส่วน Performance (ตัวเลขที่ Meta นับ) · หมายเหตุใต้กราฟ / ตารางย้ายเข้า ⓘ · ช่องตอนโหลดสูงเท่าของจริง (กันหน้าเด้ง)
 // fbads.js v20261015d — ROAS / % ไม่กดขยาย (สูตรอยู่หัวคอลัมน์) · แผงรายละเอียดยุบตามชื่อคอนเทนต์ 20 อันดับ + ทักแชท / ค่า Ads / ยอดขาย Meta / ROAS Meta · ตัดบรรทัดที่มาใต้ชื่อสินค้า
@@ -447,7 +448,7 @@
     b.innerHTML = card(`ค่า Ads Conversion · ${dt}`, m(sp), [`${fmt(d.contents || 0)} คอนเทนต์`, `${fmt(d.ads || 0)} Ads`, `${fmt(d.campaigns || 0)} Campaign`])
       + `<section class="tr-part"><div class="tr-sec"><span>แยกตามเพจ · บัญชีโฆษณา</span></div><table class="tr-tb" data-no-sort data-no-page><thead><tr><th>เพจ · บัญชี</th><th>Ads</th><th>ทักแชท</th><th>ค่า Ads</th></tr></thead><tbody>
         ${(d.by_page || []).map(x => `<tr><td ${W1}>${ttcEsc(x[0])}<div style="font-size:11px;color:var(--text3);">${ttcEsc(x[1])}</div></td><td>${fmt(x[3])}</td><td>${fmt(x[4])}</td><td>${m(x[2])}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">ไม่มี Ads Conversion วันนี้</td></tr>'}</tbody></table></section>
-      <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">20 อันดับแรก</span></div>${contentTable(d.top || [], x => `${fmt(x[1])} Ads · ${x[8] > 1 ? fmt(x[8]) + ' Campaign' : ttcEsc(x[2] || '')}`)}</section>` + src([SRC_ADS, ['คอนเทนต์', 'ยุบ Ads ที่ชื่อคอนเทนต์เดียวกัน (รวม Copy) เป็นแถวเดียว']]);
+      <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">20 อันดับแรก</span></div>${contentTable(d.top || [], x => `${x[9] ? ttcEsc(x[9]) + ' · ' : ''}${fmt(x[1])} Ads · ${x[8] > 1 ? fmt(x[8]) + ' Campaign' : ttcEsc(x[2] || '')}`)}</section>` + src([SRC_ADS, ['คอนเทนต์', 'ยุบ Ads ที่ชื่อคอนเทนต์เดียวกันในเพจเดียวกัน (รวม Copy) เป็นแถวเดียว · ชื่อเดียวกันคนละเพจ = คนละคอนเทนต์']]);
   }
   // ตารางคอนเทนต์ (ใช้ร่วมทุกแผง): รูปปก · ทักแชท · ค่า Ads · ยอดขาย (Meta นับ) · ROAS (Meta นับ)
   // แถว = [content, n_ads, campaign/n_camp, spend, msg, purchase_value, purchases, thumb, ...]
@@ -465,9 +466,9 @@
     b.innerHTML = `<div class="tr-card"><div class="tr-card-t">ค่า Ads · ${ttcEsc(sku ? skuName(sku) : 'Ads รวม (ไม่ผูกสินค้า)')}</div><div class="tr-card-v">${m(d.total)}</div>
         <div class="tr-card-m"><span>${ttcEsc(thShort(from))} – ${ttcEsc(thShort(to))}</span><span>${fmt(d.contents || 0)} คอนเทนต์ · ${fmt(d.ads || 0)} Ads</span></div></div>
       <section class="tr-part"><div class="tr-sec"><span>คอนเทนต์ที่ใช้เงินมากสุด</span><span style="font-weight:400;color:var(--text3);">${top.length < (d.contents || 0) ? '20 อันดับแรก · ดูครบที่ตาราง Ads ด้านล่าง' : 'ทั้งหมด'}</span></div>
-        ${contentTable(top, x => `${fmt(x[1])} Ads${x[2] > 1 ? ' · ' + fmt(x[2]) + ' Campaign' : ''}`)}</section>
+        ${contentTable(top, x => `${x[8] ? ttcEsc(x[8]) + ' · ' : ''}${fmt(x[1])} Ads${x[2] > 1 ? ' · ' + fmt(x[2]) + ' Campaign' : ''}`)}</section>
       <div class="tr-src"><div class="tr-src-h">วิธีคิด</div><dl class="tr-dl"><dt>ผูกสินค้า</dt><dd>ชื่อคอนเทนต์ (ชื่อ Ads) เทียบชีท Ads ของทีม · คอนเทนต์ที่ยังไม่มีในชีท = Ads รวม</dd>
-        <dt>แบ่งกลุ่ม</dt><dd>คอนเทนต์ที่ผูกหลายสินค้า แบ่งตามสัดส่วนยอดขาย Facebook ของสินค้าในกลุ่ม ช่วงวันที่เดียวกัน</dd><dt>ค่า Ads</dt><dd>Meta Marketing API · Conversion + PR · ยุบ Ads ชื่อคอนเทนต์เดียวกันเป็นแถวเดียว</dd></dl></div>`;
+        <dt>แบ่งกลุ่ม</dt><dd>คอนเทนต์ที่ผูกหลายสินค้า แบ่งตามสัดส่วนยอดขาย Facebook ของสินค้าในกลุ่ม ช่วงวันที่เดียวกัน</dd><dt>ค่า Ads</dt><dd>Meta Marketing API · Conversion + PR · ยุบ Ads ชื่อคอนเทนต์เดียวกันในเพจเดียวกันเป็นแถวเดียว</dd></dl></div>`;
   }
   function fillProductFilter() {
     const sel = document.getElementById('fbaAdsProduct'); if (!sel || !_data) return;
