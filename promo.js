@@ -69,15 +69,15 @@
       table.pg td { padding:12px 10px; border-bottom:1px solid var(--row-border, var(--border)); text-align:center; vertical-align:middle; }
       table.pg tbody tr:last-child td { border-bottom:0; } table.pg td.l { text-align:left; }
       table.pg tbody tr:focus-within td { background:color-mix(in srgb, var(--accent) 5%, transparent); }
-      table.pg .pg-n { width:30px; color:var(--text3); font-size:12px; }
-      table.pg .pg-rsp { width:90px; font-variant-numeric:tabular-nums; color:var(--text2); }
-      table.pg td.pg-p { width:130px; } table.pg .pg-price { text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; padding:8px 6px; }
-      table.pg td.pg-rkc { width:300px; }
+      table.pg .pg-n { width:30px; color:var(--text3); font-size:12px; } table.pg td.pg-n { vertical-align:top; padding-top:21px; }
+      table.pg .pg-rsp { width:11%; font-size:13.5px; font-variant-numeric:tabular-nums; color:var(--text2); }
+      table.pg td.pg-p { width:14%; } table.pg td.pg-p .pg-price { max-width:170px; margin:0 auto; display:block; } table.pg .pg-price { text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; padding:8px 6px; }
+      table.pg td.pg-rkc { width:24%; min-width:270px; }
       .pg-rk { min-height:42px; display:flex; flex-direction:column; gap:4px; justify-content:center; align-items:center; }   /* จองสูง 2 บรรทัด ผล Rank มาแล้วแถวไม่ขยับ */
       .pg-steps { display:inline-flex; gap:12px; font-size:11.5px; color:var(--text3); white-space:nowrap; } .pg-steps b { font-weight:600; color:var(--text2); } .pg-steps .on, .pg-steps .on b { color:var(--green,#16a34a); font-weight:700; }
       .pg-link { border:0; background:none; font:inherit; font-size:12px; color:var(--text3); cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:0; } .pg-link:hover { color:var(--red,#ef4444); }
       .pg-m { font-size:10.5px; color:var(--text3); white-space:nowrap; } .pg-m b { font-weight:600; color:var(--text2); }
-      table.pg td.pg-c1 { width:36%; } table.pg th.pg-h1 > div { display:grid; grid-template-columns:minmax(0,1fr) 104px; align-items:center; } table.pg th.pg-h1 .pg-hq { text-align:center; }
+      table.pg td.pg-c1 { width:29%; min-width:300px; } table.pg th.pg-h1 > div { display:grid; grid-template-columns:minmax(0,1fr) 104px; align-items:center; } table.pg th.pg-h1 .pg-hq { text-align:center; }
       .pg-lines { display:grid; gap:2px; }
       .pg-ln { display:grid; grid-template-columns:minmax(0,1fr) auto 12px 46px 22px; align-items:center; column-gap:6px; min-height:34px; padding:0 0 0 10px; border-radius:8px; }
       .pg-ln:hover, .pg-ln:focus-within { background:var(--bg3); }
@@ -93,7 +93,7 @@
       .pg-lines .pg-pick { width:100%; border-color:transparent !important; background:transparent !important; box-shadow:none !important; padding:7px 10px; font-size:12.5px; min-height:34px; }
       .pg-lines .pg-pick:hover { background:var(--bg3) !important; } .pg-lines .pg-pick:focus { border-color:var(--accent) !important; background:var(--bg) !important; }
       table.pg .pg-note { border-color:transparent !important; background:transparent !important; box-shadow:none !important; } table.pg .pg-note:hover { border-color:var(--border) !important; } table.pg .pg-note:focus { border-color:var(--accent) !important; background:var(--bg) !important; }
-      table.pg .pg-del { font-family:inherit; width:28px; height:28px; font-size:17px; line-height:1; border-color:transparent; } table.pg tr:hover .pg-del { border-color:var(--border); } table.pg td.pg-c3 { width:17%; }
+      table.pg .pg-del { font-family:inherit; width:28px; height:28px; font-size:17px; line-height:1; border-color:transparent; } table.pg tr:hover .pg-del { border-color:var(--border); } table.pg td.pg-c3 { width:19%; }
       .pg-foot { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; } .pg-foot .pg-hint { font-size:12px; color:var(--text3); flex:1; min-width:240px; } .pg-foot .pr-btn { min-width:190px; }
       @media (max-width:1100px) { .pg-top { grid-template-columns:1fr; } }
       .pr-dd { position:fixed; z-index:3000; max-height:300px; overflow-y:auto; background:var(--bg2); border:1px solid var(--border); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.14); padding:4px; }
@@ -465,7 +465,6 @@
       <div class="pr-dd" id="prDD" hidden></div>
       <div class="pr-card pg-card">
         <div class="pg-top">
-          <div class="pg-f pg-f1"><label class="sm2-l">ชื่อโปร</label><input class="pr-in" data-g="title" value="${esc(G.title)}" placeholder="เช่น 11.11 แป้งดีเซ้ย์ 2 แถม 1"></div>
           <div class="pg-f pg-f2"><label class="sm2-l">ช่องทาง</label><select class="pr-in" id="pgChSel">${C.channels.map(c => `<option value="${c.id}"${c.id === curCh().id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
           <div class="pg-f"><label class="sm2-l">ช่วงเวลา</label><div class="tm2-dates"><input class="pr-in" type="date" data-g="start_date" value="${esc(G.start_date)}"><span>–</span><input class="pr-in" type="date" data-g="end_date" value="${esc(G.end_date)}"></div></div>
         </div>
@@ -504,9 +503,13 @@
       if (!ddFor) return;
       dd.innerHTML = ddList.length ? ddList.slice(0, 80).map((p, i) => `<button type="button" data-pick="${esc(p.sku)}" class="${i === ddOn ? 'on' : ''}"><span>${esc(p.name)}</span><small>${esc(p.sku)}</small>${p.status === 'Discontinued' ? '<em>เลิกผลิต</em>' : p.status === 'NPD' ? '<em>ใหม่</em>' : ''}</button>`).join('')
         : '<div class="none">ไม่เจอสินค้าที่ตรงกับคำค้น · ลองพิมพ์รหัสสินค้า หรือคำสั้นลง</div>';
+      pickPlace();
+      const on = dd.querySelector('button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
+    }
+    function pickPlace() {
+      if (!ddFor) return;
       const r = ddFor.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.width = Math.max(r.width, 300) + 'px';
       const below = window.innerHeight - r.bottom; dd.style.top = (below < 240 && r.top > below ? Math.max(8, r.top - Math.min(300, dd.scrollHeight) - 4) : r.bottom + 4) + 'px';
-      const on = dd.querySelector('button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
     }
     function pickOpen(inp) { ddFor = inp; ddList = prodMatch(inp.value); ddOn = 0; dd.hidden = false; pickDraw(); }
     const pickClose = () => { dd.hidden = true; ddFor = null; };
@@ -527,7 +530,7 @@
       else if (e.key === 'Escape') { pickClose(); }
     });
     dd.addEventListener('mousedown', e => { e.preventDefault(); const b = e.target.closest('[data-pick]'); if (b) pickSet(C.products.find(p => p.sku === b.dataset.pick)); });
-    const onMove = () => { if (ddFor) pickDraw(); };
+    const onMove = e => { if (!ddFor || (e && e.target && e.target.nodeType === 1 && (e.target === dd || dd.contains(e.target)))) return; pickPlace(); };   // (2026-11-12 d) เลื่อนในรายการสินค้า = ไม่แตะรายการ
     window.addEventListener('scroll', onMove, true); window.addEventListener('resize', onMove);
     window._prDDOff = () => { window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
     el.addEventListener('click', async e => {
@@ -547,12 +550,13 @@
     });
     document.getElementById('prSubmit').onclick = async () => {
       const list = todo(), msg = document.getElementById('prMsg'), b = document.getElementById('prSubmit');
-      if (!G.title.trim()) { msg.textContent = 'ใส่ชื่อโปรก่อนส่ง'; el.querySelector('[data-g="title"]').focus(); return; }
       if (!list.length) return;
+      const MTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'], d0 = G.start_date ? new Date(G.start_date + 'T00:00:00') : new Date();
+      const autoTitle = c => `${c.name} · ${MTH[d0.getMonth()]} ${(d0.getFullYear() + 543) % 100}`;   // (2026-11-12 d) ไม่มีช่องชื่อโปรแล้ว
       b.disabled = true; let ok = 0; const fail = [];
       for (const [r, c, i] of list) {
         msg.textContent = `กำลังส่ง ${ok + fail.length + 1} / ${list.length}…`;
-        try { await rpc('promo_submit', { p: { title: G.title, channel_id: c.id, start_date: G.start_date, end_date: G.end_date, price: +r.prices[c.id] || 0, orders: 0, note: r.note || '',
+        try { await rpc('promo_submit', { p: { title: autoTitle(c), channel_id: c.id, start_date: G.start_date, end_date: G.end_date, price: +r.prices[c.id] || 0, orders: 0, note: r.note || '',
             items: r.items.map(x => ({ sku: x.sku, qty: +x.qty || 0 })), gifts: r.gifts.map(x => ({ sku: x.sku, qty: +x.qty || 0 })) } }); ok++; delete r.prices[c.id]; }
         catch (er) { fail.push(`แถว ${i + 1} · ${c.name}: ${er.message}`); }
       }
