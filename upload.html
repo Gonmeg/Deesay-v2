@@ -213,6 +213,11 @@
     .cl-hero { display: flex; align-items: center; gap: 18px; padding: 18px 20px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border); margin-bottom: 14px; }
     .cl-ring { --p: 0; width: 64px; height: 64px; border-radius: 50%; flex: none; background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--surface3) 0); display: flex; align-items: center; justify-content: center; }
     .cl-ring span { width: 50px; height: 50px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; }
+    .cl-auto-tag { font-size: 0.72rem; font-weight: 600; color: var(--success); border: 1px solid color-mix(in srgb, var(--success) 40%, transparent); border-radius: 999px; padding: 2px 10px; margin-left: 8px; vertical-align: 2px; }
+    .cl-auto { width: 100%; border-collapse: collapse; font-size: 0.85rem; } .cl-auto th { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-align: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .cl-auto td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; } .cl-auto tr:last-child td { border-bottom: 0; } .cl-auto th:nth-child(n+3), .cl-auto td:nth-child(n+3) { white-space: nowrap; } .cl-auto th:first-child { width: 36%; } .cl-auto th:nth-child(2) { width: 31%; }
+    .cl-auto th:first-child, .cl-auto td:first-child { text-align: left; } .cl-auto td:first-child b { font-weight: 600; display: block; } .cl-auto td:first-child small { color: var(--muted); font-size: 0.76rem; }
+    .cl-pill.fail { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); } .cl-auto tr:has(.cl-pill.fail) td:first-child b { color: var(--danger); }
     .cl-hero h3 { font-size: 1.05rem; font-weight: 700; } .cl-hero p { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
     .cl-hero p b { color: var(--text); font-weight: 600; }
     .cl-step { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; background: var(--surface); overflow: hidden; }
@@ -482,6 +487,12 @@
       <div id="clList" style="min-height:330px;"></div>
       <div id="clHold" hidden></div><!-- ที่พักฟอร์มอัปโหลด / ลบ ระหว่างวาดรายการใหม่ -->
       <div id="closeAlert" class="alert alert-error" style="display:none;margin-top:12px;"></div>
+    </div>
+    <!-- (2026-11-12) ไฟล์ที่ระบบดึงเอง: บอกว่าไฟล์ไหนไม่ต้องอัป + ดึงล่าสุดเมื่อไร (RPC auto_sources_status) -->
+    <div class="card" id="clAutoCard" style="margin-top:14px;">
+      <div class="section-title" style="color:var(--text);">ไฟล์จากบัญชีที่ระบบดึงเอง <span class="cl-auto-tag">ไม่ต้องอัป</span></div>
+      <p class="map-info" style="margin-bottom:6px;">ระบบอ่านจากลิงก์ Google Sheet ของบัญชีเองตามรอบ · ถ้าสถานะขึ้นว่าดึงไม่สำเร็จ ให้แจ้งผู้ดูแลระบบ</p>
+      <div id="clAuto" style="min-height:196px;"></div>
     </div>
   </div>
 
@@ -1861,7 +1872,16 @@ async function clMonthsRender(cur) {
     return `<button type="button" class="ph-tab${m === cur ? ' on' : ''}" data-m="${m}"><b>${closeMonLbl(m)}</b><small class="${st.length && n === st.length ? 'ok' : ''}">${!d ? '—' : n === st.length ? '✓ ครบ' : `${n} / ${st.length}`}</small></button>` }).join('')
   box.querySelectorAll('.ph-tab').forEach(b => b.onclick = () => { if (_clUpKey) clUnInline(); const mi = document.getElementById('closeMonth'); mi.value = b.dataset.m; _clOpen = null; _clCheck = null; closeLoadStatus() })
 }
+async function clAutoLoad() {   // (2026-11-12) ไฟล์ที่ระบบดึงเอง
+  const box = document.getElementById('clAuto'); if (!box) return
+  const { data, error } = await DB.rpc('auto_sources_status')
+  if (error || !Array.isArray(data)) { box.innerHTML = '<div class="cl-s">โหลดสถานะไม่สำเร็จ</div>'; return }
+  box.innerHTML = `<table class="cl-auto"><thead><tr><th>ไฟล์</th><th>ใช้กับ</th><th>ระบบดึงเองตอน</th><th>ดึงล่าสุด</th><th>สถานะ</th></tr></thead><tbody>${data.map(r => `<tr>
+    <td><b>${r.name}</b><small>${r.note || ''}</small></td><td>${r.used}</td><td>${r.round}</td><td>${r.last_at ? clDt(r.last_at) : '—'}</td>
+    <td><span class="cl-pill ${r.ok ? 'done' : 'fail'}">${r.ok ? 'ดึงสำเร็จ' : 'ดึงไม่สำเร็จ'}</span></td></tr>`).join('')}</tbody></table>`
+}
 async function closeLoadStatus() {
+  clAutoLoad()
   const mo = document.getElementById('closeMonth').value, list = document.getElementById('clList'), al = document.getElementById('closeAlert')
   if (!mo) return
   al.style.display = 'none'
