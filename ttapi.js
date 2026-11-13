@@ -1,4 +1,4 @@
-// ttapi.js (v20261112a) — แถว Ads สร้างการรับรู้: มี %Ads เทียบยอดขายรวม + ยอดแยกตามบัญชี Ads · กราฟ GMV แสดงแกนตัวเลขซ้าย / ขวา
+// ttapi.js (v20261113a) — ตารางช่องทาง: เพิ่มแถว รวมเฉพาะ Conversion คู่กับ รวมทั้งหมด · แถว Ads สร้างการรับรู้: มี %Ads เทียบยอดขายรวม + ยอดแยกตามบัญชี Ads · กราฟ GMV แสดงแกนตัวเลขซ้าย / ขวา
 // ttapi.js (v20261105a) — ทราฟฟิกร้าน: วางโครงครั้งเดียวตั้งแต่เปิดหน้า (ตารางแยกแหล่งแสดงตั้งแต่แรก) · โหลดซ้ำ / เปลี่ยนช่วง แทนตัวเลขในที่เดิม — กันหน้าเด้ง
 // ttapi.js (v20261021f) — คอลัมน์เป้าดูอย่างเดียว (tt_gmv_target_range) · ตั้งเป้าที่หน้าเป้าหมาย KPI › TikTok GMV
 // ttapi.js (v20261021e) — เป้า GMV เป็นคอลัมน์ "เป้า" หน้าคอลัมน์ GMV (กดตัวเลขเพื่อแก้ เฉพาะผู้ดูแล) · เอาการ์ดเป้าออก
@@ -229,7 +229,10 @@
       const roiCost = Object.values(AD).filter(x => x.rev != null).reduce((a, x) => a + x.cost, 0);
       const t2 = tk ? fmt2(Object.values(ind).reduce((a, x) => a + (x || 0), 0)) : fmt(Object.values(ord).reduce((a, x) => a + num(x), 0));
       const allT = TGK.reduce((a, k) => a + tgOf(k), 0);
-      h += `<tr class="ui-sum"><td class="l">รวม</td>${tk ? (allT ? tCell(allT, tot, null) : `<td>${dash}</td>`) : ''}<td>${money(tot)}</td><td>${t2}</td><td>100%</td><td class="tt-gl">${adCost ? baht(adCost) : dash}</td><td>${adCost && tot > 0 ? (tot / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${roiCost ? (adRev / roiCost).toFixed(2) + 'x' : dash}</td></tr>`;
+      // (2026-11-13) แถวรวม 2 แบบ: เฉพาะ Conversion (ไม่นับ Ads สร้างการรับรู้) และ รวมทั้งหมด — ไว้คุมงบ Conversion แยกจาก PR
+      const awC = AD.aw ? +AD.aw.cost || 0 : 0, cvC = adCost - awC;
+      if (awC > 0 && cvC > 0) h += `<tr class="ui-sum"><td class="l">รวมเฉพาะ Conversion${iTip('ค่า Ads ทุกแถว ไม่นับ Ads สร้างการรับรู้ เทียบกับ' + (tk ? ' GMV รวม' : 'ยอดขายรวมทั้งร้าน') + '\nใช้ดูว่า Ads ปิดการขายอย่างเดียวคิดเป็นกี่ % ของยอดขาย และได้ยอดกี่บาทต่อค่า Ads 1 บาท')}</td>${tk ? `<td>${dash}</td>` : ''}<td>${money(tot)}</td><td>${t2}</td><td>100%</td><td class="tt-gl">${baht(cvC)}</td><td>${tot > 0 ? (tot / cvC).toFixed(2) + 'x' : dash}</td><td>${tot > 0 ? pctTxt(cvC, tot) : dash}</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${roiCost ? (adRev / roiCost).toFixed(2) + 'x' : dash}</td></tr>`;
+      h += `<tr class="ui-sum"><td class="l">${awC > 0 && cvC > 0 ? 'รวมทั้งหมด' : 'รวม'}</td>${tk ? (allT ? tCell(allT, tot, null) : `<td>${dash}</td>`) : ''}<td>${money(tot)}</td><td>${t2}</td><td>100%</td><td class="tt-gl">${adCost ? baht(adCost) : dash}</td><td>${adCost && tot > 0 ? (tot / adCost).toFixed(2) + 'x' : dash}</td><td>${adCost && tot > 0 ? pctTxt(adCost, tot) : dash}</td><td class="tt-gl">${adRev ? baht(adRev) : dash}</td><td>${roiCost ? (adRev / roiCost).toFixed(2) + 'x' : dash}</td></tr>`;
       tb.innerHTML = tot || adCost ? h : `<tr><td colspan="${tk ? 10 : 9}" class="empty">ไม่มีข้อมูล</td></tr>`;
       if (tk && V) renderGmvTop(V, adCost, adTo);
     } catch (e) { console.warn('tt channel grid', e); tb.innerHTML = `<tr><td colspan="9" class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}</td></tr>`; }
