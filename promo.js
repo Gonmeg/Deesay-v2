@@ -408,7 +408,7 @@
     if (window._prDDOff) window._prDDOff();
     el.innerHTML = '<div class="pr-empty">กำลังโหลด…</div>';
     let C; try { C = await cat(); } catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-    if (!C) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
+    if (!C || !Array.isArray(C.channels) || !Array.isArray(C.products)) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้ หรือยังโหลดรายการสินค้าไม่ได้ · ลองเปิดหน้านี้ใหม่อีกครั้ง</div>'; return; }
     pgLoad();   // งานที่กรอกค้างไว้ในเครื่องนี้
     const SYS = [...new Set(C.channels.map(c => c.sys || c.name))];
     if (!SYS.includes(G.sys)) G.sys = SYS.includes('TikTok') ? 'TikTok' : SYS[0];
@@ -1071,7 +1071,7 @@
     let FR = null;
     try { [FT, FA, FA30, FR] = await Promise.all([rpc('fee_table'), rpc('fee_actuals').catch(() => null), rpc('fee_actuals_30d').catch(() => null), rpc('fee_rates_all').catch(() => null)]); }
     catch (e) { el.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-    if (!FT) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้</div>'; return; }
+    if (!FT || !Array.isArray(FT.items)) { el.innerHTML = '<div class="pr-empty">ยังไม่มีสิทธิ์ใช้หน้านี้ หรือยังโหลดตารางค่าธรรมเนียมไม่ได้ · ลองเปิดหน้านี้ใหม่อีกครั้ง</div>'; return; }
     const A = FA || {}, ms = A.months || [];
     const G30 = {}; ((FA30 && FA30.groups) || []).forEach(g => { G30[g.grp] = g; });
     const IT = {}; FT.items.forEach(it => { IT[it.id] = it; });
