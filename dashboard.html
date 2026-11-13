@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.12-a"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.13-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -7995,6 +7995,8 @@ async function renderHome() {
   if (seq !== renderHome._seq) return;
   _homeBrief = b; _homeTrend = tr; homeSyncNav();
 
+  // (2026-11-13) ยังไม่มีข้อมูลสรุป (ดึงไม่สำเร็จ / ยังไม่มียอด) → แจ้งในหน้า ไม่ปล่อยให้หน้าค้างเปล่า
+  if (!_homeRange || !_homeRange.a || !_homeRange.b) { el.classList.remove('is-loading'); el.innerHTML = '<div class="ui-empty"><b>ยังไม่มีข้อมูลสรุป</b>ระบบยังดึงยอดล่าสุดไม่ได้ · ลองเปิดหน้านี้ใหม่อีกครั้ง ถ้ายังไม่ขึ้นให้แจ้งผู้ดูแลระบบ</div>'; return; }
   const A = _homeRange.a, B = _homeRange.b, n = Math.round((new Date(B) - new Date(A)) / 86400000) + 1, one = n === 1;
   const money = v => fmt(Math.round(+v || 0)), pct = (x, y) => x != null && y ? (x - y) / y * 100 : null;
   const delta = (p, inv) => p === null || !isFinite(p) ? '<span class="ui-delta flat">—</span>'
