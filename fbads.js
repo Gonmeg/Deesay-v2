@@ -1,4 +1,4 @@
-// fbads.js v20261112a — แผงที่มา: คอนเทนต์ชื่อเดียวกันคนละเพจแยกแถว + บอกชื่อเพจ (ฐานข้อมูลยุบตาม เพจ + ชื่อคอนเทนต์)
+// fbads.js v20261113a — ไอคอนแก้ลิงก์เพจ KOL เป็นเส้น (เดิมเป็นอีโมจิ ฟอนต์ไม่ตรง) · แผงที่มา: คอนเทนต์ชื่อเดียวกันคนละเพจแยกแถว + บอกชื่อเพจ (ฐานข้อมูลยุบตาม เพจ + ชื่อคอนเทนต์)
 // fbads.js v20261102b — ตัดการ์ด "กำลังดู" ด้านบน · กล่อง Funnel → % ระหว่างขั้นในแถบ Performance · ตัดตาราง Objective / ตามเพจ / Campaign (ซ่อน) ออก
 // fbads.js v20261102a — หน้าตาแบบ C: แถบบน (ยอดขายจริง · ค่า Ads รวม · % ค่า Ads · ROAS) + ส่วน Performance (ตัวเลขที่ Meta นับ) · หมายเหตุใต้กราฟ / ตารางย้ายเข้า ⓘ · ช่องตอนโหลดสูงเท่าของจริง (กันหน้าเด้ง)
 // fbads.js v20261015d — ROAS / % ไม่กดขยาย (สูตรอยู่หัวคอลัมน์) · แผงรายละเอียดยุบตามชื่อคอนเทนต์ 20 อันดับ + ทักแชท / ค่า Ads / ยอดขาย Meta / ROAS Meta · ตัดบรรทัดที่มาใต้ชื่อสินค้า
@@ -506,7 +506,7 @@
 
   // ===== KOL: แสดง + ✏️ แก้ลิงก์เพจ (เฉพาะคนที่มีสิทธิ์จัดการสินค้า/แอดมิน) =====
   const canEditKol = () => !!(window.Auth && Auth.perm && Auth.perm.is_active && (Auth.perm.is_admin || Auth.perm.can_admin));
-  const PEN = (kind, key, cur, label) => canEditKol() && key ? ` <button class="fba-pen" data-kind="${kind}" data-key="${ttcEscAttr(key)}" data-cur="${ttcEscAttr(cur || '')}" data-label="${ttcEscAttr(label || '')}" title="แก้ลิงก์เพจ KOL" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;">✏️</button>` : '';
+  const PEN = (kind, key, cur, label) => canEditKol() && key ? ` <button class="fba-pen" data-kind="${kind}" data-key="${ttcEscAttr(key)}" data-cur="${ttcEscAttr(cur || '')}" data-label="${ttcEscAttr(label || '')}" title="แก้ลิงก์เพจ KOL" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>` : '';
   function kolCell(a) {
     const nm = a.kol_name || (!a.own_page && a.page_id ? 'เพจ KOL (ไม่ทราบชื่อ)' : '');
     const name = nm ? `<a href="${ttcEscAttr(a.kol_link || ('https://www.facebook.com/' + (a.page_id || '')))}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;text-decoration:none;" title="เปิดเพจ KOL">${ttcEsc(nm)}</a>`
@@ -563,7 +563,7 @@
   }
   const needsReview = a => a.kol_source === 'page' && !!_review[a.page_id];
   const warnIcon = (pageId, name) => { const r = _review[pageId]; if (!r) return ''; const all = [name, ...(r.alt_names || [])].filter((v, i, x) => v && x.indexOf(v) === i).join(' / ');
-    return ` <span title="ยังไม่ชัวร์ — ทีม Ads ตั้งชื่อ Ads ของเพจนี้ไม่ตรงกัน: ${ttcEscAttr(all)}\nกดชื่อเพื่อเปิดเพจดูว่าใคร แล้วกด ✏️ ใส่ลิงก์ที่ถูกเพื่อยืนยัน" style="cursor:default;font-size:12px;">⚠️</span>`; };
+    return ` <span title="ยังไม่ชัวร์ — ทีม Ads ตั้งชื่อ Ads ของเพจนี้ไม่ตรงกัน: ${ttcEscAttr(all)}\nกดชื่อเพื่อเปิดเพจดูว่าใคร แล้วกด ไอคอนดินสอ ใส่ลิงก์ที่ถูกเพื่อยืนยัน" style="cursor:default;font-size:12px;">⚠️</span>`; };
 
   // รวมแอดที่ใช้โพสต์เดียวกัน (post_id) เป็นแถวเดียว — ตัวเลขดิบบวกกัน แล้วให้สูตร CPM/CTR/ER คำนวณจากผลรวม · reach เป็นผลรวม (คนซ้ำข้ามแอดนับซ้ำ) จึงเป็นค่าประมาณ
   const SUM_KEYS = ['spend','impressions','reach','clicks','link_clicks','post_engagement','reactions','comments','shares','saves','video_3s','thruplay','msg_started','purchases','purchase_value','revenue'];
