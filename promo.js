@@ -1,4 +1,4 @@
-// promo.js (v20261112a) — หน้าขอ Promotion แบบตาราง: 1 แถว = 1 ชุดสินค้า · เลือก Platform + ช่องทางจากตัวกรองด้านบน · ช่องราคาเดียว + เทียบ Rank 1 / 2 / 3 · ส่งหลายรายการครั้งเดียว (แทนฟอร์มทีละโปร)
+// promo.js (v20261113c) — ปฏิทินโปรแสดงเฉพาะของบัญชีที่เปิดดู · ไม่ค้างโปรที่ยังไม่ได้ส่ง: ปิดหรือโหลดเว็บใหม่แล้วตารางเริ่มว่าง · หน้าขอ Promotion แบบตาราง: 1 แถว = 1 ชุดสินค้า · เลือก Platform + ช่องทางจากตัวกรองด้านบน · ช่องราคาเดียว + เทียบ Rank 1 / 2 / 3 · ส่งหลายรายการครั้งเดียว (แทนฟอร์มทีละโปร)
 // promo.js (v20261102c) — ปุ่มเลือกค่าธรรมเนียมขึ้นทุกช่องทาง: ช่องทางที่ไม่มี API ปุ่ม "ค่าจริง" กดไม่ได้ พร้อมบอกเหตุผล
 // promo.js (v20261102b) — เลือก ค่าจริง / ค่าที่ตั้งไว้ ตอนจำลองโปรและดูคำขอ (ปุ่มบนผลคำนวณ) แทนคอลัมน์ "ใช้คิดโปร" ในหน้าค่าธรรมเนียม · การ์ด / หัวตารางมี ⓘ อธิบายตัวเลข
 // promo.js (v20261102a) — ค่าธรรมเนียมช่องทาง: คอลัมน์ "ใช้คิดโปร" เลือก ค่าจริง / ตั้งเอง ได้รายบรรทัด (สูตรคิดโปรใช้ตามที่เลือก · อัตราคำนวณที่ฐานข้อมูล fee_rates ที่เดียว) · TikTok มีมุมมอง "เทียบทุกประเภท" ในตารางเดียว
@@ -357,7 +357,7 @@
     const rsp = (+r.rsp > 0 ? `<div class="m">ราคาปกติรวม ${n0(r.rsp)} · ลด ${pc(r.discount_vs_rsp)}</div>` : '')
       + `<div class="m">เกณฑ์: ราคาขายต้องครอบคลุมต้นทุนทั้งหมด (สินค้า · ของแถม · ค่าธรรมเนียมช่องทาง · ค่า Ads · ค่าบริหาร) และมีกำไรเกินอีก ${mm} ของต้นทุน</div>`;
     if (r.signal === 'green') return `<div class="pr-sig green"><div class="ic">✓</div><div class="t">ผ่านต้นทุนทั้งหมด + ${mm}</div><div class="s">ส่งขออนุมัติได้เลย · ยังต้องรอผู้บริหารอนุมัติอีกครั้ง</div>${rsp}</div>`;
-    if (r.signal === 'red') return `<div class="pr-sig red"><div class="ic">✕</div><div class="t">ยังไม่ผ่านต้นทุนทั้งหมด + ${mm}</div><div class="s">ลองขึ้นราคา ลดของแถม หรือเพิ่มจำนวนสินค้าในเซต · ส่งได้ แต่ผู้บริหารจะเห็นว่ายังไม่ผ่าน</div>${rsp}</div>`;
+    if (r.signal === 'red') return `<div class="pr-sig red"><div class="ic">×</div><div class="t">ยังไม่ผ่านต้นทุนทั้งหมด + ${mm}</div><div class="s">ลองขึ้นราคา ลดของแถม หรือเพิ่มจำนวนสินค้าในเซต · ส่งได้ แต่ผู้บริหารจะเห็นว่ายังไม่ผ่าน</div>${rsp}</div>`;
     const miss = (r.missing_costs || []);
     const nmOf = s => ((C.products || []).find(p => p.sku === s) || { name: s }).name;
     return `<div class="pr-sig"><div class="ic">?</div><div class="t">ยังเช็คต้นทุนไม่ได้</div><div class="s">${miss.length ? 'ยังไม่มีต้นทุนของ ' + miss.map(x => esc(nmOf(x))).join(', ') + ' ในไฟล์ต้นทุนขาย · แจ้งผู้บริหาร / บัญชี' : 'กรอกช่องทาง ราคาขาย และสินค้าให้ครบ'}</div>${rsp}</div>`;
@@ -391,15 +391,16 @@
   function rowsHtml(key, list, C) {
     return list.map((x, i) => `<div class="pr-row"><div class="pr-pickw"><input class="pr-in pr-pick" autocomplete="off" data-k="${key}" data-i="${i}" data-f="sku" placeholder="ค้นหาชื่อสินค้าหรือรหัส" value="${esc(x.sku ? prodLabel(C.products.find(p => p.sku === x.sku) || { name: x.sku, sku: x.sku }) : '')}"></div>
       <input class="pr-in" type="number" min="1" step="1" data-k="${key}" data-i="${i}" data-f="qty" value="${esc(x.qty)}" title="จำนวนชิ้นต่อ 1 ออเดอร์">
-      <button type="button" class="pr-x" data-del="${key}" data-i="${i}" aria-label="ลบ">✕</button></div>`).join('');
+      <button type="button" class="pr-x" data-del="${key}" data-i="${i}" aria-label="ลบ">×</button></div>`).join('');
   }
   // (2026-11-12) หน้าขอ Promotion แบบตาราง (ทีมคุ้นกับชีทราคา): 1 แถว = 1 ชุดสินค้า · คอลัมน์ราคาแยกตามช่องทางย่อยของ Platform ที่เลือก
   //   หลักการเดิม: เช็ค Rank ทันที (promo_rank) · ส่งขออนุมัติทีละราคา (promo_submit) · คำขอของฉัน / ปฏิทิน เหมือนเดิม · งานที่กรอกค้างเก็บไว้ในเครื่อง
   const PG_KEY = 'deesay_promo_grid_v1';
   const pgRow = () => ({ items: [], gifts: [], prices: {}, note: '' });
   let G = { title: '', sys: '', start_date: '', end_date: '', rows: [pgRow(), pgRow(), pgRow()] };
-  const pgLoad = () => { try { const d = JSON.parse(localStorage.getItem(PG_KEY) || 'null'); if (d && Array.isArray(d.rows) && d.rows.length) G = Object.assign(G, d, { rows: d.rows.map(r => Object.assign(pgRow(), r)) }); } catch (e) {} };
-  const pgSave = () => { try { localStorage.setItem(PG_KEY, JSON.stringify(G)); } catch (e) {} };
+  // (2026-11-13 b) ไม่เก็บงานที่กรอกค้างข้ามการเข้าเว็บแล้ว: ปิดหรือโหลดเว็บใหม่ = ตารางเริ่มว่าง (สลับเมนูในเว็บแล้วกลับมา ยังอยู่) · ล้างของค้างจากเวอร์ชันก่อนด้วย
+  const pgLoad = () => { try { localStorage.removeItem(PG_KEY); } catch (e) {} };
+  const pgSave = () => {};
   const pgRank = new Map(); let pgT = {};
   async function renderPromo() {
     let el = document.getElementById('page-promo'); if (!el) return;
@@ -473,7 +474,7 @@
           <span class="pr-note" id="prMsg"></span><button class="pr-btn" id="prSubmit" disabled>ส่งขออนุมัติ</button></div>
       </div>
       <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>
-      <div class="pr-card"><h3><span>ปฏิทินโปรโมชั่น <span class="pr-i" data-tip="โปรที่อนุมัติแล้วและรออนุมัติของทุกคน แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
+      <div class="pr-card"><h3><span>ปฏิทินโปรโมชั่น <span class="pr-i" data-tip="โปรที่อนุมัติแล้วและรออนุมัติของบัญชีนี้ แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
         <span class="pr-cal-leg"><span><i></i>อนุมัติแล้ว</span><span><i class="p"></i>รออนุมัติ</span></span>
         <span class="pr-cal-nav"><button type="button" data-calmv="-1" aria-label="เดือนก่อน">‹</button><span id="prCalM"></span><button type="button" data-calmv="1" aria-label="เดือนถัดไป">›</button></span></h3>
         <div class="pr-cal" id="prCal"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
@@ -580,6 +581,7 @@
     const start = new Date(first); start.setDate(1 - ((first.getDay() + 6) % 7));
     const end = new Date(last); end.setDate(last.getDate() + (6 - (last.getDay() + 6) % 7));
     let L; try { L = await rpc('promo_calendar', { p_from: iso(start), p_to: iso(end) }); } catch (e) { box.innerHTML = `<div class="pr-cal-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
+    L = (L || []).filter(x => x.mine !== false);   // (2026-11-13 c) หน้าขอ Promotion แสดงเฉพาะโปรของบัญชีที่เปิดดู (เดิมขึ้นของทุกคน รกเกินไป)
     if (want !== CAL.m) return;
     const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
     const today = iso(new Date()), MAXL = 4;
@@ -725,8 +727,8 @@
       return grp(ly, title, sum(on.map(f => f.amount_ex)), !on.length, 'ly:' + ly, F.length === 1 ? how(F[0]) : '') + F.map(f => sub(ly, esc(f.item), f.amount_ex, f.excluded, f.item, how(f), ovIn(f))).join(''); };
     const fm = c.fee_actual_ok ? `<div class="pr-seg exd-fm" data-fm title="ค่าธรรมเนียมแพลตฟอร์ม: ค่าจริง = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง"><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div>` : '';
     const OVL = (c.fees || []).filter(f => f.overridden).map(f => `${esc(f.item)} ${+(+f.rate * 100).toFixed(2)}%`);
-    const exN = (EXC.size ? `<div class="exd-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')}<button type="button" data-xreset title="กลับไปนับทุกรายการ">✕</button></div>` : '')
-      + (OVL.length ? `<div class="exd-exn">ปรับ ${OVL.join(' · ')}<button type="button" data-ovreset title="กลับไปใช้ค่าที่ตั้งไว้">✕</button></div>` : '');
+    const exN = (EXC.size ? `<div class="exd-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')}<button type="button" data-xreset title="กลับไปนับทุกรายการ">×</button></div>` : '')
+      + (OVL.length ? `<div class="exd-exn">ปรับ ${OVL.join(' · ')}<button type="button" data-ovreset title="กลับไปใช้ค่าที่ตั้งไว้">×</button></div>` : '');
     const neg = ok && +c.profit < 0;
     return `${!ok && price ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')}</span></div>` : ''}
       <div class="exd-kpi">
@@ -943,7 +945,7 @@
             <button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button><span>กำลังลองปรับ · ยังไม่แก้คำขอ</span>' : '<span>ลองเปลี่ยนราคา / จำนวน แล้วกดคำนวณ</span>'}</div></div>
         ${calcPanel(c, C)}
         <section class="exd-act"><textarea class="pr-in" id="exNote" rows="2" placeholder="Feedback ถึงทีม เช่น อนุมัติถ้าขึ้นราคาเป็น ${c.target_price ? n0(Math.ceil(c.target_price)) : '…'}">${esc(S.note != null ? S.note : (r.decision_note || ''))}</textarea>
-          <div class="exd-btns">${r.status === 'pending' ? '<button class="pr-btn good" data-dec="approved">✓ อนุมัติ</button><button class="pr-btn bad" data-dec="rejected">✕ ไม่อนุมัติ</button>' : '<button class="pr-btn ghost" data-dec="pending">กลับเป็นรออนุมัติ</button>'}</div></section>`;
+          <div class="exd-btns">${r.status === 'pending' ? '<button class="pr-btn good" data-dec="approved">✓ อนุมัติ</button><button class="pr-btn bad" data-dec="rejected">× ไม่อนุมัติ</button>' : '<button class="pr-btn ghost" data-dec="pending">กลับเป็นรออนุมัติ</button>'}</div></section>`;
       // ขั้นบันไดกำไร: กดแถวกลุ่มเพื่อดูรายการย่อย
       bindLad(body());
       // ลองปรับ: คำนวณเมื่อกด "คำนวณ" หรือ Enter
@@ -965,7 +967,7 @@
       const rs = document.getElementById('exReset');
       if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.exclude = []; S.override = {}; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
       body().querySelectorAll('[data-dec]').forEach(b => b.onclick = async () => {
-        const d = b.dataset.dec; if (d !== 'pending' && !(await uiConfirm(d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', { text: `${r.title} · ${r.channel || ''} · ${n0(r.price)}`, ok: d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', tone: d === 'approved' ? 'good' : 'bad', icon: d === 'approved' ? '✓' : '✕' }))) return;
+        const d = b.dataset.dec; if (d !== 'pending' && !(await uiConfirm(d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', { text: `${r.title} · ${r.channel || ''} · ${n0(r.price)}`, ok: d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', tone: d === 'approved' ? 'good' : 'bad', icon: d === 'approved' ? '✓' : '×' }))) return;
         const exTxt = [S.exclude.length ? `คิดแบบไม่นับ ${S.exclude.map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : x).join(', ')}` : '', Object.keys(S.override).length ? `คิด ${Object.entries(S.override).map(([k, v]) => k + ' ' + +(v * 100).toFixed(2) + '%').join(', ')}` : ''].filter(Boolean).join(' · ');   // (2026-11-10) ติ๊กออกตอนตัดสินใจ → บันทึกไว้ใน Feedback ให้ทีมเห็น
         const note0 = document.getElementById('exNote').value.trim(), noteF = exTxt && !note0.includes(exTxt) ? (note0 ? note0 + ' · ' : '') + exTxt : note0;
         try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: noteF }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
@@ -1148,8 +1150,8 @@
       const L = x.L, act = x.act;
       const input = L.extra ? '<span class="fe2-z">—</span>' : `<input class="fe2-in" type="number" step="any" data-item="${L.item_id}" data-kind="${L.kind}" value="${x.isPct ? +(+L.set * 100).toFixed(4) : +L.set}"><span class="fe2-u">${x.isPct ? '%' : 'บาท'}</span>`;
       const actTxt = act === 'merged' ? '<span class="fe2-z">รวมใน Platform Commission</span>' : x.isPct ? pct(act) + (x.tip && act != null ? ` <span class="pr-i" data-tip="${esc(x.tip)}">ⓘ</span>` : '') : act == null ? '<span class="fe2-z">—</span>' : `${n2(act)} บาท`;
-      // (2026-11-10) รายการค่าธรรมเนียมช่องทาง: ✎ เปลี่ยนชื่อ · ✕ เอาออกจากช่องทางนี้ (ค่าใช้จ่ายบริษัทลบไม่ได้)
-      const act2 = !L.company && !L.extra && L.item_id != null ? `<span class="fe2-act"><button type="button" data-ren="${L.item_id}" title="เปลี่ยนชื่อรายการ">✎</button><button type="button" data-rm="${L.item_id}" title="เอาออกจากช่องทางนี้">✕</button></span>` : '';
+      // (2026-11-10) รายการค่าธรรมเนียมช่องทาง: ไอคอนดินสอ เปลี่ยนชื่อ · × เอาออกจากช่องทางนี้ (ค่าใช้จ่ายบริษัทลบไม่ได้)
+      const act2 = !L.company && !L.extra && L.item_id != null ? `<span class="fe2-act"><button type="button" data-ren="${L.item_id}" title="เปลี่ยนชื่อรายการ"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button type="button" data-rm="${L.item_id}" title="เอาออกจากช่องทางนี้">×</button></span>` : '';
       return `<tr><td class="l">${esc(L.name)}${L.extra ? ' <span class="fe2-z">· ไม่ได้ตั้งไว้</span>' : ''}${act2}</td><td>${actTxt}</td><td>${input}</td><td>${x.isPct && act !== 'merged' ? dif(act, x.setPct) : '<span class="fe2-z">—</span>'}</td></tr>`;
     };
     // (2026-11-10 b) รายการเหมือนกันทุกร้านในแพลตฟอร์มเดียวกัน: รายการที่ร้านอื่นมีแต่ร้านนี้ยังไม่ได้ตั้ง → ขึ้นเป็นช่องว่างให้กรอก (พิมพ์ค่า = เพิ่มให้ร้านนี้)
