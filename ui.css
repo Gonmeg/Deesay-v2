@@ -340,3 +340,23 @@ body.light-theme th { color: var(--text2) !important; }
 body.light-theme tr.fe2-g td, body.light-theme tr.ex-g td, body.light-theme tr.sup-group td, body.light-theme tr.grp-row td {
   background: color-mix(in srgb, var(--accent) 9%, #FFFFFF) !important; color: var(--text) !important;
 }
+
+/* ===== (2026-11-13) ตัวเลขและหัวคอลัมน์ในตารางอยู่กลางคอลัมน์ทุกหน้า (กติกาทั้งเว็บ) — เดิมหลายหน้ากำหนดชิดขวาแยกกัน · คอลัมน์แรก (ชื่อ) ชิดซ้ายเหมือนเดิม ===== */
+.ui-table th.num, .ui-table td.num,
+.ov-tbl th:not(:first-child), .ov-tbl td:not(:first-child),
+#tblMktRoi th:not(:first-child), #tblMktRoi td:not(:first-child), #tblTtProduct th:not(:first-child), #tblTtProduct td:not(:first-child),
+.tdr-tbl th.num, .tdr-tbl td.num, #tblCpCreators th.num, #tblCpCreators td.num, #tblCpSku th.num, #tblCpSku td.num,
+#page-mthub th.num, #page-mthub td.num, .pr-tb th.num, .pr-tb td.num, .ex-it th.num, .ex-it td.num,
+.mk-pt th:not(:first-child), .mk-pt td:not(:first-child),
+#page-skuanalysis th.num, #page-skuanalysis td.num,
+#page-supply th:not(:first-child), #page-supply td:not(:first-child),
+#page-ttcontent th:not(:first-child), #page-ttcontent td:not(:first-child),
+#page-ordprofit .op-s th:not(:first-child), #page-ordprofit .op-s td:not(:first-child), .opx-t th:not(:first-child), .opx-t td:not(:first-child),
+#page-execfee table.fe2-t th:not(:first-child), #page-execfee table.fe2-t td:not(:first-child),
+#tblFbaDaily th:not(:first-child), #tblFbaDaily td:not(:first-child), #tblFbaProduct th:not(:first-child), #tblFbaProduct td:not(:first-child),
+#tblFbaType th:not(:first-child), #tblFbaType td:not(:first-child), #tblFbaPr th:not(:first-child), #tblFbaPr td:not(:first-child) { text-align: center !important; }
+
+/* ===== (2026-11-13) ตารางหลายคอลัมน์ของหน้า Ads ให้พอดีการ์ด ไม่ต้องเลื่อนซ้ายขวา: ช่องไฟแคบลง + หัวคอลัมน์ยาวขึ้นบรรทัดใหม่ได้ ===== */
+#tblFbaDaily th, #tblFbaDaily td, #tblFbaProduct th, #tblFbaProduct td, #tblFbaAds th, #tblFbaAds td,
+#tblTtaDailyRep th, #tblTtaDailyRep td, #tblTtaAll th, #tblTtaAll td { padding-left: 6px !important; padding-right: 6px !important; }
+#tblFbaDaily th, #tblFbaProduct th, #tblFbaAds th, #tblTtaDailyRep th, #tblTtaAll th { white-space: normal !important; line-height: 1.3; vertical-align: bottom; }
