@@ -1,0 +1,671 @@
+[
+  {
+    "id": "structure",
+    "name": "โครงหน้าเว็บ (dashboard.html)",
+    "issues": [],
+    "warn": [],
+    "errors": []
+  },
+  {
+    "id": "home",
+    "name": "หน้าแรก",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.7,
+    "cls_load": 0.002,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 15,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "overview",
+    "name": "ภาพรวมยอดขาย",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.8,
+    "cls_load": 0.007,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "kpi",
+    "name": "เป้าหมาย KPI",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.4,
+    "cls_load": 0.001,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 90,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbhub",
+    "name": "ภาพรวม Facebook",
+    "issues": [],
+    "warn": [],
+    "load_s": 8,
+    "cls_load": 0.004,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "crm",
+    "name": "CRM",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.2,
+    "cls_load": 0.001,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "flow",
+    "name": "เส้นทางซื้อซ้ำ",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.9,
+    "cls_load": 0.007,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "neverbought",
+    "name": "ลูกค้าที่ยังไม่ซื้อ",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.7,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbengage",
+    "name": "Engagement รายวัน",
+    "issues": [],
+    "warn": [],
+    "load_s": 9.8,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbads",
+    "name": "Facebook Ads",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.4,
+    "cls_load": 0.003,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 39,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "tthub",
+    "name": "ภาพรวม TikTok",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.8,
+    "cls_load": 0.017,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "ttcontent",
+    "name": "ผลงานคอนเทนต์",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.1,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "ttads",
+    "name": "TikTok Ads",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.6,
+    "cls_load": 0.001,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 137,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "livesearch",
+    "name": "ค้นหา Live",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.7,
+    "cls_load": 0.011,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "creatorperf",
+    "name": "Creator Performance",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.6,
+    "cls_load": 0.001,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "shhub",
+    "name": "ภาพรวม Shopee",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.5,
+    "cls_load": 0.003,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "shads",
+    "name": "Shopee Ads",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.2,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": [
+        "tblShCpasCamp 1741>1294"
+      ]
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "lzhub",
+    "name": "ภาพรวม Lazada",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.9,
+    "cls_load": 0.004,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "mthub",
+    "name": "ภาพรวม Modern Trade",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.3,
+    "cls_load": 0.02,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "skurev",
+    "name": "แนวโน้มสินค้า",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.6,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 35,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "mktlive",
+    "name": "MKT Tracking",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.8,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 67,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "skuanalysis",
+    "name": "เจาะสินค้า",
+    "issues": [],
+    "warn": [],
+    "load_s": 8,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "adperf",
+    "name": "Ad Performance",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.6,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "kol",
+    "name": "KOL",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.2,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 2,
+      "ok": 2,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "supply",
+    "name": "Supply Chain",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.9,
+    "cls_load": 0,
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "products",
+    "name": "สินค้า & ราคา",
+    "issues": [],
+    "warn": [],
+    "load_s": 8,
+    "cls_load": 0.002,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "promo",
+    "name": "ขอ Promotion",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.1,
+    "cls_load": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "upload",
+    "name": "อัปโหลดข้อมูล",
+    "issues": [],
+    "warn": [],
+    "load_s": 2.1,
+    "cls_load": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "admin",
+    "name": "ตั้งค่า (Admin)",
+    "issues": [],
+    "warn": [],
+    "load_s": 2,
+    "cls_load": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "health",
+    "name": "สถานะระบบข้อมูล",
+    "issues": [],
+    "warn": [],
+    "load_s": 2,
+    "cls_load": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  }
+]
