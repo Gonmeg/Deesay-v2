@@ -353,35 +353,38 @@
       // (2026-11-03) Engagement rate รายวัน เทียบค่าเฉลี่ยวงการ (เดิมแท่งซ้อน ไลก์บังคอมเมนต์ / แชร์ จนมองไม่เห็น และยอดดิบขึ้นลงตามยอดวิวอยู่แล้ว)
       const er = daily.map(x => +x.video_views ? ((+x.likes || 0) + (+x.comments || 0) + (+x.shares || 0)) / +x.video_views * 100 : null);
       const bmo = (DATA && DATA.benchmark) || {}, bm = bmo.average_engagement_rate != null ? +bmo.average_engagement_rate * 100 : null;
-      const dsE = [{ type: 'bar', label: 'Engagement rate', data: er, backgroundColor: er.map(v => bm == null || v == null ? 'rgba(200,169,110,.8)' : v >= bm ? 'rgba(74,222,128,.8)' : 'rgba(248,113,113,.75)'), borderRadius: 3 }];
+      // (2026-11-17) เปลี่ยนจากกราฟแท่งเป็นกราฟเส้นตามกติกาทั้งเว็บ · จุดเขียว = ถึงค่าเฉลี่ยวงการ จุดแดง = ต่ำกว่า
+      const ptE = er.map(v => bm == null || v == null ? '#c8a96e' : v >= bm ? '#4ade80' : '#f87171');
+      const dsE = [{ type: 'line', label: 'Engagement rate', data: er, borderColor: '#c8a96e', borderWidth: 2, tension: .3, spanGaps: true, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: ptE, pointBorderColor: ptE }];
       if (bm != null) dsE.push({ type: 'line', label: 'ค่าเฉลี่ยวงการ', data: daily.map(() => bm), borderColor: tick, borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0 });
       charts.engage = new Chart(el2, {
-        type: 'bar', data: { labels, datasets: dsE },
-        options: Object.assign({}, common, { plugins: Object.assign({}, common.plugins || {}, { legend: { display: false }, tooltip: { filter: c => c.dataset.type === 'bar', callbacks: {
+        type: 'line', data: { labels, datasets: dsE },
+        options: Object.assign({}, common, { plugins: Object.assign({}, common.plugins || {}, { legend: { display: false }, tooltip: { filter: c => c.dataset.label === 'Engagement rate', callbacks: {
             label: c => `Engagement rate ${c.parsed.y != null ? c.parsed.y.toFixed(2) + '%' : '—'}`,
             footer: it => { const x = daily[it[0].dataIndex] || {}; return `ไลก์ ${fmtN(x.likes)} · คอมเมนต์ ${fmtN(x.comments)} · แชร์ ${fmtN(x.shares)} · วิว ${fmtN(x.video_views)}`; } } } }),
           scales: { x: xAxis, y: Object.assign({}, yA, { ticks: Object.assign({}, yA.ticks, { callback: v => v + '%' }) }) } })
       });
-      mkLegend('lgEngage', bm != null ? [['#4ade80', 'ถึงค่าเฉลี่ยวงการ'], ['#f87171', 'ต่ำกว่าค่าเฉลี่ย'], [tick, 'ค่าเฉลี่ยวงการ ' + bm.toFixed(2) + '%']] : [['#c8a96e', 'Engagement rate']]);
+      mkLegend('lgEngage', bm != null ? [['#c8a96e', 'Engagement rate'], ['#4ade80', 'วันที่ถึงค่าเฉลี่ยวงการ'], ['#f87171', 'วันที่ต่ำกว่าค่าเฉลี่ย'], [tick, 'ค่าเฉลี่ยวงการ ' + bm.toFixed(2) + '%', true]] : [['#c8a96e', 'Engagement rate']]);
     }
 
     // 3) ผู้ติดตาม
     const el3 = document.getElementById('ttcFollow');
     if (el3) {
+      const net = daily.map((x, i) => i && +x.followers_count && +daily[i - 1].followers_count ? +x.followers_count - +daily[i - 1].followers_count : null), ptF = net.map(v => v != null && v < 0 ? '#f87171' : '#4ade80');
       charts.follow = new Chart(el3, {
-        type: 'bar',
+        type: 'line',
         data: { labels, datasets: [
-          { label: 'โตสุทธิต่อวัน', data: daily.map((x, i) => i && +x.followers_count && +daily[i - 1].followers_count ? +x.followers_count - +daily[i - 1].followers_count : null), backgroundColor: daily.map((x, i) => i && +x.followers_count - +daily[i - 1].followers_count < 0 ? 'rgba(248,113,113,.75)' : 'rgba(74,222,128,.8)'), yAxisID: 'y' },
+          { label: 'โตสุทธิต่อวัน', data: net, borderColor: '#4ade80', borderWidth: 2, tension: .3, spanGaps: true, pointRadius: 3.5, pointHoverRadius: 6, pointBackgroundColor: ptF, pointBorderColor: ptF, yAxisID: 'y' },
           { type: 'line', label: 'ผู้ติดตามรวม', data: daily.map(x => +x.followers_count || null), borderColor: '#c8a96e', borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y2' },
         ] },
         options: Object.assign({}, common, {
           plugins: Object.assign({}, common.plugins, { tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' },
-            callbacks: { title: it => dTH(labels[it[0].dataIndex]), label: it => `${it.dataset.label}: ${fmtN(Math.abs(it.raw))}` } } }),
+            callbacks: { title: it => dTH(labels[it[0].dataIndex]), label: it => `${it.dataset.label}: ${it.raw == null ? '—' : fmtN(it.raw)}` } } }),
           scales: { x: xAxis,
-            y: { grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, callback: v => fmtN(Math.abs(v)) } },
+            y: { grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, callback: v => fmtN(v) } },
             y2: Object.assign({}, yA, { position: 'right', grid: { display: false }, beginAtZero: false }) } })
       });
-      mkLegend('lgFollow', [['#4ade80', 'โตสุทธิต่อวัน (ลด = แดง)'], ['#c8a96e', 'ผู้ติดตามรวม (แกนขวา)']]);
+      mkLegend('lgFollow', [['#4ade80', 'โตสุทธิต่อวัน (แกนซ้าย · วันที่ลดลง = จุดแดง)'], ['#c8a96e', 'ผู้ติดตามรวม (แกนขวา)']]);
     }
   }
 
