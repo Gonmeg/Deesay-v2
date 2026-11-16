@@ -55,6 +55,9 @@ test('จำลองการใช้งานทุกหน้า', async ({
   };
   const scope = t => t.dash ? '.page.active' : 'main, body';
 
+  // (2026-11-17) รอให้หน้าหลังล็อกอินโหลดข้อมูลเบื้องหลังเสร็จก่อนเริ่มไล่ทีละหน้า — ไม่งั้นการดึงที่ค้างอยู่ถูกตัดตอนเปลี่ยนหน้า
+  // แล้วขึ้น "Failed to fetch" ไปโผล่เป็น error ของหน้าแรก (ไม่ใช่ปัญหาของหน้าเว็บจริง)
+  await waitIdle();
   const report = [];
   report.push({ id: 'structure', name: 'โครงหน้าเว็บ (dashboard.html)', issues: structIssues, warn: [], errors: [] });
   for (const t of targets) {
