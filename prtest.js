@@ -1,4 +1,4 @@
-// prtest.js (v20261116q) — หน้า "PR Performance · TikTok": funnel ตามงบ Awareness → Consideration → Conversion + กล่องผลที่ตามมา Shop Traffic
+// prtest.js (v20261116t) — หน้า "PR Performance · TikTok": funnel ตามงบ Awareness → Consideration → Conversion + กล่องผลที่ตามมา Shop Traffic
 // ข้อมูลทั้งหน้า = RPC pr_test_page ครั้งเดียว (Supabase สรุปให้)
 //   Awareness / Consideration = รายงานระดับ Campaign จาก TikTok Ads (ตาราง tiktok_campaign_daily · แยกชั้นตามประเภท Campaign: Reach, Video views = Awareness · Brand consideration, Engagement, Traffic = Consideration)
 //   Shop Traffic = คนเห็นสินค้า / กดเข้าหน้าสินค้าในร้าน TikTok แยก Live · คลิป · การ์ดสินค้า (tiktok_shop_perf_daily) + โปรไฟล์ช่อง (tiktok_account_daily) · รายสินค้า = tiktok_product_perf_daily (เฉพาะตะกร้าของร้านเอง)
@@ -102,6 +102,8 @@
       .pp-x { border-left:1px solid var(--border); margin-left:6px; padding:2px 0 2px 18px; min-width:0; text-align:center; display:flex; flex-direction:column; justify-content:center; } .pp-x small { display:block; font-size:12px; color:var(--text2); } .pp-x b { font-size:23px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; line-height:1.25; }
       .pp-m { height:7px; border-radius:4px; background:var(--bg3); overflow:hidden; margin:4px 0 5px; } .pp-m i { display:block; height:100%; background:${COL.aw}; border-radius:4px; min-width:3px; } .pp-x span { font-size:11.5px; color:var(--text3); }
       @media (max-width:1250px) { .pp-g { grid-template-columns:1fr; gap:10px; } .pp-x { border-left:0; margin:0; padding:0; } .pp-r > i { display:none; } }
+      .pt-zoom { position:fixed; z-index:9999; width:214px; height:380px; border-radius:12px; overflow:hidden; background:var(--bg3); box-shadow:0 16px 40px -8px rgba(0,0,0,.5); pointer-events:none; opacity:0; transform:scale(.96); transition:opacity .12s, transform .12s; } .pt-zoom.on { opacity:1; transform:none; } .pt-zoom img { width:100%; height:100%; object-fit:cover; display:block; }
+      .pt-clip a { color:inherit; text-decoration:none; } .pt-clip > a { flex:none; display:block; line-height:0; } .pt-clip b a:hover { text-decoration:underline; } .pt-clip img[data-zoom] { cursor:zoom-in; }
       .pt-lab { font-size:12px; font-weight:600; color:var(--text3); letter-spacing:.02em; margin:0 2px 10px; }
       .pt-col { position:relative; display:flex; flex-direction:column; min-width:0; }
       .pt-col:not(:first-child)::before { content:''; position:absolute; left:-12px; top:21px; width:10px; height:10px; border-top:3px solid var(--c); border-right:3px solid var(--c); transform:rotate(45deg); opacity:.8; }
@@ -117,7 +119,7 @@
       .pt-sg .hd em { font-style:normal; font-size:12.5px; } .pt-sg .hd .pt-bl { display:inline; margin-left:8px; font-size:12px; }
       .pt-sg .pt-k { grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px 10px; padding:13px 16px 0; } .pt-sg .pt-k b { font-size:14px; }
       .pt-sg .act { margin:12px 16px 0; font-size:12px; color:var(--text2); line-height:1.45; border-left:3px solid var(--c); padding:2px 0 2px 10px; min-height:38px; } .pt-sg .act b { color:var(--text); }
-      .pt-pill.a { background:#fdf0d5; color:#9a6700; }
+      .pt-pill.a { background:rgba(217,119,6,.16); color:#d97706; }
       table.pt-tbl tr.pt-row { cursor:pointer; } table.pt-tbl tr.pt-row:hover td { background:var(--bg3); } table.pt-tbl tr.pt-row[aria-selected="true"] td { background:var(--accent-soft); } table.pt-tbl tr.pt-row[aria-selected="true"] td:first-child { box-shadow:inset 3px 0 0 var(--accent); }
       .pt-x { border:0; background:var(--bg3); color:var(--text2); font:inherit; font-size:11.5px; border-radius:999px; padding:2px 10px; margin-left:8px; cursor:pointer; }
       .pt-seg { display:inline-flex; background:var(--bg3); border-radius:9px; padding:3px; gap:2px; } .pt-seg button { border:0; background:none; font:inherit; font-size:12.5px; color:var(--text2); padding:5px 14px; border-radius:7px; cursor:pointer; } .pt-seg button[aria-pressed="true"] { background:var(--bg2); color:var(--text); font-weight:600; box-shadow:0 1px 2px rgba(16,24,40,.12); }
@@ -141,8 +143,8 @@
       .pt-hero em { display:block; font-style:normal; font-size:12px; } .pt-hero > div { flex:none; } .pt-hero p { margin:0; font-size:12px; color:var(--text2); line-height:1.45; border-left:1px solid var(--border); padding-left:16px; }
       .pt-tr2 .pt-k { gap:16px 14px; } .pt-tr2 .pt-cv { height:250px; margin-top:0; } table.pt-wrap th { white-space:normal; line-height:1.3; } table.pt-wrap td, table.pt-wrap th { padding-left:5px; padding-right:5px; } table.pt-wrap .pt-clip b { max-width:230px; } .pt-clip img, .pt-clip .ph { width:34px; height:46px; border-radius:6px; object-fit:cover; background:var(--bg3); flex:none; }
       .pt-clip div { min-width:0; } .pt-clip b { display:block; font-weight:500; max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .pt-clip small { color:var(--text3); font-size:11.5px; }
-      .pt-pill { font-size:11.5px; font-weight:600; border-radius:999px; padding:2px 10px; white-space:nowrap; } .pt-pill.g { background:#dcf5e7; color:#16794a; } .pt-pill.m { background:var(--bg3); color:var(--text2); } .pt-pill.r { background:#fde4e1; color:#c0392b; }
-      .pt-base { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text2); } .pt-base select { min-width:230px; }
+      .pt-pill { font-size:11.5px; font-weight:600; border-radius:999px; padding:2px 10px; white-space:nowrap; } .pt-pill.g { background:rgba(22,163,74,.16); color:var(--green, #16a34a); } .pt-pill.m { background:var(--bg3); color:var(--text2); } .pt-pill.r { background:rgba(220,38,38,.15); color:var(--red, #dc2626); }
+      .pt-base { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text2); } .pt-base select { min-width:230px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text); font:inherit; font-size:12.5px; cursor:pointer; }
       @media (max-width:1250px) { .pt-c3 { grid-template-columns:1fr; } .pt-k { grid-template-columns:repeat(2, minmax(0,1fr)); } .pt-tier { grid-template-columns:1fr; } .pt-kcs { grid-template-columns:repeat(2, minmax(0,1fr)); } .pt-jn { grid-template-columns:repeat(2, minmax(0,1fr)); } .pt-jn::before, .pt-col::before { display:none; } .pt-tr2 { grid-template-columns:1fr; } .pt-q3 { grid-template-columns:1fr; } .pt-jr { grid-template-columns:repeat(2, minmax(0,1fr)); } .pt-js { border-left:0; padding-left:4px; } .pt-js::before { display:none; } }`;
     document.head.appendChild(s);
   }
@@ -234,7 +236,7 @@
         + K('Cost / Order', 'Cost per Order = ค่า Ads ปิดการขาย ÷ Orders ของ TikTok · ยิ่งต่ำยิ่งดี', c.cpo == null ? '—' : n2(c.cpo), cmp(c.cpo, c.cpoB, -1))
         + K('Orders', 'จำนวน Orders ของ TikTok หลังหักยกเลิก / คืน\nยอดรวมของช่วงที่เลือก · Baseline ปรับเป็นจำนวนวันเท่ากับช่วงที่เลือก (ค่าเฉลี่ยต่อวันของ Baseline × จำนวนวัน) · ยิ่งสูงยิ่งดี', n0(c.big), cmp(c.big, c.bigDay > 0 ? c.bigBase * c.big / c.bigDay : 0, 1)),
       act: { g: '<b>ดำเนินการต่อ</b> · Ads ปิดการขายคุ้มค่ากว่า Baseline', r: '<b>ควรปรับปรุง</b> · หยุดคลิปที่ได้ผล ควรหยุด ในตารางด้านล่าง', m: 'ใกล้เคียง Baseline · ตรวจสอบผลรายคลิปในตารางด้านล่าง' }, sp: c.sp, ft: 'GMV Max + Ads ขายสินค้า · ไม่นับ PR และ Live' };
-    const started = D.to >= TEST_FROM, dn = days(TEST_FROM, D.to), over = M.rev > 0 ? M.total / M.rev * 100 : null, early = `<b>ยังไม่ถึงกำหนดประเมินผล</b> · วันที่ ${dn} ของการทดลอง ประเมินผลสัปดาห์ที่ 4 และ 8`;
+    const started = D.to >= TEST_FROM, dn = days(TEST_FROM, D.to), over = M.rev > 0 ? M.total / M.rev * 100 : null, early = '<b>ยังไม่ถึงกำหนดประเมินผล</b> · ประเมินผลสัปดาห์ที่ 4 และ 8';
     return { name: 'ยอดขาย ÷ ค่า Ads รวม', tipT: 'ได้ยอดขายกี่บาทต่อค่า Ads รวม 1 บาท\nยอดขาย TikTok ÷ ค่า Ads TikTok รวมทุกส่วน (PR + Live + Conversion) · ตัวตัดสินของการทดลอง · ยิ่งสูงยิ่งดี', val: M.mer == null ? '—' : n2(M.mer), unit: 'บาท', v: M.mer, b: M.merB, dir: 1,
       pill: { g: 'คุ้มค่า', r: 'ต่ำกว่า Baseline', m: 'เท่า Baseline' }, solo: true, sup: [], vol: `ยอดขาย ${n0(M.rev)} · ค่า Ads รวม ${n0(M.total)}`,
       ks: K('%Ads รวม', 'ค่า Ads TikTok รวมทุกส่วน ÷ ยอดขาย TikTok · เพดาน ' + CAP + '% · ยิ่งต่ำยิ่งดี', over == null ? '—' : over.toFixed(1) + '%', cmp(over, M.pctB, -1, 'pt'))
@@ -297,9 +299,9 @@
   function capBar(M, over) {
     const started = D.to >= TEST_FROM, ok = over <= CAP, C = (D.conv || {}).cur || {}, pr = M.aw.sp + M.co.sp, awc = num(C.aw_cost);
     const card = (t, tp, big, cls, sub) => `<div class="pt-kc"><small>${t}${tip(tp)}</small><b class="${cls}">${big}</b><span>${sub}</span></div>`;
-    return `<div class="pt-bar2" style="margin-bottom:12px;"><span class="pt-st">${started ? 'วันที่ ' + days(TEST_FROM, D.to) + ' ของการทดลอง · เริ่ม ' + dTh(TEST_FROM) : 'ก่อนเริ่มทดลอง · เริ่ม ' + dTh(TEST_FROM)}</span>
-        <label class="pt-base">Baseline ${tip('Baseline = ค่าเฉลี่ยของช่วงที่เลือก ใช้เปรียบเทียบว่าช่วงที่เลือกดีขึ้นหรือลดลง (แสดงเป็น % ที่ต่างจากค่า Baseline)\nก่อนทดลอง = ช่วงตายตัวก่อนเริ่มทดลอง (แนะนำระหว่างทดลอง)\n60 วันก่อนหน้า = เลื่อนตามช่วงที่เลือก')}
-          <select id="ptBase"><option value="pre"${baseMode === 'pre' ? ' selected' : ''}>ก่อนทดลอง (${dTh(PRE.from)} – ${dTh(PRE.to)})</option><option value="roll"${baseMode === 'roll' ? ' selected' : ''}>60 วันก่อนช่วงที่เลือก</option></select></label></div>
+    const bg = $('prBaseGroup'); if (bg) bg.innerHTML = `<label class="pt-base">Baseline ${tip('Baseline = ค่าเฉลี่ยของช่วงที่เลือก ใช้เปรียบเทียบว่าช่วงที่เลือกดีขึ้นหรือลดลง (แสดงเป็น % ที่ต่างจากค่า Baseline)\nก่อนทดลอง = ช่วงตายตัวก่อนเริ่มทดลอง (แนะนำระหว่างทดลอง)\n60 วันก่อนหน้า = เลื่อนตามช่วงที่เลือก')}
+          <select id="ptBase"><option value="pre"${baseMode === 'pre' ? ' selected' : ''}>ก่อนทดลอง (${dTh(PRE.from)} – ${dTh(PRE.to)})</option><option value="roll"${baseMode === 'roll' ? ' selected' : ''}>60 วันก่อนช่วงที่เลือก</option></select></label>`;
+    return `
       <div class="pt-kcs">
         ${card('ค่า Ads TikTok รวมต่อยอดขาย', 'ค่า Ads TikTok ทุกส่วนรวมกัน (PR + Live + Conversion) ÷ ยอดขาย TikTok ช่วงเดียวกัน · เพดาน ' + CAP + '% · ยิ่งต่ำยิ่งดี', M.rev > 0 ? over.toFixed(1) + '%' : '—', ok ? 'pt-up' : 'pt-dn', `ค่า Ads รวม ${n0(M.total)} · เพดาน ${CAP}% · ${ok ? 'ต่ำกว่าเพดาน' : 'เกินเพดาน'} ${Math.abs(over - CAP).toFixed(1)}%`)}
         ${card('Ads PR', 'ค่า Ads ของ Campaign ชั้น Awareness + Consideration ในช่วงที่เลือก', n0(pr), '', `${pct(pr, M.rev)} ของยอดขาย · Awareness ${n0(M.aw.sp)} + Consideration ${n0(M.co.sp)}`)}
@@ -322,14 +324,30 @@
   }
   function ruleTip(k) {
     const th = (D.th || {})[k] || {}, src = `ที่มา: คลิปของเราเอง ${n0(th.n)} คลิปที่ Spend 1,000 ขึ้นไป ช่วง ${dTh(D.th.from)} – ${dTh(D.th.to)} · ดี = ดีกว่า 3 ใน 4 ของคลิปทั้งหมด · ควรหยุด = ด้อยกว่าครึ่งหนึ่ง`;
-    if (k === 'aw') return `ดี = CPM ต่ำกว่า ${th.cpm_good} บาท และ 6s View Rate สูงกว่า ${th.r6_good}%\nควรหยุด = CPM สูงกว่า ${th.cpm_bad} บาท และ 6s View Rate ต่ำกว่า ${th.r6_bad}%\nพอใช้ = นอกเหนือจาก 2 กรณีนี้\n${src}`;
+    if (k === 'aw') return `ดู 2 ด้าน\nReach ดี = CPM ต่ำกว่า ${th.cpm_good} บาท และ 6s View Rate สูงกว่า ${th.r6_good}%\nเข้าสินค้าดี = Cost / Page View ของคลิป ถูกกว่าค่าเฉลี่ยของ Ads PR ช่วงที่เลือกตั้งแต่ 20% (นับเฉพาะคลิปที่มี Product Page Views 20 ครั้งขึ้นไป)\nดีทั้ง 2 ด้าน = ผ่านทั้งคู่\nควรหยุด = CPM สูงกว่า ${th.cpm_bad} บาท และ 6s View Rate ต่ำกว่า ${th.r6_bad}% และไม่ผ่านด้านเข้าสินค้า\nพอใช้ = นอกเหนือจากนี้\n${src}`;
     if (k === 'co') return `ดี = CPC ต่ำกว่า ${th.cpc_good} บาท และ CTR สูงกว่า ${th.ctr_good}%\nควรหยุด = CPC สูงกว่า ${th.cpc_bad} บาท และ CTR ต่ำกว่า ${th.ctr_bad}%\nพอใช้ = นอกเหนือจาก 2 กรณีนี้\n${src}`;
     return `ดี = ROAS ของคลิปสูงกว่า ${th.roas_good}x\nควรหยุด = ROAS ของคลิปต่ำกว่า ${th.roas_bad}x\nพอใช้ = อยู่ระหว่าง 2 ค่านี้\n${src}`;
   }
+  // ป้ายผลของคลิปขั้น Awareness: ดู 2 ด้าน — Reach (CPM + 6s View Rate) และการพาคนเข้าหน้าสินค้า (Cost / Page View เทียบค่าเฉลี่ยของ Ads PR)
+  function awPill(c, avg) {
+    const a = verdict('aw', c), cpv = num(c.pdp) >= 20 ? c.sp / c.pdp : null, pg = avg > 0 && cpv != null && cpv <= avg * 0.8;
+    if (a === 'g' && pg) return ['g', 'ดีทั้ง 2 ด้าน']; if (a === 'g') return ['g', 'Reach ดี']; if (pg) return ['g', 'เข้าสินค้าดี'];
+    return a === 'r' ? ['r', 'ควรหยุด'] : ['m', 'พอใช้'];
+  }
   const PILL = { g: ['g', 'ดี'], m: ['m', 'พอใช้'], r: ['r', 'ควรหยุด'] };
   function clipCell(c) {
-    const img = c.cv ? `<img src="${esc(c.cv)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="ph"></span>';
-    return `<div class="pt-clip">${img}<div><b title="${esc(c.t)}">${esc(c.t || 'คลิป …' + String(c.id).slice(-6))}</b><small>${esc(c.a || '')}</small></div></div>`;
+    const ok = /^\d{15,}$/.test(String(c.id)), url = ok ? `https://www.tiktok.com/@i/video/${c.id}` : '', name = esc(c.t || 'คลิป …' + String(c.id).slice(-6));
+    const img = c.cv ? `<img src="${esc(c.cv)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-zoom="1">` : '<span class="ph"></span>';
+    const lk = h => (ok ? `<a href="${url}" target="_blank" rel="noopener" title="เปิดคลิปใน TikTok">${h}</a>` : h);
+    return `<div class="pt-clip">${c.cv ? lk(img) : img}<div><b title="${esc(c.t)}">${lk(name)}</b><small>${esc(c.a || '')}</small></div></div>`;
+  }
+  // ชี้ที่รูปคลิป = แสดงรูปขยาย (กล่องเดียวลอยตามตำแหน่งรูป)
+  function zoomBind(root) {
+    if (root._ptZoom) return; root._ptZoom = 1;
+    let z = $('ptZoom'); if (!z) { z = document.createElement('div'); z.id = 'ptZoom'; z.className = 'pt-zoom'; z.innerHTML = '<img alt="" referrerpolicy="no-referrer">'; document.body.appendChild(z); }
+    root.addEventListener('mouseover', e => { const t = e.target; if (!t || !t.dataset || !t.dataset.zoom) return; const r = t.getBoundingClientRect(), H = 380, W = 214;
+      z.firstChild.src = t.src; z.style.left = Math.min(window.innerWidth - W - 12, r.right + 12) + 'px'; z.style.top = Math.max(8, Math.min(window.innerHeight - H - 8, r.top - H / 2 + r.height / 2)) + 'px'; z.classList.add('on'); });
+    root.addEventListener('mouseout', e => { if (e.target && e.target.dataset && e.target.dataset.zoom) z.classList.remove('on'); });
   }
   // ป้ายราย Campaign: เทียบต้นทุนของ Campaign กับค่าเฉลี่ยของขั้นเดียวกันในช่วงที่ดู (ถูกกว่าตั้งแต่ 20% = ดี · แพงกว่าตั้งแต่ 25% = ควรทบทวน)
   function drawCamps(M) {
@@ -344,11 +362,11 @@
     const row = (c, cells) => `<tr class="pt-row" data-cid="${esc(c.id)}" aria-selected="${selCamp === c.id}">${cells}</tr>`;
     let head, rows;
     if (aw) {
-      head = `<th>Campaign</th><th>Spend</th><th>Reach / วัน ${tip('จำนวนคนที่เห็น Ads ของ Campaign นี้ต่อวัน (เฉลี่ยเฉพาะวันที่ Campaign ทำงาน)')}</th><th>Cost / 1,000 Reach ${tip('Cost per 1,000 Reached = Spend ÷ Reach × 1,000 · ยิ่งต่ำยิ่งดี')}</th><th>6s View Rate ${tip('การดูถึง 6 วินาที ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>Product Page Views ${tip('จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>ผล ${tip(rule)}</th>`;
+      head = `<th>Campaign</th><th>Spend</th><th>Reach / วัน ${tip('จำนวนคนที่เห็น Ads ของ Campaign นี้ต่อวัน (เฉลี่ยเฉพาะวันที่ Campaign ทำงาน)')}</th><th>Cost / 1,000 Reach ${tip('Cost per 1,000 Reached = Spend ÷ Reach × 1,000 · ยิ่งต่ำยิ่งดี')}</th><th>6s View Rate ${tip('การดูถึง 6 วินาที ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>ผล ${tip(rule)}</th>`;
       rows = list.map(c => { const cpr = c.reach > 0 ? c.sp / c.reach * 1000 : null, v = vd(cpr);
         return row(c, `<td>${name(c)}</td><td>${n0(c.sp)}</td><td>${n0(num(c.reach) / Math.max(1, num(c.days)))}</td><td>${cpr == null ? dash : n1(cpr)}</td><td>${c.imp > 0 ? (c.v6 / c.imp * 100).toFixed(1) + '%' : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td><td>${pill(v[0], v[1])}</td>`); });
     } else {
-      head = `<th>Campaign</th><th>Spend</th><th>Clicks</th><th>CPC ${tip('Spend ÷ Clicks · ยิ่งต่ำยิ่งดี')}</th><th>Product Page Views ${tip('จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>Cost / Add to Cart ${tip('Cost per Add to Cart = Spend ÷ Add to Cart · ยิ่งต่ำยิ่งดี')}</th><th>ผล ${tip(rule)}</th>`;
+      head = `<th>Campaign</th><th>Spend</th><th>Clicks</th><th>CPC ${tip('Spend ÷ Clicks · ยิ่งต่ำยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของ Campaign นี้ (TikTok Ads นับให้)')}</th><th>Cost / Add to Cart ${tip('Cost per Add to Cart = Spend ÷ Add to Cart · ยิ่งต่ำยิ่งดี')}</th><th>ผล ${tip(rule)}</th>`;
       rows = list.map(c => { const cpa = c.atc > 0 ? c.sp / c.atc : null, v = cpa == null ? ['r', 'ควรทบทวน'] : vd(cpa);
         return row(c, `<td>${name(c)}</td><td>${n0(c.sp)}</td><td>${n0(c.clk)}</td><td>${c.clk > 0 ? n2(c.sp / c.clk) : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td><td>${cpa == null ? dash : n2(cpa)}</td><td>${pill(v[0], v[1])}</td>`); });
     }
@@ -373,6 +391,7 @@
     $('ptLiveBox').innerHTML = `<table class="pt-tbl" id="tblPtLive" data-no-page><thead><tr>${head}</tr></thead><tbody>${rows.join('')}</tbody><tfoot>${row('<b>รวม</b>', tot, 'ui-sum')}</tfoot></table>`;
   }
   function drawTable() {
+    const rt = $('prtest-root'); if (rt) zoomBind(rt);
     const cc = $('ptClipCard'); if (cc) cc.style.display = sel === 'vl' ? 'none' : ''; if (sel === 'vl') return;
     const camp = (sel === 'aw' || sel === 'co') && selCamp ? (D.camps || []).find(c => c.id === selCamp) : null;
     const list = ((D.clips || {})[sel] || []).filter(c => (camp ? c.cid === selCamp : true) && num(sel === 'cv' ? c.gc : c.sp) > 0), dash = '—';
@@ -383,16 +402,17 @@
       head = `<th>คลิป</th><th>Spend</th><th>GMV ${tip('ยอดขายที่ TikTok นับให้คลิปนี้ใน Ads ปิดการขาย (GMV Max)')}</th><th>Orders</th><th>ROAS ${tip('GMV ÷ Spend ของคลิปนี้ · ยิ่งสูงยิ่งดี')}</th><th>ผล ${tip(ruleTip('cv'))}</th>`;
       rows = list.map(c => { const v = PILL[verdict('cv', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.gc)}</td><td>${n0(c.gr)}</td><td>${n0(c.go)}</td><td>${c.gc > 0 ? (c.gr / c.gc).toFixed(2) + 'x' : dash}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     } else if (sel === 'aw') {
-      head = `<th>คลิป</th><th>Spend</th><th>Impressions</th><th>CPM ${tip('ค่า Ads ต่อการแสดง 1,000 ครั้ง · ยิ่งต่ำยิ่งดี')}</th><th>6s View Rate ${tip('การดูถึง 6 วินาที ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>Profile Visits ${tip('จำนวนครั้งที่คนกดเข้าโปรไฟล์จาก Ads นี้')}</th><th>GMV (Conversion Ads) ${tip('ยอดและออเดอร์ของคลิปเดียวกันใน Ads ปิดการขาย (GMV Max) ช่วงเดียวกัน')}</th><th>ผล ${tip(ruleTip('aw'))}</th>`;
-      rows = list.map(c => { const v = PILL[verdict('aw', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${c.imp > 0 ? n1(c.sp / c.imp * 1000) : dash}</td><td>${c.imp > 0 ? (c.v6 / c.imp * 100).toFixed(1) + '%' : dash}</td><td>${n0(c.pv)}</td><td>${gm(c)}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
+      const all = ((D.clips || {}).aw || []).concat((D.clips || {}).co || []), tp = all.reduce((a, c) => a + num(c.pdp), 0), pvAvg = tp > 0 ? all.reduce((a, c) => a + num(c.sp), 0) / tp : 0;
+      head = `<th>คลิป</th><th>Spend</th><th>Impressions</th><th>CPM ${tip('ค่า Ads ต่อการแสดง 1,000 ครั้ง · ยิ่งต่ำยิ่งดี')}</th><th>6s View Rate ${tip('การดูถึง 6 วินาที ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>GMV ใน GMV Max ${tip('คลิปนี้ถูกใช้ใน Ads Conversion (GMV Max) ด้วย · ตัวเลขคือยอดขายและ Orders ที่ GMV Max นับให้คลิปเดียวกันในช่วงเดียวกัน\nไม่ใช่ยอดขายจาก Ads PR · — = คลิปนี้ไม่ได้อยู่ใน GMV Max')}</th><th>ผล ${tip(ruleTip('aw'))}</th>`;
+      rows = list.map(c => { const v = awPill(c, pvAvg); return `<tr><td>${clipCell(c)}</td><td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${c.imp > 0 ? n1(c.sp / c.imp * 1000) : dash}</td><td>${c.imp > 0 ? (c.v6 / c.imp * 100).toFixed(1) + '%' : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td><td>${gm(c)}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     } else {
-      head = `<th>คลิป</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>CTR ${tip('Clicks ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>CPC ${tip('ค่า Ads ต่อ 1 คลิก · ยิ่งต่ำยิ่งดี')}</th><th>Profile Visits ${tip('จำนวนครั้งที่คนกดเข้าโปรไฟล์จาก Ads นี้')}</th><th>GMV (Conversion Ads) ${tip('ยอดและออเดอร์ของคลิปเดียวกันใน Ads ปิดการขาย (GMV Max) ช่วงเดียวกัน')}</th><th>ผล ${tip(ruleTip('co'))}</th>`;
-      rows = list.map(c => { const v = PILL[verdict('co', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${n0(c.clk)}</td><td>${c.imp > 0 ? (c.clk / c.imp * 100).toFixed(2) + '%' : dash}</td><td>${c.clk > 0 ? n2(c.sp / c.clk) : dash}</td><td>${n0(c.pv)}</td><td>${gm(c)}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
+      head = `<th>คลิป</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>CTR ${tip('Clicks ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>CPC ${tip('ค่า Ads ต่อ 1 คลิก · ยิ่งต่ำยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>GMV ใน GMV Max ${tip('คลิปนี้ถูกใช้ใน Ads Conversion (GMV Max) ด้วย · ตัวเลขคือยอดขายและ Orders ที่ GMV Max นับให้คลิปเดียวกันในช่วงเดียวกัน\nไม่ใช่ยอดขายจาก Ads PR · — = คลิปนี้ไม่ได้อยู่ใน GMV Max')}</th><th>ผล ${tip(ruleTip('co'))}</th>`;
+      rows = list.map(c => { const v = PILL[verdict('co', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${n0(c.clk)}</td><td>${c.imp > 0 ? (c.clk / c.imp * 100).toFixed(2) + '%' : dash}</td><td>${c.clk > 0 ? n2(c.sp / c.clk) : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td><td>${gm(c)}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     }
     $('ptClipT').innerHTML = `คลิปของขั้น ${STG[sel]}` + (camp ? `<span class="pt-chip" title="${esc(camp.n)}">Campaign: ${esc(String(camp.n).length > 44 ? String(camp.n).slice(0, 44) + '…' : camp.n)}</span><button type="button" class="pt-x" id="ptCampX">× แสดงทุก Campaign</button>` : '');
     $('ptClipS').textContent = camp ? `คลิปของ Campaign นี้ที่มี Spend ในช่วงนี้ · ${list.length} คลิป · Spend รวม ${n0(list.reduce((a, c) => a + num(c.sp), 0))}`
       : `คลิปที่มี Spend ในช่วงนี้ · ${list.length} คลิป` + (sel === 'cv' ? ' · เลือกขั้นอื่นด้านบนเพื่อเปลี่ยน' : ' · เลือก Campaign ด้านบนเพื่อแสดงเฉพาะคลิปของ Campaign นั้น · คลิปเดียวกันที่อยู่หลาย Campaign แสดงแยกแถว');
-    $('ptTblBox').innerHTML = `<table class="pt-tbl" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:22px;">ช่วงนี้ยังไม่มีคลิปที่ Spend ถึงเกณฑ์</td></tr>`}</tbody></table>`;
+    $('ptTblBox').innerHTML = `<table class="pt-tbl" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:22px;">ช่วงนี้ยังไม่มีคลิปที่ Spend ถึงเกณฑ์</td></tr>`}</tbody></table>`;
     const x = $('ptCampX'); if (x) x.addEventListener('click', () => { selCamp = null; drawCamps(model()); drawTable(); });
   }
 
@@ -408,7 +428,7 @@
         <td>${n0(num(c.pvc) / cd)}</td><td>${n1(num(c.ord) / cd)}</td><td>${c.pv > 0 ? (num(c.ord) / c.pv * 100).toFixed(2) + '%' : dash}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     $('ptClipT').innerHTML = `สินค้าที่คนกดเข้าดู`;
     $('ptClipS').textContent = `${list.length} ตะกร้าที่ Page Views สูงสุดของช่วงนี้ · เฉพาะตะกร้าของร้านเอง · ข้อมูลถึง ${P.latest ? dTh(P.latest) : '—'} · เลือกขั้นอื่นด้านบนเพื่อเปลี่ยน`;
-    $('ptTblBox').innerHTML = `<table class="pt-tbl pt-wrap" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:22px;">ช่วงนี้ยังไม่มีข้อมูลรายสินค้า</td></tr>`}</tbody></table>`;
+    $('ptTblBox').innerHTML = `<table class="pt-tbl pt-wrap" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:22px;">ช่วงนี้ยังไม่มีข้อมูลรายสินค้า</td></tr>`}</tbody></table>`;
   }
 
   function chartTr(id, labels, sets, base) {
@@ -480,7 +500,7 @@
       <div class="pt-card" id="ptLiveCard"><div class="pt-t" id="ptLiveT"></div><div class="pt-s" id="ptLiveS"></div><div id="ptLiveBox" style="overflow-x:auto;"></div></div>`;
     drawChart(M); drawCamps(M); drawTable(); drawLive();
     root.querySelectorAll('.pt-sg').forEach(b => b.addEventListener('click', () => { sel = b.dataset.tier; root.querySelectorAll('.pt-sg').forEach(x => x.setAttribute('aria-pressed', x.dataset.tier === sel)); selCamp = null; drawChart(M); drawCamps(M); drawTable(); }));
-    $('ptBase').addEventListener('change', e => { baseMode = e.target.value; KEY = ''; render(); });
+    const pb = $('ptBase'); if (pb) pb.addEventListener('change', e => { baseMode = e.target.value; KEY = ''; render(); });
     if (window.UI && UI.fit) UI.fit();
   }
 
