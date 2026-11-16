@@ -64,6 +64,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
       await page.goto(SITE + t.url); await waitIdle();
       r.load_s = +((Date.now() - t0) / 1000).toFixed(1);
       r.cls_load = await page.evaluate(() => window.__deesayQA.cls());
+      r.cls_src = await page.evaluate(() => window.__deesayQA.shiftSources ? window.__deesayQA.shiftSources() : []);
 
       // (2026-11-04) ฟอนต์ + คำต้องห้าม: ทุกข้อความที่เห็นต้องเป็น Sarabun · ห้าม ฿ · ใช้ Ads ไม่ใช่ "แอด" (แอดมิน ได้) · ตัวเลขในการ์ด/ตารางไม่ย่อเป็น k / M
       const tx = await page.evaluate(sel => window.__deesayQA.text(sel), scope(t));
@@ -110,7 +111,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
 
     r.errors = [...new Set(errs)].slice(0, 10);
     if (r.errors.length) r.issues.push(...r.errors);
-    if ((r.cls_load || 0) > CLS_FAIL) r.issues.push(`หน้าเด้งตอนโหลด CLS ${r.cls_load}`); else if ((r.cls_load || 0) > CLS_WARN) r.warn.push(`หน้าเด้งเล็กน้อยตอนโหลด CLS ${r.cls_load}`);
+    if ((r.cls_load || 0) > CLS_FAIL) r.issues.push(`หน้าเด้งตอนโหลด CLS ${r.cls_load}${(r.cls_src || []).length ? ' · กล่องที่ขยับ: ' + r.cls_src.join(' / ') : ''}`); else if ((r.cls_load || 0) > CLS_WARN) r.warn.push(`หน้าเด้งเล็กน้อยตอนโหลด CLS ${r.cls_load}`);
     if ((r.cls_search || 0) > CLS_FAIL) r.issues.push(`หน้าเด้งหลังกดค้นหา CLS ${r.cls_search}`); else if ((r.cls_search || 0) > CLS_WARN) r.warn.push(`หน้าเด้งเล็กน้อยหลังกดค้นหา CLS ${r.cls_search}`);
     (r.totals || []).forEach(x => r.issues.push(x));
     (r.clicks?.fail || []).forEach(x => r.issues.push('กดตัวเลข: ' + x));

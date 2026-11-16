@@ -6,8 +6,8 @@
 (() => {
   if (window.__deesayQA) return;
   // ข้อ 3: หน้าเด้ง (Cumulative Layout Shift) — สะสมตั้งแต่เปิดหน้า · resetCls() ก่อนกดค้นหา แล้วอ่าน cls() หลังโหลดเสร็จ
-  window.__cls = 0; window.__shifts = [];
-  try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) { window.__cls += e.value; window.__shifts.push(e.value); } }).observe({ type: 'layout-shift', buffered: true }); } catch (e) {}
+  window.__cls = 0; window.__shifts = []; window.__shiftSrc = [];
+  try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) { window.__cls += e.value; window.__shifts.push(e.value); try { (e.sources || []).forEach(x => { const n = x.node && x.node.nodeType === 1 ? x.node : x.node && x.node.parentElement; if (n) window.__shiftSrc.push(n.tagName.toLowerCase() + (n.id ? '#' + n.id : '') + (typeof n.className === 'string' && n.className ? '.' + n.className.trim().split(/\s+/)[0] : '') + ' ' + Math.round(x.previousRect.top) + '→' + Math.round(x.currentRect.top) + ' (' + e.value.toFixed(3) + ')'); }); } catch (_) {} } }).observe({ type: 'layout-shift', buffered: true }); } catch (e) {}
   // ข้อ 5: กล่อง alert / confirm ของเบราว์เซอร์ — ห้ามใช้ (ต้องใช้กล่องของเว็บเอง) · นับทุกครั้งที่หน้าเรียก
   window.__nativeDialogs = [];
   for (const k of ['alert', 'confirm', 'prompt']) { const f = window[k]; window[k] = function (m) { window.__nativeDialogs.push(k + ': ' + String(m || '').slice(0, 60)); return k === 'confirm' ? false : k === 'prompt' ? null : undefined; }; window[k].__orig = f; }
@@ -19,7 +19,9 @@
 
   window.__deesayQA = {
     cls: () => +(window.__cls || 0).toFixed(3),
-    resetCls: () => { window.__cls = 0; window.__shifts = []; },
+    // (2026-11-16) กล่องที่ขยับตอนหน้าเด้ง (ชื่อกล่อง ตำแหน่งเดิม→ใหม่ และขนาดการเด้ง) ไว้หาต้นเหตุ
+    shiftSources: () => [...new Set(window.__shiftSrc || [])].slice(0, 6),
+    resetCls: () => { window.__cls = 0; window.__shifts = []; window.__shiftSrc = []; },
 
     // ข้อ 2: โครงหน้าเว็บ — ทุกหน้าต้องอยู่ในกรอบเนื้อหา ไม่มีกล่องหลุดนอกหน้า (กล่องหลุด = ขึ้นทุกหน้า)
     structure() {
