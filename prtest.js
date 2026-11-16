@@ -1,4 +1,4 @@
-// prtest.js (v20261116n) — หน้า "PR Performance · TikTok": funnel ตามงบ Awareness → Consideration → Conversion + กล่องผลที่ตามมา Shop Traffic
+// prtest.js (v20261116o) — หน้า "PR Performance · TikTok": funnel ตามงบ Awareness → Consideration → Conversion + กล่องผลที่ตามมา Shop Traffic
 // ข้อมูลทั้งหน้า = RPC pr_test_page ครั้งเดียว (Supabase สรุปให้)
 //   Awareness / Consideration = รายงานระดับ Campaign จาก TikTok Ads (ตาราง tiktok_campaign_daily · แยกชั้นตามประเภท Campaign: Reach, Video views = Awareness · Brand consideration, Engagement, Traffic = Consideration)
 //   Shop Traffic = คนเห็นสินค้า / กดเข้าหน้าสินค้าในร้าน TikTok แยก Live · คลิป · การ์ดสินค้า (tiktok_shop_perf_daily) + โปรไฟล์ช่อง (tiktok_account_daily) · รายสินค้า = tiktok_product_perf_daily (เฉพาะตะกร้าของร้านเอง)
@@ -90,6 +90,12 @@
       .pt-sl { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:7px; font-size:11.5px; color:var(--text3); } .pt-sl span { white-space:nowrap; } .pt-sl i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:5px; } .pt-sl b { color:var(--text); font-weight:600; font-variant-numeric:tabular-nums; }
       @media (max-width:1250px) { .pt-res { grid-template-columns:1fr; } }
       .pt-u { font-size:11px; font-weight:400; color:var(--text3); }
+      .pt-pp { display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--bg2); border-radius:14px; box-shadow:var(--sh, 0 1px 3px rgba(16,24,40,.08)); padding:12px 18px; margin:0 0 14px; border-left:4px solid ${COL.aw}; }
+      .pp-h b { display:block; font-size:14px; font-weight:700; color:var(--text); } .pp-h span { font-size:11.5px; color:var(--text3); } .pp-h { margin-right:6px; }
+      .pp-b small { display:block; font-size:11.5px; color:var(--text2); } .pp-b b { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); } .pp-b span { font-size:11.5px; color:var(--text3); margin-left:4px; }
+      .pp-a { display:flex; flex-direction:column; align-items:center; min-width:74px; } .pp-a b { font-size:12.5px; font-weight:700; color:${COL.co}; } .pp-a span { font-size:11px; color:var(--text3); }
+      .pp-a i { display:block; width:100%; height:2px; background:var(--border); position:relative; margin:3px 0; } .pp-a i::after { content:''; position:absolute; right:0; top:-3px; width:6px; height:6px; border-top:2px solid var(--text3); border-right:2px solid var(--text3); transform:rotate(45deg); }
+      .pp-n { margin-left:auto; font-size:12.5px; color:var(--text2); background:var(--bg3); border-radius:9px; padding:7px 12px; } .pp-n b { color:var(--text); }
       .pt-lab { font-size:12px; font-weight:600; color:var(--text3); letter-spacing:.02em; margin:0 2px 10px; }
       .pt-col { position:relative; display:flex; flex-direction:column; min-width:0; }
       .pt-col:not(:first-child)::before { content:''; position:absolute; left:-12px; top:21px; width:10px; height:10px; border-top:3px solid var(--c); border-right:3px solid var(--c); transform:rotate(45deg); opacity:.8; }
@@ -268,6 +274,16 @@
       <div class="rb"><div class="rm"><span>${g.name}${tip(g.tipT)}</span><div class="hv">${g.val}<span>${g.unit}</span></div>${cmp(g.v, g.b, g.dir)}</div><div class="pt-k">${g.ks}</div></div>
       <div class="rv">${viz}</div><div class="act">${k === 'vl' ? g.act[st] : '<b>ใช้ประกอบ ไม่ใช้ตัดสินผล</b> · เปลี่ยนแปลงตามช่วง Campaign ด้วย · ข้อมูลถึง ' + dTh(lastTraffic())}</div></button>`;
   }
+  // แถบเส้นทางของ Ads PR: แสดง → เข้าหน้าสินค้า → ใส่ตะกร้า (เชื่อมแถว Ads กับผลลัพธ์ของร้าน)
+  function prPath(M) {
+    const j = M.j, imp = j.imp, pdp = j.pdp, atc = j.atc, shop = M.tr.big, rate = (a, b) => (b > 0 ? (a / b * 100).toFixed(a / b < 0.1 ? 2 : 1) + '%' : '—');
+    const box = (n, v, u, t) => `<div class="pp-b"><small>${n}${tip(t)}</small><b>${n0(v)}</b><span>${u}</span></div>`, arr = (p, t) => `<div class="pp-a"><b>${p}</b><i></i><span>${t}</span></div>`;
+    return `<div class="pt-pp"><div class="pp-h"><b>Ads PR พาคนไปถึงไหน</b><span>Awareness + Consideration · Spend ${n0(j.sp)}</span></div>
+      ${box('Ads ถูกแสดง', imp, 'ครั้ง', 'Impressions = จำนวนครั้งที่ Ads ชั้น Awareness + Consideration ถูกแสดงในช่วงที่เลือก')}${arr(rate(pdp, imp), 'กดเข้าดู')}
+      ${box('เข้าหน้าสินค้า', pdp, 'ครั้ง', 'Product Page Views จาก Ads PR = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads นี้ (TikTok Ads นับให้)')}${arr(rate(atc, pdp), 'ใส่ตะกร้า')}
+      ${box('ใส่ตะกร้า', atc, 'ครั้ง', 'Add to Cart จาก Ads PR = จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads นี้ (TikTok Ads นับให้)')}
+      <div class="pp-n">${shop > 0 && pdp > 0 ? `คนเข้าดูสินค้าทั้งร้าน ${n0(shop)} ครั้ง มาจาก Ads PR ราว <b>${(pdp / shop * 100).toFixed(1)}%</b>` : ''} ${tip('เทียบ Product Page Views ที่ TikTok Ads นับให้ Ads PR กับ Product Page Views ทั้งร้านที่ TikTok Shop รายงาน\nสองระบบนับไม่เหมือนกันทุกครั้ง จึงเป็นค่าประมาณ · ที่เหลือมาจาก Ads ปิดการขาย Live และคนที่เข้ามาเอง\nAds PR จึงขยับยอดรวมของร้านได้น้อย แม้ Reach จะเพิ่มมาก')}</div></div>`;
+  }
   function capBar(M, over) {
     const started = D.to >= TEST_FROM, ok = over <= CAP, C = (D.conv || {}).cur || {}, pr = M.aw.sp + M.co.sp, awc = num(C.aw_cost);
     const card = (t, tp, big, cls, sub) => `<div class="pt-kc"><small>${t}${tip(tp)}</small><b class="${cls}">${big}</b><span>${sub}</span></div>`;
@@ -445,7 +461,8 @@
         <div class="pt-s">Baseline ที่ใช้: ${dTh(D.base_from)} – ${dTh(D.base_to)}${M.hasBase ? '' : ' (ยังไม่มีข้อมูลของช่วงนี้)'} · ข้อมูล Ads ถึง ${dTh((D.latest || {}).camp || D.to)} · เลือกขั้นเพื่อดูรายละเอียดด้านล่าง</div></div></div>
       <div class="pt-lab">ADS ที่จ่าย · 3 ขั้น</div>
       <div class="pt-jn">${ORDER.map((k, i) => stageHtml(k, i, M)).join('')}</div>
-      <div class="pt-flow"><i>↓</i>ผลลัพธ์ของร้าน TikTok <small>สิ่งที่เกิดขึ้นกับร้านหลังจ่าย Ads ทั้ง 3 ขั้น · ไม่ใช่ Ads</small></div>
+      ${M.j.imp > 0 ? prPath(M) : ''}
+      <div class="pt-flow"><i>↓</i>ผลลัพธ์ของร้าน TikTok <small>นับทุกทาง ไม่ใช่เฉพาะคนที่มาจาก Ads PR</small></div>
       <div class="pt-res">${RES.map(k => resHtml(k, M)).join('')}</div>
       <div class="pt-card"><div class="pt-t" id="ptChT"></div><div class="pt-cv"><canvas id="ptCh"></canvas></div><div class="pt-lg" id="ptLg"></div><div class="pt-vd" id="ptVd"></div></div>
       <div class="pt-card" id="ptCampCard"><div class="pt-t" id="ptCampT"></div><div class="pt-s" id="ptCampS"></div><div id="ptCampBox" style="overflow-x:auto;"></div></div>
