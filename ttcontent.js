@@ -323,7 +323,7 @@
     const labels = daily.map(x => x.stat_date);
     const tick = chartTickColor(), grid = chartGridColor();
     const xAxis = { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, maxTicksLimit: 10, callback: (v, i) => dTH(labels[i]) } };
-    const yA = { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, callback: v => v >= 1000 ? (v / 1000) + 'k' : v } };
+    const yA = { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 9 }, callback: v => Number(v).toLocaleString('en-US') } };
     const common = { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
       plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' },
         callbacks: { title: it => dTH(labels[it[0].dataIndex]), label: it => `${it.dataset.label}: ${fmtN(it.raw)}` } } } };

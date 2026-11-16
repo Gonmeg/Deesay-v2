@@ -355,6 +355,11 @@ body.light-theme tr.fe2-g td, body.light-theme tr.ex-g td, body.light-theme tr.s
 #page-execfee table.fe2-t th:not(:first-child), #page-execfee table.fe2-t td:not(:first-child),
 #tblFbaDaily th:not(:first-child), #tblFbaDaily td:not(:first-child), #tblFbaProduct th:not(:first-child), #tblFbaProduct td:not(:first-child),
 #tblFbaType th:not(:first-child), #tblFbaType td:not(:first-child), #tblFbaPr th:not(:first-child), #tblFbaPr td:not(:first-child) { text-align: center !important; }
+/* (2026-11-17) ตาราง Top 20 ของหน้าภาพรวมทุก Platform + ตารางรายรอบ Live ของ TikTok ยังชิดซ้ายอยู่ — ให้ตัวเลขอยู่กลางคอลัมน์ตามกติกาเดียวกัน (คอลัมน์ลำดับ / รหัส / ชื่อ ชิดซ้ายเหมือนเดิม) */
+table[id^="tblTopSKU"] th:nth-child(n+4), table[id^="tblTopSKU"] td:nth-child(n+4),
+table[id^="tblTopProduct"] th:nth-child(n+4), table[id^="tblTopProduct"] td:nth-child(n+4),
+#tblTtLives th:nth-child(n+3), #tblTtLives td:nth-child(n+3),
+#tblTtaCreator th:not(:first-child), #tblTtaCreator td:not(:first-child) { text-align: center !important; }
 
 /* ===== (2026-11-13) ตารางหลายคอลัมน์ของหน้า Ads ให้พอดีการ์ด ไม่ต้องเลื่อนซ้ายขวา: ช่องไฟแคบลง + หัวคอลัมน์ยาวขึ้นบรรทัดใหม่ได้ ===== */
 #tblFbaDaily th, #tblFbaDaily td, #tblFbaProduct th, #tblFbaProduct td, #tblFbaAds th, #tblFbaAds td,
