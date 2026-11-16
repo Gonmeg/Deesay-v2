@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.16-c"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1349,7 +1349,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <label class="kp-chk" data-tip="ของแถม = สินค้าที่ตั้งสถานะ ของแถม (GWP) ในหน้าสินค้า &amp; ราคา เช่น แปรงคาบูกิ ลิปกลอสสีใส คุชชั่นแถม · ปกติไม่นับ เพราะลูกค้าไม่ได้เลือกซื้อเอง" style="font-size:13px;color:var(--text2);display:inline-flex;gap:6px;align-items:center;white-space:nowrap;"><input type="checkbox" id="flowGift" onchange="flowIncludeGifts=this.checked;flowSelectedSKUs=[];renderFlowPage()"> รวมของแถม</label>
           <button class="btn btn-primary" onclick="renderFlowPage()">🔍 วิเคราะห์</button>
         </div>
-        <div id="flowSkuChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);min-height:32px;"></div>
+        <div id="flowSkuChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);min-height:70px;"></div>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;">เลือกได้หลายตัว (ต้องมีอย่างน้อย 2) — กดที่ชื่อเพื่อเอาออก · เริ่มต้น = 10 สินค้าที่ลูกค้ากลับมาซื้อบ่อยสุด</div>
       </div>
       <!-- (2026-11-03) หน้าตาแบบ C: แถบตัวเลข (ภาษาง่าย) · ตาราง "ซื้อแล้วซื้ออะไรต่อ" แบบสีเข้ม-อ่อน แทน Sankey · ตาราง "แนะนำขายต่อ" แทนรายการ Transition -->
@@ -1945,7 +1945,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               <button class="toggle-btn active" id="shads-mo" onclick="setShAdsView('month',this)">รายเดือน</button>
               <button class="toggle-btn" id="shads-dy" onclick="setShAdsView('day',this)">รายวัน</button>
             </div></div>
-          <div id="shads-sync-note" class="sa-note" style="min-height:18px;"></div>
+          <div id="shads-sync-note" class="sa-note" style="min-height:21px;"></div>
           <div class="chart-wrap" style="height:280px;"><canvas id="chartShAdsDaily"></canvas></div>
         </section>
         <section class="card sa-panel">
@@ -9762,6 +9762,10 @@ async function renderShAds() {
   const from = getDateValue('From'), to = getDateValue('To');
   renderShCpas(from, to);   // (2026-09-30) ส่วน CPAS ท้ายหน้า โหลดขนานกัน
   const kpi = document.getElementById('shads-kpis'); if (!kpi) return;
+  // (2026-11-17) ตารางรายวันตอนโหลด: จองแถวเท่าจำนวนวันในช่วงที่เลือก — เดิมตารางว่างแล้วโผล่ทีเดียว ดันส่วนล่างของหน้าลง (หน้าเด้งตอนข้อมูลมาช้า)
+  { const tbl = document.getElementById('tbodyShAdsLog');
+    if (tbl && !tbl.children.length) { const n = Math.max(1, Math.min(62, Math.round((new Date(to) - new Date(from)) / 86400000) + 1));
+      tbl.innerHTML = Array.from({ length: n + 1 }, () => '<tr><td class="l dt">&nbsp;</td><td colspan="20">&nbsp;</td></tr>').join(''); } }
   // (2026-11-02) ช่องตัวเลขตอนโหลด = โครงเดิมใน HTML (สูงเท่าของจริง) ไม่วาดใหม่ → หน้าไม่เด้ง
   const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt(), 'Content-Type': 'application/json' };
   let daily = [], camps = [];
