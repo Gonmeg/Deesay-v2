@@ -1,4 +1,4 @@
-// prtest.js (v20261116o) — หน้า "PR Performance · TikTok": funnel ตามงบ Awareness → Consideration → Conversion + กล่องผลที่ตามมา Shop Traffic
+// prtest.js (v20261116q) — หน้า "PR Performance · TikTok": funnel ตามงบ Awareness → Consideration → Conversion + กล่องผลที่ตามมา Shop Traffic
 // ข้อมูลทั้งหน้า = RPC pr_test_page ครั้งเดียว (Supabase สรุปให้)
 //   Awareness / Consideration = รายงานระดับ Campaign จาก TikTok Ads (ตาราง tiktok_campaign_daily · แยกชั้นตามประเภท Campaign: Reach, Video views = Awareness · Brand consideration, Engagement, Traffic = Consideration)
 //   Shop Traffic = คนเห็นสินค้า / กดเข้าหน้าสินค้าในร้าน TikTok แยก Live · คลิป · การ์ดสินค้า (tiktok_shop_perf_daily) + โปรไฟล์ช่อง (tiktok_account_daily) · รายสินค้า = tiktok_product_perf_daily (เฉพาะตะกร้าของร้านเอง)
@@ -90,12 +90,18 @@
       .pt-sl { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:7px; font-size:11.5px; color:var(--text3); } .pt-sl span { white-space:nowrap; } .pt-sl i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:5px; } .pt-sl b { color:var(--text); font-weight:600; font-variant-numeric:tabular-nums; }
       @media (max-width:1250px) { .pt-res { grid-template-columns:1fr; } }
       .pt-u { font-size:11px; font-weight:400; color:var(--text3); }
-      .pt-pp { display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--bg2); border-radius:14px; box-shadow:var(--sh, 0 1px 3px rgba(16,24,40,.08)); padding:12px 18px; margin:0 0 14px; border-left:4px solid ${COL.aw}; }
-      .pp-h b { display:block; font-size:14px; font-weight:700; color:var(--text); } .pp-h span { font-size:11.5px; color:var(--text3); } .pp-h { margin-right:6px; }
-      .pp-b small { display:block; font-size:11.5px; color:var(--text2); } .pp-b b { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); } .pp-b span { font-size:11.5px; color:var(--text3); margin-left:4px; }
-      .pp-a { display:flex; flex-direction:column; align-items:center; min-width:74px; } .pp-a b { font-size:12.5px; font-weight:700; color:${COL.co}; } .pp-a span { font-size:11px; color:var(--text3); }
-      .pp-a i { display:block; width:100%; height:2px; background:var(--border); position:relative; margin:3px 0; } .pp-a i::after { content:''; position:absolute; right:0; top:-3px; width:6px; height:6px; border-top:2px solid var(--text3); border-right:2px solid var(--text3); transform:rotate(45deg); }
-      .pp-n { margin-left:auto; font-size:12.5px; color:var(--text2); background:var(--bg3); border-radius:9px; padding:7px 12px; } .pp-n b { color:var(--text); }
+      .pt-pp { background:var(--bg2); border-radius:14px; box-shadow:var(--sh, 0 1px 3px rgba(16,24,40,.08)); padding:13px 16px 15px; margin:0 0 14px; }
+      .pp-h { display:flex; align-items:baseline; gap:10px; margin-bottom:11px; } .pp-h b { font-size:14.5px; font-weight:700; color:var(--text); } .pp-h span { font-size:12px; color:var(--text3); }
+      .pp-g { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) minmax(0,1.25fr); gap:0 12px; align-items:stretch; }
+      .pp-s { background:color-mix(in srgb, var(--c) 9%, var(--bg2)); border-radius:11px; padding:10px 14px 11px; border-top:3px solid var(--c); min-width:0; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+      .pp-s small { display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; color:var(--text2); margin-bottom:2px; } .pp-s small i { font-style:normal; width:17px; height:17px; border-radius:50%; background:var(--c); color:#fff; font-size:10.5px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex:none; }
+      .pp-s b { font-size:23px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); line-height:1.25; } .pp-s span { font-size:12px; color:var(--text3); margin-left:5px; }
+      .pp-r { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:118px; text-align:center; } .pp-r > b { font-size:15px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+      .pp-r > i { display:block; width:100%; height:2px; background:var(--border); position:relative; margin:4px 0 5px; } .pp-r > i::after { content:''; position:absolute; right:0; top:-3px; width:6px; height:6px; border-top:2px solid var(--text3); border-right:2px solid var(--text3); transform:rotate(45deg); }
+      .pp-r small { font-size:11.5px; color:var(--text2); } .pp-r em { font-style:normal; font-size:11px; display:block; } .pp-r .pt-bl { display:block; font-size:11px; }
+      .pp-x { border-left:1px solid var(--border); margin-left:6px; padding:2px 0 2px 18px; min-width:0; text-align:center; display:flex; flex-direction:column; justify-content:center; } .pp-x small { display:block; font-size:12px; color:var(--text2); } .pp-x b { font-size:23px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; line-height:1.25; }
+      .pp-m { height:7px; border-radius:4px; background:var(--bg3); overflow:hidden; margin:4px 0 5px; } .pp-m i { display:block; height:100%; background:${COL.aw}; border-radius:4px; min-width:3px; } .pp-x span { font-size:11.5px; color:var(--text3); }
+      @media (max-width:1250px) { .pp-g { grid-template-columns:1fr; gap:10px; } .pp-x { border-left:0; margin:0; padding:0; } .pp-r > i { display:none; } }
       .pt-lab { font-size:12px; font-weight:600; color:var(--text3); letter-spacing:.02em; margin:0 2px 10px; }
       .pt-col { position:relative; display:flex; flex-direction:column; min-width:0; }
       .pt-col:not(:first-child)::before { content:''; position:absolute; left:-12px; top:21px; width:10px; height:10px; border-top:3px solid var(--c); border-right:3px solid var(--c); transform:rotate(45deg); opacity:.8; }
@@ -274,15 +280,19 @@
       <div class="rb"><div class="rm"><span>${g.name}${tip(g.tipT)}</span><div class="hv">${g.val}<span>${g.unit}</span></div>${cmp(g.v, g.b, g.dir)}</div><div class="pt-k">${g.ks}</div></div>
       <div class="rv">${viz}</div><div class="act">${k === 'vl' ? g.act[st] : '<b>ใช้ประกอบ ไม่ใช้ตัดสินผล</b> · เปลี่ยนแปลงตามช่วง Campaign ด้วย · ข้อมูลถึง ' + dTh(lastTraffic())}</div></button>`;
   }
-  // แถบเส้นทางของ Ads PR: แสดง → เข้าหน้าสินค้า → ใส่ตะกร้า (เชื่อมแถว Ads กับผลลัพธ์ของร้าน)
+  // Ads PR Funnel: การแสดง Ads → เข้าหน้าสินค้า → ใส่ตะกร้า + สัดส่วนต่อการเข้าดูสินค้าทั้งร้าน (เชื่อมแถว Ads กับผลลัพธ์ของร้าน)
   function prPath(M) {
-    const j = M.j, imp = j.imp, pdp = j.pdp, atc = j.atc, shop = M.tr.big, rate = (a, b) => (b > 0 ? (a / b * 100).toFixed(a / b < 0.1 ? 2 : 1) + '%' : '—');
-    const box = (n, v, u, t) => `<div class="pp-b"><small>${n}${tip(t)}</small><b>${n0(v)}</b><span>${u}</span></div>`, arr = (p, t) => `<div class="pp-a"><b>${p}</b><i></i><span>${t}</span></div>`;
-    return `<div class="pt-pp"><div class="pp-h"><b>Ads PR พาคนไปถึงไหน</b><span>Awareness + Consideration · Spend ${n0(j.sp)}</span></div>
-      ${box('Ads ถูกแสดง', imp, 'ครั้ง', 'Impressions = จำนวนครั้งที่ Ads ชั้น Awareness + Consideration ถูกแสดงในช่วงที่เลือก')}${arr(rate(pdp, imp), 'กดเข้าดู')}
-      ${box('เข้าหน้าสินค้า', pdp, 'ครั้ง', 'Product Page Views จาก Ads PR = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads นี้ (TikTok Ads นับให้)')}${arr(rate(atc, pdp), 'ใส่ตะกร้า')}
-      ${box('ใส่ตะกร้า', atc, 'ครั้ง', 'Add to Cart จาก Ads PR = จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads นี้ (TikTok Ads นับให้)')}
-      <div class="pp-n">${shop > 0 && pdp > 0 ? `คนเข้าดูสินค้าทั้งร้าน ${n0(shop)} ครั้ง มาจาก Ads PR ราว <b>${(pdp / shop * 100).toFixed(1)}%</b>` : ''} ${tip('เทียบ Product Page Views ที่ TikTok Ads นับให้ Ads PR กับ Product Page Views ทั้งร้านที่ TikTok Shop รายงาน\nสองระบบนับไม่เหมือนกันทุกครั้ง จึงเป็นค่าประมาณ · ที่เหลือมาจาก Ads ปิดการขาย Live และคนที่เข้ามาเอง\nAds PR จึงขยับยอดรวมของร้านได้น้อย แม้ Reach จะเพิ่มมาก')}</div></div>`;
+    const j = M.j, S = j.steps, imp = j.imp, pdp = j.pdp, atc = j.atc, shop = M.tr.big, pc = (a, b) => (b > 0 ? a / b * 100 : null), f2 = v => (v == null ? '—' : v.toFixed(v < 10 ? 2 : 1) + '%');
+    const r1 = pc(pdp, imp), r1b = pc(S[3].b, S[0].b), r2 = pc(atc, pdp), r2b = pc(S[4].b, S[3].b), sh = pc(pdp, shop);
+    const step = (i, c, n, v, t) => `<div class="pp-s" style="--c:${c}"><small><i>${i}</i>${n}${tip(t)}</small><div><b>${n0(v)}</b><span>ครั้ง</span></div></div>`;
+    const rate = (n, v, b, t) => `<div class="pp-r"><b>${f2(v)}</b><i></i><small>${n}${tip(t)}</small>${cmp(v, b, 1, 'pt')}</div>`;
+    return `<div class="pt-pp"><div class="pp-h"><b>Ads PR Funnel ${tip('Ads PR = Ads ชั้น Awareness + Consideration (ไม่รวม Ads Live และ Ads Conversion)\nแสดงว่า Ads PR ถูกแสดงกี่ครั้ง มีคนเข้าหน้าสินค้าและใส่ตะกร้ากี่ครั้ง เพื่อดูว่าคนหลุดที่ขั้นไหน\nตัวเลขเข้าหน้าสินค้า / ใส่ตะกร้า เป็นตัวที่ TikTok Ads นับให้ Ads นี้')}</b><span>Ads PR = Awareness + Consideration · Spend ${n0(j.sp)}</span></div>
+      <div class="pp-g">${step(1, COL.aw, 'การแสดง Ads', imp, 'Impressions = จำนวนครั้งที่ Ads PR ถูกแสดงในช่วงที่เลือก')}
+      ${rate('อัตราเข้าหน้าสินค้า', r1, r1b, 'เข้าหน้าสินค้า ÷ การแสดง Ads · ต่ำ = คนเห็นแล้วไม่กด ควรปรับที่คลิป · ยิ่งสูงยิ่งดี')}
+      ${step(2, COL.co, 'เข้าหน้าสินค้า', pdp, 'Product Page Views จาก Ads PR = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads นี้ (TikTok Ads นับให้)')}
+      ${rate('อัตราใส่ตะกร้า', r2, r2b, 'ใส่ตะกร้า ÷ เข้าหน้าสินค้า · ต่ำ = เข้าหน้าสินค้าแล้วไม่สนใจต่อ ควรปรับที่หน้าสินค้า / ราคา / Promotion · ยิ่งสูงยิ่งดี')}
+      ${step(3, COL.cv, 'ใส่ตะกร้า', atc, 'Add to Cart จาก Ads PR = จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads นี้ (TikTok Ads นับให้)')}
+      <div class="pp-x"><small>สัดส่วนต่อการเข้าดูสินค้าทั้งร้าน ${tip('เข้าหน้าสินค้าจาก Ads PR ÷ การเข้าดูสินค้าทั้งร้าน (TikTok Shop รายงาน)\nสองระบบนับไม่เหมือนกันทุกครั้ง จึงเป็นค่าประมาณ · ที่เหลือมาจาก Ads Conversion, Live และคนที่เข้ามาเอง\nAds PR จึงขยับยอดรวมของร้านได้น้อย แม้ Reach จะเพิ่มมาก')}</small><b>${sh == null ? '—' : sh.toFixed(1) + '%'}</b><div class="pp-m"><i style="width:${Math.min(100, sh || 0)}%"></i></div><span>${n0(pdp)} จาก ${n0(shop)} ครั้ง</span></div></div></div>`;
   }
   function capBar(M, over) {
     const started = D.to >= TEST_FROM, ok = over <= CAP, C = (D.conv || {}).cur || {}, pr = M.aw.sp + M.co.sp, awc = num(C.aw_cost);
