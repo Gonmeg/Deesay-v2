@@ -23,7 +23,8 @@ test('จำลองการใช้งานทุกหน้า', async ({
   // (2026-11-02) ประกาศก่อนใช้ครั้งแรก (เดิมประกาศไว้หลังจุดที่เรียก → ระบบทดสอบหยุดหลังล็อกอิน ไม่มีรายงานออก)
   // ปิดกล่อง "มีอะไรใหม่" ที่เด้งทับหน้า (ไม่งั้นกดตัวเลขไม่ได้ ทดสอบผิดเป็นกดแล้วไม่มีแผงเปิด)
   const dismissWhatsNew = () => page.evaluate(() => { const o = document.getElementById('wnOverlay'); if (o && o.style.display === 'flex' && window.closeWhatsNew) window.closeWhatsNew(); }).catch(() => {});
-  let errs = [];
+  let errs = [], ext = [];   // ext = ไฟล์จากเว็บภายนอกที่โหลดไม่ได้ (เช่น รูปปกจาก Facebook / TikTok ที่ลิงก์หมดอายุ)
+  page.on('response', r => { if (r.status() >= 400 && !/supabase\.co/.test(r.url())) { let h = ''; try { h = new URL(r.url()).host; } catch (e) {} ext.push(`${r.status()} ${r.request().resourceType()} ${h}`); } });
   page.on('pageerror', e => errs.push('JS: ' + e.message.slice(0, 160) + ' @ ' + String(e.stack || '').split('\n').slice(1, 2).join('').trim().replace(/^at\s+/, '').slice(0, 120)));
   page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_BLOCKED_BY_CLIENT/.test(m.text())) errs.push('console: ' + m.text().slice(0, 200)); });
   page.on('response', async r => { if (r.status() >= 400 && /supabase\.co/.test(r.url())) { let body = ''; try { body = (await r.text()).replace(/\s+/g, ' ').slice(0, 160); } catch (e) {} let post = ''; try { post = (r.request().postData() || '').slice(0, 120); } catch (e) {}
@@ -61,7 +62,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
   const report = [];
   report.push({ id: 'structure', name: 'โครงหน้าเว็บ (dashboard.html)', issues: structIssues, warn: [], errors: [] });
   for (const t of targets) {
-    errs = []; const r = { id: t.id, name: t.name, issues: [], warn: [] };
+    errs = []; ext = []; const r = { id: t.id, name: t.name, issues: [], warn: [] };
     const t0 = Date.now();
     try {
       await page.goto(SITE + t.url); await waitIdle();
@@ -113,6 +114,10 @@ test('จำลองการใช้งานทุกหน้า', async ({
     } catch (e) { r.issues.push('ทดสอบไม่จบ: ' + String(e.message || e).slice(0, 200)); }
 
     r.errors = [...new Set(errs)].slice(0, 10);
+    // (2026-11-17) รูปจากเว็บภายนอกโหลดไม่ได้ = คำเตือน ไม่ใช่หน้าเสีย (หน้าแสดงช่องรูปว่างแทน) · บอกชื่อเว็บไว้ให้ไล่ต่อได้ · ไฟล์ชนิดอื่นยังนับเป็นปัญหาเหมือนเดิม
+    if (ext.length) { const u = [...new Set(ext)];
+      if (u.every(x => / image /.test(x))) { r.errors = r.errors.filter(e => !/^console: Failed to load resource/.test(e)); r.warn.push('รูปจากภายนอกโหลดไม่ได้: ' + u.slice(0, 4).join(' / ')); }
+      else r.errors = r.errors.map(e => (/^console: Failed to load resource/.test(e) ? e + ' · ' + u.slice(0, 4).join(' / ') : e)); }
     if (r.errors.length) r.issues.push(...r.errors);
     if ((r.cls_load || 0) > CLS_FAIL) r.issues.push(`หน้าเด้งตอนโหลด CLS ${r.cls_load}${(r.cls_src || []).length ? ' · กล่องที่ขยับ: ' + r.cls_src.join(' / ') : ''}`); else if ((r.cls_load || 0) > CLS_WARN) r.warn.push(`หน้าเด้งเล็กน้อยตอนโหลด CLS ${r.cls_load}`);
     if ((r.cls_search || 0) > CLS_FAIL) r.issues.push(`หน้าเด้งหลังกดค้นหา CLS ${r.cls_search}`); else if ((r.cls_search || 0) > CLS_WARN) r.warn.push(`หน้าเด้งเล็กน้อยหลังกดค้นหา CLS ${r.cls_search}`);
