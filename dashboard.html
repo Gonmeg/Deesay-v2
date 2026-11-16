@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.16-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.16-c"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1945,13 +1945,14 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
               <button class="toggle-btn active" id="shads-mo" onclick="setShAdsView('month',this)">รายเดือน</button>
               <button class="toggle-btn" id="shads-dy" onclick="setShAdsView('day',this)">รายวัน</button>
             </div></div>
-          <div id="shads-sync-note" class="sa-note"></div>
+          <div id="shads-sync-note" class="sa-note" style="min-height:18px;"></div>
           <div class="chart-wrap" style="height:280px;"><canvas id="chartShAdsDaily"></canvas></div>
         </section>
         <section class="card sa-panel">
           <div class="sa-ph"><h2>ค่า Ads แยกประเภท <span id="shads-mix-info"></span></h2></div>
           <table class="ui-table sa-tbl" data-no-sort data-no-page><thead><tr><th class="l">ประเภท</th><th class="num">ค่า Ads</th><th class="l">สัดส่วน</th></tr></thead>
-            <tbody id="shads-mix-body"><tr><td colspan="3" class="empty">กำลังโหลด...</td></tr></tbody><tfoot id="shads-mix-foot"></tfoot></table>
+            <!-- (2026-11-16) โครงตอนโหลดสูงเท่าของจริง กันหน้าเด้งเมื่อข้อมูลมาช้า -->
+            <tbody id="shads-mix-body"><tr><td class="l">Product/Shop Ads<small>ROAS Ads —</small></td><td class="num">—</td><td class="l"><span class="sa-bar"><b style="width:0%"></b></span>—</td></tr><tr><td class="l">Brand Ads</td><td class="num">—</td><td class="l"><span class="sa-bar"><b style="width:0%"></b></span>—</td></tr><tr><td class="l">Live Ads</td><td class="num">—</td><td class="l"><span class="sa-bar"><b style="width:0%"></b></span>—</td></tr><tr><td class="l">Meta Ads ผ่าน Shopee</td><td class="num">—</td><td class="l"><span class="sa-bar"><b style="width:0%"></b></span>—</td></tr><tr><td class="l">เหรียญแจกใน Live<small>1 เหรียญ = 1 บาท</small></td><td class="num">—</td><td class="l"><span class="sa-bar"><b style="width:0%"></b></span>—</td></tr><tr><td class="l">CPAS on Meta<small>Ads Meta ที่ยิงเข้าร้าน Shopee (จ่ายฝั่ง Meta)</small></td><td class="num">—</td><td class="l"><span class="sa-bar"><b style="width:0%"></b></span>—</td></tr></tbody><tfoot id="shads-mix-foot"><tr><td class="l">รวมทุกประเภท</td><td class="num">—</td><td class="l">100%</td></tr></tfoot></table>
         </section>
       </div>
       <section class="card sa-panel" style="margin-bottom:20px;">

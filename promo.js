@@ -885,7 +885,7 @@
       + subs.map(x => `<tr class="sub" data-ladp="${id}" hidden><td>${x[0]}</td><td class="num neg">−${n2(x[1])}</td></tr>`).join('');
     const tot = (t, v, extra) => `<tr class="sum"><td>${t}${extra ? ` <span class="xt">${extra}</span>` : ''}</td><td class="num" style="color:${v < 0 ? 'var(--red,#dc2626)' : 'var(--text)'}">${n2(v)}</td></tr>`;
     const costRows = lines.map(l => [`${l.kind === 'gift' ? 'แถม ' : ''}${esc(l.name || nm(l.sku))} ×${l.qty} <span class="xt">${l.unit_cost == null ? 'ไม่มีต้นทุน' : '@ ' + n2(l.unit_cost)}</span>`, l.cost]);
-    const feeRows = ly => fees(ly).map(f => [`${esc(f.item)} <span class="xt">${f.kind === 'pct' ? +(f.rate * 100).toFixed(2) + '%' : n2(f.rate) + ' ฿'}${f.src === 'actual' ? ' · ค่าจริง' : ''}</span>`, f.amount_ex]);
+    const feeRows = ly => fees(ly).map(f => [`${esc(f.item)} <span class="xt">${f.kind === 'pct' ? +(f.rate * 100).toFixed(2) + '%' : n2(f.rate) + ' บาท'}${f.src === 'actual' ? ' · ค่าจริง' : ''}</span>`, f.amount_ex]);
     return `<table class="pr-tb pr-lad" data-no-sort data-no-page><tbody>
       <tr><td>ราคาขาย (รวม VAT)</td><td class="num">${n2(c.price)}</td></tr>
       ${tot('รายได้ไม่รวม VAT', c.revenue_ex)}
