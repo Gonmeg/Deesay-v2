@@ -21,6 +21,7 @@ window.DEESAY_PAGES = [
   { id: 'tthub',        name: 'ภาพรวม TikTok',         group: 'TikTok' },
   { id: 'ttcontent',    name: 'ผลงานคอนเทนต์',         group: 'TikTok' },
   { id: 'ttads',        name: 'TikTok Ads',            group: 'TikTok' },
+  { id: 'prtest',       name: 'PR Performance',             group: 'TikTok' },
   { id: 'livesearch',   name: 'ค้นหา Live',            group: 'TikTok' },
   { id: 'creatorperf',  name: 'Creator Performance',   group: 'TikTok' },
   { id: 'shhub',        name: 'ภาพรวม Shopee',         group: 'Shopee / Lazada' },
