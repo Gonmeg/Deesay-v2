@@ -820,7 +820,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-i"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-j"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -7901,11 +7901,15 @@ function renderHomeChart() {
     yScales.y = { grid: { color: grid }, border: { display: false }, ticks: { color: t3, font, maxTicksLimit: 5, callback: v => money(v) } };
   } else {
     const keys = Object.keys(HM_MET).filter(k => _homeSel.includes(k));
-    ds = keys.map((k, i) => { const col = css(HM_MET[k].color);
+    // (2026-11-17) ทุกกราฟต้องมีแกนตัวเลข: ยอดขายกับค่า Ads ใช้แกนเดียวกัน (หน่วยบาท เทียบขนาดกันได้จริง) · ตัวเลขหน่วยอื่น (ออเดอร์ / AOV / ROAS) แกนของตัวเอง
+    //   แสดงแกนซ้าย = กลุ่มแรก · แกนขวา = กลุ่มที่สอง (ตัวเลขสีเดียวกับเส้น) · เดิมซ่อนแกนทั้งหมดเมื่อเลือกเกิน 1 ตัว และแต่ละเส้นใช้สเกลของตัวเอง
+    const AX = { sales: 'yM', ads: 'yM', orders: 'yO', aov: 'yA', roas: 'yR' }, groups = [...new Set(keys.map(k => AX[k]))];
+    ds = keys.map(k => { const col = css(HM_MET[k].color);
       const data = buckets.map(x => { const g = homeAgg(tr.rows, x.a, x.b); return k === 'sales' ? g.rev : k === 'orders' ? g.ord : k === 'ads' ? g.ads : k === 'aov' ? g.aov : g.roas; });
-      return { label: HM_MET[k].label, data, borderColor: col, backgroundColor: col, yAxisID: 'y' + i, spanGaps: false, _fmt: fmtK[k] }; });
-    keys.forEach((k, i) => { yScales['y' + i] = { display: keys.length === 1, grid: { color: grid, display: i === 0 && keys.length === 1 }, border: { display: false },
-      ticks: { color: t3, font, maxTicksLimit: 5, callback: v => fmtK[k](v) } }; });
+      return { label: HM_MET[k].label, data, borderColor: col, backgroundColor: col, yAxisID: AX[k], spanGaps: false, _fmt: fmtK[k] }; });
+    groups.forEach((gid, i) => { const ks = keys.filter(k => AX[k] === gid), k0 = ks[0];
+      yScales[gid] = { display: i < 2, position: i === 1 ? 'right' : 'left', beginAtZero: true, grid: { color: grid, display: i === 0 }, border: { display: false },
+        ticks: { color: ks.length === 1 && groups.length > 1 ? css(HM_MET[k0].color) : t3, font, maxTicksLimit: 5, callback: v => k0 === 'roas' ? (+v).toFixed(1) + 'x' : fmtK[k0](v) } }; });
   }
   ds.forEach(d => Object.assign(d, { borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: buckets.length > 14 ? 0 : 3, pointHoverRadius: 5, pointBackgroundColor: d.borderColor }));
   if (leg) leg.innerHTML = ds.map(d => `<span><i${d._tt ? ' class="ui-tt"' : ''} style="--c:${d.borderColor};"></i>${d.label}</span>`).join('');
