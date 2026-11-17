@@ -282,7 +282,7 @@
     </style>
     <div class="op-kp" id="opKpis"></div>
     <div class="op-sumg"><div class="op-card" id="opSum"></div><div class="op-card" id="opCat"></div></div>
-    <div class="op-tabs" id="opTabs"><button type="button" data-v="sets">ตามสินค้า / โปร</button><button type="button" data-v="orders">รายคำสั่งซื้อ</button></div>
+    <div class="op-tabs" id="opTabs"><button type="button" data-v="sets">ตามสินค้า / Promotion</button><button type="button" data-v="orders">รายคำสั่งซื้อ</button></div>
     <div class="op-card" id="opBody"></div>`;
     el.querySelectorAll('#opTabs button').forEach(b => b.onclick = () => { S.tab = b.dataset.v; drawTab(); });
     return el;

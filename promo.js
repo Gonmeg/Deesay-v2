@@ -628,7 +628,7 @@
           <td class="ctr">${r.status === 'pending' ? `<button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'cancelled' ? `<button class="pr-btn ghost tm2-x bad" data-rm="${r.id}">ลบ</button>` : ''}</td></tr>`; };
       box.innerHTML = L.length ? `<div style="overflow-x:auto;"><table class="pr-tb pr-ex2 pr-mine2" data-no-sort data-no-page>
           <colgroup><col><col style="width:96px"><col style="width:92px"><col style="width:112px"><col style="width:26%"><col style="width:92px"><col style="width:84px"></colgroup>
-          <thead><tr><th class="ex-c1">สินค้าในโปร</th><th class="tn">ราคา</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>Feedback</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>`
+          <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="tn">ราคา</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>Feedback</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>`
         + groups.map(g => { const r0 = g[0];
             return `<tr class="ex-g"><td colspan="7"><b class="t1">${esc(r0.title)}</b><span class="ex-gm">${esc(r0.channel || '')}${dr(r0) ? ' · ' + dr(r0) : ''} · ${g.length} รายการ</span></td></tr>` + g.map(row).join(''); }).join('') + '</tbody></table></div>'
         : '<div class="pr-empty">ยังไม่มีคำขอ</div>';
@@ -870,7 +870,7 @@
     }).join('');
     box.innerHTML = `<table class="pr-tb pr-ex2" data-no-sort data-no-page>
         <colgroup><col><col style="width:96px"><col style="width:96px"><col style="width:78px"><col style="width:110px"><col style="width:96px"><col style="width:96px"><col style="width:90px"><col style="width:104px"><col style="width:96px"><col style="width:96px"></colgroup>
-        <thead><tr><th class="ex-c1">สินค้าในโปร</th><th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
+        <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
           <th class="tn">% ของรายได้ <span class="pr-i" data-tip="กำไรสุทธิ ÷ รายได้ไม่รวม VAT">ⓘ</span></th><th class="tn">% ของต้นทุน <span class="pr-i" data-tip="กำไรสุทธิ ÷ ต้นทุนทั้งหมด (สินค้า + ค่า Platform + ค่าขาย + ค่าบริหาร / Marketing)">ⓘ</span></th>
           <th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>ขอโดย</th><th>ส่งเมื่อ</th></tr></thead><tbody>${body}</tbody></table>`;
     box.querySelectorAll('tr[data-id]').forEach(tr => tr.onclick = () => openReq(+tr.dataset.id));
