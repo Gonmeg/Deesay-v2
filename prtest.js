@@ -195,7 +195,8 @@
     // ยอดรวมต้องเท่าหน้าภาพรวม TikTok: ค่า Ads สร้างการรับรู้ทั้งหมด (aw_cost) − ที่แยกชั้นได้ = ส่วนที่ยังไม่อยู่ในชั้นใด (ต่างกันจากประเภท Campaign อื่น / เวลาตัดยอดของ 2 รายงาน)
     z.lv = num(g('cur', 'lv').sp);
     z.unk = Math.max(0, num(V.aw_cost) - z.aw.sp - z.co.sp - z.lv);
-    z.total = z.aw.sp + z.co.sp + z.lv + z.cv.sp + z.unk;
+    const awAll = num(V.aw_cost) > 0 ? num(V.aw_cost) : z.aw.sp + z.co.sp + z.lv; // ยึดยอดเดียวกับหน้าภาพรวม TikTok / TikTok Ads เสมอ (รายงานราย Campaign ตัดยอดคนละเวลา ต่างได้ไม่กี่บาท)
+    z.total = z.cv.sp + awAll;
     z.revDay = rev / ns; z.revDayB = num(Vb.rev) / nbs; z.aov = r(rev, num(V.orders)); z.aovB = r(num(Vb.rev), num(Vb.orders));
     z.mer = r(rev, z.total); z.merB = r(num(Vb.rev), num(Vb.cost) + num(Vb.aw_cost)); z.pctB = r((num(Vb.cost) + num(Vb.aw_cost)) * 100, num(Vb.rev));
     return z;
