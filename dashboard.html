@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-c"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -5640,8 +5640,11 @@ function renderCRMTrendChart() {
   const returningCounts = monthsToShow.map(m => returningByMonth[m].size);
   const returningPct = monthsToShow.map((m, i) => {
     const total = newCounts[i] + returningCounts[i];
-    return total ? Math.round((returningCounts[i] / total) * 100) : 0;
+    return total ? Math.round((returningCounts[i] / total) * 100) : null;
   });
+  // (2026-11-17) เปลี่ยนจากกราฟแท่งเป็นกราฟเส้นตามกติกาทั้งเว็บ · วันท้ายที่ยังไม่มีออเดอร์เข้า (ยังไม่ได้อัปโหลด) ไม่วาดเส้น — เดิมลากลงไปที่ 0
+  { let last = monthsToShow.length - 1; while (last >= 0 && !(newCounts[last] + returningCounts[last] > 0)) last--;
+    for (let i = last + 1; i < monthsToShow.length; i++) { newCounts[i] = null; returningCounts[i] = null; returningPct[i] = null; } }
 
   if (charts['chartCRMTrend']) charts['chartCRMTrend'].destroy();
   const ctx = document.getElementById('chartCRMTrend');
@@ -5650,9 +5653,9 @@ function renderCRMTrendChart() {
     data: {
       labels: monthLabels,
       datasets: [
-        { type: 'bar', label: 'ลูกค้าใหม่', data: newCounts, backgroundColor: 'rgba(96,165,250,0.65)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
-        { type: 'bar', label: 'ลูกค้าเก่าที่กลับมาซื้อ', data: returningCounts, backgroundColor: 'rgba(74,222,128,0.65)', borderColor: '#4ade80', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
-        { type: 'line', label: '% ลูกค้าเก่าที่กลับมา', data: returningPct, borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,0.08)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#c8a96e', tension: 0.3, yAxisID: 'y2' }
+        { type: 'line', label: 'ลูกค้าใหม่', data: newCounts, backgroundColor: '#60a5fa', borderColor: '#60a5fa', borderWidth: 2, pointRadius: 2.5, tension: 0.3, yAxisID: 'y' },
+        { type: 'line', label: 'ลูกค้าเก่าที่กลับมาซื้อ', data: returningCounts, backgroundColor: '#4ade80', borderColor: '#4ade80', borderWidth: 2, pointRadius: 2.5, tension: 0.3, yAxisID: 'y' },
+        { type: 'line', label: '% ลูกค้าเก่าที่กลับมา (แกนขวา)', data: returningPct, borderColor: '#c8a96e', backgroundColor: '#c8a96e', borderWidth: 2, borderDash: [5, 4], pointRadius: 2.5, pointBackgroundColor: '#c8a96e', tension: 0.3, yAxisID: 'y2' }
       ]
     },
     options: {
@@ -5663,8 +5666,8 @@ function renderCRMTrendChart() {
       },
       scales: {
         x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } }, grid: { color: chartGridColor() } },
-        y: { position: 'left', ticks: { color: chartTickColor(), font: { size: 10 } }, grid: { color: chartGridColor() } },
-        y2: { position: 'right', ticks: { color: '#c8a96e', font: { size: 10, weight: '600' }, callback: v => v + '%' }, grid: { display: false } }
+        y: { position: 'left', beginAtZero: true, ticks: { color: chartTickColor(), font: { size: 10 } }, grid: { color: chartGridColor() } },
+        y2: { position: 'right', beginAtZero: true, ticks: { color: '#c8a96e', font: { size: 10, weight: '600' }, callback: v => v + '%' }, grid: { display: false } }
       }
     }
   });

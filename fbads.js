@@ -298,15 +298,17 @@
     while (last >= 0 && !(+daily[last].revenue > 0)) last--;
     return { rows: daily.slice(0, last + 1), cut: daily.length - 1 - last, lastDate: last >= 0 ? daily[last].d : null };
   }
+  // (2026-11-17) วันท้ายที่ค่า Ads ยังไม่เข้า (ยังไม่ถึงรอบดึง / ดึงไม่ได้) ไม่วาดเส้น — เดิมลากเส้นลงไปที่ 0 ดูเหมือนหยุดยิง Ads
+  function adsLastIdx(daily) { let i = daily.length - 1; while (i >= 0 && !(+daily[i].spend > 0 || +daily[i].impressions > 0)) i--; return i; }
   function renderMoneyChart() {
     const cd = completeDaily(dailyRows());
-    const daily = cd.rows; const labels = daily.map(r => thShort(r.d));
+    const daily = cd.rows; const labels = daily.map(r => thShort(r.d)); const la = adsLastIdx(daily);
     const note = document.getElementById('fbaDailyTailNote');
     if (note) note.textContent = cd.cut > 0 ? `แสดงถึง ${thShort(cd.lastDate)} — ${cd.cut} วันล่าสุดยอดขาย Facebook ยังไม่ได้อัปโหลด จึงยังไม่นำมาเทียบ` : '';
     if (_moneyMode === 'money') {
       makeChart('chartFbaDaily', 'line', labels, [
         line('ยอดขายจริง Facebook', daily.map(r => +r.revenue), '#22c55e', { fill: true, backgroundColor: 'rgba(34,197,94,0.10)', yAxisID: 'y', borderWidth: 2 }),
-        line('ค่า Ads Conversion', daily.map(r => +r.spend_conv || 0), '#ef4444', { fill: true, backgroundColor: 'rgba(239,68,68,0.10)', yAxisID: 'y', borderWidth: 2 })
+        line('ค่า Ads Conversion', daily.map((r, i) => (i > la ? null : +r.spend_conv || 0)), '#ef4444', { fill: true, backgroundColor: 'rgba(239,68,68,0.10)', yAxisID: 'y', borderWidth: 2 })
       ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
         scales: { x: xaxis(), y: Object.assign(axis(undefined, v => fmtB(v), 'บาท'), { position: 'left', beginAtZero: true }) },   // แกนเดียว สเกลเดียวกัน จะได้เห็นจริงว่าค่า Ads เล็กกว่ายอดขายแค่ไหน
         tooltip: tooltipOpts({ label: it => `${it.dataset.label}: ${fmt(it.raw)}`, footer: items => { const r = daily[items[0].dataIndex]; return +r.spend_conv ? `ROAS ${(r.revenue / r.spend_conv).toFixed(2)}x · Conversion ${r.revenue ? ((+r.spend_conv) / r.revenue * 100).toFixed(1) : '—'}% ของยอด · ทั้งหมด ${fmt(r.spend)}` : ''; } }) });
@@ -320,14 +322,14 @@
     }
   }
   function renderTrafficChart() {
-    const daily = dailyRows(); const labels = daily.map(r => thShort(r.d));
+    const daily = dailyRows(); const labels = daily.map(r => thShort(r.d)); const la = adsLastIdx(daily);
     const kl = document.getElementById('fbaTrafL')?.value || 'msg_started', kr = document.getElementById('fbaTrafR')?.value || 'cost_per_msg';
     const isMoney = k => ['spend','spend_conv','revenue','cpm','cpc','cost_per_msg','cpa','cpe','cpv'].includes(k), isPct = k => ['ctr','er','acos'].includes(k);
     const fmtv = (k, v) => v == null ? '—' : isMoney(k) ? fmt(v) : isPct(k) ? (v * (k === 'acos' ? 1 : 100)).toFixed(2) + '%' : k === 'roas' ? v.toFixed(2) + 'x' : k === 'frequency' ? v.toFixed(2) : fmt(v);
     const tick = k => v => isMoney(k) ? fmtB(v) : isPct(k) ? (v * (k === 'acos' ? 1 : 100)).toFixed(1) + '%' : k === 'roas' ? v + 'x' : fmtB(v);
     makeChart('chartFbaTraffic', 'line', labels, [
-      line(mlabel(kl), daily.map(r => mv(kl, r)), '#ec4899', { fill: true, backgroundColor: 'rgba(236,72,153,0.10)', yAxisID: 'y', borderWidth: 2 }),
-      line(mlabel(kr), daily.map(r => mv(kr, r)), '#2563eb', { yAxisID: 'y1', borderWidth: 2 })
+      line(mlabel(kl), daily.map((r, i) => (i > la ? null : mv(kl, r))), '#ec4899', { fill: true, backgroundColor: 'rgba(236,72,153,0.10)', yAxisID: 'y', borderWidth: 2 }),
+      line(mlabel(kr), daily.map((r, i) => (i > la ? null : mv(kr, r))), '#2563eb', { yAxisID: 'y1', borderWidth: 2 })
     ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
       scales: { x: xaxis(), y: Object.assign(axis('#ec4899', tick(kl), mlabel(kl)), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#2563eb', tick(kr), mlabel(kr)), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },
       tooltip: tooltipOpts({ label: it => `${it.dataset.label}: ${fmtv(it.datasetIndex === 0 ? kl : kr, it.raw)}` }) });

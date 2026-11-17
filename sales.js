@@ -429,6 +429,13 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const cur = series(rowsAll, B, A && A.adsIn, A && A.capC, A && A.prIn);
     // ช่วงที่ยอดยังเข้าไม่ครบ = เส้นประ: รายวัน = หลังวันที่ครบล่าสุด · รายเดือน = เดือนสุดท้าย (ยังไม่จบเดือน)
     const capIdx = !R.cut ? B.list.length : R.none ? -1 : B.monthly ? B.list.length - 2 : B.list.indexOf(R.ct);
+    // (2026-11-17) รายวัน: วันหลังวันที่ยอดเข้าครบล่าสุด ที่ยังไม่มียอดเลย (ยังไม่ได้อัปโหลด / ยังไม่ถึง) ไม่วาดเส้น — เดิมลากเส้นประลงไปที่ 0 ดูเหมือนยอดขายร่วง
+    //   วันที่มียอดเข้ามาแล้วบางส่วนยังเป็นเส้นประเหมือนเดิม
+    if (!B.monthly && R.cut && !R.none) {
+      const empty = B.list.map((_, i) => i > capIdx && !((cur.rev || [])[i] > 0) && !((cur.ord || [])[i] > 0));
+      ['rev', 'ord', 'aov', 'canc'].forEach(k => { if (Array.isArray(cur[k])) cur[k] = cur[k].map((v, i) => (empty[i] ? null : v)); });
+      [cur.ch, cur.sub].forEach(g => Object.keys(g || {}).forEach(k => { g[k] = g[k].map((v, i) => (empty[i] ? null : v)); }));
+    }
     let dashAt = null, subLines = [];
     if (A) {
       // ค่า Ads: รายวัน = ไม่วาดวันที่ยังไม่เข้า · รายเดือน = เดือนสุดท้ายเป็นเส้นประ · ROAS ไม่วาดหลังวันที่ทั้งสองฝั่งเข้าครบ
