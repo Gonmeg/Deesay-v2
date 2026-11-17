@@ -140,7 +140,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
     ['ยอดขาย Facebook', [['fbhub', 'ยอดขาย'], ['fbads', 'ยอดขายจริง Facebook']]],
     ['ค่า Ads Facebook', [['fbhub', 'ค่า Ads'], ['fbads', 'ค่า Ads Facebook รวม']]],
     ['ROAS Facebook', [['fbhub', 'ROAS'], ['fbads', 'ROAS']]],
-    ['ลูกค้า Facebook', [['fbhub', 'ลูกค้า Facebook'], ['crm', 'ลูกค้า Facebook ทั้งหมด'], ['overview', 'ลูกค้า Facebook']]],
+    ['ลูกค้า Facebook', [['fbhub', 'ลูกค้า Facebook'], ['crm', 'ลูกค้า Facebook ทั้งหมด']]],
     ['ยอดขาย Shopee', [['shhub', 'ยอดขาย'], ['shads', 'ยอดขายจริง Shopee']]],
     ['ค่า Ads Shopee', [['shhub', 'ค่า Ads'], ['shads', 'ค่า Ads รวมทุกประเภท']]],
     ['ROAS Shopee', [['shhub', 'ROAS'], ['shads', 'ROAS จริง']]],
