@@ -173,7 +173,7 @@ function thaiSched(sched) {
 // ชื่อ job → ทำอะไร (ภาษาคน) — ใช้บอกว่าข้อมูลอะไรพร้อมกี่โมง
 const JOB_DESC = {
   'shopee-orders-sync': 'ดึงออเดอร์ Shopee Mall (API) ที่มีการเปลี่ยนแปลง → ตารางพัก shopee_orders_api (api-to-core-shopee เขียนต่อลง orders / sku_revenue)',
-  'shopee-ads-sync-daily': 'ค่า Ads Shopee (Product/Shop Ads) ทุกชั่วโมง 07:10–23:10 · 7 วันล่าสุด + วันนี้ (ยอดระหว่างวัน เขียนทับทุกรอบ) → shopee_ads_daily',
+  'shopee-ads-sync-daily': 'ค่า Ads Shopee (Product/Shop Ads) ทุกชั่วโมง 07:40–23:40 (ก่อนรอบสรุปค่า Ads นาทีที่ 45) · 7 วันล่าสุด + วันนี้ (ยอดระหว่างวัน เขียนทับทุกรอบ) → shopee_ads_daily',
   'shopee-ads-backfill': 'ค่าแอด Shopee ย้อนหลังที่ยังขาด',
   'shopee-ads-campaign-sync': 'ค่าแอด Shopee รายแคมเปญ',
   'shopee-ads-balance': 'ยอดเงินคงเหลือ Shopee Ads',
