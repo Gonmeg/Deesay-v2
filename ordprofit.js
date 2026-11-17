@@ -120,7 +120,7 @@
 
   // (2026-10-30) ตัวกรองออเดอร์กำไรต่ำ: ติ๊กได้กี่ข้อก็ได้ (แสดงออเดอร์ที่ตรงทุกข้อที่เลือก) · ตัวเลขเกณฑ์แก้ได้ · จำค่าไว้ในเบราว์เซอร์
   const OP_RULES_DEF = { on: [], m: 35, small: 200, disc: 50, aff: 5, ads: 25, cogs: 40, ship: 10 };
-  const OP_RL = [['m', 'กำไรต่ำกว่า', '%'], ['small', 'ออเดอร์เล็กกว่า', 'บาท'], ['disc', 'ส่วนลดเกิน', '%'], ['aff', 'ค่าคอม Affiliate เกิน', '%'], ['ads', 'ค่า Ads เกิน', '%'], ['cogs', 'ต้นทุนสินค้าเกิน', '%'], ['ship', 'ร้านจ่ายค่าส่งเองเกิน', 'บาท'], ['loss', 'ขาดทุน (กำไรติดลบ)', '']];
+  const OP_RL = [['m', 'กำไรต่ำกว่า', '%'], ['small', 'คำสั่งซื้อเล็กกว่า', 'บาท'], ['disc', 'ส่วนลดเกิน', '%'], ['aff', 'ค่าคอม Affiliate เกิน', '%'], ['ads', 'ค่า Ads เกิน', '%'], ['cogs', 'ต้นทุนสินค้าเกิน', '%'], ['ship', 'ร้านจ่ายค่าส่งเองเกิน', 'บาท'], ['loss', 'ขาดทุน (กำไรติดลบ)', '']];
   function opRulesLoad() { if (S.rules) return; try { S.rules = Object.assign({}, OP_RULES_DEF, JSON.parse(localStorage.getItem('opRules') || '{}')); } catch (e) { S.rules = Object.assign({}, OP_RULES_DEF); } if (!Array.isArray(S.rules.on)) S.rules.on = []; }
   function opRulesOn() { opRulesLoad(); return S.rules.on.length > 0; }
   const opRuleTxt = k => { const d = OP_RL.find(x => x[0] === k); return d ? (d[2] ? `${d[1]} ${S.rules[k]}${d[2] === '%' ? '%' : ' ' + d[2]}` : d[1]) : k; };
@@ -135,8 +135,8 @@
   function opFSave() { try { localStorage.setItem('opRules', JSON.stringify(S.rules)); } catch (e) { /* ไม่มีที่เก็บ ใช้ค่าในหน้านี้ */ } }
   function opFPanel(box) {
     const P = box.querySelector('#opFP');
-    P.innerHTML = `<div class="op-fh">ตัวกรองออเดอร์</div><div class="op-fg">${OP_RL.map(([k, l, u]) => `<label class="op-fl"><input type="checkbox" data-k="${k}"${S.rules.on.includes(k) ? ' checked' : ''}>${l}</label>${u ? `<input class="op-fn" type="number" min="0" step="any" data-v="${k}" value="${esc(S.rules[k])}"><span class="op-fu">${u}</span>` : '<span></span><span></span>'}`).join('')}</div>
-      <div class="op-fhint">เลือกได้กี่ข้อก็ได้ · แสดงออเดอร์ที่ตรงทุกข้อที่เลือก</div>
+    P.innerHTML = `<div class="op-fh">ตัวกรองคำสั่งซื้อ</div><div class="op-fg">${OP_RL.map(([k, l, u]) => `<label class="op-fl"><input type="checkbox" data-k="${k}"${S.rules.on.includes(k) ? ' checked' : ''}>${l}</label>${u ? `<input class="op-fn" type="number" min="0" step="any" data-v="${k}" value="${esc(S.rules[k])}"><span class="op-fu">${u}</span>` : '<span></span><span></span>'}`).join('')}</div>
+      <div class="op-fhint">เลือกได้กี่ข้อก็ได้ · แสดงคำสั่งซื้อที่ตรงทุกข้อที่เลือก</div>
       <div class="op-ff"><a href="javascript:void 0" data-act="reset">คืนค่าเริ่มต้น</a><button type="button" data-act="apply">ใช้ตัวกรอง</button></div>`;
     P.onclick = e => {
       const a = e.target.closest('[data-act]'); if (!a) return;
@@ -153,7 +153,7 @@
     P.addEventListener('click', e => e.stopPropagation());
     document.addEventListener('click', () => { if (P && !P.hidden) P.hidden = true; });
   }
-  const OP_TG = { small: v => 'ออเดอร์เล็ก', disc: v => `ส่วนลด ${v}%`, aff: v => `Affiliate ${v}%`, ads: v => `ค่า Ads ${v}%`, cogs: v => `ต้นทุน ${v}%`, ship: v => `ร้านจ่ายค่าส่ง ${v}` };
+  const OP_TG = { small: v => 'คำสั่งซื้อเล็ก', disc: v => `ส่วนลด ${v}%`, aff: v => `Affiliate ${v}%`, ads: v => `ค่า Ads ${v}%`, cogs: v => `ต้นทุน ${v}%`, ship: v => `ร้านจ่ายค่าส่ง ${v}` };
   const tagsCell = tags => Array.isArray(tags) && tags.length ? tags.map(([k, v]) => OP_TG[k] ? `<span class="op-tg${k === 'ship' ? ' r' : ''}">${esc(OP_TG[k](v))}</span>` : '').join('') : '<span class="z">—</span>';
   if (!document.getElementById('opFStyle')) { const st = document.createElement('style'); st.id = 'opFStyle'; st.textContent = `
     .op-fwrap{position:relative;display:inline-block}
@@ -175,7 +175,7 @@
     .op-tg{display:inline-block;font-size:11px;border-radius:5px;padding:1px 7px;margin:1px 4px 1px 0;background:rgba(184,134,47,.14);color:#a47224;white-space:nowrap}
     .op-tg.r{background:rgba(220,38,38,.12);color:#dc2626}
     td.op-tgc{white-space:nowrap}
-    #page-ordprofit .op-set-t{table-layout:fixed;width:100%} #page-ordprofit .op-set-t td.l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #page-ordprofit .op-set-t{table-layout:fixed;width:100%;min-width:1080px}   /* (2026-11-17) หน้าต่างแคบ: เดิมคอลัมน์ชื่อสินค้าเหลือ 0 (หายทั้งคอลัมน์) → เลื่อนซ้ายขวาในกล่องแทน */ #page-ordprofit .op-set-t td.l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #page-ordprofit .op-go{display:none;margin-left:10px;font-size:11.5px;color:var(--accent);font-weight:600} #page-ordprofit tr.op-st:hover .op-go{display:inline}
     .op-sd-h{margin-bottom:12px} .op-sd-t{font-size:15px;font-weight:700;color:var(--text)} .op-sd-t .op-sp b{font-weight:600} .op-sd-m{font-size:12.5px;color:var(--text2);margin-top:4px}
     .op-sd-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;background:var(--bg2)} .op-sd-k>div{padding:10px 12px} .op-sd-k>div+div{border-left:1px solid var(--border)}
@@ -418,11 +418,11 @@
       const title = g.main === 'หลายสินค้า' ? 'หลายสินค้า (เซ็ตผสม)' : esc(g.name || g.main) + ` <span class="sub mono">${esc(g.main)}</span>`;
       return `<tr class="op-gp${open ? ' open' : ''}" data-g="${esc(g.main)}"><td class="l"><span class="op-car">${open ? '▾' : '▸'}</span><b>${title}</b></td><td class="n op-m">${n0(g.ps / g.n)} <span class="sub">เฉลี่ย</span></td>${cells(g)}</tr>`
         + (open ? big.map(x => `<tr class="op-st" data-main="${esc(g.main)}" data-sig="${esc(x.sig)}" data-price="${x.price}" data-st="${x.n},${x.profit},${x.ads},${x.loss},${x.ps}" title="กดดูคำสั่งซื้อของเซ็ตนี้"><td class="l">${sigHtml(x.sig)}<span class="op-go">ดูคำสั่งซื้อ ›</span></td><td class="n"><b>${n0(x.price)}</b></td>${cells(x)}</tr>`).join('')
-          + (oth ? `<tr class="op-st op-oth" data-main="${esc(g.main)}" data-multi="${esc(JSON.stringify(rest.map(x => [x.sig, x.price])))}" data-st="${oth.n},${oth.profit},${oth.ads},${oth.loss},${oth.ps}"><td class="l">เซ็ต / ราคาอื่น ๆ <span class="sub">(${rest.length} แบบ · น้อยกว่า ${SETS.min} ออเดอร์ต่อแบบ)</span><span class="op-go">ดูคำสั่งซื้อ ›</span></td><td class="n op-m">—</td>${cells(oth)}</tr>` : '') : '');
+          + (oth ? `<tr class="op-st op-oth" data-main="${esc(g.main)}" data-multi="${esc(JSON.stringify(rest.map(x => [x.sig, x.price])))}" data-st="${oth.n},${oth.profit},${oth.ads},${oth.loss},${oth.ps}"><td class="l">เซ็ต / ราคาอื่น ๆ <span class="sub">(${rest.length} แบบ · น้อยกว่า ${SETS.min} คำสั่งซื้อต่อแบบ)</span><span class="op-go">ดูคำสั่งซื้อ ›</span></td><td class="n op-m">—</td>${cells(oth)}</tr>` : '') : '');
     }).join('');
     box.innerHTML = `<div class="op-sets"><div class="op-sh"><b>กำไรตามสินค้า / เซ็ต / ราคา</b><span>กด ▸ ดูทุกเซ็ต / ราคาที่ขาย · กดแถวเซ็ต = ดูคำสั่งซื้อของสินค้านั้น</span>
-        <span class="op-sh-r">${tip('กำไรก่อน Ads = ยอดขาย − ค่าธรรมเนียมแพลตฟอร์ม − VAT − ต้นทุนสินค้า (บอกว่าราคา / โปรนี้แข็งแรงไหม)<br>กำไรหลัง Ads = หักค่า Ads + Coins แล้ว (บอกว่ายิง Ads แล้วยังเหลือกำไรไหม)<br>ค่า Ads ต่อออเดอร์ = Ads ที่ยิงให้สินค้านั้นจริงในวันที่ขาย + ส่วนแบ่ง Ads ส่วนกลาง (Live · Coins · PR) ตามยอดขาย · ยอดรวมทั้งเดือนเท่าค่า Ads จริง<br>ไม่หักค่าบริหาร / การตลาดอื่น · ไม่นับคำสั่งซื้อที่คืนเงินเต็ม')}</span></div>
-      <div class="op-scroll"><table class="op-t op-set-t" data-no-sort data-no-page><colgroup><col><col style="width:96px"><col style="width:82px"><col style="width:110px"><col style="width:132px"><col style="width:84px"><col style="width:132px"><col style="width:80px"><col style="width:118px"></colgroup><thead><tr><th class="l">สินค้า / เซ็ตที่ขาย</th><th>ราคาขาย</th><th>ออเดอร์</th><th>ยอดขาย ${tip('ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย)')}</th><th>กำไรก่อน Ads / ออเดอร์</th><th>% ค่า Ads</th><th>กำไรหลัง Ads / ออเดอร์</th><th>% กำไร</th><th>ออเดอร์ขาดทุน</th></tr></thead>
+        <span class="op-sh-r">${tip('กำไรก่อน Ads = ยอดขาย − ค่าธรรมเนียมแพลตฟอร์ม − VAT − ต้นทุนสินค้า (บอกว่าราคา / Promotion นี้แข็งแรงไหม)<br>กำไรหลัง Ads = หักค่า Ads + Coins แล้ว (บอกว่ายิง Ads แล้วยังเหลือกำไรไหม)<br>ค่า Ads ต่อออเดอร์ = Ads ที่ยิงให้สินค้านั้นจริงในวันที่ขาย + ส่วนแบ่ง Ads ส่วนกลาง (Live · Coins · PR) ตามยอดขาย · ยอดรวมทั้งเดือนเท่าค่า Ads จริง<br>ไม่หักค่าบริหาร / การตลาดอื่น · ไม่นับคำสั่งซื้อที่คืนเงินเต็ม')}</span></div>
+      <div class="op-scroll"><table class="op-t op-set-t" data-no-sort data-no-page><colgroup><col><col style="width:96px"><col style="width:82px"><col style="width:110px"><col style="width:132px"><col style="width:84px"><col style="width:132px"><col style="width:80px"><col style="width:118px"></colgroup><thead><tr><th class="l">สินค้า / เซ็ตที่ขาย</th><th>ราคาขาย</th><th>คำสั่งซื้อ</th><th>ยอดขาย ${tip('ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย)')}</th><th>กำไรก่อน Ads / ออเดอร์</th><th>% ค่า Ads</th><th>กำไรหลัง Ads / ออเดอร์</th><th>% กำไร</th><th>คำสั่งซื้อขาดทุน</th></tr></thead>
       <tbody>${body || '<tr><td colspan="9" class="l z">ไม่มีข้อมูล</td></tr>'}</tbody></table></div></div>`;
     box.querySelectorAll('tr.op-gp').forEach(tr => tr.onclick = () => { const k = tr.dataset.g; SETS.open.has(k) ? SETS.open.delete(k) : SETS.open.add(k); drawSets(); });
     box.querySelectorAll('tr.op-st[data-sig]').forEach(tr => tr.onclick = () => openSet([[tr.dataset.sig, +tr.dataset.price]], tr.querySelector('td.l').innerHTML.replace(/<span class="op-go">.*?<\/span>/, ''), tr.dataset.st.split(',').map(Number), `ราคา ${n0(+tr.dataset.price)}`));
@@ -607,7 +607,7 @@
         const f = fac(val, raw), adj = Math.abs(f - 1) >= 0.00005, revO = rates.reduce((t, r) => t + (+r.rs || 0), 0);
         const pname = r => esc(r.name || names[r.p] || r.p), skuT = r => `<span class="opx-sku">${esc(r.p)}</span>`, per = mo + (j.open ? ' ถึงวันนี้' : '');
         blocks.push(`<div class="tr-fg"><div class="opx-h">สรุปตามสินค้า</div>
-          <table class="opx-t opx-w" data-no-sort data-no-page><thead><tr><th style="width:40%;">สินค้า</th><th>ยอดขายในคำสั่งซื้อ</th><th>${any3 ? `อัตรา Ads วันที่ขาย ${tip('(Ads ที่ยิงให้สินค้านั้นจริงวันนั้น + ส่วนแบ่ง Ads ส่วนกลางตามยอดขาย) ÷ ยอดขายสินค้านั้นวันนั้น · วันที่ขายน้อยกว่า 5 ออเดอร์ใช้ผลรวม ±3 วัน · ยอดรวมทั้งเดือนเท่าค่า Ads จริง')}` : `อัตรา Ads ทั้งเดือน ${tip('Ads + Coins ทั้งเดือนของสินค้า ÷ ยอดขายทั้งเดือนของสินค้า')}`}</th><th>Ads + Coins</th></tr></thead><tbody>`
+          <table class="opx-t opx-w" data-no-sort data-no-page><thead><tr><th style="width:40%;">สินค้า</th><th>ยอดขายในคำสั่งซื้อ</th><th>${any3 ? `อัตรา Ads วันที่ขาย ${tip('(Ads ที่ยิงให้สินค้านั้นจริงวันนั้น + ส่วนแบ่ง Ads ส่วนกลางตามยอดขาย) ÷ ยอดขายสินค้านั้นวันนั้น · วันที่ขายน้อยกว่า 5 คำสั่งซื้อใช้ผลรวม ±3 วัน · ยอดรวมทั้งเดือนเท่าค่า Ads จริง')}` : `อัตรา Ads ทั้งเดือน ${tip('Ads + Coins ทั้งเดือนของสินค้า ÷ ยอดขายทั้งเดือนของสินค้า')}`}</th><th>Ads + Coins</th></tr></thead><tbody>`
           + rates.map(r => `<tr class="op"><td>${pname(r)}${skuT(r)}</td><td>${n2(r.rs)}</td><td>${r._ar ? (r._rate * 100).toFixed(2) + '%' : '—'}</td><td>${n2(r._rate * (+r.rs || 0) * f)}</td></tr>`).join('')
           + `<tr class="tot"><td>รวมคำสั่งซื้อนี้</td><td>${n2(revO)}</td><td>${revO ? (val / revO * 100).toFixed(2) + '%' : '—'}</td><td>${n2(val)}</td></tr></tbody></table>
           <div class="opx-note" style="margin-top:6px;">${any3 ? 'อัตรา Ads = (Ads ที่ยิงให้สินค้าจริงวันนั้น + ส่วนแบ่ง Ads ส่วนกลาง) ÷ ยอดขายสินค้าวันนั้น' : `อัตรา Ads ทั้งเดือน = Ads + Coins ทั้งเดือนของสินค้า ÷ ยอดขายทั้งเดือนของสินค้า (${esc(S.ch)} ${per})`} · ยอดขาย = ราคาหลังหักส่วนลดร้านค้า${adj ? ` · รวมตัวปรับ × ${f.toFixed(4)} ${tip(`ปรับให้ผลรวมทุกคำสั่งซื้อเท่ากับค่าโฆษณาจริงของ ${S.ch} ทั้งเดือน`)}` : ''}</div></div>`);
@@ -621,8 +621,8 @@
                 <tr class="tot"><td>= อัตรา Ads ทั้งเดือน</td><td>${((r._ar ? r._at / r._ar : 0) * 100).toFixed(2)}%</td></tr>${r._r3 ? `
                 <tr class="op"><td>${lab('Ads ที่ยิงให้สินค้านี้ วันที่ ' + d3(r), 'Product Ads / GMV Max ของสินค้านี้ตามที่แพลตฟอร์มรายงาน')}</td><td>${n2(r._r3.a_direct)}</td></tr>
                 <tr class="op"><td>${lab('+ ส่วนแบ่ง Ads ส่วนกลาง', 'Live · Coins · PR ที่ไม่ผูกสินค้า แบ่งตามสัดส่วนยอดขายวันนั้น')}</td><td>${n2(r._r3.a_pool)}</td></tr>
-                <tr class="op"><td>÷ ยอดขายสินค้านี้ วันที่ ${d3(r)} (${n0(r._r3.n)} ออเดอร์)</td><td>${n2(r._r3.rev)}</td></tr>
-                ${r._r3.smooth ? `<tr class="op"><td colspan="2" class="opx-note">วันนี้ขายน้อยกว่า 5 ออเดอร์ จึงใช้ค่าเฉลี่ย ±3 วันของสินค้านี้</td></tr>` : ''}
+                <tr class="op"><td>÷ ยอดขายสินค้านี้ วันที่ ${d3(r)} (${n0(r._r3.n)} คำสั่งซื้อ)</td><td>${n2(r._r3.rev)}</td></tr>
+                ${r._r3.smooth ? `<tr class="op"><td colspan="2" class="opx-note">วันนี้ขายน้อยกว่า 5 คำสั่งซื้อ จึงใช้ค่าเฉลี่ย ±3 วันของสินค้านี้</td></tr>` : ''}
                 <tr class="tot"><td>= อัตรา Ads ที่ใช้</td><td>${(r._rate * 100).toFixed(2)}%</td></tr>` : ''}</tbody></table>`
             + (r._P.length ? `<table class="opx-t opx-w" style="margin-top:10px;" data-no-sort data-no-page><thead><tr><th style="width:38%;">ที่มา</th><th style="width:23%;">ยอดทั้งเดือน</th><th style="width:16%;">ส่วนของสินค้านี้ ${tip(`ยอดขายสินค้านี้ ÷ ยอดขายทั้งหมดบน ${S.ch} · Ads PR: ÷ ยอดขายทุกช่องทาง`)}</th><th style="width:23%;">Ads + Coins</th></tr></thead><tbody>`
               + r._P.map(x => { const [l, t] = PL[x.k] || [x.k, '']; return `<tr class="op"><td>${lab(l, t)}</td><td>${n2(x.pool)}</td><td>${x.k === 'direct' ? 'ทั้งหมด' : ((+x.share || 0) * 100).toFixed(2) + '%'}</td><td>${n2(x.amt)}</td></tr>`; }).join('')

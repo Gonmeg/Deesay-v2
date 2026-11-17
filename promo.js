@@ -31,7 +31,7 @@
   const rpc = (n, a) => Auth.rpc(n, a);
   const ST = { pending: ['รออนุมัติ', 'warn'], approved: ['อนุมัติแล้ว', 'good'], rejected: ['ไม่อนุมัติ', 'bad'], cancelled: ['ยกเลิก', ''] };
   const LAYER = { platform: 'ค่า Platform', selling: 'ค่าขาย (Commission / Ads / ขนส่ง)', overhead: 'ค่าบริหาร / Marketing' };
-  const APPLY = { all: 'ทุกออเดอร์', single: 'เฉพาะสินค้าเดี่ยว', set: 'เฉพาะเซต' };
+  const APPLY = { all: 'ทุกคำสั่งซื้อ', single: 'เฉพาะสินค้าเดี่ยว', set: 'เฉพาะเซต' };
   let CAT = null;
   const cat = async () => (CAT = CAT || await rpc('promo_catalog'));
 
@@ -390,7 +390,7 @@
   }
   function rowsHtml(key, list, C) {
     return list.map((x, i) => `<div class="pr-row"><div class="pr-pickw"><input class="pr-in pr-pick" autocomplete="off" data-k="${key}" data-i="${i}" data-f="sku" placeholder="ค้นหาชื่อสินค้าหรือรหัส" value="${esc(x.sku ? prodLabel(C.products.find(p => p.sku === x.sku) || { name: x.sku, sku: x.sku }) : '')}"></div>
-      <input class="pr-in" type="number" min="1" step="1" data-k="${key}" data-i="${i}" data-f="qty" value="${esc(x.qty)}" title="จำนวนชิ้นต่อ 1 ออเดอร์">
+      <input class="pr-in" type="number" min="1" step="1" data-k="${key}" data-i="${i}" data-f="qty" value="${esc(x.qty)}" title="จำนวนชิ้นต่อ 1 คำสั่งซื้อ">
       <button type="button" class="pr-x" data-del="${key}" data-i="${i}" aria-label="ลบ">×</button></div>`).join('');
   }
   // (2026-11-12) หน้าขอ Promotion แบบตาราง (ทีมคุ้นกับชีทราคา): 1 แถว = 1 ชุดสินค้า · คอลัมน์ราคาแยกตามช่องทางย่อยของ Platform ที่เลือก
@@ -457,9 +457,9 @@
     const later = i => { clearTimeout(pgT[i]); pgT[i] = setTimeout(() => askRank(i), 350); };
     const drawBody = () => { document.getElementById('pgBody').innerHTML = G.rows.map(rowHtml).join(''); G.rows.forEach((_, i) => askRank(i)); foot(); };
     const drawGrid = () => {
-      document.getElementById('pgGrid').innerHTML = `<table class="pg" data-no-sort data-no-page><thead><tr><th class="pg-n">#</th><th class="pg-h1"><div><span>สินค้าใน 1 ออเดอร์ <span class="pr-i" data-tip="พิมพ์ชื่อสินค้าหรือรหัสแล้วเลือก จากนั้นพิมพ์จำนวนชิ้นแล้วกด Enter เพื่อเพิ่มตัวถัดไป · ตัวไหนเป็นของแถมให้กด แถม ที่บรรทัดนั้น">ⓘ</span></span><span class="pg-hq">จำนวนชิ้น</span></div></th>
+      document.getElementById('pgGrid').innerHTML = `<table class="pg" data-no-sort data-no-page><thead><tr><th class="pg-n">#</th><th class="pg-h1"><div><span>สินค้าใน 1 คำสั่งซื้อ <span class="pr-i" data-tip="พิมพ์ชื่อสินค้าหรือรหัสแล้วเลือก จากนั้นพิมพ์จำนวนชิ้นแล้วกด Enter เพื่อเพิ่มตัวถัดไป · ตัวไหนเป็นของแถมให้กด แถม ที่บรรทัดนั้น">ⓘ</span></span><span class="pg-hq">จำนวนชิ้น</span></div></th>
         <th>ราคาปกติ <span class="pr-i" data-tip="ราคาปกติ (RSP) จากหน้า สินค้า & ราคา × จำนวนชิ้น · ไม่นับของแถม">ⓘ</span></th>
-        <th>ราคาที่ขอ <span class="pr-i" data-tip="ราคาขายต่อ 1 ออเดอร์ รวม VAT หลังส่วนลด ของช่องทางที่เลือกด้านบน · ไม่ใส่ราคา = ไม่ส่งแถวนั้น">ⓘ</span></th><th class="l">เทียบ Rank <span class="pr-i" data-tip="ราคา Rank 1 / 2 / 3 ของชุดสินค้านั้นในช่องทางที่เลือก จากหน้า สินค้า & ราคา (ไม่นับของแถม) · ใส่ราคาแล้วระบบบอกว่าถึง Rank ไหน">ⓘ</span></th><th class="l">หมายเหตุ</th><th></th></tr></thead><tbody id="pgBody"></tbody></table>`;
+        <th>ราคาที่ขอ <span class="pr-i" data-tip="ราคาขายต่อ 1 คำสั่งซื้อ รวม VAT หลังส่วนลด ของช่องทางที่เลือกด้านบน · ไม่ใส่ราคา = ไม่ส่งแถวนั้น">ⓘ</span></th><th class="l">เทียบ Rank <span class="pr-i" data-tip="ราคา Rank 1 / 2 / 3 ของชุดสินค้านั้นในช่องทางที่เลือก จากหน้า สินค้า & ราคา (ไม่นับของแถม) · ใส่ราคาแล้วระบบบอกว่าถึง Rank ไหน">ⓘ</span></th><th class="l">หมายเหตุ</th><th></th></tr></thead><tbody id="pgBody"></tbody></table>`;
       drawBody();
     };
     el.innerHTML = `
@@ -474,7 +474,7 @@
           <span class="pr-note" id="prMsg"></span><button class="pr-btn" id="prSubmit" disabled>ส่งขออนุมัติ</button></div>
       </div>
       <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>
-      <div class="pr-card"><h3><span>ปฏิทินโปรโมชั่น <span class="pr-i" data-tip="โปรที่อนุมัติแล้วและรออนุมัติของบัญชีนี้ แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
+      <div class="pr-card"><h3><span>ปฏิทิน Promotion <span class="pr-i" data-tip="Promotion ที่อนุมัติแล้วและรออนุมัติของบัญชีนี้ แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
         <span class="pr-cal-leg"><span><i></i>อนุมัติแล้ว</span><span><i class="p"></i>รออนุมัติ</span></span>
         <span class="pr-cal-nav"><button type="button" data-calmv="-1" aria-label="เดือนก่อน">‹</button><span id="prCalM"></span><button type="button" data-calmv="1" aria-label="เดือนถัดไป">›</button></span></h3>
         <div class="pr-cal" id="prCal"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
@@ -604,10 +604,10 @@
         const cls = (r.status === 'pending' ? ' pend' : '') + (r.start_date < w0 ? ' cl' : '') + ((r.end_date || r.start_date) > w6 ? ' cr' : '');
         row += `<div class="pr-mc-ev${cls}" style="--c:var(${CH_VAR[r.sys] || '--text3'});grid-column:${ev.s + 1} / ${ev.e + 2};grid-row:${ev.l + 1};" title="${esc(tip)}">${esc(r.title)} <span style="opacity:.75;font-weight:400;">· ${esc(r.channel || '')}</span></div>`;
       });
-      hidden.forEach((n, i) => { if (n) row += `<div class="pr-mc-more" style="grid-column:${i + 1};grid-row:${MAXL + 1};">+ อีก ${n} โปร</div>`; });
+      hidden.forEach((n, i) => { if (n) row += `<div class="pr-mc-more" style="grid-column:${i + 1};grid-row:${MAXL + 1};">+ อีก ${n} Promotion</div>`; });
       h += `<div class="pr-mc-wk"><div class="pr-mc-bg">${bg}</div><div class="pr-mc-fg">${row}</div></div>`;
     }
-    box.innerHTML = h + '</div>' + (!(L || []).length ? '<div class="pr-cal-empty" style="padding:10px 0 0;">เดือนนี้ยังไม่มีโปรที่อนุมัติแล้วหรือรออนุมัติ</div>' : '');
+    box.innerHTML = h + '</div>' + (!(L || []).length ? '<div class="pr-cal-empty" style="padding:10px 0 0;">เดือนนี้ยังไม่มี Promotion ที่อนุมัติแล้วหรือรออนุมัติ</div>' : '');
   }
   async function loadMine() {
     const box = document.getElementById('prMine'); if (!box) return;
@@ -683,7 +683,7 @@
     const how = f => (f.kind === 'pct' ? `${+(f.rate * 100).toFixed(2)}% × ${n2(price)} ÷ ${vf}` : `${n2(f.rate)} ÷ ${vf}`) + (f.src === 'actual' ? ' · ค่าจริง 30 วัน' : '');
     // (2026-10-28 b) ไม่ใช้เกณฑ์กำไรขั้นต่ำ (5%) แล้ว: แถบบนขึ้นเฉพาะตอนขาดต้นทุน · ขาดทุนดูจากกำไรสุทธิที่เป็นสีแดง
     const fm = c.fee_actual_ok === false ? `<div class="pv-fm"><span>ค่าธรรมเนียมแพลตฟอร์ม</span><div class="pr-seg"><button type="button" disabled aria-pressed="false" style="opacity:.45;cursor:default">ค่าจริง 30 วัน</button><button type="button" aria-pressed="true">ค่าที่ตั้งไว้</button></div><span class="pv-fm-n">ช่องทางนี้ไม่มีค่าจริงจาก API จึงใช้ค่าที่ตั้งไว้ในหน้าค่าธรรมเนียมช่องทาง</span></div>`
-      : c.fee_actual_ok ? `<div class="pv-fm"><span>ค่าธรรมเนียมแพลตฟอร์ม${tip('ค่าจริง 30 วัน = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด (อัปเดตทุกเช้า) รวมรายการที่แพลตฟอร์มหักแต่ไม่ได้ตั้งไว้\nค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง\nค่าใช้จ่ายบริษัท (Ads / ค่าบริหาร / Marketing) ใช้ค่าที่ตั้งไว้ทั้งสองแบบ')}</span><div class="pr-seg" data-fm><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div></div>` : '';
+      : c.fee_actual_ok ? `<div class="pv-fm"><span>ค่าธรรมเนียมแพลตฟอร์ม${tip('ค่าจริง 30 วัน = เฉลี่ยจากคำสั่งซื้อที่ได้เงินแล้ว 30 วันล่าสุด (อัปเดตทุกเช้า) รวมรายการที่แพลตฟอร์มหักแต่ไม่ได้ตั้งไว้\nค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง\nค่าใช้จ่ายบริษัท (Ads / ค่าบริหาร / Marketing) ใช้ค่าที่ตั้งไว้ทั้งสองแบบ')}</span><div class="pr-seg" data-fm><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div></div>` : '';
     const ban = price && !ok ? `<div class="pv-ban warn"><b>ยังคำนวณกำไรไม่ได้</b><span>ยังไม่มีต้นทุนของ ${miss.map(esc).join(', ')} ในไฟล์ต้นทุนของบัญชี</span></div>` : '';
     const dif = +c.rsp > 0 ? (price - +c.rsp) / +c.rsp : null;
     const tiles = `<div class="pv-k">
@@ -707,7 +707,7 @@
         ${row('กำไรสุทธิ / ออเดอร์', ok ? pc(c.margin) + ' ของรายได้' : 'ยังไม่รวมต้นทุนที่ขาด', ok ? n2(c.profit) : '—', 'tot big' + (ok && +c.profit < 0 ? ' negv' : ''))}
       </tbody></table>`;
     const exN = EXC.size ? `<div class="pv-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')} — ตัวเลขด้านบนคิดแบบไม่นับรายการเหล่านี้แล้ว <button type="button" class="pv-exr" data-xreset>นับทั้งหมด</button></div>` : '';
-    return fm + ban + tiles + exN + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ติ๊กช่องหน้ารายการออก = ไม่นับรายการนั้นในกำไร (เช่น สินค้าเดท ไม่คิดค่า Marketing) แล้วระบบคำนวณใหม่ทันที · ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · ค่าธรรมเนียมแพลตฟอร์มใช้ค่าจริง (เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด) หรือค่าที่ตั้งไว้ ตามที่เลือกในหน้าค่าธรรมเนียมช่องทาง · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
+    return fm + ban + tiles + exN + `<section class="tr-part pv-sec"><div class="pv-h">รายละเอียดการคำนวณ${tip('ติ๊กช่องหน้ารายการออก = ไม่นับรายการนั้นในกำไร (เช่น สินค้าเดท ไม่คิดค่า Marketing) แล้วระบบคำนวณใหม่ทันที · ราคาที่กรอกเป็นราคารวม VAT · ระบบถอด VAT ออกก่อน แล้วคิดทุกรายการแบบไม่รวม VAT · ค่าที่เป็น % คิดจากราคารวม VAT แล้วถอด VAT · ค่าธรรมเนียมแพลตฟอร์มใช้ค่าจริง (เฉลี่ยจากคำสั่งซื้อที่ได้เงินแล้ว 30 วันล่าสุด) หรือค่าที่ตั้งไว้ ตามที่เลือกในหน้าค่าธรรมเนียมช่องทาง · กดแถวที่มี ▶ เพื่อดูรายการย่อย')}</div>${table}</section>`;
   }
   const bindFm = (root, fn) => root.querySelectorAll('[data-fm] button').forEach(b => b.onclick = () => { if (b.getAttribute('aria-pressed') !== 'true') fn(b.dataset.v); });
   // (2026-11-10 b) แผงรายละเอียดผู้บริหาร: การคำนวณแบบอ่านง่าย — 2 คอลัมน์ (รายการ | บาท) · วิธีคิดอยู่ในตัวชี้ (hover) แทนคอลัมน์ · ติ๊กออกได้ · โหมดค่าธรรมเนียมอยู่หัวการ์ด
@@ -725,7 +725,7 @@
     const ovIn = f => f.layer === 'overhead' && f.kind === 'pct' ? `<span class="exd-ov${f.overridden ? ' on' : ''}"><input type="number" class="exd-pct" step="0.5" min="0" data-ov="${esc(f.item)}" data-base="${+(+(f.base_rate != null ? f.base_rate : f.rate) * 100).toFixed(2)}" value="${+(+f.rate * 100).toFixed(2)}" title="ปรับ % เอง (ตั้งไว้ ${+(+(f.base_rate != null ? f.base_rate : f.rate) * 100).toFixed(2)}%)">%</span>` : '';
     const feeG = (ly, title) => { const F = fees(ly); if (!F.length) return ''; const on = F.filter(f => !f.excluded);
       return grp(ly, title, sum(on.map(f => f.amount_ex)), !on.length, 'ly:' + ly, F.length === 1 ? how(F[0]) : '') + F.map(f => sub(ly, esc(f.item), f.amount_ex, f.excluded, f.item, how(f), ovIn(f))).join(''); };
-    const fm = c.fee_actual_ok ? `<div class="pr-seg exd-fm" data-fm title="ค่าธรรมเนียมแพลตฟอร์ม: ค่าจริง = เฉลี่ยจากออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง"><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div>` : '';
+    const fm = c.fee_actual_ok ? `<div class="pr-seg exd-fm" data-fm title="ค่าธรรมเนียมแพลตฟอร์ม: ค่าจริง = เฉลี่ยจากคำสั่งซื้อที่ได้เงินแล้ว 30 วันล่าสุด · ค่าที่ตั้งไว้ = ตัวเลขในหน้าค่าธรรมเนียมช่องทาง"><button type="button" data-v="actual" aria-pressed="${c.fee_mode === 'actual'}">ค่าจริง 30 วัน</button><button type="button" data-v="set" aria-pressed="${c.fee_mode !== 'actual'}">ค่าที่ตั้งไว้</button></div>` : '';
     const OVL = (c.fees || []).filter(f => f.overridden).map(f => `${esc(f.item)} ${+(+f.rate * 100).toFixed(2)}%`);
     const exN = (EXC.size ? `<div class="exd-exn">ไม่นับ ${[...EXC].map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : esc(x)).join(' · ')}<button type="button" data-xreset title="กลับไปนับทุกรายการ">×</button></div>` : '')
       + (OVL.length ? `<div class="exd-exn">ปรับ ${OVL.join(' · ')}<button type="button" data-ovreset title="กลับไปใช้ค่าที่ตั้งไว้">×</button></div>` : '');
@@ -772,9 +772,9 @@
   function renderSim(box, C) {
     // (2026-11-10) หน้าตาใหม่แบบเดียวกับแผงรายละเอียดคำขอ: ฟอร์มเป็นการ์ด 3 ส่วน (ช่องทาง · สินค้า · ราคา) · ผลใช้ calcPanel (ตัวเลขหลัก + การคำนวณ ติ๊กออก / ปรับ % ได้) + Rank
     box.innerHTML = `<div class="sm2"><div class="sm2-f">
-        <div class="exd-card"><div class="exd-ch"><b>จำลองโปร</b><span class="pr-i" data-tip="ลองใส่ช่องทาง สินค้า ของแถม และราคา แล้วกดคำนวณ · ไม่ส่งเป็นคำขอ ไม่บันทึกอะไร">ⓘ</span></div>
+        <div class="exd-card"><div class="exd-ch"><b>จำลอง Promotion</b><span class="pr-i" data-tip="ลองใส่ช่องทาง สินค้า ของแถม และราคา แล้วกดคำนวณ · ไม่ส่งเป็นคำขอ ไม่บันทึกอะไร">ⓘ</span></div>
           <label class="sm2-l">ช่องทาง</label><select class="pr-in" id="smCh"><option value="">เลือกช่องทาง</option>${C.channels.map(c => `<option value="${c.id}"${+SIM.channel_id === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
-        <div class="exd-card"><label class="sm2-l">สินค้าใน 1 ออเดอร์ <small>ชื่อสินค้า · จำนวนชิ้น</small></label><div id="smItems">${rowsHtml('items', SIM.items, C)}</div><button type="button" class="pr-add" data-smadd="items">＋ เพิ่มสินค้า</button>
+        <div class="exd-card"><label class="sm2-l">สินค้าใน 1 คำสั่งซื้อ <small>ชื่อสินค้า · จำนวนชิ้น</small></label><div id="smItems">${rowsHtml('items', SIM.items, C)}</div><button type="button" class="pr-add" data-smadd="items">＋ เพิ่มสินค้า</button>
           <label class="sm2-l" style="margin-top:14px;">ของแถม <small>ถ้ามี</small></label><div id="smGifts">${rowsHtml('gifts', SIM.gifts, C)}</div><button type="button" class="pr-add" data-smadd="gifts">＋ เพิ่มของแถม</button></div>
         <div class="exd-card sm2-p"><label class="sm2-l" for="smPrice">ราคาขายต่อออเดอร์ <small>รวม VAT หลังส่วนลด</small></label><input class="pr-in" type="number" id="smPrice" min="0" step="0.01" value="${esc(SIM.price)}" placeholder="0.00">
           <button type="button" class="pr-btn" id="smGo">คำนวณ</button></div></div>
@@ -830,7 +830,7 @@
     if (!top) { const f = document.querySelector('.topbar .filters'); top = document.createElement('div'); top.id = 'exTopCtl'; top.className = 'ex-topctl'; if (f) f.prepend(top); }
     top.style.display = (typeof currentPage === 'undefined' || currentPage === 'exec') ? '' : 'none';   // (2026-11-10) โหลดเสร็จช้ากว่าการสลับหน้า → ไม่โชว์บนหน้าอื่น
     top.innerHTML = `<div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div>
-      <button type="button" class="pr-btn ghost pv-simbtn" id="exSim" aria-pressed="${EX.filter === 'sim'}">จำลองโปร</button>`;
+      <button type="button" class="pr-btn ghost pv-simbtn" id="exSim" aria-pressed="${EX.filter === 'sim'}">จำลอง Promotion</button>`;
     el.innerHTML = `<div class="pr-card" style="padding:4px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
     const simBtn = top.querySelector('#exSim');
     top.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); simBtn.setAttribute('aria-pressed', 'false'); listExec(); };
@@ -939,7 +939,7 @@
         <div class="exd-card exd-hd"><div class="exd-t">${esc(r.title)}<span class="pr-pill ${st[1]}">${st[0]}</span><span title="${esc(rkTxt || rkTip)}">${rkPill(k)}</span></div>
           <div class="exd-m">${esc(r.channel || '')}${r.start_date ? ` · ${dTh(r.start_date)}${r.end_date ? ' – ' + dTh(r.end_date) : ''}` : ''} · ${esc(r.requested_name || '')}</div>
           ${r.note ? `<div class="exd-note">${esc(r.note)}</div>` : ''}</div>
-        <div class="exd-card exd-pc"><div class="exd-pl"><div class="exd-ch"><b>สินค้าในโปร</b></div>
+        <div class="exd-card exd-pc"><div class="exd-pl"><div class="exd-ch"><b>สินค้าใน Promotion</b></div>
             <table class="exd-it" data-no-sort data-no-page><tbody>${itRows}<tr class="sum"><td>ต้นทุนรวม</td><td></td><td class="num">${n2(costTot)}</td></tr></tbody></table></div>
           <div class="exd-pr"><label for="exPrice">ราคาขาย (รวม VAT)</label><input class="pr-in" type="number" step="0.01" id="exPrice" value="${S.price}">
             <button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button><span>กำลังลองปรับ · ยังไม่แก้คำขอ</span>' : '<span>ลองเปลี่ยนราคา / จำนวน แล้วกดคำนวณ</span>'}</div></div>
@@ -1024,14 +1024,14 @@
       const p = { name, sys_channel: segVal(b, 'sys') || '', acct_channels: [...b.querySelectorAll('.pr-chk input:checked')].map(x => x.value) };
       if (await feeEdit(c ? { op: 'channel_update', id: c.id, ...p } : { op: 'channel_add', ...p })) { CAT = null; trClose(); renderFee(); }
     };
-    const d = document.getElementById('fcDel'); if (d) d.onclick = async () => { if (await uiConfirm('ลบช่องทาง', { text: `${c.name} · ถ้ามีโปรอ้างถึง ระบบจะปิดใช้งานแทนการลบ`, ok: 'ลบ', tone: 'bad' }) && await feeEdit({ op: 'channel_delete', id: c.id })) { CAT = null; trClose(); renderFee(); } };
+    const d = document.getElementById('fcDel'); if (d) d.onclick = async () => { if (await uiConfirm('ลบช่องทาง', { text: `${c.name} · ถ้ามี Promotion อ้างถึง ระบบจะปิดใช้งานแทนการลบ`, ok: 'ลบ', tone: 'bad' }) && await feeEdit({ op: 'channel_delete', id: c.id })) { CAT = null; trClose(); renderFee(); } };
   }
   function thresholdForm() {
     trOpenShell('เกณฑ์สัญญาณไฟ');
     const b = document.getElementById('trBody'), cur = +(((FT.settings || {}).min_markup || 0.05) * 100).toFixed(2);
     b.innerHTML = `<section class="tr-part" style="padding:16px;"><div class="pr-f"><div class="full"><label>ไฟเขียวเมื่อกำไรเกินต้นทุนทั้งหมดอย่างน้อย (%)</label>
       <input class="pr-in" id="fmV" type="number" step="0.5" min="0" value="${cur}"></div></div>
-      <div class="pr-note" style="margin-top:10px;">ต้นทุนทั้งหมด = ต้นทุนสินค้า + ของแถม + ค่าธรรมเนียมทุกรายการในตารางนี้ · คนขอโปรเห็นแค่ผ่าน / ไม่ผ่าน ไม่เห็นตัวเลข</div>
+      <div class="pr-note" style="margin-top:10px;">ต้นทุนทั้งหมด = ต้นทุนสินค้า + ของแถม + ค่าธรรมเนียมทุกรายการในตารางนี้ · คนขอ Promotion เห็นแค่ผ่าน / ไม่ผ่าน ไม่เห็นตัวเลข</div>
       <div style="margin-top:16px;"><button class="pr-btn" id="fmSave">บันทึก</button></div></section>`;
     document.getElementById('fmSave').onclick = async () => { const v = +document.getElementById('fmV').value; if (!isFinite(v) || v < 0) return uiAlert('ใส่ตัวเลข');
       if (await feeEdit({ op: 'settings', min_markup: v / 100 })) { CAT = null; trClose(); renderFee(); } };
@@ -1087,7 +1087,7 @@
     if (!tabChs.length) { el.innerHTML = '<div class="pr-empty">ยังไม่มีช่องทาง</div>'; return; }
     const rng = FA30 && FA30.from ? `${dTh(FA30.from)} – ${dTh(FA30.to)}` : '30 วันล่าสุด';
     const upd = FA30 && FA30.refreshed_at ? new Date(FA30.refreshed_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-    const srcTip = `คำนวณใหม่ทุกวันเวลา 07:40 จากออเดอร์ที่แพลตฟอร์มโอนเงินแล้ว (หักค่าธรรมเนียมจริงแล้ว)${upd ? ' · คำนวณล่าสุด ' + upd : ''}`;
+    const srcTip = `คำนวณใหม่ทุกวันเวลา 07:40 จากคำสั่งซื้อที่แพลตฟอร์มโอนเงินแล้ว (หักค่าธรรมเนียมจริงแล้ว)${upd ? ' · คำนวณล่าสุด ' + upd : ''}`;
     const subSeg = tabChs.length > 1 ? `<div class="pr-seg fe2-sub">${canAll ? `<button type="button" data-ch="all" aria-pressed="${FE2.ch === 'all'}">เทียบทุกประเภท</button>` : ''}${tabChs.map(x => `<button type="button" data-ch="${x.id}" aria-pressed="${x.id === FE2.ch}">${esc(x.name)}</button>`).join('')}</div>` : '';
     // (2026-11-10) แท็บช่องทาง + ร้าน / ประเภท อยู่แถบบน (แบบหน้าอื่น) · ในหน้าเหลือตัวเลข + ตาราง · ที่มาของค่าจริงอยู่หัวตาราง
     let tb0 = document.getElementById('feTopCtl');
@@ -1127,14 +1127,14 @@
       const sumR = (l, f, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td>${cols.map(col => `<td>${f(col.S)}</td>`).join('')}</tr>`;
       const tot = S => S.useCh + S.useCo, two = (a, b) => `<div class="fe2-cv">${a}</div><div class="fe2-cs">${b}</div>`;
       el.innerHTML = `
-        <div class="fe2-cards" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.map(col => `<div><div class="l">${esc(short(col.c))} · สูตรคิดโปรหัก</div><div class="v">${tot(col.S).toFixed(2)}%${perTxt(col.S.pUse)}</div><div class="s">TikTok หักจริง ${col.S.useCh.toFixed(2)}% · บริษัทตั้งไว้ ${col.S.useCo.toFixed(2)}%</div></div>`).join('')}</div>
-        <div class="fe2-card"><div class="fe2-ch"><b>เทียบทุกประเภท</b><span class="fe2-src">ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip + '\nตัวเลขใหญ่ = ค่าจริง (ค่าใช้จ่ายบริษัท = ค่าที่ตั้งไว้) · ตัวเล็ก = ค่าที่ตั้งไว้')}</span></div><div class="fe2-wide"><table class="fe2-t fe2-cmp" data-no-sort data-no-page><thead><tr><th class="l">รายการ</th>${cols.map(col => { const g = col.g, sh = grpShare(col.c);
-            return `<th><button type="button" class="fe2-colh" data-goch="${col.c.id}" data-tip="กดเพื่อดูรายละเอียด และแก้ค่าของประเภทนี้"><b>${esc(short(col.c))}</b><small>${g ? `${fe2fmt(g.orders)} ออเดอร์ · เฉลี่ย ${n2(g.aov)} บาท` : 'ยังไม่มีค่าจริง'}</small></button>${sh ? ' ' + info(sh) : ''}</th>`; }).join('')}</tr></thead><tbody>
+        <div class="fe2-cards" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.map(col => `<div><div class="l">${esc(short(col.c))} · สูตรคิด Promotion หัก</div><div class="v">${tot(col.S).toFixed(2)}%${perTxt(col.S.pUse)}</div><div class="s">TikTok หักจริง ${col.S.useCh.toFixed(2)}% · บริษัทตั้งไว้ ${col.S.useCo.toFixed(2)}%</div></div>`).join('')}</div>
+        <div class="fe2-card"><div class="fe2-ch"><b>เทียบทุกประเภท</b><span class="fe2-src">ค่าจริงจากคำสั่งซื้อที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip + '\nตัวเลขใหญ่ = ค่าจริง (ค่าใช้จ่ายบริษัท = ค่าที่ตั้งไว้) · ตัวเล็ก = ค่าที่ตั้งไว้')}</span></div><div class="fe2-wide"><table class="fe2-t fe2-cmp" data-no-sort data-no-page><thead><tr><th class="l">รายการ</th>${cols.map(col => { const g = col.g, sh = grpShare(col.c);
+            return `<th><button type="button" class="fe2-colh" data-goch="${col.c.id}" data-tip="กดเพื่อดูรายละเอียด และแก้ค่าของประเภทนี้"><b>${esc(short(col.c))}</b><small>${g ? `${fe2fmt(g.orders)} คำสั่งซื้อ · เฉลี่ย ${n2(g.aov)} บาท` : 'ยังไม่มีค่าจริง'}</small></button>${sh ? ' ' + info(sh) : ''}</th>`; }).join('')}</tr></thead><tbody>
           ${body('ค่าธรรมเนียมจากแพลตฟอร์ม · TikTok หักจริง', rowsAll.filter(r => !r.L.company))}
           ${body('ค่าใช้จ่ายของบริษัท · ตั้งเอง', rowsAll.filter(r => r.L.company))}
           ${sumR('สรุป · ค่าธรรมเนียมช่องทาง', S => two(`${S.useCh.toFixed(2)}%${perTxt(S.pUse)}`, `ตั้งไว้ ${S.setCh.toFixed(2)}%${perTxt(S.pSet)}`), true)}
           ${sumR('สรุป · ค่าใช้จ่ายบริษัท (ตั้งไว้)', S => `${S.useCo.toFixed(2)}%`)}
-          ${sumR('สูตรคิดโปรหัก (ก่อนต้นทุนสินค้า) ' + info('ค่าธรรมเนียมช่องทาง + ค่าใช้จ่ายบริษัท\nตัวเลขใหญ่ = ตอนคิดโปรเลือก "ค่าจริง" · ตัวเล็ก = เลือก "ค่าที่ตั้งไว้"\nเลือกได้ตอนจำลองโปร หรือดูคำขอโปร'), S => two(`${tot(S).toFixed(2)}%${perTxt(S.pUse)}`, `ค่าที่ตั้งไว้ ${(S.setCh + S.setCo).toFixed(2)}%${perTxt(S.pSet)}`))}
+          ${sumR('สูตรคิด Promotion หัก (ก่อนต้นทุนสินค้า) ' + info('ค่าธรรมเนียมช่องทาง + ค่าใช้จ่ายบริษัท\nตัวเลขใหญ่ = ตอนคิด Promotion เลือก "ค่าจริง" · ตัวเล็ก = เลือก "ค่าที่ตั้งไว้"\nเลือกได้ตอนจำลอง Promotion หรือดูคำขอ Promotion'), S => two(`${tot(S).toFixed(2)}%${perTxt(S.pUse)}`, `ค่าที่ตั้งไว้ ${(S.setCh + S.setCo).toFixed(2)}%${perTxt(S.pSet)}`))}
           ${sumR('เหลือไว้จ่ายต้นทุน + กำไร', S => two(`${(100 - tot(S)).toFixed(2)}%`, `ค่าที่ตั้งไว้ ${(100 - S.setCh - S.setCo).toFixed(2)}%`))}
         </tbody></table></div>
         <div class="fe2-note">กดชื่อประเภทบนหัวตาราง เพื่อดูรายละเอียดและแก้ค่าที่ตั้งไว้ของประเภทนั้น</div></div>`;
@@ -1144,7 +1144,7 @@
     // ---------- มุมมองรายช่องทาง ----------
     const c = tabChs.find(x => x.id === FE2.ch);
     const { rows, S, g } = fe2Lines(c, ctx);
-    const src = g ? `ค่าจริงจากออเดอร์ที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip)} · ${fe2fmt(g.orders)} ออเดอร์ · ยอดขายสินค้าเฉลี่ย ${n2(g.aov)} บาท / ออเดอร์` : `ไม่มี API · ค่าจริงจากงบบัญชี ${esc(ctx.accRange)}`;
+    const src = g ? `ค่าจริงจากคำสั่งซื้อที่ได้เงินแล้ว ${esc(rng)} ${info(srcTip)} · ${fe2fmt(g.orders)} คำสั่งซื้อ · ยอดขายสินค้าเฉลี่ย ${n2(g.aov)} บาท / ออเดอร์` : `ไม่มี API · ค่าจริงจากงบบัญชี ${esc(ctx.accRange)}`;
     const dif = (a, s) => a == null || s == null ? '<span class="fe2-z">—</span>' : Math.abs(a - s) < 0.05 ? `<span class="fe2-z">${a - s >= 0 ? '+' : ''}${(a - s).toFixed(2)}</span>` : `<span class="${a > s ? 'fe2-up' : 'fe2-dn'}">${a > s ? '+' : ''}${(a - s).toFixed(2)}</span>`;
     const rowHtml = x => {
       const L = x.L, act = x.act;
@@ -1168,20 +1168,20 @@
     const addForm = g => { const L = g === 'co' ? coMissing : chAvail;
       return `<div class="fe2-af" data-af="${g}"><select class="pr-in" data-f="pick"><option value="">เลือกรายการ</option>${L.map(it => `<option value="${it.id}" data-kind="${it.kind}">${esc(it.name)} (${it.kind === 'pct' ? '%' : 'บาท'} · ${lyTxt[it.layer] || it.layer}${apTxt[it.apply] || ''})</option>`).join('')}${g === 'ch' ? '<option value="new">＋ รายการใหม่…</option>' : ''}</select>
         <span class="fe2-new" hidden><input class="pr-in" data-f="name" placeholder="ชื่อรายการ"><select class="pr-in" data-f="kind"><option value="pct">%</option><option value="per_order">บาท / ออเดอร์</option></select>
-          <select class="pr-in" data-f="layer"><option value="platform">ค่า Platform</option><option value="selling">ค่าขาย</option></select><select class="pr-in" data-f="apply"><option value="all">ทุกออเดอร์</option><option value="single">เฉพาะสินค้าเดี่ยว</option><option value="set">เฉพาะเซต</option></select></span>
+          <select class="pr-in" data-f="layer"><option value="platform">ค่า Platform</option><option value="selling">ค่าขาย</option></select><select class="pr-in" data-f="apply"><option value="all">ทุกคำสั่งซื้อ</option><option value="single">เฉพาะสินค้าเดี่ยว</option><option value="set">เฉพาะเซต</option></select></span>
         <input class="pr-in fe2-in" type="number" step="any" data-f="val" placeholder="ค่า"><span class="fe2-u" data-f="unit">%</span>
         <button type="button" class="pr-btn" data-f="save">บันทึก</button><button type="button" class="pr-btn ghost" data-f="cancel">ยกเลิก</button></div>`; };
     const sumRow = (l, a, aPer, s, sPer, first) => `<tr class="fe2-s${first ? ' first' : ''}"><td class="l">${l}</td><td>${a == null ? '<span class="fe2-z">—</span>' : a.toFixed(2) + '%' + perTxt(aPer)}</td><td>${s.toFixed(2)}%${perTxt(sPer)}</td><td>${a == null ? '' : dif(a, s)}</td></tr>`;
     const calcA = S.useCh + S.useCo, calcS = S.setCh + S.setCo, hasApi = rows.some(x => x.L.can);
-    const actTip = g ? 'ค่าธรรมเนียมจากช่องทาง = ที่แพลตฟอร์มหักจริง ÷ ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย) ของออเดอร์ที่ได้เงินแล้ว 30 วันล่าสุด · ชี้ ⓘ ในแต่ละบรรทัดเพื่อดูเป็นบาทต่อออเดอร์\nค่าใช้จ่ายของบริษัท = งบบัญชี ' + ctx.accRange + ' (ไว้ดูประกอบ)' : 'ตามงบบัญชี ' + ctx.accRange + ' (ช่องทางนี้ไม่มี API)';
+    const actTip = g ? 'ค่าธรรมเนียมจากช่องทาง = ที่แพลตฟอร์มหักจริง ÷ ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย) ของคำสั่งซื้อที่ได้เงินแล้ว 30 วันล่าสุด · ชี้ ⓘ ในแต่ละบรรทัดเพื่อดูเป็นบาทต่อออเดอร์\nค่าใช้จ่ายของบริษัท = งบบัญชี ' + ctx.accRange + ' (ไว้ดูประกอบ)' : 'ตามงบบัญชี ' + ctx.accRange + ' (ช่องทางนี้ไม่มี API)';
     el.innerHTML = `
       <div class="fe2-cards"><div><div class="l">ค่าธรรมเนียมช่องทาง · ค่าจริง ${info('รวมทุกบรรทัดในกลุ่ม "ค่าธรรมเนียมจากช่องทาง" คอลัมน์ค่าจริง\n% = คิดจากราคาขาย · บาท = ค่าที่คิดเป็นบาทต่อออเดอร์')}</div><div class="v">${S.actChV == null ? '—' : S.actChV.toFixed(2) + '%' + perTxt(S.pAct)}</div><div class="s">ตั้งไว้ ${S.setCh.toFixed(2)}%${perTxt(S.pSet)}</div></div>
-        <div><div class="l">ค่าใช้จ่ายบริษัท · ค่าจริงตามงบบัญชี ${info('ค่า Ads ของช่องทางนี้ + ค่าบริหาร + Marketing ทั้งบริษัท ÷ ยอดขาย ตามงบบัญชี ' + ctx.accRange + '\nไว้ดูประกอบ · สูตรคิดโปรใช้ค่าที่ตั้งไว้เสมอ')}</div><div class="v">${S.actCo.toFixed(2)}%</div><div class="s">ตั้งไว้ ${S.setCo.toFixed(2)}%</div></div>
-        <div><div class="l">สูตรคิดโปรหัก (ก่อนต้นทุนสินค้า) ${info('= ค่าธรรมเนียมช่องทาง + ค่าใช้จ่ายบริษัท (ใช้ค่าที่ตั้งไว้เสมอ)\nเลือก "ค่าจริง" หรือ "ค่าที่ตั้งไว้" ได้ตอนจำลองโปร หรือดูคำขอโปร · เริ่มต้น = ค่าจริง\nเหลือ ' + (100 - (hasApi ? calcA : calcS)).toFixed(2) + '% ของราคาขาย ไว้จ่ายต้นทุนสินค้า + กำไร')}</div>${hasApi
+        <div><div class="l">ค่าใช้จ่ายบริษัท · ค่าจริงตามงบบัญชี ${info('ค่า Ads ของช่องทางนี้ + ค่าบริหาร + Marketing ทั้งบริษัท ÷ ยอดขาย ตามงบบัญชี ' + ctx.accRange + '\nไว้ดูประกอบ · สูตรคิด Promotion ใช้ค่าที่ตั้งไว้เสมอ')}</div><div class="v">${S.actCo.toFixed(2)}%</div><div class="s">ตั้งไว้ ${S.setCo.toFixed(2)}%</div></div>
+        <div><div class="l">สูตรคิด Promotion หัก (ก่อนต้นทุนสินค้า) ${info('= ค่าธรรมเนียมช่องทาง + ค่าใช้จ่ายบริษัท (ใช้ค่าที่ตั้งไว้เสมอ)\nเลือก "ค่าจริง" หรือ "ค่าที่ตั้งไว้" ได้ตอนจำลอง Promotion หรือดูคำขอ Promotion · เริ่มต้น = ค่าจริง\nเหลือ ' + (100 - (hasApi ? calcA : calcS)).toFixed(2) + '% ของราคาขาย ไว้จ่ายต้นทุนสินค้า + กำไร')}</div>${hasApi
           ? `<div class="v">${calcA.toFixed(2)}%${perTxt(S.pUse)}</div><div class="s">เลือกค่าจริง · ถ้าเลือกค่าที่ตั้งไว้ ${calcS.toFixed(2)}%${perTxt(S.pSet)}</div>`
           : `<div class="v">${calcS.toFixed(2)}%${perTxt(S.pSet)}</div><div class="s">ช่องทางนี้ไม่มี API ใช้ค่าที่ตั้งไว้เสมอ</div>`}</div></div>
       <div class="fe2-card"><div class="fe2-ch"><b>${esc(c.name)}</b><span class="fe2-src">${src}</span></div>
-      <table class="fe2-t" data-no-sort data-no-page><thead><tr><th class="l">รายการ</th><th>ค่าจริง ${info(actTip)}</th><th>ตั้งไว้ ${info('ตัวเลขที่ตั้งไว้ใช้คิดโปร แก้ได้เลย บันทึกเมื่อออกจากช่อง')}</th><th>ต่าง ${info('ค่าจริง − ตั้งไว้ (หน่วย %)\nสีแดง = ค่าจริงสูงกว่าที่ตั้ง (ถ้าคิดโปรด้วยค่าที่ตั้งไว้ กำไรจริงจะน้อยกว่าที่เห็น) · สีเขียว = ค่าจริงต่ำกว่า')}</th></tr></thead><tbody>
+      <table class="fe2-t" data-no-sort data-no-page><thead><tr><th class="l">รายการ</th><th>ค่าจริง ${info(actTip)}</th><th>ตั้งไว้ ${info('ตัวเลขที่ตั้งไว้ใช้คิด Promotion แก้ได้เลย บันทึกเมื่อออกจากช่อง')}</th><th>ต่าง ${info('ค่าจริง − ตั้งไว้ (หน่วย %)\nสีแดง = ค่าจริงสูงกว่าที่ตั้ง (ถ้าคิด Promotion ด้วยค่าที่ตั้งไว้ กำไรจริงจะน้อยกว่าที่เห็น) · สีเขียว = ค่าจริงต่ำกว่า')}</th></tr></thead><tbody>
         <tr class="fe2-g"><td colspan="4">ค่าธรรมเนียมจากช่องทาง<button type="button" class="fe2-addb" data-add="ch">＋ เพิ่มรายการ</button></td></tr>${rowsCh.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}<tr class="fe2-addr" data-addr="ch" hidden><td colspan="4">${addForm('ch')}</td></tr>
         <tr class="fe2-g"><td colspan="4">ค่าใช้จ่ายของบริษัท · ค่าจริงไว้ดูประกอบ${coMissing.length ? '<button type="button" class="fe2-addb" data-add="co">＋ เพิ่ม</button>' : ''}</td></tr>${rowsCo.join('') || '<tr><td colspan="4" class="l fe2-z">ไม่มีรายการ</td></tr>'}${coMissing.length ? `<tr class="fe2-addr" data-addr="co" hidden><td colspan="4">${addForm('co')}</td></tr>` : ''}
         ${sumRow('สรุป · ค่าธรรมเนียมช่องทาง', S.actChV, S.pAct, S.setCh, S.pSet, true)}
@@ -1304,7 +1304,7 @@
       return `<button type="button" class="pr-act${cls}" data-act="${c.id}|${key}" data-tip="จริง ${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : ''} · คลิกเพื่อดูที่มา">จริง ${(a * 100).toFixed(1)}%</button>`; };
     const W0 = 260, W = 112, width = W0 + W * chs.length;
     const cols = `<colgroup><col style="width:${W0}px">${chs.map(() => `<col style="width:${W}px">`).join('')}</colgroup>`;
-    const legend = `ตัวเลขในช่อง = ค่าที่ตั้งไว้ใช้คิดกำไรโปร (แก้ได้ทันที บันทึกเองเมื่อออกจากช่อง · ช่อง % ใส่เป็นตัวเลขเปอร์เซ็นต์ เช่น 7.49)\n"จริง" = % ที่เสียจริงตามงบบัญชี ${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : '3 เดือนล่าสุด'} ไว้เทียบ ไม่เขียนทับค่าที่ตั้ง · สีแดง = จริงสูงกว่าที่ตั้งเกิน 2% · สีเขียว = จริงต่ำกว่า\nค่าบริหาร / Marketing ใช้ตัวเลขทั้งบริษัท เพราะบัญชีแบ่งเข้าช่องทางด้วยสัดส่วนคงที่\nระบบเก็บประวัติการแก้ทุกครั้ง`;
+    const legend = `ตัวเลขในช่อง = ค่าที่ตั้งไว้ใช้คิดกำไร Promotion (แก้ได้ทันที บันทึกเองเมื่อออกจากช่อง · ช่อง % ใส่เป็นตัวเลขเปอร์เซ็นต์ เช่น 7.49)\n"จริง" = % ที่เสียจริงตามงบบัญชี ${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : '3 เดือนล่าสุด'} ไว้เทียบ ไม่เขียนทับค่าที่ตั้ง · สีแดง = จริงสูงกว่าที่ตั้งเกิน 2% · สีเขียว = จริงต่ำกว่า\nค่าบริหาร / Marketing ใช้ตัวเลขทั้งบริษัท เพราะบัญชีแบ่งเข้าช่องทางด้วยสัดส่วนคงที่\nระบบเก็บประวัติการแก้ทุกครั้ง`;
     el.innerHTML = `<div class="pr-bar2"><div class="pr-bar2-l">${info(legend)}<span class="pr-note" style="margin:0;">เทียบค่าจริง: ${ms.length ? mLbl(ms[0]) + ' – ' + mLbl(ms[ms.length - 1]) : '—'}</span>
         <button type="button" class="pr-chip" id="feMm" data-tip="คลิกเพื่อแก้">ไฟเขียวเมื่อกำไร ≥ ${pc(+((T.settings || {}).min_markup || 0.05), 0)} ของต้นทุน</button></div>
         <div style="display:flex;gap:8px;"><button class="pr-btn ghost" id="feAddItem">＋ เพิ่มรายการ</button><button class="pr-btn ghost" id="feAddCh">＋ เพิ่มช่องทาง</button></div></div>

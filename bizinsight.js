@@ -165,6 +165,8 @@
 /* (2026-11-12) ตารางรายสินค้าพอดีการ์ดทุกจอ (เดิมกว้างตายตัว 1360 ล้นการ์ดจอโน้ตบุ๊ก หัวคอลัมน์ยาวล้นช่อง) — ช่องไฟแคบลง + ความกว้างคอลัมน์ตามความยาวหัว */
 #page-cost #tblPl th,#page-cost #tblPl td{padding-left:6px!important;padding-right:6px!important}
 #page-cost #tblPl th:first-child,#page-cost #tblPl td:first-child{padding-left:12px!important}
+/* (2026-11-17) หน้าต่างแคบกว่า ~1300: ตาราง 13 คอลัมน์ไม่บีบจนตัวเลขทับกัน → เลื่อนซ้ายขวาในกล่องแทน */
+#page-cost #tblPl{min-width:1150px}
 #page-cost #plCard{overflow:visible!important}
 #page-cost #plTableWrap{overflow:auto!important;max-height:calc(100vh - var(--bi-top,0px) - 24px);overscroll-behavior:contain}
 #page-cost #tblPl thead th{position:sticky;top:0;z-index:6;background:var(--bg2);box-shadow:0 1px 0 var(--border)}`;
