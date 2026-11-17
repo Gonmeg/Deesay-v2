@@ -178,6 +178,10 @@ const JOB_DESC = {
   'shopee-ads-campaign-sync': 'ค่าแอด Shopee รายแคมเปญ',
   'shopee-ads-balance': 'ยอดเงินคงเหลือ Shopee Ads',
   'shopee-refresh-token': 'ต่ออายุ token Shopee',
+  'fb-page-token-refresh': 'ต่ออายุ + ตรวจ token ของเพจ Facebook (ทุกวัน 06:50)',
+  'tiktok-creative-insight-sync-daily-evening': 'ค่า Ads TikTok รายคลิป รอบเย็น (18:45)',
+  'tiktok-product-perf-sync': 'ยอดเข้าชมรายสินค้า TikTok Shop',
+  'tiktok-ad-daily-sync': 'ค่า Ads TikTok ระดับ Ad (หน้า PR Performance)',
   'shopee-wallet-sync': 'รายการเงินเข้า-ออกกระเป๋าเงิน Shopee ทั้ง 2 ร้าน → shopee_wallet_txn (ใช้ดูว่าออเดอร์ได้เงินแล้วหรือยัง · อ่านอย่างเดียว ยังไม่เขียนทับ orders)',
   'shopee-settle-recon': 'เทียบสถานะได้เงิน Shopee: เงินเข้ากระเป๋า (shopee_wallet_txn) vs สถานะในระบบ → api_recon_daily + Data Guard (แจ้งเฉพาะเมื่อไม่ตรง)',
   'sync-shopee-cpas': 'CPAS จากชีท MKT Tracking → shopee_cpas_daily',
@@ -261,6 +265,7 @@ const sinceTxt = s => s ? 'ตั้งแต่ ' + new Date(s).toLocaleDateStr
 // (2026-10-27) เพจ Facebook: เพจที่ไม่ได้โพสต์ไม่ใช่ปัญหา · ควรตรวจสอบ token เฉพาะเมื่อวันหมดอายุที่บันทึกไว้ผ่านแล้ว และไม่มีโพสต์ใหม่เข้าระบบเกิน 14 วัน
 function fbStatus(p) {
   if (p['สถานะ'] === 'ปิดใช้งาน') return 'ปิดใช้งาน'
+  if (p['เชื่อมต่อได้'] === false) return 'เชื่อมต่อไม่ได้'   // (2026-11-17) ผลตรวจรายวันของ fb-page-token-refresh: token ของเพจใช้ไม่ได้ = ตัวดึงโพสต์ / คอมเมนต์ของเพจนี้หยุด
   const exp = p['token_เหลือกี่วัน'], quiet = p['เงียบมากี่วัน']
   return exp != null && exp < 0 && quiet != null && quiet > 14 ? 'ควรตรวจสอบ token' : 'ปกติ'
 }
@@ -315,6 +320,7 @@ async function render(d, unknown, extra) {
     const dRen = until ? daysTo(until) : null
     ttTxt = dRen == null ? '—' : dRen <= 14 ? `ต่ออายุได้อีก ${dRen} วัน` : 'ต่ออายุอัตโนมัติ'
     if (dRen != null && dRen <= 14) { tokBad = true; add(dRen <= 3 ? 'bad' : 'warn', `การเชื่อมต่อ TikTok จะหมดอายุใน ${dRen} วัน`, `ต่ออายุอัตโนมัติได้ถึง ${thDate(until)}`, 'ดำเนินการ: เชื่อมต่อบัญชี TikTok ใหม่ก่อนวันหมดอายุ') }
+    (X.fb_pages || []).filter(p => fbStatus(p) === 'เชื่อมต่อไม่ได้').forEach(p => { tokBad = true; add('bad', `เพจ ${p['ชื่อเพจ']} เชื่อมต่อไม่ได้`, esc(p['เชื่อมต่อ_ข้อความ'] || 'token ของเพจใช้ไม่ได้') + ' · โพสต์และคอมเมนต์ของเพจนี้ไม่เข้าระบบ', 'ดำเนินการ: สร้าง token ผู้ใช้ใหม่ (เลือกทุกเพจ) แล้วบันทึกใน secret META_ADS_TOKEN ระบบจะต่อ token ของเพจให้เองในรอบ 06:50', p['เชื่อมต่อ_ตรวจเมื่อ']) })
     (X.fb_pages || []).filter(p => fbStatus(p) === 'ควรตรวจสอบ token').forEach(p => { tokBad = true; add('warn', `ควรตรวจสอบ token ของเพจ ${p['ชื่อเพจ']}`, `ไม่มีโพสต์ใหม่เข้าระบบ ${p['เงียบมากี่วัน']} วัน และวันหมดอายุ token ที่บันทึกไว้ผ่านแล้ว`, 'ดำเนินการ: ตรวจสอบ token ของเพจในตาราง fb_pages') })
     // ⑤ TikTok สถิติช่อง: ตัวดึงไม่ทำงาน / TikTok ไม่ส่งข้อมูล / ล่าช้าตามปกติ
     let ttHandled = false
@@ -368,15 +374,15 @@ async function render(d, unknown, extra) {
 
     if ((X.fb_pages || []).length) {
       html += `<div class="card"><div class="card-head"><h2>เพจ Facebook</h2><span>ระบบไม่ถือว่าเพจที่ไม่ได้โพสต์เป็นปัญหา · แจ้งเตือนเมื่อการดึงข้อมูลหยุด หรือ token ใช้งานไม่ได้</span></div><div class="tbl-wrap"><table>
-        <thead><tr><th>เพจ</th><th>page_id</th><th>โพสต์ล่าสุด</th><th>ไม่ได้โพสต์มา</th><th>โพสต์ 30 วัน</th><th>token (วันที่บันทึกไว้)</th><th>นำเข้าล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
+        <thead><tr><th>เพจ</th><th>page_id</th><th>โพสต์ล่าสุด</th><th>ไม่ได้โพสต์มา</th><th>โพสต์ 30 วัน</th><th>ตรวจการเชื่อมต่อล่าสุด</th><th>นำเข้าล่าสุด</th><th>สถานะ</th></tr></thead><tbody>` +
         X.fb_pages.map(p2 => {
           const st = fbStatus(p2)
-          const cls = st === 'ปกติ' ? 'ok' : st === 'ปิดใช้งาน' ? 'muted' : 'warn'
+          const cls = st === 'ปกติ' ? 'ok' : st === 'ปิดใช้งาน' ? 'muted' : st === 'เชื่อมต่อไม่ได้' ? 'bad' : 'warn'
           return `<tr><td><b>${esc(p2['ชื่อเพจ'])}</b></td><td class="mono">${esc(p2.page_id)}</td>
             <td>${p2['โพสต์ล่าสุด'] ? th(p2['โพสต์ล่าสุด']) : '—'}</td>
             <td>${p2['เงียบมากี่วัน'] == null ? '—' : p2['เงียบมากี่วัน'] + ' วัน'}</td>
             <td>${fmt(p2['โพสต์30วัน'])}</td>
-            <td class="muted">${p2['token_หมดอายุ'] ? esc(String(p2['token_หมดอายุ']).slice(0,10)) + (p2['token_เหลือกี่วัน'] != null ? ` <span style="font-size:10px;">(${p2['token_เหลือกี่วัน']} วัน)</span>` : '') : '—'}</td>
+            <td class="muted">${p2['เชื่อมต่อ_ตรวจเมื่อ'] ? th(p2['เชื่อมต่อ_ตรวจเมื่อ']) + (p2['เชื่อมต่อได้'] === false ? ' · ไม่ผ่าน' : ' · ผ่าน') : '—'}</td>
             <td>${p2['ดึงล่าสุด'] ? th(p2['ดึงล่าสุด']) : '—'}</td>
             <td><span class="pill ${cls}">${esc(st)}</span></td></tr>`
         }).join('') + `</tbody></table></div></div>`
