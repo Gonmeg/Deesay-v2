@@ -334,13 +334,15 @@
       card('กำไรต่อคำสั่งซื้อ', 'กำไรรวม ÷ จำนวนคำสั่งซื้อ (ไม่รวมคำสั่งซื้อที่คืนเงินเต็มจำนวน)', n ? n2(p / n) : '—',
         `${n0(n)} คำสั่งซื้อ${po !== null ? ` · ${other} ${n2(po)}` : ''}`, 'hero', p < 0 ? 'color:var(--red);' : 'color:#15803d;')
       + card('กำไรรวม', 'รายรับสุทธิ − VAT − ต้นทุนขาย − Ads + Coins · ไม่รวมค่าการตลาดอื่นและค่าใช้จ่ายบริหาร', n0(p), `อัตรากำไร ${pc(p, prevK)}`, '', p < 0 ? 'color:var(--red);' : '')
-      + card('ค่าธรรมเนียมแพลตฟอร์ม', 'ยอดขาย − รายรับสุทธิ', pc(+k.fees, rev), `${n0(k.fees)} จากยอดขาย ${n0(rev)}`)
+      + card('ค่าธรรมเนียมแพลตฟอร์ม', 'ยอดขาย + ค่าส่งที่ผู้ซื้อจ่าย − รายรับสุทธิ · % เทียบกับยอดขายสินค้า', pc(+k.fees, prevK), `${n0(k.fees)} จากยอดขาย ${n0(prevK)}`)
       + card('คำสั่งซื้อที่ขาดทุน', 'สัดส่วนคำสั่งซื้อที่กำไรติดลบ', pc(+k.loss, n), `${n0(k.loss)} คำสั่งซื้อ`, '', +k.loss ? 'color:var(--red);' : '');
     // สรุปรายรับ–รายจ่าย (ตาราง) + ค่าธรรมเนียมแยกหมวด
-    const mk2 = (+k.mkt_direct || 0) + (+k.mkt_other || 0), pr = (l, v, cls, t) => `<tr class="${cls || ''}"><td class="${cls ? '' : 'ind'}">${l}${t ? ' ' + tip(t) : ''}</td><td>${n2(v)}</td><td>${n ? n2((+v || 0) / n) : '—'}</td><td>${pc(+v, rev)}</td></tr>`;
+    const mk2 = (+k.mkt_direct || 0) + (+k.mkt_other || 0), pr = (l, v, cls, t) => `<tr class="${cls || ''}"><td class="${cls ? '' : 'ind'}">${l}${t ? ' ' + tip(t) : ''}</td><td>${n2(v)}</td><td>${n ? n2((+v || 0) / n) : '—'}</td><td>${pc(+v, prevK)}</td></tr>`;
     el.querySelector('#opSum').innerHTML = `<div class="op-h"><span>สรุปรายรับ–รายจ่าย ${tip('ทุกคำสั่งซื้อในช่วงที่เลือก ยกเว้นคำสั่งซื้อที่คืนเงินเต็มจำนวน')}</span><span style="font-size:11.5px;font-weight:400;color:var(--text3);">${chName()} · ${rLabel()}</span></div>
       <table class="op-s" data-no-sort data-no-page><thead><tr><th>รายการ</th><th>จำนวนเงิน (บาท)</th><th>เฉลี่ยต่อคำสั่งซื้อ ${tip('จำนวนเงิน ÷ จำนวนคำสั่งซื้อ')}</th><th>% ของยอดขาย</th></tr></thead><tbody>`
-      + pr('ยอดขาย', rev, 'st', 'หลังหักส่วนลดร้าน · รวม VAT')
+      // (2026-11-18) ยอดขาย = ยอดขายสินค้า (ไม่รวมค่าส่งที่ผู้ซื้อจ่าย) ตามกติกา % กำไร · ค่าส่งที่ผู้ซื้อจ่ายแยกเป็นบรรทัดของตัวเอง → % ทุกบรรทัดใช้ฐานเดียวกับการ์ดด้านบน
+      + pr('ยอดขาย', prevK, 'st', 'ยอดขายสินค้าหลังหักส่วนลดร้าน · รวม VAT · ไม่รวมค่าส่งที่ผู้ซื้อจ่าย')
+      + (Math.abs(+k.bship || 0) >= 0.5 ? pr('บวก ค่าส่งที่ผู้ซื้อจ่าย', k.bship, '', 'ค่าส่งที่ผู้ซื้อจ่ายเอง แพลตฟอร์มเก็บมาพร้อมค่าสินค้า แล้วหักคืนเป็นค่าจัดส่งในค่าธรรมเนียมแพลตฟอร์ม') : '')
       + pr('หัก ค่าธรรมเนียมแพลตฟอร์ม', k.fees, '', 'รายละเอียดตามตารางแยกหมวด')
       + pr('รายรับสุทธิจากแพลตฟอร์ม', k.settle, 'st', 'ยอดที่แพลตฟอร์มโอนให้ร้าน')
       + pr('หัก ภาษีมูลค่าเพิ่ม', k.vat, '', 'รายรับสุทธิ × 7/107')
@@ -353,11 +355,11 @@
     const rows = CATS.filter(c => by[c]).map(c => { const L = by[c].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])), tot = L.reduce((t, x) => t + x[1], 0);
       const single = L.length === 1 && feeOf(S.ch, L[0][0])[0] === CAT[c];
       const sub = single ? '' : L.map(([kk, v]) => { const [l, t] = kk === '__rest' ? ['ยังไม่แยกรายการ', ''] : feeOf(S.ch, kk);
-        return `<tr class="op-sub" data-c="${c}" style="display:none;"><td class="ind">${esc(l)}${t ? ' ' + tip(t) : ''}</td><td>${n2(v)}</td><td>${pc(v, rev)}</td></tr>`; }).join('');
-      return `<tr${single ? '' : ` style="cursor:pointer;" onclick="OrdProfit.toggleCat('${c}', this)"`}><td>${single ? '' : '<span class="op-car">▸</span> '}${CAT[c]} ${tip(CAT_TIP[c])}</td><td>${n2(tot)}</td><td>${pc(tot, rev)}</td></tr>` + sub; }).join('');
+        return `<tr class="op-sub" data-c="${c}" style="display:none;"><td class="ind">${esc(l)}${t ? ' ' + tip(t) : ''}</td><td>${n2(v)}</td><td>${pc(v, prevK)}</td></tr>`; }).join('');
+      return `<tr${single ? '' : ` style="cursor:pointer;" onclick="OrdProfit.toggleCat('${c}', this)"`}><td>${single ? '' : '<span class="op-car">▸</span> '}${CAT[c]} ${tip(CAT_TIP[c])}</td><td>${n2(tot)}</td><td>${pc(tot, prevK)}</td></tr>` + sub; }).join('');
     el.querySelector('#opCat').innerHTML = `<div class="op-h"><span>ค่าธรรมเนียมแพลตฟอร์มแยกหมวด ${tip('ตามข้อมูลการเงินจากแพลตฟอร์ม · กด ▸ เพื่อดูรายการย่อย')}</span></div>
       <table class="op-s" data-no-sort data-no-page><thead><tr><th>หมวด</th><th>จำนวนเงิน (บาท)</th><th>% ของยอดขาย</th></tr></thead><tbody>${rows}
-      <tr class="tot"><td>รวม</td><td>${n2(all)}</td><td>${pc(all, rev)}</td></tr></tbody></table>`;
+      <tr class="tot"><td>รวม</td><td>${n2(all)}</td><td>${pc(all, prevK)}</td></tr></tbody></table>`;
   }
 
   function drawTab() {
