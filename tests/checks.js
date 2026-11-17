@@ -84,6 +84,24 @@
 
     // ข้อ 6: ตารางที่มีแถวรวม — ผลรวมแต่ละคอลัมน์ต้องเท่าแถวรวม
     //   ข้ามตารางที่แบ่งหน้า (แถวรวมนับทุกหน้า แต่จอเห็นหน้าเดียว) และคอลัมน์ % / อัตรา / ROAS / เฉลี่ย
+    // (2026-11-17) ตัวเลขใหญ่บนหน้า (การ์ดตัวเลข) พร้อมป้ายชื่อ — เก็บไว้เทียบว่าตัวเลขเดียวกันเท่ากันทุกหน้า
+    kpis(sel) {
+      const root = document.querySelector(sel) || document.body, out = [], num = /^-?[\d,]+(\.\d+)?(x|%)?$/;
+      root.querySelectorAll('*').forEach(el => {
+        if (el.children.length > 1 || el.offsetParent === null) return;
+        const t = (el.textContent || '').trim(); if (!num.test(t)) return;
+        if (parseFloat(getComputedStyle(el).fontSize) < 20) return;
+        if (el.closest('table, canvas, svg')) return;
+        let card = el.parentElement, label = '';
+        for (let i = 0; i < 4 && card; i++, card = card.parentElement) {
+          const lines = (card.innerText || '').split('\n').map(x => x.trim()).filter(Boolean);
+          const lb = lines.find(x => !num.test(x) && x !== 'ⓘ' && x.length > 1);
+          if (lb) { label = lb; break; }
+        }
+        out.push([label.replace(/\s*ⓘ\s*/g, '').slice(0, 44), t]);
+      });
+      return out.slice(0, 40);
+    },
     totals(sel) {
       const root = rootOf(sel), out = [];
       root.querySelectorAll('table').forEach((tb, ti) => {

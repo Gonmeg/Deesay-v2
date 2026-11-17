@@ -93,6 +93,7 @@ test('จำลองการใช้งานทุกหน้า', async ({
 
       // ตารางที่มีแถวรวม: ผลรวมแต่ละคอลัมน์ต้องเท่าแถวรวม (ข้ามตารางที่แบ่งหน้า และคอลัมน์ % / อัตรา / ROAS / เฉลี่ย)
       r.totals = await page.evaluate(sel => window.__deesayQA.totals(sel), scope(t));
+      r.kpis = await page.evaluate(sel => (window.__deesayQA.kpis ? window.__deesayQA.kpis(sel) : []), scope(t));
 
       // กดตัวเลขที่กดได้ (ขีดเส้นใต้จุด) → แผงที่มาต้องเปิดและมีข้อมูล → ปิด
       const cands = await page.evaluate(sel => window.__deesayQA.clickables(sel), scope(t));
