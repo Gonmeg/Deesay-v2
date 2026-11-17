@@ -403,6 +403,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       // ใช้ตัวคิดเดียวกับหน้า Ads (roasCapOf): วันล่าสุดที่มีทั้งยอดขายและค่า Ads → ตัวเลขเท่ากันทุกหน้า
       const byD = {}; rowsAll.forEach(r => { (byD[r.date] = byD[r.date] || { date: r.date, rev: 0, ads: 0 }).rev += num(r.net_revenue); });
       adsIn.forEach(a => { (byD[a.date] = byD[a.date] || { date: a.date, rev: 0, ads: 0 }).ads += a.ads; });
+      if (AC.cap) Object.values(byD).forEach(d => { if (d.date > AC.cap) d.partial = true; });   // วันที่ค่า Ads บางแหล่งยังไม่เข้า (เช่น Shopee วันนี้มีแค่ Product/Shop Ads) = ยังไม่ครบ
       const RC = window.roasCapOf ? window.roasCapOf(Object.values(byD)) : { cap: '', rev: total.rev, ads: totAds };
       const rRo = RC.cap ? RC.rev : total.rev, aRo = RC.cap ? RC.ads : totAds;
       const adsPct = rRo > 0 && aRo > 0 ? `${pct1(aRo / rRo)} ของยอดขาย` : '';

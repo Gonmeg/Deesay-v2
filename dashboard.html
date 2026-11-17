@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-f"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-g"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -9819,6 +9819,9 @@ async function renderShAds() {
       const cp = _shAdsCpas[r.stat_date]; r.cpas = cp ? +cp.spend || 0 : null;
       r.total_all = (+r.expense || 0) + (r.brand_ads || 0) + (r.live_ads || 0) + r.meta_ads + r.coins + r.manual_other + (r.cpas || 0);
       r.real_revenue = _shAdsRealByDate[r.stat_date] !== undefined ? _shAdsRealByDate[r.stat_date] : null; });
+    // (2026-11-17) Product/Shop Ads เข้าระหว่างวัน แต่ Brand / Live / Meta / เหรียญ / CPAS เข้าวันถัดไป → วันหลังวันล่าสุดที่ประเภทเหล่านี้เข้า = "ยังไม่ครบ" (ไม่ใช้คิด ROAS)
+    { const lastOf = o => Object.keys(o).sort().pop() || '', caps = [lastOf(_shAdsManual), lastOf(_shAdsCpas)].filter(Boolean), full = caps.length ? caps.sort()[0] : '';
+      daily.forEach(r => { r._partial = !!full && r.stat_date > full; }); }
     daily.forEach(r => { const p = prod[r.stat_date]; r.product_expense = p ? +p.expense : 0; r.product_gmv = p ? +p.broad_gmv : 0; r.other_expense = Math.max(0, (+r.expense || 0) - r.product_expense); r.other_gmv = Math.max(0, (+r.broad_gmv || 0) - r.product_gmv); });
   } catch (e) { kpi.innerHTML = `<div class="ui-metric is-static" style="grid-column:1/-1;"><span style="color:var(--red);font-size:12px;">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</span></div>`; return; }
   if (seq !== _shAdsSeq) return;
@@ -9852,7 +9855,8 @@ async function renderShAds() {
 // ---- แถว KPI ส่วนบน: ค่าแอดรวมทุกประเภท แยกการ์ดรายประเภท เทียบยอดขายจริง ----
 // (2026-11-17) ROAS / % ค่า Ads นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (กติกาเดียวกับหน้าภาพรวมรายช่องทาง) — ไม่เอายอดขายของวันที่ค่า Ads ยังไม่เข้ามาหาร
 function roasCapOf(pairs) {   // pairs = [{ date, rev, ads }]
-  let lr = '', la = ''; pairs.forEach(p => { if (p.rev > 0 && p.date > lr) lr = p.date; if (p.ads > 0 && p.date > la) la = p.date; });
+  // partial = วันที่ค่า Ads ยังเข้าไม่ครบทุกประเภท (เช่น Shopee วันนี้มีแค่ Product/Shop Ads) → ไม่นับเป็นวันที่ค่า Ads ครบ
+  let lr = '', la = ''; pairs.forEach(p => { if (p.rev > 0 && p.date > lr) lr = p.date; if (p.ads > 0 && !p.partial && p.date > la) la = p.date; });
   const cap = lr && la ? (lr < la ? lr : la) : '', inC = pairs.filter(p => cap && p.date <= cap);
   return { cap, rev: inC.reduce((a, p) => a + p.rev, 0), ads: inC.reduce((a, p) => a + p.ads, 0) };
 }
@@ -9869,7 +9873,8 @@ function renderShAdsTotalCard(daily, apiSpend, apiGmv, from, to) {
   const realTotal = Object.values(_shAdsRealByDate).reduce((a, v) => a + v, 0);
   const daysInRange = Math.max(1, Math.round((new Date(to) - new Date(from)) / 86400000) + 1);
   const adsBy = {}; daily.forEach(r => { adsBy[r.stat_date] = (adsBy[r.stat_date] || 0) + (+r.total_all || 0); });
-  const RC = roasCapOf([...new Set([...Object.keys(_shAdsRealByDate), ...Object.keys(adsBy)])].map(d => ({ date: d, rev: _shAdsRealByDate[d] || 0, ads: adsBy[d] || 0 })));
+  const part = new Set(daily.filter(r => r._partial).map(r => r.stat_date)), nFull = daily.filter(r => !r._partial).length;
+  const RC = roasCapOf([...new Set([...Object.keys(_shAdsRealByDate), ...Object.keys(adsBy)])].map(d => ({ date: d, rev: _shAdsRealByDate[d] || 0, ads: adsBy[d] || 0, partial: part.has(d) })));
   const realRoas = RC.ads > 0 ? RC.rev / RC.ads : null;
   const pctAds = RC.rev > 0 && RC.ads > 0 ? RC.ads / RC.rev * 100 : null, capNote = roasCapNote(RC.cap, to);
   // (2026-11-02) แถบบน: ตัวเลขหลัก + ป้ายเทียบเป้า (เป้าของเมฆ: ค่า Ads ทุกประเภทไม่เกิน 15% ของยอดขาย Shopee · ROAS 10x ขึ้นไป)
@@ -9877,7 +9882,7 @@ function renderShAdsTotalCard(daily, apiSpend, apiGmv, from, to) {
   const tgt = (ok, txt) => `<span class="ui-chip ${ok === null ? '' : ok ? 'up' : 'dn'}">${txt}</span>`;
   el.innerHTML =
     cell('ยอดขายจริง Shopee', fmt(realTotal), `<span>ตามบัญชี · ${fmt(daysInRange)} วัน</span>`, fbeInfoIcon('shads-info-real', SHADS_REAL_INFO + '<br><b>รวม</b> Shopee Mall + Shopee 24hr')) +
-    cell('ค่า Ads รวมทุกประเภท', fmt(total), `<span>เฉลี่ย ${fmt(daily.length ? total / daily.length : 0)} / วัน${daily.length < daysInRange ? ` · มีข้อมูล ${fmt(daily.length)} จาก ${fmt(daysInRange)} วัน` : ''}</span>`,
+    cell('ค่า Ads รวมทุกประเภท', fmt(total), `<span>เฉลี่ย ${fmt(daily.length ? total / daily.length : 0)} / วัน${nFull < daysInRange ? ` · ครบทุกประเภท ${fmt(nFull)} จาก ${fmt(daysInRange)} วัน` : ''}</span>`,
       fbeInfoIcon('shads-info-total', '<b>รวม</b> Product/Shop Ads + Brand Ads + Live Ads + Meta Ads ผ่าน Shopee + เหรียญที่แจกใน Live + CPAS on Meta + อื่น ๆ<br>นับเฉพาะรายการที่มีตัวเลขแล้ว — วันที่ยังไม่มีข้อมูลบางประเภท ค่ารวมของวันนั้นจะยังไม่ครบ')) +
     cell('% ค่า Ads ต่อยอดขาย', pctAds !== null ? pctAds.toFixed(1) + '%' : '—', tgt(pctAds === null ? null : pctAds <= 15, 'เป้าไม่เกิน 15%'), fbeInfoIcon('shads-info-pct', 'ค่า Ads รวมทุกประเภท ÷ ยอดขายจริง Shopee<br>เป้า: ไม่เกิน 15% · ป้ายเขียว = ถึงเป้า · แดง = เกินเป้า' + capNote)) +
     cell('ROAS จริง', realRoas !== null ? realRoas.toFixed(2) + 'x' : '—', tgt(realRoas === null ? null : realRoas >= 10, 'เป้า 10x ขึ้นไป'), fbeInfoIcon('shads-info-rroas', 'ยอดขายจริง Shopee ÷ ค่า Ads รวมทุกประเภท<br>เป้า: 10x ขึ้นไป<br><b>ไม่ใช่</b> ROAS Ads ด้านล่าง (ROAS Ads ใช้ยอดที่ Shopee นับเอง และนับเฉพาะ Product/Shop Ads)' + capNote));
@@ -9903,9 +9908,9 @@ function renderShAdsLog(daily) {
   const roasColor = v => v === null ? 'var(--text3)' : v >= 8 ? 'var(--green)' : v >= 1 ? 'var(--accent)' : 'var(--red)';
   tb.innerHTML = rows.map(r => {
     const filled = !!_shAdsManual[r.stat_date];
-    const real = r.real_revenue; const roas = r.total_all > 0 && real !== null ? real / r.total_all : null;
+    const real = r.real_revenue; const roas = !r._partial && r.total_all > 0 && real !== null ? real / r.total_all : null;
     return `<tr>
-      <td class="l dt">${thShort(r.stat_date)}</td>
+      <td class="l dt">${thShort(r.stat_date)}${r._partial ? ' <span class="ui-chip" data-tip="วันนี้มีเฉพาะ Product/Shop Ads (อัปเดตทุกชั่วโมง) · Brand / Live / Meta / เหรียญ / CPAS เข้าวันถัดไป จึงยังไม่คิด ROAS">ยังไม่ครบ</span>' : ''}</td>
       <td>${r._noapi ? money(null) : money(+r.expense || 0)}</td><td>${money(r.brand_ads)}</td><td>${money(r.live_ads)}</td>
       <td>${filled ? money(r.meta_ads) : money(null)}</td><td>${filled ? money(r.coins) : money(null)}</td><td>${money(r.cpas)}</td><td>${r.manual_other ? money(r.manual_other) : money(null)}</td>
       <td style="font-weight:700;color:#ee4d2d;">${money(r.total_all)}</td>
@@ -9915,9 +9920,10 @@ function renderShAdsLog(daily) {
   // (2026-11-02) แถวรวมล่างสุด (เส้นเข้มด้านบน) — รวมเฉพาะตัวเลขที่มีแล้ว
   const tf = document.getElementById('tfootShAdsLog');
   if (tf) { const S = k => rows.reduce((a, r) => a + (+r[k] || 0), 0), real = rows.reduce((a, r) => a + (r.real_revenue || 0), 0), tot = S('total_all');
+    const RC = roasCapOf(rows.map(r => ({ date: r.stat_date, rev: r.real_revenue || 0, ads: +r.total_all || 0, partial: r._partial }))), rT = RC.ads > 0 ? RC.rev / RC.ads : null;   // ROAS แถวรวม = ตัวเดียวกับการ์ดด้านบน
     tf.innerHTML = rows.length ? `<tr><td class="l">รวม ${fmt(rows.length)} วัน</td><td>${fmt(rows.filter(r => !r._noapi).reduce((a, r) => a + (+r.expense || 0), 0))}</td><td>${fmt(S('brand_ads'))}</td><td>${fmt(S('live_ads'))}</td>
       <td>${fmt(S('meta_ads'))}</td><td>${fmt(S('coins'))}</td><td>${fmt(S('cpas'))}</td><td>${fmt(S('manual_other'))}</td><td style="color:#ee4d2d;">${fmt(tot)}</td><td>${fmt(real)}</td>
-      <td style="color:${roasColor(tot > 0 ? real / tot : null)};">${tot > 0 ? (real / tot).toFixed(2) + 'x' : '—'}</td></tr>` : ''; }
+      <td style="color:${roasColor(rT)};">${rT !== null ? rT.toFixed(2) + 'x' : '—'}</td></tr>` : ''; }
   const li = document.getElementById('shads-log-info'); if (li) li.innerHTML = fbeInfoIcon('shads-info-log', 'ค่า Ads รวม = Product/Shop + Brand + Live + Meta + เหรียญ + CPAS on Meta + อื่น ๆ (เฉพาะรายการที่มีตัวเลขแล้ว — ช่อง "—" คือยังไม่มีข้อมูลวันนั้น)<br>ROAS จริง = ยอดขายจริง ÷ ค่า Ads รวม<br>ยอดขายจริง <b>รวม</b> Shopee Mall + 24hr');
 }
 // ---- กราฟรายวัน: เลือก metric ได้ (แท่ง / เส้น / เส้นแกนขวา) ----
@@ -9938,7 +9944,8 @@ let _shAdsView = 'month';
 function setShAdsView(v, btn) { if (isShortRange() && v !== 'day') return; _shAdsView = v; document.querySelectorAll('#shads-mo, #shads-dy').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderShAdsChart(); }
 function shAdsChartRows() {
   // รวมทุกวันที่มีอย่างน้อยยอดขายหรือค่าแอด (ยอดขายมีทุกวัน แม้วันนั้นยังไม่มีข้อมูลแอด → แท่งส้มว่าง)
-  const ads = {}; _shAdsDaily.forEach(r => { ads[r.stat_date] = +r.total_all || 0; });
+  const day = effGrain(_shAdsView) === 'day';
+  const ads = {}; _shAdsDaily.forEach(r => { ads[r.stat_date] = day && r._partial ? 0 : +r.total_all || 0; });   // รายวัน: วันที่ค่า Ads ยังไม่ครบทุกประเภท ไม่วาดเส้นค่า Ads / %
   const dates = new Set([...Object.keys(_shAdsRealByDate), ...Object.keys(ads)]);
   const rows = [...dates].sort().map(d => ({ key: d, rev: _shAdsRealByDate[d] || 0, ads: ads[d] || 0 }));
   if (effGrain(_shAdsView) === 'day') return rows.map(r => ({ label: thShort(r.key), rev: r.rev, ads: r.ads }));   // ช่วงไม่เกิน 1 เดือน → รายวันเสมอ
