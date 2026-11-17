@@ -400,18 +400,22 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       const aCur = noneA ? 0 : sumAds(adsBy(from, capC)), aPrev = noneA ? 0 : sumAds(adsBy(pA.from, pA.to));
       const rCur = noneA ? 0 : sumOf(salesRows(from, capC, ch, sub), 'net_revenue'), rPrev = noneA ? 0 : sumOf(salesRows(pA.from, pA.to, ch, sub), 'net_revenue');
       vals.ads = fmt(totAds + totPR);
-      const adsPct = (noneA ? total.rev > 0 && totAds > 0 : rCur > 0 && aCur > 0) ? `${pct1(noneA ? totAds / total.rev : aCur / rCur)} ของยอดขาย` : '';
+      // ใช้ตัวคิดเดียวกับหน้า Ads (roasCapOf): วันล่าสุดที่มีทั้งยอดขายและค่า Ads → ตัวเลขเท่ากันทุกหน้า
+      const byD = {}; rowsAll.forEach(r => { (byD[r.date] = byD[r.date] || { date: r.date, rev: 0, ads: 0 }).rev += num(r.net_revenue); });
+      adsIn.forEach(a => { (byD[a.date] = byD[a.date] || { date: a.date, rev: 0, ads: 0 }).ads += a.ads; });
+      const RC = window.roasCapOf ? window.roasCapOf(Object.values(byD)) : { cap: '', rev: total.rev, ads: totAds };
+      const rRo = RC.cap ? RC.rev : total.rev, aRo = RC.cap ? RC.ads : totAds;
+      const adsPct = rRo > 0 && aRo > 0 ? `${pct1(aRo / rRo)} ของยอดขาย` : '';
       const prCur = noneA ? 0 : sumAds(prBy(from, capC)), prPrev = noneA ? 0 : sumAds(prBy(pA.from, pA.to));
       const adsSub = totPR > 0 ? `Conversion ${fmt(totAds)} · PR ${fmt(totPR)}` : adsPct;
       deltas.ads = noneA ? (adsSub ? `<span>${adsSub}</span>` : badgeW(0, 0, true, tipA)) : (adsSub ? badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true).replace(/<span>ช่วงก่อน [^<]*<\/span>$/, '') + `<span>${adsSub}</span>` : badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true));
       // (2026-11-17) ROAS / % ค่า Ads นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (capC) — ไม่เอายอดขายของวันที่ค่า Ads ยังไม่เข้ามาหาร · เท่ากันทั้งการ์ด แถวรวม และหน้า Ads
-      const rRo = noneA ? total.rev : rCur, aRo = noneA ? totAds : aCur;
       vals.roas = roasTxt(rRo, aRo);
       deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ', false, v => v.toFixed(2) + 'x');
       // ค่า Ads ที่เข้าช้ากว่ายอดขาย → แจ้งที่ปุ่มสถานะของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
       // (2026-10-19) ค่า Ads แต่ละแหล่งมีถึงวันไหน แจ้งที่ Data Guard ของหน้า (Ads …) ที่เดียว ไม่ซ้ำที่นี่
       if (window.pageNote) window.pageNote(page, 'adsstale', null);
-      A = { adsAll, adsBy, adsIn, totAds, prBy, prIn, totPR, AC, capC, rRo, aRo, roCap: noneA ? null : capC, SG: subGroups(rowsAll, adsIn) };
+      A = { adsAll, adsBy, adsIn, totAds, prBy, prIn, totPR, AC, capC, rRo, aRo, roCap: RC.cap || null, SG: subGroups(rowsAll, adsIn) };
     }
 
     $(o, 'ovTiles').innerHTML = tilesHtml(I, { vals, deltas }); $(o, 'ovTiles').classList.remove('ov-sk');
