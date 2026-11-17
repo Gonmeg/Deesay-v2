@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-e"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-f"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -9188,13 +9188,15 @@ async function renderTtaHero(totalSpend, spendTip) {
   if (!rows) return;
   const real = rows.reduce((a, r) => a + (+r.sales || 0), 0), withSales = rows.filter(r => +r.sales).length;
   const days = Math.max(1, Math.round((new Date(to) - new Date(from)) / 86400000) + 1);
-  const pct = real > 0 && totalSpend > 0 ? totalSpend / real * 100 : null, roas = totalSpend > 0 && real > 0 ? real / totalSpend : null;
+  const RC = roasCapOf(rows.map(r => ({ date: r.date, rev: +r.sales || 0, ads: +r.spend || 0 }))), capped = RC.cap && RC.cap < to && rows.some(r => r.date > RC.cap && ((+r.sales || 0) > 0 || (+r.spend || 0) > 0));
+  const rR = capped ? RC.rev : real, aR = capped ? RC.ads : totalSpend, capNote = capped ? roasCapNote(RC.cap, to) : '';
+  const pct = rR > 0 && aR > 0 ? aR / rR * 100 : null, roas = aR > 0 && rR > 0 ? rR / aR : null;
   const cell = (label, value, d, inf) => `<div class="ui-metric is-static"><span class="ui-metric-l">${label}${inf || ''}</span><span class="ui-metric-v" data-fit>${value}</span><span class="sa-md">${d}</span></div>`;
   el.innerHTML =
     cell('ยอดขายจริง TikTok', fmt(real), `<span>ทั้งร้าน · มียอด ${fmt(withSales)}${withSales < days ? ` จาก ${fmt(days)}` : ''} วัน</span>`, fbeInfoIcon('tta-h-real', 'ยอดขายทั้งร้าน TikTok จากออเดอร์ (สูตรเดียวกับหน้าภาพรวมยอดขาย)<br><b>รวม</b> ทุกช่องทางของร้าน (คลิป · LIVE · หน้าร้าน · Affiliate)<br><b>ไม่รวม</b> ออเดอร์ที่ยกเลิก / คืน · วันที่ยังไม่มียอดไม่นับ')) +
     cell('ค่า Ads รวม', fmt(totalSpend), `<span>เฉลี่ย ${fmt(totalSpend / days)} / วัน</span>`, fbeInfoIcon('tta-kpi-spend', '<b>รวม</b> ' + spendTip)) +
-    cell('% ค่า Ads ต่อยอดขาย', pct !== null ? pct.toFixed(1) + '%' : '—', '<span>ค่า Ads ÷ ยอดขายจริง</span>', fbeInfoIcon('tta-h-pct', 'ค่า Ads รวม ÷ ยอดขายจริง TikTok ทั้งร้าน')) +
-    cell('ROAS จริง', roas !== null ? roas.toFixed(2) + 'x' : '—', '<span>ยอดขายจริง ÷ ค่า Ads</span>', fbeInfoIcon('tta-h-roas', 'ยอดขายจริง TikTok ทั้งร้าน ÷ ค่า Ads รวม<br><b>ไม่ใช่</b> ROAS Ads ด้านล่าง (ROAS Ads ใช้ยอดที่ TikTok นับให้ Ads เท่านั้น)'));
+    cell('% ค่า Ads ต่อยอดขาย', pct !== null ? pct.toFixed(1) + '%' : '—', '<span>ค่า Ads ÷ ยอดขายจริง</span>', fbeInfoIcon('tta-h-pct', 'ค่า Ads รวม ÷ ยอดขายจริง TikTok ทั้งร้าน' + capNote)) +
+    cell('ROAS จริง', roas !== null ? roas.toFixed(2) + 'x' : '—', '<span>ยอดขายจริง ÷ ค่า Ads</span>', fbeInfoIcon('tta-h-roas', 'ยอดขายจริง TikTok ทั้งร้าน ÷ ค่า Ads รวม<br><b>ไม่ใช่</b> ROAS Ads ด้านล่าง (ROAS Ads ใช้ยอดที่ TikTok นับให้ Ads เท่านั้น)' + capNote));
   if (window.UI && UI.fit) UI.fit();
 }
 // (2026-11-03) รายงานรายวันแยกส่วน — ค่า Ads ต่อประเภท (types) คู่กับยอดขายจริงต่อช่องทาง (ch จาก mv_tt_channel_daily ชุดเดียวกับภาพรวม TikTok)
@@ -9848,6 +9850,14 @@ async function renderShAds() {
   renderShAdsTable();
 }
 // ---- แถว KPI ส่วนบน: ค่าแอดรวมทุกประเภท แยกการ์ดรายประเภท เทียบยอดขายจริง ----
+// (2026-11-17) ROAS / % ค่า Ads นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (กติกาเดียวกับหน้าภาพรวมรายช่องทาง) — ไม่เอายอดขายของวันที่ค่า Ads ยังไม่เข้ามาหาร
+function roasCapOf(pairs) {   // pairs = [{ date, rev, ads }]
+  let lr = '', la = ''; pairs.forEach(p => { if (p.rev > 0 && p.date > lr) lr = p.date; if (p.ads > 0 && p.date > la) la = p.date; });
+  const cap = lr && la ? (lr < la ? lr : la) : '', inC = pairs.filter(p => cap && p.date <= cap);
+  return { cap, rev: inC.reduce((a, p) => a + p.rev, 0), ads: inC.reduce((a, p) => a + p.ads, 0) };
+}
+window.roasCapOf = roasCapOf;
+const roasCapNote = (cap, to) => cap && cap < to ? `<br>นับถึง ${grainDayLabel(cap)} (วันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ)` : '';
 let _shAdsManual = {}, _shAdsCpas = {}, _shAdsRealByDate = {};
 const SHADS_REAL_INFO = '<b>ยอดขายจริง</b> = ยอดสุทธิ Shopee ตามสูตรบัญชี (ชุดเดียวกับหน้าภาพรวม Shopee)<br>• เดือนที่ปิดแล้ว = ไฟล์บัญชี หักยกเลิก / ตีกลับ / คืนเงินแล้ว<br>• เดือนปัจจุบัน = ไฟล์รายวัน ยังไม่หักออเดอร์ที่ยกเลิก / คืนเงินทีหลัง จึงอาจสูงกว่าจริงเล็กน้อยจนกว่าจะปิดเดือน';
 function renderShAdsTotalCard(daily, apiSpend, apiGmv, from, to) {
@@ -9858,8 +9868,10 @@ function renderShAdsTotalCard(daily, apiSpend, apiGmv, from, to) {
   // ยอดขายจริงทั้งช่วง (ทุกวัน ไม่ใช่เฉพาะวันที่มีข้อมูลแอด) + จำนวนวันในช่วงเพื่อบอกว่ามีข้อมูลแอดกี่วัน
   const realTotal = Object.values(_shAdsRealByDate).reduce((a, v) => a + v, 0);
   const daysInRange = Math.max(1, Math.round((new Date(to) - new Date(from)) / 86400000) + 1);
-  const realRoas = total > 0 ? realTotal / total : null;
-  const pctAds = realTotal > 0 && total > 0 ? total / realTotal * 100 : null;
+  const adsBy = {}; daily.forEach(r => { adsBy[r.stat_date] = (adsBy[r.stat_date] || 0) + (+r.total_all || 0); });
+  const RC = roasCapOf([...new Set([...Object.keys(_shAdsRealByDate), ...Object.keys(adsBy)])].map(d => ({ date: d, rev: _shAdsRealByDate[d] || 0, ads: adsBy[d] || 0 })));
+  const realRoas = RC.ads > 0 ? RC.rev / RC.ads : null;
+  const pctAds = RC.rev > 0 && RC.ads > 0 ? RC.ads / RC.rev * 100 : null, capNote = roasCapNote(RC.cap, to);
   // (2026-11-02) แถบบน: ตัวเลขหลัก + ป้ายเทียบเป้า (เป้าของเมฆ: ค่า Ads ทุกประเภทไม่เกิน 15% ของยอดขาย Shopee · ROAS 10x ขึ้นไป)
   const cell = (label, value, d, inf, color) => `<div class="ui-metric is-static"><span class="ui-metric-l">${label}${inf || ''}</span><span class="ui-metric-v" data-fit${color ? ` style="color:${color};"` : ''}>${value}</span><span class="sa-md">${d}</span></div>`;
   const tgt = (ok, txt) => `<span class="ui-chip ${ok === null ? '' : ok ? 'up' : 'dn'}">${txt}</span>`;
@@ -9867,8 +9879,8 @@ function renderShAdsTotalCard(daily, apiSpend, apiGmv, from, to) {
     cell('ยอดขายจริง Shopee', fmt(realTotal), `<span>ตามบัญชี · ${fmt(daysInRange)} วัน</span>`, fbeInfoIcon('shads-info-real', SHADS_REAL_INFO + '<br><b>รวม</b> Shopee Mall + Shopee 24hr')) +
     cell('ค่า Ads รวมทุกประเภท', fmt(total), `<span>เฉลี่ย ${fmt(daily.length ? total / daily.length : 0)} / วัน${daily.length < daysInRange ? ` · มีข้อมูล ${fmt(daily.length)} จาก ${fmt(daysInRange)} วัน` : ''}</span>`,
       fbeInfoIcon('shads-info-total', '<b>รวม</b> Product/Shop Ads + Brand Ads + Live Ads + Meta Ads ผ่าน Shopee + เหรียญที่แจกใน Live + CPAS on Meta + อื่น ๆ<br>นับเฉพาะรายการที่มีตัวเลขแล้ว — วันที่ยังไม่มีข้อมูลบางประเภท ค่ารวมของวันนั้นจะยังไม่ครบ')) +
-    cell('% ค่า Ads ต่อยอดขาย', pctAds !== null ? pctAds.toFixed(1) + '%' : '—', tgt(pctAds === null ? null : pctAds <= 15, 'เป้าไม่เกิน 15%'), fbeInfoIcon('shads-info-pct', 'ค่า Ads รวมทุกประเภท ÷ ยอดขายจริง Shopee<br>เป้า: ไม่เกิน 15% · ป้ายเขียว = ถึงเป้า · แดง = เกินเป้า')) +
-    cell('ROAS จริง', realRoas !== null ? realRoas.toFixed(2) + 'x' : '—', tgt(realRoas === null ? null : realRoas >= 10, 'เป้า 10x ขึ้นไป'), fbeInfoIcon('shads-info-rroas', 'ยอดขายจริง Shopee ÷ ค่า Ads รวมทุกประเภท<br>เป้า: 10x ขึ้นไป<br><b>ไม่ใช่</b> ROAS Ads ด้านล่าง (ROAS Ads ใช้ยอดที่ Shopee นับเอง และนับเฉพาะ Product/Shop Ads)'));
+    cell('% ค่า Ads ต่อยอดขาย', pctAds !== null ? pctAds.toFixed(1) + '%' : '—', tgt(pctAds === null ? null : pctAds <= 15, 'เป้าไม่เกิน 15%'), fbeInfoIcon('shads-info-pct', 'ค่า Ads รวมทุกประเภท ÷ ยอดขายจริง Shopee<br>เป้า: ไม่เกิน 15% · ป้ายเขียว = ถึงเป้า · แดง = เกินเป้า' + capNote)) +
+    cell('ROAS จริง', realRoas !== null ? realRoas.toFixed(2) + 'x' : '—', tgt(realRoas === null ? null : realRoas >= 10, 'เป้า 10x ขึ้นไป'), fbeInfoIcon('shads-info-rroas', 'ยอดขายจริง Shopee ÷ ค่า Ads รวมทุกประเภท<br>เป้า: 10x ขึ้นไป<br><b>ไม่ใช่</b> ROAS Ads ด้านล่าง (ROAS Ads ใช้ยอดที่ Shopee นับเอง และนับเฉพาะ Product/Shop Ads)' + capNote));
   if (window.UI && UI.fit) UI.fit();
   // ค่า Ads แยกประเภท: ตารางเดียว แถวรวมล่างสุด = ค่า Ads รวมทุกประเภทในแถบบน
   const mix = [['Product/Shop Ads', apiSpend, `ROAS Ads ${apiSpend ? (apiGmv / apiSpend).toFixed(2) + 'x' : '—'}`], ['Brand Ads', brand], ['Live Ads', live], ['Meta Ads ผ่าน Shopee', meta],

@@ -19,7 +19,7 @@
     aov: { k: 'aov', name: 'AOV', c: '--purple', tip: '<b>AOV (Average Order Value)</b> ยอดขาย ÷ ออเดอร์<br><b>ไม่รวม</b> ตัวแทน / Modern Trade เพราะสั่งลอตใหญ่' },
     cust: { k: 'cust', name: 'ลูกค้า Facebook', c: '--cyan', tip: 'เบอร์โทรไม่ซ้ำ นับเฉพาะ Facebook / Line<br><b>ไม่รวม</b> TikTok / Shopee / Lazada (ไม่ส่งเบอร์โทรจริงมา) และตัวแทน / Modern Trade' },
     ads: { k: 'ads', name: 'ค่า Ads', c: '--red', tip: '' },
-    roas: { k: 'roas', name: 'ROAS', c: '--green', tip: '<b>ROAS (Return on Ad Spend)</b> ยอดขาย ÷ ค่า Ads<br><b>ไม่รวม</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง (Facebook PR / KOL)<br>เส้นในกราฟหยุดที่วันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ' },
+    roas: { k: 'roas', name: 'ROAS', c: '--green', tip: '<b>ROAS (Return on Ad Spend)</b> ยอดขาย ÷ ค่า Ads<br><b>ไม่รวม</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง (Facebook PR / KOL)<br>ตัวเลขและเส้นในกราฟนับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ' },
     canc: { k: 'canc', name: 'ยกเลิก / คืน', c: '--orange', tip: 'ยอดออเดอร์ที่ยกเลิก / คืน<br><b>ไม่รวม</b> ตัวแทน / Modern Trade<br>% = ยอดยกเลิก ÷ (ยอดขาย + ยอดยกเลิก)<br>Shopee / Lazada: ยอดยกเลิกของเดือนที่ยังไม่ปิดมากับไฟล์ปิดเดือนจากบัญชี' }
   };
   const metList = o => o.hub ? [M.rev, M.ord, M.aov, ...(o.ch === 'Facebook' ? [M.cust] : []), M.ads, M.roas, M.canc] : [M.rev, M.ord, M.aov, M.cust, M.canc];
@@ -284,7 +284,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const { from, to, sub, R, P, rowsAll, total, totCmp, adsIn, totAds, SG } = c, totPR = c.totPR || 0;
     const cmpOf = cmpOfFn(R), cancCell = cancCellFn(from, to, P), ch = o.ch;
     const totRow = `<tr class="ov-tot"><td>รวม ${esc(ch)}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td>
-      <td>${fmt(totAds + totPR)}</td><td>${roasTxt(total.rev, totAds)}</td><td class="${totCmp.cls}">${totCmp.t}</td><td>${cancCell(ch, sub, total.cr, total.co, total.rev)}</td></tr>`;
+      <td>${fmt(totAds + totPR)}</td><td>${roasTxt(c.rRo != null ? c.rRo : total.rev, c.aRo != null ? c.aRo : totAds)}</td><td class="${totCmp.cls}">${totCmp.t}</td><td>${cancCell(ch, sub, total.cr, total.co, total.rev)}</td></tr>`;
     let h = '';
     SG.keys.forEach(k => {
       // แถว "(ไม่ระบุ)" กดดูที่มา / เทียบช่วงก่อนไม่ได้ (ตัวกรองว่าง = ทั้งช่องทาง)
@@ -295,7 +295,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
         <td>${pct1(share)}<span class="ov-bar"><i style="width:${(share * 100).toFixed(1)}%;background:var(${v})"></i></span></td>
         <td>${tr(t.ord)}</td>
         <td>${t.ord ? fmt(t.rev / t.ord) : '—'}</td>
-        <td>${x.ads ? fmt(x.ads) : '<span class="ov-mute">0</span>'}</td><td>${x.ads ? roasTxt(t.rev, x.ads) : '<span class="ov-mute">—</span>'}</td>
+        <td>${x.ads ? fmt(x.ads) : '<span class="ov-mute">0</span>'}</td><td>${x.ads ? (c.roCap ? roasTxt(sumOf(x.rows.filter(r => r.date <= c.roCap), 'net_revenue'), sumAds(adsIn.filter(a => (a.subChannel || NOSUB) === k && a.date <= c.roCap))) : roasTxt(t.rev, x.ads)) : '<span class="ov-mute">—</span>'}</td>
         <td class="${cm.cls}">${cm.t}</td><td>${named ? cancCell(ch, k, t.cr, t.co, t.rev) : (t.cr ? fmt(t.cr) : '<span class="ov-mute">—</span>')}</td></tr>`;
     });
     if (totPR > 0) h += `<tr class="ov-mute"><td><span class="ov-nm" data-tip="Ads ที่ไม่ผูกยอดขาย: boost โพสต์ KOL · เพจอื่น · บัญชี PR&#10;นับในค่า Ads รวม แต่ไม่นับใน ROAS">PR (KOL / เพจอื่น) <span class="ui-i">ⓘ</span></span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>${fmt(totPR)}</td><td>—</td><td>—</td><td>—</td></tr>`;
@@ -400,16 +400,18 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       const aCur = noneA ? 0 : sumAds(adsBy(from, capC)), aPrev = noneA ? 0 : sumAds(adsBy(pA.from, pA.to));
       const rCur = noneA ? 0 : sumOf(salesRows(from, capC, ch, sub), 'net_revenue'), rPrev = noneA ? 0 : sumOf(salesRows(pA.from, pA.to, ch, sub), 'net_revenue');
       vals.ads = fmt(totAds + totPR);
-      const adsPct = total.rev > 0 && totAds > 0 ? `${pct1(totAds / total.rev)} ของยอดขาย` : '';
+      const adsPct = (noneA ? total.rev > 0 && totAds > 0 : rCur > 0 && aCur > 0) ? `${pct1(noneA ? totAds / total.rev : aCur / rCur)} ของยอดขาย` : '';
       const prCur = noneA ? 0 : sumAds(prBy(from, capC)), prPrev = noneA ? 0 : sumAds(prBy(pA.from, pA.to));
       const adsSub = totPR > 0 ? `Conversion ${fmt(totAds)} · PR ${fmt(totPR)}` : adsPct;
       deltas.ads = noneA ? (adsSub ? `<span>${adsSub}</span>` : badgeW(0, 0, true, tipA)) : (adsSub ? badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true).replace(/<span>ช่วงก่อน [^<]*<\/span>$/, '') + `<span>${adsSub}</span>` : badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true));
-      vals.roas = roasTxt(total.rev, totAds);
+      // (2026-11-17) ROAS / % ค่า Ads นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (capC) — ไม่เอายอดขายของวันที่ค่า Ads ยังไม่เข้ามาหาร · เท่ากันทั้งการ์ด แถวรวม และหน้า Ads
+      const rRo = noneA ? total.rev : rCur, aRo = noneA ? totAds : aCur;
+      vals.roas = roasTxt(rRo, aRo);
       deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ', false, v => v.toFixed(2) + 'x');
       // ค่า Ads ที่เข้าช้ากว่ายอดขาย → แจ้งที่ปุ่มสถานะของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
       // (2026-10-19) ค่า Ads แต่ละแหล่งมีถึงวันไหน แจ้งที่ Data Guard ของหน้า (Ads …) ที่เดียว ไม่ซ้ำที่นี่
       if (window.pageNote) window.pageNote(page, 'adsstale', null);
-      A = { adsAll, adsBy, adsIn, totAds, prBy, prIn, totPR, AC, capC, SG: subGroups(rowsAll, adsIn) };
+      A = { adsAll, adsBy, adsIn, totAds, prBy, prIn, totPR, AC, capC, rRo, aRo, roCap: noneA ? null : capC, SG: subGroups(rowsAll, adsIn) };
     }
 
     $(o, 'ovTiles').innerHTML = tilesHtml(I, { vals, deltas }); $(o, 'ovTiles').classList.remove('ov-sk');
@@ -418,7 +420,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     if (o.hub) {
       const show = A.SG.keys.length > 1;   // ร้านเดียว (เช่น TikTok) = ซ้ำกับแผงตัวเลข → ไม่แสดงตาราง
       $(o, 'ovTblCard').style.display = show ? '' : 'none';
-      tbody.innerHTML = show ? hubTableHtml(I, { from, to, sub, R, P, rowsAll, total, totCmp, adsIn: A.adsIn, totAds: A.totAds, totPR: A.totPR, SG: A.SG }) : '';
+      tbody.innerHTML = show ? hubTableHtml(I, { from, to, sub, R, P, rowsAll, total, totCmp, adsIn: A.adsIn, totAds: A.totAds, totPR: A.totPR, SG: A.SG, rRo: A.rRo, aRo: A.aRo, roCap: A.roCap }) : '';
       const alt = root.querySelector('[data-ovmode="channel"]'); if (alt) alt.hidden = !show;
       if (!show && S.mode === 'channel') { S.mode = 'metric'; syncSeg(I); }
     } else tbody.innerHTML = rowsAll.length ? tableHtml(I, { from, to, ch, sub, R, P, rowsAll, total, totCmp }) : '<tr><td colspan="7" class="empty">ไม่มียอดขายในช่วงนี้</td></tr>';
