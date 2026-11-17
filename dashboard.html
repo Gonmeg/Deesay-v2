@@ -21,6 +21,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deesay Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>/* (2026-11-17) ทุกกราฟไม่เล่น animation ตอนวาด — เดิมเส้นวิ่งจากซ้ายทุกครั้งที่เปิดหน้า / กดค้นหา ทำให้ตัวเลขดูกระโดด */ if (window.Chart && Chart.defaults) Chart.defaults.animation = false;</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -819,7 +820,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-h"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-i"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
