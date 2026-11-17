@@ -66,12 +66,12 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       <section class="ui-metrics" id="apTiles" aria-label="ตัวเลขหลัก">
         ${tile('gmv', 'ยอดขาย', 'ยอดขายของช่องทางที่ยิง Ads เอง: TikTok · Facebook (รวม Line) · Shopee · Lazada<br>ไม่นับตัวแทน / Modern Trade (ไม่มี Ads ของตัวเอง) · ยอดขายรวม VAT ไม่รวมยกเลิก / คืน (ชุดเดียวกับหน้าภาพรวมยอดขาย)<br>ป้าย = เทียบช่วงก่อนหน้าที่ยาวเท่ากัน')}
         ${tile('ads', 'ค่า Ads', 'ค่า Ads จริงของ 4 ช่องทาง ไม่รวม VAT (ชุดเดียวกับหน้าภาพรวม / MKT Tracking)<br>Facebook รวมบัญชี PR (KOL / boost) · Shopee รวม CPAS / Brand / Live / Meta in-app / Coins<br>ไม่รวมค่าจ้าง KOL (ดูที่หน้า KOL / MKT Tracking)')}
-        ${tile('roas', 'ROAS', '<b>ROAS · Return on Ad Spend</b><br>ยอดขาย ÷ ค่า Ads · ลง Ads 1 บาท ได้ยอดขายกี่บาท')}
+        ${tile('roas', 'ROAS', '<b>ROAS · Return on Ad Spend</b><br>ยอดขาย ÷ ค่า Ads · ลง Ads 1 บาท ได้ยอดขายกี่บาท<br>นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (กติกาเดียวกับหน้าภาพรวมของแต่ละช่องทาง)<br>ตัวเลขรวม = ทุกช่องทาง <b>รวม</b> ค่า Ads PR ของ Facebook')}
         ${tile('pct', '% ค่า Ads', 'ค่า Ads ÷ ยอดขาย · ยิ่งต่ำยิ่งดี<br>ป้าย = เปลี่ยนกี่ pt (จุด %) จากช่วงก่อน · ลดลง = สีเขียว')}
       </section>
       <div class="ap-card"><div class="ap-head"><h2 id="apChartTtl">ยอดขาย vs ค่า Ads</h2><span id="apChartR"></span></div>
         <div style="position:relative;height:280px;"><canvas id="apChart"></canvas></div></div>
-      <div class="ap-card" style="padding:16px 0 6px;"><div class="ap-head" style="padding:0 18px;"><h2>แยกช่องทาง ${info('ap-i-tbl', 'กดแถว = กราฟด้านบนเปลี่ยนเป็นช่องทางนั้น (กดซ้ำ = ทุกช่องทาง)<br>▸ = ดูร้าน / เพจ / ประเภท Ads ในช่องทาง · แถวที่มีแต่ค่า Ads = Ads ที่ไม่ผูกร้าน / เพจ<br>ROAS = ยอดขาย ÷ ค่า Ads · % ค่า Ads = ค่า Ads ÷ ยอดขาย · ป้าย = เทียบช่วงก่อนหน้าที่ยาวเท่ากัน')} <span class="ap-sub" id="apRange"></span></h2></div>
+      <div class="ap-card" style="padding:16px 0 6px;"><div class="ap-head" style="padding:0 18px;"><h2>แยกช่องทาง ${info('ap-i-tbl', 'กดแถว = กราฟด้านบนเปลี่ยนเป็นช่องทางนั้น (กดซ้ำ = ทุกช่องทาง)<br>ROAS / % ค่า Ads รายช่องทาง = ตัวเลขเดียวกับหน้าภาพรวมของช่องทางนั้น (นับถึงวันที่ข้อมูลครบ · Facebook ใช้เฉพาะ Ads Conversion ไม่รวม PR) · แถวรวมนับค่า Ads PR ด้วย<br>▸ = ดูร้าน / เพจ / ประเภท Ads ในช่องทาง · แถวที่มีแต่ค่า Ads = Ads ที่ไม่ผูกร้าน / เพจ<br>ROAS = ยอดขาย ÷ ค่า Ads · % ค่า Ads = ค่า Ads ÷ ยอดขาย · ป้าย = เทียบช่วงก่อนหน้าที่ยาวเท่ากัน')} <span class="ap-sub" id="apRange"></span></h2></div>
         <table class="ui-table ap-tbl" data-no-sort data-no-page><thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">ค่า Ads</th><th class="num">ROAS</th><th class="num">% ค่า Ads</th></tr></thead>
           <tbody id="apBody">${CHS.map(() => '<tr><td colspan="5">&nbsp;</td></tr>').join('')}</tbody><tfoot id="apFoot"><tr><td colspan="5">&nbsp;</td></tr></tfoot></table></div>
     </div>`;
@@ -89,6 +89,21 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     return t;
   }
   const sum = (o, k) => Object.values(o).reduce((s, x) => s + num(x[k]), 0);
+  // (2026-11-17) ROAS / % ค่า Ads ใช้กติกาเดียวกับหน้าภาพรวม / หน้า Ads ของแต่ละช่องทาง:
+  //   นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบทุกแหล่ง · Facebook ใช้เฉพาะค่า Ads Conversion (ไม่รวม PR)
+  //   แถวรวม / การ์ด = ทุกช่องทางรวมกัน และรวมค่า Ads PR ด้วย (ภาพรวมค่า Ads ทั้งบริษัท) ในช่วงวันเดียวกัน
+  function roasOf() {
+    const F = D.ads_full || {}, by = {}; CHS.forEach(c => by[c] = []);
+    (D.daily || []).forEach(r => { if (!by[r.ch]) return; const d = String(r.d).slice(0, 10);
+      by[r.ch].push({ date: d, rev: num(r.gmv), ads: num(r.ads) - num(r.pr), pr: num(r.pr), partial: !!F[r.ch] && d > F[r.ch] }); });
+    const o = {}; let g = 0, a = 0;
+    CHS.forEach(c => { const RC = window.roasCapOf ? window.roasCapOf(by[c]) : { cap: '', rev: 0, ads: 0 };
+      const pr = by[c].filter(p => RC.cap && p.date <= RC.cap).reduce((t, p) => t + p.pr, 0);
+      o[c] = { g: RC.rev, a: RC.ads, cap: RC.cap }; g += RC.rev; a += RC.ads + pr; });
+    o._all = { g, a };
+    return o;
+  }
+  const prevConv = p => num(p.ads) - num(p.pr);
 
   function drawTiles() {
     const T = totals(), P = D.prev || {}, g = sum(T, 'gmv'), a = sum(T, 'ads'), pg = sum(P, 'gmv'), pa = sum(P, 'ads');
@@ -96,8 +111,9 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const set = (k, v, d) => { const el = $('apTiles').querySelector(`[data-k="${k}"]`); el.querySelector('.ui-metric-v').textContent = v; el.querySelector('.ui-metric-d').innerHTML = d; };
     set('gmv', n0(g), `${chip(g, pg, 'up')}<span>${pg ? `${lbl} ${n0(pg)}` : ''}</span>`);
     set('ads', n0(a), `${chip(a, pa)}<span>${pa ? `${lbl} ${n0(pa)}` : ''}</span>`);
-    set('roas', xx(g, a), `${a && pa ? chip(g / a, pg / pa, 'up') : ''}<span>${pa ? `ก่อน ${xx(pg, pa)}` : ''}</span>`);
-    set('pct', pc(a, g), `${g && pg ? chipPt(a / g * 100, pa / pg * 100) : ''}<span>${pg ? `ก่อน ${pc(pa, pg)}` : ''}</span>`);
+    const R = roasOf()._all;
+    set('roas', xx(R.g, R.a), `${R.a && pa ? chip(R.g / R.a, pg / pa, 'up') : ''}<span>${pa ? `ก่อน ${xx(pg, pa)}` : ''}</span>`);
+    set('pct', pc(R.a, R.g), `${R.g && pg ? chipPt(R.a / R.g * 100, pa / pg * 100) : ''}<span>${pg ? `ก่อน ${pc(pa, pg)}` : ''}</span>`);
   }
 
   function drawChart() {
@@ -114,19 +130,19 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
 
   function drawTable() {
     const T = totals(), P = D.prev || {}, subs = D.subs || [];
-    const rows = CHS.filter(c => T[c].gmv || T[c].ads).sort((x, y) => T[y].gmv - T[x].gmv);
+    const rows = CHS.filter(c => T[c].gmv || T[c].ads).sort((x, y) => T[y].gmv - T[x].gmv), RO = roasOf();
     const roasCell = (g, a, pg, pa) => `${xx(g, a)}${a && pa && pg ? chip(g / a, pg / pa, 'up') : ''}${pa && pg ? `<span class="sm">ก่อน ${xx(pg, pa)}</span>` : ''}`;
     const pctCell = (g, a, pg, pa) => `${pc(a, g)}${g && pg ? chipPt(a / g * 100, pa / pg * 100) : ''}${pg ? `<span class="sm">ก่อน ${pc(pa, pg)}</span>` : ''}`;
     $('apBody').innerHTML = rows.map(c => {
       const t = T[c], p = P[c] || {}, ss = subs.filter(s => s.ch === c), isOpen = open.has(c);
       const main = `<tr class="ap-ch${selCh === c ? ' on' : ''}" data-ch="${esc(c)}"><td>${ss.length > 1 ? `<span class="ap-car" data-ch="${esc(c)}">${isOpen ? '▾' : '▸'}</span>` : '<span class="ap-car"></span>'}<span class="ap-dot" style="background:var(${CV[c]})"></span><b>${esc(c)}</b></td>
         <td class="num"><b>${n0(t.gmv)}</b>${chip(t.gmv, num(p.gmv), 'up')}</td><td class="num">${n0(t.ads)}</td>
-        <td class="num">${roasCell(t.gmv, t.ads, num(p.gmv), num(p.ads))}</td><td class="num">${pctCell(t.gmv, t.ads, num(p.gmv), num(p.ads))}</td></tr>`;
+        <td class="num">${roasCell(RO[c].g, RO[c].a, num(p.gmv), prevConv(p))}</td><td class="num">${pctCell(RO[c].g, RO[c].a, num(p.gmv), prevConv(p))}</td></tr>`;
       const sub = isOpen ? ss.map(s => `<tr class="ap-sub"><td>${esc(subName(c, s.sub))}</td><td class="num">${num(s.gmv) ? n0(s.gmv) : '—'}</td><td class="num">${num(s.ads) ? n0(s.ads) : '—'}</td><td class="num">${xx(num(s.gmv), num(s.ads))}</td><td class="num">${num(s.gmv) ? pc(num(s.ads), num(s.gmv)) : '—'}</td></tr>`).join('') : '';
       return main + sub;
     }).join('') || '<tr><td colspan="5" class="empty">ไม่มีข้อมูลในช่วงนี้</td></tr>';
     const g = sum(T, 'gmv'), a = sum(T, 'ads'), pg = sum(P, 'gmv'), pa = sum(P, 'ads');
-    $('apFoot').innerHTML = rows.length ? `<tr><td><span class="ap-car"></span>รวม</td><td class="num">${n0(g)}${chip(g, pg, 'up')}</td><td class="num">${n0(a)}</td><td class="num">${roasCell(g, a, pg, pa)}</td><td class="num">${pctCell(g, a, pg, pa)}</td></tr>` : '';
+    $('apFoot').innerHTML = rows.length ? `<tr><td><span class="ap-car"></span>รวม</td><td class="num">${n0(g)}${chip(g, pg, 'up')}</td><td class="num">${n0(a)}</td><td class="num">${roasCell(RO._all.g, RO._all.a, pg, pa)}</td><td class="num">${pctCell(RO._all.g, RO._all.a, pg, pa)}</td></tr>` : '';
   }
 
   function drawAll() {
