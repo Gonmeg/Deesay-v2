@@ -148,7 +148,7 @@ async function renderMtHub() {
   const tk = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
   makeChart('chartMtRevenue', 'line', months.map(PL_TH_M), ds, {
     scales: { x: { ticks: { ...tk, maxRotation: 0 }, grid: { display: false }, border: { display: false } },
-      y: { beginAtZero: true, ticks: { ...tk, callback: v => fmt(Math.round(v)), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },   // ตัวเลขเต็ม ไม่ย่อ K
+      y: { beginAtZero: true, ticks: { ...tk, precision: 0, callback: v => fmt(Math.round(v)), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },   // ตัวเลขเต็ม ไม่ย่อ K
     legend: { display: !R },
     tooltip: { callbacks: { label: it => `${it.dataset.label}: ${fmt(Math.round(it.raw || 0))}` } } });
   const emp = document.getElementById('mtEmpty');
@@ -231,6 +231,6 @@ function renderMtAdsChart() {
   const tk = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
   makeChart('chartMtAds', 'line', lab, [{ label: 'ค่าโฆษณา Awareness', data, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)', borderWidth: 2, pointRadius: mtV==='day' && labels.length>60 ? 0 : 3, fill: true, tension: 0.3 }], {
     scales: { x: { ticks: { ...tk, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
-      y: { beginAtZero: true, ticks: { ...tk, callback: v => fmt(Math.round(v)), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },
+      y: { beginAtZero: true, ticks: { ...tk, precision: 0, callback: v => fmt(Math.round(v)), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },
     tooltip: { callbacks: { label: it => `ค่าโฆษณา Awareness: ${fmt(Math.round(it.raw || 0))}` } } });
 }

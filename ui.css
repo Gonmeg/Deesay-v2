@@ -106,7 +106,7 @@ code, kbd, pre, samp { font-family: var(--font); }   /* (2026-11-04) แท็�
 /* ตัวเลขหลัก (แบบ Shopee / TikTok Seller Center): แผงเดียว แบ่งช่อง กดเลือกเข้ากราฟได้ */
 .ui-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); background: var(--bg2);
   border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
-.ui-metric { position: relative; display: block; width: 100%; text-align: left; padding: 14px 16px 15px; background: var(--bg2);
+.ui-metric { position: relative; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; width: 100%; text-align: left; padding: 14px 16px 15px; background: var(--bg2);
   border: 0; font: inherit; color: inherit; cursor: pointer; transition: background .15s;
   box-shadow: 1px 0 0 var(--border), 0 1px 0 var(--border); }
 .ui-metric:hover { background: var(--bg3); }
@@ -359,7 +359,9 @@ body.light-theme tr.fe2-g td, body.light-theme tr.ex-g td, body.light-theme tr.s
 table[id^="tblTopSKU"] th:nth-child(n+4), table[id^="tblTopSKU"] td:nth-child(n+4),
 table[id^="tblTopProduct"] th:nth-child(n+4), table[id^="tblTopProduct"] td:nth-child(n+4),
 #tblTtLives th:nth-child(n+3), #tblTtLives td:nth-child(n+3),
-#tblTtaCreator th:not(:first-child), #tblTtaCreator td:not(:first-child) { text-align: center !important; }
+#tblTtaCreator th:not(:first-child), #tblTtaCreator td:not(:first-child),
+#tblShAdsLog th:not(:first-child), #tblShAdsLog td:not(:first-child), #tblShAds th:not(:first-child), #tblShAds td:not(:first-child),
+#tblShCpasCamp th:not(:first-child), #tblShCpasCamp td:not(:first-child) { text-align: center !important; }
 
 /* ===== (2026-11-13) ตารางหลายคอลัมน์ของหน้า Ads ให้พอดีการ์ด ไม่ต้องเลื่อนซ้ายขวา: ช่องไฟแคบลง + หัวคอลัมน์ยาวขึ้นบรรทัดใหม่ได้ ===== */
 #tblFbaDaily th, #tblFbaDaily td, #tblFbaProduct th, #tblFbaProduct td, #tblFbaAds th, #tblFbaAds td,

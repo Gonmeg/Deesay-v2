@@ -131,12 +131,45 @@ test('จำลองการใช้งานทุกหน้า', async ({
     report.push(r);
   }
 
+  // (2026-11-17) เทียบตัวเลขข้ามหน้า: ตัวเลขเดียวกันต้องเท่ากันทุกหน้า · ต่าง ≤ 2 = ตรง (ปัดเศษ) · ต่าง ≤ 0.5% = ข้อมูลวันนี้เข้าเพิ่มระหว่างทดสอบ (แต่ละหน้าถ่ายห่างกันหลายนาที) · เกินนั้น = คำเตือน
+  const kv = (id, label) => { const k = ((report.find(x => x.id === id) || {}).kpis || []).find(x => x[0] === label); const v = k ? parseFloat(String(k[1]).replace(/,/g, '')) : NaN; return isFinite(v) ? v : null; };
+  const SAME = [
+    ['ยอดขาย TikTok', [['tthub', 'ยอดขาย'], ['ttads', 'ยอดขายจริง TikTok'], ['prtest', 'ยอดขาย TikTok'], ['creatorperf', 'ยอดขายรวม']]],
+    ['ค่า Ads TikTok', [['tthub', 'ค่า Ads'], ['ttads', 'ค่า Ads รวม']]],
+    ['ROAS TikTok', [['tthub', 'ROAS'], ['ttads', 'ROAS จริง']]],
+    ['ยอดขาย Facebook', [['fbhub', 'ยอดขาย'], ['fbads', 'ยอดขายจริง Facebook']]],
+    ['ค่า Ads Facebook', [['fbhub', 'ค่า Ads'], ['fbads', 'ค่า Ads Facebook รวม']]],
+    ['ROAS Facebook', [['fbhub', 'ROAS'], ['fbads', 'ROAS']]],
+    ['ลูกค้า Facebook', [['fbhub', 'ลูกค้า Facebook'], ['crm', 'ลูกค้า Facebook ทั้งหมด'], ['overview', 'ลูกค้า Facebook']]],
+    ['ยอดขาย Shopee', [['shhub', 'ยอดขาย'], ['shads', 'ยอดขายจริง Shopee']]],
+    ['ค่า Ads Shopee', [['shhub', 'ค่า Ads'], ['shads', 'ค่า Ads รวมทุกประเภท']]],
+    ['ROAS Shopee', [['shhub', 'ROAS'], ['shads', 'ROAS จริง']]],
+    ['ยอดขายออนไลน์รวม', [['skurev', 'ยอดขาย'], ['adperf', 'ยอดขาย']]],
+    ['ยอดสะสมเดือนนี้ (ออนไลน์)', [['home', 'สะสมเดือนนี้'], ['kpi', 'ทำได้ถึงวันนี้']]],
+  ];
+  const nm = id => (report.find(x => x.id === id) || {}).name || id, cross = { id: 'cross', name: 'เทียบตัวเลขข้ามหน้า', issues: [], warn: [], errors: [], rows: [] };
+  for (const [what, list] of SAME) {
+    const vals = list.map(([id, l]) => ({ id, v: kv(id, l) })).filter(x => x.v !== null);
+    if (vals.length < 2) { cross.rows.push(`| ${what} | — | อ่านตัวเลขได้ไม่ครบ 2 หน้า |`); continue; }
+    const mx = Math.max(...vals.map(x => x.v)), mn = Math.min(...vals.map(x => x.v)), d = mx - mn, tol = mx < 1000 ? 0.011 : 2;
+    const txt = vals.map(x => `${nm(x.id)} ${x.v.toLocaleString('en-US')}`).join(' · ');
+    const res = d <= tol ? 'ตรง' : d / mx <= 0.005 ? `ต่าง ${+d.toFixed(2)} (ข้อมูลเข้าเพิ่มระหว่างทดสอบ)` : `ต่าง ${+d.toFixed(2)}`;
+    if (d > tol && d / mx > 0.005) cross.warn.push(`${what} ไม่เท่ากัน: ${txt}`);
+    cross.rows.push(`| ${what} | ${res} | ${txt} |`);
+  }
+  const tk = kv('tthub', 'ยอดขาย'), fb = kv('fbhub', 'ยอดขาย'), sp = kv('shhub', 'ยอดขาย'), lz = kv('lzhub', 'ยอดขาย'), all = kv('skurev', 'ยอดขาย');
+  if ([tk, fb, sp, lz, all].every(x => x !== null)) { const sum = tk + fb + sp + lz, d = Math.abs(sum - all);
+    cross.rows.push(`| ยอดขาย 4 Platform รวมกัน เทียบ แนวโน้มสินค้า | ${d <= 4 ? 'ตรง' : d / all <= 0.005 ? `ต่าง ${d} (ข้อมูลเข้าเพิ่มระหว่างทดสอบ)` : `ต่าง ${d}`} | รวม 4 หน้า ${sum.toLocaleString('en-US')} · แนวโน้มสินค้า ${all.toLocaleString('en-US')} |`);
+    if (d > 4 && d / all > 0.005) cross.warn.push(`ยอดขาย 4 Platform รวมกัน ${sum} ไม่เท่าแนวโน้มสินค้า ${all}`); }
+  report.push(cross);
+
   // รายงาน
   const bad = report.filter(r => r.issues.length), warn = report.filter(r => !r.issues.length && r.warn.length);
   const md = [`# ผลทดสอบหน้าเว็บ — ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, '',
     `ทดสอบ ${report.length} หน้า · ❌ ต้องแก้ ${bad.length} · ⚠️ ควรดู ${warn.length} · ✅ ผ่าน ${report.length - bad.length - warn.length}`, '',
     '| หน้า | ผล | โหลด (วิ) | เด้งตอนโหลด | เด้งหลังค้นหา | กดตัวเลข | รายละเอียด |', '|---|---|---|---|---|---|---|',
     ...report.map(r => `| ${r.name} | ${r.issues.length ? '❌' : r.warn.length ? '⚠️' : '✅'} | ${r.load_s ?? '—'} | ${r.cls_load ?? '—'} | ${r.cls_search ?? '—'} | ${r.clicks ? `${r.clicks.ok}/${Math.min(r.clicks.found, SAFE_CLICK_MAX)}` : '—'} | ${[...r.issues, ...r.warn].join('<br>').replace(/\|/g, '/') || '—'} |`),
+    '', '## เทียบตัวเลขข้ามหน้า', '', '| ตัวเลข | ผล | แต่ละหน้า |', '|---|---|---|', ...cross.rows,
     '', 'ภาพหน้าจอทุกหน้าอยู่ในโฟลเดอร์ shots/'].join('\n');
   fs.writeFileSync(`${OUT}/README.md`, md); fs.writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 2));
   console.log(md);
