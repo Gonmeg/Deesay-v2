@@ -107,7 +107,7 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const keys = Object.keys(m).sort();
     const labels = keys.map(k => monthly ? PL_TH_M(k) : k.slice(8, 10) + '/' + k.slice(5, 7));
     const g = keys.map(k => m[k].gmv), a = keys.map(k => m[k].ads), p = keys.map(k => m[k].gmv > 0 ? m[k].ads / m[k].gmv * 100 : 0);
-    $('apChartTtl').innerHTML = `ยอดขาย vs ค่า Ads ${monthly ? 'รายเดือน' : 'รายวัน'}${selCh ? ` · <span style="color:var(${CV[selCh]})">${esc(selCh)}</span>` : ' · ทุกช่องทาง'} ${info('ap-i-chart', 'แท่ง = ยอดขาย / ค่า Ads · เส้น = % ค่า Ads (แกนขวา)<br>ช่วงไม่เกิน 1 เดือน = รายวัน · เกิน 1 เดือน = รายเดือน<br>วันท้ายที่มีค่า Ads แต่ยอดขายยังไม่เข้า จะไม่แสดง (กัน % ค่า Ads พุ่งผิดปกติ)<br>กดแถวในตารางด้านล่างเพื่อดูทีละช่องทาง')}`;
+    $('apChartTtl').innerHTML = `ยอดขาย vs ค่า Ads ${monthly ? 'รายเดือน' : 'รายวัน'}${selCh ? ` · <span style="color:var(${CV[selCh]})">${esc(selCh)}</span>` : ' · ทุกช่องทาง'} ${info('ap-i-chart', 'เส้นทึบ = ยอดขาย / ค่า Ads · เส้นประ = % ค่า Ads (แกนขวา)<br>ช่วงไม่เกิน 1 เดือน = รายวัน · เกิน 1 เดือน = รายเดือน<br>วันท้ายที่มีค่า Ads แต่ยอดขายยังไม่เข้า จะไม่แสดง (กัน % ค่า Ads พุ่งผิดปกติ)<br>กดแถวในตารางด้านล่างเพื่อดูทีละช่องทาง')}`;
     $('apChartR').innerHTML = selCh ? '<button type="button" class="ap-clear">ดูทุกช่องทาง</button>' : '';
     if (typeof makeAdChart === 'function') makeAdChart('apChart', labels, g, a, p, { daily: !monthly });
   }

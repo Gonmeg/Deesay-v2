@@ -819,7 +819,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-g"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.17-h"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -6224,16 +6224,19 @@ function makeAdChart(id, labels, gmvArr, adsArr, pctArr, opts = {}) {
     cut = gmvArr.length - 1 - last;
     if (cut > 0) { labels = labels.slice(0, last + 1); gmvArr = gmvArr.slice(0, last + 1); adsArr = adsArr.slice(0, last + 1); pctArr = pctArr.slice(0, last + 1); }
   }
-  const ds = [{ type: 'bar', label: 'ยอดขาย', data: gmvArr, backgroundColor: 'rgba(96,165,250,0.65)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 56 }];
+  // (2026-11-17) กราฟเส้นตามกติกา (เดิมเป็นแท่ง) · ค่า Ads สีแดง · % ค่า Ads เส้นประสีเขียว แกนขวา · ไม่เล่น animation (เดิมเส้นวิ่งจากซ้ายตอนเปิดหน้า)
+  const pr = labels.length > 31 ? 0 : 2.5, ln = (label, data, color, o) => Object.assign({ type: 'line', label, data, borderColor: color, backgroundColor: 'transparent', borderWidth: 2, pointRadius: pr, pointHoverRadius: 4, pointBackgroundColor: color, tension: 0.3, yAxisID: 'y' }, o || {});
+  const ds = [ln('ยอดขาย', gmvArr, '#60a5fa')];
   if (!opts.salesOnly) {
-    ds.push({ type: 'bar', label: 'ค่า Ads', data: adsArr, backgroundColor: 'rgba(248,113,113,0.55)', borderColor: '#f87171', borderWidth: 1, borderRadius: 3, yAxisID: 'y', maxBarThickness: 56 });
-    ds.push({ type: 'line', label: '% ค่า Ads', data: pctArr, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)', borderWidth: 2,
-      pointRadius: labels.length > 31 ? 0 : 3, pointBackgroundColor: '#f87171', yAxisID: 'y2', tension: 0.35 });
+    let la = adsArr.length - 1; while (la >= 0 && !(adsArr[la] > 0)) la--;   // วันท้ายที่ค่า Ads ยังไม่เข้า = เว้นว่าง ไม่ลากลง 0
+    ds.push(ln('ค่า Ads', adsArr.map((v, i) => (opts.daily && i > la ? null : v)), '#ef4444'));
+    ds.push(ln('% ค่า Ads', pctArr.map((v, i) => (gmvArr[i] > 0 && adsArr[i] > 0 ? v : null)), '#22c55e', { borderDash: [5, 4], yAxisID: 'y2' }));
   }
-  makeChart(id, 'bar', labels, ds, {
+  makeChart(id, 'line', labels, ds, {
     legend: { display: !opts.salesOnly, position: 'bottom' },
-    tooltip: { callbacks: { label: c => c.dataset.yAxisID === 'y2' ? `% ค่า Ads: ${(+c.raw || 0).toFixed(1)}%` : `${c.dataset.label}: ${fmt(Math.round(+c.raw || 0))}` } },
-    scales: opts.salesOnly ? {} : { y2: { position: 'right', ticks: { color: '#f87171', font: { family: 'Sarabun', size: 10, weight: '600' }, callback: v => v.toFixed(0) + '%', maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } } }
+    options: { animation: false, interaction: { mode: 'index', intersect: false } },
+    tooltip: { callbacks: { label: c => c.raw == null ? `${c.dataset.label}: —` : c.dataset.yAxisID === 'y2' ? `% ค่า Ads: ${(+c.raw || 0).toFixed(1)}%` : `${c.dataset.label}: ${fmt(Math.round(+c.raw || 0))}` } },
+    scales: opts.salesOnly ? {} : { y2: { position: 'right', beginAtZero: true, ticks: { color: '#22c55e', font: { family: 'Sarabun', size: 10, weight: '600' }, callback: v => v.toFixed(0) + '%', maxTicksLimit: 6 }, grid: { display: false }, border: { display: false } } }
   });
   const holder = document.getElementById(id)?.parentElement;
   if (holder) {
