@@ -829,7 +829,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-h"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-i"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -3264,9 +3264,12 @@ async function renderFbHub() {
   await shell;
   // (2026-10-18) แม่แบบ 1: แผงตัวเลข + กราฟ + ตารางรายเพจ อยู่ใน sales.js (กราฟ / ตาราง Sub-Channel เดิมเอาออกแล้ว)
   // (2026-11-18) การ์ด "คนทักจาก Meta" — ชุดข้อมูลเดียวกับการ์ด "ทักแชท" หน้า Facebook Ads (fb_ads_page) ตัวเลขจึงเท่ากันเสมอ
-  { const f = getDateValue('From'), t = getDateValue('To'); let tile = null; try { tile = await fbMsgTile(f, t); } catch (e) { console.warn('fb msg', e.message); }
-    if (currentPage !== 'fbhub') return;
-    renderHubOverview('fbhub', [tile || { name: 'คนทักจาก Meta', value: '—', sub: 'โหลดไม่สำเร็จ' }]); }
+  { const f = getDateValue('From'), t = getDateValue('To'), k = f + '|' + t;
+    // วาดหน้าก่อน (ใช้ข้อมูลคนทักที่มีอยู่แล้วถ้าเป็นช่วงเดิม) แล้วค่อยเติมเมื่อข้อมูลคนทักมา ไม่ให้ทั้งหน้ารอ
+    renderHubOverview('fbhub', null, renderFbHub._msgK === k ? renderFbHub._msg : undefined);
+    if (renderFbHub._msgK !== k) fbMsgData(f, t).then(m => m, e => { console.warn('fb msg', e.message); return null; }).then(m => {
+      if (currentPage !== 'fbhub' || getDateValue('From') !== f || getDateValue('To') !== t) return;
+      renderFbHub._msgK = k; renderFbHub._msg = m; renderHubOverview('fbhub', null, m); }); }
   const subSel = document.getElementById('fbPromoSubChannel');
   if (subSel && subSel.options.length <= 1) {
     subSel.innerHTML = '<option value="">ทั้งหมด</option>' + hubAgg('Facebook').sortedSub.map(([k]) => `<option value="${k}">${k}</option>`).join('');
@@ -3683,12 +3686,13 @@ function ttSetView(v) {
   ttViewMark(v); document.getElementById('ttViewDd')?.classList.remove('is-open');
   ensureTtApi().then(api => api.setView(v, getDateValue('From'), getDateValue('To'))).catch(e => console.warn('ttapi', e));
 }
-async function fbMsgTile(from, to) {
-  const tip = '<b>คนทักจาก Meta</b> จำนวนคนที่เริ่มคุยจาก Ads (Meta นับ) รวมทุกประเภท Ads<br>ตัวเลขเดียวกับการ์ด "ทักแชท" ในหน้า Facebook Ads<br><b>บาท / การทัก</b> = ค่า Ads Facebook ทั้งหมด ÷ จำนวนคนทัก';
-  if (document.getElementById('filterSubChannel').value) return { name: 'คนทักจาก Meta', value: '—', sub: 'ดูรายเพจได้ที่หน้า Facebook Ads', tip };
-  const P = { p_from: from, p_to: to }, d = await (window.sigCachedRpc ? sigCachedRpc('fb_ads_page', P, 'fb_ads_page_check') : supaRpc('fb_ads_page', P));
-  let msg = 0, sp = 0; ((d && d.daily) || []).forEach(r => { msg += +r.msg_started || 0; sp += +r.spend || 0; });
-  return { name: 'คนทักจาก Meta', value: fmt(msg), sub: msg > 0 ? `${fmt(sp / msg)} บาท / การทัก` : 'ไม่มีในช่วงนี้', tip };
+// (2026-11-18) คนทักจาก Meta รายวัน ของช่วงที่เลือก + ช่วงก่อนที่ยาวเท่ากัน — ชุดเดียวกับหน้า Facebook Ads (fb_ads_page) · การ์ด + เส้นกราฟวาดใน sales.js
+async function fbMsgData(from, to) {
+  const get = (a, b) => { const P = { p_from: a, p_to: b }; return (window.sigCachedRpc ? sigCachedRpc('fb_ads_page', P, 'fb_ads_page_check') : supaRpc('fb_ads_page', P)); };
+  const rows = d => ((d && d.daily) || []).map(r => ({ date: String(r.d).slice(0, 10), msg: +r.msg_started || 0, spend: +r.spend || 0 }));
+  const pr = getPrevPeriodRange(from, to);
+  const [c, p] = await Promise.all([get(from, to), pr && pr.from ? get(pr.from, pr.to).catch(() => null) : null]);
+  return { cur: rows(c), prev: rows(p) };
 }
 // ตัวอย่าง / รีวิวที่ส่งฟรี (ตัวเลขเดิมของการ์ดเดิม) — แสดงในแผงตัวเลขแบบดูอย่างเดียว ไม่เป็นเส้นในกราฟ
 function ttFreeSampleTile(from, to) {
@@ -4416,9 +4420,9 @@ async function hubShell(page) {
   const C = HUB_OV[page], root = document.getElementById(page + '-ov'); if (!C || !root || root.querySelector('.ov')) return;
   try { await loadSalesJs(); } catch (e) { return; }
   if (currentPage !== page || !window.salesOverviewShell) return;
-  window.salesOverviewShell({ root, page, hub: true, ch: C.ch, adsPage: C.adsPage, adsName: C.adsName, extraTiles: page === 'tthub' ? [{ name: 'ตัวอย่างฟรี' }] : page === 'fbhub' ? [{ name: 'คนทักจาก Meta' }] : [] });
+  window.salesOverviewShell({ root, page, hub: true, ch: C.ch, adsPage: C.adsPage, adsName: C.adsName, extraTiles: page === 'tthub' ? [{ name: 'ตัวอย่างฟรี' }] : [] });
 }
-async function renderHubOverview(page, extraTiles) {
+async function renderHubOverview(page, extraTiles, msg) {
   const C = HUB_OV[page], root = document.getElementById(page + '-ov'); if (!C || !root) return;
   try {
     await loadSalesJs();
@@ -4428,7 +4432,7 @@ async function renderHubOverview(page, extraTiles) {
     if (currentPage !== page) return;
     await window.renderSalesOverview({ root, page, hub: true, skipEnsure: true, ch: C.ch,
       from: getDateValue('From'), to: getDateValue('To'), sub: document.getElementById('filterSubChannel').value,
-      ads: adRawData.filter(r => r.channel === C.ch), adsPR: C.ch === 'Facebook' ? adRawData.filter(r => r.channel === 'Facebook PR') : null, adsTip: ADS_SOURCE_INFO[C.key], adsPage: C.adsPage, adsName: C.adsName, extraTiles: extraTiles || [] });
+      ads: adRawData.filter(r => r.channel === C.ch), adsPR: C.ch === 'Facebook' ? adRawData.filter(r => r.channel === 'Facebook PR') : null, adsTip: ADS_SOURCE_INFO[C.key], adsPage: C.adsPage, adsName: C.adsName, extraTiles: extraTiles || [], msg: page === 'fbhub' ? (msg === undefined ? undefined : msg) : undefined });
   } catch (e) { root.innerHTML = `<div class="error-banner" style="display:block;">${String(e.message || e)}</div>`; }
 }
 async function hubPrepare(page) {

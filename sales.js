@@ -18,11 +18,12 @@
     ord: { k: 'ord', name: 'ออเดอร์', c: '--blue', tip: 'จำนวนออเดอร์ทุกช่องทาง <b>รวม</b>ตัวแทน / Modern Trade<br><b>ไม่รวม</b> ออเดอร์ที่ยกเลิก / คืน' },
     aov: { k: 'aov', name: 'AOV', c: '--purple', tip: '<b>AOV (Average Order Value)</b> ยอดขาย ÷ ออเดอร์<br><b>ไม่รวม</b> ตัวแทน / Modern Trade เพราะสั่งลอตใหญ่' },
     cust: { k: 'cust', name: 'ลูกค้า Facebook', c: '--cyan', tip: 'เบอร์โทรไม่ซ้ำ นับเฉพาะ Facebook / Line<br><b>ไม่รวม</b> TikTok / Shopee / Lazada (ไม่ส่งเบอร์โทรจริงมา) และตัวแทน / Modern Trade' },
+    msg: { k: 'msg', name: 'คนทักจาก Meta', c: '--purple', tip: '<b>คนทักจาก Meta</b> จำนวนคนที่เริ่มคุยจาก Ads (Meta นับ) รวมทุกประเภท Ads<br>ตัวเลขเดียวกับการ์ด "ทักแชท" ในหน้า Facebook Ads<br><b>บาท / การทัก</b> = ค่า Ads Facebook ทั้งหมด ÷ จำนวนคนทัก<br>เลือกดูเฉพาะเพจ = ไม่แสดง (ดูรายเพจได้ที่หน้า Facebook Ads)' },
     ads: { k: 'ads', name: 'ค่า Ads', c: '--red', tip: '' },
     roas: { k: 'roas', name: '% ค่า Ads', c: '--green', tip: '<b>% ค่า Ads</b> = ค่า Ads ÷ ยอดขาย (ยิ่งต่ำยิ่งดี) · ตัวเล็กข้าง ๆ คือ <b>ROAS (Return on Ad Spend)</b> = ยอดขาย ÷ ค่า Ads<br><b>ไม่รวม</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง (Facebook PR / KOL)<br>ตัวเลขและเส้นในกราฟนับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ' },
     canc: { k: 'canc', name: 'ยกเลิก / คืน', c: '--orange', tip: 'ยอดออเดอร์ที่ยกเลิก / คืน<br><b>ไม่รวม</b> ตัวแทน / Modern Trade<br>% = ยอดยกเลิก ÷ (ยอดขาย + ยอดยกเลิก)<br>Shopee / Lazada: ยอดยกเลิกของเดือนที่ยังไม่ปิดมากับไฟล์ปิดเดือนจากบัญชี' }
   };
-  const metList = o => o.hub ? [M.rev, M.ord, M.aov, ...(o.ch === 'Facebook' ? [M.cust] : []), M.ads, M.roas, M.canc] : [M.rev, M.ord, M.aov, M.cust, M.canc];
+  const metList = o => o.hub ? (o.ch === 'Facebook' ? [M.rev, M.ord, M.msg, M.aov, M.ads, M.roas, M.canc, M.cust] : [M.rev, M.ord, M.aov, M.ads, M.roas, M.canc])   /* (2026-11-18) Facebook: คนทักจาก Meta ต่อจากออเดอร์ (ติ๊กดูกราฟได้) · ลูกค้า Facebook ไว้ท้ายสุด */ : [M.rev, M.ord, M.aov, M.cust, M.canc];
   const tipOf = (o, m) => !o.hub ? m.tip
     : m.k === 'rev' ? `ยอดขาย ${esc(o.ch)} ทุก${o.ch === 'Facebook' ? 'เพจ' : 'ร้าน'}<br><b>ไม่รวม</b> ออเดอร์ที่ยกเลิก / คืน และ CN · แหล่งเดียวกับทุกหน้า (ตารางสรุปยอดขาย)`
     : m.k === 'ads' ? (o.adsTip || 'ค่า Ads ของช่องทางนี้').replace(/\n/g, '<br>') + '<br>% = ค่า Ads ÷ ยอดขาย'
@@ -189,8 +190,8 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const ds = [], scales = { x: { grid: { display: false }, ticks: { color: css('--text3'), maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } } };
     const legend = [];
     if (S.mode === 'metric') {
-      const data = { rev: cur.rev, ord: cur.ord, aov: cur.aov, cust, canc: cur.canc, ads: cur.ads, roas: cur.roas };
-      const pdata = prv ? { rev: prv.rev, ord: prv.ord, aov: prv.aov, cust: prvCust, canc: prv.canc, ads: prv.ads, roas: prv.roas } : {};
+      const data = { rev: cur.rev, ord: cur.ord, aov: cur.aov, cust, canc: cur.canc, ads: cur.ads, roas: cur.roas, msg: cur.msg };
+      const pdata = prv ? { rev: prv.rev, ord: prv.ord, aov: prv.aov, cust: prvCust, canc: prv.canc, ads: prv.ads, roas: prv.roas, msg: prv.msg } : {};
       // (2026-11-12) แสดงแกนตัวเลข: ตัวชี้วัดแรกที่เลือก = แกนซ้าย · ตัวที่สอง = แกนขวา (ตัวเลขสีเดียวกับเส้น) · ตัวที่ 3 ขึ้นไปดูค่าได้ตอนชี้
       metList(o).filter(m => S.sel[m.k]).forEach((m, mi) => {
         const col = css(m.c), ax = 'y_' + m.k;
@@ -403,6 +404,12 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       const aCur = noneA ? 0 : sumAds(adsBy(from, capC)), aPrev = noneA ? 0 : sumAds(adsBy(pA.from, pA.to));
       const rCur = noneA ? 0 : sumOf(salesRows(from, capC, ch, sub), 'net_revenue'), rPrev = noneA ? 0 : sumOf(salesRows(pA.from, pA.to, ch, sub), 'net_revenue');
       vals.ads = fmt(totAds + totPR);
+      if (o.ch === 'Facebook') {   // (2026-11-18) คนทักจาก Meta — ชุดเดียวกับการ์ด ทักแชท หน้า Facebook Ads
+        const mc = o.msg && !sub ? o.msg.cur : null, mp = o.msg && !sub ? (o.msg.prev || []) : [], sm = (a, f) => a.reduce((t, r) => t + (+r[f] || 0), 0);
+        if (!mc) { vals.msg = '—'; deltas.msg = `<span>${sub ? 'ดูรายเพจได้ที่หน้า Facebook Ads' : (o.msg === null ? 'โหลดไม่สำเร็จ' : '&nbsp;')}</span>`; }
+        else { const n = sm(mc, 'msg'), sp = sm(mc, 'spend'), pn = sm(mp, 'msg'); vals.msg = fmt(n);
+          deltas.msg = (pn > 0 && !R.noPrev ? chipOf((n - pn) / pn * 100, false, 'เทียบกับช่วงก่อนที่ยาวเท่ากัน · ช่วงก่อน ' + fmt(pn)) : '') + `<span>${n > 0 ? fmt(sp / n) + ' บาท / การทัก' : 'ไม่มีในช่วงนี้'}</span>`; }
+      }
       // ใช้ตัวคิดเดียวกับหน้า Ads (roasCapOf): วันล่าสุดที่มีทั้งยอดขายและค่า Ads → ตัวเลขเท่ากันทุกหน้า
       const byD = {}; rowsAll.forEach(r => { (byD[r.date] = byD[r.date] || { date: r.date, rev: 0, ads: 0 }).rev += num(r.net_revenue); });
       adsIn.forEach(a => { (byD[a.date] = byD[a.date] || { date: a.date, rev: 0, ads: 0 }).ads += a.ads; });
@@ -438,6 +445,9 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const B = buckets(from, to);
     $(o, 'ovGrain').textContent = B.monthly ? 'รายเดือน' : 'รายวัน';
     const cur = series(rowsAll, B, A && A.adsIn, A && A.capC, A && A.prIn);
+    // คนทักจาก Meta รายวัน (จาก o.msg ที่หน้า Facebook ส่งมา) · วันหลังวันล่าสุดที่มีข้อมูล = ไม่วาด
+    const msgSer = (rows, BB) => { if (!rows || !rows.length) return null; const ix = Object.fromEntries(BB.list.map((b, i) => [b, i])), a = BB.list.map(() => 0); let last = -1; rows.forEach(r => { const i = ix[BB.key(r)]; if (i == null) return; a[i] += r.msg; if (i > last) last = i; }); return a.map((v, i) => i > last ? null : v); };
+    if (o.msg && !sub) cur.msg = msgSer(o.msg.cur, B);
     // ช่วงที่ยอดยังเข้าไม่ครบ = เส้นประ: รายวัน = หลังวันที่ครบล่าสุด · รายเดือน = เดือนสุดท้าย (ยังไม่จบเดือน)
     const capIdx = !R.cut ? B.list.length : R.none ? -1 : B.monthly ? B.list.length - 2 : B.list.indexOf(R.ct);
     // (2026-11-17) รายวัน: วันหลังวันที่ยอดเข้าครบล่าสุด ที่ยังไม่มียอดเลย (ยังไม่ได้อัปโหลด / ยังไม่ถึง) ไม่วาดเส้น — เดิมลากเส้นประลงไปที่ 0 ดูเหมือนยอดขายร่วง
@@ -461,7 +471,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const showPrev = !B.monthly && !R.noPrev;
     if (showPrev) { const pr = getPrevPeriodRange(from, to);
       if (pr && pr.from) { const PB = { monthly: false, list: [], key: r => r.date }; let d = pr.from; while (d <= pr.to) { PB.list.push(d); d = dayAdd(d, 1); }
-        prv = series(salesRows(pr.from, pr.to, ch, sub), PB, A && A.adsBy(pr.from, pr.to), A && pr.to, A && A.prBy(pr.from, pr.to)); prevLbl = PB.list.map(dLbl); } }
+        prv = series(salesRows(pr.from, pr.to, ch, sub), PB, A && A.adsBy(pr.from, pr.to), A && pr.to, A && A.prBy(pr.from, pr.to)); prevLbl = PB.list.map(dLbl); if (o.msg && !sub) prv.msg = msgSer(o.msg.prev, PB); } }
     I.ctx = { B, cur, prv, cust: null, prvCust: null, capIdx, showPrev, prevLbl, dashAt, subLines };
     drawChart(I);
     if (window.UI && UI.fit) UI.fit();
