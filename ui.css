@@ -390,3 +390,5 @@ button { font-family: inherit; }
 .tdr-tbl .ui-adp, #tblTtOrderChannel .ui-adp, #tblShSys .ui-adp, .hm-adtbl .ui-adp, .mkt-tbl .ui-adp, #tblTtProduct .ui-adp { display: inline-block; line-height: 1.25; }
 .tdr-tbl .ui-adp small, #tblTtOrderChannel .ui-adp small, #tblShSys .ui-adp small, .hm-adtbl .ui-adp small, .mkt-tbl .ui-adp small, #tblTtProduct .ui-adp small { display: block; margin-left: 0; }
 .tdr-tbl .ui-adp-w, #tblTtOrderChannel .ui-adp-w, #tblShSys .ui-adp-w, .mkt-tbl .ui-adp-w, #tblTtProduct .ui-adp-w { display: none; }
+/* (2026-11-18) จอโน้ตบุ๊ก: แถบการ์ดของหน้าภาพรวมช่องทางมี 7–8 ใบ การ์ดแคบ — ROAS ลงบรรทัดล่างใต้ % ไม่ให้ล้นการ์ด */
+@media (max-width: 1500px) { [id$="ovTiles"] .ui-metric-v .ui-adp { display: inline-block; line-height: 1.15; } [id$="ovTiles"] .ui-metric-v .ui-adp small { display: block; margin-left: 0; font-size: 12px; } }
