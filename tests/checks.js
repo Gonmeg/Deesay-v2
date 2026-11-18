@@ -92,7 +92,7 @@
         const t = (el.textContent || '').trim(); if (!num.test(t)) return;
         if (parseFloat(getComputedStyle(el).fontSize) < 20) return;
         if (el.closest('table, canvas, svg')) return;
-        let card = el.parentElement, label = '';
+        let card = (el.closest('.ui-adp') || el).parentElement, label = '';   // (2026-11-18) % ค่า Ads + ROAS ตัวเล็ก อยู่ในกล่องเดียวกัน — หาป้ายชื่อจากการ์ด ไม่ใช่จากกล่องตัวเลข
         for (let i = 0; i < 4 && card; i++, card = card.parentElement) {
           const lines = (card.innerText || '').split('\n').map(x => x.trim()).filter(Boolean);
           const lb = lines.find(x => !num.test(x) && x !== 'ⓘ' && x.length > 1);

@@ -829,7 +829,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-e"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-f"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -3849,7 +3849,7 @@ async function renderShCpas(from, to) {
       ${kpi('เข้าหน้า Shopee', CP_NUM(T.lpv), T.lpv ? `${fmt(Math.round(T.spend / T.lpv))} ต่อครั้ง` : '')}
       ${kpi('ใส่ตะกร้า (Meta)', CP_NUM(T.atc), T.atc ? `${fmt(Math.round(T.spend / T.atc))} ต่อครั้ง` : '')}
       ${kpi('ยอดขาย (Meta)', CP_MONEY(T.val), T.pur ? `ซื้อ ${fmt(T.pur)} ครั้ง · ${fmt(Math.round(T.spend / T.pur))} ต่อการซื้อ` : '')}
-      ${kpi('% ค่า Ads (Meta นับ)', CP_ROAS(T.val, T.spend), 'ค่า Ads ÷ ยอดขาย (Meta) · ตัวเล็ก = ROAS')}
+      ${kpi('% ค่า Ads (Meta นับ)', CP_ROAS(T.val, T.spend), 'ค่า Ads ÷ ยอดขาย (Meta)')}
     </div>
     <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">CPAS ตาม Campaign <span class="sa-note">กดชื่อ Campaign เพื่อดู Ads ข้างใน</span></div>
       <div style="display:flex;gap:8px;align-items:center;">${cpMetricsBtn('shCpasCamp')}<button class="btn btn-ghost" onclick="exportTable('tblShCpasCamp')">⬇ Export CSV</button></div></div>
@@ -9206,7 +9206,7 @@ async function renderTta() {
   const nClips = window._ttaTotalClips || ttaClipTotal(), nDee = ttaClipTotal(true);
   document.getElementById('tta-kpis').innerHTML =
     kc('ยอดขายจาก Ads', fmt(totalPurchaseValue), 'Product + LIVE GMV Max', fbeInfoIcon('tta-kpi-rev', revTip + '<br>ยอดตามที่ TikTok นับให้ Ads <b>ไม่ใช่</b>ยอดขายจริงทั้งร้าน (ดูแถบด้านบน)')) +
-    kc('% ค่า Ads (TikTok นับ)', overallRoas !== null ? window.adPctR(overallRoas) : '—', 'ค่า Ads ÷ ยอดที่ TikTok นับ · ตัวเล็ก = ROAS Ads', fbeInfoIcon('tta-kpi-roas', 'ยอดขายที่ TikTok นับให้ Ads ÷ ค่า Ads รวม<br><b>ไม่ใช่</b> ROAS จริง (ROAS จริงใช้ยอดขายจริงทั้งร้าน อยู่ในแถบด้านบน)')) +
+    kc('% ค่า Ads (TikTok นับ)', overallRoas !== null ? window.adPctR(overallRoas) : '—', 'ค่า Ads ÷ ยอดที่ TikTok นับ', fbeInfoIcon('tta-kpi-roas', 'ยอดขายที่ TikTok นับให้ Ads ÷ ค่า Ads รวม<br><b>ไม่ใช่</b> ROAS จริง (ROAS จริงใช้ยอดขายจริงทั้งร้าน อยู่ในแถบด้านบน)')) +
     kc('ออเดอร์จาก Ads', fmt(totalOrders), `CPO ${totalOrders ? fmt(totalSpend / totalOrders) : '—'}`, fbeInfoIcon('tta-kpi-orders', ordersTip + '<br>CPO = ' + cpoTip)) +
     kc('คลิปที่ยิง Ads', fmt(nClips), ttaByClip.length ? `Deesay ${fmt(nDee)} · KOL ${fmt(Math.max(0, nClips - nDee))}` : '&nbsp;');
   renderTtaHero(totalSpend, spendTip);
@@ -9880,7 +9880,7 @@ async function renderShAds() {
   kpi.innerHTML =
     kc('ค่า Ads Product/Shop', fmt(spend), `เฉลี่ย ${fmt(daily.length ? spend / daily.length : 0)} / วัน`, fbeInfoIcon('shads-info-pspend', '<b>รวม</b> Product Ads + Shop Ads ของร้าน Shopee Mall และ Shopee 24hr<br><b>ไม่รวม</b> Brand / Live / Meta / เหรียญ / CPAS (ดูในแถบด้านบน)')) +
     kc('ยอดขายจาก Ads', fmt(gmv), `เฉพาะสินค้าที่ยิง ${fmt(dgmv)}`, fbeInfoIcon('shads-info-gmv', 'ยอดขายที่ Shopee นับว่ามาจาก Ads: ยอดหลังคนคลิก Ads <b>รวม</b>สินค้าอื่นในร้านที่ซื้อพร้อมกัน (ค่าเดียวกับหน้า Shopee Ads ใน Seller Centre)<br>บรรทัดเล็ก = เฉพาะสินค้าที่ยิง Ads<br><b>ไม่ใช่</b>ยอดขายตามบัญชี · <b>ไม่รวม</b>ยอดจาก Brand / Live / Meta / CPAS')) +
-    kc('% ค่า Ads (Shopee นับ)', roas !== null ? window.adPctR(roas) : '—', 'ค่า Ads ÷ ยอดที่ Shopee นับ · ตัวเล็ก = ROAS Ads', fbeInfoIcon('shads-info-proas', 'ยอดขายที่ Shopee นับว่ามาจาก Ads ÷ ค่า Ads Product/Shop<br><b>ไม่ใช่</b> ROAS จริง (ROAS จริงใช้ยอดขายตามบัญชี ÷ ค่า Ads ทุกประเภท อยู่ในแถบด้านบน)'), shAdsRoasColor(roas)) +
+    kc('% ค่า Ads (Shopee นับ)', roas !== null ? window.adPctR(roas) : '—', 'ค่า Ads ÷ ยอดที่ Shopee นับ', fbeInfoIcon('shads-info-proas', 'ยอดขายที่ Shopee นับว่ามาจาก Ads ÷ ค่า Ads Product/Shop<br><b>ไม่ใช่</b> ROAS จริง (ROAS จริงใช้ยอดขายตามบัญชี ÷ ค่า Ads ทุกประเภท อยู่ในแถบด้านบน)'), shAdsRoasColor(roas)) +
     kc('ออเดอร์จาก Ads', fmt(orders), `${fmt(items)} ชิ้น · ${fmt(orders ? spend / orders : 0)} / ออเดอร์`) +
     kc('คลิก / CPC', fmtB(clicks), `CPC ${(clicks ? spend / clicks : 0).toFixed(2)} · CTR ${imp ? (clicks / imp * 100).toFixed(2) : 0}%`) +
     kc('Impression', fmtB(imp), `CVR ${clicks ? (orders / clicks * 100).toFixed(1) : 0}%`);
