@@ -19,7 +19,7 @@
     aov: { k: 'aov', name: 'AOV', c: '--purple', tip: '<b>AOV (Average Order Value)</b> ยอดขาย ÷ ออเดอร์<br><b>ไม่รวม</b> ตัวแทน / Modern Trade เพราะสั่งลอตใหญ่' },
     cust: { k: 'cust', name: 'ลูกค้า Facebook', c: '--cyan', tip: 'เบอร์โทรไม่ซ้ำ นับเฉพาะ Facebook / Line<br><b>ไม่รวม</b> TikTok / Shopee / Lazada (ไม่ส่งเบอร์โทรจริงมา) และตัวแทน / Modern Trade' },
     ads: { k: 'ads', name: 'ค่า Ads', c: '--red', tip: '' },
-    roas: { k: 'roas', name: 'ROAS', c: '--green', tip: '<b>ROAS (Return on Ad Spend)</b> ยอดขาย ÷ ค่า Ads<br><b>ไม่รวม</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง (Facebook PR / KOL)<br>ตัวเลขและเส้นในกราฟนับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ' },
+    roas: { k: 'roas', name: '% ค่า Ads', c: '--green', tip: '<b>% ค่า Ads</b> = ค่า Ads ÷ ยอดขาย (ยิ่งต่ำยิ่งดี) · ตัวเล็กข้าง ๆ คือ <b>ROAS (Return on Ad Spend)</b> = ยอดขาย ÷ ค่า Ads<br><b>ไม่รวม</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง (Facebook PR / KOL)<br>ตัวเลขและเส้นในกราฟนับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ' },
     canc: { k: 'canc', name: 'ยกเลิก / คืน', c: '--orange', tip: 'ยอดออเดอร์ที่ยกเลิก / คืน<br><b>ไม่รวม</b> ตัวแทน / Modern Trade<br>% = ยอดยกเลิก ÷ (ยอดขาย + ยอดยกเลิก)<br>Shopee / Lazada: ยอดยกเลิกของเดือนที่ยังไม่ปิดมากับไฟล์ปิดเดือนจากบัญชี' }
   };
   const metList = o => o.hub ? [M.rev, M.ord, M.aov, ...(o.ch === 'Facebook' ? [M.cust] : []), M.ads, M.roas, M.canc] : [M.rev, M.ord, M.aov, M.cust, M.canc];
@@ -49,7 +49,7 @@
     const d = LAY_DEF[o.ch]; return d ? { t: d.t, w: d.n ? HEAD_H + (d.n + 1) * ROW_H : 0 } : null; };
   const laySet = (o, t, w) => { const v = { t: Math.round(t), w: Math.round(w) }, c = layMem[o.page];
     if (c && c.t === v.t && c.w === v.w) return; layMem[o.page] = v; try { localStorage.setItem(LAY_KEY, JSON.stringify(layMem)); } catch (e) {} };
-  const roasTxt = (rev, ads) => ads > 0 ? (rev / ads).toFixed(2) + 'x' : '—';
+  const roasTxt = (rev, ads) => window.adPctHtml(rev, ads);   // (2026-11-18) % ค่า Ads ตัวหลัก + ROAS ตัวเล็ก
   // (2026-11-02) ป้ายเทียบแบบเดียวกับหน้าแรก: เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3% · inv = ยิ่งมากยิ่งไม่ดี (ค่า Ads)
   const chipOf = (v, inv, tip) => `<span class="ui-chip ${Math.abs(v) < 3 ? '' : ((v > 0) !== !!inv ? 'up' : 'dn')}"${tip ? ` title="${esc(tip)}"` : ''}>${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}%</span>`;
   // id ของชิ้นส่วนในหน้า: หน้าภาพรวมยอดขายใช้ id เดิม · หน้าภาพรวมรายช่องทางเติมชื่อหน้าข้างหน้า (กัน id ซ้ำกันข้ามหน้า)
@@ -138,7 +138,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     o.aov = o.rx.map((v, i) => o.ox[i] ? v / o.ox[i] : null);
     if (withAds) {
       adsRows.forEach(a => { const i = idx[B.key(a)]; if (i == null) return; o.ads[i] += a.ads; if (capC && a.date <= capC) o.adsC[i] += a.ads; });
-      o.roas = o.revC.map((v, i) => o.adsC[i] > 0 ? v / o.adsC[i] : null);
+      o.roas = o.revC.map((v, i) => o.adsC[i] > 0 && v > 0 ? o.adsC[i] / v * 100 : null);   // (2026-11-18) เส้นกราฟ = % ค่า Ads
       (prRows || []).forEach(a => { const i = idx[B.key(a)]; if (i != null) o.ads[i] += a.ads; });   // PR: นับในค่า Ads แต่ไม่นับใน ROAS
     }
     return o;
@@ -192,7 +192,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       metList(o).filter(m => S.sel[m.k]).forEach((m, mi) => {
         const col = css(m.c), ax = 'y_' + m.k;
         scales[ax] = { display: mi < 2, position: mi === 1 ? 'right' : 'left', beginAtZero: true, border: { display: false }, grid: { color: css('--grid') || 'rgba(127,127,127,.12)' },
-          ticks: { color: col, maxTicksLimit: 6, callback: v => m.k === 'roas' ? (+v).toFixed(1) + 'x' : fmt(v) } };
+          ticks: { color: col, maxTicksLimit: 6, callback: v => m.k === 'roas' ? (+v).toFixed(0) + '%' : fmt(v) } };
         ds.push({ label: m.name, data: data[m.k] || [], yAxisID: ax, borderColor: col, backgroundColor: col, borderWidth: 2.2, pointRadius: 0, pointHoverRadius: 4, tension: .25, spanGaps: false, segment: { borderDash: dashFor(m.k) }, _k: m.k });
         if (showPrev && S.cmp && pdata[m.k]) ds.push({ label: 'ช่วงก่อน · ' + m.name, data: pdata[m.k], yAxisID: ax, borderColor: col, borderWidth: 1.3, borderDash: [3, 5], pointRadius: 0, pointHoverRadius: 3, tension: .25, _prev: true, _opacity: .55, _k: m.k });
         legend.push(`<span><i style="background:var(${m.c})"></i>${m.name}</span>`);
@@ -210,7 +210,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     ds.forEach(d => { if (d._opacity && /^#[0-9a-f]{6}$/i.test(d.borderColor)) d.borderColor += '8C'; });
     $(o, 'ovLegend').innerHTML = legend.join('') + (S.mode === 'metric' && showPrev ? `<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-ovcmp ${S.cmp ? 'checked' : ''} style="accent-color:var(--accent);">เส้นประ = ช่วงก่อน</label>` : '');
     const cb = $(o, 'ovLegend').querySelector('[data-ovcmp]'); if (cb) cb.onchange = () => { S.cmp = cb.checked; drawChart(I); };
-    const vfmt = (k, v) => v == null ? '—' : k === 'roas' ? v.toFixed(2) + 'x' : fmt(v);
+    const vfmt = (k, v) => v == null ? '—' : k === 'roas' ? v.toFixed(1) + '%' + (v > 0 ? ' (ROAS ' + (100 / v).toFixed(2) + 'x)' : '') : fmt(v);
     I.chart = new Chart(cv, { type: 'line', data: { labels: lbl, datasets: ds }, options: {
       responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, animation: false,
       plugins: { legend: { display: false }, tooltip: {
@@ -309,7 +309,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const go = o.hub && o.adsPage ? `<button class="btn btn-ghost" type="button" data-ovgo="${o.adsPage}">ดูหน้า ${esc(o.adsName || 'Ads')} →</button>` : '';
     const head = o.hub
       ? `<th>${unit}</th><th>ยอดขาย</th><th title="ยอดขายของแถว ÷ ยอดขายรวม ${esc(o.ch)}">สัดส่วน</th><th>ออเดอร์</th><th title="ยอดขาย ÷ ออเดอร์">AOV</th>
-         <th title="ค่า Ads ที่ยิงให้${unit}นั้น · แหล่งเดียวกับหน้า Ad Performance">ค่า Ads</th><th title="ROAS = ยอดขาย ÷ ค่า Ads ของแถวเดียวกัน">ROAS</th><th id="${idOf(o, 'ovCmpTh')}">เทียบช่วงก่อน</th><th>ยกเลิก / คืน</th>`
+         <th title="ค่า Ads ที่ยิงให้${unit}นั้น · แหล่งเดียวกับหน้า Ad Performance">ค่า Ads</th><th title="% ค่า Ads = ค่า Ads ÷ ยอดขาย ของแถวเดียวกัน (ยิ่งต่ำยิ่งดี) · ROAS = ยอดขาย ÷ ค่า Ads">% ค่า Ads</th><th id="${idOf(o, 'ovCmpTh')}">เทียบช่วงก่อน</th><th>ยกเลิก / คืน</th>`
       : `<th>ช่องทาง</th><th>ยอดขาย</th><th title="ยอดขายของแถว ÷ ยอดรวมทุกช่องทาง">สัดส่วน</th><th>ออเดอร์</th>
          <th title="ยอดขาย ÷ ออเดอร์ · ตัวแทน / MT ไม่คิด">AOV</th><th id="${idOf(o, 'ovCmpTh')}">เทียบช่วงก่อน</th><th>ยกเลิก / คืน</th>`;
     const cols = o.hub ? 9 : 7;
@@ -406,13 +406,14 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       if (AC.cap) Object.values(byD).forEach(d => { if (d.date > AC.cap) d.partial = true; });   // วันที่ค่า Ads บางแหล่งยังไม่เข้า (เช่น Shopee วันนี้มีแค่ Product/Shop Ads) = ยังไม่ครบ
       const RC = window.roasCapOf ? window.roasCapOf(Object.values(byD)) : { cap: '', rev: total.rev, ads: totAds };
       const rRo = RC.cap ? RC.rev : total.rev, aRo = RC.cap ? RC.ads : totAds;
-      const adsPct = rRo > 0 && aRo > 0 ? `${pct1(aRo / rRo)} ของยอดขาย` : '';
+      const adsPct = '';   // (2026-11-18) % อยู่ที่การ์ด % ค่า Ads แล้ว ไม่โชว์ซ้ำ
       const prCur = noneA ? 0 : sumAds(prBy(from, capC)), prPrev = noneA ? 0 : sumAds(prBy(pA.from, pA.to));
       const adsSub = totPR > 0 ? `Conversion ${fmt(totAds)} · PR ${fmt(totPR)}` : adsPct;
       deltas.ads = noneA ? (adsSub ? `<span>${adsSub}</span>` : badgeW(0, 0, true, tipA)) : (adsSub ? badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true).replace(/<span>ช่วงก่อน [^<]*<\/span>$/, '') + `<span>${adsSub}</span>` : badgeW(aCur + prCur, aPrev + prPrev, false, tipA, true));
       // (2026-11-17) ROAS / % ค่า Ads นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (capC) — ไม่เอายอดขายของวันที่ค่า Ads ยังไม่เข้ามาหาร · เท่ากันทั้งการ์ด แถวรวม และหน้า Ads
       vals.roas = roasTxt(rRo, aRo);
-      deltas.roas = badgeW(aCur > 0 ? rCur / aCur : 0, aPrev > 0 ? rPrev / aPrev : 0, noneA || !(aCur > 0 && aPrev > 0), aCur > 0 && aPrev > 0 ? tipA : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ', false, v => v.toFixed(2) + 'x');
+      { const pc = window.adPctOf(rCur, aCur), pp = window.adPctOf(rPrev, aPrev), ok = !noneA && pc != null && pp != null;
+        deltas.roas = window.adPctChip(ok ? pc : null, ok ? pp : null, ok ? tipA + ' · % ลดลง = ดีขึ้น' : 'ช่วงนี้หรือช่วงก่อนไม่มีค่า Ads ให้เทียบ') + (ok ? `<span>ช่วงก่อน ${pp.toFixed(1)}% · ${(rPrev / aPrev).toFixed(2)}x</span>` : ''); }
       // ค่า Ads ที่เข้าช้ากว่ายอดขาย → แจ้งที่ปุ่มสถานะของหน้า (ที่เดียว ไม่ทำแถบในหน้า)
       // (2026-10-19) ค่า Ads แต่ละแหล่งมีถึงวันไหน แจ้งที่ Data Guard ของหน้า (Ads …) ที่เดียว ไม่ซ้ำที่นี่
       if (window.pageNote) window.pageNote(page, 'adsstale', null);

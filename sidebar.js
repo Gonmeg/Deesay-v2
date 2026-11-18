@@ -109,7 +109,6 @@
   // ── ส่วนล่าง: ผู้ใช้ · สถานะ · เวอร์ชัน · ปุ่ม ──
   const legacy = DASH ? `<span id="authUser" hidden></span><span id="buildTag" hidden>${esc(BUILD)}</span>
       <button type="button" id="themeToggleBtn" hidden></button><button type="button" id="btnRefreshMV" hidden></button>
-      <span id="cacheStatus" class="sb-note"></span>
       <div class="sb-bar" id="refreshMVBarWrap" style="display:none;"><div id="refreshMVBar"></div></div>
       <div id="refreshMVStatus" class="sb-note"></div>
       <div id="bgSyncWrap" style="display:none;"><div id="bgSyncStatus" class="sb-note"></div><div class="sb-bar"><div id="bgSyncBar" style="background:#a78bfa;"></div></div></div>` : '';
@@ -119,11 +118,11 @@
     <div class="nav sb-nav" role="navigation">${nav}</div>
     <div class="sb-ft">
       <div class="sb-usr"><div class="sb-av" id="sbAv">·</div><div class="sb-who"><b id="sbName">—</b><small id="sbRole"></small></div></div>
-      <div class="sb-st"><i class="sb-dot" data-label="เชื่อมต่อฐานข้อมูลแล้ว"></i><span class="sb-tx" id="lastUpdate">เชื่อมต่อแล้ว</span>${BUILD ? `<span class="sb-ver">เวอร์ชัน ${esc(BUILD.replace(/^v/, ''))}</span>` : ''}</div>
+      <div class="sb-st"><div class="sb-st1"><i class="sb-dot" data-label="เชื่อมต่อฐานข้อมูลแล้ว"></i>${DASH ? '<span class="sb-tx sb-main" id="cacheStatus">เชื่อมต่อแล้ว</span>' : '<span class="sb-tx sb-main" id="lastUpdate">เชื่อมต่อแล้ว</span>'}</div>${DASH ? '<span class="sb-tx sb-st2" id="lastUpdate"></span>' : ''}</div>
       ${legacy}
       <div class="sb-acts">${DASH ? `<button type="button" class="sb-ib" onclick="refreshDashboardData()" data-label="รีเฟรชข้อมูล Dashboard">${svg('refresh')}</button>` : ''}
         <button type="button" class="sb-ib" id="sbTheme" data-label="สลับโหมดมืด / สว่าง">${svg('moon')}</button>
-        <button type="button" class="sb-ib" id="sbLogout" data-label="ออกจากระบบ">${svg('logout')}</button></div>
+        <button type="button" class="sb-ib" id="sbLogout" data-label="ออกจากระบบ">${svg('logout')}</button>${BUILD ? `<span class="sb-ver" data-label="เวอร์ชันของหน้าเว็บ">v${esc(BUILD.replace(/^v/, ''))}</span>` : ''}</div>
     </div>
   </aside><div class="sb-fly" id="sbFly"></div>`;
 
@@ -158,14 +157,17 @@
   .sb-usr { display: flex; align-items: center; gap: 10px; padding: 6px; }
   .sb-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; border: 1px solid var(--border); }
   .sb-who { min-width: 0; line-height: 1.25; } .sb-who b { display: block; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .sb-who small { display: block; font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sb-st { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--text3); padding: 6px 6px 8px; }
+  /* (2026-11-18) กล่องสถานะเดียว: บรรทัดบน = สถานะข้อมูล · บรรทัดล่าง = ข้อมูลถึงวันไหน · เลขเวอร์ชันย้ายไปท้ายแถวปุ่ม */
+  .sb-st { margin: 6px 0 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg2); font-size: 11.5px; color: var(--text3); line-height: 1.35; }
+  .sb-st1 { display: flex; align-items: center; gap: 7px; min-width: 0; } .sb-main { font-size: 12.5px; font-weight: 600; color: var(--text2); white-space: nowrap; }
+  .sb-st2 { display: block; padding-left: 14px; margin-top: 1px; white-space: nowrap; } .sb-st2:empty { display: none; }
   .sb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green, #16a34a); flex: none; }
-  .sb-ver { flex-basis: 100%; padding-left: 13px; font-size: 11px; color: var(--text3); }
+  .sb-ver { margin-left: auto; align-self: center; font-size: 10.5px; color: var(--text3); white-space: nowrap; }
   .sb-note { display: block; font-size: 10.5px; color: var(--text3); line-height: 1.4; padding: 0 6px; }
   .sb-note:empty { display: none; }
   .sb-bar { height: 4px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin: 4px 6px 6px; } .sb-bar > div { width: 0%; height: 100%; background: var(--accent); transition: width .3s ease; }
-  .sb-acts { display: flex; gap: 6px; }
-  .sb-ib { flex: 1; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text2); display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .sb-acts { display: flex; gap: 6px; align-items: center; }
+  .sb-ib { flex: none; width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text2); display: grid; place-items: center; cursor: pointer; padding: 0; }
   .sb-ib:hover { background: var(--bg3); color: var(--text); } .sb-ib .sb-ic { width: 16px; height: 16px; }
   .sb-fly { position: fixed; z-index: 1200; display: none; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 6px; min-width: 180px; font-family: 'Sarabun', sans-serif; color: var(--text); }
   .sb-fly.tip { min-width: 0; padding: 5px 10px; font-size: 12px; white-space: nowrap; }
@@ -178,7 +180,7 @@
   body.sb-mini .sb-nav { padding: 8px 10px 12px; } body.sb-mini .sb .nav-item, body.sb-mini .sb .nav-group-label:not(.sb-sec) { justify-content: center; padding: 9px 0; }
   body.sb-mini .sb .sb-sec { font-size: 0; margin: 10px 4px 6px; padding: 0; }
   body.sb-mini .sb .wn-dot { position: absolute; top: 6px; right: 8px; }
-  body.sb-mini .sb-usr { justify-content: center; padding: 6px 0; } body.sb-mini .sb-st { justify-content: center; padding: 4px 0 8px; } body.sb-mini .sb-acts { flex-direction: column; }
+  body.sb-mini .sb-usr { justify-content: center; padding: 6px 0; } body.sb-mini .sb-st { border: 0; background: none; padding: 4px 0 8px; margin: 0; } body.sb-mini .sb-st1 { justify-content: center; } body.sb-mini .sb-ib { width: 100%; } body.sb-mini .sb-acts { flex-direction: column; }
   @media (max-width: 760px) { body.has-sb { --sb-w: 64px; } }`;
 
   const st = document.createElement('style'); st.id = 'sbStyle'; st.textContent = css; document.head.appendChild(st);
