@@ -829,7 +829,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-i"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-j"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -10202,7 +10202,8 @@ window._authP.then(p => {
     if (m && THMON[m[2]] !== undefined) return new Date(2000 + (new Date().getFullYear() % 100), THMON[m[2]], +m[1]).getTime();
     return null;
   };
-  const cellText = td => (td?.innerText ?? td?.textContent ?? '').trim();
+  // (2026-11-18) ช่องที่ใส่ data-sv = ใช้ค่านี้เรียง (เช่นช่องที่มีตัวเลข 2 ตัว "9,079 · 50 Orders")
+  const cellText = td => (td && td.dataset && td.dataset.sv !== undefined ? td.dataset.sv : (td?.innerText ?? td?.textContent ?? '')).trim();
 
   document.addEventListener('click', function (e) {
     const th = e.target.closest('th');
@@ -10226,19 +10227,21 @@ window._authP.then(p => {
     [...th.parentElement.cells].forEach(c => { c.classList.remove('asc', 'desc'); });
     th.classList.add(dir);
 
-    const sample = rows.slice(0, 12).map(r => cellText(r.cells[idx]));
+    // (2026-11-18) ดูชนิดคอลัมน์จากแถวที่มีค่าจริง (เดิมดูแค่ 12 แถวแรก ถ้าเป็น — หมด จะเรียงแบบตัวอักษรผิด)
+    const sample = rows.map(r => cellText(r.cells[idx])).filter(x => x && x !== '—' && x !== '-').slice(0, 40);
     const isNum = sample.filter(x => num(x) !== null).length >= Math.max(1, Math.ceil(sample.filter(x => x && x !== '—').length * 0.6));
     const isDate = !isNum && sample.filter(x => asDate(x) !== null).length >= Math.ceil(sample.length * 0.6);
 
     const key = r => {
       const t = cellText(r.cells[idx]);
-      if (isNum) { const v = num(t); return v === null ? -Infinity : v; }
-      if (isDate) { const v = asDate(t); return v === null ? -Infinity : v; }
+      if (isNum) { const v = num(t); return v === null ? null : v; }
+      if (isDate) { const v = asDate(t); return v === null ? null : v; }
       return t.toLowerCase();
     };
     const mul = dir === 'asc' ? 1 : -1;
     rows.sort((a, b) => {
       const x = key(a), y = key(b);
+      if (x === null || y === null) return x === y ? 0 : x === null ? 1 : -1;   // ช่องว่าง / — อยู่ท้ายเสมอ ทั้งเรียงมากไปน้อยและน้อยไปมาก
       if (typeof x === 'number' && typeof y === 'number') return (x - y) * mul;
       return String(x).localeCompare(String(y), 'th') * mul;
     });

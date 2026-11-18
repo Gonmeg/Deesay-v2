@@ -65,6 +65,7 @@
       table.pt-tbl { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
       table.pt-tbl th { font-size:12px; color:var(--text3); font-weight:600; padding:8px; border-bottom:1px solid var(--border); text-align:center; white-space:nowrap; }
       table.pt-tbl td { padding:9px 8px; border-bottom:1px solid var(--border); text-align:center; font-variant-numeric:tabular-nums; } table.pt-tbl th:first-child, table.pt-tbl td:first-child { text-align:left; } table.pt-tbl tr:last-child td { border-bottom:0; }
+      table.pt-tbl th.pt-l, table.pt-tbl td.pt-l { text-align:left; } .pt-ch, .pt-pd { display:block; max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .pt-pd { max-width:210px; } #tblPtClips .pt-clip b { max-width:240px; }
       .pt-clip { display:flex; align-items:center; gap:9px; min-width:0; } .pt-clip.sq img { height:34px; }
       .pt-bl { display:block; font-size:11px; color:var(--text3); font-weight:400; }
       .pt-kcs { display:grid; grid-template-columns:1.25fr repeat(4, minmax(0,1fr)); gap:14px; margin-bottom:8px; }
@@ -340,7 +341,18 @@
     const ok = /^\d{15,}$/.test(String(c.id)), url = ok ? `https://www.tiktok.com/@i/video/${c.id}` : '', name = esc(c.t || 'คลิป …' + String(c.id).slice(-6));
     const img = c.cv ? `<img src="${esc(c.cv)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-zoom="1">` : '<span class="ph"></span>';
     const lk = h => (ok ? `<a href="${url}" target="_blank" rel="noopener" title="เปิดคลิปใน TikTok">${h}</a>` : h);
-    return `<div class="pt-clip">${c.cv ? lk(img) : img}<div><b title="${esc(c.t)}">${lk(name)}</b><small>${esc(c.a || '')}</small></div></div>`;
+    return `<div class="pt-clip">${c.cv ? lk(img) : img}<div><b title="${esc(c.t)}">${lk(name)}</b>${c._n > 1 ? `<small>รวม ${c._n} Campaign</small>` : ''}</div></div>`;
+  }
+  // (2026-11-18) คอลัมน์ ช่อง + สินค้าในตะกร้า (แยกจากชื่อคลิป)
+  const chCell = c => `<td class="pt-l"><span class="pt-ch" title="${esc(c.a || '')}">${esc(c.a || '—')}</span></td>`;
+  const pdCell = c => `<td class="pt-l"><span class="pt-pd" title="${esc(c.pd || '')}">${c.pd ? esc(c.pd) : '<span style="color:var(--text3)">—</span>'}</span></td>`;
+  const EXH = () => `<th class="pt-l">ช่อง ${tip('ชื่อช่อง TikTok ของคลิป')}</th><th class="pt-l">สินค้าในตะกร้า ${tip('สินค้าที่คลิปนี้ติดตะกร้า — ดูจากคู่ คลิป × ตะกร้า ที่ Ads ปิดการขาย (GMV Max) รายงาน ย้อนหลัง 30 วันก่อนช่วงที่ดู\nสูงสุด 3 สินค้า เรียงตามค่า Ads\n— = คลิปนี้ยังไม่เคยถูกใช้ใน GMV Max จึงยังไม่รู้ว่าติดตะกร้าอะไร')}</th>`;
+  // คลิปเดียวกันที่อยู่หลาย Campaign / หลายบัญชี Ads รวมเป็นแถวเดียว (ตัวเลข Ads บวกกัน · GMV ใน GMV Max เป็นของคลิป ไม่บวกซ้ำ)
+  function mergeClips(list, sumG) {
+    const m = new Map(), F = ['sp', 'imp', 'clk', 'v6', 'pv', 'pdp', 'atc', 'reach'].concat(sumG ? ['gc', 'gr', 'go'] : []);
+    list.forEach(c => { const o = m.get(c.id); if (!o) { m.set(c.id, { ...c, _n: 1 }); return; }
+      F.forEach(f => { o[f] = num(o[f]) + num(c[f]); }); o._n++; if (!o.t && c.t) o.t = c.t; if (!o.a && c.a) o.a = c.a; if (!o.cv && c.cv) o.cv = c.cv; if (!o.pd && c.pd) o.pd = c.pd; });
+    return [...m.values()];
   }
   // ชี้ที่รูปคลิป = แสดงรูปขยาย (กล่องเดียวลอยตามตำแหน่งรูป)
   function zoomBind(root) {
@@ -395,25 +407,26 @@
     const rt = $('prtest-root'); if (rt) zoomBind(rt);
     const cc = $('ptClipCard'); if (cc) cc.style.display = sel === 'vl' ? 'none' : ''; if (sel === 'vl') return;
     const camp = (sel === 'aw' || sel === 'co') && selCamp ? (D.camps || []).find(c => c.id === selCamp) : null;
-    const list = ((D.clips || {})[sel] || []).filter(c => (camp ? c.cid === selCamp : true) && num(sel === 'cv' ? c.gc : c.sp) > 0), dash = '—';
-    const gm = c => num(c.gc) > 0 ? `${n0(c.gr)} · ${n0(c.go)} Orders` : dash;
+    const raw = ((D.clips || {})[sel] || []).filter(c => (camp ? c.cid === selCamp : true) && num(sel === 'cv' ? c.gc : c.sp) > 0), dash = '—';
+    const list = mergeClips(raw, sel === 'cv').sort((a, b) => num(sel === 'cv' ? b.gc : b.sp) - num(sel === 'cv' ? a.gc : a.sp)), dup = raw.length - list.length;
+    const gm = c => num(c.gc) > 0 ? `${n0(c.gr)} · ${n0(c.go)} Orders` : dash, gmTd = c => `<td data-sv="${num(c.gc) > 0 ? num(c.gr) : ''}">${gm(c)}</td>`;
     let head, rows;
     if (sel === 'tr') { drawProducts(); return; }
     if (sel === 'cv') {
-      head = `<th>คลิป</th><th>Spend</th><th>GMV ${tip('ยอดขายที่ TikTok นับให้คลิปนี้ใน Ads ปิดการขาย (GMV Max)')}</th><th>Orders</th><th>% ค่า Ads ${tip('Spend ÷ GMV ของคลิปนี้ · ยิ่งต่ำยิ่งดี · ตัวเล็ก = ROAS (GMV ÷ Spend)')}</th><th>ผล ${tip(ruleTip('cv'))}</th>`;
-      rows = list.map(c => { const v = PILL[verdict('cv', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.gc)}</td><td>${n0(c.gr)}</td><td>${n0(c.go)}</td><td>${c.gc > 0 && c.gr > 0 ? window.adPctR(c.gr / c.gc) : dash}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
+      head = `<th>คลิป</th>${EXH()}<th>Spend</th><th>GMV ${tip('ยอดขายที่ TikTok นับให้คลิปนี้ใน Ads ปิดการขาย (GMV Max)')}</th><th>Orders</th><th>% ค่า Ads ${tip('Spend ÷ GMV ของคลิปนี้ · ยิ่งต่ำยิ่งดี · ตัวเล็ก = ROAS (GMV ÷ Spend)')}</th><th>ผล ${tip(ruleTip('cv'))}</th>`;
+      rows = list.map(c => { const v = PILL[verdict('cv', c)]; return `<tr><td>${clipCell(c)}</td>${chCell(c)}${pdCell(c)}<td>${n0(c.gc)}</td><td>${n0(c.gr)}</td><td>${n0(c.go)}</td><td>${c.gc > 0 && c.gr > 0 ? window.adPctR(c.gr / c.gc) : dash}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     } else if (sel === 'aw') {
       const all = ((D.clips || {}).aw || []).concat((D.clips || {}).co || []), tp = all.reduce((a, c) => a + num(c.pdp), 0), pvAvg = tp > 0 ? all.reduce((a, c) => a + num(c.sp), 0) / tp : 0;
-      head = `<th>คลิป</th><th>Spend</th><th>Impressions</th><th>CPM ${tip('ค่า Ads ต่อการแสดง 1,000 ครั้ง · ยิ่งต่ำยิ่งดี')}</th><th>6s View Rate ${tip('การดูถึง 6 วินาที ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>GMV ใน GMV Max ${tip('คลิปนี้ถูกใช้ใน Ads Conversion (GMV Max) ด้วย · ตัวเลขคือยอดขายและ Orders ที่ GMV Max นับให้คลิปเดียวกันในช่วงเดียวกัน\nไม่ใช่ยอดขายจาก Ads PR · — = คลิปนี้ไม่ได้อยู่ใน GMV Max')}</th><th>ผล ${tip(ruleTip('aw'))}</th>`;
-      rows = list.map(c => { const v = awPill(c, pvAvg); return `<tr><td>${clipCell(c)}</td><td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${c.imp > 0 ? n1(c.sp / c.imp * 1000) : dash}</td><td>${c.imp > 0 ? (c.v6 / c.imp * 100).toFixed(1) + '%' : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td><td>${gm(c)}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
+      head = `<th>คลิป</th>${EXH()}<th>Spend</th><th>Impressions</th><th>CPM ${tip('ค่า Ads ต่อการแสดง 1,000 ครั้ง · ยิ่งต่ำยิ่งดี')}</th><th>6s View Rate ${tip('การดูถึง 6 วินาที ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>GMV ใน GMV Max ${tip('คลิปนี้ถูกใช้ใน Ads Conversion (GMV Max) ด้วย · ตัวเลขคือยอดขายและ Orders ที่ GMV Max นับให้คลิปเดียวกันในช่วงเดียวกัน\nไม่ใช่ยอดขายจาก Ads PR · — = คลิปนี้ไม่ได้อยู่ใน GMV Max')}</th><th>ผล ${tip(ruleTip('aw'))}</th>`;
+      rows = list.map(c => { const v = awPill(c, pvAvg); return `<tr><td>${clipCell(c)}</td>${chCell(c)}${pdCell(c)}<td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${c.imp > 0 ? n1(c.sp / c.imp * 1000) : dash}</td><td>${c.imp > 0 ? (c.v6 / c.imp * 100).toFixed(1) + '%' : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td>${gmTd(c)}<td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     } else {
-      head = `<th>คลิป</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>CTR ${tip('Clicks ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>CPC ${tip('ค่า Ads ต่อ 1 คลิก · ยิ่งต่ำยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>GMV ใน GMV Max ${tip('คลิปนี้ถูกใช้ใน Ads Conversion (GMV Max) ด้วย · ตัวเลขคือยอดขายและ Orders ที่ GMV Max นับให้คลิปเดียวกันในช่วงเดียวกัน\nไม่ใช่ยอดขายจาก Ads PR · — = คลิปนี้ไม่ได้อยู่ใน GMV Max')}</th><th>ผล ${tip(ruleTip('co'))}</th>`;
-      rows = list.map(c => { const v = PILL[verdict('co', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${n0(c.clk)}</td><td>${c.imp > 0 ? (c.clk / c.imp * 100).toFixed(2) + '%' : dash}</td><td>${c.clk > 0 ? n2(c.sp / c.clk) : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td><td>${gm(c)}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
+      head = `<th>คลิป</th>${EXH()}<th>Spend</th><th>Impressions</th><th>Clicks</th><th>CTR ${tip('Clicks ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>CPC ${tip('ค่า Ads ต่อ 1 คลิก · ยิ่งต่ำยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>GMV ใน GMV Max ${tip('คลิปนี้ถูกใช้ใน Ads Conversion (GMV Max) ด้วย · ตัวเลขคือยอดขายและ Orders ที่ GMV Max นับให้คลิปเดียวกันในช่วงเดียวกัน\nไม่ใช่ยอดขายจาก Ads PR · — = คลิปนี้ไม่ได้อยู่ใน GMV Max')}</th><th>ผล ${tip(ruleTip('co'))}</th>`;
+      rows = list.map(c => { const v = PILL[verdict('co', c)]; return `<tr><td>${clipCell(c)}</td>${chCell(c)}${pdCell(c)}<td>${n0(c.sp)}</td><td>${n0(c.imp)}</td><td>${n0(c.clk)}</td><td>${c.imp > 0 ? (c.clk / c.imp * 100).toFixed(2) + '%' : dash}</td><td>${c.clk > 0 ? n2(c.sp / c.clk) : dash}</td><td>${n0(c.pdp)}</td><td>${n0(c.atc)}</td>${gmTd(c)}<td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     }
     $('ptClipT').innerHTML = `คลิปของขั้น ${STG[sel]}` + (camp ? `<span class="pt-chip" title="${esc(camp.n)}">Campaign: ${esc(String(camp.n).length > 44 ? String(camp.n).slice(0, 44) + '…' : camp.n)}</span><button type="button" class="pt-x" id="ptCampX">× แสดงทุก Campaign</button>` : '');
     $('ptClipS').textContent = camp ? `คลิปของ Campaign นี้ที่มี Spend ในช่วงนี้ · ${list.length} คลิป · Spend รวม ${n0(list.reduce((a, c) => a + num(c.sp), 0))}`
-      : `คลิปที่มี Spend ในช่วงนี้ · ${list.length} คลิป` + (sel === 'cv' ? ' · เลือกขั้นอื่นด้านบนเพื่อเปลี่ยน' : ' · เลือก Campaign ด้านบนเพื่อแสดงเฉพาะคลิปของ Campaign นั้น · คลิปเดียวกันที่อยู่หลาย Campaign แสดงแยกแถว');
-    $('ptTblBox').innerHTML = `<table class="pt-tbl" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:22px;">ช่วงนี้ยังไม่มีคลิปที่ Spend ถึงเกณฑ์</td></tr>`}</tbody></table>`;
+      : `คลิปที่มี Spend ในช่วงนี้ · ${list.length} คลิป` + (sel === 'cv' ? ' · เลือกขั้นอื่นด้านบนเพื่อเปลี่ยน' : ' · เลือก Campaign ด้านบนเพื่อแสดงเฉพาะคลิปของ Campaign นั้น') + (dup > 0 ? ` · คลิปเดียวกันที่อยู่หลาย Campaign รวมเป็นแถวเดียว (${dup} แถวที่ซ้ำ)` : '');
+    $('ptTblBox').innerHTML = `<table class="pt-tbl" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:22px;">ช่วงนี้ยังไม่มีคลิปที่ Spend ถึงเกณฑ์</td></tr>`}</tbody></table>`;
     const x = $('ptCampX'); if (x) x.addEventListener('click', () => { selCamp = null; drawCamps(model()); drawTable(); });
   }
 
