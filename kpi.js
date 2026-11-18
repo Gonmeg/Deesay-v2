@@ -558,7 +558,7 @@
     const empty = !N ? `<tr><td colspan="9"><div class="ui-empty"><b>ไม่พบสินค้า</b>${S.q || S.st ? 'ลองล้างคำค้นหาหรือตัวกรองสถานะ' : 'เดือนนี้ยังไม่มีสินค้าที่ตั้งเป้า'}</div></td></tr>` : '';
     const cta = K.st === 'future' && !Object.keys(T[S.mo] || {}).length && ME.can_edit
       ? `<div class="ui-status warn" style="margin:4px 0 10px;"><b>เดือนนี้ยังไม่มีเป้า</b><span>กด "✏️ ตั้งเป้า" ด้านบน แล้วใช้ปุ่ม "คัดลอกเป้าเดือนก่อน" หรือ "ตั้งจากยอดจริง" เพื่อเริ่มเร็วๆ</span></div>` : '';
-    return `<div class="hm-panel-h"><h2>แยกตามสินค้า${S.F ? ` <span class="kp-scope-l">${dot(S.F)}${esc(S.F)}</span>` : ''} ${info('kp-i-pt', infoTxt)}</h2>${tools}</div>${K.st === 'cur' ? paceLegend() : ''}${cta}
+    return `<div class="hm-panel-h"><h2>แยกตามสินค้า${S.F ? ` <span class="kp-scope-l">${dot(S.F)}${esc(S.F)}</span>` : ''} ${info('kp-i-pt', infoTxt)}</h2>${tools}</div>${K.st === 'cur' ? '<div class="kp-plg"><b>%</b> = ทำได้ ÷ เป้าทั้งเดือน · <b>เขียว</b> = ถึงเป้าแล้ว (100% ขึ้นไป) · <b>แดง</b> = ยังไม่ถึงเป้า · สีเทา = ตัวแทน / MT</div>' : ''}${cta}
       <div class="table-wrap"><table class="ui-table hm-tbl kp-tbl${S.F ? '' : ' kp-mx'}" id="kpProdTbl" data-no-sort data-no-page><thead>${head}</thead><tbody>${body || empty}</tbody><tfoot>${foot}</tfoot></table></div>${pager(N)}`;
   }
 
