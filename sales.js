@@ -51,6 +51,9 @@
     if (c && c.t === v.t && c.w === v.w) return; layMem[o.page] = v; try { localStorage.setItem(LAY_KEY, JSON.stringify(layMem)); } catch (e) {} };
   const roasTxt = (rev, ads) => window.adPctHtml(rev, ads);   // (2026-11-18) % ค่า Ads ตัวหลัก + ROAS ตัวเล็ก
   // (2026-11-02) ป้ายเทียบแบบเดียวกับหน้าแรก: เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3% · inv = ยิ่งมากยิ่งไม่ดี (ค่า Ads)
+  // (2026-11-18) ตัวเลขยอดขาย / ออเดอร์ / ค่า Ads ในตาราง กดดูที่มาได้ (แผงกลาง traceSales / traceAds ของ dashboard.html)
+  const tS = (v, ch, from, to, sub, mode) => v ? `<span class="pl-trace" data-tsales="${esc(ch || '')}|${from}|${to}||${esc(sub || '')}${mode ? '|' + mode : ''}">${fmt(v)}</span>` : fmt(v);
+  const tA = (v, ch, from, to) => v ? `<span class="pl-trace" data-tads="${esc(ch)}|${from}|${to}">${fmt(v)}</span>` : fmt(v);
   const chipOf = (v, inv, tip) => `<span class="ui-chip ${Math.abs(v) < 3 ? '' : ((v > 0) !== !!inv ? 'up' : 'dn')}"${tip ? ` title="${esc(tip)}"` : ''}>${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}%</span>`;
   // id ของชิ้นส่วนในหน้า: หน้าภาพรวมยอดขายใช้ id เดิม · หน้าภาพรวมรายช่องทางเติมชื่อหน้าข้างหน้า (กัน id ซ้ำกันข้ามหน้า)
   const idOf = (o, s) => o.page === 'overview' ? s : o.page + '-' + s;
@@ -247,7 +250,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     rowsAll.forEach(r => { const g = byCh[r.channel] = byCh[r.channel] || { rows: [], subs: {} }; g.rows.push(r);
       const k = r.sub_channel || NOSUB; (g.subs[k] = g.subs[k] || []).push(r); });
     const chs = Object.keys(byCh).sort((a, b) => sumOf(byCh[b].rows, 'net_revenue') - sumOf(byCh[a].rows, 'net_revenue'));
-    const totRow = `<tr class="ov-tot"><td>รวม${c.ch ? ' ' + esc(c.ch) : 'ทุกช่องทาง'}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td><td class="${c.totCmp.cls}">${c.totCmp.t}</td><td>${fmt(total.cr)} · ${pct1(total.cpct)}</td></tr>`;
+    const totRow = `<tr class="ov-tot"><td>รวม${c.ch ? ' ' + esc(c.ch) : 'ทุกช่องทาง'}</td><td>${tS(total.rev, c.ch, from, to, sub)}</td><td>100%</td><td>${tS(total.ord, c.ch, from, to, sub, 'orders')}</td><td>${total.aov ? fmt(total.aov) : '—'}</td><td class="${c.totCmp.cls}">${c.totCmp.t}</td><td>${fmt(total.cr)} · ${pct1(total.cpct)}</td></tr>`;
     let h = '';
     chs.forEach(ch => {
       const g = byCh[ch], t = tot(g.rows), subs = Object.keys(g.subs).sort((a, b) => sumOf(g.subs[b], 'net_revenue') - sumOf(g.subs[a], 'net_revenue'));
@@ -256,15 +259,15 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       const share = total.rev ? t.rev / total.rev : 0, k = cmpOf(ch, sub), col = `var(${CH_VAR[ch] || '--text2'})`;
       const unit = ch === 'Facebook' ? 'เพจ' : 'ร้าน';
       h += `<tr data-ovch="${esc(ch)}"${open ? ' class="ov-open"' : ''}><td><button type="button" class="ov-ch" ${canOpen ? `aria-expanded="${open}"` : 'disabled'}>${canOpen ? '<span class="chev">›</span>' : ''}<span class="ov-dot" style="background:${col}"></span>${esc(ch)}${canOpen ? ` <span class="ov-n">${subs.length} ${unit}</span>` : ''}</button></td>
-        <td>${fmt(t.rev)}</td>
+        <td>${tS(t.rev, ch, from, to, sub)}</td>
         <td>${pct1(share)}<span class="ov-bar"><i style="width:${(share * 100).toFixed(1)}%;background:${col}"></i></span></td>
-        <td>${fmt(t.ord)}</td>
+        <td>${tS(t.ord, ch, from, to, sub, 'orders')}</td>
         <td>${isBulkChannel(ch) ? '<span style="color:var(--text3);" title="ตัวแทน / MT สั่งลอตใหญ่ ไม่คิด AOV">—</span>' : (t.ord ? fmt(t.rev / t.ord) : '—')}</td>
         <td class="${k.cls}">${k.t}</td><td>${cancCell(ch, sub, t.cr, t.co, t.rev)}</td></tr>`;
       if (canOpen) subs.forEach((s, si) => { const sr = g.subs[s], st = tot(sr), sk = cmpOf(ch, s === NOSUB ? null : s), sh = total.rev ? st.rev / total.rev : 0, sname = s === NOSUB ? '' : s;
         h += `<tr class="ov-sub pg-child${si === subs.length - 1 ? ' ov-last' : ''}" data-ovp="${esc(ch)}" style="${open ? '' : 'display:none;'}"><td title="${esc(s)}">${esc(s)}</td>
-          <td>${fmt(st.rev)}</td><td>${pct1(sh)}</td>
-          <td>${fmt(st.ord)}</td><td>${isBulkChannel(ch) ? '—' : (st.ord && st.rev ? fmt(st.rev / st.ord) : '—')}</td>
+          <td>${sname ? tS(st.rev, ch, from, to, sname) : fmt(st.rev)}</td><td>${pct1(sh)}</td>
+          <td>${sname ? tS(st.ord, ch, from, to, sname, 'orders') : fmt(st.ord)}</td><td>${isBulkChannel(ch) ? '—' : (st.ord && st.rev ? fmt(st.rev / st.ord) : '—')}</td>
           <td class="${sk.cls}">${sk.t}</td><td>${cancCell(ch, sname, st.cr, st.co, st.rev)}</td></tr>`; });
     });
     return h + totRow;   // (2026-11-02) แถวรวมอยู่ล่างสุด เส้นเข้มด้านบน (แบบบรรทัดรวมในงบ / ชีท)
@@ -283,22 +286,22 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const { o } = I;
     const { from, to, sub, R, P, rowsAll, total, totCmp, adsIn, totAds, SG } = c, totPR = c.totPR || 0;
     const cmpOf = cmpOfFn(R), cancCell = cancCellFn(from, to, P), ch = o.ch;
-    const totRow = `<tr class="ov-tot"><td>รวม ${esc(ch)}</td><td>${fmt(total.rev)}</td><td>100%</td><td>${fmt(total.ord)}</td><td>${total.aov ? fmt(total.aov) : '—'}</td>
-      <td>${fmt(totAds + totPR)}</td><td>${roasTxt(c.rRo != null ? c.rRo : total.rev, c.aRo != null ? c.aRo : totAds)}</td><td class="${totCmp.cls}">${totCmp.t}</td><td>${cancCell(ch, sub, total.cr, total.co, total.rev)}</td></tr>`;
+    const totRow = `<tr class="ov-tot"><td>รวม ${esc(ch)}</td><td>${tS(total.rev, ch, from, to, sub)}</td><td>100%</td><td>${tS(total.ord, ch, from, to, sub, 'orders')}</td><td>${total.aov ? fmt(total.aov) : '—'}</td>
+      <td>${!sub && !totPR ? tA(totAds, ch, from, to) : fmt(totAds + totPR)}</td><td>${roasTxt(c.rRo != null ? c.rRo : total.rev, c.aRo != null ? c.aRo : totAds)}</td><td class="${totCmp.cls}">${totCmp.t}</td><td>${cancCell(ch, sub, total.cr, total.co, total.rev)}</td></tr>`;
     let h = '';
     SG.keys.forEach(k => {
       // แถว "(ไม่ระบุ)" กดดูที่มา / เทียบช่วงก่อนไม่ได้ (ตัวกรองว่าง = ทั้งช่องทาง)
       const x = SG.g[k], t = tot(x.rows), named = k !== NOSUB && x.rows.length > 0, share = total.rev ? t.rev / total.rev : 0, cm = named ? cmpOf(ch, k) : { t: '—', cls: '' }, v = subVar(SG.keys, k);
-      const tr = (val, kind) => named ? `${fmt(val)}` : (val ? fmt(val) : '<span class="ov-mute">0</span>');
+      const tr = (val, kind) => named ? tS(val, ch, from, to, k, kind) : (val ? fmt(val) : '<span class="ov-mute">0</span>');
       h += `<tr><td><span class="ov-nm"><span class="ov-dot" style="background:var(${v})"></span><span class="ui-trunc" title="${esc(k)}">${esc(k)}</span></span></td>
         <td>${tr(t.rev)}</td>
         <td>${pct1(share)}<span class="ov-bar"><i style="width:${(share * 100).toFixed(1)}%;background:var(${v})"></i></span></td>
-        <td>${tr(t.ord)}</td>
+        <td>${tr(t.ord, 'orders')}</td>
         <td>${t.ord ? fmt(t.rev / t.ord) : '—'}</td>
         <td>${x.ads ? fmt(x.ads) : '<span class="ov-mute">0</span>'}</td><td>${x.ads ? (c.roCap ? roasTxt(sumOf(x.rows.filter(r => r.date <= c.roCap), 'net_revenue'), sumAds(adsIn.filter(a => (a.subChannel || NOSUB) === k && a.date <= c.roCap))) : roasTxt(t.rev, x.ads)) : '<span class="ov-mute">—</span>'}</td>
         <td class="${cm.cls}">${cm.t}</td><td>${named ? cancCell(ch, k, t.cr, t.co, t.rev) : (t.cr ? fmt(t.cr) : '<span class="ov-mute">—</span>')}</td></tr>`;
     });
-    if (totPR > 0) h += `<tr class="ov-mute"><td><span class="ov-nm" data-tip="Ads ที่ไม่ผูกยอดขาย: boost โพสต์ KOL · เพจอื่น · บัญชี PR&#10;นับในค่า Ads รวม แต่ไม่นับใน ROAS">PR (KOL / เพจอื่น) <span class="ui-i">ⓘ</span></span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>${fmt(totPR)}</td><td>—</td><td>—</td><td>—</td></tr>`;
+    if (totPR > 0) h += `<tr class="ov-mute"><td><span class="ov-nm" data-tip="Ads ที่ไม่ผูกยอดขาย: boost โพสต์ KOL · เพจอื่น · บัญชี PR&#10;นับในค่า Ads รวม แต่ไม่นับใน ROAS">PR (KOL / เพจอื่น) <span class="ui-i">ⓘ</span></span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>${!sub ? tA(totPR, 'Facebook PR', from, to) : fmt(totPR)}</td><td>—</td><td>—</td><td>—</td></tr>`;
     return h + totRow;
   }
 

@@ -77,7 +77,7 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     root.addEventListener('click', e => {
       if (e.target.closest('.ap-clear')) { selCh = null; drawAll(); return; }
       const car = e.target.closest('.ap-car'); if (car) { const c = car.dataset.ch; open.has(c) ? open.delete(c) : open.add(c); drawTable(); return; }
-      const tr = e.target.closest('tr.ap-ch'); if (tr && !e.target.closest('.ads-info-wrap')) { selCh = selCh === tr.dataset.ch ? null : tr.dataset.ch; drawAll(); }
+      const tr = e.target.closest('tr.ap-ch'); if (tr && !e.target.closest('.ads-info-wrap, .pl-trace')) { selCh = selCh === tr.dataset.ch ? null : tr.dataset.ch; drawAll(); }
     });
   }
 
@@ -133,7 +133,7 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     $('apBody').innerHTML = rows.map(c => {
       const t = T[c], p = P[c] || {}, ss = subs.filter(s => s.ch === c), isOpen = open.has(c);
       const main = `<tr class="ap-ch${selCh === c ? ' on' : ''}" data-ch="${esc(c)}"><td>${ss.length > 1 ? `<span class="ap-car" data-ch="${esc(c)}">${isOpen ? '▾' : '▸'}</span>` : '<span class="ap-car"></span>'}<span class="ap-dot" style="background:var(${CV[c]})"></span><b>${esc(c)}</b></td>
-        <td class="num"><b>${n0(t.gmv)}</b>${chip(t.gmv, num(p.gmv), 'up')}</td><td class="num">${n0(t.ads)}</td>
+        <td class="num"><b>${t.gmv ? `<span class="pl-trace" data-tsales="${esc(c)}|${D.from}|${D.to}">${n0(t.gmv)}</span>` : n0(t.gmv)}</b>${chip(t.gmv, num(p.gmv), 'up')}</td><td class="num">${t.ads && c !== 'Facebook' ? `<span class="pl-trace" data-tads="${esc(c)}|${D.from}|${D.to}">${n0(t.ads)}</span>` : n0(t.ads)}</td>
         <td class="num">${pctCell(RO[c].g, RO[c].a, num(p.gmv), prevConv(p))}</td></tr>`;
       const sub = isOpen ? ss.map(s => `<tr class="ap-sub"><td>${esc(subName(c, s.sub))}</td><td class="num">${num(s.gmv) ? n0(s.gmv) : '—'}</td><td class="num">${num(s.ads) ? n0(s.ads) : '—'}</td><td class="num">${window.adPctHtml(num(s.gmv), num(s.ads))}</td></tr>`).join('') : '';
       return main + sub;
