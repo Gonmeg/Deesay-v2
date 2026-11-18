@@ -6,6 +6,7 @@
 // promo.js (v20261029a) — ที่มาต้นทุนบอกชัด (ไฟล์ต้นทุนขายรายเดือน / ไฟล์ต้นทุนสินค้า)
 // promo.js (v20261028c) — การ์ด Rank: เปลี่ยนชื่อคลาส hd/bd/sb (ชนกับเมนูซ้ายที่ใช้ .sb → ข้อความไปลอยบนเมนู)
 // promo.js (v20261028b) — ไม่ใช้เกณฑ์ 5% · หัวข้อ "รายละเอียดการคำนวณ" · คำอธิบายไปอยู่ใน ⓘ · แถวย่อยไม่ทับ · ปุ่มจำลองโปรอยู่ซ้าย · แก้จำลองโปรเลือกสินค้าแล้วคำนวณไม่ได้
+// promo.js (v20261119a) — หน้าอนุมัติแยกกล่องตามช่องทาง + ป้ายเลือกช่องทาง · แผงรายละเอียด: ลบ / เพิ่มสินค้า + ปุ่มเสนอกลับ (สถานะใหม่ "เสนอกลับ" · คนขอกดรับ = อนุมัติ)
 // promo.js (v20261028a) — รายละเอียดคำขอแบบอ่านง่าย (ผลก่อน · 3 ตัวเลข · เงินไปไหนบ้าง + วิธีคิด + บรรทัด VAT · ซ่อนกำไรเมื่อขาดต้นทุน) · แท็บ "จำลองโปร" ในหน้าอนุมัติ
 // promo.js (v20261020k) — โปรโมชั่น 3 หน้า
 // (2026-10-20 i) กล่องยืนยัน / แจ้งเตือนเป็นของเว็บเอง (uiConfirm / uiAlert ใน ui.js) แทนกล่องของเบราว์เซอร์
@@ -29,7 +30,7 @@
   const dTh = d => d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '';
   const toast = m => (window.uiToast ? window.uiToast(m) : null);
   const rpc = (n, a) => Auth.rpc(n, a);
-  const ST = { pending: ['รออนุมัติ', 'warn'], approved: ['อนุมัติแล้ว', 'good'], rejected: ['ไม่อนุมัติ', 'bad'], cancelled: ['ยกเลิก', ''] };
+  const ST = { pending: ['รออนุมัติ', 'warn'], approved: ['อนุมัติแล้ว', 'good'], rejected: ['ไม่อนุมัติ', 'bad'], cancelled: ['ยกเลิก', ''], countered: ['เสนอกลับ', 'warn'] };
   const LAYER = { platform: 'ค่า Platform', selling: 'ค่าขาย (Commission / Ads / ขนส่ง)', overhead: 'ค่าบริหาร / Marketing' };
   const APPLY = { all: 'ทุกคำสั่งซื้อ', single: 'เฉพาะสินค้าเดี่ยว', set: 'เฉพาะเซต' };
   let CAT = null;
@@ -204,6 +205,16 @@
       .pr-tb.pr-ex2 .ex-c1 { padding-left:20px; } .pr-tb.pr-ex2 tr.ex-r .ex-c1 { padding-left:38px; }
       .pr-tb.pr-ex2 tr.ex-r:hover td { background:color-mix(in srgb, var(--accent) 6%, transparent); }
       .pr-tb.pr-ex2 tr.ex-g td { background:var(--bg3); cursor:pointer; padding:9px 20px; border-top:1px solid var(--border); } .pr-tb.pr-ex2 tr.ex-g:hover td { background:color-mix(in srgb, var(--accent) 8%, var(--bg3)); }
+      .ex-chs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; } .ex-chs:empty { display:none; }
+      .ex-chip { display:inline-flex; align-items:center; gap:7px; padding:5px 13px; border-radius:999px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font:inherit; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; }
+      .ex-chip i, .ex-chd i { width:9px; height:9px; border-radius:50%; flex:none; } .ex-chip b { font-size:11.5px; color:var(--text3); font-weight:600; } .ex-chip[aria-pressed="true"] { border-color:var(--accent); color:var(--text); box-shadow:inset 0 0 0 1px var(--accent); }
+      .pr-card.ex-chc { padding:0; margin-bottom:14px; overflow:hidden; } .ex-chd { display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; } .ex-chd h3 { margin:0; font-size:15.5px; font-weight:700; color:var(--text); } .ex-chd i { width:11px; height:11px; } .ex-chd .ex-gm { margin-left:0; } .ex-car2 { margin-left:auto; color:var(--text3); font-size:12px; }
+      .ex-chc .pr-tb.pr-ex2 thead th { border-top:1px solid var(--border); } .ex-off { font-size:11.5px; font-weight:600; color:var(--warn, #b26a00); } .ex-by { display:inline-block; max-width:86px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; }
+      .exd-x { width:24px; height:24px; border:0; border-radius:6px; background:color-mix(in srgb, var(--red, #dc2626) 12%, transparent); color:var(--red, #dc2626); font-weight:700; cursor:pointer; line-height:1; } .exd-it td.x { width:30px; text-align:right; padding-left:6px; }
+      .exd-add { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; } .exd-add button { border:1px dashed var(--accent); background:none; color:var(--accent); border-radius:8px; padding:4px 10px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; } .exd-add select { flex:1; min-width:180px; }
+      .exd-new { font-size:10px; font-weight:700; padding:0 5px; border-radius:4px; margin-right:5px; background:color-mix(in srgb, var(--warn, #b26a00) 16%, transparent); color:var(--warn, #b26a00); } .exd-it tr.isnew td { background:color-mix(in srgb, var(--accent) 7%, transparent); }
+      .exd-offer { margin-top:8px; padding:8px 10px; border-radius:9px; background:color-mix(in srgb, var(--warn, #b26a00) 10%, transparent); font-size:12.5px; color:var(--text); line-height:1.5; } .pr-btn.cnt { background:var(--accent); color:#fff; }
+      .tm2-offer { font-size:12.5px; line-height:1.5; } .tm2-offer b { color:var(--warn, #b26a00); }
       .ex-car { display:inline-block; width:16px; color:var(--text3); font-size:11px; } .ex-gm { margin-left:10px; font-size:12px; color:var(--text3); } .ex-neg { color:var(--red,#dc2626); font-weight:600; }
       .ex-pds { display:flex; flex-wrap:wrap; gap:4px 6px; margin-top:2px; } .ex-pd { font-size:12.5px; color:var(--text); } .ex-pd b { font-weight:600; color:var(--text2); }
       .ex-pd + .ex-pd::before { content:'+'; color:var(--text3); margin-right:6px; }
@@ -535,7 +546,8 @@
     window.addEventListener('scroll', onMove, true); window.addEventListener('resize', onMove);
     window._prDDOff = () => { window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
     el.addEventListener('click', async e => {
-      const cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]'), rm = e.target.closest('[data-rm]');
+      const cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]'), rm = e.target.closest('[data-rm]'), acc = e.target.closest('[data-acc]');
+      if (acc) { if (await uiConfirm('รับตามที่เสนอ', { text: 'คำขอจะเปลี่ยนเป็นราคา / สินค้าที่เสนอกลับ และถือว่าอนุมัติทันที', ok: 'รับตามที่เสนอ', tone: 'good', icon: '✓' })) { try { await rpc('promo_counter_accept', { p_id: +acc.dataset.acc }); toast('รับข้อเสนอแล้ว · อนุมัติเรียบร้อย'); loadMine(); loadCal(C); } catch (er) { uiAlert('รับข้อเสนอไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
       const add = e.target.closest('[data-pgadd]'), del = e.target.closest('[data-pgdel]'), chip = e.target.closest('.pg-cx');
       if (rm) { if (await uiConfirm('ลบคำขอ', { text: (rm.closest('tr')?.querySelector('.t1')?.textContent || '') + ' · ลบแล้วกู้คืนไม่ได้', ok: 'ลบ', tone: 'bad' })) { try { await rpc('promo_delete', { p_id: +rm.dataset.rm }); loadMine(); } catch (er) { uiAlert('ลบไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
       if (mv) { const [y, m] = CAL.m.split('-').map(Number); const dt = new Date(y, m - 1 + (+mv.dataset.calmv), 1); CAL.m = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`; loadCal(C); return; }
@@ -623,11 +635,11 @@
         return `<tr class="ex-r"><td class="ex-c1"><div class="ex-pds">${prod(r) || '<span class="ex-pd">—</span>'}</div></td>
           <td class="tn"><b>${n2(r.price)}</b></td><td class="ctr">${rkPill(r.rank)}</td>
           <td class="ctr"><span class="pr-pill ${st[1]}">${st[0]}</span></td>
-          <td class="tm2-fb">${r.decision_note ? esc(r.decision_note) + (r.decided_name ? `<div class="ex-sub">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : '') : '<span class="ex-mute">—</span>'}</td>
+          <td class="tm2-fb">${r.status === 'countered' && r.counter ? `<div class="tm2-offer"><b>เสนอกลับ:</b> ราคา <b>${n2(r.counter.price)}</b> (เดิม ${n2(r.price)})<div class="ex-pds">${prod(r.counter)}</div></div>` : ''}${r.decision_note ? esc(r.decision_note) + (r.decided_name ? `<div class="ex-sub">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : '') : (r.status === 'countered' ? '' : '<span class="ex-mute">—</span>')}</td>
           <td class="ex-m">${dTh(r.requested_at)}</td>
-          <td class="ctr">${r.status === 'pending' ? `<button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'cancelled' ? `<button class="pr-btn ghost tm2-x bad" data-rm="${r.id}">ลบ</button>` : ''}</td></tr>`; };
+          <td class="ctr">${r.status === 'countered' ? `<button class="pr-btn good tm2-x" data-acc="${r.id}" style="margin-bottom:4px;">รับตามที่เสนอ</button><button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'pending' ? `<button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'cancelled' ? `<button class="pr-btn ghost tm2-x bad" data-rm="${r.id}">ลบ</button>` : ''}</td></tr>`; };
       box.innerHTML = L.length ? `<div style="overflow-x:auto;"><table class="pr-tb pr-ex2 pr-mine2" data-no-sort data-no-page>
-          <colgroup><col><col style="width:96px"><col style="width:92px"><col style="width:112px"><col style="width:26%"><col style="width:92px"><col style="width:84px"></colgroup>
+          <colgroup><col><col style="width:96px"><col style="width:92px"><col style="width:112px"><col style="width:26%"><col style="width:92px"><col style="width:118px"></colgroup>
           <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="tn">ราคา</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>Feedback</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>`
         + groups.map(g => { const r0 = g[0];
             return `<tr class="ex-g"><td colspan="7"><b class="t1">${esc(r0.title)}</b><span class="ex-gm">${esc(r0.channel || '')}${dr(r0) ? ' · ' + dr(r0) : ''} · ${g.length} รายการ</span></td></tr>` + g.map(row).join(''); }).join('') + '</tbody></table></div>'
@@ -829,52 +841,64 @@
     let top = document.getElementById('exTopCtl');
     if (!top) { const f = document.querySelector('.topbar .filters'); top = document.createElement('div'); top.id = 'exTopCtl'; top.className = 'ex-topctl'; if (f) f.prepend(top); }
     top.style.display = (typeof currentPage === 'undefined' || currentPage === 'exec') ? '' : 'none';   // (2026-11-10) โหลดเสร็จช้ากว่าการสลับหน้า → ไม่โชว์บนหน้าอื่น
-    top.innerHTML = `<div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div>
+    top.innerHTML = `<div class="pr-seg ex-tabs" id="exSeg">${[['pending', 'รออนุมัติ', cnt('pending')], ['countered', 'เสนอกลับ', cnt('countered')], ['approved', 'อนุมัติแล้ว', cnt('approved')], ['rejected', 'ไม่อนุมัติ', cnt('rejected')], ['all', 'ทั้งหมด', L.filter(r => r.status !== 'cancelled').length]].map(([k, t, n]) => `<button type="button" data-f="${k}" aria-pressed="${EX.filter === k}">${t}${n == null ? '' : `<b>${n}</b>`}</button>`).join('')}</div>
       <button type="button" class="pr-btn ghost pv-simbtn" id="exSim" aria-pressed="${EX.filter === 'sim'}">จำลอง Promotion</button>`;
-    el.innerHTML = `<div class="pr-card" style="padding:4px 0 0;"><div id="exList" style="overflow-x:auto;"></div></div>`;
+    el.innerHTML = `<div class="ex-chs" id="exChs"></div><div id="exList"></div>`;   // (2026-11-19) แยกกล่องตามช่องทาง + ป้ายเลือกช่องทาง
     const simBtn = top.querySelector('#exSim');
     top.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); simBtn.setAttribute('aria-pressed', 'false'); listExec(); };
-    simBtn.onclick = () => { EX.filter = 'sim'; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', 'false')); simBtn.setAttribute('aria-pressed', 'true'); renderSim(document.getElementById('exList'), CAT); };
-    EX.filter === 'sim' ? renderSim(document.getElementById('exList'), CAT) : listExec();
+    const sim = () => { const b = document.getElementById('exList'), c = document.getElementById('exChs'); if (c) c.innerHTML = ''; b.className = 'pr-card'; b.style.cssText = 'padding:4px 0 0;overflow-x:auto;'; renderSim(b, CAT); };
+    simBtn.onclick = () => { EX.filter = 'sim'; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', 'false')); simBtn.setAttribute('aria-pressed', 'true'); sim(); };
+    EX.filter === 'sim' ? sim() : listExec();
   }
   // (2026-11-10) รายการคำขอแบบใหม่: จัดกลุ่มตามชื่อโปร + ช่องทาง (หัวกลุ่มบอกจำนวน / ขาดทุนกี่รายการ · กดย่อได้) · มีคอลัมน์สินค้าในโปร (ของแถมติดป้าย)
   //   กำไรติดลบสีแดง · % ใต้ตัวเลข = กำไรเทียบต้นทุน · ขอโดย + วันที่ส่งอยู่ช่องเดียว
   const EXCOL = new Set();
+  const chCol = name => { const C = CAT || {}, c = (C.channels || []).find(x => x.name === name), sys = (c && c.sys) || name || '';
+    const M = (typeof PL_CH_COLOR !== 'undefined' && PL_CH_COLOR) || { TikTok: '#111827', Facebook: '#1877f2', Shopee: '#ee4d2d', Lazada: '#2f3bd6', 'Modern Trade': '#0d9488', 'ตัวแทน': '#b8862f' };
+    const k = Object.keys(M).find(x => sys.indexOf(x) === 0) || (/^MT/.test(sys) ? 'Modern Trade' : null), col = k ? M[k] : '#94a3b8';
+    return k === 'TikTok' ? 'var(--text)' : col; };
+  // (2026-11-19) รายการคำขอแบบแยกช่องทาง: ป้ายเลือกช่องทางด้านบน · 1 ช่องทาง = 1 กล่อง (หัวกล่อง: ชื่อ · จำนวน · ขาดทุนกี่รายการ · กดย่อได้) · ในกล่องแบ่งตามชื่อ Promotion
+  //   สีใช้แค่จุดหน้าชื่อช่องทาง · ตัวแดงเฉพาะกำไรติดลบ · ขอโดย + ส่งเมื่อ รวมช่องเดียว · คำขอที่เสนอกลับ แสดงราคาเดิม → ราคาที่เสนอ
   function listExec() {
-    const box = document.getElementById('exList'); if (!box) return;
+    const box = document.getElementById('exList'), chs = document.getElementById('exChs'); if (!box) return;
+    box.className = ''; box.style.cssText = '';
     const C = CAT || { products: [] }, pnm = k => (C.products.find(p => p.sku === k) || { name: k }).name;
-    const L = EX.list.filter(r => EX.filter === 'all' ? r.status !== 'cancelled' : r.status === EX.filter);
-    if (!L.length) { box.innerHTML = '<div class="pr-empty">ไม่มีรายการ</div>'; return; }
+    const Lall = EX.list.filter(r => EX.filter === 'all' ? r.status !== 'cancelled' : r.status === EX.filter);
+    const order = (C.channels || []).map(c => c.name), names = [...new Set(Lall.map(r => r.channel || '—'))].sort((a, b) => (order.indexOf(a) < 0 ? 999 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 999 : order.indexOf(b)));
+    if (EX.ch && !names.includes(EX.ch)) EX.ch = null;
+    if (chs) { chs.innerHTML = names.length > 1 ? `<button type="button" class="ex-chip" data-ch="" aria-pressed="${!EX.ch}">ทุกช่องทาง <b>${Lall.length}</b></button>` + names.map(n => `<button type="button" class="ex-chip" data-ch="${esc(n)}" aria-pressed="${EX.ch === n}"><i style="background:${chCol(n)}"></i>${esc(n)} <b>${Lall.filter(r => (r.channel || '—') === n).length}</b></button>`).join('') : '';
+      chs.onclick = e => { const b = e.target.closest('.ex-chip'); if (!b) return; EX.ch = b.dataset.ch || null; listExec(); }; }
+    const L = EX.ch ? Lall.filter(r => (r.channel || '—') === EX.ch) : Lall;
+    if (!L.length) { box.innerHTML = '<div class="pr-card"><div class="pr-empty">ไม่มีรายการ</div></div>'; return; }
     const prod = r => (r.items || []).map(x => `<span class="ex-pd">${esc(pnm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`).join('')
       + (r.gifts || []).map(x => `<span class="ex-pd gift"><i>แถม</i>${esc(pnm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`).join('');
     const prodTxt = r => [...(r.items || []).map(x => pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : '')), ...(r.gifts || []).map(x => 'แถม ' + pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : ''))].join(' · ');
-    const dr = r => !r.start_date ? '—' : r.end_date && r.end_date !== r.start_date ? `${dTh(r.start_date)} – ${dTh(r.end_date)}` : dTh(r.start_date);
-    const groups = []; const gi = {};
-    L.forEach(r => { const k = (r.title || '') + '|' + (r.channel || ''); if (gi[k] == null) { gi[k] = groups.length; groups.push({ k, rows: [] }); } groups[gi[k]].rows.push(r); });
+    const dr = r => !r.start_date ? '' : r.end_date && r.end_date !== r.start_date ? `${dTh(r.start_date)} – ${dTh(r.end_date)}` : dTh(r.start_date);
     const pcs = v => v == null || !isFinite(+v) ? '—' : `<span class="${+v < 0 ? 'ex-n' : ''}">${(+v * 100).toFixed(1)}%</span>`;
-    const rowHtml = r => { const c = r.calc || {}, s = ST[r.status] || [r.status, ''], neg = +c.profit < 0, disc = +c.discount_vs_rsp;
+    const rowHtml = r => { const c = r.calc || {}, s = ST[r.status] || [r.status, ''], neg = +c.profit < 0, disc = +c.discount_vs_rsp, cp = r.status === 'countered' && r.counter ? +r.counter.price : null;
       return `<tr class="click ex-r" data-id="${r.id}">
         <td class="ex-c1"><div class="ex-pds" title="${esc(prodTxt(r))}">${prod(r) || '<span class="ex-pd">—</span>'}</div></td>
-        <td class="tn"><b>${n2(r.price)}</b></td>
+        <td class="tn"><b>${n2(r.price)}</b>${cp != null && cp !== +r.price ? `<div class="ex-off" title="ราคาที่เสนอกลับ">→ ${n2(cp)}</div>` : ''}</td>
         <td class="tn ex-m">${+c.rsp > 0 ? n2(c.rsp) : '—'}</td>
         <td class="tn ex-m">${+c.rsp > 0 && disc ? (disc > 0 ? '−' : '+') + (Math.abs(disc) * 100).toFixed(1) + '%' : '—'}</td>
         <td class="tn"><span class="ex-pf${neg ? ' neg' : ''}">${c.profit == null ? '—' : n2(c.profit)}</span></td>
         <td class="tn">${pcs(c.margin)}</td>
         <td class="tn">${pcs(c.markup)}</td>
         <td class="ctr">${rkPill(r.rank)}</td><td class="ctr"><span class="pr-pill ${s[1]}">${s[0]}</span></td>
-        <td>${esc(r.requested_name || '—')}</td><td class="ex-m">${dTh(r.requested_at)}</td></tr>`; };
-    const body = groups.map(g => {
-      const r0 = g.rows[0], nNeg = g.rows.filter(r => r.calc && +r.calc.profit < 0).length, col = EXCOL.has(g.k);
-      const head = `<tr class="ex-g" data-g="${esc(g.k)}"><td colspan="11"><span class="ex-car">${col ? '▸' : '▾'}</span><b>${esc(r0.title)}</b><span class="ex-gm">${esc(r0.channel || '')}${r0.start_date ? ' · ' + dr(r0) : ''} · ${g.rows.length} รายการ${nNeg ? ` · <span class="ex-neg">ขาดทุน ${nNeg}</span>` : ''}</span></td></tr>`;
-      return head + (col ? '' : g.rows.map(rowHtml).join(''));
-    }).join('');
-    box.innerHTML = `<table class="pr-tb pr-ex2" data-no-sort data-no-page>
-        <colgroup><col><col style="width:96px"><col style="width:96px"><col style="width:78px"><col style="width:110px"><col style="width:96px"><col style="width:96px"><col style="width:90px"><col style="width:104px"><col style="width:96px"><col style="width:96px"></colgroup>
+        <td class="ex-m" title="${esc(r.requested_name || '')}"><span class="ex-by">${esc(r.requested_name || '—')}</span> · ${dTh(r.requested_at)}</td></tr>`; };
+    const card = n => { const R = L.filter(r => (r.channel || '—') === n), nNeg = R.filter(r => r.calc && +r.calc.profit < 0).length, ck = 'ch:' + n, col = EXCOL.has(ck);
+      const groups = [], gi = {}; R.forEach(r => { const k = (r.title || '') + '|' + n; if (gi[k] == null) { gi[k] = groups.length; groups.push({ k, rows: [] }); } groups[gi[k]].rows.push(r); });
+      const body = groups.map(g => { const r0 = g.rows[0], gNeg = g.rows.filter(r => r.calc && +r.calc.profit < 0).length, gc = EXCOL.has(g.k);
+        return `<tr class="ex-g" data-g="${esc(g.k)}"><td colspan="10"><span class="ex-car">${gc ? '▸' : '▾'}</span><b>${esc(r0.title)}</b><span class="ex-gm">${dr(r0) ? dr(r0) + ' · ' : ''}${g.rows.length} รายการ${gNeg ? ` · <span class="ex-neg">ขาดทุน ${gNeg}</span>` : ''}</span></td></tr>` + (gc ? '' : g.rows.map(rowHtml).join('')); }).join('');
+      return `<div class="pr-card ex-chc"><div class="ex-chd" data-g="${esc(ck)}"><i style="background:${chCol(n)}"></i><h3>${esc(n)}</h3><span class="ex-gm">${R.length} รายการ${nNeg ? ` · <span class="ex-neg">ขาดทุน ${nNeg}</span>` : ''}</span><span class="ex-car2">${col ? '▸' : '▾'}</span></div>
+        ${col ? '' : `<div style="overflow-x:auto;"><table class="pr-tb pr-ex2" data-no-sort data-no-page>
+        <colgroup><col><col style="width:96px"><col style="width:92px"><col style="width:76px"><col style="width:110px"><col style="width:96px"><col style="width:96px"><col style="width:86px"><col style="width:104px"><col style="width:170px"></colgroup>
         <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
           <th class="tn">% ของรายได้ <span class="pr-i" data-tip="กำไรสุทธิ ÷ รายได้ไม่รวม VAT">ⓘ</span></th><th class="tn">% ของต้นทุน <span class="pr-i" data-tip="กำไรสุทธิ ÷ ต้นทุนทั้งหมด (สินค้า + ค่า Platform + ค่าขาย + ค่าบริหาร / Marketing)">ⓘ</span></th>
-          <th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>ขอโดย</th><th>ส่งเมื่อ</th></tr></thead><tbody>${body}</tbody></table>`;
+          <th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>ขอโดย · ส่งเมื่อ</th></tr></thead><tbody>${body}</tbody></table></div>`}</div>`; };
+    box.innerHTML = (EX.ch ? [EX.ch] : names).map(card).join('');
     box.querySelectorAll('tr[data-id]').forEach(tr => tr.onclick = () => openReq(+tr.dataset.id));
-    box.querySelectorAll('tr.ex-g').forEach(tr => tr.onclick = () => { const k = tr.dataset.g; EXCOL.has(k) ? EXCOL.delete(k) : EXCOL.add(k); listExec(); });
+    box.querySelectorAll('tr.ex-g, .ex-chd').forEach(tr => tr.onclick = () => { const k = tr.dataset.g; EXCOL.has(k) ? EXCOL.delete(k) : EXCOL.add(k); listExec(); });
   }
   function ladder(c, C) {
     const nm = k => (C.products.find(p => p.sku === k) || { name: k }).name;
@@ -908,7 +932,7 @@
     let firstDraw = true;
     const draw = (c) => { if (firstDraw) { firstDraw = false; return drawInner(c); } keepView(body(), () => drawInner(c)); };
     const drawInner = (c) => {
-      const st = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0), k = S.rank;
+      const st = ST[r.status] || [r.status, ''], mm = pc(+c.min_markup, 0), k = S.rank, canEdit = r.status === 'pending';
       const changed = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []) || S.exclude.length > 0 || Object.keys(S.override).length > 0;
       const pnm = x => (C.products.find(p => p.sku === x) || { name: x }).name;
       const sig = c.signal === 'green' ? ['g', 'ผ่าน'] : c.signal === 'red' ? ['r', 'ไม่ผ่าน'] : ['', 'ขาดต้นทุน'];
@@ -933,33 +957,50 @@
       // (2026-10-28) หน้าตาใหม่: ผลก่อน → ตัวเลข 3 ช่อง → เงินไปไหนบ้าง (มีวิธีคิด + VAT) → สินค้าในโปร (พับได้) → Feedback
       // (2026-11-10) แผงรายละเอียดแบบใหม่: หัว (ชื่อ · สถานะ · Rank · ช่องทาง / วันที่ / ผู้ขอ) → สินค้าในโปร (เปิดตลอด) → ลองราคา → ตัวเลขหลัก + การคำนวณ (ติ๊กออกได้) → Feedback + ปุ่ม (ติดล่างแผง)
       const itRows = [...S.items.map((g, i) => ({ g, i, kind: 'item' })), ...S.gifts.map((g, i) => ({ g, i, kind: 'gift' }))].map(({ g, i, kind }) => { const l = cl[kind + '|' + g.sku];
-        return `<tr><td>${kind === 'gift' ? '<span class="exd-gift">แถม</span>' : ''}${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" ${kind === 'gift' ? 'data-gi' : 'data-ii'}="${i}" value="${g.qty}"></td><td class="num" title="${l && l.unit_cost != null ? 'ต้นทุน ' + n2(l.unit_cost) + ' × ' + g.qty + ' ชิ้น' : ''}">${l && l.unit_cost != null ? n2(l.cost) : '<span class="miss">ไม่มีต้นทุน</span>'}</td></tr>`; }).join('');
+        const isNew = !((kind === 'gift' ? r.gifts : r.items) || []).some(o => o.sku === g.sku);
+        return `<tr${isNew ? ' class="isnew"' : ''}><td>${isNew ? '<span class="exd-new">เพิ่มใหม่</span>' : ''}${kind === 'gift' ? '<span class="exd-gift">แถม</span>' : ''}${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" ${kind === 'gift' ? 'data-gi' : 'data-ii'}="${i}" value="${g.qty}"></td><td class="num" title="${l && l.unit_cost != null ? 'ต้นทุน ' + n2(l.unit_cost) + ' × ' + g.qty + ' ชิ้น' : ''}">${l && l.unit_cost != null ? n2(l.cost) : '<span class="miss">ไม่มีต้นทุน</span>'}</td><td class="x">${canEdit ? `<button type="button" class="exd-x" data-rmk="${kind}" data-rmi="${i}" title="เอาออกจาก Promotion">×</button>` : ''}</td></tr>`; }).join('');
+      const optHtml = '<option value="">เลือกสินค้า…</option>' + C.products.map(p => `<option value="${esc(p.sku)}">${esc(p.name)}</option>`).join('');
+      const propChanged = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []);
+      const offTxt = o => o ? `ราคา <b>${n2(o.price)}</b> · ${[...(o.items || []).map(x => pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : '')), ...(o.gifts || []).map(x => 'แถม ' + pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : ''))].map(esc).join(' + ')}` : '';
       const rkTxt = showRank ? `Rank 1 ${n0(k.sum1)} · Rank 2 ${n0(k.sum2)} · Rank 3 ${n0(k.sum3)}` : '';
       body().innerHTML = `
         <div class="exd-card exd-hd"><div class="exd-t">${esc(r.title)}<span class="pr-pill ${st[1]}">${st[0]}</span><span title="${esc(rkTxt || rkTip)}">${rkPill(k)}</span></div>
           <div class="exd-m">${esc(r.channel || '')}${r.start_date ? ` · ${dTh(r.start_date)}${r.end_date ? ' – ' + dTh(r.end_date) : ''}` : ''} · ${esc(r.requested_name || '')}</div>
-          ${r.note ? `<div class="exd-note">${esc(r.note)}</div>` : ''}</div>
+          ${r.note ? `<div class="exd-note">${esc(r.note)}</div>` : ''}
+          ${r.status === 'countered' && r.counter ? `<div class="exd-offer"><b>เสนอกลับไปแล้ว</b> รอคนขอกดรับ · ${offTxt(r.counter)}</div>` : ''}
+          ${r.status === 'approved' && r.counter && r.counter.orig ? `<div class="exd-offer">อนุมัติตามที่เสนอกลับ · ของเดิมที่ขอ: ${offTxt(r.counter.orig)}</div>` : ''}</div>
         <div class="exd-card exd-pc"><div class="exd-pl"><div class="exd-ch"><b>สินค้าใน Promotion</b></div>
-            <table class="exd-it" data-no-sort data-no-page><tbody>${itRows}<tr class="sum"><td>ต้นทุนรวม</td><td></td><td class="num">${n2(costTot)}</td></tr></tbody></table></div>
+            <table class="exd-it" data-no-sort data-no-page><tbody>${itRows}<tr class="sum"><td>ต้นทุนรวม</td><td></td><td class="num">${n2(costTot)}</td><td class="x"></td></tr></tbody></table>
+            ${canEdit ? `<div class="exd-add"><button type="button" data-addk="item">+ เพิ่มสินค้า</button><button type="button" data-addk="gift">+ เพิ่มของแถม</button><select class="pr-in" id="exAddSel" hidden>${optHtml}</select></div>` : ''}</div>
           <div class="exd-pr"><label for="exPrice">ราคาขาย (รวม VAT)</label><input class="pr-in" type="number" step="0.01" id="exPrice" value="${S.price}">
             <button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button><span>กำลังลองปรับ · ยังไม่แก้คำขอ</span>' : '<span>ลองเปลี่ยนราคา / จำนวน แล้วกดคำนวณ</span>'}</div></div>
         ${calcPanel(c, C)}
         <section class="exd-act"><textarea class="pr-in" id="exNote" rows="2" placeholder="Feedback ถึงทีม เช่น อนุมัติถ้าขึ้นราคาเป็น ${c.target_price ? n0(Math.ceil(c.target_price)) : '…'}">${esc(S.note != null ? S.note : (r.decision_note || ''))}</textarea>
-          <div class="exd-btns">${r.status === 'pending' ? '<button class="pr-btn good" data-dec="approved">✓ อนุมัติ</button><button class="pr-btn bad" data-dec="rejected">× ไม่อนุมัติ</button>' : '<button class="pr-btn ghost" data-dec="pending">กลับเป็นรออนุมัติ</button>'}</div></section>`;
+          <div class="exd-btns">${r.status === 'pending' ? `<button class="pr-btn good" data-dec="approved">✓ อนุมัติ</button>${propChanged ? '<button class="pr-btn cnt" id="exCounter" title="ส่งราคา / สินค้าที่ปรับแล้วกลับไปให้คนขอ · คนขอกดรับ = อนุมัติทันที">↩ เสนอกลับแบบที่ปรับ</button>' : ''}<button class="pr-btn bad" data-dec="rejected">× ไม่อนุมัติ</button>` : '<button class="pr-btn ghost" data-dec="pending">กลับเป็นรออนุมัติ</button>'}</div></section>`;
       // ขั้นบันไดกำไร: กดแถวกลุ่มเพื่อดูรายการย่อย
       bindLad(body());
       // ลองปรับ: คำนวณเมื่อกด "คำนวณ" หรือ Enter
-      const recalc = async () => {
-        S.note = document.getElementById('exNote').value;
-        S.price = +document.getElementById('exPrice').value || 0;
-        body().querySelectorAll('[data-gi]').forEach(x => { S.gifts[+x.dataset.gi].qty = +x.value || 0; });
-        body().querySelectorAll('[data-ii]').forEach(x => { S.items[+x.dataset.ii].qty = +x.value || 0; });
+      const readIn = () => { S.note = document.getElementById('exNote').value; S.price = +document.getElementById('exPrice').value || 0;
+        body().querySelectorAll('[data-gi]').forEach(x => { if (S.gifts[+x.dataset.gi]) S.gifts[+x.dataset.gi].qty = +x.value || 0; });
+        body().querySelectorAll('[data-ii]').forEach(x => { if (S.items[+x.dataset.ii]) S.items[+x.dataset.ii].qty = +x.value || 0; }); };
+      const recalc = async (noRead) => {
+        if (noRead !== true) readIn();
         const btn = document.getElementById('exCalc'); if (btn) { btn.disabled = true; btn.textContent = 'กำลังคำนวณ…'; }
         try { const pp = { channel_id: r.channel_id, price: S.price, orders: 0, items: S.items, gifts: S.gifts }; if (S.fee_mode) pp.fee_mode = S.fee_mode; if (S.exclude.length) pp.exclude = S.exclude; if (Object.keys(S.override).length) pp.override = S.override;
           const [c2, k2] = await Promise.all([rpc('promo_calc', { p: pp }), rpc('promo_rank', { p: pp }).catch(() => null)]); S.rank = k2; draw(c2); }
         catch (e) { toast('คำนวณไม่สำเร็จ: ' + e.message); if (btn) { btn.disabled = false; btn.textContent = 'คำนวณ'; } }
       };
-      document.getElementById('exCalc').onclick = recalc;
+      document.getElementById('exCalc').onclick = () => recalc();
+      // (2026-11-19) ลบ / เพิ่มสินค้าในคำขอ (ลองปรับ · ยังไม่แก้คำขอจริง) + เสนอกลับ
+      body().querySelectorAll('[data-rmi]').forEach(b => b.onclick = () => { readIn(); const a = b.dataset.rmk === 'gift' ? S.gifts : S.items; if (b.dataset.rmk !== 'gift' && S.items.length <= 1) { toast('ต้องมีสินค้าอย่างน้อย 1 รายการ'); return; } a.splice(+b.dataset.rmi, 1); recalc(true); });
+      const sel = document.getElementById('exAddSel'); let addK = 'item';
+      body().querySelectorAll('[data-addk]').forEach(b => b.onclick = () => { addK = b.dataset.addk; sel.hidden = false; sel.value = ''; sel.focus(); });
+      if (sel) sel.onchange = () => { const sku = sel.value; if (!sku) return; readIn(); const a = addK === 'gift' ? S.gifts : S.items, ex = a.find(x => x.sku === sku); if (ex) ex.qty = (+ex.qty || 0) + 1; else a.push({ sku, qty: 1 }); recalc(true); };
+      const cb = document.getElementById('exCounter');
+      if (cb) cb.onclick = async () => { readIn(); const items = S.items.filter(x => +x.qty > 0), gifts = S.gifts.filter(x => +x.qty > 0);
+        if (!items.length || !(S.price > 0)) { uiAlert('เสนอกลับไม่ได้', { text: 'ต้องมีราคา และสินค้าอย่างน้อย 1 รายการ', tone: 'bad' }); return; }
+        if (!(await uiConfirm('เสนอกลับ', { text: `${r.title} · ${r.channel || ''} · ราคา ${n0(r.price)} → ${n0(S.price)} · คนขอกดรับ = อนุมัติทันที`, ok: 'เสนอกลับ' }))) return;
+        try { await rpc('promo_counter', { p_id: r.id, p: { price: S.price, items, gifts }, p_note: document.getElementById('exNote').value.trim() }); toast('เสนอกลับแล้ว'); trClose(); renderExec(); } catch (e) { uiAlert('เสนอกลับไม่สำเร็จ', { text: e.message, tone: 'bad' }); } };
       bindFm(body(), v => { S.fee_mode = v; recalc(); });
       bindEx(body(), list => { S.exclude = list; recalc(); });
       bindOv(body(), o => { S.override = o; recalc(); });
