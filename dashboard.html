@@ -824,7 +824,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-c"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -7341,11 +7341,18 @@ function trFx(j, d, m) {
   const rows = (j.rows || []).map(r => ({ m: r[0], grp: r[1], src: r[2], sch: r[3], amt: +r[4], pool: +r[5], bn: r[6] == null ? null : +r[6], bd: r[7] == null ? null : +r[7] }));
   const MK = '①②③④⑤⑥⑦⑧⑨⑩';
   if (m === 'all') {   // ทุกเดือน: สรุปกลุ่ม + รายเดือน (กดเดือนเพื่อดูสูตร)
-    const gs = trGroups(j, d, null), months = [...new Set(rows.map(r => r.m))].sort();
-    let h = `<div class="tr-fg"><div class="tr-fg-h"><span>ประกอบด้วย</span></div>` + gs.map((g, gi) => `<div class="tr-ln"><span class="tr-sg">${MK[gi] || '•'}</span><div class="tr-lb">${trEsc(g.title)}<div class="tr-ref">${trEsc(g.how)}</div></div><div class="tr-num">${n(g.amt)}</div></div>`).join('')
-      + `<div class="tr-eq"><span>รวมทุกเดือน</span><b>${n(rows.reduce((t, r) => t + r.amt, 0))}</b></div></div>`;
+    const gs = trGroups(j, d, null), have = [...new Set(rows.map(r => r.m))].sort(), tot = rows.reduce((t, r) => t + r.amt, 0);
+    // (2026-11-18) เดือนในช่วงที่เลือกแต่ไม่มียอด แสดงเป็น "—" ด้วย (เดิมหายไปจากรายการ ดูเหมือนข้อมูลขาด)
+    const months = (() => { const f = (document.getElementById('plFrom') || {}).value, t = (document.getElementById('plTo') || {}).value, L = have[0] ? have[0].length : 7;
+      if (!/^\d{4}-\d{2}/.test(f || '') || !/^\d{4}-\d{2}/.test(t || '')) return have;
+      const out = []; let y = +f.slice(0, 4), mo = +f.slice(5, 7); const ey = +t.slice(0, 4), em = +t.slice(5, 7);
+      while ((y < ey || (y === ey && mo <= em)) && out.length < 60) { out.push((y + '-' + String(mo).padStart(2, '0') + '-01').slice(0, L)); if (++mo > 12) { mo = 1; y++; } }
+      return [...new Set(out.concat(have))].sort(); })();
+    let h = `<div class="tr-fg"><div class="tr-fg-h"><span>ประกอบด้วย</span></div>` + gs.map((g, gi) => `<div class="tr-ln"><span class="tr-sg">${MK[gi] || '•'}</span><div class="tr-lb">${trEsc(g.title)}<div class="tr-ref">${trEsc(g.how)}</div></div><div class="tr-num">${n(g.amt)}${gs.length > 1 && Math.abs(tot) >= 1 ? ` <span class="tr-ref" style="display:inline;margin-left:4px;" data-tip="สัดส่วนของยอดรวมนี้">${(g.amt / tot * 100).toFixed(1)}%</span>` : ''}</div></div>`).join('')
+      + `<div class="tr-eq"><span>รวมทุกเดือน</span><b>${n(tot)}</b></div></div>`;
     h += `<div class="tr-fg"><div class="tr-fg-h"><span>รายเดือน</span><span class="tr-ref">กดเดือนเพื่อดูวิธีคิด</span></div>` + months.map(mm => {
       const a = rows.filter(r => r.m === mm).reduce((t, r) => t + r.amt, 0);
+      if (!have.includes(mm)) return `<div class="tr-ln" style="opacity:.6;"><span class="tr-sg"></span><div class="tr-lb">${PL_TH_M(mm)} <span class="tr-ref" style="display:inline;">ไม่มียอดในเดือนนี้</span></div><div class="tr-num">—</div></div>`;
       return `<div class="tr-ln tr-mrow" onclick="trPick('${mm}')"><span class="tr-sg">›</span><div class="tr-lb">${PL_TH_M(mm)}</div><div class="tr-num">${n(a)}</div></div>`;
     }).join('') + `</div>`;
     return h;
@@ -7541,7 +7548,9 @@ function cgFx(j, o, m) {
       + (Math.abs(P.gift) >= 0.5 ? ln('④', 'เป็นของแถมของสินค้าอื่น', '', `−${n(Math.abs(P.gift))}`, 'ต้นทุนส่วนที่แถมไปย้ายไปอยู่คอลัมน์ "ต้นทุนของแถม" ของสินค้าหลัก') : '')
       + `<div class="tr-eq"><span>รวมทุกเดือน</span><b>${n(j.total_own)}</b></div></div>`;
     h += `<div class="tr-fg"><div class="tr-fg-h"><span>รายเดือน</span><span class="tr-ref">กดเดือนเพื่อดูวิธีคิด</span></div>`
-      + months.map(mm => `<div class="tr-ln tr-mrow" onclick="cgPick('${mm}')"><span class="tr-sg">›</span><div class="tr-lb">${PL_TH_M(mm)}</div><div class="tr-num">${n(fm[mm])}</div></div>`).join('') + `</div>`;
+      + (j.months || []).map(mm => months.includes(mm)
+          ? `<div class="tr-ln tr-mrow" onclick="cgPick('${mm}')"><span class="tr-sg">›</span><div class="tr-lb">${PL_TH_M(mm)}</div><div class="tr-num">${n(fm[mm])}</div></div>`
+          : `<div class="tr-ln" style="opacity:.6;"><span class="tr-sg"></span><div class="tr-lb">${PL_TH_M(mm)} <span class="tr-ref" style="display:inline;">ไม่มียอดในเดือนนี้</span></div><div class="tr-num">—</div></div>`).join('') + `</div>`;   // (2026-11-18) เดือนที่ไม่มียอดแสดงเป็น — ด้วย
     return h;
   }
   const mm = m.slice(5, 7), tabLink = (tab, label) => { const g = (j.tabs || {})[tab]; return g ? `<a class="tr-src-a" href="${trEsc(j.url)}pubhtml?gid=${encodeURIComponent(g)}&single=true" target="_blank" rel="noopener">${label || 'แท็บ ' + tab} ↗</a>` : (label || 'แท็บ ' + tab); };
