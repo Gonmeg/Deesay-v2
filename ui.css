@@ -386,3 +386,7 @@ button { font-family: inherit; }
 .ui-metric-v .ui-adp small, .ui-adp.is-big small { font-size: 13px; font-weight: 600; color: var(--text2); margin-left: 8px; }
 .ui-adp.is-stack small { display: block; margin-left: 0; line-height: 1.2; }
 .ui-roas-sm { font-size: 11.5px; font-weight: 500; color: var(--text3); }   /* ROAS ในตารางที่มีคอลัมน์ % ค่า Ads อยู่แล้ว = ตัวเล็กสีเทา */
+/* (2026-11-18) ตารางที่ล็อกความกว้างคอลัมน์ (คอลัมน์แคบ): ROAS ลงบรรทัดล่างใต้ % และตัดคำว่า ROAS ออก (หัวคอลัมน์บอกไว้แล้ว) กันตัวเลขล้นไปทับคอลัมน์ข้าง ๆ */
+.tdr-tbl .ui-adp, #tblTtOrderChannel .ui-adp, #tblShSys .ui-adp, .hm-adtbl .ui-adp, .mkt-tbl .ui-adp, #tblTtProduct .ui-adp { display: inline-block; line-height: 1.25; }
+.tdr-tbl .ui-adp small, #tblTtOrderChannel .ui-adp small, #tblShSys .ui-adp small, .hm-adtbl .ui-adp small, .mkt-tbl .ui-adp small, #tblTtProduct .ui-adp small { display: block; margin-left: 0; }
+.tdr-tbl .ui-adp-w, #tblTtOrderChannel .ui-adp-w, #tblShSys .ui-adp-w, .mkt-tbl .ui-adp-w, #tblTtProduct .ui-adp-w { display: none; }

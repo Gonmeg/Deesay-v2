@@ -829,7 +829,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-g"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.18-h"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -8062,7 +8062,7 @@ async function renderHome() {
   const money = v => fmt(Math.round(+v || 0)), pct = (x, y) => x != null && y ? (x - y) / y * 100 : null;
   const delta = (p, inv) => p === null || !isFinite(p) ? '<span class="ui-delta flat">—</span>'
     : `<span class="ui-delta ${Math.abs(p) < 3 ? 'flat' : ((p > 0) !== !!inv ? 'good' : 'bad')}">${p > 0 ? '▲' : p < 0 ? '▼' : ''} ${Math.abs(p).toFixed(1)}%</span>`;
-  const roasTxt = (r, stack) => r ? `<span class="ui-adp${stack ? ' is-stack' : ''}"><b class="hm-roas ${r >= 3 ? 'good' : r >= 1.5 ? 'mid' : 'bad'}">${(100 / r).toFixed(1)}%</b><small>ROAS ${r.toFixed(2)}x</small></span>` : '<span class="ui-muted">—</span>';   // (2026-11-18) % ค่า Ads ตัวหลัก · ROAS ตัวเล็ก (สีตามเกณฑ์เดิม)
+  const roasTxt = (r, stack) => r ? `<span class="ui-adp${stack ? ' is-stack' : ''}"><b class="hm-roas ${r >= 3 ? 'good' : r >= 1.5 ? 'mid' : 'bad'}">${(100 / r).toFixed(1)}%</b><small><span class="ui-adp-w">ROAS </span>${r.toFixed(2)}x</small></span>` : '<span class="ui-muted">—</span>';   // (2026-11-18) % ค่า Ads ตัวหลัก · ROAS ตัวเล็ก (สีตามเกณฑ์เดิม)
   const dash = '<span class="ui-muted">—</span>';
   const dShort = v => new Date(v + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
   const dLong = v => new Date(v + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -9267,7 +9267,7 @@ const tdrAffAds = r => tdrLiveAff(r), tdrPreAds = r => tdrLivePre(r);
 const tdrAware = r => tdrN(r, 'spend') - tdrN(r, 'pgm') - tdrN(r, 'lgm');           // Ads ทุกประเภทที่ไม่ใช่ GMV Max
 const tdrOther = r => tdrN(r, 'sales') - tdrPgmSales(r) - tdrLiveAds(r);             // โชว์เคส Affiliate · อื่น ๆ · ลดหนี้ (CN)
 const tdrMuted = '<span class="ui-muted">—</span>';
-const tdrRoas = (s, a) => a > 0 && s > 0 ? `<span class="ui-adp"><b class="tdr-roas ${s / a >= TDR_ROAS_OK ? 'tdr-good' : 'tdr-bad'}">${(a / s * 100).toFixed(1)}%</b><small>ROAS ${(s / a).toFixed(2)}x</small></span>` : tdrMuted;   // (2026-11-18) % ค่า Ads ตัวหลัก + ROAS ตัวเล็ก
+const tdrRoas = (s, a) => a > 0 && s > 0 ? `<span class="ui-adp"><b class="tdr-roas ${s / a >= TDR_ROAS_OK ? 'tdr-good' : 'tdr-bad'}">${(a / s * 100).toFixed(1)}%</b><small><span class="ui-adp-w">ROAS </span>${(s / a).toFixed(2)}x</small></span>` : tdrMuted;   // (2026-11-18) % ค่า Ads ตัวหลัก + ROAS ตัวเล็ก
 const tdrPct = (a, s) => tdrRoas(s, a);
 const tdrF = v => Math.round(v) ? fmt(Math.round(v)) : tdrMuted;
 const tdrTip = s => ` <span class="pr-i" data-tip="${s}">ⓘ</span>`;
