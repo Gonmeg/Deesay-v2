@@ -21,7 +21,7 @@
   const TIER = { aw: ['Awareness', 'การรับรู้'], co: ['Consideration', 'ความสนใจ'], tr: ['Shop Traffic', 'การเข้าชมร้าน'], cv: ['Conversion', 'การปิดการขาย'], vl: ['Total ROAS', 'ความคุ้มค่ารวม'] };
   const ORDER = ['aw', 'co', 'cv'], RES = ['tr', 'vl'], STG = { aw: 'Awareness', co: 'Consideration', tr: 'Shop Traffic', cv: 'Conversion', vl: 'Total ROAS' }, UNIT = { aw: 'Reach', co: 'Clicks', tr: 'เข้าดูสินค้า (ครั้ง)', cv: 'Orders', vl: 'ยอดขาย' };
   const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-  let D = null, KEY = '', seq = 0, sel = 'aw', baseMode = 'pre', selCamp = null, charts = {};
+  let D = null, KEY = '', seq = 0, sel = 'aw', baseMode = 'pre', selCamp = null, charts = {}, clipQ = '';
   const ADV = { '7138651956792360962': 'Fimiq B', '7409927410046648337': 'Fimiq Awareness', '7680042517500313621': 'Fimiq PR' };
   const OBJ = { REACH: 'Reach', VIDEO_VIEWS: 'Video views', RF_REACH: 'Reach', TOPVIEW: 'TopView', BRAND_CONSIDERATION: 'Brand consideration', ENGAGEMENT: 'Engagement', TRAFFIC: 'Traffic', COMMUNITY_INTERACTION: 'Community interaction' };
   const $ = id => document.getElementById(id);
@@ -65,6 +65,8 @@
       table.pt-tbl { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
       table.pt-tbl th { font-size:12px; color:var(--text3); font-weight:600; padding:8px; border-bottom:1px solid var(--border); text-align:center; white-space:nowrap; }
       table.pt-tbl td { padding:9px 8px; border-bottom:1px solid var(--border); text-align:center; font-variant-numeric:tabular-nums; } table.pt-tbl th:first-child, table.pt-tbl td:first-child { text-align:left; } table.pt-tbl tr:last-child td { border-bottom:0; }
+      .pt-chd { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; } .pt-q { flex:none; width:270px; height:34px; padding:0 12px; border:1px solid var(--border); border-radius:9px; background:var(--bg2); color:var(--text); font:inherit; font-size:13px; } .pt-q:focus { outline:none; border-color:var(--accent); }
+      .pt-more { display:inline-block; margin-left:6px; padding:0 6px; border-radius:6px; background:var(--bg3); color:var(--text2); font-size:11.5px; font-weight:600; cursor:default; vertical-align:top; } .pt-pd { display:inline-block !important; vertical-align:top; } .pt-nc { display:block; font-size:10.5px; color:var(--text3); white-space:nowrap; } table.pt-cl th:first-child, table.pt-cl td:first-child { width:64px; } table.pt-cl .pt-clip { flex-direction:column; align-items:flex-start; gap:2px; }
       table.pt-tbl th.pt-l, table.pt-tbl td.pt-l { text-align:left; } .pt-ch, .pt-pd { display:block; max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .pt-pd { max-width:210px; } #tblPtClips .pt-clip b { max-width:240px; }
       .pt-clip { display:flex; align-items:center; gap:9px; min-width:0; } .pt-clip.sq img { height:34px; }
       .pt-bl { display:block; font-size:11px; color:var(--text3); font-weight:400; }
@@ -341,12 +343,16 @@
     const ok = /^\d{15,}$/.test(String(c.id)), url = ok ? `https://www.tiktok.com/@i/video/${c.id}` : '', name = esc(c.t || 'คลิป …' + String(c.id).slice(-6));
     const img = c.cv ? `<img src="${esc(c.cv)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-zoom="1">` : '<span class="ph"></span>';
     const lk = h => (ok ? `<a href="${url}" target="_blank" rel="noopener" title="เปิดคลิปใน TikTok">${h}</a>` : h);
-    return `<div class="pt-clip">${c.cv ? lk(img) : img}<div><b title="${esc(c.t)}">${lk(name)}</b>${c._n > 1 ? `<small>รวม ${c._n} Campaign</small>` : ''}</div></div>`;
+    // (2026-11-18) เหลือแค่รูป (ชื่อคลิปอยู่ในคำอธิบายตอนชี้ที่รูป · กดรูป = เปิดคลิปใน TikTok)
+    return `<div class="pt-clip" title="${name}${c._n > 1 ? ' · รวม ' + c._n + ' Campaign' : ''}">${lk(img)}${c._n > 1 ? `<small class="pt-nc">${c._n} Campaign</small>` : ''}</div>`;
   }
   // (2026-11-18) คอลัมน์ ช่อง + สินค้าในตะกร้า (แยกจากชื่อคลิป)
   const chCell = c => `<td class="pt-l"><span class="pt-ch" title="${esc(c.a || '')}">${esc(c.a || '—')}</span></td>`;
-  const pdCell = c => `<td class="pt-l"><span class="pt-pd" title="${esc(c.pd || '')}">${c.pd ? esc(c.pd) : '<span style="color:var(--text3)">—</span>'}</span></td>`;
-  const EXH = () => `<th class="pt-l">ช่อง ${tip('ชื่อช่อง TikTok ของคลิป')}</th><th class="pt-l">สินค้าในตะกร้า ${tip('สินค้าที่คลิปนี้ติดตะกร้า — ดูจากคู่ คลิป × ตะกร้า ที่ Ads ปิดการขาย (GMV Max) รายงาน ย้อนหลัง 30 วันก่อนช่วงที่ดู\nสูงสุด 3 สินค้า เรียงตามค่า Ads\n— = คลิปนี้ยังไม่เคยถูกใช้ใน GMV Max จึงยังไม่รู้ว่าติดตะกร้าอะไร')}</th>`;
+  // ตะกร้า: คั่นด้วยลูกน้ำ · เกิน 2 สินค้า = แสดง 2 ตัวแรก (ค่า Ads มากสุด) + ป้าย "+N" ชี้ดูรายชื่อทั้งหมด
+  const pdList = c => (c.pd ? String(c.pd).split(', ').filter(Boolean) : []);
+  const pdCell = c => { const L = pdList(c); if (!L.length) return '<td class="pt-l" data-sv=""><span style="color:var(--text3)">—</span></td>';
+    return `<td class="pt-l" data-sv="${esc(L.join(', '))}"><span class="pt-pd" title="${esc(L.join(', '))}">${esc(L.slice(0, 2).join(', '))}</span>${L.length > 2 ? `<span class="pt-more" title="${esc(L.join('\n'))}">+${L.length - 2}</span>` : ''}</td>`; };
+  const EXH = () => `<th class="pt-l">ช่อง ${tip('ชื่อช่อง TikTok ของคลิป')}</th><th class="pt-l">สินค้าในตะกร้า ${tip('สินค้าที่คลิปนี้ติดตะกร้า — ดูจากคู่ คลิป × ตะกร้า ที่ Ads ปิดการขาย (GMV Max) รายงาน ย้อนหลัง 30 วันก่อนช่วงที่ดู\nเรียงตามค่า Ads · เกิน 2 สินค้าแสดงเป็น +N ชี้เพื่อดูรายชื่อทั้งหมด\n— = คลิปนี้ยังไม่เคยถูกใช้ใน GMV Max จึงยังไม่รู้ว่าติดตะกร้าอะไร')}</th>`;
   // คลิปเดียวกันที่อยู่หลาย Campaign / หลายบัญชี Ads รวมเป็นแถวเดียว (ตัวเลข Ads บวกกัน · GMV ใน GMV Max เป็นของคลิป ไม่บวกซ้ำ)
   function mergeClips(list, sumG) {
     const m = new Map(), F = ['sp', 'imp', 'clk', 'v6', 'pv', 'pdp', 'atc', 'reach'].concat(sumG ? ['gc', 'gr', 'go'] : []);
@@ -408,9 +414,11 @@
     const cc = $('ptClipCard'); if (cc) cc.style.display = sel === 'vl' ? 'none' : ''; if (sel === 'vl') return;
     const camp = (sel === 'aw' || sel === 'co') && selCamp ? (D.camps || []).find(c => c.id === selCamp) : null;
     const raw = ((D.clips || {})[sel] || []).filter(c => (camp ? c.cid === selCamp : true) && num(sel === 'cv' ? c.gc : c.sp) > 0), dash = '—';
-    const list = mergeClips(raw, sel === 'cv').sort((a, b) => num(sel === 'cv' ? b.gc : b.sp) - num(sel === 'cv' ? a.gc : a.sp)), dup = raw.length - list.length;
+    const qq = clipQ.trim().toLowerCase(), all0 = mergeClips(raw, sel === 'cv');
+    const list = (qq ? all0.filter(c => ((c.a || '') + ' ' + (c.pd || '') + ' ' + (c.t || '')).toLowerCase().includes(qq)) : all0).sort((a, b) => num(sel === 'cv' ? b.gc : b.sp) - num(sel === 'cv' ? a.gc : a.sp)), dup = raw.length - all0.length;
     const gm = c => num(c.gc) > 0 ? `${n0(c.gr)} · ${n0(c.go)} Orders` : dash, gmTd = c => `<td data-sv="${num(c.gc) > 0 ? num(c.gr) : ''}">${gm(c)}</td>`;
     let head, rows;
+    const qi = $('ptClipQ'); if (qi) { qi.style.display = sel === 'tr' ? 'none' : ''; if (!qi._b) { qi._b = 1; qi.addEventListener('input', () => { clipQ = qi.value; drawTable(); }); } }
     if (sel === 'tr') { drawProducts(); return; }
     if (sel === 'cv') {
       head = `<th>คลิป</th>${EXH()}<th>Spend</th><th>GMV ${tip('ยอดขายที่ TikTok นับให้คลิปนี้ใน Ads ปิดการขาย (GMV Max)')}</th><th>Orders</th><th>% ค่า Ads ${tip('Spend ÷ GMV ของคลิปนี้ · ยิ่งต่ำยิ่งดี · ตัวเล็ก = ROAS (GMV ÷ Spend)')}</th><th>ผล ${tip(ruleTip('cv'))}</th>`;
@@ -425,8 +433,8 @@
     }
     $('ptClipT').innerHTML = `คลิปของขั้น ${STG[sel]}` + (camp ? `<span class="pt-chip" title="${esc(camp.n)}">Campaign: ${esc(String(camp.n).length > 44 ? String(camp.n).slice(0, 44) + '…' : camp.n)}</span><button type="button" class="pt-x" id="ptCampX">× แสดงทุก Campaign</button>` : '');
     $('ptClipS').textContent = camp ? `คลิปของ Campaign นี้ที่มี Spend ในช่วงนี้ · ${list.length} คลิป · Spend รวม ${n0(list.reduce((a, c) => a + num(c.sp), 0))}`
-      : `คลิปที่มี Spend ในช่วงนี้ · ${list.length} คลิป` + (sel === 'cv' ? ' · เลือกขั้นอื่นด้านบนเพื่อเปลี่ยน' : ' · เลือก Campaign ด้านบนเพื่อแสดงเฉพาะคลิปของ Campaign นั้น') + (dup > 0 ? ` · คลิปเดียวกันที่อยู่หลาย Campaign รวมเป็นแถวเดียว (${dup} แถวที่ซ้ำ)` : '');
-    $('ptTblBox').innerHTML = `<table class="pt-tbl" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:22px;">ช่วงนี้ยังไม่มีคลิปที่ Spend ถึงเกณฑ์</td></tr>`}</tbody></table>`;
+      : `คลิปที่มี Spend ในช่วงนี้ · ${qq ? `พบ ${list.length} จาก ${all0.length} คลิป` : `${list.length} คลิป`}` + (sel === 'cv' ? ' · เลือกขั้นอื่นด้านบนเพื่อเปลี่ยน' : ' · เลือก Campaign ด้านบนเพื่อแสดงเฉพาะคลิปของ Campaign นั้น') + (dup > 0 ? ` · คลิปเดียวกันที่อยู่หลาย Campaign รวมเป็นแถวเดียว (${dup} แถวที่ซ้ำ)` : '');
+    $('ptTblBox').innerHTML = `<table class="pt-tbl pt-cl" id="tblPtClips"><thead><tr>${head}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:22px;">${qq ? 'ไม่พบคลิปที่ตรงกับคำค้น' : 'ช่วงนี้ยังไม่มีคลิปที่ Spend ถึงเกณฑ์'}</td></tr>`}</tbody></table>`;
     const x = $('ptCampX'); if (x) x.addEventListener('click', () => { selCamp = null; drawCamps(model()); drawTable(); });
   }
 
@@ -510,7 +518,7 @@
       <div class="pt-res">${RES.map(k => resHtml(k, M)).join('')}</div>
       <div class="pt-card"><div class="pt-t" id="ptChT"></div><div class="pt-cv"><canvas id="ptCh"></canvas></div><div class="pt-lg" id="ptLg"></div><div class="pt-vd" id="ptVd"></div></div>
       <div class="pt-card" id="ptCampCard"><div class="pt-t" id="ptCampT"></div><div class="pt-s" id="ptCampS"></div><div id="ptCampBox" style="overflow-x:auto;"></div></div>
-      <div class="pt-card" id="ptClipCard"><div class="pt-t" id="ptClipT"></div><div class="pt-s" id="ptClipS"></div><div id="ptTblBox" style="overflow-x:auto;"></div></div>
+      <div class="pt-card" id="ptClipCard"><div class="pt-chd"><div><div class="pt-t" id="ptClipT"></div><div class="pt-s" id="ptClipS"></div></div><input type="search" id="ptClipQ" class="pt-q" placeholder="ค้นหา ชื่อช่อง / สินค้าในตะกร้า" autocomplete="off"></div><div id="ptTblBox" style="overflow-x:auto;"></div></div>
       <div class="pt-card" id="ptLiveCard"><div class="pt-t" id="ptLiveT"></div><div class="pt-s" id="ptLiveS"></div><div id="ptLiveBox" style="overflow-x:auto;"></div></div>`;
     drawChart(M); drawCamps(M); drawTable(); drawLive();
     root.querySelectorAll('.pt-sg').forEach(b => b.addEventListener('click', () => { sel = b.dataset.tier; root.querySelectorAll('.pt-sg').forEach(x => x.setAttribute('aria-pressed', x.dataset.tier === sel)); selCamp = null; drawChart(M); drawCamps(M); drawTable(); }));
