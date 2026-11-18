@@ -63,7 +63,7 @@
   const R = {
     revenue: { label: 'ยอดขายจริง Facebook', default: true, fmt: r => money(+r.revenue), val: r => +r.revenue },
     spend_conv: { label: 'ค่า Ads Conversion', default: true, fmt: r => money(+r.spend_conv), val: r => +r.spend_conv || 0 },
-    roas:    { label: 'ROAS (ยอดจริง/Conversion)', default: false, fmt: r => +r.spend_conv ? (r.revenue / r.spend_conv).toFixed(2) + 'x' : '—', val: r => +r.spend_conv ? r.revenue / r.spend_conv : 0 },
+    roas:    { label: 'ROAS (ยอดจริง/Conversion)', default: false, fmt: r => +r.spend_conv && +r.revenue ? (r.revenue / r.spend_conv).toFixed(2) + 'x' : '—', val: r => +r.spend_conv ? r.revenue / r.spend_conv : 0 },
     acos:    { label: '% ค่า Ads', default: true, fmt: r => roasCell(+r.revenue, +r.spend_conv), val: r => +r.revenue ? (+r.spend_conv || 0) / r.revenue * 100 : 0 }
   };
   const TRAF_KEYS = ['spend_conv','msg_started','cost_per_msg','link_clicks','ctr','cpc','post_engagement','er','impressions','reach','frequency','cpm','purchases','cpa','thruplay','revenue','roas','acos','spend'];
