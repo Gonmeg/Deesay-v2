@@ -400,8 +400,8 @@
     let head, rows;
     if (sel === 'tr') { drawProducts(); return; }
     if (sel === 'cv') {
-      head = `<th>คลิป</th><th>Spend</th><th>GMV ${tip('ยอดขายที่ TikTok นับให้คลิปนี้ใน Ads ปิดการขาย (GMV Max)')}</th><th>Orders</th><th>ROAS ${tip('GMV ÷ Spend ของคลิปนี้ · ยิ่งสูงยิ่งดี')}</th><th>ผล ${tip(ruleTip('cv'))}</th>`;
-      rows = list.map(c => { const v = PILL[verdict('cv', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.gc)}</td><td>${n0(c.gr)}</td><td>${n0(c.go)}</td><td>${c.gc > 0 ? (c.gr / c.gc).toFixed(2) + 'x' : dash}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
+      head = `<th>คลิป</th><th>Spend</th><th>GMV ${tip('ยอดขายที่ TikTok นับให้คลิปนี้ใน Ads ปิดการขาย (GMV Max)')}</th><th>Orders</th><th>% ค่า Ads ${tip('Spend ÷ GMV ของคลิปนี้ · ยิ่งต่ำยิ่งดี · ตัวเล็ก = ROAS (GMV ÷ Spend)')}</th><th>ผล ${tip(ruleTip('cv'))}</th>`;
+      rows = list.map(c => { const v = PILL[verdict('cv', c)]; return `<tr><td>${clipCell(c)}</td><td>${n0(c.gc)}</td><td>${n0(c.gr)}</td><td>${n0(c.go)}</td><td>${c.gc > 0 && c.gr > 0 ? window.adPctR(c.gr / c.gc) : dash}</td><td><span class="pt-pill ${v[0]}">${v[1]}</span></td></tr>`; });
     } else if (sel === 'aw') {
       const all = ((D.clips || {}).aw || []).concat((D.clips || {}).co || []), tp = all.reduce((a, c) => a + num(c.pdp), 0), pvAvg = tp > 0 ? all.reduce((a, c) => a + num(c.sp), 0) / tp : 0;
       head = `<th>คลิป</th><th>Spend</th><th>Impressions</th><th>CPM ${tip('ค่า Ads ต่อการแสดง 1,000 ครั้ง · ยิ่งต่ำยิ่งดี')}</th><th>6s View Rate ${tip('การดูถึง 6 วินาที ÷ Impressions · ยิ่งสูงยิ่งดี')}</th><th>เข้าหน้าสินค้า ${tip('Product Page Views = จำนวนครั้งที่คนเข้าหน้าสินค้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>Add to Cart ${tip('จำนวนครั้งที่คนใส่ตะกร้าหลังเห็น Ads ของคลิปนี้ (TikTok Ads นับให้)')}</th><th>GMV ใน GMV Max ${tip('คลิปนี้ถูกใช้ใน Ads Conversion (GMV Max) ด้วย · ตัวเลขคือยอดขายและ Orders ที่ GMV Max นับให้คลิปเดียวกันในช่วงเดียวกัน\nไม่ใช่ยอดขายจาก Ads PR · — = คลิปนี้ไม่ได้อยู่ใน GMV Max')}</th><th>ผล ${tip(ruleTip('aw'))}</th>`;

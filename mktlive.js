@@ -88,7 +88,7 @@ body.light-theme .mk .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       <div class="mk-card"><div class="mk-head"><h2>แนวโน้มรายเดือน ${info('mk-i-tr', 'ทุกเดือนที่มีข้อมูล (ไม่ขึ้นกับช่วงที่เลือก)<br>ยอดขายถอด VAT · ค่าการตลาด = ค่า KOL + ค่า Ads · MER = ยอดขาย ÷ ค่าการตลาด (แกนขวา)<br>เส้นประ = เดือนที่ยังไม่จบ ยอดยังไม่ครบเดือน')}</h2>
         <div class="mk-leg"><span><i style="background:var(--accent)"></i>ยอดขาย</span><span><i style="background:var(--bad)"></i>ค่า KOL + Ads</span><span><i style="background:var(--good)"></i>MER</span></div></div>
         <div style="position:relative;height:240px;"><canvas id="chartMkTrend"></canvas></div></div>
-      <div class="mk-card"><div class="mk-head"><h2>ROAS ตามช่องทาง ${info('mk-i-roas', '<b>ROAS · Return on Ad Spend</b><br>ยอดขายช่องทาง (ถอด VAT) ÷ ค่า Ads ช่องทาง ในช่วงที่เลือก · ไม่รวมค่า KOL<br>ป้าย = เปลี่ยนกี่ % จากช่วงก่อนหน้าที่ยาวเท่ากัน<br>ไม่แสดงตัวแทน / Modern Trade เพราะไม่มี Ads ของตัวเอง')}</h2></div>
+      <div class="mk-card"><div class="mk-head"><h2>% ค่า Ads ตามช่องทาง ${info('mk-i-roas', '<b>% ค่า Ads</b> = ค่า Ads ช่องทาง ÷ ยอดขายช่องทาง (ยิ่งต่ำยิ่งดี) · ตัวเล็ก = <b>ROAS · Return on Ad Spend</b><br>ยอดขายช่องทาง (ถอด VAT) ÷ ค่า Ads ช่องทาง ในช่วงที่เลือก · ไม่รวมค่า KOL<br>ป้าย = เปลี่ยนกี่ % จากช่วงก่อนหน้าที่ยาวเท่ากัน<br>ไม่แสดงตัวแทน / Modern Trade เพราะไม่มี Ads ของตัวเอง')}</h2></div>
         <div class="mk-chs" id="mkChs">${Array.from({ length: 4 }, () => '<div class="mk-ch"></div>').join('')}</div>
         <div class="mk-chnote" id="mkChNote">ไม่แสดงตัวแทน / Modern Trade · ไม่มี Ads ของตัวเอง</div></div>
       <div class="mk-card" style="padding:16px 0 6px;">
@@ -145,7 +145,7 @@ body.light-theme .mk .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const L = PL_CH_ORDER.filter(c => !NO_ROAS.includes(c) && t[c] && t[c].ads >= 0.5);
     $('mkChs').innerHTML = L.map(c => { const r = t[c].rev / t[c].ads, pr = p[c] && p[c].ads >= 0.5 ? p[c].rev / p[c].ads : 0;
       return `<div class="mk-ch"><div class="l"><span class="mk-dot" style="background:var(${CH_VAR[c] || '--text3'})"></span>${esc(c)}</div>
-      <div class="v">${xx(r)}${D.prev_has && pr > 0 ? chipP(r, pr) : ''}</div><div class="s" title="ยอดขาย ${fmt(Math.round(t[c].rev))} · ค่า Ads ${fmt(Math.round(t[c].ads))}${pr > 0 ? ` · ${prevLbl()} ${xx(pr)}` : ''}">ขาย ${fmt(Math.round(t[c].rev))} · Ads ${fmt(Math.round(t[c].ads))}${D.prev_has && pr > 0 ? ` · ก่อน ${xx(pr)}` : ''}</div></div>`; }).join('') || '<div class="empty">ไม่มีค่า Ads ในช่วงนี้</div>';
+      <div class="v">${r > 0 ? window.adPctR(r) : '—'}${D.prev_has && pr > 0 && r > 0 ? ' ' + window.adPctChip(100 / r, 100 / pr) : ''}</div><div class="s" title="ยอดขาย ${fmt(Math.round(t[c].rev))} · ค่า Ads ${fmt(Math.round(t[c].ads))}${pr > 0 ? ` · ${prevLbl()} ${xx(pr)}` : ''}">ขาย ${fmt(Math.round(t[c].rev))} · Ads ${fmt(Math.round(t[c].ads))}${D.prev_has && pr > 0 ? ` · ก่อน ${(100 / pr).toFixed(1)}%` : ''}</div></div>`; }).join('') || '<div class="empty">ไม่มีค่า Ads ในช่วงนี้</div>';
   }
   function drawTable() {
     const th = (k, l, c) => `<th class="${c || 'num'}" data-sort="${k}" aria-sort="${sortK === k ? (sortD === 'asc' ? 'ascending' : 'descending') : 'none'}">${l}</th>`;

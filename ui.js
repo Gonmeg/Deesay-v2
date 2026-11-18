@@ -281,6 +281,8 @@
   // (2026-11-18) % ค่า Ads เป็นตัวหลัก · ROAS ตัวเล็กข้าง ๆ — ใช้ตัวเดียวทุกหน้า (ค่า Ads ÷ ยอดขาย · ยิ่งต่ำยิ่งดี)
   window.adPctOf = (rev, ads) => rev > 0 && ads > 0 ? ads / rev * 100 : null;
   window.adPctHtml = (rev, ads) => { const p = window.adPctOf(rev, ads); return p == null ? '—' : `<span class="ui-adp"><b>${p.toFixed(1)}%</b><small>ROAS ${(rev / ads).toFixed(2)}x</small></span>`; };
+  // จากค่า ROAS ตรง ๆ (เช่นตัวเลขที่ Platform นับให้) · col = สีของตัว % (ถ้ามี) · lbl = คำนำหน้าตัวเล็ก (ค่าเริ่ม ROAS)
+  window.adPctR = (r, col, lbl) => !(r > 0) || !isFinite(r) ? '—' : `<span class="ui-adp"><b${col ? ` style="color:${col};"` : ''}>${(100 / r).toFixed(1)}%</b><small>${lbl || 'ROAS'} ${(+r).toFixed(2)}x</small></span>`;
   window.adPctChip = (cur, prev, tip) => { if (cur == null || prev == null) return `<span class="ui-chip"${tip ? ` title="${String(tip).replace(/"/g, '&quot;')}"` : ''}>—</span>`; const d = cur - prev;
     return `<span class="ui-chip ${Math.abs(d) < 0.5 ? '' : d < 0 ? 'up' : 'dn'}"${tip ? ` title="${String(tip).replace(/"/g, '&quot;')}"` : ''}>${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(d).toFixed(1)} pt</span>`; };
   window.UI = { fit: queueFit, enhanceDates: enhanceAll, showDate, showMonth, setupCharts };
