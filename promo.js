@@ -205,13 +205,16 @@
       .pr-tb.pr-ex2 .ex-c1 { padding-left:20px; } .pr-tb.pr-ex2 tr.ex-r .ex-c1 { padding-left:38px; }
       .pr-tb.pr-ex2 tr.ex-r:hover td { background:color-mix(in srgb, var(--accent) 6%, transparent); }
       .pr-tb.pr-ex2 tr.ex-g td { background:var(--bg3); cursor:pointer; padding:9px 20px; border-top:1px solid var(--border); } .pr-tb.pr-ex2 tr.ex-g:hover td { background:color-mix(in srgb, var(--accent) 8%, var(--bg3)); }
+      .pr-tb.pr-ex2 tr.ex-g.ex-mo td { background:none; border-top:0; padding:14px 20px 6px; } .pr-tb.pr-ex2 tr.ex-g.ex-mo:hover td { background:none; } body.light-theme .pr-tb.pr-ex2 tr.ex-g.ex-mo td { background:none !important; }
+      .ex-mow { display:flex; align-items:center; gap:8px; } .ex-mow b { font-size:12.5px; font-weight:700; color:var(--accent); letter-spacing:.01em; } .ex-mow .ex-gm { margin-left:0; } .ex-mow i { flex:1; height:1px; background:var(--border); margin-left:6px; } .ex-mow .ex-car { width:12px; }
+      .ex-tt { font-size:11px; color:var(--text3); border:1px solid var(--border); border-radius:5px; padding:0 6px; margin-left:4px; white-space:nowrap; } .ex-chc .pr-tb.pr-ex2 tr.ex-r .ex-c1 { padding-left:40px; }
       .ex-chs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; } .ex-chs:empty { display:none; }
       .ex-chip { display:inline-flex; align-items:center; gap:7px; padding:5px 13px; border-radius:999px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font:inherit; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; }
       .ex-chip i, .ex-chd i { width:9px; height:9px; border-radius:50%; flex:none; } .ex-chip b { font-size:11.5px; color:var(--text3); font-weight:600; } .ex-chip[aria-pressed="true"] { border-color:var(--accent); color:var(--text); box-shadow:inset 0 0 0 1px var(--accent); }
       .pr-card.ex-chc { padding:0; margin-bottom:14px; overflow:hidden; } .ex-chd { display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; } .ex-chd h3 { margin:0; font-size:15.5px; font-weight:700; color:var(--text); } .ex-chd i { width:11px; height:11px; } .ex-chd .ex-gm { margin-left:0; } .ex-car2 { margin-left:auto; color:var(--text3); font-size:12px; }
       .ex-chc .pr-tb.pr-ex2 thead th { border-top:1px solid var(--border); } .ex-off { font-size:11.5px; font-weight:600; color:var(--warn, #b26a00); } .ex-by { display:inline-block; max-width:78px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; }
       .exd-x { width:24px; height:24px; border:0; border-radius:6px; background:color-mix(in srgb, var(--red, #dc2626) 12%, transparent); color:var(--red, #dc2626); font-weight:700; cursor:pointer; line-height:1; } .exd-it td.x { width:30px; text-align:right; padding-left:6px; }
-      .exd-add { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; } .exd-add button { border:1px dashed var(--accent); background:none; color:var(--accent); border-radius:8px; padding:4px 10px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; } .exd-add select { flex:1; min-width:180px; } .exd-add select[hidden] { display:none; }
+      .exd-add { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; } .exd-add button { border:1px dashed var(--accent); background:none; color:var(--accent); border-radius:8px; padding:4px 10px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; } .exd-add select.exd-addsel { flex:none; width:auto; max-width:150px; border:1px dashed var(--accent) !important; background:none !important; color:var(--accent); border-radius:8px; padding:4px 8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; } .exd-add select.exd-addsel option { color:var(--text); background:var(--bg2); font-weight:400; }
       .exd-new { font-size:10px; font-weight:700; padding:0 5px; border-radius:4px; margin-right:5px; background:color-mix(in srgb, var(--warn, #b26a00) 16%, transparent); color:var(--warn, #b26a00); } .exd-it tr.isnew td { background:color-mix(in srgb, var(--accent) 7%, transparent); }
       .exd-offer { margin-top:8px; padding:8px 10px; border-radius:9px; background:color-mix(in srgb, var(--warn, #b26a00) 10%, transparent); font-size:12.5px; color:var(--text); line-height:1.5; } .pr-btn.cnt { background:var(--accent); color:#fff; }
       .tm2-offer { font-size:12.5px; line-height:1.5; } .tm2-offer b { color:var(--warn, #b26a00); }
@@ -877,7 +880,7 @@
     const pcs = v => v == null || !isFinite(+v) ? '—' : `<span class="${+v < 0 ? 'ex-n' : ''}">${(+v * 100).toFixed(1)}%</span>`;
     const rowHtml = r => { const c = r.calc || {}, s = ST[r.status] || [r.status, ''], neg = +c.profit < 0, disc = +c.discount_vs_rsp, cp = r.status === 'countered' && r.counter ? +r.counter.price : null;
       return `<tr class="click ex-r" data-id="${r.id}">
-        <td class="ex-c1"><div class="ex-pds" title="${esc(prodTxt(r))}">${prod(r) || '<span class="ex-pd">—</span>'}</div></td>
+        <td class="ex-c1"><div class="ex-pds" title="${esc(prodTxt(r))}">${prod(r) || '<span class="ex-pd">—</span>'}${r.title && r.title.indexOf((r.channel || '') + ' · ') !== 0 ? `<span class="ex-tt" title="ชื่อ Promotion">${esc(r.title)}</span>` : ''}</div></td>
         <td class="tn"><b>${n2(r.price)}</b>${cp != null && cp !== +r.price ? `<div class="ex-off" title="ราคาที่เสนอกลับ">→ ${n2(cp)}</div>` : ''}</td>
         <td class="tn ex-m">${+c.rsp > 0 ? n2(c.rsp) : '—'}</td>
         <td class="tn ex-m">${+c.rsp > 0 && disc ? (disc > 0 ? '−' : '+') + (Math.abs(disc) * 100).toFixed(1) + '%' : '—'}</td>
@@ -886,14 +889,18 @@
         <td class="tn">${pcs(c.markup)}</td>
         <td class="ctr">${rkPill(r.rank)}</td><td class="ctr"><span class="pr-pill ${s[1]}">${s[0]}</span></td>
         <td class="ex-m" title="${esc(r.requested_name || '')}"><span class="ex-by">${esc(r.requested_name || '—')}</span> · ${dTh(r.requested_at)}</td></tr>`; };
-    const card = n => { const R = L.filter(r => (r.channel || '—') === n), nNeg = R.filter(r => r.calc && +r.calc.profit < 0).length, ck = 'ch:' + n, col = EXCOL.has(ck);
-      const groups = [], gi = {}; R.forEach(r => { const k = (r.title || '') + '|' + n; if (gi[k] == null) { gi[k] = groups.length; groups.push({ k, rows: [] }); } groups[gi[k]].rows.push(r); });
-      const body = groups.map(g => { const r0 = g.rows[0], gNeg = g.rows.filter(r => r.calc && +r.calc.profit < 0).length, gc = EXCOL.has(g.k);
-        return `<tr class="ex-g" data-g="${esc(g.k)}"><td colspan="10"><span class="ex-car">${gc ? '▸' : '▾'}</span><b>${esc(r0.title)}</b><span class="ex-gm">${dr(r0) ? dr(r0) + ' · ' : ''}${g.rows.length} รายการ${gNeg ? ` · <span class="ex-neg">ขาดทุน ${gNeg}</span>` : ''}</span></td></tr>` + (gc ? '' : g.rows.map(rowHtml).join('')); }).join('');
-      return `<div class="pr-card ex-chc"><div class="ex-chd" data-g="${esc(ck)}"><i style="background:${chCol(n)}"></i><h3>${esc(n)}</h3><span class="ex-gm">${R.length} รายการ${nNeg ? ` · <span class="ex-neg">ขาดทุน ${nNeg}</span>` : ''}</span><span class="ex-car2">${col ? '▸' : '▾'}</span></div>
+    // (2026-11-19 b) หัวกล่อง = ชื่อช่องทาง + จำนวนรายการ (ไม่บอกขาดทุน — ตัวแดงในตารางบอกอยู่แล้ว) · ในกล่องคั่นด้วยเดือน (เดือนที่ Promotion เริ่ม · ไม่มีวันที่ = เดือนที่ส่งคำขอ)
+    const MTHF = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const moKey = r => String(r.start_date || r.requested_at || '').slice(0, 7), moLbl = k => k ? `${MTHF[+k.slice(5, 7) - 1]} ${+k.slice(0, 4) + 543}` : 'ไม่ระบุเดือน';
+    const card = n => { const R = L.filter(r => (r.channel || '—') === n), ck = 'ch:' + n, col = EXCOL.has(ck);
+      const groups = [], gi = {}; R.forEach(r => { const m = moKey(r), k = m + '|' + n; if (gi[k] == null) { gi[k] = groups.length; groups.push({ k, m, rows: [] }); } groups[gi[k]].rows.push(r); });
+      groups.sort((x, y) => y.m.localeCompare(x.m));
+      const body = groups.map(g => { const gc = EXCOL.has(g.k);
+        return `<tr class="ex-g ex-mo" data-g="${esc(g.k)}"><td colspan="10"><div class="ex-mow"><span class="ex-car">${gc ? '▸' : '▾'}</span><b>${moLbl(g.m)}</b><span class="ex-gm">${g.rows.length} รายการ</span><i></i></div></td></tr>` + (gc ? '' : g.rows.map(rowHtml).join('')); }).join('');
+      return `<div class="pr-card ex-chc"><div class="ex-chd" data-g="${esc(ck)}"><i style="background:${chCol(n)}"></i><h3>${esc(n)}</h3><span class="ex-gm">${R.length} รายการ</span><span class="ex-car2">${col ? '▸' : '▾'}</span></div>
         ${col ? '' : `<div style="overflow-x:auto;"><table class="pr-tb pr-ex2" data-no-sort data-no-page>
         <colgroup><col><col style="width:96px"><col style="width:92px"><col style="width:76px"><col style="width:110px"><col style="width:96px"><col style="width:96px"><col style="width:116px"><col style="width:104px"><col style="width:190px"></colgroup>
-        <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
+        <thead><tr><th class="ex-c1"></th><th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
           <th class="tn">% ของรายได้ <span class="pr-i" data-tip="กำไรสุทธิ ÷ รายได้ไม่รวม VAT">ⓘ</span></th><th class="tn">% ของต้นทุน <span class="pr-i" data-tip="กำไรสุทธิ ÷ ต้นทุนทั้งหมด (สินค้า + ค่า Platform + ค่าขาย + ค่าบริหาร / Marketing)">ⓘ</span></th>
           <th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>ขอโดย · ส่งเมื่อ</th></tr></thead><tbody>${body}</tbody></table></div>`}</div>`; };
     box.innerHTML = (EX.ch ? [EX.ch] : names).map(card).join('');
@@ -959,7 +966,7 @@
       const itRows = [...S.items.map((g, i) => ({ g, i, kind: 'item' })), ...S.gifts.map((g, i) => ({ g, i, kind: 'gift' }))].map(({ g, i, kind }) => { const l = cl[kind + '|' + g.sku];
         const isNew = !((kind === 'gift' ? r.gifts : r.items) || []).some(o => o.sku === g.sku);
         return `<tr${isNew ? ' class="isnew"' : ''}><td>${isNew ? '<span class="exd-new">เพิ่มใหม่</span>' : ''}${kind === 'gift' ? '<span class="exd-gift">แถม</span>' : ''}${esc(pnm(g.sku))}</td><td class="q"><input class="pr-in" type="number" min="0" step="1" ${kind === 'gift' ? 'data-gi' : 'data-ii'}="${i}" value="${g.qty}"></td><td class="num" title="${l && l.unit_cost != null ? 'ต้นทุน ' + n2(l.unit_cost) + ' × ' + g.qty + ' ชิ้น' : ''}">${l && l.unit_cost != null ? n2(l.cost) : '<span class="miss">ไม่มีต้นทุน</span>'}</td><td class="x">${canEdit ? `<button type="button" class="exd-x" data-rmk="${kind}" data-rmi="${i}" title="เอาออกจาก Promotion">×</button>` : ''}</td></tr>`; }).join('');
-      const optHtml = '<option value="">เลือกสินค้า…</option>' + C.products.map(p => `<option value="${esc(p.sku)}">${esc(p.name)}</option>`).join('');
+      const optHtml = C.products.map(p => `<option value="${esc(p.sku)}">${esc(p.name)}</option>`).join('');
       const propChanged = +S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || []);
       const offTxt = o => o ? `ราคา <b>${n2(o.price)}</b> · ${[...(o.items || []).map(x => pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : '')), ...(o.gifts || []).map(x => 'แถม ' + pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : ''))].map(esc).join(' + ')}` : '';
       const rkTxt = showRank ? `Rank 1 ${n0(k.sum1)} · Rank 2 ${n0(k.sum2)} · Rank 3 ${n0(k.sum3)}` : '';
@@ -971,7 +978,7 @@
           ${r.status === 'approved' && r.counter && r.counter.orig ? `<div class="exd-offer">อนุมัติตามที่เสนอกลับ · ของเดิมที่ขอ: ${offTxt(r.counter.orig)}</div>` : ''}</div>
         <div class="exd-card exd-pc"><div class="exd-pl"><div class="exd-ch"><b>สินค้าใน Promotion</b></div>
             <table class="exd-it" data-no-sort data-no-page><tbody>${itRows}<tr class="sum"><td>ต้นทุนรวม</td><td></td><td class="num">${n2(costTot)}</td><td class="x"></td></tr></tbody></table>
-            ${canEdit ? `<div class="exd-add"><button type="button" data-addk="item">+ เพิ่มสินค้า</button><button type="button" data-addk="gift">+ เพิ่มของแถม</button><select class="pr-in" id="exAddSel" hidden>${optHtml}</select></div>` : ''}</div>
+            ${canEdit ? `<div class="exd-add"><select class="exd-addsel" data-addk="item" data-native aria-label="เพิ่มสินค้า"><option value="">+ เพิ่มสินค้า</option>${optHtml}</select><select class="exd-addsel" data-addk="gift" data-native aria-label="เพิ่มของแถม"><option value="">+ เพิ่มของแถม</option>${optHtml}</select></div>` : ''}</div>
           <div class="exd-pr"><label for="exPrice">ราคาขาย (รวม VAT)</label><input class="pr-in" type="number" step="0.01" id="exPrice" value="${S.price}">
             <button type="button" class="pr-btn" id="exCalc">คำนวณ</button>${changed ? '<button type="button" class="pr-btn ghost" id="exReset">คืนค่าเดิม</button><span>กำลังลองปรับ · ยังไม่แก้คำขอ</span>' : '<span>ลองเปลี่ยนราคา / จำนวน แล้วกดคำนวณ</span>'}</div></div>
         ${calcPanel(c, C)}
@@ -993,9 +1000,8 @@
       document.getElementById('exCalc').onclick = () => recalc();
       // (2026-11-19) ลบ / เพิ่มสินค้าในคำขอ (ลองปรับ · ยังไม่แก้คำขอจริง) + เสนอกลับ
       body().querySelectorAll('[data-rmi]').forEach(b => b.onclick = () => { readIn(); const a = b.dataset.rmk === 'gift' ? S.gifts : S.items; if (b.dataset.rmk !== 'gift' && S.items.length <= 1) { toast('ต้องมีสินค้าอย่างน้อย 1 รายการ'); return; } a.splice(+b.dataset.rmi, 1); recalc(true); });
-      const sel = document.getElementById('exAddSel'); let addK = 'item';
-      body().querySelectorAll('[data-addk]').forEach(b => b.onclick = () => { addK = b.dataset.addk; sel.hidden = false; sel.value = ''; sel.focus(); });
-      if (sel) sel.onchange = () => { const sku = sel.value; if (!sku) return; readIn(); const a = addK === 'gift' ? S.gifts : S.items, ex = a.find(x => x.sku === sku); if (ex) ex.qty = (+ex.qty || 0) + 1; else a.push({ sku, qty: 1 }); recalc(true); };
+      // (2026-11-19 b) ปุ่มเพิ่ม = ตัวเลือก 2 อัน: กดแล้วเลือกสินค้าจากรายการ → เพิ่มเข้าทันที 1 ชิ้น (มีอยู่แล้ว = บวกจำนวน)
+      body().querySelectorAll('select.exd-addsel').forEach(sel => sel.addEventListener('change', () => { const sku = sel.value; if (!sku) return; readIn(); const a = sel.dataset.addk === 'gift' ? S.gifts : S.items, ex = a.find(x => x.sku === sku); if (ex) ex.qty = (+ex.qty || 0) + 1; else a.push({ sku, qty: 1 }); sel.value = ''; recalc(true); }));
       const cb = document.getElementById('exCounter');
       if (cb) cb.onclick = async () => { readIn(); const items = S.items.filter(x => +x.qty > 0), gifts = S.gifts.filter(x => +x.qty > 0);
         if (!items.length || !(S.price > 0)) { uiAlert('เสนอกลับไม่ได้', { text: 'ต้องมีราคา และสินค้าอย่างน้อย 1 รายการ', tone: 'bad' }); return; }
