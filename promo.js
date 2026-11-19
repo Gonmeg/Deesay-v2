@@ -208,6 +208,11 @@
       .pr-tb.pr-ex2 tr.ex-g.ex-mo td { background:none; border-top:0; padding:14px 20px 6px; } .pr-tb.pr-ex2 tr.ex-g.ex-mo:hover td { background:none; } body.light-theme .pr-tb.pr-ex2 tr.ex-g.ex-mo td { background:none !important; }
       .ex-mow { display:flex; align-items:center; gap:8px; } .ex-mow b { font-size:12.5px; font-weight:700; color:var(--accent); letter-spacing:.01em; } .ex-mow .ex-gm { margin-left:0; } .ex-mow i { flex:1; height:1px; background:var(--border); margin-left:6px; } .ex-mow .ex-car { width:12px; }
       .ex-tt { font-size:11px; color:var(--text3); border:1px solid var(--border); border-radius:5px; padding:0 6px; margin-left:4px; white-space:nowrap; } .ex-chc .pr-tb.pr-ex2 tr.ex-r .ex-c1 { padding-left:40px; }
+      .pr-tb.pr-ex2 tr.ex-moh th { background:var(--bg3); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:8px 12px; cursor:pointer; white-space:nowrap; } .pr-tb.pr-ex2 tr.ex-moh th.ex-c1 { padding-left:4px; text-align:left; }
+      .pr-tb.pr-ex2 tr.ex-moh th.ex-c1 b { font-size:13px; font-weight:700; color:var(--text); } .pr-tb.pr-ex2 tr.ex-moh .ex-gm { margin-left:8px; font-weight:400; } .pr-tb.pr-ex2 tr.ex-moh .ex-car { width:14px; }
+      .pr-tb.pr-ex2 .ex-ck { width:44px; padding:0 0 0 20px !important; text-align:left; cursor:default; } .ex-cb { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; vertical-align:middle; margin:0; }
+      .ex-chc .pr-tb.pr-ex2 tr.ex-r .ex-c1 { padding-left:22px !important; } .pr-tb.pr-ex2 tr.ex-r.is-sel td { background:color-mix(in srgb, var(--accent) 9%, transparent); }
+      .ex-selbar { display:flex; align-items:center; gap:10px; margin:-4px 0 12px; min-height:32px; font-size:13px; color:var(--text2); } .ex-selall { display:inline-flex; align-items:center; gap:7px; cursor:pointer; } .ex-seln { font-weight:600; color:var(--text); margin-left:6px; } .ex-selbar .pr-btn { padding:5px 12px; font-size:12.5px; }
       .ex-chs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; } .ex-chs:empty { display:none; }
       .ex-chip { display:inline-flex; align-items:center; gap:7px; padding:5px 13px; border-radius:999px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font:inherit; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; }
       .ex-chip i, .ex-chd i { width:9px; height:9px; border-radius:50%; flex:none; } .ex-chip b { font-size:11.5px; color:var(--text3); font-weight:600; } .ex-chip[aria-pressed="true"] { border-color:var(--accent); color:var(--text); box-shadow:inset 0 0 0 1px var(--accent); }
@@ -849,13 +854,13 @@
     el.innerHTML = `<div class="ex-chs" id="exChs"></div><div id="exList"></div>`;   // (2026-11-19) แยกกล่องตามช่องทาง + ป้ายเลือกช่องทาง
     const simBtn = top.querySelector('#exSim');
     top.querySelector('#exSeg').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; EX.filter = b.dataset.f; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); simBtn.setAttribute('aria-pressed', 'false'); listExec(); };
-    const sim = () => { const b = document.getElementById('exList'), c = document.getElementById('exChs'); if (c) c.innerHTML = ''; b.className = 'pr-card'; b.style.cssText = 'padding:4px 0 0;overflow-x:auto;'; renderSim(b, CAT); };
+    const sim = () => { const b = document.getElementById('exList'), c = document.getElementById('exChs'); if (c) c.innerHTML = ''; const sb = document.getElementById('exSelBar'); if (sb) sb.remove(); b.className = 'pr-card'; b.style.cssText = 'padding:4px 0 0;overflow-x:auto;'; renderSim(b, CAT); };
     simBtn.onclick = () => { EX.filter = 'sim'; top.querySelectorAll('#exSeg button').forEach(x => x.setAttribute('aria-pressed', 'false')); simBtn.setAttribute('aria-pressed', 'true'); sim(); };
     EX.filter === 'sim' ? sim() : listExec();
   }
   // (2026-11-10) รายการคำขอแบบใหม่: จัดกลุ่มตามชื่อโปร + ช่องทาง (หัวกลุ่มบอกจำนวน / ขาดทุนกี่รายการ · กดย่อได้) · มีคอลัมน์สินค้าในโปร (ของแถมติดป้าย)
   //   กำไรติดลบสีแดง · % ใต้ตัวเลข = กำไรเทียบต้นทุน · ขอโดย + วันที่ส่งอยู่ช่องเดียว
-  const EXCOL = new Set();
+  const EXCOL = new Set(), EXSEL = new Set();
   const chCol = name => { const C = CAT || {}, c = (C.channels || []).find(x => x.name === name), sys = (c && c.sys) || name || '';
     const M = (typeof PL_CH_COLOR !== 'undefined' && PL_CH_COLOR) || { TikTok: '#111827', Facebook: '#1877f2', Shopee: '#ee4d2d', Lazada: '#2f3bd6', 'Modern Trade': '#0d9488', 'ตัวแทน': '#b8862f' };
     const k = Object.keys(M).find(x => sys.indexOf(x) === 0) || (/^MT/.test(sys) ? 'Modern Trade' : null), col = k ? M[k] : '#94a3b8';
@@ -872,14 +877,15 @@
     if (chs) { chs.innerHTML = names.length > 1 ? `<button type="button" class="ex-chip" data-ch="" aria-pressed="${!EX.ch}">ทุกช่องทาง <b>${Lall.length}</b></button>` + names.map(n => `<button type="button" class="ex-chip" data-ch="${esc(n)}" aria-pressed="${EX.ch === n}"><i style="background:${chCol(n)}"></i>${esc(n)} <b>${Lall.filter(r => (r.channel || '—') === n).length}</b></button>`).join('') : '';
       chs.onclick = e => { const b = e.target.closest('.ex-chip'); if (!b) return; EX.ch = b.dataset.ch || null; listExec(); }; }
     const L = EX.ch ? Lall.filter(r => (r.channel || '—') === EX.ch) : Lall;
-    if (!L.length) { box.innerHTML = '<div class="pr-card"><div class="pr-empty">ไม่มีรายการ</div></div>'; return; }
+    if (!L.length) { box.innerHTML = '<div class="pr-card"><div class="pr-empty">ไม่มีรายการ</div></div>'; const sb = document.getElementById('exSelBar'); if (sb) sb.remove(); return; }
     const prod = r => (r.items || []).map(x => `<span class="ex-pd">${esc(pnm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`).join('')
       + (r.gifts || []).map(x => `<span class="ex-pd gift"><i>แถม</i>${esc(pnm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`).join('');
     const prodTxt = r => [...(r.items || []).map(x => pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : '')), ...(r.gifts || []).map(x => 'แถม ' + pnm(x.sku) + (+x.qty > 1 ? ' ×' + x.qty : ''))].join(' · ');
     const dr = r => !r.start_date ? '' : r.end_date && r.end_date !== r.start_date ? `${dTh(r.start_date)} – ${dTh(r.end_date)}` : dTh(r.start_date);
     const pcs = v => v == null || !isFinite(+v) ? '—' : `<span class="${+v < 0 ? 'ex-n' : ''}">${(+v * 100).toFixed(1)}%</span>`;
     const rowHtml = r => { const c = r.calc || {}, s = ST[r.status] || [r.status, ''], neg = +c.profit < 0, disc = +c.discount_vs_rsp, cp = r.status === 'countered' && r.counter ? +r.counter.price : null;
-      return `<tr class="click ex-r" data-id="${r.id}">
+      return `<tr class="click ex-r${EXSEL.has(r.id) ? ' is-sel' : ''}" data-id="${r.id}">
+        <td class="ex-ck"><input type="checkbox" class="ex-cb" data-sel="${r.id}"${EXSEL.has(r.id) ? ' checked' : ''}></td>
         <td class="ex-c1"><div class="ex-pds" title="${esc(prodTxt(r))}">${prod(r) || '<span class="ex-pd">—</span>'}${r.title && r.title.indexOf((r.channel || '') + ' · ') !== 0 ? `<span class="ex-tt" title="ชื่อ Promotion">${esc(r.title)}</span>` : ''}</div></td>
         <td class="tn"><b>${n2(r.price)}</b>${cp != null && cp !== +r.price ? `<div class="ex-off" title="ราคาที่เสนอกลับ">→ ${n2(cp)}</div>` : ''}</td>
         <td class="tn ex-m">${+c.rsp > 0 ? n2(c.rsp) : '—'}</td>
@@ -892,20 +898,36 @@
     // (2026-11-19 b) หัวกล่อง = ชื่อช่องทาง + จำนวนรายการ (ไม่บอกขาดทุน — ตัวแดงในตารางบอกอยู่แล้ว) · ในกล่องคั่นด้วยเดือน (เดือนที่ Promotion เริ่ม · ไม่มีวันที่ = เดือนที่ส่งคำขอ)
     const MTHF = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const moKey = r => String(r.start_date || r.requested_at || '').slice(0, 7), moLbl = k => k ? `${MTHF[+k.slice(5, 7) - 1]} ${+k.slice(0, 4) + 543}` : 'ไม่ระบุเดือน';
+    // (2026-11-19 c) แต่ละเดือน = แถวหัวตาราง 1 แถว (ชื่อเดือน + จำนวน อยู่ช่องแรก · ชื่อคอลัมน์อยู่แถวเดียวกัน) ไม่มีแถวว่างคั่น · มีช่องติ๊กเลือกรายแถว / ทั้งเดือน เพื่อลบ
+    const HCOLS = `<th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
+          <th class="tn">% ของรายได้ <span class="pr-i" data-tip="กำไรสุทธิ ÷ รายได้ไม่รวม VAT">ⓘ</span></th><th class="tn">% ของต้นทุน <span class="pr-i" data-tip="กำไรสุทธิ ÷ ต้นทุนทั้งหมด (สินค้า + ค่า Platform + ค่าขาย + ค่าบริหาร / Marketing)">ⓘ</span></th>
+          <th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>ขอโดย · ส่งเมื่อ</th>`;
     const card = n => { const R = L.filter(r => (r.channel || '—') === n), ck = 'ch:' + n, col = EXCOL.has(ck);
       const groups = [], gi = {}; R.forEach(r => { const m = moKey(r), k = m + '|' + n; if (gi[k] == null) { gi[k] = groups.length; groups.push({ k, m, rows: [] }); } groups[gi[k]].rows.push(r); });
       groups.sort((x, y) => y.m.localeCompare(x.m));
-      const body = groups.map(g => { const gc = EXCOL.has(g.k);
-        return `<tr class="ex-g ex-mo" data-g="${esc(g.k)}"><td colspan="10"><div class="ex-mow"><span class="ex-car">${gc ? '▸' : '▾'}</span><b>${moLbl(g.m)}</b><span class="ex-gm">${g.rows.length} รายการ</span><i></i></div></td></tr>` + (gc ? '' : g.rows.map(rowHtml).join('')); }).join('');
+      const body = groups.map(g => { const gc = EXCOL.has(g.k), allOn = g.rows.every(r => EXSEL.has(r.id));
+        return `<tr class="ex-moh" data-g="${esc(g.k)}"><th class="ex-ck"><input type="checkbox" class="ex-cb" data-selg="${g.rows.map(r => r.id).join(',')}"${allOn ? ' checked' : ''} title="เลือกทั้งเดือนนี้"></th><th class="ex-c1"><span class="ex-car">${gc ? '▸' : '▾'}</span><b>${moLbl(g.m)}</b><span class="ex-gm">${g.rows.length} รายการ</span></th>${HCOLS}</tr>` + (gc ? '' : g.rows.map(rowHtml).join('')); }).join('');
       return `<div class="pr-card ex-chc"><div class="ex-chd" data-g="${esc(ck)}"><i style="background:${chCol(n)}"></i><h3>${esc(n)}</h3><span class="ex-gm">${R.length} รายการ</span><span class="ex-car2">${col ? '▸' : '▾'}</span></div>
         ${col ? '' : `<div style="overflow-x:auto;"><table class="pr-tb pr-ex2" data-no-sort data-no-page>
-        <colgroup><col><col style="width:96px"><col style="width:92px"><col style="width:76px"><col style="width:110px"><col style="width:96px"><col style="width:96px"><col style="width:116px"><col style="width:104px"><col style="width:190px"></colgroup>
-        <thead><tr><th class="ex-c1"></th><th class="tn">ราคา</th><th class="tn">ราคาปกติ</th><th class="tn">ส่วนลด</th><th class="tn">กำไร / ออเดอร์</th>
-          <th class="tn">% ของรายได้ <span class="pr-i" data-tip="กำไรสุทธิ ÷ รายได้ไม่รวม VAT">ⓘ</span></th><th class="tn">% ของต้นทุน <span class="pr-i" data-tip="กำไรสุทธิ ÷ ต้นทุนทั้งหมด (สินค้า + ค่า Platform + ค่าขาย + ค่าบริหาร / Marketing)">ⓘ</span></th>
-          <th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>ขอโดย · ส่งเมื่อ</th></tr></thead><tbody>${body}</tbody></table></div>`}</div>`; };
-    box.innerHTML = (EX.ch ? [EX.ch] : names).map(card).join('');
-    box.querySelectorAll('tr[data-id]').forEach(tr => tr.onclick = () => openReq(+tr.dataset.id));
-    box.querySelectorAll('tr.ex-g, .ex-chd').forEach(tr => tr.onclick = () => { const k = tr.dataset.g; EXCOL.has(k) ? EXCOL.delete(k) : EXCOL.add(k); listExec(); });
+        <colgroup><col style="width:44px"><col><col style="width:96px"><col style="width:92px"><col style="width:76px"><col style="width:110px"><col style="width:96px"><col style="width:96px"><col style="width:116px"><col style="width:104px"><col style="width:190px"></colgroup>
+        <tbody>${body}</tbody></table></div>`}</div>`; };
+    // แถบเลือก / ลบ (อยู่ท้ายแถวป้ายช่องทาง)
+    const selBar = () => { const ids = L.map(r => r.id), nSel = ids.filter(i => EXSEL.has(i)).length; let bar = document.getElementById('exSelBar');
+      if (!bar && chs) { bar = document.createElement('div'); bar.id = 'exSelBar'; bar.className = 'ex-selbar'; chs.after(bar); }
+      if (!bar) return;
+      bar.innerHTML = `<label class="ex-selall"><input type="checkbox" class="ex-cb" id="exSelAll"${nSel && nSel === ids.length ? ' checked' : ''}>เลือกทั้งหมด (${ids.length})</label>${nSel ? `<span class="ex-seln">เลือกแล้ว ${nSel} รายการ</span><button type="button" class="pr-btn bad" id="exDelSel">ลบที่เลือก</button><button type="button" class="pr-btn ghost" id="exSelClr">ยกเลิกการเลือก</button>` : ''}`;
+      bar.querySelector('#exSelAll').onchange = e => { ids.forEach(i => e.target.checked ? EXSEL.add(i) : EXSEL.delete(i)); listExec(); };
+      const clr = bar.querySelector('#exSelClr'); if (clr) clr.onclick = () => { EXSEL.clear(); listExec(); };
+      const del = bar.querySelector('#exDelSel'); if (del) del.onclick = async () => { const pick = L.filter(r => EXSEL.has(r.id)), by = k => pick.filter(r => r.status === k).length;
+        const parts = [['rejected', 'ไม่อนุมัติ'], ['approved', 'อนุมัติแล้ว'], ['pending', 'รออนุมัติ'], ['countered', 'เสนอกลับ']].map(([k, t]) => by(k) ? `${t} ${by(k)}` : '').filter(Boolean).join(' · ');
+        if (!(await uiConfirm('ลบคำขอที่เลือก', { text: `${pick.length} รายการ (${parts}) · ลบแล้วกู้คืนไม่ได้${by('approved') ? ' · รายการที่อนุมัติแล้วจะหายจากปฏิทิน Promotion ด้วย' : ''}`, ok: `ลบ ${pick.length} รายการ`, tone: 'bad' }))) return;
+        try { const n = await rpc('promo_delete_many', { p_ids: pick.map(r => r.id) }); EXSEL.clear(); toast(`ลบแล้ว ${n} รายการ`); renderExec(); } catch (e) { uiAlert('ลบไม่สำเร็จ', { text: e.message, tone: 'bad' }); } }; };
+    [...EXSEL].forEach(i => { if (!L.some(r => r.id === i)) EXSEL.delete(i); });   // สิ่งที่ไม่อยู่ในมุมมองนี้ไม่ถูกเลือกค้าง
+    box.innerHTML = (EX.ch ? [EX.ch] : names).map(card).join(''); selBar();
+    box.querySelectorAll('tr[data-id]').forEach(tr => tr.onclick = e => { if (e.target.closest('.ex-ck')) return; openReq(+tr.dataset.id); });
+    box.querySelectorAll('tr.ex-moh, .ex-chd').forEach(tr => tr.onclick = e => { if (e.target.closest('.ex-ck, .pr-i')) return; const k = tr.dataset.g; EXCOL.has(k) ? EXCOL.delete(k) : EXCOL.add(k); listExec(); });
+    box.querySelectorAll('input[data-sel]').forEach(c => c.onchange = () => { c.checked ? EXSEL.add(+c.dataset.sel) : EXSEL.delete(+c.dataset.sel); listExec(); });
+    box.querySelectorAll('input[data-selg]').forEach(c => c.onchange = () => { c.dataset.selg.split(',').forEach(i => c.checked ? EXSEL.add(+i) : EXSEL.delete(+i)); listExec(); });
   }
   function ladder(c, C) {
     const nm = k => (C.products.find(p => p.sku === k) || { name: k }).name;
