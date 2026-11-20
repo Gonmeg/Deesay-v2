@@ -262,6 +262,8 @@ code, kbd, pre, samp { font-family: var(--font); }   /* (2026-11-04) แท็�
 .ui-ctip-r em { font-style: normal; color: var(--text3); font-size: var(--fs-xs); text-align: right; min-width: 40px; font-variant-numeric: tabular-nums; }
 .ui-ctip-r em.ui-ctip-a { min-width: 10px; font-size: 9px; text-align: center; color: var(--text3); }
 .ui-ctip-r em.ui-ctip-a.up { color: var(--good, #16a34a); } .ui-ctip-r em.ui-ctip-a.dn { color: var(--bad, #dc2626); }
+.ui-cmp-tg { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text2); cursor: pointer; white-space: nowrap; }
+.ui-cmp-tg input { accent-color: var(--accent); margin: 0; }
 .ui-ctip-sep { margin: 7px 0 4px; padding-top: 7px; border-top: 1px solid var(--row-border); font-size: var(--fs-xs); font-weight: 600; color: var(--text3); }
 .ui-ctip-r.is-prev span, .ui-ctip-r.is-prev b { color: var(--text2); font-weight: 400; }
 .ui-ctip-r.is-prev i { background: repeating-linear-gradient(90deg, var(--c) 0 3px, transparent 3px 5px); }
