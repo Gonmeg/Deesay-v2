@@ -181,7 +181,10 @@
       .tm2-price { font-size:20px !important; font-weight:700; padding:8px 12px !important; } .tm2-send { width:100%; justify-content:center; margin-top:12px; padding:10px 0 !important; font-size:14px; }
       .tm2-ph { display:flex; flex-direction:column; gap:6px; text-align:center; padding:36px 20px !important; color:var(--text3); font-size:12.5px; } .tm2-ph b { color:var(--text); font-size:14px; }
       .tm2-r .pr-rk { background:var(--bg2); border:1px solid var(--border); border-radius:12px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
-      .pr-mine2 .tm2-fb { white-space:normal; font-size:12.5px; } .pr-mine2 .tm2-x { padding:4px 10px !important; font-size:12px !important; } .pr-mine2 .tm2-x.bad { color:var(--red,#dc2626); }
+      .pr-mine2 .tm2-fb { white-space:normal; font-size:12.5px; } .pr-mine2 .tm2-x { padding:5px 8px !important; font-size:12px !important; } .pr-mine2 .tm2-x.bad { background:none; color:var(--red,#dc2626); }
+      .pr-ex2.pr-mine2 { min-width:1040px; } .pr-mine2 td, .pr-mine2 th { padding:10px 10px; } .pr-mine2 tr.ex-g td { cursor:default; }
+      .pr-mine2 .mn-n { font-variant-numeric:tabular-nums; } .pr-mine2 .mn-off { color:var(--accent-text, var(--accent)); } .pr-mine2 .mn-pds { justify-content:center; margin-top:4px; }
+      .pr-mine2 .mn-act { padding:8px 16px 8px 6px; } .pr-mine2 .mn-act .pr-btn { display:flex; width:100%; justify-content:center; white-space:nowrap; } .pr-mine2 .mn-act .pr-btn + .pr-btn { margin-top:5px; }
       @media (max-width:1100px) { .tm2 { grid-template-columns:1fr; } .tm2-r { position:static; } }
       .sm2 { display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:16px; align-items:start; }
       .sm2-f .exd-card { margin-bottom:12px; } .sm2-l { display:block; font-size:12.5px; font-weight:600; color:var(--text); margin:0 0 6px; } .sm2-l small { font-weight:400; color:var(--text3); margin-left:4px; }
@@ -639,18 +642,23 @@
       const prod = r => [...(r.items || []).map(x => `<span class="ex-pd">${esc(nm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`), ...(r.gifts || []).map(x => `<span class="ex-pd gift"><i>แถม</i>${esc(nm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`)].join('');
       const dr = r => !r.start_date ? '' : r.end_date && r.end_date !== r.start_date ? `${dTh(r.start_date)} – ${dTh(r.end_date)}` : dTh(r.start_date);
       const groups = [], gi = {}; L.forEach(r => { const k = (r.title || '') + '|' + (r.channel || ''); if (gi[k] == null) { gi[k] = groups.length; groups.push([]); } groups[gi[k]].push(r); });
-      const row = r => { const st = ST[r.status] || [r.status, ''];
-        return `<tr class="ex-r"><td class="ex-c1"><div class="ex-pds">${prod(r) || '<span class="ex-pd">—</span>'}</div></td>
-          <td class="tn"><b>${n2(r.price)}</b></td><td class="ctr">${rkPill(r.rank)}</td>
+      // (2026-11-20) จัดคอลัมน์ใหม่: แยก "ราคาที่ขอ" กับ "ราคาที่เสนอกลับ" เป็นคนละคอลัมน์ (เดิมราคาเสนอกลับปนอยู่ใน Feedback) · ปุ่มเรียงแนวตั้งเต็มช่อง ไม่ล้นตาราง · ตัวเลขอยู่กลางคอลัมน์
+      const same = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || []);
+      const row = r => { const st = ST[r.status] || [r.status, ''], c = r.counter, acc = r.status === 'approved' && c && c.orig;   // acc = อนุมัติจากการรับข้อเสนอกลับ
+        const ask = acc ? c.orig : r, off = r.status === 'countered' && c ? c : acc ? c : null;
+        const offHtml = !off ? '<span class="ex-mute">—</span>' : `<b class="mn-off">${n2(off.price)}</b>${!same(off.items, ask.items) || !same(off.gifts, ask.gifts) ? `<div class="ex-pds mn-pds">${prod(off)}</div>` : ''}${acc ? '<div class="ex-sub">รับตามที่เสนอแล้ว</div>' : ''}`;
+        const act = r.status === 'countered' ? `<button class="pr-btn good tm2-x" data-acc="${r.id}">รับตามที่เสนอ</button><button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'pending' ? `<button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'cancelled' ? `<button class="pr-btn ghost tm2-x bad" data-rm="${r.id}">ลบ</button>` : '';
+        return `<tr class="ex-r"><td class="ex-c1"><div class="ex-pds">${prod(ask) || '<span class="ex-pd">—</span>'}</div></td>
+          <td class="ctr mn-n"><b>${n2(ask.price)}</b></td><td class="ctr mn-n">${offHtml}</td><td class="ctr">${rkPill(r.rank)}</td>
           <td class="ctr"><span class="pr-pill ${st[1]}">${st[0]}</span></td>
-          <td class="tm2-fb">${r.status === 'countered' && r.counter ? `<div class="tm2-offer"><b>เสนอกลับ:</b> ราคา <b>${n2(r.counter.price)}</b> (เดิม ${n2(r.price)})<div class="ex-pds">${prod(r.counter)}</div></div>` : ''}${r.decision_note ? esc(r.decision_note) + (r.decided_name ? `<div class="ex-sub">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : '') : (r.status === 'countered' ? '' : '<span class="ex-mute">—</span>')}</td>
-          <td class="ex-m">${dTh(r.requested_at)}</td>
-          <td class="ctr">${r.status === 'countered' ? `<button class="pr-btn good tm2-x" data-acc="${r.id}" style="margin-bottom:4px;">รับตามที่เสนอ</button><button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'pending' ? `<button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'cancelled' ? `<button class="pr-btn ghost tm2-x bad" data-rm="${r.id}">ลบ</button>` : ''}</td></tr>`; };
+          <td class="tm2-fb ctr">${r.decision_note ? esc(r.decision_note) : '<span class="ex-mute">—</span>'}${r.decided_name && (r.decision_note || off) ? `<div class="ex-sub">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : ''}</td>
+          <td class="ctr ex-m">${dTh(r.requested_at)}</td>
+          <td class="mn-act">${act}</td></tr>`; };
       box.innerHTML = L.length ? `<div style="overflow-x:auto;"><table class="pr-tb pr-ex2 pr-mine2" data-no-sort data-no-page>
-          <colgroup><col><col style="width:96px"><col style="width:92px"><col style="width:112px"><col style="width:26%"><col style="width:92px"><col style="width:118px"></colgroup>
-          <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="tn">ราคา</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th>Feedback</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>`
+          <colgroup><col><col style="width:104px"><col style="width:132px"><col style="width:124px"><col style="width:112px"><col style="width:22%"><col style="width:96px"><col style="width:142px"></colgroup>
+          <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="ctr">ราคาที่ขอ</th><th class="ctr">ราคาที่เสนอกลับ</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th class="ctr">Feedback</th><th class="ctr">ส่งเมื่อ</th><th></th></tr></thead><tbody>`
         + groups.map(g => { const r0 = g[0];
-            return `<tr class="ex-g"><td colspan="7"><b class="t1">${esc(r0.title)}</b><span class="ex-gm">${esc(r0.channel || '')}${dr(r0) ? ' · ' + dr(r0) : ''} · ${g.length} รายการ</span></td></tr>` + g.map(row).join(''); }).join('') + '</tbody></table></div>'
+            return `<tr class="ex-g"><td colspan="8"><b class="t1">${esc(r0.title)}</b><span class="ex-gm">${esc(r0.channel || '')}${dr(r0) ? ' · ' + dr(r0) : ''} · ${g.length} รายการ</span></td></tr>` + g.map(row).join(''); }).join('') + '</tbody></table></div>'
         : '<div class="pr-empty">ยังไม่มีคำขอ</div>';
     } catch (e) { box.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; }
   }
