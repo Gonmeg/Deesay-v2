@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+<script>/* (2026-11-20) เปิดจากมือถือ (จอ ≤ 700px) → ไปมุมมองมือถือ m.html · กด "เปิดแบบเต็ม" (?full=1) = อยู่หน้านี้ต่อจนปิดแท็บ */
+(function(){try{if(/[?&]full=1/.test(location.search))sessionStorage.setItem('mFull','1');if(!sessionStorage.getItem('mFull')&&window.matchMedia&&matchMedia('(max-width: 700px)').matches)location.replace('m.html');}catch(e){}})();</script>
 <meta charset="UTF-8">
 <script>
 // (2026-11-03) กันหน้าเด้งตอนเปิดหน้า (ทุกหน้า): ซ่อนเมนูซ้าย หัวหน้าเว็บ และเนื้อหาไว้ จนสิทธิ์โหลดเสร็จ หัวหน้าเว็บนิ่ง และหน้าจอ "กำลังโหลดข้อมูล" ปิดแล้ว แล้วค่อยแสดงทีเดียว
@@ -840,7 +842,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.20-d"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.20-e"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
