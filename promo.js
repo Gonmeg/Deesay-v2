@@ -19,7 +19,7 @@
 // (2026-10-20) ช่องเลือกสินค้า: กล่องค้นหาของเว็บเอง (เดิมใช้ datalist ของเบราว์เซอร์ = กล่องดำ ค้นได้แค่บางคำ) · ค้นจากชื่อ / รหัส / รหัสลูก / ชื่อเรียกอื่น (product_alias)
 // (2026-10-20) หน้าขอโปรโมชั่น: ปฏิทินโปรโมชั่นรายเดือน — โปรที่อนุมัติแล้ว + รออนุมัติของทุกคน (RPC promo_calendar)
 //  • promo   (หน้าทีม)     ขอโปรโมชั่น: กรอกโปร → เห็นสัญญาณไฟทันทีว่าผ่าน "ต้นทุนทั้งหมด + กำไรขั้นต่ำ" หรือยัง (ไม่เห็นต้นทุน) → ส่งขออนุมัติ
-//  • exec    (ผู้บริหาร)   โปรโมชั่น · อนุมัติ: กำไรต่อออเดอร์เป็นขั้นบันได · จุดคุ้มทุน · ลองปรับราคา / ของแถม · อนุมัติ / ไม่อนุมัติ
+//  • exec    (ผู้บริหาร)   โปรโมชั่น · อนุมัติ: กำไรต่อออเดอร์เป็นขั้นบันได · ลองปรับราคา / ของแถม · อนุมัติ / ไม่อนุมัติ
 //  • execfee (ผู้บริหาร)   ค่าธรรมเนียมช่องทาง: ตารางแก้ได้ เพิ่ม / ลบรายการและช่องทาง · เก็บประวัติทุกครั้ง
 // คำนวณทั้งหมดในฐานข้อมูล (promo_calc_core) — ค่าธรรมเนียม % คิดจากราคาขายรวม VAT แล้วถอด VAT · ต้นทุนต่อชิ้นเดือนล่าสุดจากไฟล์ต้นทุนขายของบัญชี
 (function () {
@@ -162,7 +162,7 @@
       .exd-gift { display:inline-block; font-size:10px; font-weight:700; padding:0 6px; border-radius:4px; margin-right:6px; background:color-mix(in srgb, var(--accent) 16%, transparent); color:var(--accent); }
       .exd-try { display:flex; align-items:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); flex-wrap:wrap; }
       .exd-try label { font-size:12.5px; color:var(--text2); } .exd-try input { width:110px; font-weight:700; } .exd-try span { font-size:11.5px; color:var(--text3); }
-      .exd-kpi { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); background:var(--bg2); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+      .exd-kpi { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); background:var(--bg2); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,.04); }
       .exd-kpi > div { padding:12px 14px; min-width:0; } .exd-kpi > div + div { border-left:1px solid var(--border); }
       .exd-kpi span { display:block; font-size:11.5px; color:var(--text2); } .exd-kpi b { display:block; font-size:22px; font-weight:700; color:var(--text); margin-top:2px; font-variant-numeric:tabular-nums; }
       .exd-kpi i { display:block; font-style:normal; font-size:11.5px; color:var(--text3); margin-top:1px; }
@@ -667,7 +667,7 @@
       .pv-ban.good { border-color:rgba(22,163,74,.35); background:rgba(22,163,74,.07); } .pv-ban.good b { color:var(--green,#16a34a); }
       .pv-ban.bad { border-color:rgba(220,38,38,.35); background:rgba(220,38,38,.06); } .pv-ban.bad b { color:var(--red,#dc2626); }
       .pv-ban.warn { border-color:rgba(217,119,6,.4); background:rgba(217,119,6,.07); } .pv-ban.warn b { color:#b45309; }
-      .pv-k { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin-bottom:12px; }
+      .pv-k { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; margin-bottom:12px; }
       .pv-k > div { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; min-width:0; }
       .pv-k .l { font-size:11.5px; color:var(--text3); } .pv-k .v { font-size:20px; font-weight:700; margin:2px 0; white-space:nowrap; } .pv-k .v.neg { color:var(--red,#dc2626); } .pv-k .s { font-size:11px; color:var(--text3); }
       .pv-sec { padding:12px 14px !important; } .pv-h { font-size:13.5px; font-weight:700; margin-bottom:8px; } .pv-h span { display:block; font-size:11.5px; font-weight:400; color:var(--text3); margin-top:2px; }
@@ -708,8 +708,7 @@
     const dif = +c.rsp > 0 ? (price - +c.rsp) / +c.rsp : null;
     const tiles = `<div class="pv-k">
         <div><div class="l">ราคาขาย (รวม VAT)</div><div class="v">${n2(price)}</div><div class="s">${dif == null ? '&nbsp;' : (dif < 0 ? 'ต่ำกว่า' : dif > 0 ? 'สูงกว่า' : 'เท่า') + 'ราคาปกติ ' + (dif ? pc(Math.abs(dif)) : '') + tip('ราคาปกติ (RSP) ของทั้งเซ็ต ' + n2(c.rsp))}</div></div>
-        <div><div class="l">กำไรสุทธิ / ออเดอร์</div><div class="v${ok && +c.profit < 0 ? ' neg' : ''}">${ok ? n2(c.profit) : '—'}</div><div class="s">${ok ? (+c.profit < 0 ? 'ขาดทุน · ' : '') + pc(c.margin) + ' ของรายได้' : 'รอต้นทุนครบ'}</div></div>
-        <div><div class="l">ราคาคุ้มทุน (รวม VAT)${tip('ราคาขาย (รวม VAT) ที่กำไรสุทธิเท่ากับ 0 พอดี · ขายต่ำกว่านี้ขาดทุน')}</div><div class="v">${ok && c.breakeven_price != null ? n2(c.breakeven_price) : '—'}</div><div class="s">${ok && c.breakeven_price != null && price ? (price >= +c.breakeven_price ? 'สูงกว่าคุ้มทุน ' : 'ต่ำกว่าคุ้มทุน ') + n2(Math.abs(price - c.breakeven_price)) : '&nbsp;'}</div></div></div>`;
+        <div><div class="l">กำไรสุทธิ / ออเดอร์</div><div class="v${ok && +c.profit < 0 ? ' neg' : ''}">${ok ? n2(c.profit) : '—'}</div><div class="s">${ok ? (+c.profit < 0 ? 'ขาดทุน · ' : '') + pc(c.margin) + ' ของรายได้' : 'รอต้นทุนครบ'}</div></div></div>`;
     // (2026-11-10) ติ๊กออก = ไม่นับรายการนั้นในกำไร (เช่น สินค้าเดท ไม่คิดค่า Marketing) · คำนวณใหม่ใน Supabase (p.exclude)
     const EXC = new Set((c.exclude || []).map(String)), xbox = (key, on, title) => `<input type="checkbox" class="pv-x" data-x="${esc(key)}"${on ? ' checked' : ''} title="${esc(title || 'ติ๊กออก = ไม่นับรายการนี้')}">`;
     const row = (lbl, h, v, cls, id, xk) => `<tr class="${cls || ''}"${id ? ` data-lad="${id}"` : ''}><td>${xk || ''}${id ? '<span class="car">▶</span>' : ''}${lbl}</td><td class="how">${h}</td><td class="num">${v}</td></tr>`;
@@ -754,7 +753,6 @@
       <div class="exd-kpi">
         <div><span>ราคาขาย</span><b>${n2(price)}</b>${+c.rsp > 0 ? `<i>ปกติ ${n2(c.rsp)}</i>` : ''}</div>
         <div class="${neg ? 'neg' : 'pos'}"><span>กำไรสุทธิ / ออเดอร์</span><b>${ok ? n2(c.profit) : '—'}</b>${ok ? `<i>${pc(c.margin)} ของรายได้</i>` : ''}</div>
-        <div><span>ราคาคุ้มทุน</span><b>${ok && c.breakeven_price != null ? n2(c.breakeven_price) : '—'}</b><i>รวม VAT</i></div>
       </div>
       <div class="exd-card"><div class="exd-ch"><b>การคำนวณ</b>${exN}${fm}</div>
         <table class="pv-lad exd-lad" data-no-sort data-no-page><tbody>
