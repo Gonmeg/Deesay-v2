@@ -324,8 +324,8 @@
     if (note) note.textContent = cd.cut > 0 ? `แสดงถึง ${thShort(cd.lastDate)} — ${cd.cut} วันล่าสุดยอดขาย Facebook ยังไม่ได้อัปโหลด จึงยังไม่นำมาเทียบ` : '';
     if (_moneyMode === 'money') {
       makeChart('chartFbaDaily', 'line', labels, withPrev([
-        line('ยอดขายจริง Facebook', daily.map(r => +r.revenue), '#22c55e', { fill: true, backgroundColor: 'rgba(34,197,94,0.10)', yAxisID: 'y', borderWidth: 2 }),
-        line('ค่า Ads Conversion', daily.map((r, i) => (i > la ? null : +r.spend_conv || 0)), '#ef4444', { fill: true, backgroundColor: 'rgba(239,68,68,0.10)', yAxisID: 'y', borderWidth: 2 })
+        line('ยอดขายจริง Facebook', daily.map(r => +r.revenue), '#22c55e', { yAxisID: 'y', borderWidth: 2 }),
+        line('ค่า Ads Conversion', daily.map((r, i) => (i > la ? null : +r.spend_conv || 0)), '#ef4444', { yAxisID: 'y', borderWidth: 2 })
       ], [[0, r => r.revenue == null ? null : +r.revenue, 'rev', false], [1, r => +r.spend_conv || 0, 'conv', null]]), { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
         scales: { x: xaxis(), y: Object.assign(axis(undefined, v => fmtB(v), 'บาท'), { position: 'left', beginAtZero: true }) },   // แกนเดียว สเกลเดียวกัน จะได้เห็นจริงว่าค่า Ads เล็กกว่ายอดขายแค่ไหน
         tooltip: tooltipOpts({ label: it => `${it.dataset.label}: ${fmt(it.raw)}`, footer: items => { const r = daily[items[0].dataIndex]; return +r.spend_conv ? `% ค่า Ads ${r.revenue ? ((+r.spend_conv) / r.revenue * 100).toFixed(1) : '—'}% (ROAS ${(r.revenue / r.spend_conv).toFixed(2)}x) · ทั้งหมด ${fmt(r.spend)}` : ''; } }) });
@@ -346,7 +346,7 @@
     const tick = k => v => isMoney(k) ? fmtB(v) : isPct(k) ? (v * (k === 'acos' ? 1 : 100)).toFixed(1) + '%' : k === 'roas' ? v + 'x' : fmtB(v);
     const PP = prevPairs(daily), invOf = k => ['cpm', 'cpc', 'cost_per_msg', 'cpa', 'cpe', 'cpv', 'acos'].includes(k) ? true : ['spend', 'spend_conv', 'frequency'].includes(k) ? null : false;
     const dsT = [
-      line(mlabel(kl), daily.map((r, i) => (i > la ? null : mv(kl, r))), '#ec4899', { fill: true, backgroundColor: 'rgba(236,72,153,0.10)', yAxisID: 'y', borderWidth: 2 }),
+      line(mlabel(kl), daily.map((r, i) => (i > la ? null : mv(kl, r))), '#ec4899', { yAxisID: 'y', borderWidth: 2 }),
       line(mlabel(kr), daily.map((r, i) => (i > la ? null : mv(kr, r))), '#2563eb', { yAxisID: 'y1', borderWidth: 2 })
     ];
     if (PP) [[0, kl], [1, kr]].forEach(([i, k]) => dsT.push(prevLine(dsT[i], PP.rows.map(r => r ? mv(k, r) : null), PP.dates, i + ':' + k, invOf(k))));
@@ -389,7 +389,7 @@
     const labels = pr.map(r => thShort(r.d));
     const isMoneyK = ['cpm','cpe','cost_per_msg','cpc','cpv'].includes(mk);
     makeChart('chartFbaPr', 'line', labels, [
-      line('ค่า Ads PR', pr.map(r => +r.spend), '#a78bfa', { fill: true, backgroundColor: 'rgba(167,139,250,0.10)', yAxisID: 'y', borderWidth: 2 }),
+      line('ค่า Ads PR', pr.map(r => +r.spend), '#a78bfa', { yAxisID: 'y', borderWidth: 2 }),
       line(M[mk].label, pr.map(r => M[mk].val(r)), '#2563eb', { yAxisID: 'y1', borderWidth: 1.6 })
     ], { options: { interaction: { mode: 'index', intersect: false } }, legend: legendOpts(),
       scales: { x: xaxis(), y: Object.assign(axis('#a78bfa', v => fmtB(v), 'ค่า Ads'), { position: 'left', beginAtZero: true }), y1: Object.assign(axis('#2563eb', v => isMoneyK ? fmtB(v) : (mk === 'er' || mk === 'ctr') ? (v * 100).toFixed(1) + '%' : fmtB(v), M[mk].label), { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }) },

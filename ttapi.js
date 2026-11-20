@@ -119,8 +119,11 @@
   }
   function setView(v, from, to) { _view = v === 'tiktok' ? 'tiktok' : 'order'; applyView(); renderOrderChannel(from, to); }
   // การ์ด + กราฟ ของมุมมอง TikTok (หน้าตาแบบเดียวกับแม่แบบ 1)
+  let _gmvPrev = null, _gmvArgs = null;
+  window.ttGmvCmpRedraw = () => { if (_gmvArgs) renderGmvTop(..._gmvArgs); };
   function renderGmvTop(V, ads, adTo) {
     const g = document.getElementById('ttgmv-ov'); if (!g) return;
+    _gmvArgs = [V, ads, adTo];
     const gmv = num(V.gmv), ind = num(V.aff_live_i) + num(V.aff_video_i) + num(V.sel_live_i) + num(V.sel_video_i);
     const capNote = V.latest_date && V.to > V.latest_date ? `ข้อมูลถึง ${thDate(V.latest_date)}` : 'ตามที่ TikTok นับ';
     const tile = (l, v, d, t) => `<div class="ui-metric is-static"><span class="ui-metric-l">${l}${t ? iTip(t) : ''}</span><span class="ui-metric-v" data-fit>${v}</span><span class="ui-metric-d">${d || '&nbsp;'}</span></div>`;
@@ -131,7 +134,7 @@
       + tile('ค่า Ads', ads ? baht(ads) : '—', ads && gmv ? pctTxt(ads, gmv) + ' ของ GMV' : '', `ค่า Ads TikTok ทุกบัญชี ถึงวันเดียวกับ GMV${adTo ? ' (' + thDate(adTo) + ')' : ''}`)
       + tile('% ค่า Ads', window.adPctHtml(gmv, ads), 'ค่า Ads ÷ GMV', '% ค่า Ads = ค่า Ads ÷ GMV (ช่วงวันเดียวกัน · ยิ่งต่ำยิ่งดี)\nตัวเล็ก = ROAS (GMV ÷ ค่า Ads)')
       + tile('GMV โดยอ้อม', fmt2(ind), gmv ? pctTxt(ind, gmv) + ' ของ GMV' : '', 'ยอดที่ลูกค้าซื้อหลังดูไลฟ์ / วิดีโอ แต่ไม่ได้ซื้อตรงจากคอนเทนต์นั้น (TikTok นับ)')
-      + `</section><div class="ov-card"><div class="ov-head"><div style="font-weight:700;font-size:15px;">แนวโน้ม GMV (TikTok)</div><div class="ov-leg" style="margin-left:auto;font-size:11.5px;color:var(--text2);"><span style="display:inline-block;width:14px;height:3px;background:#b8862f;border-radius:2px;vertical-align:middle;margin-right:5px;"></span>GMV<span style="display:inline-block;width:14px;height:3px;background:#dc2626;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px;"></span>ค่า Ads</div></div><div class="ov-chart"><canvas id="ttgmvChart"></canvas></div></div></div>`;
+      + `</section><div class="ov-card"><div class="ov-head"><div style="font-weight:700;font-size:15px;">แนวโน้ม GMV (TikTok)</div><div class="ov-leg" style="margin-left:auto;font-size:11.5px;color:var(--text2);display:flex;align-items:center;">${cmpToggleHtml('ttGmvCmpRedraw')}<span style="display:inline-block;width:14px;height:3px;background:#b8862f;margin-left:14px;border-radius:2px;vertical-align:middle;margin-right:5px;"></span>GMV<span style="display:inline-block;width:14px;height:3px;background:#dc2626;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px;"></span>ค่า Ads</div></div><div class="ov-chart"><canvas id="ttgmvChart"></canvas></div></div></div>`;
     // กราฟ: ช่วงไม่เกิน 1 เดือน = รายวัน · หลายเดือน = รายเดือน · ค่า Ads ถึงวันเดียวกับ GMV
     const daily = (V.daily || []).map(x => ({ d: x.d, v: num(x.gmv) }));
     const multi = (V.from || '').slice(0, 7) !== (V.to || '').slice(0, 7) && daily.length > 31;
@@ -148,9 +151,23 @@
         { label: 'GMV', data: keys.map(k => Math.round(gm[k] || 0)), borderColor: '#b8862f', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y' },
         { label: 'ค่า Ads', data: keys.map(k => Math.round(am[k] || 0)), borderColor: '#dc2626', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y1' }] },
       options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}  ${fmt(c.raw)}` } } },
+        plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => `${c.dataset.label}: ${c.raw == null ? '—' : fmt(c.raw)}` } } },
         scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { beginAtZero: true, border: { display: false }, grid: { color: 'rgba(127,127,127,.12)' }, ticks: { color: '#b8862f', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => fmt(v) } },
           y1: { beginAtZero: true, position: 'right', border: { display: false }, grid: { display: false }, ticks: { color: '#dc2626', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => fmt(v) } } } } });   // (2026-11-12) แสดงแกนตัวเลข: ซ้าย = GMV (ทอง) · ขวา = ค่า Ads (แดง)
+    // (2026-11-20) เส้นประ = วันเดียวกันของเดือนก่อน (เฉพาะกราฟรายวัน) · ดึงตามหลัง ไม่ให้หน้ารอ
+    (async () => {
+      if (multi || !cmpOn() || !cmpDaily(V.from, V.to)) return;
+      const ch = _gmvChart, pr = getPrevPeriodRange(V.from, V.to), ck = pr.from + '|' + pr.to;
+      if (!_gmvPrev || _gmvPrev.k !== ck) { try { _gmvPrev = { k: ck, V: await supaRpc('tt_gmv_view', { p_from: pr.from, p_to: pr.to }, true) }; } catch (e) { return; } }
+      if (_gmvChart !== ch || ch.data.datasets.some(d => d._prev)) return;
+      const pd = prevPairDates(keys, V.from, V.to), pg = {}, pa = {}; let hasAds = false;
+      ((_gmvPrev.V || {}).daily || []).forEach(x => { pg[x.d] = num(x.gmv); });
+      (typeof adRawData !== 'undefined' ? adRawData : []).forEach(a => { if (a.channel === 'TikTok' && a.date >= pr.from && a.date <= pr.to) { pa[a.date] = (pa[a.date] || 0) + (+a.ads || 0); hasAds = true; } });
+      const ds = ch.data.datasets;
+      ds.push(prevLine(ds[0], pd.map(d => d && d in pg ? Math.round(pg[d]) : null), pd, 'gmv', false));
+      if (hasAds) ds.push(prevLine(ds[1], pd.map(d => d ? Math.round(pa[d] || 0) : null), pd, 'ads', null));
+      ch.update('none');
+    })();
   }
   // ===== (2026-10-21 c) คอลัมน์ "เป้า" (มุมมอง GMV ตาม TikTok · ดูอย่างเดียว) — ตั้งเป้าที่หน้าเป้าหมาย KPI › แท็บ TikTok GMV =====
   //   เลือกในเดือนเดียว = เป้าจริงของเดือน (แผน + ยกมา) · หลายเดือน / ทั้งปี = แผนรวมตามวันที่ทับช่วง ถึงวันล่าสุดที่ TikTok ปล่อย

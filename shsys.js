@@ -58,7 +58,7 @@
       + tile('ค่า Ads', tot.ads ? n0(tot.ads) : '—', tot.ads && tot.gmv ? pct(tot.ads, tot.gmv) + ' ของยอดขาย' : '', 'ค่า Ads Shopee ทั้งหมด (Product / Shop Ads · Meta ในแอป · CPAS · Brand · Live · เหรียญ) ถึงวันเดียวกับยอด')
       + tile('% ค่า Ads', window.adPctHtml(num(tot.gmv), num(tot.ads)), 'ค่า Ads ÷ ยอดขาย', '% ค่า Ads = ค่า Ads ทั้งหมด ÷ ยอดขายตามระบบ (ยิ่งต่ำยิ่งดี) · ตัวเล็ก = ROAS (ยอดขายตามระบบ ÷ ค่า Ads)')
       + tile(tLabel, tgTot ? ((mtd || !monthMode) ? (tot.gmv / tgTot * 100).toFixed(1) + '%' : n0(tgTot)) : '—', tgTot ? ((mtd || !monthMode) ? 'ของเป้า ' + n0(tgTot) : '') : 'ยังไม่ได้ตั้งเป้า', 'เป้าจากหน้า Admin › ตั้งเป้ายอดขาย (ชุดเดียวกับหน้าเป้าหมาย KPI)\nเลือกเดือนเดียว = เป้าจริงเดือนนั้น (รวมส่วนที่ขาดยกมา) · หลายเดือน = แผนของช่วงนั้น')
-      + `</section><div class="ov-card"><div class="ov-head"><div style="font-weight:700;font-size:15px;">แนวโน้มยอดขาย (ระบบ Shopee)</div><div style="margin-left:auto;font-size:11.5px;color:var(--text2);"><span style="display:inline-block;width:14px;height:3px;background:#b8862f;border-radius:2px;vertical-align:middle;margin-right:5px;"></span>ยอดขาย<span style="display:inline-block;width:14px;height:3px;background:#dc2626;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px;"></span>ค่า Ads</div></div><div class="ov-chart"><canvas id="shsysChart"></canvas></div></div></div>`;
+      + `</section><div class="ov-card"><div class="ov-head"><div style="font-weight:700;font-size:15px;">แนวโน้มยอดขาย (ระบบ Shopee)</div><div style="margin-left:auto;font-size:11.5px;color:var(--text2);display:flex;align-items:center;">${cmpToggleHtml('shSysCmpRedraw')}<span style="display:inline-block;width:14px;height:3px;background:#b8862f;margin-left:14px;border-radius:2px;vertical-align:middle;margin-right:5px;"></span>ยอดขาย<span style="display:inline-block;width:14px;height:3px;background:#dc2626;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px;"></span>ค่า Ads</div></div><div class="ov-chart"><canvas id="shsysChart"></canvas></div></div></div>`;
     // ตารางแยกร้าน
     const head = `<tr><th class="l">ร้าน</th><th>${tLabel}${tip('เป้าจากหน้า Admin › ตั้งเป้ายอดขาย · % ใต้ตัวเลข = ยอดขาย ÷ เป้า · สีเทียบกับจำนวนวันที่ผ่านไป: เขียว ทัน · ส้ม ช้าไม่เกิน 10% · แดง ช้ามาก')}</th><th>ยอดขาย${tip('ยอดขายตามระบบ Shopee (รวมยกเลิก / คืนทีหลัง)')}</th><th>คำสั่งซื้อ</th><th>ยกเลิก</th><th>สัดส่วน</th>`
       + `<th class="tt-gl tt-ad">ค่า Ads</th><th class="tt-ad">ROAS${tip('ยอดขายตามระบบ ÷ ค่า Ads ทั้งหมด')}</th><th class="tt-ad">%Ads</th><th class="tt-gl tt-ad">ยอดขายจาก Ads (Shopee)${tip('ยอดขายที่ Shopee นับว่ามาจาก Product / Shop Ads (แบบกว้าง) — ตัวเลขเดียวกับหน้า Shopee Ads')}</th><th class="tt-ad">% ค่า Ads (Shopee นับ)${tip('ค่า Product / Shop Ads ÷ ยอดขายจาก Ads (Shopee) · ตัวเล็ก = ROI (ยอดขายจาก Ads ÷ ค่า Ads)')}</th></tr>`;
@@ -76,8 +76,11 @@
     drawChart(D, from, to);
   }
 
+  let _prevD = null, _chArgs = null;
+  window.shSysCmpRedraw = () => { if (_chArgs) drawChart(..._chArgs); };
   function drawChart(D, from, to) {
     const cv = $('shsysChart'); if (!cv || !window.Chart) return;
+    _chArgs = [D, from, to];
     const daily = (D.daily || []).map(x => ({ d: x.d, g: num(x.gmv), a: num(x.ads) }));
     const multi = from.slice(0, 7) !== to.slice(0, 7) && daily.length > 31;   // ช่วงเกิน 1 เดือน = รายเดือน
     const key = d => multi ? d.slice(0, 7) : d;
@@ -90,9 +93,21 @@
         { label: 'ยอดขาย', data: keys.map(k => Math.round(gm[k] || 0)), borderColor: '#b8862f', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y' },
         { label: 'ค่า Ads', data: keys.map(k => Math.round(am[k] || 0)), borderColor: '#dc2626', backgroundColor: 'transparent', tension: .35, pointRadius: 0, borderWidth: 2.2, yAxisID: 'y1' }] },
       options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}  ${n0(c.raw)}` } } },
+        plugins: { legend: { display: false }, tooltip: { itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => `${c.dataset.label}: ${c.raw == null ? '—' : n0(c.raw)}` } } },
         scales: { x: { grid: { display: false }, ticks: { color: tx, font: { family: 'Sarabun', size: 11 } } }, y: { beginAtZero: true, border: { display: false }, grid: { color: 'rgba(127,127,127,.12)' }, ticks: { color: '#b8862f', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => n0(v) } },
           y1: { beginAtZero: true, position: 'right', border: { display: false }, grid: { display: false }, ticks: { color: '#dc2626', maxTicksLimit: 6, font: { family: 'Sarabun', size: 11 }, callback: v => n0(v) } } } } });   // (2026-11-12) แสดงแกนตัวเลข: ซ้าย = ยอดขาย (ทอง) · ขวา = ค่า Ads (แดง)
+    // (2026-11-20) เส้นประ = วันเดียวกันของเดือนก่อน (เฉพาะกราฟรายวัน) · ดึงตามหลัง ไม่ให้หน้ารอ
+    (async () => {
+      if (multi || !cmpOn() || !cmpDaily(from, to)) return;
+      const ch = _chart, pr = getPrevPeriodRange(from, to), ck = pr.from + '|' + pr.to;
+      if (!_prevD || _prevD.k !== ck) { try { _prevD = { k: ck, D: await supaRpc('shopee_system_view', { p_from: pr.from, p_to: pr.to }, true) }; } catch (e) { return; } }
+      if (_chart !== ch || ch.data.datasets.some(d => d._prev)) return;
+      const pd = prevPairDates(keys, from, to), by = {}; ((_prevD.D || {}).daily || []).forEach(x => { by[x.d] = x; });
+      const ds = ch.data.datasets;
+      ds.push(prevLine(ds[0], pd.map(d => d && by[d] ? Math.round(num(by[d].gmv)) : null), pd, 'gmv', false));
+      ds.push(prevLine(ds[1], pd.map(d => d && by[d] ? Math.round(num(by[d].ads)) : null), pd, 'ads', null));
+      ch.update('none');
+    })();
   }
 
   window.shSys = { setView, render, apply, getView: () => _view };
