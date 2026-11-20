@@ -1018,6 +1018,8 @@
         catch (e) { toast('คำนวณไม่สำเร็จ: ' + e.message); if (btn) { btn.disabled = false; btn.textContent = 'คำนวณ'; } }
       };
       document.getElementById('exCalc').onclick = () => recalc();
+      // (2026-11-20) แก้ราคา / จำนวนแล้วคำนวณให้เองทันที (เดิมต้องกด "คำนวณ" ก่อน ปุ่ม "เสนอกลับ" ถึงจะขึ้น — ผู้บริหารแก้ราคาแล้วกดอนุมัติ = อนุมัติราคาเดิมโดยไม่รู้ตัว)
+      body().querySelectorAll('#exPrice,[data-gi],[data-ii]').forEach(x => x.addEventListener('change', () => recalc()));
       // (2026-11-19) ลบ / เพิ่มสินค้าในคำขอ (ลองปรับ · ยังไม่แก้คำขอจริง) + เสนอกลับ
       body().querySelectorAll('[data-rmi]').forEach(b => b.onclick = () => { readIn(); const a = b.dataset.rmk === 'gift' ? S.gifts : S.items; if (b.dataset.rmk !== 'gift' && S.items.length <= 1) { toast('ต้องมีสินค้าอย่างน้อย 1 รายการ'); return; } a.splice(+b.dataset.rmi, 1); recalc(true); });
       // (2026-11-19 b) ปุ่มเพิ่ม = ตัวเลือก 2 อัน: กดแล้วเลือกสินค้าจากรายการ → เพิ่มเข้าทันที 1 ชิ้น (มีอยู่แล้ว = บวกจำนวน)
@@ -1034,7 +1036,12 @@
       const rs = document.getElementById('exReset');
       if (rs) rs.onclick = () => { S.note = document.getElementById('exNote').value; S.price = r.price; S.exclude = []; S.override = {}; S.items = JSON.parse(JSON.stringify(r.items || [])); S.gifts = JSON.parse(JSON.stringify(r.gifts || [])); document.getElementById('exPrice').value = r.price; body().querySelectorAll('[data-ii]').forEach(x => { x.value = S.items[+x.dataset.ii].qty; }); body().querySelectorAll('[data-gi]').forEach(x => { x.value = S.gifts[+x.dataset.gi].qty; }); recalc(); };
       body().querySelectorAll('[data-dec]').forEach(b => b.onclick = async () => {
-        const d = b.dataset.dec; if (d !== 'pending' && !(await uiConfirm(d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', { text: `${r.title} · ${r.channel || ''} · ${n0(r.price)}`, ok: d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', tone: d === 'approved' ? 'good' : 'bad', icon: d === 'approved' ? '✓' : '×' }))) return;
+        const d = b.dataset.dec;
+        // (2026-11-20) กันพลาด: แก้ราคา / สินค้าไว้แล้วกด "อนุมัติ" → ไม่อนุมัติให้ (เพราะจะเป็นการอนุมัติราคาเดิม) ให้เลือก "เสนอกลับแบบที่ปรับ" หรือ "คืนค่าเดิม" ก่อน
+        if (d === 'approved' && r.status === 'pending') { readIn();
+          if (+S.price !== +r.price || JSON.stringify(S.gifts) !== JSON.stringify(r.gifts || []) || JSON.stringify(S.items) !== JSON.stringify(r.items || [])) {
+            uiAlert('ยังไม่ได้ส่งราคาที่แก้', { text: `คุณแก้ราคา / สินค้าไว้ (ราคา ${n0(r.price)} → ${n0(S.price)}) · ถ้าต้องการให้ใช้แบบที่แก้ กด "เสนอกลับแบบที่ปรับ" · ถ้าจะอนุมัติราคาเดิม กด "คืนค่าเดิม" ก่อน`, tone: 'bad' }); recalc(true); return; } }
+        if (d !== 'pending' && !(await uiConfirm(d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', { text: `${r.title} · ${r.channel || ''} · ${n0(r.price)}`, ok: d === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ', tone: d === 'approved' ? 'good' : 'bad', icon: d === 'approved' ? '✓' : '×' }))) return;
         const exTxt = [S.exclude.length ? `คิดแบบไม่นับ ${S.exclude.map(x => x === 'cogs' ? 'ต้นทุนสินค้า' : x).join(', ')}` : '', Object.keys(S.override).length ? `คิด ${Object.entries(S.override).map(([k, v]) => k + ' ' + +(v * 100).toFixed(2) + '%').join(', ')}` : ''].filter(Boolean).join(' · ');   // (2026-11-10) ติ๊กออกตอนตัดสินใจ → บันทึกไว้ใน Feedback ให้ทีมเห็น
         const note0 = document.getElementById('exNote').value.trim(), noteF = exTxt && !note0.includes(exTxt) ? (note0 ? note0 + ' · ' : '') + exTxt : note0;
         try { await rpc('promo_decide', { p_id: r.id, p_status: d, p_note: noteF }); toast('บันทึกแล้ว'); trClose(); renderExec(); } catch (e) { uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
