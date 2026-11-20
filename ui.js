@@ -63,7 +63,8 @@
     if (tooltip.opacity === 0 || !tooltip.dataPoints || !tooltip.dataPoints.length) { el.style.opacity = 0; return; }
     const pts = tooltip.dataPoints, opt = chart.options.plugins.tooltip || {};
     const share = !!opt.uiShare, total = pts.reduce((s, p) => s + (+p.parsed.y || 0), 0);
-    const rows = (tooltip.body || []).map((b, i) => {
+    const hasPrev = pts.some(z => z.dataset && z.dataset._prev);
+    const rows0 = (tooltip.body || []).map((b, i) => {
       const p = pts[i] || {}, ds = p.dataset || {}, lab = ds.label || '';
       let line = (b.lines || []).join(' '), name = line, val = '';
       if (lab && line.startsWith(lab + ': ')) { name = lab; val = line.slice(lab.length + 2); }
@@ -71,8 +72,17 @@
       const lc = (tooltip.labelColors || [])[i] || {};
       const col = typeof ds.borderColor === 'string' ? ds.borderColor : (lc.borderColor || lc.backgroundColor || 'var(--accent)');
       const pct = share && total ? ((+p.parsed.y || 0) / total * 100).toFixed(1) + '%' : '';
-      return `<div class="ui-ctip-r"><i${/tiktok/i.test(name) ? ' class="ui-tt"' : ''} style="--c:${esc(col)}"></i><span>${esc(name)}</span><b>${esc(val)}</b>${share ? `<em>${pct}</em>` : ''}</div>`;
-    }).join('');
+      // (2026-11-20) ลูกศรเทียบกับเส้นเทียบของตัวเดียวกัน (dataset._k ตรงกัน): เขียว = ดีกว่า · แดง = แย่กว่า · dataset._inv = true ยิ่งน้อยยิ่งดี · null = ไม่ตัดสิน (เทา)
+      let arrow = '';
+      if (hasPrev) { const q = !ds._prev && ds._k != null ? pts.find(z => z.dataset && z.dataset._prev && z.dataset._k === ds._k) : null, cv = +p.raw, pv = q ? +q.raw : NaN;
+        const dir = q && p.raw != null && q.raw != null && isFinite(cv) && isFinite(pv) && cv !== pv ? (cv > pv ? 1 : -1) : 0;
+        arrow = `<em class="ui-ctip-a${dir ? (ds._inv == null ? '' : (dir > 0) !== !!ds._inv ? ' up' : ' dn') : ''}">${dir > 0 ? '▲' : dir < 0 ? '▼' : ''}</em>`; }
+      return [!!ds._prev, `<div class="ui-ctip-r${ds._prev ? ' is-prev' : ''}"><i${/tiktok/i.test(name) ? ' class="ui-tt"' : ''} style="--c:${esc(col)}"></i><span>${esc(name)}</span><b>${esc(val)}</b>${share ? `<em>${pct}</em>` : arrow}</div>`];
+    });
+    // (2026-11-20) เส้นเทียบ (dataset._prev) แยกไว้ใต้เส้นคั่น พร้อมหัวข้อบอกว่าเทียบกับวันไหน (dataset._prevTitles[index])
+    const prevRows = rows0.filter(r => r[0]).map(r => r[1]).join('');
+    const pDs = (pts.find(q => q.dataset && q.dataset._prev) || {}).dataset, pIdx = (pts[0] || {}).dataIndex, pTitle = pDs && pDs._prevTitles ? pDs._prevTitles[pIdx] : '';
+    const rows = rows0.filter(r => !r[0]).map(r => r[1]).join('') + (prevRows ? `<div class="ui-ctip-sep">${esc(pTitle || 'ช่วงเทียบ')}</div>${prevRows}` : '');
     const foot = (tooltip.footer || []).filter(Boolean).map(f => {
       const k = f.lastIndexOf(': ');
       return k > 0 ? `<div class="ui-ctip-f"><span>${esc(f.slice(0, k))}</span><b>${esc(f.slice(k + 2))}</b></div>` : `<div class="ui-ctip-f"><span>${esc(f)}</span></div>`;

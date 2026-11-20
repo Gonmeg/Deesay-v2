@@ -197,8 +197,8 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
         const col = css(m.c), ax = 'y_' + m.k;
         scales[ax] = { display: mi < 2, position: mi === 1 ? 'right' : 'left', beginAtZero: true, border: { display: false }, grid: { color: css('--grid') || 'rgba(127,127,127,.12)' },
           ticks: { color: col, maxTicksLimit: 6, callback: v => m.k === 'roas' ? (+v).toFixed(0) + '%' : fmt(v) } };
-        ds.push({ label: m.name, data: data[m.k] || [], yAxisID: ax, borderColor: col, backgroundColor: col, borderWidth: 2.2, pointRadius: 0, pointHoverRadius: 4, tension: .25, spanGaps: false, segment: { borderDash: dashFor(m.k) }, _k: m.k });
-        if (showPrev && S.cmp && pdata[m.k]) ds.push({ label: 'ช่วงก่อน · ' + m.name, data: pdata[m.k], yAxisID: ax, borderColor: col, borderWidth: 1.3, borderDash: [3, 5], pointRadius: 0, pointHoverRadius: 3, tension: .25, _prev: true, _opacity: .55, _k: m.k });
+        ds.push({ label: m.name, data: data[m.k] || [], yAxisID: ax, borderColor: col, backgroundColor: col, borderWidth: 2.2, pointRadius: 0, pointHoverRadius: 4, tension: .25, spanGaps: false, segment: { borderDash: dashFor(m.k) }, _k: m.k, _inv: m.k === 'ads' ? null : m.k === 'canc' || m.k === 'roas' });
+        if (showPrev && S.cmp && pdata[m.k]) ds.push({ label: 'ช่วงก่อน · ' + m.name, data: pdata[m.k], yAxisID: ax, borderColor: col, borderWidth: 1.3, borderDash: [3, 5], pointRadius: 0, pointHoverRadius: 3, tension: .25, _prev: true, _prevTitles: (ctx.prevLbl || []).map(x => x ? 'เดือนก่อน · ' + x : 'เดือนก่อน'), _opacity: .55, _k: m.k });
         legend.push(`<span><i style="background:var(${m.c})"></i>${m.name}</span>`);
       });
       Object.keys(scales).filter(k => k.startsWith('y_')).forEach((k, i) => { scales[k].grid.display = i === 0; });   // เส้นตารางตามแกนซ้ายแกนเดียว
@@ -212,7 +212,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
       });
     }
     ds.forEach(d => { if (d._opacity && /^#[0-9a-f]{6}$/i.test(d.borderColor)) d.borderColor += '8C'; });
-    $(o, 'ovLegend').innerHTML = legend.join('') + (S.mode === 'metric' && showPrev ? `<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-ovcmp ${S.cmp ? 'checked' : ''} style="accent-color:var(--accent);">เส้นประ = ช่วงก่อน</label>` : '');
+    $(o, 'ovLegend').innerHTML = legend.join('') + (S.mode === 'metric' && showPrev ? `<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-ovcmp ${S.cmp ? 'checked' : ''} style="accent-color:var(--accent);">เส้นประ = เดือนก่อน</label>` : '');
     const cb = $(o, 'ovLegend').querySelector('[data-ovcmp]'); if (cb) cb.onchange = () => { S.cmp = cb.checked; drawChart(I); };
     const vfmt = (k, v) => v == null ? '—' : k === 'roas' ? v.toFixed(1) + '%' + (v > 0 ? ' (ROAS ' + (100 / v).toFixed(2) + 'x)' : '') : fmt(v);
     I.chart = new Chart(cv, { type: 'line', data: { labels: lbl, datasets: ds }, options: {
@@ -222,7 +222,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
         callbacks: {
           title: it => { const i = it[0].dataIndex; return lbl[i] + (i > capIdx ? ' · ยอดยังเข้าไม่ครบ' : ''); },
           label: it => { const d = it.dataset; let name = d.label;
-            if (d._prev && ctx.prevLbl) name = 'ช่วงก่อน (' + ctx.prevLbl[it.dataIndex] + ') · ' + d.label.replace('ช่วงก่อน · ', '');
+            if (d._prev) name = d.label.replace('ช่วงก่อน · ', '');
             return name + ': ' + vfmt(d._k, it.raw); } } } },
       scales } });
   }
@@ -408,7 +408,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
         const mc = o.msg && !sub ? o.msg.cur : null, mp = o.msg && !sub ? (o.msg.prev || []) : [], sm = (a, f) => a.reduce((t, r) => t + (+r[f] || 0), 0);
         if (!mc) { vals.msg = '—'; deltas.msg = `<span>${sub ? 'ดูรายเพจได้ที่หน้า Facebook Ads' : (o.msg === null ? 'โหลดไม่สำเร็จ' : '&nbsp;')}</span>`; }
         else { const n = sm(mc, 'msg'), sp = sm(mc, 'spend'), pn = sm(mp, 'msg'); vals.msg = fmt(n);
-          deltas.msg = (pn > 0 && !R.noPrev ? chipOf((n - pn) / pn * 100, false, 'เทียบกับช่วงก่อนที่ยาวเท่ากัน · ช่วงก่อน ' + fmt(pn)) : '') + `<span>${n > 0 ? fmt(sp / n) + ' บาท / การทัก' : 'ไม่มีในช่วงนี้'}</span>`; }
+          deltas.msg = (pn > 0 && !R.noPrev ? chipOf((n - pn) / pn * 100, false, 'เทียบกับช่วงวันเดียวกันของเดือนก่อน · ช่วงก่อน ' + fmt(pn)) : '') + `<span>${n > 0 ? fmt(sp / n) + ' บาท / การทัก' : 'ไม่มีในช่วงนี้'}</span>`; }
       }
       // ใช้ตัวคิดเดียวกับหน้า Ads (roasCapOf): วันล่าสุดที่มีทั้งยอดขายและค่า Ads → ตัวเลขเท่ากันทุกหน้า
       const byD = {}; rowsAll.forEach(r => { (byD[r.date] = byD[r.date] || { date: r.date, rev: 0, ads: 0 }).rev += num(r.net_revenue); });
@@ -470,8 +470,9 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     let prv = null, prevLbl = null;
     const showPrev = !B.monthly && !R.noPrev;
     if (showPrev) { const pr = getPrevPeriodRange(from, to);
-      if (pr && pr.from) { const PB = { monthly: false, list: [], key: r => r.date }; let d = pr.from; while (d <= pr.to) { PB.list.push(d); d = dayAdd(d, 1); }
-        prv = series(salesRows(pr.from, pr.to, ch, sub), PB, A && A.adsBy(pr.from, pr.to), A && pr.to, A && A.prBy(pr.from, pr.to)); prevLbl = PB.list.map(dLbl); if (o.msg && !sub) prv.msg = msgSer(o.msg.prev, PB); } }
+      if (pr && pr.from) { const PL = prevDayList(from, to), PB = { monthly: false, list: PL.map((d, i) => d || '-' + i), key: r => r.date };   // (2026-11-20) เส้นประ = วันเดียวกันของเดือนก่อน จับคู่ทีละวัน
+        prv = series(salesRows(pr.from, pr.to, ch, sub), PB, A && A.adsBy(pr.from, pr.to), A && pr.to, A && A.prBy(pr.from, pr.to)); prevLbl = PL.map(d => d ? dLbl(d) : '');
+        ['rev', 'ord', 'canc', 'aov', 'ads', 'roas'].forEach(k => { if (prv[k]) prv[k] = prv[k].map((v, i) => PL[i] ? v : null); }); if (o.msg && !sub) prv.msg = msgSer(o.msg.prev, PB); } }
     I.ctx = { B, cur, prv, cust: null, prvCust: null, capIdx, showPrev, prevLbl, dashAt, subLines };
     drawChart(I);
     if (window.UI && UI.fit) UI.fit();
@@ -493,7 +494,7 @@ body.light-theme .ov .ui-metrics .ui-metric{box-shadow:1px 0 0 #EDF0F4}
         if (tile) { tile.querySelector('.ui-metric-v').textContent = fmt(n); tile.querySelector('.ui-metric-d').innerHTML = noCmp ? '&nbsp;' : badge(nc, np); }
         const m = Object.fromEntries((ser || []).map(x => [x[0], x[1]]));
         I.ctx.cust = B.list.map((b, i) => i > I.ctx.capIdx ? null : (m[b] || 0));
-        if (pser) { const pm = Object.fromEntries(pser.map(x => [x[0], x[1]])); const pr = getPrevPeriodRange(from, to); const pl = []; let d = pr.from; while (d <= pr.to) { pl.push(pm[d] || 0); d = dayAdd(d, 1); } I.ctx.prvCust = pl; }
+        if (pser) { const pm = Object.fromEntries(pser.map(x => [x[0], x[1]])); I.ctx.prvCust = prevDayList(from, to).map(d => d ? (pm[d] || 0) : null); }
         if (S.sel.cust) drawChart(I);
         if (window.UI && UI.fit) UI.fit();
       } catch (e) { const tile = $(o, 'ovTiles').querySelector('[data-ovk="cust"] .ui-metric-v'); if (tile) tile.textContent = '—'; console.warn('customers', e.message); }

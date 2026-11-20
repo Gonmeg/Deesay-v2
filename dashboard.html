@@ -730,6 +730,17 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   .tr-tb th:first-child, .tr-tb td:first-child { text-align:left; padding-left:16px; }
   .tr-tb td:last-child { color:var(--text); font-weight:600; }
   .tr-tb td.tr-pc { color:var(--accent-text, var(--text)); font-weight:600; }
+  /* (2026-11-20) แผงที่มา: ตารางไม่เกิน 3 คอลัมน์ = แผงแคบ คอลัมน์ตัวเลขกว้างเท่ากัน อยู่กลางคอลัมน์ (เดิมแผงกว้าง 620 ตัวเลขห่างกันมาก) · ตารางยาวเกิน 10 แถว = แบ่งหน้า */
+  .tr-dw.tr-slim { width:min(440px, 94vw); }
+  .tr-dw.tr-slim .tr-tb { table-layout:fixed; }
+  .tr-dw.tr-slim .tr-tb th, .tr-dw.tr-slim .tr-tb td { text-align:center; padding:8px 10px; }
+  .tr-dw.tr-slim .tr-tb th:first-child, .tr-dw.tr-slim .tr-tb td:first-child { text-align:left; padding-left:16px; width:44%; }
+  .tr-dw.tr-slim .tr-tb.tr-c2 th:first-child, .tr-dw.tr-slim .tr-tb.tr-c2 td:first-child { width:62%; }
+  .tr-pg { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 16px 6px; font-size:11.5px; color:var(--text3); }
+  .tr-pg-b { display:flex; gap:4px; }
+  .tr-pg button { min-width:26px; height:26px; padding:0 7px; border-radius:6px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font:inherit; font-size:11.5px; cursor:pointer; }
+  .tr-pg button[aria-current="page"] { background:var(--accent-soft, rgba(184,134,47,.14)); border-color:transparent; color:var(--accent-text, var(--text)); font-weight:700; }
+  .tr-pg button:disabled { opacity:.4; cursor:default; }
   
   .tr-tb tr.tr-gh { cursor:pointer; background:var(--row-sum); }
   /* (2026-10-20) ตารางยอดขายแยกตามช่องทาง TikTok: ตัวเลขชิดขวา · กลุ่มคอลัมน์แอดมีเส้นคั่น */
@@ -829,7 +840,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.19-d"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.20-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -2150,7 +2161,7 @@ async function ensureSalesDone() {
 const ONLINE_CHS = ['Facebook', 'TikTok', 'Shopee', 'Lazada'];
 const dayAdd = (s, n) => { const d = parseDateLocal(s); d.setDate(d.getDate() + n); return fmtDateISO(d); };
 const dLbl = s => parseDateLocal(s).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-// ช่วงที่ใช้คิด % เทียบช่วงก่อน: ตัดวันที่ยอดยังเข้าไม่ครบออก แล้วเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน (ตัวแทน / MT ไม่ตัด)
+// ช่วงที่ใช้คิด % เทียบช่วงก่อน: ตัดวันที่ยอดยังเข้าไม่ครบออก แล้วเทียบกับวันเดียวกันของเดือนก่อน (ตัวแทน / MT ไม่ตัด)
 // (2026-10-19) ระบบมีข้อมูลยอดขายครบทุกช่องทางตั้งแต่วันนี้ · ช่วงก่อนที่ย้อนไปก่อนวันนี้ = ไม่มีข้อมูลให้เทียบ (ไม่โชว์ % มั่ว ๆ)
 const SALES_DATA_START = '2026-01-01';
 function cmpRange(from, to, ch) {
@@ -2570,16 +2581,19 @@ function getMonthsInRange(from, to) {
 }
 
 
-// คืนช่วงวันที่ "ก่อนหน้า" ที่ยาวเท่ากับช่วงที่เลือกไว้ (ใช้เทียบ % เปลี่ยนแปลง / NEW / อันดับขยับ)
+// (2026-11-20) ช่วงเทียบ = "วันเดียวกันของเดือนก่อน" ทุกหน้า (เดิม = ช่วงก่อนหน้าติดกันที่ยาวเท่ากัน เช่น ย้อนไป 30 วัน — เทียบเทรนด์ช่วงเดียวกันของเดือนไม่ได้)
+//   1–20 พ.ย. → 1–20 ต.ค. · ทั้งเดือน พ.ย. → ทั้งเดือน ต.ค. · ช่วงคร่อม n เดือน → ถอย n เดือน · วันที่ไม่มีในเดือนก่อน (เช่น 31) ใช้วันสุดท้ายของเดือนนั้น
+function prevShiftN(from, to) { const f = parseDateLocal(from), t = parseDateLocal(to); return (t.getFullYear() - f.getFullYear()) * 12 + t.getMonth() - f.getMonth() + 1; }
+function shiftMonthISO(s, n) { const d = parseDateLocal(s), t = new Date(d.getFullYear(), d.getMonth() + n, 1), last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate(); t.setDate(Math.min(d.getDate(), last)); return fmtDateISO(t); }
 function getPrevPeriodRange(from, to) {
   if (!from || !to) return { from: null, to: null };
-  const fromD = parseDateLocal(from);
-  const toD = parseDateLocal(to);
-  const days = Math.round((toD - fromD) / 86400000) + 1;
-  const prevTo = new Date(fromD); prevTo.setDate(prevTo.getDate() - 1);
-  const prevFrom = new Date(prevTo); prevFrom.setDate(prevFrom.getDate() - days + 1);
-  return { from: fmtDateISO(prevFrom), to: fmtDateISO(prevTo) };
+  const f = parseDateLocal(from), t = parseDateLocal(to), n = prevShiftN(from, to), nx = new Date(t); nx.setDate(t.getDate() + 1);
+  if (f.getDate() === 1 && nx.getDate() === 1) return { from: fmtDateISO(new Date(f.getFullYear(), f.getMonth() - n, 1)), to: fmtDateISO(new Date(f.getFullYear(), f.getMonth(), 0)) };   // เต็มเดือน → เต็มเดือนก่อน
+  return { from: shiftMonthISO(from, -n), to: shiftMonthISO(to, -n) };
 }
+// วันที่ของช่วงเทียบ เรียงคู่กับวันของช่วงที่เลือกทีละวัน (ใช้วาดเส้นประในกราฟ) · null = เดือนก่อนไม่มีวันนั้น
+function prevDayList(from, to) { const n = prevShiftN(from, to), out = []; let d = from; while (d <= to) { const p = shiftMonthISO(d, -n); out.push(p.slice(8) === d.slice(8) ? p : null); d = dayAdd(d, 1); } return out; }
+const PREV_TXT = 'ช่วงวันเดียวกันของเดือนก่อน';
 
 
 
@@ -7291,7 +7305,7 @@ async function openTrace(sku, d) {
   let ov = document.getElementById('trOv'), dw = document.getElementById('trDw');
   if (!dw) {
     ov = document.createElement('div'); ov.id = 'trOv'; ov.className = 'tr-ov'; ov.onclick = trClose; document.body.appendChild(ov);
-    dw = document.createElement('aside'); dw.id = 'trDw'; dw.className = 'tr-dw'; dw.setAttribute('role', 'dialog'); dw.setAttribute('aria-label', 'ที่มาของตัวเลข'); document.body.appendChild(dw);
+    dw = document.createElement('aside'); dw.id = 'trDw'; dw.className = 'tr-dw'; dw.setAttribute('role', 'dialog'); dw.setAttribute('aria-label', 'ที่มาของตัวเลข'); document.body.appendChild(dw); trWatch(dw);
     requestAnimationFrame(() => { ov.classList.add('on'); dw.classList.add('on'); });
   } else { ov.classList.add('on'); dw.classList.add('on'); }
   dw.innerHTML = `<div class="tr-h"><span>ที่มาของตัวเลข</span><button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button></div><div class="tr-b" id="trBody"><div class="tr-n">กำลังโหลด…</div></div>`;
@@ -7449,12 +7463,37 @@ function trTabLink(j, m, label) {
   return `<a class="tr-src-a" href="${trEsc(s.url)}pubhtml?gid=${encodeURIComponent(t.gid)}&single=true" target="_blank" rel="noopener" onclick="event.stopPropagation()" data-tip="เปิดแท็บ ${trEsc(PL_TH_M(m))} ในไฟล์บัญชี">${label} ↗</a>`;
 }
 
+// ───────── (2026-11-20) จัดแผงที่มาของตัวเลขให้เหมือนกันทุกหน้า: แผงแคบเมื่อทุกตารางมีไม่เกิน 3 คอลัมน์ · ตารางเกิน 10 แถว แบ่งหน้าละ 10 ─────────
+const TR_PG = 10;
+function trTidy() {
+  const dw = document.getElementById('trDw'), body = document.getElementById('trBody'); if (!dw || !body) return;
+  const tbs = [...body.querySelectorAll('table.tr-tb')];
+  const cols = tb => { const r = tb.querySelector('thead tr') || tb.querySelector('tr'); return r ? [...r.children].reduce((n, c) => n + (c.colSpan || 1), 0) : 0; };
+  const slim = tbs.length > 0 && tbs.every(tb => cols(tb) <= 3) && !body.querySelector('.tr-fg, .tr-st, .mtb-h, img');
+  dw.classList.toggle('tr-slim', slim);
+  tbs.forEach(tb => {
+    tb.classList.toggle('tr-c2', cols(tb) === 2);
+    if (tb.dataset.trPg || tb.hasAttribute('data-tr-all') || tb.querySelector('tr.tr-gh, tr[hidden], tr[onclick], td[rowspan]')) return;
+    const rows = [...tb.querySelectorAll('tbody > tr')]; if (rows.length <= TR_PG) return;
+    tb.dataset.trPg = '1';
+    const pg = document.createElement('div'); pg.className = 'tr-pg'; tb.after(pg);
+    const N = Math.ceil(rows.length / TR_PG);
+    const go = p => { p = Math.max(1, Math.min(N, p));
+      rows.forEach((r, i) => { r.style.display = i >= (p - 1) * TR_PG && i < p * TR_PG ? '' : 'none'; });
+      const nums = N <= 7 ? Array.from({ length: N }, (_, i) => i + 1) : [...new Set([1, p - 1, p, p + 1, N].filter(x => x >= 1 && x <= N))];
+      let h = '', last = 0; nums.forEach(x => { if (x - last > 1) h += '<span>…</span>'; h += `<button type="button" data-p="${x}"${x === p ? ' aria-current="page"' : ''}>${x}</button>`; last = x; });
+      pg.innerHTML = `<span>${(p - 1) * TR_PG + 1}–${Math.min(p * TR_PG, rows.length)} จาก ${rows.length}</span><span class="tr-pg-b"><button type="button" data-p="${p - 1}"${p === 1 ? ' disabled' : ''} aria-label="ก่อนหน้า">‹</button>${h}<button type="button" data-p="${p + 1}"${p === N ? ' disabled' : ''} aria-label="ถัดไป">›</button></span>`;
+      pg.querySelectorAll('button').forEach(b => b.onclick = () => go(+b.dataset.p)); };
+    go(1);
+  });
+}
+function trWatch(dw) { if (dw._trObs) return; let t = 0; dw._trObs = new MutationObserver(() => { clearTimeout(t); t = setTimeout(trTidy, 0); }); dw._trObs.observe(dw, { childList: true, subtree: true }); }
 // ───────── (2026-10-14) ที่มาของตัวเลข: หน้า KOL (ค่า Ads / ยอดขายของงาน → รายแอด Facebook และรายแคมเปญ TikTok) ─────────
 function trOpenShell(kicker) {
   let ov = document.getElementById('trOv'), dw = document.getElementById('trDw');
   if (!dw) {
     ov = document.createElement('div'); ov.id = 'trOv'; ov.className = 'tr-ov'; ov.onclick = trClose; document.body.appendChild(ov);
-    dw = document.createElement('aside'); dw.id = 'trDw'; dw.className = 'tr-dw'; dw.setAttribute('role', 'dialog'); dw.setAttribute('aria-label', 'ที่มาของตัวเลข'); document.body.appendChild(dw);
+    dw = document.createElement('aside'); dw.id = 'trDw'; dw.className = 'tr-dw'; dw.setAttribute('role', 'dialog'); dw.setAttribute('aria-label', 'ที่มาของตัวเลข'); document.body.appendChild(dw); trWatch(dw);
     requestAnimationFrame(() => { ov.classList.add('on'); dw.classList.add('on'); });
   } else { ov.classList.add('on'); dw.classList.add('on'); }
   dw.innerHTML = `<div class="tr-h"><span>${trEsc(kicker || 'ที่มาของตัวเลข')}</span><button type="button" class="tr-x" onclick="trClose()" aria-label="ปิด">✕</button></div><div class="tr-b" id="trBody"><div class="tr-n">กำลังโหลด…</div></div>`;
@@ -8055,7 +8094,7 @@ async function renderHome() {
     const { a: A, b: B } = _homeRange, n = Math.round((new Date(B) - new Date(A)) / 86400000) + 1;
     [b, tr] = await Promise.all([
       B === _homeLatest && _homeBrief0 ? _homeBrief0 : Auth.rpc('home_brief', { p_date: B }),
-      Auth.rpc('home_trend', { p_date: B, p_days: Math.min(800, Math.max(14, n * 2, Math.round((new Date(B) - new Date(homePrevMonthStart(B))) / 86400000) + 1)) }).catch(() => null)]);
+      Auth.rpc('home_trend', { p_date: B, p_days: Math.min(800, Math.max(14, n * 2, Math.round((new Date(B) - new Date(homePrevMonthStart(B))) / 86400000) + 1, n > 1 ? Math.round((new Date(B) - new Date(getPrevPeriodRange(A, B).from)) / 86400000) + 1 : 0)) }).catch(() => null)]);
   } catch (e) { el.classList.remove('is-loading'); el.innerHTML = `<div class="ui-empty"><b>โหลดสรุปไม่สำเร็จ</b>${esc(e.message || e)} · ลองกดรีเฟรชข้อมูลอีกครั้ง</div>`; return; }
   if (seq !== renderHome._seq) return;
   _homeBrief = b; _homeTrend = tr; homeSyncNav();
@@ -8076,16 +8115,16 @@ async function renderHome() {
   const dot = c => `<span class="ui-chdot${c === 'TikTok' ? ' ui-tt' : ''}" style="--c:${(HM_CH[c] || ['var(--ch-dealer)'])[0]};"></span>`;
   const info = (id, html, stop) => `<span class="ads-info-wrap" style="position:relative;display:inline-block;"><span class="hm-info" onclick="${stop ? 'event.stopPropagation();' : ''}toggleFbeInfo('${id}')" aria-label="ดูคำอธิบายเพิ่มเติม">ⓘ</span><div id="${id}" class="ads-info-popover hm-info-pop" style="display:none;"${stop ? ' onclick="event.stopPropagation()"' : ''}>${html}</div></span>`;
 
-  // ช่วงที่เลือก vs ช่วงเทียบ (วันเดียว = เฉลี่ย 7 วันก่อน เหมือนเดิม · หลายวัน = ช่วงก่อนหน้าที่ยาวเท่ากัน)
+  // ช่วงที่เลือก vs ช่วงเทียบ (วันเดียว = เฉลี่ย 7 วันก่อน เหมือนเดิม · หลายวัน = วันเดียวกันของเดือนก่อน (2026-11-20))
   const rows = tr ? tr.rows : [];
   // (2026-10-08) ช่องทางที่ยอดยังเข้าไม่ครบถึงวันสุดท้ายของช่วง: ตัวเลขรวมแสดงเท่าที่มี · การเทียบใช้เฉพาะช่องทางที่ยอดเข้าครบ (ทั้งช่วงนี้และช่วงเทียบ)
   const CT = (tr && tr.complete) || {}, inc = HM_ONLINE.filter(c => CT[c] && CT[c] < B);
   const cmpX = inc.concat(HM_CUM);   // (2026-11-02) ป้ายเทียบนับเฉพาะออนไลน์ที่ยอดเข้าครบ — ตัวแทน / MT สั่งเป็นก้อน ทำให้ค่าปกติเพี้ยน
   const cur = homeAgg(rows, A, B), curC = homeAgg(rows, A, B, null, cmpX);
-  const pA = one ? homeAdd(A, -7) : homeAdd(A, -n), pB = homeAdd(A, -1), pd = one ? 7 : 1;
+  const pR = one ? null : getPrevPeriodRange(A, B), pA = one ? homeAdd(A, -7) : pR.from, pB = one ? homeAdd(A, -1) : pR.to, pd = one ? 7 : 1;
   const prv0 = homeAgg(rows, pA, pB, null, cmpX), prv = { rev: prv0.rev / pd, ord: prv0.ord / pd, ads: prv0.ads / pd, aov: prv0.aov, roas: prv0.roas };
-  const cmpTxt = one ? 'เทียบเฉลี่ย 7 วันก่อน' : 'เทียบช่วงก่อน';
-  const cmpLong = one ? `เทียบค่าเฉลี่ยรายวัน ${dShort(pA)} – ${dLong(pB)}` : `เทียบกับ ${dShort(pA)} – ${dLong(pB)} (ช่วงก่อนหน้าที่ยาวเท่ากัน)`;
+  const cmpTxt = one ? 'เทียบเฉลี่ย 7 วันก่อน' : 'เทียบเดือนก่อน';
+  const cmpLong = one ? `เทียบค่าเฉลี่ยรายวัน ${dShort(pA)} – ${dLong(pB)}` : `เทียบกับ ${dShort(pA)} – ${dLong(pB)} (ช่วงวันเดียวกันของเดือนก่อน)`;
   const ch = b.channels || [];
   const stOf = c => !CT[c] || CT[c] >= B ? '' : rows.some(r => r.ch === c && r.date === B && (+r.rev || +r.ord)) ? 'partial' : 'pending';
   const stName = x => x === 'pending' ? 'Pending upload' : 'Partial';
@@ -8172,7 +8211,7 @@ async function renderHome() {
   // (2026-10-16) วันที่ + ช่วงที่เทียบ อยู่บรรทัดเดียวกับชื่อหน้าด้านบน (ไม่ทำหัวข้อซ้ำในหน้า)
   const ps = document.getElementById('pageSub');
   if (ps && currentPage === 'home') ps.innerHTML = `· ${one ? new Date(B + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) + ' · เทียบเฉลี่ยรายวัน ' + dShort(pA) + ' – ' + dShort(pB)
-    : dShort(A) + ' – ' + dLong(B) + ' (' + n + ' วัน) · เทียบ ' + dShort(pA) + ' – ' + dShort(pB)} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน · นับเฉพาะออนไลน์ (ไม่นับตัวแทน / Modern Trade ที่สั่งเป็นก้อน)<br><b>ป้ายสี</b> เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3%')}`;
+    : dShort(A) + ' – ' + dLong(B) + ' (' + n + ' วัน) · เทียบ ' + dShort(pA) + ' – ' + dShort(pB)} ${info('hm-i-page', '<b>ยอดขาย</b> ยอดรวม VAT สูตรเดียวกับหน้ายอดขาย<br><b>ค่า Ads</b> รวมทุกแหล่ง (Meta / TikTok / Shopee / Lazada) รวม Facebook PR / KOL<br><b>เปิดหน้า</b> แสดงเมื่อวานเสมอ ช่องทางที่ยอดยังไม่เข้าติดป้าย Pending upload / Partial<br><b>เลือกวันที่</b> ใช้ปุ่มด้านบน (วันล่าสุด / 7 วัน / 30 วัน / เดือนนี้ / เดือนก่อน) หรือเลือกเองในปฏิทิน<br><b>เทียบ</b> วันเดียวเทียบกับค่าเฉลี่ย 7 วันก่อน · หลายวันเทียบกับช่วงวันเดียวกันของเดือนก่อน · นับเฉพาะออนไลน์ (ไม่นับตัวแทน / Modern Trade ที่สั่งเป็นก้อน)<br><b>ป้ายสี</b> เขียว = ดีขึ้น · แดง = แย่ลง · เทา = เปลี่ยนไม่ถึง 3%')}`;
   el.innerHTML = `
     <section class="ui-metrics hm-metrics" aria-label="ตัวเลขหลัก">
       ${metric('sales', 'ยอดขายรวม', money(cur.rev), chip(pct(curC.rev, prv.rev)), baseTxt(money(prv.rev), true), info('hm-i-sales', 'ยอดขายทุกช่องทาง <b>รวม</b>ตัวแทนและ Modern Trade · <b>ไม่รวม</b>ออเดอร์ที่ยกเลิก / คืน<br>ป้ายเทียบและค่าปกติ<b>ไม่รวม</b>ตัวแทน / Modern Trade เพราะสั่งเป็นก้อน ไม่ตรงวัน', true))}
@@ -8193,7 +8232,7 @@ async function renderHome() {
     <div class="hm-gap"></div>
     <div class="hm-grid2">
       <section class="hm-panel">
-        <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของช่วงวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>สัดส่วน</b> ยอดขายของช่องทาง ÷ ยอดขายรวม<br><b>' + (one ? 'ปกติวันละ' : 'ช่วงก่อน') + '</b> ' + (one ? 'ยอดเฉลี่ยต่อวันของ 7 วันก่อน' : 'ยอดของช่วงก่อนหน้าที่ยาวเท่ากัน') + ' · แถวรวมนับเฉพาะออนไลน์' + '<br><b>Pending upload</b> ยังไม่ได้อัปไฟล์ยอดของวันนั้น · <b>Partial</b> อัปแล้วแต่ไฟล์ยังไม่ครอบทั้งวัน — ทั้งสองแบบไม่นับในการเทียบและ ROAS<br><b>Facebook PR / KOL</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง แสดงค่าใช้จ่ายแต่ไม่นับใน ROAS<br><b>ROAS</b> ไม่นับยอดตัวแทนและ Modern Trade')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
+        <div class="hm-panel-h"><h2>ยอดขายแยกช่องทาง ${info('hm-i-ch', 'ยอดของช่วงวันที่เลือก แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br><b>สัดส่วน</b> ยอดขายของช่องทาง ÷ ยอดขายรวม<br><b>' + (one ? 'ปกติวันละ' : 'ช่วงก่อน') + '</b> ' + (one ? 'ยอดเฉลี่ยต่อวันของ 7 วันก่อน' : 'ยอดของช่วงวันเดียวกันของเดือนก่อน') + ' · แถวรวมนับเฉพาะออนไลน์' + '<br><b>Pending upload</b> ยังไม่ได้อัปไฟล์ยอดของวันนั้น · <b>Partial</b> อัปแล้วแต่ไฟล์ยังไม่ครอบทั้งวัน — ทั้งสองแบบไม่นับในการเทียบและ ROAS<br><b>Facebook PR / KOL</b> ค่า Ads ที่ไม่ได้ขายของโดยตรง แสดงค่าใช้จ่ายแต่ไม่นับใน ROAS<br><b>ROAS</b> ไม่นับยอดตัวแทนและ Modern Trade')}</h2>${link('channel', 'ดูภาพรวมทุกช่องทาง')}</div>
         <div class="table-wrap"><table class="ui-table hm-tbl" data-no-sort data-no-page>
           <thead><tr><th class="l">ช่องทาง</th><th class="l">สัดส่วน</th><th class="num">ยอดขาย</th><th class="num">${one ? 'ปกติวันละ' : 'ช่วงก่อน'}</th><th class="num">เทียบ</th><th class="num">ค่า Ads</th><th class="num">% ค่า Ads</th><th class="num">ออเดอร์</th></tr></thead>
           <tbody>${chRows}</tbody>

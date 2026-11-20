@@ -2,7 +2,7 @@
 // ข้อมูล: RPC adperf_page — Supabase สรุปให้ทั้งหน้า (เดิมโหลดค่า Ads ทุกแถวตั้งแต่ 2025 + ยอดขายมาคิดในเครื่อง)
 //   ช่องทางที่มี Ads ของตัวเอง: TikTok · Facebook (รวมบัญชี PR) · Shopee (รวม CPAS / Brand / Live / Meta in-app / Coins) · Lazada
 //   ไม่นับตัวแทน / Modern Trade (ไม่มี Ads ของตัวเอง) — ยอดขาย = sales_summary · ค่า Ads = mv_ad_spend_daily (แหล่งเดียวกับทุกหน้า)
-// หน้าตา: การ์ด 4 ใบ + ป้ายเทียบช่วงก่อนหน้าที่ยาวเท่ากัน → กราฟยอดขาย vs ค่า Ads (makeAdChart สไตล์เดียวกับหน้าอื่น) → ตารางรายช่องทาง
+// หน้าตา: การ์ด 4 ใบ + ป้ายเทียบช่วงวันเดียวกันของเดือนก่อน → กราฟยอดขาย vs ค่า Ads (makeAdChart สไตล์เดียวกับหน้าอื่น) → ตารางรายช่องทาง
 //   กดแถวช่องทาง = กราฟเปลี่ยนเป็นช่องทางนั้น (กดซ้ำ = ทุกช่องทาง) · ▸ = กางร้าน / เพจ / ประเภท Ads ในแถวนั้น
 //   ช่วงไม่เกิน 1 เดือน = รายวัน · เกิน = รายเดือน · วันท้ายที่ยอดขายยังไม่เข้า → ปุ่มสถานะข้อมูล (ไม่ขึ้นคำเตือนในหน้า)
 (function () {
@@ -64,13 +64,13 @@ body.light-theme .ap .ui-metric{box-shadow:1px 0 0 #EDF0F4}
     const tile = (k, l, tip) => `<div class="ui-metric is-static" data-k="${k}"><span class="ui-metric-l">${l}${tip ? info('ap-i-' + k, tip) : ''}</span><span class="ui-metric-v" data-fit>—</span><span class="ui-metric-d">&nbsp;</span></div>`;
     root.innerHTML = `<div class="ap">
       <section class="ui-metrics" id="apTiles" aria-label="ตัวเลขหลัก">
-        ${tile('gmv', 'ยอดขาย', 'ยอดขายของช่องทางที่ยิง Ads เอง: TikTok · Facebook (รวม Line) · Shopee · Lazada<br>ไม่นับตัวแทน / Modern Trade (ไม่มี Ads ของตัวเอง) · ยอดขายรวม VAT ไม่รวมยกเลิก / คืน (ชุดเดียวกับหน้าภาพรวมยอดขาย)<br>ป้าย = เทียบช่วงก่อนหน้าที่ยาวเท่ากัน')}
+        ${tile('gmv', 'ยอดขาย', 'ยอดขายของช่องทางที่ยิง Ads เอง: TikTok · Facebook (รวม Line) · Shopee · Lazada<br>ไม่นับตัวแทน / Modern Trade (ไม่มี Ads ของตัวเอง) · ยอดขายรวม VAT ไม่รวมยกเลิก / คืน (ชุดเดียวกับหน้าภาพรวมยอดขาย)<br>ป้าย = เทียบช่วงวันเดียวกันของเดือนก่อน')}
         ${tile('ads', 'ค่า Ads', 'ค่า Ads จริงของ 4 ช่องทาง ไม่รวม VAT (ชุดเดียวกับหน้าภาพรวม / MKT Tracking)<br>Facebook รวมบัญชี PR (KOL / boost) · Shopee รวม CPAS / Brand / Live / Meta in-app / Coins<br>ไม่รวมค่าจ้าง KOL (ดูที่หน้า KOL / MKT Tracking)')}
         ${tile('pct', '% ค่า Ads', '<b>% ค่า Ads</b> = ค่า Ads ÷ ยอดขาย · ยิ่งต่ำยิ่งดี · ตัวเล็กข้าง ๆ คือ <b>ROAS (Return on Ad Spend)</b> = ยอดขาย ÷ ค่า Ads<br>นับถึงวันล่าสุดที่ทั้งยอดขายและค่า Ads เข้าครบ (กติกาเดียวกับหน้าภาพรวมของแต่ละช่องทาง)<br>ป้าย = เปลี่ยนกี่ pt (จุด %) จากช่วงก่อน · ลดลง = สีเขียว')}
       </section>
       <div class="ap-card"><div class="ap-head"><h2 id="apChartTtl">ยอดขาย vs ค่า Ads</h2><span id="apChartR"></span></div>
         <div style="position:relative;height:280px;"><canvas id="apChart"></canvas></div></div>
-      <div class="ap-card" style="padding:16px 0 6px;"><div class="ap-head" style="padding:0 18px;"><h2>แยกช่องทาง ${info('ap-i-tbl', 'กดแถว = กราฟด้านบนเปลี่ยนเป็นช่องทางนั้น (กดซ้ำ = ทุกช่องทาง)<br>ROAS / % ค่า Ads รายช่องทาง = ตัวเลขเดียวกับหน้าภาพรวมของช่องทางนั้น (นับถึงวันที่ข้อมูลครบ · Facebook ใช้เฉพาะ Ads Conversion ไม่รวม PR) · แถวรวมนับค่า Ads PR ด้วย<br>▸ = ดูร้าน / เพจ / ประเภท Ads ในช่องทาง · แถวที่มีแต่ค่า Ads = Ads ที่ไม่ผูกร้าน / เพจ<br>ROAS = ยอดขาย ÷ ค่า Ads · % ค่า Ads = ค่า Ads ÷ ยอดขาย · ป้าย = เทียบช่วงก่อนหน้าที่ยาวเท่ากัน')} <span class="ap-sub" id="apRange"></span></h2></div>
+      <div class="ap-card" style="padding:16px 0 6px;"><div class="ap-head" style="padding:0 18px;"><h2>แยกช่องทาง ${info('ap-i-tbl', 'กดแถว = กราฟด้านบนเปลี่ยนเป็นช่องทางนั้น (กดซ้ำ = ทุกช่องทาง)<br>ROAS / % ค่า Ads รายช่องทาง = ตัวเลขเดียวกับหน้าภาพรวมของช่องทางนั้น (นับถึงวันที่ข้อมูลครบ · Facebook ใช้เฉพาะ Ads Conversion ไม่รวม PR) · แถวรวมนับค่า Ads PR ด้วย<br>▸ = ดูร้าน / เพจ / ประเภท Ads ในช่องทาง · แถวที่มีแต่ค่า Ads = Ads ที่ไม่ผูกร้าน / เพจ<br>ROAS = ยอดขาย ÷ ค่า Ads · % ค่า Ads = ค่า Ads ÷ ยอดขาย · ป้าย = เทียบช่วงวันเดียวกันของเดือนก่อน')} <span class="ap-sub" id="apRange"></span></h2></div>
         <table class="ui-table ap-tbl" data-no-sort data-no-page><thead><tr><th>ช่องทาง</th><th class="num">ยอดขาย</th><th class="num">ค่า Ads</th><th class="num">% ค่า Ads</th></tr></thead>
           <tbody id="apBody">${CHS.map(() => '<tr><td colspan="4">&nbsp;</td></tr>').join('')}</tbody><tfoot id="apFoot"><tr><td colspan="4">&nbsp;</td></tr></tfoot></table></div>
     </div>`;
