@@ -244,10 +244,10 @@
     const key = r => g === 'day' ? String(r.d).slice(0, 10) : String(r.d).slice(0, 7);
     const keys = [...new Set(daily.map(key))].sort();
     const chs = CH_ORDER.filter(c => daily.some(r => r.channel === c)).concat([...new Set(daily.map(r => r.channel))].filter(c => !CH_ORDER.includes(c)));
-    const ds = chs.map(c => ({ label: c, data: keys.map(k => daily.filter(r => r.channel === c && key(r) === k).reduce((t, r) => t + (+r[fld] || 0), 0)), backgroundColor: CH_COL[c] || '#94a3b8', stack: 's', borderRadius: 2, maxBarThickness: 44, yAxisID: 'y' }));
+    const ds = chs.map(c => ({ label: c, data: keys.map(k => daily.filter(r => r.channel === c && key(r) === k).reduce((t, r) => t + (+r[fld] || 0), 0)), borderColor: CH_COL[c] || '#94a3b8', backgroundColor: CH_COL[c] || '#94a3b8', borderWidth: 2, pointRadius: g === 'day' ? 0 : 3, pointHoverRadius: 4, tension: 0.3, fill: false, yAxisID: 'y' }));   // (2026-11-20) กราฟเส้นตามกติกา (เดิมเป็นแท่งซ้อน)
     const tk = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
-    const scales = { x: { stacked: true, ticks: { ...tk, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
-      y: { stacked: true, ticks: { ...tk, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } };
+    const scales = { x: { ticks: { ...tk, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
+      y: { beginAtZero: true, ticks: { ...tk, callback: v => fmtB(v), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } };
     const withAds = false;   // (v20260930d) ไม่แสดงค่า Adsในกราฟ — ดูค่า Ads / ROAS ที่การ์ดด้านบนและตารางช่องทาง
     if (withAds) {
       const adsM = {}; (d.ads_month || []).forEach(r => { adsM[r.m] = (adsM[r.m] || 0) + (+r.ad || 0) + (+r.aa || 0); });
@@ -257,7 +257,7 @@
     const unit = v => qm ? `${fmt(Math.round(v))} ชิ้น` : `${fmt(Math.round(v))}`;
     document.getElementById('skdChartTtl').innerHTML = (qm ? 'จำนวนชิ้น' : 'ยอดขาย') + (g === 'day' ? 'รายวันแยกช่องทาง ' : 'รายเดือนแยกช่องทาง ')
       + tipI('skd-i-chart', (g === 'day' ? 'ช่วงไม่เกิน 1 เดือนแสดงรายวัน' : 'ช่วงเกิน 1 เดือนแสดงรายเดือน') + ' · ยอดขายรวม VAT<br>นับตามตัวเลือก "นับ" บนแถบบน · Modern Trade ลงวันที่ 1 ของเดือน');
-    makeChart('chartSkd', 'bar', keys.map(k => g === 'day' ? k.slice(8, 10) + '/' + k.slice(5, 7) : PL_TH_M(k)), ds, { scales,
+    makeChart('chartSkd', 'line', keys.map(k => g === 'day' ? k.slice(8, 10) + '/' + k.slice(5, 7) : PL_TH_M(k)), ds, { scales,
       tooltip: {
         filter: it => it.dataset.yAxisID === 'y',   // รายการในกล่อง = ช่องทางเท่านั้น (ค่า Adsแยกไปบรรทัดล่าง)
         callbacks: { label: it => `${it.dataset.label}: ${unit(it.raw || 0)}`,

@@ -110,7 +110,7 @@
         if (/ถัดไป|ต่อหน้า/.test(host.innerText || '') || [...tb.querySelectorAll('tbody tr')].some(x => x.style.display === 'none')) return;
         const rows = [...tb.querySelectorAll('tbody tr')].filter(x => x.offsetParent);
         const tot = rows.find(x => /\b(tot|total|pl-total|sum)\b/.test(x.className) || /^\s*รวม/.test(x.cells[0]?.innerText || '')); if (!tot) return;
-        const body = rows.filter(x => x !== tot && !/\b(child|sub|pl-ch|op-sub|detail)\b/.test(x.className));
+        const body = rows.filter(x => x !== tot && !/\b(child|sub|pl-ch|op-sub|detail|tt-grp)\b/.test(x.className));
         const grid = tr => { const o = []; [...tr.cells].forEach(c => { o.push(c.innerText); for (let k = 1; k < (c.colSpan || 1); k++) o.push(null); }); return o; };   // ช่องที่รวมคอลัมน์ (colspan)
         const hr = tb.querySelector('thead tr:last-child'), heads = hr ? grid(hr).map(h => (h || '').trim()) : [];
         const T = grid(tot), Bs = body.map(grid);

@@ -840,7 +840,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.20-c"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.20-d"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1962,10 +1962,10 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="sa-grid2">
         <section class="card sa-panel">
           <div class="sa-ph"><h2>ยอดขายจริง เทียบค่า Ads รวม <span id="shads-chart-info"></span></h2>
-            <div class="toggle-group">
+            <div style="display:flex;align-items:center;gap:12px;"><span id="shads-cmp" style="display:inline-flex;align-items:center;"></span><div class="toggle-group">
               <button class="toggle-btn active" id="shads-mo" onclick="setShAdsView('month',this)">รายเดือน</button>
               <button class="toggle-btn" id="shads-dy" onclick="setShAdsView('day',this)">รายวัน</button>
-            </div></div>
+            </div></div></div>
           <div id="shads-sync-note" class="sa-note" style="min-height:21px;"></div>
           <div class="chart-wrap" style="height:280px;"><canvas id="chartShAdsDaily"></canvas></div>
         </section>
@@ -4746,7 +4746,7 @@ function renderCpTrendChart() {
   const partial = !daily && to < endOfMonth(keys[keys.length - 1]);
   const seg = { borderDash: c => partial && c.p1DataIndex === keys.length - 1 ? [5, 5] : undefined };
   const datasets = [
-    { label: 'ยอดขาย (ออเดอร์จริง)', data: keys.map(k => B[k].s), borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', fill: true, borderWidth: 2.5, pointRadius: pr, pointHoverRadius: 5, tension: 0.3, segment: seg },
+    { label: 'ยอดขาย (ออเดอร์จริง)', data: keys.map(k => B[k].s), borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', borderWidth: 2.5, pointRadius: pr, pointHoverRadius: 5, tension: 0.3, segment: seg },
     { label: 'ค่า Ads', data: keys.map(k => B[k].a), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.10)', borderWidth: 2, pointRadius: pr, pointHoverRadius: 5, tension: 0.3, segment: seg },
     { label: 'ค่าจ้าง KOL', data: keys.map(k => B[k].f), borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.10)', borderWidth: 2, borderDash: [5, 4], pointRadius: pr, pointHoverRadius: 5, tension: 0.3,
       hidden: !keys.some(k => B[k].f) }   // ไม่มีค่าจ้าง KOL ในช่วงนี้ → ไม่วาดเส้นศูนย์
@@ -5041,7 +5041,7 @@ function lsRenderChart(matched, soldIds, fromV, toV) {
   const css = getComputedStyle(document.body), tt = (css.getPropertyValue('--ch-tiktok') || '').trim() || '#25F4EE';
   const alpha = (c, a) => { const m = /^#([0-9a-f]{6})$/i.exec(c); return m ? `rgba(${parseInt(m[1].slice(0, 2), 16)},${parseInt(m[1].slice(2, 4), 16)},${parseInt(m[1].slice(4), 16)},${a})` : 'transparent'; };
   makeChart('chartLsTime', 'line', labels, [
-    { label: 'ยอดขายจริง', data: sold, borderColor: tt, backgroundColor: alpha(tt, 0.10), fill: true },
+    { label: 'ยอดขายจริง', data: sold, borderColor: tt, backgroundColor: alpha(tt, 0.10) },
     { label: 'ยกเลิก / ตีกลับ', data: canc, borderColor: '#9a9ab0', borderDash: [5, 4], backgroundColor: 'transparent', fill: false }
   ], { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)} (${fmt(c.datasetIndex ? co[c.dataIndex] : so[c.dataIndex])} ออเดอร์)` } } });
 }
@@ -10047,12 +10047,24 @@ function shAdsChartRows() {
   const ads = {}; _shAdsDaily.forEach(r => { ads[r.stat_date] = day && r._partial ? 0 : +r.total_all || 0; });   // รายวัน: วันที่ค่า Ads ยังไม่ครบทุกประเภท ไม่วาดเส้นค่า Ads / %
   const dates = new Set([...Object.keys(_shAdsRealByDate), ...Object.keys(ads)]);
   const rows = [...dates].sort().map(d => ({ key: d, rev: _shAdsRealByDate[d] || 0, ads: ads[d] || 0 }));
-  if (effGrain(_shAdsView) === 'day') return rows.map(r => ({ label: thShort(r.key), rev: r.rev, ads: r.ads }));   // ช่วงไม่เกิน 1 เดือน → รายวันเสมอ
+  if (effGrain(_shAdsView) === 'day') return rows.map(r => ({ key: r.key, label: thShort(r.key), rev: r.rev, ads: r.ads }));   // ช่วงไม่เกิน 1 เดือน → รายวันเสมอ
   const by = {}; rows.forEach(r => { const m = r.key.slice(0, 7); (by[m] = by[m] || { key: m, rev: 0, ads: 0 }); by[m].rev += r.rev; by[m].ads += r.ads; });
   return Object.values(by).sort((a, b) => a.key.localeCompare(b.key)).map(r => ({ label: new Date(r.key + '-01').toLocaleDateString('th-TH', { month: 'short', year: '2-digit' }), rev: r.rev, ads: r.ads }));
 }
+// (2026-11-20) เส้นประเดือนก่อนของกราฟรายวัน: ค่า Ads รวมต่อวัน คิดสูตรเดียวกับเส้นหลัก (Product/Shop + Brand + Live + Meta + เหรียญ + อื่นๆ + CPAS + ชีทร้าน 24hr) · ยอดขายจาก sales_summary ชุดเดียวกัน
+let _shAdsPrev = null;
+async function shAdsLoadPrev(pr) {
+  const headers = { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() }, q = (t, sel, col, extra) => fetch(`${window.SUPABASE_URL}/rest/v1/${t}?select=${sel}&${col}=gte.${pr.from}&${col}=lte.${pr.to}${extra || ''}`, { headers }).then(r => r.ok ? r.json() : []);
+  const [a, m, c, sh] = await Promise.all([q('shopee_ads_daily', 'stat_date,expense', 'stat_date'), q('shopee_ads_manual', '*', 'stat_date'), q('shopee_cpas_meta_daily', 'stat_date,spend', 'stat_date'), q('mv_ad_spend_daily', 'date,ads', 'date', '&channel=eq.Shopee&source=eq.shopee_sheet'),
+    ensureSalesSummary(pr.from, getDateValue('To')).catch(() => null)]);
+  const ads = {}, add = (d, v) => { ads[d] = (ads[d] || 0) + (+v || 0); };
+  a.forEach(r => add(r.stat_date, r.expense)); m.forEach(r => add(r.stat_date, (+r.brand_ads || 0) + (+r.live_ads || 0) + (+r.meta_ads || 0) + (+r.coins || 0) + (+r.other_ads || 0))); c.forEach(r => add(r.stat_date, r.spend)); sh.forEach(r => add(r.date, r.ads));
+  const rev = {}; salesRows(pr.from, pr.to, 'Shopee').forEach(x => { rev[x.date] = (rev[x.date] || 0) + (parseFloat(x.net_revenue) || 0); });
+  return { ads, rev };
+}
 function renderShAdsChart() {
   syncGrainButtons();
+  { const c = document.getElementById('shads-cmp'); if (c && !c.innerHTML) c.innerHTML = cmpToggleHtml('renderShAdsChart'); }
   const rows = shAdsChartRows();
   // (2026-11-17) กราฟเส้นตามกติกา (เดิมเป็นแท่ง) · ค่า Ads สีแดง · วันท้ายที่ค่า Ads ยังไม่เข้า = เว้นว่าง ไม่ลากลง 0
   let la = rows.length - 1; while (la >= 0 && !(rows[la].ads > 0)) la--;
@@ -10060,7 +10072,19 @@ function renderShAdsChart() {
   const ds = [
     ln('ยอดขายจริง (บัญชี)', rows.map(r => r.rev), '#d4a017'),
     ln('ค่า Ads รวม', rows.map((r, i) => (i > la ? null : r.ads)), '#ef4444'),
-    ln('% ค่า Ads ต่อยอดขาย', rows.map(r => r.rev > 0 && r.ads > 0 ? r.ads / r.rev * 100 : null), '#22c55e', { borderDash: [5, 4], yAxisID: 'y2', _fmt: v => v.toFixed(1) + '%' })];
+    ln('% ค่า Ads ต่อยอดขาย', rows.map(r => r.rev > 0 && r.ads > 0 ? r.ads / r.rev * 100 : null), '#22c55e', { borderWidth: 1.6, yAxisID: 'y2', _fmt: v => v.toFixed(1) + '%' })];   // (2026-11-20) เส้นทึบ — เส้นประสงวนไว้ให้ "เดือนก่อน"
+  { const from = getDateValue('From'), to = getDateValue('To');
+    if (effGrain(_shAdsView) === 'day' && rows.length && cmpOn() && cmpDaily(from, to)) {
+      const pr = getPrevPeriodRange(from, to), ck = pr.from + '|' + pr.to;
+      if (_shAdsPrev && _shAdsPrev.k === ck && _shAdsPrev.d) {
+        const P = _shAdsPrev.d, pd = prevPairDates(rows.map(r => r.key), from, to), fx = f => pd.map(d => d ? f(d) : null);
+        [[0, d => d in P.rev ? P.rev[d] : null, 'rev', false], [1, d => d in P.ads ? P.ads[d] : null, 'ads', null], [2, d => P.rev[d] > 0 && P.ads[d] > 0 ? P.ads[d] / P.rev[d] * 100 : null, 'pct', true]]
+          .forEach(([i, f, k, inv]) => { const x = prevLine(ds[i], fx(f), pd, k, inv); x._fmt = ds[i]._fmt; ds.push(x); });
+      } else if (!_shAdsPrev || _shAdsPrev.k !== ck) {
+        _shAdsPrev = { k: ck, d: null };
+        shAdsLoadPrev(pr).then(d => { if (_shAdsPrev && _shAdsPrev.k === ck) { _shAdsPrev.d = d; if (currentPage === 'shads') renderShAdsChart(); } }).catch(e => console.warn('shads prev', e.message));
+      }
+    } }
   makeChart('chartShAdsDaily', 'line', rows.map(r => r.label), ds, {
     scales: { x: { ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 11 }, maxTicksLimit: 16, maxRotation: 0 }, grid: { display: false } },
       y: { beginAtZero: true, ticks: { color: chartTickColor(), font: { family: 'Sarabun', size: 11 }, callback: v => fmtB(v) }, grid: { color: chartGridColor() } },

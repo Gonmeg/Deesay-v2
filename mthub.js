@@ -229,7 +229,7 @@ function renderMtAdsChart() {
   // (2026-11-04) แกนล่างเป็นชื่อเดือน / วันแบบไทยเหมือนกราฟอื่น · แกนซ้ายตัวเลขเต็ม ไม่ย่อ K
   const lab = labels.map(k => mtV === 'day' ? grainDayLabel(k) : mtV === 'year' ? k : PL_TH_M(k + '-01'));
   const tk = { color: chartTickColor(), font: { family: 'Sarabun', size: 10 } };
-  makeChart('chartMtAds', 'line', lab, [{ label: 'ค่าโฆษณา Awareness', data, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)', borderWidth: 2, pointRadius: mtV==='day' && labels.length>60 ? 0 : 3, fill: true, tension: 0.3 }], {
+  makeChart('chartMtAds', 'line', lab, [{ label: 'ค่าโฆษณา Awareness', data, borderColor: '#f87171', backgroundColor: '#f87171', borderWidth: 2, pointRadius: mtV==='day' && labels.length>60 ? 0 : 3, tension: 0.3 }], {
     scales: { x: { ticks: { ...tk, maxRotation: 0, autoSkip: true }, grid: { display: false }, border: { display: false } },
       y: { beginAtZero: true, ticks: { ...tk, precision: 0, callback: v => fmt(Math.round(v)), maxTicksLimit: 6 }, grid: { color: chartGridColor() }, border: { display: false } } },
     tooltip: { callbacks: { label: it => `ค่าโฆษณา Awareness: ${fmt(Math.round(it.raw || 0))}` } } });

@@ -336,7 +336,7 @@
       charts.traffic = new Chart(el1, {
         type: 'line',
         data: { labels, datasets: [
-          { label: 'ยอดวิว', data: daily.map(x => +x.video_views || 0), borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,.12)', fill: true, borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y' },
+          { label: 'ยอดวิว', data: daily.map(x => +x.video_views || 0), borderColor: '#c8a96e', backgroundColor: '#c8a96e', borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y' },
           { label: 'คนเข้าดูโปรไฟล์', data: daily.map(x => +x.profile_views || 0), borderColor: '#60a5fa', borderWidth: 2, pointRadius: 0, tension: .25, yAxisID: 'y2' },
           { label: 'กดลิงก์ในไบโอ', data: daily.map(x => +x.bio_link_clicks || 0), borderColor: '#4ade80', borderWidth: 2, pointRadius: 2, tension: .25, yAxisID: 'y2' },
         ] },
