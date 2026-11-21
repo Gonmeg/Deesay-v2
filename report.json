@@ -1,0 +1,1440 @@
+[
+  {
+    "id": "structure",
+    "name": "โครงหน้าเว็บ (dashboard.html)",
+    "issues": [],
+    "warn": [],
+    "errors": []
+  },
+  {
+    "id": "home",
+    "name": "หน้าแรก",
+    "issues": [],
+    "warn": [],
+    "load_s": 7,
+    "cls_load": 0.001,
+    "cls_src": [
+      "span.dg-wrap 13→13 (0.001)",
+      "div#homeDrp.ui-dd 9→9 (0.001)"
+    ],
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขายรวม",
+        "204,295"
+      ],
+      [
+        "ออเดอร์",
+        "617"
+      ],
+      [
+        "AOV",
+        "331"
+      ],
+      [
+        "ค่า Ads รวม",
+        "49,880"
+      ],
+      [
+        "24.2%ROAS 4.13x",
+        "24.2%"
+      ],
+      [
+        "สะสมเดือนนี้",
+        "6,048,488"
+      ]
+    ],
+    "clicks": {
+      "found": 16,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "overview",
+    "name": "ภาพรวมยอดขาย",
+    "issues": [
+      "กดตัวเลข: 46,140,615: แผงเปิดแต่ไม่มีข้อมูล"
+    ],
+    "warn": [],
+    "load_s": 8.4,
+    "cls_load": 0.007,
+    "cls_src": [
+      "div.ov-chart 242→261 (0.003)",
+      "td 668→668 (0.003)",
+      "td 751→751 (0.003)",
+      "td 709→709 (0.003)",
+      "td 792→792 (0.003)",
+      "td 627→627 (0.003)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย",
+        "121,817,666"
+      ],
+      [
+        "ออเดอร์",
+        "267,309"
+      ],
+      [
+        "AOV",
+        "349"
+      ],
+      [
+        "ลูกค้า Facebook",
+        "36,732"
+      ],
+      [
+        "ยกเลิก / คืน",
+        "11,023,356"
+      ]
+    ],
+    "clicks": {
+      "found": 14,
+      "ok": 5,
+      "fail": [
+        "46,140,615: แผงเปิดแต่ไม่มีข้อมูล"
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "kpi",
+    "name": "เป้าหมาย KPI",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.6,
+    "cls_load": 0.001,
+    "cls_src": [
+      "span.dg-wrap 14→14 (0.001)",
+      "div#kpDrp.ui-dd 9→9 (0.001)"
+    ],
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขายเทียบเป้า",
+        "8,631,198"
+      ],
+      [
+        "ทำได้ถึงวันนี้",
+        "6,048,488"
+      ],
+      [
+        "คาดการณ์สิ้นเดือน",
+        "9,072,731"
+      ],
+      [
+        "ต้องได้วันละ",
+        "531,871"
+      ]
+    ],
+    "clicks": {
+      "found": 101,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbhub",
+    "name": "ภาพรวม Facebook",
+    "issues": [],
+    "warn": [],
+    "load_s": 9,
+    "cls_load": 0.005,
+    "cls_src": [
+      "div.ov-chart 338→359 (0.003)",
+      "td 807→807 (0.002)",
+      "td 766→766 (0.002)",
+      "td 848→848 (0.002)",
+      "td 724→724 (0.002)",
+      "div.sb-ft 728→754 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย",
+        "1,588,250"
+      ],
+      [
+        "ออเดอร์",
+        "2,626"
+      ],
+      [
+        "คนทักจาก Meta",
+        "5,363"
+      ],
+      [
+        "AOV",
+        "605"
+      ],
+      [
+        "ค่า Ads",
+        "584,909"
+      ],
+      [
+        "ROAS 2.77x",
+        "36.2%"
+      ],
+      [
+        "ยกเลิก / คืน",
+        "10,155"
+      ],
+      [
+        "ลูกค้า Facebook",
+        "2,535"
+      ]
+    ],
+    "clicks": {
+      "found": 23,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "crm",
+    "name": "CRM",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.4,
+    "cls_load": 0.001,
+    "cls_src": [
+      "div.sb-ft 715→701 (0.000)",
+      "div.sb-ft 701→715 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ลูกค้า Facebook ทั้งหมด",
+        "2,535"
+      ],
+      [
+        "ลูกค้าซื้อซ้ำ (2 ครั้งขึ้นไป)",
+        "83"
+      ],
+      [
+        "ยอดซื้อเฉลี่ยต่อลูกค้า",
+        "627"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "flow",
+    "name": "เส้นทางซื้อซ้ำ",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.2,
+    "cls_load": 0.006,
+    "cls_src": [
+      "section#flowKPIs.ui-metrics 223→227 (0.000)",
+      "section.card 334→341 (0.003)",
+      "span.sa-md 316→309 (0.003)",
+      "section.card 341→334 (0.003)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ครั้งที่ลูกค้ากลับมาซื้อ",
+        "795"
+      ],
+      [
+        "ซื้อสินค้าเดิมซ้ำ",
+        "34%"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "neverbought",
+    "name": "ลูกค้าที่ยังไม่ซื้อ",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.5,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbengage",
+    "name": "Engagement รายวัน",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.3,
+    "cls_load": 0,
+    "cls_src": [
+      "div.chart-wrap 226→229 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "Engagement รวม",
+        "900"
+      ],
+      [
+        "โพสต์",
+        "148"
+      ],
+      [
+        "คอมเมนต์",
+        "87"
+      ],
+      [
+        "คอมเมนต์ถามซื้อ",
+        "17"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "fbads",
+    "name": "Facebook Ads",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.2,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขายจริง Facebook",
+        "1,588,250"
+      ],
+      [
+        "ค่า Ads Facebook รวม",
+        "584,909"
+      ],
+      [
+        "36.2%ROAS 2.77x",
+        "36.2%"
+      ],
+      [
+        "ทักแชท",
+        "5,363"
+      ],
+      [
+        "คลิกลิงก์",
+        "45,930"
+      ],
+      [
+        "ซื้อ (Meta นับ)",
+        "2,401"
+      ],
+      [
+        "43.2%ROAS 2.32x",
+        "43.2%"
+      ],
+      [
+        "ค่า Ads PR รวม",
+        "10,745"
+      ],
+      [
+        "คนเห็น (Impressions)",
+        "330,976"
+      ],
+      [
+        "Reach",
+        "306,985"
+      ],
+      [
+        "มีส่วนร่วม",
+        "18,330"
+      ],
+      [
+        "ทักแชท",
+        "19"
+      ]
+    ],
+    "clicks": {
+      "found": 53,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "tthub",
+    "name": "ภาพรวม TikTok",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.7,
+    "cls_load": 0.02,
+    "cls_src": [
+      "div.ov-chart 266→278 (0.002)",
+      "span.ads-info-wrap 812→824 (0.002)",
+      "div#ttapi-traffic 824→0 (0.018)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย",
+        "2,901,807"
+      ],
+      [
+        "ออเดอร์",
+        "10,678"
+      ],
+      [
+        "AOV",
+        "272"
+      ],
+      [
+        "ค่า Ads",
+        "626,927"
+      ],
+      [
+        "ROAS 4.63x",
+        "21.6%"
+      ],
+      [
+        "ยกเลิก / คืน",
+        "385,375"
+      ],
+      [
+        "ตัวอย่างฟรี",
+        "0"
+      ],
+      [
+        "Impression สินค้า",
+        "6,228,477"
+      ],
+      [
+        "เข้าชมหน้าสินค้า",
+        "239,490"
+      ],
+      [
+        "ออเดอร์",
+        "10,993"
+      ],
+      [
+        "คืนเงิน",
+        "63,153"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "ttcontent",
+    "name": "ผลงานคอนเทนต์",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.5,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ผู้ติดตามตอนนี้",
+        "229,310"
+      ],
+      [
+        "คลิปในช่วงนี้",
+        "40"
+      ],
+      [
+        "Engagement rate",
+        "0.50%"
+      ],
+      [
+        "ดูจนจบเฉลี่ย",
+        "5.1%"
+      ],
+      [
+        "คนเข้าดูโปรไฟล์",
+        "11,056"
+      ],
+      [
+        "คอมเมนต์ค้างตอบ",
+        "80"
+      ],
+      [
+        "คอมเมนต์ค้างตอบ",
+        "80"
+      ],
+      [
+        "ยอดวิวคลิป",
+        "440,858"
+      ],
+      [
+        "เข้าดูโปรไฟล์",
+        "11,056"
+      ],
+      [
+        "กดลิงก์ในไบโอ",
+        "11"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "ttads",
+    "name": "TikTok Ads",
+    "issues": [],
+    "warn": [],
+    "load_s": 7.2,
+    "cls_load": 0.001,
+    "cls_src": [
+      "div.sb-ft 715→728 (0.000)",
+      "div 755→0 (0.000)",
+      "div.sb-ft 728→754 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขายจริง TikTok",
+        "2,901,807"
+      ],
+      [
+        "ค่า Ads รวม",
+        "626,927"
+      ],
+      [
+        "21.6%ROAS 4.63x",
+        "21.6%"
+      ],
+      [
+        "ยอดขายจาก Ads",
+        "3,142,834"
+      ],
+      [
+        "19.9%ROAS 5.01x",
+        "19.9%"
+      ],
+      [
+        "ออเดอร์จาก Ads",
+        "9,887"
+      ],
+      [
+        "คลิปที่ยิง Ads",
+        "5,200"
+      ]
+    ],
+    "clicks": {
+      "found": 200,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "prtest",
+    "name": "PR Performance",
+    "issues": [],
+    "warn": [],
+    "load_s": 8.5,
+    "cls_load": 0,
+    "cls_src": [
+      "div#prBaseGroup.filter-group 10→15 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ค่า Ads TikTok รวมต่อยอดขาย",
+        "21.6%"
+      ],
+      [
+        "Ads PR",
+        "81,387"
+      ],
+      [
+        "Ads Live",
+        "6,786"
+      ],
+      [
+        "Ads Conversion",
+        "538,880"
+      ],
+      [
+        "ยอดขาย TikTok",
+        "2,901,807"
+      ],
+      [
+        "ด้อยกว่า 14%Baseline 6.29",
+        "5.38x"
+      ],
+      [
+        "3,044,496ครั้ง",
+        "3,044,496"
+      ],
+      [
+        "19,766ครั้ง",
+        "19,766"
+      ],
+      [
+        "2,541ครั้ง",
+        "2,541"
+      ],
+      [
+        "สัดส่วนต่อการเข้าดูสินค้าทั้งร้าน",
+        "8.3%"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "livesearch",
+    "name": "ค้นหา Live",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.5,
+    "cls_load": 0.009,
+    "cls_src": [
+      "td.num 434→434 (0.008)",
+      "td.num 518→518 (0.008)",
+      "td.num 335→335 (0.008)",
+      "td.num 568→568 (0.008)",
+      "td.num 285→285 (0.008)",
+      "td.num 434→434 (0.001)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "creatorperf",
+    "name": "Creator Performance",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.4,
+    "cls_load": 0.001,
+    "cls_src": [
+      "div.sb-ft 715→728 (0.000)",
+      "div.sb-ft 728→754 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขายรวม",
+        "2,901,807"
+      ],
+      [
+        "87.0%ROAS 1.15x",
+        "87.0%"
+      ],
+      [
+        "ต้นทุนรวม",
+        "723,869"
+      ],
+      [
+        "ยอดยกเลิก / คืน",
+        "385,375"
+      ],
+      [
+        "ทั้งหมด",
+        "2,901,807"
+      ],
+      [
+        "Live",
+        "987,319"
+      ],
+      [
+        "คลิป",
+        "832,227"
+      ],
+      [
+        "โชว์เคส",
+        "227,568"
+      ],
+      [
+        "หน้าสินค้า",
+        "854,693"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "shhub",
+    "name": "ภาพรวม Shopee",
+    "issues": [
+      "กดตัวเลข: 1,569,938: แผงเปิดแต่ไม่มีข้อมูล",
+      "กดตัวเลข: 35,114: แผงเปิดแต่ไม่มีข้อมูล"
+    ],
+    "warn": [],
+    "load_s": 6.6,
+    "cls_load": 0.01,
+    "cls_src": [
+      "th 856→856 (0.001)",
+      "td 887→887 (0.001)",
+      "th.auto-sort 856→856 (0.001)",
+      "div.ov-chart 248→278 (0.008)",
+      "div.card 776→804 (0.008)",
+      "td 644→644 (0.002)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย",
+        "1,605,052"
+      ],
+      [
+        "ออเดอร์",
+        "5,019"
+      ],
+      [
+        "AOV",
+        "320"
+      ],
+      [
+        "ค่า Ads",
+        "283,506"
+      ],
+      [
+        "ROAS 5.59x",
+        "17.9%"
+      ],
+      [
+        "ยกเลิก / คืน",
+        "222,114"
+      ]
+    ],
+    "clicks": {
+      "found": 7,
+      "ok": 4,
+      "fail": [
+        "1,569,938: แผงเปิดแต่ไม่มีข้อมูล",
+        "35,114: แผงเปิดแต่ไม่มีข้อมูล"
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "shads",
+    "name": "Shopee Ads",
+    "issues": [],
+    "warn": [],
+    "load_s": 9,
+    "cls_load": 0.001,
+    "cls_src": [
+      "button#shads-mo.toggle-btn 205→208 (0.000)",
+      "div.chart-wrap 259→262 (0.000)",
+      "div.sb-ft 728→754 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": [
+        "tblShCpasCamp 1784>1294"
+      ]
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขายจริง Shopee",
+        "1,605,052"
+      ],
+      [
+        "ค่า Ads รวมทุกประเภท",
+        "283,851"
+      ],
+      [
+        "17.9%ROAS 5.59x",
+        "17.9%"
+      ],
+      [
+        "ค่า Ads Product/Shop",
+        "200,365"
+      ],
+      [
+        "ยอดขายจาก Ads",
+        "1,674,140"
+      ],
+      [
+        "12.0%ROAS 8.36x",
+        "12.0%"
+      ],
+      [
+        "ออเดอร์จาก Ads",
+        "6,463"
+      ],
+      [
+        "คลิก / CPC",
+        "64,905"
+      ],
+      [
+        "Impression",
+        "2,064,380"
+      ],
+      [
+        "ค่า Ads CPAS",
+        "28,477"
+      ],
+      [
+        "คลิกลิงก์",
+        "4,876"
+      ],
+      [
+        "เข้าหน้า Shopee",
+        "1,506"
+      ],
+      [
+        "ใส่ตะกร้า (Meta)",
+        "3,903"
+      ],
+      [
+        "ยอดขาย (Meta)",
+        "335,642"
+      ],
+      [
+        "8.5%ROAS 11.79x",
+        "8.5%"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "lzhub",
+    "name": "ภาพรวม Lazada",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.9,
+    "cls_load": 0.004,
+    "cls_src": [
+      "th 877→877 (0.000)",
+      "th.auto-sort 877→877 (0.000)",
+      "div.ov-chart 268→278 (0.002)",
+      "div.card 797→804 (0.002)",
+      "td 726→726 (0.002)",
+      "td 685→685 (0.002)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย",
+        "29,319"
+      ],
+      [
+        "ออเดอร์",
+        "97"
+      ],
+      [
+        "AOV",
+        "302"
+      ],
+      [
+        "ค่า Ads",
+        "1,521"
+      ],
+      [
+        "ROAS 19.28x",
+        "5.2%"
+      ],
+      [
+        "ยกเลิก / คืน",
+        "0"
+      ]
+    ],
+    "clicks": {
+      "found": 7,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "mthub",
+    "name": "ภาพรวม Modern Trade",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.5,
+    "cls_load": 0.02,
+    "cls_src": [
+      "button#mthub-yr.toggle-btn 673→841 (0.020)",
+      "button#mthub-mo.toggle-btn 673→841 (0.020)",
+      "div.chart-wrap 715→883 (0.020)",
+      "th.num 262→262 (0.000)",
+      "span.ui-i 261→261 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "skurev",
+    "name": "แนวโน้มสินค้า",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.4,
+    "cls_load": 0,
+    "cls_src": [
+      "div.sr-tw 749→753 (0.000)"
+    ],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย",
+        "6,124,428"
+      ],
+      [
+        "จำนวนชิ้น",
+        "31,722"
+      ]
+    ],
+    "clicks": {
+      "found": 36,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "mktlive",
+    "name": "MKT Tracking",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.7,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย (ถอด VAT)",
+        "5,724,193"
+      ],
+      [
+        "ค่า KOL",
+        "553,700"
+      ],
+      [
+        "ค่า Ads",
+        "1,480,541"
+      ],
+      [
+        "CM1",
+        "64.5%"
+      ],
+      [
+        "MER",
+        "2.81x"
+      ]
+    ],
+    "clicks": {
+      "found": 71,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "skuanalysis",
+    "name": "เจาะสินค้า",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.4,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "adperf",
+    "name": "Ad Performance",
+    "issues": [
+      "กดตัวเลข: 626,927: แผงเปิดแต่ไม่มีข้อมูล"
+    ],
+    "warn": [],
+    "load_s": 6.5,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "ยอดขาย",
+        "6,124,428"
+      ],
+      [
+        "ค่า Ads",
+        "1,496,863"
+      ],
+      [
+        "24.6%ROAS 4.07x",
+        "24.6%"
+      ]
+    ],
+    "clicks": {
+      "found": 7,
+      "ok": 5,
+      "fail": [
+        "626,927: แผงเปิดแต่ไม่มีข้อมูล"
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "kol",
+    "name": "KOL",
+    "issues": [],
+    "warn": [
+      "ตัวเลขย่อ k / M: «@k.kate184k.kate18401_No»"
+    ],
+    "load_s": 6.4,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "MER",
+        "0.88x"
+      ]
+    ],
+    "clicks": {
+      "found": 7,
+      "ok": 6,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "supply",
+    "name": "Supply Chain",
+    "issues": [],
+    "warn": [],
+    "load_s": 7,
+    "cls_load": 0,
+    "cls_src": [],
+    "cls_search": 0,
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [
+      [
+        "7SKU",
+        "7"
+      ],
+      [
+        "1SKU",
+        "1"
+      ],
+      [
+        "3SKU",
+        "3"
+      ],
+      [
+        "0SKU",
+        "0"
+      ],
+      [
+        "25SKU",
+        "25"
+      ],
+      [
+        "83SKU",
+        "83"
+      ],
+      [
+        "62SKU",
+        "62"
+      ],
+      [
+        "22SKU",
+        "22"
+      ]
+    ],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "products",
+    "name": "สินค้า & ราคา",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.6,
+    "cls_load": 0.002,
+    "cls_src": [
+      "div.content 47→50 (0.002)"
+    ],
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "promo",
+    "name": "ขอ Promotion",
+    "issues": [],
+    "warn": [],
+    "load_s": 6.1,
+    "cls_load": 0,
+    "cls_src": [],
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "upload",
+    "name": "อัปโหลดข้อมูล",
+    "issues": [],
+    "warn": [],
+    "load_s": 2.1,
+    "cls_load": 0,
+    "cls_src": [],
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "admin",
+    "name": "ตั้งค่า (Admin)",
+    "issues": [],
+    "warn": [],
+    "load_s": 2.1,
+    "cls_load": 0,
+    "cls_src": [],
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "health",
+    "name": "สถานะระบบข้อมูล",
+    "issues": [],
+    "warn": [],
+    "load_s": 2,
+    "cls_load": 0,
+    "cls_src": [],
+    "overflow": [],
+    "wide": {
+      "page": false,
+      "boxes": [],
+      "tables": []
+    },
+    "align": [],
+    "totals": [],
+    "kpis": [],
+    "clicks": {
+      "found": 0,
+      "ok": 0,
+      "fail": []
+    },
+    "errors": []
+  },
+  {
+    "id": "cross",
+    "name": "เทียบตัวเลขข้ามหน้า",
+    "issues": [],
+    "warn": [],
+    "errors": [],
+    "rows": [
+      "| ยอดขาย TikTok | ตรง | ภาพรวม TikTok 2,901,807 · TikTok Ads 2,901,807 · PR Performance 2,901,807 · Creator Performance 2,901,807 |",
+      "| ค่า Ads TikTok | ตรง | ภาพรวม TikTok 626,927 · TikTok Ads 626,927 |",
+      "| % ค่า Ads TikTok | — | อ่านตัวเลขได้ไม่ครบ 2 หน้า |",
+      "| ยอดขาย Facebook | ตรง | ภาพรวม Facebook 1,588,250 · Facebook Ads 1,588,250 |",
+      "| ค่า Ads Facebook | ตรง | ภาพรวม Facebook 584,909 · Facebook Ads 584,909 |",
+      "| % ค่า Ads Facebook | — | อ่านตัวเลขได้ไม่ครบ 2 หน้า |",
+      "| คนทักจาก Meta | ตรง | ภาพรวม Facebook 5,363 · Facebook Ads 5,363 |",
+      "| ลูกค้า Facebook | ตรง | ภาพรวม Facebook 2,535 · CRM 2,535 |",
+      "| ยอดขาย Shopee | ตรง | ภาพรวม Shopee 1,605,052 · Shopee Ads 1,605,052 |",
+      "| ค่า Ads Shopee | ต่าง 345 (ข้อมูลเข้าเพิ่มระหว่างทดสอบ) | ภาพรวม Shopee 283,506 · Shopee Ads 283,851 |",
+      "| % ค่า Ads Shopee | — | อ่านตัวเลขได้ไม่ครบ 2 หน้า |",
+      "| ยอดขายออนไลน์รวม | ตรง | แนวโน้มสินค้า 6,124,428 · Ad Performance 6,124,428 |",
+      "| ยอดสะสมเดือนนี้ (ออนไลน์) | ตรง | หน้าแรก 6,048,488 · เป้าหมาย KPI 6,048,488 |",
+      "| ยอดขาย 4 Platform รวมกัน เทียบ แนวโน้มสินค้า | ตรง | รวม 4 หน้า 6,124,428 · แนวโน้มสินค้า 6,124,428 |"
+    ]
+  }
+]
