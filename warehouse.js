@@ -283,14 +283,67 @@
       const d = new Date(day + 'T00:00:00');
       const j = await api({ action: 'summary', day_start: Math.floor(d.getTime() / 1000), sc: true });
       Object.assign(SC, { d: day, j, got: Date.now() });
-      const rows = Object.entries(j.carriers || {}).sort((a, b) => (b[1].wait_collect + b[1].picked) - (a[1].wait_collect + a[1].picked));
-      let A = 0, B = 0;
-      $('sumBody').innerHTML = rows.map(([c, v]) => { A += v.wait_collect; B += v.picked; return `<tr><td class="l"><b>${esc(c)}</b></td><td>${num(v.wait_collect)}</td><td>${num(v.picked)}</td><td>${num(v.wait_collect + v.picked)}</td></tr>`; }).join('');
-      $('sumFoot').innerHTML = rows.length ? `<tr><td class="l">รวม</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(A + B)}</td></tr>` : '';
-      $('sumEmpty').style.display = rows.length ? 'none' : 'block'; $('sumEmpty').textContent = 'ยังไม่มีคำสั่งซื้อที่จัดส่งในวันที่เลือก';
-      $('sA').textContent = num(A); $('sB').textContent = num(B); $('sC').textContent = num(j.wait_ship); $('sD').textContent = num(j.cancelled_after_print);
+      // (2026-11-23) ยอดตามที่ปริ้น: รวมที่ถูกยกเลิกทีหลัง ให้ตรงกับจำนวนที่น้องปริ้นจริง — แยก รอเข้ารับ / ขนส่งรับแล้ว / ยกเลิกหลังปริ้น
+      const rows = Object.entries(j.carriers || {}).map(([c, v]) => [c, { w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }]).sort((a, b) => (b[1].w + b[1].p + b[1].x) - (a[1].w + a[1].p + a[1].x));
+      let A = 0, B = 0, X = 0;
+      $('sumBody').innerHTML = rows.map(([c, v]) => { A += v.w; B += v.p; X += v.x; return `<tr><td class="l"><b>${esc(c)}</b></td><td>${num(v.w)}</td><td>${num(v.p)}</td><td>${num(v.x)}</td><td><b>${num(v.w + v.p + v.x)}</b></td></tr>`; }).join('');
+      $('sumFoot').innerHTML = rows.length ? `<tr><td class="l">รวม</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(X)}</td><td>${num(A + B + X)}</td></tr>` : '';
+      $('sumEmpty').style.display = rows.length ? 'none' : 'block'; $('sumEmpty').textContent = 'ยังไม่มีคำสั่งซื้อที่ปริ้น / จัดส่งในวันที่เลือก';
+      $('sP').textContent = num(A + B + X); $('sA').textContent = num(A); $('sB').textContent = num(B); $('sD').textContent = num(X); $('sC').textContent = num(j.wait_ship);
       $('stSum').textContent = 'Updated ' + fmtT(new Date(j.at || Date.now()));
     } catch (e) { $('stSum').textContent = '1 alert'; $('stSum').classList.add('bad'); $('sumBody').innerHTML = ''; $('sumFoot').innerHTML = ''; $('sumEmpty').style.display = 'block'; $('sumEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
+  }
+
+  // ───── สต็อกวันนี้ (2026-11-23 ทดลองเทียบกับชีทตัดสต็อก · ยังไม่ใช้ตัดสต็อกจริง) ─────
+  // ออกตามที่ปริ้น = คำสั่งซื้อที่กดจัดส่งวันนั้น (wh-labels outday ชุดเดียวกับหน้าสรุป) แตกชุดเป็น SKU · ชีท = inventory_movements คลัง TikTok ประเภท sold วันเดียวกัน
+  const STK = { page: 1, rows: [], seq: 0 };
+  async function sheetSold(day) {
+    const out = {};
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await Auth.client.from('inventory_movements').select('sku, qty').eq('location', 'TikTok').eq('move_type', 'sold').eq('move_date', day).or('voided.is.null,voided.eq.false').range(from, from + 999);
+      if (error) throw new Error(error.message);
+      (data || []).forEach(r => { const k = String(r.sku || '').trim().toUpperCase(); if (k) out[k] = (out[k] || 0) - Number(r.qty || 0); });
+      if (!data || data.length < 1000) break;
+    }
+    return out;
+  }
+  async function loadStock(force) {
+    const day = $('stkDate').value; if (!day) return;
+    if (force !== true && STK.d === day && Date.now() - STK.got < FRESH) return;
+    const my = ++STK.seq; $('stStk').textContent = 'กำลังโหลด…'; $('stStk').classList.remove('bad');   // กดค้นหาซ้ำระหว่างโหลด = ใช้ผลของครั้งล่าสุด
+    try {
+      const d0 = Math.floor(new Date(day + 'T00:00:00').getTime() / 1000);
+      const [j, sh] = await Promise.all([api({ action: 'outday', day_start: d0 }), sheetSold(day)]);
+      if (my !== STK.seq) return;
+      S.names = { ...S.names, ...(j.names || {}) };
+      const m = {}, k = { on: 0, oq: 0, cn: 0, cq: 0, sq: 0 }, row = c => (m[c] ||= { out: 0, cx: 0, sh: 0 });
+      (j.orders || []).map(derive).forEach(o => { const cx = o.st === 'CANCELLED'; k.on++; k.oq += o.qty; if (cx) { k.cn++; k.cq += o.qty; } for (const c in o.parts) { row(c).out += o.parts[c]; if (cx) row(c).cx += o.parts[c]; } });
+      for (const c in sh) { row(c).sh += sh[c]; k.sq += sh[c]; }
+      const hasSheet = Object.keys(sh).length > 0, rows = Object.keys(m).sort().map(c => [c, m[c]]);
+      if (hasSheet) rows.sort((a, b) => Math.abs(b[1].out - b[1].sh) - Math.abs(a[1].out - a[1].sh));   // แถวที่ไม่ตรงขึ้นก่อน (ต่างมากก่อน) ที่เหลือคงเรียงตาม SKU
+      Object.assign(STK, { d: day, got: Date.now(), k, hasSheet, page: 1, rows });
+      renderStock(); $('stStk').textContent = 'Updated ' + fmtT(new Date());
+    } catch (e) {
+      if (my !== STK.seq) return;
+      $('stStk').textContent = '1 alert'; $('stStk').classList.add('bad'); STK.rows = []; $('stkBody').innerHTML = ''; $('stkFoot').innerHTML = '';
+      $('stkEmpty').style.display = 'block'; $('stkEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message;
+    }
+  }
+  function renderStock() {
+    const { rows, k, hasSheet } = STK, size = 50, sgn = v => (v > 0 ? '+' : '') + num(v);
+    $('kOut').textContent = num(k.oq); $('kOutS').textContent = `${num(k.on)} คำสั่งซื้อ`;
+    $('kCx').textContent = num(k.cq); $('kCxS').textContent = `${num(k.cn)} คำสั่งซื้อ · จะเป็นของตีกลับ`;
+    $('kSh').textContent = hasSheet ? num(k.sq) : '—'; $('kShS').textContent = hasSheet ? 'ที่น้องกรอกในชีท' : 'ยังไม่มีข้อมูลวันนี้ในชีท';
+    const bad = rows.filter(([, r]) => r.out !== r.sh).length, df = k.oq - k.sq;
+    $('kDf').innerHTML = hasSheet ? (df ? `<span style="color:var(--bad)">${sgn(df)}</span>` : '0') : '—'; $('kDfS').textContent = hasSheet ? (bad ? `${num(bad)} SKU ไม่ตรง` : 'ตรงทุก SKU') : '';
+    const pages = Math.max(1, Math.ceil(rows.length / size)); if (STK.page > pages) STK.page = pages;
+    $('stkBody').innerHTML = rows.slice((STK.page - 1) * size, STK.page * size).map(([c, r]) => { const d = r.out - r.sh;
+      return `<tr><td class="l"><b>${esc(c)}</b></td><td class="l">${esc(S.names[c] || '—')}</td><td>${num(r.out)}</td><td>${r.cx ? num(r.cx) : ''}</td><td class="sh">${num(r.sh)}</td><td class="sh">${d ? `<b style="color:var(--bad)">${sgn(d)}</b>` : ''}</td></tr>`; }).join('');
+    $('stkFoot').innerHTML = rows.length ? `<tr><td class="l" colspan="2">รวม</td><td>${num(k.oq)}</td><td>${num(k.cq)}</td><td class="sh">${num(k.sq)}</td><td class="sh">${df ? sgn(df) : ''}</td></tr>` : '';
+    $('stkTbl').classList.toggle('nosh', !hasSheet);   // ยังไม่มีชีทของวันนั้น: ซ่อนคอลัมน์ชีท / ต่าง (การ์ดบนบอกแล้วว่ายังไม่มี)
+    $('stkEmpty').style.display = rows.length ? 'none' : 'block'; $('stkEmpty').textContent = 'ยังไม่มีสินค้าออกในวันที่เลือก';
+    $('stkPgInfo').textContent = rows.length ? `แสดง ${num((STK.page - 1) * size + 1)}–${num(Math.min(STK.page * size, rows.length))} จาก ${num(rows.length)} SKU` : '';
+    $('stkPgBtns').innerHTML = pages > 1 ? `<button class="wh-btn sm" data-p="-1" ${STK.page <= 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button><span>หน้า ${STK.page} / ${pages}</span><button class="wh-btn sm" data-p="1" ${STK.page >= pages ? 'disabled' : ''}>ถัดไป ›</button>` : '';
   }
 
   // ───── ประวัติการปริ้น ─────
@@ -310,7 +363,7 @@
     S.view = v;
     document.querySelectorAll('.wh-side a[data-view]').forEach(a => a.classList.toggle('on', a.dataset.view === v));
     document.querySelectorAll('.wh-page').forEach(p => p.classList.toggle('on', p.id === 'v-' + v));
-    if (v === 'summary') loadSummary(); if (v === 'history') loadHistory();   // สรุป: ใช้ผลเดิมถ้ายังไม่เกิน 5 นาที · ประวัติ: อ่านจากตารางเรา เร็วอยู่แล้ว
+    if (v === 'summary') loadSummary(); if (v === 'history') loadHistory(); if (v === 'stock') loadStock();   // สรุป: ใช้ผลเดิมถ้ายังไม่เกิน 5 นาที · ประวัติ: อ่านจากตารางเรา เร็วอยู่แล้ว
   }
   function bind() {
     document.querySelectorAll('.wh-side a[data-view]').forEach(a => a.onclick = () => setView(a.dataset.view));
@@ -343,6 +396,8 @@
     $('pickBtn').onclick = openPick; $('goBtn').onclick = openPick;
     $('ov').onclick = e => { if (e.target === $('ov')) closeDlg(); };
     $('sumBtn').onclick = () => loadSummary(true);
+    $('stkBtn').onclick = () => loadStock(true);
+    $('stkPgBtns').onclick = e => { const b = e.target.closest('button[data-p]'); if (b) { STK.page += Number(b.dataset.p); renderStock(); } };
     $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) runPrint('reprint', HIS[Number(b.dataset.i)].order_ids); };
   }
 
@@ -353,7 +408,8 @@
     if (!(perm.is_admin || perm.pages.some(x => x !== 'warehouse') || perm.can_upload || perm.can_admin || perm.can_edit_kpi)) document.querySelector('.wh-side .home')?.remove();
     $('whoMail').textContent = perm.email || '';
     bind();
-    const now = new Date(); $('sumDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const now = new Date(), ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; $('sumDate').value = ymd(now);
+    $('stkDate').value = ymd(now); $('stkDate').max = ymd(now); $('stkDate').min = ymd(new Date(now.getTime() - 3 * 86400000));   // ยอดตามที่ปริ้นดูย้อนหลังได้ 3 วัน
     setRound('all');   // (2026-11-23) เปิดหน้า = ทั้งหมด ไม่กรองเวลา
     render(); loadAll();
   }

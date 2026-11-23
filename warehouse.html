@@ -63,6 +63,9 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
 .wh-t td{padding:8px 10px;border-bottom:1px solid var(--row-border);text-align:center;vertical-align:middle;white-space:nowrap}
 .wh-t td.l,.wh-t th.l{text-align:left}
 .wh-t td.l{white-space:normal}
+.wh-t.fit{width:auto;min-width:560px}.wh-t.fit th,.wh-t.fit td{padding:8px 20px}.wh-t.fit td.l{white-space:nowrap}.wh-t.fit th:not(.l),.wh-t.fit td:not(.l){min-width:92px}   /* ตารางคอลัมน์น้อย: กว้างตามเนื้อหา ไม่ยืดเต็มจอ */
+.wh-t.nosh .sh{display:none}
+.wh-card.fitc{width:fit-content;max-width:100%}
 .wh-t tr.sel td{background:var(--accent-soft)}
 .wh-t tbody tr.pick{cursor:pointer}
 .wh-t tfoot td{font-weight:700;border-top:2px solid var(--tot-line);border-bottom:0;background:var(--row-sum)}
@@ -74,7 +77,7 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
 /* (2026-11-23) dropdown แบบเว็บ (ui.css .ui-dd) แทน <select> ของ browser */
 .wh-sel{display:block;width:100%}.wh-sel .ui-dd-btn{width:100%;justify-content:space-between;font-size:13px;font-weight:600}.wh-sel .ui-dd-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wh-sel .ui-dd-menu{width:max(100%,240px);max-height:360px;overflow:auto}.wh-sel .ui-dd-item{white-space:normal;font-size:13px}#fBasket .ui-dd-menu{width:max(100%,440px)}#fPrinted .ui-dd-menu,#fPlatform .ui-dd-menu{left:auto;right:0}
-body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFFFF;border:1px solid #C9D1DC}.wh-sub{font-size:12px;color:var(--text2)}
+body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFFFF;border:1px solid #C9D1DC}.wh-sub{font-size:12px;color:var(--text2)}.wh-kp .wh-sub{display:block;margin-top:2px}.wh-side a .wh-pill{font-size:10px;padding:0 6px;margin-left:4px}
 .pc0{color:var(--text3)}.pc1{color:var(--good);font-weight:600}.pc2{color:var(--bad);font-weight:700}
 .wh-bk{color:var(--text2);max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .wh-pager{display:flex;justify-content:space-between;align-items:center;color:var(--text2);font-size:13px;padding-top:12px;gap:12px;flex-wrap:wrap}
@@ -131,6 +134,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
   <div class="grp">งานประจำวัน</div>
   <a data-view="print" class="on">ปริ้นใบปะหน้า</a>
   <a data-view="summary">สรุปการจัดส่งวันนี้</a>
+  <a data-view="stock">สต็อกวันนี้ <span class="wh-pill cod">ทดลอง</span></a>
   <a data-view="history">ประวัติการปริ้น</a>
   <div class="who"><span id="whoMail"></span><br><a id="themeBtn">สลับโหมดสว่าง / มืด</a> · <a id="outBtn">ออกจากระบบ</a></div>
 </aside>
@@ -176,14 +180,31 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
     <div class="wh-top"><h1>สรุปการจัดส่งวันนี้</h1><span class="wh-status" id="stSum">—</span><span class="sp"></span>
       <div style="width:170px"><input class="wh-in" type="date" id="sumDate"></div><button class="wh-btn pri" id="sumBtn" type="button">ค้นหา</button></div>
     <div class="wh-kp cards">
-      <div><small>จัดส่งแล้ว รอขนส่งเข้ารับ <span class="wh-i">i<span class="pop"><b>จัดส่งแล้ว รอขนส่งเข้ารับ</b><br>คำสั่งซื้อ TikTok ที่ถูกกดจัดส่งในวันที่เลือก (ตามเวลาไทย) และขนส่งยังไม่ได้รับไป<br>นับตามเวลาที่กดจัดส่ง ไม่ใช่เวลาที่ลูกค้าสั่ง</span></span></small><b id="sA">—</b></div>
-      <div><small>ขนส่งรับไปแล้ว</small><b id="sB">—</b></div>
-      <div><small>ยังรอจัดส่ง (ทั้งหมดตอนนี้)</small><b id="sC">—</b></div>
-      <div><small>ยกเลิกหลังปริ้น <span class="wh-i r">i<span class="pop"><b>ยกเลิกหลังปริ้น</b><br>คำสั่งซื้อที่กดจัดส่ง / ปริ้นใบปะหน้าไปแล้ว (จากหน้านี้หรือ Seller Center) แล้วถูกยกเลิกในวันที่เลือก ก่อนขนส่งมารับ หรือมีคำขอยกเลิกทีหลัง — พัสดุยังอยู่ในคลัง ต้องดึงสินค้ากลับ<br>ไม่รวมพัสดุที่ขนส่งรับไปแล้วแต่ส่งไม่สำเร็จ (ตีกลับ)</span></span></small><b id="sD">—</b></div>
+      <div><small>ปริ้น / จัดส่งวันนี้ทั้งหมด <span class="wh-i">i<span class="pop"><b>ปริ้น / จัดส่งวันนี้ทั้งหมด</b><br>คำสั่งซื้อ TikTok ที่กดจัดส่ง / ปริ้นใบปะหน้าในวันที่เลือก (เวลาไทย) จากหน้านี้หรือ Seller Center<br><b>รวม</b> ที่ถูกยกเลิกทีหลัง (น้องหยิบของออกไปแล้ว)<br>นับตามเวลาที่กดจัดส่ง ไม่ใช่เวลาที่ลูกค้าสั่ง</span></span></small><b id="sP">—</b></div>
+      <div><small>รอขนส่งเข้ารับ <span class="wh-i">i<span class="pop"><b>รอขนส่งเข้ารับ</b><br>ในยอดที่ปริ้นวันนี้ ที่ขนส่งยังไม่มารับ<br><b>ไม่รวม</b> ที่ถูกยกเลิก</span></span></small><b id="sA">—</b></div>
+      <div><small>ขนส่งรับไปแล้ว <span class="wh-i">i<span class="pop"><b>ขนส่งรับไปแล้ว</b><br>ในยอดที่ปริ้นวันนี้ ที่ขนส่งรับไปแล้ว (กำลังส่ง / ส่งถึงแล้ว)</span></span></small><b id="sB">—</b></div>
+      <div><small>ยกเลิกหลังปริ้น <span class="wh-i r">i<span class="pop"><b>ยกเลิกหลังปริ้น</b><br>ในยอดที่ปริ้นวันนี้ ที่ลูกค้ายกเลิกทีหลัง — ขนส่งยิงรับไม่ได้ จะกลายเป็นของตีกลับ<br>ดูรายการที่ต้องดึงพัสดุออกจากกองได้ที่แท็บ "ยกเลิกหลังปริ้น"</span></span></small><b id="sD">—</b></div>
+      <div><small>ยังรอจัดส่ง (ทั้งหมดตอนนี้) <span class="wh-i r">i<span class="pop"><b>ยังรอจัดส่ง</b><br>คำสั่งซื้อที่ยังไม่ได้กดจัดส่ง ทุกวันที่สั่ง ณ ตอนนี้<br>ไม่ขึ้นกับวันที่เลือก</span></span></small><b id="sC">—</b></div>
     </div>
-    <div class="wh-card"><div style="font-weight:600;margin-bottom:8px">จำนวนคำสั่งซื้อที่ต้องส่งมอบให้ขนส่ง แยกตามขนส่ง</div>
-      <table class="wh-t"><thead><tr><th class="l">ขนส่ง</th><th>รอขนส่งเข้ารับ</th><th>ขนส่งรับไปแล้ว</th><th>รวมทั้งวัน</th></tr></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
+    <div class="wh-card fitc"><div style="font-weight:600;margin-bottom:8px">จำนวนคำสั่งซื้อที่ปริ้น / จัดส่งวันนี้ แยกตามขนส่ง</div>
+      <table class="wh-t fit"><thead><tr><th class="l">ขนส่ง</th><th>รอขนส่งเข้ารับ</th><th>ขนส่งรับไปแล้ว</th><th>ยกเลิกหลังปริ้น</th><th>รวมที่ปริ้นวันนี้</th></tr></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
       <div class="wh-empty" id="sumEmpty" style="display:none"></div></div>
+  </section>
+
+  <!-- หน้า 4: สต็อกวันนี้ (2026-11-23 ทดลองเทียบกับชีทตัดสต็อก · ยังไม่ใช้ตัดสต็อกจริง) -->
+  <section class="wh-page" id="v-stock">
+    <div class="wh-top"><h1>สต็อกวันนี้</h1><span class="wh-status" id="stStk">—</span><span class="wh-pill cod">ทดลองเทียบ · ยังไม่ใช้ตัดสต็อกจริง</span><span class="sp"></span>
+      <div style="width:170px"><input class="wh-in" type="date" id="stkDate"></div><button class="wh-btn pri" id="stkBtn" type="button">ค้นหา</button></div>
+    <div class="wh-kp cards">
+      <div><small>TikTok ออกตามที่ปริ้น (ชิ้น) <span class="wh-i">i<span class="pop"><b>ออกตามที่ปริ้น</b><br>ชิ้นสินค้าของคำสั่งซื้อ TikTok ที่กดจัดส่ง / ปริ้นใบปะหน้าในวันที่เลือก แตกชุดเป็น SKU จริงแล้ว<br><b>รวม</b> ที่ถูกยกเลิกทีหลัง (หยิบของออกไปแล้ว)<br>ตัวเลขชุดเดียวกับหน้าสรุปการจัดส่ง · ดูย้อนหลังได้ 3 วัน</span></span></small><b id="kOut">—</b><span class="wh-sub" id="kOutS"></span></div>
+      <div><small>ในนั้นยกเลิกหลังปริ้น (ชิ้น) <span class="wh-i">i<span class="pop"><b>ยกเลิกหลังปริ้น</b><br>ชิ้นสินค้าของคำสั่งซื้อที่ปริ้นวันนี้แล้วลูกค้ายกเลิกทีหลัง<br>ขนส่งยิงรับไม่ได้ จะกลับเข้าคลังเป็นของตีกลับ</span></span></small><b id="kCx">—</b><span class="wh-sub" id="kCxS"></span></div>
+      <div><small>ชีทตัดสต็อก TikTok · Sold (ชิ้น) <span class="wh-i r">i<span class="pop"><b>ชีทตัดสต็อก</b><br>ยอดที่น้องกรอกในชีทตัดสต็อก คลัง TikTok ประเภท Sold ของวันที่เลือก<br>ระบบดึงชีทเข้ามาวันละ 3 รอบ (03:30 · 13:30 · 18:30) ถ้าเพิ่งกรอกอาจยังไม่ขึ้น</span></span></small><b id="kSh">—</b><span class="wh-sub" id="kShS"></span></div>
+      <div><small>ต่าง (ปริ้น − ชีท) <span class="wh-i r">i<span class="pop"><b>ต่าง</b><br>ออกตามที่ปริ้น ลบ ยอดในชีท<br>บวก = ระบบนับได้มากกว่าชีท · ลบ = ชีทมากกว่า</span></span></small><b id="kDf">—</b><span class="wh-sub" id="kDfS"></span></div>
+    </div>
+    <div class="wh-card fitc"><div style="font-weight:600;margin-bottom:8px">TikTok ออก แยกตาม SKU เทียบกับชีทตัดสต็อก <span class="wh-i">i<span class="pop"><b>เรียงแถว</b><br>SKU ที่ตัวเลขไม่ตรงกับชีทอยู่บนสุด (ต่างมากก่อน) ที่เหลือเรียงตาม SKU<br>ชุดสินค้าแตกเป็น SKU จริงแล้ว · <b>รวม</b> ของแถมที่อยู่ในคำสั่งซื้อ TikTok</span></span></div>
+      <table class="wh-t fit" id="stkTbl"><thead><tr><th class="l">SKU</th><th class="l">ชื่อสินค้า</th><th>ออกตามที่ปริ้น</th><th>ในนั้นยกเลิกหลังปริ้น</th><th class="sh">ชีท TikTok · Sold</th><th class="sh">ต่าง (ปริ้น − ชีท)</th></tr></thead><tbody id="stkBody"></tbody><tfoot id="stkFoot"></tfoot></table>
+      <div class="wh-empty" id="stkEmpty" style="display:none"></div>
+      <div class="wh-pager"><span id="stkPgInfo"></span><span class="pg" id="stkPgBtns"></span></div></div>
   </section>
 
   <!-- หน้า 3: ประวัติการปริ้น -->
