@@ -70,7 +70,11 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
 .wh-pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;background:var(--bg3);color:var(--text2)}
 .wh-pill.cod{background:var(--warn-bg);color:var(--warn)}
 .wh-pill.mix{margin-left:6px}
-.wh-pill.bad{background:var(--dn-bg);color:var(--bad)}.wh-sub{font-size:12px;color:var(--text2)}
+.wh-pill.bad{background:var(--dn-bg);color:var(--bad)}
+/* (2026-11-23) dropdown แบบเว็บ (ui.css .ui-dd) แทน <select> ของ browser */
+.wh-sel{display:block;width:100%}.wh-sel .ui-dd-btn{width:100%;justify-content:space-between;font-size:13px;font-weight:600}.wh-sel .ui-dd-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wh-sel .ui-dd-menu{width:max(100%,240px);max-height:360px;overflow:auto}.wh-sel .ui-dd-item{white-space:normal;font-size:13px}#fBasket .ui-dd-menu{width:max(100%,440px)}#fPrinted .ui-dd-menu,#fPlatform .ui-dd-menu{left:auto;right:0}
+body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFFFF;border:1px solid #C9D1DC}.wh-sub{font-size:12px;color:var(--text2)}
 .pc0{color:var(--text3)}.pc1{color:var(--good);font-weight:600}.pc2{color:var(--bad);font-weight:700}
 .wh-bk{color:var(--text2);max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .wh-pager{display:flex;justify-content:space-between;align-items:center;color:var(--text2);font-size:13px;padding-top:12px;gap:12px;flex-wrap:wrap}
@@ -135,7 +139,7 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
   <!-- หน้า 1: ปริ้นใบปะหน้า -->
   <section class="wh-page on" id="v-print">
     <div class="wh-top"><h1>ปริ้นใบปะหน้า</h1><span class="wh-status" id="stPrint">กำลังโหลด…</span><span class="sp"></span>
-      <div style="width:150px"><select class="wh-in" id="fPlatform"><option value="tiktok">Platform: TikTok</option></select></div></div>
+      <div class="ui-dd wh-sel" id="fPlatform" style="width:150px"></div></div>
     <div class="wh-card wh-fbar">
       <div class="f fx"><label>รอบปริ้น <span class="wh-i">i<span class="pop"><b>รอบปริ้น (Print round)</b><br>ตัดคำสั่งซื้อตามเวลาที่ลูกค้าสั่ง เพื่อปริ้นทีละก้อน<br>ทั้งหมด = ทุกคำสั่งซื้อในแต่ละสถานะ ไม่กรองเวลาสั่ง (ค่าเริ่มต้นตอนเปิดหน้า)<br>รอบ 1 = ทุกคำสั่งซื้อที่สั่งก่อนเวลาตัดรอบ 1 ของวันนี้ (รวมที่ค้างจากวันก่อน / วันหยุด)<br>รอบ 2 = หลังเวลาตัดรอบ 1 ถึงเวลาตัดรอบ 2 ของวันนี้<br>กด "ตั้งเวลารอบ" เพื่อเปลี่ยนเวลาตัด</span></span>
         <button class="wh-link" id="roundCfgBtn" type="button">ตั้งเวลารอบ</button></label>
@@ -146,8 +150,8 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
       <div class="f" style="flex:1.8;min-width:240px"><label>รูปแบบคำสั่งซื้อ (SKU) <span class="wh-i">i<span class="pop"><b>รูปแบบคำสั่งซื้อ (Order pattern)</b><br>สินค้าทั้งหมดในคำสั่งซื้อ แตกชุดเป็น SKU จริงแล้ว เช่น DSCH03 × 1 + FREECH03 × 1<br>ตัวเลข = จำนวนคำสั่งซื้อที่สั่งแบบนี้ในแท็บที่เปิดอยู่ เรียงมาก → น้อย<br>เลือกแล้ว = แสดงเฉพาะคำสั่งซื้อที่สั่งแบบนี้พอดี ไม่มีสินค้าอื่นปน · พิมพ์ SKU เพื่อค้นหา</span></span></label>
         <div class="wh-dd" id="fPat"><button class="wh-in wh-dd-btn" id="fPatBtn" type="button"><span id="fPatTx">ทั้งหมด</span></button>
           <div class="wh-dd-pop"><input class="wh-in" id="fPatQ" placeholder="พิมพ์ SKU เพื่อค้นหา เช่น DFK15ML" autocomplete="off"><div class="wh-dd-list" id="fPatList"></div></div></div></div>
-      <div class="f"><label>ตะกร้า <span class="wh-i">i<span class="pop"><b>ตะกร้า</b><br>แสดงเฉพาะตะกร้าที่อยู่ในคำสั่งซื้อตามรูปแบบที่เลือก</span></span></label><select class="wh-in" id="fBasket"><option value="">ทั้งหมด</option></select></div>
-      <div class="f" style="min-width:110px"><label>การปริ้น</label><select class="wh-in" id="fPrinted"><option value="">ทั้งหมด</option><option value="0">ยังไม่ปริ้น</option><option value="1">ปริ้นแล้ว</option></select></div>
+      <div class="f"><label>ตะกร้า <span class="wh-i">i<span class="pop"><b>ตะกร้า</b><br>แสดงเฉพาะตะกร้าที่อยู่ในคำสั่งซื้อตามรูปแบบที่เลือก</span></span></label><div class="ui-dd wh-sel" id="fBasket"></div></div>
+      <div class="f" style="min-width:110px"><label>การปริ้น</label><div class="ui-dd wh-sel" id="fPrinted"></div></div>
       <div class="f fx"><label>&nbsp;</label><button class="wh-btn pri" id="searchBtn" type="button">ค้นหา</button></div>
       <div class="wh-rounds" id="roundCfg">เวลาตัดรอบ 1 <input class="wh-in" type="time" id="cut1"> เวลาตัดรอบ 2 <input class="wh-in" type="time" id="cut2"> <button class="wh-btn sm" id="cutSave" type="button">บันทึก</button></div>
     </div>

@@ -13,7 +13,7 @@
   const num = n => Number(n || 0).toLocaleString('en-US');
   const CHUNK = 20;   // จำนวนคำสั่งซื้อต่อ 1 ครั้งที่ส่งให้ระบบหลังบ้าน
 
-  const S = { view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', pat: '', pats: [], patAll: 0, busy: false, pickTab: 'sku', counts: {} };
+  const S = { view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', pat: '', pats: [], patAll: 0, basket: '', prf: '', busy: false, pickTab: 'sku', counts: {} };
   try { const z = Number(localStorage.getItem('wh_page_size')); if ([50, 100, 250].includes(z)) S.size = z; } catch (e) {}
   const cuts = (() => { try { return Object.assign({ c1: '10:30', c2: '16:00' }, JSON.parse(localStorage.getItem('wh_cuts') || '{}')); } catch (e) { return { c1: '10:30', c2: '16:00' }; } })();
 
@@ -115,11 +115,18 @@
     S.pats = Object.entries(pc).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); S.patAll = all;
     if (S.pat && !pc[S.pat]) S.pat = '';
     const bs = new Set(); S.raw.forEach(o => { if (passes(o, S.printed, { basket: true })) o.bnames.forEach(b => bs.add(b)); });
-    const el = $('fBasket'), cur = el.value;
-    el.innerHTML = '<option value="">ทั้งหมด</option>' + [...bs].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
-    el.value = bs.has(cur) ? cur : '';
+    if (S.basket && !bs.has(S.basket)) S.basket = '';
+    dd('fBasket', [['', 'ทั้งหมด'], ...[...bs].sort().map(v => [v, v])], S.basket, v => { S.basket = v; fillOptions(); applyFilters(); });
     renderPat();
   }
+  // (2026-11-23) dropdown แบบเว็บ (ui.css .ui-dd) แทน <select> ของ browser · items = [[ค่า, ข้อความ]] · กดปุ่มเดิมซ้ำ = ปิด
+  function dd(id, items, value, onPick) {
+    const el = $(id), cur = items.find(x => x[0] === value) || items[0];
+    el.innerHTML = `<button type="button" class="ui-dd-btn"><span>${esc(cur[1])}</span></button><div class="ui-dd-menu">${items.map(([v, l]) => `<button type="button" class="ui-dd-item" data-v="${esc(v)}" aria-selected="${v === cur[0]}">${esc(l)}</button>`).join('')}</div>`;
+    el.title = cur[0] ? cur[1] : ''; el._pick = onPick;
+  }
+  const PRF = [['', 'ทั้งหมด'], ['0', 'ยังไม่ปริ้น'], ['1', 'ปริ้นแล้ว']];
+  function renderPrf() { dd('fPrinted', PRF, S.prf, v => { S.prf = v; renderPrf(); fillOptions(); applyFilters(); }); }
   const normQ = t => String(t).toUpperCase().replace(/×/g, 'X').replace(/\s+/g, '');
   function renderPat() {
     $('fPatTx').textContent = S.pat || 'ทั้งหมด'; $('fPatBtn').title = S.pat || '';
@@ -129,7 +136,7 @@
       + (q && !items.length ? '<div class="wh-dd-empty">ไม่พบรูปแบบที่มี SKU นี้</div>' : '');
   }
   function passes(o, printed, skip = {}) {
-    const b = $('fBasket').value, pr = $('fPrinted').value;
+    const b = S.basket, pr = S.prf;
     if (S.pat && !skip.pat && o.pat !== S.pat) return false;
     if (b && !skip.basket && !(o.bnames || []).includes(b)) return false;
     const n = printed[o.id] || 0;
@@ -235,7 +242,7 @@
     const win = window.open('', '_blank');   // เปิดแท็บไว้ก่อน กัน browser บล็อก popup
     if (win) win.document.write('<title>ใบปะหน้า</title><p style="font-family:Sarabun,sans-serif;padding:24px">กำลังเตรียมใบปะหน้า… ห้ามปิดหน้านี้</p>');
     const batch = (crypto.randomUUID && crypto.randomUUID()) || '';
-    const okAll = [], failAll = [], pdfs = [];
+    const okAll = [], failAll = [], pdfs = []; let sheets = 0;
     $('dlg').innerHTML = `<h2>${action === 'ship' ? 'กำลังสั่งจัดส่งและเตรียมใบปะหน้า' : 'กำลังเตรียมใบปะหน้า'}</h2><div class="s" id="prg">เริ่มทำงาน…</div><div class="wh-note">ห้ามปิดหรือรีเฟรชหน้านี้จนกว่าจะเสร็จ</div>`;
     $('ov').classList.add('on');
     for (let i = 0; i < ids.length; i += CHUNK) {
@@ -244,7 +251,7 @@
       try {
         const j = await api({ action, order_ids: part, batch_id: batch, doc: 'label_slip' });   // (2026-11-23) ใบปะหน้า + รายการสินค้าในหน้าเดียว (แบบ Seller Center)
         (j.results || []).forEach(r => (r.ok ? okAll : failAll).push(r));
-        if (j.pdf) pdfs.push(b64ToU8(j.pdf));
+        if (j.pdf) { pdfs.push(b64ToU8(j.pdf)); sheets += j.pages || 0; }
       } catch (e) { part.forEach(id => failAll.push({ id, ok: false, error: 'ไม่ได้รับคำตอบจากระบบ: ' + e.message + ' (ให้เช็คสถานะในแท็บรอเข้ารับก่อนกดซ้ำ)' })); }
     }
     let url = '';
@@ -260,7 +267,7 @@
     S.printing = false;
     $('dlg').innerHTML = `<h2>${action === 'ship' ? 'จัดส่ง + ปริ้นใบปะหน้า' : 'ปริ้นใบปะหน้าซ้ำ'} เสร็จแล้ว</h2><div class="s">${fmtDT(new Date())}</div>
       <div class="wh-kp"><div><small>สำเร็จ</small><b>${num(okAll.length)}</b></div><div><small>ไม่สำเร็จ</small><b>${num(failAll.length)}</b></div></div>
-      ${okAll.length ? `<div class="wh-note ok">ใบปะหน้า ${num(okAll.length)} คำสั่งซื้อ เปิดในแท็บใหม่แล้ว ให้สั่งปริ้นจากแท็บนั้น${url ? ` · <a href="${url}" target="_blank" style="color:inherit">เปิดอีกครั้ง</a>` : ''}</div>` : ''}
+      ${okAll.length ? `<div class="wh-note ok">ใบปะหน้า ${num(okAll.length)} คำสั่งซื้อ (${num(sheets)} แผ่น) เปิดในแท็บใหม่แล้ว ให้สั่งปริ้นจากแท็บนั้น${sheets > okAll.length ? `<br>มี ${num(sheets - okAll.length)} แผ่นเป็นรายการสินค้าต่อ (ออเดอร์ที่มีสินค้า 3 รายการขึ้นไป) แผ่นนั้นมีเลขคำสั่งซื้อกำกับ ให้แปะคู่กับใบปะหน้าของออเดอร์เดียวกัน` : ''}${url ? ` · <a href="${url}" target="_blank" style="color:inherit">เปิดอีกครั้ง</a>` : ''}</div>` : ''}
       ${failAll.length ? `<div class="wh-note err"><b>คำสั่งซื้อที่ไม่สำเร็จ</b><br>${failAll.map(f => `${esc(f.id)} — ${esc(f.error || '')}`).join('<br>')}</div>` : ''}
       <div class="wh-act"><button class="wh-btn pri" id="doneBtn" type="button">ปิด</button></div>`;
     $('doneBtn').onclick = () => { $('ov').classList.remove('on'); S.sel.clear(); Object.keys(LC).forEach(k => delete LC[k]); delete SC.d; if (S.view === 'print') loadAll(true); else loadHistory(); };
@@ -311,7 +318,15 @@
     $('outBtn').onclick = () => Auth.signOut();
     $('fRound').onclick = e => { const b = e.target.closest('button'); if (!b || S.busy) return; setRound(b.dataset.v); if (b.dataset.v !== 'c') loadAll(); };   // รอบ 1 / 2 = โหลดเลย · กำหนดเอง = ตั้งเวลาแล้วกดค้นหา
     ['fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', () => { S.round = 'c'; [...$('fRound').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'c')); dirty(); }));
-    ['fBasket', 'fPrinted'].forEach(id => $(id).addEventListener('change', () => { fillOptions(); applyFilters(); }));   // กรองทันที ไม่ดึงใหม่
+    renderPrf(); dd('fPlatform', [['tiktok', 'Platform: TikTok']], 'tiktok', () => {});
+    document.addEventListener('click', e => {   // เปิด / ปิด / เลือก dropdown แบบเว็บ (ตะกร้า / การปริ้น / Platform) — กรองทันที ไม่ดึงใหม่
+      const sel = e.target.closest('.wh-sel');
+      document.querySelectorAll('.wh-sel.is-open').forEach(x => { if (x !== sel) x.classList.remove('is-open'); });
+      if (!sel) return;
+      const it = e.target.closest('.ui-dd-item');
+      if (it) { sel.classList.remove('is-open'); sel._pick && sel._pick(it.dataset.v); return; }
+      if (e.target.closest('.ui-dd-btn')) sel.classList.toggle('is-open');
+    });
     $('fPatBtn').onclick = () => { const dd = $('fPat'), on = !dd.classList.contains('on'); dd.classList.toggle('on', on); if (on) { $('fPatQ').value = ''; renderPat(); $('fPatQ').focus(); } };
     $('fPatQ').oninput = renderPat;
     $('fPatQ').onkeydown = e => { if (e.key === 'Escape') $('fPat').classList.remove('on'); if (e.key === 'Enter') { const b = $('fPatList').querySelector('button'); if (b) b.click(); } };
