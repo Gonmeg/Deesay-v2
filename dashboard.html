@@ -185,6 +185,8 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
 .flow-chip:hover { border-color:var(--bad); } .flow-chip span { color:var(--text3) !important; font-size:10.5px !important; }
 #tblShCpasCamp .ov-ch { display:inline-flex; align-items:center; gap:8px; border:0; background:none; padding:0; color:var(--text); font:inherit; cursor:pointer; text-align:left; }
 #tblShCpasCamp .ov-ch .chev { display:inline-block; width:12px; color:var(--text3); transition:transform .15s; } #tblShCpasCamp .ov-ch[aria-expanded="true"] .chev { transform:rotate(90deg); }
+#tblShCpasCamp th, #tblShCpasCamp td { padding-left:8px; padding-right:8px; } #tblShCpasCamp .cp-nm { display:block; max-width:210px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #tblShCpasCamp .cp-ad .cp-nm { max-width:140px; } #tblShCpasCamp thead th { line-height:1.3; vertical-align:bottom; }
+@media (min-width:1700px) { #tblShCpasCamp .cp-nm { max-width:420px; } #tblShCpasCamp .cp-ad .cp-nm { max-width:362px; } }
 #tblShCpasCamp tr.ov-sub td { background:color-mix(in srgb, var(--bg3) 55%, var(--bg2)); font-size:12.5px; color:var(--text2); }
 .sa-log td { text-align:right; font-variant-numeric:tabular-nums; }   /* (2026-11-04) ตัวเลขชิดขวาตรงกับหัวคอลัมน์ */
 .sa-log th.l, .sa-log td.l { text-align:left; } .sa-log td.dt { white-space:nowrap; font-variant-numeric:tabular-nums; }
@@ -842,7 +844,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.20-e"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.23-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -3827,7 +3829,8 @@ const cpMetricsBtn = pg => `<div style="position:relative;"><button class="btn b
     <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('${pg}')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('${pg}')">เลือกทั้งหมด</button></div></div></div>`;
 // (2026-10-02) ตาราง CPAS กดหัวคอลัมน์เพื่อเรียงได้ (เดิมเรียงตามค่า Ads อย่างเดียว)
 const _shCpasSort = { shCpasCamp: { k: 'spend', d: 'desc' }, shCpasAds: { k: 'spend', d: 'desc' } };
-function shCpasSort(pg, k) { const s = _shCpasSort[pg]; if (s.k === k) s.d = s.d === 'asc' ? 'desc' : 'asc'; else { s.k = k; s.d = k === 'name' ? 'asc' : 'desc'; } shCpasTables(); }
+let _shCpasPg = 1; function shCpasGo(p) { _shCpasPg = p; shCpasTables(); }
+function shCpasSort(pg, k) { _shCpasPg = 1; const s = _shCpasSort[pg]; if (s.k === k) s.d = s.d === 'asc' ? 'desc' : 'asc'; else { s.k = k; s.d = k === 'name' ? 'asc' : 'desc'; } shCpasTables(); }
 function shCpasTables() {
   const d = _shCpas; if (!d) return;
   const sv = (r, k) => k === 'name' ? String(r.name || r.campaign_id || r.ad_id || '') : k === 'ads' ? (+r.ads || 0) : (CP_M[k] && CP_M[k].val ? CP_M[k].val(r) : (+r[k] || 0));
@@ -3839,21 +3842,25 @@ function shCpasTables() {
   { const c = document.getElementById('shCpasCamp-metric-count'); if (c) c.textContent = `(${kc.length})`; }
   const th = (pg, ks) => ks.map(k => hth(pg, k, CP_M[k].label)).join('');
   const camps = (d.by_campaign || []).slice().sort(sorter('shCpasCamp'));
-  document.getElementById('theadShCpasCamp').innerHTML = `<tr>${hth('shCpasCamp', 'name', 'Campaign')}${hth('shCpasCamp', 'ads', 'Ads')}${th('shCpasCamp', kc)}</tr>`;
+  // (2026-11-23) ตารางล้นจอ: หัวคอลัมน์ยาวขึ้นบรรทัดใหม่ก่อน (Meta) / Shopee · ชื่อ Campaign ยาวตัดด้วย … (ชี้เพื่อดูชื่อเต็ม) · แบ่งหน้าตามจำนวน Campaign
+  const lb = l => l.length > 11 ? l.replace(/ (\(|Shopee)/, ' <br>$1') : l;
+  document.getElementById('theadShCpasCamp').innerHTML = `<tr>${hth('shCpasCamp', 'name', 'Campaign')}${hth('shCpasCamp', 'ads', 'Ads')}${kc.map(k => hth('shCpasCamp', k, lb(CP_M[k].label))).join('')}</tr>`;
   document.getElementById('tbodyShCpasCamp').innerHTML = camps.map(c => `<tr><td><b>${ttcEsc(c.name || c.campaign_id)}</b></td><td>${fmt(c.ads)}</td>${kc.map(k => `<td>${CP_M[k].fmt(c)}</td>`).join('')}</tr>`).join('')
     || `<tr><td colspan="${2 + kc.length}" class="empty">ไม่มี Ads CPAS ในช่วงที่เลือก</td></tr>`;
   // (2026-11-02) ตารางเดียว: แถว Campaign กดกางดู Ads ข้างใน (เดิมแยก 2 ตาราง ข้อมูลชุดเดียวกัน) · แถวรวมล่างสุด
   const byC = {}; (d.ads || []).forEach(a => { (byC[a.campaign_id] = byC[a.campaign_id] || []).push(a); });
   const adRow = (a, cid) => { const url = a.post_id ? `https://www.facebook.com/${a.post_id}` : '';
     const img = a.thumbnail_url ? `<img loading="lazy" decoding="async" src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
-    return `<tr class="ov-sub" data-cpc="${ttcEscAttr(cid)}" style="display:${_shCpasOpen[cid] ? '' : 'none'};"><td><div style="display:flex;gap:10px;align-items:center;padding-left:22px;min-width:240px;"><a ${url ? `href="${ttcEscAttr(url)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:36px;height:36px;border-radius:6px;overflow:hidden;flex:none;background:var(--bg3);display:grid;place-items:center;">${img}</a>
-      <div style="min-width:0;font-size:12.5px;">${ttcEsc(a.name || a.ad_id)}</div></div></td><td></td>${kc.map(k => `<td>${CP_M[k].fmt(a)}</td>`).join('')}</tr>`; };
-  document.getElementById('tbodyShCpasCamp').innerHTML = camps.map(c => { const ads = (byC[c.campaign_id] || []).slice().sort((x, y) => (+y.spend || 0) - (+x.spend || 0)), open = !!_shCpasOpen[c.campaign_id];
-    return `<tr><td><button type="button" class="ov-ch" aria-expanded="${open}" onclick="shCpasToggle('${ttcEscAttr(c.campaign_id)}', this)"><span class="chev">›</span><b>${ttcEsc(c.name || c.campaign_id)}</b></button></td><td>${fmt(c.ads)}</td>${kc.map(k => `<td>${CP_M[k].fmt(c)}</td>`).join('')}</tr>`
+    return `<tr class="ov-sub" data-cpc="${ttcEscAttr(cid)}" style="display:${_shCpasOpen[cid] ? '' : 'none'};"><td><div class="cp-ad" style="display:flex;gap:10px;align-items:center;padding-left:22px;"><a ${url ? `href="${ttcEscAttr(url)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:36px;height:36px;border-radius:6px;overflow:hidden;flex:none;background:var(--bg3);display:grid;place-items:center;">${img}</a>
+      <div class="cp-nm" style="font-size:12.5px;" title="${ttcEscAttr(a.name || a.ad_id)}">${ttcEsc(a.name || a.ad_id)}</div></div></td><td></td>${kc.map(k => `<td>${CP_M[k].fmt(a)}</td>`).join('')}</tr>`; };
+  const sz = pgSize(), tp = Math.max(1, Math.ceil(camps.length / sz)); _shCpasPg = Math.min(Math.max(1, _shCpasPg), tp);
+  document.getElementById('tbodyShCpasCamp').innerHTML = camps.slice((_shCpasPg - 1) * sz, _shCpasPg * sz).map(c => { const ads = (byC[c.campaign_id] || []).slice().sort((x, y) => (+y.spend || 0) - (+x.spend || 0)), open = !!_shCpasOpen[c.campaign_id];
+    return `<tr><td><button type="button" class="ov-ch" aria-expanded="${open}" onclick="shCpasToggle('${ttcEscAttr(c.campaign_id)}', this)"><span class="chev">›</span><b class="cp-nm" title="${ttcEscAttr(c.name || c.campaign_id)}">${ttcEsc(c.name || c.campaign_id)}</b></button></td><td>${fmt(c.ads)}</td>${kc.map(k => `<td>${CP_M[k].fmt(c)}</td>`).join('')}</tr>`
       + ads.map(a => adRow(a, c.campaign_id)).join(''); }).join('')
     || `<tr><td colspan="${2 + kc.length}" class="empty">ไม่มี Ads CPAS ในช่วงที่เลือก</td></tr>`;
   const tf = document.getElementById('tfootShCpasCamp');
   if (tf) { const sum = {}; camps.forEach(c => Object.keys(c).forEach(k => { if (typeof c[k] === 'number' || (c[k] !== null && c[k] !== '' && !isNaN(+c[k]) && k !== 'campaign_id')) sum[k] = (sum[k] || 0) + (+c[k] || 0); }));
+    renderPagerHtml('shCpasCampPager', _shCpasPg, tp, 'shCpasGo');
     tf.innerHTML = camps.length ? `<tr><td>รวม ${fmt(camps.length)} Campaign</td><td>${fmt(sum.ads || 0)}</td>${kc.map(k => `<td>${k === 'period' ? '' : CP_M[k].fmt(sum)}</td>`).join('')}</tr>` : ''; }
 }
 let _shCpasOpen = {};
@@ -3886,7 +3893,7 @@ async function renderShCpas(from, to) {
     </div>
     <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">CPAS ตาม Campaign <span class="sa-note">กดชื่อ Campaign เพื่อดู Ads ข้างใน</span></div>
       <div style="display:flex;gap:8px;align-items:center;">${cpMetricsBtn('shCpasCamp')}<button class="btn btn-ghost" onclick="exportTable('tblShCpasCamp')">⬇ Export CSV</button></div></div>
-      <div class="table-wrap"><table id="tblShCpasCamp" class="ui-table" data-no-page><thead id="theadShCpasCamp"></thead><tbody id="tbodyShCpasCamp"></tbody><tfoot id="tfootShCpasCamp"></tfoot></table></div></div>`;
+      <div class="table-wrap"><table id="tblShCpasCamp" class="ui-table" data-no-page><thead id="theadShCpasCamp"></thead><tbody id="tbodyShCpasCamp"></tbody><tfoot id="tfootShCpasCamp"></tfoot></table></div><div id="shCpasCampPager"></div></div>`;
   shCpasTables();
 }
 

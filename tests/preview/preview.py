@@ -85,6 +85,10 @@ def make_router(data):
     fonts = _read(os.path.join(CACHE, 'fonts.css')); fake = _read(os.path.join(HERE, 'fake-supabase.js'))
     def route(r):
         u = r.request.url
+        # (2026-11-23) ไฟล์ฟอนต์ถูกเรียกจาก css ของ fonts.googleapis.com (คนละ origin) → ต้องแนบ access-control-allow-origin ไม่งั้นเบราว์เซอร์ไม่ใช้ Sarabun แล้วรูปออกมาเป็นฟอนต์สำรอง (ความกว้างเพี้ยน)
+        if u.startswith(f'http://127.0.0.1:{PORT}') and u.split('?')[0].endswith('.ttf'):
+            fp = os.path.join(CACHE, 'fonts', os.path.basename(u.split('?')[0]))
+            if os.path.exists(fp): return r.fulfill(path=fp, content_type='font/ttf', headers={'access-control-allow-origin': '*'})
         if u.startswith(f'http://127.0.0.1:{PORT}'): return r.continue_()
         if 'chart.umd' in u or '/chart.js' in u: return r.fulfill(body=chart, content_type='application/javascript')
         if 'fonts.googleapis.com' in u: return r.fulfill(body=fonts, content_type='text/css')
