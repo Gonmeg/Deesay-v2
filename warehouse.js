@@ -52,15 +52,25 @@
     S.round = v;
     [...$('fRound').children].forEach(b => b.classList.toggle('on', b.dataset.v === v));
     const now = new Date();
-    if (v === '1') { $('fFrom').value = toLocalInput(atTime(now, cuts.c2, -1)); $('fTo').value = toLocalInput(atTime(now, cuts.c1, 0)); }
+    if (v === '1') { $('fFrom').value = ''; $('fTo').value = toLocalInput(atTime(now, cuts.c1, 0)); }   // (2026-11-23) รอบ 1 = ทุกคำสั่งซื้อที่สั่งก่อนเวลาตัดรอบ 1 วันนี้ ไม่มีเวลาเริ่ม (ค้างเสาร์-อาทิตย์ / วันหยุดเข้ารอบนี้เอง)
     if (v === '2') { $('fFrom').value = toLocalInput(atTime(now, cuts.c1, 0)); $('fTo').value = toLocalInput(atTime(now, cuts.c2, 0)); }
     dirty();
   }
-  function dirty() { $('searchBtn').classList.add('dirty'); }
+  function dirty() { $('searchBtn').classList.add('dirty'); const e = !$('fFrom').value; $('fFrom').classList.toggle('noval', e); $('fFromPh').classList.toggle('on', e); }
 
   // ───── โหลดรายการ ─────
-  async function loadList() {
+  // (2026-11-23) จำผลล่าสุดของแต่ละแท็บ / ช่วงเวลา ไว้ 5 นาที — สลับแท็บแล้วโชว์ทันที ไม่ดึง TikTok ใหม่ · กดค้นหา / ปริ้นเสร็จ = ดึงใหม่เสมอ
+  const FRESH = 5 * 60 * 1000, LC = {};
+  const listKey = () => S.tab === 'cancel' ? 'cancel' : [S.tab, $('fFrom').value, $('fTo').value].join('|');
+  function useList(j) {
+    S.raw = (j.orders || []).map(derive); S.printed = j.printed || {}; S.names = j.names || {};
+    fillOptions(); applyFilters();
+    $('stPrint').textContent = 'Updated ' + fmtT(new Date(j.at || Date.now()));
+  }
+  async function loadList(force) {
     if (S.busy) return;
+    const key = listKey(), c = LC[key];
+    if (force !== true && c && Date.now() - c.got < FRESH) { $('stPrint').classList.remove('bad'); useList(c.j); return; }
     S.busy = true; $('searchBtn').disabled = true; $('searchBtn').classList.remove('dirty');
     $('stPrint').textContent = 'กำลังโหลด…'; $('stPrint').classList.remove('bad');
     try {
@@ -71,9 +81,8 @@
         const t = $('fTo').value ? Math.floor(new Date($('fTo').value).getTime() / 1000) : null;
         j = await api({ action: 'list', tab: S.tab, from: f, to: t });
       }
-      S.raw = (j.orders || []).map(derive); S.printed = j.printed || {}; S.names = j.names || {};
-      fillOptions(); applyFilters();
-      $('stPrint').textContent = 'Updated ' + fmtT(new Date(j.at || Date.now()));
+      LC[key] = { j, got: Date.now() };
+      useList(j);
     } catch (e) {
       S.raw = []; S.rows = []; render();
       $('stPrint').textContent = '1 alert'; $('stPrint').classList.add('bad');
@@ -215,15 +224,19 @@
       ${okAll.length ? `<div class="wh-note ok">ใบปะหน้า ${num(okAll.length)} คำสั่งซื้อ เปิดในแท็บใหม่แล้ว ให้สั่งปริ้นจากแท็บนั้น${url ? ` · <a href="${url}" target="_blank" style="color:inherit">เปิดอีกครั้ง</a>` : ''}</div>` : ''}
       ${failAll.length ? `<div class="wh-note err"><b>คำสั่งซื้อที่ไม่สำเร็จ</b><br>${failAll.map(f => `${esc(f.id)} — ${esc(f.error || '')}`).join('<br>')}</div>` : ''}
       <div class="wh-act"><button class="wh-btn pri" id="doneBtn" type="button">ปิด</button></div>`;
-    $('doneBtn').onclick = () => { $('ov').classList.remove('on'); S.sel.clear(); if (S.view === 'print') loadList(); else loadHistory(); };
+    $('doneBtn').onclick = () => { $('ov').classList.remove('on'); S.sel.clear(); Object.keys(LC).forEach(k => delete LC[k]); delete SC.d; if (S.view === 'print') loadList(true); else loadHistory(); };
   }
 
   // ───── สรุปการจัดส่ง ─────
-  async function loadSummary() {
+  const SC = {};   // ผลสรุปล่าสุด { d: วันที่, j, got }
+  async function loadSummary(force) {
+    const day = $('sumDate').value;
+    if (force !== true && SC.d === day && Date.now() - SC.got < FRESH) return;   // ผลเดิมยังแสดงอยู่บนหน้า ไม่ต้องดึงใหม่
     $('stSum').textContent = 'กำลังโหลด…'; $('stSum').classList.remove('bad');
     try {
-      const d = new Date($('sumDate').value + 'T00:00:00');
+      const d = new Date(day + 'T00:00:00');
       const j = await api({ action: 'summary', day_start: Math.floor(d.getTime() / 1000) });
+      Object.assign(SC, { d: day, j, got: Date.now() });
       const rows = Object.entries(j.carriers || {}).sort((a, b) => (b[1].wait_collect + b[1].picked) - (a[1].wait_collect + a[1].picked));
       let A = 0, B = 0;
       $('sumBody').innerHTML = rows.map(([c, v]) => { A += v.wait_collect; B += v.picked; return `<tr><td class="l"><b>${esc(c)}</b></td><td>${num(v.wait_collect)}</td><td>${num(v.picked)}</td><td>${num(v.wait_collect + v.picked)}</td></tr>`; }).join('');
@@ -251,7 +264,7 @@
     S.view = v;
     document.querySelectorAll('.wh-side a[data-view]').forEach(a => a.classList.toggle('on', a.dataset.view === v));
     document.querySelectorAll('.wh-page').forEach(p => p.classList.toggle('on', p.id === 'v-' + v));
-    if (v === 'summary') loadSummary(); if (v === 'history') loadHistory();
+    if (v === 'summary') loadSummary(); if (v === 'history') loadHistory();   // สรุป: ใช้ผลเดิมถ้ายังไม่เกิน 5 นาที · ประวัติ: อ่านจากตารางเรา เร็วอยู่แล้ว
   }
   function bind() {
     document.querySelectorAll('.wh-side a[data-view]').forEach(a => a.onclick = () => setView(a.dataset.view));
@@ -263,7 +276,7 @@
     $('fMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.mode = b.dataset.v; [...$('fMode').children].forEach(x => x.classList.toggle('on', x === b)); dirty(); };
     $('roundCfgBtn').onclick = () => { $('cut1').value = cuts.c1; $('cut2').value = cuts.c2; $('roundCfg').classList.toggle('on'); };
     $('cutSave').onclick = () => { if ($('cut1').value) cuts.c1 = $('cut1').value; if ($('cut2').value) cuts.c2 = $('cut2').value; try { localStorage.setItem('wh_cuts', JSON.stringify(cuts)); } catch (e) {} $('roundCfg').classList.remove('on'); if (S.round !== 'c') setRound(S.round); };
-    $('searchBtn').onclick = loadList;
+    $('searchBtn').onclick = () => loadList(true);
     $('tabs').onclick = e => { const b = e.target.closest('button'); if (!b || b.dataset.tab === S.tab || S.busy) return; S.tab = b.dataset.tab; S.sel.clear(); S.raw = []; S.rows = []; render(); loadList(); };
     $('tbody').onclick = e => { const tr = e.target.closest('tr.pick'); if (!tr) return; const id = tr.dataset.id; if (S.sel.has(id)) S.sel.delete(id); else S.sel.add(id); render(); };
     $('thead').onclick = e => { if (e.target.id !== 'chkAll') return; if (S.sel.size === S.rows.length) S.sel.clear(); else S.sel = new Set(S.rows.map(o => o.id)); render(); };
@@ -271,7 +284,7 @@
     $('pgSize').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.size = Number(b.dataset.v); try { localStorage.setItem('wh_page_size', String(S.size)); } catch (e2) {} S.page = 1; render(); };
     $('pickBtn').onclick = openPick; $('goBtn').onclick = openPick;
     $('ov').onclick = e => { if (e.target === $('ov')) closeDlg(); };
-    $('sumBtn').onclick = loadSummary;
+    $('sumBtn').onclick = () => loadSummary(true);
     $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) runPrint('reprint', HIS[Number(b.dataset.i)].order_ids); };
   }
 
