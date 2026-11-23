@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warehouse | Deesay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<script src="auth.js?v=1"></script>
+<link rel="stylesheet" href="ui.css?v=1">
+<style>
+/* warehouse.html (2026-11-23) — งานคลังสินค้า: ปริ้นใบปะหน้า / สรุปการจัดส่ง / ประวัติการปริ้น · ใช้สีและฟอนต์จาก ui.css */
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:var(--pg);color:var(--text);font-size:14px;min-height:100vh;position:relative}
+button,select,input{font-family:inherit}
+.wh-side{position:fixed;left:0;top:0;bottom:0;width:210px;background:var(--bg2);border-right:1px solid var(--border);padding:18px 14px;z-index:5}
+.wh-side .brand{font-weight:700;font-size:17px;margin-bottom:4px}
+.wh-side .sub{color:var(--text3);font-size:12px;margin-bottom:18px}
+.wh-side a{display:block;padding:8px 10px;border-radius:8px;color:var(--text2);font-size:14px;cursor:pointer;text-decoration:none}
+.wh-side a:hover{color:var(--text)}
+.wh-side a.on{background:var(--accent-soft);color:var(--accent-text);font-weight:600}
+.wh-side a.home{border:1px solid var(--border);text-align:center;color:var(--text);font-weight:600;margin-bottom:16px}
+.wh-side .grp{font-size:12px;color:var(--text3);margin:14px 6px 6px}
+.wh-side .who{position:absolute;left:14px;right:14px;bottom:14px;font-size:12px;color:var(--text3);word-break:break-all}
+.wh-side .who a{display:inline;padding:0;color:var(--text2);font-size:12px;text-decoration:underline}
+.wh-main{margin-left:210px;padding:18px 26px 40px}
+.wh-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;min-height:36px}
+.wh-top h1{font-size:20px;margin:0 6px 0 0}
+.wh-status{font-size:12px;color:var(--text2);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+.wh-status.bad{color:var(--bad);border-color:var(--bad)}
+.sp{flex:1}
+.wh-card{background:var(--bg2);border:1px solid var(--panel-line);border-radius:10px;box-shadow:var(--sh);padding:14px 18px}
+.wh-fbar{display:flex;gap:14px;align-items:flex-end;padding:12px 18px 14px;margin-bottom:14px;flex-wrap:wrap}
+.wh-fbar .f{flex:1;min-width:120px;display:flex;flex-direction:column;gap:5px}
+.wh-fbar .f.fx{flex:0 0 auto;min-width:0}
+.wh-fbar label{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.wh-fbar .vr{width:1px;align-self:stretch;background:var(--border);margin:2px}
+.wh-in{height:34px;padding:0 10px;border:1px solid transparent;border-radius:6px;background:var(--bg3);color:var(--text);font-size:13px;font-weight:600;width:100%;outline:none}
+.wh-in:focus{border-color:var(--accent)}
+input.wh-in{font-weight:500}
+.wh-seg{display:inline-flex;border-radius:6px;overflow:hidden;height:34px;background:var(--bg3)}
+.wh-seg button{border:0;background:none;padding:0 12px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap}
+.wh-seg button.on{background:var(--accent-soft);color:var(--accent-text);font-weight:600}
+.wh-seg.sm{height:28px}.wh-seg.sm button{padding:0 10px}
+.wh-btn{height:34px;padding:0 16px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.wh-btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);position:relative}
+.wh-btn:disabled{opacity:.45;cursor:default}
+.wh-btn.sm{height:28px;padding:0 10px;font-size:12px}
+.wh-btn.pri.dirty:after{content:"";position:absolute;right:-4px;top:-4px;width:9px;height:9px;border-radius:50%;background:var(--red)}
+.wh-tabs{display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.wh-tabs button{border:0;background:none;padding:8px 0;color:var(--text2);border-bottom:2px solid transparent;font-size:14px;cursor:pointer}
+.wh-tabs button.on{color:var(--text);font-weight:600;border-bottom-color:var(--accent)}
+.wh-tabs small{color:var(--text3);margin-left:5px;font-size:12px}
+.wh-bar{display:flex;align-items:center;gap:12px;padding:8px 0 12px;min-height:54px;flex-wrap:wrap}
+.wh-bar .n{font-weight:600}.wh-bar .m{color:var(--text2);font-size:13px}
+table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
+.wh-t th{font-size:12px;font-weight:600;color:var(--text2);padding:8px 10px;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
+.wh-t td{padding:8px 10px;border-bottom:1px solid var(--row-border);text-align:center;vertical-align:middle;white-space:nowrap}
+.wh-t td.l,.wh-t th.l{text-align:left}
+.wh-t td.l{white-space:normal}
+.wh-t tr.sel td{background:var(--accent-soft)}
+.wh-t tbody tr.pick{cursor:pointer}
+.wh-t tfoot td{font-weight:700;border-top:2px solid var(--tot-line);border-bottom:0;background:var(--row-sum)}
+.wh-t input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
+.wh-pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;background:var(--bg3);color:var(--text2)}
+.wh-pill.cod{background:var(--warn-bg);color:var(--warn)}
+.wh-pill.mix{margin-left:6px}
+.pc0{color:var(--text3)}.pc1{color:var(--good);font-weight:600}.pc2{color:var(--bad);font-weight:700}
+.wh-bk{color:var(--text2);max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.wh-pager{display:flex;justify-content:space-between;align-items:center;color:var(--text2);font-size:13px;padding-top:12px;gap:12px;flex-wrap:wrap}
+.wh-pager .pg{display:flex;gap:4px;align-items:center}
+.wh-empty{padding:46px 0;text-align:center;color:var(--text3)}
+.wh-i{position:relative;display:inline-flex;width:15px;height:15px;border-radius:50%;border:1px solid var(--text3);color:var(--text3);font-size:10px;line-height:13px;justify-content:center;cursor:default;font-weight:500}
+.wh-i:hover .pop{display:block}
+.wh-i .pop{display:none;position:absolute;top:20px;left:-8px;z-index:30;width:270px;padding:10px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow-pop);color:var(--text);font-size:12.5px;line-height:1.55;text-align:left;white-space:normal;font-weight:400}
+.wh-i.r .pop{left:auto;right:-8px}
+.wh-kp{display:flex;gap:12px;margin-bottom:14px}
+.wh-kp>div{flex:1;background:var(--bg3);border-radius:10px;padding:10px 14px}
+.wh-kp.cards>div{background:var(--bg2);box-shadow:var(--sh);border:1px solid var(--panel-line)}
+.wh-kp small{color:var(--text2);font-size:12px;display:flex;gap:4px;align-items:center}
+.wh-kp b{font-size:24px;display:block;min-height:36px}
+.wh-ov{position:fixed;inset:0;background:rgba(8,12,18,.55);display:none;align-items:center;justify-content:center;z-index:50}
+.wh-ov.on{display:flex}
+.wh-dlg{width:760px;max-width:94vw;max-height:92vh;overflow:auto;background:var(--bg2);border-radius:12px;box-shadow:var(--shadow-pop);padding:22px 26px;border:1px solid var(--border)}
+.wh-dlg h2{margin:0 0 4px;font-size:18px}
+.wh-dlg .s{color:var(--text2);font-size:13px;margin-bottom:14px}
+.wh-note{font-size:13px;color:var(--text2);background:var(--warn-bg);border-radius:8px;padding:8px 12px;margin:14px 0}
+.wh-note.err{background:var(--dn-bg);color:var(--text)}
+.wh-note.ok{background:var(--up-bg);color:var(--text)}
+.wh-act{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.wh-rounds{display:none;gap:10px;align-items:center;font-size:12.5px;color:var(--text2);flex-basis:100%}
+.wh-rounds.on{display:flex}
+.wh-rounds input{width:110px}
+.wh-link{color:var(--accent-text);cursor:pointer;font-size:12px;background:none;border:0;padding:0;text-decoration:underline}
+.wh-page{display:none}.wh-page.on{display:block}
+#printArea{display:none}
+@media print{
+  body{background:#fff;color:#000}
+  .wh-side,.wh-main,.wh-ov{display:none!important}
+  #printArea{display:block;padding:8mm;font-size:13px;color:#000}
+  #printArea h2{margin:0 0 2px;font-size:18px}
+  #printArea .s{font-size:12px;margin-bottom:10px}
+  #printArea table{width:100%;border-collapse:collapse}
+  #printArea th,#printArea td{border:1px solid #888;padding:5px 8px;text-align:center;font-size:13px}
+  #printArea th.l,#printArea td.l{text-align:left}
+  #printArea tfoot td{font-weight:700}
+}
+</style>
+</head>
+<body>
+<aside class="wh-side">
+  <div class="brand">Deesay</div><div class="sub">ระบบงานคลังสินค้า</div>
+  <a class="home" href="dashboard.html">← กลับหน้าแรก</a>
+  <div class="grp">งานประจำวัน</div>
+  <a data-view="print" class="on">ปริ้นใบปะหน้า</a>
+  <a data-view="summary">สรุปการจัดส่งวันนี้</a>
+  <a data-view="history">ประวัติการปริ้น</a>
+  <div class="who"><span id="whoMail"></span><br><a id="themeBtn">สลับโหมดสว่าง / มืด</a> · <a id="outBtn">ออกจากระบบ</a></div>
+</aside>
+
+<main class="wh-main">
+  <!-- หน้า 1: ปริ้นใบปะหน้า -->
+  <section class="wh-page on" id="v-print">
+    <div class="wh-top"><h1>ปริ้นใบปะหน้า</h1><span class="wh-status" id="stPrint">กำลังโหลด…</span><span class="sp"></span>
+      <div style="width:150px"><select class="wh-in" id="fPlatform"><option value="tiktok">Platform: TikTok</option></select></div></div>
+    <div class="wh-card wh-fbar">
+      <div class="f fx"><label>รอบปริ้น <span class="wh-i">i<span class="pop"><b>รอบปริ้น (Print round)</b><br>ตัดคำสั่งซื้อตามเวลาที่ลูกค้าสั่ง เพื่อปริ้นทีละก้อน<br>รอบ 1 = หลังเวลาตัดรอบ 2 ของเมื่อวาน ถึงเวลาตัดรอบ 1 ของวันนี้<br>รอบ 2 = หลังเวลาตัดรอบ 1 ถึงเวลาตัดรอบ 2 ของวันนี้<br>กด "ตั้งเวลารอบ" เพื่อเปลี่ยนเวลาตัด</span></span>
+        <button class="wh-link" id="roundCfgBtn" type="button">ตั้งเวลารอบ</button></label>
+        <span class="wh-seg" id="fRound"><button data-v="1" type="button">รอบ 1</button><button data-v="2" type="button">รอบ 2</button><button data-v="c" type="button">กำหนดเอง</button></span></div>
+      <div class="f" style="flex:1.2;min-width:190px"><label>เวลาสั่ง ตั้งแต่</label><input class="wh-in" type="datetime-local" id="fFrom"></div>
+      <div class="f" style="flex:1.2;min-width:190px"><label>ถึงก่อน</label><input class="wh-in" type="datetime-local" id="fTo"></div>
+      <div class="vr"></div>
+      <div class="f"><label>ตะกร้า</label><select class="wh-in" id="fBasket"><option value="">ทั้งหมด</option></select></div>
+      <div class="f"><label>SKU</label><select class="wh-in" id="fSku"><option value="">ทั้งหมด</option></select></div>
+      <div class="f fx"><label>วิธีจับคู่ SKU <span class="wh-i r">i<span class="pop"><b>วิธีจับคู่ SKU</b><br>มีแค่ SKU นี้ = คำสั่งซื้อที่มีเฉพาะ SKU ที่เลือก ไม่มีสินค้าอื่นปน<br>ปนสินค้าอื่นได้ = คำสั่งซื้อที่มี SKU ที่เลือก และอาจมีสินค้าอื่นอยู่ด้วย</span></span></label>
+        <span class="wh-seg" id="fMode"><button data-v="only" class="on" type="button">มีแค่ SKU นี้</button><button data-v="mixed" type="button">ปนสินค้าอื่นได้</button></span></div>
+      <div class="f" style="min-width:110px"><label>การปริ้น</label><select class="wh-in" id="fPrinted"><option value="">ทั้งหมด</option><option value="0">ยังไม่ปริ้น</option><option value="1">ปริ้นแล้ว</option></select></div>
+      <div class="f fx"><label>&nbsp;</label><button class="wh-btn pri" id="searchBtn" type="button">ค้นหา</button></div>
+      <div class="wh-rounds" id="roundCfg">เวลาตัดรอบ 1 <input class="wh-in" type="time" id="cut1"> เวลาตัดรอบ 2 <input class="wh-in" type="time" id="cut2"> <button class="wh-btn sm" id="cutSave" type="button">บันทึก</button></div>
+    </div>
+    <div class="wh-card">
+      <div class="wh-tabs" id="tabs">
+        <button data-tab="ship" class="on" type="button">รอจัดส่ง<small id="nShip"></small></button>
+        <button data-tab="collect" type="button">รอเข้ารับ<small id="nCollect"></small></button>
+        <button data-tab="cancel" type="button">ยกเลิกหลังปริ้น<small id="nCancel"></small></button>
+      </div>
+      <div class="wh-bar"><span class="n" id="selN"></span><span class="m" id="selM"></span><span class="sp"></span>
+        <button class="wh-btn" id="pickBtn" type="button">รายการเตรียมสินค้า</button>
+        <button class="wh-btn pri" id="goBtn" type="button">จัดส่ง + ปริ้นใบปะหน้า</button></div>
+      <table class="wh-t"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+      <div class="wh-empty" id="empty" style="display:none"></div>
+      <div class="wh-pager"><span id="pgInfo"></span><span class="pg" id="pgBtns"></span>
+        <span>แสดงต่อหน้า &nbsp;<span class="wh-seg sm" id="pgSize"><button data-v="50" type="button">50</button><button data-v="100" type="button">100</button><button data-v="250" type="button">250</button></span></span></div>
+    </div>
+  </section>
+
+  <!-- หน้า 2: สรุปการจัดส่งวันนี้ -->
+  <section class="wh-page" id="v-summary">
+    <div class="wh-top"><h1>สรุปการจัดส่งวันนี้</h1><span class="wh-status" id="stSum">—</span><span class="sp"></span>
+      <div style="width:170px"><input class="wh-in" type="date" id="sumDate"></div><button class="wh-btn pri" id="sumBtn" type="button">ค้นหา</button></div>
+    <div class="wh-kp cards">
+      <div><small>จัดส่งแล้ว รอขนส่งเข้ารับ <span class="wh-i">i<span class="pop"><b>จัดส่งแล้ว รอขนส่งเข้ารับ</b><br>คำสั่งซื้อ TikTok ที่ถูกกดจัดส่งในวันที่เลือก (ตามเวลาไทย) และขนส่งยังไม่ได้รับไป<br>นับตามเวลาที่กดจัดส่ง ไม่ใช่เวลาที่ลูกค้าสั่ง</span></span></small><b id="sA">—</b></div>
+      <div><small>ขนส่งรับไปแล้ว</small><b id="sB">—</b></div>
+      <div><small>ยังรอจัดส่ง (ทั้งหมดตอนนี้)</small><b id="sC">—</b></div>
+      <div><small>ยกเลิกหลังปริ้น <span class="wh-i r">i<span class="pop"><b>ยกเลิกหลังปริ้น</b><br>คำสั่งซื้อที่ปริ้นใบปะหน้าจากหน้านี้ไปแล้วในวันที่เลือก แต่ถูกยกเลิก หรือมีคำขอยกเลิกทีหลัง ต้องดึงสินค้ากลับ</span></span></small><b id="sD">—</b></div>
+    </div>
+    <div class="wh-card"><div style="font-weight:600;margin-bottom:8px">จำนวนคำสั่งซื้อที่ต้องส่งมอบให้ขนส่ง แยกตามขนส่ง</div>
+      <table class="wh-t"><thead><tr><th class="l">ขนส่ง</th><th>รอขนส่งเข้ารับ</th><th>ขนส่งรับไปแล้ว</th><th>รวมทั้งวัน</th></tr></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
+      <div class="wh-empty" id="sumEmpty" style="display:none"></div></div>
+  </section>
+
+  <!-- หน้า 3: ประวัติการปริ้น -->
+  <section class="wh-page" id="v-history">
+    <div class="wh-top"><h1>ประวัติการปริ้น</h1><span class="wh-status" id="stHis">—</span></div>
+    <div class="wh-card">
+      <table class="wh-t"><thead><tr><th>เวลาที่ปริ้น</th><th class="l">ผู้ปริ้น</th><th>จัดส่ง + ปริ้น</th><th>ปริ้นซ้ำ</th><th>ไม่สำเร็จ</th><th></th></tr></thead><tbody id="hisBody"></tbody></table>
+      <div class="wh-empty" id="hisEmpty" style="display:none"></div></div>
+  </section>
+</main>
+
+<!-- กล่องรายการเตรียมสินค้า / ยืนยัน / ผลลัพธ์ -->
+<div class="wh-ov" id="ov"><div class="wh-dlg" id="dlg"></div></div>
+<div id="printArea"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="warehouse.js?v=1"></script>
+</body>
+</html>
