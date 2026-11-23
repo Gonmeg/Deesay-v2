@@ -321,7 +321,7 @@ async function render(d, unknown, extra) {
     ttTxt = dRen == null ? '—' : dRen <= 14 ? `ต่ออายุได้อีก ${dRen} วัน` : 'ต่ออายุอัตโนมัติ'
     if (dRen != null && dRen <= 14) { tokBad = true; add(dRen <= 3 ? 'bad' : 'warn', `การเชื่อมต่อ TikTok จะหมดอายุใน ${dRen} วัน`, `ต่ออายุอัตโนมัติได้ถึง ${thDate(until)}`, 'ดำเนินการ: เชื่อมต่อบัญชี TikTok ใหม่ก่อนวันหมดอายุ') }
     (X.fb_pages || []).filter(p => fbStatus(p) === 'เชื่อมต่อไม่ได้').forEach(p => { tokBad = true; add('bad', `เพจ ${p['ชื่อเพจ']} เชื่อมต่อไม่ได้`, esc(p['เชื่อมต่อ_ข้อความ'] || 'token ของเพจใช้ไม่ได้') + ' · โพสต์และคอมเมนต์ของเพจนี้ไม่เข้าระบบ', 'ดำเนินการ: สร้าง token ผู้ใช้ใหม่ (เลือกทุกเพจ) แล้วบันทึกใน secret META_ADS_TOKEN ระบบจะต่อ token ของเพจให้เองในรอบ 06:50', p['เชื่อมต่อ_ตรวจเมื่อ']) })
-    (X.fb_pages || []).filter(p => fbStatus(p) === 'ควรตรวจสอบ token').forEach(p => { tokBad = true; add('warn', `ควรตรวจสอบ token ของเพจ ${p['ชื่อเพจ']}`, `ไม่มีโพสต์ใหม่เข้าระบบ ${p['เงียบมากี่วัน']} วัน และวันหมดอายุ token ที่บันทึกไว้ผ่านแล้ว`, 'ดำเนินการ: ตรวจสอบ token ของเพจในตาราง fb_pages') })
+    ;(X.fb_pages || []).filter(p => fbStatus(p) === 'ควรตรวจสอบ token').forEach(p => { tokBad = true; add('warn', `ควรตรวจสอบ token ของเพจ ${p['ชื่อเพจ']}`, `ไม่มีโพสต์ใหม่เข้าระบบ ${p['เงียบมากี่วัน']} วัน และวันหมดอายุ token ที่บันทึกไว้ผ่านแล้ว`, 'ดำเนินการ: ตรวจสอบ token ของเพจในตาราง fb_pages') })
     // ⑤ TikTok สถิติช่อง: ตัวดึงไม่ทำงาน / TikTok ไม่ส่งข้อมูล / ล่าช้าตามปกติ
     let ttHandled = false
     const acc = (X.feeds || []).find(f => f['ตาราง'] === 'tiktok_account_daily')

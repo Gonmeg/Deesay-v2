@@ -844,7 +844,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.23-a"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.23-b"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1781,7 +1781,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div class="sa-ph"><h2 id="cp-sku-title">Top SKU</h2><button class="btn btn-ghost" onclick="exportTable('tblCpSku')">⬇ Export CSV</button></div>
           <div class="table-wrap">
             <table id="tblCpSku" class="ui-table sa-tbl">
-              <thead><tr><th class="l">#</th><th class="l">สินค้า</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน</th><th class="num">ชิ้น</th></tr></thead>
+              <thead><tr><th class="l">#</th><th class="l">สินค้า</th><th class="num">ยอดขาย</th><th class="num">สัดส่วน <span class="pr-i" data-tip="ยอดขายของสินค้านี้ ÷ ยอดขายรวมทุกสินค้าในช่วงนี้">ⓘ</span></th><th class="num">ชิ้น</th></tr></thead>
               <tbody id="tbodyCpSku"></tbody>
             </table>
           </div>
@@ -4165,7 +4165,7 @@ function renderCpCreatorTable() {
   else rows = all.slice().sort((a, b) => b.rev - a.rev);
   document.getElementById('cpCrCount').textContent = cpCrSort === 'trend' ? `${fmt(rows.length)} คนที่ยอด 7 วันล่าสุดตั้งแต่ 1,000 · จาก ${fmt(all.length)} คน` : `${fmt(all.length)} คน`;
   const mixCol = cpCrCh === 'all';
-  document.getElementById('theadCpCreators').innerHTML = `<tr><th class="l">#</th><th class="l">Creator</th><th class="num">ยอดขาย</th><th class="num">% ของยอด</th><th class="num">ออเดอร์</th>`
+  document.getElementById('theadCpCreators').innerHTML = `<tr><th class="l">#</th><th class="l">Creator</th><th class="num">ยอดขาย</th><th class="num">% ของยอด <span class="pr-i" data-tip="ยอดขายของคนนั้น ÷ ยอดขายรวมทุกคนในตาราง (ตามช่องทางที่เลือก)">ⓘ</span></th><th class="num">ออเดอร์</th>`
     + (mixCol ? `<th class="l">ช่องทางขาย <span class="pr-i" data-tip="สัดส่วนยอดขายของคนนั้นตามช่องทาง · สี: Live ชมพู · คลิป ฟ้า · โชว์เคส ทอง · หน้าสินค้า เขียวน้ำทะเล · ชี้แถบเพื่อดูยอด">ⓘ</span></th>` : '')
     + `<th class="num">7 วันล่าสุด <span class="pr-i" data-tip="ยอดขาย ${w7} (7 วันนับถึงวันสุดท้ายของตัวกรองวันที่)">ⓘ</span></th><th class="num">เทียบ 7 วันก่อน <span class="pr-i" data-tip="7 วันล่าสุด เทียบกับ ${w7p} · ใหม่ = ช่วงก่อนไม่มียอดเลย&#10;มาแรง 7 วัน: แสดงเฉพาะคนที่ยอด 7 วันล่าสุดตั้งแต่ 1,000 (กันยอดน้อยเกินไป) เรียงคนใหม่ก่อน แล้วตาม % เติบโต">ⓘ</span></th></tr>`;
   const chip = (l7, p7) => p7 > 0 ? `<span class="ui-chip ${l7 >= p7 ? 'up' : 'dn'}">${l7 >= p7 ? '▲' : '▼'} ${Math.abs((l7 - p7) / p7 * 100).toFixed(0)}%</span>` : (l7 > 0 ? '<span class="cp-new">ใหม่</span>' : '<span class="ui-muted">—</span>');
@@ -4177,14 +4177,115 @@ function renderCpCreatorTable() {
   tb.innerHTML = rows.length ? rows.slice(start, start + size).map((x, i) => `<tr>
       <td class="rk">${start + i + 1}</td>
       <td class="l"><a class="cp-h mono" onclick="selectCpCreator(decodeURIComponent('${encodeURIComponent(x.h)}'))" data-tip="ดูรายละเอียดของ ${ttcEsc(x.h)}">${ttcEsc(x.h)}</a>${cpKindBadge(x.h)}</td>
-      <td class="num"><b>${fmt(x.rev)}</b></td><td class="num">${cpPct(x.rev, tot.rev)}</td><td class="num">${fmt(x.ord)}</td>
+      <td class="num"><b class="pl-trace" data-cptr="rev|${encodeURIComponent(x.h)}">${fmt(x.rev)}</b></td><td class="num">${cpPct(x.rev, tot.rev)}</td><td class="num"><span class="pl-trace" data-cptr="ord|${encodeURIComponent(x.h)}">${fmt(x.ord)}</span></td>
       ${mixCol ? `<td class="l">${mix(x)}</td>` : ''}
-      <td class="num">${x.l7 ? fmt(x.l7) : '<span class="ui-muted">—</span>'}</td><td class="num">${chip(x.l7, x.p7)}</td></tr>`).join('')
-    + `<tr class="ui-sum"><td></td><td class="l">รวม ${fmt(all.length)} คน</td><td class="num">${fmt(tot.rev)}</td><td class="num">100%</td><td class="num">${fmt(tot.ord)}</td>${mixCol ? '<td></td>' : ''}<td class="num">${fmt(tot.l7)}</td><td class="num">${chip(tot.l7, tot.p7)}</td></tr>`
+      <td class="num">${x.l7 ? `<span class="pl-trace" data-cptr="l7|${encodeURIComponent(x.h)}">${fmt(x.l7)}</span>` : '<span class="ui-muted">—</span>'}</td><td class="num">${chip(x.l7, x.p7)}</td></tr>`).join('')
+    + `<tr class="ui-sum"><td></td><td class="l">รวม ${fmt(all.length)} คน</td><td class="num"><span class="pl-trace" data-cptr="rev|">${fmt(tot.rev)}</span></td><td class="num">100%</td><td class="num"><span class="pl-trace" data-cptr="ord|">${fmt(tot.ord)}</span></td>${mixCol ? '<td></td>' : ''}<td class="num">${tot.l7 ? `<span class="pl-trace" data-cptr="l7|">${fmt(tot.l7)}</span>` : '—'}</td><td class="num">${chip(tot.l7, tot.p7)}</td></tr>`
     : `<tr><td colspan="${cols}" class="empty">${all.length ? 'ยังไม่มี Creator ที่ยอด 7 วันล่าสุดตั้งแต่ 1,000' : 'ไม่มีข้อมูลในช่วงนี้'}</td></tr>`;
   renderPagerHtml('cpCrPager', cpCrPage, pages, 'cpCrGo');
   if (window.UI && UI.fit) UI.fit();
 }
+
+// ===== (2026-11-23) ที่มาของตัวเลข — Creator Performance =====
+//   ตาราง Creator ทั้งหมด: ยอดขาย / ออเดอร์ / 7 วันล่าสุด (รายคน + แถวรวม) · ตาราง Top SKU: ยอดขาย / ชิ้น
+//   ใช้ข้อมูลชุดเดียวกับตาราง (creator_summary · creator_trend · creator_daily · creator_top_sku · mv_creator_sku_daily) → ยอดในแผงเท่าตัวเลขที่กดเสมอ
+const CP_OC_NAME = { LIVE: 'Live', Videos: 'คลิป', 'Creator showcase': 'โชว์เคส', 'Product cards': 'หน้าสินค้า' };
+const CP_KIND_NAME = { own: 'บัญชีร้าน', KOL: 'KOL', Affiliate: 'Affiliate' };
+const CP_SRC = '<dt>ยอดขาย</dt><dd>ออเดอร์ TikTok Shop นับตามวันที่สั่งซื้อ ไม่นับยกเลิก / คืน · ชุดเดียวกับการ์ดยอดขายรวม</dd>'
+  + '<dt>Creator</dt><dd>บัญชีที่ TikTok ผูกกับออเดอร์ (คนที่ได้ Commission) · ออเดอร์ที่ร้านขายเองอยู่ใต้บัญชีร้าน</dd>'
+  + '<dt>ช่องทางขาย</dt><dd>Order Channel ของออเดอร์: Live · คลิป · โชว์เคส · หน้าสินค้า</dd>';
+const cpTrTb = (head, rows, foot) => `<table class="tr-tb" data-no-sort data-no-page><thead><tr>${head.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="${head.length}" class="empty">ไม่มี</td></tr>`}</tbody>${foot ? `<tfoot><tr>${foot.map(x => `<td>${x}</td>`).join('')}</tr></tfoot>` : ''}</table>`;
+const cpTrSec = (t, note, html) => `<section class="tr-part"><div class="tr-sec"><span>${t}</span>${note ? `<span style="font-weight:400;color:var(--text3);">${note}</span>` : ''}</div>${html}</section>`;
+const cpTrDays = (rows, ch) => { const m = {}; rows.forEach(r => { if (ch !== 'all' && r.order_channel !== ch) return; const o = m[r.date] = m[r.date] || { rev: 0, ord: 0 }; o.rev += +r.revenue || 0; o.ord += +r.orders || 0; }); return m; };
+async function cpTrace(kind, h) {
+  const from = getDateValue('From'), to = getDateValue('To'), ch = cpCrCh, m = v => fmt(Math.round(+v || 0));
+  const H = r => r.creator_handle || 'deesaythailand', chOk = oc => ch === 'all' || oc === ch;
+  const toD = new Date(to + 'T00:00:00'), addD = n => { const x = new Date(toD); x.setDate(x.getDate() + n); return fmtDateISO(x); };
+  // กลุ่มคนเดียวกับตาราง: ตัวกรอง ทุกคน / KOL / Affiliate + ช่องทางที่เลือก + มียอดในช่วงนี้
+  const sum = cpCreator.summary.filter(r => (h ? H(r) === h : cpTypeOk(H(r))) && chOk(r.order_channel));
+  const hRev = {}; sum.forEach(r => { hRev[H(r)] = (hRev[H(r)] || 0) + (+r.revenue || 0); });
+  const S = sum.filter(r => hRev[H(r)] > 0);
+  const who = h ? `<span style="font-family:'Sarabun',sans-serif;">@${trEsc(h)}</span>` : (cpType === 'all' ? 'ทุก Creator' : 'เฉพาะ ' + cpType);
+  const tag = who + (ch === 'all' ? '' : ' · ' + trEsc(CP_OC_NAME[ch] || ch));
+  const T = S.reduce((t, r) => ({ rev: t.rev + (+r.revenue || 0), ord: t.ord + (+r.orders || 0), crev: t.crev + (+r.cancelled_revenue || 0), cord: t.cord + (+r.cancelled_orders || 0) }), { rev: 0, ord: 0, crev: 0, cord: 0 });
+  const grp = (rows, keyF, vF) => { const o = {}; rows.forEach(r => { const k = keyF(r), v = vF(r), x = o[k] = o[k] || v.map(() => 0); v.forEach((n, i) => x[i] += n); }); return Object.entries(o).filter(([, v]) => v.some(n => Math.round(n))).sort((a, b) => b[1][b[1].length - 1] - a[1][a[1].length - 1]); };
+  trOpenShell('ที่มาของตัวเลข');
+  const body = document.getElementById('trBody');
+  if (kind === 'l7') {   // 7 วันล่าสุด เทียบ 7 วันก่อน (นับถึงวันสุดท้ายของตัวกรองวันที่)
+    const w7 = trRange(addD(-6), to), w7p = trRange(addD(-13), addD(-7)), inS = new Set(S.map(H));
+    const tr = cpCreator.trend.filter(r => inS.has(H(r)) && chOk(r.order_channel));
+    const L = tr.reduce((t, r) => t + (+r.last7_revenue || 0), 0), P = tr.reduce((t, r) => t + (+r.prev7_revenue || 0), 0);
+    const chg = P > 0 ? `เทียบ 7 วันก่อน ${L >= P ? '+' : '−'}${Math.abs((L - P) / P * 100).toFixed(0)}%` : 'ช่วงก่อนไม่มียอด';
+    let html = `<div class="tr-card"><div class="tr-card-t">ยอดขาย 7 วันล่าสุด · ${tag}</div><div class="tr-card-v">${m(L)}</div><div class="tr-card-m"><span>${w7}</span><span>${chg}</span></div></div>`;
+    if (h) {
+      const k = h + '|l7|' + to;
+      if (!cpCreator.detail[k]) { try { cpCreator.detail[k] = await supaRpc('creator_daily' + (cpUseApi(from) ? '_api' : ''), { p_from: addD(-13), p_to: to, p_handle: h }, true); } catch (e) { body.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; } }
+      const D = cpTrDays(cpCreator.detail[k], ch), day = (a, b) => { const out = [], t = [0, 0]; for (let i = b; i >= a; i--) { const d = addD(-i), x = D[d] || { rev: 0, ord: 0 }; t[0] += x.ord; t[1] += x.rev; out.push(`<tr><td>${trRange(d, d)}</td><td>${x.ord ? fmt(x.ord) : '—'}</td><td>${x.rev ? m(x.rev) : '—'}</td></tr>`); } return [out.reverse(), t]; };
+      const [r1, t1] = day(0, 6), [r2, t2] = day(7, 13);
+      html += cpTrSec('7 วันล่าสุด', w7, cpTrTb(['วันที่', 'ออเดอร์', 'ยอดขาย'], r1, ['รวม', fmt(t1[0]), m(t1[1])]))
+        + cpTrSec('7 วันก่อน', w7p, cpTrTb(['วันที่', 'ออเดอร์', 'ยอดขาย'], r2, ['รวม', fmt(t2[0]), m(t2[1])]));
+    } else {
+      const row = ([l, v]) => `<tr><td>${trEsc(l)}</td><td>${m(v[0])}</td><td>${m(v[1])}</td></tr>`;
+      if (ch === 'all') html += cpTrSec('แยกตามช่องทางขาย', '', cpTrTb(['ช่องทาง', '7 วันก่อน', '7 วันล่าสุด'], grp(tr, r => CP_OC_NAME[r.order_channel] || r.order_channel || 'ไม่ระบุ', r => [+r.prev7_revenue || 0, +r.last7_revenue || 0]).map(row), ['รวม', m(P), m(L)]));
+      if (cpType === 'all') html += cpTrSec('แยกตามประเภท Creator', '', cpTrTb(['ประเภท', '7 วันก่อน', '7 วันล่าสุด'], grp(tr, r => CP_KIND_NAME[cpKind(H(r))], r => [+r.prev7_revenue || 0, +r.last7_revenue || 0]).map(row), ['รวม', m(P), m(L)]));
+    }
+    body.innerHTML = html + `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">${CP_SRC}<dt>ช่วงเวลา</dt><dd>7 วันนับถึงวันสุดท้ายของตัวกรองวันที่ เทียบกับ 7 วันก่อนหน้านั้น</dd></dl></div>`;
+    return;
+  }
+  const isOrd = kind === 'ord';
+  let html = `<div class="tr-card"><div class="tr-card-t">${isOrd ? 'ออเดอร์' : 'ยอดขาย'} · ${tag}</div><div class="tr-card-v">${isOrd ? fmt(T.ord) : m(T.rev)}</div>
+    <div class="tr-card-m"><span>${trRange(from, to)}</span><span>${isOrd ? 'ยอดขาย ' + m(T.rev) : fmt(T.ord) + ' ออเดอร์'}</span>${h ? '' : `<span>${fmt(Object.keys(hRev).filter(k => hRev[k] > 0).length)} คน</span>`}</div></div>`;
+  const row3 = ([l, v]) => `<tr><td>${trEsc(l)}</td><td>${fmt(v[0])}</td><td>${m(v[1])}</td></tr>`, foot = ['รวม', fmt(T.ord), m(T.rev)];
+  if (ch === 'all') html += cpTrSec('แยกตามช่องทางขาย', '', cpTrTb(['ช่องทาง', 'ออเดอร์', 'ยอดขาย'], grp(S, r => CP_OC_NAME[r.order_channel] || r.order_channel || 'ไม่ระบุ', r => [+r.orders || 0, +r.revenue || 0]).map(row3), foot));
+  if (!h && cpType === 'all') html += cpTrSec('แยกตามประเภท Creator', '', cpTrTb(['ประเภท', 'ออเดอร์', 'ยอดขาย'], grp(S, r => CP_KIND_NAME[cpKind(H(r))], r => [+r.orders || 0, +r.revenue || 0]).map(row3), foot));
+  let daily = cpCreator.daily;
+  if (h) {
+    let det; try { det = await ensureCreatorDetail(from, to, h); } catch (e) { body.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
+    daily = det.daily;
+    if (ch === 'all') { const sk = det.topSku.filter(r => Math.round(+r.revenue || 0) || +r.qty);   // สินค้า: ข้อมูลรายสินค้าไม่แยกช่องทางขาย จึงแสดงเฉพาะตอนดูทุกช่องทาง
+      html += cpTrSec('แยกตามสินค้า', 'ยอดขายแบ่งตามราคาที่ผู้ซื้อจ่ายจริงต่อชิ้น', cpTrTb(['สินค้า', 'ชิ้น', 'ยอดขาย'], sk.map(r => `<tr><td style="white-space:normal;">${trEsc(skuToName(r.parent_sku || '—'))}</td><td>${fmt(+r.qty || 0)}</td><td>${m(r.revenue)}</td></tr>`),
+        ['รวม', fmt(sk.reduce((t, r) => t + (+r.qty || 0), 0)), m(sk.reduce((t, r) => t + (+r.revenue || 0), 0))])); }
+  }
+  const D = cpTrDays(daily, ch), days = Object.keys(D).sort().reverse().filter(d => Math.round(D[d].rev) || D[d].ord);
+  if (days.length > 1) html += cpTrSec('รายวัน', '', cpTrTb(['วันที่', 'ออเดอร์', 'ยอดขาย'], days.map(d => `<tr><td>${trRange(d, d)}</td><td>${fmt(D[d].ord)}</td><td>${m(D[d].rev)}</td></tr>`), foot));
+  html += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">${CP_SRC}${T.cord ? `<dt>ไม่นับ</dt><dd>ยกเลิก / คืน ${fmt(T.cord)} ออเดอร์ (${m(T.crev)})</dd>` : ''}</dl></div>`;
+  body.innerHTML = html;
+}
+// Top SKU: ยอดขาย / ชิ้นของสินค้า → แยกตาม Creator + รายวัน (mv_creator_sku_daily ตัวเดียวกับตาราง)
+async function cpSkuTrace(sku, kind) {
+  const from = getDateValue('From'), to = getDateValue('To'), h = cpSelectedCreator, m = v => fmt(Math.round(+v || 0));
+  trOpenShell('ที่มาของตัวเลข');
+  const body = document.getElementById('trBody');
+  let rows;
+  try {
+    rows = await fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_creator_sku_daily?select=date,creator_handle,qty,revenue&parent_sku=eq.${encodeURIComponent(sku)}&date=gte.${from}&date=lte.${to}${h ? '&creator_handle=eq.' + encodeURIComponent(h) : ''}&order=date.asc,creator_handle.asc`,
+      { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + authJwt() });
+  } catch (e) { body.innerHTML = `<div class="tr-warn">โหลดไม่สำเร็จ: ${trEsc(e.message)}</div>`; return; }
+  if (!h && cpType !== 'all') rows = rows.filter(r => cpKind(r.creator_handle) === cpType);   // ตัวกรอง KOL / Affiliate เหมือนตาราง Top SKU
+  const T = rows.reduce((t, r) => ({ q: t.q + (+r.qty || 0), r: t.r + (+r.revenue || 0) }), { q: 0, r: 0 });
+  const by = (keyF) => { const o = {}; rows.forEach(r => { const k = keyF(r), x = o[k] = o[k] || [0, 0]; x[0] += +r.qty || 0; x[1] += +r.revenue || 0; }); return Object.entries(o).filter(([, v]) => Math.round(v[1]) || v[0]); };
+  const isQ = kind === 'qty', foot = ['รวม', fmt(T.q), m(T.r)];
+  const who = h ? `<span style="font-family:'Sarabun',sans-serif;">@${trEsc(h)}</span>` : (cpType === 'all' ? '' : 'เฉพาะ ' + cpType);
+  let html = `<div class="tr-card"><div class="tr-card-t">${isQ ? 'ชิ้น' : 'ยอดขาย'} · ${trEsc(skuToName(sku))}${who ? ' · ' + who : ''}</div><div class="tr-card-v">${isQ ? fmt(T.q) : m(T.r)}</div>
+    <div class="tr-card-m"><span>${trRange(from, to)}</span><span>${isQ ? 'ยอดขาย ' + m(T.r) : fmt(T.q) + ' ชิ้น'}</span></div></div>`;
+  if (!h) {
+    const C = by(r => r.creator_handle).sort((a, b) => b[1][1] - a[1][1]), top = C.slice(0, 20), rest = C.slice(20);
+    const rr = rest.reduce((t, [, v]) => [t[0] + v[0], t[1] + v[1]], [0, 0]);
+    html += cpTrSec('แยกตาม Creator', C.length > 20 ? `20 อันดับแรกจาก ${fmt(C.length)} คน` : `${fmt(C.length)} คน`, cpTrTb(['Creator', 'ชิ้น', 'ยอดขาย'],
+      top.map(([k, v]) => `<tr><td><span style="font-family:'Sarabun',sans-serif;">@${trEsc(k)}</span> <span style="color:var(--text3);font-size:11px;">${CP_KIND_NAME[cpKind(k)]}</span></td><td>${fmt(v[0])}</td><td>${m(v[1])}</td></tr>`)
+        .concat(rest.length ? [`<tr><td>อื่นๆ ${fmt(rest.length)} คน</td><td>${fmt(rr[0])}</td><td>${m(rr[1])}</td></tr>`] : []), foot));
+  }
+  const D = by(r => r.date).sort((a, b) => b[0].localeCompare(a[0]));
+  if (D.length > 1) html += cpTrSec('รายวัน', '', cpTrTb(['วันที่', 'ชิ้น', 'ยอดขาย'], D.map(([d, v]) => `<tr><td>${trRange(d, d)}</td><td>${fmt(v[0])}</td><td>${m(v[1])}</td></tr>`), foot));
+  html += `<div class="tr-src"><div class="tr-src-h">แหล่งที่มา</div><dl class="tr-dl">${CP_SRC}<dt>ยอดต่อสินค้า</dt><dd>ยอดออเดอร์แบ่งให้แต่ละสินค้าตามราคาที่ผู้ซื้อจ่ายจริงต่อชิ้น · ของแถมที่มากับสินค้าอื่นได้ยอด 0</dd></dl></div>`;
+  body.innerHTML = html;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-cptr],[data-cpsku]'); if (!t) return;
+  e.stopPropagation();
+  if (t.dataset.cptr) { const [k, h] = t.dataset.cptr.split('|'); cpTrace(k, h ? decodeURIComponent(h) : null); }
+  else { const [s, k] = t.dataset.cpsku.split('|'); cpSkuTrace(decodeURIComponent(s), k); }
+});
 
 async function renderCreatorPerf() {
   syncCpSrcButtons();
@@ -4239,7 +4340,7 @@ async function renderCreatorPerf() {
   const skuTot = topSkuRows.reduce((t, r) => t + (parseFloat(r.revenue) || 0), 0);
   document.getElementById('tbodyCpSku').innerHTML = sortedSku.length ? sortedSku.map(([sku, v], i) => `
     <tr><td class="rk">${i + 1}</td><td class="l"><b>${ttcEsc(skuToName(sku))}</b><small class="mono">${ttcEsc(sku)}</small></td>
-      <td class="num"><b>${fmt(v.rev)}</b></td><td class="num">${cpPct(v.rev, skuTot)}</td><td class="num">${fmt(v.qty)}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
+      <td class="num"><b${sku === '—' ? '' : ` class="pl-trace" data-cpsku="${encodeURIComponent(sku)}|rev"`}>${fmt(v.rev)}</b></td><td class="num">${cpPct(v.rev, skuTot)}</td><td class="num">${sku === '—' ? fmt(v.qty) : `<span class="pl-trace" data-cpsku="${encodeURIComponent(sku)}|qty">${fmt(v.qty)}</span>`}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
 
   // ยอดแยก Order Channel (ใช้กับการ์ด ROAS · ตาราง LIVE vs Videos เดิมย้ายไปเป็นแถบช่องทางเหนือตาราง Creator)
   const byOC = {};
