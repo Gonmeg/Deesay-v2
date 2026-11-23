@@ -47,6 +47,7 @@
     moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
     logout: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
     collapse: '<path d="M11 6l-6 6 6 6"/><path d="M19 6l-6 6 6 6"/>',
+    grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
   };
   const svg = k => `<svg class="sb-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k] || ''}</svg>`;
 
@@ -77,6 +78,8 @@
       : `<a class="${cls}" href="dashboard.html?page=${id}" data-label="${esc(label)}" data-page="${id}">${ic}<span class="sb-tx">${esc(label)}</span></a>`;
   };
   let nav = '';
+  // (2026-11-23) หน้าหลัก (hub.html: เลือก Dashboard / Warehouse) — โชว์เฉพาะคนที่เข้า Warehouse ได้ (ตอนนี้ = ผู้ดูแลระบบ) · เปิดตอนสิทธิ์โหลดเสร็จ (waitPerm)
+  nav += `<a class="nav-item sb-back" id="sbHub" href="hub.html" style="display:none;" data-label="หน้าหลัก"><span class="nav-icon">${svg('grid')}</span><span class="sb-tx">หน้าหลัก</span></a>`;
   if (!DASH) nav += `<a class="nav-item sb-back" href="dashboard.html" data-label="กลับ Dashboard"><span class="nav-icon">${svg('back')}</span><span class="sb-tx">กลับ Dashboard</span></a>`;
   // หน้า admin: แท็บของหน้าอยู่บนสุด (กดแล้วไปกดปุ่มแท็บเดิมของหน้าให้)
   if (PAGE === 'admin') {
@@ -268,6 +271,7 @@
     setT('sbName', name);
     setT('sbRole', p.is_admin ? 'ผู้ดูแลระบบ' : (p.email || 'ผู้ใช้งาน'));
     setT('sbAv', (name.trim()[0] || '·').toUpperCase());
+    { const h = document.getElementById('sbHub'); if (h && p.is_admin) h.style.display = ''; }   // สิทธิ์ Warehouse = ผู้ดูแลระบบ (ตรงกับ hub.html / warehouse.html)
     if (DASH) return;   // dashboard กรองเมนูเองใน applyPermissions() (โค้ดเดิม)
     document.querySelectorAll('.sb-nav [data-page]').forEach(el => { if (Auth.canPage && !Auth.canPage(el.dataset.page)) el.remove(); });
     document.querySelectorAll('.sb-nav .sb-subs').forEach(g => { if (!g.querySelector('.nav-item')) { g.previousElementSibling && g.previousElementSibling.remove(); g.remove(); } });

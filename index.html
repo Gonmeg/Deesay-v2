@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deesay</title>
-<!-- (2026-11-02) หน้าแรกของลิงก์เว็บ → ไป dashboard เลย (ถ้ายังไม่ล็อกอิน auth.js จะพาไปหน้า login เอง) · เดิมเป็นหน้าเมนูเก่า -->
-<script>location.replace('dashboard.html' + location.search + location.hash);</script>
-<meta http-equiv="refresh" content="0; url=dashboard.html">
-</head><body style="font-family:'Sarabun',system-ui,sans-serif;padding:24px;">กำลังเปิด Deesay… <a href="dashboard.html">กดที่นี่ถ้าไม่เปิดเอง</a></body></html>
+<!-- (2026-11-23) ลิงก์หลักของเว็บ → หน้าหลัก (hub.html เลือก Dashboard / Warehouse) · ลิงก์เก่าที่มี ?page= ยังไป dashboard ตรง · คนที่ไม่มีสิทธิ์ Warehouse hub จะพาไป dashboard เอง -->
+<script>location.replace((/[?&]page=/.test(location.search) ? 'dashboard.html' : 'hub.html') + location.search + location.hash);</script>
+<meta http-equiv="refresh" content="0; url=hub.html">
+</head><body style="font-family:'Sarabun',system-ui,sans-serif;padding:24px;">กำลังเปิด Deesay… <a href="hub.html">กดที่นี่ถ้าไม่เปิดเอง</a></body></html>

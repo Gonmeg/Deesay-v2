@@ -72,7 +72,7 @@
   let mode = 'login';
   function togglePw(id, btn) { const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁'; }
   const $ = id => document.getElementById(id);
-  const redirectTo = () => { const r = new URLSearchParams(location.search).get('redirect'); return (r && !r.startsWith('http') && !r.startsWith('//')) ? r : 'dashboard.html'; };
+  const redirectTo = () => { const r = new URLSearchParams(location.search).get('redirect'); return (r && !r.startsWith('http') && !r.startsWith('//')) ? r : 'hub.html'; };   // (2026-11-23) เข้าระบบแล้วไปหน้าหลัก (คนที่ไม่มีสิทธิ์ Warehouse hub พาไป dashboard เอง)
   const show = (kind, text) => { const m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; };
 
   function setMode(m) {
