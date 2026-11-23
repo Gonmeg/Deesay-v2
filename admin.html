@@ -545,8 +545,8 @@
     <div class="card">
       <div class="pm-head">👥 ผู้ใช้ทั้งหมด <span class="pm-sub">ทุกช่องบันทึกทันทีที่ติ๊ก · คนสมัครใหม่จะยังไม่มีหน้าไหนจนกว่าจะติ๊กให้</span></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>ชื่อ</th><th>อีเมล</th><th title="เห็นทุกหน้า · เข้าหน้าสิทธิ์ผู้ใช้ และเปิด / ปิดสิทธิ์ให้คนอื่นได้">ผู้ดูแลระบบ</th><th>หน้า Dashboard</th><th>อัปโหลดไฟล์</th><th>จัดการสินค้า</th><th title="แก้เป้าในหน้าเป้าหมาย KPI ได้ (เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ) — ต้องติ๊กหน้า เป้าหมาย KPI ให้ด้วยถึงจะเข้าหน้าได้">แก้เป้า KPI</th><th>สถานะ</th><th></th></tr></thead>
-        <tbody id="pmUserBody"><tr><td colspan="9" class="pm-empty">กำลังโหลด…</td></tr></tbody>
+        <thead><tr><th>ชื่อ</th><th>อีเมล</th><th title="เห็นทุกหน้า · เข้าหน้าสิทธิ์ผู้ใช้ และเปิด / ปิดสิทธิ์ให้คนอื่นได้">ผู้ดูแลระบบ</th><th>หน้า Dashboard</th><th>อัปโหลดไฟล์</th><th>จัดการสินค้า</th><th title="แก้เป้าในหน้าเป้าหมาย KPI ได้ (เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ) — ต้องติ๊กหน้า เป้าหมาย KPI ให้ด้วยถึงจะเข้าหน้าได้">แก้เป้า KPI</th><th title="เข้าหน้า Warehouse: ปริ้นใบปะหน้า + สั่งจัดส่ง TikTok · สรุปการจัดส่ง · ประวัติการปริ้น — แยกจากหน้า Dashboard (ติ๊ก ทุกหน้า ไม่รวม Warehouse)">Warehouse</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody id="pmUserBody"><tr><td colspan="10" class="pm-empty">กำลังโหลด…</td></tr></tbody>
       </table></div>
     </div>
   </div><!-- /tab-perms -->
@@ -1340,6 +1340,9 @@ let pmUsers = []
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const thDate = d => d ? new Date(d).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'
 const hasAll = u => u.is_admin || (u.pages || []).includes('*')
+// (2026-11-23) สิทธิ์ Warehouse เก็บเป็น 'warehouse' ในรายการหน้า (ไม่อยู่ในรายชื่อหน้า Dashboard) — ติ๊กหน้า / กดทางลัดต้องเก็บค่านี้ไว้
+const hasWh = u => (u.pages || []).includes('warehouse')
+const keepWh = (u, pages) => hasWh(u) ? [...pages.filter(p => p !== 'warehouse'), 'warehouse'] : pages
 const pageCount = u => hasAll(u) ? 'ทุกหน้า' : `${(u.pages || []).filter(p => PAGES.some(x => x.id === p)).length}/${PAGES.length} หน้า`
 
 async function authAdmin(action, user_id, extra = {}) {
@@ -1378,7 +1381,7 @@ function renderPmRequests(reqs) {
 
 function renderPmUsers() {
   const tb = document.getElementById('pmUserBody')
-  if (!pmUsers.length) { tb.innerHTML = '<tr><td colspan="9" class="pm-empty">ยังไม่มีใครสมัคร</td></tr>'; return }
+  if (!pmUsers.length) { tb.innerHTML = '<tr><td colspan="10" class="pm-empty">ยังไม่มีใครสมัคร</td></tr>'; return }
   tb.innerHTML = pmUsers.map(u => {
     const me = u.user_id === Auth.perm.user_id, adm = u.is_admin, dis = adm ? 'disabled' : ''
     return `<tr data-uid="${u.user_id}">
@@ -1389,6 +1392,7 @@ function renderPmUsers() {
       <td><input type="checkbox" data-f="can_upload" ${u.can_upload || adm ? 'checked' : ''} ${dis}></td>
       <td><input type="checkbox" data-f="can_admin" ${u.can_admin || adm ? 'checked' : ''} ${dis}></td>
       <td><input type="checkbox" data-f="can_edit_kpi" ${u.can_edit_kpi || adm ? 'checked' : ''} ${dis}></td>
+      <td><input type="checkbox" data-f="warehouse" ${hasWh(u) || adm ? 'checked' : ''} ${dis}></td>
       <td>${u.is_active ? '<span class="pm-badge pm-on">ใช้งานได้</span>' : '<span class="pm-badge pm-off">ปิดอยู่</span>'}</td>
       <td><button class="pm-btn gold" data-act="reset">🔑 ตั้งรหัสใหม่</button>${me ? '' : `<button class="pm-btn" data-act="toggle-active">${u.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button><button class="pm-btn danger" data-act="delete">ลบ</button>`}</td>
     </tr>`
@@ -1398,7 +1402,7 @@ function renderPmUsers() {
 function pmDetailRow(u) {
   const groups = [...new Set(PAGES.map(p => p.group))]
   const on = id => hasAll(u) || (u.pages || []).includes(id)
-  return `<tr class="pm-detail" data-detail="${u.user_id}"><td colspan="9">
+  return `<tr class="pm-detail" data-detail="${u.user_id}"><td colspan="10">
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
       <span class="pm-sub">ทางลัด:</span>
       <button class="pm-btn" data-act="preset" data-preset="all">ทุกหน้า</button>
@@ -1448,7 +1452,7 @@ document.getElementById('tab-perms').addEventListener('click', async e => {
   }
   if (act === 'preset') {
     const pages = btn.dataset.preset === 'all' ? ['*'] : btn.dataset.preset === 'staff' ? [...STAFF_PAGES] : []
-    await pmSave(uid, { pages }, 'บันทึกหน้าแล้ว'); renderPmUsers()
+    await pmSave(uid, { pages: keepWh(u, pages) }, 'บันทึกหน้าแล้ว'); renderPmUsers()
     document.querySelector(`tr[data-uid="${uid}"]`).insertAdjacentHTML('afterend', pmDetailRow(pmUsers.find(x => x.user_id === uid)))
     return
   }
@@ -1468,7 +1472,7 @@ document.getElementById('tab-perms').addEventListener('change', async e => {
   const uid = row.dataset.uid || row.dataset.detail
   if (el.dataset.page) {           // ติ๊กหน้าในตารางย่อย
     const pages = [...row.querySelectorAll('input[data-page]:checked')].map(x => x.dataset.page)
-    await pmSave(uid, { pages }, 'บันทึกหน้าแล้ว')
+    await pmSave(uid, { pages: keepWh(pmUsers.find(x => x.user_id === uid), pages) }, 'บันทึกหน้าแล้ว')
     const main = document.querySelector(`tr[data-uid="${uid}"] td:nth-child(3)`); if (main) main.firstChild.textContent = pageCount(pmUsers.find(x => x.user_id === uid)) + ' '
     return
   }
@@ -1481,6 +1485,10 @@ document.getElementById('tab-perms').addEventListener('change', async e => {
     renderPmUsers(); return
   }
   if (el.dataset.f === 'can_upload' || el.dataset.f === 'can_admin' || el.dataset.f === 'can_edit_kpi') await pmSave(uid, { [el.dataset.f]: el.checked })
+  if (el.dataset.f === 'warehouse') {   // (2026-11-23) เพิ่ม / ถอด 'warehouse' ในรายการหน้า โดยไม่แตะหน้าอื่น
+    const u = pmUsers.find(x => x.user_id === uid), cur = (u?.pages || []).filter(p => p !== 'warehouse')
+    try { await pmSave(uid, { pages: el.checked ? [...cur, 'warehouse'] : cur }, el.checked ? 'เปิดสิทธิ์ Warehouse แล้ว' : 'ปิดสิทธิ์ Warehouse แล้ว') } catch (err) { el.checked = !el.checked }
+  }
   if (el.dataset.f === 'name') await pmSave(uid, { display_name: el.value.trim() }, 'บันทึกชื่อแล้ว')
 })
 

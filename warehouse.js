@@ -313,7 +313,9 @@
 
   async function start() {
     try { if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
-    const perm = await Auth.require('health');   // ช่วงทดสอบ: เฉพาะผู้ดูแลระบบ
+    const perm = await Auth.require('warehouse');   // (2026-11-23) ผู้ดูแลระบบ หรือคนที่ติ๊กช่อง Warehouse ในหน้าตั้งค่า
+    // มีแค่สิทธิ์ Warehouse (ไม่มีหน้าอื่น) = ซ่อนปุ่มกลับหน้าหลัก เพราะหน้าหลักจะพากลับมาที่นี่อยู่ดี
+    if (!(perm.is_admin || perm.pages.some(x => x !== 'warehouse') || perm.can_upload || perm.can_admin || perm.can_edit_kpi)) document.querySelector('.wh-side .home')?.remove();
     $('whoMail').textContent = perm.email || '';
     bind();
     const now = new Date(); $('sumDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;

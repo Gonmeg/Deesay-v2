@@ -271,7 +271,7 @@
     setT('sbName', name);
     setT('sbRole', p.is_admin ? 'ผู้ดูแลระบบ' : (p.email || 'ผู้ใช้งาน'));
     setT('sbAv', (name.trim()[0] || '·').toUpperCase());
-    { const h = document.getElementById('sbHub'); if (h && p.is_admin) h.style.display = ''; }   // สิทธิ์ Warehouse = ผู้ดูแลระบบ (ตรงกับ hub.html / warehouse.html)
+    { const h = document.getElementById('sbHub'); if (h && (p.is_admin || (p.pages || []).includes('warehouse'))) h.style.display = ''; }   // สิทธิ์ Warehouse = ผู้ดูแลระบบ หรือติ๊กช่อง Warehouse (ตรงกับ auth.js / hub.html)
     if (DASH) return;   // dashboard กรองเมนูเองใน applyPermissions() (โค้ดเดิม)
     document.querySelectorAll('.sb-nav [data-page]').forEach(el => { if (Auth.canPage && !Auth.canPage(el.dataset.page)) el.remove(); });
     document.querySelectorAll('.sb-nav .sb-subs').forEach(g => { if (!g.querySelector('.nav-item')) { g.previousElementSibling && g.previousElementSibling.remove(); g.remove(); } });

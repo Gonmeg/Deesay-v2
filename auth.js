@@ -88,7 +88,7 @@ window.Auth = (function () {
   // (2026-10-15) execfee (ค่าธรรมเนียมช่องทาง) ใช้สิทธิ์เดียวกับ exec (หน้าผู้บริหาร)
   function canPage(id) { if (id === 'execfee') id = 'exec'; if (id === 'ordprofit' || id === 'invvalue') id = 'cost'; /* (2026-10-26) กำไรต่อออเดอร์ ใช้สิทธิ์เดียวกับ Business Insight */ return !!perm && perm.is_active && (id === 'home' || perm.is_admin || perm.pages.includes('*') || perm.pages.includes(id)); }
 
-  // ด่านหลัก — where = 'dashboard' | 'upload' | 'admin' | 'health'
+  // ด่านหลัก — where = 'dashboard' | 'upload' | 'admin' | 'health' | 'warehouse' | 'hub'
   async function require(where) {
     await ready;
     const { data } = await client.auth.getSession();
@@ -108,14 +108,18 @@ window.Auth = (function () {
     const ok = where === 'upload' ? (perm.is_admin || perm.can_upload)
              : where === 'admin'  ? (perm.is_admin || perm.can_admin || perm.can_edit_kpi)   // (2026-10-22) คนแก้ KPI เข้าได้เฉพาะแท็บตั้งเป้ายอดขาย
              : where === 'health' ? perm.is_admin
-             : (perm.is_admin || perm.pages.length > 0);
+             // (2026-11-23) Warehouse = ติ๊กช่อง Warehouse ในหน้าตั้งค่า (เก็บเป็น 'warehouse' ในรายการหน้า · ไม่นับเป็นหน้า Dashboard · "ทุกหน้า" ไม่รวม Warehouse)
+             : where === 'warehouse' ? (perm.is_admin || perm.pages.includes('warehouse'))
+             : where === 'hub' ? (perm.is_admin || perm.pages.length > 0 || perm.can_upload || perm.can_admin || perm.can_edit_kpi)
+             : (perm.is_admin || perm.pages.some(p => p !== 'warehouse'));
     // (2026-11-02) คนที่มีสิทธิ์แค่อัปโหลด / ตั้งค่า (ไม่มีหน้า dashboard) เปิดลิงก์หลักแล้วพาไปหน้าที่ใช้ได้เลย — ไม่ขึ้น "รอเปิดสิทธิ์"
     //   (ลิงก์หลักของเว็บพาไป dashboard ตั้งแต่ 2026-11-02 เดิมเป็นหน้าเมนูให้เลือกเอง)
     if (!ok && where === 'dashboard') {
       if (perm.can_upload) { location.replace('upload.html'); return new Promise(() => {}); }
       if (perm.can_admin || perm.can_edit_kpi) { location.replace('admin.html'); return new Promise(() => {}); }
+      if (perm.pages.includes('warehouse')) { location.replace('warehouse.html'); return new Promise(() => {}); }
     }
-    if (!ok) return showBlocked('รอเปิดสิทธิ์ใช้งาน', where === 'dashboard'
+    if (!ok) return showBlocked('รอเปิดสิทธิ์ใช้งาน', where === 'dashboard' || where === 'hub'
       ? 'สมัครเรียบร้อยแล้ว — รอผู้ดูแลระบบเปิดสิทธิ์ให้ แล้วกด "ลองใหม่"'
       : 'บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าหน้านี้ — ติดต่อผู้ดูแลระบบถ้าต้องใช้');
     return perm;

@@ -60,9 +60,12 @@ body{margin:0;font-family:'Sarabun',sans-serif;background:var(--pg);color:var(--
 <footer class="hb-ft"><span id="hbMail"></span><button type="button" id="hbTheme">สลับโหมดสว่าง / มืด</button><button type="button" id="hbOut">ออกจากระบบ</button></footer>
 <script>
 (async () => {
-  const p = await Auth.require('dashboard');
-  // สิทธิ์ Warehouse: ตอนนี้เฉพาะผู้ดูแลระบบ (ตรงกับ warehouse.html / wh-labels) — เปิดให้ทีมแพ็คเมื่อไรแก้ที่นี่ + sidebar.js
-  if (!p.is_admin) { location.replace('dashboard.html'); return; }
+  const p = await Auth.require('hub');
+  // (2026-11-23) สิทธิ์ Warehouse = ผู้ดูแลระบบ หรือติ๊กช่อง Warehouse ในหน้าตั้งค่า (ตรงกับ auth.js / sidebar.js / wh-labels)
+  const wh = p.is_admin || p.pages.includes('warehouse');
+  const dash = p.is_admin || p.pages.some(x => x !== 'warehouse') || p.can_upload || p.can_admin || p.can_edit_kpi;
+  if (!wh) { location.replace('dashboard.html'); return; }    // ไม่มีสิทธิ์ Warehouse = เข้า Dashboard ตรงเหมือนเดิม
+  if (!dash) { location.replace('warehouse.html'); return; }  // มีแค่ Warehouse = เข้า Warehouse ตรง
   const name = p.name || String(p.email || '').split('@')[0];
   document.getElementById('hbHi').textContent = name ? `สวัสดี ${name}` : 'สวัสดี';
   document.getElementById('hbMail').textContent = p.email || '';
