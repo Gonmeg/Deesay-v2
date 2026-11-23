@@ -148,6 +148,8 @@
   function itemsHtml(o) {   // (2026-11-23) เรียงตามรหัส + คั่นด้วย "+" ให้ตรงกับตัวกรองรูปแบบคำสั่งซื้อ · ไม่มีป้าย "หลายรายการ" (ล้นช่อง)
     return Object.keys(o.parts).sort().map(k => `<b title="${esc(S.names[k] || '')}">${esc(k)}</b> × ${o.parts[k]}`).join(' + ');
   }
+  // ยกเลิกหลังปริ้นนานเท่าไร (เวลายกเลิก − เวลาปริ้น)
+  function afterTxt(o) { const m = Math.max(0, Math.round((o.cancel_time * 1000 - new Date(o.printed_at).getTime()) / 60000)); return 'หลังปริ้น ' + (m < 60 ? `${m} นาที` : m < 1440 ? `${Math.round(m / 60)} ชม.` : `${Math.round(m / 1440)} วัน`); }
   function printedHtml(id) { const n = S.printed[id] || 0; return n === 0 ? '<span class="pc0">ยังไม่ปริ้น</span>' : n === 1 ? '<span class="pc1">1</span>' : `<span class="pc2">${n}</span>`; }
   function render() {
     const cancel = S.tab === 'cancel';
@@ -155,14 +157,16 @@
     $('nShip').textContent = S.counts.ship ?? ''; $('nCollect').textContent = S.counts.collect ?? ''; $('nCancel').textContent = S.counts.cancel ?? '';
     const info = `<span class="wh-i r">i<span class="pop"><b>ปริ้นแล้ว (ครั้ง)</b><br>จำนวนครั้งที่ใบปะหน้าของคำสั่งซื้อนี้ถูกปริ้นจากหน้านี้ รวมการปริ้นซ้ำ<br>ไม่นับการปริ้นจาก Seller Center</span></span>`;
     // (2026-11-23) ยกเลิกหลังปริ้น: รวมที่กดจัดส่ง / ปริ้นจาก Seller Center แล้วถูกยกเลิกก่อนขนส่งมารับ (src = sc)
-    const infoSrc = `<span class="wh-i r">i<span class="pop"><b>ปริ้นจาก</b><br>หน้านี้ = ปริ้นจากหน้า Warehouse (ตัวเลข = จำนวนครั้งที่ปริ้น)<br>Seller Center = กดจัดส่ง / ปริ้นจาก Seller Center</span></span>`;
+    // (2026-11-23) บอกให้ชัดว่า "ปริ้นแล้ว" + ยกเลิกหลังปริ้นนานเท่าไร (เช่น ระหว่างน้องปริ้นทีละ 250 ใบ แล้วลูกค้ายกเลิก)
+    const infoSrc = `<span class="wh-i r">i<span class="pop"><b>ปริ้นจาก</b><br>หน้านี้ = ปริ้นจากหน้า Warehouse (ตัวเลข = จำนวนครั้งที่ปริ้น)<br>Seller Center = กดจัดส่ง / ปริ้นใบปะหน้าจาก Seller Center</span></span>`;
+    const infoSt = `<span class="wh-i">i<span class="pop"><b>สถานะ</b><br>ปริ้นแล้ว · ยกเลิกแล้ว = ลูกค้ายกเลิกหลังปริ้นใบปะหน้า ขนส่งยังไม่มารับ พัสดุยังอยู่ในคลัง<br>ปริ้นแล้ว · ลูกค้าขอยกเลิก = มีคำขอยกเลิกค้างอยู่ อย่าเพิ่งส่งให้ขนส่ง</span></span>`;
     $('thead').innerHTML = cancel
-      ? `<tr><th>เวลาที่จัดส่ง / ปริ้น</th><th>เวลาที่ยกเลิก</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องดึงกลับ (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>ขนส่ง</th><th class="l">เหตุผลที่ยกเลิก</th><th>ปริ้นจาก ${infoSrc}</th></tr>`
+      ? `<tr><th>ปริ้นใบปะหน้าเมื่อ</th><th>ยกเลิกเมื่อ</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องดึงกลับ (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>สถานะ ${infoSt}</th><th class="l">เหตุผลที่ยกเลิก</th><th>ปริ้นจาก ${infoSrc}</th></tr>`
       : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลาสั่ง</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>ปริ้นแล้ว (ครั้ง) ${info}</th></tr>`;
     const pages = Math.max(1, Math.ceil(S.rows.length / S.size)); if (S.page > pages) S.page = pages;
     const view = S.rows.slice((S.page - 1) * S.size, S.page * S.size);
     $('tbody').innerHTML = view.map(o => cancel
-      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) : '—'}</td><td>${esc(o.id)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${esc(o.carrier || '—')}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? '<span class="wh-pill">Seller Center</span>' : `หน้านี้ · ${printedHtml(o.id)}`}</td></tr>`
+      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) + `<div class="wh-sub">${afterTxt(o)}</div>` : '—'}</td><td>${esc(o.id)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.st === 'CANCELLED' ? '<span class="wh-pill bad">ปริ้นแล้ว · ยกเลิกแล้ว</span>' : '<span class="wh-pill cod">ปริ้นแล้ว · ลูกค้าขอยกเลิก</span>'}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? 'Seller Center' : `หน้านี้ (${num(S.printed[o.id] || 1)} ครั้ง)`}</td></tr>`
       : `<tr class="pick ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td><input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}></td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${printedHtml(o.id)}</td></tr>`).join('');
     const empty = !S.rows.length;
     $('empty').style.display = empty ? 'block' : 'none';
@@ -181,7 +185,7 @@
   }
   function renderSel() {
     const cancel = S.tab === 'cancel', s = summarize(selected());
-    $('selN').textContent = cancel ? `${num(S.rows.length)} คำสั่งซื้อที่ต้องดึงสินค้ากลับ` : `เลือกแล้ว ${num(s.n)} คำสั่งซื้อ`;
+    $('selN').innerHTML = cancel ? `${num(S.rows.length)} คำสั่งซื้อที่ปริ้นใบปะหน้าแล้วแต่ถูกยกเลิก · ต้องดึงสินค้ากลับเข้าสต็อก <span class="wh-i">i<span class="pop"><b>ยกเลิกหลังปริ้น</b><br>ปริ้นใบปะหน้าแล้ว (จากหน้านี้หรือ Seller Center) แต่ลูกค้ายกเลิกก่อนขนส่งมารับ = พัสดุยังอยู่ในคลัง ต้องดึงออกจากกอง แล้วเอาสินค้ากลับเข้าสต็อก<br>ย้อนหลัง 7 วัน · ไม่รวมพัสดุที่ขนส่งรับไปแล้ว</span></span>` : `เลือกแล้ว ${num(s.n)} คำสั่งซื้อ`;
     $('selM').textContent = cancel || !s.n ? '' : `รวม ${num(s.qty)} ชิ้น · ${Object.keys(s.sku).length} รายการสินค้า`;
     $('pickBtn').style.display = cancel ? 'none' : ''; $('goBtn').style.display = cancel ? 'none' : '';
     $('pickBtn').disabled = !s.n; $('goBtn').disabled = !s.n;
