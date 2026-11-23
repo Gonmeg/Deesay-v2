@@ -96,7 +96,7 @@
     const errs = [];
     await Promise.all(need.map(async t => {
       try {
-        const j = t === 'cancel' ? await api({ action: 'cancelled' }) : await api({ action: 'list', tab: t, from: f, to });
+        const j = t === 'cancel' ? await api({ action: 'cancelled', sc: true }) : await api({ action: 'list', tab: t, from: f, to });
         LC[keys[t]] = { j, rows: (j.orders || []).map(derive), got: Date.now() }; st[t] = 'ok';
       } catch (e) { delete LC[keys[t]]; st[t] = 'err'; errs.push(TNAME[t] + ': ' + e.message); }
       countTabs(); draw();
@@ -142,17 +142,19 @@
     [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
     $('nShip').textContent = S.counts.ship ?? ''; $('nCollect').textContent = S.counts.collect ?? ''; $('nCancel').textContent = S.counts.cancel ?? '';
     const info = `<span class="wh-i r">i<span class="pop"><b>ปริ้นแล้ว (ครั้ง)</b><br>จำนวนครั้งที่ใบปะหน้าของคำสั่งซื้อนี้ถูกปริ้นจากหน้านี้ รวมการปริ้นซ้ำ<br>ไม่นับการปริ้นจาก Seller Center</span></span>`;
+    // (2026-11-23) ยกเลิกหลังปริ้น: รวมที่กดจัดส่ง / ปริ้นจาก Seller Center แล้วถูกยกเลิกก่อนขนส่งมารับ (src = sc)
+    const infoSrc = `<span class="wh-i r">i<span class="pop"><b>ปริ้นจาก</b><br>หน้านี้ = ปริ้นจากหน้า Warehouse (ตัวเลข = จำนวนครั้งที่ปริ้น)<br>Seller Center = กดจัดส่ง / ปริ้นจาก Seller Center</span></span>`;
     $('thead').innerHTML = cancel
-      ? `<tr><th>เวลาที่ปริ้น</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องดึงกลับ (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>ขนส่ง</th><th class="l">เหตุผลที่ยกเลิก</th><th>ปริ้นแล้ว (ครั้ง) ${info}</th></tr>`
+      ? `<tr><th>เวลาที่จัดส่ง / ปริ้น</th><th>เวลาที่ยกเลิก</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องดึงกลับ (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>ขนส่ง</th><th class="l">เหตุผลที่ยกเลิก</th><th>ปริ้นจาก ${infoSrc}</th></tr>`
       : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลาสั่ง</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>ปริ้นแล้ว (ครั้ง) ${info}</th></tr>`;
     const pages = Math.max(1, Math.ceil(S.rows.length / S.size)); if (S.page > pages) S.page = pages;
     const view = S.rows.slice((S.page - 1) * S.size, S.page * S.size);
     $('tbody').innerHTML = view.map(o => cancel
-      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${esc(o.id)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${esc(o.carrier || '—')}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${printedHtml(o.id)}</td></tr>`
+      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) : '—'}</td><td>${esc(o.id)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${esc(o.carrier || '—')}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? '<span class="wh-pill">Seller Center</span>' : `หน้านี้ · ${printedHtml(o.id)}`}</td></tr>`
       : `<tr class="pick ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td><input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}></td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${printedHtml(o.id)}</td></tr>`).join('');
     const empty = !S.rows.length;
     $('empty').style.display = empty ? 'block' : 'none';
-    if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังปริ้น (ย้อนหลัง 7 วัน)' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
+    if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังจัดส่ง / ปริ้น (ย้อนหลัง 7 วัน)' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
     $('pgInfo').textContent = empty ? '' : `แสดง ${num((S.page - 1) * S.size + 1)}–${num(Math.min(S.page * S.size, S.rows.length))} จาก ${num(S.rows.length)} คำสั่งซื้อ`;
     $('pgBtns').innerHTML = pages > 1 ? `<button class="wh-btn sm" data-p="-1" ${S.page <= 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button><span>หน้า ${S.page} / ${pages}</span><button class="wh-btn sm" data-p="1" ${S.page >= pages ? 'disabled' : ''}>ถัดไป ›</button>` : '';
     [...$('pgSize').children].forEach(b => b.classList.toggle('on', Number(b.dataset.v) === S.size));
@@ -256,7 +258,7 @@
     $('stSum').textContent = 'กำลังโหลด…'; $('stSum').classList.remove('bad');
     try {
       const d = new Date(day + 'T00:00:00');
-      const j = await api({ action: 'summary', day_start: Math.floor(d.getTime() / 1000) });
+      const j = await api({ action: 'summary', day_start: Math.floor(d.getTime() / 1000), sc: true });
       Object.assign(SC, { d: day, j, got: Date.now() });
       const rows = Object.entries(j.carriers || {}).sort((a, b) => (b[1].wait_collect + b[1].picked) - (a[1].wait_collect + a[1].picked));
       let A = 0, B = 0;
