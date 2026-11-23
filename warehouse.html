@@ -93,6 +93,11 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
 .wh-note.err{background:var(--dn-bg);color:var(--text)}
 .wh-note.ok{background:var(--up-bg);color:var(--text)}
 .wh-act{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.wh-dd{position:relative}.wh-dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;cursor:pointer}.wh-dd-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wh-dd-btn:after{content:"";flex:0 0 auto;width:6px;height:6px;border-right:2px solid var(--text2);border-bottom:2px solid var(--text2);transform:translateY(-2px) rotate(45deg)}
+.wh-dd-pop{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:40;width:max(100%,440px);background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-pop);padding:8px}.wh-dd.on .wh-dd-pop{display:block}
+.wh-dd-list{max-height:360px;overflow:auto;margin-top:6px}.wh-dd-list button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:14px;border:0;background:none;padding:7px 10px;border-radius:6px;font:inherit;font-size:13px;font-weight:600;color:var(--text);text-align:left;cursor:pointer}
+.wh-dd-list button:hover{background:var(--bg3)}.wh-dd-list button.on{background:var(--accent-soft);color:var(--accent-text)}.wh-dd-list small{flex:0 0 auto;color:var(--text2);font-size:12px;font-weight:500}.wh-dd-empty{padding:10px;color:var(--text2);font-size:13px}
 .wh-ld{width:440px}.wh-ld .r{display:flex;justify-content:space-between;align-items:center;min-height:42px;border-top:1px solid var(--panel-line);font-size:14px}.wh-ld .r b{font-size:18px}
 .wh-spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--panel-line);border-top-color:var(--accent);animation:whsp .8s linear infinite}@keyframes whsp{to{transform:rotate(360deg)}}
 .wh-rounds{display:none;gap:10px;align-items:center;font-size:12.5px;color:var(--text2);flex-basis:100%}
@@ -137,10 +142,10 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
       <div class="f" style="flex:1.2;min-width:190px;position:relative"><label>เวลาสั่ง ตั้งแต่</label><input class="wh-in" type="datetime-local" id="fFrom"><span class="wh-ph" id="fFromPh">ไม่จำกัด · รวมที่ค้างจากวันก่อน</span></div>
       <div class="f" style="flex:1.2;min-width:190px;position:relative"><label>ถึงก่อน</label><input class="wh-in" type="datetime-local" id="fTo"><span class="wh-ph" id="fToPh">ไม่จำกัด · ถึงตอนนี้</span></div>
       <div class="vr"></div>
-      <div class="f"><label>ตะกร้า</label><select class="wh-in" id="fBasket"><option value="">ทั้งหมด</option></select></div>
-      <div class="f"><label>SKU</label><select class="wh-in" id="fSku"><option value="">ทั้งหมด</option></select></div>
-      <div class="f fx"><label>วิธีจับคู่ SKU <span class="wh-i r">i<span class="pop"><b>วิธีจับคู่ SKU</b><br>มีแค่ SKU นี้ = คำสั่งซื้อที่มีเฉพาะ SKU ที่เลือก ไม่มีสินค้าอื่นปน<br>ปนสินค้าอื่นได้ = คำสั่งซื้อที่มี SKU ที่เลือก และอาจมีสินค้าอื่นอยู่ด้วย</span></span></label>
-        <span class="wh-seg" id="fMode"><button data-v="only" class="on" type="button">มีแค่ SKU นี้</button><button data-v="mixed" type="button">ปนสินค้าอื่นได้</button></span></div>
+      <div class="f" style="flex:1.8;min-width:240px"><label>รูปแบบคำสั่งซื้อ (SKU) <span class="wh-i">i<span class="pop"><b>รูปแบบคำสั่งซื้อ (Order pattern)</b><br>สินค้าทั้งหมดในคำสั่งซื้อ แตกชุดเป็น SKU จริงแล้ว เช่น DSCH03 × 1 + FREECH03 × 1<br>ตัวเลข = จำนวนคำสั่งซื้อที่สั่งแบบนี้ในแท็บที่เปิดอยู่ เรียงมาก → น้อย<br>เลือกแล้ว = แสดงเฉพาะคำสั่งซื้อที่สั่งแบบนี้พอดี ไม่มีสินค้าอื่นปน · พิมพ์ SKU เพื่อค้นหา</span></span></label>
+        <div class="wh-dd" id="fPat"><button class="wh-in wh-dd-btn" id="fPatBtn" type="button"><span id="fPatTx">ทั้งหมด</span></button>
+          <div class="wh-dd-pop"><input class="wh-in" id="fPatQ" placeholder="พิมพ์ SKU เพื่อค้นหา เช่น DFK15ML" autocomplete="off"><div class="wh-dd-list" id="fPatList"></div></div></div></div>
+      <div class="f"><label>ตะกร้า <span class="wh-i">i<span class="pop"><b>ตะกร้า</b><br>แสดงเฉพาะตะกร้าที่อยู่ในคำสั่งซื้อตามรูปแบบที่เลือก</span></span></label><select class="wh-in" id="fBasket"><option value="">ทั้งหมด</option></select></div>
       <div class="f" style="min-width:110px"><label>การปริ้น</label><select class="wh-in" id="fPrinted"><option value="">ทั้งหมด</option><option value="0">ยังไม่ปริ้น</option><option value="1">ปริ้นแล้ว</option></select></div>
       <div class="f fx"><label>&nbsp;</label><button class="wh-btn pri" id="searchBtn" type="button">ค้นหา</button></div>
       <div class="wh-rounds" id="roundCfg">เวลาตัดรอบ 1 <input class="wh-in" type="time" id="cut1"> เวลาตัดรอบ 2 <input class="wh-in" type="time" id="cut2"> <button class="wh-btn sm" id="cutSave" type="button">บันทึก</button></div>

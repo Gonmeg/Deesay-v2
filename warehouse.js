@@ -13,7 +13,7 @@
   const num = n => Number(n || 0).toLocaleString('en-US');
   const CHUNK = 20;   // จำนวนคำสั่งซื้อต่อ 1 ครั้งที่ส่งให้ระบบหลังบ้าน
 
-  const S = { view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', mode: 'only', busy: false, pickTab: 'sku', counts: {} };
+  const S = { view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', pat: '', pats: [], patAll: 0, busy: false, pickTab: 'sku', counts: {} };
   try { const z = Number(localStorage.getItem('wh_page_size')); if ([50, 100, 250].includes(z)) S.size = z; } catch (e) {}
   const cuts = (() => { try { return Object.assign({ c1: '10:30', c2: '16:00' }, JSON.parse(localStorage.getItem('wh_cuts') || '{}')); } catch (e) { return { c1: '10:30', c2: '16:00' }; } })();
 
@@ -35,13 +35,11 @@
     return out.length ? out : [{ code: '(ไม่มี SKU)', qty: 1 }];
   }
   function derive(o) {
-    const parts = {}, baskets = {};
-    (o.lines || []).forEach(l => {
-      splitSku(l.sku).forEach(p => { parts[p.code] = (parts[p.code] || 0) + p.qty; });
-      const k = (l.pname || '(ไม่มีชื่อตะกร้า)') + '\u0001' + (l.sku || '');
-      baskets[k] = (baskets[k] || 0) + 1;
-    });
-    o.parts = parts; o.baskets = baskets; o.qty = Object.values(parts).reduce((a, b) => a + b, 0);
+    const parts = {};
+    (o.lines || []).forEach(l => { splitSku(l.sku).forEach(p => { parts[p.code] = (parts[p.code] || 0) + p.qty; }); });
+    o.parts = parts; o.qty = Object.values(parts).reduce((a, b) => a + b, 0);
+    // (2026-11-23) รูปแบบคำสั่งซื้อ = สินค้าทั้งหมดในออเดอร์ (SKU จริง × จำนวน) เรียงตามรหัส — ออเดอร์ที่สั่งเหมือนกันได้ค่าเดียวกัน
+    o.pat = Object.keys(parts).sort().map(k => `${k} × ${parts[k]}`).join(' + ') || '(ไม่มีรายการสินค้า)';
     o.bnames = [...new Set((o.lines || []).map(l => l.pname || '(ไม่มีชื่อตะกร้า)'))];
     return o;
   }
@@ -109,16 +107,31 @@
       $('ldClose').onclick = () => $('ldOv').classList.remove('on');
     } else setTimeout(() => $('ldOv').classList.remove('on'), 300);
   }
+  // (2026-11-23) ตัวกรองรูปแบบคำสั่งซื้อ (SKU) = รูปแบบที่มีจริงในแท็บที่เปิดอยู่ + จำนวนคำสั่งซื้อ เรียงมาก → น้อย · ตะกร้า = เฉพาะที่อยู่ในรูปแบบที่เลือก
+  //   เลือกแล้วกรองทันที (กรองจากข้อมูลที่โหลดไว้ ไม่ดึง TikTok ใหม่)
   function fillOptions() {
-    const bs = new Set(), ss = new Set();
-    S.raw.forEach(o => { o.bnames.forEach(b => bs.add(b)); Object.keys(o.parts).forEach(c => ss.add(c)); });
-    const fill = (el, vals, label) => { const cur = el.value; el.innerHTML = '<option value="">ทั้งหมด</option>' + [...vals].sort().map(v => `<option value="${esc(v)}">${esc(label ? label(v) : v)}</option>`).join(''); if ([...vals].includes(cur)) el.value = cur; };
-    fill($('fBasket'), bs); fill($('fSku'), ss, c => S.names[c] ? `${c} · ${S.names[c]}` : c);
+    const pc = {}; let all = 0;
+    S.raw.forEach(o => { if (passes(o, S.printed, { pat: true, basket: true })) { pc[o.pat] = (pc[o.pat] || 0) + 1; all++; } });
+    S.pats = Object.entries(pc).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); S.patAll = all;
+    if (S.pat && !pc[S.pat]) S.pat = '';
+    const bs = new Set(); S.raw.forEach(o => { if (passes(o, S.printed, { basket: true })) o.bnames.forEach(b => bs.add(b)); });
+    const el = $('fBasket'), cur = el.value;
+    el.innerHTML = '<option value="">ทั้งหมด</option>' + [...bs].sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    el.value = bs.has(cur) ? cur : '';
+    renderPat();
   }
-  function passes(o, printed) {
-    const b = $('fBasket').value, sku = $('fSku').value, pr = $('fPrinted').value;
-    if (b && !(o.bnames || []).includes(b)) return false;
-    if (sku) { const codes = Object.keys(o.parts || {}); if (!codes.includes(sku)) return false; if (S.mode === 'only' && codes.length !== 1) return false; }
+  const normQ = t => String(t).toUpperCase().replace(/×/g, 'X').replace(/\s+/g, '');
+  function renderPat() {
+    $('fPatTx').textContent = S.pat || 'ทั้งหมด'; $('fPatBtn').title = S.pat || '';
+    const q = normQ($('fPatQ').value), items = S.pats.filter(([p]) => !q || normQ(p).includes(q));
+    $('fPatList').innerHTML = (q ? '' : `<button type="button" data-p="" class="${S.pat ? '' : 'on'}"><span>ทั้งหมด</span><small>${num(S.patAll)} คำสั่งซื้อ</small></button>`)
+      + items.map(([p, n]) => `<button type="button" data-p="${esc(p)}" class="${p === S.pat ? 'on' : ''}"><span>${esc(p)}</span><small>${num(n)} คำสั่งซื้อ</small></button>`).join('')
+      + (q && !items.length ? '<div class="wh-dd-empty">ไม่พบรูปแบบที่มี SKU นี้</div>' : '');
+  }
+  function passes(o, printed, skip = {}) {
+    const b = $('fBasket').value, pr = $('fPrinted').value;
+    if (S.pat && !skip.pat && o.pat !== S.pat) return false;
+    if (b && !skip.basket && !(o.bnames || []).includes(b)) return false;
     const n = printed[o.id] || 0;
     if (pr === '0' && n > 0) return false;
     if (pr === '1' && n === 0) return false;
@@ -163,9 +176,9 @@
   }
   function selected() { return S.rows.filter(o => S.sel.has(o.id)); }
   function summarize(list) {
-    const sku = {}, bk = {}; let qty = 0;
-    list.forEach(o => { qty += o.qty; for (const k in o.parts) sku[k] = (sku[k] || 0) + o.parts[k]; for (const k in o.baskets) bk[k] = (bk[k] || 0) + o.baskets[k]; });
-    return { sku, bk, qty, n: list.length };
+    const sku = {}, pat = {}; let qty = 0;
+    list.forEach(o => { qty += o.qty; for (const k in o.parts) sku[k] = (sku[k] || 0) + o.parts[k]; pat[o.pat] = (pat[o.pat] || 0) + 1; });
+    return { sku, pat, qty, n: list.length };
   }
   function renderSel() {
     const cancel = S.tab === 'cancel', s = summarize(selected());
@@ -179,12 +192,12 @@
   // ───── กล่องรายการเตรียมสินค้า ─────
   function pickTables(s) {
     const skuRows = Object.keys(s.sku).sort().map(k => `<tr><td class="l"><b>${esc(k)}</b></td><td class="l">${esc(S.names[k] || '—')}</td><td><b>${num(s.sku[k])}</b></td></tr>`).join('');
-    let bt = 0;
-    const bkRows = Object.keys(s.bk).sort().map(k => { const [a, b] = k.split('\u0001'); bt += s.bk[k]; return `<tr><td class="l">${esc(a)}</td><td class="l"><b>${esc(splitSku(b).map(p => p.code + ' × ' + p.qty).join(' + '))}</b></td><td><b>${num(s.bk[k])}</b></td></tr>`; }).join('');
+    // (2026-11-23) แท็บ 2 = รูปแบบคำสั่งซื้อ (แทนตะกร้า / Promotion) — ไม่มีชื่อตะกร้า นับจำนวนคำสั่งซื้อต่อรูปแบบ เรียงมาก → น้อย
+    const patRows = Object.entries(s.pat).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([p, n]) => `<tr><td class="l"><b>${esc(p)}</b></td><td><b>${num(n)}</b></td></tr>`).join('');
     return {
       sku: `<table class="wh-t"><thead><tr><th class="l">SKU</th><th class="l">ชื่อสินค้า</th><th>จำนวนชิ้นที่ต้องหยิบ</th></tr></thead><tbody>${skuRows}</tbody><tfoot><tr><td class="l" colspan="2">รวม</td><td>${num(s.qty)}</td></tr></tfoot></table>`,
-      bk: `<table class="wh-t"><thead><tr><th class="l">ตะกร้า</th><th class="l">รหัสชุด</th><th>จำนวนชุด</th></tr></thead><tbody>${bkRows}</tbody><tfoot><tr><td class="l" colspan="2">รวม</td><td>${num(bt)}</td></tr></tfoot></table>`,
-      nSku: Object.keys(s.sku).length, nBk: Object.keys(s.bk).length,
+      pat: `<table class="wh-t"><thead><tr><th class="l">รูปแบบคำสั่งซื้อ (SKU × จำนวน)</th><th>จำนวนคำสั่งซื้อ</th></tr></thead><tbody>${patRows}</tbody><tfoot><tr><td class="l">รวม</td><td>${num(s.n)}</td></tr></tfoot></table>`,
+      nSku: Object.keys(s.sku).length, nPat: Object.keys(s.pat).length,
     };
   }
   function openPick() {
@@ -193,16 +206,16 @@
     const when = fmtDT(new Date());
     $('dlg').innerHTML = `<h2>รายการเตรียมสินค้า</h2><div class="s">สรุปจากคำสั่งซื้อที่เลือก · TikTok · ${when}</div>
       <div class="wh-kp"><div><small>คำสั่งซื้อที่เลือก</small><b>${num(s.n)}</b></div><div><small>จำนวนสินค้า (รายการ)</small><b>${t.nSku}</b></div><div><small>จำนวนชิ้นรวม</small><b>${num(s.qty)}</b></div></div>
-      <div class="wh-tabs" id="pkTabs"><button data-k="sku" type="button">สินค้าที่ต้องหยิบ<small>${t.nSku}</small></button><button data-k="bk" type="button">ตะกร้า / Promotion<small>${t.nBk}</small></button></div>
+      <div class="wh-tabs" id="pkTabs"><button data-k="sku" type="button">สินค้าที่ต้องหยิบ<small>${t.nSku}</small></button><button data-k="pat" type="button">รูปแบบคำสั่งซื้อ<small>${t.nPat}</small></button></div>
       <div id="pkBody"></div>
       <div class="wh-note" id="pkNote">${reprint ? 'ปริ้นซ้ำ: สถานะใน TikTok ไม่เปลี่ยน ระบบจะนับจำนวนครั้งที่ปริ้นเพิ่ม' : 'เมื่อกด "ยืนยันจัดส่ง" คำสั่งซื้อทั้งหมดที่เลือกจะย้ายไปสถานะรอเข้ารับใน TikTok ทันที และยกเลิกย้อนกลับไม่ได้'}</div>
       <div class="wh-act"><button class="wh-btn" id="pkClose" type="button">ยกเลิก</button><button class="wh-btn" id="pkPrint" type="button">ปริ้นรายการในแท็บนี้</button><button class="wh-btn pri" id="pkGo" type="button">${reprint ? 'ปริ้นใบปะหน้าซ้ำ' : 'ยืนยันจัดส่ง + ปริ้นใบปะหน้า'}</button></div>`;
     const show = k => { S.pickTab = k; [...$('pkTabs').children].forEach(b => b.classList.toggle('on', b.dataset.k === k)); $('pkBody').innerHTML = t[k]; };
-    show(S.pickTab);
+    show(t[S.pickTab] ? S.pickTab : 'sku');
     $('pkTabs').onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.k); };
     $('pkClose').onclick = closeDlg;
     $('pkPrint').onclick = () => {
-      const title = S.pickTab === 'sku' ? 'รายการเตรียมสินค้า — สินค้าที่ต้องหยิบ' : 'รายการเตรียมสินค้า — ตะกร้า / Promotion';
+      const title = S.pickTab === 'sku' ? 'รายการเตรียมสินค้า — สินค้าที่ต้องหยิบ' : 'รายการเตรียมสินค้า — รูปแบบคำสั่งซื้อ';
       $('printArea').innerHTML = `<h2>${title}</h2><div class="s">TikTok · ${when} · ${num(s.n)} คำสั่งซื้อ · ${num(s.qty)} ชิ้น · ${esc(rangeText())}</div>${t[S.pickTab]}`;
       window.print();
     };
@@ -226,7 +239,7 @@
       const part = ids.slice(i, i + CHUNK);
       $('prg').textContent = `ทำแล้ว ${num(i)} จาก ${num(ids.length)} คำสั่งซื้อ…`;
       try {
-        const j = await api({ action, order_ids: part, batch_id: batch });
+        const j = await api({ action, order_ids: part, batch_id: batch, doc: 'label_slip' });   // (2026-11-23) ใบปะหน้า + รายการสินค้าในหน้าเดียว (แบบ Seller Center)
         (j.results || []).forEach(r => (r.ok ? okAll : failAll).push(r));
         if (j.pdf) pdfs.push(b64ToU8(j.pdf));
       } catch (e) { part.forEach(id => failAll.push({ id, ok: false, error: 'ไม่ได้รับคำตอบจากระบบ: ' + e.message + ' (ให้เช็คสถานะในแท็บรอเข้ารับก่อนกดซ้ำ)' })); }
@@ -295,8 +308,12 @@
     $('outBtn').onclick = () => Auth.signOut();
     $('fRound').onclick = e => { const b = e.target.closest('button'); if (!b || S.busy) return; setRound(b.dataset.v); if (b.dataset.v !== 'c') loadAll(); };   // รอบ 1 / 2 = โหลดเลย · กำหนดเอง = ตั้งเวลาแล้วกดค้นหา
     ['fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', () => { S.round = 'c'; [...$('fRound').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'c')); dirty(); }));
-    ['fBasket', 'fSku', 'fPrinted'].forEach(id => $(id).addEventListener('change', dirty));
-    $('fMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.mode = b.dataset.v; [...$('fMode').children].forEach(x => x.classList.toggle('on', x === b)); dirty(); };
+    ['fBasket', 'fPrinted'].forEach(id => $(id).addEventListener('change', () => { fillOptions(); applyFilters(); }));   // กรองทันที ไม่ดึงใหม่
+    $('fPatBtn').onclick = () => { const dd = $('fPat'), on = !dd.classList.contains('on'); dd.classList.toggle('on', on); if (on) { $('fPatQ').value = ''; renderPat(); $('fPatQ').focus(); } };
+    $('fPatQ').oninput = renderPat;
+    $('fPatQ').onkeydown = e => { if (e.key === 'Escape') $('fPat').classList.remove('on'); if (e.key === 'Enter') { const b = $('fPatList').querySelector('button'); if (b) b.click(); } };
+    $('fPatList').onclick = e => { const b = e.target.closest('button[data-p]'); if (!b) return; S.pat = b.dataset.p; $('fPat').classList.remove('on'); fillOptions(); applyFilters(); };
+    document.addEventListener('click', e => { if (!e.target.closest('#fPat')) $('fPat').classList.remove('on'); });
     $('roundCfgBtn').onclick = () => { $('cut1').value = cuts.c1; $('cut2').value = cuts.c2; $('roundCfg').classList.toggle('on'); };
     $('cutSave').onclick = () => { if ($('cut1').value) cuts.c1 = $('cut1').value; if ($('cut2').value) cuts.c2 = $('cut2').value; try { localStorage.setItem('wh_cuts', JSON.stringify(cuts)); } catch (e) {} $('roundCfg').classList.remove('on'); if (S.round !== 'c') setRound(S.round); };
     $('searchBtn').onclick = () => loadAll(true);
