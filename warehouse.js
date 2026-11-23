@@ -145,9 +145,8 @@
   }
 
   // ───── ตาราง ─────
-  function itemsHtml(o) {
-    const e = Object.entries(o.parts);
-    return e.map(([k, v]) => `<b title="${esc(S.names[k] || '')}">${esc(k)}</b> × ${v}`).join(' , ') + (e.length > 1 ? '<span class="wh-pill mix">หลายรายการ</span>' : '');
+  function itemsHtml(o) {   // (2026-11-23) เรียงตามรหัส + คั่นด้วย "+" ให้ตรงกับตัวกรองรูปแบบคำสั่งซื้อ · ไม่มีป้าย "หลายรายการ" (ล้นช่อง)
+    return Object.keys(o.parts).sort().map(k => `<b title="${esc(S.names[k] || '')}">${esc(k)}</b> × ${o.parts[k]}`).join(' + ');
   }
   function printedHtml(id) { const n = S.printed[id] || 0; return n === 0 ? '<span class="pc0">ยังไม่ปริ้น</span>' : n === 1 ? '<span class="pc1">1</span>' : `<span class="pc2">${n}</span>`; }
   function render() {
