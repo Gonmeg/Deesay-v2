@@ -105,28 +105,6 @@
       .pr-dd button em { font-style:normal; font-size:10.5px; color:var(--text3); border:1px solid var(--border); border-radius:99px; padding:0 6px; }
       .pr-dd button.on, .pr-dd button:hover { background:var(--bg3); }
       .pr-dd .none { padding:10px; font-size:12.5px; color:var(--text3); }
-      .pr-cal-nav { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text); }
-      .pr-cal-nav button { border:1px solid var(--border); background:var(--bg2); border-radius:7px; width:28px; height:28px; cursor:pointer; color:var(--text2); font:inherit; }
-      .pr-cal-nav button:hover { background:var(--bg3); }
-      .pr-cal-leg { display:flex; gap:14px; font-size:11.5px; color:var(--text3); font-weight:400; }
-      .pr-cal-leg i { display:inline-block; width:18px; height:8px; border-radius:3px; margin-right:5px; vertical-align:middle; background:var(--text3); }
-      .pr-cal-leg i.p { background:repeating-linear-gradient(135deg, var(--text3) 0 3px, transparent 3px 6px); border:1px solid var(--text3); }
-      .pr-cal { overflow-x:auto; }
-      .pr-mc { min-width:720px; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-      .pr-mc-hd { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); background:var(--bg3); }
-      .pr-mc-hd div { padding:7px 10px; font-size:11.5px; font-weight:600; color:var(--text3); }
-      .pr-mc-wk { position:relative; min-height:92px; border-top:1px solid var(--border); }
-      .pr-mc-bg { position:absolute; inset:0; display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); }
-      .pr-mc-fg { position:relative; display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); grid-auto-rows:22px; row-gap:3px; padding:28px 0 8px; }
-      .pr-mc-day { border-left:1px solid var(--border); padding:5px 8px; font-size:12px; color:var(--text2); }
-      .pr-mc-day:first-child { border-left:0; }
-      .pr-mc-day.out { color:var(--text3); opacity:.45; } .pr-mc-day.we { background:color-mix(in srgb, var(--bg3) 50%, transparent); }
-      .pr-mc-day.td span { display:inline-block; min-width:20px; padding:0 5px; border-radius:99px; background:var(--accent); color:#fff; font-weight:700; text-align:center; }
-      .pr-mc-ev { z-index:1; margin:0 4px; height:22px; border-radius:6px; background:var(--c); color:#fff; font-size:11.5px; font-weight:600; line-height:22px; padding:0 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:default; }
-      .pr-mc-ev.pend { background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 28%, var(--bg2)) 0 5px, var(--bg2) 5px 10px); border:1.5px solid var(--c); color:var(--text); line-height:19px; }
-      .pr-mc-ev.cl { margin-left:0; border-top-left-radius:0; border-bottom-left-radius:0; } .pr-mc-ev.cr { margin-right:0; border-top-right-radius:0; border-bottom-right-radius:0; }
-      .pr-mc-more { z-index:1; margin:0 6px; font-size:11px; color:var(--text3); line-height:22px; }
-      .pr-cal-empty { padding:22px; text-align:center; color:var(--text3); font-size:13px; }
       .pr-x { border:1px solid var(--border); background:none; border-radius:8px; color:var(--text2); cursor:pointer; font-size:14px; }
       .pr-x:hover { color:var(--red, #ef4444); border-color:var(--red, #ef4444); }
       .pr-add { border:1px dashed var(--border); background:none; border-radius:8px; color:var(--text2); padding:6px 12px; cursor:pointer; font:inherit; font-size:12px; }
@@ -182,6 +160,19 @@
       .tm2-ph { display:flex; flex-direction:column; gap:6px; text-align:center; padding:36px 20px !important; color:var(--text3); font-size:12.5px; } .tm2-ph b { color:var(--text); font-size:14px; }
       .tm2-r .pr-rk { background:var(--bg2); border:1px solid var(--border); border-radius:12px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
       .pr-mine2 .tm2-fb { white-space:normal; font-size:12.5px; } .pr-mine2 .tm2-x { padding:5px 8px !important; font-size:12px !important; } .pr-mine2 .tm2-x.bad { background:none; color:var(--red,#dc2626); }
+      .mn-tb { width:100%; min-width:1080px; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+      .mn-tb th { padding:6px 10px 10px; font-size:12px; font-weight:600; color:var(--text2); text-align:center; background:none; border-bottom:1px solid var(--border); white-space:nowrap; } .mn-tb th:first-child { text-align:left; padding-left:6px; }
+      .mn-tb td { height:46px; box-sizing:border-box; padding:6px 10px; text-align:center; vertical-align:middle; color:var(--text); }
+      .mn-tb tr.mn-f td { border-top:1px solid color-mix(in srgb, var(--border) 75%, transparent); } .mn-tb tbody tr:first-child td { border-top:0; } .mn-tb tbody tr:last-child td { border-bottom:1px solid color-mix(in srgb, var(--border) 75%, transparent); }
+      .mn-tb td.mn-c1 { text-align:left; padding-left:6px; } .mn-ti { display:flex; align-items:center; gap:8px; } .mn-ti i { width:8px; height:8px; border-radius:50%; flex:none; } .mn-ti b { font-weight:600; line-height:1.35; }
+      .mn-tb .mn-dt, .mn-tb .mn-lf { font-size:12.5px; color:var(--text2); white-space:nowrap; } .mn-tb td.mn-pd { text-align:left; } .mn-tb .mn-pd .ex-pds { margin-top:0; } .mn-tb .mn-n { font-variant-numeric:tabular-nums; } .mn-tb .mn-off { color:var(--accent-text, var(--accent)); } .mn-tb .mn-pds { margin-top:4px; }
+      .mn-tb .mn-fb { font-size:12.5px; color:var(--text2); white-space:normal; line-height:1.3; } .mn-tb .ex-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+      .mn-tb .tm2-x { padding:5px 10px !important; font-size:12px !important; white-space:nowrap; min-width:70px; justify-content:center; } .mn-tb .tm2-x.bad { background:none; color:var(--red,#dc2626); }
+      .mn-tb th:last-child, .mn-tb .mn-act { text-align:center; } .mn-tb .mn-act { white-space:nowrap; padding:6px 4px; } .mn-tb .mn-act .pr-btn + .pr-btn { margin-left:6px; }
+      .mn-pop { position:fixed; z-index:190; width:272px; font-family:var(--font, 'Sarabun', sans-serif); padding:12px; border-radius:10px; background:var(--bg2); border:1px solid var(--border); box-shadow:0 10px 28px rgba(15,23,42,.18); font-size:12.5px; color:var(--text); }
+      .mn-pop > b { display:block; font-size:12.5px; margin-bottom:8px; } .mn-pop .pr-seg { display:flex; } .mn-pop .pr-seg button { flex:1; padding:6px 0; font-size:12px; }
+      .mn-pop-n { margin:10px 0; color:var(--text2); } .mn-pop-n b { color:var(--text); font-size:13.5px; margin-left:4px; } .mn-pop-n { min-height:50px; } .mn-pop-n .ui-datebtn { margin-left:6px; vertical-align:middle; color:var(--text); background:var(--bg2); } .mn-pop-n > span { display:block; font-size:11px; color:var(--text3); margin-top:2px; }
+      .mn-pop-f { display:flex; gap:6px; } .mn-pop-f .pr-btn { flex:1; padding:6px 0 !important; font-size:12px !important; }
       .pr-ex2.pr-mine2 { min-width:1040px; } .pr-mine2 td, .pr-mine2 th { padding:10px 10px; } .pr-mine2 tr.ex-g td { cursor:default; }
       .pr-mine2 .mn-n { font-variant-numeric:tabular-nums; } .pr-mine2 .mn-off { color:var(--accent-text, var(--accent)); } .pr-mine2 .mn-pds { justify-content:center; margin-top:4px; }
       .pr-mine2 .mn-act { padding:8px 16px 8px 6px; } .pr-mine2 .mn-act .pr-btn { display:flex; width:100%; justify-content:center; white-space:nowrap; } .pr-mine2 .mn-act .pr-btn + .pr-btn { margin-top:5px; }
@@ -495,11 +486,7 @@
         <div class="pg-foot"><button type="button" class="pr-add" data-pgadd>＋ เพิ่มแถว</button><button type="button" class="pg-link" data-pgclear>ล้างตาราง</button><span class="pg-hint"></span>
           <span class="pr-note" id="prMsg"></span><button class="pr-btn" id="prSubmit" disabled>ส่งขออนุมัติ</button></div>
       </div>
-      <div class="pr-card"><h3>คำขอของฉัน</h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>
-      <div class="pr-card"><h3><span>ปฏิทิน Promotion <span class="pr-i" data-tip="Promotion ที่อนุมัติแล้วและรออนุมัติของบัญชีนี้ แยกสีตามช่องทาง · แถบลายทาง = รออนุมัติ">ⓘ</span></span>
-        <span class="pr-cal-leg"><span><i></i>อนุมัติแล้ว</span><span><i class="p"></i>รออนุมัติ</span></span>
-        <span class="pr-cal-nav"><button type="button" data-calmv="-1" aria-label="เดือนก่อน">‹</button><span id="prCalM"></span><button type="button" data-calmv="1" aria-label="เดือนถัดไป">›</button></span></h3>
-        <div class="pr-cal" id="prCal"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
+      <div class="pr-card"><h3><span>Promotion ของฉัน</span><span id="prMineTabs"></span></h3><div id="prMine"><div class="pr-empty">กำลังโหลด…</div></div></div>`;
     drawGrid();
     const onField = t => {
       if (t.id === 'pgChSel') { const c = C.channels.find(x => x.id === +t.value); if (c && c.id !== curCh().id) { G.sys = c.sys || c.name; G.chBy[G.sys] = c.id; pgSave(); drawGrid(); } return; }
@@ -557,11 +544,13 @@
     window.addEventListener('scroll', onMove, true); window.addEventListener('resize', onMove);
     window._prDDOff = () => { window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
     el.addEventListener('click', async e => {
-      const cx = e.target.closest('[data-cancel]'), mv = e.target.closest('[data-calmv]'), rm = e.target.closest('[data-rm]'), acc = e.target.closest('[data-acc]');
-      if (acc) { if (await uiConfirm('รับตามที่เสนอ', { text: 'คำขอจะเปลี่ยนเป็นราคา / สินค้าที่เสนอกลับ และถือว่าอนุมัติทันที', ok: 'รับตามที่เสนอ', tone: 'good', icon: '✓' })) { try { await rpc('promo_counter_accept', { p_id: +acc.dataset.acc }); toast('รับข้อเสนอแล้ว · อนุมัติเรียบร้อย'); loadMine(); loadCal(C); } catch (er) { uiAlert('รับข้อเสนอไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
+      const cx = e.target.closest('[data-cancel]'), rm = e.target.closest('[data-rm]'), acc = e.target.closest('[data-acc]');
+      const mt = e.target.closest('[data-mtab]'), ex = e.target.closest('[data-ext]');
+      if (mt) { MN.tab = mt.dataset.mtab; drawMine(); return; }
+      if (ex) { e.stopPropagation(); mnExtPop(ex, MN.G[ex.dataset.ext]); return; }
+      if (acc) { if (await uiConfirm('รับตามที่เสนอ', { text: 'คำขอจะเปลี่ยนเป็นราคา / สินค้าที่เสนอกลับ และถือว่าอนุมัติทันที', ok: 'รับตามที่เสนอ', tone: 'good', icon: '✓' })) { try { await rpc('promo_counter_accept', { p_id: +acc.dataset.acc }); toast('รับข้อเสนอแล้ว · อนุมัติเรียบร้อย'); loadMine(); } catch (er) { uiAlert('รับข้อเสนอไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
       const add = e.target.closest('[data-pgadd]'), del = e.target.closest('[data-pgdel]'), chip = e.target.closest('.pg-cx');
-      if (rm) { if (await uiConfirm('ลบคำขอ', { text: (rm.closest('tr')?.querySelector('.t1')?.textContent || '') + ' · ลบแล้วกู้คืนไม่ได้', ok: 'ลบ', tone: 'bad' })) { try { await rpc('promo_delete', { p_id: +rm.dataset.rm }); loadMine(); } catch (er) { uiAlert('ลบไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
-      if (mv) { const [y, m] = CAL.m.split('-').map(Number); const dt = new Date(y, m - 1 + (+mv.dataset.calmv), 1); CAL.m = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`; loadCal(C); return; }
+      if (rm) { if (await uiConfirm('ลบคำขอ', { text: (rm.closest('tr')?.querySelector('.t1, .mn-pd')?.textContent || '') + ' · ลบแล้วกู้คืนไม่ได้', ok: 'ลบ', tone: 'bad' })) { try { await rpc('promo_delete', { p_id: +rm.dataset.rm }); loadMine(); } catch (er) { uiAlert('ลบไม่สำเร็จ', { text: er.message, tone: 'bad' }); } } return; }
       const clr = e.target.closest('[data-pgclear]'), gf = e.target.closest('[data-gift]');
       if (gf) { const i = +gf.dataset.r, r = G.rows[i], from = gf.dataset.k, to = from === 'items' ? 'gifts' : 'items', x = r[from].splice(+gf.dataset.i, 1)[0];
         if (x) { const ex = r[to].find(y => y.sku === x.sku); if (ex) ex.qty = (+ex.qty || 0) + (+x.qty || 0); else r[to].push(x); }
@@ -570,7 +559,7 @@
       if (add) { G.rows.push(pgRow()); pgSave(); drawBody(); return; }
       if (del) { G.rows.splice(+del.dataset.pgdel, 1); if (!G.rows.length) G.rows.push(pgRow()); pgSave(); drawBody(); return; }
       if (chip) { const i = +chip.dataset.r, r = G.rows[i]; r[chip.dataset.k].splice(+chip.dataset.i, 1); pgSave(); const tr = el.querySelector(`tr[data-r="${i}"]`); if (tr) tr.outerHTML = rowHtml(r, i); askRank(i); foot(); return; }
-      if (cx && await uiConfirm('ยกเลิกคำขอ', { text: cx.closest('tr')?.querySelector('.t1')?.textContent || '', ok: 'ยกเลิกคำขอ', cancel: 'ปิด', tone: 'bad' })) { try { await rpc('promo_cancel', { p_id: +cx.dataset.cancel }); loadMine(); } catch (er) { uiAlert('ยกเลิกไม่สำเร็จ', { text: er.message, tone: 'bad' }); } }
+      if (cx && await uiConfirm('ยกเลิกคำขอ', { text: cx.closest('tr')?.querySelector('.t1, .mn-pd')?.textContent || '', ok: 'ยกเลิกคำขอ', cancel: 'ปิด', tone: 'bad' })) { try { await rpc('promo_cancel', { p_id: +cx.dataset.cancel }); loadMine(); } catch (er) { uiAlert('ยกเลิกไม่สำเร็จ', { text: er.message, tone: 'bad' }); } }
     });
     document.getElementById('prSubmit').onclick = async () => {
       const list = todo(), msg = document.getElementById('prMsg'), b = document.getElementById('prSubmit');
@@ -584,83 +573,93 @@
             items: r.items.map(x => ({ sku: x.sku, qty: +x.qty || 0 })), gifts: r.gifts.map(x => ({ sku: x.sku, qty: +x.qty || 0 })) } }); ok++; delete r.prices[c.id]; }
         catch (er) { fail.push(`แถว ${i + 1} · ${c.name}: ${er.message}`); }
       }
-      pgSave(); drawBody(); loadMine(); loadCal(C);
+      pgSave(); drawBody(); loadMine();
       msg.textContent = fail.length ? `ส่งแล้ว ${ok} รายการ · ไม่สำเร็จ ${fail.length}: ${fail[0]}` : '';
       if (ok) toast(`ส่งขออนุมัติแล้ว ${ok} รายการ · สินค้าในตารางยังอยู่ เลือกช่องทางอื่นแล้วใส่ราคาต่อได้`);
     };
-    loadMine(); loadCal(C);
+    loadMine();
   }
-  // ---------- ปฏิทินโปรโมชั่น (เดือนละหน้า) ----------
-  const CAL = { m: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })() };
-  const CH_VAR = { Facebook: '--ch-facebook', TikTok: '--ch-tiktok', Shopee: '--ch-shopee', Lazada: '--ch-lazada', 'ตัวแทน': '--ch-dealer', 'Modern Trade': '--ch-mt' };
-  const TH_M = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-  async function loadCal(C) {
-    const box = document.getElementById('prCal'), lab = document.getElementById('prCalM'); if (!box) return;
-    const [y, m] = CAL.m.split('-').map(Number), want = CAL.m;
-    if (lab) lab.textContent = `${TH_M[m - 1]} ${y + 543}`;
-    // ช่วงที่วาด: ตั้งแต่วันจันทร์ของสัปดาห์แรก ถึงวันอาทิตย์ของสัปดาห์สุดท้ายของเดือน
-    const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const first = new Date(y, m - 1, 1), last = new Date(y, m, 0);
-    const start = new Date(first); start.setDate(1 - ((first.getDay() + 6) % 7));
-    const end = new Date(last); end.setDate(last.getDate() + (6 - (last.getDay() + 6) % 7));
-    let L; try { L = await rpc('promo_calendar', { p_from: iso(start), p_to: iso(end) }); } catch (e) { box.innerHTML = `<div class="pr-cal-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-    L = (L || []).filter(x => x.mine !== false);   // (2026-11-13 c) หน้าขอ Promotion แสดงเฉพาะโปรของบัญชีที่เปิดดู (เดิมขึ้นของทุกคน รกเกินไป)
-    if (want !== CAL.m) return;
-    const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
-    const today = iso(new Date()), MAXL = 4;
-    let h = '<div class="pr-mc"><div class="pr-mc-hd">' + ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'].map(d => `<div>${d}</div>`).join('') + '</div>';
-    for (let ws = new Date(start); ws <= end; ws.setDate(ws.getDate() + 7)) {
-      const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(ws.getDate() + i); return d; });
-      const w0 = iso(days[0]), w6 = iso(days[6]);
-      const bg = days.map((d, i) => `<div class="pr-mc-day${d.getMonth() !== m - 1 ? ' out' : ''}${i >= 5 ? ' we' : ''}${iso(d) === today ? ' td' : ''}"><span>${d.getDate()}</span></div>`).join('');
-      let row = '';
-      // โปรที่ทับสัปดาห์นี้ → จัดลงแถว (lane) ไม่ให้ทับกัน
-      const evs = (L || []).filter(r => r.start_date <= w6 && (r.end_date || r.start_date) >= w0)
-        .map(r => { const s = r.start_date < w0 ? 0 : days.findIndex(d => iso(d) === r.start_date), e = (r.end_date || r.start_date) > w6 ? 6 : days.findIndex(d => iso(d) === (r.end_date || r.start_date)); return { r, s, e }; })
-        .sort((a, b) => a.s - b.s || (b.e - b.s) - (a.e - a.s));
-      const lanes = [], hidden = Array(7).fill(0);
-      evs.forEach(ev => { let l = lanes.findIndex(end => end < ev.s); if (l < 0) { l = lanes.length; lanes.push(-1); } lanes[l] = ev.e; ev.l = l; });
-      evs.forEach(ev => {
-        if (ev.l >= MAXL) { for (let i = ev.s; i <= ev.e; i++) hidden[i]++; return; }
-        const r = ev.r, items = (r.items || []).map(x => nm(x.sku) + ' ×' + x.qty).join(' + '), gifts = (r.gifts || []).map(x => nm(x.sku) + ' ×' + x.qty).join(' + ');
-        const tip = `${r.title} · ${r.channel || ''}\n${dTh(r.start_date)} – ${dTh(r.end_date || r.start_date)} · ${(ST[r.status] || [r.status])[0]}\n${items}${gifts ? '\nแถม ' + gifts : ''}`;
-        const cls = (r.status === 'pending' ? ' pend' : '') + (r.start_date < w0 ? ' cl' : '') + ((r.end_date || r.start_date) > w6 ? ' cr' : '');
-        row += `<div class="pr-mc-ev${cls}" style="--c:var(${CH_VAR[r.sys] || '--text3'});grid-column:${ev.s + 1} / ${ev.e + 2};grid-row:${ev.l + 1};" title="${esc(tip)}">${esc(r.title)} <span style="opacity:.75;font-weight:400;">· ${esc(r.channel || '')}</span></div>`;
-      });
-      hidden.forEach((n, i) => { if (n) row += `<div class="pr-mc-more" style="grid-column:${i + 1};grid-row:${MAXL + 1};">+ อีก ${n} Promotion</div>`; });
-      h += `<div class="pr-mc-wk"><div class="pr-mc-bg">${bg}</div><div class="pr-mc-fg">${row}</div></div>`;
+  // (2026-11-22) "Promotion ของฉัน": เอาปฏิทินออก · ตารางเบา ๆ แบ่ง 3 แท็บ (ใช้อยู่ / รอผล / จบแล้ว) · หัวกลุ่ม = 1 Promotion บอกช่วงวัน + เหลือกี่วัน + ปุ่มต่ออายุ / ยกเลิก
+  const MN = { tab: null, L: [], C: null, G: {} }, MN_NEAR = 10;   // ใกล้หมด = เหลือไม่เกิน 10 วัน
+  // (2026-11-22) กล่องเล็กใต้ปุ่ม "ต่ออายุ": เลือกว่าจะขยายอีกกี่วัน (7 วัน / 15 วัน / 1 เดือน) แล้วบอกวันสิ้นสุดใหม่ · ไม่มีช่องกรอกในตาราง
+  function mnPopClose() { const p = document.getElementById('mnPop'); if (p) p.remove(); document.removeEventListener('click', mnPopOut, true); removeEventListener('scroll', mnPopClose, true); }
+  function mnPopOut(e) { const p = document.getElementById('mnPop'); if (p && !p.contains(e.target) && !e.target.closest('[data-ext], .ui-cal')) mnPopClose(); }
+  function mnExtPop(btn, g) {
+    const was = document.getElementById('mnPop'), same = was && was.dataset.k === g.k; mnPopClose(); if (same) return;
+    const r = g.rows[0], f = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, t0 = new Date(); t0.setHours(0, 0, 0, 0);
+    const e = new Date((r.end_date || f(t0)) + 'T00:00:00'), base = e < t0 ? t0 : e;   // หมดอายุไปแล้ว = นับจากวันนี้
+    const plus = k => { const d = new Date(base); if (k === 'm') { const last = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate() === base.getDate(), t = new Date(base.getFullYear(), base.getMonth() + 1, 1), ml = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate(); t.setDate(last ? ml : Math.min(base.getDate(), ml)); return t; } d.setDate(d.getDate() + k); return d; };
+    const OPT = [[7, '7 วัน'], [15, '15 วัน'], ['m', '1 เดือน'], ['c', 'เลือกวัน']]; let pick = 'm', cust = f(plus('m'));   // เลือกวัน = ใส่วันสิ้นสุดเอง
+    const mn = new Date(base); mn.setDate(mn.getDate() + 1); const newEnd = () => pick === 'c' ? cust : f(plus(pick));
+    const p = document.createElement('div'); p.id = 'mnPop'; p.className = 'mn-pop'; p.dataset.k = g.k;
+    const draw = () => { p.innerHTML = `<b>ต่ออายุอีก</b><div class="pr-seg">${OPT.map(([k, t]) => `<button type="button" data-o="${k}" aria-pressed="${String(k) === String(pick)}">${t}</button>`).join('')}</div>
+      <div class="mn-pop-n">สิ้นสุดใหม่ ${pick === 'c' ? `<input class="pr-in" type="date" id="mnPopD" min="${f(mn)}" value="${cust}">` : `<b>${dTh(newEnd())}</b>`}<span>เดิม ${r.end_date ? dTh(r.end_date) : '—'} · ${g.rows.length} ชุด ราคาเดิม · ส่งให้ผู้บริหารอนุมัติ</span></div>
+      <div class="mn-pop-f"><button type="button" class="pr-btn tm2-x" data-go>ยืนยัน</button><button type="button" class="pr-btn ghost tm2-x" data-x>ปิด</button></div>`;
+      const di = p.querySelector('#mnPopD'); if (di) { di.onchange = () => { if (di.value && di.value >= f(mn)) cust = di.value; else di.value = cust; }; if (window.UI && UI.enhanceDates) UI.enhanceDates(p); } };
+    draw(); p.classList.toggle('ui-light', document.body.classList.contains('light-theme')); document.documentElement.appendChild(p);   // นอก body เหมือน tooltip กลาง (body มี zoom บนจอเล็ก)
+    const b = btn.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight; let top = b.bottom + 6; if (top + h > innerHeight - 8 && b.top - h - 6 > 8) top = b.top - h - 6;
+    p.style.top = top + 'px'; p.style.left = Math.max(8, Math.min(b.right - w, innerWidth - w - 8)) + 'px';
+    p.onclick = ev => { const o = ev.target.closest('[data-o]'); if (o) { const k = o.dataset.o; if (k === 'c' && pick !== 'c') cust = newEnd(); pick = k === 'm' || k === 'c' ? k : +k; draw(); return; }
+      if (ev.target.closest('[data-x]')) return mnPopClose();
+      if (ev.target.closest('[data-go]')) { const to = newEnd(), from = f(mn); mnPopClose(); mnExtend(g, from, to); } };
+    setTimeout(() => { document.addEventListener('click', mnPopOut, true); addEventListener('scroll', mnPopClose, true); }, 0);
+  }
+  // ต่ออายุ = ส่งคำขอใหม่ สินค้า / ราคาเดิมทุกชุด ช่วงวัน = วันถัดจากวันสิ้นสุดเดิม (หมดไปแล้ว = พรุ่งนี้) ถึงวันที่เลือก → ผู้บริหารอนุมัติอีกครั้ง (ใช้ promo_submit ตัวเดิม ไม่แตะคำขอเดิม)
+  async function mnExtend(g, from, to) {
+    let ok = 0; const bad = [];
+    for (const r of g.rows.filter(x => x.status === 'approved')) {
+      try { await rpc('promo_submit', { p: { title: r.title, channel_id: r.channel_id, start_date: from, end_date: to, price: +r.price || 0, orders: +r.orders || 0, note: r.note || '', items: r.items || [], gifts: r.gifts || [] } }); ok++; }
+      catch (e) { bad.push(e.message); }
     }
-    box.innerHTML = h + '</div>' + (!(L || []).length ? '<div class="pr-cal-empty" style="padding:10px 0 0;">เดือนนี้ยังไม่มี Promotion ที่อนุมัติแล้วหรือรออนุมัติ</div>' : '');
+    if (ok) toast(`ส่งต่ออายุแล้ว ${ok} ชุด (${dTh(from)} – ${dTh(to)}) · รอผู้บริหารอนุมัติ`);
+    if (bad.length) uiAlert('ต่ออายุไม่สำเร็จ', { text: `${bad.length} ชุด: ${bad[0]}`, tone: 'bad' });
+    if (ok) MN.tab = 'wait';
+    loadMine();
   }
   async function loadMine() {
     const box = document.getElementById('prMine'); if (!box) return;
-    try {
-      const L = await rpc('promo_list', { p_scope: 'mine' }), C = await cat();
-      const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
-      const list = a => (a || []).map(x => `<div>${esc(nm(x.sku))} <span class="t2">×${x.qty}</span></div>`).join('') || '<span class="t2">—</span>';
-      // (2026-11-10) จัดกลุ่มตามโปร (ชื่อ + ช่องทาง) แบบเดียวกับหน้าอนุมัติ · หัวกลุ่มบอกช่องทาง / วันที่ / จำนวนรายการ · ไม่มีคอลัมน์ซ้อนกันแล้ว
-      const prod = r => [...(r.items || []).map(x => `<span class="ex-pd">${esc(nm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`), ...(r.gifts || []).map(x => `<span class="ex-pd gift"><i>แถม</i>${esc(nm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`)].join('');
-      const dr = r => !r.start_date ? '' : r.end_date && r.end_date !== r.start_date ? `${dTh(r.start_date)} – ${dTh(r.end_date)}` : dTh(r.start_date);
-      const groups = [], gi = {}; L.forEach(r => { const k = (r.title || '') + '|' + (r.channel || ''); if (gi[k] == null) { gi[k] = groups.length; groups.push([]); } groups[gi[k]].push(r); });
-      // (2026-11-20) จัดคอลัมน์ใหม่: แยก "ราคาที่ขอ" กับ "ราคาที่เสนอกลับ" เป็นคนละคอลัมน์ (เดิมราคาเสนอกลับปนอยู่ใน Feedback) · ปุ่มเรียงแนวตั้งเต็มช่อง ไม่ล้นตาราง · ตัวเลขอยู่กลางคอลัมน์
-      const same = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || []);
-      const row = r => { const st = ST[r.status] || [r.status, ''], c = r.counter, acc = r.status === 'approved' && c && c.orig;   // acc = อนุมัติจากการรับข้อเสนอกลับ
-        const ask = acc ? c.orig : r, off = r.status === 'countered' && c ? c : acc ? c : null;
-        const offHtml = !off ? '<span class="ex-mute">—</span>' : `<b class="mn-off">${n2(off.price)}</b>${!same(off.items, ask.items) || !same(off.gifts, ask.gifts) ? `<div class="ex-pds mn-pds">${prod(off)}</div>` : ''}${acc ? '<div class="ex-sub">รับตามที่เสนอแล้ว</div>' : ''}`;
-        const act = r.status === 'countered' ? `<button class="pr-btn good tm2-x" data-acc="${r.id}">รับตามที่เสนอ</button><button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'pending' ? `<button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button>` : r.status === 'cancelled' ? `<button class="pr-btn ghost tm2-x bad" data-rm="${r.id}">ลบ</button>` : '';
-        return `<tr class="ex-r"><td class="ex-c1"><div class="ex-pds">${prod(ask) || '<span class="ex-pd">—</span>'}</div></td>
-          <td class="ctr mn-n"><b>${n2(ask.price)}</b></td><td class="ctr mn-n">${offHtml}</td><td class="ctr">${rkPill(r.rank)}</td>
-          <td class="ctr"><span class="pr-pill ${st[1]}">${st[0]}</span></td>
-          <td class="tm2-fb ctr">${r.decision_note ? esc(r.decision_note) : '<span class="ex-mute">—</span>'}${r.decided_name && (r.decision_note || off) ? `<div class="ex-sub">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : ''}</td>
-          <td class="ctr ex-m">${dTh(r.requested_at)}</td>
-          <td class="mn-act">${act}</td></tr>`; };
-      box.innerHTML = L.length ? `<div style="overflow-x:auto;"><table class="pr-tb pr-ex2 pr-mine2" data-no-sort data-no-page>
-          <colgroup><col><col style="width:104px"><col style="width:132px"><col style="width:124px"><col style="width:112px"><col style="width:22%"><col style="width:96px"><col style="width:142px"></colgroup>
-          <thead><tr><th class="ex-c1">สินค้าใน Promotion</th><th class="ctr">ราคาที่ขอ</th><th class="ctr">ราคาที่เสนอกลับ</th><th class="ctr">Rank</th><th class="ctr">สถานะ</th><th class="ctr">Feedback</th><th class="ctr">ส่งเมื่อ</th><th></th></tr></thead><tbody>`
-        + groups.map(g => { const r0 = g[0];
-            return `<tr class="ex-g"><td colspan="8"><b class="t1">${esc(r0.title)}</b><span class="ex-gm">${esc(r0.channel || '')}${dr(r0) ? ' · ' + dr(r0) : ''} · ${g.length} รายการ</span></td></tr>` + g.map(row).join(''); }).join('') + '</tbody></table></div>'
-        : '<div class="pr-empty">ยังไม่มีคำขอ</div>';
-    } catch (e) { box.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; }
+    try { MN.L = await rpc('promo_list', { p_scope: 'mine' }); MN.C = await cat(); drawMine(); }
+    catch (e) { box.innerHTML = `<div class="pr-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; }
+  }
+  function drawMine() {
+    const box = document.getElementById('prMine'), tabs = document.getElementById('prMineTabs'); if (!box) return;
+    const L = MN.L || [], C = MN.C || { products: [] }, td = new Date(), today = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-${String(td.getDate()).padStart(2, '0')}`;
+    const nm = s => (C.products.find(p => p.sku === s) || { name: s }).name;
+    const prod = r => [...(r.items || []).map(x => `<span class="ex-pd">${esc(nm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`), ...(r.gifts || []).map(x => `<span class="ex-pd gift"><i>แถม</i>${esc(nm(x.sku))}${+x.qty > 1 ? ` <b>×${+x.qty}</b>` : ''}</span>`)].join('');
+    const dr = r => !r.start_date ? '' : r.end_date && r.end_date !== r.start_date ? `${dTh(r.start_date)} – ${dTh(r.end_date)}` : dTh(r.start_date);
+    const same = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || []);
+    const bucket = r => r.status === 'pending' || r.status === 'countered' ? 'wait' : r.status === 'approved' && (!r.end_date || r.end_date >= today) ? 'on' : 'done';
+    const cnt = { on: 0, wait: 0, done: 0 }; L.forEach(r => cnt[bucket(r)]++);
+    if (!MN.tab || !cnt[MN.tab]) MN.tab = L.some(r => r.status === 'countered') ? 'wait' : cnt.on ? 'on' : cnt.wait ? 'wait' : 'done';
+    const T = MN.tab, R = L.filter(r => bucket(r) === T);
+    if (tabs) tabs.innerHTML = L.length ? `<span class="pr-seg ex-tabs">${[['on', 'ใช้อยู่'], ['wait', 'รอผล'], ['done', 'จบแล้ว']].map(([k, t]) => `<button type="button" data-mtab="${k}" aria-pressed="${k === T}">${t}<b>${cnt[k]}</b></button>`).join('')}</span>` : '';
+    if (!L.length) { box.innerHTML = '<div class="pr-empty">ยังไม่มีคำขอ</div>'; return; }
+    MN.G = {}; mnPopClose();
+    const groups = [], gi = {}; R.forEach(r => { const k = [r.title, r.channel, r.start_date, r.end_date].join('|'); if (gi[k] == null) { gi[k] = groups.length; groups.push({ k, rows: [] }); } groups[gi[k]].rows.push(r); });
+    const days = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
+    if (T === 'on') groups.sort((a, b) => String(a.rows[0].end_date || '9').localeCompare(String(b.rows[0].end_date || '9')));   // ใกล้หมดก่อน
+    // คอลัมน์: Promotion / ช่วงเวลา (+ เหลือกี่วัน) / ปุ่มของทั้ง Promotion = 1 ช่องต่อ 1 Promotion (rowspan) · สินค้า / ราคา / Rank / Feedback = 1 แถวต่อ 1 ชุด
+    const COLS = T === 'on' ? ['Promotion', 'ช่วงเวลา', 'เหลือ', 'สินค้า', 'ราคา', 'Rank', 'Feedback', 'จัดการ'] : T === 'wait' ? ['Promotion', 'ช่วงเวลา', 'สินค้า', 'ราคาที่ขอ', 'ราคาที่เสนอกลับ', 'Rank', 'สถานะ', 'Feedback', 'จัดการ'] : ['Promotion', 'ช่วงเวลา', 'สินค้า', 'ราคา', 'Rank', 'สถานะ', 'Feedback', 'จัดการ'];
+    const W = T === 'on' ? ['20%', '158px', '112px', '', '96px', '124px', '18%', '110px'] : T === 'wait' ? ['15%', '150px', '', '88px', '116px', '116px', '96px', '12%', '196px'] : ['20%', '158px', '', '96px', '124px', '104px', '18%', '110px'];
+    const fb = r => `${r.decision_note ? esc(r.decision_note) : '<span class="ex-mute">—</span>'}${r.decided_name && r.decision_note ? `<div class="ex-sub">${esc(r.decided_name)} · ${dTh(r.decided_at)}</div>` : ''}`;
+    const cells = (r, xi, first) => { const st = ST[r.status] || [r.status, ''], c = r.counter, acc = r.status === 'approved' && c && c.orig;
+      const p1 = `<td class="mn-pd"><div class="ex-pds">${prod(r) || '—'}</div></td>`;
+      if (T === 'on') return `${p1}<td class="mn-n"><b>${n2(r.price)}</b>${acc && +c.orig.price !== +r.price ? `<div class="ex-sub">เดิมขอ ${n2(c.orig.price)}</div>` : ''}</td><td>${rkPill(r.rank)}</td><td class="mn-fb">${fb(r)}</td>`;
+      if (T === 'wait') { const off = r.status === 'countered' && c ? `<b class="mn-off">${n2(c.price)}</b>${!same(c.items, r.items) || !same(c.gifts, r.gifts) ? `<div class="ex-pds mn-pds">${prod(c)}</div>` : ''}` : '<span class="ex-mute">—</span>';
+        return `${p1}<td class="mn-n"><b>${n2(r.price)}</b></td><td class="mn-n">${off}</td><td>${rkPill(r.rank)}</td><td><span class="pr-pill ${st[1]}">${st[0]}</span></td><td class="mn-fb">${fb(r)}</td>
+          <td class="mn-act">${r.status === 'countered' ? `<button class="pr-btn good tm2-x" data-acc="${r.id}">รับตามที่เสนอ</button>` : ''}<button class="pr-btn ghost tm2-x" data-cancel="${r.id}">ยกเลิก</button></td>`; }
+      return `${p1}<td class="mn-n"><b>${n2(r.price)}</b></td><td>${rkPill(r.rank)}</td><td><span class="pr-pill ${r.status === 'approved' ? '' : st[1]}">${r.status === 'approved' ? 'หมดอายุ' : st[0]}</span></td><td class="mn-fb">${fb(r)}</td>${xi || `<td class="mn-act">${r.status === 'cancelled' ? `<button class="pr-btn ghost tm2-x bad" data-rm="${r.id}">ลบ</button>` : r.status === 'approved' && first ? `<button type="button" class="pr-btn ghost tm2-x" data-ext="${esc([r.title, r.channel, r.start_date, r.end_date].join('|'))}">ต่ออายุ</button>` : ''}</td>`}`; };
+    const dS = d => new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+    const grp = g => { const r = g.rows[0], n = g.rows.length, left = r.end_date ? days(r.end_date) : null, soon = T === 'on' && left != null && left <= MN_NEAR;
+      // (รอบ 3) ไม่รวมช่อง (rowspan) แล้ว: 1 แถว = 1 ชุด สูงเท่ากันทุกแถว · ชื่อ Promotion / ช่วงเวลา / เหลือ / ปุ่ม อยู่แถวแรกของ Promotion แถวถัดไปเว้นว่าง · เส้นคั่นเฉพาะระหว่าง Promotion
+      const lead = `<td class="mn-c1"><div class="mn-ti"><i style="background:${chCol(r.channel)}"></i><b>${esc(r.title)}</b></div></td><td class="mn-dt">${!r.start_date ? '—' : r.end_date && r.end_date !== r.start_date ? dS(r.start_date) + ' – ' + dTh(r.end_date) : dTh(r.start_date)}</td>`
+        + (T !== 'on' ? '' : `<td class="mn-lf">${r.start_date > today ? 'ยังไม่เริ่ม' : left == null ? '—' : soon ? `<span class="pr-pill warn">${left === 0 ? 'วันสุดท้าย' : 'เหลือ ' + left + ' วัน'}</span>` : left + ' วัน'}</td>`);
+      const blank = '<td></td><td></td>' + (T === 'on' ? '<td></td>' : '');
+      const tail = T !== 'on' ? '' : `<td class="mn-act"><button type="button" class="pr-btn tm2-x${soon ? '' : ' ghost'}" data-ext="${esc(g.k)}">ต่ออายุ</button></td>`;
+      MN.G[g.k] = g;
+      return g.rows.map((q, i) => `<tr class="${i ? '' : 'mn-f'}">${i ? blank : lead}${cells(q, '', !i)}${T !== 'on' ? '' : i ? '<td></td>' : tail}</tr>`).join(''); };
+    box.innerHTML = !R.length ? '<div class="pr-empty">ไม่มีรายการ</div>' : `<div style="overflow-x:auto;"><table class="mn-tb" data-no-sort data-no-page><colgroup>${W.map(w => `<col${w ? ` style="width:${w}"` : ''}>`).join('')}</colgroup>
+      <thead><tr>${COLS.map(c => `<th${c === 'สินค้า' ? ' style="text-align:left;"' : ''}>${c}</th>`).join('')}</tr></thead><tbody>${groups.map(grp).join('')}</tbody></table></div>`;
   }
 
   // ===================== หน้า โปรโมชั่น · อนุมัติ (ผู้บริหาร) =====================
