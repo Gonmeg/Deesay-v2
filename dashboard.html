@@ -844,7 +844,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.23-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.23-c"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1760,7 +1760,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         <section id="cp-kpis" class="ui-metrics sa-hero" aria-label="ตัวเลขหลัก"></section>
         <section class="card sa-panel" style="margin-bottom:16px;">
           <div class="sa-ph"><h2 id="cp-trend-title">ยอดขาย vs ต้นทุน รายวัน</h2>
-            <div class="cp-lg"><span><i style="background:#2a78d6;"></i>ยอดขาย (ออเดอร์จริง)</span><span><i style="background:#ef4444;"></i>ค่า Ads</span><span><i style="background:#a78bfa;"></i>ค่าจ้าง KOL (วันโพสต์)</span><span class="pr-i" data-tip="ช่วงไม่เกิน 1 เดือน = รายวัน · ยาวกว่านั้น = รายเดือน (เดือนที่ยังไม่จบเป็นเส้นประ นับถึงวันสุดท้ายของตัวกรอง)&#10;ยอดขายและต้นทุนใช้แกนเงินเดียวกัน · เส้นต้นทุนยิ่งต่ำกว่าเส้นยอดขายมาก ยิ่งคุ้ม&#10;ค่าจ้าง KOL นับตามวันโพสต์ (ไฟล์ทีม KOL) · ค่า Ads ตามวันที่ใช้เงิน&#10;ชี้เมาส์เพื่อดูต้นทุนรวม % ของยอดขาย และงาน KOL ที่โพสต์">ⓘ</span></div></div>
+            <div class="cp-lg"><span id="cpCmp"></span><span><i style="background:#2a78d6;"></i>ยอดขาย (ออเดอร์จริง)</span><span><i style="background:#ef4444;"></i>ค่า Ads</span><span><i style="background:#a78bfa;"></i>ค่าจ้าง KOL (วันโพสต์)</span><span class="pr-i" data-tip="ช่วงไม่เกิน 1 เดือน = รายวัน · ยาวกว่านั้น = รายเดือน (เดือนที่ยังไม่จบเป็นเส้นประ นับถึงวันสุดท้ายของตัวกรอง)&#10;ยอดขายและต้นทุนใช้แกนเงินเดียวกัน · เส้นต้นทุนยิ่งต่ำกว่าเส้นยอดขายมาก ยิ่งคุ้ม&#10;ค่าจ้าง KOL นับตามวันโพสต์ (ไฟล์ทีม KOL) · ค่า Ads ตามวันที่ใช้เงิน&#10;เส้นประ = ยอดขาย / ค่า Ads ช่วงวันเดียวกันของเดือนก่อน (เฉพาะกราฟรายวัน)&#10;ชี้เมาส์เพื่อดูต้นทุนรวม % ของยอดขาย และงาน KOL ที่โพสต์">ⓘ</span></div></div>
           <div class="chart-wrap" style="height:320px;"><canvas id="chartCpTrend"></canvas></div>
         </section>
         <div id="cp-overview-section">
@@ -4825,6 +4825,25 @@ function cpDailyAdSpend(from, to, target) {
   rows.forEach(r => { if (r.stat_date >= from && r.stat_date <= to) m[r.stat_date] = (m[r.stat_date] || 0) + (+r.spend || 0); });
   return m;
 }
+// (2026-11-23) ข้อมูลเส้นประของกราฟ Creator Performance: ช่วงวันเดียวกันของเดือนก่อน · กลุ่มเดียวกับเส้นหลัก (ทุกคน / KOL / Affiliate / คนที่เลือก)
+const _cpPrevT = {};
+function cpPrevTrend(from, to, target) {
+  const pr = getPrevPeriodRange(from, to), sfx = cpUseApi(from) ? '_api' : '', ty = cpType === 'all' ? null : cpType;
+  const k = [pr.from, pr.to, sfx, target ? 'h:' + cpSelectedCreator : 't:' + (ty || '')].join('|');
+  if (_cpPrevT[k]) return _cpPrevT[k].d;
+  _cpPrevT[k] = { d: null };
+  Promise.all([
+    supaRpc('creator_daily' + sfx, target ? { p_from: pr.from, p_to: pr.to, p_handle: cpSelectedCreator } : { p_from: pr.from, p_to: pr.to, p_handle: null, p_type: ty }, true),
+    supaRpc('tta_daily_spend', target ? { p_from: pr.from, p_to: pr.to, p_handle: target } : ty ? { p_from: pr.from, p_to: pr.to, p_handle: null, p_type: ty } : { p_from: pr.from, p_to: pr.to, p_handle: null }, true)
+  ]).then(([sales, ads]) => {
+    const d = { s: {}, a: {}, hasAds: false };
+    (sales || []).forEach(r => { d.s[r.date] = (d.s[r.date] || 0) + (+r.revenue || 0); });
+    (ads || []).forEach(r => { if (r.stat_date >= pr.from && r.stat_date <= pr.to) { d.a[r.stat_date] = (d.a[r.stat_date] || 0) + (+r.spend || 0); d.hasAds = true; } });
+    _cpPrevT[k].d = d;
+    if (currentPage === 'creatorperf' && cpView !== 'product') renderCpTrendChart();
+  }).catch(e => { delete _cpPrevT[k]; console.warn('cp prev', e.message); });
+  return null;
+}
 function renderCpTrendChart() {
   // (2026-11-04) อ่านง่ายขึ้น: ช่วงไม่เกิน 1 เดือน = รายวัน · ยาวกว่า = รายเดือน (กฎเดียวกับทุกหน้า — เดิมรายวันเสมอ ทั้งปีเลยเป็นยึกยือ 300 จุด)
   //   ยอดขายกับต้นทุนใช้แกนเงินเดียวกัน (เดิมแยก 2 แกน ทำให้เส้นค่า Ads ดูสูงเกือบเท่ายอดขาย) · เลิกแถวสามเหลี่ยมวันโพสต์ — รายชื่องาน KOL อยู่ในกล่องตอนชี้เมาส์
@@ -4858,9 +4877,16 @@ function renderCpTrendChart() {
   const datasets = [
     { label: 'ยอดขาย (ออเดอร์จริง)', data: keys.map(k => B[k].s), borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.10)', borderWidth: 2.5, pointRadius: pr, pointHoverRadius: 5, tension: 0.3, segment: seg },
     { label: 'ค่า Ads', data: keys.map(k => B[k].a), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.10)', borderWidth: 2, pointRadius: pr, pointHoverRadius: 5, tension: 0.3, segment: seg },
-    { label: 'ค่าจ้าง KOL', data: keys.map(k => B[k].f), borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.10)', borderWidth: 2, borderDash: [5, 4], pointRadius: pr, pointHoverRadius: 5, tension: 0.3,
+    { label: 'ค่าจ้าง KOL', data: keys.map(k => B[k].f), borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.10)', borderWidth: 2, pointRadius: pr, pointHoverRadius: 5, tension: 0.3,
       hidden: !keys.some(k => B[k].f) }   // ไม่มีค่าจ้าง KOL ในช่วงนี้ → ไม่วาดเส้นศูนย์
   ];
+  // (2026-11-23) เส้นประ = ยอดขาย / ค่า Ads ช่วงวันเดียวกันของเดือนก่อน (เฉพาะกราฟรายวัน) · ใช้คำสั่งเดิม creator_daily / tta_daily_spend กับช่วงเดือนก่อน · โหลดตามหลัง ไม่ให้หน้ารอ
+  { const on = daily && cmpDaily(from, to), c = document.getElementById('cpCmp'); if (c) c.innerHTML = on ? cmpToggleHtml('renderCpTrendChart') : '';
+    if (on && cmpOn()) {
+      const P = cpPrevTrend(from, to, target);
+      if (P) { const pd = prevPairDates(keys, from, to);
+        datasets.push(prevLine(datasets[0], pd.map(d => d ? Math.round(P.s[d] || 0) : null), pd, 's', false));
+        if (P.hasAds) datasets.push(prevLine(datasets[1], pd.map(d => d ? Math.round(P.a[d] || 0) : null), pd, 'a', null)); } } }
   makeChart('chartCpTrend', 'line', keys.map(lab), datasets, {
     legend: { display: false },   // ใช้ legend ที่หัวการ์ด
     scales: {
@@ -4870,7 +4896,7 @@ function renderCpTrendChart() {
     tooltip: {
       filter: item => !(item.dataset.label === 'ค่าจ้าง KOL' && !item.raw),
       callbacks: {
-        label: item => ` ${item.dataset.label}: ${fmt(item.raw || 0)}`,
+        label: item => ` ${item.dataset.label}: ${item.raw == null ? '—' : fmt(item.raw)}`,
         footer: items => {
           if (!items.length) return [];
           const i0 = items[0].dataIndex, b = B[keys[i0]], cost = b.a + b.f, out = [];

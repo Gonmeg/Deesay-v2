@@ -1,3 +1,4 @@
+// invvalue.js (v20261123a) — ตารางแสดงเต็ม ไม่มีกล่องเลื่อน · หัวตารางค้างใต้แถบบนตอนเลื่อนหน้า
 // invvalue.js (v20261028c) — ไม่มีกรอบซ้อนรอบตาราง · ราคาต่อชิ้นแสดงเฉพาะแถว parent
 // invvalue.js (v20261028b) — มูลค่าสินค้าคงคลัง (Management)
 // (2026-10-28 b) แสดงมูลค่า ไม่รวม VAT / รวม VAT (ปุ่มที่แถบบน · ใช้ทั้งหน้า) · คอลัมน์ต่อชิ้น (ราคาทุน / RSP) · กดหัวคอลัมน์เพื่อเรียง · แสดงทุกสินค้า (ไม่แบ่งหน้า) หัวตารางล็อกตอนเลื่อน
@@ -22,10 +23,10 @@
       #page-invvalue .iv-k .row b { font-size:18px; color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; } #page-invvalue .iv-k .row.sub b { font-size:14px; color:var(--text2); }
       #page-invvalue .iv-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px 16px 10px; }
       #page-invvalue .iv-card h3 { margin:0 0 10px; font-size:14px; font-weight:700; color:var(--text); }
-      #page-invvalue .iv-wrap { overflow:auto; max-height:calc(100vh - 230px); }   /* (2026-10-28 c) ไม่มีกรอบซ้อนในการ์ด */
+      #page-invvalue .iv-wrap { overflow:visible; }   /* (2026-11-23) ตารางแสดงเต็มทุกแถว ไม่มีกล่องเลื่อน · หัวตารางค้างใต้แถบบนตอนเลื่อนหน้า (แบบ Business Insight) */
       #page-invvalue table.iv { width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; min-width:1180px; table-layout:fixed; }
       #page-invvalue table.iv th { position:sticky; z-index:2; background:var(--bg2); font-size:11.5px; font-weight:600; color:var(--text3); padding:7px 6px; text-align:center; border-bottom:1px solid var(--border); white-space:normal; line-height:1.35; vertical-align:middle; }
-      #page-invvalue table.iv thead tr.h1 th { top:0; } #page-invvalue table.iv thead tr.h2 th { top:var(--ivh1, 33px); }
+      #page-invvalue table.iv thead tr.h1 th { top:var(--iv-top, 0px); } #page-invvalue table.iv thead tr.h2 th { top:calc(var(--iv-top, 0px) + var(--ivh1, 33px)); }
       #page-invvalue table.iv th.sort { cursor:pointer; user-select:none; } #page-invvalue table.iv th.sort:hover { color:var(--text); } #page-invvalue table.iv th .ar { font-size:9px; margin-left:3px; color:var(--text); }
       #page-invvalue table.iv th.gc { background:linear-gradient(var(--iv-costh), var(--iv-costh)), var(--bg2); color:#2563eb; } #page-invvalue table.iv th.gr { background:linear-gradient(var(--iv-rsph), var(--iv-rsph)), var(--bg2); color:#a16207; }
       #page-invvalue table.iv th.nm, #page-invvalue table.iv td.nm { text-align:left; }
@@ -126,6 +127,7 @@
         <div class="iv-miss">${missC.length ? `ยังไม่มีต้นทุน ${missC.length} รายการ (มูลค่าแสดง —): ${missC.map(esc).join(', ')}<br>` : ''}${missR.length ? `ยังไม่มีราคา RSP ${missR.length} รายการ: ${missR.map(esc).join(', ')}<br>` : ''}${missC.length || missR.length ? '* = ไม่รวมสี / เบอร์ที่ยังไม่มีราคา · ' : ''}กดหัวคอลัมน์เพื่อเรียง · ข้อมูล ณ ${esc((D0 && D0.as_of) || '')}</div>
       </div>`;
     const h1 = el.querySelector('thead tr.h1'); if (h1) el.style.setProperty('--ivh1', h1.offsetHeight + 'px');
+    const tb = document.querySelector('.topbar'); el.style.setProperty('--iv-top', (tb ? tb.offsetHeight : 0) + 'px');   // หัวตารางค้างใต้แถบบน
     el.onclick = e => {
       const h = e.target.closest('th.sort'); if (h) { const k = h.dataset.sk; if (sk === k) sd = -sd; else { sk = k; sd = k === 'name' ? 1 : -1; } draw(); return; }
       const tr = e.target.closest('tr.par.has'); if (!tr) return;
