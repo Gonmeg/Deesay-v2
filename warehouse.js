@@ -13,12 +13,16 @@
   const num = n => Number(n || 0).toLocaleString('en-US');
   const CHUNK = 20;   // จำนวนคำสั่งซื้อต่อ 1 ครั้งที่ส่งให้ระบบหลังบ้าน
 
-  const S = { view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', pat: '', pats: [], patAll: 0, basket: '', prf: '', busy: false, pickTab: 'sku', counts: {} };
+  const S = { platform: 'tiktok', shop: 'all', admin: false, view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', pat: '', pats: [], patAll: 0, basket: '', car: '', prf: '', busy: false, pickTab: 'sku', counts: {} };
   try { const z = Number(localStorage.getItem('wh_page_size')); if ([50, 100, 250].includes(z)) S.size = z; } catch (e) {}
   const cuts = (() => { try { return Object.assign({ c1: '10:30', c2: '16:00' }, JSON.parse(localStorage.getItem('wh_cuts') || '{}')); } catch (e) { return { c1: '10:30', c2: '16:00' }; } })();
 
-  async function api(body) {
-    const r = await fetch(window.SUPABASE_URL + '/functions/v1/wh-labels', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Auth.token(), apikey: window.SUPABASE_ANON_KEY }, body: JSON.stringify(body) });
+  // (2026-11-24) Shopee ใช้ Edge Function แยก (wh-shopee) · หน้าพิมพ์ใบปะหน้าเรียกผ่าน apiP ให้ไปตาม Platform ที่เลือก
+  const SHOPS = [['all', 'ร้าน: ทั้ง 2 ร้าน'], ['566792331', 'ร้าน: Shopee Mall'], ['530338789', 'ร้าน: Shopee 24hr']], SHOPNAME = { 566792331: 'Mall', 530338789: '24hr' };
+  const PL = p => (p || S.platform) === 'shopee' ? 'Shopee' : 'TikTok';
+  const apiP = body => S.platform === 'shopee' ? api({ ...body, shop: S.shop }, 'wh-shopee') : api(body);
+  async function api(body, fn) {
+    const r = await fetch(window.SUPABASE_URL + '/functions/v1/' + (fn || 'wh-labels'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Auth.token(), apikey: window.SUPABASE_ANON_KEY }, body: JSON.stringify(body) });
     let j = null; try { j = await r.json(); } catch (e) {}
     if (!r.ok || !j || j.error) throw new Error((j && j.error) || ('เชื่อมต่อไม่ได้ (' + r.status + ')'));
     return j;
@@ -62,7 +66,7 @@
   // จำผลแต่ละแท็บ / ช่วงเวลา ไว้ 5 นาที — สลับแท็บแล้วโชว์ทันที · กดค้นหา / พิมพ์เสร็จ = ดึงใหม่เสมอ
   const FRESH = 5 * 60 * 1000, LC = {};
   const TABS = ['ship', 'collect', 'cancel'], TNAME = { ship: 'รอจัดส่ง', collect: 'รอเข้ารับ', cancel: 'ยกเลิกหลังพิมพ์' };
-  const keyOf = t => t === 'cancel' ? 'cancel' : [t, $('fFrom').value, $('fTo').value].join('|');
+  const keyOf = t => [S.platform, S.shop, t === 'cancel' ? 'cancel' : [t, $('fFrom').value, $('fTo').value].join('|')].join('#');
   const fresh = t => { const c = LC[keyOf(t)]; return !!c && Date.now() - c.got < FRESH; };
   function rangeText() {
     const a = $('fFrom').value, b = $('fTo').value, f = v => fmtDT(new Date(v));
@@ -88,13 +92,13 @@
     const keys = {}; TABS.forEach(t => { keys[t] = keyOf(t); });
     const f = $('fFrom').value ? Math.floor(new Date($('fFrom').value).getTime() / 1000) : null;
     const to = $('fTo').value ? Math.floor(new Date($('fTo').value).getTime() / 1000) : null;
-    const head = `<h2>กำลังโหลดคำสั่งซื้อ</h2><div class="s">TikTok · ${esc(rangeText())}</div>`;
+    const head = `<h2>กำลังโหลดคำสั่งซื้อ</h2><div class="s">${PL()}${S.platform === 'shopee' ? ' · ' + esc(SHOPS.find(x => x[0] === S.shop)[1].replace('ร้าน: ', '')) : ''} · ${esc(rangeText())}</div>`;
     const draw = () => { $('ldDlg').innerHTML = head + TABS.map(t => `<div class="r"><span>${TNAME[t]}</span>${st[t] === 'wait' ? '<span class="wh-spin"></span>' : st[t] === 'err' ? '<span class="pc2">โหลดไม่ได้</span>' : `<b>${num(S.counts[t] ?? 0)}</b>`}</div>`).join(''); };
     countTabs(); draw(); $('ldOv').classList.add('on');
     const errs = [];
     await Promise.all(need.map(async t => {
       try {
-        const j = t === 'cancel' ? await api({ action: 'cancelled', sc: true }) : await api({ action: 'list', tab: t, from: f, to });
+        const j = t === 'cancel' ? await apiP({ action: 'cancelled', sc: true }) : await apiP({ action: 'list', tab: t, from: f, to });
         LC[keys[t]] = { j, rows: (j.orders || []).map(derive), got: Date.now() }; st[t] = 'ok';
       } catch (e) { delete LC[keys[t]]; st[t] = 'err'; errs.push(TNAME[t] + ': ' + e.message); }
       countTabs(); draw();
@@ -109,7 +113,11 @@
   }
   // (2026-11-23) ตัวกรองรูปแบบคำสั่งซื้อ (SKU) = รูปแบบที่มีจริงในแท็บที่เปิดอยู่ + จำนวนคำสั่งซื้อ เรียงมาก → น้อย · ตะกร้า = เฉพาะที่อยู่ในรูปแบบที่เลือก
   //   เลือกแล้วกรองทันที (กรองจากข้อมูลที่โหลดไว้ ไม่ดึง TikTok ใหม่)
+  //   (2026-11-24) ขนส่ง = เฉพาะขนส่งที่มีตามตัวกรองอื่นที่เลือก + จำนวนคำสั่งซื้อ · เลือกขนส่งแล้วรูปแบบ / ตะกร้าก็แสดงเฉพาะของขนส่งนั้น
+  const carOf = o => o.carrier || '-';
+  function carCount() { const cc = {}; S.raw.forEach(o => { if (passes(o, S.printed, { car: true })) cc[carOf(o)] = (cc[carOf(o)] || 0) + 1; }); return cc; }
   function fillOptions() {
+    if (S.car && !carCount()[S.car]) S.car = '';
     const pc = {}; let all = 0;
     S.raw.forEach(o => { if (passes(o, S.printed, { pat: true, basket: true })) { pc[o.pat] = (pc[o.pat] || 0) + 1; all++; } });
     S.pats = Object.entries(pc).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); S.patAll = all;
@@ -117,6 +125,8 @@
     const bs = new Set(); S.raw.forEach(o => { if (passes(o, S.printed, { basket: true })) o.bnames.forEach(b => bs.add(b)); });
     if (S.basket && !bs.has(S.basket)) S.basket = '';
     dd('fBasket', [['', 'ทั้งหมด'], ...[...bs].sort().map(v => [v, v])], S.basket, v => { S.basket = v; fillOptions(); applyFilters(); });
+    const cc = carCount(), cs = Object.keys(cc).sort((a, b) => a === '-' ? 1 : b === '-' ? -1 : a.localeCompare(b, 'en', { sensitivity: 'base' }));
+    dd('fCarrier', [['', 'ทั้งหมด'], ...cs.map(c => [c, `${c === '-' ? 'ไม่ระบุ' : c} · ${num(cc[c])}`])], S.car, v => { S.car = v; fillOptions(); applyFilters(); });
     renderPat();
   }
   // (2026-11-23) dropdown แบบเว็บ (ui.css .ui-dd) แทน <select> ของ browser · items = [[ค่า, ข้อความ]] · กดปุ่มเดิมซ้ำ = ปิด
@@ -193,6 +203,15 @@
   addEventListener('resize', tpClose);
   addEventListener('scroll', e => { if (TP.pop && !TP.pop.contains(e.target)) tpClose(); }, true);
 
+  // (2026-11-24) Platform: TikTok / Shopee · Shopee เลือกร้านได้ (ทั้ง 2 ร้าน / Mall / 24hr) — เปลี่ยนแล้วโหลดรายการใหม่
+  function drawPlat() {
+    const plats = [['tiktok', 'Platform: TikTok']].concat(S.admin ? [['shopee', 'Platform: Shopee (ทดลอง)']] : []);
+    dd('fPlatform', plats, S.platform, v => { if (v === S.platform) return; S.platform = v; drawPlat(); switchList(); });
+    dd('fShop', SHOPS, S.shop, v => { if (v === S.shop) return; S.shop = v; drawPlat(); switchList(); });
+    $('fShop').style.display = S.platform === 'shopee' ? '' : 'none';
+  }
+  function switchList() { S.sel.clear(); S.pat = ''; S.basket = ''; S.car = ''; S.page = 1; S.raw = []; S.rows = []; render(); loadAll(); }
+
   function dd(id, items, value, onPick) {
     const el = $(id), cur = items.find(x => x[0] === value) || items[0];
     el.innerHTML = `<button type="button" class="ui-dd-btn"><span>${esc(cur[1])}</span></button><div class="ui-dd-menu">${items.map(([v, l]) => `<button type="button" class="ui-dd-item" data-v="${esc(v)}" aria-selected="${v === cur[0]}">${esc(l)}</button>`).join('')}</div>`;
@@ -212,6 +231,7 @@
     const b = S.basket, pr = S.prf;
     if (S.pat && !skip.pat && o.pat !== S.pat) return false;
     if (b && !skip.basket && !(o.bnames || []).includes(b)) return false;
+    if (S.car && !skip.car && carOf(o) !== S.car) return false;
     const n = printed[o.id] || 0;
     if (pr === '0' && n > 0) return false;
     if (pr === '1' && n === 0) return false;
@@ -246,8 +266,8 @@
     const pages = Math.max(1, Math.ceil(S.rows.length / S.size)); if (S.page > pages) S.page = pages;
     const view = S.rows.slice((S.page - 1) * S.size, S.page * S.size);
     $('tbody').innerHTML = view.map(o => cancel
-      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) + `<div class="wh-sub">${afterTxt(o)}</div>` : '—'}</td><td>${esc(o.id)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.st === 'CANCELLED' ? '<span class="wh-pill bad">พิมพ์แล้ว · ยกเลิกแล้ว</span>' : '<span class="wh-pill cod">พิมพ์แล้ว · ลูกค้าขอยกเลิก</span>'}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? 'Seller Center' : `หน้านี้ (${num(S.printed[o.id] || 1)} ครั้ง)`}</td></tr>`
-      : `<tr class="pick ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td><input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}></td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${printedHtml(o.id)}</td></tr>`).join('');
+      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) + `<div class="wh-sub">${afterTxt(o)}</div>` : '—'}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.st === 'CANCELLED' ? '<span class="wh-pill bad">พิมพ์แล้ว · ยกเลิกแล้ว</span>' : '<span class="wh-pill cod">พิมพ์แล้ว · ลูกค้าขอยกเลิก</span>'}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? 'Seller Center' : `หน้านี้ (${num(S.printed[o.id] || 1)} ครั้ง)`}</td></tr>`
+      : `<tr class="pick ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td><input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}></td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${printedHtml(o.id)}</td></tr>`).join('');
     const empty = !S.rows.length;
     $('empty').style.display = empty ? 'block' : 'none';
     if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังจัดส่ง / พิมพ์ (ย้อนหลัง 7 วัน)' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
@@ -258,6 +278,7 @@
     renderSel();
   }
   function selected() { return S.rows.filter(o => S.sel.has(o.id)); }
+  const shopSub = o => o.shop ? `<div class="wh-sub">Shopee ${SHOPNAME[o.shop] || ''}</div>` : '';
   function summarize(list) {
     const sku = {}, pat = {}; let qty = 0;
     list.forEach(o => { qty += o.qty; for (const k in o.parts) sku[k] = (sku[k] || 0) + o.parts[k]; pat[o.pat] = (pat[o.pat] || 0) + 1; });
@@ -287,11 +308,11 @@
     const list = selected(); if (!list.length) return;
     const s = summarize(list), t = pickTables(s), reprint = S.tab === 'collect';
     const when = fmtDT(new Date());
-    $('dlg').innerHTML = `<h2>รายการเตรียมสินค้า</h2><div class="s">สรุปจากคำสั่งซื้อที่เลือก · TikTok · ${when}</div>
+    $('dlg').innerHTML = `<h2>รายการเตรียมสินค้า</h2><div class="s">สรุปจากคำสั่งซื้อที่เลือก · ${PL()} · ${when}</div>
       <div class="wh-kp"><div><small>คำสั่งซื้อที่เลือก</small><b>${num(s.n)}</b></div><div><small>จำนวนสินค้า (รายการ)</small><b>${t.nSku}</b></div><div><small>จำนวนชิ้นรวม</small><b>${num(s.qty)}</b></div></div>
       <div class="wh-tabs" id="pkTabs"><button data-k="sku" type="button">สินค้าที่ต้องหยิบ<small>${t.nSku}</small></button><button data-k="pat" type="button">รูปแบบคำสั่งซื้อ<small>${t.nPat}</small></button></div>
       <div id="pkBody"></div>
-      <div class="wh-note" id="pkNote">${reprint ? 'พิมพ์ซ้ำ: สถานะใน TikTok ไม่เปลี่ยน ระบบจะนับจำนวนครั้งที่พิมพ์เพิ่ม' : 'เมื่อกด "ยืนยันจัดส่ง" คำสั่งซื้อทั้งหมดที่เลือกจะย้ายไปสถานะรอเข้ารับใน TikTok ทันที และยกเลิกย้อนกลับไม่ได้'}</div>
+      <div class="wh-note" id="pkNote">${reprint ? `พิมพ์ซ้ำ: สถานะใน ${PL()} ไม่เปลี่ยน ระบบจะนับจำนวนครั้งที่พิมพ์เพิ่ม` : `เมื่อกด "ยืนยันจัดส่ง" คำสั่งซื้อทั้งหมดที่เลือกจะย้ายไปสถานะรอเข้ารับใน ${PL()} ทันที${S.platform === 'shopee' ? ' และนัดขนส่งเข้ารับที่คลังรอบเวลาแรกที่มี' : ''} และยกเลิกย้อนกลับไม่ได้`}</div>
       <div class="wh-act"><button class="wh-btn" id="pkClose" type="button">ยกเลิก</button><button class="wh-btn" id="pkPrint" type="button">พิมพ์รายการในแท็บนี้</button><button class="wh-btn pri" id="pkGo" type="button">${reprint ? 'พิมพ์ใบปะหน้าซ้ำ' : 'ยืนยันจัดส่ง + พิมพ์ใบปะหน้า'}</button></div>`;
     const show = k => { S.pickTab = k; [...$('pkTabs').children].forEach(b => b.classList.toggle('on', b.dataset.k === k)); $('pkBody').innerHTML = t[k]; };
     show(t[S.pickTab] ? S.pickTab : 'sku');
@@ -299,7 +320,7 @@
     $('pkClose').onclick = closeDlg;
     $('pkPrint').onclick = () => {
       const title = S.pickTab === 'sku' ? 'รายการเตรียมสินค้า — สินค้าที่ต้องหยิบ' : 'รายการเตรียมสินค้า — รูปแบบคำสั่งซื้อ';
-      $('printArea').innerHTML = `<h2>${title}</h2><div class="s">TikTok · ${when} · ${num(s.n)} คำสั่งซื้อ · ${num(s.qty)} ชิ้น · ${esc(rangeText())}</div>${t[S.pickTab]}`;
+      $('printArea').innerHTML = `<h2>${title}</h2><div class="s">${PL()} · ${when} · ${num(s.n)} คำสั่งซื้อ · ${num(s.qty)} ชิ้น · ${esc(rangeText())}</div>${t[S.pickTab]}`;
       window.print();
     };
     $('pkGo').onclick = () => runPrint(reprint ? 'reprint' : 'ship', list.map(o => o.id));
@@ -309,8 +330,9 @@
 
   // ───── สั่งจัดส่ง + พิมพ์ใบปะหน้า ─────
   function b64ToU8(b) { const s = atob(b), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
-  async function runPrint(action, ids) {
+  async function runPrint(action, ids, plat, shopOf) {   // (2026-11-24) plat / shopOf ส่งมาจากประวัติการพิมพ์ · ไม่ส่ง = ตาม Platform ที่เลือกในหน้า
     if (S.printing || !ids.length) return;
+    plat = plat || S.platform; shopOf = shopOf || Object.fromEntries((S.raw || []).map(o => [o.id, o.shop]));
     S.printing = true;
     const win = window.open('', '_blank');   // เปิดแท็บไว้ก่อน กัน browser บล็อก popup
     if (win) win.document.write('<title>ใบปะหน้า</title><p style="font-family:Sarabun,sans-serif;padding:24px">กำลังเตรียมใบปะหน้า… ห้ามปิดหน้านี้</p>');
@@ -322,7 +344,8 @@
       const part = ids.slice(i, i + CHUNK);
       $('prg').textContent = `ทำแล้ว ${num(i)} จาก ${num(ids.length)} คำสั่งซื้อ…`;
       try {
-        const j = await api({ action, order_ids: part, batch_id: batch, doc: 'label_slip' });   // (2026-11-23) ใบปะหน้า + รายการสินค้าในหน้าเดียว (แบบ Seller Center)
+        const j = plat === 'shopee' ? await api({ action, order_ids: part, batch_id: batch, shop_of: Object.fromEntries(part.map(id => [id, shopOf[id]])) }, 'wh-shopee')
+          : await api({ action, order_ids: part, batch_id: batch, doc: 'label_slip' });   // (2026-11-23) ใบปะหน้า + รายการสินค้าในหน้าเดียว (แบบ Seller Center)
         (j.results || []).forEach(r => (r.ok ? okAll : failAll).push(r));
         if (j.pdf) { pdfs.push(b64ToU8(j.pdf)); sheets += j.pages || 0; }
       } catch (e) { part.forEach(id => failAll.push({ id, ok: false, error: 'ไม่ได้รับคำตอบจากระบบ: ' + e.message + ' (ให้เช็คสถานะในแท็บรอเข้ารับก่อนกดซ้ำ)' })); }
@@ -426,7 +449,7 @@
     $('stHis').textContent = 'กำลังโหลด…'; $('stHis').classList.remove('bad');
     try {
       const j = await api({ action: 'history' }); HIS = j.batches || [];
-      $('hisBody').innerHTML = HIS.map((b, i) => `<tr><td>${fmtDT(new Date(b.at))}</td><td class="l">${esc(b.by || '—')}</td><td>${num(b.ship)}</td><td>${num(b.reprint)}</td><td>${b.fail ? `<span class="pc2" title="${esc((b.fails || []).map(f => f.id + ' — ' + (f.error || '')).join('\n'))}">${num(b.fail)}</span>` : '0'}</td><td>${b.order_ids.length ? `<button class="wh-btn sm" data-i="${i}" type="button">พิมพ์ซ้ำทั้งรอบ</button>` : ''}</td></tr>`).join('');
+      $('hisBody').innerHTML = HIS.map((b, i) => `<tr><td>${fmtDT(new Date(b.at))}</td><td>${b.platform === 'shopee' ? 'Shopee ' + [...new Set(Object.values(b.shop_of || {}).map(x => SHOPNAME[x]))].join(' + ') : 'TikTok'}</td><td class="l">${esc(b.by || '—')}</td><td>${num(b.ship)}</td><td>${num(b.reprint)}</td><td>${b.fail ? `<span class="pc2" title="${esc((b.fails || []).map(f => f.id + ' — ' + (f.error || '')).join('\n'))}">${num(b.fail)}</span>` : '0'}</td><td>${b.order_ids.length ? `<button class="wh-btn sm" data-i="${i}" type="button">พิมพ์ซ้ำทั้งรอบ</button>` : ''}</td></tr>`).join('');
       $('hisEmpty').style.display = HIS.length ? 'none' : 'block'; $('hisEmpty').textContent = 'ยังไม่มีประวัติการพิมพ์';
       $('stHis').textContent = 'Updated ' + fmtT(new Date());
     } catch (e) { $('stHis').textContent = '1 alert'; $('stHis').classList.add('bad'); $('hisBody').innerHTML = ''; $('hisEmpty').style.display = 'block'; $('hisEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
@@ -445,7 +468,7 @@
     $('outBtn').onclick = () => Auth.signOut();
     $('fRound').onclick = e => { const b = e.target.closest('button'); if (!b || S.busy) return; setRound(b.dataset.v); if (b.dataset.v !== 'c') loadAll(); };   // รอบ 1 / 2 = โหลดเลย · กำหนดเอง = ตั้งเวลาแล้วกดค้นหา
     ['fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', () => { S.round = 'c'; [...$('fRound').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'c')); dirty(); }));
-    renderPrf(); dd('fPlatform', [['tiktok', 'Platform: TikTok']], 'tiktok', () => {});
+    renderPrf(); drawPlat();
     document.addEventListener('click', e => {   // เปิด / ปิด / เลือก dropdown แบบเว็บ (ตะกร้า / การพิมพ์ / Platform) — กรองทันที ไม่ดึงใหม่
       const sel = e.target.closest('.wh-sel');
       document.querySelectorAll('.wh-sel.is-open').forEach(x => { if (x !== sel) x.classList.remove('is-open'); });
@@ -472,12 +495,13 @@
     $('sumBtn').onclick = () => loadSummary(true);
     $('stkBtn').onclick = () => loadStock(true);
     $('stkPgBtns').onclick = e => { const b = e.target.closest('button[data-p]'); if (b) { STK.page += Number(b.dataset.p); renderStock(); } };
-    $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) runPrint('reprint', HIS[Number(b.dataset.i)].order_ids); };
+    $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) { const h = HIS[Number(b.dataset.i)]; runPrint('reprint', h.order_ids, h.platform, h.shop_of); } };
   }
 
   async function start() {
     try { if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
     const perm = await Auth.require('warehouse');   // (2026-11-23) ผู้ดูแลระบบ หรือคนที่ติ๊กช่อง Warehouse ในหน้าตั้งค่า
+    S.admin = !!perm.is_admin;   // (2026-11-24) Shopee ช่วงทดสอบ: เห็นเฉพาะผู้ดูแลระบบ
     // มีแค่สิทธิ์ Warehouse (ไม่มีหน้าอื่น) = ซ่อนปุ่มกลับหน้าหลัก เพราะหน้าหลักจะพากลับมาที่นี่อยู่ดี
     if (!(perm.is_admin || perm.pages.some(x => x !== 'warehouse') || perm.can_upload || perm.can_admin || perm.can_edit_kpi)) document.querySelector('.wh-side .home')?.remove();
     $('whoMail').textContent = perm.email || '';
