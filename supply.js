@@ -210,6 +210,7 @@
             <button class="btn btn-ghost" id="supHiddenToggle" style="${showHidden ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}" title="สินค้าที่ตั้งเป็น ซ่อน ในหน้า Admin">👁 ที่ซ่อนไว้${d.hidden_count ? ' (' + fmtN(d.hidden_count) + ')' : ''}</button>
             <button class="btn btn-ghost" id="supClear">✕ ล้าง</button>
             <button class="btn btn-ghost" id="supExport">⬇ Export CSV</button>
+            ${canProd() ? '<button class="btn btn-ghost" id="supAddProd" title="เพิ่มสินค้าใหม่ (ข้อมูลเดียวกับหน้าสินค้า & ราคา)">＋ เพิ่มสินค้า</button>' : ''}
           </div>
         </div>
         <div class="table-wrap" id="supTbl" style="max-height:calc(100vh - 160px);overflow:auto;"></div>
@@ -381,6 +382,7 @@
     document.getElementById('supQ').oninput = e => { filt.q = e.target.value; renderTable(); };
     document.getElementById('supClear').onclick = () => { filt = { status: '', abc: '', xyz: '', q: '' }; renderAll(); };
     document.getElementById('supExport').onclick = exportCsv;
+    const ap = document.getElementById('supAddProd'); if (ap) ap.onclick = () => editProduct('');
     document.getElementById('supGroupToggle').onclick = () => { collapseAll = !collapseAll; collapsed = new Set(); if (sort.key !== 'parent_sku') { sort.key = 'parent_sku'; sort.dir = 1; } renderAll(); };
     document.getElementById('supHiddenToggle').onclick = () => { showHidden = !showHidden; renderAll(); };
     document.querySelectorAll('#supKpis .card[data-f]').forEach(el => { const f = el.dataset.f; if (!f) return; el.onclick = () => { filt.status = filt.status === f ? '' : f; renderAll(); }; });
@@ -859,7 +861,9 @@
     const covCol = cov == null ? 'var(--text3)' : cov > 180 ? '#60a5fa' : r.plan_mode !== 'plan' ? 'var(--text)' : cov < lt + REVIEW_DAYS ? 'var(--red)' : 'var(--green)';
     const f = (l, v, sub) => `<div><span>${l}</span><b>${v}</b>${sub ? `<i>${sub}</i>` : ''}</div>`;
     const locs = Object.entries(r.by_loc || {}).filter(([, q]) => q > 0).sort((a, b) => b[1] - a[1]).map(([L, q]) => `${esc(LOC_LABEL[L] || L)} <b>${fmtN(q)}</b>`).join(' · ');
-    document.getElementById('supSkuTitle').innerHTML = `${esc(r.product_name || d.sku)} <span style="font-size:12px;font-weight:500;color:var(--text3);margin-left:6px;">${esc(d.sku)}${r.abc ? ' · ' + r.abc + r.xyz : ''}</span>`;
+    document.getElementById('supSkuTitle').innerHTML = `${esc(r.product_name || d.sku)} <span style="font-size:12px;font-weight:500;color:var(--text3);margin-left:6px;">${esc(d.sku)}${r.abc ? ' · ' + r.abc + r.xyz : ''}</span>`
+      + (canProd() ? ` <button class="btn btn-ghost" id="supEditProd" style="margin-left:10px;padding:3px 10px;font-size:11.5px;" title="แก้ชื่อสินค้า / ชื่อย่อย / รหัสลูก / ราคา (ข้อมูลเดียวกับหน้าสินค้า & ราคา)">✎ แก้ไขข้อมูลสินค้า</button>` : '');
+    const ep = document.getElementById('supEditProd'); if (ep) ep.onclick = () => editProduct(d.sku);
     document.getElementById('supSkuBody').innerHTML = `
       <div class="sup-facts">
         ${f('Status', statusCell(r).replace(/<div class="sup-sub">.*$/s, ''))}
@@ -933,5 +937,17 @@
   }
 
   // เรียกจาก dashboard.html ตอนกดเมนู / สลับธีม
+  // (2026-11-24) เพิ่ม / แก้สินค้าจากหน้านี้ = แผงแก้สินค้าตัวเดียวกับหน้า "สินค้า & ราคา" (products.js) ข้อมูลชุดเดียวกัน · แก้ได้เฉพาะผู้ดูแลระบบ / สิทธิ์จัดการ
+  function canProd() { const p = window.Auth && window.Auth.perm; return !!(p && (p.is_admin || p.can_admin)); }
+  function editProduct(sku) {
+    const go = () => window.ProductsUI.edit(sku, () => { DATA = null; load(); });   // บันทึกแล้ว → โหลดหน้านี้ใหม่ ชื่อ / รหัสลูกใหม่ขึ้นทันที
+    if (window.ProductsUI) return go();
+    if (window._productsLoading) return;
+    window._productsLoading = true;
+    const s = document.createElement('script'); s.src = 'products.js?v=1';
+    s.onload = () => { window._productsLoading = false; go(); };
+    s.onerror = () => { window._productsLoading = false; if (typeof uiAlert === 'function') uiAlert('เปิดแผงแก้สินค้าไม่สำเร็จ', { text: 'โหลด products.js ไม่ได้', tone: 'bad' }); };
+    document.body.appendChild(s);
+  }
   window.renderSupplyPage = function () { if (DATA) { renderAll(); if (selSku && lastSeries) renderSku(lastSeries); } else load(); };
 })();

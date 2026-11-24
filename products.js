@@ -92,6 +92,15 @@
       .pp-tags { display:flex; flex-wrap:wrap; gap:6px; align-items:center; border:1px solid var(--border); border-radius:9px; background:var(--bg); padding:6px; }
       .pp-tag { display:inline-flex; align-items:center; gap:6px; background:var(--bg2); border:1px solid var(--border); border-radius:7px; padding:3px 6px 3px 9px; font-size:12.5px; font-weight:600; color:var(--text); }
       .pp-tag button { border:0; background:none; color:var(--text3); font-size:11px; cursor:pointer; padding:0 2px; }
+      .pp-kids { border:1px solid var(--border); border-radius:9px; background:var(--bg); padding:4px 6px; }   /* (2026-11-24) รหัสลูก 1 แถว = รหัส + ชื่อย่อย (มีเบอร์) */
+      .pp-kid { display:grid; grid-template-columns:110px 1fr 22px; gap:8px; align-items:center; padding:3px 0; border-bottom:1px solid var(--row-border, var(--border)); }
+      .pp-kid:last-of-type { border-bottom:0; }
+      .pp-kid .pp-kc { font-family:'IBM Plex Mono', monospace; font-size:12.5px; font-weight:600; color:var(--text); }
+      .pp-kid .pp-f { padding:5px 8px; font-size:13px; }
+      .pp-kid .pp-f.nonum { border-color:var(--orange, #e8912d); }
+      .pp-kid button { border:0; background:none; color:var(--text3); font-size:11px; cursor:pointer; padding:0; }
+      .pp-kid .pp-kn { font-size:13px; color:var(--text); }
+      .pp-kids .pp-tadd { width:100%; padding:6px 2px 4px; }
       .pp-tadd { flex:1; min-width:140px; border:0; background:none; font:inherit; font-size:12.5px; color:var(--text); outline:none; padding:3px 6px; }
       .pp-rg { display:grid; grid-template-columns:70px repeat(3, 1fr); gap:8px; align-items:center; }
       .pp-rg .h { font-size:11.5px; color:var(--text3); font-weight:600; text-align:center; } .pp-rg .l { font-size:12.5px; font-weight:600; color:var(--text2); }
@@ -223,13 +232,17 @@
     renderList();
   }
 
+  // (2026-11-24) ชื่อย่อยตั้งต้นของรหัสลูก = ชื่อสินค้า + เบอร์ท้ายรหัส (MNZOL04 → แป้งดำมินิ 04)
+  const defKn = (name, k) => { const d = (String(k).match(/(\d+)$/) || [])[1]; return (String(name || '').trim() + (d ? ' ' + d : '')).trim(); };
+
   // ---------- แผงแก้สินค้า ----------
-  function openEdit(sku) {
+  function openEdit(sku, after) {
+    S.after = after || null;
     const D = S.data, can = !!D.can_edit, isNew = !sku;
     const p = isNew ? { sku: '', name: '', status: 'NPD', mock: null, rsp: null, kids: [], plan: 'plan', lead: 60 } : D.products.find(x => x.sku === sku);
     if (!p) return;
     const b0 = JSON.parse(JSON.stringify(D._base[p.sku] || {})), o0 = JSON.parse(JSON.stringify(D._ovr[p.sku] || {}));
-    const E = { sku: p.sku, name: p.name || '', status: p.status || 'Existing', mock: p.mock, rsp: p.rsp, kids: [...(p.kids || [])], plan: p.plan || 'plan', lead: p.lead == null ? 60 : p.lead,
+    const E = { sku: p.sku, name: p.name || '', status: p.status || 'Existing', mock: p.mock, rsp: p.rsp, kids: [...(p.kids || [])], kn: { ...(p.kn || {}) }, plan: p.plan || 'plan', lead: p.lead == null ? 60 : p.lead,
       base: b0, ovr: o0, off: new Set(D._off[p.sku] || []), pop: null };
     window.trOpenShell(isNew ? 'สินค้า · เพิ่มใหม่' : 'สินค้า · รายละเอียด');
     const body = () => document.getElementById('trBody');
@@ -249,9 +262,10 @@
           <div class="pp-g2"><div style="grid-column:1 / -1;"><div class="pp-lb">ชื่อสินค้า</div><input class="pp-f" id="ppName" value="${esc(E.name)}" ${dis}></div>
             <div style="grid-column:1 / -1;"><div class="pp-lb">สถานะ${tip(ST_TIP)}</div>
               <div class="pp-seg" id="ppSt">${Object.entries(ST).map(([k, v]) => `<button type="button" data-v="${k}" aria-pressed="${E.status === k}" ${dis}>${v[0]}</button>`).join('')}</div></div></div>
-          <div class="pp-lb" style="margin-top:12px;">รหัสลูก (สี / เบอร์)${tip('รหัสที่อยู่ในไฟล์ออเดอร์ของแต่ละสี / เบอร์ · ลบแล้วยอดขายเก่าไม่หาย แต่ไฟล์ออเดอร์ใหม่ที่ใช้รหัสนั้นจะจับคู่ไม่เจอ')}</div>
-          <div class="pp-tags" id="ppKids">${E.kids.map((k, i) => `<span class="pp-tag">${esc(k)}${can ? `<button type="button" data-rmk="${i}" aria-label="ลบ">✕</button>` : ''}</span>`).join('')}
-            ${can ? '<input class="pp-tadd" id="ppKidIn" data-keep-bg placeholder="พิมพ์รหัสแล้วกด Enter…">' : (E.kids.length ? '' : '<span class="pp-mu" style="font-size:12.5px;padding:3px 6px;">ไม่มี</span>')}</div></div>
+          <div class="pp-lb" style="margin-top:12px;">รหัสลูก (สี / เบอร์) และชื่อย่อย${tip('รหัสลูก = รหัสที่อยู่ในไฟล์ออเดอร์ของแต่ละสี / เบอร์ · ลบแล้วยอดขายเก่าไม่หาย แต่ไฟล์ออเดอร์ใหม่ที่ใช้รหัสนั้นจะจับคู่ไม่เจอ\nชื่อย่อย = ชื่อที่แสดงในหน้า Supply Chain, Warehouse (รายการเตรียมสินค้า) และหน้าอื่น ควรมีเบอร์ / สี เช่น แป้งดำมินิ 02\nเพิ่มรหัสใหม่ ระบบตั้งชื่อย่อย = ชื่อสินค้า + เบอร์ท้ายรหัสให้ แก้ได้ · กรอบสีส้ม = รหัสมีเบอร์แต่ชื่อย่อยยังไม่มีเบอร์')}</div>
+          <div class="pp-kids" id="ppKids">${E.kids.map((k, i) => { const d = (k.match(/(\d+)$/) || [])[1], v = E.kn[k] || '', warn = d && !v.includes(d);
+              return `<div class="pp-kid"><span class="pp-kc">${esc(k)}</span>${can ? `<input class="pp-f${warn ? ' nonum' : ''}" data-kn="${esc(k)}" value="${esc(v)}" placeholder="${esc(defKn(E.name, k))}" data-keep-bg>` : `<span class="pp-kn">${esc(v || '—')}</span>`}${can ? `<button type="button" data-rmk="${i}" aria-label="ลบ">✕</button>` : '<span></span>'}</div>`; }).join('')}
+            ${can ? '<input class="pp-tadd" id="ppKidIn" data-keep-bg placeholder="＋ พิมพ์รหัสลูกแล้วกด Enter…">' : (E.kids.length ? '' : '<span class="pp-mu" style="font-size:12.5px;padding:3px 6px;">ไม่มี</span>')}</div></div>
         <div class="pp-sec"><div class="pp-sh">ราคา</div><div class="pp-g2">
           <div><div class="pp-lb">Mock (หน้ากล่อง)</div><input class="pp-f" type="number" step="0.01" id="ppMock" value="${E.mock == null ? '' : E.mock}" ${dis}></div>
           <div><div class="pp-lb">RSP (ราคาขายปกติ)</div><input class="pp-f" type="number" step="0.01" id="ppRsp" value="${E.rsp == null ? '' : E.rsp}" ${dis}></div></div></div>
@@ -273,6 +287,7 @@
       const g = id => document.getElementById(id);
       if (g('ppSku')) E.sku = g('ppSku').value.trim().toUpperCase();
       if (g('ppName')) E.name = g('ppName').value;
+      body().querySelectorAll('[data-kn]').forEach(x => { E.kn[x.dataset.kn] = x.value; });
       if (g('ppMock')) E.mock = num(g('ppMock').value); if (g('ppRsp')) E.rsp = num(g('ppRsp').value); if (g('ppLead')) E.lead = num(g('ppLead').value);
       body().querySelectorAll('[data-bc]').forEach(x => { const c = x.dataset.bc, r = +x.dataset.br, v = num(x.value); (E.base[c] = E.base[c] || {}); if (v == null) delete E.base[c][r]; else E.base[c][r] = v; });
     };
@@ -308,7 +323,7 @@
       const ki = document.getElementById('ppKidIn');
       if (ki) ki.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); const v = ki.value.trim().toUpperCase().replace(/\s+/g, ''); if (!v) return;
-          if (E.kids.includes(v)) { ki.value = ''; return; } keep(); E.kids.push(v); draw(); setTimeout(() => { const n = document.getElementById('ppKidIn'); if (n) n.focus(); }, 0); }
+          if (E.kids.includes(v)) { ki.value = ''; return; } keep(); E.kids.push(v); if (!E.kn[v]) E.kn[v] = defKn(E.name, v); draw(); setTimeout(() => { const n = document.getElementById('ppKidIn'); if (n) n.focus(); }, 0); }
         else if (e.key === 'Backspace' && !ki.value && E.kids.length) { keep(); E.kids.pop(); draw(); setTimeout(() => { const n = document.getElementById('ppKidIn'); if (n) n.focus(); }, 0); }
       });
       B.querySelectorAll('[data-on]').forEach(x => x.onchange = () => { keep(); if (x.checked) E.off.delete(x.dataset.on); else E.off.add(x.dataset.on); draw(); });
@@ -328,8 +343,10 @@
       btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
       try {
         await rpc('product_save', { p: { sku: E.sku, is_new: isNew, name: E.name.trim(), status: E.status, mock: E.mock, rsp: E.rsp, kids: E.kids, plan: E.plan, lead: E.lead,
+          kid_names: Object.fromEntries(E.kids.map(k => [k, (E.kn[k] || '').trim() || defKn(E.name, k)])),
           base, ovr, off: [...E.off] } });
         toastMsg('บันทึกแล้ว'); window.trClose(); await load(); renderPage();
+        if (S.after) { const f = S.after; S.after = null; f(); }   // เปิดจากหน้าอื่น (Supply Chain) → ให้หน้านั้นโหลดใหม่
       } catch (e) { btn.disabled = false; btn.textContent = 'บันทึก'; uiAlert('บันทึกไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
     };
     // ปิดกล่องราคาเฉพาะช่องทางเมื่อคลิกที่อื่น
@@ -345,5 +362,13 @@
     try { await load(); } catch (e) { el.innerHTML = `<div class="pp-empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
     renderPage();
   }
-  window.ProductsUI = { render };
+  // (2026-11-24) เปิดแผงแก้สินค้าจากหน้าอื่น (Supply Chain): sku = รหัสแม่หรือรหัสลูก · ไม่ใส่ = เพิ่มสินค้าใหม่ · after = เรียกหลังบันทึก
+  async function edit(sku, after) {
+    style();
+    try { if (!S.data) await load(); } catch (e) { uiAlert('โหลดข้อมูลสินค้าไม่สำเร็จ', { text: e.message, tone: 'bad' }); return; }
+    let par = '';
+    if (sku) { const u = String(sku).toUpperCase(), p = S.data.products.find(x => x.sku === u || (x.kids || []).includes(u)); if (!p) { uiAlert('ไม่พบสินค้า ' + u + ' ในหน้าสินค้า & ราคา'); return; } par = p.sku; }
+    openEdit(par, after);
+  }
+  window.ProductsUI = { render, edit };
 })();
