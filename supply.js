@@ -1,9 +1,10 @@
+// supply.js v20261124a — การ์ดกราฟ SKU ด้านล่าง → ตาราง YOY (ยอดขายชิ้นรายเดือน เทียบเดือนเดียวกันปีก่อน · RPC supply_yoy) · กดแถวในตารางสต็อก = ไปที่สินค้านั้นในตาราง YOY
 // supply.js v20261110a — หน้าตาชุดเดียวกับหน้าที่ปรับแล้ว: การ์ดสถานะเป็นแถบเดียว (ตัวเลขสีเดียว) · ⓘ ชี้แล้วขึ้น · บรรทัดเวลาอัปเดตไปอยู่ปุ่มสถานะข้อมูล
 //   ตาราง: รหัสสีปกติ + ชื่อสินค้าอ่านง่าย · ABC-XYZ เป็นป้ายเล็ก · Days of cover ไม่มีแถบเล็ก · แนวโน้ม Avg/day สีเทา · ช่อง Forecast โปร่งจนกว่าจะชี้ / พิมพ์ · ลำดับเดิม (ตามรหัสแม่)
 // supply.js v20261002a — ⓘ ABC × XYZ สั้นลง (ตัดส่วนอธิบายเหตุผลการออกแบบตาราง)
 // supply.js — หน้า Supply Chain ของ dashboard.html (โหลดตอนกดเมนูครั้งแรกเท่านั้น)
 // ใช้ของกลางจาก dashboard.html: supaRpc, fmtDateISO, chartTickColor/chartGridColor, Chart.js, CSS (.card/.section-header/.table-wrap/.btn/.ls-input)
-// RPC: supply_chain_page() จาก 55_supply_rpc_v2.sql + supply_sku_series(p_sku, p_days) จาก 48_supply_rpc.sql
+// RPC: supply_chain_page() จาก 55_supply_rpc_v2.sql + supply_yoy(p_year) (2026-11-24 ตาราง YOY)
 // v2 (2026-09-09): เพิ่มคอลัมน์รหัสแม่ + เรียงตามรหัสแม่ · สต็อกแยกรายคลัง (ปุ่มสลับ) · ตัดเรื่องเงิน/ต้นทุนออกทั้งหมด · เพิ่ม ⓘ อธิบายศัพท์ · หัวตารางเป็น Sarabun
 (function () {
   const fmtN = (n, d = 0) => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toLocaleString('th-TH', { maximumFractionDigits: d, minimumFractionDigits: d });
@@ -63,7 +64,7 @@
 
   let DATA = null, rows = [], filt = { status: '', abc: '', xyz: '', q: '' },
       sort = { key: 'parent_sku', dir: 1 }, showLoc = false, showHidden = false, collapseAll = false, collapsed = new Set(),
-      selSku = null, chart = null, lastSeries = null, seq = 0;
+      selSku = null, seq = 0;
 
   function root() { return document.getElementById('page-supply'); }
   function locList() { return (DATA && DATA.locations) ? DATA.locations : []; }
@@ -79,7 +80,6 @@
     if (data && data.message && !data.rows) { el.innerHTML = `<div class="error-banner" style="display:block;">โหลดไม่สำเร็จ: ${esc(data.message)}</div>`; return; }
     DATA = data; rows = data.rows || [];
     renderAll();
-    if (selSku) loadSku(selSku);
   }
 
   // สถานะชุดเดียวกับคอลัมน์ Status (คำนวณในหน้า: สต็อกรวม Hold → WIP → forecast · รอบประชุม)
@@ -227,9 +227,19 @@
         <div class="table-wrap" id="supLocTbl" style="max-height:calc(100vh - 160px);overflow:auto;"></div>
       </div>
 
-      <div class="card" id="supSkuCard">
-        <div class="section-header"><div class="section-title" id="supSkuTitle">กราฟ SKU</div><span style="font-size:11.5px;color:var(--text3);">กดแถวในตารางด้านบนเพื่อดูสต็อกที่ผ่านมา + คาดการณ์ของสินค้านั้น</span></div>
-        <div id="supSkuBody"><div class="empty">เลือก SKU จากตารางด้านบน</div></div>
+      <div class="card" id="supYoyCard">
+        <div class="section-header">
+          <div class="section-title">ยอดขายรายเดือน (YOY / MoM) ${infoIcon('supYoyInfo', yoyInfo())}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <input type="text" class="ls-input" id="supYoyQ" placeholder="🔎 Parent SKU / SKU / ชื่อสินค้า" value="${esc(yoyQ)}" style="width:210px;padding:6px 10px;font-size:12px;">
+            <div class="yoy-seg" id="supYoyCmp"></div>
+            <div class="sup-dd" id="supYoyDD"></div>
+            <button class="btn btn-ghost" id="supYoyPar" style="${yoyPar ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}" title="ย่อแถวสี/เบอร์ เหลือแถวสรุปของ Parent (กดที่แถวสรุปเพื่อขยายทีละกลุ่ม)">▤ ย่อเหลือ Parent</button>
+          </div>
+        </div>
+        <div class="yoy-bar" id="supYoyBar"></div>
+        <div class="table-wrap" id="supYoyBody"><div class="empty" style="min-height:420px;">กำลังโหลดยอดขายรายเดือน...</div></div>
+        <div id="supYoyPager"></div>
       </div>
       <style>
         /* หน้านี้ใช้ Sarabun ทั้งหมด (2026-11-04 ทั้งเว็บใช้ฟอนต์เดียว รวมรหัสสินค้า) */
@@ -385,7 +395,7 @@
     document.getElementById('supHiddenToggle').onclick = () => { showHidden = !showHidden; renderAll(); };
     document.querySelectorAll('#supKpis .card[data-f]').forEach(el => { const f = el.dataset.f; if (!f) return; el.onclick = () => { filt.status = filt.status === f ? '' : f; renderAll(); }; });
     document.querySelectorAll('.sup-cell').forEach(el => el.onclick = () => { const a = el.dataset.a, x = el.dataset.x; if (filt.abc === a && filt.xyz === x) { filt.abc = ''; filt.xyz = ''; } else { filt.abc = a; filt.xyz = x; } renderAll(); });
-    if (selSku && lastSeries) renderSku(lastSeries);
+    renderYoy();
   }
 
   // ===== (2026-09-21) แผนสั่งของที่กรอกเอง: จะสั่งกี่ชิ้น + ของพร้อมส่งวันที่ → ขายได้ถึงวันไหน =====
@@ -572,13 +582,46 @@
       #page-supply .sup-loc td.sl-low { background:color-mix(in srgb, var(--red) 12%, transparent); } #page-supply .sup-loc td.sl-low .sl-q, #page-supply .sup-loc td.sl-low .sl-dd { color:var(--red); }
       #page-supply .sup-loc tr.sl-par td { background:var(--bg3) !important; }
       #page-supply .sup-loc .sl-d { display:none; }
-      #page-supply .sup-facts { display:flex; flex-wrap:wrap; border:1px solid var(--border); border-radius:10px; margin-bottom:10px; }
-      #page-supply .sup-facts > div { flex:1 1 0; min-width:120px; padding:10px 14px; } #page-supply .sup-facts > div + div { border-left:1px solid var(--border); }
-      #page-supply .sup-facts > div > span:first-child { display:block; font-size:11px; color:var(--text3); } #page-supply .sup-facts b { display:block; font-size:16px; margin-top:3px; font-variant-numeric:tabular-nums; }
-      #page-supply .sup-facts i { display:block; font-style:normal; font-size:11px; color:var(--text3); margin-top:2px; } #page-supply .sup-facts .sup-pill { font-size:12px; display:inline-block; }
-      #page-supply .sup-locline { font-size:12px; color:var(--text3); margin:0 2px 14px; } #page-supply .sup-locline b { color:var(--text2); font-weight:600; }
-      #page-supply .sup-ch-h { display:flex; align-items:baseline; gap:8px; margin:4px 2px 6px; } #page-supply .sup-ch-h b { font-size:13px; } #page-supply .sup-ch-h span { font-size:11.5px; color:var(--text3); }
-      #page-supply .sup-leg { display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--text3); margin-top:8px; } #page-supply .sup-leg span { display:inline-flex; align-items:center; gap:6px; } #page-supply .sup-leg i { display:inline-block; }
+      /* (2026-11-24) ตาราง YOY (แทนการ์ดกราฟ SKU) — แถว Parent / เบอร์ ใช้ sup-group / sup-child ชุดเดียวกับตารางสต็อก · สีพื้นรายเดือน = เพิ่ม / ลด เทียบปีก่อน 3 ระดับ */
+      #page-supply .yoy-bar { display:flex; justify-content:space-between; align-items:center; gap:10px 16px; flex-wrap:wrap; margin:0 0 12px; }
+      #page-supply .yoy-pills { display:flex; gap:6px; flex-wrap:wrap; }
+      #page-supply .yoy-pill { display:inline-flex; align-items:center; gap:7px; padding:5px 8px 5px 13px; border-radius:99px; border:1px solid var(--border); background:transparent; color:var(--text2); font:inherit; font-size:12px; cursor:pointer; }
+      #page-supply .yoy-pill b { font-size:11px; font-weight:700; padding:1px 8px; border-radius:99px; background:var(--bg3); color:var(--text2); font-variant-numeric:tabular-nums; }
+      #page-supply .yoy-pill:hover { border-color:var(--accent); }
+      #page-supply .yoy-pill.on { border-color:var(--accent); color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); font-weight:600; }
+      #page-supply .yoy-pill.k-up b { color:var(--good); background:color-mix(in srgb, var(--good) 14%, transparent); } #page-supply .yoy-pill.k-dn b { color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, transparent); }
+      #page-supply .yoy-scale { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text3); flex-wrap:wrap; }
+      #page-supply .yoy-scale i { display:inline-block; width:18px; height:12px; border-radius:3px; } #page-supply .yoy-scale .sep { width:1px; height:12px; background:var(--border); margin:0 4px; }
+      #page-supply .sup-yoy .hm.u1, #page-supply .yoy-scale i.u1 { background:color-mix(in srgb, var(--good) 13%, transparent); }
+      #page-supply .sup-yoy .hm.u2, #page-supply .yoy-scale i.u2 { background:color-mix(in srgb, var(--good) 26%, transparent); }
+      #page-supply .sup-yoy .hm.u3, #page-supply .yoy-scale i.u3 { background:color-mix(in srgb, var(--good) 42%, transparent); }
+      #page-supply .sup-yoy .hm.d1, #page-supply .yoy-scale i.d1 { background:color-mix(in srgb, var(--bad) 13%, transparent); }
+      #page-supply .sup-yoy .hm.d2, #page-supply .yoy-scale i.d2 { background:color-mix(in srgb, var(--bad) 26%, transparent); }
+      #page-supply .sup-yoy .hm.d3, #page-supply .yoy-scale i.d3 { background:color-mix(in srgb, var(--bad) 42%, transparent); }
+      #page-supply .yoy-seg { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+      #page-supply .yoy-seg button { font:inherit; font-size:12px; padding:6px 12px; background:transparent; color:var(--text2); border:0; cursor:pointer; white-space:nowrap; }
+      #page-supply .yoy-seg button + button { border-left:1px solid var(--border); } #page-supply .yoy-seg button:hover { color:var(--accent); }
+      #page-supply .yoy-seg button.on { background:var(--accent); color:#0a0a0f; font-weight:600; }
+      #page-supply .yoy-src { flex-basis:100%; font-size:11px; color:var(--text3); margin-top:-2px; }
+      #page-supply table.sup-yoy { width:100%; table-layout:fixed; border-collapse:collapse; font-size:12.5px; font-variant-numeric:tabular-nums; }
+      #page-supply table.sup-yoy col.c-nm { width:18%; } #page-supply table.sup-yoy col.c-s { width:6.5%; } #page-supply table.sup-yoy col.c-p { width:5.5%; } #page-supply table.sup-yoy col.c-m { width:5.29%; }
+      #page-supply table.sup-yoy th { font-size:11.5px; font-weight:600; color:var(--text2); padding:7px 3px; border-bottom:1px solid var(--border); text-align:center; white-space:nowrap; }
+      #page-supply table.sup-yoy tr.h1 th { font-size:11px; font-weight:600; color:var(--text3); padding:2px 3px 5px; border-bottom:2px solid var(--border); }
+      #page-supply table.sup-yoy tr.h1 th:first-child { border-bottom:0; } #page-supply table.sup-yoy tr.h1 th span { font-weight:400; }
+      #page-supply table.sup-yoy th.srt { cursor:pointer; user-select:none; } #page-supply table.sup-yoy th.srt:hover { color:var(--accent); } #page-supply table.sup-yoy th.srt.on { color:var(--text); }
+      #page-supply table.sup-yoy th.fut { color:var(--text3); font-weight:500; }
+      #page-supply table.sup-yoy td { padding:5px 3px; border-bottom:1px solid var(--row-border, var(--border)); text-align:center; white-space:nowrap; vertical-align:middle; }
+      #page-supply table.sup-yoy .l { text-align:left; padding-left:10px; } #page-supply table.sup-yoy tr.sup-group td { border-top:0; }
+      #page-supply table.sup-yoy .s3, #page-supply table.sup-yoy tr.h2 th:nth-child(4), #page-supply table.sup-yoy tr.h1 th.hs { border-right:1px solid var(--border); }
+      #page-supply table.sup-yoy td.s1 { font-size:13px; } #page-supply table.sup-yoy td.s2 { color:var(--text2); }
+      #page-supply table.sup-yoy .yoy-nm { display:flex; align-items:baseline; gap:8px; min-width:0; }
+      #page-supply table.sup-yoy .yoy-k { font-weight:700; flex:0 0 auto; } #page-supply table.sup-yoy .yoy-cnt { flex:0 0 auto; color:var(--text3); font-weight:400; font-size:11px; }
+      #page-supply table.sup-yoy .yoy-n { color:var(--text2); font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      #page-supply table.sup-yoy tr.yoy-kid td { font-size:12px; } #page-supply table.sup-yoy tr.yoy-kid .yoy-k { font-weight:600; } #page-supply table.sup-yoy tr.yoy-kid .yoy-n { color:var(--text3); }
+      #page-supply table.sup-yoy .hm { display:inline-block; min-width:54px; padding:3px 6px; border-radius:6px; line-height:1.3; }
+      #page-supply table.sup-yoy td.part .hm { font-style:italic; color:var(--text2); } #page-supply table.sup-yoy .yoy-z { color:var(--text3); }
+      #page-supply table.sup-yoy .ui-chip.yoy-new { color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); }
+      #page-supply table.sup-yoy tfoot td { font-weight:700; box-shadow:inset 0 2px 0 var(--tot-line, var(--border)); border-bottom:0; }
       tr.sup-row:hover .sup-plan-qty:not(.on):not(:focus) { border-color:var(--border); border-style:dashed; }
       .sup-plan-qty.done { text-decoration:line-through; opacity:.55; }
       .sup-fcb { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-top:4px; } .sup-fcb .sup-fcx { white-space:nowrap; padding:2px 7px !important; } .sup-fcx.alt { border-color:var(--border); background:transparent; color:var(--text2); }
@@ -754,7 +797,7 @@
     document.getElementById('supFoot').textContent = `${fmtN(list.length)} SKU · as of ${dY(DATA.as_of)} · กดแถวเพื่อดูกราฟ`;
     bindPlanInputs();
     document.querySelectorAll('.sup-group').forEach(tr => tr.onclick = () => { const p = tr.dataset.parent; if (collapsed.has(p)) collapsed.delete(p); else collapsed.add(p); renderTable(); });
-    document.querySelectorAll('.sup-row').forEach(tr => tr.onclick = () => { selSku = tr.dataset.sku; document.querySelectorAll('.sup-row').forEach(x => x.style.background = x.dataset.sku === selSku ? 'var(--bg3)' : ''); loadSku(selSku); document.getElementById('supSkuCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    document.querySelectorAll('.sup-row').forEach(tr => tr.onclick = () => { selSku = tr.dataset.sku; document.querySelectorAll('.sup-row').forEach(x => x.style.background = x.dataset.sku === selSku ? 'var(--bg3)' : ''); yoyFocus(selSku); });
   }
 
   // ===== (2026-09-29) ตาราง "สต็อกแยกคลัง" — เจ้าของแต่ละช่องทางดูของในคลังตัวเอง + พอขายกี่วัน (จากของที่ขายออกจากคลังนั้น 30 วัน) =====
@@ -835,103 +878,160 @@
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })); a.download = `supply_plan_${DATA.as_of}.csv`; a.click();
   }
 
-  async function loadSku(sku) {
-    document.getElementById('supSkuTitle').textContent = `กราฟ ${sku}`;
-    document.getElementById('supSkuBody').innerHTML = '<div class="empty">กำลังโหลด...</div>';
-    let data;
-    try { data = await supaRpc('supply_sku_series', { p_sku: sku, p_days: 90 }); }
-    catch (e) { document.getElementById('supSkuBody').innerHTML = `<div class="error-banner" style="display:block;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return; }
-    if (selSku !== sku) return;
-    lastSeries = data; renderSku(data);
-  }
+  // ===== (2026-11-24) ตาราง YOY — ยอดขาย (ชิ้น) รายเดือน เทียบเดือนเดียวกันของปีก่อน (แทนการ์ดกราฟ SKU เดิม) =====
+  // RPC supply_yoy(p_year): ปี ≤ 2025 = ชีทยอดขายย้อนหลัง (sales_history_monthly · ไม่นับ Return)
+  //   ปี ≥ 2026 = ระบบ (sku_qty_monthly ← mv_demand_daily ชุดเดียวกับตารางสต็อก) · เฉพาะสินค้าที่อยู่ในรายการสินค้า
+  // หน้าตา: สรุปอยู่ติดชื่อสินค้า → รายเดือนแสดงแค่ยอดปีที่เลือก + สีพื้นบอกว่าเพิ่ม / ลด (ชี้ดูตัวเลขที่ใช้เทียบ)
+  //   เทียบได้ 2 แบบ: เดือนเดียวกันปีก่อน (สรุป = ม.ค.–เดือนล่าสุดที่ครบ เทียบช่วงเดียวกันปีก่อน) · เดือนก่อนหน้า (สรุป = เดือนล่าสุดที่ครบ เทียบเดือนก่อนหน้า · ม.ค. เทียบ ธ.ค. ปีก่อน)
+  //   ปุ่มกรอง ทั้งหมด / โตขึ้น / ลดลง / ทรงตัว / ใหม่ (นับระดับ Parent ตามคอลัมน์สรุป) · เรียงตามรหัสสินค้า (กดหัวคอลัมน์สรุปเพื่อเรียงแบบอื่น) · เดือนนี้ยังไม่ครบ = ตัวเอียง ไม่มีสี ไม่อยู่ในสรุป
+  const MON_TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const YOY = {};
+  let yoyYear = null, yoyQ = '', yoyPar = false, yoyTog = new Set(), yoyPage = 1, yoyBusy = false, yoyKind = '', yoySort = { k: 'n', dir: 1 }, yoyCmp = 'y';   // yoyCmp: y = เทียบเดือนเดียวกันปีก่อน · m = เทียบเดือนก่อนหน้า
+  const yoyInfo = () => ''
+    + T('ตารางนี้คืออะไร', 'ยอดขาย (ชิ้น) รายเดือนของปีที่เลือก · สีพื้นในช่องรายเดือน: <span style="color:var(--good);">เขียว</span> = เพิ่ม · <span style="color:var(--bad);">แดง</span> = ลด · ยิ่งเข้มยิ่งเปลี่ยนมาก (3–20% · 20–50% · 50% ขึ้นไป) · ไม่มีสี = เปลี่ยนไม่ถึง 3% หรือไม่มียอดให้เทียบ · ชี้ที่ช่องเพื่อดูตัวเลขที่ใช้เทียบ')
+    + T('เทียบเดือนเดียวกันปีก่อน (YOY)', 'แต่ละเดือนเทียบเดือนเดียวกันของปีก่อน<br>3 คอลัมน์สรุป = รวม ม.ค. ถึงเดือนล่าสุดที่ครบ เทียบช่วงเดียวกันปีก่อน · YOY = (ปีนี้ − ปีก่อน) ÷ ปีก่อน')
+    + T('เทียบเดือนก่อนหน้า (MoM)', 'แต่ละเดือนเทียบเดือนก่อนหน้า (ม.ค. เทียบ ธ.ค. ของปีก่อน)<br>3 คอลัมน์สรุป = เดือนล่าสุดที่ครบ เทียบเดือนก่อนหน้า · MoM = (เดือนนี้ − เดือนก่อน) ÷ เดือนก่อน')
+    + T('ปุ่ม โตขึ้น / ลดลง / ทรงตัว / ใหม่', 'จัดกลุ่มตาม % ในคอลัมน์สรุปของแถว Parent · ทรงตัว = เปลี่ยนไม่ถึง 3% · ใหม่ = ช่วงที่ใช้เทียบไม่มียอด')
+    + T('ปี 2026 เป็นต้นไป', 'ยอดขายในระบบ ตามวันที่สั่งซื้อ <b>รวม</b> ทุกช่องทาง (ออนไลน์ · ตัวแทน · Modern Trade เฉพาะที่ส่งให้ร้าน) · ชุดสินค้าแตกเป็นสินค้าย่อยแล้ว · <b>ไม่รวม</b> ออเดอร์ยกเลิก · ชุดเดียวกับตารางสต็อกด้านบน<br>ออเดอร์ตัวแทนไม่ระบุเบอร์ ระบบแบ่งเบอร์ตามสัดส่วนขาย 90 วันล่าสุด — ยอดรายเบอร์ของสินค้าที่ขายตัวแทนเยอะจึงเป็นค่าประมาณ (ยอดแถว Parent ถูกต้อง)')
+    + T('ปี 2024 – 2025', 'ชีทยอดขายย้อนหลัง (Online, MKP, Tiktok, Dealer, Moderntrade) <b>ไม่รวม</b> คืนสินค้า (Return)')
+    + T('ไม่รวม', 'สินค้าที่ไม่อยู่ในรายการสินค้าของระบบ (เช่น สินค้าแบรนด์ FASAI ในชีทปีก่อน)<br>เดือนที่ยังไม่ครบ (ตัวเอียง) ไม่อยู่ในคอลัมน์สรุป');
 
-  // (2026-11-10) การ์ดกราฟ SKU แบบใหม่ — เดิมกราฟ 2 แกน (แท่งขาย + เส้นสต็อก + ROP) ดูงง · ตัวเลขข้างบนเป็นคำเก่า (ROP / แนะสั่ง / สายแล้ว) ไม่ตรงกับตาราง
-  //   ใหม่: แถวตัวเลขชุดเดียวกับตาราง (On hand · Avg/day · Days of cover · LT · Order by · Incoming · Status)
-  //   กราฟ 1 = สต็อก (แกนเดียว): 90 วันที่ผ่านมา (เส้นทึบ) → คาดการณ์ (เส้นประ) นับ PO ตามวันของเข้า · WIP ไม่มีวัน = เข้าตอนของหมด (กติกาเดียวกับตาราง)
-  //            เส้นตั้ง: Today · Order by · Out · จุด PO เข้า   กราฟ 2 (เล็ก) = ยอดขายต่อวัน 90 วัน
-  function renderSku(d) {
-    const r = rows.find(x => x.sku === d.sku) || {}, k = statusKey(r);
-    const stk = stockAll(r), hold = HOLD[r.sku] || 0, avg = +r.avg_day || 0, lt = +r.lt || 60;
-    const today0 = toD(iso(new Date())), cov = avg > 0 ? Math.floor(stk / avg) : null;
-    const so = cov != null ? iso(new Date(today0.getTime() + cov * DAY)) : null;
-    const pc = r.plan_mode === 'plan' && avg > 0 ? planCalc(r) : null, due = pc && pc.orderBy ? iso(pc.orderBy) : null, dueIn = due ? daysFrom(due) : null;
-    const pos = OPEN_PO[r.sku] || [], wip = pos.reduce((t, x) => t + x.q, 0), etaNext = pos.filter(x => !x.nodate).map(x => x.eta).sort()[0];
-    const covCol = cov == null ? 'var(--text3)' : cov > 180 ? '#60a5fa' : r.plan_mode !== 'plan' ? 'var(--text)' : cov < lt + REVIEW_DAYS ? 'var(--red)' : 'var(--green)';
-    const f = (l, v, sub) => `<div><span>${l}</span><b>${v}</b>${sub ? `<i>${sub}</i>` : ''}</div>`;
-    const locs = Object.entries(r.by_loc || {}).filter(([, q]) => q > 0).sort((a, b) => b[1] - a[1]).map(([L, q]) => `${esc(LOC_LABEL[L] || L)} <b>${fmtN(q)}</b>`).join(' · ');
-    document.getElementById('supSkuTitle').innerHTML = `${esc(r.product_name || d.sku)} <span style="font-size:12px;font-weight:500;color:var(--text3);margin-left:6px;">${esc(d.sku)}${r.abc ? ' · ' + r.abc + r.xyz : ''}</span>`;
-    document.getElementById('supSkuBody').innerHTML = `
-      <div class="sup-facts">
-        ${f('Status', statusCell(r).replace(/<div class="sup-sub">.*$/s, ''))}
-        ${f('On hand', stk ? fmtN(stk) : '—', hold ? `WH ${fmtN(r.on_hand)} · Hold ${fmtN(hold)}` : '')}
-        ${f('Avg/day', avg ? fmtN(avg, avg < 10 ? 1 : 0) : '—')}
-        ${f('Days of cover', cov == null ? '—' : `<span style="color:${covCol};">${covTxt(cov)}</span>`, so ? 'Out ' + dY(so) : '')}
-        ${f('Lead time', lt + ' d')}
-        ${f('Order by', due ? `<span style="color:${dueIn < 0 ? 'var(--red)' : dueIn <= 30 ? 'var(--orange)' : 'var(--text)'};">${dY(due)}</span>` : '—', due ? (dueIn < 0 ? fmtN(-dueIn) + ' d late' : 'in ' + fmtN(dueIn) + ' d') : '')}
-        ${f('Incoming', wip ? fmtN(wip) : '—', wip ? (etaNext ? 'ETA ' + dY(etaNext) : 'No ETA yet') : '')}
-      </div>
-      ${locs ? `<div class="sup-locline">Stock by location: ${locs}</div>` : ''}
-      <div class="sup-ch-h"><b>Stock</b><span>ผ่านมา 90 วัน · คาดการณ์ต่อจากวันนี้</span></div>
-      <div class="chart-wrap" style="height:280px;"><canvas id="supChart"></canvas></div>
-      <div id="supLegend" class="sup-leg"></div>
-      <div class="sup-ch-h" style="margin-top:14px;"><b>Sales / day</b><span>ยอดขายจริงต่อวัน 90 วันที่ผ่านมา</span></div>
-      <div class="chart-wrap" style="height:110px;"><canvas id="supChart2"></canvas></div>`;
-    drawChart(d, { r, stk, avg, so, due, pos });
-  }
-
-  let chart2 = null;
-  function drawChart(d, ctx) {
-    ctx = ctx || {}; const s = d.series || [], r = ctx.r || {}, avg = ctx.avg || 0;
-    const tick = chartTickColor(), grid = chartGridColor(), css = v => getComputedStyle(document.body).getPropertyValue(v).trim();
-    const C_STOCK = css('--accent') || '#c8a96e', C_RED = css('--red') || '#ef4444', C_OR = css('--orange') || '#f59e0b', C_GREEN = css('--green') || '#22c55e';
-    // คาดการณ์: จากสต็อกวันนี้ (ทุกคลัง + Hold) ลดวันละ Avg/day · PO มีวัน = บวกวันของเข้า · WIP ไม่มีวัน = บวกตอนของหมด · ไปจนหมดหลัง PO สุดท้าย (สูงสุด 365 วัน)
-    const t0 = toD(iso(new Date())), posD = (ctx.pos || []).filter(x => !x.nodate).map(x => ({ d: x.eta, q: x.q })), noDate = (ctx.pos || []).filter(x => x.nodate).reduce((t, x) => t + x.q, 0);
-    const lastPo = posD.map(x => x.d).sort().pop();
-    const fut = [], futL = [], poMark = {}; let st = ctx.stk || 0, nd = noDate;
-    for (let i = 0; i <= 365 && avg > 0; i++) {
-      const di = iso(new Date(t0.getTime() + i * DAY));
-      posD.filter(x => x.d === di).forEach(x => { st += x.q; poMark[di] = (poMark[di] || 0) + x.q; });
-      if (st <= 0 && nd > 0) { st += nd; poMark[di] = (poMark[di] || 0) + nd; nd = 0; }
-      futL.push(di); fut.push(Math.max(0, Math.round(st)));
-      if (st <= 0 && i > 30 && (!lastPo || di > lastPo) && nd <= 0) break;
-      st -= avg;
+  async function loadYoy(y) {
+    if (yoyBusy) return;
+    yoyBusy = true;
+    try {
+      const d = await supaRpc('supply_yoy', y ? { p_year: y } : {});
+      if (!d || !d.year) throw new Error((d && d.message) || 'ไม่มีข้อมูล');
+      YOY[d.year] = d; yoyYear = d.year;
+    } catch (e) {
+      yoyBusy = false;
+      const b = document.getElementById('supYoyBody'); if (b) b.innerHTML = `<div class="error-banner" style="display:block;">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`;
+      return;
     }
-    if (!futL.length) { futL.push(iso(t0)); fut.push(ctx.stk || 0); }
-    const past = s.filter(x => x.d < futL[0]);
-    const labels = [...past.map(x => x.d), ...futL], np = past.length;
-    const pastSt = [...past.map(x => Number(x.stock)), fut[0]];
-    const idx = dd => dd ? labels.indexOf(dd) : -1;
-    const marks = [[idx(futL[0]), 'Today', tick], [idx(ctx.due), 'Order by', C_OR], [idx(ctx.so), 'Out', C_RED]].filter(m => m[0] >= 0);
-    const vlines = { id: 'supV', afterDatasetsDraw(c) { const { ctx: g, chartArea: a, scales: { x } } = c; g.save(); g.font = "600 10.5px Sarabun, sans-serif";
-      marks.forEach(([i, t, col], j) => { const px = x.getPixelForValue(i); g.strokeStyle = col; g.setLineDash([4, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(px, a.top); g.lineTo(px, a.bottom); g.stroke();
-        g.setLineDash([]); g.fillStyle = col; g.textAlign = px > a.right - 60 ? 'right' : 'left'; g.fillText(t, px + (g.textAlign === 'left' ? 4 : -4), a.top + 10 + j * 13); });
-      Object.entries(poMark).forEach(([di, q]) => { const i = idx(di); if (i < 0) return; const px = x.getPixelForValue(i); g.fillStyle = C_GREEN; g.textAlign = 'center'; g.fillText('PO +' + fmtN(q), px, a.bottom - 6); });
-      g.restore(); } };
-    if (chart) chart.destroy();
-    chart = new Chart(document.getElementById('supChart'), {
-      type: 'line',
-      data: { labels, datasets: [
-        { label: 'Stock (past 90 days)', data: [...pastSt, ...Array(Math.max(0, futL.length - 1)).fill(null)], borderColor: C_STOCK, backgroundColor: 'transparent', borderWidth: 2.2, pointRadius: 0, tension: .15, spanGaps: true },
-        { label: 'Projected stock', data: [...Array(np).fill(null), ...fut], borderColor: C_STOCK, borderDash: [6, 4], borderWidth: 2, pointRadius: 0, tension: 0, stepped: false },
-      ] },
-      options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, filter: it => it.raw != null,
-          callbacks: { title: it => dY(it[0].label), label: it => `${it.dataset.label}: ${fmtN(it.raw)}`, afterBody: it => { const q = poMark[it[0].label]; return q ? `PO เข้า +${fmtN(q)}` : ''; } } } },
-        scales: { x: { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 10, callback: (v, i) => dY(labels[i]) } },
-          y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, callback: v => fmtN(v) }, title: { display: true, text: 'ชิ้น', color: tick, font: { family: 'Sarabun', size: 10 } } } } },
-      plugins: [vlines]
+    yoyBusy = false; renderYoy();
+  }
+
+  // เรียกทุกครั้งที่ renderAll() สร้างการ์ดใหม่ → ผูกปุ่ม + วาดตาราง (ข้อมูลอยู่ในเครื่องแล้วไม่ดึงซ้ำ)
+  function renderYoy() {
+    const card = document.getElementById('supYoyCard'); if (!card) return;
+    const d = yoyYear && YOY[yoyYear];
+    if (!d) { if (!yoyBusy) loadYoy(); return; }
+    const years = d.years || [d.year];
+    const dd = document.getElementById('supYoyDD');
+    dd.innerHTML = `<button type="button" class="sup-dd-btn" style="min-width:110px;"><span>ปี ${d.year}</span><span class="sup-dd-caret" style="margin-left:auto;">▾</span></button>
+      <div class="sup-dd-menu" style="width:150px;">${years.map(y => `<div class="sup-dd-it${y === d.year ? ' on' : ''}" data-y="${y}"><span>ปี ${y}</span></div>`).join('')}</div>`;
+    dd.querySelector('.sup-dd-btn').onclick = e => { e.stopPropagation(); dd.classList.toggle('open'); };
+    dd.querySelectorAll('.sup-dd-it').forEach(el => el.onclick = () => { const y = +el.dataset.y; dd.classList.remove('open'); if (y === yoyYear) return; yoyPage = 1; if (YOY[y]) { yoyYear = y; renderYoy(); } else { document.getElementById('supYoyBody').style.opacity = '.5'; loadYoy(y); } });
+    if (!window._supYoyDoc) {   // ปิดเมนูเมื่อกดที่อื่น / กด Esc
+      window._supYoyDoc = true;
+      const close = () => { const x = document.getElementById('supYoyDD'); if (x) x.classList.remove('open'); };
+      document.addEventListener('click', e => { if (!e.target.closest('#supYoyDD')) close(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    }
+    const seg = document.getElementById('supYoyCmp');
+    seg.innerHTML = [['y', 'เทียบเดือนเดียวกันปีก่อน'], ['m', 'เทียบเดือนก่อนหน้า']].map(([k, l]) => `<button type="button" data-c="${k}" class="${yoyCmp === k ? 'on' : ''}">${l}</button>`).join('');
+    seg.querySelectorAll('button').forEach(b => b.onclick = () => { if (yoyCmp === b.dataset.c) return; yoyCmp = b.dataset.c; yoyKind = ''; yoyPage = 1; if (['t', 'u', 'p'].includes(yoySort.k)) yoySort = { k: 'n', dir: 1 }; seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawYoy(); });
+    document.getElementById('supYoyQ').oninput = e => { yoyQ = e.target.value; yoyPage = 1; drawYoy(); };
+    const pb = document.getElementById('supYoyPar');
+    pb.onclick = () => { yoyPar = !yoyPar; yoyTog = new Set(); pb.style.cssText = yoyPar ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''; drawYoy(); };
+    drawYoy();
+  }
+
+  function drawYoy() {
+    const d = YOY[yoyYear], body = document.getElementById('supYoyBody'); if (!d || !body) return;
+    body.style.opacity = '';
+    const Y = d.year, PY = Y - 1, asY = +String(d.as_of).slice(0, 4);
+    const curM = Y < asY ? 12 : +String(d.as_of).slice(5, 7) - 1;   // เดือนที่ยังไม่ครบ (12 = ปีที่ผ่านไปแล้ว ครบทุกเดือน)
+    const lastDay = +String(d.as_of).slice(8, 10), nFull = Math.min(curM, 12);
+    const sum = (a, n) => { let t = 0; for (let i = 0; i < n; i++) t += +a[i] || 0; return t; };
+    const Z = () => Array(12).fill(0);
+    const pct = (a, b) => b > 0 ? (a - b) / b * 100 : null;
+    const MOM = yoyCmp === 'm', lm = nFull - 1;   // lm = เดือนล่าสุดที่ครบ
+    const prevOf = (c, l, m) => MOM ? (m > 0 ? c[m - 1] : l[11]) : l[m];
+    const prevLbl = m => MOM ? (m > 0 ? `${MON_TH[m - 1]} ${Y}` : `${MON_TH[11]} ${PY}`) : `${MON_TH[m]} ${PY}`;
+    const tu = (c, l) => MOM ? (lm >= 0 ? [+c[lm] || 0, +prevOf(c, l, lm) || 0] : [0, 0]) : [sum(c, nFull), sum(l, nFull)];
+    const kindOf = (t, u) => u > 0 ? (pct(t, u) >= 3 ? 'up' : pct(t, u) <= -3 ? 'dn' : 'flat') : (t > 0 ? 'new' : 'none');   // none = ช่วงที่ใช้สรุปไม่มียอดทั้ง 2 ฝั่ง (อยู่ในทั้งหมดอย่างเดียว)
+    // จัดกลุ่มตาม Parent + กรองตามช่องค้นหา (พิมพ์รหัส Parent ตรงตัว = เฉพาะกลุ่มนั้น)
+    const q = yoyQ.trim().toUpperCase(), pn = d.pn || {};
+    const G = {}; (d.rows || []).forEach(r => { (G[r.p] = G[r.p] || []).push(r); });
+    let groups = Object.keys(G).map(par => {
+      const kids = G[par].slice().sort((a, b) => a.s.localeCompare(b.s)), c = Z(), l = Z();
+      kids.forEach(k => { for (let m = 0; m < 12; m++) { c[m] += +k.c[m] || 0; l[m] += +k.l[m] || 0; } });
+      const [t, u] = tu(c, l);
+      return { par, name: pn[par] || (kids[0].n || '').replace(/\s*\d+$/, ''), kids, c, l, t, u, p: pct(t, u), kind: kindOf(t, u) };
     });
-    const lg = document.getElementById('supLegend');
-    if (lg) lg.innerHTML = `<span><i style="background:${C_STOCK};height:2px;width:16px;"></i>Stock 90 วันที่ผ่านมา</span><span><i style="border-top:2px dashed ${C_STOCK};width:16px;"></i>คาดการณ์ (ขายวันละ ${fmtN(avg, avg < 10 ? 1 : 0)} · นับ PO ตามวันของเข้า)</span><span><i style="border-top:1px dashed ${C_OR};width:16px;"></i>Order by</span><span><i style="border-top:1px dashed ${C_RED};width:16px;"></i>Out (ของเดิมหมด)</span>`;
-    if (chart2) chart2.destroy();
-    chart2 = new Chart(document.getElementById('supChart2'), {
-      type: 'bar', data: { labels: s.map(x => x.d), datasets: [{ label: 'Sales / day', data: s.map(x => Number(x.sales) || 0), backgroundColor: 'rgba(148,163,184,.55)', borderRadius: 2, maxBarThickness: 10 }] },
-      options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { title: it => dY(it[0].label), label: it => `ขาย ${fmtN(it.raw)} ชิ้น` } } },
-        scales: { x: { grid: { display: false }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 8, callback: (v, i) => dY(s[i] && s[i].d) } },
-          y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Sarabun', size: 10 }, maxTicksLimit: 3, callback: v => fmtN(v) } } } }
+    if (q) {
+      const exact = groups.filter(g => g.par.toUpperCase() === q);
+      groups = exact.length ? exact : groups.filter(g => (g.par + ' ' + g.name).toUpperCase().includes(q) || g.kids.some(k => (k.s + ' ' + (k.n || '')).toUpperCase().includes(q)));
+    }
+    const cnt = { '': groups.length, up: 0, dn: 0, flat: 0, new: 0, none: 0 }; groups.forEach(g => cnt[g.kind]++);
+    if (yoyKind) groups = groups.filter(g => g.kind === yoyKind);
+    const sk = yoySort.k, dir = yoySort.dir;
+    const sv = g => sk === 'u' ? g.u : sk === 'p' ? (g.p == null ? (g.t > 0 ? Infinity : -Infinity) : g.p) : sk === 'n' ? null : g.t;
+    groups.sort((a, b) => sk === 'n' ? dir * a.par.localeCompare(b.par) : dir * (sv(a) - sv(b)) || a.par.localeCompare(b.par));
+    const tot = { c: Z(), l: Z() }; groups.forEach(g => { for (let m = 0; m < 12; m++) { tot.c[m] += g.c[m]; tot.l[m] += g.l[m]; } });
+
+    const pctTxt = p => (p > 0 ? '+' : p < 0 ? '−' : '') + fmtN(Math.abs(Math.round(p))) + '%';
+    const chip = (t, u) => { if (!t && !u) return '<span class="yoy-z">—</span>'; const p = pct(t, u); if (p == null) return '<span class="ui-chip yoy-new">ใหม่</span>';
+      return `<span class="ui-chip ${p >= 3 ? 'up' : p <= -3 ? 'dn' : ''}">${pctTxt(p)}</span>`; };
+    const heat = (a, b) => { const p = pct(a, b); if (p == null || Math.abs(p) < 3) return ''; const m = Math.abs(p); return (p > 0 ? 'u' : 'd') + (m >= 50 ? 3 : m >= 20 ? 2 : 1); };
+    const cell = (a, b, m) => {
+      if (m > curM) return '<td class="fut"></td>';
+      if (m === curM) return `<td class="part" data-tip="1–${lastDay} ${MON_TH[m]} ${Y} (ยังไม่ครบเดือน) · ${prevLbl(m)} ทั้งเดือน ${fmtN(b)} ชิ้น"><span class="hm">${a ? fmtN(a) : '—'}</span></td>`;
+      const p = pct(a, b), tip = `${MON_TH[m]} ${Y}: ${fmtN(a)} · ${prevLbl(m)}: ${fmtN(b)} ชิ้น${p == null ? (a ? ` · ${MOM ? 'เดือนก่อน' : 'ปีก่อน'}ไม่มียอด` : '') : ' · ' + pctTxt(p)}`;
+      return `<td data-tip="${tip}"><span class="hm ${heat(a, b)}">${a ? fmtN(a) : '<span class="yoy-z">—</span>'}</span></td>`;
+    };
+    const sumCells = (c, l) => { const [t, u] = tu(c, l);
+      return `<td class="s1"><b>${t ? fmtN(t) : '—'}</b></td><td class="s2">${u ? fmtN(u) : '—'}</td><td class="s3">${chip(t, u)}</td>`; };
+    const months = (c, l) => MON_TH.map((_, m) => cell(c[m], prevOf(c, l, m), m)).join('');
+    const nameCell = (code, nm, extra) => `<td class="l"><div class="yoy-nm"><span class="yoy-k">${esc(code)}</span><span class="yoy-n ui-trunc" data-tip="${esc(nm)}">${esc(nm)}</span>${extra || ''}</div></td>`;
+
+    const per = pgSize(), pages = Math.max(1, Math.ceil(groups.length / per));
+    if (yoyPage > pages) yoyPage = pages;
+    let html = '';
+    groups.slice((yoyPage - 1) * per, yoyPage * per).forEach(g => {
+      if (g.kids.length === 1) { const k = g.kids[0]; html += `<tr class="yoy-one">${nameCell(k.s, k.n || '')}${sumCells(k.c, k.l)}${months(k.c, k.l)}</tr>`; return; }
+      const open = yoyPar ? yoyTog.has(g.par) : !yoyTog.has(g.par);
+      html += `<tr class="sup-group yoy-g" data-par="${esc(g.par)}" title="กดเพื่อ${open ? 'ย่อ' : 'ขยาย'}สี/เบอร์ของ ${esc(g.par)}">${nameCell(g.par, g.name, `<span class="yoy-cnt">${g.kids.length} SKU</span>`).replace('<div class="yoy-nm">', `<div class="yoy-nm"><span class="sup-caret">${open ? '▾' : '▸'}</span>`)}${sumCells(g.c, g.l)}${months(g.c, g.l)}</tr>`;
+      if (open) g.kids.forEach(k => { html += `<tr class="sup-child yoy-kid">${nameCell(k.s, k.n || '')}${sumCells(k.c, k.l)}${months(k.c, k.l)}</tr>`; });
     });
+
+    // แถบบน: ปุ่มกรองตามผล YOY (ซ้าย) · คำอธิบายสี (ขวา)
+    const srcOf = y => y >= 2026 ? 'ยอดขายในระบบ' : 'ชีทยอดขายย้อนหลัง (ไม่รวมคืนสินค้า)', diffSrc = (Y >= 2026) !== (PY >= 2026);
+    const yoySrc = MOM ? `ปี ${Y} = ${srcOf(Y)}${diffSrc ? ` · ม.ค. เทียบ ธ.ค. ${PY} จาก${srcOf(PY)} — นับคนละแหล่ง` : ''}`
+      : (diffSrc ? `ปี ${Y} = ${srcOf(Y)} · ปี ${PY} = ${srcOf(PY)} — นับคนละแหล่ง` : `ทั้ง 2 ปี = ${srcOf(Y)}`);
+    const KINDS = [['', 'ทั้งหมด'], ['up', 'โตขึ้น'], ['dn', 'ลดลง'], ['flat', 'ทรงตัว'], ['new', 'ใหม่']];
+    const fullLbl = MOM ? 'เดือนล่าสุดที่ครบ เทียบเดือนก่อนหน้า' : nFull >= 12 ? `ทั้งปี ${Y} เทียบปี ${PY}` : nFull > 0 ? `ม.ค. – ${MON_TH[nFull - 1]} เทียบช่วงเดียวกันปีก่อน` : '';
+    document.getElementById('supYoyBar').innerHTML = `<div class="yoy-pills">${KINDS.map(([k, l]) => `<button type="button" class="yoy-pill${yoyKind === k ? ' on' : ''}${k ? ' k-' + k : ''}" data-k="${k}">${l}<b>${fmtN(cnt[k])}</b></button>`).join('')}</div>
+      <div class="yoy-scale"><span>${MOM ? 'เทียบเดือนก่อนหน้า' : `เทียบเดือนเดียวกันปี ${PY}`}</span><i class="d3"></i><i class="d2"></i><i class="d1"></i><span>ลด</span><span class="sep"></span><span>เพิ่ม</span><i class="u1"></i><i class="u2"></i><i class="u3"></i>${curM < 12 ? `<span class="sep"></span><span>* ${MON_TH[curM]} ข้อมูลถึง ${lastDay} ${MON_TH[curM]} ยังไม่ครบเดือน</span>` : ''}</div>
+      <div class="yoy-src">ที่มา: ${yoySrc}</div>`;
+    document.querySelectorAll('#supYoyBar .yoy-pill').forEach(b => b.onclick = () => { yoyKind = yoyKind === b.dataset.k ? '' : b.dataset.k; yoyPage = 1; drawYoy(); });
+
+    const srt = k => `class="srt${yoySort.k === k ? ' on' : ''}" data-s="${k}"`, arr = k => yoySort.k === k ? (yoySort.dir < 0 ? ' ↓' : ' ↑') : '';
+    body.innerHTML = !groups.length ? `<div class="empty">${q || yoyKind ? 'ไม่พบสินค้าที่ตรงกับตัวกรอง' : 'ไม่มียอดขาย'}</div>`
+      : `<table class="sup-yoy" data-no-sort data-no-page>
+        <colgroup><col class="c-nm"><col class="c-s"><col class="c-s"><col class="c-p">${MON_TH.map(() => '<col class="c-m">').join('')}</colgroup>
+        <thead><tr class="h1"><th></th><th colspan="3" class="hs">${fullLbl}</th><th colspan="12" class="hm-h">รายเดือน ปี ${Y}</th></tr>
+        <tr class="h2"><th class="l" ${srt('n')}>สินค้า${arr('n')}</th><th ${srt('t')}>${MOM ? (lm >= 0 ? `${MON_TH[lm]} ${Y}` : '—') : `ปี ${Y}`}${arr('t')}</th><th ${srt('u')}>${MOM ? (lm >= 0 ? prevLbl(lm) : '—') : `ปี ${PY}`}${arr('u')}</th><th ${srt('p')}>${MOM ? 'MoM' : 'YOY'}${arr('p')}</th>${MON_TH.map((m, i) => `<th class="${i === 0 ? 'm0 ' : ''}${i > curM ? 'fut' : ''}">${m}${i === curM ? '*' : ''}</th>`).join('')}</tr></thead>
+        <tbody>${html}</tbody>
+        <tfoot><tr>${nameCell('รวม', `${q || yoyKind ? 'ที่กรอง' : 'ทุกสินค้า'} · ${fmtN(groups.length)} Parent`)}${sumCells(tot.c, tot.l)}${months(tot.c, tot.l)}</tr></tfoot></table>`;
+    body.querySelectorAll('tr.yoy-g').forEach(tr => tr.onclick = () => { const p = tr.dataset.par; yoyTog.has(p) ? yoyTog.delete(p) : yoyTog.add(p); drawYoy(); });
+    body.querySelectorAll('th.srt').forEach(th => th.onclick = () => { const k = th.dataset.s; yoySort = yoySort.k === k ? { k, dir: -yoySort.dir } : { k, dir: k === 'n' ? 1 : -1 }; drawYoy(); });
+    window._supYoyGo = p => { yoyPage = p; drawYoy(); };
+    renderPagerHtml('supYoyPager', yoyPage, pages, '_supYoyGo');
+  }
+
+  // กดแถวในตารางสต็อก → ไปที่สินค้านั้น (ทั้งกลุ่ม Parent) ในตาราง YOY
+  function yoyFocus(sku) {
+    const d = YOY[yoyYear], r = d && (d.rows || []).find(x => x.s === String(sku).toUpperCase());
+    const key = r ? r.p : String(sku).toUpperCase();
+    yoyQ = key; yoyPage = 1; yoyKind = '';
+    if (yoyPar) yoyTog.add(key); else yoyTog.delete(key);
+    const inp = document.getElementById('supYoyQ'); if (inp) inp.value = key;
+    drawYoy();
+    const card = document.getElementById('supYoyCard'); if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // เรียกจาก dashboard.html ตอนกดเมนู / สลับธีม
-  window.renderSupplyPage = function () { if (DATA) { renderAll(); if (selSku && lastSeries) renderSku(lastSeries); } else load(); };
+  window.renderSupplyPage = function () { if (DATA) renderAll(); else load(); };
 })();
