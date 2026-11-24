@@ -1,4 +1,4 @@
-// warehouse.js (2026-11-23) — หน้า Warehouse: ปริ้นใบปะหน้า TikTok จากระบบเราเอง (สั่งจัดส่ง + ดึงใบปะหน้า) / สรุปการจัดส่ง / ประวัติการปริ้น
+// warehouse.js (2026-11-23) — หน้า Warehouse: พิมพ์ใบปะหน้า TikTok จากระบบเราเอง (สั่งจัดส่ง + ดึงใบปะหน้า) / สรุปการจัดส่ง / ประวัติการพิมพ์
 // ข้อมูลทั้งหมดมาจาก Edge Function `wh-labels` (อ่านสดจาก TikTok + ตารางประวัติ wh_print_log) — หน้านี้ไม่อ่านตารางตรง ๆ
 // ช่วงทดสอบ: เข้าได้เฉพาะบัญชีผู้ดูแลระบบ
 (function () {
@@ -44,7 +44,7 @@
     return o;
   }
 
-  // ───── รอบปริ้น ─────
+  // ───── รอบพิมพ์ ─────
   function atTime(base, hhmm, dayOffset) { const [h, m] = hhmm.split(':').map(Number); const d = new Date(base); d.setDate(d.getDate() + (dayOffset || 0)); d.setHours(h, m, 0, 0); return d; }
   function setRound(v) {
     S.round = v;
@@ -55,13 +55,13 @@
     if (v === '2') { $('fFrom').value = toLocalInput(atTime(now, cuts.c1, 0)); $('fTo').value = toLocalInput(atTime(now, cuts.c2, 0)); }
     dirty();
   }
-  function dirty() { $('searchBtn').classList.add('dirty'); ['fFrom', 'fTo'].forEach(id => { const e = !$(id).value; $(id).classList.toggle('noval', e); $(id + 'Ph').classList.toggle('on', e); }); }
+  function dirty() { $('searchBtn').classList.add('dirty'); }   // (2026-11-24) ข้อความ "ไม่จำกัด" อยู่ในปุ่มเลือกเวลาแล้ว
 
   // ───── โหลดรายการ ─────
-  // (2026-11-23) โหลด 3 แท็บพร้อมกัน (รอจัดส่ง / รอเข้ารับ / ยกเลิกหลังปริ้น) ตัวเลขขึ้นครบทุกแท็บ · ระหว่างโหลดมีกล่อง "กำลังโหลด" บังหน้าไว้ เสร็จแล้วปิดเอง
-  // จำผลแต่ละแท็บ / ช่วงเวลา ไว้ 5 นาที — สลับแท็บแล้วโชว์ทันที · กดค้นหา / ปริ้นเสร็จ = ดึงใหม่เสมอ
+  // (2026-11-23) โหลด 3 แท็บพร้อมกัน (รอจัดส่ง / รอเข้ารับ / ยกเลิกหลังพิมพ์) ตัวเลขขึ้นครบทุกแท็บ · ระหว่างโหลดมีกล่อง "กำลังโหลด" บังหน้าไว้ เสร็จแล้วปิดเอง
+  // จำผลแต่ละแท็บ / ช่วงเวลา ไว้ 5 นาที — สลับแท็บแล้วโชว์ทันที · กดค้นหา / พิมพ์เสร็จ = ดึงใหม่เสมอ
   const FRESH = 5 * 60 * 1000, LC = {};
-  const TABS = ['ship', 'collect', 'cancel'], TNAME = { ship: 'รอจัดส่ง', collect: 'รอเข้ารับ', cancel: 'ยกเลิกหลังปริ้น' };
+  const TABS = ['ship', 'collect', 'cancel'], TNAME = { ship: 'รอจัดส่ง', collect: 'รอเข้ารับ', cancel: 'ยกเลิกหลังพิมพ์' };
   const keyOf = t => t === 'cancel' ? 'cancel' : [t, $('fFrom').value, $('fTo').value].join('|');
   const fresh = t => { const c = LC[keyOf(t)]; return !!c && Date.now() - c.got < FRESH; };
   function rangeText() {
@@ -120,12 +120,85 @@
     renderPat();
   }
   // (2026-11-23) dropdown แบบเว็บ (ui.css .ui-dd) แทน <select> ของ browser · items = [[ค่า, ข้อความ]] · กดปุ่มเดิมซ้ำ = ปิด
+  // ───── ช่องวันที่ + เวลา / ช่องเวลา แบบเว็บ (2026-11-24) — แทนกล่องของ browser · หน้าตาเดียวกับปฏิทินกลาง (ui.css .ui-cal)
+  // ค่าจริงยังอยู่ใน input เดิม (YYYY-MM-DDTHH:MM / HH:MM) โค้ดเดิมที่อ่าน .value / ฟัง input ใช้ได้เหมือนเดิม
+  const MLONG = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'], WDAY = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+  const ymdOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const TP = { pop: null, inp: null };
+  function tpClose() { if (TP.pop) { TP.pop.remove(); TP.pop = null; TP.inp = null; } }
+  function tpLabel(inp) {
+    const v = inp.value; if (!v) return inp.dataset.ph || 'เลือกเวลา';
+    if (inp.type === 'time') return v.slice(0, 5) + ' น.';
+    const d = new Date(v); return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear() + 543} · ${pad(d.getHours())}:${pad(d.getMinutes())} น.`;
+  }
+  function tpEnhance(inp) {
+    if (!inp || inp._tpBtn) return;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'ui-datebtn';
+    btn.innerHTML = inp.type === 'time' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span></span>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span></span>';
+    const sync = () => { btn.querySelector('span').textContent = tpLabel(inp); btn.classList.toggle('is-empty', !inp.value); };
+    const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    Object.defineProperty(inp, 'value', { configurable: true, get() { return proto.get.call(this); }, set(v) { proto.set.call(this, v); sync(); } });
+    inp.classList.add('ui-native-hidden'); inp.tabIndex = -1; inp.after(btn); inp._tpBtn = btn;
+    btn.addEventListener('click', e => { e.stopPropagation(); if (TP.inp === inp) tpClose(); else tpOpen(inp, btn); });
+    sync();
+  }
+  function tpOpen(inp, btn) {
+    tpClose();
+    const dt = inp.type === 'datetime-local';
+    const parts = () => { const v = inp.value; if (!v) return null; const t = dt ? v.split('T')[1] || '00:00' : v; return { d: dt ? v.split('T')[0] : null, h: +t.slice(0, 2), m: +t.slice(3, 5) }; };
+    const p0 = parts(), base = p0 && p0.d ? new Date(p0.d + 'T00:00:00') : new Date();
+    let view = new Date(base.getFullYear(), base.getMonth(), 1), first = true;
+    const pop = TP.pop = document.createElement('div'); TP.inp = inp;
+    pop.className = 'ui-cal wh-tp' + (document.body.classList.contains('light-theme') ? ' ui-light' : '');
+    pop.setAttribute('role', 'dialog'); document.documentElement.appendChild(pop);
+    const fire = () => { inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); };
+    const set = (d, h, m) => { inp.value = dt ? `${d}T${pad(h)}:${pad(m)}` : `${pad(h)}:${pad(m)}`; fire(); draw(); };
+    const draw = () => {
+      const p = parts(), today = ymdOf(new Date()), keep = [...pop.querySelectorAll('.wh-tp-col')].map(c => c.scrollTop);
+      let cal = '';
+      if (dt) {
+        const start = new Date(view); start.setDate(1 - view.getDay()); let cells = '';
+        for (let i = 0; i < 42; i++) { const d = new Date(start); d.setDate(start.getDate() + i); const s = ymdOf(d);
+          cells += `<button type="button" class="ui-cal-d${d.getMonth() !== view.getMonth() ? ' is-out' : ''}${s === today ? ' is-today' : ''}" data-d="${s}"${p && p.d === s ? ' aria-selected="true"' : ''}>${d.getDate()}</button>`; }
+        cal = `<div class="wh-tp-cal"><div class="ui-cal-h"><button type="button" class="ui-cal-nav" data-nav="-1" aria-label="เดือนก่อน">‹</button><b>${MLONG[view.getMonth()]} ${view.getFullYear() + 543}</b><button type="button" class="ui-cal-nav" data-nav="1" aria-label="เดือนถัดไป">›</button></div><div class="ui-cal-w">${WDAY.map(w => `<span>${w}</span>`).join('')}</div><div class="ui-cal-g">${cells}</div></div>`;
+      }
+      const col = (k, n, step, sel) => `<div class="wh-tp-col">${Array.from({ length: n / step }, (_, i) => i * step).map(v => `<button type="button" class="ui-cal-d" data-${k}="${v}"${sel === v ? ' aria-selected="true"' : ''}>${pad(v)}</button>`).join('')}</div>`;
+      pop.innerHTML = `<div class="wh-tp-body">${cal}<div class="wh-tp-time"><div class="wh-tp-th"><span>ชั่วโมง</span><span>นาที</span></div><div class="wh-tp-cols">${col('h', 24, 1, p ? p.h : null)}${col('m', 60, 5, p ? p.m : null)}</div></div></div>`
+        + `<div class="ui-cal-f wh-tp-f">${dt ? `<button type="button" class="ui-cal-link" data-act="clear">${inp.dataset.ph ? 'ไม่จำกัด' : 'ล้าง'}</button><button type="button" class="ui-cal-link" data-act="now">ปัจจุบัน</button>` : ''}<span class="sp"></span><button type="button" class="ui-cal-link" data-act="ok">ตกลง</button></div>`;
+      if (dt) pop.querySelector('.wh-tp-cols').style.height = (pop.querySelector('.wh-tp-cal').offsetHeight - pop.querySelector('.wh-tp-th').offsetHeight) + 'px';   // คอลัมน์เวลาสูงเท่าปฏิทิน
+      pop.querySelectorAll('.wh-tp-col').forEach((c, i) => { const s = c.querySelector('[aria-selected="true"]');
+        c.scrollTop = first ? (s ? s.offsetTop - c.offsetTop - c.clientHeight / 2 + s.offsetHeight / 2 : 0) : keep[i]; });
+      first = false;
+      const r = btn.getBoundingClientRect(), w = pop.offsetWidth, hh = pop.offsetHeight;
+      let top = r.bottom + 6; if (top + hh > innerHeight - 8 && r.top - hh - 6 > 8) top = r.top - hh - 6;
+      pop.style.top = top + 'px'; pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+    };
+    pop.addEventListener('click', e => {
+      e.stopPropagation();
+      const b = e.target.closest('button'); if (!b) return;
+      const p = parts() || { d: ymdOf(new Date()), h: 0, m: 0 }, d = p.d || ymdOf(new Date());
+      if (b.dataset.nav) { view.setMonth(view.getMonth() + +b.dataset.nav); draw(); }
+      else if (b.dataset.d) set(b.dataset.d, p.h, p.m);
+      else if (b.dataset.h != null) set(d, +b.dataset.h, p.m);
+      else if (b.dataset.m != null) set(d, p.h, +b.dataset.m);
+      else if (b.dataset.act === 'now') { const n = new Date(); view = new Date(n.getFullYear(), n.getMonth(), 1); set(ymdOf(n), n.getHours(), n.getMinutes()); }
+      else if (b.dataset.act === 'clear') { inp.value = ''; fire(); tpClose(); btn.focus(); }
+      else if (b.dataset.act === 'ok') { tpClose(); btn.focus(); }
+    });
+    draw();
+  }
+  document.addEventListener('click', e => { if (TP.pop && !TP.pop.contains(e.target)) tpClose(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && TP.pop) { const b = TP.inp && TP.inp._tpBtn; tpClose(); if (b) b.focus(); } });
+  addEventListener('resize', tpClose);
+  addEventListener('scroll', e => { if (TP.pop && !TP.pop.contains(e.target)) tpClose(); }, true);
+
   function dd(id, items, value, onPick) {
     const el = $(id), cur = items.find(x => x[0] === value) || items[0];
     el.innerHTML = `<button type="button" class="ui-dd-btn"><span>${esc(cur[1])}</span></button><div class="ui-dd-menu">${items.map(([v, l]) => `<button type="button" class="ui-dd-item" data-v="${esc(v)}" aria-selected="${v === cur[0]}">${esc(l)}</button>`).join('')}</div>`;
     el.title = cur[0] ? cur[1] : ''; el._pick = onPick;
   }
-  const PRF = [['', 'ทั้งหมด'], ['0', 'ยังไม่ปริ้น'], ['1', 'ปริ้นแล้ว']];
+  const PRF = [['', 'ทั้งหมด'], ['0', 'ยังไม่พิมพ์'], ['1', 'พิมพ์แล้ว']];
   function renderPrf() { dd('fPrinted', PRF, S.prf, v => { S.prf = v; renderPrf(); fillOptions(); applyFilters(); }); }
   const normQ = t => String(t).toUpperCase().replace(/×/g, 'X').replace(/\s+/g, '');
   function renderPat() {
@@ -155,29 +228,29 @@
   function itemsHtml(o) {   // (2026-11-23) เรียงตามรหัส + คั่นด้วย "+" ให้ตรงกับตัวกรองรูปแบบคำสั่งซื้อ · ไม่มีป้าย "หลายรายการ" (ล้นช่อง)
     return Object.keys(o.parts).sort().map(k => `<b title="${esc(S.names[k] || '')}">${esc(k)}</b> × ${o.parts[k]}`).join(' + ');
   }
-  // ยกเลิกหลังปริ้นนานเท่าไร (เวลายกเลิก − เวลาปริ้น)
-  function afterTxt(o) { const m = Math.max(0, Math.round((o.cancel_time * 1000 - new Date(o.printed_at).getTime()) / 60000)); return 'หลังปริ้น ' + (m < 60 ? `${m} นาที` : m < 1440 ? `${Math.round(m / 60)} ชม.` : `${Math.round(m / 1440)} วัน`); }
-  function printedHtml(id) { const n = S.printed[id] || 0; return n === 0 ? '<span class="pc0">ยังไม่ปริ้น</span>' : n === 1 ? '<span class="pc1">1</span>' : `<span class="pc2">${n}</span>`; }
+  // ยกเลิกหลังพิมพ์นานเท่าไร (เวลายกเลิก − เวลาพิมพ์)
+  function afterTxt(o) { const m = Math.max(0, Math.round((o.cancel_time * 1000 - new Date(o.printed_at).getTime()) / 60000)); return 'หลังพิมพ์ ' + (m < 60 ? `${m} นาที` : m < 1440 ? `${Math.round(m / 60)} ชม.` : `${Math.round(m / 1440)} วัน`); }
+  function printedHtml(id) { const n = S.printed[id] || 0; return n === 0 ? '<span class="pc0">ยังไม่พิมพ์</span>' : n === 1 ? '<span class="pc1">1</span>' : `<span class="pc2">${n}</span>`; }
   function render() {
     const cancel = S.tab === 'cancel';
     [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
     $('nShip').textContent = S.counts.ship ?? ''; $('nCollect').textContent = S.counts.collect ?? ''; $('nCancel').textContent = S.counts.cancel ?? '';
-    const info = `<span class="wh-i r">i<span class="pop"><b>ปริ้นแล้ว (ครั้ง)</b><br>จำนวนครั้งที่ใบปะหน้าของคำสั่งซื้อนี้ถูกปริ้นจากหน้านี้ รวมการปริ้นซ้ำ<br>ไม่นับการปริ้นจาก Seller Center</span></span>`;
-    // (2026-11-23) ยกเลิกหลังปริ้น: รวมที่กดจัดส่ง / ปริ้นจาก Seller Center แล้วถูกยกเลิกก่อนขนส่งมารับ (src = sc)
-    // (2026-11-23) บอกให้ชัดว่า "ปริ้นแล้ว" + ยกเลิกหลังปริ้นนานเท่าไร (เช่น ระหว่างน้องปริ้นทีละ 250 ใบ แล้วลูกค้ายกเลิก)
-    const infoSrc = `<span class="wh-i r">i<span class="pop"><b>ปริ้นจาก</b><br>หน้านี้ = ปริ้นจากหน้า Warehouse (ตัวเลข = จำนวนครั้งที่ปริ้น)<br>Seller Center = กดจัดส่ง / ปริ้นใบปะหน้าจาก Seller Center</span></span>`;
-    const infoSt = `<span class="wh-i">i<span class="pop"><b>สถานะ</b><br>ปริ้นแล้ว · ยกเลิกแล้ว = ลูกค้ายกเลิกหลังปริ้นใบปะหน้า ขนส่งยังไม่มารับ พัสดุยังอยู่ในคลัง<br>ปริ้นแล้ว · ลูกค้าขอยกเลิก = มีคำขอยกเลิกค้างอยู่ อย่าเพิ่งส่งให้ขนส่ง</span></span>`;
+    const info = `<span class="wh-i r">i<span class="pop"><b>พิมพ์แล้ว (ครั้ง)</b><br>จำนวนครั้งที่ใบปะหน้าของคำสั่งซื้อนี้ถูกพิมพ์จากหน้านี้ รวมการพิมพ์ซ้ำ<br>ไม่นับการพิมพ์จาก Seller Center</span></span>`;
+    // (2026-11-23) ยกเลิกหลังพิมพ์: รวมที่กดจัดส่ง / พิมพ์จาก Seller Center แล้วถูกยกเลิกก่อนขนส่งมารับ (src = sc)
+    // (2026-11-23) บอกให้ชัดว่า "พิมพ์แล้ว" + ยกเลิกหลังพิมพ์นานเท่าไร (เช่น ระหว่างน้องพิมพ์ทีละ 250 ใบ แล้วลูกค้ายกเลิก)
+    const infoSrc = `<span class="wh-i r">i<span class="pop"><b>พิมพ์จาก</b><br>หน้านี้ = พิมพ์จากหน้า Warehouse (ตัวเลข = จำนวนครั้งที่พิมพ์)<br>Seller Center = กดจัดส่ง / พิมพ์ใบปะหน้าจาก Seller Center</span></span>`;
+    const infoSt = `<span class="wh-i">i<span class="pop"><b>สถานะ</b><br>พิมพ์แล้ว · ยกเลิกแล้ว = ลูกค้ายกเลิกหลังพิมพ์ใบปะหน้า ขนส่งยังไม่มารับ พัสดุยังอยู่ในคลัง<br>พิมพ์แล้ว · ลูกค้าขอยกเลิก = มีคำขอยกเลิกค้างอยู่ อย่าเพิ่งส่งให้ขนส่ง</span></span>`;
     $('thead').innerHTML = cancel
-      ? `<tr><th>ปริ้นใบปะหน้าเมื่อ</th><th>ยกเลิกเมื่อ</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องดึงกลับ (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>สถานะ ${infoSt}</th><th class="l">เหตุผลที่ยกเลิก</th><th>ปริ้นจาก ${infoSrc}</th></tr>`
-      : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลาสั่ง</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>ปริ้นแล้ว (ครั้ง) ${info}</th></tr>`;
+      ? `<tr><th>พิมพ์ใบปะหน้าเมื่อ</th><th>ยกเลิกเมื่อ</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องรับคืน (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>สถานะ ${infoSt}</th><th class="l">เหตุผลที่ยกเลิก</th><th>พิมพ์จาก ${infoSrc}</th></tr>`
+      : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลาสั่ง</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>พิมพ์แล้ว (ครั้ง) ${info}</th></tr>`;
     const pages = Math.max(1, Math.ceil(S.rows.length / S.size)); if (S.page > pages) S.page = pages;
     const view = S.rows.slice((S.page - 1) * S.size, S.page * S.size);
     $('tbody').innerHTML = view.map(o => cancel
-      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) + `<div class="wh-sub">${afterTxt(o)}</div>` : '—'}</td><td>${esc(o.id)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.st === 'CANCELLED' ? '<span class="wh-pill bad">ปริ้นแล้ว · ยกเลิกแล้ว</span>' : '<span class="wh-pill cod">ปริ้นแล้ว · ลูกค้าขอยกเลิก</span>'}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? 'Seller Center' : `หน้านี้ (${num(S.printed[o.id] || 1)} ครั้ง)`}</td></tr>`
+      ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) + `<div class="wh-sub">${afterTxt(o)}</div>` : '—'}</td><td>${esc(o.id)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.st === 'CANCELLED' ? '<span class="wh-pill bad">พิมพ์แล้ว · ยกเลิกแล้ว</span>' : '<span class="wh-pill cod">พิมพ์แล้ว · ลูกค้าขอยกเลิก</span>'}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? 'Seller Center' : `หน้านี้ (${num(S.printed[o.id] || 1)} ครั้ง)`}</td></tr>`
       : `<tr class="pick ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td><input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}></td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${printedHtml(o.id)}</td></tr>`).join('');
     const empty = !S.rows.length;
     $('empty').style.display = empty ? 'block' : 'none';
-    if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังจัดส่ง / ปริ้น (ย้อนหลัง 7 วัน)' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
+    if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังจัดส่ง / พิมพ์ (ย้อนหลัง 7 วัน)' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
     $('pgInfo').textContent = empty ? '' : `แสดง ${num((S.page - 1) * S.size + 1)}–${num(Math.min(S.page * S.size, S.rows.length))} จาก ${num(S.rows.length)} คำสั่งซื้อ`;
     $('pgBtns').innerHTML = pages > 1 ? `<button class="wh-btn sm" data-p="-1" ${S.page <= 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button><span>หน้า ${S.page} / ${pages}</span><button class="wh-btn sm" data-p="1" ${S.page >= pages ? 'disabled' : ''}>ถัดไป ›</button>` : '';
     [...$('pgSize').children].forEach(b => b.classList.toggle('on', Number(b.dataset.v) === S.size));
@@ -192,11 +265,11 @@
   }
   function renderSel() {
     const cancel = S.tab === 'cancel', s = summarize(selected());
-    $('selN').innerHTML = cancel ? `${num(S.rows.length)} คำสั่งซื้อที่ปริ้นใบปะหน้าแล้วแต่ถูกยกเลิก · ต้องดึงสินค้ากลับเข้าสต็อก <span class="wh-i">i<span class="pop"><b>ยกเลิกหลังปริ้น</b><br>ปริ้นใบปะหน้าแล้ว (จากหน้านี้หรือ Seller Center) แต่ลูกค้ายกเลิกก่อนขนส่งมารับ = พัสดุยังอยู่ในคลัง ต้องดึงออกจากกอง แล้วเอาสินค้ากลับเข้าสต็อก<br>ย้อนหลัง 7 วัน · ไม่รวมพัสดุที่ขนส่งรับไปแล้ว</span></span>` : `เลือกแล้ว ${num(s.n)} คำสั่งซื้อ`;
+    $('selN').innerHTML = cancel ? `${num(S.rows.length)} คำสั่งซื้อที่พิมพ์ใบปะหน้าแล้วแต่ถูกยกเลิก · ต้องนำสินค้ากลับเข้าคลัง <span class="wh-i">i<span class="pop"><b>ยกเลิกหลังพิมพ์</b><br>พิมพ์ใบปะหน้าแล้ว (จากหน้านี้หรือ Seller Center) แต่ลูกค้ายกเลิกก่อนขนส่งเข้ารับ พัสดุจึงยังอยู่ในคลัง ต้องแยกออกจากกองพัสดุและนำสินค้ากลับเข้าคลัง<br>แสดงย้อนหลัง 7 วัน (หน้าสรุปการจัดส่งนับเฉพาะวันที่เลือก) · ไม่รวมพัสดุที่ขนส่งรับไปแล้ว</span></span>` : `เลือกแล้ว ${num(s.n)} คำสั่งซื้อ`;
     $('selM').textContent = cancel || !s.n ? '' : `รวม ${num(s.qty)} ชิ้น · ${Object.keys(s.sku).length} รายการสินค้า`;
     $('pickBtn').style.display = cancel ? 'none' : ''; $('goBtn').style.display = cancel ? 'none' : '';
     $('pickBtn').disabled = !s.n; $('goBtn').disabled = !s.n;
-    $('goBtn').textContent = S.tab === 'collect' ? 'ปริ้นใบปะหน้าซ้ำ' : 'จัดส่ง + ปริ้นใบปะหน้า';
+    $('goBtn').textContent = S.tab === 'collect' ? 'พิมพ์ใบปะหน้าซ้ำ' : 'จัดส่ง + พิมพ์ใบปะหน้า';
   }
 
   // ───── กล่องรายการเตรียมสินค้า ─────
@@ -218,8 +291,8 @@
       <div class="wh-kp"><div><small>คำสั่งซื้อที่เลือก</small><b>${num(s.n)}</b></div><div><small>จำนวนสินค้า (รายการ)</small><b>${t.nSku}</b></div><div><small>จำนวนชิ้นรวม</small><b>${num(s.qty)}</b></div></div>
       <div class="wh-tabs" id="pkTabs"><button data-k="sku" type="button">สินค้าที่ต้องหยิบ<small>${t.nSku}</small></button><button data-k="pat" type="button">รูปแบบคำสั่งซื้อ<small>${t.nPat}</small></button></div>
       <div id="pkBody"></div>
-      <div class="wh-note" id="pkNote">${reprint ? 'ปริ้นซ้ำ: สถานะใน TikTok ไม่เปลี่ยน ระบบจะนับจำนวนครั้งที่ปริ้นเพิ่ม' : 'เมื่อกด "ยืนยันจัดส่ง" คำสั่งซื้อทั้งหมดที่เลือกจะย้ายไปสถานะรอเข้ารับใน TikTok ทันที และยกเลิกย้อนกลับไม่ได้'}</div>
-      <div class="wh-act"><button class="wh-btn" id="pkClose" type="button">ยกเลิก</button><button class="wh-btn" id="pkPrint" type="button">ปริ้นรายการในแท็บนี้</button><button class="wh-btn pri" id="pkGo" type="button">${reprint ? 'ปริ้นใบปะหน้าซ้ำ' : 'ยืนยันจัดส่ง + ปริ้นใบปะหน้า'}</button></div>`;
+      <div class="wh-note" id="pkNote">${reprint ? 'พิมพ์ซ้ำ: สถานะใน TikTok ไม่เปลี่ยน ระบบจะนับจำนวนครั้งที่พิมพ์เพิ่ม' : 'เมื่อกด "ยืนยันจัดส่ง" คำสั่งซื้อทั้งหมดที่เลือกจะย้ายไปสถานะรอเข้ารับใน TikTok ทันที และยกเลิกย้อนกลับไม่ได้'}</div>
+      <div class="wh-act"><button class="wh-btn" id="pkClose" type="button">ยกเลิก</button><button class="wh-btn" id="pkPrint" type="button">พิมพ์รายการในแท็บนี้</button><button class="wh-btn pri" id="pkGo" type="button">${reprint ? 'พิมพ์ใบปะหน้าซ้ำ' : 'ยืนยันจัดส่ง + พิมพ์ใบปะหน้า'}</button></div>`;
     const show = k => { S.pickTab = k; [...$('pkTabs').children].forEach(b => b.classList.toggle('on', b.dataset.k === k)); $('pkBody').innerHTML = t[k]; };
     show(t[S.pickTab] ? S.pickTab : 'sku');
     $('pkTabs').onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.k); };
@@ -234,7 +307,7 @@
   }
   function closeDlg() { if (S.printing) return; $('ov').classList.remove('on'); }
 
-  // ───── สั่งจัดส่ง + ปริ้นใบปะหน้า ─────
+  // ───── สั่งจัดส่ง + พิมพ์ใบปะหน้า ─────
   function b64ToU8(b) { const s = atob(b), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
   async function runPrint(action, ids) {
     if (S.printing || !ids.length) return;
@@ -265,9 +338,9 @@
     } catch (e) { failAll.push({ id: '-', error: 'รวมไฟล์ใบปะหน้าไม่ได้: ' + e.message }); }
     if (url && win) win.location.href = url; else if (win) win.close();
     S.printing = false;
-    $('dlg').innerHTML = `<h2>${action === 'ship' ? 'จัดส่ง + ปริ้นใบปะหน้า' : 'ปริ้นใบปะหน้าซ้ำ'} เสร็จแล้ว</h2><div class="s">${fmtDT(new Date())}</div>
+    $('dlg').innerHTML = `<h2>${action === 'ship' ? 'จัดส่ง + พิมพ์ใบปะหน้า' : 'พิมพ์ใบปะหน้าซ้ำ'} เสร็จแล้ว</h2><div class="s">${fmtDT(new Date())}</div>
       <div class="wh-kp"><div><small>สำเร็จ</small><b>${num(okAll.length)}</b></div><div><small>ไม่สำเร็จ</small><b>${num(failAll.length)}</b></div></div>
-      ${okAll.length ? `<div class="wh-note ok">ใบปะหน้า ${num(okAll.length)} คำสั่งซื้อ (${num(sheets)} แผ่น) เปิดในแท็บใหม่แล้ว ให้สั่งปริ้นจากแท็บนั้น${sheets > okAll.length ? `<br>มี ${num(sheets - okAll.length)} แผ่นเป็นรายการสินค้าต่อ (ออเดอร์ที่มีสินค้า 3 รายการขึ้นไป) แผ่นนั้นมีเลขคำสั่งซื้อกำกับ ให้แปะคู่กับใบปะหน้าของออเดอร์เดียวกัน` : ''}${url ? ` · <a href="${url}" target="_blank" style="color:inherit">เปิดอีกครั้ง</a>` : ''}</div>` : ''}
+      ${okAll.length ? `<div class="wh-note ok">ใบปะหน้า ${num(okAll.length)} คำสั่งซื้อ (${num(sheets)} แผ่น) เปิดในแท็บใหม่แล้ว ให้สั่งพิมพ์จากแท็บนั้น${sheets > okAll.length ? `<br>มี ${num(sheets - okAll.length)} แผ่นเป็นรายการสินค้าต่อ (ออเดอร์ที่มีสินค้า 3 รายการขึ้นไป) แผ่นนั้นมีเลขคำสั่งซื้อกำกับ ให้แปะคู่กับใบปะหน้าของออเดอร์เดียวกัน` : ''}${url ? ` · <a href="${url}" target="_blank" style="color:inherit">เปิดอีกครั้ง</a>` : ''}</div>` : ''}
       ${failAll.length ? `<div class="wh-note err"><b>คำสั่งซื้อที่ไม่สำเร็จ</b><br>${failAll.map(f => `${esc(f.id)} — ${esc(f.error || '')}`).join('<br>')}</div>` : ''}
       <div class="wh-act"><button class="wh-btn pri" id="doneBtn" type="button">ปิด</button></div>`;
     $('doneBtn').onclick = () => { $('ov').classList.remove('on'); S.sel.clear(); Object.keys(LC).forEach(k => delete LC[k]); delete SC.d; if (S.view === 'print') loadAll(true); else loadHistory(); };
@@ -277,25 +350,27 @@
   const SC = {};   // ผลสรุปล่าสุด { d: วันที่, j, got }
   async function loadSummary(force) {
     const day = $('sumDate').value;
-    if (force !== true && SC.d === day && Date.now() - SC.got < FRESH) return;   // ผลเดิมยังแสดงอยู่บนหน้า ไม่ต้องดึงใหม่
+    if (force !== true && (SC.pend === day || (SC.d === day && Date.now() - SC.got < FRESH))) return;   // ผลเดิมยังแสดงอยู่ / กำลังโหลดวันเดียวกันอยู่ (โหลดล่วงหน้า) ไม่ต้องดึงซ้ำ
+    const my = SC.seq = (SC.seq || 0) + 1; SC.pend = day;
     $('stSum').textContent = 'กำลังโหลด…'; $('stSum').classList.remove('bad');
     try {
       const d = new Date(day + 'T00:00:00');
       const j = await api({ action: 'summary', day_start: Math.floor(d.getTime() / 1000), sc: true });
+      if (my !== SC.seq) return; SC.pend = null;
       Object.assign(SC, { d: day, j, got: Date.now() });
-      // (2026-11-23) ยอดตามที่ปริ้น: รวมที่ถูกยกเลิกทีหลัง ให้ตรงกับจำนวนที่น้องปริ้นจริง — แยก รอเข้ารับ / ขนส่งรับแล้ว / ยกเลิกหลังปริ้น
+      // (2026-11-23) ยอดตามที่พิมพ์: รวมที่ถูกยกเลิกทีหลัง ให้ตรงกับจำนวนที่น้องพิมพ์จริง — แยก รอเข้ารับ / ขนส่งรับแล้ว / ยกเลิกหลังพิมพ์
       const rows = Object.entries(j.carriers || {}).map(([c, v]) => [c, { w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }]).sort((a, b) => (b[1].w + b[1].p + b[1].x) - (a[1].w + a[1].p + a[1].x));
       let A = 0, B = 0, X = 0;
       $('sumBody').innerHTML = rows.map(([c, v]) => { A += v.w; B += v.p; X += v.x; return `<tr><td class="l"><b>${esc(c)}</b></td><td>${num(v.w)}</td><td>${num(v.p)}</td><td>${num(v.x)}</td><td><b>${num(v.w + v.p + v.x)}</b></td></tr>`; }).join('');
       $('sumFoot').innerHTML = rows.length ? `<tr><td class="l">รวม</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(X)}</td><td>${num(A + B + X)}</td></tr>` : '';
-      $('sumEmpty').style.display = rows.length ? 'none' : 'block'; $('sumEmpty').textContent = 'ยังไม่มีคำสั่งซื้อที่ปริ้น / จัดส่งในวันที่เลือก';
+      $('sumEmpty').style.display = rows.length ? 'none' : 'block'; $('sumEmpty').textContent = 'ไม่มีคำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก';
       $('sP').textContent = num(A + B + X); $('sA').textContent = num(A); $('sB').textContent = num(B); $('sD').textContent = num(X); $('sC').textContent = num(j.wait_ship);
       $('stSum').textContent = 'Updated ' + fmtT(new Date(j.at || Date.now()));
-    } catch (e) { $('stSum').textContent = '1 alert'; $('stSum').classList.add('bad'); $('sumBody').innerHTML = ''; $('sumFoot').innerHTML = ''; $('sumEmpty').style.display = 'block'; $('sumEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
+    } catch (e) { if (my !== SC.seq) return; SC.pend = null; $('stSum').textContent = '1 alert'; $('stSum').classList.add('bad'); $('sumBody').innerHTML = ''; $('sumFoot').innerHTML = ''; $('sumEmpty').style.display = 'block'; $('sumEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
   }
 
   // ───── สต็อกวันนี้ (2026-11-23 ทดลองเทียบกับชีทตัดสต็อก · ยังไม่ใช้ตัดสต็อกจริง) ─────
-  // ออกตามที่ปริ้น = คำสั่งซื้อที่กดจัดส่งวันนั้น (wh-labels outday ชุดเดียวกับหน้าสรุป) แตกชุดเป็น SKU · ชีท = inventory_movements คลัง TikTok ประเภท sold วันเดียวกัน
+  // ออกตามที่พิมพ์ = คำสั่งซื้อที่กดจัดส่งวันนั้น (wh-labels outday ชุดเดียวกับหน้าสรุป) แตกชุดเป็น SKU · ชีท = inventory_movements คลัง TikTok ประเภท sold วันเดียวกัน
   const STK = { page: 1, rows: [], seq: 0 };
   async function sheetSold(day) {
     const out = {};
@@ -309,22 +384,21 @@
   }
   async function loadStock(force) {
     const day = $('stkDate').value; if (!day) return;
-    if (force !== true && STK.d === day && Date.now() - STK.got < FRESH) return;
-    const my = ++STK.seq; $('stStk').textContent = 'กำลังโหลด…'; $('stStk').classList.remove('bad');   // กดค้นหาซ้ำระหว่างโหลด = ใช้ผลของครั้งล่าสุด
+    if (force !== true && (STK.pend === day || (STK.d === day && Date.now() - STK.got < FRESH))) return;
+    const my = ++STK.seq; STK.pend = day; $('stStk').textContent = 'กำลังโหลด…'; $('stStk').classList.remove('bad');   // กดค้นหาซ้ำระหว่างโหลด = ใช้ผลของครั้งล่าสุด
     try {
       const d0 = Math.floor(new Date(day + 'T00:00:00').getTime() / 1000);
       const [j, sh] = await Promise.all([api({ action: 'outday', day_start: d0 }), sheetSold(day)]);
-      if (my !== STK.seq) return;
+      if (my !== STK.seq) return; STK.pend = null;
       S.names = { ...S.names, ...(j.names || {}) };
       const m = {}, k = { on: 0, oq: 0, cn: 0, cq: 0, sq: 0 }, row = c => (m[c] ||= { out: 0, cx: 0, sh: 0 });
       (j.orders || []).map(derive).forEach(o => { const cx = o.st === 'CANCELLED'; k.on++; k.oq += o.qty; if (cx) { k.cn++; k.cq += o.qty; } for (const c in o.parts) { row(c).out += o.parts[c]; if (cx) row(c).cx += o.parts[c]; } });
       for (const c in sh) { row(c).sh += sh[c]; k.sq += sh[c]; }
       const hasSheet = Object.keys(sh).length > 0, rows = Object.keys(m).sort().map(c => [c, m[c]]);
-      if (hasSheet) rows.sort((a, b) => Math.abs(b[1].out - b[1].sh) - Math.abs(a[1].out - a[1].sh));   // แถวที่ไม่ตรงขึ้นก่อน (ต่างมากก่อน) ที่เหลือคงเรียงตาม SKU
-      Object.assign(STK, { d: day, got: Date.now(), k, hasSheet, page: 1, rows });
+      Object.assign(STK, { d: day, got: Date.now(), k, hasSheet, page: 1, rows });   // (2026-11-24) เรียงตาม SKU A–Z
       renderStock(); $('stStk').textContent = 'Updated ' + fmtT(new Date());
     } catch (e) {
-      if (my !== STK.seq) return;
+      if (my !== STK.seq) return; STK.pend = null;
       $('stStk').textContent = '1 alert'; $('stStk').classList.add('bad'); STK.rows = []; $('stkBody').innerHTML = ''; $('stkFoot').innerHTML = '';
       $('stkEmpty').style.display = 'block'; $('stkEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message;
     }
@@ -332,28 +406,28 @@
   function renderStock() {
     const { rows, k, hasSheet } = STK, size = 50, sgn = v => (v > 0 ? '+' : '') + num(v);
     $('kOut').textContent = num(k.oq); $('kOutS').textContent = `${num(k.on)} คำสั่งซื้อ`;
-    $('kCx').textContent = num(k.cq); $('kCxS').textContent = `${num(k.cn)} คำสั่งซื้อ · จะเป็นของตีกลับ`;
-    $('kSh').textContent = hasSheet ? num(k.sq) : '—'; $('kShS').textContent = hasSheet ? 'ที่น้องกรอกในชีท' : 'ยังไม่มีข้อมูลวันนี้ในชีท';
+    $('kCx').textContent = num(k.cq); $('kCxS').textContent = `${num(k.cn)} คำสั่งซื้อ · รอรับคืนเข้าคลัง`;
+    $('kSh').textContent = hasSheet ? num(k.sq) : '—'; $('kShS').textContent = hasSheet ? 'คลัง TikTok · Sold' : 'ยังไม่มีข้อมูลของวันที่เลือกในชีท';
     const bad = rows.filter(([, r]) => r.out !== r.sh).length, df = k.oq - k.sq;
-    $('kDf').innerHTML = hasSheet ? (df ? `<span style="color:var(--bad)">${sgn(df)}</span>` : '0') : '—'; $('kDfS').textContent = hasSheet ? (bad ? `${num(bad)} SKU ไม่ตรง` : 'ตรงทุก SKU') : '';
+    $('kDf').innerHTML = hasSheet ? (df ? `<span style="color:var(--bad)">${sgn(df)}</span>` : '0') : '—'; $('kDfS').textContent = hasSheet ? (bad ? `${num(bad)} SKU ไม่ตรงกัน` : 'ตรงกันทุก SKU') : '';
     const pages = Math.max(1, Math.ceil(rows.length / size)); if (STK.page > pages) STK.page = pages;
     $('stkBody').innerHTML = rows.slice((STK.page - 1) * size, STK.page * size).map(([c, r]) => { const d = r.out - r.sh;
       return `<tr><td class="l"><b>${esc(c)}</b></td><td class="l">${esc(S.names[c] || '—')}</td><td>${num(r.out)}</td><td>${r.cx ? num(r.cx) : ''}</td><td class="sh">${num(r.sh)}</td><td class="sh">${d ? `<b style="color:var(--bad)">${sgn(d)}</b>` : ''}</td></tr>`; }).join('');
     $('stkFoot').innerHTML = rows.length ? `<tr><td class="l" colspan="2">รวม</td><td>${num(k.oq)}</td><td>${num(k.cq)}</td><td class="sh">${num(k.sq)}</td><td class="sh">${df ? sgn(df) : ''}</td></tr>` : '';
     $('stkTbl').classList.toggle('nosh', !hasSheet);   // ยังไม่มีชีทของวันนั้น: ซ่อนคอลัมน์ชีท / ต่าง (การ์ดบนบอกแล้วว่ายังไม่มี)
-    $('stkEmpty').style.display = rows.length ? 'none' : 'block'; $('stkEmpty').textContent = 'ยังไม่มีสินค้าออกในวันที่เลือก';
+    $('stkEmpty').style.display = rows.length ? 'none' : 'block'; $('stkEmpty').textContent = 'ไม่มีสินค้าออกในวันที่เลือก';
     $('stkPgInfo').textContent = rows.length ? `แสดง ${num((STK.page - 1) * size + 1)}–${num(Math.min(STK.page * size, rows.length))} จาก ${num(rows.length)} SKU` : '';
     $('stkPgBtns').innerHTML = pages > 1 ? `<button class="wh-btn sm" data-p="-1" ${STK.page <= 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button><span>หน้า ${STK.page} / ${pages}</span><button class="wh-btn sm" data-p="1" ${STK.page >= pages ? 'disabled' : ''}>ถัดไป ›</button>` : '';
   }
 
-  // ───── ประวัติการปริ้น ─────
+  // ───── ประวัติการพิมพ์ ─────
   let HIS = [];
   async function loadHistory() {
     $('stHis').textContent = 'กำลังโหลด…'; $('stHis').classList.remove('bad');
     try {
       const j = await api({ action: 'history' }); HIS = j.batches || [];
-      $('hisBody').innerHTML = HIS.map((b, i) => `<tr><td>${fmtDT(new Date(b.at))}</td><td class="l">${esc(b.by || '—')}</td><td>${num(b.ship)}</td><td>${num(b.reprint)}</td><td>${b.fail ? `<span class="pc2" title="${esc((b.fails || []).map(f => f.id + ' — ' + (f.error || '')).join('\n'))}">${num(b.fail)}</span>` : '0'}</td><td>${b.order_ids.length ? `<button class="wh-btn sm" data-i="${i}" type="button">ปริ้นซ้ำทั้งรอบ</button>` : ''}</td></tr>`).join('');
-      $('hisEmpty').style.display = HIS.length ? 'none' : 'block'; $('hisEmpty').textContent = 'ยังไม่มีประวัติการปริ้น';
+      $('hisBody').innerHTML = HIS.map((b, i) => `<tr><td>${fmtDT(new Date(b.at))}</td><td class="l">${esc(b.by || '—')}</td><td>${num(b.ship)}</td><td>${num(b.reprint)}</td><td>${b.fail ? `<span class="pc2" title="${esc((b.fails || []).map(f => f.id + ' — ' + (f.error || '')).join('\n'))}">${num(b.fail)}</span>` : '0'}</td><td>${b.order_ids.length ? `<button class="wh-btn sm" data-i="${i}" type="button">พิมพ์ซ้ำทั้งรอบ</button>` : ''}</td></tr>`).join('');
+      $('hisEmpty').style.display = HIS.length ? 'none' : 'block'; $('hisEmpty').textContent = 'ยังไม่มีประวัติการพิมพ์';
       $('stHis').textContent = 'Updated ' + fmtT(new Date());
     } catch (e) { $('stHis').textContent = '1 alert'; $('stHis').classList.add('bad'); $('hisBody').innerHTML = ''; $('hisEmpty').style.display = 'block'; $('hisEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
   }
@@ -372,7 +446,7 @@
     $('fRound').onclick = e => { const b = e.target.closest('button'); if (!b || S.busy) return; setRound(b.dataset.v); if (b.dataset.v !== 'c') loadAll(); };   // รอบ 1 / 2 = โหลดเลย · กำหนดเอง = ตั้งเวลาแล้วกดค้นหา
     ['fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', () => { S.round = 'c'; [...$('fRound').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'c')); dirty(); }));
     renderPrf(); dd('fPlatform', [['tiktok', 'Platform: TikTok']], 'tiktok', () => {});
-    document.addEventListener('click', e => {   // เปิด / ปิด / เลือก dropdown แบบเว็บ (ตะกร้า / การปริ้น / Platform) — กรองทันที ไม่ดึงใหม่
+    document.addEventListener('click', e => {   // เปิด / ปิด / เลือก dropdown แบบเว็บ (ตะกร้า / การพิมพ์ / Platform) — กรองทันที ไม่ดึงใหม่
       const sel = e.target.closest('.wh-sel');
       document.querySelectorAll('.wh-sel.is-open').forEach(x => { if (x !== sel) x.classList.remove('is-open'); });
       if (!sel) return;
@@ -409,9 +483,10 @@
     $('whoMail').textContent = perm.email || '';
     bind();
     const now = new Date(), ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; $('sumDate').value = ymd(now);
-    $('stkDate').value = ymd(now); $('stkDate').max = ymd(now); $('stkDate').min = ymd(new Date(now.getTime() - 3 * 86400000));   // ยอดตามที่ปริ้นดูย้อนหลังได้ 3 วัน
+    $('stkDate').value = ymd(now); $('stkDate').max = ymd(now); $('stkDate').min = ymd(new Date(now.getTime() - 3 * 86400000));   // ยอดตามที่พิมพ์ดูย้อนหลังได้ 3 วัน
+    ['fFrom', 'fTo', 'cut1', 'cut2'].forEach(id => tpEnhance($(id)));   // (2026-11-24) ช่องวันที่ + เวลาแบบเว็บ
     setRound('all');   // (2026-11-23) เปิดหน้า = ทั้งหมด ไม่กรองเวลา
-    render(); loadAll();
+    render(); loadAll().then(() => { loadSummary(); loadStock(); });   // (2026-11-24) โหลดหน้าสรุป / สต็อกล่วงหน้า กดเข้าแล้วขึ้นทันที
   }
   start();
 })();
