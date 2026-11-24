@@ -64,6 +64,7 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
 .wh-t td.l{white-space:normal}
 .wh-t.fit{width:auto;min-width:560px}.wh-t.fit th,.wh-t.fit td{padding:8px 20px}.wh-t.fit td.l{white-space:nowrap}.wh-t.fit th:not(.l),.wh-t.fit td:not(.l){min-width:92px}   /* ตารางคอลัมน์น้อย: กว้างตามเนื้อหา ไม่ยืดเต็มจอ */
 .wh-t.nosh .sh{display:none}
+#sumTbl tr.wh-ch td{font-weight:700;background:var(--bg3,transparent);border-top:1px solid var(--border)}#sumTbl td.ci{padding-left:36px;color:var(--text2)}   /* (2026-11-24) หัวช่องทาง = ตัวหนา + พื้นอ่อน · ขนส่ง = เยื้องเข้า */
 .wh-card.fitc{width:fit-content;max-width:100%}
 /* (2026-11-24) ช่องวันที่ / เวลาแบบเว็บ: ปุ่ม .ui-datebtn + กล่อง .ui-cal (ui.js สำหรับวันที่ · warehouse.js สำหรับวันที่ + เวลา) */
 .wh-main .ui-datebtn{width:100%;height:34px;border-radius:6px;font-weight:600;font-size:13px}.wh-rounds .ui-datebtn{width:auto;min-width:96px}.ui-datebtn span{overflow:hidden;text-overflow:ellipsis}
@@ -82,7 +83,7 @@ body.light-theme .ui-datebtn{background:#FFFFFF;border:1px solid #C9D1DC}
 .wh-pill.bad{background:var(--dn-bg);color:var(--bad)}
 /* (2026-11-23) dropdown แบบเว็บ (ui.css .ui-dd) แทน <select> ของ browser */
 .wh-sel{display:block;width:100%}.wh-sel .ui-dd-btn{width:100%;justify-content:space-between;font-size:13px;font-weight:600}.wh-sel .ui-dd-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wh-sel .ui-dd-menu{width:max(100%,240px);max-height:360px;overflow:auto}.wh-sel .ui-dd-item{white-space:normal;font-size:13px}#fBasket .ui-dd-menu{width:max(100%,440px)}#fPrinted .ui-dd-menu,#fPlatform .ui-dd-menu,#fShop .ui-dd-menu{left:auto;right:0}
+.wh-sel .ui-dd-menu{width:max(100%,240px);max-height:360px;overflow:auto}.wh-sel .ui-dd-item{white-space:normal;font-size:13px}#fBasket .ui-dd-menu{width:max(100%,440px)}#fPrinted .ui-dd-menu,#fPlatform .ui-dd-menu{left:auto;right:0}
 body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFFFF;border:1px solid #C9D1DC}.wh-sub{font-size:12px;color:var(--text2)}.wh-kp .wh-sub{display:block;margin-top:2px}.wh-side a .wh-pill{font-size:10px;padding:0 6px;margin-left:4px}
 .pc0{color:var(--text3)}.pc1{color:var(--good);font-weight:600}.pc2{color:var(--bad);font-weight:700}
 .wh-bk{color:var(--text2);max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
@@ -149,7 +150,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
   <!-- หน้า 1: พิมพ์ใบปะหน้า -->
   <section class="wh-page on" id="v-print">
     <div class="wh-top"><h1>พิมพ์ใบปะหน้า</h1><span class="wh-status" id="stPrint">กำลังโหลด…</span><span class="sp"></span>
-      <div class="ui-dd wh-sel" id="fShop" style="width:190px;display:none"></div><div class="ui-dd wh-sel" id="fPlatform" style="width:220px"></div></div>
+      <div class="ui-dd wh-sel" id="fPlatform" style="width:220px"></div></div>
     <div class="wh-card wh-fbar">
       <div class="f fx"><label>รอบพิมพ์ <span class="wh-i">i<span class="pop"><b>รอบพิมพ์ (Print round)</b><br>ตัดคำสั่งซื้อตามเวลาที่ลูกค้าสั่ง เพื่อพิมพ์ทีละก้อน<br>ทั้งหมด = ทุกคำสั่งซื้อในแต่ละสถานะ ไม่กรองเวลาสั่ง (ค่าเริ่มต้นตอนเปิดหน้า)<br>รอบ 1 = ทุกคำสั่งซื้อที่สั่งก่อนเวลาตัดรอบ 1 ของวันนี้ (รวมที่ค้างจากวันก่อน / วันหยุด)<br>รอบ 2 = หลังเวลาตัดรอบ 1 ถึงเวลาตัดรอบ 2 ของวันนี้<br>กด "ตั้งเวลารอบ" เพื่อเปลี่ยนเวลาตัด</span></span>
         <button class="wh-link" id="roundCfgBtn" type="button">ตั้งเวลารอบ</button></label>
@@ -157,6 +158,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
       <div class="f" style="flex:1.2;min-width:190px;position:relative"><label>เวลาสั่ง ตั้งแต่</label><input class="wh-in" type="datetime-local" id="fFrom" data-ph="ไม่จำกัด · รวมที่ค้างจากวันก่อน"></div>
       <div class="f" style="flex:1.2;min-width:190px;position:relative"><label>ถึงก่อน</label><input class="wh-in" type="datetime-local" id="fTo" data-ph="ไม่จำกัด · ถึงปัจจุบัน"></div>
       <div class="vr"></div>
+      <div class="f" id="fShopF" style="min-width:150px;display:none"><label>ร้าน <span class="wh-i">i<span class="pop"><b>ร้าน (Shop)</b><br>เลือกร้านเพื่อพิมพ์ใบปะหน้าแยกร้าน · ตัวเลขหลังชื่อ = จำนวนคำสั่งซื้อตามตัวกรองที่เลือก<br>ทั้ง 2 ร้าน = รวม Shopee Mall และ Shopee 24hr</span></span></label><div class="ui-dd wh-sel" id="fShop"></div></div>
       <div class="f" style="flex:1.8;min-width:240px"><label>รูปแบบคำสั่งซื้อ (SKU) <span class="wh-i">i<span class="pop"><b>รูปแบบคำสั่งซื้อ (Order pattern)</b><br>สินค้าทั้งหมดในคำสั่งซื้อ แตกชุดเป็น SKU จริงแล้ว เช่น DSCH03 × 1 + FREECH03 × 1<br>ตัวเลข = จำนวนคำสั่งซื้อที่สั่งแบบนี้ในแท็บที่เปิดอยู่ เรียงมาก → น้อย<br>เลือกแล้ว = แสดงเฉพาะคำสั่งซื้อที่สั่งแบบนี้พอดี ไม่มีสินค้าอื่นปน · พิมพ์ SKU เพื่อค้นหา</span></span></label>
         <div class="wh-dd" id="fPat"><button class="wh-in wh-dd-btn" id="fPatBtn" type="button"><span id="fPatTx">ทั้งหมด</span></button>
           <div class="wh-dd-pop"><input class="wh-in" id="fPatQ" placeholder="พิมพ์ SKU เพื่อค้นหา เช่น DFK15ML" autocomplete="off"><div class="wh-dd-list" id="fPatList"></div></div></div></div>
@@ -184,17 +186,17 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 
   <!-- หน้า 2: สรุปการจัดส่งวันนี้ -->
   <section class="wh-page" id="v-summary">
-    <div class="wh-top"><h1>สรุปการจัดส่งวันนี้</h1><span class="wh-status" id="stSum">—</span><span class="wh-pill">TikTok</span><span class="sp"></span>
+    <div class="wh-top"><h1>สรุปการจัดส่งวันนี้</h1><span class="wh-status" id="stSum">—</span><span class="sp"></span>
       <div style="width:170px"><input class="wh-in" type="date" id="sumDate"></div><button class="wh-btn pri" id="sumBtn" type="button">ค้นหา</button></div>
     <div class="wh-kp cards">
-      <div><small>พิมพ์ใบปะหน้าแล้วทั้งหมด <span class="wh-i">i<span class="pop"><b>พิมพ์ใบปะหน้าแล้วทั้งหมด</b><br>คำสั่งซื้อ TikTok ที่กดจัดส่งและพิมพ์ใบปะหน้าในวันที่เลือก (เวลาไทย) ทั้งจากหน้านี้และ Seller Center<br><b>รวม</b> คำสั่งซื้อที่ถูกยกเลิกภายหลัง เนื่องจากหยิบสินค้าออกจากคลังแล้ว<br>นับตามเวลาที่กดจัดส่ง ไม่ใช่เวลาที่ลูกค้าสั่งซื้อ</span></span></small><b id="sP">—</b></div>
+      <div><small>พิมพ์ใบปะหน้าแล้วทั้งหมด <span class="wh-i">i<span class="pop"><b>พิมพ์ใบปะหน้าแล้วทั้งหมด</b><br>คำสั่งซื้อที่กดจัดส่งและพิมพ์ใบปะหน้าในวันที่เลือก (เวลาไทย) ทั้งจากหน้านี้และ Seller Center<br><b>รวม</b> TikTok + Shopee Mall + Shopee 24hr และคำสั่งซื้อที่ถูกยกเลิกภายหลัง เนื่องจากหยิบสินค้าออกจากคลังแล้ว<br>นับตามเวลาที่กดจัดส่ง ไม่ใช่เวลาที่ลูกค้าสั่งซื้อ · Shopee ที่กดจัดส่งจาก Seller Center ใช้เวลาของเหตุการณ์แรกในการติดตามพัสดุ (Tracking) แทน</span></span></small><b id="sP">—</b></div>
       <div><small>รอขนส่งเข้ารับ <span class="wh-i">i<span class="pop"><b>รอขนส่งเข้ารับ</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก และขนส่งยังไม่เข้ารับ<br><b>ไม่รวม</b> คำสั่งซื้อที่ถูกยกเลิก</span></span></small><b id="sA">—</b></div>
       <div><small>ขนส่งรับแล้ว <span class="wh-i">i<span class="pop"><b>ขนส่งรับแล้ว</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก และขนส่งรับแล้ว (อยู่ระหว่างจัดส่ง / จัดส่งสำเร็จ)</span></span></small><b id="sB">—</b></div>
       <div><small>ยกเลิกหลังพิมพ์ใบปะหน้า <span class="wh-i r">i<span class="pop"><b>ยกเลิกหลังพิมพ์ใบปะหน้า</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก แล้วลูกค้ายกเลิกภายหลัง ขนส่งสแกนรับไม่ได้ ต้องรับคืนเข้าคลัง<br>นับเฉพาะที่พิมพ์ในวันที่เลือก · แท็บ "ยกเลิกหลังพิมพ์" ในหน้าพิมพ์ใบปะหน้าแสดงย้อนหลัง 7 วัน ตัวเลขจึงมากกว่า</span></span></small><b id="sD">—</b></div>
-      <div><small>รอจัดส่ง (คงค้างทั้งหมด) <span class="wh-i r">i<span class="pop"><b>รอจัดส่ง (คงค้างทั้งหมด)</b><br>คำสั่งซื้อที่ยังไม่ได้กดจัดส่ง ทุกวันที่สั่งซื้อ ณ เวลาปัจจุบัน<br>ไม่ขึ้นกับวันที่เลือก</span></span></small><b id="sC">—</b></div>
+      <div><small>รอจัดส่ง (คงค้างทั้งหมด) <span class="wh-i r">i<span class="pop"><b>รอจัดส่ง (คงค้างทั้งหมด)</b><br>คำสั่งซื้อที่ยังไม่ได้กดจัดส่ง ทุกวันที่สั่งซื้อ ณ เวลาปัจจุบัน<br><b>รวม</b> TikTok + Shopee Mall + Shopee 24hr · ไม่ขึ้นกับวันที่เลือก</span></span></small><b id="sC">—</b></div>
     </div>
-    <div class="wh-card fitc"><div style="font-weight:600;margin-bottom:8px">คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามบริษัทขนส่ง</div>
-      <table class="wh-t fit"><thead><tr><th class="l">บริษัทขนส่ง</th><th>รอขนส่งเข้ารับ</th><th>ขนส่งรับแล้ว</th><th>ยกเลิกหลังพิมพ์</th><th>รวม</th></tr></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
+    <div class="wh-card fitc"><div style="font-weight:600;margin-bottom:8px">คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามช่องทางและบริษัทขนส่ง</div>
+      <table class="wh-t fit" id="sumTbl"><thead><tr><th class="l">ช่องทาง / บริษัทขนส่ง</th><th>รอขนส่งเข้ารับ</th><th>ขนส่งรับแล้ว</th><th>ยกเลิกหลังพิมพ์</th><th>รวม</th></tr></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
       <div class="wh-empty" id="sumEmpty" style="display:none"></div></div>
   </section>
 

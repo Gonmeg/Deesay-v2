@@ -18,9 +18,10 @@
   const cuts = (() => { try { return Object.assign({ c1: '10:30', c2: '16:00' }, JSON.parse(localStorage.getItem('wh_cuts') || '{}')); } catch (e) { return { c1: '10:30', c2: '16:00' }; } })();
 
   // (2026-11-24) Shopee ใช้ Edge Function แยก (wh-shopee) · หน้าพิมพ์ใบปะหน้าเรียกผ่าน apiP ให้ไปตาม Platform ที่เลือก
-  const SHOPS = [['all', 'ร้าน: ทั้ง 2 ร้าน'], ['566792331', 'ร้าน: Shopee Mall'], ['530338789', 'ร้าน: Shopee 24hr']], SHOPNAME = { 566792331: 'Mall', 530338789: '24hr' };
+  // (2026-11-24) ร้าน = ตัวกรองในแถบตัวกรอง (เหมือนขนส่ง) · ดึงทั้ง 2 ร้านครั้งเดียวแล้วกรองในหน้า เปลี่ยนร้านไม่ต้องโหลดใหม่
+  const SHOPS = [['566792331', 'Shopee Mall'], ['530338789', 'Shopee 24hr']], SHOPNAME = { 566792331: 'Mall', 530338789: '24hr' };
   const PL = p => (p || S.platform) === 'shopee' ? 'Shopee' : 'TikTok';
-  const apiP = body => S.platform === 'shopee' ? api({ ...body, shop: S.shop }, 'wh-shopee') : api(body);
+  const apiP = body => S.platform === 'shopee' ? api({ ...body, shop: 'all' }, 'wh-shopee') : api(body);
   async function api(body, fn) {
     const r = await fetch(window.SUPABASE_URL + '/functions/v1/' + (fn || 'wh-labels'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Auth.token(), apikey: window.SUPABASE_ANON_KEY }, body: JSON.stringify(body) });
     let j = null; try { j = await r.json(); } catch (e) {}
@@ -66,7 +67,7 @@
   // จำผลแต่ละแท็บ / ช่วงเวลา ไว้ 5 นาที — สลับแท็บแล้วโชว์ทันที · กดค้นหา / พิมพ์เสร็จ = ดึงใหม่เสมอ
   const FRESH = 5 * 60 * 1000, LC = {};
   const TABS = ['ship', 'collect', 'cancel'], TNAME = { ship: 'รอจัดส่ง', collect: 'รอเข้ารับ', cancel: 'ยกเลิกหลังพิมพ์' };
-  const keyOf = t => [S.platform, S.shop, t === 'cancel' ? 'cancel' : [t, $('fFrom').value, $('fTo').value].join('|')].join('#');
+  const keyOf = t => [S.platform, t === 'cancel' ? 'cancel' : [t, $('fFrom').value, $('fTo').value].join('|')].join('#');
   const fresh = t => { const c = LC[keyOf(t)]; return !!c && Date.now() - c.got < FRESH; };
   function rangeText() {
     const a = $('fFrom').value, b = $('fTo').value, f = v => fmtDT(new Date(v));
@@ -92,7 +93,7 @@
     const keys = {}; TABS.forEach(t => { keys[t] = keyOf(t); });
     const f = $('fFrom').value ? Math.floor(new Date($('fFrom').value).getTime() / 1000) : null;
     const to = $('fTo').value ? Math.floor(new Date($('fTo').value).getTime() / 1000) : null;
-    const head = `<h2>กำลังโหลดคำสั่งซื้อ</h2><div class="s">${PL()}${S.platform === 'shopee' ? ' · ' + esc(SHOPS.find(x => x[0] === S.shop)[1].replace('ร้าน: ', '')) : ''} · ${esc(rangeText())}</div>`;
+    const head = `<h2>กำลังโหลดคำสั่งซื้อ</h2><div class="s">${PL()}${S.platform === 'shopee' ? ' · ทั้ง 2 ร้าน' : ''} · ${esc(rangeText())}</div>`;
     const draw = () => { $('ldDlg').innerHTML = head + TABS.map(t => `<div class="r"><span>${TNAME[t]}</span>${st[t] === 'wait' ? '<span class="wh-spin"></span>' : st[t] === 'err' ? '<span class="pc2">โหลดไม่ได้</span>' : `<b>${num(S.counts[t] ?? 0)}</b>`}</div>`).join(''); };
     countTabs(); draw(); $('ldOv').classList.add('on');
     const errs = [];
@@ -117,6 +118,10 @@
   const carOf = o => o.carrier || '-';
   function carCount() { const cc = {}; S.raw.forEach(o => { if (passes(o, S.printed, { car: true })) cc[carOf(o)] = (cc[carOf(o)] || 0) + 1; }); return cc; }
   function fillOptions() {
+    if (S.platform === 'shopee') {   // ร้าน + จำนวนคำสั่งซื้อตามตัวกรองอื่น (แสดงครบ 2 ร้านเสมอ แม้เป็น 0)
+      const sc = {}; S.raw.forEach(o => { if (passes(o, S.printed, { shop: true })) sc[o.shop] = (sc[o.shop] || 0) + 1; });
+      dd('fShop', [['all', 'ทั้ง 2 ร้าน'], ...SHOPS.map(([v, l]) => [v, `${l} · ${num(sc[v] || 0)}`])], S.shop, v => { S.shop = v; fillOptions(); applyFilters(); });
+    }
     if (S.car && !carCount()[S.car]) S.car = '';
     const pc = {}; let all = 0;
     S.raw.forEach(o => { if (passes(o, S.printed, { pat: true, basket: true })) { pc[o.pat] = (pc[o.pat] || 0) + 1; all++; } });
@@ -207,10 +212,9 @@
   function drawPlat() {
     const plats = [['tiktok', 'Platform: TikTok']].concat(S.admin ? [['shopee', 'Platform: Shopee (ทดลอง)']] : []);
     dd('fPlatform', plats, S.platform, v => { if (v === S.platform) return; S.platform = v; drawPlat(); switchList(); });
-    dd('fShop', SHOPS, S.shop, v => { if (v === S.shop) return; S.shop = v; drawPlat(); switchList(); });
-    $('fShop').style.display = S.platform === 'shopee' ? '' : 'none';
+    $('fShopF').style.display = S.platform === 'shopee' ? '' : 'none';
   }
-  function switchList() { S.sel.clear(); S.pat = ''; S.basket = ''; S.car = ''; S.page = 1; S.raw = []; S.rows = []; render(); loadAll(); }
+  function switchList() { S.sel.clear(); S.pat = ''; S.basket = ''; S.car = ''; S.shop = 'all'; S.page = 1; S.raw = []; S.rows = []; render(); loadAll(); }
 
   function dd(id, items, value, onPick) {
     const el = $(id), cur = items.find(x => x[0] === value) || items[0];
@@ -232,6 +236,7 @@
     if (S.pat && !skip.pat && o.pat !== S.pat) return false;
     if (b && !skip.basket && !(o.bnames || []).includes(b)) return false;
     if (S.car && !skip.car && carOf(o) !== S.car) return false;
+    if (S.shop !== 'all' && !skip.shop && String(o.shop) !== S.shop) return false;
     const n = printed[o.id] || 0;
     if (pr === '0' && n > 0) return false;
     if (pr === '1' && n === 0) return false;
@@ -377,18 +382,26 @@
     const my = SC.seq = (SC.seq || 0) + 1; SC.pend = day;
     $('stSum').textContent = 'กำลังโหลด…'; $('stSum').classList.remove('bad');
     try {
-      const d = new Date(day + 'T00:00:00');
-      const j = await api({ action: 'summary', day_start: Math.floor(d.getTime() / 1000), sc: true });
+      const d0 = Math.floor(new Date(day + 'T00:00:00').getTime() / 1000);
+      // (2026-11-24) ทุกช่องทาง: TikTok (wh-labels) + Shopee 2 ร้าน (wh-shopee) โหลดพร้อมกัน · Shopee โหลดไม่ได้ = ยังแสดง TikTok แล้วแจ้งที่ปุ่มสถานะ
+      const [j, js] = await Promise.all([api({ action: 'summary', day_start: d0, sc: true }), api({ action: 'summary', day_start: d0 }, 'wh-shopee').catch(e => ({ error: e.message }))]);
       if (my !== SC.seq) return; SC.pend = null;
-      Object.assign(SC, { d: day, j, got: Date.now() });
-      // (2026-11-23) ยอดตามที่พิมพ์: รวมที่ถูกยกเลิกทีหลัง ให้ตรงกับจำนวนที่น้องพิมพ์จริง — แยก รอเข้ารับ / ขนส่งรับแล้ว / ยกเลิกหลังพิมพ์
-      const rows = Object.entries(j.carriers || {}).map(([c, v]) => [c, { w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }]).sort((a, b) => (b[1].w + b[1].p + b[1].x) - (a[1].w + a[1].p + a[1].x));
-      let A = 0, B = 0, X = 0;
-      $('sumBody').innerHTML = rows.map(([c, v]) => { A += v.w; B += v.p; X += v.x; return `<tr><td class="l"><b>${esc(c)}</b></td><td>${num(v.w)}</td><td>${num(v.p)}</td><td>${num(v.x)}</td><td><b>${num(v.w + v.p + v.x)}</b></td></tr>`; }).join('');
-      $('sumFoot').innerHTML = rows.length ? `<tr><td class="l">รวม</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(X)}</td><td>${num(A + B + X)}</td></tr>` : '';
-      $('sumEmpty').style.display = rows.length ? 'none' : 'block'; $('sumEmpty').textContent = 'ไม่มีคำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก';
-      $('sP').textContent = num(A + B + X); $('sA').textContent = num(A); $('sB').textContent = num(B); $('sD').textContent = num(X); $('sC').textContent = num(j.wait_ship);
-      $('stSum').textContent = 'Updated ' + fmtT(new Date(j.at || Date.now()));
+      Object.assign(SC, { d: day, j, js, got: Date.now() });
+      // ยอดตามที่พิมพ์: รวมที่ถูกยกเลิกทีหลัง ให้ตรงกับจำนวนที่น้องพิมพ์จริง — แยก รอเข้ารับ / ขนส่งรับแล้ว / ยกเลิกหลังพิมพ์ · แต่ละช่องทางแยกตามขนส่ง
+      const chans = [{ name: 'TikTok', carriers: j.carriers, wait: j.wait_ship }].concat((js.shops || []).map(x => ({ name: 'Shopee ' + (SHOPNAME[x.shop] || x.shop), carriers: x.carriers, wait: x.wait_ship })));
+      let A = 0, B = 0, X = 0, W = 0, html = '';
+      chans.forEach(ch => {
+        const rows = Object.entries(ch.carriers || {}).map(([c, v]) => [c, { w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }]).sort((a, b) => (b[1].w + b[1].p + b[1].x) - (a[1].w + a[1].p + a[1].x));
+        const t = rows.reduce((m, [, v]) => ({ w: m.w + v.w, p: m.p + v.p, x: m.x + v.x }), { w: 0, p: 0, x: 0 });
+        A += t.w; B += t.p; X += t.x; W += ch.wait || 0;
+        html += `<tr class="wh-ch"><td class="l">${esc(ch.name)}</td><td>${num(t.w)}</td><td>${num(t.p)}</td><td>${num(t.x)}</td><td>${num(t.w + t.p + t.x)}</td></tr>`
+          + rows.map(([c, v]) => `<tr><td class="l ci">${esc(c)}</td><td>${num(v.w)}</td><td>${num(v.p)}</td><td>${num(v.x)}</td><td>${num(v.w + v.p + v.x)}</td></tr>`).join('');
+      });
+      $('sumBody').innerHTML = html;
+      $('sumFoot').innerHTML = `<tr><td class="l">รวมทุกช่องทาง</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(X)}</td><td>${num(A + B + X)}</td></tr>`;
+      $('sumEmpty').style.display = js.error ? 'block' : 'none'; $('sumEmpty').textContent = js.error ? 'Shopee โหลดไม่ได้: ' + js.error : '';
+      $('sP').textContent = num(A + B + X); $('sA').textContent = num(A); $('sB').textContent = num(B); $('sD').textContent = num(X); $('sC').textContent = num(W);
+      $('stSum').textContent = js.error ? '1 alert' : 'Updated ' + fmtT(new Date(j.at || Date.now())); $('stSum').classList.toggle('bad', !!js.error);
     } catch (e) { if (my !== SC.seq) return; SC.pend = null; $('stSum').textContent = '1 alert'; $('stSum').classList.add('bad'); $('sumBody').innerHTML = ''; $('sumFoot').innerHTML = ''; $('sumEmpty').style.display = 'block'; $('sumEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
   }
 
