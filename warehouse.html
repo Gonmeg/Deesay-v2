@@ -64,6 +64,8 @@ table.wh-t{width:100%;border-collapse:collapse;font-size:13px}
 .wh-t td.l{white-space:normal}
 .wh-t.fit{width:auto;min-width:560px}.wh-t.fit th,.wh-t.fit td{padding:8px 20px}.wh-t.fit td.l{white-space:nowrap}.wh-t.fit th:not(.l),.wh-t.fit td:not(.l){min-width:92px}   /* ตารางคอลัมน์น้อย: กว้างตามเนื้อหา ไม่ยืดเต็มจอ */
 .wh-t.nosh .sh{display:none}
+.wh-t tr.gone td{background:var(--red-soft,rgba(220,60,60,.06))}.wh-t tr.gone .wh-btn.sm{margin-top:4px}   /* (2026-11-24) กำลังแพ็ค: คำสั่งซื้อที่ไม่อยู่ในรอจัดส่งแล้ว */
+#whToast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--text);color:var(--bg2);padding:10px 18px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-pop);transition:all .2s;z-index:90}#whToast.on{opacity:1;transform:translate(-50%,0)}
 #sumTbl tr.wh-ch td{font-weight:700;background:var(--bg3,transparent);border-top:1px solid var(--border)}#sumTbl td.ci{padding-left:36px;color:var(--text2)}   /* (2026-11-24) หัวช่องทาง = ตัวหนา + พื้นอ่อน · ขนส่ง = เยื้องเข้า */
 .wh-card.fitc{width:fit-content;max-width:100%}
 /* (2026-11-24) ช่องวันที่ / เวลาแบบเว็บ: ปุ่ม .ui-datebtn + กล่อง .ui-cal (ui.js สำหรับวันที่ · warehouse.js สำหรับวันที่ + เวลา) */
@@ -174,11 +176,13 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
     <div class="wh-card">
       <div class="wh-tabs" id="tabs">
         <button data-tab="ship" class="on" type="button">รอจัดส่ง<small id="nShip"></small></button>
+        <button data-tab="pack" type="button">กำลังแพ็ค<small id="nPack"></small></button>
         <button data-tab="collect" type="button">รอเข้ารับ<small id="nCollect"></small></button>
         <button data-tab="cancel" type="button">ยกเลิกหลังพิมพ์<small id="nCancel"></small></button>
       </div>
       <div class="wh-bar"><span class="n" id="selN"></span><span class="m" id="selM"></span><span class="sp"></span>
         <button class="wh-btn" id="pickBtn" type="button">รายการเตรียมสินค้า</button>
+        <button class="wh-btn" id="backBtn" type="button" style="display:none">ย้ายกลับรอจัดส่ง</button>
         <button class="wh-btn pri" id="goBtn" type="button">จัดส่ง + พิมพ์ใบปะหน้า</button></div>
       <table class="wh-t"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
       <div class="wh-empty" id="empty" style="display:none"></div>
@@ -231,7 +235,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 <!-- กล่องรายการเตรียมสินค้า / ยืนยัน / ผลลัพธ์ -->
 <div class="wh-ov" id="ov"><div class="wh-dlg" id="dlg"></div></div>
 <div class="wh-ov" id="ldOv"><div class="wh-dlg wh-ld" id="ldDlg"></div></div>
-<div id="printArea"></div>
+<div id="printArea"></div><div id="whToast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="warehouse.js?v=1"></script>
