@@ -65,52 +65,80 @@
   // ───── โหลดรายการ ─────
   // (2026-11-23) โหลด 3 แท็บพร้อมกัน (รอจัดส่ง / รอเข้ารับ / ยกเลิกหลังพิมพ์) ตัวเลขขึ้นครบทุกแท็บ · ระหว่างโหลดมีกล่อง "กำลังโหลด" บังหน้าไว้ เสร็จแล้วปิดเอง
   // จำผลแต่ละแท็บ / ช่วงเวลา ไว้ 5 นาที — สลับแท็บแล้วโชว์ทันที · กดค้นหา / พิมพ์เสร็จ = ดึงใหม่เสมอ
-  const FRESH = 5 * 60 * 1000, LC = {};
-  const TABS = ['ship', 'collect', 'cancel'], TNAME = { ship: 'รอจัดส่ง', collect: 'รอเข้ารับ', cancel: 'ยกเลิกหลังพิมพ์' };
-  const keyOf = t => [S.platform, t === 'cancel' ? 'cancel' : [t, $('fFrom').value, $('fTo').value].join('|')].join('#');
+  // (2026-11-24) ความเร็ว: ดึงทั้งรายการครั้งเดียวต่อ Platform (ไม่ส่งช่วงเวลา) แล้วกรองรอบ / เวลาในหน้า → กดรอบ / สลับแท็บขึ้นทันที
+  //   ข้อมูลเก่าเกิน 5 นาที = แสดงของเดิมไปก่อน แล้วอัปเดตเบื้องหลัง (ไม่บังหน้าจอ) · บังหน้าจอเฉพาะครั้งแรกที่ยังไม่มีข้อมูล
+  const FRESH = 5 * 60 * 1000, LC = {}, PK = {};   // PK[platform] = { map: { order_id: { by, at, shop, snap } }, got } = คำสั่งซื้อในแท็บกำลังแพ็ค
+  const TABS = ['ship', 'collect', 'cancel'], TNAME = { ship: 'รอจัดส่ง', pack: 'กำลังแพ็ค', collect: 'รอเข้ารับ', cancel: 'ยกเลิกหลังพิมพ์' };
+  const dk = t => t === 'pack' ? 'ship' : t;   // กำลังแพ็ค = คำสั่งซื้อรอจัดส่งที่น้องย้ายมา (สถานะในแพลตฟอร์มยังเป็นรอจัดส่ง)
+  const keyOf = (t, plat) => [plat || S.platform, dk(t)].join('#');
   const fresh = t => { const c = LC[keyOf(t)]; return !!c && Date.now() - c.got < FRESH; };
+  const packMap = plat => (PK[plat || S.platform] || {}).map || {};
   function rangeText() {
     const a = $('fFrom').value, b = $('fTo').value, f = v => fmtDT(new Date(v));
     if (!a && !b) return 'ทั้งหมด · ไม่กรองเวลาสั่ง';
     const r = S.round === '1' ? 'รอบ 1 · ' : S.round === '2' ? 'รอบ 2 · ' : '';
     return r + (a ? `สั่ง ${f(a)} – ${b ? f(b) : 'ตอนนี้'}` : `สั่งก่อน ${b ? f(b) : 'ตอนนี้'} (รวมที่ค้างจากวันก่อน)`);
   }
+  // แถวของแต่ละแท็บ: รอจัดส่ง = ที่ยังไม่ย้าย · กำลังแพ็ค = ที่ย้ายมาแล้ว + ที่ไม่อยู่ในรอจัดส่งแล้ว (ถูกยกเลิก / จัดส่งที่อื่น) ใช้ข้อมูลที่เก็บไว้ตอนย้าย
+  function rowsFor(t, plat) {
+    plat = plat || S.platform; const c = LC[keyOf(t, plat)];
+    if (!c) return null;
+    if (t !== 'ship' && t !== 'pack') return c.rows;
+    const P = packMap(plat);
+    if (t === 'ship') return c.rows.filter(o => !P[o.id]);
+    if (!PK[plat]) return null;
+    const ids = new Set(c.rows.map(o => o.id));
+    const gone = Object.entries(P).filter(([id]) => !ids.has(id)).map(([id, p]) => derive({ ...(p.snap || {}), id, shop: p.shop || (p.snap || {}).shop || null, gone: true }));
+    return c.rows.filter(o => P[o.id]).concat(gone);
+  }
+  const printedFor = (t, plat) => ((LC[keyOf(t, plat)] || {}).j || {}).printed || {};
   function showTab() {
+    const rows = rowsFor(S.tab);
+    if (!rows) { S.raw = []; S.rows = []; render(); $('empty').style.display = 'block'; $('empty').textContent = S.busy ? 'กำลังโหลด…' : 'โหลดข้อมูลไม่ได้ กด "ค้นหา" อีกครั้ง'; return; }
+    S.raw = rows; S.printed = printedFor(S.tab); S.names = (LC[keyOf(S.tab)] || {}).j?.names || S.names || {};
+    fillOptions(); applyFilters(true);
+    stamp();
+  }
+  function stamp() {   // เวลาที่ดึงข้อมูลชุดที่กำลังดูอยู่ · ระหว่างอัปเดตเบื้องหลังขึ้นว่า "กำลังอัปเดต…"
     const c = LC[keyOf(S.tab)];
-    if (!c) { S.raw = []; S.rows = []; render(); $('empty').style.display = 'block'; $('empty').textContent = 'โหลดข้อมูลไม่ได้ กด "ค้นหา" อีกครั้ง'; return; }
-    S.raw = c.rows; S.printed = c.j.printed || {}; S.names = c.j.names || S.names || {};
-    fillOptions(); applyFilters();
-    $('stPrint').textContent = 'Updated ' + fmtT(new Date(c.got)); $('stPrint').classList.remove('bad');   // เวลาที่ดึงข้อมูลชุดที่กำลังดูอยู่
+    $('stPrint').classList.toggle('bad', !!S.err);
+    $('stPrint').textContent = S.err ? '1 alert' : S.busy && c ? 'กำลังอัปเดต…' : c ? 'Updated ' + fmtT(new Date(c.got)) : 'กำลังโหลด…';
+    $('stPrint').title = S.err || '';
+  }
+  async function loadPack(plat) {
+    const j = await Auth.rpc('wh_pack_list', { p_platform: plat });
+    const map = {}; (j || []).forEach(r => { map[r.order_id] = { by: r.by, at: r.at, shop: r.shop, snap: r.snap || {} }; });
+    PK[plat] = { map, got: Date.now() };
   }
   async function loadAll(force) {
-    if (S.busy) return;
+    if (S.busy) { if (force === true) S.again = true; return; }
     $('searchBtn').classList.remove('dirty');
-    const need = TABS.filter(t => force === true || !fresh(t));
-    if (!need.length) { showTab(); return; }
-    S.busy = true; $('searchBtn').disabled = true;
-    $('stPrint').textContent = 'กำลังโหลด…'; $('stPrint').classList.remove('bad');
+    const plat = S.platform;
+    const need = TABS.filter(t => force === true || !fresh(t)), needPack = force === true || !PK[plat] || Date.now() - PK[plat].got > FRESH;
+    if (!need.length && !needPack) { showTab(); return; }
+    const first = !rowsFor(S.tab, plat);   // ยังไม่มีข้อมูลของแท็บที่เปิดอยู่ = บังหน้าจอรอ (ครั้งแรก) · มีแล้ว = อัปเดตเบื้องหลัง
+    S.busy = true; S.err = ''; stamp();
     const st = {}; TABS.forEach(t => { st[t] = need.includes(t) ? 'wait' : 'ok'; });
-    const keys = {}; TABS.forEach(t => { keys[t] = keyOf(t); });
-    const f = $('fFrom').value ? Math.floor(new Date($('fFrom').value).getTime() / 1000) : null;
-    const to = $('fTo').value ? Math.floor(new Date($('fTo').value).getTime() / 1000) : null;
-    const head = `<h2>กำลังโหลดคำสั่งซื้อ</h2><div class="s">${PL()}${S.platform === 'shopee' ? ' · ทั้ง 2 ร้าน' : ''} · ${esc(rangeText())}</div>`;
-    const draw = () => { $('ldDlg').innerHTML = head + TABS.map(t => `<div class="r"><span>${TNAME[t]}</span>${st[t] === 'wait' ? '<span class="wh-spin"></span>' : st[t] === 'err' ? '<span class="pc2">โหลดไม่ได้</span>' : `<b>${num(S.counts[t] ?? 0)}</b>`}</div>`).join(''); };
-    countTabs(); draw(); $('ldOv').classList.add('on');
+    const head = `<h2>กำลังโหลดคำสั่งซื้อ</h2><div class="s">${PL(plat)}${plat === 'shopee' ? ' · ทั้ง 2 ร้าน' : ''} · ทุกคำสั่งซื้อ (เลือกรอบได้ทันทีหลังโหลด)</div>`;
+    const draw = () => { $('ldDlg').innerHTML = head + TABS.map(t => `<div class="r"><span>${TNAME[t]}</span>${st[t] === 'wait' ? '<span class="wh-spin"></span>' : st[t] === 'err' ? '<span class="pc2">โหลดไม่ได้</span>' : `<b>${num((rowsFor(t, plat) || []).length)}</b>`}</div>`).join(''); };
+    if (first) { draw(); $('ldOv').classList.add('on'); }
     const errs = [];
+    const done = () => { if (plat !== S.platform) return; if (first && rowsFor(S.tab, plat)) $('ldOv').classList.remove('on'); countTabs(); showTab(); };
     await Promise.all(need.map(async t => {
       try {
-        const j = t === 'cancel' ? await apiP({ action: 'cancelled', sc: true }) : await apiP({ action: 'list', tab: t, from: f, to });
-        LC[keys[t]] = { j, rows: (j.orders || []).map(derive), got: Date.now() }; st[t] = 'ok';
-      } catch (e) { delete LC[keys[t]]; st[t] = 'err'; errs.push(TNAME[t] + ': ' + e.message); }
-      countTabs(); draw();
-    }));
-    S.busy = false; $('searchBtn').disabled = false;
-    showTab();
-    if (errs.length) {
-      $('stPrint').textContent = '1 alert'; $('stPrint').classList.add('bad');
-      $('ldDlg').insertAdjacentHTML('beforeend', `<div class="wh-note err">${errs.map(esc).join('<br>')}</div><div class="wh-act"><button class="wh-btn pri" id="ldClose" type="button">ปิด</button></div>`);
-      $('ldClose').onclick = () => $('ldOv').classList.remove('on');
-    } else setTimeout(() => $('ldOv').classList.remove('on'), 300);
+        const j = t === 'cancel' ? await api(plat === 'shopee' ? { action: 'cancelled', sc: true, shop: 'all' } : { action: 'cancelled', sc: true }, plat === 'shopee' ? 'wh-shopee' : undefined)
+          : await api(plat === 'shopee' ? { action: 'list', tab: t, from: null, to: null, shop: 'all' } : { action: 'list', tab: t, from: null, to: null }, plat === 'shopee' ? 'wh-shopee' : undefined);
+        LC[keyOf(t, plat)] = { j, rows: (j.orders || []).map(derive), got: Date.now() }; st[t] = 'ok';
+      } catch (e) { st[t] = 'err'; errs.push(TNAME[t] + ': ' + e.message); }
+      if (first) draw(); done();
+    }).concat(needPack ? [loadPack(plat).catch(e => { errs.push('กำลังแพ็ค: ' + e.message); })] : []));
+    // คำสั่งซื้อในกำลังแพ็คที่ไปอยู่รอเข้ารับแล้ว (จัดส่งจากที่อื่น เช่น Seller Center) = เอาออกจากกำลังแพ็คเอง
+    const col = LC[keyOf('collect', plat)], P = packMap(plat);
+    if (col) { const out = col.rows.filter(o => P[o.id]).map(o => o.id); if (out.length) { out.forEach(id => delete P[id]); Auth.rpc('wh_pack_remove', { p_platform: plat, p_ids: out }).catch(() => {}); } }
+    S.busy = false; S.err = errs.join(' · ');
+    if (plat === S.platform) { countTabs(); showTab(); }
+    if (first) { if (errs.length && !rowsFor(S.tab, plat)) { $('ldDlg').insertAdjacentHTML('beforeend', `<div class="wh-note err">${errs.map(esc).join('<br>')}</div><div class="wh-act"><button class="wh-btn pri" id="ldClose" type="button">ปิด</button></div>`); $('ldClose').onclick = () => $('ldOv').classList.remove('on'); } else $('ldOv').classList.remove('on'); }
+    if (S.again) { S.again = false; loadAll(true); }
   }
   // (2026-11-23) ตัวกรองรูปแบบคำสั่งซื้อ (SKU) = รูปแบบที่มีจริงในแท็บที่เปิดอยู่ + จำนวนคำสั่งซื้อ เรียงมาก → น้อย · ตะกร้า = เฉพาะที่อยู่ในรูปแบบที่เลือก
   //   เลือกแล้วกรองทันที (กรองจากข้อมูลที่โหลดไว้ ไม่ดึง TikTok ใหม่)
@@ -237,6 +265,7 @@
   }
   function passes(o, printed, skip = {}) {
     const b = S.basket, pr = S.prf;
+    if (S.tab !== 'cancel' && !inRange(o)) return false;
     if (S.pat.size && !skip.pat && !S.pat.has(o.pat)) return false;
     if (b && !skip.basket && !(o.bnames || []).includes(b)) return false;
     if (S.car && !skip.car && carOf(o) !== S.car) return false;
@@ -246,11 +275,22 @@
     if (pr === '1' && n === 0) return false;
     return true;
   }
-  function countTabs() { TABS.forEach(t => { const c = LC[keyOf(t)]; S.counts[t] = c ? c.rows.filter(o => passes(o, c.j.printed || {})).length : undefined; }); }
-  function applyFilters() {
+  function inRange(o) {   // เวลาสั่งตามรอบ / ช่วงที่เลือก (เดิมส่งให้ระบบหลังบ้านกรอง · ตอนนี้กรองในหน้า)
+    const a = $('fFrom').value, b = $('fTo').value;
+    if (a && o.t * 1000 < new Date(a).getTime()) return false;
+    if (b && o.t * 1000 >= new Date(b).getTime()) return false;
+    return true;
+  }
+  function countTabs() {
+    const cur = S.tab;
+    ['ship', 'pack', 'collect', 'cancel'].forEach(t => { const r = rowsFor(t); S.tab = t; S.counts[t] = r ? r.filter(o => passes(o, printedFor(t))).length : undefined; });
+    S.tab = cur;
+  }
+  function applyFilters(keepPage) {
     S.rows = S.raw.filter(o => passes(o, S.printed));
-    const keep = new Set(S.rows.map(o => o.id)); S.sel = new Set([...S.sel].filter(id => keep.has(id)));
-    S.page = 1; countTabs(); render();
+    const keep = new Set(S.rows.filter(o => !o.gone).map(o => o.id)); S.sel = new Set([...S.sel].filter(id => keep.has(id)));
+    if (keepPage !== true) S.page = 1;
+    countTabs(); render();
   }
 
   // ───── ตาราง ─────
@@ -263,7 +303,12 @@
   function render() {
     const cancel = S.tab === 'cancel';
     [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
-    $('nShip').textContent = S.counts.ship ?? ''; $('nCollect').textContent = S.counts.collect ?? ''; $('nCancel').textContent = S.counts.cancel ?? '';
+    $('nShip').textContent = S.counts.ship ?? ''; $('nPack').textContent = S.counts.pack ?? ''; $('nCollect').textContent = S.counts.collect ?? ''; $('nCancel').textContent = S.counts.cancel ?? '';
+    const pack = S.tab === 'pack', P = packMap();
+    const infoPk = `<span class="wh-i r">i<span class="pop"><b>ย้ายมาเมื่อ</b><br>เวลาที่ย้ายคำสั่งซื้อจากรอจัดส่งมากำลังแพ็ค และชื่อบัญชีที่ย้าย</span></span>`;
+    const whoShort = e => String(e || '').split('@')[0];
+    const lastCell = o => pack ? (o.gone ? `<span class="wh-pill bad">ไม่อยู่ในรอจัดส่งแล้ว</span><div><button class="wh-btn sm" data-rm="${esc(o.id)}" type="button">เอาออก</button></div>`
+      : `${P[o.id] && P[o.id].at ? fmtDT(new Date(P[o.id].at)) : '—'}<div class="wh-sub">${esc(whoShort(P[o.id] && P[o.id].by))}</div>`) : printedHtml(o.id);
     const info = `<span class="wh-i r">i<span class="pop"><b>พิมพ์แล้ว (ครั้ง)</b><br>จำนวนครั้งที่ใบปะหน้าของคำสั่งซื้อนี้ถูกพิมพ์จากหน้านี้ รวมการพิมพ์ซ้ำ<br>ไม่นับการพิมพ์จาก Seller Center</span></span>`;
     // (2026-11-23) ยกเลิกหลังพิมพ์: รวมที่กดจัดส่ง / พิมพ์จาก Seller Center แล้วถูกยกเลิกก่อนขนส่งมารับ (src = sc)
     // (2026-11-23) บอกให้ชัดว่า "พิมพ์แล้ว" + ยกเลิกหลังพิมพ์นานเท่าไร (เช่น ระหว่างน้องพิมพ์ทีละ 250 ใบ แล้วลูกค้ายกเลิก)
@@ -271,19 +316,19 @@
     const infoSt = `<span class="wh-i">i<span class="pop"><b>สถานะ</b><br>พิมพ์แล้ว · ยกเลิกแล้ว = ลูกค้ายกเลิกหลังพิมพ์ใบปะหน้า ขนส่งยังไม่มารับ พัสดุยังอยู่ในคลัง<br>พิมพ์แล้ว · ลูกค้าขอยกเลิก = มีคำขอยกเลิกค้างอยู่ อย่าเพิ่งส่งให้ขนส่ง</span></span>`;
     $('thead').innerHTML = cancel
       ? `<tr><th>พิมพ์ใบปะหน้าเมื่อ</th><th>ยกเลิกเมื่อ</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องรับคืน (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>สถานะ ${infoSt}</th><th class="l">เหตุผลที่ยกเลิก</th><th>พิมพ์จาก ${infoSrc}</th></tr>`
-      : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลาสั่ง</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>พิมพ์แล้ว (ครั้ง) ${info}</th></tr>`;
+      : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลาสั่ง</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>${pack ? 'ย้ายมาเมื่อ ' + infoPk : 'พิมพ์แล้ว (ครั้ง) ' + info}</th></tr>`;
     const pages = Math.max(1, Math.ceil(S.rows.length / S.size)); if (S.page > pages) S.page = pages;
     const view = S.rows.slice((S.page - 1) * S.size, S.page * S.size);
     $('tbody').innerHTML = view.map(o => cancel
       ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) + `<div class="wh-sub">${afterTxt(o)}</div>` : '—'}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.st === 'CANCELLED' ? '<span class="wh-pill bad">พิมพ์แล้ว · ยกเลิกแล้ว</span>' : '<span class="wh-pill cod">พิมพ์แล้ว · ลูกค้าขอยกเลิก</span>'}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? 'Seller Center' : `หน้านี้ (${num(S.printed[o.id] || 1)} ครั้ง)`}</td></tr>`
-      : `<tr class="pick ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td><input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}></td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${printedHtml(o.id)}</td></tr>`).join('');
+      : `<tr class="${o.gone ? 'gone' : 'pick'} ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td>${o.gone ? '' : `<input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}>`}</td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${lastCell(o)}</td></tr>`).join('');
     const empty = !S.rows.length;
     $('empty').style.display = empty ? 'block' : 'none';
-    if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังจัดส่ง / พิมพ์ (ย้อนหลัง 7 วัน)' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
+    if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังจัดส่ง / พิมพ์ (ย้อนหลัง 7 วัน)' : pack && !Object.keys(P).length ? 'ยังไม่มีคำสั่งซื้อในกำลังแพ็ค — เลือกคำสั่งซื้อในแท็บรอจัดส่ง แล้วกด "ย้ายไปกำลังแพ็ค"' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
     $('pgInfo').textContent = empty ? '' : `แสดง ${num((S.page - 1) * S.size + 1)}–${num(Math.min(S.page * S.size, S.rows.length))} จาก ${num(S.rows.length)} คำสั่งซื้อ`;
     $('pgBtns').innerHTML = pages > 1 ? `<button class="wh-btn sm" data-p="-1" ${S.page <= 1 ? 'disabled' : ''}>‹ ก่อนหน้า</button><span>หน้า ${S.page} / ${pages}</span><button class="wh-btn sm" data-p="1" ${S.page >= pages ? 'disabled' : ''}>ถัดไป ›</button>` : '';
     [...$('pgSize').children].forEach(b => b.classList.toggle('on', Number(b.dataset.v) === S.size));
-    const all = $('chkAll'); if (all) { all.checked = S.rows.length > 0 && S.sel.size === S.rows.length; all.indeterminate = S.sel.size > 0 && S.sel.size < S.rows.length; }
+    const nSel = S.rows.filter(o => !o.gone).length, all = $('chkAll'); if (all) { all.checked = nSel > 0 && S.sel.size === nSel; all.indeterminate = S.sel.size > 0 && S.sel.size < nSel; }
     renderSel();
   }
   function selected() { return S.rows.filter(o => S.sel.has(o.id)); }
@@ -301,9 +346,11 @@
     const cancel = S.tab === 'cancel', s = summarize(selected());
     $('selN').innerHTML = cancel ? `${num(S.rows.length)} คำสั่งซื้อที่พิมพ์ใบปะหน้าแล้วแต่ถูกยกเลิก · ต้องนำสินค้ากลับเข้าคลัง <span class="wh-i">i<span class="pop"><b>ยกเลิกหลังพิมพ์</b><br>พิมพ์ใบปะหน้าแล้ว (จากหน้านี้หรือ Seller Center) แต่ลูกค้ายกเลิกก่อนขนส่งเข้ารับ พัสดุจึงยังอยู่ในคลัง ต้องแยกออกจากกองพัสดุและนำสินค้ากลับเข้าคลัง<br>แสดงย้อนหลัง 7 วัน (หน้าสรุปการจัดส่งนับเฉพาะวันที่เลือก) · ไม่รวมพัสดุที่ขนส่งรับไปแล้ว</span></span>` : `เลือกแล้ว ${num(s.n)} คำสั่งซื้อ`;
     $('selM').textContent = cancel || !s.n ? '' : `รวม ${num(s.qty)} ชิ้น · ${Object.keys(s.sku).length} รายการสินค้า`;
-    $('pickBtn').style.display = cancel ? 'none' : ''; $('goBtn').style.display = cancel ? 'none' : '';
-    $('pickBtn').disabled = !s.n; $('goBtn').disabled = !s.n;
-    $('goBtn').textContent = S.tab === 'collect' ? 'พิมพ์ใบปะหน้าซ้ำ' : 'จัดส่ง + พิมพ์ใบปะหน้า';
+    $('pickBtn').style.display = cancel ? 'none' : ''; $('goBtn').style.display = cancel ? 'none' : ''; $('backBtn').style.display = S.tab === 'pack' ? '' : 'none';
+    $('pickBtn').disabled = !s.n; $('goBtn').disabled = !s.n; $('backBtn').disabled = !s.n;
+    // (2026-11-24) รอจัดส่ง = ย้ายไปกำลังแพ็ค · กำลังแพ็ค = จัดส่ง + พิมพ์ (และย้ายกลับ) · รอเข้ารับ = พิมพ์ซ้ำ
+    $('goBtn').textContent = S.tab === 'collect' ? 'พิมพ์ใบปะหน้าซ้ำ' : S.tab === 'ship' ? 'ย้ายไปกำลังแพ็ค' : 'จัดส่ง + พิมพ์ใบปะหน้า';
+    if (S.tab === 'pack' && !cancel) $('selN').insertAdjacentHTML('beforeend', ` <span class="wh-i">i<span class="pop"><b>กำลังแพ็ค</b><br>คำสั่งซื้อที่ย้ายมาจากรอจัดส่ง เพื่อแพ็คและพิมพ์ใบปะหน้ากลุ่มนี้ · ทุกเครื่องเห็นเหมือนกัน<br>สถานะใน ${PL()} ยังเป็นรอจัดส่ง จนกว่าจะกด "จัดส่ง + พิมพ์ใบปะหน้า" แล้วจะย้ายไปรอเข้ารับ<br>ถ้าจัดส่งจาก Seller Center แทน คำสั่งซื้อจะออกจากกำลังแพ็คเอง · "ไม่อยู่ในรอจัดส่งแล้ว" = ถูกยกเลิก หรือสถานะเปลี่ยน กด "เอาออก"</span></span>`);
   }
 
   // ───── กล่องรายการเตรียมสินค้า ─────
@@ -325,14 +372,14 @@
   }
   function openPick() {
     const list = selected(); if (!list.length) return;
-    const s = summarize(list), t = pickTables(s), reprint = S.tab === 'collect';
+    const s = summarize(list), t = pickTables(s), reprint = S.tab === 'collect', toPack = S.tab === 'ship';
     const when = fmtDT(new Date());
     $('dlg').innerHTML = `<h2>รายการเตรียมสินค้า</h2><div class="s">สรุปจากคำสั่งซื้อที่เลือก · ${PL()} · ${when}</div>
       <div class="wh-kp"><div><small>คำสั่งซื้อที่เลือก</small><b>${num(s.n)}</b></div><div><small>จำนวนสินค้า (รายการ)</small><b>${t.nSku}</b></div><div><small>จำนวนชิ้นรวม</small><b>${num(s.qty)}</b></div></div>
       <div class="wh-tabs" id="pkTabs"><button data-k="sku" type="button">สินค้าที่ต้องหยิบ<small>${t.nSku}</small></button><button data-k="pat" type="button">รูปแบบคำสั่งซื้อ<small>${t.nPat}</small></button></div>
       <div id="pkBody"></div>
-      <div class="wh-note" id="pkNote">${reprint ? `พิมพ์ซ้ำ: สถานะใน ${PL()} ไม่เปลี่ยน ระบบจะนับจำนวนครั้งที่พิมพ์เพิ่ม` : `เมื่อกด "ยืนยันจัดส่ง" คำสั่งซื้อทั้งหมดที่เลือกจะย้ายไปสถานะรอเข้ารับใน ${PL()} ทันที${S.platform === 'shopee' ? ' และนัดขนส่งเข้ารับที่คลังรอบเวลาแรกที่มี' : ''} และยกเลิกย้อนกลับไม่ได้`}</div>
-      <div class="wh-act"><button class="wh-btn" id="pkClose" type="button">ยกเลิก</button><button class="wh-btn" id="pkPrint" type="button">พิมพ์รายการในแท็บนี้</button><button class="wh-btn pri" id="pkGo" type="button">${reprint ? 'พิมพ์ใบปะหน้าซ้ำ' : 'ยืนยันจัดส่ง + พิมพ์ใบปะหน้า'}</button></div>`;
+      <div class="wh-note" id="pkNote">${toPack ? `ย้ายไปแท็บกำลังแพ็ค เพื่อแพ็คและพิมพ์ใบปะหน้ากลุ่มนี้ · สถานะใน ${PL()} ยังไม่เปลี่ยน ย้ายกลับได้` : reprint ? `พิมพ์ซ้ำ: สถานะใน ${PL()} ไม่เปลี่ยน ระบบจะนับจำนวนครั้งที่พิมพ์เพิ่ม` : `เมื่อกด "ยืนยันจัดส่ง" คำสั่งซื้อทั้งหมดที่เลือกจะย้ายไปสถานะรอเข้ารับใน ${PL()} ทันที${S.platform === 'shopee' ? ' และนัดขนส่งเข้ารับที่คลังรอบเวลาแรกที่มี' : ''} และยกเลิกย้อนกลับไม่ได้`}</div>
+      <div class="wh-act"><button class="wh-btn" id="pkClose" type="button">ยกเลิก</button><button class="wh-btn" id="pkPrint" type="button">พิมพ์รายการในแท็บนี้</button><button class="wh-btn pri" id="pkGo" type="button">${toPack ? 'ย้ายไปกำลังแพ็ค' : reprint ? 'พิมพ์ใบปะหน้าซ้ำ' : 'ยืนยันจัดส่ง + พิมพ์ใบปะหน้า'}</button></div>`;
     const show = k => { S.pickTab = k; [...$('pkTabs').children].forEach(b => b.classList.toggle('on', b.dataset.k === k)); $('pkBody').innerHTML = t[k]; };
     show(t[S.pickTab] ? S.pickTab : 'sku');
     $('pkTabs').onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.k); };
@@ -342,8 +389,32 @@
       $('printArea').innerHTML = `<h2>${title}</h2><div class="s">${PL()} · ${when} · ${num(s.n)} คำสั่งซื้อ · ${num(s.qty)} ชิ้น · ${esc(rangeText())}</div>${t[S.pickTab]}`;
       window.print();
     };
-    $('pkGo').onclick = () => runPrint(reprint ? 'reprint' : 'ship', list.map(o => o.id));
+    $('pkGo').onclick = () => toPack ? (closeDlg(), packMove(true, list)) : runPrint(reprint ? 'reprint' : 'ship', list.map(o => o.id));
     $('ov').classList.add('on');
+  }
+  // ───── กำลังแพ็ค (2026-11-24) — เก็บในตาราง wh_packing ผ่าน RPC wh_pack_add / wh_pack_remove (ทุกเครื่องเห็นเหมือนกัน)
+  const snapOf = o => ({ id: o.id, t: o.t, carrier: o.carrier || '', cod: !!o.cod, shop: o.shop || null, lines: (o.lines || []).map(l => ({ sku: l.sku, pname: l.pname })) });
+  async function packMove(on, list) {
+    const plat = S.platform; if (!list.length) return;
+    try {
+      if (on) await Auth.rpc('wh_pack_add', { p_platform: plat, p_items: list.map(o => ({ id: o.id, shop: o.shop ? String(o.shop) : null, snap: snapOf(o) })) });
+      else await Auth.rpc('wh_pack_remove', { p_platform: plat, p_ids: list.map(o => o.id) });
+    } catch (e) { uiAlert(on ? 'ย้ายไปกำลังแพ็คไม่สำเร็จ' : 'ย้ายกลับไม่สำเร็จ', { text: e.message, tone: 'bad' }); return; }
+    const P = (PK[plat] ??= { map: {}, got: Date.now() }).map, me = (Auth.perm || {}).email || '', now = new Date().toISOString();
+    list.forEach(o => { if (on) P[o.id] = { by: me, at: now, shop: o.shop ? String(o.shop) : null, snap: snapOf(o) }; else delete P[o.id]; });
+    S.sel.clear(); showTab();
+    toast(on ? `ย้าย ${num(list.length)} คำสั่งซื้อไปกำลังแพ็คแล้ว` : `ย้าย ${num(list.length)} คำสั่งซื้อออกจากกำลังแพ็คแล้ว`);
+  }
+  function toast(msg) { const t = $('whToast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600); }
+  // พิมพ์เสร็จ: อัปเดตในหน้าทันที (ไม่ต้องรอโหลดใหม่) แล้วค่อยดึงสดเบื้องหลัง
+  function afterPrintLocal(action, okIds, plat) {
+    const ok = new Set(okIds), shp = LC[keyOf('ship', plat)], col = LC[keyOf('collect', plat)];
+    if (action === 'ship' && shp) {
+      const moved = shp.rows.filter(o => ok.has(o.id)); shp.rows = shp.rows.filter(o => !ok.has(o.id));
+      if (col) { moved.forEach(o => { o.st = 'AWAITING_COLLECTION'; }); col.rows = col.rows.concat(moved); }
+      const P = packMap(plat); okIds.forEach(id => delete P[id]);
+    }
+    [shp, col].forEach(c => { if (!c) return; c.j.printed = c.j.printed || {}; okIds.forEach(id => { c.j.printed[id] = (c.j.printed[id] || 0) + 1; }); });
   }
   function closeDlg() { if (S.printing) return; $('ov').classList.remove('on'); const f = S.afterPrint; S.afterPrint = null; if (f) f(); }
 
@@ -387,7 +458,12 @@
       <div class="wh-act"><button class="wh-btn pri" id="doneBtn" type="button">ปิด</button></div>`;
     // (2026-11-24 แก้บั๊ก) ปิดกล่องผลการพิมพ์ด้วยวิธีไหนก็ตาม (ปุ่มปิด / คลิกพื้นหลัง) ต้องล้างที่เลือก + ดึงข้อมูลใหม่เสมอ
     //   เดิมคลิกพื้นหลังแล้วข้ามขั้นนี้ → ตัวเลข "พิมพ์แล้ว" ยังเป็นของเก่า (ยังไม่พิมพ์) และคำสั่งซื้อยังถูกเลือกค้างไว้ → น้องพิมพ์ซ้ำ
-    S.afterPrint = () => { S.sel.clear(); Object.keys(LC).forEach(k => delete LC[k]); delete SC.d; if (S.view === 'print') loadAll(true); else loadHistory(); };
+    S.afterPrint = () => {
+      S.sel.clear(); delete SC.d;
+      afterPrintLocal(action, okAll.map(r => String(r.id)), plat);
+      if (action === 'ship') Auth.rpc('wh_pack_remove', { p_platform: plat, p_ids: okAll.map(r => String(r.id)) }).catch(() => {});
+      if (S.view === 'print') { if (plat === S.platform) showTab(); setTimeout(() => loadAll(true), 4000); } else loadHistory();   // ดึงสดเบื้องหลัง (ไม่บังหน้าจอ)
+    };
     $('doneBtn').onclick = closeDlg;
   }
 
@@ -496,7 +572,7 @@
     document.querySelectorAll('.wh-side a[data-view]').forEach(a => a.onclick = () => setView(a.dataset.view));
     $('themeBtn').onclick = () => { document.body.classList.toggle('light-theme'); try { localStorage.setItem('deesay_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark'); } catch (e) {} };
     $('outBtn').onclick = () => Auth.signOut();
-    $('fRound').onclick = e => { const b = e.target.closest('button'); if (!b || S.busy) return; setRound(b.dataset.v); if (b.dataset.v !== 'c') loadAll(); };   // รอบ 1 / 2 = โหลดเลย · กำหนดเอง = ตั้งเวลาแล้วกดค้นหา
+    $('fRound').onclick = e => { const b = e.target.closest('button'); if (!b) return; setRound(b.dataset.v); if (b.dataset.v !== 'c') { $('searchBtn').classList.remove('dirty'); S.sel.clear(); fillOptions(); applyFilters(); } };   // (2026-11-24) รอบ = กรองในหน้าทันที ไม่ดึงใหม่ · กำหนดเอง = ตั้งเวลาแล้วกดค้นหา
     ['fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', () => { S.round = 'c'; [...$('fRound').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'c')); dirty(); }));
     renderPrf(); drawPlat();
     document.addEventListener('click', e => {   // เปิด / ปิด / เลือก dropdown แบบเว็บ (ตะกร้า / การพิมพ์ / Platform) — กรองทันที ไม่ดึงใหม่
@@ -521,13 +597,16 @@
     document.addEventListener('click', e => { if (!e.target.closest('#fPat')) $('fPat').classList.remove('on'); });
     $('roundCfgBtn').onclick = () => { $('cut1').value = cuts.c1; $('cut2').value = cuts.c2; $('roundCfg').classList.toggle('on'); };
     $('cutSave').onclick = () => { if ($('cut1').value) cuts.c1 = $('cut1').value; if ($('cut2').value) cuts.c2 = $('cut2').value; try { localStorage.setItem('wh_cuts', JSON.stringify(cuts)); } catch (e) {} $('roundCfg').classList.remove('on'); if (S.round !== 'c') setRound(S.round); };
-    $('searchBtn').onclick = () => loadAll(true);
-    $('tabs').onclick = e => { const b = e.target.closest('button'); if (!b || b.dataset.tab === S.tab || S.busy) return; S.tab = b.dataset.tab; S.sel.clear(); if (fresh(S.tab)) { showTab(); return; } S.raw = []; S.rows = []; render(); loadAll(); };
-    $('tbody').onclick = e => { const tr = e.target.closest('tr.pick'); if (!tr) return; const id = tr.dataset.id; if (S.sel.has(id)) S.sel.delete(id); else S.sel.add(id); render(); };
-    $('thead').onclick = e => { if (e.target.id !== 'chkAll') return; if (S.sel.size === S.rows.length) S.sel.clear(); else S.sel = new Set(S.rows.map(o => o.id)); render(); };
+    $('searchBtn').onclick = () => { S.sel.clear(); fillOptions(); applyFilters(); loadAll(true); };   // ใช้ช่วงเวลาที่ตั้ง + ดึงข้อมูลสดจากแพลตฟอร์ม
+    $('tabs').onclick = e => { const b = e.target.closest('button'); if (!b || b.dataset.tab === S.tab) return; S.tab = b.dataset.tab; S.sel.clear(); showTab(); if (!fresh(S.tab)) loadAll(); };   // สลับแท็บ = ขึ้นทันทีจากที่โหลดไว้ · เก่าเกิน 5 นาที อัปเดตเบื้องหลัง
+    $('tbody').onclick = e => { const rm = e.target.closest('button[data-rm]'); if (rm) { const o = S.rows.find(x => x.id === rm.dataset.rm); if (o) packMove(false, [o]); return; } const tr = e.target.closest('tr.pick'); if (!tr) return; const id = tr.dataset.id; if (S.sel.has(id)) S.sel.delete(id); else S.sel.add(id); render(); };
+    $('thead').onclick = e => { if (e.target.id !== 'chkAll') return; const can = S.rows.filter(o => !o.gone); if (S.sel.size === can.length) S.sel.clear(); else S.sel = new Set(can.map(o => o.id)); render(); };
     $('pgBtns').onclick = e => { const b = e.target.closest('button'); if (b) { S.page += Number(b.dataset.p); render(); window.scrollTo(0, 0); } };
     $('pgSize').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.size = Number(b.dataset.v); try { localStorage.setItem('wh_page_size', String(S.size)); } catch (e2) {} S.page = 1; render(); };
-    $('pickBtn').onclick = openPick; $('goBtn').onclick = openPick;
+    $('pickBtn').onclick = openPick; $('goBtn').onclick = () => S.tab === 'ship' ? packMove(true, selected()) : openPick();
+    $('backBtn').onclick = () => packMove(false, selected());
+    // (2026-11-24) อัปเดตเบื้องหลังทุก 5 นาทีเมื่อเปิดหน้านี้อยู่ (ไม่บังหน้าจอ · ไม่ทำระหว่างพิมพ์ / เปิดกล่อง)
+    setInterval(() => { if (document.visibilityState === 'visible' && S.view === 'print' && !S.busy && !S.printing && !$('ov').classList.contains('on') && TABS.some(t => !fresh(t))) loadAll(); }, 60000);
     $('ov').onclick = e => { if (e.target === $('ov')) closeDlg(); };
     $('sumBtn').onclick = () => loadSummary(true);
     $('stkBtn').onclick = () => loadStock(true);
