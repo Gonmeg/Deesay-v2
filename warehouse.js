@@ -345,7 +345,7 @@
     $('pkGo').onclick = () => runPrint(reprint ? 'reprint' : 'ship', list.map(o => o.id));
     $('ov').classList.add('on');
   }
-  function closeDlg() { if (S.printing) return; $('ov').classList.remove('on'); }
+  function closeDlg() { if (S.printing) return; $('ov').classList.remove('on'); const f = S.afterPrint; S.afterPrint = null; if (f) f(); }
 
   // ───── สั่งจัดส่ง + พิมพ์ใบปะหน้า ─────
   function b64ToU8(b) { const s = atob(b), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
@@ -385,7 +385,10 @@
       ${okAll.length ? `<div class="wh-note ok">ใบปะหน้า ${num(okAll.length)} คำสั่งซื้อ (${num(sheets)} แผ่น) เปิดในแท็บใหม่แล้ว ให้สั่งพิมพ์จากแท็บนั้น${sheets > okAll.length ? `<br>มี ${num(sheets - okAll.length)} แผ่นเป็นรายการสินค้าต่อ (ออเดอร์ที่มีสินค้า 3 รายการขึ้นไป) แผ่นนั้นมีเลขคำสั่งซื้อกำกับ ให้แปะคู่กับใบปะหน้าของออเดอร์เดียวกัน` : ''}${url ? ` · <a href="${url}" target="_blank" style="color:inherit">เปิดอีกครั้ง</a>` : ''}</div>` : ''}
       ${failAll.length ? `<div class="wh-note err"><b>คำสั่งซื้อที่ไม่สำเร็จ</b><br>${failAll.map(f => `${esc(f.id)} — ${esc(f.error || '')}`).join('<br>')}</div>` : ''}
       <div class="wh-act"><button class="wh-btn pri" id="doneBtn" type="button">ปิด</button></div>`;
-    $('doneBtn').onclick = () => { $('ov').classList.remove('on'); S.sel.clear(); Object.keys(LC).forEach(k => delete LC[k]); delete SC.d; if (S.view === 'print') loadAll(true); else loadHistory(); };
+    // (2026-11-24 แก้บั๊ก) ปิดกล่องผลการพิมพ์ด้วยวิธีไหนก็ตาม (ปุ่มปิด / คลิกพื้นหลัง) ต้องล้างที่เลือก + ดึงข้อมูลใหม่เสมอ
+    //   เดิมคลิกพื้นหลังแล้วข้ามขั้นนี้ → ตัวเลข "พิมพ์แล้ว" ยังเป็นของเก่า (ยังไม่พิมพ์) และคำสั่งซื้อยังถูกเลือกค้างไว้ → น้องพิมพ์ซ้ำ
+    S.afterPrint = () => { S.sel.clear(); Object.keys(LC).forEach(k => delete LC[k]); delete SC.d; if (S.view === 'print') loadAll(true); else loadHistory(); };
+    $('doneBtn').onclick = closeDlg;
   }
 
   // ───── สรุปการจัดส่ง ─────
