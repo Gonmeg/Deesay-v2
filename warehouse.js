@@ -13,7 +13,7 @@
   const num = n => Number(n || 0).toLocaleString('en-US');
   const CHUNK = 20;   // จำนวนคำสั่งซื้อต่อ 1 ครั้งที่ส่งให้ระบบหลังบ้าน
 
-  const S = { platform: 'tiktok', shop: 'all', admin: false, view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', pat: '', pats: [], patAll: 0, basket: '', car: '', prf: '', busy: false, pickTab: 'sku', counts: {} };
+  const S = { platform: 'tiktok', shop: 'all', admin: false, view: 'print', tab: 'ship', raw: [], rows: [], printed: {}, names: {}, sel: new Set(), page: 1, size: 50, round: '1', pat: new Set(), pats: [], patAll: 0, basket: '', car: '', prf: '', busy: false, pickTab: 'sku', counts: {} };
   try { const z = Number(localStorage.getItem('wh_page_size')); if ([50, 100, 250].includes(z)) S.size = z; } catch (e) {}
   const cuts = (() => { try { return Object.assign({ c1: '10:30', c2: '16:00' }, JSON.parse(localStorage.getItem('wh_cuts') || '{}')); } catch (e) { return { c1: '10:30', c2: '16:00' }; } })();
 
@@ -126,7 +126,7 @@
     const pc = {}; let all = 0;
     S.raw.forEach(o => { if (passes(o, S.printed, { pat: true, basket: true })) { pc[o.pat] = (pc[o.pat] || 0) + 1; all++; } });
     S.pats = Object.entries(pc).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); S.patAll = all;
-    if (S.pat && !pc[S.pat]) S.pat = '';
+    [...S.pat].forEach(p => { if (!pc[p]) S.pat.delete(p); });   // รูปแบบที่เลือกไว้แต่ไม่มีแล้วตามตัวกรองอื่น = เอาออก
     const bs = new Set(); S.raw.forEach(o => { if (passes(o, S.printed, { basket: true })) o.bnames.forEach(b => bs.add(b)); });
     if (S.basket && !bs.has(S.basket)) S.basket = '';
     dd('fBasket', [['', 'ทั้งหมด'], ...[...bs].sort().map(v => [v, v])], S.basket, v => { S.basket = v; fillOptions(); applyFilters(); });
@@ -214,7 +214,7 @@
     dd('fPlatform', plats, S.platform, v => { if (v === S.platform) return; S.platform = v; drawPlat(); switchList(); });
     $('fShopF').style.display = S.platform === 'shopee' ? '' : 'none';
   }
-  function switchList() { S.sel.clear(); S.pat = ''; S.basket = ''; S.car = ''; S.shop = 'all'; S.page = 1; S.raw = []; S.rows = []; render(); loadAll(); }
+  function switchList() { S.sel.clear(); S.pat.clear(); S.basket = ''; S.car = ''; S.shop = 'all'; S.page = 1; S.raw = []; S.rows = []; render(); loadAll(); }
 
   function dd(id, items, value, onPick) {
     const el = $(id), cur = items.find(x => x[0] === value) || items[0];
@@ -224,16 +224,20 @@
   const PRF = [['', 'ทั้งหมด'], ['0', 'ยังไม่พิมพ์'], ['1', 'พิมพ์แล้ว']];
   function renderPrf() { dd('fPrinted', PRF, S.prf, v => { S.prf = v; renderPrf(); fillOptions(); applyFilters(); }); }
   const normQ = t => String(t).toUpperCase().replace(/×/g, 'X').replace(/\s+/g, '');
+  // (2026-11-24) รูปแบบคำสั่งซื้อ: ติ๊กเลือกได้หลายแบบ · ค้นหาแล้วเลือกทั้งหมดที่ค้นเจอได้ · ทั้งหมด = ล้างที่เลือก · กล่องไม่ปิดระหว่างเลือก
   function renderPat() {
-    $('fPatTx').textContent = S.pat || 'ทั้งหมด'; $('fPatBtn').title = S.pat || '';
+    const n = S.pat.size, one = n === 1 ? [...S.pat][0] : '';
+    $('fPatTx').textContent = !n ? 'ทั้งหมด' : one || `เลือก ${num(n)} รูปแบบ`; $('fPatBtn').title = [...S.pat].join('\n');
     const q = normQ($('fPatQ').value), items = S.pats.filter(([p]) => !q || normQ(p).includes(q));
-    $('fPatList').innerHTML = (q ? '' : `<button type="button" data-p="" class="${S.pat ? '' : 'on'}"><span>ทั้งหมด</span><small>${num(S.patAll)} คำสั่งซื้อ</small></button>`)
-      + items.map(([p, n]) => `<button type="button" data-p="${esc(p)}" class="${p === S.pat ? 'on' : ''}"><span>${esc(p)}</span><small>${num(n)} คำสั่งซื้อ</small></button>`).join('')
+    const allQ = q && items.length > 1 && items.every(([p]) => S.pat.has(p));
+    $('fPatList').innerHTML = (q ? (items.length > 1 ? `<button type="button" data-p="__q" class="all${allQ ? ' on' : ''}"><i class="ck"></i><span>${allQ ? 'ยกเลิกที่ค้นเจอทั้งหมด' : 'เลือกทั้งหมดที่ค้นเจอ'}</span><small>${num(items.length)} รูปแบบ</small></button>` : '')
+      : `<button type="button" data-p="" class="${n ? '' : 'on'}"><i class="ck"></i><span>ทั้งหมด</span><small>${num(S.patAll)} คำสั่งซื้อ</small></button>`)
+      + items.map(([p, c]) => `<button type="button" data-p="${esc(p)}" class="${S.pat.has(p) ? 'on' : ''}"><i class="ck"></i><span>${esc(p)}</span><small>${num(c)} คำสั่งซื้อ</small></button>`).join('')
       + (q && !items.length ? '<div class="wh-dd-empty">ไม่พบรูปแบบที่มี SKU นี้</div>' : '');
   }
   function passes(o, printed, skip = {}) {
     const b = S.basket, pr = S.prf;
-    if (S.pat && !skip.pat && o.pat !== S.pat) return false;
+    if (S.pat.size && !skip.pat && !S.pat.has(o.pat)) return false;
     if (b && !skip.basket && !(o.bnames || []).includes(b)) return false;
     if (S.car && !skip.car && carOf(o) !== S.car) return false;
     if (S.shop !== 'all' && !skip.shop && String(o.shop) !== S.shop) return false;
@@ -285,9 +289,13 @@
   function selected() { return S.rows.filter(o => S.sel.has(o.id)); }
   const shopSub = o => o.shop ? `<div class="wh-sub">Shopee ${SHOPNAME[o.shop] || ''}</div>` : '';
   function summarize(list) {
-    const sku = {}, pat = {}; let qty = 0;
-    list.forEach(o => { qty += o.qty; for (const k in o.parts) sku[k] = (sku[k] || 0) + o.parts[k]; pat[o.pat] = (pat[o.pat] || 0) + 1; });
-    return { sku, pat, qty, n: list.length };
+    const sku = {}, pat = {}, skuC = {}, patC = {}, car = {}; let qty = 0;
+    list.forEach(o => {
+      const c = o.carrier || 'ไม่ระบุ'; qty += o.qty; car[c] = (car[c] || 0) + 1;
+      for (const k in o.parts) { sku[k] = (sku[k] || 0) + o.parts[k]; (skuC[k] ??= {})[c] = (skuC[k][c] || 0) + o.parts[k]; }
+      pat[o.pat] = (pat[o.pat] || 0) + 1; (patC[o.pat] ??= {})[c] = (patC[o.pat][c] || 0) + 1;
+    });
+    return { sku, pat, skuC, patC, cars: Object.keys(car).sort((a, b) => car[b] - car[a] || a.localeCompare(b)), qty, n: list.length };
   }
   function renderSel() {
     const cancel = S.tab === 'cancel', s = summarize(selected());
@@ -299,13 +307,19 @@
   }
 
   // ───── กล่องรายการเตรียมสินค้า ─────
+  // (2026-11-24) แยกตามขนส่ง: 1 คอลัมน์ต่อขนส่ง (หัวตาราง 2 ชั้น) + คอลัมน์รวม เมื่อมีมากกว่า 1 ขนส่ง · 0 = จางลง
   function pickTables(s) {
-    const skuRows = Object.keys(s.sku).sort().map(k => `<tr><td class="l"><b>${esc(k)}</b></td><td class="l">${esc(S.names[k] || '—')}</td><td><b>${num(s.sku[k])}</b></td></tr>`).join('');
+    const cs = s.cars, multi = cs.length > 1, z = v => v ? num(v) : '<span class="wh-z">0</span>';
+    const cells = (byC, tot) => cs.map(c => `<td>${z((byC || {})[c] || 0)}</td>`).join('') + (multi ? `<td><b>${num(tot)}</b></td>` : '');
+    const head = (lead, what) => `<thead><tr>${lead}<th colspan="${cs.length}">${what} แยกตามขนส่ง</th>${multi ? '<th rowspan="2">รวม</th>' : ''}</tr><tr>${cs.map(c => `<th class="wh-car">${esc(c)}</th>`).join('')}</tr></thead>`;
+    const foot = (lead, byC, tot) => `<tfoot><tr>${lead}${cs.map(c => `<td>${num(byC[c] || 0)}</td>`).join('')}${multi ? `<td>${num(tot)}</td>` : ''}</tr></tfoot>`;
+    const sumBy = m => { const o = {}; Object.values(m).forEach(x => { for (const c in x) o[c] = (o[c] || 0) + x[c]; }); return o; };
+    const skuRows = Object.keys(s.sku).sort().map(k => `<tr><td class="l"><b>${esc(k)}</b></td><td class="l">${esc(S.names[k] || '—')}</td>${cells(s.skuC[k], s.sku[k])}</tr>`).join('');
     // (2026-11-23) แท็บ 2 = รูปแบบคำสั่งซื้อ (แทนตะกร้า / Promotion) — ไม่มีชื่อตะกร้า นับจำนวนคำสั่งซื้อต่อรูปแบบ เรียงมาก → น้อย
-    const patRows = Object.entries(s.pat).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([p, n]) => `<tr><td class="l"><b>${esc(p)}</b></td><td><b>${num(n)}</b></td></tr>`).join('');
+    const patRows = Object.entries(s.pat).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([p, n]) => `<tr><td class="l"><b>${esc(p)}</b></td>${cells(s.patC[p], n)}</tr>`).join('');
     return {
-      sku: `<table class="wh-t"><thead><tr><th class="l">SKU</th><th class="l">ชื่อสินค้า</th><th>จำนวนชิ้นที่ต้องหยิบ</th></tr></thead><tbody>${skuRows}</tbody><tfoot><tr><td class="l" colspan="2">รวม</td><td>${num(s.qty)}</td></tr></tfoot></table>`,
-      pat: `<table class="wh-t"><thead><tr><th class="l">รูปแบบคำสั่งซื้อ (SKU × จำนวน)</th><th>จำนวนคำสั่งซื้อ</th></tr></thead><tbody>${patRows}</tbody><tfoot><tr><td class="l">รวม</td><td>${num(s.n)}</td></tr></tfoot></table>`,
+      sku: `<table class="wh-t wh-pk">${head('<th class="l" rowspan="2">SKU</th><th class="l" rowspan="2">ชื่อสินค้า</th>', 'จำนวนชิ้นที่ต้องหยิบ')}<tbody>${skuRows}</tbody>${foot('<td class="l" colspan="2">รวม</td>', sumBy(s.skuC), s.qty)}</table>`,
+      pat: `<table class="wh-t wh-pk">${head('<th class="l" rowspan="2">รูปแบบคำสั่งซื้อ (SKU × จำนวน)</th>', 'จำนวนคำสั่งซื้อ')}<tbody>${patRows}</tbody>${foot('<td class="l">รวม</td>', sumBy(s.patC), s.n)}</table>`,
       nSku: Object.keys(s.sku).length, nPat: Object.keys(s.pat).length,
     };
   }
@@ -492,8 +506,15 @@
     });
     $('fPatBtn').onclick = () => { const dd = $('fPat'), on = !dd.classList.contains('on'); dd.classList.toggle('on', on); if (on) { $('fPatQ').value = ''; renderPat(); $('fPatQ').focus(); } };
     $('fPatQ').oninput = renderPat;
-    $('fPatQ').onkeydown = e => { if (e.key === 'Escape') $('fPat').classList.remove('on'); if (e.key === 'Enter') { const b = $('fPatList').querySelector('button'); if (b) b.click(); } };
-    $('fPatList').onclick = e => { const b = e.target.closest('button[data-p]'); if (!b) return; S.pat = b.dataset.p; $('fPat').classList.remove('on'); fillOptions(); applyFilters(); };
+    $('fPatQ').onkeydown = e => { if (e.key === 'Escape') $('fPat').classList.remove('on'); if (e.key === 'Enter') { const b = $('fPatList').querySelector('button[data-p]:not([data-p="__q"])') || $('fPatList').querySelector('button'); if (b) b.click(); } };
+    $('fPatList').onclick = e => {
+      const b = e.target.closest('button[data-p]'); if (!b) return; e.stopPropagation();   // กล่องเปิดค้างไว้ เลือกต่อได้
+      const p = b.dataset.p, q = normQ($('fPatQ').value);
+      if (p === '') S.pat.clear();
+      else if (p === '__q') { const hit = S.pats.filter(([x]) => normQ(x).includes(q)).map(([x]) => x), all = hit.every(x => S.pat.has(x)); hit.forEach(x => all ? S.pat.delete(x) : S.pat.add(x)); }
+      else S.pat.has(p) ? S.pat.delete(p) : S.pat.add(p);
+      S.page = 1; fillOptions(); applyFilters();
+    };
     document.addEventListener('click', e => { if (!e.target.closest('#fPat')) $('fPat').classList.remove('on'); });
     $('roundCfgBtn').onclick = () => { $('cut1').value = cuts.c1; $('cut2').value = cuts.c2; $('roundCfg').classList.toggle('on'); };
     $('cutSave').onclick = () => { if ($('cut1').value) cuts.c1 = $('cut1').value; if ($('cut2').value) cuts.c2 = $('cut2').value; try { localStorage.setItem('wh_cuts', JSON.stringify(cuts)); } catch (e) {} $('roundCfg').classList.remove('on'); if (S.round !== 'c') setRound(S.round); };

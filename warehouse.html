@@ -112,7 +112,9 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 .wh-dd-btn:after{content:"";flex:0 0 auto;width:6px;height:6px;border-right:2px solid var(--text2);border-bottom:2px solid var(--text2);transform:translateY(-2px) rotate(45deg)}
 .wh-dd-pop{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:40;width:max(100%,440px);background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-pop);padding:8px}.wh-dd.on .wh-dd-pop{display:block}
 .wh-dd-list{max-height:360px;overflow:auto;margin-top:6px}.wh-dd-list button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:14px;border:0;background:none;padding:7px 10px;border-radius:6px;font:inherit;font-size:13px;font-weight:600;color:var(--text);text-align:left;cursor:pointer}
-.wh-dd-list button:hover{background:var(--bg3)}.wh-dd-list button.on{background:var(--accent-soft);color:var(--accent-text)}.wh-dd-list small{flex:0 0 auto;color:var(--text2);font-size:12px;font-weight:500}.wh-dd-empty{padding:10px;color:var(--text2);font-size:13px}
+.wh-dd-list button:hover{background:var(--bg3)}.wh-dd-list button.on{background:var(--accent-soft);color:var(--accent-text)}.wh-dd-list small{flex:0 0 auto;color:var(--text2);font-size:12px;font-weight:500}.wh-dd-list .ck{flex:0 0 auto;width:16px;height:16px;border:1.5px solid var(--text3,var(--border));border-radius:4px;display:inline-flex;align-items:center;justify-content:center;margin-right:-4px}.wh-dd-list button.on .ck{background:var(--accent);border-color:var(--accent)}.wh-dd-list button.on .ck::after{content:'';width:4px;height:8px;border:solid var(--accent-ink,#fff);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}.wh-dd-list button span{flex:1;text-align:left}.wh-dd-list button.all{border-bottom:1px solid var(--border);border-radius:6px 6px 0 0;margin-bottom:4px}   /* (2026-11-24) ติ๊กเลือกหลายรูปแบบ */
+.wh-pk th.wh-car{white-space:normal;max-width:130px;font-weight:600;vertical-align:bottom}.wh-pk .wh-z{color:var(--text3,var(--text2));opacity:.6}   /* (2026-11-24) รายการเตรียมสินค้าแยกตามขนส่ง */
+.wh-dd-empty{padding:10px;color:var(--text2);font-size:13px}
 .wh-ld{width:440px}.wh-ld .r{display:flex;justify-content:space-between;align-items:center;min-height:42px;border-top:1px solid var(--panel-line);font-size:14px}.wh-ld .r b{font-size:18px}
 .wh-spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--panel-line);border-top-color:var(--accent);animation:whsp .8s linear infinite}@keyframes whsp{to{transform:rotate(360deg)}}
 .wh-rounds{display:none;gap:10px;align-items:center;font-size:12.5px;color:var(--text2);flex-basis:100%}
@@ -131,6 +133,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
   #printArea th,#printArea td{border:1px solid #888;padding:5px 8px;text-align:center;font-size:13px}
   #printArea th.l,#printArea td.l{text-align:left}
   #printArea tfoot td{font-weight:700}
+  #printArea th{vertical-align:bottom}#printArea .wh-z{color:#999}
 }
 </style>
 </head>
