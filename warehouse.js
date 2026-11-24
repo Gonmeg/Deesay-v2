@@ -210,7 +210,7 @@
 
   // (2026-11-24) Platform: TikTok / Shopee · Shopee เลือกร้านได้ (ทั้ง 2 ร้าน / Mall / 24hr) — เปลี่ยนแล้วโหลดรายการใหม่
   function drawPlat() {
-    const plats = [['tiktok', 'Platform: TikTok']].concat(S.admin ? [['shopee', 'Platform: Shopee (ทดลอง)']] : []);
+    const plats = [['tiktok', 'Platform: TikTok'], ['shopee', 'Platform: Shopee']];   // (2026-11-24) เปิด Shopee ให้ทุกบัญชีที่มีสิทธิ์ Warehouse (เมฆอนุมัติ)
     dd('fPlatform', plats, S.platform, v => { if (v === S.platform) return; S.platform = v; drawPlat(); switchList(); });
     $('fShopF').style.display = S.platform === 'shopee' ? '' : 'none';
   }
@@ -514,7 +514,7 @@
   async function start() {
     try { if (localStorage.getItem('deesay_theme') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
     const perm = await Auth.require('warehouse');   // (2026-11-23) ผู้ดูแลระบบ หรือคนที่ติ๊กช่อง Warehouse ในหน้าตั้งค่า
-    S.admin = !!perm.is_admin;   // (2026-11-24) Shopee ช่วงทดสอบ: เห็นเฉพาะผู้ดูแลระบบ
+    S.admin = !!perm.is_admin;
     // มีแค่สิทธิ์ Warehouse (ไม่มีหน้าอื่น) = ซ่อนปุ่มกลับหน้าหลัก เพราะหน้าหลักจะพากลับมาที่นี่อยู่ดี
     if (!(perm.is_admin || perm.pages.some(x => x !== 'warehouse') || perm.can_upload || perm.can_admin || perm.can_edit_kpi)) document.querySelector('.wh-side .home')?.remove();
     $('whoMail').textContent = perm.email || '';
