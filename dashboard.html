@@ -194,11 +194,23 @@ tr.fbe-on > td { background:color-mix(in srgb, var(--ch-facebook, #1877F2) 10%, 
 .fm-tbl td.fm-c { text-align:center; font-weight:600; min-width:62px; border-radius:6px; } .fm-tbl td.fm-o { color:var(--text3); font-weight:400; }
 .flow-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--bg3); color:var(--text); font-size:12.5px; cursor:pointer; border:1px solid var(--border); }
 .flow-chip:hover { border-color:var(--bad); } .flow-chip span { color:var(--text3) !important; font-size:10.5px !important; }
-#tblShCpasCamp .ov-ch { display:inline-flex; align-items:center; gap:8px; border:0; background:none; padding:0; color:var(--text); font:inherit; cursor:pointer; text-align:left; }
-#tblShCpasCamp .ov-ch .chev { display:inline-block; width:12px; color:var(--text3); transition:transform .15s; } #tblShCpasCamp .ov-ch[aria-expanded="true"] .chev { transform:rotate(90deg); }
-#tblShCpasCamp th, #tblShCpasCamp td { padding-left:8px; padding-right:8px; } #tblShCpasCamp .cp-nm { display:block; max-width:210px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #tblShCpasCamp .cp-ad .cp-nm { max-width:140px; } #tblShCpasCamp thead th { line-height:1.3; vertical-align:bottom; }
-@media (min-width:1700px) { #tblShCpasCamp .cp-nm { max-width:420px; } #tblShCpasCamp .cp-ad .cp-nm { max-width:362px; } }
-#tblShCpasCamp tr.ov-sub td { background:color-mix(in srgb, var(--bg3) 55%, var(--bg2)); font-size:12.5px; color:var(--text2); }
+/* (2026-11-25) CPAS ราย Ads · รายวัน (ท้ายหน้า Shopee Ads) */
+#tblShCpasAd th, #tblShCpasAd td { padding:7px 6px; text-align:center; vertical-align:middle; } #tblShCpasAd thead th { line-height:1.3; white-space:nowrap; }
+#tblShCpasAd thead tr:first-child th:first-child, #tblShCpasAd tr.cp-r > td:first-child, #tblShCpasAd tfoot td:first-child { text-align:left; }
+#tblShCpasAd .cp-nb { display:flex; align-items:center; gap:8px; border:0; background:none; padding:0; color:var(--text); font:inherit; cursor:pointer; text-align:left; width:100%; }
+#tblShCpasAd .chev { flex:none; width:10px; color:var(--text3); transition:transform .15s; } #tblShCpasAd .cp-nb[aria-expanded="true"] .chev { transform:rotate(90deg); }
+#tblShCpasAd .cp-th { flex:none; width:34px; height:34px; border-radius:6px; overflow:hidden; background:var(--bg3); } #tblShCpasAd .cp-th img { width:100%; height:100%; object-fit:cover; display:block; }
+#tblShCpasAd .cp-tx { min-width:0; display:flex; flex-direction:column; gap:1px; } #tblShCpasAd .cp-nm { display:block; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #tblShCpasAd small.cp-nm { color:var(--text3); font-size:11px; font-weight:400; }
+@media (min-width:1700px) { #tblShCpasAd .cp-nm { max-width:330px; } }
+#tblShCpasAd td.cp-st { white-space:nowrap; font-size:12px; color:var(--text2); } #tblShCpasAd .cp-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--text3); margin-right:6px; vertical-align:1px; } #tblShCpasAd .cp-dot.on { background:var(--accent); }
+#tblShCpasAd td.cp-v small { display:block; font-size:10.5px; color:var(--text3); margin-top:3px; white-space:nowrap; font-weight:400; }
+#tblShCpasAd th.cp-dh { padding-bottom:2px; } #tblShCpasAd th.cp-dn { font-weight:500; color:var(--text3); padding:2px 1px 6px; min-width:38px; }
+#tblShCpasAd td.cp-dc { font-size:11.5px; font-variant-numeric:tabular-nums; padding:6px 1px; min-width:38px; color:var(--text3); box-shadow:inset 0 0 0 1px var(--bg2); }
+#shCpasAdBox .cp-lg { font-size:11.5px; color:var(--text3); margin:-4px 0 10px; } #shCpasAdBox .cp-lg i { display:inline-block; width:10px; height:10px; border-radius:3px; margin:0 4px 0 8px; vertical-align:-1px; } #shCpasAdBox .cp-lg i.g { background:var(--up-bg); box-shadow:inset 0 0 0 1px var(--good); } #shCpasAdBox .cp-lg i.r { background:var(--dn-bg); box-shadow:inset 0 0 0 1px var(--bad); } #shCpasAdBox .cp-lg b { color:var(--bad); }
+#tblShCpasAd td.cp-dc.g { background:var(--up-bg); color:var(--good); font-weight:600; } #tblShCpasAd td.cp-dc.r { background:var(--dn-bg); color:var(--bad); font-weight:600; }
+#tblShCpasAd tr.cp-x > td { background:color-mix(in srgb, var(--bg3) 55%, var(--bg2)); padding:10px 14px 14px 46px; text-align:left; }
+#tblShCpasAd .cp-xh { font-size:12px; color:var(--text2); margin-bottom:8px; } #tblShCpasAd .cp-xh a { color:var(--accent); }
+#tblShCpasAd .cp-xt { width:auto; min-width:72%; } #tblShCpasAd .cp-xt th { position:static; background:transparent; } #tblShCpasAd .cp-xt th, #tblShCpasAd .cp-xt td { padding:5px 12px; font-size:12px; box-shadow:none; } #tblShCpasAd .cp-xt td:first-child { text-align:left; white-space:nowrap; }
 .sa-log td { text-align:right; font-variant-numeric:tabular-nums; }   /* (2026-11-04) ตัวเลขชิดขวาตรงกับหัวคอลัมน์ */
 .sa-log th.l, .sa-log td.l { text-align:left; } .sa-log td.dt { white-space:nowrap; font-variant-numeric:tabular-nums; }
   .badge-up { color: var(--green); font-size: 11px; }
@@ -855,7 +867,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.25-a"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.25-b"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -3792,106 +3804,103 @@ function loadMtHubPage() {
   document.body.appendChild(s);
 }
 
-// ===== (2026-09-30) CPAS on Meta → Shopee — ท้ายหน้า Shopee Ads (ย้ายมาจากหน้า Facebook Ads) · RPC fb_ads_page(p_mode = 'cpas') =====
-//   ตัวเลขทั้งหมดมาจาก Meta Ads Manager ของบัญชี CPAS → Shopee (ซื้อ/ยอดขาย = คอลัมน์ shared items — fb_cpas_daily จาก meta-cpas-sync)
-//   คนละชุดกับตัวเลข CPAS / Meta ที่ Shopee รายงานเองใน Seller Centre — ห้ามปนกัน
-//   เลือกคอลัมน์ได้ที่ ⚙ Metrics (บันทึกแยกตามผู้ใช้ เหมือนตารางอื่น)
-let _shCpas = null;
+// ===== (2026-09-30) CPAS on Meta → Shopee — ท้ายหน้า Shopee Ads (ย้ายมาจากหน้า Facebook Ads) =====
+//   การ์ดด้านบน = RPC fb_ads_page(p_mode = 'cpas') · (2026-11-25) ตาราง = ราย Ads รายวัน จาก RPC sh_cpas_ad_daily (เมฆขอ: ดูผลรายวันของแต่ละ Ads เพื่อรู้ว่าตัวไหนควรปิด / เปิด — แทนตารางราย Campaign เดิม)
+//   ทั้ง 2 RPC อ่านจากแหล่งเดียวกัน (mv_fb_ads_daily_b bucket CPAS + fb_cpas_daily) → ยอดรวมตาราง = การ์ด
+//   ตัวเลขทั้งหมดมาจาก Meta Ads Manager ของบัญชี CPAS → Shopee (ซื้อ/ยอดขาย = คอลัมน์ shared items) — คนละชุดกับตัวเลข CPAS / Meta ที่ Shopee รายงานเองใน Seller Centre ห้ามปนกัน
+let _shCpas = null, _shCpasAd = null;
 const CP_MONEY = v => v ? fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
 const CP_NUM = v => v ? fmt(Math.round(v)) : '<span style="color:var(--text3);">—</span>';
-const CP_PER = (a, b) => +b ? fmt(Math.round(a / b)) : '<span style="color:var(--text3);">—</span>';
-const CP_ROAS = (v, sp) => { if (!+sp || !+v) return '<span style="color:var(--text3);">—</span>'; const x = v / sp; return window.adPctR(x, x >= 3 ? 'var(--green)' : x >= 1 ? 'var(--accent)' : 'var(--red)'); };
-const CP_M = {
-  spend:          { label: 'ค่า Ads', fmt: r => `<b>${CP_MONEY(+r.spend)}</b>`, val: r => +r.spend },
-  impressions:    { label: 'Impressions', fmt: r => CP_NUM(+r.impressions), val: r => +r.impressions },
-  reach:          { label: 'Reach', fmt: r => CP_NUM(+r.reach), val: r => +r.reach },
-  frequency:      { label: 'ความถี่', fmt: r => +r.reach ? (r.impressions / r.reach).toFixed(2) : '—', val: r => +r.reach ? r.impressions / r.reach : 0 },
-  cpm:            { label: 'CPM', fmt: r => +r.impressions ? fmt(Math.round(r.spend / r.impressions * 1000)) : '—', val: r => +r.impressions ? r.spend / r.impressions * 1000 : 0 },
-  link_clicks:    { label: 'คลิกลิงก์', fmt: r => CP_NUM(+r.link_clicks), val: r => +r.link_clicks },
-  ctr:            { label: 'CTR', fmt: r => +r.impressions ? (r.link_clicks / r.impressions * 100).toFixed(2) + '%' : '—', val: r => +r.impressions ? r.link_clicks / r.impressions : 0 },
-  cpc:            { label: 'บาท/คลิก', fmt: r => CP_PER(+r.spend, +r.link_clicks), val: r => +r.link_clicks ? r.spend / r.link_clicks : 0 },
-  lpv:            { label: 'เข้าหน้า Shopee', fmt: r => CP_NUM(+r.lpv), val: r => +r.lpv },
-  cost_lpv:       { label: 'บาท/การเข้าหน้า Shopee', fmt: r => CP_PER(+r.spend, +r.lpv), val: r => +r.lpv ? r.spend / r.lpv : 0 },
-  vc:             { label: 'ดูสินค้า (Meta)', fmt: r => CP_NUM(+r.vc), val: r => +r.vc },
-  atc:            { label: 'ใส่ตะกร้า (Meta)', fmt: r => CP_NUM(+r.atc), val: r => +r.atc },
-  cost_atc:       { label: 'บาท/ใส่ตะกร้า', fmt: r => CP_PER(+r.spend, +r.atc), val: r => +r.atc ? r.spend / r.atc : 0 },
-  sh_pur:         { label: 'ซื้อ (Meta)', fmt: r => CP_NUM(+r.sh_pur), val: r => +r.sh_pur },
-  sh_val:         { label: 'ยอดขาย (Meta)', fmt: r => CP_MONEY(+r.sh_val), val: r => +r.sh_val },
-  roas_sh:        { label: '% ค่า Ads (Meta นับ)', fmt: r => CP_ROAS(+r.sh_val, +r.spend), val: r => +r.spend ? r.sh_val / r.spend : 0 },
-  cpa_sh:         { label: 'บาท/การซื้อ', fmt: r => CP_PER(+r.spend, +r.sh_pur), val: r => +r.sh_pur ? r.spend / r.sh_pur : 0 },
-  aov_sh:         { label: 'ยอดต่อการซื้อ', fmt: r => CP_PER(+r.sh_val, +r.sh_pur), val: r => +r.sh_pur ? r.sh_val / r.sh_pur : 0 },
-  purchases:      { label: 'ซื้อ (pixel)', fmt: r => CP_NUM(+r.purchases), val: r => +r.purchases },
-  purchase_value: { label: 'มูลค่าซื้อ (pixel)', fmt: r => CP_MONEY(+r.purchase_value), val: r => +r.purchase_value },
-  days:           { label: 'จำนวนวันที่รัน', fmt: r => fmt(+r.days || 0), val: r => +r.days || 0 },
-  period:         { label: 'ช่วงที่รัน', fmt: r => `<span style="font-family:'Sarabun',sans-serif;font-size:10.5px;white-space:nowrap;">${thShort(r.first_date)}${r.last_date !== r.first_date ? ' – ' + thShort(r.last_date) : ''}</span>`, val: r => r.first_date || '' }
-};
-const CP_ORDER = ['spend','impressions','reach','frequency','cpm','link_clicks','ctr','cpc','lpv','cost_lpv','vc','atc','cost_atc','sh_pur','sh_val','roas_sh','cpa_sh','aov_sh','purchases','purchase_value','days','period'];
-function shCpasRegister() {
-  if (METRIC_CONFIGS.shCpasCamp) return;
-  const DEF = { shCpasCamp: ['spend','impressions','cpm','link_clicks','ctr','cpc','lpv','cost_lpv','atc','sh_pur','sh_val','roas_sh','period'],
-                shCpasAds:  ['spend','link_clicks','ctr','cpc','lpv','cost_lpv','atc','sh_pur','sh_val','roas_sh','period'] };
-  Object.keys(DEF).forEach(pg => { const def = DEF[pg], meta = {}; CP_ORDER.forEach(k => { meta[k] = { label: CP_M[k].label, default: def.includes(k) }; });
-    METRIC_CONFIGS[pg] = { order: def.concat(CP_ORDER.filter(k => !def.includes(k))), meta };
-    metricState[pg] = { order: [...METRIC_CONFIGS[pg].order], active: {} }; CP_ORDER.forEach(k => { metricState[pg].active[k] = def.includes(k); }); });
-  try { applyMetricPrefs(['shCpasCamp', 'shCpasAds']); } catch (e) { console.warn('cpas prefs', e.message); }
+const CPAS_OK = 15;     // % ค่า Ads ไม่เกินนี้ = ดี (เป้าค่า Ads Shopee ไม่เกิน 15% ของยอดขาย)
+const CPAS_MIN = 150;   // ใช้เงินน้อยกว่านี้ (บาท) = ข้อมูลน้อย ยังตัดสินไม่ได้
+const CPAS_COLS = 14;   // คอลัมน์รายวัน = 14 วันล่าสุดของช่วงที่เลือก (กดแถวเพื่อดูทุกวัน)
+const CP_ROAS = (v, sp) => { if (!+sp || !+v) return '<span style="color:var(--text3);">—</span>'; const x = v / sp; return window.adPctR(x, 100 / x <= CPAS_OK ? 'var(--good)' : 'var(--bad)'); };
+const cpasAddD = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const cpasDay = s => new Date(s + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+const cpasPct = p => p == null ? 'ไม่มียอดขาย' : p.toFixed(p < 10 ? 1 : 0) + '%';
+let _cpasSt = 'all', _cpasCell = 'pct', _cpasPg = 1, _cpasSort = { k: 'sp', d: -1 }, _cpasOpen = {};
+// แนะนำ: กำลังรัน → ดู 7 วันล่าสุด · หยุดแล้ว → ดูทั้งช่วงที่รัน
+const CPAS_V = { stop: ['dn', 'ควรปิด', 0], keep: ['up', 'รันต่อ', 1], reopen: ['up', 'เปิดอีกได้', 2], few: ['', 'ข้อมูลน้อย', 3], none: ['', '—', 4] };
+function cpasModel(X) {
+  const end = X.last && X.last < X.to ? X.last : X.to, w7 = cpasAddD(end, -6), span = Math.round((new Date(end) - new Date(X.from)) / 864e5) + 1;
+  const cols = []; for (let k = Math.min(CPAS_COLS, span) - 1; k >= 0; k--) cols.push(cpasAddD(end, -k));
+  const rows = (X.ads || []).map((a, i) => ({ i, id: a[0], name: a[1] || a[0], camp: a[2] || '', img: a[3], post: a[4], on: a[5] === 'ACTIVE', by: {}, sp: 0, imp: 0, lc: 0, lpv: 0, atc: 0, pur: 0, val: 0, sp7: 0, val7: 0 }));
+  (X.d || []).forEach(x => { const r = rows[x[0]]; if (!r) return; r.by[x[1]] = x;
+    r.sp += +x[2]; r.imp += +x[3]; r.lc += +x[4]; r.lpv += +x[5]; r.atc += +x[6]; r.pur += +x[7]; r.val += +x[8];
+    if (x[1] >= w7 && x[1] <= end) { r.sp7 += +x[2]; r.val7 += +x[8]; } });
+  rows.forEach(r => { r.pct = r.val > 0 ? r.sp / r.val * 100 : null; r.p7 = r.val7 > 0 ? r.sp7 / r.val7 * 100 : null;
+    r.v = r.on ? (r.sp7 < CPAS_MIN ? 'few' : r.p7 != null && r.p7 <= CPAS_OK ? 'keep' : 'stop') : (r.sp < CPAS_MIN ? 'none' : r.pct != null && r.pct <= CPAS_OK ? 'reopen' : 'none'); });
+  return { rows, cols, end, n7: Math.min(7, span) };
 }
-const cpMetricsBtn = pg => `<div style="position:relative;"><button class="btn btn-ghost" id="${pg}MetricsBtn" onclick="toggleMetricsPanel('${pg}')">⚙ Metrics <span id="${pg}-metric-count" style="color:var(--accent);"></span></button>
-  <div id="${pg}-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="${pg}-metrics-checks"></div>
-    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="resetMetrics('${pg}')">ค่าแนะนำ</button><button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="allMetrics('${pg}')">เลือกทั้งหมด</button></div></div></div>`;
-// (2026-10-02) ตาราง CPAS กดหัวคอลัมน์เพื่อเรียงได้ (เดิมเรียงตามค่า Ads อย่างเดียว)
-const _shCpasSort = { shCpasCamp: { k: 'spend', d: 'desc' }, shCpasAds: { k: 'spend', d: 'desc' } };
-let _shCpasPg = 1; function shCpasGo(p) { _shCpasPg = p; shCpasTables(); }
-function shCpasSort(pg, k) { _shCpasPg = 1; const s = _shCpasSort[pg]; if (s.k === k) s.d = s.d === 'asc' ? 'desc' : 'asc'; else { s.k = k; s.d = k === 'name' ? 'asc' : 'desc'; } shCpasTables(); }
+function shCpasGo(p) { _cpasPg = p; shCpasTables(); }
+function shCpasSort(k) { _cpasPg = 1; if (_cpasSort.k === k) _cpasSort.d = -_cpasSort.d; else _cpasSort = { k, d: k === 'name' || k === 'v' ? 1 : -1 }; shCpasTables(); }
+function shCpasSt(v) { _cpasSt = v; _cpasPg = 1; shCpasTables(); }
+function shCpasCell(v) { _cpasCell = v; shCpasTables(); }
+function shCpasToggle(i, btn) { const open = !_cpasOpen[i]; _cpasOpen[i] = open; btn.setAttribute('aria-expanded', open);
+  const tr = document.querySelector(`#tbodyShCpasAd tr[data-cpx="${i}"]`); if (tr) tr.style.display = open ? '' : 'none'; }
 function shCpasTables() {
-  const d = _shCpas; if (!d) return;
-  const sv = (r, k) => k === 'name' ? String(r.name || r.campaign_id || r.ad_id || '') : k === 'ads' ? (+r.ads || 0) : (CP_M[k] && CP_M[k].val ? CP_M[k].val(r) : (+r[k] || 0));
-  const sorter = pg => (a, b) => { const s = _shCpasSort[pg], av = sv(a, s.k), bv = sv(b, s.k);
-    const c = typeof av === 'string' || typeof bv === 'string' ? String(av || '').localeCompare(String(bv || ''), 'th') : ((isFinite(av) ? av : 0) - (isFinite(bv) ? bv : 0)); return s.d === 'asc' ? c : -c; };
-  const hth = (pg, k, label) => { const s = _shCpasSort[pg]; return `<th class="sortable-th" style="cursor:pointer;white-space:nowrap;" onclick="shCpasSort('${pg}','${k}')">${label} <span class="sort-ind">${s.k === k ? (s.d === 'asc' ? '▲' : '▼') : ''}</span></th>`; };
-  const cols = pg => activeCols(pg).filter(k => CP_M[k]);
-  const kc = cols('shCpasCamp');
-  { const c = document.getElementById('shCpasCamp-metric-count'); if (c) c.textContent = `(${kc.length})`; }
-  const th = (pg, ks) => ks.map(k => hth(pg, k, CP_M[k].label)).join('');
-  const camps = (d.by_campaign || []).slice().sort(sorter('shCpasCamp'));
-  // (2026-11-23) ตารางล้นจอ: หัวคอลัมน์ยาวขึ้นบรรทัดใหม่ก่อน (Meta) / Shopee · ชื่อ Campaign ยาวตัดด้วย … (ชี้เพื่อดูชื่อเต็ม) · แบ่งหน้าตามจำนวน Campaign
-  const lb = l => l.length > 11 ? l.replace(/ (\(|Shopee)/, ' <br>$1') : l;
-  document.getElementById('theadShCpasCamp').innerHTML = `<tr>${hth('shCpasCamp', 'name', 'Campaign')}${hth('shCpasCamp', 'ads', 'Ads')}${kc.map(k => hth('shCpasCamp', k, lb(CP_M[k].label))).join('')}</tr>`;
-  document.getElementById('tbodyShCpasCamp').innerHTML = camps.map(c => `<tr><td><b>${ttcEsc(c.name || c.campaign_id)}</b></td><td>${fmt(c.ads)}</td>${kc.map(k => `<td>${CP_M[k].fmt(c)}</td>`).join('')}</tr>`).join('')
-    || `<tr><td colspan="${2 + kc.length}" class="empty">ไม่มี Ads CPAS ในช่วงที่เลือก</td></tr>`;
-  // (2026-11-02) ตารางเดียว: แถว Campaign กดกางดู Ads ข้างใน (เดิมแยก 2 ตาราง ข้อมูลชุดเดียวกัน) · แถวรวมล่างสุด
-  const byC = {}; (d.ads || []).forEach(a => { (byC[a.campaign_id] = byC[a.campaign_id] || []).push(a); });
-  const adRow = (a, cid) => { const url = a.post_id ? `https://www.facebook.com/${a.post_id}` : '';
-    const img = a.thumbnail_url ? `<img loading="lazy" decoding="async" src="${ttcEscAttr(a.thumbnail_url)}" class="zoom-thumb" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='📘'">` : '📘';
-    return `<tr class="ov-sub" data-cpc="${ttcEscAttr(cid)}" style="display:${_shCpasOpen[cid] ? '' : 'none'};"><td><div class="cp-ad" style="display:flex;gap:10px;align-items:center;padding-left:22px;"><a ${url ? `href="${ttcEscAttr(url)}" target="_blank" rel="noopener" title="เปิดโพสต์บน Facebook"` : ''} style="display:block;width:36px;height:36px;border-radius:6px;overflow:hidden;flex:none;background:var(--bg3);display:grid;place-items:center;">${img}</a>
-      <div class="cp-nm" style="font-size:12.5px;" title="${ttcEscAttr(a.name || a.ad_id)}">${ttcEsc(a.name || a.ad_id)}</div></div></td><td></td>${kc.map(k => `<td>${CP_M[k].fmt(a)}</td>`).join('')}</tr>`; };
-  const sz = pgSize(), tp = Math.max(1, Math.ceil(camps.length / sz)); _shCpasPg = Math.min(Math.max(1, _shCpasPg), tp);
-  document.getElementById('tbodyShCpasCamp').innerHTML = camps.slice((_shCpasPg - 1) * sz, _shCpasPg * sz).map(c => { const ads = (byC[c.campaign_id] || []).slice().sort((x, y) => (+y.spend || 0) - (+x.spend || 0)), open = !!_shCpasOpen[c.campaign_id];
-    return `<tr><td><button type="button" class="ov-ch" aria-expanded="${open}" onclick="shCpasToggle('${ttcEscAttr(c.campaign_id)}', this)"><span class="chev">›</span><b class="cp-nm" title="${ttcEscAttr(c.name || c.campaign_id)}">${ttcEsc(c.name || c.campaign_id)}</b></button></td><td>${fmt(c.ads)}</td>${kc.map(k => `<td>${CP_M[k].fmt(c)}</td>`).join('')}</tr>`
-      + ads.map(a => adRow(a, c.campaign_id)).join(''); }).join('')
-    || `<tr><td colspan="${2 + kc.length}" class="empty">ไม่มี Ads CPAS ในช่วงที่เลือก</td></tr>`;
-  const tf = document.getElementById('tfootShCpasCamp');
-  if (tf) { const sum = {}; camps.forEach(c => Object.keys(c).forEach(k => { if (typeof c[k] === 'number' || (c[k] !== null && c[k] !== '' && !isNaN(+c[k]) && k !== 'campaign_id')) sum[k] = (sum[k] || 0) + (+c[k] || 0); }));
-    renderPagerHtml('shCpasCampPager', _shCpasPg, tp, 'shCpasGo');
-    tf.innerHTML = camps.length ? `<tr><td>รวม ${fmt(camps.length)} Campaign</td><td>${fmt(sum.ads || 0)}</td>${kc.map(k => `<td>${k === 'period' ? '' : CP_M[k].fmt(sum)}</td>`).join('')}</tr>` : ''; }
+  const box = document.getElementById('shCpasAdBox'); if (!box || !_shCpasAd) return;
+  if (_shCpasAd._err) { box.innerHTML = `<div class="ui-empty" style="padding:24px;color:var(--text3);">โหลดตารางราย Ads ไม่สำเร็จ: ${ttcEsc(_shCpasAd._err)}</div>`; return; }
+  const M = _shCpasAd._m || (_shCpasAd._m = cpasModel(_shCpasAd)), all = M.rows;
+  const cnt = { all: all.length, on: all.filter(r => r.on).length, off: all.filter(r => !r.on).length };
+  const list = all.filter(r => _cpasSt === 'all' || (_cpasSt === 'on') === r.on);
+  const sv = r => _cpasSort.k === 'name' ? r.name : _cpasSort.k === 'v' ? CPAS_V[r.v][2] * 1e9 - r.sp : _cpasSort.k === 'pct' ? (r.pct == null ? (r.sp > 0 ? 1e9 : -1) : r.pct) : r[_cpasSort.k];
+  list.sort((a, b) => { const x = sv(a), y = sv(b); return (typeof x === 'string' ? x.localeCompare(y, 'th') : x - y) * _cpasSort.d || b.sp - a.sp; });
+  const segB = (fn, cur, v, l) => `<button type="button" class="toggle-btn${cur === v ? ' active' : ''}" onclick="${fn}('${v}')">${l}</button>`;
+  const CELL = { pct: '% ค่า Ads', sp: 'ค่า Ads', val: 'ยอดขาย (Meta)' };
+  document.getElementById('shCpasAdTools').innerHTML = `<div class="toggle-group">${segB('shCpasSt', _cpasSt, 'all', `ทั้งหมด ${cnt.all}`)}${segB('shCpasSt', _cpasSt, 'on', `กำลังรัน ${cnt.on}`)}${segB('shCpasSt', _cpasSt, 'off', `หยุดแล้ว ${cnt.off}`)}</div>
+    <div class="toggle-group">${Object.keys(CELL).map(k => segB('shCpasCell', _cpasCell, k, CELL[k])).join('')}</div>
+    <button class="btn btn-ghost" onclick="exportTable('tblShCpasAd')">⬇ Export CSV</button>`;
+  const hth = (k, label, extra) => `<th class="sortable-th${k === 'name' ? '' : ' num'}"${extra || ''} style="cursor:pointer;" onclick="shCpasSort('${k}')">${label} <span class="sort-ind">${_cpasSort.k === k ? (_cpasSort.d > 0 ? '▲' : '▼') : ''}</span></th>`;
+  const rng = M.cols.length ? `${cpasDay(M.cols[0])} – ${cpasDay(M.cols[M.cols.length - 1])}` : '';
+  const head = `<tr>${hth('name', 'Ads', ' rowspan="2"')}<th rowspan="2" class="cp-st">สถานะ</th>${hth('sp', 'ค่า Ads', ' rowspan="2"')}${hth('val', 'ยอดขาย<br>(Meta)', ' rowspan="2"')}${hth('pct', '% ค่า Ads', ' rowspan="2"')}${hth('v', 'แนะนำ', ' rowspan="2"')}
+      <th colspan="${M.cols.length}" class="cp-dh">รายวัน · ${CELL[_cpasCell]} <span class="sa-note">${rng}</span></th></tr>
+    <tr>${M.cols.map(d => `<th class="cp-dn">${+d.slice(8)}</th>`).join('')}</tr>`;
+  const dayCell = (by, d) => { const x = by[d]; if (!x) return '<td class="cp-dc"></td>';
+    const sp = +x[2], val = +x[8], p = val > 0 ? sp / val * 100 : null, cls = sp > 0 ? (p != null && p <= CPAS_OK ? ' g' : ' r') : '';
+    const txt = _cpasCell === 'pct' ? (sp > 0 ? (p == null ? '—' : p.toFixed(p < 10 ? 1 : 0) + '%') : '') : _cpasCell === 'sp' ? (sp > 0 ? fmt(Math.round(sp)) : '') : (val > 0 ? fmt(val) : '');
+    const tip = `${cpasDay(d)} · ค่า Ads ${fmt(Math.round(sp))} · ยอดขาย ${fmt(val)}` + (sp > 0 ? ` · % ค่า Ads ${cpasPct(p)}` : ' · ไม่มีค่า Ads วันนี้ (ยอดขายที่ Meta นับตามมาจากวันก่อน)');
+    return `<td class="cp-dc${cls}" data-tip="${ttcEscAttr(tip)}">${txt}</td>`; };
+  const vCell = r => { const v = CPAS_V[r.v], sub = r.on ? (r.sp7 > 0 ? `${M.n7} วัน ${cpasPct(r.p7)}` : `${M.n7} วันไม่มีค่า Ads`) : (r.v === 'reopen' ? `ตอนรัน ${cpasPct(r.pct)}` : '');
+    return `<td class="num cp-v">${r.v === 'none' ? '<span style="color:var(--text3);">—</span>' : `<span class="ui-chip ${v[0]}">${v[1]}</span>`}${sub ? `<small>${sub}</small>` : ''}</td>`; };
+  const ncol = 6 + M.cols.length;
+  const xRow = r => { const ds = Object.keys(r.by).sort().reverse(), url = r.post ? `https://www.facebook.com/${r.post}` : '';
+    const td = x => { const sp = +x[2], val = +x[8], p = val > 0 ? sp / val * 100 : null;
+      return `<tr><td>${cpasDay(x[1])}</td><td class="num">${CP_MONEY(sp)}</td><td class="num">${CP_NUM(+x[3])}</td><td class="num">${CP_NUM(+x[4])}</td><td class="num">${+x[3] ? (x[4] / x[3] * 100).toFixed(2) + '%' : '—'}</td><td class="num">${CP_NUM(+x[5])}</td><td class="num">${CP_NUM(+x[6])}</td><td class="num">${CP_NUM(+x[7])}</td><td class="num">${CP_MONEY(val)}</td><td class="num">${sp > 0 ? `<b style="color:${p != null && p <= CPAS_OK ? 'var(--good)' : 'var(--bad)'};">${cpasPct(p)}</b>` : '<span style="color:var(--text3);">—</span>'}</td></tr>`; };
+    return `<tr class="cp-x" data-cpx="${r.i}" style="display:${_cpasOpen[r.i] ? '' : 'none'};"><td colspan="${ncol}"><div class="cp-xh">Campaign <b>${ttcEsc(r.camp || '—')}</b>${url ? ` · <a href="${ttcEscAttr(url)}" target="_blank" rel="noopener">เปิดโพสต์บน Facebook ↗</a>` : ''}</div>
+      <table class="ui-table cp-xt" data-no-page data-no-sort><thead><tr><th>วันที่</th><th class="num">ค่า Ads</th><th class="num">Impressions</th><th class="num">คลิกลิงก์</th><th class="num">CTR</th><th class="num">เข้าหน้า Shopee</th><th class="num">ใส่ตะกร้า (Meta)</th><th class="num">ซื้อ (Meta)</th><th class="num">ยอดขาย (Meta)</th><th class="num">% ค่า Ads</th></tr></thead>
+      <tbody>${ds.map(d => td(r.by[d])).join('')}</tbody></table></td></tr>`; };
+  const sz = pgSize(), tp = Math.max(1, Math.ceil(list.length / sz)); _cpasPg = Math.min(Math.max(1, _cpasPg), tp);
+  const body = list.slice((_cpasPg - 1) * sz, _cpasPg * sz).map(r => {
+    const img = r.img ? `<img loading="lazy" decoding="async" src="${ttcEscAttr(r.img)}" onerror="this.remove()">` : '';
+    return `<tr class="cp-r"><td><button type="button" class="cp-nb" aria-expanded="${!!_cpasOpen[r.i]}" onclick="shCpasToggle(${r.i}, this)"><span class="chev">›</span><span class="cp-th">${img}</span><span class="cp-tx"><b class="cp-nm">${ttcEsc(r.name)}</b><small class="cp-nm">${ttcEsc(r.camp)}</small></span></button></td>
+      <td class="cp-st"><span class="cp-dot${r.on ? ' on' : ''}"></span>${r.on ? 'กำลังรัน' : 'หยุดแล้ว'}</td><td class="num"><b>${CP_MONEY(r.sp)}</b></td><td class="num">${CP_MONEY(r.val)}</td><td class="num">${r.sp > 0 ? CP_ROAS(r.val, r.sp) : '<span style="color:var(--text3);">—</span>'}</td>${vCell(r)}${M.cols.map(d => dayCell(r.by, d)).join('')}</tr>` + xRow(r); }).join('')
+    || `<tr><td colspan="${ncol}" class="empty">ไม่มี Ads CPAS ในช่วงที่เลือก</td></tr>`;
+  // แถวรวม = ทุก Ads ตามตัวกรองสถานะ (ไม่ใช่เฉพาะหน้านี้) · รายวัน = รวมทุก Ads ของวันนั้น
+  const T = { sp: 0, val: 0, sp7: 0, val7: 0, by: {} }; list.forEach(r => { T.sp += r.sp; T.val += r.val; T.sp7 += r.sp7; T.val7 += r.val7;
+    M.cols.forEach(d => { const x = r.by[d]; if (!x) return; const t = T.by[d] || (T.by[d] = [0, d, 0, 0, 0, 0, 0, 0, 0]); t[2] += +x[2]; t[8] += +x[8]; }); });
+  const p7 = T.val7 > 0 ? T.sp7 / T.val7 * 100 : null;
+  const foot = list.length ? `<tr><td>รวม ${fmt(list.length)} Ads${_cpasSt === 'all' ? '' : _cpasSt === 'on' ? ' (กำลังรัน)' : ' (หยุดแล้ว)'}</td><td></td><td class="num">${CP_MONEY(T.sp)}</td><td class="num">${CP_MONEY(T.val)}</td><td class="num">${CP_ROAS(T.val, T.sp)}</td><td class="num cp-v">${T.sp7 > 0 ? `<small>${M.n7} วัน ${cpasPct(p7)}</small>` : ''}</td>${M.cols.map(d => dayCell(T.by, d)).join('')}</tr>` : '';
+  const lg = `<div class="cp-lg">สีช่องรายวัน = % ค่า Ads ของ Ads นั้นในวันนั้น (ค่า Ads ÷ ยอดขาย Meta) · <i class="g"></i>ไม่เกิน ${CPAS_OK}% <i class="r"></i>เกิน ${CPAS_OK}% · <b>—</b> = ใช้เงินแล้วยังไม่มียอดขาย · ช่องว่าง = วันนั้นไม่มีค่า Ads</div>`;
+  box.innerHTML = lg + `<div class="table-wrap"><table id="tblShCpasAd" class="ui-table" data-no-page data-no-sort><thead>${head}</thead><tbody id="tbodyShCpasAd">${body}</tbody><tfoot>${foot}</tfoot></table></div><div id="shCpasAdPager"></div>`;
+  renderPagerHtml('shCpasAdPager', _cpasPg, tp, 'shCpasGo');
 }
-let _shCpasOpen = {};
-function shCpasToggle(cid, btn) { const open = !_shCpasOpen[cid]; _shCpasOpen[cid] = open; btn.setAttribute('aria-expanded', open);
-  document.querySelectorAll(`#tbodyShCpasCamp tr[data-cpc="${cid}"]`).forEach(r => { r.style.display = open ? '' : 'none'; }); }
 async function renderShCpas(from, to) {
   const el = document.getElementById('shCpasSec'); if (!el) return;
   const seq = (renderShCpas._seq = (renderShCpas._seq || 0) + 1);
-  if (!_shCpas) el.innerHTML = '<div class="card"><div class="section-title">CPAS on Meta → Shopee</div><div style="font-size:12px;color:var(--text3);margin-top:8px;">กำลังโหลด...</div></div>';
-  let d;
-  try { d = await supaRpc('fb_ads_page', { p_from: from, p_to: to, p_mode: 'cpas' }); }
+  if (!_shCpas) el.innerHTML = '<div class="card"><div class="section-title">CPAS on Meta → Shopee</div><div style="font-size:12px;color:var(--text3);margin-top:8px;min-height:520px;">กำลังโหลด...</div></div>';
+  let d, a;
+  try { [d, a] = await Promise.all([supaRpc('fb_ads_page', { p_from: from, p_to: to, p_mode: 'cpas' }), supaRpc('sh_cpas_ad_daily', { p_from: from, p_to: to }).catch(e => ({ _err: e.message || String(e) }))]); }
   catch (e) { el.innerHTML = `<div class="card"><div class="section-title">CPAS on Meta → Shopee</div><div style="color:var(--red);font-size:12px;margin-top:8px;">โหลดไม่สำเร็จ: ${ttcEsc(e.message)}</div></div>`; return; }
   if (seq !== renderShCpas._seq || currentPage !== 'shads') return;
-  _shCpas = d; shCpasRegister();
+  _shCpas = d; _shCpasAd = a || { ads: [], d: [] }; _cpasOpen = {}; _cpasPg = 1;
   const ads = d.ads || [];
-  const S = k => ads.reduce((t, a) => t + (+a[k] || 0), 0);
+  const S = k => ads.reduce((t, x) => t + (+x[k] || 0), 0);
   const T = { spend: S('spend'), imp: S('impressions'), lc: S('link_clicks'), lpv: S('lpv'), atc: S('atc'), pur: S('sh_pur'), val: S('sh_val') };
   const waiting = T.spend > 0 && !T.pur && !T.val;
   const kpi = (t, v, sub) => `<div class="ui-metric is-static"><span class="ui-metric-l">${t}</span><span class="ui-metric-v" data-fit>${v}</span><span class="sa-md"><span>${sub || '&nbsp;'}</span></span></div>`;
-  const info = fbeInfoIcon('sh-cpas-info', 'Ads บัญชี Meta "CPAS → Shopee" — รวมอยู่ในค่า Ads รวมของ Shopee ด้านบนแล้ว<br>ทุกตัวเลขในส่วนนี้มาจาก Meta Ads Manager (คอลัมน์ shared items) เป็นคนละชุดกับตัวเลข CPAS / Meta ที่ Shopee รายงานใน Seller Centre — ห้ามบวกหรือเทียบแทนกัน<br>เลือกคอลัมน์ได้ที่ ⚙ Metrics');
+  const info = fbeInfoIcon('sh-cpas-info', 'Ads บัญชี Meta "CPAS → Shopee" — รวมอยู่ในค่า Ads รวมของ Shopee ด้านบนแล้ว<br>ทุกตัวเลขในส่วนนี้มาจาก Meta Ads Manager (คอลัมน์ shared items) เป็นคนละชุดกับตัวเลข CPAS / Meta ที่ Shopee รายงานใน Seller Centre — ห้ามบวกหรือเทียบแทนกัน');
+  const tInfo = fbeInfoIcon('sh-cpas-ad-info', `แต่ละแถว = Ads 1 ตัว · ตัวเลขที่ Meta นับ<br><b>% ค่า Ads</b> = ค่า Ads ÷ ยอดขาย (Meta) · <b>เขียว</b> = ไม่เกิน ${CPAS_OK}% (เป้าค่า Ads Shopee) · <b>แดง</b> = เกิน ${CPAS_OK}% หรือใช้เงินแล้วยังไม่มียอดขาย<br><b>แนะนำ</b> · กำลังรัน ดู 7 วันล่าสุด: ไม่เกิน ${CPAS_OK}% = รันต่อ · เกิน = ควรปิด · หยุดแล้ว ดูช่วงที่รัน: ไม่เกิน ${CPAS_OK}% = เปิดอีกได้ · ใช้เงินไม่ถึง ${CPAS_MIN} บาท = ข้อมูลน้อย<br><b>สถานะ</b> = สถานะล่าสุดใน Meta Ads Manager<br>รายวันแสดง ${CPAS_COLS} วันล่าสุดของช่วงที่เลือก · กดแถวเพื่อดูทุกวันของ Ads นั้น<br>ยอดขาย 1–2 วันล่าสุดยังเพิ่มได้ (Meta นับยอดย้อนให้วันที่เห็น Ads)<br>รวม: ยอดขายที่ตามมาหลัง Ads หยุดในช่วงที่เลือก · ไม่รวม Ads บัญชีอื่น`);
   el.innerHTML = `<div class="sa-ph" style="margin:4px 0 10px;"><h2>CPAS on Meta → Shopee <span class="sa-scope">ตัวเลขที่ Meta นับ</span> ${info}</h2></div>
     ${waiting ? '<div style="font-size:11.5px;color:var(--orange);margin:-4px 0 12px;">ยอดซื้อ / ยอดขายจาก Meta ยังไม่มี — ระบบกำลังรอดึงจาก Meta Ads Manager (ดึงทุกวัน 08:20 และ 20:20)</div>' : ''}
     <div class="ui-metrics sa-strip2">
@@ -3902,12 +3911,11 @@ async function renderShCpas(from, to) {
       ${kpi('ยอดขาย (Meta)', CP_MONEY(T.val), T.pur ? `ซื้อ ${fmt(T.pur)} ครั้ง · ${fmt(Math.round(T.spend / T.pur))} ต่อการซื้อ` : '')}
       ${kpi('% ค่า Ads (Meta นับ)', CP_ROAS(T.val, T.spend), 'ค่า Ads ÷ ยอดขาย (Meta)')}
     </div>
-    <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">CPAS ตาม Campaign <span class="sa-note">กดชื่อ Campaign เพื่อดู Ads ข้างใน</span></div>
-      <div style="display:flex;gap:8px;align-items:center;">${cpMetricsBtn('shCpasCamp')}<button class="btn btn-ghost" onclick="exportTable('tblShCpasCamp')">⬇ Export CSV</button></div></div>
-      <div class="table-wrap"><table id="tblShCpasCamp" class="ui-table" data-no-page><thead id="theadShCpasCamp"></thead><tbody id="tbodyShCpasCamp"></tbody><tfoot id="tfootShCpasCamp"></tfoot></table></div><div id="shCpasCampPager"></div></div>`;
+    <div class="card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">CPAS ราย Ads · รายวัน ${tInfo} <span class="sa-note">กดแถวเพื่อดูทุกวันของ Ads นั้น</span></div>
+      <div id="shCpasAdTools" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"></div></div>
+      <div id="shCpasAdBox"></div></div>`;
   shCpasTables();
 }
-
 // ค่าโฆษณา Awareness (แยกจากยอดขาย ไม่คำนวณ ROI) — รองรับมุมมอง ปี/เดือน/วัน เหมือนกราฟ ads ช่องทางอื่น
 
 
