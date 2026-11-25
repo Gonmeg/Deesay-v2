@@ -1,3 +1,4 @@
+// supply.js v20261125a — ตาราง YOY / MoM แสดงทุกสินค้า ไม่แบ่งหน้า · หัวตารางค้างใต้แถบบนตอนเลื่อน
 // supply.js v20261124a — การ์ดกราฟ SKU ด้านล่าง → ตาราง YOY (ยอดขายชิ้นรายเดือน เทียบเดือนเดียวกันปีก่อน · RPC supply_yoy) · กดแถวในตารางสต็อก = ไปที่สินค้านั้นในตาราง YOY
 // supply.js v20261110a — หน้าตาชุดเดียวกับหน้าที่ปรับแล้ว: การ์ดสถานะเป็นแถบเดียว (ตัวเลขสีเดียว) · ⓘ ชี้แล้วขึ้น · บรรทัดเวลาอัปเดตไปอยู่ปุ่มสถานะข้อมูล
 //   ตาราง: รหัสสีปกติ + ชื่อสินค้าอ่านง่าย · ABC-XYZ เป็นป้ายเล็ก · Days of cover ไม่มีแถบเล็ก · แนวโน้ม Avg/day สีเทา · ช่อง Forecast โปร่งจนกว่าจะชี้ / พิมพ์ · ลำดับเดิม (ตามรหัสแม่)
@@ -239,7 +240,6 @@
         </div>
         <div class="yoy-bar" id="supYoyBar"></div>
         <div class="table-wrap" id="supYoyBody"><div class="empty" style="min-height:420px;">กำลังโหลดยอดขายรายเดือน...</div></div>
-        <div id="supYoyPager"></div>
       </div>
       <style>
         /* หน้านี้ใช้ Sarabun ทั้งหมด (2026-11-04 ทั้งเว็บใช้ฟอนต์เดียว รวมรหัสสินค้า) */
@@ -603,7 +603,9 @@
       #page-supply .yoy-seg button + button { border-left:1px solid var(--border); } #page-supply .yoy-seg button:hover { color:var(--accent); }
       #page-supply .yoy-seg button.on { background:var(--accent); color:#0a0a0f; font-weight:600; }
       #page-supply .yoy-src { flex-basis:100%; font-size:11px; color:var(--text3); margin-top:-2px; }
-      #page-supply table.sup-yoy { width:100%; table-layout:fixed; border-collapse:collapse; font-size:12.5px; font-variant-numeric:tabular-nums; }
+      #page-supply #supYoyBody { overflow:visible; }   /* (2026-11-25) แสดงเต็ม ไม่มีกล่องเลื่อน · หัวตารางค้างใต้แถบบน (แบบมูลค่าสินค้าคงคลัง) */
+      #page-supply table.sup-yoy thead th { position:sticky; z-index:3; background:var(--bg2); } #page-supply table.sup-yoy thead tr.h1 th { top:var(--yoy-top, 0px); } #page-supply table.sup-yoy thead tr.h2 th { top:calc(var(--yoy-top, 0px) + var(--yoyh1, 24px)); }
+      #page-supply table.sup-yoy { width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:12.5px; font-variant-numeric:tabular-nums; }
       #page-supply table.sup-yoy col.c-nm { width:18%; } #page-supply table.sup-yoy col.c-s { width:6.5%; } #page-supply table.sup-yoy col.c-p { width:5.5%; } #page-supply table.sup-yoy col.c-m { width:5.29%; }
       #page-supply table.sup-yoy th { font-size:11.5px; font-weight:600; color:var(--text2); padding:7px 3px; border-bottom:1px solid var(--border); text-align:center; white-space:nowrap; }
       #page-supply table.sup-yoy tr.h1 th { font-size:11px; font-weight:600; color:var(--text3); padding:2px 3px 5px; border-bottom:2px solid var(--border); }
@@ -986,10 +988,8 @@
     const months = (c, l) => MON_TH.map((_, m) => cell(c[m], prevOf(c, l, m), m)).join('');
     const nameCell = (code, nm, extra) => `<td class="l"><div class="yoy-nm"><span class="yoy-k">${esc(code)}</span><span class="yoy-n ui-trunc" data-tip="${esc(nm)}">${esc(nm)}</span>${extra || ''}</div></td>`;
 
-    const per = pgSize(), pages = Math.max(1, Math.ceil(groups.length / per));
-    if (yoyPage > pages) yoyPage = pages;
-    let html = '';
-    groups.slice((yoyPage - 1) * per, yoyPage * per).forEach(g => {
+    let html = '';   // (2026-11-25) แสดงทุกสินค้า ไม่แบ่งหน้า (เมฆขอ) · หัวตารางค้างใต้แถบบน
+    groups.forEach(g => {
       if (g.kids.length === 1) { const k = g.kids[0]; html += `<tr class="yoy-one">${nameCell(k.s, k.n || '')}${sumCells(k.c, k.l)}${months(k.c, k.l)}</tr>`; return; }
       const open = yoyPar ? yoyTog.has(g.par) : !yoyTog.has(g.par);
       html += `<tr class="sup-group yoy-g" data-par="${esc(g.par)}" title="กดเพื่อ${open ? 'ย่อ' : 'ขยาย'}สี/เบอร์ของ ${esc(g.par)}">${nameCell(g.par, g.name, `<span class="yoy-cnt">${g.kids.length} SKU</span>`).replace('<div class="yoy-nm">', `<div class="yoy-nm"><span class="sup-caret">${open ? '▾' : '▸'}</span>`)}${sumCells(g.c, g.l)}${months(g.c, g.l)}</tr>`;
@@ -1017,8 +1017,9 @@
         <tfoot><tr>${nameCell('รวม', `${q || yoyKind ? 'ที่กรอง' : 'ทุกสินค้า'} · ${fmtN(groups.length)} Parent`)}${sumCells(tot.c, tot.l)}${months(tot.c, tot.l)}</tr></tfoot></table>`;
     body.querySelectorAll('tr.yoy-g').forEach(tr => tr.onclick = () => { const p = tr.dataset.par; yoyTog.has(p) ? yoyTog.delete(p) : yoyTog.add(p); drawYoy(); });
     body.querySelectorAll('th.srt').forEach(th => th.onclick = () => { const k = th.dataset.s; yoySort = yoySort.k === k ? { k, dir: -yoySort.dir } : { k, dir: k === 'n' ? 1 : -1 }; drawYoy(); });
-    window._supYoyGo = p => { yoyPage = p; drawYoy(); };
-    renderPagerHtml('supYoyPager', yoyPage, pages, '_supYoyGo');
+    const h1 = body.querySelector('thead tr.h1'), tb = document.querySelector('.topbar');
+    if (h1) body.style.setProperty('--yoyh1', h1.offsetHeight + 'px');
+    body.style.setProperty('--yoy-top', (tb ? tb.offsetHeight : 0) + 'px');
   }
 
   // กดแถวในตารางสต็อก → ไปที่สินค้านั้น (ทั้งกลุ่ม Parent) ในตาราง YOY

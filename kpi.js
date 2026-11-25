@@ -1,3 +1,4 @@
+// kpi.js (v20261125a) — คิดรวมทุกช่องทาง ไม่แยกออนไลน์ / ตัวแทน / MT แล้ว (เมฆขอ): การ์ด · กราฟ · ตารางช่องทาง · ตารางสินค้า ใช้สูตรเดียวกันทุกช่องทาง · การ์ดสรุป 4 ใบไม่ซ้ำกัน (ยอดขาย · เทียบเป้าถึงวันนี้ · คาดการณ์ · ต้องได้วันละ) · ⓘ สั้นลง
 // kpi.js (v20261120a) — ตารางสินค้า: คำอธิบายตอนชี้ที่ช่องเหลือบรรทัดเดียว (คาดการณ์สิ้นเดือน)
 // kpi.js (v20261118a) — ตารางสินค้า: ป้าย % = ทำได้ ÷ เป้าทั้งเดือน (เดิม = เทียบกับที่ควรได้ถึงวันนี้ ดูแล้วงง) · สียังบอกว่าเร็ว / ช้ากว่าที่ควรได้ถึงวันนี้
 // kpi.js (v20261111a) — แสดงสินค้าเลิกผลิตที่ยังมียอดขายเป็นค่าเริ่ม (ติ๊กออกเพื่อซ่อน) · ซ่อนอยู่ = การ์ดบอกยอดเลิกผลิตที่ไม่ได้นับ
@@ -18,7 +19,8 @@
   'use strict';
   const CH = ['Facebook', 'TikTok', 'Shopee', 'Lazada', 'ตัวแทน', 'Modern Trade'];
   const ONLINE = ['Facebook', 'TikTok', 'Shopee', 'Lazada'];
-  const isBulk = c => c === 'ตัวแทน' || c === 'Modern Trade';
+  const isLumpy = c => c === 'ตัวแทน' || c === 'Modern Trade';   // ยอดเข้าเป็นก้อน / รายเดือน → นับวันที่ผ่านไปตามปฏิทิน (ไม่ใช้วันที่ข้อมูลล่าสุด · ไม่ปรับเศษวัน)
+  const isBulk = c => false;   // (2026-11-25) คิดรวมทุกช่องทาง ไม่แยกออนไลน์ / ออฟไลน์ — ทุกช่องทางเทียบเป้าถึงวันนี้ + คาดการณ์แบบเดียวกัน
   const CHC = { Facebook: '--ch-facebook', TikTok: '--ch-tiktok', Shopee: '--ch-shopee', Lazada: '--ch-lazada', 'ตัวแทน': '--ch-dealer', 'Modern Trade': '--ch-mt' };
   const PACE_UP = 1.0, PACE_DN = 1.0, FIN_NEAR = 1.0;   // (2026-10-30) เหลือ 2 สี: ตั้งแต่ 100% ของ "ควรได้ถึงวันนี้" = เขียว · ต่ำกว่า 100% = แดง (เดือนที่จบ: ถึงเป้า / ไม่ถึงเป้า)
   const MIN_M = '2026-01';
@@ -116,10 +118,10 @@
     const st = state3(mo), n = dim(mo), el = {}, last = {}, partial = {}, now = st === 'cur' ? (YEST && YEST.startsWith(mo) ? +YEST.slice(8) : 0) : st === 'past' ? n : 0;   // ต้นเดือนที่ยังไม่มีวันไหนครบ = 0
     CH.forEach(c => {
       if (st !== 'cur') { el[c] = st === 'past' ? n : 0; return; }
-      const L = lastData(mo, c); last[c] = L; el[c] = isBulk(c) ? now : (L ? +L.slice(8) : now);
+      const L = lastData(mo, c); last[c] = L; el[c] = isLumpy(c) ? now : (L ? +L.slice(8) : now);
       // (2026-10-13) วันล่าสุดยอดเข้ามาไม่ถึงครึ่งของวันปกติ (มัธยฐาน 7 วันก่อนหน้า) = ไฟล์/ข้อมูลวันนั้นยังไม่ครบ
       //   → นับวันนั้นเป็นเศษวันตามสัดส่วนที่เข้ามา ทั้ง "ควรได้ถึงวันนี้" และ "คาดการณ์" จะได้ไม่ดูช้ากว่าเป้าเกินจริง
-      if (L && !isBulk(c)) {
+      if (L && !isLumpy(c)) {
         const prev = Object.keys(DL[c] || {}).filter(d => d < L).sort().slice(-7).map(d => DL[c][d][1]).sort((x, y) => x - y);
         const med = prev.length >= 3 ? prev[Math.floor(prev.length / 2)] : 0, v = (DL[c][L] || [0, 0])[1];
         if (med > 0 && v < med * 0.5) { const f = Math.max(0, v / med); el[c] = +L.slice(8) - 1 + f; partial[c] = { d: L, f, v, med }; }
@@ -135,7 +137,7 @@
     cells.forEach(({ c, x }) => {
       const av = u === 'rev' ? x.ar : x.aq, tv = u === 'rev' ? x.tr : x.tq;
       a += av; if (tv != null) { t += tv; has = true; }
-      if (K.st === 'cur' && !isBulk(c)) {
+      if (K.st === 'cur') {   // (2026-11-25) ทุกช่องทาง
         const e = K.el[c]; oa += av;
         if (tv != null) { ot += tv; ex += tv * e / K.n; }
         if (e > 0) { pj += av / e * K.n; rate += av / e; }
@@ -183,10 +185,10 @@
   }
   const lagDays = iso => iso && YEST ? Math.round((Date.parse(YEST) - Date.parse(iso)) / 864e5) : 0;
   // (2026-10-12) คำอธิบายแถบ ใต้หัวตาราง (เดือนปัจจุบัน)
-  const paceLegend = () => `<div class="kp-plg"><span class="kp-bar" style="--c:var(--good)"><b style="width:80%"></b><i style="left:66.7%"></i></span> <b>ขีด</b> = ควรได้ถึงวันนี้ (100%) · แถบ<b>เลยขีด</b> = นำเป้า · <b>ไม่ถึงขีด</b> = ช้ากว่าเป้า · <span class="kp-bar" style="--c:var(--text3)"><b style="width:30%"></b></span> สีเทา = ตัวแทน / MT (% ของเป้าทั้งเดือน)</div>`;
+  const paceLegend = () => `<div class="kp-plg"><span class="kp-bar" style="--c:var(--good)"><b style="width:80%"></b><i style="left:66.7%"></i></span> <b>ขีด</b> = ควรได้ถึงวันนี้ (100%) · แถบ<b>เลยขีด</b> = นำเป้า · <b>ไม่ถึงขีด</b> = ช้ากว่าเป้า</div>`;
   const subL = t => `<div style="font-size:10.5px;color:var(--text3);font-weight:400;">${t}</div>`;
-  const PACE_INFO = `<b>เทียบเป้าถึงวันนี้</b> = ทำได้ ÷ ควรได้ถึงวันที่ข้อมูลมี · <b>100% = ได้ตามเป้า</b> มากกว่า = นำ น้อยกว่า = ช้า · ขีดบนแถบ = 100%<br>ควรได้ถึงวันนี้ = เป้าเดือน ÷ จำนวนวันในเดือน × วันที่ข้อมูลมี (แบ่งเท่ากันทุกวัน)<br>สี: <b>เขียว</b> = ตั้งแต่ 100% (ถึง / นำเป้า) · <b>แดง</b> = ต่ำกว่า 100% (ช้ากว่าเป้า) · <b>เทา</b> = ตัวแทน / MT ที่สั่งเป็นก้อน ไม่ได้ดูรายวัน`;
-  const FC_INFO = `<b>คาดการณ์สิ้นเดือน</b> = ทำได้ ÷ วันที่มีข้อมูล × จำนวนวันในเดือน<br>แปลว่า ถ้าขายได้เฉลี่ยต่อวันเท่าที่ผ่านมา ไปจนถึงสิ้นเดือน จะได้เท่าไร<br>⚠️ ช่วงที่มี Campaign ใหญ่ (เช่น 10.10) ค่าเฉลี่ยต่อวันสูงกว่าปกติ คาดการณ์อาจสูงเกินจริง`;
+  const PACE_INFO = `<b>เทียบเป้าถึงวันนี้</b> = ทำได้ ÷ ควรได้ถึงวันนี้<br>ควรได้ = เป้าเดือน ÷ วันในเดือน × วันที่ผ่านไป · เขียว = ตั้งแต่ 100% · แดง = ต่ำกว่า`;
+  const FC_INFO = `<b>คาดการณ์สิ้นเดือน</b> = ทำได้ ÷ วันที่ผ่านไป × วันในเดือน (ถ้าขายได้เฉลี่ยเท่านี้ไปจนสิ้นเดือน)`;
   const T_INFO = `<b>เป้าเดือน</b> = จำนวนชิ้นที่ตั้ง × ราคาเฉลี่ยต่อชิ้นจริง 3 เดือนก่อน (ในช่องทางนั้น) · ราคาล็อกเมื่อเดือนจบ`;
   // (2026-10-12) บรรทัดเล็กใต้ตัวเลข: โหมดยอดเงิน → แสดงชิ้น · โหมดชิ้น → แสดงยอดเงิน
   const oU = u => u === 'rev' ? 'qty' : 'rev';
@@ -264,7 +266,7 @@
   function renderCards(K) {
     const chs = S.F ? [S.F] : CH, u = 'rev', fm = fmU(u);   // (2026-10-13) การ์ดเป็นยอดขายเสมอ
     const R = tot(K, chs, 'rev'), Q = tot(K, chs, 'qty'), G = R;
-    const tick = K.st === 'cur' ? (S.F ? (isBulk(S.F) ? null : K.el[S.F] / K.n) : K.now / K.n) : null;
+    const tick = K.st === 'cur' ? (S.F ? K.el[S.F] / K.n : K.now / K.n) : null;
     const lc = lastComplete(S.mo), lcR = lcRows(chs, 'rev'), lcQ = lcRows(chs, 'qty');
     const mbar = (g, st) => g.t ? `<span class="kp-mbar" style="--c:${barColor(st.c)}"><b style="width:${Math.min(100, g.a / g.t * 100).toFixed(1)}%"></b>${tick != null ? `<i style="left:${(tick * 100).toFixed(1)}%"></i>` : ''}</span>` : '';
     const vsTxt = (g, st) => g.t ? `เป้า ${g === R ? money(g.t) : fmt(g.t) + ' ชิ้น'} · <b class="kp-c-${st.c}">${(g.a / g.t * 100).toFixed(1)}%</b>` : 'ยังไม่ได้ตั้งเป้า';
@@ -283,25 +285,16 @@
       h += m('ตั้งเป้าแล้ว', `${fmt(nT)} สินค้า`, `${fmt(nC)} ช่อง (สินค้า × ช่องทาง)`);
     } else if (K.st === 'cur') {
       const stR = status(K, R), stQ = status(K, Q);
-      // (2026-10-30) บอกให้ชัดว่าการ์ดนี้นับทุกช่องทาง ต่างจากการ์ด 2–3 ที่นับเฉพาะออนไลน์
-      h += m('ยอดขายเทียบเป้า' + (S.F ? '' : ' <small class="kp-scope">ทุกช่องทาง</small>'), money(R.a), vsTxt(R, stR), info('kp-i-a', `<b>ยอดขายจริง</b> ${S.F ? 'ช่อง ' + esc(S.F) : 'ทุกช่องทาง (ออนไลน์ + ตัวแทน + Modern Trade)'} ตั้งแต่ 1 ${mShort(S.mo)} ถึง ${dShort(YEST)} เทียบกับ<b>เป้าทั้งเดือน</b><br>แถบสีทอง = ทำได้กี่ % ของเป้า · <b>ขีดเล็กบนแถบ</b> = เดือนผ่านไปแล้วกี่ % (แถบยาวเลยขีด = ขายเร็วกว่าเป้า)`), mbar(R, stR));
-      if (S.F && isBulk(S.F)) {
-        h += m('ควรได้ถึงวันนี้', '—', S.F === 'ตัวแทน' ? 'ตัวแทนสั่งเป็นก้อน ดูผลตอนสิ้นเดือน' : 'ห้างส่งยอดเป็นรายเดือน ดูผลตอนสิ้นเดือน');
-        h += m('คาดการณ์สิ้นเดือน', '—', 'ไม่คาดการณ์ เพราะยอดไม่ได้เข้าทุกวัน');
-      } else {
-        const lbl = S.F ? '' : ' <small class="kp-scope">ออนไลน์</small>';
-        const scopeInfo = S.F ? '' : '<br>นับเฉพาะ Facebook, TikTok, Shopee, Lazada เพราะตัวแทนสั่งเป็นก้อน และ Modern Trade ส่งยอดเป็นรายเดือน';
-        const tg = S.F ? 'เป้า' : 'เป้าออนไลน์';
-        // (2026-11-03) การ์ดละ 1 คำถาม · ตัวเลขใหญ่ 1 ตัว + บรรทัดเล็ก 1 บรรทัด (ป้ายสี + ค่าอ้างอิง) · สูตรอยู่ใน ⓘ
-        const rem = K.n - K.now, need = G.ot > 0 && rem > 0 ? Math.max(0, (G.ot - G.oa) / rem) : null;
-        h += m('ทำได้ถึงวันนี้' + lbl, G.ot > 0 || G.oa ? fm(G.oa) : '—', G.ot > 0 ? `${gapTxt(G.oa - G.ex, fm)} <span>ควรได้ ${fm(G.ex)}</span>` : 'ยังไม่ได้ตั้งเป้า',
-          info('kp-i-ex', `<b>ทำได้ถึงวันนี้</b> = ยอดจริงตั้งแต่วันที่ 1 ถึง ${dShort(YEST)}<br><b>ควรได้</b> = ถ้าแบ่งเป้าเท่า ๆ กันทุกวัน ถึงวันนี้ควรได้เท่านี้ (${tg} ${fm(G.ot)} ÷ ${K.n} วัน × ${K.now} วันที่ผ่านไป)<br><b>นำ</b> = ขายได้มากกว่าที่ควรได้ · <b>ช้ากว่า</b> = ยังขาดอยู่${scopeInfo}<br>สี: เขียว = ตั้งแต่ 100% · แดง = ต่ำกว่า 100%`));
-        h += m('คาดการณ์สิ้นเดือน' + lbl, G.oa > 0 ? fm(G.pj) : '—', G.ot > 0 && G.oa > 0 ? `<span class="ui-chip ${G.pj >= G.ot ? 'up' : 'dn'}">${(G.pj / G.ot * 100).toFixed(0)}% ของเป้า</span> <span>เป้า ${fm(G.ot)}</span>` : G.ot > 0 ? `<span>เป้า ${fm(G.ot)}</span>` : 'ยังไม่ได้ตั้งเป้า',
-          info('kp-i-pj', `<b>คาดการณ์สิ้นเดือน</b> = ถ้าขายได้เฉลี่ยวันละเท่าที่ผ่านมา (${fm(G.rate)}) ไปจนสิ้นเดือน จะได้ยอดเท่านี้${scopeInfo}<br>⚠️ ช่วง Campaign ใหญ่ (เช่น 10.10) ค่าเฉลี่ยต่อวันสูงกว่าปกติ คาดการณ์อาจสูงเกินจริง`));
-        h += m('ต้องได้วันละ' + lbl, need != null ? fm(need) : '—', need == null ? (G.ot > 0 ? 'วันสุดท้ายของเดือนแล้ว' : 'ยังไม่ได้ตั้งเป้า') : need === 0 ? '<span class="ui-chip up">ถึงเป้าเดือนแล้ว</span>'
-          : `<span class="ui-chip ${G.rate >= need ? 'up' : 'dn'}">ตอนนี้ได้วันละ ${fm(G.rate)}</span> <span>อีก ${rem} วัน</span>`,
-          info('kp-i-need', `<b>ต้องได้วันละ</b> = ยอดที่ยังขาดถึง${tg} ÷ ${rem} วันที่เหลือ<br><b>ตอนนี้ได้วันละ</b> = ยอดเฉลี่ยต่อวันที่ผ่านมา · เขียว = มากกว่าที่ต้องได้ (กำลังจะถึงเป้า) · แดง = ยังน้อยกว่า${scopeInfo}`));
-      }
+      // (2026-11-25) คิดรวมทุกช่องทาง · การ์ดละ 1 คำถาม ไม่ซ้ำกัน · ⓘ = สูตรสั้น ๆ
+      const scope = S.F ? 'ช่อง ' + esc(S.F) : 'ทุกช่องทาง', rem = K.n - K.now, need = G.t > 0 && rem > 0 ? Math.max(0, (G.t - G.a) / rem) : null;
+      h += m('ยอดขายถึงวันนี้', money(R.a), vsTxt(R, stR), info('kp-i-a', `ยอดขายจริง${scope} 1 ${mShort(S.mo)} – ${dShort(YEST)} ÷ เป้าทั้งเดือน<br>ขีดบนแถบ = เดือนผ่านไปแล้วกี่ %`), mbar(R, stR));
+      h += m('เทียบเป้าถึงวันนี้', G.t > 0 && G.ex > 0 ? (G.a / G.ex * 100).toFixed(1) + '%' : '—', G.t > 0 ? `${gapTxt(G.a - G.ex, fm)} <span>ควรได้ ${fm(G.ex)}</span>` : 'ยังไม่ได้ตั้งเป้า',
+        info('kp-i-ex', `ควรได้ = เป้า ${fm(G.t || 0)} ÷ ${K.n} วัน × ${K.now} วันที่ผ่านไป<br>นำ = ขายได้มากกว่าที่ควรได้ · ช้ากว่า = ยังขาด`));
+      h += m('คาดการณ์สิ้นเดือน', G.a > 0 ? fm(G.pj) : '—', G.t > 0 && G.a > 0 ? `<span class="ui-chip ${G.pj >= G.t ? 'up' : 'dn'}">${(G.pj / G.t * 100).toFixed(0)}% ของเป้า</span> <span>เป้า ${fm(G.t)}</span>` : G.t > 0 ? `<span>เป้า ${fm(G.t)}</span>` : 'ยังไม่ได้ตั้งเป้า',
+        info('kp-i-pj', `= ยอดเฉลี่ยต่อวันที่ผ่านมา (${fm(G.rate)}) × ${K.n} วัน<br>ช่วง Campaign ใหญ่ อาจสูงเกินจริง`));
+      h += m('ต้องได้วันละ', need != null ? fm(need) : '—', need == null ? (G.t > 0 ? 'วันสุดท้ายของเดือนแล้ว' : 'ยังไม่ได้ตั้งเป้า') : need === 0 ? '<span class="ui-chip up">ถึงเป้าเดือนแล้ว</span>'
+        : `<span class="ui-chip ${G.rate >= need ? 'up' : 'dn'}">ตอนนี้ได้วันละ ${fm(G.rate)}</span> <span>อีก ${rem} วัน</span>`,
+        info('kp-i-need', `= (เป้า − ทำได้) ÷ ${rem} วันที่เหลือ<br>เขียว = ตอนนี้ขายได้ต่อวันถึงแล้ว · แดง = ยังไม่ถึง`));
     } else {   // past
       const stR = status(K, R), stQ = status(K, Q);
       h += m('ยอดขายเทียบเป้า', money(R.a), vsTxt(R, stR), info('kp-i-a2', '<b>ยอดขาย</b> ทั้งเดือน ทุกสินค้า (รวมสินค้าที่ไม่ได้ตั้งเป้า)'), mbar(R, stR));
@@ -321,7 +314,7 @@
     const u = S.unit;
     let h = `<section class="hm-panel">
       <div class="hm-panel-h"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2>${S.cv === 'cum' ? 'ยอดสะสมเทียบเป้า' : 'ยอดรายวันเทียบเป้าต่อวัน'} ${info('kp-i-ch', `<b>ยอดจริงสะสม</b> ยอดตั้งแต่วันที่ 1 รวมขึ้นไปทุกวัน<br><b>เป้าสะสม</b> เป้าเดือนแบ่งเท่าๆ กันทุกวัน${S.F && isBulk(S.F) ? ' (ตัวแทน / Modern Trade แสดงเป็นเส้นเป้าทั้งเดือน เพราะยอดเข้าเป็นก้อน)' : ''}<br><b>คาดการณ์</b> ถ้าขายต่อด้วยความเร็วเท่าตอนนี้ สิ้นเดือนจะได้เท่าไหร่<br>เส้นยอดจริงหยุดที่วันล่าสุดที่ทุกช่องทางในกราฟมีข้อมูลครบ`)}</h2>
-        <span class="kp-scope-l">${S.F ? dot(S.F) + esc(S.F) : 'ช่องทางออนไลน์ (Facebook · TikTok · Shopee · Lazada)'} · ${unitWord(u)}</span></div>
+        <span class="kp-scope-l">${S.F ? dot(S.F) + esc(S.F) : 'ทุกช่องทาง'} · ${unitWord(u)}</span></div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><div class="ui-legend" id="kpLegend"></div>
           <div class="ui-presets" id="kpCv" role="group" aria-label="มุมมองกราฟ"><button type="button" data-cv="day" aria-pressed="${S.cv !== 'cum'}">รายวัน</button><button type="button" data-cv="cum" aria-pressed="${S.cv === 'cum'}">สะสม</button></div></div></div>
       <div class="kp-sum" id="kpChartSum"></div>
@@ -337,7 +330,7 @@
     const box = $('kpChartBox'); if (!box) return;
     if (window._kpChart) { window._kpChart.destroy(); window._kpChart = null; }
     box.innerHTML = '<canvas id="kpChart"></canvas>';
-    const u = 'rev', i = 1, fm = fmU(u), bulk = !!(S.F && isBulk(S.F)), scope = S.F ? [S.F] : ONLINE, n = K.n;   // (2026-10-13) กราฟเป็นยอดขายเสมอ
+    const u = 'rev', i = 1, fm = fmU(u), bulk = false, scope = S.F ? [S.F] : CH, n = K.n;   // (2026-10-13) กราฟเป็นยอดขายเสมอ
     const G = tot(K, scope, u);
     const days = Array.from({ length: n }, (_, k) => k + 1), iso = d => K.mo + '-' + String(d).padStart(2, '0');
     const lastD = K.st === 'past' ? n : K.st === 'future' ? 0 : bulk ? K.now : Math.floor(Math.min(...scope.map(c => K.el[c])));   // วันที่ข้อมูลครบทุกช่องทาง
@@ -401,13 +394,13 @@
       }
       if (K.st === 'past') return `<tr><td>${name}</td><td class="num">${t}</td><td class="num">${fm(g.a)}</td><td class="num">${prog(g, st, null, true)}</td><td class="num">${g.t != null ? diffTxt(g.a - g.t, fm) : '—'}</td><td>${badge(st)}</td></tr>`;
       // เดือนปัจจุบัน
-      const g2 = tot(K, kind === 'on' ? ONLINE : kind === 'all' ? CH : [c], oU(u));
+      const g2 = tot(K, kind ? CH : [c], oU(u));
       const tU = '', aU = '';   // (2026-10-13) จำนวนชิ้นรวมหลายสินค้าไม่มีความหมาย ไม่แสดง
       if (kind === 'all') return `<tr><td>${name}</td><td class="num">${t}${tU}</td><td class="num">${fm(g.a)}${aU}${g.t ? subL((g.a / g.t * 100).toFixed(0) + '% ของเป้าเดือน') : ''}</td><td class="num">${dash}</td><td class="num">${dash}</td><td class="num">${dash}</td><td></td><td></td></tr>`;
       const bulk = !isTot && isBulk(c);
       const ofT = !bulk && g.t ? subL((g.a / g.t * 100).toFixed(0) + '% ของเป้าเดือน') : '';
-      const lag = !isTot && !bulk && K.last[c] ? lagDays(K.last[c]) : 0;
-      const upto = isTot ? '' : bulk ? `<span class="ui-muted">${c === 'ตัวแทน' ? 'สั่งเป็นก้อน' : 'ยอดรายเดือน'}</span>`
+      const lag = !isTot && !isLumpy(c) && K.last[c] ? lagDays(K.last[c]) : 0;
+      const upto = isTot ? '' : isLumpy(c) ? `<span class="ui-muted">${c === 'ตัวแทน' ? 'สั่งเป็นก้อน' : 'ยอดรายเดือน'}</span>`
         : (K.last[c] ? dShort(K.last[c]) : dash) + (K.partial[c] ? ` <span class="ui-badge warn" data-tip="${esc(`${dShort(K.partial[c].d)} ยอดเข้ามา ${money(K.partial[c].v)} จากวันปกติ ~${money(K.partial[c].med)} · นับวันนั้นตามสัดส่วนที่เข้ามา`)}">เข้า ${Math.round(K.partial[c].f * 100)}%</span>` : '') + (lag > 0 ? ` <span class="ui-badge warn" data-tip="ข้อมูลยังมาไม่ถึงเมื่อวาน · การเทียบเป้าคิดถึงวันที่ข้อมูลมี จึงยังเทียบได้ยุติธรรม">ขาด ${lag} วัน</span>` : '');
       const exTip = !bulk && g.ot ? ` data-tip="${esc('ควรได้ถึง' + (isTot ? 'วันที่ข้อมูลแต่ละช่องทางมี' : ' ' + dShort(K.last[c] || YEST)) + ' ' + fm(g.ex) + ' · ทำได้ ' + fm(g.oa))}"` : '';
       const gR = u === 'rev' ? g : g2, gQ = u === 'rev' ? g2 : g;
@@ -417,9 +410,9 @@
         <td class="num"${!bulk && g.oa ? ` data-tip="${esc(fcTip(g, null))}"` : ''}>${bulk || !g.oa ? dash : fm(g.pj)}</td><td class="num">${upto}</td><td>${badge(st)}</td></tr>`;
     };
     const body = CH.map(c => row(c, tot(K, [c], u), '')).join('');
-    const foot = K.st === 'cur' ? row('', tot(K, ONLINE, u), 'on') + row('', tot(K, CH, u), 'all') : row('', tot(K, CH, u), 'tot');
+    const foot = row('', tot(K, CH, u), 'tot');   // (2026-11-25) แถวรวมเดียว = ทุกช่องทาง
     const infoTxt = K.st === 'cur'
-      ? `กดชื่อช่องทางเพื่อดูเฉพาะช่องทางนั้นทั้งหน้า<br>${PACE_INFO}<br>${FC_INFO}<br><b>ตัวแทน</b> สั่งเป็นก้อน · <b>Modern Trade</b> ห้างส่งยอดเป็นรายเดือน จึงไม่เทียบเป้าถึงวันนี้ แสดงเป็น % ของเป้าทั้งเดือน (สีเทา) ดูผลตอนสิ้นเดือน<br><b>รวมออนไลน์</b> ใช้วัดว่าเดือนนี้ไปได้ดีไหม · <b>รวมทั้งหมด</b> รวมตัวแทน + MT ไว้ดูยอดเงินรวม`
+      ? `กดชื่อช่องทางเพื่อดูเฉพาะช่องทางนั้นทั้งหน้า<br>${PACE_INFO}<br>${FC_INFO}<br>ตัวแทน / Modern Trade ยอดเข้าเป็นก้อน — นับวันที่ผ่านไปตามปฏิทิน`
       : `กดชื่อช่องทางเพื่อดูเฉพาะช่องทางนั้นทั้งหน้า<br><b>ความคืบหน้า</b> ทำได้ ÷ เป้าทั้งเดือน${K.st === 'future' ? `<br><b>ยอดจริง ${mShort(lc)} *</b> นับเฉพาะสินค้าในตาราง เพื่อเทียบกับเป้าแบบรายการเดียวกัน` : ''}`;
     return `<div class="hm-panel-h"><h2>แยกตามช่องทาง ${info('kp-i-cht', infoTxt)}</h2></div>${K.st === 'cur' ? paceLegend() : ''}
       <div class="table-wrap"><table class="ui-table hm-tbl kp-tbl" data-no-sort data-no-page><thead><tr>${head.map((x, i) => `<th${i && x !== 'สถานะ' ? ' class="num"' : ''}>${x}</th>`).join('')}</tr></thead>
@@ -474,7 +467,7 @@
       ${K.st === 'future' ? '' : `<div class="ui-presets" id="kpStFilter" role="group" aria-label="กรองตามสถานะ"><button type="button" data-st="" aria-pressed="${!S.st}">ทั้งหมด</button>${stLabels.map(([k, l]) => `<button type="button" data-st="${k}" aria-pressed="${S.st === k}">${l}</button>`).join('')}<button type="button" data-st="none" aria-pressed="${S.st === 'none'}">ไม่มีเป้า</button></div>`}
       ${K.st === 'future' ? '' : `<div class="ui-presets" id="kpGapSort" role="group" aria-label="เรียงลำดับ"><button type="button" data-g="gap" aria-pressed="${S.sort.k === 'gap' && S.sort.d === 1}" data-tip="${K.st === 'cur' ? 'เรียงตามยอดที่ยังช้ากว่าเป้าถึงวันนี้ มากสุดขึ้นก่อน' : 'เรียงตามยอดที่ขาดจากเป้า มากสุดขึ้นก่อน'}">ขาดเป้ามากสุดก่อน</button></div>`}
       <label class="kp-chk"><input type="checkbox" id="kpDisc" ${S.showDisc ? 'checked' : ''}> แสดงสินค้าเลิกผลิต</label></div>`;
-    const infoTxt = (K.st === 'cur' ? `<b>% ในตาราง</b> = ทำได้แล้วกี่ % ของเป้าทั้งเดือน (ทำได้ ÷ เป้า ตามบรรทัดเล็กด้านล่าง) · <b>สี</b> ช่องออนไลน์: เขียว = ถึงเป้าทั้งเดือนแล้ว (100% ขึ้นไป) · แดง = ยังไม่ถึงเป้า · สลับ ยอดขาย / จำนวนชิ้น ได้ที่ปุ่มบนตารางนี้ · ชี้ที่ช่องเพื่อดูคาดการณ์สิ้นเดือน · ตัวแทน / MT = % ของเป้าทั้งเดือน (สีเทา ไม่นับเข้าสี เพราะสั่งเป็นก้อน) · คอลัมน์รวม = ยอดทุกช่องทาง แต่สีและ % คิดเฉพาะออนไลน์<br>` : '') + `<b>สินค้าที่แสดง</b> สินค้าปกติ / สินค้าใหม่ที่มียอดใน 3 เดือนล่าสุด และทุกสินค้าที่ตั้งเป้าไว้ · ของแถม (ราคา 0) ไม่แสดง<br><b>สินค้าอื่น</b> ยอดของสินค้าที่ไม่ได้แสดงและของแถม เพื่อให้แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br>${S.F ? '' : 'ชี้ที่ช่องเพื่อดูเป้า / ควรได้ถึงวันนี้ / คาดการณ์ของช่องนั้น<br>'}กดชื่อสินค้าเพื่อเปิดหน้าเจาะสินค้า`;
+    const infoTxt = (K.st === 'cur' ? `<b>% ในตาราง</b> = ทำได้ ÷ เป้าทั้งเดือน · เขียว = ถึงเป้าแล้ว · แดง = ยังไม่ถึง · ชี้ที่ช่องเพื่อดูคาดการณ์สิ้นเดือน · สลับ ยอดขาย / จำนวนชิ้น ได้ที่ปุ่มบนตาราง<br>` : '') + `<b>สินค้าที่แสดง</b> สินค้าปกติ / สินค้าใหม่ที่มียอดใน 3 เดือนล่าสุด และทุกสินค้าที่ตั้งเป้าไว้ · ของแถม (ราคา 0) ไม่แสดง<br><b>สินค้าอื่น</b> ยอดของสินค้าที่ไม่ได้แสดงและของแถม เพื่อให้แถวรวมเท่ากับตัวเลขหลักด้านบนเสมอ<br>${S.F ? '' : 'ชี้ที่ช่องเพื่อดูเป้า / ควรได้ถึงวันนี้ / คาดการณ์ของช่องนั้น<br>'}กดชื่อสินค้าเพื่อเปิดหน้าเจาะสินค้า`;
     let head, body, foot;
     // แถว "สินค้าอื่น" + "รวม" (= ตัวเลขหลัก)
     const chs = S.F ? [S.F] : CH, shown = new Set(rowSkus(S.mo));
@@ -515,8 +508,8 @@
       // (2026-10-12) คอลัมน์รวม: ยอด = ทุกช่องทาง · % = เทียบเป้าถึงวันนี้ เฉพาะออนไลน์ (ตัวแทน / MT สั่งเป็นก้อน ไม่นับเข้าสี)
       const totCell = (g, cells) => {
         if (K.st !== 'cur') return `<td class="num kp-cell kp-tot" data-tip="${esc(`รวม · เป้า ${g.t != null ? fm(g.t) : '—'} · ${status(K, g).l}`)}"><div class="kp-a">${fm(g.a)}</div>${prog(g, status(K, g), null)}</td>`;
-        const gOn = agg(K, cells.filter(x => !isBulk(x.c)), u), stOn = status(K, gOn), bulkA = g.a - gOn.a, g2 = agg(K, cells, oU(u));
-        const tipT = (gOn.ot ? `ออนไลน์ทำได้ ${fm(gOn.oa)} · ควรได้ถึงวันนี้ ${fm(gOn.ex)}` : '') + (bulkA ? `${gOn.ot ? ' · ' : ''}ตัวแทน / MT ${fm(bulkA)} ไม่นับเข้าสี` : '');
+        const gOn = agg(K, cells, u);   // (2026-11-25) ทุกช่องทาง
+        const tipT = gOn.ot ? `ทำได้ ${fm(gOn.oa)} · ควรได้ถึงวันนี้ ${fm(gOn.ex)} · คาดการณ์ ${fm(gOn.pj)}` : '';
         return `<td class="num kp-cell kp-tot"${tipT ? ` data-tip="${esc(tipT)}"` : ''}><div class="kp-a">${fm(g.a)}</div>${tgtLine(g, fm, u)}${gOn.ot ? prog(g, { c: g.t > 0 && g.a >= g.t ? 'good' : 'bad' }, null) : ofTarget(g)}</td>`;
       };
       body = view.map(r => `<tr>${nmCell(r.s)}${r.cells.map(({ c, x }) => mcell(c, x, r.s)).join('')}${K.st === 'future'
@@ -528,7 +521,6 @@
         if (g.t == null || g.t <= 0) return `<td class="num kp-cell"><span class="ui-chip kp-pc">—</span>${pairLine(fm(g.a), g)}</td>`;
         const bulkCur = K.st === 'cur' && isBulk(c), r = g.a / g.t;
         return `<td class="num kp-cell">${pctChip(r, bulkCur ? '' : r >= 1 ? 'up' : 'dn')}${pairLine(fm(g.a), g)}</td>`; };
-      const allOn = tot(K, ONLINE, u);
       foot = `<tr class="kp-other"><td>สินค้าอื่น <span class="ui-muted">(ไม่ได้ตั้งเป้า + ของแถม)</span></td>${others.map(o => `<td class="num">${K.st === 'future' ? '' : fm(u === 'rev' ? o.x.ar : o.x.aq)}</td>`).join('')}<td class="num">${K.st === 'future' ? '' : fm(oG.a)}</td></tr>
         <tr><td>รวม</td>${totC.map((g, k) => fcell(g, CH[k])).join('')}${K.st === 'cur' ? `<td class="num kp-cell kp-tot"><div class="kp-a">${fm(all.a)}</div>${tgtLine(all, fm, u)}${prog(all, { c: all.t > 0 && all.a >= all.t ? 'good' : 'bad' }, null)}</td>` : fcell(all)}</tr>`;
     } else {
@@ -559,7 +551,7 @@
     const empty = !N ? `<tr><td colspan="9"><div class="ui-empty"><b>ไม่พบสินค้า</b>${S.q || S.st ? 'ลองล้างคำค้นหาหรือตัวกรองสถานะ' : 'เดือนนี้ยังไม่มีสินค้าที่ตั้งเป้า'}</div></td></tr>` : '';
     const cta = K.st === 'future' && !Object.keys(T[S.mo] || {}).length && ME.can_edit
       ? `<div class="ui-status warn" style="margin:4px 0 10px;"><b>เดือนนี้ยังไม่มีเป้า</b><span>กด "✏️ ตั้งเป้า" ด้านบน แล้วใช้ปุ่ม "คัดลอกเป้าเดือนก่อน" หรือ "ตั้งจากยอดจริง" เพื่อเริ่มเร็วๆ</span></div>` : '';
-    return `<div class="hm-panel-h"><h2>แยกตามสินค้า${S.F ? ` <span class="kp-scope-l">${dot(S.F)}${esc(S.F)}</span>` : ''} ${info('kp-i-pt', infoTxt)}</h2>${tools}</div>${K.st === 'cur' ? '<div class="kp-plg"><b>%</b> = ทำได้ ÷ เป้าทั้งเดือน · <b>เขียว</b> = ถึงเป้าแล้ว (100% ขึ้นไป) · <b>แดง</b> = ยังไม่ถึงเป้า · สีเทา = ตัวแทน / MT</div>' : ''}${cta}
+    return `<div class="hm-panel-h"><h2>แยกตามสินค้า${S.F ? ` <span class="kp-scope-l">${dot(S.F)}${esc(S.F)}</span>` : ''} ${info('kp-i-pt', infoTxt)}</h2>${tools}</div>${K.st === 'cur' ? '<div class="kp-plg"><b>%</b> = ทำได้ ÷ เป้าทั้งเดือน · <b>เขียว</b> = ถึงเป้าแล้ว (100% ขึ้นไป) · <b>แดง</b> = ยังไม่ถึงเป้า</div>' : ''}${cta}
       <div class="table-wrap"><table class="ui-table hm-tbl kp-tbl${S.F ? '' : ' kp-mx'}" id="kpProdTbl" data-no-sort data-no-page><thead>${head}</thead><tbody>${body || empty}</tbody><tfoot>${foot}</tfoot></table></div>${pager(N)}`;
   }
 

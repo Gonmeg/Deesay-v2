@@ -24,6 +24,17 @@
 <title>Deesay Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>/* (2026-11-17) ทุกกราฟไม่เล่น animation ตอนวาด — เดิมเส้นวิ่งจากซ้ายทุกครั้งที่เปิดหน้า / กดค้นหา ทำให้ตัวเลขดูกระโดด */ if (window.Chart && Chart.defaults) Chart.defaults.animation = false;</script>
+<script>/* (2026-11-25) จอ ≤ 1500px หน้าเว็บย่อด้วย zoom (0.9 / 0.82) → Chart.js คิดตำแหน่งเมาส์เพี้ยน (ชี้วันที่ 15 ได้วันที่ 13 · เห็นชัดบน Mac จอ 13–14 นิ้ว)
+   แก้ทุกกราฟที่เดียว: คิดตำแหน่งใหม่จากตำแหน่งเมาส์บนจอ ÷ ขนาดกราฟที่เห็นจริง (จอไม่ย่อ = ไม่ทำอะไร) */
+if (window.Chart && Chart.register) Chart.register({ id: 'zoomFix', beforeEvent(chart, args) {
+  const e = args.event, n = e && e.native; if (!n) return;
+  const p = n.touches && n.touches.length ? n.touches[0] : n.changedTouches && n.changedTouches.length ? n.changedTouches[0] : n;
+  if (p.clientX == null) return;
+  const r = chart.canvas.getBoundingClientRect(); if (!r.width || !r.height) return;
+  const sx = chart.width / r.width, sy = chart.height / r.height; if (Math.abs(sx - 1) < 0.005 && Math.abs(sy - 1) < 0.005) return;
+  e.x = (p.clientX - r.left) * sx; e.y = (p.clientY - r.top) * sy;
+  if (typeof chart.isPointInArea === 'function') args.inChartArea = chart.isPointInArea(e);
+} });</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -844,7 +855,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.23-c"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.25-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1502,7 +1513,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
         tfoot tr.tta-rec-tot td { font-weight:700; box-shadow:none; border-top:1px dashed var(--border); }
       </style>
       <div class="card" id="ttaDrCard" style="margin-bottom:20px;"><div class="section-header">
-          <div class="section-title">รายงานรายวัน — ค่า Ads เทียบยอดขายจริง TikTok <span id="tta-dr-count" class="sa-note"></span> <span class="pr-i" data-tip="แยกค่า Ads ตามประเภท แล้วจับคู่กับยอดขายจริงของช่องทางที่ Ads นั้นดัน · ROAS = ยอดขายจริง ÷ ค่า Ads · % Ads = ค่า Ads ÷ ยอดขายจริง · เขียว = % Ads ไม่เกิน 18% (ROAS 5.56x ขึ้นไป) · กดตัวเลขที่มีเส้นประเพื่อดูที่มา">ⓘ</span></div>
+          <div class="section-title">รายงานรายวัน — ค่า Ads เทียบยอดขายจริง TikTok <span id="tta-dr-count" class="sa-note"></span> <span class="pr-i" data-tip="แยกค่า Ads ตามประเภท แล้วจับคู่กับยอดขายจริงของช่องทางที่ Ads นั้นดัน · ROAS = ยอดขายจริง ÷ ค่า Ads · % Ads = ค่า Ads ÷ ยอดขายจริง · เขียว = % Ads ไม่เกิน 18% (ROAS 5.56x ขึ้นไป) · LIVE · In House เป้าไม่เกิน 7% · LIVE · Affiliate / Presenter เป้าไม่เกิน 5% · กดตัวเลขที่มีเส้นประเพื่อดูที่มา">ⓘ</span></div>
           <div style="display:flex;gap:8px;align-items:center;">
             <div style="position:relative;"><button class="btn btn-ghost" id="ttaDailyRepMetricsBtn" onclick="toggleMetricsPanel('ttaDailyRep')">⚙ Metrics <span id="ttaDailyRep-metric-count" style="color:var(--accent);"></span></button>
               <div id="ttaDailyRep-metrics-panel" class="metrics-panel" style="display:none;"><div style="font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:'Sarabun',sans-serif;">ลาก ⠿ เพื่อสลับลำดับ · ติ๊กเพื่อเปิด/ปิด</div><div id="ttaDailyRep-metrics-checks"></div>
@@ -9459,8 +9470,9 @@ const tdrAffAds = r => tdrLiveAff(r), tdrPreAds = r => tdrLivePre(r);
 const tdrAware = r => tdrN(r, 'spend') - tdrN(r, 'pgm') - tdrN(r, 'lgm');           // Ads ทุกประเภทที่ไม่ใช่ GMV Max
 const tdrOther = r => tdrN(r, 'sales') - tdrPgmSales(r) - tdrLiveAds(r);             // โชว์เคส Affiliate · อื่น ๆ · ลดหนี้ (CN)
 const tdrMuted = '<span class="ui-muted">—</span>';
-const tdrRoas = (s, a) => a > 0 && s > 0 ? `<span class="ui-adp"><b class="tdr-roas ${s / a >= TDR_ROAS_OK ? 'tdr-good' : 'tdr-bad'}">${(a / s * 100).toFixed(1)}%</b><small><span class="ui-adp-w">ROAS </span>${(s / a).toFixed(2)}x</small></span>` : tdrMuted;   // (2026-11-18) % ค่า Ads ตัวหลัก + ROAS ตัวเล็ก
-const tdrPct = (a, s) => tdrRoas(s, a);
+const TDR_LIVE_OK = { in: 7, aff: 5, pre: 5 };   // (2026-11-25) เป้า % Ads ของ LIVE แต่ละกลุ่ม: In House ไม่เกิน 7% · Affiliate / Presenter ไม่เกิน 5% (เทียบตัวเลขที่แสดง 1 ตำแหน่ง: 7.1% ขึ้นไป = แดง)
+const tdrRoas = (s, a, ok) => a > 0 && s > 0 ? `<span class="ui-adp"><b class="tdr-roas ${(ok == null ? s / a >= TDR_ROAS_OK : Math.round(a / s * 1000) / 10 <= ok) ? 'tdr-good' : 'tdr-bad'}">${(a / s * 100).toFixed(1)}%</b><small><span class="ui-adp-w">ROAS </span>${(s / a).toFixed(2)}x</small></span>` : tdrMuted;   // (2026-11-18) % ค่า Ads ตัวหลัก + ROAS ตัวเล็ก
+const tdrPct = (a, s, ok) => tdrRoas(s, a, ok);
 const tdrF = v => Math.round(v) ? fmt(Math.round(v)) : tdrMuted;
 const tdrTip = s => ` <span class="pr-i" data-tip="${s}">ⓘ</span>`;
 const tdrClk = (v, kind, d) => Math.round(v) ? `<span class="pl-trace" data-tdr="${kind}|${d}">${fmt(Math.round(v))}</span>` : tdrMuted;
@@ -9560,19 +9572,19 @@ async function renderTtaDailyReport() {
   const share = v => spend > 0 && Math.round(v) ? (v / spend * 100).toFixed(1) + '%' : tdrMuted;
   const pgmS = tdrPgmSales(T), liveS = tdrLiveAds(T), baseS = pgmS + liveS;   // (รอบ m) สัดส่วนยอดขาย: Product GMV Max กับ LIVE เทียบกันเอง · แถวย่อย LIVE เทียบในยอด Live
   const pctOf = (v, b) => b > 0 && Math.round(v) ? (v / b * 100).toFixed(1) + '%' : null;
-  const row = (cls, label, a, sv, tt, info, isDot, ss = null) => `<tr class="${cls}"><td class="l">${isDot ? dot(label) : ''}${label}${info ? tdrTip(info) : ''}</td>
+  const row = (cls, label, a, sv, tt, info, isDot, ss = null, ok = null) => `<tr class="${cls}"><td class="l">${isDot ? dot(label) : ''}${label}${info ? tdrTip(info) : ''}</td>
       <td class="num">${a === null ? na : tdrF(a)}</td><td class="num">${a === null ? na : share(a)}</td>
-      <td class="num">${sv === null ? na : tdrF(sv)}</td><td class="num">${ss === null ? na : ss}</td><td class="num">${a === null || sv === null ? na : tdrPct(a, sv)}</td>
-      <td class="num">${tt === null ? na : tdrF(tt)}</td><td class="num">${tt === null || a === null ? na : tdrRoas(tt, a)}</td></tr>`;
+      <td class="num">${sv === null ? na : tdrF(sv)}</td><td class="num">${ss === null ? na : ss}</td><td class="num">${a === null || sv === null ? na : tdrPct(a, sv, ok)}</td>
+      <td class="num">${tt === null ? na : tdrF(tt)}</td><td class="num">${tt === null || a === null ? na : tdrRoas(tt, a, ok)}</td></tr>`;
   const awKeys = Object.keys(typeTot).filter(n => n !== 'Product GMV Max' && n !== 'LIVE GMV Max' && Math.round(typeTot[n])).sort((x, y) => typeTot[y] - typeTot[x]);
   let body = '';
   if (Math.round(typeTot['Product GMV Max'] || 0) || Math.round(tdrPgmSales(T)))
     body += row('tdr-parent', 'Product GMV Max', typeTot['Product GMV Max'] || 0, tdrPgmSales(T), T.pgm_tt, 'เทียบกับยอดขายจากหน้าสินค้า + คลิป (ร้านและ Affiliate)', 1, pctOf(pgmS, baseS));
   if (Math.round(typeTot['LIVE GMV Max'] || 0) || Math.round(tdrLiveAds(T)))
     body += row('tdr-parent', 'LIVE GMV Max', typeTot['LIVE GMV Max'] || 0, tdrLiveAds(T), T.lgm_tt, 'เทียบกับยอด Live ทั้งหมด (ร้าน + Affiliate + Presenter) · วันที่กลุ่มไหนไม่มีค่า Ads ยอด Live ของกลุ่มนั้นยังนับรวมอยู่', 1, pctOf(liveS, baseS))
-      + row('tdr-child', TDR_LG.in, tdrLgC(T, 'in'), tdrLiveShop(T), tdrLgT(T, 'in'), 'แคมเปญที่ชื่อมีคำว่า In House · เทียบกับยอด Live ของบัญชีร้าน', 0, pctOf(tdrLiveShop(T), liveS))
-      + row('tdr-child', TDR_LG.aff, tdrLgC(T, 'aff'), tdrAffAds(T), tdrLgT(T, 'aff'), 'แคมเปญที่ชื่อมีคำว่า Affiliate · เทียบกับยอด Live ของ Affiliate ทั้งหมด', 0, pctOf(tdrAffAds(T), liveS))
-      + row('tdr-child', TDR_LG.pre, tdrLgC(T, 'pre'), tdrPreAds(T), tdrLgT(T, 'pre'), 'แคมเปญที่ชื่อมีคำว่า Kambum · เทียบกับยอด Live ของ kambum_live ทั้งหมด', 0, pctOf(tdrPreAds(T), liveS))
+      + row('tdr-child', TDR_LG.in, tdrLgC(T, 'in'), tdrLiveShop(T), tdrLgT(T, 'in'), 'แคมเปญที่ชื่อมีคำว่า In House · เทียบกับยอด Live ของบัญชีร้าน · เป้า % Ads ไม่เกิน 7% (เกิน = แดง)', 0, pctOf(tdrLiveShop(T), liveS), TDR_LIVE_OK.in)
+      + row('tdr-child', TDR_LG.aff, tdrLgC(T, 'aff'), tdrAffAds(T), tdrLgT(T, 'aff'), 'แคมเปญที่ชื่อมีคำว่า Affiliate · เทียบกับยอด Live ของ Affiliate ทั้งหมด · เป้า % Ads ไม่เกิน 5% (เกิน = แดง)', 0, pctOf(tdrAffAds(T), liveS), TDR_LIVE_OK.aff)
+      + row('tdr-child', TDR_LG.pre, tdrLgC(T, 'pre'), tdrPreAds(T), tdrLgT(T, 'pre'), 'แคมเปญที่ชื่อมีคำว่า Kambum · เทียบกับยอด Live ของ kambum_live ทั้งหมด · เป้า % Ads ไม่เกิน 5% (เกิน = แดง)', 0, pctOf(tdrPreAds(T), liveS), TDR_LIVE_OK.pre)
       + (Math.round(tdrLgC(T, 'oth')) ? row('tdr-child', TDR_LG.oth, tdrLgC(T, 'oth'), null, tdrLgT(T, 'oth'), 'แคมเปญที่ชื่อไม่มีคำว่า In House / Affiliate / Kambum') : '');
   if (awKeys.length)
     body += row('tdr-parent', 'Ads สร้างการรับรู้', awKeys.reduce((a, n) => a + typeTot[n], 0), null, null, 'Ads ที่ไม่ใช่ GMV Max ใช้สร้างการรู้จัก / ยอดวิว จึงไม่มียอดขายให้เทียบ', 0)
@@ -9585,7 +9597,7 @@ async function renderTtaDailyReport() {
       <th class="l">ประเภท</th><th class="num">ค่า Ads</th><th class="num">สัดส่วนค่า Ads</th>
       <th class="num">ยอดขายจริง${tdrTip('ยอดขายจริงของช่องทางที่ Ads กลุ่มนั้นดัน (ชี้ ⓘ ข้างชื่อแถวเพื่อดูว่าเทียบกับยอดไหน) · รวมยอดที่ไม่ได้มาจาก Ads ด้วย')}</th>
       <th class="num">สัดส่วนยอดขาย${tdrTip('Product GMV Max กับ LIVE GMV Max = แต่ละกลุ่มเป็นกี่ % ของยอดขาย 2 กลุ่มนี้รวมกัน · แถวย่อย LIVE = เป็นกี่ % ของยอด Live')}</th>
-      <th class="num">% ค่า Ads${tdrTip('ค่า Ads ÷ ยอดขายจริง · เขียว = ไม่เกิน 18% · ตัวเล็ก = ROAS (ยอดขายจริง ÷ ค่า Ads)')}</th>
+      <th class="num">% ค่า Ads${tdrTip('ค่า Ads ÷ ยอดขายจริง · เขียว = ไม่เกิน 18% (LIVE · In House ไม่เกิน 7% · LIVE · Affiliate / Presenter ไม่เกิน 5%) · ตัวเล็ก = ROAS (ยอดขายจริง ÷ ค่า Ads)')}</th>
       <th class="num">TikTok นับยอดให้${tdrTip('ยอดขายที่ TikTok นับให้ Ads (GMV Max) ตาม TikTok Ads Manager')}</th>
       <th class="num">% ค่า Ads (TikTok นับ)${tdrTip('ค่า Ads ÷ ยอดที่ TikTok นับให้ · ตัวเล็ก = ROAS ตาม TikTok')}</th></tr></thead><tbody>${body}</tbody>
     <tfoot><tr><td class="l">รวมทั้งร้าน</td><td class="num">${fmt(Math.round(spend))}</td><td class="num">${spend > 0 ? '100%' : '—'}</td><td class="num">${fmt(Math.round(sales))}</td><td class="num">${na}</td><td class="num">${tdrPct(spend, sales)}</td><td class="num">${tdrF(T.pgm_tt + T.lgm_tt)}</td><td class="num">${tdrRoas(T.pgm_tt + T.lgm_tt, spend)}</td></tr></tfoot></table>`;
@@ -9598,9 +9610,9 @@ async function renderTtaDailyReport() {
     { k: 'g_all', c: 'var(--text2)', h: 'ทั้งร้าน', tip: 'ยอดขายจริงทั้งร้าน TikTok · ค่า Ads รวมทุกประเภททุกบัญชี', sub: [['ยอดขาย', r => tdrClk(r.sales, 'sales', D(r))], ['ค่า Ads', r => tdrClk(r.spend, 'spend', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'spend'), tdrN(r, 'sales'))]] },
     { k: 'g_pgm', c: 'var(--ch-tiktok, #fe2c55)', h: 'Product GMV Max', tip: 'ค่า Ads Product GMV Max คู่กับยอดขายจริงจากหน้าสินค้า + คลิป', sub: [['ค่า Ads', r => tdrF(tdrN(r, 'pgm'))], ['ยอดขาย', r => tdrClk(tdrPgmSales(r), 'pgm_sales', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'pgm'), tdrPgmSales(r))]] },
     { k: 'g_lgm', c: '#7c3aed', h: 'LIVE GMV Max รวม', tip: 'ค่า Ads LIVE GMV Max ทุกแคมเปญ เทียบกับยอด Live ทั้งหมด (ร้าน + Affiliate + Presenter)', sub: [['ค่า Ads', r => tdrClk(r.lgm, 'lgm_spend', D(r))], ['ยอดขาย', r => tdrClk(tdrLiveAds(r), 'lgm_sales', D(r))], ['% Ads', r => tdrPct(tdrN(r, 'lgm'), tdrLiveAds(r))]] },
-    { k: 'g_lin', c: '#a78bfa', h: TDR_LG.in, tip: 'แคมเปญที่ชื่อมีคำว่า In House คู่กับยอด Live ของบัญชีร้าน', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'in'), 'lin_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLiveShop(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'in'), tdrLiveShop(r))]] },
-    { k: 'g_laff', c: '#a78bfa', h: TDR_LG.aff, tip: 'แคมเปญที่ชื่อมีคำว่า Affiliate · ยอดขาย = Live ของ Affiliate ทั้งหมด (ไม่รวม Presenter)', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'aff'), 'laff_spend', D(r))], ['ยอดขาย', r => tdrClk(tdrLiveAff(r), 'laff_sales', D(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'aff'), tdrAffAds(r))]] },
-    { k: 'g_lpre', c: '#a78bfa', h: TDR_LG.pre, tip: 'แคมเปญที่ชื่อมีคำว่า Kambum · ยอดขาย = Live ของ kambum_live', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'pre'), 'lpre_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLivePre(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'pre'), tdrPreAds(r))]] },
+    { k: 'g_lin', c: '#a78bfa', h: TDR_LG.in, tip: 'แคมเปญที่ชื่อมีคำว่า In House คู่กับยอด Live ของบัญชีร้าน · เป้า % Ads ไม่เกิน 7% (เกิน = แดง)', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'in'), 'lin_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLiveShop(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'in'), tdrLiveShop(r), TDR_LIVE_OK.in)]] },
+    { k: 'g_laff', c: '#a78bfa', h: TDR_LG.aff, tip: 'แคมเปญที่ชื่อมีคำว่า Affiliate · ยอดขาย = Live ของ Affiliate ทั้งหมด (ไม่รวม Presenter) · เป้า % Ads ไม่เกิน 5% (เกิน = แดง)', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'aff'), 'laff_spend', D(r))], ['ยอดขาย', r => tdrClk(tdrLiveAff(r), 'laff_sales', D(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'aff'), tdrAffAds(r), TDR_LIVE_OK.aff)]] },
+    { k: 'g_lpre', c: '#a78bfa', h: TDR_LG.pre, tip: 'แคมเปญที่ชื่อมีคำว่า Kambum · ยอดขาย = Live ของ kambum_live · เป้า % Ads ไม่เกิน 5% (เกิน = แดง)', sub: [['ค่า Ads', r => tdrClk(tdrLgC(r, 'pre'), 'lpre_spend', D(r))], ['ยอดขาย', r => tdrF(tdrLivePre(r))], ['% Ads', r => tdrPct(tdrLgC(r, 'pre'), tdrPreAds(r), TDR_LIVE_OK.pre)]] },
     { k: 'g_aw', c: 'var(--text3)', h: 'Ads รับรู้', tip: 'Ads สร้างการรับรู้ = Ads ทุกประเภทที่ไม่ใช่ GMV Max เช่น Video views · Brand consideration · Traditional Ads — ไม่มียอดขายผูกตรง', sub: [['ค่า Ads', r => tdrClk(tdrAware(r), 'aw_spend', D(r))]] },
     { k: 'g_oth', c: 'var(--text3)', h: 'ยอดอื่น', tip: 'ยอดขายที่ไม่ได้ผ่านหน้าสินค้า คลิป หรือ Live: โชว์เคส Affiliate · ลดหนี้ (CN) — กดตัวเลขเพื่อดูแยกส่วน', sub: [['ยอดขาย', r => tdrClk(tdrOther(r), 'oth_sales', D(r))]] },
   ].filter(g => g.k === 'g_all' || on(g.k));
