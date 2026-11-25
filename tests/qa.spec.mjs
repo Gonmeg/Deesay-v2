@@ -102,9 +102,19 @@ test('จำลองการใช้งานทุกหน้า', async ({
         const el = page.locator(`[data-qa-click="${id}"]`).first();
         const label = ((await el.innerText().catch(() => '')) || '').trim().slice(0, 30);
         if (DANGER.test(label)) continue;
-        const e0 = errs.length;
-        await el.click({ timeout: 5000 }).catch(() => {}); await page.waitForTimeout(1800);
-        const open = await page.evaluate(before => window.__deesayQA.panelOpen(before), await page.evaluate(() => (document.querySelector('.page.active') || {}).id || ''));
+        const e0 = errs.length, before = await page.evaluate(() => (document.querySelector('.page.active') || {}).id || ''), c0 = Date.now();
+        await el.click({ timeout: 5000 }).catch(() => {});
+        // (2026-11-25) รอแผงโหลดเสร็จ (ไม่เกิน 8 วิ) แทนรอตายตัว 1.8 วิ — แผงที่ดึงข้อมูลนานกว่านั้นเคยถูกนับเป็น "แผงเปิดแต่ไม่มีข้อมูล" ทั้งที่ข้อมูลมาครบ
+        //   แผงที่ใช้เวลาเกิน 3 วิ = คำเตือน "แผงที่มาเปิดช้า" (ยังเห็นว่าช้า แต่ไม่นับเป็นหน้าเสีย)
+        let open = -1;
+        for (let k = 0; k < 16; k++) {
+          await page.waitForTimeout(500);
+          open = await page.evaluate(b => window.__deesayQA.panelOpen(b), before);
+          const loading = await page.evaluate(() => { const b = document.getElementById('trBody'); return !!(b && b.offsetParent && /กำลังโหลด/.test(b.innerText || '')); });
+          if ((open > 20 && !loading) || (open < 0 && k >= 3)) break;
+        }
+        const took = (Date.now() - c0) / 1000;
+        if (open > 20 && took > 3) r.warn.push(`แผงที่มาเปิดช้า ${took.toFixed(1)} วิ: ${label || '(ไม่มีข้อความ)'}`);
         if (open > 20 && errs.length === e0) r.clicks.ok++; else r.clicks.fail.push(`${label || '(ไม่มีข้อความ)'}: ${open < 0 ? 'กดแล้วไม่มีแผงเปิด' : open <= 20 ? 'แผงเปิดแต่ไม่มีข้อมูล' : errs.slice(e0).join(' / ')}`);
         await page.keyboard.press('Escape'); await page.waitForTimeout(400);
         await page.evaluate(() => window.__deesayQA.closePanel());
