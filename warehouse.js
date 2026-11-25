@@ -21,6 +21,12 @@
   // (2026-11-24) ร้าน = ตัวกรองในแถบตัวกรอง (เหมือนขนส่ง) · ดึงทั้ง 2 ร้านครั้งเดียวแล้วกรองในหน้า เปลี่ยนร้านไม่ต้องโหลดใหม่
   const SHOPS = [['566792331', 'Shopee Mall'], ['530338789', 'Shopee 24hr']], SHOPNAME = { 566792331: 'Mall', 530338789: '24hr' };
   const PL = p => (p || S.platform) === 'shopee' ? 'Shopee' : 'TikTok';
+  // (2026-11-25) Shopee ใช้เวลายืนยันคำสั่งซื้อ (ct = เวลาที่พร้อมให้เตรียมจัดส่ง: จ่ายออนไลน์ = เวลาชำระเงิน · เก็บเงินปลายทาง = เวลาสั่ง) กับรอบพิมพ์ / ช่วงเวลา / การเรียง · TikTok ใช้เวลาสั่งเหมือนเดิม
+  const tOf = o => (S.platform === 'shopee' && o.ct) ? o.ct : o.t;
+  const TW = () => S.platform === 'shopee' ? 'ยืนยัน' : 'สั่ง';   // เวลาสั่ง / เวลายืนยัน
+  // (2026-11-25) ชื่อร้านบนหัวกระดาษรายการเตรียมสินค้า · TikTok เชื่อมร้านเดียว (Deesay Thailand)
+  const shopLabel = list => S.platform !== 'shopee' ? 'TikTok · Deesay Thailand'
+    : ([...new Set(list.map(o => o.shop).filter(Boolean).map(String))].map(id => (SHOPS.find(x => x[0] === id) || [id, 'Shopee ' + id])[1]).join(' + ') || 'Shopee');
   const apiP = body => S.platform === 'shopee' ? api({ ...body, shop: 'all' }, 'wh-shopee') : api(body);
   async function api(body, fn) {
     const r = await fetch(window.SUPABASE_URL + '/functions/v1/' + (fn || 'wh-labels'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Auth.token(), apikey: window.SUPABASE_ANON_KEY }, body: JSON.stringify(body) });
@@ -75,9 +81,9 @@
   const packMap = plat => (PK[plat || S.platform] || {}).map || {};
   function rangeText() {
     const a = $('fFrom').value, b = $('fTo').value, f = v => fmtDT(new Date(v));
-    if (!a && !b) return 'ทั้งหมด · ไม่กรองเวลาสั่ง';
+    if (!a && !b) return `ทั้งหมด · ไม่กรองเวลา${TW()}`;
     const r = S.round === '1' ? 'รอบ 1 · ' : S.round === '2' ? 'รอบ 2 · ' : '';
-    return r + (a ? `สั่ง ${f(a)} – ${b ? f(b) : 'ตอนนี้'}` : `สั่งก่อน ${b ? f(b) : 'ตอนนี้'} (รวมที่ค้างจากวันก่อน)`);
+    return r + (a ? `${TW()} ${f(a)} – ${b ? f(b) : 'ตอนนี้'}` : `${TW()}ก่อน ${b ? f(b) : 'ตอนนี้'} (รวมที่ค้างจากวันก่อน)`);
   }
   // แถวของแต่ละแท็บ: รอจัดส่ง = ที่ยังไม่ย้าย · กำลังแพ็ค = ที่ย้ายมาแล้ว + ที่ไม่อยู่ในรอจัดส่งแล้ว (ถูกยกเลิก / จัดส่งที่อื่น) ใช้ข้อมูลที่เก็บไว้ตอนย้าย
   function rowsFor(t, plat) {
@@ -128,7 +134,9 @@
       try {
         const j = t === 'cancel' ? await api(plat === 'shopee' ? { action: 'cancelled', sc: true, shop: 'all' } : { action: 'cancelled', sc: true }, plat === 'shopee' ? 'wh-shopee' : undefined)
           : await api(plat === 'shopee' ? { action: 'list', tab: t, from: null, to: null, shop: 'all' } : { action: 'list', tab: t, from: null, to: null }, plat === 'shopee' ? 'wh-shopee' : undefined);
-        LC[keyOf(t, plat)] = { j, rows: (j.orders || []).map(derive), got: Date.now() }; st[t] = 'ok';
+        const rows = (j.orders || []).map(derive);
+        if (plat === 'shopee' && t !== 'cancel') rows.sort((x, y) => (x.ct || x.t) - (y.ct || y.t));   // (2026-11-25) Shopee เรียงตามเวลายืนยัน
+        LC[keyOf(t, plat)] = { j, rows, got: Date.now() }; st[t] = 'ok';
       } catch (e) { st[t] = 'err'; errs.push(TNAME[t] + ': ' + e.message); }
       if (first) draw(); done();
     }).concat(needPack ? [loadPack(plat).catch(e => { errs.push('กำลังแพ็ค: ' + e.message); })] : []));
@@ -241,6 +249,7 @@
     const plats = [['tiktok', 'Platform: TikTok'], ['shopee', 'Platform: Shopee']];   // (2026-11-24) เปิด Shopee ให้ทุกบัญชีที่มีสิทธิ์ Warehouse (เมฆอนุมัติ)
     dd('fPlatform', plats, S.platform, v => { if (v === S.platform) return; S.platform = v; drawPlat(); switchList(); });
     $('fShopF').style.display = S.platform === 'shopee' ? '' : 'none';
+    $('fFromL').textContent = `เวลา${TW()} ตั้งแต่`;   // (2026-11-25) Shopee = เวลายืนยัน
   }
   function switchList() { S.sel.clear(); S.pat.clear(); S.basket = ''; S.car = ''; S.shop = 'all'; S.page = 1; S.raw = []; S.rows = []; render(); loadAll(); }
 
@@ -277,8 +286,8 @@
   }
   function inRange(o) {   // เวลาสั่งตามรอบ / ช่วงที่เลือก (เดิมส่งให้ระบบหลังบ้านกรอง · ตอนนี้กรองในหน้า)
     const a = $('fFrom').value, b = $('fTo').value;
-    if (a && o.t * 1000 < new Date(a).getTime()) return false;
-    if (b && o.t * 1000 >= new Date(b).getTime()) return false;
+    if (a && tOf(o) * 1000 < new Date(a).getTime()) return false;
+    if (b && tOf(o) * 1000 >= new Date(b).getTime()) return false;
     return true;
   }
   function countTabs() {
@@ -305,6 +314,7 @@
     [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
     $('nShip').textContent = S.counts.ship ?? ''; $('nPack').textContent = S.counts.pack ?? ''; $('nCollect').textContent = S.counts.collect ?? ''; $('nCancel').textContent = S.counts.cancel ?? '';
     const pack = S.tab === 'pack', P = packMap();
+    const infoCt = `<span class="wh-i">i<span class="pop"><b>เวลายืนยัน (Confirmed time)</b><br>เวลาที่คำสั่งซื้อพร้อมให้เตรียมจัดส่งใน Shopee<br>จ่ายออนไลน์ = เวลาที่ชำระเงินสำเร็จ<br>เก็บเงินปลายทาง (COD) = เวลาที่สั่งซื้อ<br>รอบพิมพ์ ช่วงเวลา และการเรียง ใช้เวลานี้<br>ตัวเล็กด้านล่าง = เวลาที่ลูกค้าสั่ง (แสดงเมื่อต่างกันเกิน 1 นาที)</span></span>`;
     const infoPk = `<span class="wh-i r">i<span class="pop"><b>ย้ายมาเมื่อ</b><br>เวลาที่ย้ายคำสั่งซื้อจากรอจัดส่งมากำลังแพ็ค และชื่อบัญชีที่ย้าย</span></span>`;
     const whoShort = e => String(e || '').split('@')[0];
     const lastCell = o => pack ? (o.gone ? `<span class="wh-pill bad">ไม่อยู่ในรอจัดส่งแล้ว</span><div><button class="wh-btn sm" data-rm="${esc(o.id)}" type="button">เอาออก</button></div>`
@@ -316,12 +326,12 @@
     const infoSt = `<span class="wh-i">i<span class="pop"><b>สถานะ</b><br>พิมพ์แล้ว · ยกเลิกแล้ว = ลูกค้ายกเลิกหลังพิมพ์ใบปะหน้า ขนส่งยังไม่มารับ พัสดุยังอยู่ในคลัง<br>พิมพ์แล้ว · ลูกค้าขอยกเลิก = มีคำขอยกเลิกค้างอยู่ อย่าเพิ่งส่งให้ขนส่ง</span></span>`;
     $('thead').innerHTML = cancel
       ? `<tr><th>พิมพ์ใบปะหน้าเมื่อ</th><th>ยกเลิกเมื่อ</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องรับคืน (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>สถานะ ${infoSt}</th><th class="l">เหตุผลที่ยกเลิก</th><th>พิมพ์จาก ${infoSrc}</th></tr>`
-      : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลาสั่ง</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>${pack ? 'ย้ายมาเมื่อ ' + infoPk : 'พิมพ์แล้ว (ครั้ง) ' + info}</th></tr>`;
+      : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลา${TW()}${S.platform === 'shopee' ? ' ' + infoCt : ''}</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>${pack ? 'ย้ายมาเมื่อ ' + infoPk : 'พิมพ์แล้ว (ครั้ง) ' + info}</th></tr>`;
     const pages = Math.max(1, Math.ceil(S.rows.length / S.size)); if (S.page > pages) S.page = pages;
     const view = S.rows.slice((S.page - 1) * S.size, S.page * S.size);
     $('tbody').innerHTML = view.map(o => cancel
       ? `<tr><td>${o.printed_at ? fmtDT(new Date(o.printed_at)) : '—'}</td><td>${o.cancel_time ? fmtDT(new Date(o.cancel_time * 1000)) + `<div class="wh-sub">${afterTxt(o)}</div>` : '—'}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.st === 'CANCELLED' ? '<span class="wh-pill bad">พิมพ์แล้ว · ยกเลิกแล้ว</span>' : '<span class="wh-pill cod">พิมพ์แล้ว · ลูกค้าขอยกเลิก</span>'}</td><td class="l">${esc(o.cancel_reason || (o.st === 'CANCELLED' ? 'ยกเลิกแล้ว' : 'มีคำขอยกเลิก'))}</td><td>${o.src === 'sc' ? 'Seller Center' : `หน้านี้ (${num(S.printed[o.id] || 1)} ครั้ง)`}</td></tr>`
-      : `<tr class="${o.gone ? 'gone' : 'pick'} ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td>${o.gone ? '' : `<input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}>`}</td><td>${fmtDT(new Date(o.t * 1000))}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${lastCell(o)}</td></tr>`).join('');
+      : `<tr class="${o.gone ? 'gone' : 'pick'} ${S.sel.has(o.id) ? 'sel' : ''}" data-id="${esc(o.id)}"><td>${o.gone ? '' : `<input type="checkbox" ${S.sel.has(o.id) ? 'checked' : ''}>`}</td><td>${fmtDT(new Date(tOf(o) * 1000))}${tOf(o) - o.t > 60 ? `<div class="wh-sub">สั่ง ${fmtDT(new Date(o.t * 1000))}</div>` : ''}</td><td>${esc(o.id)}${shopSub(o)}</td><td class="l"><span class="wh-bk" title="${esc(o.bnames.join(' + '))}">${esc(o.bnames.join(' + '))}</span></td><td class="l">${itemsHtml(o)}</td><td>${o.qty}</td><td>${o.cod ? '<span class="wh-pill cod">COD</span>' : '<span class="wh-pill">ชำระแล้ว</span>'}</td><td>${esc(o.carrier || '—')}</td><td>${lastCell(o)}</td></tr>`).join('');
     const empty = !S.rows.length;
     $('empty').style.display = empty ? 'block' : 'none';
     if (empty) $('empty').textContent = cancel ? 'ไม่มีคำสั่งซื้อที่ถูกยกเลิกหลังจัดส่ง / พิมพ์ (ย้อนหลัง 7 วัน)' : pack && !Object.keys(P).length ? 'ยังไม่มีคำสั่งซื้อในกำลังแพ็ค — เลือกคำสั่งซื้อในแท็บรอจัดส่ง แล้วกด "ย้ายไปกำลังแพ็ค"' : 'ไม่มีคำสั่งซื้อตามเงื่อนไขที่เลือก';
@@ -374,7 +384,7 @@
     const list = selected(); if (!list.length) return;
     const s = summarize(list), t = pickTables(s), reprint = S.tab === 'collect', toPack = S.tab === 'ship';
     const when = fmtDT(new Date());
-    $('dlg').innerHTML = `<h2>รายการเตรียมสินค้า</h2><div class="s">สรุปจากคำสั่งซื้อที่เลือก · ${PL()} · ${when}</div>
+    $('dlg').innerHTML = `<h2>รายการเตรียมสินค้า</h2><div class="s">สรุปจากคำสั่งซื้อที่เลือก · ${esc(shopLabel(list))} · ${when}</div>
       <div class="wh-kp"><div><small>คำสั่งซื้อที่เลือก</small><b>${num(s.n)}</b></div><div><small>จำนวนสินค้า (รายการ)</small><b>${t.nSku}</b></div><div><small>จำนวนชิ้นรวม</small><b>${num(s.qty)}</b></div></div>
       <div class="wh-tabs" id="pkTabs"><button data-k="sku" type="button">สินค้าที่ต้องหยิบ<small>${t.nSku}</small></button><button data-k="pat" type="button">รูปแบบคำสั่งซื้อ<small>${t.nPat}</small></button></div>
       <div id="pkBody"></div>
@@ -386,14 +396,14 @@
     $('pkClose').onclick = closeDlg;
     $('pkPrint').onclick = () => {
       const title = S.pickTab === 'sku' ? 'รายการเตรียมสินค้า — สินค้าที่ต้องหยิบ' : 'รายการเตรียมสินค้า — รูปแบบคำสั่งซื้อ';
-      $('printArea').innerHTML = `<h2>${title}</h2><div class="s">${PL()} · ${when} · ${num(s.n)} คำสั่งซื้อ · ${num(s.qty)} ชิ้น · ${esc(rangeText())}</div>${t[S.pickTab]}`;
+      $('printArea').innerHTML = `<div class="shop">${esc(shopLabel(list))}</div><h2>${title}</h2><div class="s">${when} · ${num(s.n)} คำสั่งซื้อ · ${num(s.qty)} ชิ้น · ${esc(rangeText())}</div>${t[S.pickTab]}`;
       window.print();
     };
     $('pkGo').onclick = () => toPack ? (closeDlg(), packMove(true, list)) : runPrint(reprint ? 'reprint' : 'ship', list.map(o => o.id));
     $('ov').classList.add('on');
   }
   // ───── กำลังแพ็ค (2026-11-24) — เก็บในตาราง wh_packing ผ่าน RPC wh_pack_add / wh_pack_remove (ทุกเครื่องเห็นเหมือนกัน)
-  const snapOf = o => ({ id: o.id, t: o.t, carrier: o.carrier || '', cod: !!o.cod, shop: o.shop || null, lines: (o.lines || []).map(l => ({ sku: l.sku, pname: l.pname })) });
+  const snapOf = o => ({ id: o.id, t: o.t, ct: o.ct || null, carrier: o.carrier || '', cod: !!o.cod, shop: o.shop || null, lines: (o.lines || []).map(l => ({ sku: l.sku, pname: l.pname })) });
   async function packMove(on, list) {
     const plat = S.platform; if (!list.length) return;
     try {
