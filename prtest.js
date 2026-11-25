@@ -1,3 +1,4 @@
+// prtest.js (v20261125b) — หัวขั้น Awareness / Consideration / Conversion เทียบช่วงวันเดียวกันของเดือนก่อน (เพิ่ม / ลดเท่าไร)
 // prtest.js (v20261125a) — เพิ่ม Cost / 6s View (ค่า Ads ÷ การดูถึง 6 วินาที) ในขั้น Awareness: การ์ด · ตาราง Campaign · ตารางคลิป · แถวคลิปสูงเท่ากัน (ไม่มีรูปปก = กรอบว่างขนาดเท่ารูป · ป้าย N Campaign ย้ายไปใต้ชื่อช่อง)
 // prtest.js (v20261116t) — หน้า "PR Performance · TikTok": funnel ตามงบ Awareness → Consideration → Conversion + กล่องผลที่ตามมา Shop Traffic
 // ข้อมูลทั้งหน้า = RPC pr_test_page ครั้งเดียว (Supabase สรุปให้)
@@ -23,6 +24,7 @@
   const ORDER = ['aw', 'co', 'cv'], RES = ['tr', 'vl'], STG = { aw: 'Awareness', co: 'Consideration', tr: 'Shop Traffic', cv: 'Conversion', vl: 'Total ROAS' }, UNIT = { aw: 'Reach', co: 'Clicks', tr: 'เข้าดูสินค้า (ครั้ง)', cv: 'Orders', vl: 'ยอดขาย' };
   const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   let D = null, KEY = '', seq = 0, sel = 'aw', baseMode = 'pre', selCamp = null, charts = {}, clipQ = '';
+  let PM = null, PKEY = '', PR = null, pseq = 0, MM = null;   // (2026-11-25) เทียบเดือนก่อน: PM = model ของช่วงวันเดียวกันเดือนก่อน · 'off' = ช่วงยาวเกิน 1 เดือน · 'err' = โหลดไม่สำเร็จ
   const ADV = { '7138651956792360962': 'Fimiq B', '7409927410046648337': 'Fimiq Awareness', '7680042517500313621': 'Fimiq PR' };
   const OBJ = { REACH: 'Reach', VIDEO_VIEWS: 'Video views', RF_REACH: 'Reach', TOPVIEW: 'TopView', BRAND_CONSIDERATION: 'Brand consideration', ENGAGEMENT: 'Engagement', TRAFFIC: 'Traffic', COMMUNITY_INTERACTION: 'Community interaction' };
   const $ = id => document.getElementById(id);
@@ -116,6 +118,7 @@
       .pt-nd i svg { width:26px; height:26px; stroke:#fff; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
       .pt-nd b { margin-top:10px; font-size:17px; font-weight:700; color:var(--text); } .pt-nd b small { font-size:11.5px; font-weight:400; color:var(--text3); margin-left:7px; }
       .pt-nd span { font-size:12px; color:var(--text2); margin-top:1px; }
+      .pt-mom { display:flex; align-items:center; gap:6px; min-height:22px; margin-top:3px; font-size:11.5px; color:var(--text3); } .pt-mom .ui-chip { margin-top:0; font-size:11.5px; } .pt-mom .pt-i { margin-top:0; }
       .pt-sg { flex:1; background:var(--bg2); border-radius:14px; box-shadow:var(--sh, 0 1px 3px rgba(16,24,40,.08)); padding:0 0 14px; border:1.5px solid transparent; cursor:pointer; text-align:left; font:inherit; color:inherit; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
       .pt-sg:hover { box-shadow:0 8px 22px -10px var(--c); } .pt-sg[aria-pressed="true"] { border-color:var(--c); }
       .pt-sg .hd { padding:14px 16px 13px; background:color-mix(in srgb, var(--c) 9%, var(--bg2)); display:flex; flex-direction:column; gap:3px; }
@@ -165,11 +168,11 @@
   }
   const K = (name, t, val, c) => `<div><small>${name}${tip(t)}</small><b>${val}</b>${c}</div>`;
 
-  function model() {
-    const T = D.tiers || {}, C = D.conv || {}, z = {};
+  function model(X = D) {   // (2026-11-25) รับชุดข้อมูลได้ — ใช้คิดเดือนก่อนด้วยสูตรเดียวกัน
+    const T = X.tiers || {}, C = X.conv || {}, z = {};
     const g = (p, k) => (T[p] && T[p][k]) || {};
-    const lastAds = minS(D.to, (D.latest || {}).camp || D.to), lastSales = minS(D.to, (D.latest || {}).sales || D.to);
-    const nd = Math.max(1, days(D.from, lastAds)), ns = Math.max(1, num((C.cur || {}).days)), nb = Math.max(1, days(D.base_from, D.base_to)), nbs = Math.max(1, num((C.base || {}).days));
+    const lastAds = minS(X.to, (X.latest || {}).camp || X.to), lastSales = minS(X.to, (X.latest || {}).sales || X.to);
+    const nd = Math.max(1, days(X.from, lastAds)), ns = Math.max(1, num((C.cur || {}).days)), nb = Math.max(1, days(X.base_from, X.base_to)), nbs = Math.max(1, num((C.base || {}).days));
     const A = g('cur', 'aw'), Ab = g('base', 'aw'), O = g('cur', 'co'), Ob = g('base', 'co'), V = C.cur || {}, Vb = C.base || {};
     const rev = num(V.rev), r = (a, b) => b > 0 ? a / b : null;
     z.rev = rev; z.nd = nd; z.ns = ns; z.hasBase = num(Ab.sp) + num(Ob.sp) + num(Vb.cost) > 0;
@@ -184,7 +187,7 @@
     z.cv = { sp: num(V.cost), big: num(V.orders), bigDay: num(V.orders) / ns, bigBase: num(Vb.orders) / nbs,
       pa: r(num(V.cost) * 100, rev), paB: r(num(Vb.cost) * 100, num(Vb.rev)), roas: r(rev, num(V.cost)), roasB: r(num(Vb.rev), num(Vb.cost)),
       ppv: r(num(V.ppv), num(V.ppv_days)), ppvB: r(num(Vb.ppv), num(Vb.ppv_days)), card: r(num(V.card) * 100, num(V.grid_rev)), cardB: r(num(Vb.card) * 100, num(Vb.grid_rev)) };
-    const R = (D.traffic || {}).cur || {}, Rb = (D.traffic || {}).base || {}, rd = Math.max(1, num(R.days)), rb = Math.max(1, num(Rb.days));
+    const R = (X.traffic || {}).cur || {}, Rb = (X.traffic || {}).base || {}, rd = Math.max(1, num(R.days)), rb = Math.max(1, num(Rb.days));
     z.tr = { sp: 0, big: num(R.pv), bigDay: num(R.pv) / rd, bigBase: num(Rb.pv) / rb,
       imp: num(R.imp) / rd, impB: num(Rb.imp) / rb, ctr: r(num(R.pv) * 100, num(R.imp)), ctrB: r(num(Rb.pv) * 100, num(Rb.imp)),
       card: num(R.pv_card) / rd, cardB: num(Rb.pv_card) / rb, cvr: r(num(R.ord) * 100, num(R.pv)), cvrB: r(num(Rb.ord) * 100, num(Rb.pv)),
@@ -258,12 +261,36 @@
     co: '<path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 22l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>',
     tr: '<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/>',
     cv: '<path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/>', vl: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>' };
+  // (2026-11-25) เทียบเดือนก่อน (เมฆขอ): ช่วงวันเดียวกันของเดือนก่อน · นับแบบเดียวกับตัวเลขบนหัวขั้น · เพิ่ม = เขียว ลด = แดง เปลี่ยนไม่ถึง 3% = เทา
+  const MOM = { aw: [m => m.aw.reach, 'คนต่อวัน', 'Reach เฉลี่ยต่อวันของชั้น Awareness'], co: [m => m.j.atc, 'ครั้ง', 'Add to Cart จาก Ads PR (Awareness + Consideration) รวมทั้งช่วง'], cv: [m => m.cv.big, 'Orders', 'Orders ของ TikTok หลังหักยกเลิก / คืน รวมทั้งช่วง'] };
+  function prevRange(from, to) {
+    if (days(from, to) > 31) return null;
+    const L = D && D.latest || {}; let e = to; [L.camp, L.sales].forEach(x => { if (x && x < e) e = x; });
+    const sh = (s, end) => { const [y, m, d] = s.split('-').map(Number), t = new Date(y, m - 2, 1), last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+      return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(end ? last : Math.min(d, last)).padStart(2, '0')}`; };
+    const isEnd = s => { const [y, m, d] = s.split('-').map(Number); return d === new Date(y, m, 0).getDate(); };
+    return { from: sh(from, false), to: sh(e, isEnd(e)) };
+  }
+  function momHtml(k, M) {
+    const cfg = MOM[k]; if (!cfg || PM === 'off') return '';
+    if (!PM || PM === 'err') return `<div class="pt-mom" data-k="${k}">เดือนก่อน ${PM === 'err' ? '—' : '…'}</div>`;
+    const v = cfg[0](M), p = cfg[0](PM), d = v - p, pc = p > 0 ? d / p * 100 : null, cls = pc == null || Math.abs(pc) < 3 ? '' : d > 0 ? 'up' : 'dn';
+    const rg = `${dTh(PR.from)} – ${dTh(PR.to)}`;
+    return `<div class="pt-mom" data-k="${k}">เดือนก่อน ${n0(p)} <span class="ui-chip ${cls}">${d >= 0 ? 'เพิ่ม' : 'ลด'} ${n0(Math.abs(d))} ${cfg[1]}${pc != null ? ` · ${d >= 0 ? '+' : '−'}${Math.abs(pc).toFixed(0)}%` : ''}</span>${tip(`เทียบช่วงวันเดียวกันของเดือนก่อน ${rg}\n${cfg[2]} · นับแบบเดียวกับตัวเลขด้านบน`)}</div>`;
+  }
+  async function loadPrev(base) {
+    const pk = PKEY, my = ++pseq;
+    try { const p = await supaRpc('pr_test_page', { p_from: PR.from, p_to: PR.to, p_base_from: base.from, p_base_to: base.to }); if (my !== pseq || pk !== PKEY) return; PM = model(p); }
+    catch (e) { if (my !== pseq || pk !== PKEY) return; PM = 'err'; }
+    const root = $('prtest-root'); if (!root || !MM) return;
+    root.querySelectorAll('.pt-mom[data-k]').forEach(el => { el.outerHTML = momHtml(el.dataset.k, MM); });
+  }
   // ป้ายของขั้น: ตัวชี้วัดหลักเป็นตัวกำหนด · ถ้าตัวชี้วัดประกอบตั้งแต่ 2 ตัวไปทางตรงข้าม = "บางส่วน" (สีเหลือง) · ขั้นซื้อดูตัวชี้วัดหลักตัวเดียว (ตัวตัดสิน)
   function stageHtml(k, i, M) {
     const g = stage(k, M), st = stat(g.v, g.b, g.dir), opp = st === 'g' ? 'r' : st === 'r' ? 'g' : '', nOpp = g.solo || !opp ? 0 : g.sup.filter(x => x === opp).length, mix = nOpp >= 2;
     const pl = g.pill || { g: 'ดีขึ้น', r: 'ลดลง', m: 'คงที่' }, pc = mix ? 'a' : st, pt = !(g.b > 0) ? 'ยังไม่มี Baseline' : mix ? pl[st] + 'บางส่วน' : pl[st];
     const act = mix && k !== 'tr' ? (st === 'g' ? `<b>ควรตรวจสอบก่อนเพิ่มงบประมาณ</b> · ตัวชี้วัดหลักดีขึ้น แต่ตัวชี้วัดประกอบ ${nOpp} ตัวลดลง ตรวจสอบราย Campaign ในตารางด้านล่าง` : `<b>ควรปรับปรุง</b> · ตัวชี้วัดหลักลดลง แม้ตัวชี้วัดประกอบ ${nOpp} ตัวดีขึ้น ตรวจสอบราย Campaign ในตารางด้านล่าง`) : g.act[st];
-    return `<div class="pt-col" style="--c:${COL[k]}"><div class="pt-nd"><i><svg viewBox="0 0 24 24">${ICON[k]}</svg></i><b>${i == null ? '' : i + 1 + ' · '}${TIER[k][0]}<small>${TIER[k][1]}</small></b><span>${g.vol}</span></div>
+    return `<div class="pt-col" style="--c:${COL[k]}"><div class="pt-nd"><i><svg viewBox="0 0 24 24">${ICON[k]}</svg></i><b>${i == null ? '' : i + 1 + ' · '}${TIER[k][0]}<small>${TIER[k][1]}</small></b><span>${g.vol}</span>${momHtml(k, M)}</div>
       <button type="button" class="pt-sg" data-tier="${k}" aria-pressed="${sel === k}">
       <div class="hd"><div class="hl"><span>${g.name}${tip(g.tipT)}</span><span class="pt-pill ${pc}">${pt}</span></div><div class="pt-hrow"><div><div class="hv">${g.val}<span>${g.unit}</span></div>${cmp(g.v, g.b, g.dir)}</div>${g.sp != null ? `<div class="pt-hsp"><small>Spend</small><b>${n0(g.sp)}</b><span>${pct(g.sp, M.rev)} ของยอดขาย</span></div>` : ''}</div></div>
       <div class="pt-k">${g.ks}</div><div class="act">${act}</div>${g.ft ? `<div class="ft">${g.ft}</div>` : ''}</button></div>`;
@@ -511,7 +538,7 @@
   }
 
   function draw() {
-    const M = model(), over = M.rev > 0 ? M.total / M.rev * 100 : 0, root = $('prtest-root');
+    const M = model(), over = M.rev > 0 ? M.total / M.rev * 100 : 0, root = $('prtest-root'); MM = M;
     root.innerHTML = `
       ${capBar(M, over)}
       <div class="pt-hd2"><div><div class="pt-t">Customer Journey · ตั้งแต่เห็น Ads จนถึงสั่งซื้อ ${tip('แถวบน = Ads ที่จ่าย 3 ขั้น อ่านจากซ้ายไปขวา · แถวล่าง = ผลลัพธ์ที่เกิดกับร้าน TikTok\nShop Traffic = คนเข้าชมสินค้าในร้าน (ตัวชี้วัดประกอบ) · Total ROAS = ยอดขายต่อค่า Ads รวม (ตัวตัดสินว่าคุ้มค่าหรือไม่)\nป้ายของขั้น: ดูตัวเลขหลักเป็นตัวกำหนด ถ้าตัวชี้วัดประกอบตั้งแต่ 2 ใน 3 ตัวไปทางตรงข้าม จะขึ้นป้ายสีเหลืองว่า บางส่วน\nเลือกขั้นเพื่อดูกราฟรายวัน Campaign และคลิปของขั้นนั้นด้านล่าง')}</div>
@@ -543,7 +570,11 @@
     try {
       const d = await supaRpc('pr_test_page', { p_from: from, p_to: to, p_base_from: base.from, p_base_to: base.to });
       if (my !== seq) return;
-      D = d; KEY = key; draw();
+      D = d; KEY = key;
+      PR = prevRange(from, to); const pk = PR ? [PR.from, PR.to, base.from, base.to].join('|') : '';
+      if (!PR) { PM = 'off'; PKEY = ''; } else if (pk !== PKEY) { PM = null; PKEY = pk; }
+      draw();
+      if (PR && !PM) loadPrev(base);
     } catch (e) {
       if (my !== seq) return;
       root.innerHTML = `<div class="pt-card"><div class="ui-empty"><b>โหลดข้อมูลไม่สำเร็จ</b>${esc(e.message || e)}</div></div>`;
