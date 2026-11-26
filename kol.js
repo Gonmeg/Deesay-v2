@@ -1,3 +1,4 @@
+// kol.js (2026-11-26) — ตารางงาน KOL รวมยอดคลิป TikTok: ยอดวิว · วิวเพิ่ม · ER · ค่าจ้างต่อ 1,000 วิว · น่ายิง Ads · กดแถวดูยอดวิวรายวัน (RPC kol_clip_page) · การ์ดยอดวิวคลิป TikTok
 // kol.js (2026-11-10) — หน้า KOL ย้ายออกจาก dashboard.html (โค้ดเดิมทั้งหมด + โครงหน้าก่อนข้อมูลมา + ป้ายเทียบช่วงก่อน)
 // ตัวช่วยที่หน้าอื่นใช้ด้วย (kjDisplay / kjIcons / kjHandleFromLink / kjPlat / KJ_PRODUCT_WORD / KJ_ICON) ยังอยู่ใน dashboard.html
 // โหลดครั้งแรกที่เปิดหน้า KOL (renderKolPage ใน dashboard.html) · ฟังก์ชันในไฟล์นี้เป็น global เพราะปุ่มในหน้าเรียกด้วย onclick
@@ -77,6 +78,45 @@ function kjCalPick(key) {
 }
 // (2026-10-01) ค่า Ads / ยอดขายของงาน KOL ตามวันที่ใช้เงินจริง (RPC kol_ads_range → { k: { m: { 'YYYY-MM': [fb, fbValue, gmvMax, gmvMaxRev, adsปกติ/Spark] } } }) — ตรงกับหน้า TikTok / Facebook Ads ที่นับตามวันที่
 let _kjAds = {};
+// (2026-11-26) ยอดคลิป TikTok (วิว ไลค์ คอมเมนต์ แชร์ บันทึก) — ตาราง kol_clip_stats เก็บวันละ 1 รอบ (Edge Function kol-clip-stats) · RPC kol_clip_page
+//   จับคู่กับงานด้วยเลขคลิป (video_id) หรือลิงก์โพสต์ในไฟล์ทีม KOL · มีเฉพาะ TikTok
+let _kjClip = null, _kjClipOpen = null;
+const kjCleanUrl = u => String(u || '').trim().split('?')[0].replace(/\/+$/, '/');
+function kjClipModel(d) {
+  const snaps = (d && d.snaps) || [], by = {}, byUrl = {};
+  Object.entries((d && d.v) || {}).forEach(([id, x]) => {
+    const v = (x.v || []).map(n => n == null ? null : +n);
+    let li = -1; for (let i = v.length - 1; i >= 0; i--) if (v[i] != null) { li = i; break; }
+    if (li < 0) return;
+    let pi = -1; for (let i = li - 1; i >= 0; i--) if (v[i] != null) { pi = i; break; }
+    const e = x.e || [], views = v[li], eng = (+e[0] || 0) + (+e[1] || 0) + (+e[2] || 0) + (+e[3] || 0);
+    const o = { id, u: x.u, n: x.n, v, views, s: +x.s || 0, likes: +e[0] || 0, comments: +e[1] || 0, shares: +e[2] || 0, saves: +e[3] || 0, li, pi,
+      gain: pi >= 0 ? Math.max(views - v[pi], 0) : null, prev: pi >= 0 ? v[pi] : null, er: views > 0 ? eng / views * 100 : 0 };
+    by[id] = o; if (x.i) byUrl[kjCleanUrl(x.i)] = o;
+  });
+  const all = Object.values(by), med = a => { const q = a.slice().sort((x, y) => x - y), m = q.length >> 1; return !q.length ? 0 : q.length % 2 ? q[m] : (q[m - 1] + q[m]) / 2; };
+  return { snaps, by, byUrl, cpm: +(d && d.cpm) || 0, boostMin: d && d.boost_min != null ? +d.boost_min : 100, thV: d && d.thv != null ? +d.thv : Math.round(med(all.map(c => c.views))), thE: d && d.the != null ? +d.the : med(all.filter(c => c.views >= 1000).map(c => c.er)) };
+}
+const kjClipOf = r => !_kjClip ? null : (r.video_id && _kjClip.by[r.video_id]) || (r.post_link && _kjClip.byUrl[kjCleanUrl(r.post_link)]) || null;
+// น่ายิง Ads = ค่า Ads TikTok รวมของคลิป < 100 บาท (ยังไม่ได้ยิงจริง) + ยอดวิว ≥ ค่ากลาง + Engagement ≥ ค่ากลาง (ค่ากลางของคลิปที่ยังไม่ได้ยิง · คิดใน RPC)
+const kjWorth = r => { const c = kjClipOf(r); return !!c && c.s < _kjClip.boostMin && c.views >= _kjClip.thV && c.er >= _kjClip.thE; };
+const kjSnapT = i => { const x = _kjClip && _kjClip.snaps[i]; if (!x) return ''; const d = new Date(x.at); return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+function kjClipToggle(ev, key) { if (ev && ev.target.closest('a, .pl-trace, button, .ads-info-wrap')) return; _kjClipOpen = _kjClipOpen === key ? null : key; renderKolTable(); }
+function kjClipDetail(o) {
+  const c = o.clip; if (!c) return '';
+  const cpm = _kjClip.cpm, pct = (a, b) => b > 0 ? (a / b * 100).toFixed(2) + '%' : '—';
+  return `<div class="kj-cx"><div class="chart-wrap" style="height:190px;"><canvas id="kjClipChart"></canvas></div><div class="kj-cxs">
+    <div>ยอดวิว <b>${fmt(c.views)}</b>${c.gain != null ? ` · วิวเพิ่ม <b>+${fmt(c.gain)}</b>` : ''}</div>
+    <div>ไลค์ <b>${fmt(c.likes)}</b> · คอมเมนต์ <b>${fmt(c.comments)}</b></div><div>แชร์ <b>${fmt(c.shares)}</b> · บันทึก <b>${fmt(c.saves)}</b></div>
+    <div>Engagement <b>${c.er.toFixed(2)}%</b> <span style="color:var(--text3);">(ค่ากลาง ${_kjClip.thE.toFixed(2)}%)</span></div>
+    <div>ค่าจ้าง ${o.cpv != null ? `<b>${o.cpv.toFixed(2)}</b> ต่อ 1,000 วิว` : '—'}${cpm ? ` <span style="color:var(--text3);">· TikTok Ads ${cpm.toFixed(2)}</span>` : ''}</div></div></div>`;
+}
+function kjClipChart(o) {
+  const c = o.clip; if (!c || typeof makeChart !== 'function') return;
+  const labels = _kjClip.snaps.map((x, i) => kjSnapT(i)), v = c.v;
+  makeChart('kjClipChart', 'line', labels, [{ label: 'ยอดวิวสะสม', data: v, borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,.12)', fill: true, spanGaps: true, pointRadius: 3 }],
+    { tooltip: { callbacks: { footer: it => { const i = it[0] && it[0].dataIndex; return i > 0 && v[i] != null && v[i - 1] != null ? 'วิวเพิ่ม +' + fmt(v[i] - v[i - 1]) : ''; } } } });
+}
 // (2026-10-06) ยอดขายแบบ Commission ของ KOL ที่จ้าง (ครีเอเตอร์ในไฟล์ทีม KOL รวม Presenter) — ชุดเดียวกับการ์ดยอดขายของ Creator Performance (⚡ API, กรอง KOL)
 //   แสดงแยก ไม่บวกเข้ายอดที่ผูกได้ / MER (บางออเดอร์ซ้ำกับยอดจาก Ads ของคลิปงาน) · มีข้อมูลตั้งแต่ CP_API_START
 let _kjCom = {};
@@ -113,7 +153,7 @@ async function kjLoadAds(from, to) {
 // แถวงาน + ค่า Ads / ยอดขายในช่วง · ค่าจ้างนับเฉพาะงานที่โพสต์ในช่วง · ยอดขายถอด VAT
 function kjWithAds(r, a, inRange) {
   const s = [0, 0, 0, 0, 0]; if (a) Object.values(a.m || {}).forEach(v => v.forEach((x, i) => { s[i] += +x || 0; }));
-  return { ...r, inRange, amount: inRange ? r.amount : 0, fb_ads_spend: s[0], fb_ads_value: s[1] / VAT_DIV, tt_gmvmax_cost: s[2], tt_gmvmax_rev: s[3] / VAT_DIV, tt_ads_spend: s[4], tt_ads_value: 0,
+  return { ...r, fee: +r.amount || 0, inRange, amount: inRange ? r.amount : 0, fb_ads_spend: s[0], fb_ads_value: s[1] / VAT_DIV, tt_gmvmax_cost: s[2], tt_gmvmax_rev: s[3] / VAT_DIV, tt_ads_spend: s[4], tt_ads_value: 0,
     ads_spend: s[0] + s[2] + s[4], sales: (s[1] + s[3]) / VAT_DIV };
 }
 async function kolRenderPage() {   // (2026-11-10) เรียกผ่าน renderKolPage() ใน dashboard.html (โหลดไฟล์นี้ก่อน)
@@ -125,7 +165,8 @@ async function kolRenderPage() {   // (2026-11-10) เรียกผ่าน r
       const KJ_COLS = 'k,job_id,content_code,kol_type,post_date,cost_month,platform,kol_name,kol_handle,tt_handle,channel_link,product_code,parent_sku,product_group,progress,post_link,video_id,budget_total,amount,match_status,match_note,pay_status,claim_amount,acct_amount,acct_months,claim_match,claim_over_budget';
       const [a, b] = await Promise.all([fetchAllRows(`${window.SUPABASE_URL}/rest/v1/mv_kol_plan_jobs?select=${KJ_COLS}&order=k.asc`, h),
         fetchAllRows(`${window.SUPABASE_URL}/rest/v1/products?select=parent_sku,product_name`, h),
-        kjLoadAds(getDateValue('From') || '2000-01-01', getDateValue('To') || '2999-12-31').catch(() => null)]);
+        kjLoadAds(getDateValue('From') || '2000-01-01', getDateValue('To') || '2999-12-31').catch(() => null),
+        supaRpc('kol_clip_page', {}).then(d => { _kjClip = kjClipModel(d); }).catch(e => { console.warn('kol_clip_page:', e.message); _kjClip = kjClipModel(null); })]);
       _kjRows = a.map(r => ({ ...r, month: String(r.cost_month || '').slice(0, 7) }));   // month = เดือนที่โพสต์
       b.forEach(p => { if (p.parent_sku && p.product_name && !_kjNames[p.parent_sku]) _kjNames[p.parent_sku] = p.product_name; });
     }
@@ -133,7 +174,7 @@ async function kolRenderPage() {   // (2026-11-10) เรียกผ่าน r
   renderKolTable();
 }
 function kjSetView(v) { _kjView = v; _kjSortCol = 'amount'; _kjSortDir = 'desc'; _kjOpen = new Map(); document.getElementById('kjCalSeg').style.display = v === 'cal' ? '' : 'none'; document.querySelectorAll('#kjViewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); renderKolTable(); }
-function kjSort(c) { if (_kjSortCol === c) _kjSortDir = _kjSortDir === 'asc' ? 'desc' : 'asc'; else { _kjSortCol = c; _kjSortDir = ['name', 'kol', 'sku', 'plat', 'type', 'date'].includes(c) ? 'asc' : 'desc'; } renderKolTable(); }
+function kjSort(c) { if (_kjSortCol === c) _kjSortDir = _kjSortDir === 'asc' ? 'desc' : 'asc'; else { _kjSortCol = c; _kjSortDir = ['name', 'kol', 'sku', 'plat', 'type', 'date', 'cpv'].includes(c) ? 'asc' : 'desc'; } renderKolTable(); }
 function kjFillProducts() {
   const sel = document.getElementById('kjProduct'); if (!sel || !_kjRows || sel.dataset.n == _kjRows.length) return;
   const by = {}; _kjRows.forEach(r => { const k = r.parent_sku || r.product_code; if (k) by[k] = (by[k] || 0) + (+r.amount || 0); });
@@ -180,7 +221,7 @@ function renderKolTable() {
   const dFrom = getDateValue('From') || '2000-01-01', dTo = getDateValue('To') || '2999-12-31';
   const plat = document.getElementById('kjPlat').value, typ = document.getElementById('kjType').value, q = (document.getElementById('kjSearch').value || '').trim().toLowerCase();
   const st = (document.getElementById('kjStatus') || {}).value || '';
-  const stOk = r => !st || (st.startsWith('pay:') ? r.pay_status === st.slice(4) : r.match_status === st);
+  const stOk = r => !st || (st === 'worth' ? kjWorth(r) : st === 'hot' ? (() => { const c = kjClipOf(r); return !!c && c.prev > 0 && c.gain != null && c.gain / c.prev >= 0.03; })() : st === 'views' ? !!kjClipOf(r) : st.startsWith('pay:') ? r.pay_status === st.slice(4) : r.match_status === st);
   kjFillProducts(); const prod = (document.getElementById('kjProduct') || {}).value || '';
   // (2026-10-01) ค่าจ้าง = งานที่โพสต์ในช่วงนี้ · ค่า Ads / ยอดขาย = ที่ใช้เงิน/เกิดในช่วงนี้ (รวมงานที่โพสต์ก่อนช่วงแต่ยังยิง Ads อยู่)
   const A = _kjAds[dFrom + '|' + dTo];
@@ -215,6 +256,11 @@ function renderKolTable() {
   const T = rows.reduce((t, r) => { const v = val(r); t.amount += v.amount; t.ads += v.ads; t.sales += v.sales; t.acct += r.inRange ? (+r.acct_amount || 0) : 0; if (/^conv/i.test(r.kol_type || '')) t.conv += v.amount; else t.pr += v.amount;
     t.aTT += (+r.tt_gmvmax_cost || 0) + (+r.tt_ads_spend || 0); t.aFB += +r.fb_ads_spend || 0; t.sTT += (+r.tt_gmvmax_rev || 0) + (+r.tt_ads_value || 0); t.sFB += +r.fb_ads_value || 0; return t; }, { amount: 0, ads: 0, sales: 0, acct: 0, conv: 0, pr: 0, aTT: 0, aFB: 0, sTT: 0, sFB: 0 });
   const J = [...new Map(rows.filter(r => r.inRange).map(r => [r.content_code, r])).values()], cnt = f => J.filter(f).length;
+  // (2026-11-26) ยอดวิวคลิป TikTok ของงานที่โพสต์ในช่วงนี้ (นับคลิปละครั้ง) · ค่าจ้างนับเฉพาะงานที่มียอดวิว
+  const VT = (() => { const seen = new Map(); let fee = 0; rows.filter(r => r.inRange).forEach(r => { const c = kjClipOf(r); if (!c) return; seen.set(c.id, c); fee += +r.fee || 0; });
+    const cs = [...seen.values()]; return { n: cs.length, views: cs.reduce((a, c) => a + c.views, 0), gain: cs.reduce((a, c) => a + (c.gain || 0), 0), hasGain: cs.some(c => c.gain != null), fee, worth: J.filter(kjWorth).length }; })();
+  const kjLastT = _kjClip && _kjClip.snaps.length ? kjSnapT(_kjClip.snaps.length - 1) : '—', kjPrevT = _kjClip && _kjClip.snaps.length > 1 ? kjSnapT(_kjClip.snaps.length - 2) : '';
+  const kjCpm = _kjClip && _kjClip.cpm ? _kjClip.cpm.toFixed(2) : '—';
   const adsPrev = rows.filter(r => !r.inRange).reduce((t, r) => t + (+r.ads_spend || 0), 0);
   // (2026-10-02) boost บัญชี/เพจ KOL ที่หางานในไฟล์ไม่เจอ — แสดงแยก ไม่บวกเข้ายอด (โชว์เมื่อไม่ได้กรองอื่นนอกจากวันที่ / Facebook)
   const boostFree = (!prod && !q && !st && !typ && (!plat || plat === 'Facebook')) ? Object.values(((A._boost || {}).m) || {}).reduce((t, v) => t + (+v[0] || 0), 0) : 0;
@@ -243,7 +289,7 @@ function renderKolTable() {
   const nOther = Math.max(0, T.n - T.m - T.na - T.nf - T.np);
   const cpStartTxt = new Date(CP_API_START).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
   const comCard = (() => {
-    const head = `<div class="card-title">ยอดขาย Commission ${plTip('tip-kj-com', 'ยอดขายทุกออเดอร์ที่ TikTok จ่าย Commission ให้ KOL ที่จ้าง ในช่วงนี้ — ทั้ง Live คลิปอื่นนอกจากคลิปงาน และโชว์เคส<br>• KOL = ครีเอเตอร์ที่มีงานในไฟล์งานทีม KOL (รวม Presenter) · ไม่ได้กรองอะไรนอกจากวันที่ = KOL ทุกคนในไฟล์ (ตรงกับ Creator Performance กรอง KOL ก่อนถอด VAT) · มีตัวกรองอื่น = เฉพาะ KOL ในตาราง<br>• นับตามวันที่สั่งซื้อ · ไม่รวมยกเลิก / คืน · ถอด VAT แล้ว<br>• แสดงแยก ไม่บวกเข้ายอดขายที่ผูกได้ และไม่คิดใน MER เพราะบางออเดอร์ซ้ำกับยอดจาก Ads ของคลิปงาน<br>• มีข้อมูลตั้งแต่ ' + cpStartTxt, 'right')}</div>`;
+    const head = `<div class="card-title">ยอดขาย Commission ${plTip('tip-kj-com', 'ยอดขายทุกออเดอร์ที่ TikTok จ่าย Commission ให้ KOL ที่จ้าง ในช่วงนี้ — ทั้ง Live คลิปอื่นนอกจากคลิปงาน และโชว์เคส<br>• KOL = ครีเอเตอร์ที่มีงานในไฟล์งานทีม KOL (รวม Presenter) · ไม่ได้กรองอะไรนอกจากวันที่ = KOL ทุกคนในไฟล์ (ตรงกับ Creator Performance กรอง KOL ก่อนถอด VAT) · มีตัวกรองอื่น = เฉพาะ KOL ในตาราง<br>• นับตามวันที่สั่งซื้อ · ไม่รวมยกเลิก / คืน · ถอด VAT แล้ว<br>• แสดงแยก ไม่บวกเข้ายอดขายที่ผูกได้ เพราะบางออเดอร์ซ้ำกับยอดจาก Ads ของคลิปงาน<br>• มีข้อมูลตั้งแต่ ' + cpStartTxt, 'right')}</div>`;
     const dash = sub => `<div class="card">${head}<div class="kpi-value" style="color:var(--text3);">—</div>${kSub(sub)}</div>`;
     if (comNA) return dash('มีเฉพาะ TikTok');
     if (!C) return `<div class="card">${head}<div class="kpi-value"><span class="skeleton" style="display:inline-block;width:70%;height:22px;border-radius:4px;"></span></div></div>`;
@@ -254,14 +300,14 @@ function renderKolTable() {
   { const ks = document.getElementById('kjStat');   // (2026-11-10) สถานะการจับคู่ Ads ของงาน → บรรทัดสรุปที่หัวตาราง (เดิมเป็นการ์ดใบที่ 5)
     if (ks) ks.innerHTML = T.n ? `เจอ Ads <b>${fmt(T.m)}</b> / ${fmt(T.n)} งาน`
       + [[T.na, 'var(--text3)', 'ไม่ได้ยิง Ads'], [T.nf, 'var(--red)', 'หาไม่เจอ'], [T.np, '#60a5fa', 'ยังไม่โพสต์'], [nOther, 'var(--text3)', 'ช่องทางอื่น']].filter(x => x[0] > 0).map(x => ` · <span style="color:${x[1]}">● </span>${x[2]} ${fmt(x[0])}`).join('')
+      + (VT.worth ? ` · <span style="color:var(--green)">● </span>น่ายิง Ads ${fmt(VT.worth)}` : '')
       + ` ${plTip('tip-kj-match', '• เจอ Ads = เจอ Ads ของคลิป/โพสต์<br>• ไม่ได้ยิง Ads = เจอคลิป แต่ไม่มี Ads<br>• หาไม่เจอ = ลิงก์ผิด / ไม่ใช่ TikTok หรือชื่อไม่ตรงกับ Ads → ควรแก้ไฟล์<br>• ยังไม่โพสต์ = ยังไม่มีลิงก์ / ยังไม่ถึงวันโพสต์<br>• ช่องทางอื่น = IG / Lemon8 / FB group (ไม่มีข้อมูล Ads)<br>เลือกดูทีละสถานะได้ที่ตัวกรอง "สถานะ" ด้านบน')}` : ''; }
   { const kk = document.getElementById('kjKpis'); if (kk && kk.offsetHeight) kk.style.minHeight = Math.max(parseFloat(kk.style.minHeight) || 0, kk.offsetHeight) + 'px'; }   // (2026-11-10) การ์ดวาดใหม่ระหว่างโหลดส่วนย่อย → ไม่ให้แถวการ์ดหดแล้วขยาย (กันหน้าเด้ง)
   document.getElementById('kjKpis').innerHTML = `
     <div class="card"><div class="card-title">ค่าจ้าง KOL ${plTip('tip-kj-amt', 'งบในไฟล์งานทีม KOL (ก่อน VAT) ของงานที่โพสต์ในช่วงนี้<br>ตรงกับ MKT Tracking · เจาะสินค้า · Creator Performance (งาน TikTok)<br>Business Insight ใช้ยอดที่บัญชีลง จึงอาจต่างกัน')}</div><div class="kpi-value">${fmt(Math.round(T.amount))}${kUnit(fmt(T.n) + ' งาน')}</div>${kBar([[T.conv, C_CONV, 'Conversion'], [T.pr, C_PR, 'PR']], 1)}${kSub(kPrev(T.amount, TP && TP.amount, false, fmt(Math.round(TP ? TP.amount : 0))) + kDot(C_CONV, 'Conversion ' + fmt(Math.round(T.conv))) + kDot(C_PR, 'PR ' + fmt(Math.round(T.pr))))}</div>
     <div class="card"><div class="card-title">ค่า Ads งาน KOL ${plTip('tip-kj-ads', 'ค่า Ads ที่ยิงคลิป/โพสต์ของงาน KOL นับตามวันที่ใช้เงิน<br>• TikTok = GMV Max + Ads ปกติ/Spark (ตรงกับ Creator Performance)<br>• Facebook = Ads ที่ ad name หรือชื่อ KOL ตรงกับงาน (ตรงกับหน้า Facebook Ads)' + (adsPrev ? `<br>รวมงานที่โพสต์ก่อนช่วง ${fmt(Math.round(adsPrev))}` : '') + (boostFree >= 1 ? `<br>ไม่รวม boost ที่ยังไม่ผูกงาน ${fmt(Math.round(boostFree))}` : ''))}</div><div class="kpi-value">${fmt(Math.round(T.ads))}${T.amount > 0 ? kUnit((T.ads / T.amount * 100).toFixed(0) + '% ของค่าจ้าง') : ''}</div>${kBar([[T.aTT, C_TT, 'TikTok'], [T.aFB, C_FB, 'Facebook']], 1)}${kSub(kPrev(T.ads, TP && TP.ads, false, fmt(Math.round(TP ? TP.ads : 0))) + kDot(C_TT, 'TikTok ' + fmt(Math.round(T.aTT))) + kDot(C_FB, 'Facebook ' + fmt(Math.round(T.aFB))))}</div>
     <div class="card"><div class="card-title">ยอดขายที่ผูกได้ ${plTip('tip-kj-vat', 'ยอดขายที่ Ads ของคลิป/โพสต์งาน KOL นับได้<br>• TikTok = ยอดขาย GMV Max ของคลิป<br>• Facebook = ยอดซื้อที่ Meta นับ<br>ถอด VAT 7% แล้ว ให้เทียบกับค่าจ้าง / ค่า Ads')}</div><div class="kpi-value">${fmt(Math.round(T.sales))}${kUnit('ถอด VAT')}</div>${kBar([[T.sTT, C_TT, 'TikTok'], [T.sFB, C_FB, 'Facebook']], 1)}${kSub(kPrev(T.sales, TP && TP.sales, true, fmt(Math.round(TP ? TP.sales : 0))) + kDot(C_TT, 'TikTok ' + fmt(Math.round(T.sTT))) + kDot(C_FB, 'Facebook ' + fmt(Math.round(T.sFB))))}</div>
-    <div class="card"><div class="card-title">MER ${plTip('tip-kj-mer', 'ยอดขายที่ผูกได้ ÷ (ค่าจ้าง + ค่า Ads)<br>เขียว ≥ 2x · ทอง 1–2x · แดง &lt; 1x (แถบเต็ม = 2x)')}</div><div class="kpi-value" style="${all > 0 ? 'color:' + merC(merV) + ';' : ''}">${all > 0 ? merV.toFixed(2) + 'x' : '—'}</div><div style="height:6px;border-radius:3px;overflow:hidden;background:rgba(148,163,184,.18);margin:8px 0 6px;"><div style="height:100%;width:${Math.min(100, merV / 2 * 100).toFixed(0)}%;background:${merC(merV)};"></div></div>${kSub((all > 0 && allP > 0 ? kPrev(merV, TP.sales / allP, true, (TP.sales / allP).toFixed(2) + 'x') : '') + (all > 0 ? `ลง 1 ได้ยอดขาย ${merV.toFixed(2)}` : ''))}</div>
-
+    <div class="card"><div class="card-title">ยอดวิวคลิป TikTok ${plTip('tip-kj-views', `<b>รวม</b> คลิป TikTok ของงานที่โพสต์ในช่วงนี้ที่ดึงยอดได้ (นับคลิปละครั้ง) · ยอดวิวสะสมรอบล่าสุด ${kjLastT}<br><b>ไม่รวม</b> Facebook / IG / Lemon8 / FB group และงานที่ยังไม่โพสต์<br>ยอดวิวรวมวิวจาก Ads ด้วย (TikTok ไม่แยก)<br>วิวเพิ่ม = รอบล่าสุด − รอบก่อน${kjPrevT ? ' (' + kjPrevT + ')' : ''}<br>ค่าจ้างต่อ 1,000 วิว = ค่าจ้างของงานที่มียอดวิว ÷ ยอดวิว × 1,000 · เทียบ TikTok Ads ${kjCpm} ต่อ 1,000 ครั้งที่เห็น (90 วันล่าสุด ไม่รวม GMV Max)`, 'right')}</div><div class="kpi-value">${VT.n ? fmt(VT.views) : '—'}${VT.n ? kUnit(fmt(VT.n) + ' คลิป') : ''}</div>${kBar([])}${kSub(VT.n ? (VT.hasGain ? 'วิวเพิ่ม +' + fmt(VT.gain) + '<br>' : '') + 'ค่าจ้าง ' + (VT.views > 0 ? (VT.fee / VT.views * 1000).toFixed(2) : '—') + ' ต่อ 1,000 วิว' : 'มีเฉพาะ TikTok')}</div>
     <div class="card"><div class="card-title">บัญชีลงค่าใช้จ่าย ${plTip('tip-kj-pay', `ยอดที่บัญชีลงเป็นค่าใช้จ่าย KOL ${AE && AE.from ? (AE.from === AE.to ? 'เดือน ' + PL_TH_M(AE.from) : PL_TH_M(AE.from) + ' – ' + PL_TH_M(AE.to)) : ''} — <b>เท่ากับชีทเบิกเงิน KOL</b><br>คอลัมน์ AB = เดือนที่บัญชีลง · คอลัมน์ AR = จำนวนตั้งหนี้ EX.VAT บัญชีลง<br>นับตามเดือนที่บัญชีลง ไม่ใช่วันโพสต์ จึงต่างจากค่าจ้าง KOL ได้ (งานที่จ่ายก่อน / หลังเดือนที่โพสต์)<br>เลือกช่วงไม่เต็มเดือน = นับทั้งเดือนของวันแรกถึงวันสุดท้าย · ไม่ขึ้นกับตัวกรองอื่น<br>บรรทัดส้ม = งานที่โพสต์ในช่วงนี้แต่ยังไม่กรอกเบิก`, 'right')}</div>
       <div class="kpi-value">${!AE ? '…' : AE.err ? '—' : fmt(Math.round(+AE.total || 0))}${AE && !AE.err ? kUnit(fmt(+AE.n || 0) + ' ใบ') : ''}</div>${AE && !AE.err ? kBar([[+AE.conv || 0, C_CONV, 'Conversion'], [+AE.pr || 0, C_PR, 'PR'], [+AE.other || 0, '#94a3b8', 'อื่น ๆ']], 1) : kBar([])}${kSub((AE && !AE.err ? kDot(C_CONV, 'Conversion ' + fmt(Math.round(+AE.conv || 0))) + kDot(C_PR, 'PR ' + fmt(Math.round(+AE.pr || 0))) : AE && AE.err ? 'โหลดไม่สำเร็จ' : '') + (P.none ? kDot('var(--orange)', 'ยังไม่กรอกเบิก ' + fmt(P.none) + ' งาน') : ''))}</div>${comCard}`;
   // รวมตามมุมมอง
@@ -277,15 +323,18 @@ function renderKolTable() {
     list = Object.entries(g).map(([k, js]) => {
       const r = js[0], t = js.reduce((a, x) => { const v = val(x); a.amount += v.amount; a.ads += v.ads; a.sales += v.sales; a.acct += +x.acct_amount || 0; a.claim += +x.claim_amount || 0; return a; }, { amount: 0, ads: 0, sales: 0, acct: 0, claim: 0 });
       const skus = [...new Set(js.map(x => _kjNames[x.parent_sku] || x.parent_sku || x.product_group || x.product_code || '—'))];
-      return { ...r, ...t, key: 'j' + r.job_id, jobs: js, n: js.length, kol: kjDisplay(r), sku: skus.join(', '),
+      const c = kjClipOf(r), fee = js.reduce((a, x) => a + (+x.fee || 0), 0);
+      return { ...r, ...t, clip: c, views: c ? c.views : null, gain: c ? c.gain : null, er: c ? c.er : null, cpv: c && c.views > 0 && fee > 0 ? fee / c.views * 1000 : null, worth: kjWorth(r), key: 'j' + r.job_id, jobs: js, n: js.length, kol: kjDisplay(r), sku: skus.join(', '),
         plat: r.platform || '—', type: r.kol_type || '—', date: r.post_date || '', shared: r.video_id && vidJobs[r.video_id] ? vidJobs[r.video_id].size - 1 : 0, dupKind: dupKind(r), payRank: KJ_PAY_RANK[r.pay_status] || 0 };
     });
   }
   else {
-    const by = {};
+    const by = {}, KJ_SHARE = {};   // (2026-11-26) คลิปเดียวกันหลายแถว (หลายสินค้า / หลายงาน) → แบ่งยอดวิวเท่าๆ กัน เหมือนค่า Ads
+    _kjRows.forEach(x => { const c = kjClipOf(x); if (c) KJ_SHARE[c.id] = (KJ_SHARE[c.id] || 0) + 1; });
     rows.forEach(r => { const k = _kjView === 'kol' ? kjDisplay(r) : (r.parent_sku || r.product_code || '—');
       const o = (by[k] = by[k] || { key: k, name: _kjView === 'kol' ? k : (_kjNames[k] || k), n: 0, codes: new Set(), amount: 0, ads: 0, sales: 0, plats: new Set(), jobs: [] });
-      const v = val(r); if (r.inRange) o.codes.add(r.content_code); o.n = o.codes.size; o.jobs.push(r); o.amount += v.amount; o.ads += v.ads; o.sales += v.sales; o.plats.add(kjPlat(r.platform)); });
+      const v = val(r); if (r.inRange) o.codes.add(r.content_code); o.n = o.codes.size; o.jobs.push(r); o.amount += v.amount; o.ads += v.ads; o.sales += v.sales; o.plats.add(kjPlat(r.platform));
+      if (r.inRange) { const c = kjClipOf(r); if (c) { const w = 1 / (KJ_SHARE[c.id] || 1); o.vSum = (o.vSum || 0) + c.views * w; o.gSum = (o.gSum || 0) + (c.gain || 0) * w; if (c.gain != null) o.hasG = true; o.feeV = (o.feeV || 0) + (+r.fee || 0); o.hasV = true; } } });
     if (_kjView === 'kol' && comAll && C && C.m) {   // (2026-10-06) KOL ที่เคยจ้าง ไม่มีงาน / Ads ในช่วงนี้ แต่ยังมียอด Commission → ใส่แถวด้วย ให้ผลรวมคอลัมน์ = การ์ด
       const seen = new Set(rows.map(hOf).filter(Boolean)), latest = {};
       _kjRows.forEach(r => { const h = hOf(r); if (h && !seen.has(h) && C.m[h] && C.m[h].rev && (!latest[h] || String(r.post_date || '') > String(latest[h].post_date || ''))) latest[h] = r; });
@@ -296,42 +345,53 @@ function renderKolTable() {
     }
     list = Object.values(by).map(o => ({ ...o, plat: [...new Set(o.jobs.map(j => j.platform || ''))].join(','), chLink: (o.jobs.find(j => j.channel_link) || {}).channel_link || '' }));
   }
-  list.forEach(o => { o.mer = (o.amount + o.ads) > 0 ? o.sales / (o.amount + o.ads) : 0; if (_kjView === 'kol') { o.comD = comNA ? comOf([]) : comOf(new Set((o.jobs || []).map(hOf).filter(Boolean))); o.com = o.comD.rev; } });
-  list.sort((a, b) => { const av = a[_kjSortCol], bv = b[_kjSortCol]; const c = typeof av === 'string' ? String(av).localeCompare(String(bv), 'th') : (av || 0) - (bv || 0); return _kjSortDir === 'asc' ? c : -c; });
+  list.forEach(o => { o.mer = (o.amount + o.ads) > 0 ? o.sales / (o.amount + o.ads) : 0;
+    if (_kjView !== 'job') { o.views = o.hasV ? Math.round(o.vSum) : null; o.gain = o.hasG ? Math.round(o.gSum) : null; o.cpv = o.hasV && o.vSum > 0 && o.feeV > 0 ? o.feeV / o.vSum * 1000 : null; } if (_kjView === 'kol') { o.comD = comNA ? comOf([]) : comOf(new Set((o.jobs || []).map(hOf).filter(Boolean))); o.com = o.comD.rev; } });
+  list.sort((a, b) => { const av = a[_kjSortCol], bv = b[_kjSortCol]; if (av == null && bv != null) return 1; if (bv == null && av != null) return -1; const c = typeof av === 'string' ? String(av).localeCompare(String(bv), 'th') : (av || 0) - (bv || 0); return _kjSortDir === 'asc' ? c : -c; });
   _kjList = list;
-  const th = (k, label, left, w) => `<th class="sortable-th${left ? ' c-left' : ''}" style="white-space:nowrap;${w ? 'width:' + w + ';' : ''}" onclick="kjSort('${k}')">${label} <span class="sort-ind">${_kjSortCol === k ? (_kjSortDir === 'asc' ? '▲' : '▼') : ''}</span></th>`;
+  const th = (k, label, left, w, cls) => `<th class="sortable-th${left ? ' c-left' : ''}${cls ? ' ' + cls : ''}" style="white-space:nowrap;${w ? 'width:' + w + ';' : ''}" onclick="kjSort('${k}')">${label} <span class="sort-ind">${_kjSortCol === k ? (_kjSortDir === 'asc' ? '▲' : '▼') : ''}</span></th>`;
   const money = v => v ? `${fmt(Math.round(v))}` : '<span style="color:var(--text3);">—</span>';
+  const dash = '<span style="color:var(--text3);">—</span>';
+  const vCell = v => v == null ? dash : fmt(Math.round(v));
+  const gCell = g => g == null ? dash : g > 0 ? `<b>+${fmt(Math.round(g))}</b>` : '0';
+  const cpvCell = x => x == null ? dash : `<span style="${_kjClip && _kjClip.cpm && x <= _kjClip.cpm ? 'color:var(--green);font-weight:700;' : ''}">${x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+  const TIP_V = `ยอดวิวสะสมของคลิปบน TikTok รอบล่าสุด (${kjLastT}) · รวมวิวจาก Ads<br>มีเฉพาะงาน TikTok ที่มีลิงก์โพสต์ · ช่องทางอื่น / ยังไม่โพสต์ = —`;
+  const TIP_G = kjPrevT ? `ยอดวิวรอบล่าสุด (${kjLastT}) − รอบก่อน (${kjPrevT})<br>เก็บยอดวันละ 1 รอบตอนเช้า · กดแถวเพื่อดูยอดวิวรายวัน` : 'ต้องมียอดอย่างน้อย 2 รอบ';
+  const TIP_E = `Engagement = (ไลค์ + คอมเมนต์ + แชร์ + บันทึก) ÷ ยอดวิว · ใช้ตัวเลขตามที่ TikTok แสดง<br>ค่ากลางของคลิปที่ยังไม่ได้ยิง Ads ${_kjClip ? _kjClip.thE.toFixed(2) : '—'}%`;
+  const TIP_C = `ค่าจ้าง ÷ ยอดวิว × 1,000 · ยิ่งต่ำยิ่งคุ้ม${_kjView === 'job' ? '' : ' (คิดเฉพาะงานที่มียอดวิว)'}<br>สีเขียว = ถูกกว่าค่า TikTok Ads ต่อ 1,000 ครั้งที่เห็น ${kjCpm} (90 วันล่าสุด ไม่รวม GMV Max)`;
+  const TIP_A = `• เจอ Ads / ไม่ได้ยิง Ads / หาไม่เจอ / ยังไม่โพสต์ = สถานะเดิมของงาน<br>• ค่า Ads = ที่ยิงคลิปนี้ในช่วงที่เลือก (กดดูที่มาได้)<br>• <b>น่ายิง Ads</b> = ยังไม่ได้ยิงจริง (ค่า Ads TikTok รวมของคลิปไม่ถึง ${_kjClip ? fmt(_kjClip.boostMin) : 100} บาท · GMV Max หยิบไปใช้เล็กน้อยไม่นับ) + ยอดวิว ≥ ${_kjClip ? fmt(_kjClip.thV) : '—'} และ Engagement ≥ ${_kjClip ? _kjClip.thE.toFixed(2) : '—'}% (ค่ากลางของคลิปที่ยังไม่ได้ยิง)`;
   const mer = o => o.sales > 0 ? `<b>${o.mer.toFixed(2)}x</b>` : '<span style="color:var(--text3);">—</span>';
   const comCell = o => !C ? '<td><span style="color:var(--text3);">…</span></td>' : o.com >= 1 ? `<td title="Live ${fmt(Math.round(o.comD.live))} · คลิป ${fmt(Math.round(o.comD.video))} · โชว์เคส / อื่นๆ ${fmt(Math.round(o.comD.other))} (ถอด VAT)">${fmt(Math.round(o.com))}</td>` : '<td><span style="color:var(--text3);">—</span></td>';
   if (_kjView === 'job') {
     { const tbl = document.getElementById('theadKj').closest('table'); if (tbl) tbl.style.tableLayout = 'fixed'; }   // (2026-10-02) คุมความกว้างคอลัมน์
-    document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1, '17%')}${th('plat', 'ช่องทาง', 1, '6%')}${th('sku', 'สินค้า', 1, '13%')}${th('type', 'ประเภท', 0, '7%')}${th('date', 'วันโพสต์', 0, '8%')}${th('amount', 'ค่าจ้าง', 0, '8%')}${th('ads', 'ค่า Ads', 0, '7%')}${th('sales', 'ยอดขาย ' + plTip('tip-kjh-vat' + _kjView, 'ยอดขายจาก Ads ของคลิป/โพสต์ · ถอด VAT แล้ว', 'right'), 0, '8%')}${th('mer', 'MER ' + plTip('tip-kjh-mer', 'ยอดขาย ÷ (ค่าจ้าง + ค่า Ads)', 'right'), 0, '6%')}<th style="white-space:nowrap;width:9%;">Ads ของงาน</th>${th('payRank', 'เบิกจ่าย ' + plTip('tip-kjh-pay', KJ_PAY_TIP, 'right'), 0, '11%')}</tr>`;
-    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr>
+    document.getElementById('theadKj').innerHTML = `<tr>${th('kol', 'KOL', 1, '14%')}${th('plat', 'ช่องทาง', 1, '5%')}${th('sku', 'สินค้า', 1, '12%')}${th('date', 'วันโพสต์', 0, '8%')}${th('amount', 'ค่าจ้าง', 0, '6%')}${th('views', 'ยอดวิว ' + plTip('tip-kjh-v', TIP_V, 'right'), 0, '7%', 'kj-st')}${th('gain', 'วิวเพิ่ม ' + plTip('tip-kjh-g', TIP_G, 'right'), 0, '6%', 'kj-st')}${th('er', 'ER ' + plTip('tip-kjh-e', TIP_E, 'right'), 0, '6%', 'kj-st')}${th('cpv', 'ต่อ 1,000 วิว ' + plTip('tip-kjh-c', TIP_C, 'right'), 0, '8%', 'kj-st')}${th('sales', 'ยอดขาย ' + plTip('tip-kjh-vat' + _kjView, 'ยอดขายจาก Ads ของคลิป/โพสต์ · ถอด VAT แล้ว', 'right'), 0, '7%')}${th('ads', 'Ads ของงาน ' + plTip('tip-kjh-a', TIP_A, 'right'), 0, '12%')}${th('payRank', 'เบิกจ่าย ' + plTip('tip-kjh-pay', KJ_PAY_TIP, 'right'), 0, '9%')}</tr>`;
+    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr class="${o.clip ? 'kj-clk' : ''}${_kjClipOpen === o.key ? ' on' : ''}"${o.clip ? ` onclick="kjClipToggle(event,'${o.key}')"` : ''}>
       <td class="c-left">${o.channel_link ? `<a href="${o.channel_link}" target="_blank" rel="noopener" title="เปิดช่อง KOL" class="kj-name">${o.kol}</a>` : `<b>${o.kol}</b>`}${o.post_link ? `<a href="${o.post_link}" target="_blank" rel="noopener" title="เปิดโพสต์" class="kj-post">↗</a>` : ''}<div style="color:var(--text3);font-size:10px;font-family:'Sarabun',sans-serif;word-break:break-all;">${o.content_code || ''}</div></td>
-      <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${o.sku}${o.n > 1 ? `<div style="font-size:10px;color:var(--accent);" title="งานนี้รีวิวหลายสินค้า — ค่าจ้าง ค่า Ads และยอดขายถูกแบ่งเท่าๆ กันให้แต่ละสินค้า (กติกาเดียวกับ MKT Tracking)">แบ่ง ${o.n} สินค้า</div>` : ''}</td><td>${o.type}</td>
+      <td class="c-left kj-icons">${kjIcons(o.plat)}</td><td class="c-left" style="font-size:11.5px;white-space:normal;">${o.sku}${o.n > 1 ? `<div style="font-size:10px;color:var(--accent);" title="งานนี้รีวิวหลายสินค้า — ค่าจ้าง ค่า Ads และยอดขายถูกแบ่งเท่าๆ กันให้แต่ละสินค้า (กติกาเดียวกับ MKT Tracking)">แบ่ง ${o.n} สินค้า</div>` : ''}<div style="font-size:10.5px;color:var(--text3);">${o.type}</div></td>
       <td>${o.date ? new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}${o.progress && o.match_status === 'not_posted' ? `<div style="font-size:10.5px;color:var(--text3);">${o.progress}</div>` : ''}${o.inRange ? '' : '<div style="font-size:10.5px;color:var(--orange);" title="ค่าจ้างนับในเดือนที่โพสต์ — แถวนี้ขึ้นเพราะยังมีค่า Ads / ยอดขายในช่วงนี้">โพสต์ก่อนช่วงนี้</div>'}</td>
-      <td>${money(o.amount)}</td><td>${o.ads >= 1 ? `<span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'ads')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.ads))}</span>` : money(o.ads)}</td><td>${o.sales >= 1 ? `<span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'sales')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.sales))}</span>` : money(o.sales)}</td><td>${mer(o)}</td>
+      <td>${money(o.amount)}</td>${o.clip ? `<td class="kj-st">${vCell(o.views)}</td><td class="kj-st">${gCell(o.gain)}${o.clip.prev > 0 && o.gain != null ? `<div style="margin-top:2px;"><span class="ui-chip${o.gain / o.clip.prev >= 0.03 ? ' up' : ''}" style="font-size:10.5px;">โต ${(o.gain / o.clip.prev * 100).toFixed(1)}%</span></div>` : ''}</td><td class="kj-st">${o.er.toFixed(2)}%</td><td class="kj-st">${cpvCell(o.cpv)}</td>` : `<td colspan="4" class="kj-st kj-nost">${kjPlat(o.platform) !== 'TikTok' ? 'ช่องทางนี้ยังไม่มียอดวิว' : o.match_status === 'not_posted' ? 'ยังไม่โพสต์' : !o.post_link ? 'ยังไม่มีลิงก์โพสต์ในไฟล์ทีม KOL' : 'ดึงยอดไม่ได้ (คลิปถูกลบ / ปิด)'}</td>`}<td>${o.sales >= 1 ? `<span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'sales')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.sales))}</span>` : money(o.sales)}</td>
       <td title="${o.match_note || ''}">${o.match_status === 'matched' ? '<span class="kj-tag kj-ok">เจอ Ads</span>' : o.match_status === 'no_ads' ? '<span class="kj-tag kj-no">ไม่ได้ยิง Ads</span>' : o.match_status === 'not_found' ? '<span class="kj-tag kj-no" style="color:var(--red);">หาไม่เจอ</span>' : o.match_status === 'not_posted' ? '<span class="kj-tag kj-no">ยังไม่โพสต์</span>' : '<span class="kj-tag kj-no">ไม่มีข้อมูล Ads</span>'}${kjShortNote(o.match_note) ? `<div style="font-size:10.5px;color:var(--text3);">${kjShortNote(o.match_note)}</div>` : ''}${o.shared ? (() => { const K = { link: ['⚠️ ลิงก์อาจผิด', 'var(--orange)', 'รหัสงานต่างกัน แต่ลิงก์เปิดแล้วเป็นคลิปเดียวกับงานอื่น — ถ้าเป็นคลิปใหม่ ให้แก้ลิงก์ในไฟล์ทีม KOL'], extra: ['⚠️ คลิปเดิมหลายงาน?', 'var(--orange)', 'KOL คนเดิมใช้คลิปเดียวกันในงานคนละเดือน — ถ้าเป็นการจ่ายเพิ่มสำหรับคลิปเดิม ไม่ต้องแก้'] }[o.dupKind] || ['⚠️ คลิปเดียวกับอีก ' + o.shared + ' งาน', 'var(--orange)', ''];
-        return `<div style="font-size:10px;color:${K[1]};font-weight:700;" title="${K[2]} · ค่า Ads และยอดขายของคลิปถูกแบ่งเท่าๆ กันระหว่างงาน (ไม่นับซ้ำ)">${K[0]}</div>`; })() : ''}</td>
-      <td>${kjPayCell(o, o.acct, o.claim)}</td></tr>`).join('')
-      || '<tr><td colspan="11" class="empty">ไม่มีงานที่โพสต์ในช่วงนี้</td></tr>';
+        return `<div style="font-size:10px;color:${K[1]};font-weight:700;" title="${K[2]} · ค่า Ads และยอดขายของคลิปถูกแบ่งเท่าๆ กันระหว่างงาน (ไม่นับซ้ำ)">${K[0]}</div>`; })() : ''}${o.ads >= 1 ? `<div style="font-size:11px;color:var(--text2);">ค่า Ads <span class="pl-trace" onclick="openKolTrace(${trReg({ ks: o.jobs.map(x => x.k), kol: o.kol_handle || o.kol_name || '', ads: o.ads, sales: o.sales })},'ads')" title="คลิกเพื่อดูที่มาของตัวเลข">${fmt(Math.round(o.ads))}</span></div>` : ''}${o.worth ? '<div style="margin-top:3px;"><span class="ui-chip up">น่ายิง Ads</span></div>' : ''}</td>
+      <td>${kjPayCell(o, o.acct, o.claim)}</td></tr>${_kjClipOpen === o.key && o.clip ? `<tr class="pg-child kj-exp"><td colspan="12">${kjClipDetail(o)}</td></tr>` : ''}`).join('')
+      || '<tr><td colspan="12" class="empty">ไม่มีงานที่โพสต์ในช่วงนี้</td></tr>';
+    { const oo = _kjClipOpen && list.find(x => x.key === _kjClipOpen); if (oo && oo.clip) kjClipChart(oo); }
 
   } else {
     { const tbl = document.getElementById('theadKj').closest('table'); if (tbl) tbl.style.tableLayout = ''; }
     const lbl = _kjView === 'kol' ? 'KOL' : 'สินค้า', showPlat = _kjView === 'kol';
-    document.getElementById('theadKj').innerHTML = `<tr>${th('name', lbl, 1)}${showPlat ? th('plat', 'ช่องทาง', 1) : ''}${th('n', 'งาน')}${th('amount', 'ค่าจ้าง')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้ ' + plTip('tip-kjh-vat' + _kjView, 'ยอดขายจาก Ads ของคลิป/โพสต์ · ถอด VAT แล้ว', 'right'))}${th('mer', 'MER ' + plTip('tip-kjh-mer2', 'ยอดขาย ÷ (ค่าจ้าง + ค่า Ads)', 'right'))}${showPlat ? th('com', 'ยอด Commission ' + plTip('tip-kjh-com', 'ยอดขายที่ TikTok จ่าย Commission ให้ KOL คนนี้ในช่วงนี้ (Live / คลิปอื่น / โชว์เคส) · ถอด VAT · ชี้ที่ตัวเลขเพื่อดูแยก<br>แสดงแยก ไม่บวกเข้ายอดขายที่ผูกได้ และไม่คิดใน MER<br>ไม่ได้กรองอะไรนอกจากวันที่ = มี KOL ที่ไม่มีงานในช่วงนี้แต่ยังมียอด Commission ด้วย', 'right')) : ''}</tr>`;
-    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left">${_kjView === 'sku' ? `<a onclick="kjPickProduct('${String(o.key).replace(/'/g, '')}')" style="cursor:pointer;font-weight:700;color:var(--text);" title="กดเพื่อดูว่าจ้าง KOL คนไหนบ้าง">${o.name}</a> <a onclick="kjPickProduct('${String(o.key).replace(/'/g, '')}')" style="cursor:pointer;font-size:10.5px;color:var(--accent);margin-left:4px;">ดู KOL →</a>` : `<b>${o.name}</b>${o.comOnly ? '<div style="font-size:10.5px;color:var(--text3);font-weight:400;">ไม่มีงานในช่วงนี้ · มีแต่ยอด Commission</div>' : ''}`}${showPlat && o.chLink ? ` <a href="${o.chLink}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;">🔗</a>` : ''}</td>${showPlat ? `<td class="c-left kj-icons">${kjIcons(o.plat)}</td>` : ''}<td>${fmt(o.n)}</td>${kjCell(o, 'amount')}${kjCell(o, 'ads')}${kjCell(o, 'sales')}<td>${mer(o)}</td>${showPlat ? comCell(o) : ''}</tr>`).join('')
-      || `<tr><td colspan="${showPlat ? 8 : 6}" class="empty">ไม่มีงานในช่วงนี้</td></tr>`;
-    kjAfterRows(showPlat ? 8 : 6);
+    document.getElementById('theadKj').innerHTML = `<tr>${th('name', lbl, 1)}${showPlat ? th('plat', 'ช่องทาง', 1) : ''}${th('n', 'งาน')}${th('amount', 'ค่าจ้าง')}${th('views', 'ยอดวิว ' + plTip('tip-kjh-v' + _kjView, TIP_V + '<br>คลิปที่รีวิวหลายสินค้า / อยู่หลายงาน แบ่งยอดวิวเท่าๆ กัน', 'right'), 0, '', 'kj-st')}${th('gain', 'วิวเพิ่ม ' + plTip('tip-kjh-g' + _kjView, TIP_G, 'right'), 0, '', 'kj-st')}${th('cpv', 'ต่อ 1,000 วิว ' + plTip('tip-kjh-c' + _kjView, TIP_C, 'right'), 0, '', 'kj-st')}${th('ads', 'ค่า Ads')}${th('sales', 'ยอดขายที่ผูกได้ ' + plTip('tip-kjh-vat' + _kjView, 'ยอดขายจาก Ads ของคลิป/โพสต์ · ถอด VAT แล้ว', 'right'))}${showPlat ? th('com', 'ยอด Commission ' + plTip('tip-kjh-com', 'ยอดขายที่ TikTok จ่าย Commission ให้ KOL คนนี้ในช่วงนี้ (Live / คลิปอื่น / โชว์เคส) · ถอด VAT · ชี้ที่ตัวเลขเพื่อดูแยก<br>แสดงแยก ไม่บวกเข้ายอดขายที่ผูกได้<br>ไม่ได้กรองอะไรนอกจากวันที่ = มี KOL ที่ไม่มีงานในช่วงนี้แต่ยังมียอด Commission ด้วย', 'right')) : ''}</tr>`;
+    document.getElementById('tbodyKj').innerHTML = list.map(o => `<tr><td class="c-left">${_kjView === 'sku' ? `<a onclick="kjPickProduct('${String(o.key).replace(/'/g, '')}')" style="cursor:pointer;font-weight:700;color:var(--text);" title="กดเพื่อดูว่าจ้าง KOL คนไหนบ้าง">${o.name}</a> <a onclick="kjPickProduct('${String(o.key).replace(/'/g, '')}')" style="cursor:pointer;font-size:10.5px;color:var(--accent);margin-left:4px;">ดู KOL →</a>` : `<b>${o.name}</b>${o.comOnly ? '<div style="font-size:10.5px;color:var(--text3);font-weight:400;">ไม่มีงานในช่วงนี้ · มีแต่ยอด Commission</div>' : ''}`}${showPlat && o.chLink ? ` <a href="${o.chLink}" target="_blank" rel="noopener" title="เปิดช่อง KOL" style="text-decoration:none;">🔗</a>` : ''}</td>${showPlat ? `<td class="c-left kj-icons">${kjIcons(o.plat)}</td>` : ''}<td>${fmt(o.n)}</td>${kjCell(o, 'amount')}<td class="kj-st">${vCell(o.views)}</td><td class="kj-st">${gCell(o.gain)}</td><td class="kj-st">${cpvCell(o.cpv)}</td>${kjCell(o, 'ads')}${kjCell(o, 'sales')}${showPlat ? comCell(o) : ''}</tr>`).join('')
+      || `<tr><td colspan="${showPlat ? 10 : 8}" class="empty">ไม่มีงานในช่วงนี้</td></tr>`;
+    kjAfterRows(showPlat ? 10 : 8);
   }
 }
 function exportKol() {
   const job = _kjView === 'job';
-  const head = job ? ['KOL', 'Content Name', 'ช่องทาง', 'สินค้า', 'ประเภท', 'วันโพสต์', 'ค่าจ้าง (งบ)', 'ค่า Ads', 'ยอดขายที่ผูกได้', 'MER', 'Ads ของงาน', 'เบิกจ่าย', 'เดือนที่บัญชีลง', 'ยอดบัญชีลง', 'ลิงก์โพสต์']
-    : [_kjView === 'kol' ? 'KOL' : 'สินค้า', 'ช่องทาง', 'งาน', 'ค่าจ้าง', 'ค่า Ads', 'ยอดขายที่ผูกได้', 'MER'].concat(_kjView === 'kol' ? ['ยอด Commission (ถอด VAT)'] : []);
+  const head = job ? ['KOL', 'Content Name', 'ช่องทาง', 'สินค้า', 'ประเภท', 'วันโพสต์', 'ค่าจ้าง (งบ)', 'ยอดวิว', 'วิวเพิ่ม', 'Engagement %', 'ค่าจ้างต่อ 1,000 วิว', 'ค่า Ads', 'ยอดขายที่ผูกได้', 'Ads ของงาน', 'เบิกจ่าย', 'เดือนที่บัญชีลง', 'ยอดบัญชีลง', 'ลิงก์โพสต์']
+    : [_kjView === 'kol' ? 'KOL' : 'สินค้า', 'ช่องทาง', 'งาน', 'ค่าจ้าง', 'ยอดวิว', 'วิวเพิ่ม', 'ค่าจ้างต่อ 1,000 วิว', 'ค่า Ads', 'ยอดขายที่ผูกได้'].concat(_kjView === 'kol' ? ['ยอด Commission (ถอด VAT)'] : []);
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const lines = [head.join(',')].concat(_kjList.map(o => (job ? [o.kol, o.content_code, o.plat, o.sku, o.type, o.date, o.amount, o.ads, o.sales, o.mer.toFixed(2), o.match_status, KJ_PAY[o.pay_status] || '', o.acct_months || '', o.acct || '', o.post_link]
-    : [o.name, o.plat, o.n, o.amount, o.ads, o.sales, o.mer.toFixed(2)].concat(_kjView === 'kol' ? [Math.round(o.com || 0)] : [])).map(q).join(',')));
+  const lines = [head.join(',')].concat(_kjList.map(o => (job ? [o.kol, o.content_code, o.plat, o.sku, o.type, o.date, o.amount, o.views ?? '', o.gain ?? '', o.er != null ? o.er.toFixed(2) : '', o.cpv != null ? o.cpv.toFixed(2) : '', o.ads, o.sales, o.match_status, KJ_PAY[o.pay_status] || '', o.acct_months || '', o.acct || '', o.post_link]
+    : [o.name, o.plat, o.n, o.amount, o.views ?? '', o.gain ?? '', o.cpv != null ? o.cpv.toFixed(2) : '', o.ads, o.sales].concat(_kjView === 'kol' ? [Math.round(o.com || 0)] : [])).map(q).join(',')));
   const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `KOL_${_kjView}.csv`; a.click();
 }

@@ -116,6 +116,9 @@ if (window.Chart && Chart.register) Chart.register({ id: 'zoomFix', beforeEvent(
   #topSearchBtn.is-pending { box-shadow: 0 0 0 3px var(--accent-soft); }
   #topSearchBtn.is-pending::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); margin-left: 2px; }
   .filter-group { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+  /* (2026-11-26) ช่องพิมพ์ชื่อ KOL: ไม่มีกรอบซ้อนในกล่องตัวกรอง (โหมดสว่างเคยได้กรอบขาว) · ตอนพิมพ์ทั้งกล่องขึ้นขอบสีทอง */
+  .filter-group.kj-filter:focus-within { border-color: var(--accent); }
+  #kjSearch:focus { box-shadow: none !important; }
   .ls-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; align-items: end; }
   .ls-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .ls-field label { font-size: 11px; color: var(--text2); font-weight: 600; }
@@ -560,6 +563,11 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
   #tblKj .kj-tag { background:none !important; padding:0 !important; font-weight:500; white-space:nowrap; }
   #tblKj .kj-tag::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin-right:6px; vertical-align:middle; opacity:.9; }
   #tblKj .kj-tag.kj-no { color:var(--text3); } #tblKj .kj-tag.kj-ok { color:var(--green,#16a34a); } #tblKj .kj-tag.kj-nf { color:var(--orange,#f59e0b); }
+  /* (2026-11-26) ยอดคลิป TikTok: กดแถวเพื่อกางกราฟยอดวิวรายวัน */
+  #tblKj tr.kj-clk { cursor:pointer; } #tblKj tr.kj-clk:hover > td { background:var(--bg3); } #tblKj tr.kj-clk.on > td { background:var(--accent-soft, rgba(200,169,110,.12)); }
+  #tblKj tr.kj-exp > td { background:var(--bg3); padding:12px 18px; }
+  #tblKj .kj-st { background:rgba(200,169,110,.06); } #tblKj td.kj-nost { color:var(--text3); font-size:11.5px; }
+  .kj-cx { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:20px; align-items:center; } .kj-cxs { font-size:12.5px; line-height:1.9; color:var(--text2); text-align:left; } .kj-cxs b { color:var(--text); font-variant-numeric:tabular-nums; }
   #tblKj .kj-name { font-weight:700; color:var(--text); text-decoration:none; } #tblKj .kj-name:hover { color:var(--accent); }
   #tblKj .kj-post { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:5px; background:var(--bg3); color:var(--accent); font-size:11px; text-decoration:none; margin-left:6px; vertical-align:1px; }
   /* ===== หน้าแรก (สรุปประจำวัน) ===== */
@@ -867,7 +875,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
 </div>
 
 <!-- (2026-10-26) เมนูซ้ายกลาง sidebar.js ใช้ร่วมทุกหน้า (ย่อเหลือไอคอนได้) · เวอร์ชันของหน้านี้อยู่ที่ data-build -->
-<div id="sbMount" data-page="dashboard" data-build="v2026.11.25-b"></div>
+<div id="sbMount" data-page="dashboard" data-build="v2026.11.26-a"></div>
 <script src="sidebar.js?v=20261103a"></script>
 
 <div class="main">
@@ -1034,8 +1042,8 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
       <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">สินค้า</span><select id="kjProduct" style="min-width:190px;"><option value="">ทุกสินค้า</option></select></div>
       <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">ช่องทาง</span><select id="kjPlat"><option value="">ทั้งหมด</option><option>TikTok</option><option>Facebook</option><option value="other">อื่นๆ</option></select></div>
       <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">ประเภท</span><select id="kjType"><option value="">Conversion + PR</option><option>Conversion</option><option>PR</option></select></div>
-      <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">สถานะ</span><select id="kjStatus"><option value="">ทั้งหมด</option><optgroup label="Ads ของงาน"><option value="matched">เจอ Ads</option><option value="no_ads">ไม่ได้ยิง Ads</option><option value="not_found">หาไม่เจอ</option><option value="not_posted">ยังไม่โพสต์</option><option value="n/a">ช่องทางอื่น</option></optgroup><optgroup label="เบิกจ่าย"><option value="pay:none">ยังไม่กรอกเบิก</option><option value="pay:claimed">กรอกเบิกแล้ว · รอบัญชี</option><option value="pay:acct">บัญชีลงแล้ว</option><option value="pay:partial">บัญชีลงบางงวด</option></optgroup></select></div>
-      <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">KOL</span><input id="kjSearch" placeholder="ชื่อ KOL…" style="width:120px;border:none;background:transparent;color:var(--text);font:inherit;font-size:12.5px;outline:none;" onkeydown="if(event.key==='Enter')applyFilters()"></div>
+      <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">สถานะ</span><select id="kjStatus"><option value="">ทั้งหมด</option><optgroup label="Ads ของงาน"><option value="matched">เจอ Ads</option><option value="no_ads">ไม่ได้ยิง Ads</option><option value="not_found">หาไม่เจอ</option><option value="not_posted">ยังไม่โพสต์</option><option value="n/a">ช่องทางอื่น</option></optgroup><optgroup label="ยอดคลิป TikTok"><option value="worth">น่ายิง Ads</option><option value="hot">มาแรง (วิวโต 3% ขึ้นไป)</option><option value="views">มียอดวิวแล้ว</option></optgroup><optgroup label="เบิกจ่าย"><option value="pay:none">ยังไม่กรอกเบิก</option><option value="pay:claimed">กรอกเบิกแล้ว · รอบัญชี</option><option value="pay:acct">บัญชีลงแล้ว</option><option value="pay:partial">บัญชีลงบางงวด</option></optgroup></select></div>
+      <div class="filter-group kj-filter" style="display:none;"><span class="filter-label">KOL</span><input id="kjSearch" data-keep-bg placeholder="ชื่อ KOL…" style="width:130px;border:none;background:transparent;color:var(--text);font:inherit;font-size:12.5px;outline:none;padding:0;" onkeydown="if(event.key==='Enter')applyFilters()"></div>
       <div class="filter-group fba-filter" id="fbaAccountFilterGroup" style="display:none;">
         <span class="filter-label">เพจ</span>
         <select id="fbaFilterAccount" onchange="window.fbaApplyFilters && fbaApplyFilters()"><option value="">ทุกเพจ</option></select>
@@ -1371,7 +1379,7 @@ tr.mkt-ch-sub-row > td { padding:0 14px 14px 28px !important; background: rgba(9
           <div class="section-title">งาน KOL <span class="ads-info-wrap" style="position:relative;display:inline-block;" onclick="event.stopPropagation()"><span onclick="event.stopPropagation();toggleTip('tip-kj-main')" style="cursor:pointer;color:var(--text3);font-size:11px;font-weight:400;">ⓘ</span><div id="tip-kj-main" class="ads-info-popover" style="display:none;text-transform:none;letter-spacing:normal;font-family:'Sarabun',sans-serif;position:absolute;top:18px;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.65;width:300px;z-index:60;box-shadow:0 4px 16px rgba(0,0,0,0.3);color:var(--text2);text-align:left;font-weight:400;white-space:normal;"><b>ที่มา</b>: ไฟล์งานทีม KOL (Conversion + PR) · 1 Content Name = 1 งาน<br>• ค่าจ้าง = งบในไฟล์ นับตามวันโพสต์<br>• ค่า Ads / ยอดขาย = จากระบบ Ads ของ Meta / TikTok นับตามวันที่เกิด เฉพาะคลิป/โพสต์ของงานนั้น<br>• งานเดียวหลายสินค้า หรือคลิปเดียวหลายงาน แบ่งเท่าๆ กัน<br>• เบิกจ่าย = จากฟอร์มเบิกเงิน ดูอย่างเดียว ไม่บวกเข้ายอด<br>• ยอด Commission = ยอดที่ TikTok จ่าย Commission ให้ KOL (Live / คลิปอื่น / โชว์เคส) แสดงแยก ไม่บวกเข้ายอดขาย และไม่คิดใน MER</div></span></div><span class="kj-stat" id="kjStat"></span>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             <div class="pl-seg" id="kjViewSeg"><button class="on" data-v="job" onclick="kjSetView('job')">ตามงาน</button><button data-v="kol" onclick="kjSetView('kol')">ตาม KOL</button><button data-v="sku" onclick="kjSetView('sku')">ตามสินค้า</button><button data-v="cal" onclick="kjSetView('cal')">📅 ปฏิทินงบ</button></div>
-            <div class="pl-seg" id="kjCalSeg" style="display:none;"><button class="on" data-m="amount" onclick="kjSetCal('amount')">ค่าจ้าง</button><button data-m="spend" onclick="kjSetCal('spend')">ค่าจ้าง + Ads</button><button data-m="sales" onclick="kjSetCal('sales')">ยอดขาย</button><button data-m="mer" onclick="kjSetCal('mer')">MER</button></div>
+            <div class="pl-seg" id="kjCalSeg" style="display:none;"><button class="on" data-m="amount" onclick="kjSetCal('amount')">ค่าจ้าง</button><button data-m="spend" onclick="kjSetCal('spend')">ค่าจ้าง + Ads</button><button data-m="sales" onclick="kjSetCal('sales')">ยอดขาย</button></div>
             <button class="btn btn-ghost" style="white-space:nowrap;padding:6px 12px;font-size:12px;" onclick="exportKol()">⬇ Export CSV</button>
           </div>
         </div>

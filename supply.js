@@ -237,6 +237,7 @@
             <div class="yoy-seg" id="supYoyCmp"></div>
             <div class="sup-dd" id="supYoyDD"></div>
             <button class="btn btn-ghost" id="supYoyPar" style="${yoyPar ? 'background:var(--accent);color:#0a0a0f;border-color:var(--accent);' : ''}" title="ย่อแถวสี/เบอร์ เหลือแถวสรุปของ Parent (กดที่แถวสรุปเพื่อขยายทีละกลุ่ม)">▤ ย่อเหลือ Parent</button>
+            <button type="button" class="btn btn-ghost" id="supYoyExp" style="white-space:nowrap;padding:6px 12px;font-size:12px;">⬇ Export Excel</button>
           </div>
         </div>
         <div class="yoy-bar" id="supYoyBar"></div>
@@ -1016,6 +1017,21 @@
         <tr class="h2"><th class="l" ${srt('n')}>สินค้า${arr('n')}</th><th ${srt('t')}>${MOM ? (lm >= 0 ? `${MON_TH[lm]} ${Y}` : '—') : `ปี ${Y}`}${arr('t')}</th><th ${srt('u')}>${MOM ? (lm >= 0 ? prevLbl(lm) : '—') : `ปี ${PY}`}${arr('u')}</th><th ${srt('p')}>${MOM ? 'MoM' : 'YOY'}${arr('p')}</th>${MON_TH.map((m, i) => `<th class="${i === 0 ? 'm0 ' : ''}${i > curM ? 'fut' : ''}">${m}${i === curM ? '*' : ''}</th>`).join('')}</tr></thead>
         <tbody>${html}</tbody>
         <tfoot><tr>${nameCell('รวม', `${q || yoyKind ? 'ที่กรอง' : 'ทุกสินค้า'} · ${fmtN(groups.length)} Parent`)}${sumCells(tot.c, tot.l)}${months(tot.c, tot.l)}</tr></tfoot></table>`;
+    { const ex = document.getElementById('supYoyExp');   // (2026-11-26) Export Excel: สินค้าที่กรองอยู่ทั้งหมด (Parent + สี/เบอร์) ยอดรายเดือนปีนี้ + ปีก่อน · ชิ้น
+      if (ex) ex.onclick = () => {
+        const mh = m => m > curM ? null : m === curM ? `${MON_TH[m]} ${Y} (1–${lastDay})` : `${MON_TH[m]} ${Y}`;
+        const tl = MOM ? (lm >= 0 ? `${MON_TH[lm]} ${Y}` : 'เดือนล่าสุด') : `ปี ${Y} (${fullLbl})`, ul = MOM ? (lm >= 0 ? prevLbl(lm) : 'เดือนก่อน') : `ปี ${PY} ช่วงเดียวกัน`;
+        const head = ['Parent', 'SKU', 'ชื่อสินค้า', tl, ul, '% เปลี่ยน'].concat(MON_TH.map((_, m) => mh(m) || `${MON_TH[m]} ${Y}`), MON_TH.map(m => `${m} ${PY}`));
+        const line = (par, sku, nm, c, l) => { const [t, u] = tu(c, l), p = pct(t, u);
+          return [par, sku, nm, t, u, p == null ? (t > 0 ? 'ใหม่' : '') : Math.round(p * 10) / 10].concat(MON_TH.map((_, m) => m > curM ? '' : +c[m] || 0), MON_TH.map((_, m) => +l[m] || 0)); };
+        const rows = [head];
+        groups.forEach(g => { if (g.kids.length === 1) { const k = g.kids[0]; rows.push(line(g.par, k.s, k.n || g.name, k.c, k.l)); return; }
+          rows.push(line(g.par, '(รวม Parent)', g.name, g.c, g.l)); g.kids.forEach(k => rows.push(line(g.par, k.s, k.n || '', k.c, k.l))); });
+        rows.push(line('รวม', '', `${groups.length} Parent`, tot.c, tot.l));
+        const fn = `ยอดขายรายเดือน_${MOM ? 'MoM' : 'YOY'}_${Y}`;
+        if (window.XLSX) { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), MOM ? 'MoM' : 'YOY'); XLSX.writeFile(wb, fn + '.xlsx'); }
+        else if (typeof downloadCSV === 'function') downloadCSV(rows, fn + '.csv');
+      }; }
     body.querySelectorAll('tr.yoy-g').forEach(tr => tr.onclick = () => { const p = tr.dataset.par; yoyTog.has(p) ? yoyTog.delete(p) : yoyTog.add(p); drawYoy(); });
     body.querySelectorAll('th.srt').forEach(th => th.onclick = () => { const k = th.dataset.s; yoySort = yoySort.k === k ? { k, dir: -yoySort.dir } : { k, dir: k === 'n' ? 1 : -1 }; drawYoy(); });
     const h1 = body.querySelector('thead tr.h1'), tb = document.querySelector('.topbar');

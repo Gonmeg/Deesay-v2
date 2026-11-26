@@ -103,6 +103,21 @@
       return par + kids; }).join('');
   }
   const th = (key, label, cls, t, rs) => `<th class="sort ${cls || ''}" data-sk="${key}"${rs ? ' rowspan="2"' : ''}>${label}${t || ''}${sk === key ? `<span class="ar">${sd < 0 ? '▼' : '▲'}</span>` : ''}</th>`;
+  // (2026-11-26) Export Excel: 1 แถว = 1 SKU (ตัวเลขชุดเดียวกับตาราง · ตามตัวเลือก VAT ที่เลือกอยู่) + แถวรวม
+  function ivExport() {
+    const cm = cMul(), rm = rMul(), vt = vatTxt(), r2 = v => v == null ? '' : Math.round(v * 100) / 100;
+    const head = ['Parent', 'SKU', 'ชื่อสินค้า', 'สำเร็จรูป (ชิ้น)', 'PO ยังไม่ผลิต (ชิ้น)', `ทุนต่อชิ้น (${vt})`, `มูลค่าทุน สำเร็จรูป (${vt})`, `มูลค่าทุน รวม PO (${vt})`,
+      `RSP ต่อชิ้น (${vt})`, `มูลค่า RSP สำเร็จรูป (${vt})`, `มูลค่า RSP รวม PO (${vt})`, 'ขายเฉลี่ยต่อวัน (ชิ้น)', 'ขายได้อีก (วัน)'];
+    const t = [0, 0, 0, 0, 0, 0], rows = [head];
+    G.forEach(g => g.kids.forEach(k => { const c = k.cost == null ? null : k.cost * cm, r = k.rsp == null ? null : k.rsp * rm, fg = +k.fg || 0, wip = +k.wip || 0;
+      const v = [c == null ? null : c * fg, c == null ? null : c * (fg + wip), r == null ? null : r * fg, r == null ? null : r * (fg + wip)];
+      t[0] += fg; t[1] += wip; v.forEach((x, i) => { t[i + 2] += x || 0; });
+      rows.push([g.parent, k.sku, k.name || g.name, fg, wip, r2(c), r2(v[0]), r2(v[1]), r2(r), r2(v[2]), r2(v[3]), r2(k.avg), fg > 0 && k.avg > 0 ? Math.round(fg / k.avg) : '']); }));
+    rows.push(['รวม', '', '', t[0], t[1], '', r2(t[2]), r2(t[3]), '', r2(t[4]), r2(t[5]), '', '']);
+    const fn = 'มูลค่าสินค้าคงคลัง_' + new Date().toISOString().slice(0, 10);
+    if (window.XLSX) { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'มูลค่าคงคลัง'); XLSX.writeFile(wb, fn + '.xlsx'); }
+    else if (typeof downloadCSV === 'function') downloadCSV(rows, fn + '.csv');
+  }
   function draw() {
     const el = document.getElementById('page-invvalue'); if (!el) return;
     calc(); sortG();
@@ -114,7 +129,7 @@
         <div class="c"><div class="l">มูลค่าตามราคาทุน (${vt})${tip('ivt3', 'จำนวนชิ้น × ต้นทุนต่อชิ้นจากไฟล์ต้นทุนของบัญชี (ต้นฉบับไม่รวม VAT · โหมดรวม VAT = × 1.07)')}</div><div class="row"><span>สินค้าสำเร็จรูป</span><b>${n0(T.cFg)}</b></div><div class="row sub"><span>รวม PO ที่ยังไม่ผลิต</span><b>${n0(T.cAll)}</b></div></div>
         <div class="r"><div class="l">มูลค่าตามราคาขาย RSP (${vt})${tip('ivt4', 'จำนวนชิ้น × ราคาขายปกติ (RSP) จากหน้า สินค้า & ราคา (ต้นฉบับรวม VAT · โหมดไม่รวม VAT = ÷ 1.07)')}</div><div class="row"><span>สินค้าสำเร็จรูป</span><b>${n0(T.rFg)}</b></div><div class="row sub"><span>รวม PO ที่ยังไม่ผลิต</span><b>${n0(T.rAll)}</b></div></div>
       </div>
-      <div class="iv-card"><h3>มูลค่าสินค้าคงคลังรายสินค้า</h3>
+      <div class="iv-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><h3>มูลค่าสินค้าคงคลังรายสินค้า</h3><button type="button" class="btn btn-ghost" id="ivExp" style="white-space:nowrap;padding:6px 12px;font-size:12px;">⬇ Export Excel</button></div>
         <div class="iv-leg"><span class="c">ราคาทุน</span><span class="r">ราคาขาย RSP</span><span class="m">ขายได้ 6–12 เดือน</span><span class="s">ขายได้นานกว่า 1 ปี</span></div>
         <div class="iv-wrap"><table class="iv" data-no-sort data-no-page>
           <colgroup><col style="width:19%">${'<col>'.repeat(10)}</colgroup>
@@ -126,6 +141,7 @@
         </table></div>
         <div class="iv-miss">${missC.length ? `ยังไม่มีต้นทุน ${missC.length} รายการ (มูลค่าแสดง —): ${missC.map(esc).join(', ')}<br>` : ''}${missR.length ? `ยังไม่มีราคา RSP ${missR.length} รายการ: ${missR.map(esc).join(', ')}<br>` : ''}${missC.length || missR.length ? '* = ไม่รวมสี / เบอร์ที่ยังไม่มีราคา · ' : ''}กดหัวคอลัมน์เพื่อเรียง · ข้อมูล ณ ${esc((D0 && D0.as_of) || '')}</div>
       </div>`;
+    { const b = document.getElementById('ivExp'); if (b) b.onclick = ivExport; }
     const h1 = el.querySelector('thead tr.h1'); if (h1) el.style.setProperty('--ivh1', h1.offsetHeight + 'px');
     const tb = document.querySelector('.topbar'); el.style.setProperty('--iv-top', (tb ? tb.offsetHeight : 0) + 'px');   // หัวตารางค้างใต้แถบบน
     el.onclick = e => {
