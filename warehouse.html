@@ -26,11 +26,30 @@ button,select,input{font-family:inherit}
 .wh-side .grp{font-size:12px;color:var(--text3);margin:14px 6px 6px}
 .wh-side .who{position:absolute;left:14px;right:14px;bottom:14px;font-size:12px;color:var(--text3);word-break:break-all}
 .wh-side .who a{display:inline;padding:0;color:var(--text2);font-size:12px;text-decoration:underline}
-.wh-main{margin-left:210px;padding:18px 26px 40px}
-.wh-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;min-height:36px}
-.wh-top h1{font-size:20px;margin:0 6px 0 0}
-.wh-status{font-size:12px;color:var(--text2);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
-.wh-status.bad{color:var(--bad);border-color:var(--bad)}
+.wh-main{margin-left:210px;padding:0 26px 40px}
+body.has-sb .wh-main{margin-left:0}
+/* (2026-11-26) แถบบนแบบ Dashboard: ติดบนสุด พื้น --bg2 · ชื่อหน้า 16px + ปุ่มสถานะข้อมูล (จุดสี + Updated) · ตัวกรองชิดขวา */
+.wh-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:58px;margin:0 -26px 16px;padding:10px 28px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+.wh-top h1{font-size:16px;font-weight:700;margin:0;display:flex;align-items:center;gap:4px}
+.wh-status{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--bg2);border-radius:999px;padding:3px 10px 3px 8px;font:inherit;font-size:12px;color:var(--text3);cursor:pointer;white-space:nowrap}
+.wh-status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+.wh-status:hover{color:var(--text);border-color:var(--text3)}
+.wh-status.ld::before{background:var(--text3)}
+.wh-status.bad{color:var(--text);font-weight:600;border-color:color-mix(in srgb,var(--bad) 45%,var(--border));background:color-mix(in srgb,var(--bad) 7%,var(--bg2))}
+.wh-status.bad::before{background:var(--bad)}
+.dg-pop{position:fixed;z-index:2500;width:420px;max-width:86vw;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:14px 16px;font-size:12.5px;color:var(--text2);line-height:1.6}
+.dg-pop h4{margin:0 0 8px;font-size:13px;color:var(--text)}
+.dg-pop .it{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}.dg-pop .its>.it:last-child{border-bottom:0}
+.dg-pop .it i{flex:none;width:7px;height:7px;border-radius:50%;margin-top:7px;background:var(--good)}.dg-pop .it.bad i{background:var(--bad)}.dg-pop .it b{color:var(--text);font-weight:600}
+.dg-pop .dg-rows{display:grid;grid-template-columns:minmax(0,1fr) auto auto;column-gap:14px;margin:2px 0 6px}
+.dg-pop .dg-rows>span{padding:6px 0;border-bottom:1px solid var(--border);white-space:nowrap}
+.dg-pop .dg-rows .hd{padding-top:0;font-size:11px;color:var(--text3)}.dg-pop .dg-rows .r{text-align:right}
+.dg-pop .dg-rows .nm{display:flex;align-items:center;gap:8px;color:var(--text);overflow:hidden;text-overflow:ellipsis}
+.dg-pop .dg-rows .nm i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.dg-pop .dg-rows .dt{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}.dg-pop .dg-rows .sc{text-align:right;color:var(--text3);font-size:11.5px}
+.dg-pop .dg-rows>span:nth-last-child(-n+3){border-bottom:0}
+.dg-pop .its{margin-top:4px;padding-top:4px;border-top:1px solid var(--border)}
+.dg-pop .meta{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);color:var(--text3);font-size:11.5px}
 .sp{flex:1}
 .wh-card{background:var(--bg2);border:1px solid var(--panel-line);border-radius:10px;box-shadow:var(--sh);padding:14px 18px}
 .wh-fbar{display:flex;gap:14px;align-items:flex-end;padding:12px 18px 14px;margin-bottom:14px;flex-wrap:wrap}
@@ -93,15 +112,17 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 .wh-pager{display:flex;justify-content:space-between;align-items:center;color:var(--text2);font-size:13px;padding-top:12px;gap:12px;flex-wrap:wrap}
 .wh-pager .pg{display:flex;gap:4px;align-items:center}
 .wh-empty{padding:46px 0;text-align:center;color:var(--text3)}
-.wh-i{position:relative;display:inline-flex;width:15px;height:15px;border-radius:50%;border:1px solid var(--text3);color:var(--text3);font-size:10px;line-height:13px;justify-content:center;cursor:default;font-weight:500}
-.wh-i:hover .pop{display:block}
-.wh-i .pop{display:none;position:absolute;top:20px;left:-8px;z-index:30;width:270px;padding:10px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow-pop);color:var(--text);font-size:12.5px;line-height:1.55;text-align:left;white-space:normal;font-weight:400}
-.wh-i.r .pop{left:auto;right:-8px}
+/* (2026-11-26) ⓘ แบบ Dashboard: .ads-info-wrap > ⓘ + .ads-info-popover · ชี้เมาส์แล้ว ui.js ขึ้นกล่อง .ui-tip กล่องเดียวกันทั้งเว็บ */
+.ads-info-wrap{position:relative;display:inline-block;vertical-align:baseline;margin-left:2px}
 .wh-kp{display:flex;gap:12px;margin-bottom:14px}
-.wh-kp>div{flex:1;background:var(--bg3);border-radius:10px;padding:10px 14px}
-.wh-kp.cards>div{background:var(--bg2);box-shadow:var(--sh);border:1px solid var(--panel-line)}
-.wh-kp small{color:var(--text2);font-size:12px;display:flex;gap:4px;align-items:center}
-.wh-kp b{font-size:24px;display:block;min-height:36px}
+.wh-kp>div{flex:1;min-width:0;background:var(--bg3);border-radius:10px;padding:10px 14px}
+/* (2026-11-26) แถบสรุปบนสุดแบบ Dashboard (หน้าตาแบบ C): กล่องเดียว ขอบไล่สี --hero-line · ช่องคั่นด้วยเส้นบาง */
+.wh-kp.cards{gap:0;border:1.5px solid transparent;background:var(--hero,var(--bg2)) padding-box,var(--hero-line,var(--border)) border-box;box-shadow:var(--sh);border-radius:14px;margin-bottom:16px}
+.wh-kp.cards>div{background:transparent;border-radius:0;box-shadow:1px 0 0 var(--border);padding:12px 16px}
+body.light-theme .wh-kp.cards>div{box-shadow:1px 0 0 #EDF0F4}
+.wh-kp.cards>div:last-child{box-shadow:none}
+.wh-kp small{color:var(--text2);font-size:12.5px;display:flex;gap:2px;align-items:center}
+.wh-kp b{font-size:clamp(20px,1.7vw,26px);line-height:1.15;display:block;min-height:30px;margin-top:4px}
 .wh-ov{position:fixed;inset:0;background:rgba(8,12,18,.55);display:none;align-items:center;justify-content:center;z-index:50}
 .wh-ov.on{display:flex}
 .wh-dlg{width:760px;max-width:94vw;max-height:92vh;overflow:auto;background:var(--bg2);border-radius:12px;box-shadow:var(--shadow-pop);padding:22px 26px;border:1px solid var(--border)}
@@ -129,7 +150,8 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 #printArea{display:none}
 @media print{
   body{background:#fff;color:#000}
-  .wh-side,.wh-main,.wh-ov{display:none!important}
+  .wh-side,.wh-main,.wh-ov,.sb,.sb-fly{display:none!important}
+  body.has-sb{padding-left:0!important}
   #printArea{display:block;padding:8mm;font-size:13px;color:#000}
   #printArea .shop{font-size:22px;font-weight:700;margin:0 0 6px;padding-bottom:4px;border-bottom:2px solid #000}   /* (2026-11-25) ชื่อร้านบนหัวกระดาษ */
   #printArea h2{margin:0 0 2px;font-size:18px}
@@ -153,6 +175,9 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
   <a data-view="history">ประวัติการพิมพ์</a>
   <div class="who"><span id="whoMail"></span><br><a id="themeBtn">สลับโหมดสว่าง / มืด</a> · <a id="outBtn">ออกจากระบบ</a></div>
 </aside>
+<!-- (2026-11-26) เมนูซ้ายกลาง sidebar.js แบบเดียวกับ Dashboard (เมนูเดิมด้านบนซ่อนไว้ กดผ่านเมนูนี้) -->
+<div id="sbMount" data-page="warehouse"></div>
+<script src="sidebar.js?v=1"></script>
 
 <main class="wh-main">
   <!-- หน้า 1: พิมพ์ใบปะหน้า -->
@@ -160,18 +185,18 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
     <div class="wh-top"><h1>พิมพ์ใบปะหน้า</h1><span class="wh-status" id="stPrint">กำลังโหลด…</span><span class="sp"></span>
       <div class="ui-dd wh-sel" id="fPlatform" style="width:220px"></div></div>
     <div class="wh-card wh-fbar">
-      <div class="f fx"><label>รอบพิมพ์ <span class="wh-i">i<span class="pop"><b>รอบพิมพ์ (Print round)</b><br>ตัดคำสั่งซื้อตามเวลา เพื่อพิมพ์ทีละก้อน · TikTok = เวลาที่ลูกค้าสั่ง · Shopee = เวลายืนยันคำสั่งซื้อ (จ่ายออนไลน์ = เวลาชำระเงิน · เก็บเงินปลายทาง = เวลาสั่ง)<br>ทั้งหมด = ทุกคำสั่งซื้อในแต่ละสถานะ ไม่กรองเวลา (ค่าเริ่มต้นตอนเปิดหน้า)<br>รอบ 1 = ทุกคำสั่งซื้อก่อนเวลาตัดรอบ 1 ของวันนี้ (รวมที่ค้างจากวันก่อน / วันหยุด)<br>รอบ 2 = หลังเวลาตัดรอบ 1 ถึงเวลาตัดรอบ 2 ของวันนี้<br>กด "ตั้งเวลารอบ" เพื่อเปลี่ยนเวลาตัด</span></span>
+      <div class="f fx"><label>รอบพิมพ์ <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>รอบพิมพ์ (Print round)</b><br>ตัดคำสั่งซื้อตามเวลา เพื่อพิมพ์ทีละก้อน · TikTok = เวลาที่ลูกค้าสั่ง · Shopee = เวลายืนยันคำสั่งซื้อ (จ่ายออนไลน์ = เวลาชำระเงิน · เก็บเงินปลายทาง = เวลาสั่ง)<br>ทั้งหมด = ทุกคำสั่งซื้อในแต่ละสถานะ ไม่กรองเวลา (ค่าเริ่มต้นตอนเปิดหน้า)<br>รอบ 1 = ทุกคำสั่งซื้อก่อนเวลาตัดรอบ 1 ของวันนี้ (รวมที่ค้างจากวันก่อน / วันหยุด)<br>รอบ 2 = หลังเวลาตัดรอบ 1 ถึงเวลาตัดรอบ 2 ของวันนี้<br>กด "ตั้งเวลารอบ" เพื่อเปลี่ยนเวลาตัด</span></span>
         <button class="wh-link" id="roundCfgBtn" type="button">ตั้งเวลารอบ</button></label>
         <span class="wh-seg" id="fRound"><button data-v="all" type="button">ทั้งหมด</button><button data-v="1" type="button">รอบ 1</button><button data-v="2" type="button">รอบ 2</button><button data-v="c" type="button">กำหนดเอง</button></span></div>
       <div class="f" style="flex:1.2;min-width:190px;position:relative"><label id="fFromL">เวลาสั่ง ตั้งแต่</label><input class="wh-in" type="datetime-local" id="fFrom" data-ph="ไม่จำกัด · รวมที่ค้างจากวันก่อน"></div>
       <div class="f" style="flex:1.2;min-width:190px;position:relative"><label>ถึงก่อน</label><input class="wh-in" type="datetime-local" id="fTo" data-ph="ไม่จำกัด · ถึงปัจจุบัน"></div>
       <div class="vr"></div>
-      <div class="f" id="fShopF" style="min-width:150px;display:none"><label>ร้าน <span class="wh-i">i<span class="pop"><b>ร้าน (Shop)</b><br>เลือกร้านเพื่อพิมพ์ใบปะหน้าแยกร้าน · ตัวเลขหลังชื่อ = จำนวนคำสั่งซื้อตามตัวกรองที่เลือก<br>ทั้ง 2 ร้าน = รวม Shopee Mall และ Shopee 24hr</span></span></label><div class="ui-dd wh-sel" id="fShop"></div></div>
-      <div class="f" style="flex:1.8;min-width:240px"><label>รูปแบบคำสั่งซื้อ (SKU) <span class="wh-i">i<span class="pop"><b>รูปแบบคำสั่งซื้อ (Order pattern)</b><br>สินค้าทั้งหมดในคำสั่งซื้อ แตกชุดเป็น SKU จริงแล้ว เช่น DSCH03 × 1 + FREECH03 × 1<br>ตัวเลข = จำนวนคำสั่งซื้อที่สั่งแบบนี้ในแท็บที่เปิดอยู่ เรียงมาก → น้อย<br>เลือกแล้ว = แสดงเฉพาะคำสั่งซื้อที่สั่งแบบนี้พอดี ไม่มีสินค้าอื่นปน · พิมพ์ SKU เพื่อค้นหา</span></span></label>
+      <div class="f" id="fShopF" style="min-width:150px;display:none"><label>ร้าน <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ร้าน (Shop)</b><br>เลือกร้านเพื่อพิมพ์ใบปะหน้าแยกร้าน · ตัวเลขหลังชื่อ = จำนวนคำสั่งซื้อตามตัวกรองที่เลือก<br>ทั้ง 2 ร้าน = รวม Shopee Mall และ Shopee 24hr</span></span></label><div class="ui-dd wh-sel" id="fShop"></div></div>
+      <div class="f" style="flex:1.8;min-width:240px"><label>รูปแบบคำสั่งซื้อ (SKU) <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>รูปแบบคำสั่งซื้อ (Order pattern)</b><br>สินค้าทั้งหมดในคำสั่งซื้อ แตกชุดเป็น SKU จริงแล้ว เช่น DSCH03 × 1 + FREECH03 × 1<br>ตัวเลข = จำนวนคำสั่งซื้อที่สั่งแบบนี้ในแท็บที่เปิดอยู่ เรียงมาก → น้อย<br>เลือกแล้ว = แสดงเฉพาะคำสั่งซื้อที่สั่งแบบนี้พอดี ไม่มีสินค้าอื่นปน · พิมพ์ SKU เพื่อค้นหา</span></span></label>
         <div class="wh-dd" id="fPat"><button class="wh-in wh-dd-btn" id="fPatBtn" type="button"><span id="fPatTx">ทั้งหมด</span></button>
           <div class="wh-dd-pop"><input class="wh-in" id="fPatQ" placeholder="พิมพ์ SKU เพื่อค้นหา เช่น DFK15ML" autocomplete="off"><div class="wh-dd-list" id="fPatList"></div></div></div></div>
-      <div class="f"><label>ตะกร้า <span class="wh-i">i<span class="pop"><b>ตะกร้า</b><br>แสดงเฉพาะตะกร้าที่อยู่ในคำสั่งซื้อตามรูปแบบที่เลือก</span></span></label><div class="ui-dd wh-sel" id="fBasket"></div></div>
-      <div class="f" style="min-width:150px"><label>ขนส่ง <span class="wh-i">i<span class="pop"><b>ขนส่ง (Carrier)</b><br>แสดงเฉพาะขนส่งที่อยู่ในคำสั่งซื้อตามตัวกรองที่เลือก · ตัวเลขหลังชื่อ = จำนวนคำสั่งซื้อ<br>เลือกขนส่งแล้วติ๊กเลือกทั้งหมด เพื่อพิมพ์ใบปะหน้าเฉพาะขนส่งนั้น</span></span></label><div class="ui-dd wh-sel" id="fCarrier"></div></div>
+      <div class="f"><label>ตะกร้า <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ตะกร้า</b><br>แสดงเฉพาะตะกร้าที่อยู่ในคำสั่งซื้อตามรูปแบบที่เลือก</span></span></label><div class="ui-dd wh-sel" id="fBasket"></div></div>
+      <div class="f" style="min-width:150px"><label>ขนส่ง <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ขนส่ง (Carrier)</b><br>แสดงเฉพาะขนส่งที่อยู่ในคำสั่งซื้อตามตัวกรองที่เลือก · ตัวเลขหลังชื่อ = จำนวนคำสั่งซื้อ<br>เลือกขนส่งแล้วติ๊กเลือกทั้งหมด เพื่อพิมพ์ใบปะหน้าเฉพาะขนส่งนั้น</span></span></label><div class="ui-dd wh-sel" id="fCarrier"></div></div>
       <div class="f" style="min-width:110px"><label>การพิมพ์</label><div class="ui-dd wh-sel" id="fPrinted"></div></div>
       <div class="f fx"><label>&nbsp;</label><button class="wh-btn pri" id="searchBtn" type="button">ค้นหา</button></div>
       <div class="wh-rounds" id="roundCfg">เวลาตัดรอบ 1 <input class="wh-in" type="time" id="cut1"> เวลาตัดรอบ 2 <input class="wh-in" type="time" id="cut2"> <button class="wh-btn sm" id="cutSave" type="button">บันทึก</button></div>
@@ -199,11 +224,11 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
     <div class="wh-top"><h1>สรุปการจัดส่งวันนี้</h1><span class="wh-status" id="stSum">—</span><span class="sp"></span>
       <div style="width:170px"><input class="wh-in" type="date" id="sumDate"></div><button class="wh-btn pri" id="sumBtn" type="button">ค้นหา</button></div>
     <div class="wh-kp cards">
-      <div><small>พิมพ์ใบปะหน้าแล้วทั้งหมด <span class="wh-i">i<span class="pop"><b>พิมพ์ใบปะหน้าแล้วทั้งหมด</b><br>คำสั่งซื้อที่กดจัดส่งและพิมพ์ใบปะหน้าในวันที่เลือก (เวลาไทย) ทั้งจากหน้านี้และ Seller Center<br><b>รวม</b> TikTok + Shopee Mall + Shopee 24hr และคำสั่งซื้อที่ถูกยกเลิกภายหลัง เนื่องจากหยิบสินค้าออกจากคลังแล้ว<br>นับตามเวลาที่กดจัดส่ง ไม่ใช่เวลาที่ลูกค้าสั่งซื้อ · Shopee ที่กดจัดส่งจาก Seller Center ใช้เวลาของเหตุการณ์แรกในการติดตามพัสดุ (Tracking) แทน</span></span></small><b id="sP">—</b></div>
-      <div><small>รอขนส่งเข้ารับ <span class="wh-i">i<span class="pop"><b>รอขนส่งเข้ารับ</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก และขนส่งยังไม่เข้ารับ<br><b>ไม่รวม</b> คำสั่งซื้อที่ถูกยกเลิก</span></span></small><b id="sA">—</b></div>
-      <div><small>ขนส่งรับแล้ว <span class="wh-i">i<span class="pop"><b>ขนส่งรับแล้ว</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก และขนส่งรับแล้ว (อยู่ระหว่างจัดส่ง / จัดส่งสำเร็จ)</span></span></small><b id="sB">—</b></div>
-      <div><small>ยกเลิกหลังพิมพ์ใบปะหน้า <span class="wh-i r">i<span class="pop"><b>ยกเลิกหลังพิมพ์ใบปะหน้า</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก แล้วลูกค้ายกเลิกภายหลัง ขนส่งสแกนรับไม่ได้ ต้องรับคืนเข้าคลัง<br>นับเฉพาะที่พิมพ์ในวันที่เลือก · แท็บ "ยกเลิกหลังพิมพ์" ในหน้าพิมพ์ใบปะหน้าแสดงย้อนหลัง 7 วัน ตัวเลขจึงมากกว่า</span></span></small><b id="sD">—</b></div>
-      <div><small>รอจัดส่ง (คงค้างทั้งหมด) <span class="wh-i r">i<span class="pop"><b>รอจัดส่ง (คงค้างทั้งหมด)</b><br>คำสั่งซื้อที่ยังไม่ได้กดจัดส่ง ทุกวันที่สั่งซื้อ ณ เวลาปัจจุบัน<br><b>รวม</b> TikTok + Shopee Mall + Shopee 24hr · ไม่ขึ้นกับวันที่เลือก</span></span></small><b id="sC">—</b></div>
+      <div><small>พิมพ์ใบปะหน้าแล้วทั้งหมด <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>พิมพ์ใบปะหน้าแล้วทั้งหมด</b><br>คำสั่งซื้อที่กดจัดส่งและพิมพ์ใบปะหน้าในวันที่เลือก (เวลาไทย) ทั้งจากหน้านี้และ Seller Center<br><b>รวม</b> TikTok + Shopee Mall + Shopee 24hr และคำสั่งซื้อที่ถูกยกเลิกภายหลัง เนื่องจากหยิบสินค้าออกจากคลังแล้ว<br>นับตามเวลาที่กดจัดส่ง ไม่ใช่เวลาที่ลูกค้าสั่งซื้อ · Shopee ที่กดจัดส่งจาก Seller Center ใช้เวลาของเหตุการณ์แรกในการติดตามพัสดุ (Tracking) แทน</span></span></small><b id="sP">—</b></div>
+      <div><small>รอขนส่งเข้ารับ <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>รอขนส่งเข้ารับ</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก และขนส่งยังไม่เข้ารับ<br><b>ไม่รวม</b> คำสั่งซื้อที่ถูกยกเลิก</span></span></small><b id="sA">—</b></div>
+      <div><small>ขนส่งรับแล้ว <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ขนส่งรับแล้ว</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก และขนส่งรับแล้ว (อยู่ระหว่างจัดส่ง / จัดส่งสำเร็จ)</span></span></small><b id="sB">—</b></div>
+      <div><small>ยกเลิกหลังพิมพ์ใบปะหน้า <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ยกเลิกหลังพิมพ์ใบปะหน้า</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก แล้วลูกค้ายกเลิกภายหลัง ขนส่งสแกนรับไม่ได้ ต้องรับคืนเข้าคลัง<br>นับเฉพาะที่พิมพ์ในวันที่เลือก · แท็บ "ยกเลิกหลังพิมพ์" ในหน้าพิมพ์ใบปะหน้าแสดงย้อนหลัง 7 วัน ตัวเลขจึงมากกว่า</span></span></small><b id="sD">—</b></div>
+      <div><small>รอจัดส่ง (คงค้างทั้งหมด) <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>รอจัดส่ง (คงค้างทั้งหมด)</b><br>คำสั่งซื้อที่ยังไม่ได้กดจัดส่ง ทุกวันที่สั่งซื้อ ณ เวลาปัจจุบัน<br><b>รวม</b> TikTok + Shopee Mall + Shopee 24hr · ไม่ขึ้นกับวันที่เลือก</span></span></small><b id="sC">—</b></div>
     </div>
     <div class="wh-card fitc"><div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:8px"><span style="font-weight:600" id="sumTtl">คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามบริษัทขนส่ง × ช่องทาง</span></div>
       <table class="wh-t fit" id="sumTbl"><thead id="sumHead"></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
@@ -215,12 +240,12 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
     <div class="wh-top"><h1>สต็อกวันนี้</h1><span class="wh-status" id="stStk">—</span><span class="wh-pill cod">ทดลองเปรียบเทียบ · ยังไม่ใช้ตัดสต็อกจริง</span><span class="sp"></span>
       <div style="width:170px"><input class="wh-in" type="date" id="stkDate"></div><button class="wh-btn pri" id="stkBtn" type="button">ค้นหา</button></div>
     <div class="wh-kp cards">
-      <div><small>สินค้าออกตามใบปะหน้า (ชิ้น) <span class="wh-i">i<span class="pop"><b>สินค้าออกตามใบปะหน้า</b><br>จำนวนชิ้นของคำสั่งซื้อ TikTok ที่พิมพ์ใบปะหน้าในวันที่เลือก แยกชุดสินค้าเป็น SKU จริงแล้ว<br><b>รวม</b> คำสั่งซื้อที่ถูกยกเลิกภายหลัง (หยิบสินค้าออกจากคลังแล้ว)<br>ใช้ข้อมูลชุดเดียวกับหน้าสรุปการจัดส่ง · ดูย้อนหลังได้ 3 วัน</span></span></small><b id="kOut">—</b><span class="wh-sub" id="kOutS"></span></div>
-      <div><small>ยกเลิกหลังพิมพ์ใบปะหน้า (ชิ้น) <span class="wh-i">i<span class="pop"><b>ยกเลิกหลังพิมพ์ใบปะหน้า</b><br>จำนวนชิ้นของคำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก แล้วลูกค้ายกเลิกภายหลัง<br>ขนส่งสแกนรับไม่ได้ ต้องรับคืนเข้าคลัง</span></span></small><b id="kCx">—</b><span class="wh-sub" id="kCxS"></span></div>
-      <div><small>ยอดตัดสต็อกในชีท (ชิ้น) <span class="wh-i r">i<span class="pop"><b>ยอดตัดสต็อกในชีท</b><br>ยอดที่ทีมคลังบันทึกในชีทตัดสต็อก คลัง TikTok ประเภท Sold ของวันที่เลือก<br>ระบบดึงข้อมูลจากชีทวันละ 3 รอบ (03:30 · 13:30 · 18:30) ข้อมูลที่เพิ่งบันทึกอาจยังไม่แสดง</span></span></small><b id="kSh">—</b><span class="wh-sub" id="kShS"></span></div>
-      <div><small>ส่วนต่าง (ชิ้น) <span class="wh-i r">i<span class="pop"><b>ส่วนต่าง</b><br>สินค้าออกตามใบปะหน้า ลบ ยอดตัดสต็อกในชีท<br>บวก = ระบบนับได้มากกว่าชีท · ลบ = ชีทมากกว่าระบบ</span></span></small><b id="kDf">—</b><span class="wh-sub" id="kDfS"></span></div>
+      <div><small>สินค้าออกตามใบปะหน้า (ชิ้น) <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>สินค้าออกตามใบปะหน้า</b><br>จำนวนชิ้นของคำสั่งซื้อ TikTok ที่พิมพ์ใบปะหน้าในวันที่เลือก แยกชุดสินค้าเป็น SKU จริงแล้ว<br><b>รวม</b> คำสั่งซื้อที่ถูกยกเลิกภายหลัง (หยิบสินค้าออกจากคลังแล้ว)<br>ใช้ข้อมูลชุดเดียวกับหน้าสรุปการจัดส่ง · ดูย้อนหลังได้ 3 วัน</span></span></small><b id="kOut">—</b><span class="wh-sub" id="kOutS"></span></div>
+      <div><small>ยกเลิกหลังพิมพ์ใบปะหน้า (ชิ้น) <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ยกเลิกหลังพิมพ์ใบปะหน้า</b><br>จำนวนชิ้นของคำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก แล้วลูกค้ายกเลิกภายหลัง<br>ขนส่งสแกนรับไม่ได้ ต้องรับคืนเข้าคลัง</span></span></small><b id="kCx">—</b><span class="wh-sub" id="kCxS"></span></div>
+      <div><small>ยอดตัดสต็อกในชีท (ชิ้น) <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ยอดตัดสต็อกในชีท</b><br>ยอดที่ทีมคลังบันทึกในชีทตัดสต็อก คลัง TikTok ประเภท Sold ของวันที่เลือก<br>ระบบดึงข้อมูลจากชีทวันละ 3 รอบ (03:30 · 13:30 · 18:30) ข้อมูลที่เพิ่งบันทึกอาจยังไม่แสดง</span></span></small><b id="kSh">—</b><span class="wh-sub" id="kShS"></span></div>
+      <div><small>ส่วนต่าง (ชิ้น) <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ส่วนต่าง</b><br>สินค้าออกตามใบปะหน้า ลบ ยอดตัดสต็อกในชีท<br>บวก = ระบบนับได้มากกว่าชีท · ลบ = ชีทมากกว่าระบบ</span></span></small><b id="kDf">—</b><span class="wh-sub" id="kDfS"></span></div>
     </div>
-    <div class="wh-card fitc"><div style="font-weight:600;margin-bottom:8px">สินค้าออก TikTok แยกตาม SKU เปรียบเทียบกับชีทตัดสต็อก <span class="wh-i">i<span class="pop"><b>การเรียงข้อมูล</b><br>เรียงตามรหัส SKU (A–Z)<br>ส่วนต่างสีแดง = ตัวเลขไม่ตรงกับชีท<br>ชุดสินค้าแยกเป็น SKU จริงแล้ว · <b>รวม</b> ของแถมที่อยู่ในคำสั่งซื้อ TikTok</span></span></div>
+    <div class="wh-card fitc"><div style="font-weight:600;margin-bottom:8px">สินค้าออก TikTok แยกตาม SKU เปรียบเทียบกับชีทตัดสต็อก <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>การเรียงข้อมูล</b><br>เรียงตามรหัส SKU (A–Z)<br>ส่วนต่างสีแดง = ตัวเลขไม่ตรงกับชีท<br>ชุดสินค้าแยกเป็น SKU จริงแล้ว · <b>รวม</b> ของแถมที่อยู่ในคำสั่งซื้อ TikTok</span></span></div>
       <table class="wh-t fit" id="stkTbl"><thead><tr><th class="l">SKU</th><th class="l">ชื่อสินค้า</th><th>ออกตามใบปะหน้า</th><th>ยกเลิกหลังพิมพ์</th><th class="sh">ชีทตัดสต็อก</th><th class="sh">ส่วนต่าง</th></tr></thead><tbody id="stkBody"></tbody><tfoot id="stkFoot"></tfoot></table>
       <div class="wh-empty" id="stkEmpty" style="display:none"></div>
       <div class="wh-pager"><span id="stkPgInfo"></span><span class="pg" id="stkPgBtns"></span></div></div>
@@ -228,7 +253,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 
   <!-- หน้า 3: ประวัติการพิมพ์ -->
   <section class="wh-page" id="v-history">
-    <div class="wh-top"><h1>ประวัติการพิมพ์ <span class="wh-i">i<span class="pop"><b>พิมพ์ซ้ำ</b><br>พิมพ์ซ้ำได้ทุกวัน (ข้ามวันได้)<br>ขนส่งยังไม่มารับ = ขอใบปะหน้าใหม่จาก TikTok / Shopee<br>ขนส่งรับไปแล้ว = ใช้ไฟล์ใบปะหน้าที่ระบบเก็บไว้ตอนพิมพ์ (ไว้ส่งหลักฐานเคลม) · เก็บ 30 วัน เฉพาะที่พิมพ์จากหน้านี้ตั้งแต่ 26 พ.ย. 69 · ระบบลบไฟล์เกิน 30 วันทุกวัน 03:47<br>ไม่มีไฟล์เก็บไว้ ระบบลองขอจาก TikTok / Shopee อีกครั้ง ถ้าไม่ได้จะขึ้นในช่อง ไม่สำเร็จ พร้อมเหตุผล · คำสั่งซื้อที่ถูกยกเลิกพิมพ์ซ้ำไม่ได้<br><b>เลือกบางรายการ</b> = ติ๊กเฉพาะเลขคำสั่งซื้อที่ต้องการพิมพ์ซ้ำ</span></span></h1><span class="wh-status" id="stHis">—</span></div>
+    <div class="wh-top"><h1>ประวัติการพิมพ์ <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>พิมพ์ซ้ำ (Reprint)</b><br>ข้ามวันได้ · ขนส่งรับแล้วก็พิมพ์ได้<br><b>ก่อนขนส่งรับ</b> = ขอใบปะหน้าใหม่จาก TikTok / Shopee<br><b>หลังขนส่งรับ</b> = ใช้ไฟล์ที่ระบบเก็บไว้ 30 วัน (พิมพ์ตั้งแต่ 26 พ.ย. 69) · ไม่มีไฟล์ = ลองขอจาก TikTok / Shopee<br><b>ไม่รวม</b> คำสั่งซื้อที่ถูกยกเลิก<br><b>เลือกบางรายการ</b> = ติ๊กเฉพาะเลขที่ต้องการ</span></span></h1><span class="wh-status" id="stHis">—</span></div>
     <div class="wh-card">
       <table class="wh-t"><thead><tr><th>เวลาที่พิมพ์</th><th>Platform</th><th class="l">ผู้พิมพ์</th><th>จัดส่ง + พิมพ์</th><th>พิมพ์ซ้ำ</th><th>ไม่สำเร็จ</th><th></th></tr></thead><tbody id="hisBody"></tbody></table>
       <div class="wh-empty" id="hisEmpty" style="display:none"></div></div>

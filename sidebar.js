@@ -12,7 +12,7 @@
 (function () {
   const M = document.getElementById('sbMount');
   if (!M) return;
-  const PAGE = M.dataset.page || 'dashboard', DASH = PAGE === 'dashboard', BUILD = M.dataset.build || '';
+  const PAGE = M.dataset.page || 'dashboard', DASH = PAGE === 'dashboard', WH = PAGE === 'warehouse', BUILD = M.dataset.build || '';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const I = {
@@ -80,7 +80,7 @@
   let nav = '';
   // (2026-11-23) หน้าหลัก (hub.html: เลือก Dashboard / Warehouse) — โชว์เฉพาะคนที่เข้า Warehouse ได้ (ตอนนี้ = ผู้ดูแลระบบ) · เปิดตอนสิทธิ์โหลดเสร็จ (waitPerm)
   nav += `<a class="nav-item sb-back" id="sbHub" href="hub.html" style="display:none;" data-label="หน้าหลัก"><span class="nav-icon">${svg('grid')}</span><span class="sb-tx">หน้าหลัก</span></a>`;
-  if (!DASH) nav += `<a class="nav-item sb-back" href="dashboard.html" data-label="กลับ Dashboard"><span class="nav-icon">${svg('back')}</span><span class="sb-tx">กลับ Dashboard</span></a>`;
+  if (!DASH && !WH) nav += `<a class="nav-item sb-back" href="dashboard.html" data-label="กลับ Dashboard"><span class="nav-icon">${svg('back')}</span><span class="sb-tx">กลับ Dashboard</span></a>`;
   // หน้า admin: แท็บของหน้าอยู่บนสุด (กดแล้วไปกดปุ่มแท็บเดิมของหน้าให้)
   if (PAGE === 'admin') {
     const tabs = [...document.querySelectorAll('.side .side-item[data-tab]')];
@@ -90,6 +90,15 @@
       nav += `<div class="nav-group-label sb-sec">ตั้งค่า (Admin)</div>` + tabs.map(b => `<button type="button" class="nav-item sb-proxy" data-proxy="${esc(b.dataset.tab)}" data-label="${esc(txt(b))}"><span class="nav-icon">${svg(ic[b.dataset.tab] || 'sliders')}</span><span class="sb-tx">${esc(txt(b))}</span></button>`).join('')
         ;
     }
+  }
+  // (2026-11-26) หน้า Warehouse: เมนูงานของหน้า → กดเมนูเดิมที่ซ่อนไว้ (.wh-side a[data-view]) · ไม่มีเมนู Dashboard / ระบบ (สลับที่หน้าหลัก)
+  if (WH) {
+    const ic = { print: 'receipt', summary: 'chart', stock: 'box', history: 'layers' };
+    const its = [...document.querySelectorAll('.wh-side a[data-view]')];
+    if (its.length) nav += `<div class="nav-group-label sb-sec">งานประจำวัน</div>` + its.map(a => {
+      const l = [...a.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim(), tag = a.querySelector('.wh-pill');
+      return `<button type="button" class="nav-item sb-proxy-wh" data-view="${esc(a.dataset.view)}" data-label="${esc(l)}"><span class="nav-icon">${svg(ic[a.dataset.view] || 'box')}</span><span class="sb-tx">${esc(l)}</span>${tag ? `<span class="sb-tag">${esc(tag.textContent)}</span>` : ''}</button>`;
+    }).join('');
   }
   if (PAGE === 'upload') {   // ปุ่มโหมดเดิมอยู่ใต้เมนูนี้ในหน้า → ผูกปุ่มตอนหน้าโหลดเสร็จ (ด้านล่าง)
     nav += UP_MENU.map(([sec, items]) => `<div class="nav-group-label sb-sec">${esc(sec)}</div>` + items
@@ -103,11 +112,11 @@
       + `<span class="nav-icon" style="color:${m.color}">${svg(m.icon)}</span><span class="sb-tx">${esc(m.label)}</span><span class="nav-group-chevron" id="navGroupChevron-${m.g}">▸</span></div>`
       + `<div id="navGroup-${m.g}" class="sb-subs" style="display:none;">${m.items.map(x => pageItem(x[0], x[1], null, true, false, x[2])).join('')}</div>`;
   }
-  nav += `<div class="nav-group-label sb-sec">ระบบ</div>`;
+  if (!WH) nav += `<div class="nav-group-label sb-sec">ระบบ</div>`;
   if (DASH) nav += `<a class="nav-item nav-sub" id="navToExec" href="exec.html" target="_blank" rel="noopener" style="display:none;" data-label="Management">${'<span class="nav-icon">' + svg('ext') + '</span>'}<span class="sb-tx">Management ↗</span></a>`
     + `<a class="nav-item nav-sub" id="navToOps" href="dashboard.html" style="display:none;" data-label="Team View"><span class="nav-icon">${svg('back')}</span><span class="sb-tx">Team View</span></a>`
     + `<div class="nav-item nav-sub" onclick="openWhatsNew(false)" id="navWhatsNew" data-label="มีอะไรใหม่"><span class="nav-icon">${svg('spark')}</span><span class="sb-tx">มีอะไรใหม่</span><span class="wn-dot" id="wnDot" style="display:none;"></span></div>`;
-  nav += SYS.filter(([h, , , pg]) => DASH || pg !== PAGE).map(([h, l, ic]) => `<a class="nav-item nav-sub${h === PAGE + '.html' && PAGE !== 'upload' ? ' active' : ''}" href="${h}" data-label="${esc(l)}" data-sys="${h.split('#')[0]}"><span class="nav-icon">${svg(ic)}</span><span class="sb-tx">${esc(l)}</span></a>`).join('');
+  if (!WH) nav += SYS.filter(([h, , , pg]) => DASH || pg !== PAGE).map(([h, l, ic]) => `<a class="nav-item nav-sub${h === PAGE + '.html' && PAGE !== 'upload' ? ' active' : ''}" href="${h}" data-label="${esc(l)}" data-sys="${h.split('#')[0]}"><span class="nav-icon">${svg(ic)}</span><span class="sb-tx">${esc(l)}</span></a>`).join('');
 
   // ── ส่วนล่าง: ผู้ใช้ · สถานะ · เวอร์ชัน · ปุ่ม ──
   const legacy = DASH ? `<span id="authUser" hidden></span><span id="buildTag" hidden>${esc(BUILD)}</span>
@@ -133,7 +142,7 @@
   body.has-sb { --sb-w: 208px; }
   body.has-sb.sb-mini { --sb-w: 64px; }
   body.has-sb:not(.sb-dash) { padding-left: var(--sb-w); transition: padding-left .18s ease; }
-  body.has-sb > nav, body.has-sb .side { display: none !important; }   /* เมนูเดิมของหน้า upload / health / admin (ซ่อนไว้ ปุ่มเดิมยังทำงานผ่านเมนูนี้) */
+  body.has-sb > nav, body.has-sb .side, body.has-sb .wh-side { display: none !important; }   /* เมนูเดิมของหน้า upload / health / admin (ซ่อนไว้ ปุ่มเดิมยังทำงานผ่านเมนูนี้) */
   .sb { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sb-w); background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; transition: width .18s ease; font-family: 'Sarabun', sans-serif; padding-top: env(safe-area-inset-top, 0px); }
   .sb-h { display: flex; align-items: center; gap: 10px; padding: 14px 12px 12px 14px; border-bottom: 1px solid var(--border); min-height: 58px; }
   .sb-mark { width: 32px; height: 32px; border-radius: 9px; background: var(--accent, #b8862f); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 16px; flex: none; }
@@ -178,6 +187,8 @@
   .sb-fly .t { font-size: 12px; font-weight: 600; padding: 5px 8px 6px; }
   .sb-fly a, .sb-fly button { display: block; width: 100%; text-align: left; padding: 6px 8px; border: 0; border-radius: 7px; background: none; font: inherit; font-size: 12.5px; color: var(--text2); text-decoration: none; cursor: pointer; white-space: nowrap; }
   .sb-fly a:hover, .sb-fly button:hover { background: var(--bg3); color: var(--text); }
+  .sb .sb-tag { margin-left: auto; font-size: 10px; line-height: 16px; padding: 0 6px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); font-weight: 600; flex: none; }
+  body.sb-mini .sb-tag,
   body.sb-mini .sb-brand, body.sb-mini .sb-tx, body.sb-mini .nav-group-chevron, body.sb-mini .sb-subs, body.sb-mini .sb-who, body.sb-mini .sb-ver, body.sb-mini .sb-note { display: none !important; }
   body.sb-mini .sb-h { flex-direction: column; padding: 12px 0 10px; gap: 8px; } body.sb-mini .sb-tg { margin: 0; } body.sb-mini .sb-tg .sb-ic { transform: rotate(180deg); }
   body.sb-mini .sb-nav { padding: 8px 10px 12px; } body.sb-mini .sb .nav-item, body.sb-mini .sb .nav-group-label:not(.sb-sec) { justify-content: center; padding: 9px 0; }
@@ -253,6 +264,13 @@
     new MutationObserver(sync).observe(o, { attributes: true, attributeFilter: ['class'] });
   });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindUp); else bindUp();
+  // ── warehouse: เมนูงาน → กดเมนูเดิม · active ตามเมนูเดิม (class on) ──
+  document.querySelectorAll('.sb-proxy-wh').forEach(p => {
+    const o = document.querySelector(`.wh-side a[data-view="${p.dataset.view}"]`); if (!o) return;
+    const sync = () => p.classList.toggle('active', o.classList.contains('on'));
+    p.onclick = () => o.click(); sync();
+    new MutationObserver(sync).observe(o, { attributes: true, attributeFilter: ['class'] });
+  });
   // ── admin: แท็บในเมนูนี้ → กดปุ่มแท็บเดิม · สถานะ active / ซ่อน ตามปุ่มเดิม ──
   document.querySelectorAll('.sb-proxy').forEach(p => {
     const o = document.querySelector(`.side .side-item[data-tab="${p.dataset.proxy}"]`); if (!o) return;
@@ -271,7 +289,7 @@
     setT('sbName', name);
     setT('sbRole', p.is_admin ? 'ผู้ดูแลระบบ' : (p.email || 'ผู้ใช้งาน'));
     setT('sbAv', (name.trim()[0] || '·').toUpperCase());
-    { const h = document.getElementById('sbHub'); if (h && (p.is_admin || (p.pages || []).includes('warehouse'))) h.style.display = ''; }   // สิทธิ์ Warehouse = ผู้ดูแลระบบ หรือติ๊กช่อง Warehouse (ตรงกับ auth.js / hub.html)
+    { const h = document.getElementById('sbHub'); if (h && (p.is_admin || (p.pages || []).includes('warehouse')) && !(WH && !(p.is_admin || (p.pages || []).some(x => x !== 'warehouse') || p.can_upload || p.can_admin || p.can_edit_kpi))) h.style.display = ''; }   // (2026-11-26) หน้า Warehouse: มีสิทธิ์แค่ Warehouse = ไม่มีปุ่มหน้าหลัก (หน้าหลักพากลับมาที่นี่อยู่แล้ว)   // สิทธิ์ Warehouse = ผู้ดูแลระบบ หรือติ๊กช่อง Warehouse (ตรงกับ auth.js / hub.html)
     if (DASH) return;   // dashboard กรองเมนูเองใน applyPermissions() (โค้ดเดิม)
     document.querySelectorAll('.sb-nav [data-page]').forEach(el => { if (Auth.canPage && !Auth.canPage(el.dataset.page)) el.remove(); });
     document.querySelectorAll('.sb-nav .sb-subs').forEach(g => { if (!g.querySelector('.nav-item')) { g.previousElementSibling && g.previousElementSibling.remove(); g.remove(); } });

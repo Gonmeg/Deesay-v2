@@ -110,6 +110,24 @@
     $('stPrint').classList.toggle('bad', !!S.err);
     $('stPrint').textContent = S.err ? '1 alert' : S.busy && c ? 'กำลังอัปเดต…' : c ? 'Updated ' + fmtT(new Date(c.got)) : 'กำลังโหลด…';
     $('stPrint').title = S.err || '';
+    note('print', [[S.platform === 'shopee' ? 'Shopee' : 'TikTok', S.platform, c ? fmtT(new Date(c.got)) : '—', 'ทุก 5 นาที']], 'ดึงจาก TikTok / Shopee ตอนเปิดหน้า · ตอนกดค้นหา · และทุก 5 นาทีระหว่างเปิดหน้านี้');
+  }
+  // (2026-11-26) ปุ่มสถานะข้อมูลแบบ Dashboard: กดแล้วขึ้น แหล่งข้อมูล / ข้อมูล ณ / รอบอัปเดต (+ เรื่องที่ต้องดู ถ้าโหลดไม่สำเร็จ)
+  const NOTE = {}, CHC = { tiktok: 'var(--ch-tiktok)', shopee: 'var(--ch-shopee)' };
+  function note(v, rows, meta) { NOTE[v] = { rows, meta }; }
+  const ERR = { print: () => $('stPrint').title || $('stPrint').dataset.tip, summary: () => $('sumEmpty').textContent, stock: () => $('stkEmpty').textContent, history: () => $('hisEmpty').textContent };
+  function statusPop(chip) {
+    let pop = $('whDg');
+    if (!pop) { pop = document.createElement('div'); pop.id = 'whDg'; pop.className = 'dg-pop'; pop.hidden = true; document.body.appendChild(pop); pop.onclick = e => e.stopPropagation(); }
+    if (!pop.hidden && pop._for === chip) { pop.hidden = true; return; }
+    const v = chip.closest('.wh-page').id.slice(2), n = NOTE[v] || { rows: [], meta: '' }, bad = chip.classList.contains('bad');
+    const rows = n.rows.length ? '<div class="dg-rows"><span class="hd">แหล่งข้อมูล</span><span class="hd r">ข้อมูล ณ</span><span class="hd r">อัปเดต</span>'
+      + n.rows.map(([nm, ch, at, sc]) => `<span class="nm"><i style="--c:${CHC[ch] || 'var(--text3)'}"></i>${esc(nm)}</span><span class="dt">${esc(at)}</span><span class="sc">${esc(sc)}</span>`).join('') + '</div>' : '';
+    const err = bad ? `<div class="its"><div class="it bad"><i></i><div><b>โหลดข้อมูลไม่สำเร็จ</b><div>${esc((ERR[v] && ERR[v]()) || 'กดค้นหาอีกครั้ง')}</div></div></div></div>` : '';
+    pop.innerHTML = `<h4>สถานะข้อมูล</h4>${rows}${err}${n.meta ? `<div class="meta">${n.meta}</div>` : ''}`;
+    pop.hidden = false; pop._for = chip;
+    const r = chip.getBoundingClientRect();
+    pop.style.top = (r.bottom + 8) + 'px'; pop.style.left = Math.max(8, Math.min(r.left, innerWidth - pop.offsetWidth - 8)) + 'px';
   }
   async function loadPack(plat) {
     const j = await Auth.rpc('wh_pack_list', { p_platform: plat });
@@ -314,16 +332,16 @@
     [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
     $('nShip').textContent = S.counts.ship ?? ''; $('nPack').textContent = S.counts.pack ?? ''; $('nCollect').textContent = S.counts.collect ?? ''; $('nCancel').textContent = S.counts.cancel ?? '';
     const pack = S.tab === 'pack', P = packMap();
-    const infoCt = `<span class="wh-i">i<span class="pop"><b>เวลายืนยัน (Confirmed time)</b><br>เวลาที่คำสั่งซื้อพร้อมให้เตรียมจัดส่งใน Shopee<br>จ่ายออนไลน์ = เวลาที่ชำระเงินสำเร็จ<br>เก็บเงินปลายทาง (COD) = เวลาที่สั่งซื้อ<br>รอบพิมพ์ ช่วงเวลา และการเรียง ใช้เวลานี้<br>ตัวเล็กด้านล่าง = เวลาที่ลูกค้าสั่ง (แสดงเมื่อต่างกันเกิน 1 นาที)</span></span>`;
-    const infoPk = `<span class="wh-i r">i<span class="pop"><b>ย้ายมาเมื่อ</b><br>เวลาที่ย้ายคำสั่งซื้อจากรอจัดส่งมากำลังแพ็ค และชื่อบัญชีที่ย้าย</span></span>`;
+    const infoCt = `<span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>เวลายืนยัน (Confirmed time)</b><br>เวลาที่คำสั่งซื้อพร้อมให้เตรียมจัดส่งใน Shopee<br>จ่ายออนไลน์ = เวลาที่ชำระเงินสำเร็จ<br>เก็บเงินปลายทาง (COD) = เวลาที่สั่งซื้อ<br>รอบพิมพ์ ช่วงเวลา และการเรียง ใช้เวลานี้<br>ตัวเล็กด้านล่าง = เวลาที่ลูกค้าสั่ง (แสดงเมื่อต่างกันเกิน 1 นาที)</span></span>`;
+    const infoPk = `<span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ย้ายมาเมื่อ</b><br>เวลาที่ย้ายคำสั่งซื้อจากรอจัดส่งมากำลังแพ็ค และชื่อบัญชีที่ย้าย</span></span>`;
     const whoShort = e => String(e || '').split('@')[0];
     const lastCell = o => pack ? (o.gone ? `<span class="wh-pill bad">ไม่อยู่ในรอจัดส่งแล้ว</span><div><button class="wh-btn sm" data-rm="${esc(o.id)}" type="button">เอาออก</button></div>`
       : `${P[o.id] && P[o.id].at ? fmtDT(new Date(P[o.id].at)) : '—'}<div class="wh-sub">${esc(whoShort(P[o.id] && P[o.id].by))}</div>`) : printedHtml(o.id);
-    const info = `<span class="wh-i r">i<span class="pop"><b>พิมพ์แล้ว (ครั้ง)</b><br>จำนวนครั้งที่ใบปะหน้าของคำสั่งซื้อนี้ถูกพิมพ์จากหน้านี้ รวมการพิมพ์ซ้ำ<br>ไม่นับการพิมพ์จาก Seller Center</span></span>`;
+    const info = `<span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>พิมพ์แล้ว (ครั้ง)</b><br>จำนวนครั้งที่ใบปะหน้าของคำสั่งซื้อนี้ถูกพิมพ์จากหน้านี้ รวมการพิมพ์ซ้ำ<br>ไม่นับการพิมพ์จาก Seller Center</span></span>`;
     // (2026-11-23) ยกเลิกหลังพิมพ์: รวมที่กดจัดส่ง / พิมพ์จาก Seller Center แล้วถูกยกเลิกก่อนขนส่งมารับ (src = sc)
     // (2026-11-23) บอกให้ชัดว่า "พิมพ์แล้ว" + ยกเลิกหลังพิมพ์นานเท่าไร (เช่น ระหว่างน้องพิมพ์ทีละ 250 ใบ แล้วลูกค้ายกเลิก)
-    const infoSrc = `<span class="wh-i r">i<span class="pop"><b>พิมพ์จาก</b><br>หน้านี้ = พิมพ์จากหน้า Warehouse (ตัวเลข = จำนวนครั้งที่พิมพ์)<br>Seller Center = กดจัดส่ง / พิมพ์ใบปะหน้าจาก Seller Center</span></span>`;
-    const infoSt = `<span class="wh-i">i<span class="pop"><b>สถานะ</b><br>พิมพ์แล้ว · ยกเลิกแล้ว = ลูกค้ายกเลิกหลังพิมพ์ใบปะหน้า ขนส่งยังไม่มารับ พัสดุยังอยู่ในคลัง<br>พิมพ์แล้ว · ลูกค้าขอยกเลิก = มีคำขอยกเลิกค้างอยู่ อย่าเพิ่งส่งให้ขนส่ง</span></span>`;
+    const infoSrc = `<span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>พิมพ์จาก</b><br>หน้านี้ = พิมพ์จากหน้า Warehouse (ตัวเลข = จำนวนครั้งที่พิมพ์)<br>Seller Center = กดจัดส่ง / พิมพ์ใบปะหน้าจาก Seller Center</span></span>`;
+    const infoSt = `<span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>สถานะ</b><br>พิมพ์แล้ว · ยกเลิกแล้ว = ลูกค้ายกเลิกหลังพิมพ์ใบปะหน้า ขนส่งยังไม่มารับ พัสดุยังอยู่ในคลัง<br>พิมพ์แล้ว · ลูกค้าขอยกเลิก = มีคำขอยกเลิกค้างอยู่ อย่าเพิ่งส่งให้ขนส่ง</span></span>`;
     $('thead').innerHTML = cancel
       ? `<tr><th>พิมพ์ใบปะหน้าเมื่อ</th><th>ยกเลิกเมื่อ</th><th>เลขคำสั่งซื้อ</th><th class="l">สินค้าที่ต้องรับคืน (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>สถานะ ${infoSt}</th><th class="l">เหตุผลที่ยกเลิก</th><th>พิมพ์จาก ${infoSrc}</th></tr>`
       : `<tr><th style="width:36px"><input type="checkbox" id="chkAll" title="เลือกทั้งหมดที่ค้นเจอ"></th><th>เวลา${TW()}${S.platform === 'shopee' ? ' ' + infoCt : ''}</th><th>เลขคำสั่งซื้อ</th><th class="l">ตะกร้า</th><th class="l">สินค้า (SKU × จำนวน)</th><th>จำนวนชิ้น</th><th>การชำระ</th><th>ขนส่ง</th><th>${pack ? 'ย้ายมาเมื่อ ' + infoPk : 'พิมพ์แล้ว (ครั้ง) ' + info}</th></tr>`;
@@ -354,13 +372,13 @@
   }
   function renderSel() {
     const cancel = S.tab === 'cancel', s = summarize(selected());
-    $('selN').innerHTML = cancel ? `${num(S.rows.length)} คำสั่งซื้อที่พิมพ์ใบปะหน้าแล้วแต่ถูกยกเลิก · ต้องนำสินค้ากลับเข้าคลัง <span class="wh-i">i<span class="pop"><b>ยกเลิกหลังพิมพ์</b><br>พิมพ์ใบปะหน้าแล้ว (จากหน้านี้หรือ Seller Center) แต่ลูกค้ายกเลิกก่อนขนส่งเข้ารับ พัสดุจึงยังอยู่ในคลัง ต้องแยกออกจากกองพัสดุและนำสินค้ากลับเข้าคลัง<br>แสดงย้อนหลัง 7 วัน (หน้าสรุปการจัดส่งนับเฉพาะวันที่เลือก) · ไม่รวมพัสดุที่ขนส่งรับไปแล้ว</span></span>` : `เลือกแล้ว ${num(s.n)} คำสั่งซื้อ`;
+    $('selN').innerHTML = cancel ? `${num(S.rows.length)} คำสั่งซื้อที่พิมพ์ใบปะหน้าแล้วแต่ถูกยกเลิก · ต้องนำสินค้ากลับเข้าคลัง <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ยกเลิกหลังพิมพ์</b><br>พิมพ์ใบปะหน้าแล้ว (จากหน้านี้หรือ Seller Center) แต่ลูกค้ายกเลิกก่อนขนส่งเข้ารับ พัสดุจึงยังอยู่ในคลัง ต้องแยกออกจากกองพัสดุและนำสินค้ากลับเข้าคลัง<br>แสดงย้อนหลัง 7 วัน (หน้าสรุปการจัดส่งนับเฉพาะวันที่เลือก) · ไม่รวมพัสดุที่ขนส่งรับไปแล้ว</span></span>` : `เลือกแล้ว ${num(s.n)} คำสั่งซื้อ`;
     $('selM').textContent = cancel || !s.n ? '' : `รวม ${num(s.qty)} ชิ้น · ${Object.keys(s.sku).length} รายการสินค้า`;
     $('pickBtn').style.display = cancel ? 'none' : ''; $('goBtn').style.display = cancel ? 'none' : ''; $('backBtn').style.display = S.tab === 'pack' ? '' : 'none';
     $('pickBtn').disabled = !s.n; $('goBtn').disabled = !s.n; $('backBtn').disabled = !s.n;
     // (2026-11-24) รอจัดส่ง = ย้ายไปกำลังแพ็ค · กำลังแพ็ค = จัดส่ง + พิมพ์ (และย้ายกลับ) · รอเข้ารับ = พิมพ์ซ้ำ
     $('goBtn').textContent = S.tab === 'collect' ? 'พิมพ์ใบปะหน้าซ้ำ' : S.tab === 'ship' ? 'ย้ายไปกำลังแพ็ค' : 'จัดส่ง + พิมพ์ใบปะหน้า';
-    if (S.tab === 'pack' && !cancel) $('selN').insertAdjacentHTML('beforeend', ` <span class="wh-i">i<span class="pop"><b>กำลังแพ็ค</b><br>คำสั่งซื้อที่ย้ายมาจากรอจัดส่ง เพื่อแพ็คและพิมพ์ใบปะหน้ากลุ่มนี้ · ทุกเครื่องเห็นเหมือนกัน<br>สถานะใน ${PL()} ยังเป็นรอจัดส่ง จนกว่าจะกด "จัดส่ง + พิมพ์ใบปะหน้า" แล้วจะย้ายไปรอเข้ารับ<br>ถ้าจัดส่งจาก Seller Center แทน คำสั่งซื้อจะออกจากกำลังแพ็คเอง · "ไม่อยู่ในรอจัดส่งแล้ว" = ถูกยกเลิก หรือสถานะเปลี่ยน กด "เอาออก"</span></span>`);
+    if (S.tab === 'pack' && !cancel) $('selN').insertAdjacentHTML('beforeend', ` <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>กำลังแพ็ค</b><br>คำสั่งซื้อที่ย้ายมาจากรอจัดส่ง เพื่อแพ็คและพิมพ์ใบปะหน้ากลุ่มนี้ · ทุกเครื่องเห็นเหมือนกัน<br>สถานะใน ${PL()} ยังเป็นรอจัดส่ง จนกว่าจะกด "จัดส่ง + พิมพ์ใบปะหน้า" แล้วจะย้ายไปรอเข้ารับ<br>ถ้าจัดส่งจาก Seller Center แทน คำสั่งซื้อจะออกจากกำลังแพ็คเอง · "ไม่อยู่ในรอจัดส่งแล้ว" = ถูกยกเลิก หรือสถานะเปลี่ยน กด "เอาออก"</span></span>`);
   }
 
   // ───── กล่องรายการเตรียมสินค้า ─────
@@ -513,6 +531,7 @@
       $('sumEmpty').style.display = js.error ? 'block' : 'none'; $('sumEmpty').textContent = js.error ? 'Shopee โหลดไม่ได้: ' + js.error : '';
       $('sP').textContent = num(A + B + X); $('sA').textContent = num(A); $('sB').textContent = num(B); $('sD').textContent = num(X); $('sC').textContent = num(W);
       $('stSum').textContent = js.error ? '1 alert' : 'Updated ' + fmtT(new Date(j.at || Date.now())); $('stSum').classList.toggle('bad', !!js.error);
+      note('summary', [['TikTok', 'tiktok', fmtT(new Date(j.at || Date.now())), 'ทุก 5 นาที'], ['Shopee', 'shopee', js.at ? fmtT(new Date(js.at)) : '—', 'ทุก 5 นาที']], 'วันนี้: คิดไว้ล่วงหน้า 07:00–21:55 · กดจัดส่งจากหน้าพิมพ์แล้วอัปเดตทันที<br>วันอื่น / นอกเวลา: ดึงตอนกดค้นหา');
     } catch (e) { if (my !== SC.seq) return; SC.pend = null; $('stSum').textContent = '1 alert'; $('stSum').classList.add('bad'); $('sumBody').innerHTML = ''; $('sumFoot').innerHTML = ''; $('sumEmpty').style.display = 'block'; $('sumEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
   }
 
@@ -543,7 +562,8 @@
       for (const c in sh) { row(c).sh += sh[c]; k.sq += sh[c]; }
       const hasSheet = Object.keys(sh).length > 0, rows = Object.keys(m).sort().map(c => [c, m[c]]);
       Object.assign(STK, { d: day, got: Date.now(), k, hasSheet, page: 1, rows });   // (2026-11-24) เรียงตาม SKU A–Z
-      renderStock(); $('stStk').textContent = 'Updated ' + fmtT(new Date());
+      renderStock(); $('stStk').textContent = 'Updated ' + fmtT(new Date(j.at || Date.now()));
+      note('stock', [['ออกตามใบปะหน้า · TikTok', 'tiktok', fmtT(new Date(j.at || Date.now())), 'ทุก 5 นาที'], ['Log สต็อกทีมแพ็ค', '', hasSheet ? 'เข้าแล้ว' : 'ยังไม่เข้า', '03:30 / 13:30 / 18:30']], 'ออกตามใบปะหน้า วันนี้: คิดไว้ล่วงหน้า 07:00–21:55 · วันอื่น: ดึงตอนกดค้นหา');
     } catch (e) {
       if (my !== STK.seq) return; STK.pend = null;
       $('stStk').textContent = '1 alert'; $('stStk').classList.add('bad'); STK.rows = []; $('stkBody').innerHTML = ''; $('stkFoot').innerHTML = '';
@@ -559,8 +579,8 @@
     $('kDf').innerHTML = hasSheet ? (df ? `<span style="color:var(--bad)">${sgn(df)}</span>` : '0') : '—'; $('kDfS').textContent = hasSheet ? (bad ? `${num(bad)} SKU ไม่ตรงกัน` : 'ตรงกันทุก SKU') : '';
     const pages = Math.max(1, Math.ceil(rows.length / size)); if (STK.page > pages) STK.page = pages;
     $('stkBody').innerHTML = rows.slice((STK.page - 1) * size, STK.page * size).map(([c, r]) => { const d = r.out - r.sh;
-      return `<tr><td class="l"><b>${esc(c)}</b></td><td class="l">${esc(S.names[c] || '—')}</td><td>${num(r.out)}</td><td>${r.cx ? num(r.cx) : ''}</td><td class="sh">${num(r.sh)}</td><td class="sh">${d ? `<b style="color:var(--bad)">${sgn(d)}</b>` : ''}</td></tr>`; }).join('');
-    $('stkFoot').innerHTML = rows.length ? `<tr><td class="l" colspan="2">รวม</td><td>${num(k.oq)}</td><td>${num(k.cq)}</td><td class="sh">${num(k.sq)}</td><td class="sh">${df ? sgn(df) : ''}</td></tr>` : '';
+      return `<tr><td class="l"><b>${esc(c)}</b></td><td class="l">${esc(S.names[c] || '—')}</td><td>${num(r.out)}</td><td>${r.cx ? num(r.cx) : '<span class="pc0">0</span>'}</td><td class="sh">${num(r.sh)}</td><td class="sh">${d ? `<b style="color:var(--bad)">${sgn(d)}</b>` : '<span class="pc0">0</span>'}</td></tr>`; }).join('');
+    $('stkFoot').innerHTML = rows.length ? `<tr><td class="l" colspan="2">รวม</td><td>${num(k.oq)}</td><td>${num(k.cq)}</td><td class="sh">${num(k.sq)}</td><td class="sh">${df ? sgn(df) : '0'}</td></tr>` : '';
     $('stkTbl').classList.toggle('nosh', !hasSheet);   // ยังไม่มีชีทของวันนั้น: ซ่อนคอลัมน์ชีท / ต่าง (การ์ดบนบอกแล้วว่ายังไม่มี)
     $('stkEmpty').style.display = rows.length ? 'none' : 'block'; $('stkEmpty').textContent = 'ไม่มีสินค้าออกในวันที่เลือก';
     $('stkPgInfo').textContent = rows.length ? `แสดง ${num((STK.page - 1) * size + 1)}–${num(Math.min(STK.page * size, rows.length))} จาก ${num(rows.length)} SKU` : '';
@@ -576,6 +596,7 @@
       $('hisBody').innerHTML = HIS.map((b, i) => `<tr><td>${fmtDT(new Date(b.at))}</td><td>${b.platform === 'shopee' ? 'Shopee ' + [...new Set(Object.values(b.shop_of || {}).map(x => SHOPNAME[x]))].join(' + ') : 'TikTok'}</td><td class="l">${esc(b.by || '—')}</td><td>${num(b.ship)}</td><td>${num(b.reprint)}</td><td>${b.fail ? `<span class="pc2" title="${esc((b.fails || []).map(f => f.id + ' — ' + (f.error || '')).join('\n'))}">${num(b.fail)}</span>` : '0'}</td><td style="white-space:nowrap">${b.order_ids.length ? `<button class="wh-btn sm" data-i="${i}" data-a="all" type="button">พิมพ์ซ้ำทั้งรอบ</button> <button class="wh-btn sm" data-i="${i}" data-a="pick" type="button">เลือกบางรายการ</button>` : ''}</td></tr>`).join('');
       $('hisEmpty').style.display = HIS.length ? 'none' : 'block'; $('hisEmpty').textContent = 'ยังไม่มีประวัติการพิมพ์';
       $('stHis').textContent = 'Updated ' + fmtT(new Date());
+      note('history', [['ประวัติการพิมพ์', '', fmtT(new Date()), 'ทันทีที่พิมพ์']], 'บันทึกทุกครั้งที่กดพิมพ์จากหน้านี้ · ดึงใหม่ทุกครั้งที่เปิดหน้า');
     } catch (e) { $('stHis').textContent = '1 alert'; $('stHis').classList.add('bad'); $('hisBody').innerHTML = ''; $('hisEmpty').style.display = 'block'; $('hisEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
   }
 
@@ -646,6 +667,13 @@
     setInterval(() => { if (document.visibilityState === 'visible' && S.view === 'print' && !S.busy && !S.printing && !$('ov').classList.contains('on') && TABS.some(t => !fresh(t))) loadAll(); }, 60000);
     $('ov').onclick = e => { if (e.target === $('ov')) closeDlg(); };
     $('sumBtn').onclick = () => loadSummary(true);
+    document.querySelectorAll('.wh-status').forEach(ch => {
+      const ld = () => ch.classList.toggle('ld', /^กำลัง/.test(ch.textContent)); ld();
+      new MutationObserver(ld).observe(ch, { childList: true, characterData: true, subtree: true });
+      ch.onclick = e => { e.stopPropagation(); statusPop(ch); };
+    });
+    document.addEventListener('click', () => { const p = $('whDg'); if (p) p.hidden = true; });
+    addEventListener('scroll', e => { const p = $('whDg'); if (p && !p.contains(e.target)) p.hidden = true; }, true);
     $('stkBtn').onclick = () => loadStock(true);
     $('stkPgBtns').onclick = e => { const b = e.target.closest('button[data-p]'); if (b) { STK.page += Number(b.dataset.p); renderStock(); } };
     $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) { const h = HIS[Number(b.dataset.i)]; if (b.dataset.a === 'pick') openReprintPick(h); else runPrint('reprint', h.order_ids, h.platform, h.shop_of); } };
