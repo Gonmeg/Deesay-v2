@@ -479,33 +479,22 @@
 
   // ───── สรุปการจัดส่ง ─────
   const SC = {};   // ผลสรุปล่าสุด { d: วันที่, j, got }
-  // (2026-11-26) ตารางสรุป 2 มุมมอง: ตามช่องทาง (ช่องทาง → ขนส่ง) / ตามขนส่ง (ขนส่ง → ช่องทาง) · ตัวเลขชุดเดียวกัน ยอดรวมเท่ากัน
-  //   ตามขนส่ง: ชื่อขนส่งเดียวกันข้าม Platform รวมเป็นแถวเดียว (ตัดคำว่า Thailand ท้ายชื่อ เช่น Flash Express Thailand = Flash Express)
+  // (2026-11-26) ตารางสรุปตารางเดียว: แถว = บริษัทขนส่ง (ชื่อเดียวกันข้าม Platform รวมแถวเดียว · ตัดคำว่า Thailand ท้ายชื่อ)
+  //   คอลัมน์ = จำนวนต่อช่องทาง / ร้าน (ชี้ดูแยกสถานะ) + แยกตามสถานะ + รวม · ตัวเลขชุดเดียวกับการ์ดด้านบน
   const carKey = c => String(c || 'ไม่ระบุ').replace(/\s*thailand\s*$/i, '').trim().toLowerCase();
   function drawSummary() {
-    const chans = SC.chans || [], byCar = SC.by === 'car', tri = v => ({ w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }), tot = r => r.w + r.p + r.x;
-    let A = 0, B = 0, X = 0, W = 0, html = '';
-    const groups = [];
-    if (!byCar) chans.forEach(ch => groups.push({ name: ch.name, rows: Object.entries(ch.carriers || {}).map(([c, v]) => [c, tri(v)]) }));
-    else {
-      const m = new Map();
-      chans.forEach(ch => Object.entries(ch.carriers || {}).forEach(([c, v]) => { const k = carKey(c); const g = m.get(k) || { name: c, rows: [] }; if (c.length < g.name.length) g.name = c; g.rows.push([ch.name, tri(v)]); m.set(k, g); }));
-      groups.push(...m.values());
-    }
-    groups.forEach(g => { g.rows.sort((a, b) => tot(b[1]) - tot(a[1])); g.t = g.rows.reduce((m, [, v]) => ({ w: m.w + v.w, p: m.p + v.p, x: m.x + v.x }), { w: 0, p: 0, x: 0 }); });
-    if (byCar) groups.sort((a, b) => tot(b.t) - tot(a.t));
-    groups.forEach(g => {
-      A += g.t.w; B += g.t.p; X += g.t.x;
-      html += `<tr class="wh-ch"><td class="l">${esc(g.name)}</td><td>${num(g.t.w)}</td><td>${num(g.t.p)}</td><td>${num(g.t.x)}</td><td>${num(tot(g.t))}</td></tr>`
-        + g.rows.map(([c, v]) => `<tr><td class="l ci">${esc(c)}</td><td>${num(v.w)}</td><td>${num(v.p)}</td><td>${num(v.x)}</td><td>${num(tot(v))}</td></tr>`).join('');
-    });
-    chans.forEach(ch => { W += ch.wait || 0; });
-    $('sumBody').innerHTML = html;
-    $('sumFoot').innerHTML = `<tr><td class="l">${byCar ? 'รวมทุกขนส่ง' : 'รวมทุกช่องทาง'}</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(X)}</td><td>${num(A + B + X)}</td></tr>`;
-    $('sumTh').textContent = byCar ? 'บริษัทขนส่ง / ช่องทาง' : 'ช่องทาง / บริษัทขนส่ง';
-    $('sumTtl').textContent = byCar ? 'คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามบริษัทขนส่งและช่องทาง' : 'คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามช่องทางและบริษัทขนส่ง';
-    document.querySelectorAll('#sumBy button').forEach(b => b.classList.toggle('on', b.dataset.v === (byCar ? 'car' : 'ch')));
-    return { A, B, X, W };
+    const chans = SC.chans || [], tri = v => ({ w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }), tot = r => r.w + r.p + r.x, add = (a, b) => { a.w += b.w; a.p += b.p; a.x += b.x; };
+    const m = new Map(), Z = () => ({ w: 0, p: 0, x: 0 });
+    chans.forEach((ch, ci) => Object.entries(ch.carriers || {}).forEach(([c, v]) => { const k = carKey(c); const g = m.get(k) || { name: c, by: chans.map(Z), t: Z() }; if (c.length < g.name.length) g.name = c; const r = tri(v); add(g.by[ci], r); add(g.t, r); m.set(k, g); }));
+    const rows = [...m.values()].sort((a, b) => tot(b.t) - tot(a.t)), T = Z(), TC = chans.map(Z);
+    rows.forEach(g => { add(T, g.t); g.by.forEach((v, ci) => add(TC[ci], v)); });
+    const cell = v => `<td title="รอขนส่งเข้ารับ ${num(v.w)} · ขนส่งรับแล้ว ${num(v.p)} · ยกเลิกหลังพิมพ์ ${num(v.x)}">${tot(v) ? num(tot(v)) : '<span style="color:var(--text3)">—</span>'}</td>`;
+    $('sumHead').innerHTML = `<tr><th class="l" rowspan="2">บริษัทขนส่ง</th><th colspan="${chans.length}" class="gs">ตามช่องทาง</th><th colspan="3" class="gs">ตามสถานะ</th><th rowspan="2" class="gs">รวม</th></tr>
+      <tr>${chans.map((c, i) => `<th${i === 0 ? ' class="gs"' : ''}>${esc(c.name)}</th>`).join('')}<th class="gs">รอขนส่งเข้ารับ</th><th>ขนส่งรับแล้ว</th><th>ยกเลิกหลังพิมพ์</th></tr>`;
+    $('sumBody').innerHTML = rows.map(g => `<tr><td class="l">${esc(g.name)}</td>${g.by.map((v, i) => cell(v).replace('<td', i === 0 ? '<td class="gs"' : '<td')).join('')}<td class="gs">${num(g.t.w)}</td><td>${num(g.t.p)}</td><td>${num(g.t.x)}</td><td class="gs"><b>${num(tot(g.t))}</b></td></tr>`).join('');
+    $('sumFoot').innerHTML = `<tr><td class="l">รวมทั้งหมด</td>${TC.map((v, i) => cell(v).replace('<td', i === 0 ? '<td class="gs"' : '<td')).join('')}<td class="gs">${num(T.w)}</td><td>${num(T.p)}</td><td>${num(T.x)}</td><td class="gs">${num(tot(T))}</td></tr>`;
+    let W = 0; chans.forEach(ch => { W += ch.wait || 0; });
+    return { A: T.w, B: T.p, X: T.x, W };
   }
   async function loadSummary(force) {
     const day = $('sumDate').value;
@@ -597,7 +586,7 @@
     $('dlg').innerHTML = `<h2>พิมพ์ซ้ำ เลือกบางรายการ</h2><div class="s">รอบที่พิมพ์ ${fmtDT(new Date(h.at))} · ${esc(plat)} · ${num(ids.length)} คำสั่งซื้อ</div>
       <div class="rp-top"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="rpAll"> เลือกทั้งหมด</label><input type="text" id="rpQ" placeholder="ค้นเลขคำสั่งซื้อ…"><span id="rpN" style="color:var(--text2)">เลือก 0 รายการ</span></div>
       <div class="rp-list" id="rpList">${ids.map(id => `<label data-id="${esc(id)}"><input type="checkbox" value="${esc(id)}"> ${esc(id)}</label>`).join('')}</div>
-      <div class="wh-note">พิมพ์ซ้ำได้เฉพาะคำสั่งซื้อที่ขนส่งยังไม่มารับ — ที่ขนส่งรับไปแล้วจะขึ้นเป็น ไม่สำเร็จ พร้อมเหตุผล</div>
+      <div class="wh-note">ขนส่งรับไปแล้วก็พิมพ์ซ้ำได้ — ใช้ไฟล์ใบปะหน้าที่ระบบเก็บไว้ 30 วัน (เฉพาะที่พิมพ์ตั้งแต่ 26 พ.ย. 69)</div>
       <div class="wh-act"><button class="wh-btn" id="rpClose" type="button">ยกเลิก</button><button class="wh-btn pri" id="rpGo" type="button" disabled>พิมพ์ซ้ำที่เลือก</button></div>`;
     const sync = () => { $('rpN').textContent = `เลือก ${num(pick.size)} รายการ`; $('rpGo').disabled = !pick.size; $('rpGo').textContent = pick.size ? `พิมพ์ซ้ำที่เลือก (${num(pick.size)})` : 'พิมพ์ซ้ำที่เลือก';
       const vis = [...document.querySelectorAll('#rpList label')].filter(l => l.style.display !== 'none'); $('rpAll').checked = vis.length > 0 && vis.every(l => pick.has(l.dataset.id)); };
@@ -660,7 +649,6 @@
     $('stkBtn').onclick = () => loadStock(true);
     $('stkPgBtns').onclick = e => { const b = e.target.closest('button[data-p]'); if (b) { STK.page += Number(b.dataset.p); renderStock(); } };
     $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) { const h = HIS[Number(b.dataset.i)]; if (b.dataset.a === 'pick') openReprintPick(h); else runPrint('reprint', h.order_ids, h.platform, h.shop_of); } };
-    $('sumBy').onclick = e => { const b = e.target.closest('button'); if (b) { SC.by = b.dataset.v; if (SC.chans) drawSummary(); } };
   }
 
   async function start() {
