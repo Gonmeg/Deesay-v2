@@ -479,6 +479,34 @@
 
   // ───── สรุปการจัดส่ง ─────
   const SC = {};   // ผลสรุปล่าสุด { d: วันที่, j, got }
+  // (2026-11-26) ตารางสรุป 2 มุมมอง: ตามช่องทาง (ช่องทาง → ขนส่ง) / ตามขนส่ง (ขนส่ง → ช่องทาง) · ตัวเลขชุดเดียวกัน ยอดรวมเท่ากัน
+  //   ตามขนส่ง: ชื่อขนส่งเดียวกันข้าม Platform รวมเป็นแถวเดียว (ตัดคำว่า Thailand ท้ายชื่อ เช่น Flash Express Thailand = Flash Express)
+  const carKey = c => String(c || 'ไม่ระบุ').replace(/\s*thailand\s*$/i, '').trim().toLowerCase();
+  function drawSummary() {
+    const chans = SC.chans || [], byCar = SC.by === 'car', tri = v => ({ w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }), tot = r => r.w + r.p + r.x;
+    let A = 0, B = 0, X = 0, W = 0, html = '';
+    const groups = [];
+    if (!byCar) chans.forEach(ch => groups.push({ name: ch.name, rows: Object.entries(ch.carriers || {}).map(([c, v]) => [c, tri(v)]) }));
+    else {
+      const m = new Map();
+      chans.forEach(ch => Object.entries(ch.carriers || {}).forEach(([c, v]) => { const k = carKey(c); const g = m.get(k) || { name: c, rows: [] }; if (c.length < g.name.length) g.name = c; g.rows.push([ch.name, tri(v)]); m.set(k, g); }));
+      groups.push(...m.values());
+    }
+    groups.forEach(g => { g.rows.sort((a, b) => tot(b[1]) - tot(a[1])); g.t = g.rows.reduce((m, [, v]) => ({ w: m.w + v.w, p: m.p + v.p, x: m.x + v.x }), { w: 0, p: 0, x: 0 }); });
+    if (byCar) groups.sort((a, b) => tot(b.t) - tot(a.t));
+    groups.forEach(g => {
+      A += g.t.w; B += g.t.p; X += g.t.x;
+      html += `<tr class="wh-ch"><td class="l">${esc(g.name)}</td><td>${num(g.t.w)}</td><td>${num(g.t.p)}</td><td>${num(g.t.x)}</td><td>${num(tot(g.t))}</td></tr>`
+        + g.rows.map(([c, v]) => `<tr><td class="l ci">${esc(c)}</td><td>${num(v.w)}</td><td>${num(v.p)}</td><td>${num(v.x)}</td><td>${num(tot(v))}</td></tr>`).join('');
+    });
+    chans.forEach(ch => { W += ch.wait || 0; });
+    $('sumBody').innerHTML = html;
+    $('sumFoot').innerHTML = `<tr><td class="l">${byCar ? 'รวมทุกขนส่ง' : 'รวมทุกช่องทาง'}</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(X)}</td><td>${num(A + B + X)}</td></tr>`;
+    $('sumTh').textContent = byCar ? 'บริษัทขนส่ง / ช่องทาง' : 'ช่องทาง / บริษัทขนส่ง';
+    $('sumTtl').textContent = byCar ? 'คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามบริษัทขนส่งและช่องทาง' : 'คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามช่องทางและบริษัทขนส่ง';
+    document.querySelectorAll('#sumBy button').forEach(b => b.classList.toggle('on', b.dataset.v === (byCar ? 'car' : 'ch')));
+    return { A, B, X, W };
+  }
   async function loadSummary(force) {
     const day = $('sumDate').value;
     if (force !== true && (SC.pend === day || (SC.d === day && Date.now() - SC.got < FRESH))) return;   // ผลเดิมยังแสดงอยู่ / กำลังโหลดวันเดียวกันอยู่ (โหลดล่วงหน้า) ไม่ต้องดึงซ้ำ
@@ -491,17 +519,8 @@
       if (my !== SC.seq) return; SC.pend = null;
       Object.assign(SC, { d: day, j, js, got: Date.now() });
       // ยอดตามที่พิมพ์: รวมที่ถูกยกเลิกทีหลัง ให้ตรงกับจำนวนที่น้องพิมพ์จริง — แยก รอเข้ารับ / ขนส่งรับแล้ว / ยกเลิกหลังพิมพ์ · แต่ละช่องทางแยกตามขนส่ง
-      const chans = [{ name: 'TikTok', carriers: j.carriers, wait: j.wait_ship }].concat((js.shops || []).map(x => ({ name: 'Shopee ' + (SHOPNAME[x.shop] || x.shop), carriers: x.carriers, wait: x.wait_ship })));
-      let A = 0, B = 0, X = 0, W = 0, html = '';
-      chans.forEach(ch => {
-        const rows = Object.entries(ch.carriers || {}).map(([c, v]) => [c, { w: v.wait_collect || 0, p: v.picked || 0, x: v.cancelled || 0 }]).sort((a, b) => (b[1].w + b[1].p + b[1].x) - (a[1].w + a[1].p + a[1].x));
-        const t = rows.reduce((m, [, v]) => ({ w: m.w + v.w, p: m.p + v.p, x: m.x + v.x }), { w: 0, p: 0, x: 0 });
-        A += t.w; B += t.p; X += t.x; W += ch.wait || 0;
-        html += `<tr class="wh-ch"><td class="l">${esc(ch.name)}</td><td>${num(t.w)}</td><td>${num(t.p)}</td><td>${num(t.x)}</td><td>${num(t.w + t.p + t.x)}</td></tr>`
-          + rows.map(([c, v]) => `<tr><td class="l ci">${esc(c)}</td><td>${num(v.w)}</td><td>${num(v.p)}</td><td>${num(v.x)}</td><td>${num(v.w + v.p + v.x)}</td></tr>`).join('');
-      });
-      $('sumBody').innerHTML = html;
-      $('sumFoot').innerHTML = `<tr><td class="l">รวมทุกช่องทาง</td><td>${num(A)}</td><td>${num(B)}</td><td>${num(X)}</td><td>${num(A + B + X)}</td></tr>`;
+      SC.chans = [{ name: 'TikTok', carriers: j.carriers, wait: j.wait_ship }].concat((js.shops || []).map(x => ({ name: 'Shopee ' + (SHOPNAME[x.shop] || x.shop), carriers: x.carriers, wait: x.wait_ship })));
+      const { A, B, X, W } = drawSummary();
       $('sumEmpty').style.display = js.error ? 'block' : 'none'; $('sumEmpty').textContent = js.error ? 'Shopee โหลดไม่ได้: ' + js.error : '';
       $('sP').textContent = num(A + B + X); $('sA').textContent = num(A); $('sB').textContent = num(B); $('sD').textContent = num(X); $('sC').textContent = num(W);
       $('stSum').textContent = js.error ? '1 alert' : 'Updated ' + fmtT(new Date(j.at || Date.now())); $('stSum').classList.toggle('bad', !!js.error);
@@ -565,10 +584,29 @@
     $('stHis').textContent = 'กำลังโหลด…'; $('stHis').classList.remove('bad');
     try {
       const j = await api({ action: 'history' }); HIS = j.batches || [];
-      $('hisBody').innerHTML = HIS.map((b, i) => `<tr><td>${fmtDT(new Date(b.at))}</td><td>${b.platform === 'shopee' ? 'Shopee ' + [...new Set(Object.values(b.shop_of || {}).map(x => SHOPNAME[x]))].join(' + ') : 'TikTok'}</td><td class="l">${esc(b.by || '—')}</td><td>${num(b.ship)}</td><td>${num(b.reprint)}</td><td>${b.fail ? `<span class="pc2" title="${esc((b.fails || []).map(f => f.id + ' — ' + (f.error || '')).join('\n'))}">${num(b.fail)}</span>` : '0'}</td><td>${b.order_ids.length ? `<button class="wh-btn sm" data-i="${i}" type="button">พิมพ์ซ้ำทั้งรอบ</button>` : ''}</td></tr>`).join('');
+      $('hisBody').innerHTML = HIS.map((b, i) => `<tr><td>${fmtDT(new Date(b.at))}</td><td>${b.platform === 'shopee' ? 'Shopee ' + [...new Set(Object.values(b.shop_of || {}).map(x => SHOPNAME[x]))].join(' + ') : 'TikTok'}</td><td class="l">${esc(b.by || '—')}</td><td>${num(b.ship)}</td><td>${num(b.reprint)}</td><td>${b.fail ? `<span class="pc2" title="${esc((b.fails || []).map(f => f.id + ' — ' + (f.error || '')).join('\n'))}">${num(b.fail)}</span>` : '0'}</td><td style="white-space:nowrap">${b.order_ids.length ? `<button class="wh-btn sm" data-i="${i}" data-a="all" type="button">พิมพ์ซ้ำทั้งรอบ</button> <button class="wh-btn sm" data-i="${i}" data-a="pick" type="button">เลือกบางรายการ</button>` : ''}</td></tr>`).join('');
       $('hisEmpty').style.display = HIS.length ? 'none' : 'block'; $('hisEmpty').textContent = 'ยังไม่มีประวัติการพิมพ์';
       $('stHis').textContent = 'Updated ' + fmtT(new Date());
     } catch (e) { $('stHis').textContent = '1 alert'; $('stHis').classList.add('bad'); $('hisBody').innerHTML = ''; $('hisEmpty').style.display = 'block'; $('hisEmpty').textContent = 'โหลดข้อมูลไม่ได้: ' + e.message; }
+  }
+
+  // (2026-11-26) พิมพ์ซ้ำ: เลือกเฉพาะบางเลขคำสั่งซื้อในรอบนั้น (ค้นเลขได้ · ติ๊กทั้งหมดได้)
+  function openReprintPick(h) {
+    const ids = [...new Set(h.order_ids)], pick = new Set();
+    const plat = h.platform === 'shopee' ? 'Shopee ' + [...new Set(Object.values(h.shop_of || {}).map(x => SHOPNAME[x]))].join(' + ') : 'TikTok';
+    $('dlg').innerHTML = `<h2>พิมพ์ซ้ำ เลือกบางรายการ</h2><div class="s">รอบที่พิมพ์ ${fmtDT(new Date(h.at))} · ${esc(plat)} · ${num(ids.length)} คำสั่งซื้อ</div>
+      <div class="rp-top"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="rpAll"> เลือกทั้งหมด</label><input type="text" id="rpQ" placeholder="ค้นเลขคำสั่งซื้อ…"><span id="rpN" style="color:var(--text2)">เลือก 0 รายการ</span></div>
+      <div class="rp-list" id="rpList">${ids.map(id => `<label data-id="${esc(id)}"><input type="checkbox" value="${esc(id)}"> ${esc(id)}</label>`).join('')}</div>
+      <div class="wh-note">พิมพ์ซ้ำได้เฉพาะคำสั่งซื้อที่ขนส่งยังไม่มารับ — ที่ขนส่งรับไปแล้วจะขึ้นเป็น ไม่สำเร็จ พร้อมเหตุผล</div>
+      <div class="wh-act"><button class="wh-btn" id="rpClose" type="button">ยกเลิก</button><button class="wh-btn pri" id="rpGo" type="button" disabled>พิมพ์ซ้ำที่เลือก</button></div>`;
+    const sync = () => { $('rpN').textContent = `เลือก ${num(pick.size)} รายการ`; $('rpGo').disabled = !pick.size; $('rpGo').textContent = pick.size ? `พิมพ์ซ้ำที่เลือก (${num(pick.size)})` : 'พิมพ์ซ้ำที่เลือก';
+      const vis = [...document.querySelectorAll('#rpList label')].filter(l => l.style.display !== 'none'); $('rpAll').checked = vis.length > 0 && vis.every(l => pick.has(l.dataset.id)); };
+    $('rpList').onchange = e => { const c = e.target; if (c.type !== 'checkbox') return; c.checked ? pick.add(c.value) : pick.delete(c.value); sync(); };
+    $('rpAll').onchange = e => { document.querySelectorAll('#rpList label').forEach(l => { if (l.style.display === 'none') return; const c = l.querySelector('input'); c.checked = e.target.checked; e.target.checked ? pick.add(c.value) : pick.delete(c.value); }); sync(); };
+    $('rpQ').oninput = e => { const q = e.target.value.trim(); document.querySelectorAll('#rpList label').forEach(l => { l.style.display = !q || l.dataset.id.includes(q) ? '' : 'none'; }); sync(); };
+    $('rpClose').onclick = closeDlg;
+    $('rpGo').onclick = () => { const sel = ids.filter(id => pick.has(id)); if (sel.length) runPrint('reprint', sel, h.platform, h.shop_of); };
+    $('ov').classList.add('on');
   }
 
   // ───── เมนู / ปุ่ม ─────
@@ -621,7 +659,8 @@
     $('sumBtn').onclick = () => loadSummary(true);
     $('stkBtn').onclick = () => loadStock(true);
     $('stkPgBtns').onclick = e => { const b = e.target.closest('button[data-p]'); if (b) { STK.page += Number(b.dataset.p); renderStock(); } };
-    $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) { const h = HIS[Number(b.dataset.i)]; runPrint('reprint', h.order_ids, h.platform, h.shop_of); } };
+    $('hisBody').onclick = e => { const b = e.target.closest('button'); if (b) { const h = HIS[Number(b.dataset.i)]; if (b.dataset.a === 'pick') openReprintPick(h); else runPrint('reprint', h.order_ids, h.platform, h.shop_of); } };
+    $('sumBy').onclick = e => { const b = e.target.closest('button'); if (b) { SC.by = b.dataset.v; if (SC.chans) drawSummary(); } };
   }
 
   async function start() {

@@ -106,6 +106,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 .wh-ov.on{display:flex}
 .wh-dlg{width:760px;max-width:94vw;max-height:92vh;overflow:auto;background:var(--bg2);border-radius:12px;box-shadow:var(--shadow-pop);padding:22px 26px;border:1px solid var(--border)}
 .wh-dlg h2{margin:0 0 4px;font-size:18px}
+.rp-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 18px;margin:10px 0 4px}.rp-list label{display:flex;align-items:center;gap:8px;font-size:13px;font-variant-numeric:tabular-nums;cursor:pointer}.rp-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px}.rp-top input[type=text]{height:32px;border:1px solid var(--border);border-radius:6px;padding:0 10px;background:var(--bg2);color:var(--text);font:inherit;width:220px}   /* (2026-11-26) พิมพ์ซ้ำ เลือกบางรายการ */
 .wh-dlg .s{color:var(--text2);font-size:13px;margin-bottom:14px}
 .wh-note{font-size:13px;color:var(--text2);background:var(--warn-bg);border-radius:8px;padding:8px 12px;margin:14px 0}
 .wh-note.err{background:var(--dn-bg);color:var(--text)}
@@ -204,8 +205,8 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
       <div><small>ยกเลิกหลังพิมพ์ใบปะหน้า <span class="wh-i r">i<span class="pop"><b>ยกเลิกหลังพิมพ์ใบปะหน้า</b><br>คำสั่งซื้อที่พิมพ์ใบปะหน้าในวันที่เลือก แล้วลูกค้ายกเลิกภายหลัง ขนส่งสแกนรับไม่ได้ ต้องรับคืนเข้าคลัง<br>นับเฉพาะที่พิมพ์ในวันที่เลือก · แท็บ "ยกเลิกหลังพิมพ์" ในหน้าพิมพ์ใบปะหน้าแสดงย้อนหลัง 7 วัน ตัวเลขจึงมากกว่า</span></span></small><b id="sD">—</b></div>
       <div><small>รอจัดส่ง (คงค้างทั้งหมด) <span class="wh-i r">i<span class="pop"><b>รอจัดส่ง (คงค้างทั้งหมด)</b><br>คำสั่งซื้อที่ยังไม่ได้กดจัดส่ง ทุกวันที่สั่งซื้อ ณ เวลาปัจจุบัน<br><b>รวม</b> TikTok + Shopee Mall + Shopee 24hr · ไม่ขึ้นกับวันที่เลือก</span></span></small><b id="sC">—</b></div>
     </div>
-    <div class="wh-card fitc"><div style="font-weight:600;margin-bottom:8px">คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามช่องทางและบริษัทขนส่ง</div>
-      <table class="wh-t fit" id="sumTbl"><thead><tr><th class="l">ช่องทาง / บริษัทขนส่ง</th><th>รอขนส่งเข้ารับ</th><th>ขนส่งรับแล้ว</th><th>ยกเลิกหลังพิมพ์</th><th>รวม</th></tr></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
+    <div class="wh-card fitc"><div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:8px"><span style="font-weight:600" id="sumTtl">คำสั่งซื้อที่พิมพ์ใบปะหน้า แยกตามช่องทางและบริษัทขนส่ง</span><span class="wh-seg sm" id="sumBy"><button data-v="ch" class="on" type="button">ตามช่องทาง</button><button data-v="car" type="button">ตามขนส่ง</button></span></div>
+      <table class="wh-t fit" id="sumTbl"><thead><tr><th class="l" id="sumTh">ช่องทาง / บริษัทขนส่ง</th><th>รอขนส่งเข้ารับ</th><th>ขนส่งรับแล้ว</th><th>ยกเลิกหลังพิมพ์</th><th>รวม</th></tr></thead><tbody id="sumBody"></tbody><tfoot id="sumFoot"></tfoot></table>
       <div class="wh-empty" id="sumEmpty" style="display:none"></div></div>
   </section>
 
@@ -227,7 +228,7 @@ body.light-theme .wh-sel .ui-dd-btn,body.light-theme .wh-dd-btn{background:#FFFF
 
   <!-- หน้า 3: ประวัติการพิมพ์ -->
   <section class="wh-page" id="v-history">
-    <div class="wh-top"><h1>ประวัติการพิมพ์</h1><span class="wh-status" id="stHis">—</span></div>
+    <div class="wh-top"><h1>ประวัติการพิมพ์ <span class="wh-i">i<span class="pop"><b>พิมพ์ซ้ำ</b><br>พิมพ์ซ้ำได้ทุกวัน (ข้ามวันได้) เฉพาะคำสั่งซื้อที่ขนส่งยังไม่มารับ<br>ขนส่งรับไปแล้ว ระบบไม่ให้พิมพ์ซ้ำ (กันใบปะหน้าซ้ำของพัสดุที่ออกจากคลังไปแล้ว) — รายการนั้นจะขึ้นในช่อง ไม่สำเร็จ พร้อมเหตุผล<br><b>เลือกบางรายการ</b> = ติ๊กเฉพาะเลขคำสั่งซื้อที่ต้องการพิมพ์ซ้ำ</span></span></h1><span class="wh-status" id="stHis">—</span></div>
     <div class="wh-card">
       <table class="wh-t"><thead><tr><th>เวลาที่พิมพ์</th><th>Platform</th><th class="l">ผู้พิมพ์</th><th>จัดส่ง + พิมพ์</th><th>พิมพ์ซ้ำ</th><th>ไม่สำเร็จ</th><th></th></tr></thead><tbody id="hisBody"></tbody></table>
       <div class="wh-empty" id="hisEmpty" style="display:none"></div></div>
