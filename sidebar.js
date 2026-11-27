@@ -12,7 +12,7 @@
 (function () {
   const M = document.getElementById('sbMount');
   if (!M) return;
-  const PAGE = M.dataset.page || 'dashboard', DASH = PAGE === 'dashboard', WH = PAGE === 'warehouse', BUILD = M.dataset.build || '';
+  const PAGE = M.dataset.page || 'dashboard', DASH = PAGE === 'dashboard', WH = PAGE === 'warehouse' || PAGE === 'chat', BUILD = M.dataset.build || '';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const I = {
@@ -93,7 +93,7 @@
   }
   // (2026-11-26) หน้า Warehouse: เมนูงานของหน้า → กดเมนูเดิมที่ซ่อนไว้ (.wh-side a[data-view]) · ไม่มีเมนู Dashboard / ระบบ (สลับที่หน้าหลัก)
   if (WH) {
-    const ic = { print: 'receipt', summary: 'chart', stock: 'box', history: 'layers' };
+    const ic = { print: 'receipt', summary: 'chart', stock: 'box', history: 'layers', inbox: 'fb', orders: 'receipt' };   // (2026-11-27) chat.html ใช้เมนูแบบเดียวกับ Warehouse
     const its = [...document.querySelectorAll('.wh-side a[data-view]')];
     if (its.length) nav += `<div class="nav-group-label sb-sec">งานประจำวัน</div>` + its.map(a => {
       const l = [...a.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim(), tag = a.querySelector('.wh-pill');

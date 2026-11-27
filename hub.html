@@ -23,6 +23,7 @@ body{margin:0;font-family:'Sarabun',sans-serif;background:var(--pg);color:var(--
 .hb-hi{font-size:24px;font-weight:600;margin:0 0 4px;text-align:center}
 .hb-sub{color:var(--text2);font-size:14px;margin:0 0 28px;text-align:center}
 .hb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,340px));gap:22px;width:100%;justify-content:center}
+.hb-grid.n3{grid-template-columns:repeat(3,minmax(0,320px))}
 .hb-card{display:flex;flex-direction:column;gap:14px;padding:26px 26px 22px;border-radius:14px;background:var(--bg2);box-shadow:var(--sh);border:1px solid var(--panel-line);color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
 .hb-card:hover{border-color:var(--accent);transform:translateY(-2px)}
 .hb-card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -55,6 +56,12 @@ body{margin:0;font-family:'Sarabun',sans-serif;background:var(--pg);color:var(--
       <p>พิมพ์ใบปะหน้า · สรุปการจัดส่ง · ประวัติการพิมพ์</p>
       <span class="hb-go">เข้าใช้งาน →</span>
     </a>
+    <a class="hb-card" href="chat.html" id="hbChat" style="display:none">
+      <span class="hb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.6L3 21l1.5-5.2A8.5 8.5 0 1 1 21 12z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg></span>
+      <h2>แชท Facebook</h2>
+      <p>แชททุกเพจในหน้าเดียว · สร้างคำสั่งซื้อข้างแชท</p>
+      <span class="hb-go">เข้าใช้งาน →</span>
+    </a>
   </div>
 </main>
 <footer class="hb-ft"><span id="hbMail"></span><button type="button" id="hbTheme">สลับโหมดสว่าง / มืด</button><button type="button" id="hbOut">ออกจากระบบ</button></footer>
@@ -66,6 +73,8 @@ body{margin:0;font-family:'Sarabun',sans-serif;background:var(--pg);color:var(--
   const dash = p.is_admin || p.pages.some(x => x !== 'warehouse') || p.can_upload || p.can_admin || p.can_edit_kpi;
   if (!wh) { location.replace('dashboard.html'); return; }    // ไม่มีสิทธิ์ Warehouse = เข้า Dashboard ตรงเหมือนเดิม
   if (!dash) { location.replace('warehouse.html'); return; }  // มีแค่ Warehouse = เข้า Warehouse ตรง
+  // (2026-11-27) แชท Facebook (chat.html) = ผู้ดูแลระบบ หรือมี 'chat' ในรายการหน้า (ตรงกับ auth.js)
+  if (p.is_admin || p.pages.includes('chat')) { document.getElementById('hbChat').style.display = ''; document.querySelector('.hb-grid').classList.add('n3'); }
   const name = p.name || String(p.email || '').split('@')[0];
   document.getElementById('hbHi').textContent = name ? `สวัสดี ${name}` : 'สวัสดี';
   document.getElementById('hbMail').textContent = p.email || '';
