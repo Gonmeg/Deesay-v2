@@ -110,9 +110,11 @@
       await loadList(true, !first);
     } catch (e) { setStatus('stInbox', 'โหลดไม่ได้: ' + e.message, 'bad'); }
   }
+  // ชื่อเพจตามที่ตั้งใน Facebook (เมฆขอ 27 พ.ย.) · ไม่มีชื่อ = ชื่อย่อ
+  const pgName = id => { const p = S.pages.find(x => x.id === id); return p ? (p.name || p.label) : ''; };
   function renderPageDd() {
-    const items = [['', `ทุกเพจ (${S.pages.length})`], ...S.pages.map(p => [p.id, p.label])];
-    dd($('fPage'), items, S.page, v => { S.page = v; renderPageDd(); S.list = []; S.more = true; refreshInbox(false); }, '170px');
+    const items = [['', `ทุกเพจ (${S.pages.length})`], ...S.pages.map(p => [p.id, p.name || p.label])];
+    dd($('fPage'), items, S.page, v => { S.page = v; renderPageDd(); S.list = []; S.more = true; refreshInbox(false); }, '260px');
   }
 
   async function loadList(reset, keepScroll) {
@@ -137,7 +139,7 @@
       return `<div class="it${t.waiting ? ' wait' : ''}${on ? ' on' : ''}" data-page="${esc(t.page_id)}" data-psid="${esc(t.psid)}">
         <div class="av">${esc(initials(t.name))}</div>
         <div class="bd"><div class="r1"><span class="nm">${esc(t.name || 'ลูกค้า ··' + String(t.psid).slice(-4))}</span>${tm}</div>
-          <div class="r2"><span class="tag pg" style="--c:${esc(t.page_color || 'var(--ch-facebook)')}">${esc(t.page_label || t.page_id)}</span>${ad}</div>
+          <div class="r2"><span class="tag pg" style="--c:${esc(t.page_color || 'var(--ch-facebook)')}" title="${esc(pgName(t.page_id) || t.page_label || '')}"><span>${esc(pgName(t.page_id) || t.page_label || t.page_id)}</span></span>${ad}</div>
           <div class="pv">${esc(t.preview || '')}</div></div></div>`;
     }).join('') + (S.more ? `<div class="lst-more"><button class="wh-btn" id="lstMore">โหลดแชทเก่าเพิ่ม</button></div>` : '');
   }
@@ -154,6 +156,7 @@
       S.thread = d; S.lastMsgId = last;
       if (changed) { renderThread(!silent || !same); }
       if (!silent || !same) renderForm();
+      syncComposer(!silent || !same);
     } catch (e) { if (!silent) $('msgs').innerHTML = `<div class="empty">เปิดแชทไม่ได้<br>${esc(e.message)}</div>`; }
   }
 
@@ -164,7 +167,7 @@
     const ords = S.thread.orders || [];
     S.thread.bills = billsOf(messages);
     $('cvH').innerHTML = `<div class="av">${esc(initials(t.name))}</div>
-      <div class="who"><div class="t1">${esc(t.name || 'ลูกค้า ··' + String(t.psid).slice(-4))}</div><div class="t2" title="${esc(t.sub_channel || '')}">เพจ ${esc(t.page_label || t.sub_channel || '')}</div></div>
+      <div class="who"><div class="t1">${esc(t.name || 'ลูกค้า ··' + String(t.psid).slice(-4))}</div><div class="t2" title="${esc(t.sub_channel || '')}">เพจ ${esc(pgName(t.page_id) || t.page_label || t.sub_channel || '')}</div></div>
       <div class="meta">ทักครั้งแรก ${esc(fmtWhen(t.first_at))}${S.thread.bills.length ? ` · <span class="billed">เปิดบิลแล้ว ${esc(S.thread.bills.join(', '))}</span>` : ''}${ords.length ? ` · สร้างจากหน้านี้ ${ords.length} ครั้ง` : ''}<br>${t.link ? `<a class="fbl" href="${esc(t.link)}" target="_blank" rel="noopener">เปิดใน Facebook ↗</a>` : ''}</div>`;
     const box = $('msgs'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
     let html = '';
@@ -200,7 +203,7 @@
         if (x.dir === 'in' && x.text) { const a = parseAddress(x.text); if (a.ok) { found.push({ id: x.id, a }); html += `<div class="det" data-mid="${x.id}">📍 พบชื่อ เบอร์ ที่อยู่ในข้อความนี้ · <button type="button" data-use="${x.id}">ใช้กรอกฟอร์ม</button></div>`; } }
       }
       flush(m.dir);
-      const last = grp[grp.length - 1], lb = last.dir === 'out' ? (APP_LABEL[last.app_id] || (last.app_id ? 'ข้อความอัตโนมัติ' : '')) : '';
+      const last = grp[grp.length - 1], lb = last.dir === 'out' ? (last.by ? 'ตอบจากหน้านี้ · ' + last.by : APP_LABEL[last.app_id] || (last.app_id ? 'ข้อความอัตโนมัติ' : '')) : '';
       html += `<div class="st${last.dir === 'out' ? ' r' : ''}">${esc(fmtT(new Date(last.at)))}${lb ? ' · ' + esc(lb) : ''}</div>`;
       i = j;
     }
@@ -210,6 +213,54 @@
     box.querySelectorAll('img[data-full]').forEach(im => { im.onclick = () => { $('lb').querySelector('img').src = im.dataset.full; $('lb').classList.add('on'); }; if (stick) im.onload = () => { if (box.scrollHeight - box.scrollTop - box.clientHeight < 400) box.scrollTop = box.scrollHeight; }; });
     box.querySelectorAll('button[data-use]').forEach(b => b.onclick = () => { const f = found.find(x => String(x.id) === b.dataset.use); if (f) { applyAddress(f.a, true); } });
     if (scrollBottom || atBottom) box.scrollTop = box.scrollHeight;
+  }
+
+  // ───── ตอบแชท (Edge Function fb-inbox-send) ─────
+  // Meta: ตอบจากระบบได้ภายใน 24 ชม. หลังลูกค้าทักล่าสุด · แชทที่เริ่มจากกด Ads อาจได้ถึง 7 วัน (Meta ตัดสินสุดท้าย ส่งไม่ได้จะแจ้งกลับ)
+  S.cmp = {}; S.sending = false;
+  function winOf(t, ad) {
+    const now = Date.now(), lastIn = t.last_in_at ? new Date(t.last_in_at).getTime() : 0, left = lastIn + 864e5 - now;
+    if (lastIn && left > 0) return { open: true, cls: left < 3600e3 ? 'warn' : '', txt: `ตอบได้อีก ${left >= 3600e3 ? Math.floor(left / 3600e3) + ' ชม. ' : ''}${Math.floor((left % 3600e3) / 60e3)} นาที` };
+    const adAt = ad && ad.at ? new Date(ad.at).getTime() : 0;
+    if (lastIn && adAt && now - adAt < 7 * 864e5) return { open: true, cls: 'warn', txt: `แชทจาก Ads ตอบได้ถึง ${fmtWhen(new Date(adAt + 7 * 864e5).toISOString())} (ถ้า Meta ไม่รับ ให้ตอบใน Business Suite)` };
+    return { open: false, cls: 'bad', txt: lastIn ? 'เกิน 24 ชม. หลังลูกค้าทักล่าสุดแล้ว — ตอบใน Business Suite (ปุ่ม "เปิดใน Facebook")' : 'ลูกค้ายังไม่ได้ทักเพจ — ส่งข้อความไม่ได้' };
+  }
+  function syncComposer(reset) {
+    const tx = $('cmpTx'), bt = $('cmpBtn'), nt = $('cmpNote'); if (!tx || !S.thread) return;
+    const k = keyOf(), w = winOf(S.thread.thread, S.thread.ad);
+    if (reset) tx.value = S.cmp[k] || '';
+    tx.disabled = !w.open || S.sending;
+    tx.placeholder = w.open ? 'พิมพ์ข้อความตอบลูกค้า · Enter ส่ง · Shift + Enter ขึ้นบรรทัดใหม่' : 'ตอบจากหน้านี้ไม่ได้แล้ว — กด "เปิดใน Facebook" ด้านบน';
+    bt.disabled = !w.open || S.sending || !tx.value.trim();
+    bt.textContent = S.sending ? 'กำลังส่ง…' : 'ส่ง';
+    nt.className = w.cls; nt.textContent = w.txt;
+    const n = tx.value.length; $('cmpCnt').textContent = n > 1500 ? `${num(n)} / 2,000` : '';
+  }
+  (function bindComposer() {
+    const tx = $('cmpTx');
+    tx.addEventListener('input', () => { S.cmp[keyOf()] = tx.value; syncComposer(false); });
+    tx.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); sendMsg(); } });
+    $('cmpBtn').onclick = sendMsg;
+  })();
+  async function sendMsg() {
+    const tx = $('cmpTx'), text = tx.value.trim();
+    if (!S.thread || S.sending || !text || !winOf(S.thread.thread, S.thread.ad).open) return;
+    const { page_id, psid } = S.thread.thread, k = keyOf();
+    S.sending = true; syncComposer(false);
+    const box = $('msgs'), tmp = document.createElement('div');
+    tmp.className = 'b out sending'; tmp.textContent = text; box.appendChild(tmp); box.scrollTop = box.scrollHeight;
+    try {
+      const r = await fetch(window.SUPABASE_URL + '/functions/v1/fb-inbox-send', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Auth.token(), apikey: window.SUPABASE_ANON_KEY }, body: JSON.stringify({ page_id, psid, text }) });
+      let j = null; try { j = await r.json(); } catch (e) {}
+      if (!r.ok || !j || !j.ok) throw new Error((j && (j.error || j.message)) || ('เชื่อมต่อไม่ได้ (' + r.status + ')'));
+      S.cmp[k] = ''; if (keyOf() === k) tx.value = '';
+      S.sending = false; tmp.classList.remove('sending');
+      if (S.sel && S.sel.page_id === page_id && S.sel.psid === psid) { S.lastMsgId = null; await openThread(page_id, psid, true); }   // วาดแชทใหม่จากฐานข้อมูล (ข้อความที่ส่งบันทึกแล้ว)
+      loadList(true, true);
+    } catch (e) {
+      tmp.remove(); S.sending = false;
+      uiAlert('ส่งข้อความไม่สำเร็จ', { text: e.message, tone: 'bad' });
+    } finally { S.sending = false; syncComposer(false); if (keyOf() === k) tx.focus(); }
   }
 
   // ───── ที่อยู่: ฐานข้อมูลไปรษณีย์ + แยกที่อยู่จากข้อความ ─────
@@ -334,7 +385,7 @@
   const oldAddrHtml = f => f.cust && f.cust.addresses && f.cust.addresses.length ? `<div class="chk">ที่อยู่เดิมของเบอร์นี้ (กดเพื่อใช้)</div><div class="oldaddr">${f.cust.addresses.map((a, i) => `<button type="button" data-oa="${i}">${esc(a.name)} · ${esc(a.line)} ${esc(a.sub)} ${esc(a.dist)} ${esc(a.prov)} ${esc(a.zip)}</button>`).join('')}</div>` : '';
   function s4Html(f, c) {
     const t = S.thread.thread, ad = S.thread.ad;
-    return `<div class="kv"><span>เพจ</span><b>${esc(t.sub_channel || '')}</b></div>
+    return `<div class="kv"><span>เพจ</span><b title="${esc(t.sub_channel || '')}">${esc(pgName(t.page_id) || t.sub_channel || '')}</b></div>
       <div class="kv"><span>พนักงานขาย</span><b>${esc((S.perm && (S.perm.name || S.perm.email)) || '')}</b></div>
       <div class="kv"><span>ชื่อเฟซลูกค้า</span><b>${esc(t.name || '—')}</b></div>
       <div class="kv"><span>มาจาก Ads</span><b>${ad ? esc((ad.title || ad.ad_id) + (ad.product ? ' · ' + ad.product : '')) : 'ไม่ได้มาจาก Ads'}</b></div>
@@ -587,7 +638,7 @@
     if (!rows.length) { $('oWrap').innerHTML = '<div class="empty">ยังไม่มีคำสั่งซื้อจากแชทในช่วงวันที่นี้</div>'; $('oPagerBox').style.display = 'none'; return; }
     const part = rows.slice((S.oPage - 1) * S.oSize, S.oPage * S.oSize);
     const sum = rows.reduce((s, o) => s + Number(o.total || 0), 0);
-    const pgLabel = sub => (S.pages.find(p => p.sub === sub) || {}).label || sub;
+    const pgLabel = sub => { const p = S.pages.find(x => x.sub === sub); return p ? (p.name || p.label) : sub; };
     const items = c => String(c || '').split('+').map(x => { const m = x.match(/^(.*)x(\d+)$/); return m ? `${(S.prodBy[m[1]] || {}).name || m[1]} ×${m[2]}` : x; }).join(' · ');
     const payShort = p => p === PAYS[0] ? 'เก็บปลายทาง' : p === PAYS[1] ? 'โอนเงิน' : p;
     $('oWrap').innerHTML = `<table class="or-t"><thead><tr><th>เลขที่ / เวลา</th><th>เพจ</th><th>ผู้รับ</th><th>สินค้า</th><th>ยอดรวมสินค้า</th><th>ส่วนลดท้ายบิล</th><th>ค่าส่ง</th><th>รวมทั้งสิ้น</th><th>ชำระเงิน</th><th>พนักงานขาย</th></tr></thead><tbody>${part.map(o => `<tr>

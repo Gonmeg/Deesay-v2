@@ -52,13 +52,15 @@ body.light-theme .wh-in:focus{border-color:var(--accent)}
 .wh-seg{display:inline-flex;border-radius:6px;overflow:hidden;height:28px;background:var(--bg3)}
 .wh-seg button{border:0;background:none;padding:0 10px;font-size:12.5px;color:var(--text2);cursor:pointer}
 .wh-seg button.on{background:var(--accent-soft);color:var(--accent-text);font-weight:600}
-.ch-q{width:230px}
+.lsrch{padding:12px 14px 2px;flex:none}.lsrch .wh-in{width:100%}
+#fPage .ui-dd-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fPage .ui-dd-menu{left:auto;right:0;min-width:100%;width:max-content;max-width:360px}
 /* 3 คอลัมน์ */
 .ch-grid{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr) 370px;gap:14px}
 @media (max-width:1500px){.ch-grid{grid-template-columns:300px minmax(0,1fr) 340px}.kp{gap:14px}}
 .ch-col{background:var(--bg2);border:1px solid var(--panel-line);border-radius:10px;box-shadow:var(--sh);min-height:0;display:flex;flex-direction:column;overflow:hidden}
 /* ซ้าย: รายการแชท */
-.tabs{display:flex;gap:12px;padding:12px 14px 0;border-bottom:1px solid var(--border);flex:none}
+.tabs{display:flex;gap:12px;padding:8px 14px 0;border-bottom:1px solid var(--border);flex:none}
 .tabs button{border:0;background:none;padding:6px 0 9px;color:var(--text2);border-bottom:2px solid transparent;font-size:13px;cursor:pointer;white-space:nowrap}
 .tabs button.on{color:var(--text);font-weight:600;border-bottom-color:var(--accent)}
 .tabs small{color:var(--bad);margin-left:3px;font-weight:700}
@@ -73,8 +75,9 @@ body.light-theme .wh-in:focus{border-color:var(--accent)}
 .it .nm{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .it .tm{margin-left:auto;font-size:11.5px;color:var(--text3);font-variant-numeric:tabular-nums;flex:none}
 .it .tm.wt{color:var(--bad);font-weight:700}
-.it .r2{display:flex;gap:5px;margin:3px 0;overflow:hidden}
+.it .r2{display:flex;flex-wrap:wrap;gap:4px 5px;margin:3px 0}
 .tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:1px 7px;border-radius:5px;background:var(--bg3);color:var(--text2);white-space:nowrap;flex:none}
+.tag.pg{flex:0 1 auto;min-width:0;max-width:100%}.tag.pg>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tag.pg::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
 .tag.ad{background:color-mix(in srgb,var(--ch-facebook) 14%,var(--bg2));color:var(--text);flex:0 1 auto;min-width:0;display:block;overflow:hidden;text-overflow:ellipsis}
 .tag.ad b{color:var(--ch-facebook);font-weight:700}
@@ -122,6 +125,9 @@ body.light-theme .b.out{background:#DCE8FD}
 body.light-theme .cmp textarea{background:#fff;border-color:#C9D1DC}
 .cmp textarea:disabled{opacity:.6}
 .cmp .note{font-size:11.5px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:4px}
+.cmp .note .bad{color:var(--bad);font-weight:600}.cmp .note .warn{color:var(--warn);font-weight:600}
+.cmp .note .cnt{margin-left:auto;font-variant-numeric:tabular-nums}
+.b.sending{opacity:.6}
 /* ขวา: ฟอร์มสร้างคำสั่งซื้อ */
 .of-h{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex:none;min-height:50px}
 .of-h b{font-size:15px}
@@ -136,7 +142,7 @@ body.light-theme .cmp textarea{background:#fff;border-color:#C9D1DC}
 .stp-h small{display:block;color:var(--text3);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stp-h .amt{font-weight:700;font-variant-numeric:tabular-nums}
 .stp-h .ed{color:var(--accent-text);font-size:12px}
-.stp-b{padding:10px 0 6px 32px;display:none}
+.stp-b{padding:10px 0 6px;display:none}
 .stp-b.on{display:block}
 .srchw{position:relative}
 .srch{width:100%;margin:0 0 8px}
@@ -250,11 +256,11 @@ table.or-t{width:100%;border-collapse:collapse;font-size:13px}
       </div>
       <span class="sp"></span>
       <div class="ui-dd" id="fPage"></div>
-      <input class="wh-in ch-q" id="fQ" placeholder="ค้นหาชื่อลูกค้า / ข้อความ" autocomplete="off">
     </div>
 
     <div class="ch-grid">
       <section class="ch-col">
+        <div class="lsrch"><input class="wh-in" id="fQ" placeholder="ค้นหาชื่อลูกค้า / ข้อความ" autocomplete="off"></div>
         <div class="tabs" id="tabs">
           <button data-t="all" class="on">ทั้งหมด</button>
           <button data-t="waiting">รอตอบ<small id="tWait"></small></button>
@@ -268,8 +274,8 @@ table.or-t{width:100%;border-collapse:collapse;font-size:13px}
         <div class="cv-h" id="cvH"></div>
         <div class="msgs" id="msgs"><div class="empty">เลือกแชททางซ้ายเพื่อดูข้อความ</div></div>
         <div class="cmp">
-          <div class="row"><textarea id="cmpTx" placeholder="ระยะทดลอง: ตอบแชทผ่านปุ่ม &quot;เปิดใน Facebook&quot; ด้านบน" disabled></textarea><button class="wh-btn pri" style="height:44px" disabled>ส่ง</button></div>
-          <div class="note">ตอบลูกค้าได้ภายใน 24 ชม. หลังลูกค้าทักล่าสุด <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>กติกา 24 ชม. ของ Meta</b><br>ระบบตอบแชทได้ภายใน 24 ชม. นับจากข้อความล่าสุดของลูกค้า เกินกว่านั้นตอบใน Business Suite / Messenger ของเพจแทน</span></span></div>
+          <div class="row"><textarea id="cmpTx" placeholder="เลือกแชทก่อน" maxlength="2000" disabled></textarea><button class="wh-btn pri" id="cmpBtn" style="height:44px" disabled>ส่ง</button></div>
+          <div class="note"><span id="cmpNote">ตอบลูกค้าได้ภายใน 24 ชม. หลังลูกค้าทักล่าสุด</span> <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ตอบแชทจากหน้านี้ (Messenger)</b><br>ส่งข้อความตัวอักษรในนามเพจ ลูกค้าเห็นเหมือนแอดมินตอบปกติ · ข้อความขึ้นในแชทนี้ทันที พร้อมชื่อคนตอบ (ลูกค้าไม่เห็นชื่อ)<br>กติกาของ Meta: ตอบจากระบบได้ภายใน 24 ชม. หลังลูกค้าทักล่าสุด · แชทที่เริ่มจากกด Ads อาจได้ถึง 7 วัน · เกินนั้นตอบใน Business Suite (ปุ่ม "เปิดใน Facebook")<br>Enter = ส่ง · Shift + Enter = ขึ้นบรรทัดใหม่</span></span><span class="cnt" id="cmpCnt"></span></div>
         </div>
       </section>
 
