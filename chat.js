@@ -242,7 +242,7 @@
     if (reset) { tx.value = S.cmp[k] || ''; $('emoPop').classList.remove('on'); }
     tx.disabled = !w.open || S.sending;
     $('emoBtn').disabled = $('imgBtn').disabled = !w.open || S.sending;
-    tx.placeholder = w.open ? 'พิมพ์ข้อความตอบลูกค้า · Enter ส่ง · Shift + Enter ขึ้นบรรทัดใหม่' : 'ตอบจากหน้านี้ไม่ได้แล้ว — กด "เปิดใน Facebook" ด้านบน';
+    tx.placeholder = w.open ? 'พิมพ์ข้อความตอบลูกค้า · Enter ส่ง' : 'ตอบจากหน้านี้ไม่ได้แล้ว — กด "เปิดใน Facebook" ด้านบน';
     bt.disabled = !w.open || S.sending || (!tx.value.trim() && !img);
     bt.textContent = S.sending ? 'กำลังส่ง…' : 'ส่ง';
     nt.className = w.cls; nt.textContent = w.txt;
@@ -509,6 +509,58 @@
     finally { f.slipBusy = false; if (f === S.drafts[keyOf()]) renderForm(); }
   }
 
+  // ───── หลังสร้างคำสั่งซื้อ: สรุปเป็นช่อง ๆ + ข้อความสรุปส่งให้ลูกค้าในแชท (เมฆขอ 27 พ.ย.) ─────
+  const phoneFmt = p => { const d = String(p || '').replace(/\D/g, ''); return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : d.length === 9 ? `${d.slice(0, 2)}-${d.slice(2, 5)}-${d.slice(5)}` : d; };
+  const addrTx = f => { const bkk = f.prov === 'กรุงเทพมหานคร'; return `${f.line} ${bkk ? 'แขวง' : 'ต.'}${f.sub} ${bkk ? 'เขต' : 'อ.'}${f.dist} ${bkk ? '' : 'จ.'}${f.prov} ${f.zip}`.replace(/\s+/g, ' ').trim(); };
+  const lineName = l => (S.prodBy[l.sku] && S.prodBy[l.sku].name) || S.parentName[l.parent] || l.sku || l.parent;
+  function summaryText(f) {
+    const d = f.done, total = Number(f.price || 0) - Number(f.disc || 0) + Number(f.ship || 0), cod = f.pay === PAYS[0];
+    const L = [`📦 สรุปคำสั่งซื้อ ${d.order_no}`, '━━━━━━━━━━━━━━', '🛍️ รายการสินค้า'];
+    for (const l of f.lines) L.push(`• ${lineName(l)} × ${l.qty}${S.prodBy[l.sku] && S.prodBy[l.sku].gift ? ' (ของแถม)' : ''}`);
+    L.push('', `💰 ราคาสินค้า ${num(f.price)} บาท`);
+    if (Number(f.disc) > 0) L.push(`🎟️ ส่วนลด −${num(f.disc)} บาท`);
+    L.push(`🚚 ค่าส่ง ${Number(f.ship) > 0 ? num(f.ship) + ' บาท' : 'ฟรี'}`, `✅ ยอดรวม ${num(total)} บาท`, '',
+      cod ? `💵 ชำระเงิน: เก็บเงินปลายทาง ${num(total)} บาท` : `💳 ชำระเงิน: โอนเงิน${f.slip ? ' (ได้รับสลิปแล้ว)' : ''}`,
+      '━━━━━━━━━━━━━━', '📍 ที่อยู่จัดส่ง', `คุณ${f.name.replace(/^คุณ\s*/, '')}`, `โทร ${phoneFmt(f.phone)}`, addrTx(f));
+    L.push('', 'ขอบคุณที่สั่งซื้อกับ Deesay นะคะ 🙏', 'หากข้อมูลไม่ถูกต้อง แจ้งแอดมินได้เลยค่ะ');
+    return L.join('\n');
+  }
+  function doneHtml(f) {
+    const d = f.done, total = Number(f.price || 0) - Number(f.disc || 0) + Number(f.ship || 0), w = S.thread ? winOf(S.thread.thread, S.thread.ad) : { open: false };
+    const row = (k, v) => `<div class="rc-r"><span>${k}</span><b>${v}</b></div>`;
+    return `<div class="rc">
+      <div class="rc-h"><span class="rc-ok">✓</span><div><b>สร้างคำสั่งซื้อแล้ว</b><small>บันทึกที่ "ออเดอร์จากแชท" · ยังไม่เข้ายอดขายและ Warehouse</small></div></div>
+      ${row('เลขที่', esc(d.order_no))}
+      ${row('ยอดรวม', `<span class="rc-big">${num(total)}</span>`)}
+      ${row('ชำระเงิน', esc(f.pay === PAYS[0] ? 'เก็บเงินปลายทาง' : 'โอนเงิน' + (f.slip ? ' · แนบสลิปแล้ว' : ' · ยังไม่แนบสลิป')))}
+      ${row('สินค้า', f.lines.map(l => `${esc(lineName(l))} ×${l.qty}`).join('<br>'))}
+      ${row('ผู้รับ', `${esc(f.name)}<br><span class="rc-sub">${esc(phoneFmt(f.phone))}</span>`)}
+      ${row('ที่อยู่', esc(addrTx(f)))}
+      ${row('พนักงานขาย', esc((S.perm && (S.perm.name || S.perm.email)) || ''))}
+    </div>
+    <div class="rc-msg">
+      <div class="rc-mh">ข้อความสรุปส่งให้ลูกค้า <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ส่งสรุปคำสั่งซื้อ</b><br>ส่งข้อความนี้เข้าแชทลูกค้าในนามเพจ (เหมือนตอบแชทปกติ · ต้องอยู่ในเวลาที่ Meta ให้ตอบ) · กด "แก้ก่อนส่ง" เพื่อนำไปแก้ในช่องพิมพ์ด้านล่างก่อนส่งเอง</span></span></div>
+      <div class="rc-pre">${esc(summaryText(f))}</div>
+      ${f.sumSent ? `<div class="rc-sent">✓ ส่งสรุปให้ลูกค้าแล้ว ${esc(f.sumSent)}</div>` : ''}
+      <div class="rc-btns"><button type="button" class="wh-btn${f.sumSent ? '' : ' pri'}" id="sumSend" ${!w.open || f.sumBusy ? 'disabled' : ''}>${f.sumBusy ? 'กำลังส่ง…' : f.sumSent ? 'ส่งอีกครั้ง' : 'ส่งสรุปให้ลูกค้า'}</button><button type="button" class="wh-btn" id="sumEdit" ${!w.open ? 'disabled' : ''}>แก้ก่อนส่ง</button></div>
+      ${!w.open ? '<div class="chk no">เกินเวลาที่ Meta ให้ตอบจากระบบแล้ว — คัดลอกข้อความไปส่งใน Business Suite</div>' : ''}
+    </div>
+    <div class="rc-foot"><button type="button" class="lnk" id="goOrders">ดูใน "ออเดอร์จากแชท"</button><button type="button" class="wh-btn" id="newOrd">เปิดบิลใหม่ให้ลูกค้าคนนี้</button></div>`;
+  }
+  async function sendSummary(f) {
+    if (f.sumBusy || !S.thread) return;
+    const { page_id, psid } = S.thread.thread, k = keyOf();
+    if (f.sumSent && !(await uiConfirm('ส่งสรุปอีกครั้ง', { text: 'ส่งสรุปคำสั่งซื้อนี้ให้ลูกค้าไปแล้ว ต้องการส่งซ้ำไหม', ok: 'ส่งอีกครั้ง' }))) return;
+    f.sumBusy = true; renderForm();
+    try {
+      await fnCall('fb-inbox-send', { page_id, psid, text: summaryText(f) });
+      f.sumSent = fmtT(new Date());
+      if (S.sel && S.sel.psid === psid) { S.lastMsgId = null; openThread(page_id, psid, true); }
+      loadList(true, true);
+    } catch (e) { uiAlert('ส่งสรุปไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
+    finally { f.sumBusy = false; if (keyOf() === k) renderForm(); }
+  }
+
   function renderForm() {
     const of = $('of');
     if (!S.thread) return;
@@ -579,7 +631,7 @@
     // ④ ตรวจแล้วสร้าง
     h += headHtml(f, 4, c);
     h += `<div class="stp-b${f.step === 4 ? ' on' : ''}" id="s4">${s4Html(f, c)}</div>`;
-    if (f.done) h = `<div class="ord-ok">✓ สร้างคำสั่งซื้อ <b>${esc(f.done.order_no)}</b> แล้ว · ยอด ${num(f.done.total)} · ดูได้ที่เมนู "ออเดอร์จากแชท"</div><div style="text-align:center"><button type="button" class="wh-btn" id="newOrd">เปิดบิลใหม่ให้ลูกค้าคนนี้</button></div>`;
+    if (f.done) h = doneHtml(f);
     of.innerHTML = h;
     $('ofF').style.display = f.done ? 'none' : '';
     syncFoot(f);
@@ -613,7 +665,13 @@
 
   function bindForm(f) {
     const of = $('of');
-    if (f.done) { $('newOrd').onclick = () => { delete S.drafts[keyOf()]; renderForm(); }; return; }
+    if (f.done) {
+      $('newOrd').onclick = () => { delete S.drafts[keyOf()]; renderForm(); };
+      $('goOrders').onclick = () => setView('orders');
+      $('sumSend').onclick = () => sendSummary(f);
+      $('sumEdit').onclick = () => { const k = keyOf(); S.cmp[k] = summaryText(f); syncComposer(true); $('cmpTx').focus(); $('cmpTx').setSelectionRange(0, 0); $('cmpTx').scrollTop = 0; };
+      return;
+    }
     of.onclick = e => {
       const sh = e.target.closest('.stp-h'); if (sh) { f.step = Number(sh.dataset.step); renderForm(); return; }
       const go = e.target.closest('[data-go]'); if (go) { f.step = Number(go.dataset.go); renderForm(); return; }
@@ -737,7 +795,7 @@
       f.done = r;
       openThread(t.page_id, t.psid, true);
     } catch (e) { uiAlert('บันทึกไม่ได้', { text: e.message }); }
-    finally { S.busy = false; $('btnCreate').textContent = 'สร้างคำสั่งซื้อ'; renderForm(); }
+    finally { S.busy = false; $('btnCreate').textContent = 'สร้างคำสั่งซื้อ'; renderForm(); if (f.done) $('of').scrollTop = 0; }
   }
 
   // ───── ออเดอร์จากแชท ─────

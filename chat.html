@@ -249,6 +249,22 @@ i.gift{font-style:normal;font-size:10.5px;font-weight:600;color:var(--good);back
 .of-f small.no{color:var(--bad)}
 .of-f small.bill{color:var(--warn);font-weight:600;margin:0 0 8px}
 .ord-ok{font-size:12px;background:var(--up-bg);color:var(--text);border-radius:8px;padding:8px 10px;margin:10px 0}
+/* (2026-11-27) หลังสร้างคำสั่งซื้อ: สรุปเป็นช่อง + ข้อความสรุปส่งให้ลูกค้า (เมฆขอ) */
+.rc{margin:12px 0 0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.rc-h{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--up-bg)}
+.rc-h b{display:block;font-size:14px}.rc-h small{display:block;font-size:11.5px;color:var(--text2)}
+.rc-ok{flex:none;width:26px;height:26px;border-radius:50%;background:var(--good);color:#fff;display:grid;place-items:center;font-weight:700}
+.rc-r{display:grid;grid-template-columns:84px 1fr;gap:10px;padding:8px 14px;border-top:1px solid var(--row-border);font-size:12.5px}
+.rc-r span{color:var(--text3)}.rc-r b{font-weight:600;line-height:1.5;overflow-wrap:anywhere}
+.rc-big{font-size:17px;font-weight:700;color:var(--text)!important;font-variant-numeric:tabular-nums}
+.rc-sub{color:var(--text2)!important;font-weight:400}
+.rc-msg{margin-top:14px}
+.rc-mh{font-size:12.5px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:3px}
+.rc-pre{white-space:pre-line;font-size:12.5px;line-height:1.55;background:color-mix(in srgb,var(--ch-facebook) 14%,var(--bg2));border-radius:14px 14px 4px 14px;padding:10px 12px}
+body.light-theme .rc-pre{background:#DCE8FD}
+.rc-sent{font-size:12px;color:var(--good);font-weight:600;margin-top:6px}
+.rc-btns{display:flex;gap:8px;margin-top:8px}.rc-btns .wh-btn{flex:1}
+.rc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:14px 0 6px;padding-top:10px;border-top:1px solid var(--row-border)}
 /* หน้า ออเดอร์จากแชท */
 .wh-card{background:var(--bg2);border:1px solid var(--panel-line);border-radius:10px;box-shadow:var(--sh);padding:14px 18px}
 .or-bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
