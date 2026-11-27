@@ -110,16 +110,17 @@ window.Auth = (function () {
              : where === 'health' ? perm.is_admin
              // (2026-11-23) Warehouse = ติ๊กช่อง Warehouse ในหน้าตั้งค่า (เก็บเป็น 'warehouse' ในรายการหน้า · ไม่นับเป็นหน้า Dashboard · "ทุกหน้า" ไม่รวม Warehouse)
              : where === 'warehouse' ? (perm.is_admin || perm.pages.includes('warehouse'))
-             // (2026-11-27) แชท Facebook (chat.html) = ผู้ดูแลระบบ หรือมี 'chat' ในรายการหน้า (ตรงกับ chat_can_use() ในฐานข้อมูล) · ระยะทดลอง: ผู้ดูแลระบบเท่านั้น
+             // (2026-11-27) แชท Facebook (chat.html) = ผู้ดูแลระบบ หรือมี 'chat' ในรายการหน้า (ตรงกับ chat_can_use() ในฐานข้อมูล)
              : where === 'chat' ? (perm.is_admin || perm.pages.includes('chat'))
              : where === 'hub' ? (perm.is_admin || perm.pages.length > 0 || perm.can_upload || perm.can_admin || perm.can_edit_kpi)
-             : (perm.is_admin || perm.pages.some(p => p !== 'warehouse'));
+             : apps(perm).dash;   // (2026-11-27) 'warehouse' / 'chat' ในรายการหน้า ไม่นับเป็นหน้า Dashboard
     // (2026-11-02) คนที่มีสิทธิ์แค่อัปโหลด / ตั้งค่า (ไม่มีหน้า dashboard) เปิดลิงก์หลักแล้วพาไปหน้าที่ใช้ได้เลย — ไม่ขึ้น "รอเปิดสิทธิ์"
     //   (ลิงก์หลักของเว็บพาไป dashboard ตั้งแต่ 2026-11-02 เดิมเป็นหน้าเมนูให้เลือกเอง)
     if (!ok && where === 'dashboard') {
       if (perm.can_upload) { location.replace('upload.html'); return new Promise(() => {}); }
       if (perm.can_admin || perm.can_edit_kpi) { location.replace('admin.html'); return new Promise(() => {}); }
       if (perm.pages.includes('warehouse')) { location.replace('warehouse.html'); return new Promise(() => {}); }
+      if (perm.pages.includes('chat')) { location.replace('chat.html'); return new Promise(() => {}); }   // (2026-11-27) มีแค่สิทธิ์แชท Facebook
     }
     if (!ok) return showBlocked('รอเปิดสิทธิ์ใช้งาน', where === 'dashboard' || where === 'hub'
       ? 'สมัครเรียบร้อยแล้ว — รอผู้ดูแลระบบเปิดสิทธิ์ให้ แล้วกด "ลองใหม่"'
@@ -127,8 +128,18 @@ window.Auth = (function () {
     return perm;
   }
 
+  // (2026-11-27) ระบบที่คนนี้เข้าได้ — Dashboard / Warehouse / แชท Facebook (ใช้ร่วม hub.html + sidebar.js ให้ตรงกัน)
+  //   'warehouse' / 'chat' เก็บในรายการหน้า แต่ไม่ใช่หน้า Dashboard · เข้าได้ตั้งแต่ 2 ระบบ = มีหน้าหลักให้เลือก
+  function apps(p) {
+    const pg = (p && p.pages) || [], adm = !!(p && p.is_admin);
+    const r = { dash: adm || pg.some(x => x !== 'warehouse' && x !== 'chat'), wh: adm || pg.includes('warehouse'), chat: adm || pg.includes('chat') };
+    r.withTools = r.dash || !!(p && (p.can_upload || p.can_admin || p.can_edit_kpi));   // อัปโหลด / ตั้งค่า อยู่ฝั่ง Dashboard
+    r.count = (r.withTools ? 1 : 0) + (r.wh ? 1 : 0) + (r.chat ? 1 : 0);
+    return r;
+  }
+
   async function signOut() { try { await ready; await client.auth.signOut(); } catch (e) {} location.replace('login.html'); }
 
-  return { require, canPage, signOut, ready, rpc,
+  return { require, canPage, signOut, ready, rpc, apps,
     get perm() { return perm; }, get client() { return client; }, token() { return session?.access_token || null; } };
 })();

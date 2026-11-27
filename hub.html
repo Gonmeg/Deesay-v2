@@ -44,13 +44,13 @@ body{margin:0;font-family:'Sarabun',sans-serif;background:var(--pg);color:var(--
   <h1 class="hb-hi" id="hbHi">สวัสดี</h1>
   <p class="hb-sub">เลือกระบบที่จะใช้งาน</p>
   <div class="hb-grid">
-    <a class="hb-card" href="dashboard.html">
+    <a class="hb-card" id="hbDash" href="dashboard.html">
       <span class="hb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M6 17v-6"/><path d="M11 17V6"/><path d="M16 17v-4"/></svg></span>
       <h2>Dashboard</h2>
       <p>ยอดขาย · การตลาด · Ads · รายงานผู้บริหาร</p>
       <span class="hb-go">เข้าใช้งาน →</span>
     </a>
-    <a class="hb-card" href="warehouse.html">
+    <a class="hb-card" id="hbWh" href="warehouse.html">
       <span class="hb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5v8l-9 5-9-5V8l9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg></span>
       <h2>Warehouse</h2>
       <p>พิมพ์ใบปะหน้า · สรุปการจัดส่ง · ประวัติการพิมพ์</p>
@@ -69,12 +69,13 @@ body{margin:0;font-family:'Sarabun',sans-serif;background:var(--pg);color:var(--
 (async () => {
   const p = await Auth.require('hub');
   // (2026-11-23) สิทธิ์ Warehouse = ผู้ดูแลระบบ หรือติ๊กช่อง Warehouse ในหน้าตั้งค่า (ตรงกับ auth.js / sidebar.js / wh-labels)
-  const wh = p.is_admin || p.pages.includes('warehouse');
-  const dash = p.is_admin || p.pages.some(x => x !== 'warehouse') || p.can_upload || p.can_admin || p.can_edit_kpi;
-  if (!wh) { location.replace('dashboard.html'); return; }    // ไม่มีสิทธิ์ Warehouse = เข้า Dashboard ตรงเหมือนเดิม
-  if (!dash) { location.replace('warehouse.html'); return; }  // มีแค่ Warehouse = เข้า Warehouse ตรง
-  // (2026-11-27) แชท Facebook (chat.html) = ผู้ดูแลระบบ หรือมี 'chat' ในรายการหน้า (ตรงกับ auth.js)
-  if (p.is_admin || p.pages.includes('chat')) { document.getElementById('hbChat').style.display = ''; document.querySelector('.hb-grid').classList.add('n3'); }
+  // (2026-11-27) ระบบที่เข้าได้ (Auth.apps ตัวเดียวกับเมนูซ้าย) — ได้ระบบเดียว = เข้าระบบนั้นตรง ๆ · 2 ระบบขึ้นไป = ให้เลือก
+  const a = Auth.apps(p);
+  if (a.count < 2) { location.replace(a.wh ? 'warehouse.html' : a.chat ? 'chat.html' : 'dashboard.html'); return; }
+  if (!a.withTools) document.getElementById('hbDash').style.display = 'none';
+  if (!a.wh) document.getElementById('hbWh').style.display = 'none';
+  if (a.chat) document.getElementById('hbChat').style.display = '';
+  if (a.count === 3) document.querySelector('.hb-grid').classList.add('n3');
   const name = p.name || String(p.email || '').split('@')[0];
   document.getElementById('hbHi').textContent = name ? `สวัสดี ${name}` : 'สวัสดี';
   document.getElementById('hbMail').textContent = p.email || '';

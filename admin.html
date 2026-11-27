@@ -229,6 +229,88 @@
   .pm-chk { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 2px 0; cursor: pointer; }
   .pm-chk input { accent-color: var(--accent); }
   .pm-empty { text-align: center; color: var(--muted); padding: 18px !important; }
+  /* (2026-11-27) สิทธิ์ผู้ใช้แบบใหม่ — รายชื่อซ้าย + แผงตั้งสิทธิ์ขวา */
+  .pm2 { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .pm2-box { background: var(--bg2); border: 1px solid var(--panel-line); border-radius: 12px; box-shadow: var(--sh); }
+  .pm2-cnt { color: var(--text3); font-weight: 500; font-size: 12.5px; }
+  .pm2-cnt:empty { display: none; }
+  .pm2-empty { padding: 28px 16px; text-align: center; color: var(--text3); font-size: 13px; }
+  .pm2-req { padding: 14px 18px 8px 20px; margin-bottom: 16px; }
+  .pm2-rh, .pm2-lh { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .pm2-rr { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--row-border); font-size: 13px; flex-wrap: wrap; }
+  .pm2-rh + div .pm2-rr:first-child { border-top: none; }
+  .pm2-rr .when { color: var(--text3); font-size: 12px; }
+  .pm2-rr .acts { margin-left: auto; display: flex; gap: 6px; }
+  .pm2-list { padding: 14px 0 6px; }
+  .pm2-lh { padding: 0 16px; }
+  .pm2-q { display: block; margin: 10px 16px 8px; width: calc(100% - 32px); height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-family: inherit; font-size: 13px; box-sizing: border-box; }
+  .pm2-q:focus { outline: none; border-color: var(--accent); }
+  .pm2-seg { display: flex; gap: 5px; flex-wrap: wrap; padding: 0 16px 10px; border-bottom: 1px solid var(--row-border); }
+  .pm2-seg button { border: none; background: var(--bg3); color: var(--text2); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .pm2-seg button.on { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+  .pm2-u { display: flex; gap: 11px; width: 100%; text-align: left; padding: 10px 16px; border: none; border-bottom: 1px solid var(--row-border); background: none; color: var(--text); cursor: pointer; font-family: inherit; align-items: center; position: relative; }
+  .pm2-u:hover { background: var(--bg3); }
+  .pm2-u.sel { background: var(--accent-soft); }
+  .pm2-u.sel::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+  .pm2-u.off { opacity: .6; }
+  .pm2-av { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--bg3); color: var(--text2); font-weight: 700; font-size: 14px; }
+  .pm2-u.sel .pm2-av { background: var(--bg2); }
+  .pm2-u .t { min-width: 0; flex: 1; }
+  .pm2-u .t1 { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+  .pm2-u .t1 b { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; max-width: 60%; }
+  .pm2-u .t1 small { font-size: 11.5px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .pm2-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .pm2-tag { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--bg3); color: var(--text2); white-space: nowrap; }
+  .pm2-u.sel .pm2-tag { background: var(--bg2); }
+  .pm2-tag.adm { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+  .pm2-tag.none { background: var(--warn-bg) !important; color: var(--warn); font-weight: 600; }
+  .pm2-tag.off { font-weight: 600; }
+  .pm2-ed { padding: 18px 22px 22px; }
+  .pm2-eh { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--row-border); }
+  .pm2-av.lg { width: 48px; height: 48px; font-size: 19px; background: var(--accent-soft); color: var(--accent-text); }
+  .pm2-who { min-width: 0; flex: 1; }
+  .pm2-nm { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .pm2-nm b { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm2-nm .pm2-btn { flex: none; height: 24px; padding: 0 8px; font-size: 11.5px; color: var(--text2); }
+  .pm2-who small { display: block; color: var(--text3); font-size: 12.5px; margin-top: 1px; }
+  .pm2-st { font-size: 11px; font-weight: 600; padding: 1px 8px; margin-left: 4px; border-radius: 999px; background: var(--bg3); color: var(--text2); white-space: nowrap; }
+  .pm2-acts { margin-left: auto; display: flex; gap: 6px; flex: none; }
+  .pm2-btn { height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 12.5px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .pm2-btn:hover { border-color: var(--text3); }
+  .pm2-btn.danger { color: var(--red); }
+  .pm2-btn.danger:hover { border-color: var(--red); }
+  .pm2-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .pm2-btn.sm { height: 28px; padding: 0 10px; font-size: 12px; }
+  .pm2-sec { padding-top: 18px; }
+  .pm2-sec h4 { margin: 0 0 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .pm2-apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .pm2-app b i { font-style: normal; font-size: 10.5px; font-weight: 600; padding: 0 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); margin-left: 4px; vertical-align: 1px; }
+  .pm2-app { display: flex; gap: 11px; align-items: flex-start; padding: 11px 13px; border-radius: 10px; background: var(--bg3); cursor: pointer; border: 1px solid transparent; position: relative; }
+  .pm2-app.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: var(--accent-soft); }
+  .pm2-app.dis { cursor: default; }
+  .pm2-app input { position: absolute; opacity: 0; pointer-events: none; }
+  .pm2-app b { display: block; font-size: 13.5px; }
+  .pm2-app small { display: block; font-size: 12px; color: var(--text2); line-height: 1.45; margin-top: 2px; }
+  .pm2-sw { flex: none; width: 34px; height: 20px; border-radius: 999px; background: color-mix(in srgb, var(--text3) 55%, transparent); position: relative; margin-top: 1px; transition: background .15s; }
+  .pm2-sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: left .15s; }
+  .pm2-app input:checked + .pm2-sw { background: var(--accent); }
+  .pm2-app input:checked + .pm2-sw::after { left: 16px; }
+  .pm2-app input:disabled + .pm2-sw { opacity: .55; }
+  .pm2-app input:focus-visible + .pm2-sw { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pm2-note { font-size: 12.5px; color: var(--text2); background: var(--bg3); border-radius: 8px; padding: 8px 12px; margin-top: 10px; }
+  .pm2-presets { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; font-size: 12.5px; color: var(--text2); }
+  .pm2-groups { columns: 205px 4; column-gap: 12px; }
+  .pm2-g { background: var(--bg3); border-radius: 10px; padding: 10px 12px 8px; break-inside: avoid; display: inline-block; width: 100%; box-sizing: border-box; margin-bottom: 12px; }
+  .pm2-gh { display: flex; align-items: center; gap: 8px; padding-bottom: 7px; margin-bottom: 4px; border-bottom: 1px solid var(--row-border); cursor: pointer; }
+  .pm2-gh b { font-size: 13px; }
+  .pm2-gh span { margin-left: auto; color: var(--text3); font-size: 12px; }
+  .pm2-p { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; font-size: 13px; cursor: pointer; line-height: 1.4; }
+  .pm2-p small { display: block; color: var(--text3); font-size: 11.5px; }
+  .pm2-p em { font-style: normal; font-size: 10.5px; padding: 0 7px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); font-weight: 600; white-space: nowrap; margin-left: 4px; }
+  .pm2-g input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; margin: 2px 0 0; flex: none; cursor: pointer; }
+  .pm2-g input:disabled { cursor: default; }
+  #pmPager .fa-pager { margin: 10px 16px 6px; }
+  @media (max-width: 1300px) { .pm2 { grid-template-columns: 340px minmax(0, 1fr); } }
   /* ===== แท็บ แอด Facebook ===== */
   #tab-fbads table { table-layout: fixed; }
   #tab-fbads td, #tab-fbads th { padding: 7px 10px; vertical-align: middle; }
@@ -535,19 +617,20 @@
   </div><!-- /tab-supply -->
 
   <div id="tab-perms" class="tabpane" style="display:none;">
-    <div class="card" style="margin-bottom:18px;">
-      <div class="pm-head">🔔 คำขอรีเซ็ตรหัสผ่าน <span class="pm-count" id="pmReqCount"></span><span class="pm-sub">คนที่กด "ลืมรหัสผ่าน" ในหน้า login — ตั้งรหัสใหม่แล้วแจ้งเขาเอง</span></div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>อีเมล</th><th>ขอเมื่อ</th><th>บัญชี</th><th></th></tr></thead>
-        <tbody id="pmReqBody"><tr><td colspan="4" class="pm-empty">กำลังโหลด…</td></tr></tbody>
-      </table></div>
+    <!-- (2026-11-27) หน้าสิทธิ์ผู้ใช้แบบใหม่: รายชื่อซ้าย + แผงตั้งสิทธิ์ของคนที่เลือกด้านขวา · บันทึกทันทีที่กด -->
+    <div class="pm2-box ui-alertbox pm2-req" id="pmReq" hidden>
+      <div class="pm2-rh"><b>คำขอตั้งรหัสผ่านใหม่</b><span class="pm2-cnt" id="pmReqCount"></span><span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>คำขอตั้งรหัสผ่านใหม่</b><br>คนที่กด "ลืมรหัสผ่าน" ในหน้าเข้าสู่ระบบ · กด "ตั้งรหัสใหม่" แล้วแจ้งรหัสให้เจ้าของบัญชีเอง · คำขอจะหายไปเมื่อตั้งรหัสแล้วหรือกด "ปิดคำขอ"</span></span></div>
+      <div id="pmReqBody"></div>
     </div>
-    <div class="card">
-      <div class="pm-head">👥 ผู้ใช้ทั้งหมด <span class="pm-sub">ทุกช่องบันทึกทันทีที่ติ๊ก · คนสมัครใหม่จะยังไม่มีหน้าไหนจนกว่าจะติ๊กให้</span></div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>ชื่อ</th><th>อีเมล</th><th title="เห็นทุกหน้า · เข้าหน้าสิทธิ์ผู้ใช้ และเปิด / ปิดสิทธิ์ให้คนอื่นได้">ผู้ดูแลระบบ</th><th>หน้า Dashboard</th><th>อัปโหลดไฟล์</th><th>จัดการสินค้า</th><th title="แก้เป้าในหน้าเป้าหมาย KPI ได้ (เดือนที่จบแล้วแก้ได้เฉพาะผู้ดูแลระบบ) — ต้องติ๊กหน้า เป้าหมาย KPI ให้ด้วยถึงจะเข้าหน้าได้">แก้เป้า KPI</th><th title="เข้าหน้า Warehouse: พิมพ์ใบปะหน้า + สั่งจัดส่ง TikTok · สรุปการจัดส่ง · ประวัติการพิมพ์ — แยกจากหน้า Dashboard (ติ๊ก ทุกหน้า ไม่รวม Warehouse)">Warehouse</th><th>สถานะ</th><th></th></tr></thead>
-        <tbody id="pmUserBody"><tr><td colspan="10" class="pm-empty">กำลังโหลด…</td></tr></tbody>
-      </table></div>
+    <div class="pm2">
+      <section class="pm2-box pm2-list">
+        <div class="pm2-lh"><b>ผู้ใช้ทั้งหมด</b><span class="pm2-cnt" id="pmTotal"></span><span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ผู้ใช้ทั้งหมด</b><br>เลือกชื่อทางซ้าย แล้วตั้งสิทธิ์ทางขวา · ทุกปุ่มบันทึกทันทีที่กด (ไม่มีปุ่มบันทึก)<br>คนสมัครใหม่จะยังไม่มีสิทธิ์ใช้ส่วนไหนเลยจนกว่าจะเปิดให้ (ป้าย "ยังไม่มีสิทธิ์")</span></span></div>
+        <input class="pm2-q" id="pmQ" placeholder="ค้นหาชื่อ / อีเมล" autocomplete="off">
+        <div class="pm2-seg" id="pmSeg"></div>
+        <div id="pmList"><div class="pm2-empty">กำลังโหลด…</div></div>
+        <div id="pmPager"></div>
+      </section>
+      <section class="pm2-box pm2-ed" id="pmEd"><div class="pm2-empty">กำลังโหลด…</div></section>
     </div>
   </div><!-- /tab-perms -->
 
@@ -1342,8 +1425,6 @@ const thDate = d => d ? new Date(d).toLocaleString('th-TH', { day: 'numeric', mo
 const hasAll = u => u.is_admin || (u.pages || []).includes('*')
 // (2026-11-23) สิทธิ์ Warehouse เก็บเป็น 'warehouse' ในรายการหน้า (ไม่อยู่ในรายชื่อหน้า Dashboard) — ติ๊กหน้า / กดทางลัดต้องเก็บค่านี้ไว้
 const hasWh = u => (u.pages || []).includes('warehouse')
-const keepWh = (u, pages) => hasWh(u) ? [...pages.filter(p => p !== 'warehouse'), 'warehouse'] : pages
-const pageCount = u => hasAll(u) ? 'ทุกหน้า' : `${(u.pages || []).filter(p => PAGES.some(x => x.id === p)).length}/${PAGES.length} หน้า`
 
 async function authAdmin(action, user_id, extra = {}) {
   const res = await fetch(`${window.SUPABASE_URL}/functions/v1/auth-admin`, {
@@ -1364,65 +1445,125 @@ async function loadPermsTab() {
   } catch (e) { showToast('โหลดรายชื่อไม่สำเร็จ: ' + e.message, true) }
 }
 
+// (2026-11-27) หน้าสิทธิ์ผู้ใช้แบบใหม่ — รายชื่อซ้าย (ค้นหา / กรอง / แบ่งหน้า) + แผงตั้งสิทธิ์ของคนที่เลือกด้านขวา
+//   ทุกปุ่มอัปเดตบนจอทันที แล้วบันทึกตามลำดับ (คิวเดียว กดเร็ว ๆ ไม่ทับกัน) · บันทึกไม่สำเร็จ = โหลดรายชื่อใหม่จากฐานข้อมูล
+const PM_APPS = [
+  { k: 'chat', name: 'แชท Facebook', d: 'ตอบแชททุกเพจ · สร้างคำสั่งซื้อข้างแชท', has: u => (u.pages || []).includes('chat') },
+  { k: 'warehouse', name: 'Warehouse', d: 'พิมพ์ใบปะหน้า · สั่งจัดส่ง · ประวัติการพิมพ์', has: u => hasWh(u) },
+  { k: 'can_upload', name: 'อัปโหลดไฟล์', d: 'อัปโหลดออเดอร์รายวัน · ไฟล์บัญชี · ไฟล์รับเงิน', has: u => !!u.can_upload },
+  { k: 'can_admin', name: 'จัดการสินค้า', d: 'แก้ข้อมูลในหน้าสินค้า & ราคา · เข้าหน้าตั้งค่า (ยกเว้นสิทธิ์ผู้ใช้)', has: u => !!u.can_admin },
+  { k: 'can_edit_kpi', name: 'แก้เป้า KPI', d: 'แก้เป้าในหน้าเป้าหมาย KPI (ต้องติ๊กหน้านี้ด้านล่างด้วย)', has: u => !!u.can_edit_kpi },
+]
+const PM_HINT = {
+  cost: { tag: 'เห็นต้นทุน', sub: 'รวมหน้ากำไรต่อคำสั่งซื้อ · มูลค่าสินค้าคงคลัง' },
+  exec: { name: 'ผู้บริหาร: อนุมัติโปร + ค่าธรรมเนียมช่องทาง', tag: 'เห็นต้นทุน' },
+  products: { name: 'สินค้า & ราคา', sub: 'แก้ข้อมูลได้เมื่อเปิด "จัดการสินค้า"' },
+  home: { sub: 'เปิดให้ทุกคนอยู่แล้ว' },
+}
+// หน้าแรก (home) ทุกคนที่เข้า Dashboard ได้เห็นอยู่แล้ว (Auth.canPage) — มีหน้าอื่นอย่างน้อย 1 หน้า = นับหน้าแรกด้วยเสมอ
+const pmDash = u => { if (hasAll(u)) return PAGES.map(p => p.id); const l = (u.pages || []).filter(p => PAGES.some(x => x.id === p)); return l.length && !l.includes('home') ? ['home', ...l] : l }
+const pmNone = u => !u.is_admin && !pmDash(u).length && !PM_APPS.some(a => a.has(u))
+const pmInitial = u => ((String(u.display_name || u.email || '').match(/[A-Za-z0-9ก-ฮ]/) || ['·'])[0]).toUpperCase()
+const pmSt = { q: '', seg: 'all', page: 1, size: 12, sel: null }
+let pmChain = Promise.resolve()
+const PM_SEGS = [
+  ['all', 'ทั้งหมด', () => true],
+  ['admin', 'ผู้ดูแลระบบ', u => u.is_admin],
+  ['chat', 'แชท Facebook', u => u.is_admin || (u.pages || []).includes('chat')],
+  ['none', 'ยังไม่มีสิทธิ์', u => u.is_active && pmNone(u)],
+  ['off', 'ปิดใช้งาน', u => !u.is_active],
+]
+
 function renderPmRequests(reqs) {
   const pending = reqs.filter(r => r.status === 'pending')
-  document.getElementById('pmReqCount').textContent = pending.length ? String(pending.length) : ''
-  const tb = document.getElementById('pmReqBody')
-  if (!pending.length) { tb.innerHTML = '<tr><td colspan="4" class="pm-empty">ไม่มีคำขอค้าง</td></tr>'; return }
-  tb.innerHTML = pending.map(r => {
+  document.getElementById('pmReq').hidden = !pending.length
+  document.getElementById('pmReqCount').textContent = pending.length ? `${pending.length} รายการ` : ''
+  document.getElementById('pmReqBody').innerHTML = pending.map(r => {
     const u = pmUsers.find(x => (x.email || '').toLowerCase() === r.email)
-    return `<tr data-req="${r.id}">
-      <td>${esc(r.email)}</td><td>${thDate(r.requested_at)}</td>
-      <td>${u ? `<span class="pm-badge pm-on">มีบัญชี</span>` : `<span class="pm-badge pm-warn">ไม่พบบัญชีนี้</span>`}</td>
-      <td>${u ? `<button class="pm-btn gold" data-act="req-reset" data-uid="${u.user_id}">🔑 ตั้งรหัสใหม่</button>` : ''}<button class="pm-btn" data-act="req-close">ปิดคำขอ</button></td>
-    </tr>`
+    return `<div class="pm2-rr" data-req="${r.id}"><b>${esc(r.email)}</b><span class="when">ขอเมื่อ ${thDate(r.requested_at)}</span>${u ? '' : '<span class="pm2-tag none">ไม่พบบัญชีนี้</span>'}
+      <span class="acts">${u ? `<button class="pm2-btn sm on" data-act="req-reset" data-uid="${u.user_id}">ตั้งรหัสใหม่</button>` : ''}<button class="pm2-btn sm" data-act="req-close">ปิดคำขอ</button></span></div>`
   }).join('')
+}
+
+function pmTags(u) {
+  if (!u.is_active) return '<span class="pm2-tag off">ปิดใช้งาน</span>'
+  if (u.is_admin) return '<span class="pm2-tag adm">ผู้ดูแลระบบ · ทุกส่วน</span>'
+  if (pmNone(u)) return '<span class="pm2-tag none">ยังไม่มีสิทธิ์</span>'
+  const n = pmDash(u).length, t = []
+  if (n) t.push(hasAll(u) ? 'Dashboard ทุกหน้า' : `Dashboard ${n} หน้า`)
+  PM_APPS.forEach(a => { if (a.has(u)) t.push(a.name) })
+  return t.map(x => `<span class="pm2-tag">${esc(x)}</span>`).join('')
 }
 
 function renderPmUsers() {
-  const tb = document.getElementById('pmUserBody')
-  if (!pmUsers.length) { tb.innerHTML = '<tr><td colspan="10" class="pm-empty">ยังไม่มีใครสมัคร</td></tr>'; return }
-  tb.innerHTML = pmUsers.map(u => {
-    const me = u.user_id === Auth.perm.user_id, adm = u.is_admin, dis = adm ? 'disabled' : ''
-    return `<tr data-uid="${u.user_id}">
-      <td><input class="row-input pm-name" data-f="name" value="${esc(u.display_name)}" placeholder="ชื่อ">${adm ? ' <span class="pm-badge pm-admin">แอดมิน</span>' : ''}</td>
-      <td>${esc(u.email)}${me ? ' <span class="pm-sub">(คุณ)</span>' : ''}</td>
-      <td><input type="checkbox" data-f="is_admin" ${adm ? 'checked' : ''} ${me ? 'disabled title="ถอดสิทธิ์ผู้ดูแลของตัวเองไม่ได้"' : ''}></td>
-      <td>${pageCount(u)} ${adm ? '' : `<button class="pm-btn" data-act="toggle-pages">แก้</button>`}</td>
-      <td><input type="checkbox" data-f="can_upload" ${u.can_upload || adm ? 'checked' : ''} ${dis}></td>
-      <td><input type="checkbox" data-f="can_admin" ${u.can_admin || adm ? 'checked' : ''} ${dis}></td>
-      <td><input type="checkbox" data-f="can_edit_kpi" ${u.can_edit_kpi || adm ? 'checked' : ''} ${dis}></td>
-      <td><input type="checkbox" data-f="warehouse" ${hasWh(u) || adm ? 'checked' : ''} ${dis}></td>
-      <td>${u.is_active ? '<span class="pm-badge pm-on">ใช้งานได้</span>' : '<span class="pm-badge pm-off">ปิดอยู่</span>'}</td>
-      <td><button class="pm-btn gold" data-act="reset">🔑 ตั้งรหัสใหม่</button>${me ? '' : `<button class="pm-btn" data-act="toggle-active">${u.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button><button class="pm-btn danger" data-act="delete">ลบ</button>`}</td>
-    </tr>`
-  }).join('')
+  const segF = (PM_SEGS.find(s => s[0] === pmSt.seg) || PM_SEGS[0])[2]
+  const q = pmSt.q.trim().toLowerCase()
+  const rows = pmUsers.filter(u => segF(u) && (!q || `${u.display_name || ''} ${u.email || ''}`.toLowerCase().includes(q)))
+  document.getElementById('pmTotal').textContent = pmUsers.length ? `${pmUsers.length} คน` : ''
+  document.getElementById('pmSeg').innerHTML = PM_SEGS.map(([k, label, f]) => { const n = pmUsers.filter(f).length; return (k === 'all' || n) ? `<button type="button" data-seg="${k}" class="${pmSt.seg === k ? 'on' : ''}">${label} ${n}</button>` : '' }).join('')
+  if (!pmSt.sel || !pmUsers.some(u => u.user_id === pmSt.sel)) pmSt.sel = (rows[0] || pmUsers[0] || {}).user_id || null
+  const pages = Math.max(1, Math.ceil(rows.length / pmSt.size)); if (pmSt.page > pages) pmSt.page = pages
+  const start = (pmSt.page - 1) * pmSt.size
+  document.getElementById('pmList').innerHTML = rows.length ? rows.slice(start, start + pmSt.size).map(u => {
+    const me = u.user_id === Auth.perm.user_id
+    return `<button type="button" class="pm2-u${u.user_id === pmSt.sel ? ' sel' : ''}${u.is_active ? '' : ' off'}" data-pick="${u.user_id}">
+      <span class="pm2-av">${esc(pmInitial(u))}</span>
+      <span class="t"><span class="t1"><b>${esc(u.display_name || '(ไม่มีชื่อ)')}</b><small>${esc(u.email)}${me ? ' · คุณ' : ''}</small></span><span class="pm2-tags">${pmTags(u)}</span></span></button>`
+  }).join('') : `<div class="pm2-empty">${pmUsers.length ? 'ไม่พบชื่อที่ค้นหา' : 'ยังไม่มีใครสมัคร'}</div>`
+  pmPager(rows.length, start)
+  renderPmEditor()
 }
 
-function pmDetailRow(u) {
+function pmPager(total, start) {
+  const host = document.getElementById('pmPager'), pages = Math.max(1, Math.ceil(total / pmSt.size)), cur = pmSt.page
+  if (total <= 12 && pmSt.size === 12) { host.innerHTML = ''; return }
+  const nums = []; for (let i = 1; i <= pages; i++) { if (i === 1 || i === pages || Math.abs(i - cur) <= 1) nums.push(i); else if (nums[nums.length - 1] !== '…') nums.push('…') }
+  host.innerHTML = `<div class="fa-pager"><button class="pg" data-p="${cur - 1}" ${cur === 1 ? 'disabled' : ''}>‹</button>${nums.map(p => p === '…' ? '<span class="info">…</span>' : `<button class="pg ${p === cur ? 'on' : ''}" data-p="${p}">${p}</button>`).join('')}<button class="pg" data-p="${cur + 1}" ${cur === pages ? 'disabled' : ''}>›</button><span class="info">${start + 1}–${Math.min(start + pmSt.size, total)} จาก ${total}</span><label>ต่อหน้า <select>${[12, 25, 50].map(n => `<option value="${n}" ${n === pmSt.size ? 'selected' : ''}>${n}</option>`).join('')}</select></label></div>`
+  host.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { pmSt.page = +b.dataset.p; renderPmUsers() })
+  host.querySelector('select').onchange = e => { pmSt.size = +e.target.value; pmSt.page = 1; renderPmUsers() }
+}
+
+function renderPmEditor() {
+  const ed = document.getElementById('pmEd'), u = pmUsers.find(x => x.user_id === pmSt.sel)
+  if (!u) { ed.innerHTML = '<div class="pm2-empty">เลือกชื่อทางซ้ายเพื่อตั้งสิทธิ์</div>'; return }
+  const me = u.user_id === Auth.perm.user_id, adm = u.is_admin, dis = adm ? 'disabled' : '', dp = pmDash(u), all = hasAll(u)
+  const dpx = dp.filter(p => p !== 'home'), isStaff = !all && dpx.length === STAFF_PAGES.length && STAFF_PAGES.every(p => dpx.includes(p))
   const groups = [...new Set(PAGES.map(p => p.group))]
-  const on = id => hasAll(u) || (u.pages || []).includes(id)
-  return `<tr class="pm-detail" data-detail="${u.user_id}"><td colspan="10">
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-      <span class="pm-sub">ทางลัด:</span>
-      <button class="pm-btn" data-act="preset" data-preset="all">ทุกหน้า</button>
-      <button class="pm-btn" data-act="preset" data-preset="staff">ให้แบบพนักงานทั่วไป</button>
-      <button class="pm-btn" data-act="preset" data-preset="none">ไม่ให้เลย</button>
-      <button class="pm-btn" data-act="toggle-pages" style="margin-left:auto;">ปิด</button>
+  ed.innerHTML = `
+    <div class="pm2-eh">
+      <span class="pm2-av lg">${esc(pmInitial(u))}</span>
+      <div class="pm2-who"><div class="pm2-nm"><b>${esc(u.display_name || '(ไม่มีชื่อ)')}</b><button class="pm2-btn sm" data-act="rename">แก้ชื่อ</button></div><small>${esc(u.email)}${me ? ' · บัญชีของคุณ' : ''} <span class="pm2-st">${u.is_active ? 'ใช้งานได้' : 'ปิดใช้งานอยู่'}</span></small></div>
+      <div class="pm2-acts"><button class="pm2-btn" data-act="reset">ตั้งรหัสใหม่</button>${me ? '' : `<button class="pm2-btn" data-act="toggle-active">${u.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button><button class="pm2-btn danger" data-act="delete">ลบบัญชี</button>`}</div>
     </div>
-    <div class="pm-groups">${groups.map(g => `<div class="pm-group"><b>${esc(g)}</b>${PAGES.filter(p => p.group === g).map(p =>
-      `<label class="pm-chk"><input type="checkbox" data-page="${p.id}" ${on(p.id) ? 'checked' : ''}>${esc(p.name)}</label>`).join('')}</div>`).join('')}</div>
-  </td></tr>`
+    <div class="pm2-sec">
+      <h4>ใช้งานส่วนไหนได้บ้าง</h4>
+      <div class="pm2-apps"><label class="pm2-app adm${adm ? ' on' : ''}${me ? ' dis' : ''}"${me ? ' title="ถอดสิทธิ์ผู้ดูแลระบบของตัวเองไม่ได้"' : ''}><input type="checkbox" data-f="is_admin" ${adm ? 'checked' : ''} ${me ? 'disabled' : ''}><span class="pm2-sw"></span><span><b>ผู้ดูแลระบบ <i>สิทธิ์เต็ม</i></b><small>ใช้ได้ทุกส่วน ทุกหน้า และตั้งสิทธิ์ของทุกคนได้</small></span></label>${PM_APPS.map(a => { const on = adm || a.has(u); return `<label class="pm2-app${on ? ' on' : ''}${adm ? ' dis' : ''}"><input type="checkbox" data-app="${a.k}" ${on ? 'checked' : ''} ${dis}><span class="pm2-sw"></span><span><b>${a.name}</b><small>${a.d}</small></span></label>` }).join('')}</div>
+      ${adm ? '<div class="pm2-note">ผู้ดูแลระบบใช้ได้ทุกส่วนอยู่แล้ว · ถ้าจะเลือกให้ทีละส่วน ปิด "ผู้ดูแลระบบ" ก่อน</div>' : ''}
+    </div>
+    <div class="pm2-sec">
+      <h4>หน้า Dashboard ที่เห็น <span class="pm2-cnt">${adm || all ? 'ทุกหน้า' : `${dp.length} / ${PAGES.length} หน้า`}</span><span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>หน้า Dashboard ที่เห็น</b><br>ติ๊กหน้าที่ให้คนนี้เห็นในเมนูซ้ายของ Dashboard · ติ๊กหัวกลุ่ม = เลือก / เอาออกทั้งกลุ่ม<br>"ทุกหน้า" = รวมหน้าที่จะเพิ่มในอนาคตด้วย · ติ๊กออกบางหน้า = เปลี่ยนเป็นเลือกเองทีละหน้า<br>"แบบพนักงานทั่วไป" = ${STAFF_PAGES.length} หน้าพื้นฐาน (ภาพรวมยอดขาย / ช่องทาง / สินค้า)<br>ป้าย "เห็นต้นทุน" = หน้านั้นแสดงต้นทุนสินค้า</span></span></h4>
+      ${adm ? '' : `<div class="pm2-presets">ตั้งเร็ว: <button class="pm2-btn sm${all ? ' on' : ''}" data-act="preset" data-preset="all">ทุกหน้า</button><button class="pm2-btn sm${isStaff ? ' on' : ''}" data-act="preset" data-preset="staff">แบบพนักงานทั่วไป</button><button class="pm2-btn sm${!dp.length ? ' on' : ''}" data-act="preset" data-preset="none">ไม่ให้เลย</button></div>`}
+      <div class="pm2-groups">${groups.map(g => { const ps = PAGES.filter(p => p.group === g), n = adm ? ps.length : ps.filter(p => dp.includes(p.id)).length
+        return `<div class="pm2-g"><label class="pm2-gh"><input type="checkbox" data-grp="${esc(g)}" ${n === ps.length ? 'checked' : ''} ${n && n < ps.length ? 'data-mixed="1"' : ''} ${dis}><b>${esc(g)}</b><span>${n}/${ps.length}</span></label>${ps.map(p => { const h = PM_HINT[p.id] || {}, on = adm || dp.includes(p.id)
+          return `<label class="pm2-p"><input type="checkbox" data-page="${p.id}" ${on ? 'checked' : ''} ${adm || p.id === 'home' ? 'disabled' : ''}><span>${esc(h.name || p.name)}${h.tag ? `<em>${h.tag}</em>` : ''}${h.sub ? `<small>${h.sub}</small>` : ''}</span></label>` }).join('')}</div>` }).join('')}</div>
+    </div>`
+  ed.querySelectorAll('input[data-mixed]').forEach(x => { x.indeterminate = true })
 }
 
+// อัปเดตบนจอทันที แล้วบันทึกตามลำดับ
+function pmApply(uid, patch, okMsg) {
+  const u = pmUsers.find(x => x.user_id === uid); if (!u) return
+  Object.assign(u, patch); renderPmUsers()
+  pmChain = pmChain.then(() => pmSave(uid, patch, okMsg)).catch(() => loadPermsTab())
+}
 async function pmSave(uid, patch, okMsg) {
   try {
-    const u = await Auth.rpc('admin_set_permissions', { p_user_id: uid, p_pages: patch.pages ?? null, p_can_upload: patch.can_upload ?? null, p_can_admin: patch.can_admin ?? null, p_is_active: patch.is_active ?? null, p_is_admin: patch.is_admin ?? null, p_display_name: patch.display_name ?? null, p_can_edit_kpi: patch.can_edit_kpi ?? null })
-    const i = pmUsers.findIndex(x => x.user_id === uid); if (i >= 0) pmUsers[i] = u
+    await Auth.rpc('admin_set_permissions', { p_user_id: uid, p_pages: patch.pages ?? null, p_can_upload: patch.can_upload ?? null, p_can_admin: patch.can_admin ?? null, p_is_active: patch.is_active ?? null, p_is_admin: patch.is_admin ?? null, p_display_name: patch.display_name ?? null, p_can_edit_kpi: patch.can_edit_kpi ?? null })
     showToast(okMsg || 'บันทึกแล้ว')
-    return u
   } catch (e) { showToast('บันทึกไม่สำเร็จ: ' + e.message, true); throw e }
 }
+// รายการหน้าใหม่ + คงสิทธิ์ที่ไม่ใช่หน้า Dashboard (แชท / Warehouse) ไว้
+const pmKeep = (u, pages) => [...pages.filter(p => !PM_APPS.some(a => a.k === p)), ...['chat', 'warehouse'].filter(x => (u.pages || []).includes(x))]
 
 async function pmResetPassword(uid, reqId) {
   const u = pmUsers.find(x => x.user_id === uid); if (!u) return
@@ -1437,59 +1578,60 @@ async function pmResetPassword(uid, reqId) {
   } catch (e) { showToast('ตั้งรหัสไม่สำเร็จ: ' + e.message, true) }
 }
 
+document.getElementById('pmQ').addEventListener('input', e => { pmSt.q = e.target.value; pmSt.page = 1; renderPmUsers() })
 document.getElementById('tab-perms').addEventListener('click', async e => {
+  const seg = e.target.closest('button[data-seg]'); if (seg) { pmSt.seg = seg.dataset.seg; pmSt.page = 1; renderPmUsers(); return }
+  const pick = e.target.closest('button[data-pick]'); if (pick) { pmSt.sel = pick.dataset.pick; renderPmUsers(); return }
   const btn = e.target.closest('button[data-act]'); if (!btn) return
   const act = btn.dataset.act
-  const reqRow = btn.closest('tr[data-req]')
+  const reqRow = btn.closest('[data-req]')
   if (act === 'req-reset') return pmResetPassword(btn.dataset.uid, Number(reqRow.dataset.req))
   if (act === 'req-close') { try { await Auth.rpc('admin_close_reset_request', { p_id: Number(reqRow.dataset.req), p_status: 'dismissed' }); loadPermsTab() } catch (err) { showToast(err.message, true) } return }
-  const row = btn.closest('tr[data-uid], tr[data-detail]'); const uid = row.dataset.uid || row.dataset.detail
-  const u = pmUsers.find(x => x.user_id === uid); if (!u) return
-  if (act === 'toggle-pages') {
-    const ex = document.querySelector(`tr[data-detail="${uid}"]`)
-    if (ex) ex.remove(); else document.querySelector(`tr[data-uid="${uid}"]`).insertAdjacentHTML('afterend', pmDetailRow(u))
-    return
-  }
+  const uid = pmSt.sel, u = pmUsers.find(x => x.user_id === uid); if (!u) return
+  const nm = u.display_name || u.email
   if (act === 'preset') {
-    const pages = btn.dataset.preset === 'all' ? ['*'] : btn.dataset.preset === 'staff' ? [...STAFF_PAGES] : []
-    await pmSave(uid, { pages: keepWh(u, pages) }, 'บันทึกหน้าแล้ว'); renderPmUsers()
-    document.querySelector(`tr[data-uid="${uid}"]`).insertAdjacentHTML('afterend', pmDetailRow(pmUsers.find(x => x.user_id === uid)))
-    return
+    const pages = btn.dataset.preset === 'all' ? ['*'] : btn.dataset.preset === 'staff' ? ['home', ...STAFF_PAGES] : []
+    return pmApply(uid, { pages: pmKeep(u, pages) }, 'บันทึกหน้าที่เห็นแล้ว')
   }
   if (act === 'reset') return pmResetPassword(uid)
+  if (act === 'rename') {
+    const v = await uiPrompt('แก้ชื่อที่ใช้เรียก', { text: u.email, value: u.display_name || '', placeholder: 'ชื่อที่ใช้เรียก', ok: 'บันทึก' })
+    if (v === null || !v.trim() || v.trim() === u.display_name) return
+    return pmApply(uid, { display_name: v.trim() }, 'บันทึกชื่อแล้ว')
+  }
   if (act === 'toggle-active') {
-    if (u.is_active && !(await uiConfirm(`ปิดใช้งาน ${u.display_name || u.email}`, { text: 'เขาจะเข้าหน้าไหนไม่ได้เลยจนกว่าจะเปิดใหม่', ok: 'ปิดใช้งาน', tone: 'bad' }))) return
-    await pmSave(uid, { is_active: !u.is_active }); renderPmUsers(); return
+    if (u.is_active && !(await uiConfirm(`ปิดใช้งาน ${nm}`, { text: 'เขาจะเข้าหน้าไหนไม่ได้เลยจนกว่าจะเปิดใหม่ · สิทธิ์ที่ตั้งไว้ยังอยู่', ok: 'ปิดใช้งาน', tone: 'bad' }))) return
+    return pmApply(uid, { is_active: !u.is_active }, u.is_active ? 'ปิดใช้งานแล้ว' : 'เปิดใช้งานแล้ว')
   }
   if (act === 'delete') {
-    if (!(await uiConfirm(`ลบบัญชี ${u.display_name || u.email}`, { text: 'ลบถาวร · ถ้าแค่ไม่ให้เข้า ใช้ "ปิดใช้งาน" แทน', ok: 'ลบ', tone: 'bad' }))) return
-    try { await authAdmin('delete_user', uid); showToast('ลบบัญชีแล้ว'); loadPermsTab() } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message, true) }
+    if (!(await uiConfirm(`ลบบัญชี ${nm}`, { text: 'ลบถาวร · ถ้าแค่ไม่ให้เข้า ใช้ "ปิดใช้งาน" แทน', ok: 'ลบ', tone: 'bad' }))) return
+    try { await authAdmin('delete_user', uid); showToast('ลบบัญชีแล้ว'); pmSt.sel = null; loadPermsTab() } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message, true) }
   }
 })
 document.getElementById('tab-perms').addEventListener('change', async e => {
-  const el = e.target
-  const row = el.closest('tr[data-uid], tr[data-detail]'); if (!row) return
-  const uid = row.dataset.uid || row.dataset.detail
-  if (el.dataset.page) {           // ติ๊กหน้าในตารางย่อย
-    const pages = [...row.querySelectorAll('input[data-page]:checked')].map(x => x.dataset.page)
-    await pmSave(uid, { pages: keepWh(pmUsers.find(x => x.user_id === uid), pages) }, 'บันทึกหน้าแล้ว')
-    const main = document.querySelector(`tr[data-uid="${uid}"] td:nth-child(3)`); if (main) main.firstChild.textContent = pageCount(pmUsers.find(x => x.user_id === uid)) + ' '
-    return
-  }
-  if (el.dataset.f === 'is_admin') {   // (2026-10-20) ผู้ดูแลระบบ (สิทธิ์เต็ม)
-    const u = pmUsers.find(x => x.user_id === uid), nm = u ? (u.display_name || u.email) : ''
+  const el = e.target, ed = el.closest('#pmEd'); if (!ed) return
+  const uid = pmSt.sel, u = pmUsers.find(x => x.user_id === uid); if (!u) return
+  const nm = u.display_name || u.email
+  if (el.dataset.f === 'is_admin') {
     const ok = await uiConfirm(el.checked ? `ให้ ${nm} เป็นผู้ดูแลระบบ` : `ถอดสิทธิ์ผู้ดูแลระบบของ ${nm}`,
-      { text: el.checked ? 'เห็นทุกหน้า และเปิด / ปิดสิทธิ์ของทุกคนได้' : 'กลับไปใช้สิทธิ์ตามที่ติ๊กไว้ในแถวนี้', ok: el.checked ? 'ให้สิทธิ์' : 'ถอดสิทธิ์', tone: el.checked ? 'pri' : 'bad' })
+      { text: el.checked ? 'ใช้ได้ทุกส่วน ทุกหน้า และตั้งสิทธิ์ของทุกคนได้' : 'กลับไปใช้สิทธิ์ตามที่เลือกไว้ในหน้านี้', ok: el.checked ? 'ให้สิทธิ์' : 'ถอดสิทธิ์', tone: el.checked ? 'pri' : 'bad' })
     if (!ok) { el.checked = !el.checked; return }
-    try { await pmSave(uid, { is_admin: el.checked }, el.checked ? 'ให้สิทธิ์ผู้ดูแลระบบแล้ว' : 'ถอดสิทธิ์ผู้ดูแลระบบแล้ว') } catch (err) { el.checked = !el.checked; return }
-    renderPmUsers(); return
+    return pmApply(uid, { is_admin: el.checked }, el.checked ? 'ให้สิทธิ์ผู้ดูแลระบบแล้ว' : 'ถอดสิทธิ์ผู้ดูแลระบบแล้ว')
   }
-  if (el.dataset.f === 'can_upload' || el.dataset.f === 'can_admin' || el.dataset.f === 'can_edit_kpi') await pmSave(uid, { [el.dataset.f]: el.checked })
-  if (el.dataset.f === 'warehouse') {   // (2026-11-23) เพิ่ม / ถอด 'warehouse' ในรายการหน้า โดยไม่แตะหน้าอื่น
-    const u = pmUsers.find(x => x.user_id === uid), cur = (u?.pages || []).filter(p => p !== 'warehouse')
-    try { await pmSave(uid, { pages: el.checked ? [...cur, 'warehouse'] : cur }, el.checked ? 'เปิดสิทธิ์ Warehouse แล้ว' : 'ปิดสิทธิ์ Warehouse แล้ว') } catch (err) { el.checked = !el.checked }
+  if (el.dataset.app) {
+    const a = PM_APPS.find(x => x.k === el.dataset.app), on = el.checked
+    if (a.k === 'chat' || a.k === 'warehouse') {   // เก็บเป็นชื่อในรายการหน้า โดยไม่แตะหน้าอื่น
+      const cur = (u.pages || []).filter(p => p !== a.k)
+      return pmApply(uid, { pages: on ? [...cur, a.k] : cur }, `${on ? 'เปิด' : 'ปิด'}สิทธิ์ ${a.name} แล้ว`)
+    }
+    return pmApply(uid, { [a.k]: on }, `${on ? 'เปิด' : 'ปิด'}สิทธิ์ ${a.name} แล้ว`)
   }
-  if (el.dataset.f === 'name') await pmSave(uid, { display_name: el.value.trim() }, 'บันทึกชื่อแล้ว')
+  if (el.dataset.grp || el.dataset.page) {
+    if (el.dataset.grp) ed.querySelectorAll(`input[data-page]`).forEach(x => { if ((PAGES.find(p => p.id === x.dataset.page) || {}).group === el.dataset.grp) x.checked = el.checked })
+    const pages = [...ed.querySelectorAll('input[data-page]:checked')].map(x => x.dataset.page).filter(p => p !== 'home')
+    if (pages.length) pages.unshift('home')   // มีหน้าอื่น = เห็นหน้าแรกด้วยเสมอ
+    return pmApply(uid, { pages: pmKeep(u, pages.length === PAGES.length && hasAll(u) ? ['*'] : pages) }, 'บันทึกหน้าที่เห็นแล้ว')
+  }
 })
 
 // ===== สลับแท็บ =====

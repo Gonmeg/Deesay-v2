@@ -289,7 +289,7 @@
     setT('sbName', name);
     setT('sbRole', p.is_admin ? 'ผู้ดูแลระบบ' : (p.email || 'ผู้ใช้งาน'));
     setT('sbAv', (name.trim()[0] || '·').toUpperCase());
-    { const h = document.getElementById('sbHub'); if (h && (p.is_admin || (p.pages || []).includes('warehouse')) && !(WH && !(p.is_admin || (p.pages || []).some(x => x !== 'warehouse') || p.can_upload || p.can_admin || p.can_edit_kpi))) h.style.display = ''; }   // (2026-11-26) หน้า Warehouse: มีสิทธิ์แค่ Warehouse = ไม่มีปุ่มหน้าหลัก (หน้าหลักพากลับมาที่นี่อยู่แล้ว)   // สิทธิ์ Warehouse = ผู้ดูแลระบบ หรือติ๊กช่อง Warehouse (ตรงกับ auth.js / hub.html)
+    { const h = document.getElementById('sbHub'); if (h && Auth.apps && Auth.apps(p).count >= 2) h.style.display = ''; }   // (2026-11-27) เข้าได้ตั้งแต่ 2 ระบบ (Dashboard / Warehouse / แชท Facebook) = มีปุ่มหน้าหลัก · ตรงกับ hub.html   // (2026-11-26) หน้า Warehouse: มีสิทธิ์แค่ Warehouse = ไม่มีปุ่มหน้าหลัก (หน้าหลักพากลับมาที่นี่อยู่แล้ว)   // สิทธิ์ Warehouse = ผู้ดูแลระบบ หรือติ๊กช่อง Warehouse (ตรงกับ auth.js / hub.html)
     if (DASH) return;   // dashboard กรองเมนูเองใน applyPermissions() (โค้ดเดิม)
     document.querySelectorAll('.sb-nav [data-page]').forEach(el => { if (Auth.canPage && !Auth.canPage(el.dataset.page)) el.remove(); });
     document.querySelectorAll('.sb-nav .sb-subs').forEach(g => { if (!g.querySelector('.nav-item')) { g.previousElementSibling && g.previousElementSibling.remove(); g.remove(); } });
