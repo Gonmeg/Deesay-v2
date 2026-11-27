@@ -45,7 +45,7 @@
   (async function init() {
     try { S.perm = await Auth.require('chat'); } catch (e) { return; }
     bindViews(); bindInbox(); bindOrders();
-    loadAddr();
+    loadAddr(); loadAllTags();
     Promise.all([Auth.rpc('chat_products'), Auth.rpc('chat_combo_prices')]).then(([p, c]) => {
       S.products = p || []; S.prodBy = {}; S.parentName = {};
       for (const x of S.products) { S.prodBy[x.sku] = x; if (!S.parentName[x.parent]) S.parentName[x.parent] = x.pname || x.name; }
@@ -90,6 +90,7 @@
     $('fQ').oninput = () => { clearTimeout(qt); qt = setTimeout(() => { S.q = $('fQ').value.trim(); S.list = []; S.more = true; loadList(true); }, 400); };
     $('lst').onclick = e => {
       const more = e.target.closest('#lstMore'); if (more) { loadList(false); return; }
+      const tq = e.target.closest('[data-tq]'); if (tq) { $('fQ').value = '#' + tq.dataset.tq; S.q = $('fQ').value; S.list = []; S.more = true; loadList(true); return; }   // กดแท็ก = ค้นหาแท็กนี้
       const it = e.target.closest('.it'); if (!it) return;
       openThread(it.dataset.page, it.dataset.psid, false);
     };
@@ -140,7 +141,7 @@
         <div class="av">${esc(initials(t.name))}</div>
         <div class="bd"><div class="r1"><span class="nm">${esc(t.name || 'ลูกค้า ··' + String(t.psid).slice(-4))}</span>${tm}</div>
           <div class="r2"><span class="tag pg" style="--c:${esc(t.page_color || 'var(--ch-facebook)')}" title="${esc(pgName(t.page_id) || t.page_label || '')}"><span>${esc(pgName(t.page_id) || t.page_label || t.page_id)}</span></span>${ad}</div>
-          <div class="pv">${esc(t.preview || '')}</div></div></div>`;
+          <div class="pv">${esc(t.preview || '')}</div>${(t.tags || []).length ? `<div class="r3">${t.tags.slice(0, 3).map(g => `<button type="button" class="tgs" data-tq="${esc(g)}" title="ค้นหาแท็กนี้">#${esc(g)}</button>`).join('')}${t.tags.length > 3 ? `<span class="tgs more">+${t.tags.length - 3}</span>` : ''}</div>` : ''}</div></div>`;
     }).join('') + (S.more ? `<div class="lst-more"><button class="wh-btn" id="lstMore">โหลดแชทเก่าเพิ่ม</button></div>` : '');
   }
 
@@ -155,7 +156,7 @@
       const changed = !silent || last !== S.lastMsgId;
       S.thread = d; S.lastMsgId = last;
       if (changed) { renderThread(!silent || !same); }
-      if (!silent || !same) renderForm();
+      if (!silent || !same) { renderForm(); renderTags(); }
       syncComposer(!silent || !same);
     } catch (e) { if (!silent) $('msgs').innerHTML = `<div class="empty">เปิดแชทไม่ได้<br>${esc(e.message)}</div>`; }
   }
@@ -215,9 +216,19 @@
     if (scrollBottom || atBottom) box.scrollTop = box.scrollHeight;
   }
 
+  async function fnCall(name, body) {
+    const r = await fetch(window.SUPABASE_URL + '/functions/v1/' + name, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Auth.token(), apikey: window.SUPABASE_ANON_KEY }, body: JSON.stringify(body) });
+    let j = null; try { j = await r.json(); } catch (e) {}
+    if (!r.ok || !j || j.error) throw new Error((j && (j.error || j.message)) || ('เชื่อมต่อไม่ได้ (' + r.status + ')'));
+    return j;
+  }
+  function showImg(url) { $('lb').querySelector('img').src = url; $('lb').classList.add('on'); }
+
   // ───── ตอบแชท (Edge Function fb-inbox-send) ─────
   // Meta: ตอบจากระบบได้ภายใน 24 ชม. หลังลูกค้าทักล่าสุด · แชทที่เริ่มจากกด Ads อาจได้ถึง 7 วัน (Meta ตัดสินสุดท้าย ส่งไม่ได้จะแจ้งกลับ)
-  S.cmp = {}; S.sending = false;
+  // (2026-11-27) แนบรูป (jpg / png / gif ไม่เกิน 5 MB) + อีโมจิ (เมฆขอ)
+  S.cmp = {}; S.cmpImg = {}; S.sending = false;
+  const EMO = ['🙏', '😊', '🥰', '😍', '😘', '🤗', '😄', '😂', '😅', '🥺', '🙇‍♀️', '👍', '👌', '👇', '👉', '💖', '💕', '💜', '💙', '❤️', '✨', '🌸', '🎁', '🎉', '🔥', '⭐', '💯', '✅', '‼️', '❗', '🚚', '📦', '🛒', '💰', '💳', '📍', '📞', '⏰', '💄', '🧴'];
   function winOf(t, ad) {
     const now = Date.now(), lastIn = t.last_in_at ? new Date(t.last_in_at).getTime() : 0, left = lastIn + 864e5 - now;
     if (lastIn && left > 0) return { open: true, cls: left < 3600e3 ? 'warn' : '', txt: `ตอบได้อีก ${left >= 3600e3 ? Math.floor(left / 3600e3) + ' ชม. ' : ''}${Math.floor((left % 3600e3) / 60e3)} นาที` };
@@ -227,41 +238,117 @@
   }
   function syncComposer(reset) {
     const tx = $('cmpTx'), bt = $('cmpBtn'), nt = $('cmpNote'); if (!tx || !S.thread) return;
-    const k = keyOf(), w = winOf(S.thread.thread, S.thread.ad);
-    if (reset) tx.value = S.cmp[k] || '';
+    const k = keyOf(), w = winOf(S.thread.thread, S.thread.ad), img = S.cmpImg[k];
+    if (reset) { tx.value = S.cmp[k] || ''; $('emoPop').classList.remove('on'); }
     tx.disabled = !w.open || S.sending;
+    $('emoBtn').disabled = $('imgBtn').disabled = !w.open || S.sending;
     tx.placeholder = w.open ? 'พิมพ์ข้อความตอบลูกค้า · Enter ส่ง · Shift + Enter ขึ้นบรรทัดใหม่' : 'ตอบจากหน้านี้ไม่ได้แล้ว — กด "เปิดใน Facebook" ด้านบน';
-    bt.disabled = !w.open || S.sending || !tx.value.trim();
+    bt.disabled = !w.open || S.sending || (!tx.value.trim() && !img);
     bt.textContent = S.sending ? 'กำลังส่ง…' : 'ส่ง';
     nt.className = w.cls; nt.textContent = w.txt;
     const n = tx.value.length; $('cmpCnt').textContent = n > 1500 ? `${num(n)} / 2,000` : '';
+    const att = $('cmpAtt');
+    att.innerHTML = img && w.open ? `<div class="att-chip"><img src="${esc(img.data)}" alt=""><span>${esc(img.name)}<small>รูปจะส่งก่อนข้อความ</small></span><button type="button" id="attDel" title="เอาออก" aria-label="เอารูปออก">×</button></div>` : '';
+    att.style.display = att.innerHTML ? '' : 'none';
+  }
+  function insertAtCursor(tx, s) {
+    const a = tx.selectionStart ?? tx.value.length, b = tx.selectionEnd ?? a;
+    tx.value = tx.value.slice(0, a) + s + tx.value.slice(b); tx.focus(); tx.setSelectionRange(a + s.length, a + s.length);
+    S.cmp[keyOf()] = tx.value; syncComposer(false);
   }
   (function bindComposer() {
-    const tx = $('cmpTx');
+    const tx = $('cmpTx'), pop = $('emoPop');
+    pop.innerHTML = EMO.map(e => `<button type="button" data-emo="${e}">${e}</button>`).join('');
     tx.addEventListener('input', () => { S.cmp[keyOf()] = tx.value; syncComposer(false); });
-    tx.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); sendMsg(); } });
+    tx.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); sendMsg(); } else if (e.key === 'Escape') pop.classList.remove('on'); });
+    tx.addEventListener('paste', e => {   // วางรูปจากคลิปบอร์ด = แนบรูป
+      const it = [...(e.clipboardData && e.clipboardData.items || [])].find(x => x.kind === 'file' && /^image\//.test(x.type));
+      if (it) { e.preventDefault(); pickImage(it.getAsFile()); }
+    });
+    $('emoBtn').onclick = () => pop.classList.toggle('on');   // กดซ้ำ = ปิด
+    pop.onclick = e => { const b = e.target.closest('[data-emo]'); if (b) insertAtCursor(tx, b.dataset.emo); };
+    document.addEventListener('click', e => { if (!e.target.closest('#emoPop, #emoBtn')) pop.classList.remove('on'); });
+    $('imgBtn').onclick = () => $('cmpFile').click();
+    $('cmpFile').onchange = () => { const f = $('cmpFile').files[0]; $('cmpFile').value = ''; if (f) pickImage(f); };
+    $('cmpAtt').onclick = e => { if (e.target.closest('#attDel')) { delete S.cmpImg[keyOf()]; syncComposer(false); } else if (e.target.closest('img')) showImg(S.cmpImg[keyOf()].data); };
     $('cmpBtn').onclick = sendMsg;
   })();
+  function pickImage(file) {
+    if (!S.thread || !winOf(S.thread.thread, S.thread.ad).open) return;
+    if (!/^image\/(jpeg|png|gif)$/.test(file.type)) { uiAlert('แนบรูปไม่ได้', { text: 'ส่งได้เฉพาะรูป jpg / png / gif', tone: 'bad' }); return; }
+    if (file.size > 5 * 1024 * 1024) { uiAlert('แนบรูปไม่ได้', { text: 'รูปใหญ่เกิน 5 MB', tone: 'bad' }); return; }
+    const k = keyOf(), rd = new FileReader();
+    rd.onload = () => { S.cmpImg[k] = { data: rd.result, name: file.name || 'รูปจากคลิปบอร์ด' }; if (keyOf() === k) { syncComposer(false); $('cmpTx').focus(); } };
+    rd.readAsDataURL(file);
+  }
   async function sendMsg() {
-    const tx = $('cmpTx'), text = tx.value.trim();
-    if (!S.thread || S.sending || !text || !winOf(S.thread.thread, S.thread.ad).open) return;
-    const { page_id, psid } = S.thread.thread, k = keyOf();
-    S.sending = true; syncComposer(false);
-    const box = $('msgs'), tmp = document.createElement('div');
-    tmp.className = 'b out sending'; tmp.textContent = text; box.appendChild(tmp); box.scrollTop = box.scrollHeight;
+    const tx = $('cmpTx'), text = tx.value.trim(), k = keyOf(), img = S.cmpImg[k];
+    if (!S.thread || S.sending || (!text && !img) || !winOf(S.thread.thread, S.thread.ad).open) return;
+    const { page_id, psid } = S.thread.thread;
+    S.sending = true; syncComposer(false); $('emoPop').classList.remove('on');
+    const box = $('msgs'), tmps = [];
+    const bubble = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; box.appendChild(d); tmps.push(d); box.scrollTop = box.scrollHeight; return d; };
+    if (img) bubble('b att out sending', `<img src="${esc(img.data)}" alt="">`);
+    if (text) bubble('b out sending', esc(text));
+    let sentImg = false;
     try {
-      const r = await fetch(window.SUPABASE_URL + '/functions/v1/fb-inbox-send', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Auth.token(), apikey: window.SUPABASE_ANON_KEY }, body: JSON.stringify({ page_id, psid, text }) });
-      let j = null; try { j = await r.json(); } catch (e) {}
-      if (!r.ok || !j || !j.ok) throw new Error((j && (j.error || j.message)) || ('เชื่อมต่อไม่ได้ (' + r.status + ')'));
-      S.cmp[k] = ''; if (keyOf() === k) tx.value = '';
-      S.sending = false; tmp.classList.remove('sending');
-      if (S.sel && S.sel.page_id === page_id && S.sel.psid === psid) { S.lastMsgId = null; await openThread(page_id, psid, true); }   // วาดแชทใหม่จากฐานข้อมูล (ข้อความที่ส่งบันทึกแล้ว)
+      if (img) { await fnCall('fb-inbox-send', { page_id, psid, image: img.data }); sentImg = true; delete S.cmpImg[k]; }
+      if (text) { await fnCall('fb-inbox-send', { page_id, psid, text }); S.cmp[k] = ''; if (keyOf() === k) tx.value = ''; }
+      S.sending = false; tmps.forEach(t => t.classList.remove('sending'));
+      if (S.sel && S.sel.page_id === page_id && S.sel.psid === psid) {   // วาดแชทใหม่จากฐานข้อมูล (รูปรอข้อความสะท้อนจาก Meta ~1–2 วิ)
+        S.lastMsgId = null; await openThread(page_id, psid, true);
+        if (img) setTimeout(() => { if (S.sel && S.sel.psid === psid) { S.lastMsgId = null; openThread(page_id, psid, true); } }, 2500);
+      }
       loadList(true, true);
     } catch (e) {
-      tmp.remove(); S.sending = false;
-      uiAlert('ส่งข้อความไม่สำเร็จ', { text: e.message, tone: 'bad' });
+      tmps.forEach(t => t.remove()); S.sending = false;
+      uiAlert(sentImg ? 'ส่งรูปแล้ว แต่ข้อความยังไม่ได้ส่ง' : 'ส่งไม่สำเร็จ', { text: e.message, tone: 'bad' });
+      if (sentImg && S.sel && S.sel.psid === psid) { S.lastMsgId = null; openThread(page_id, psid, true); }
     } finally { S.sending = false; syncComposer(false); if (keyOf() === k) tx.focus(); }
   }
+
+  // ───── แฮชแท็กลูกค้า (เมฆขอ 27 พ.ย.) — ติดที่แชท (เพจ + ลูกค้า) · ค้นหาในรายการแชทด้วย #แท็ก ─────
+  S.allTags = [];
+  function loadAllTags() { Auth.rpc('chat_tags_all').then(r => { S.allTags = r || []; }).catch(() => {}); }
+  function renderTags() {
+    const bar = $('tagBar'); if (!S.thread) { bar.innerHTML = ''; return; }
+    const tags = S.thread.thread.tags || [];
+    bar.innerHTML = `<span class="tg-l">แท็ก <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>แท็กลูกค้า</b><br>ติดป้ายให้ลูกค้าคนนี้ (ในเพจนี้) เช่น #สนใจแต่ยังไม่ซื้อ · #VIP · #ส่งของแล้ว — ทุกคนที่ใช้หน้าแชทเห็นเหมือนกัน<br>ค้นหา: พิมพ์ # ตามด้วยชื่อแท็กในช่องค้นหาด้านซ้าย หรือกดแท็กในรายการแชท · ติดได้ไม่เกิน 10 แท็กต่อคน</span></span></span>
+      ${tags.map((t, i) => `<span class="tg">#${esc(t)}<button type="button" data-tdel="${i}" title="เอาแท็กออก" aria-label="เอาแท็กออก">×</button></span>`).join('')}
+      <span class="tg-add"><button type="button" class="lnk" id="tgAddBtn">+ เพิ่มแท็ก</button><span class="tg-in" id="tgIn" style="display:none"><input class="wh-in" id="tgTx" placeholder="#พิมพ์แท็ก แล้วกด Enter" maxlength="41" autocomplete="off"><span class="tg-sug" id="tgSug"></span></span></span>`;
+  }
+  async function setTags(tags) {
+    const t = S.thread.thread, k = keyOf();
+    try {
+      const r = await Auth.rpc('chat_tags_set', { p_page: t.page_id, p_psid: t.psid, p_tags: tags });
+      if (keyOf() !== k) return;
+      t.tags = r || [];
+      const li = S.list.find(x => x.page_id === t.page_id && x.psid === t.psid); if (li) { li.tags = t.tags; renderList(); }
+      renderTags(); loadAllTags();
+    } catch (e) { uiAlert('บันทึกแท็กไม่ได้', { text: e.message, tone: 'bad' }); }
+  }
+  (function bindTags() {
+    const bar = $('tagBar');
+    const sug = () => {
+      const q = ($('tgTx').value || '').replace(/^[#＃\s]+/, '').trim().toLowerCase(), have = new Set((S.thread.thread.tags || []).map(x => x.toLowerCase()));
+      const hits = S.allTags.filter(x => !have.has(x.tag.toLowerCase()) && (!q || x.tag.toLowerCase().includes(q))).slice(0, 8);
+      $('tgSug').innerHTML = hits.map(x => `<button type="button" data-tadd="${esc(x.tag)}">#${esc(x.tag)} <small>${num(x.n)}</small></button>`).join('');
+      $('tgSug').style.display = hits.length ? '' : 'none';
+    };
+    const add = v => { v = String(v || '').replace(/^[#＃\s]+/, '').trim(); if (!v) return; const cur = S.thread.thread.tags || []; if (cur.some(x => x.toLowerCase() === v.toLowerCase())) { renderTags(); return; } setTags([...cur, v]); };
+    bar.addEventListener('click', e => {
+      const d = e.target.closest('[data-tdel]'); if (d) { const cur = [...(S.thread.thread.tags || [])]; cur.splice(Number(d.dataset.tdel), 1); setTags(cur); return; }
+      const a = e.target.closest('[data-tadd]'); if (a) { add(a.dataset.tadd); return; }
+      if (e.target.id === 'tgAddBtn') { $('tgAddBtn').style.display = 'none'; $('tgIn').style.display = ''; $('tgTx').focus(); sug(); }
+    });
+    bar.addEventListener('input', e => { if (e.target.id === 'tgTx') sug(); });
+    bar.addEventListener('keydown', e => {
+      if (e.target.id !== 'tgTx') return;
+      if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); add(e.target.value); }
+      else if (e.key === 'Escape') renderTags();
+    });
+    bar.addEventListener('focusout', e => { if (e.target.id === 'tgTx') setTimeout(() => { if (!bar.contains(document.activeElement) && $('tgIn') && $('tgIn').style.display !== 'none' && !$('tgTx').value.trim()) renderTags(); }, 200); });
+  })();
 
   // ───── ที่อยู่: ฐานข้อมูลไปรษณีย์ + แยกที่อยู่จากข้อความ ─────
   async function loadAddr() {
@@ -300,9 +387,20 @@
     let ni = lines.findIndex(l => isName(l) && pref.test(l)); if (ni < 0) ni = lines.findIndex(isName);
     let name = '', rest;
     if (ni >= 0) { name = lines[ni]; rest = lines.filter((_, i) => i !== ni); }
-    else {   // ข้อความบรรทัดเดียว: ชื่อ = ข้อความก่อนตัวเลขตัวแรก
-      const one = lines.join(' '), m = one.match(/^([^\d]*?)\s*(?=\d)/);
-      if (m && m[1] && !new RegExp('(^|\\s)' + MARK).test(m[1])) { name = m[1]; rest = [one.slice(m[0].length)]; } else rest = [one];
+    else {   // ข้อความบรรทัดเดียว (ชื่ออยู่ตรงไหนก็ได้): ชื่อ = กลุ่มคำที่ไม่มีตัวเลข ไม่ใช่คำบอกที่อยู่ / ตำบล อำเภอ จังหวัด / คำลงท้าย
+      const one = lines.join(' '), tk = one.split(/\s+/).filter(Boolean);
+      const KW = /^(ม\.|หมู่|ซ\.|ซอย|ถ\.|ถนน|ต\.|ตำบล|แขวง|อ\.|อำเภอ|เขต|จ\.|จังหวัด|กทม|กรุงเทพ|บ้านเลขที่|เลขที่|ที่อยู่|ส่ง|อาคาร|คอนโด|ชั้น)/;
+      const BARE = /^(ม\.|หมู่|หมู่บ้าน|ซ\.|ซอย|ถ\.|ถนน|อาคาร|คอนโด)$/, END = /^(เก็บ|ปลายทาง|cod|โอน|ค่ะ|คะ|ครับ|นะ|จ้า|ด้วย)/i;
+      const place = w => best && [best.sub, best.dist, best.prov].some(p => w.replace(/^(ต\.|อ\.|จ\.|แขวง|เขต|ตำบล|อำเภอ|จังหวัด)/, '') === p || w.includes(p));
+      const runs = []; let cur = [], skip = false;
+      tk.forEach((w, i) => {
+        const bad = /\d/.test(w) || KW.test(w) || place(w) || END.test(w) || skip;
+        skip = BARE.test(w);
+        if (bad) { if (cur.length) runs.push(cur); cur = []; } else cur.push(i);
+      });
+      if (cur.length) runs.push(cur);
+      const pick = runs.find(r => pref.test(tk[r[0]])) || runs.find(r => r.length <= 4);
+      if (pick) { name = pick.map(i => tk[i]).join(' '); rest = [tk.filter((_, i) => !pick.includes(i) && !END.test(tk[i])).join(' ')]; } else rest = [one];
     }
     name = name.replace(/^(ชื่อ(ผู้รับ)?|ผู้รับ)\s*[:：]?\s*/, '').replace(/^(คุณ|k\.)\s*/i, '').replace(/[,，:：\-]+$/, '').trim();
     let line = rest.filter(l => !ORDERW.test(l)).join(' ');
@@ -372,7 +470,7 @@
     const done = (n === 1 && c.s1) || (n === 2 && c.s1) || (n === 3 && c.s3);
     const H = {
       1: ['ตะกร้า', f.lines.length ? c.itemsTx : 'ค้นหาสินค้าแล้วกดใส่ตะกร้า', f.step !== 1 && f.lines.length ? `<span class="amt">${num(f.price)}</span><span class="ed">แก้</span>` : ''],
-      2: ['การชำระเงิน', f.pay + (f.pay === PAYS[0] ? ' · ยอดเก็บ ' + num(c.total) : ''), f.step !== 2 ? '<span class="ed">แก้</span>' : ''],
+      2: ['การชำระเงิน', f.pay + (f.pay === PAYS[0] ? ' · ยอดเก็บ ' + num(c.total) : f.slip ? ' · แนบสลิปแล้ว' : ' · ยังไม่แนบสลิป'), f.step !== 2 ? '<span class="ed">แก้</span>' : ''],
       3: ['ที่อยู่จัดส่ง', c.s3 ? `${f.name} · ${f.sub} ${f.dist} ${f.prov} ${f.zip}` : f.autoFilledFrom ? 'ระบบแยกให้แล้ว ตรวจอีกครั้ง' : 'ชื่อ เบอร์ ที่อยู่ผู้รับ', f.step !== 3 && c.s3 ? '<span class="ed">แก้</span>' : ''],
       4: ['ตรวจแล้วสร้าง', 'เพจ · พนักงานขาย · Ads ระบบใส่ให้เอง', ''],
     }[n];
@@ -390,7 +488,25 @@
       <div class="kv"><span>ชื่อเฟซลูกค้า</span><b>${esc(t.name || '—')}</b></div>
       <div class="kv"><span>มาจาก Ads</span><b>${ad ? esc((ad.title || ad.ad_id) + (ad.product ? ' · ' + ad.product : '')) : 'ไม่ได้มาจาก Ads'}</b></div>
       <div class="kv"><span>สินค้า</span><b>${esc(f.lines.length ? c.itemsTx : '—')}</b></div>
-      <div class="kv"><span>${f.pay === PAYS[0] ? 'ยอดเก็บปลายทาง' : 'ยอดโอน'}</span><b>${num(c.total)}</b></div>`;
+      <div class="kv"><span>${f.pay === PAYS[0] ? 'ยอดเก็บปลายทาง' : 'ยอดโอน'}</span><b>${num(c.total)}</b></div>${f.pay === PAYS[1] ? `<div class="kv"><span>สลิป</span><b>${f.slip ? 'แนบแล้ว' : 'ยังไม่แนบ'}</b></div>` : ''}`;
+  }
+
+  // สลิปโอนเงิน: เลือกรูปที่ลูกค้าส่งในแชท หรืออัปโหลดจากเครื่อง → เก็บสำเนาไว้ในระบบ (Edge Function chat-slip · ลิงก์รูปของ Facebook หมดอายุเองได้)
+  function slipHtml(f) {
+    if (f.slipBusy) return '<div class="slip"><div class="slip-h">สลิปโอนเงิน</div><div class="chk">กำลังแนบสลิป…</div></div>';
+    if (f.slip) return `<div class="slip"><div class="slip-h">สลิปโอนเงิน</div><div class="slip-sel"><button type="button" class="slip-img" id="slipView" title="กดดูรูปเต็ม"><img src="${esc(f.slip.src || f.slip.url || '')}" alt="สลิปที่แนบ"></button><div>✓ แนบแล้ว · <button type="button" class="lnk" id="slipView2">ดูรูปเต็ม</button> · <button type="button" class="lnk" id="slipDel">เอาออก</button></div></div></div>`;
+    const imgs = [];
+    for (const m of [...((S.thread && S.thread.messages) || [])].reverse()) { if (m.dir !== 'in') continue; (m.att || []).forEach((a, i) => { if (a.type === 'image' && a.url && imgs.length < 6) imgs.push({ id: m.id, i, url: a.url, at: m.at }); }); }
+    return `<div class="slip"><div class="slip-h">สลิปโอนเงิน <small>(ถ้ามี)</small> <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>แนบสลิป</b><br>กดรูปที่ลูกค้าส่งในแชทนี้ (ใหม่สุดอยู่ซ้าย) หรืออัปโหลดรูปจากเครื่อง (jpg / png / webp ไม่เกิน 5 MB)<br>ระบบเก็บสำเนาไว้กับคำสั่งซื้อ ดูย้อนหลังได้ที่ "ออเดอร์จากแชท" (รูปในแชท Facebook หมดอายุเองได้)</span></span></div>
+      ${imgs.length ? `<div class="slip-pick">${imgs.map(x => `<button type="button" data-slipmsg="${x.id}" data-idx="${x.i}" data-src="${esc(x.url)}" title="รูปจากลูกค้า ${esc(fmtWhen(x.at))}"><img src="${esc(x.url)}" alt="" loading="lazy"></button>`).join('')}</div>` : '<div class="chk">ลูกค้ายังไม่ได้ส่งรูปในแชทนี้</div>'}
+      <label class="wh-btn sm slip-up">อัปโหลดจากเครื่อง<input type="file" id="slipFile" accept="image/jpeg,image/png,image/webp" hidden></label></div>`;
+  }
+  async function attachSlip(f, body, src) {
+    if (f.slipBusy) return;
+    f.slipBusy = true; renderForm();
+    try { const r = await fnCall('chat-slip', body); f.slip = { path: r.path, url: r.url, src }; }
+    catch (e) { uiAlert('แนบสลิปไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
+    finally { f.slipBusy = false; if (f === S.drafts[keyOf()]) renderForm(); }
   }
 
   function renderForm() {
@@ -432,6 +548,7 @@
     h += `<div class="stp-b${f.step === 2 ? ' on' : ''}">
       <div class="seg">${PAYS.map(p => `<button type="button" data-pay="${esc(p)}" class="${f.pay === p ? 'on' : ''}">${p === PAYS[1] ? 'โอนเงิน' : p}</button>`).join('')}</div>
       <div class="pay-note" id="payNote">${payNoteHtml(f, c)}</div>
+      ${f.pay === PAYS[1] ? slipHtml(f) : ''}
       <div style="text-align:right;margin-top:8px"><button type="button" class="wh-btn" data-go="3">ต่อไป</button></div>
     </div>`;
     // ③ ที่อยู่จัดส่ง
@@ -506,6 +623,9 @@
       const shd = e.target.closest('[data-shade]'); if (shd) { if (shd.disabled) return; const l = f.lines[shd.dataset.shade]; l.sku = shd.dataset.sku; mergeLines(f); afterLines(f); return; }
       const pay = e.target.closest('[data-pay]'); if (pay) { f.pay = pay.dataset.pay; f.payFrom = ''; renderForm(); return; }
       const oa = e.target.closest('[data-oa]'); if (oa) { const a = f.cust.addresses[oa.dataset.oa]; Object.assign(f, { name: a.name, line: a.line, sub: a.sub, dist: a.dist, prov: a.prov, zip: a.zip }); renderForm(); return; }
+      const sp0 = e.target.closest('[data-slipmsg]'); if (sp0) { attachSlip(f, { action: 'from_chat', msg_id: Number(sp0.dataset.slipmsg), idx: Number(sp0.dataset.idx) }, sp0.dataset.src); return; }
+      if (e.target.closest('#slipView, #slipView2')) { if (f.slip) showImg(f.slip.url || f.slip.src); return; }
+      if (e.target.closest('#slipDel')) { f.slip = null; renderForm(); return; }
       if (e.target.id === 'priceReset') { f.priceEdited = false; f.price = suggest(f.lines).price; renderForm(); return; }
       if (e.target.id === 'pasteTg') { f.pasteOpen = !f.pasteOpen; renderForm(); return; }
       if (e.target.id === 'pasteGo') { const a = parseAddress($('pasteTx').value); if (a.ok) { applyAddress(a, true, 'ที่วางเอง'); } else uiAlert('แยกที่อยู่ไม่ได้', { text: 'ต้องมีเบอร์โทรและรหัสไปรษณีย์ 5 หลักในข้อความ' }); return; }
@@ -527,6 +647,12 @@
       const items = [['', c.length ? 'เลือกตำบล' : 'ใส่รหัสไปรษณีย์ก่อน'], ...c.map(x => [x.sub + '|' + x.dist, c.filter(y => y.sub === x.sub).length > 1 ? `${x.sub} (${x.dist})` : x.sub])];
       dd(subEl, items, f.sub ? f.sub + '|' + f.dist : '', v => { const [s, d] = v.split('|'); const p = c.find(x => x.sub === s && x.dist === d); Object.assign(f, p ? { sub: p.sub, dist: p.dist, prov: p.prov } : { sub: '', dist: '', prov: '' }); renderForm(); }, '100%');
     }
+    const sf = $('slipFile'); if (sf) sf.onchange = () => {
+      const file = sf.files && sf.files[0]; sf.value = ''; if (!file) return;
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { uiAlert('แนบสลิปไม่ได้', { text: 'รับเฉพาะรูป jpg / png / webp', tone: 'bad' }); return; }
+      if (file.size > 5 * 1024 * 1024) { uiAlert('แนบสลิปไม่ได้', { text: 'รูปใหญ่เกิน 5 MB', tone: 'bad' }); return; }
+      const rd = new FileReader(); rd.onload = () => attachSlip(f, { action: 'upload', data: rd.result }, rd.result); rd.readAsDataURL(file);
+    };
     bindSearch(f);
     $('btnCreate').onclick = () => createOrder(f);
   }
@@ -606,7 +732,8 @@
         page_id: t.page_id, psid: t.psid, items: f.lines.map(l => ({ sku: l.sku, qty: l.qty })),
         subtotal: f.price, bill_discount: f.disc || 0, shipping: f.ship || 0, suggested_price: f.priceEdited ? suggest(f.lines).price : f.price,
         payment_method: f.pay, recipient_name: f.name.trim(), phone: f.phone.replace(/\D/g, ''), address_line: f.line.trim(),
-        subdistrict: f.sub, district: f.dist, province: f.prov, zipcode: f.zip, note: f.note } });
+        subdistrict: f.sub, district: f.dist, province: f.prov, zipcode: f.zip, note: f.note,
+        slip_path: f.pay === PAYS[1] && f.slip ? f.slip.path : null } });
       f.done = r;
       openThread(t.page_id, t.psid, true);
     } catch (e) { uiAlert('บันทึกไม่ได้', { text: e.message }); }
@@ -622,6 +749,7 @@
     $('oFrom').addEventListener('change', dirty); $('oTo').addEventListener('change', dirty);
     $('oGo').onclick = () => { if ($('oFrom').value > $('oTo').value) { uiAlert('ช่วงวันที่ไม่ถูกต้อง', { text: 'วันเริ่มต้องไม่เกินวันสุดท้าย' }); return; } S.oPage = 1; loadOrders(); };
     $('oXls').onclick = exportXls;
+    $('oWrap').onclick = async e => { const b = e.target.closest('[data-slip]'); if (!b) return; try { showImg((await fnCall('chat-slip', { action: 'view', path: b.dataset.slip })).url); } catch (x) { uiAlert('เปิดสลิปไม่ได้', { text: x.message, tone: 'bad' }); } };
     $('oPgBtns').onclick = e => { const b = e.target.closest('button[data-p]'); if (b) { S.oPage += Number(b.dataset.p); renderOrders(); window.scrollTo(0, 0); } };
     $('oPgSize').onclick = e => { const b = e.target.closest('button[data-v]'); if (!b) return; S.oSize = Number(b.dataset.v); try { localStorage.setItem('chat_page_size', String(S.oSize)); } catch (e2) {} S.oPage = 1; renderOrders(); };
   }
@@ -643,7 +771,7 @@
     const payShort = p => p === PAYS[0] ? 'เก็บปลายทาง' : p === PAYS[1] ? 'โอนเงิน' : p;
     $('oWrap').innerHTML = `<table class="or-t"><thead><tr><th>เลขที่ / เวลา</th><th>เพจ</th><th>ผู้รับ</th><th>สินค้า</th><th>ยอดรวมสินค้า</th><th>ส่วนลดท้ายบิล</th><th>ค่าส่ง</th><th>รวมทั้งสิ้น</th><th>ชำระเงิน</th><th>พนักงานขาย</th></tr></thead><tbody>${part.map(o => `<tr>
       <td class="nw">${esc(o.order_no)}<small>${esc(fmtWhen(o.created_at))}</small></td><td class="nw" title="${esc(o.sub_channel)}">${esc(pgLabel(o.sub_channel))}</td><td class="l nw">${esc(o.recipient_name)}<small>${esc(o.phone)} · ${esc(o.province)}</small></td><td class="l it2" title="${esc(o.sku_promotion_child)}">${esc(items(o.sku_promotion_child))}</td>
-      <td>${num(o.subtotal)}</td><td>${num(o.bill_discount)}</td><td>${num(o.shipping)}</td><td><b>${num(o.total)}</b></td><td class="nw">${esc(payShort(o.payment_method))}</td><td class="nw">${esc(o.sales_admin || '')}</td></tr>`).join('')}</tbody>
+      <td>${num(o.subtotal)}</td><td>${num(o.bill_discount)}</td><td>${num(o.shipping)}</td><td><b>${num(o.total)}</b></td><td class="nw">${esc(payShort(o.payment_method))}${o.slip_path ? `<small><button type="button" class="lnk" data-slip="${esc(o.slip_path)}">ดูสลิป</button></small>` : ''}</td><td class="nw">${esc(o.sales_admin || '')}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>รวม</td><td colspan="6" style="text-align:left">${num(rows.length)} คำสั่งซื้อ</td><td>${num(sum)}</td><td colspan="2"></td></tr></tfoot></table>`;
     $('oPagerBox').style.display = '';
     $('oPgInfo').textContent = `แสดง ${num((S.oPage - 1) * S.oSize + 1)}–${num(Math.min(S.oPage * S.oSize, rows.length))} จาก ${num(rows.length)} คำสั่งซื้อ`;
@@ -662,7 +790,7 @@
       'ชื่อลูกค้า': o.recipient_name, 'เบอร์โทร': o.phone, 'ที่อยู่': o.address_line, 'ตำบล/ แขวง': o.subdistrict, 'เขต/ อำเภอ': o.district,
       'จังหวัด': o.province, 'รหัสไปรษณีย์': o.zipcode, 'รหัสสินค้า (SKU) (จำนวน)': skuQty(o.sku_promotion_child),
       'ยอดรวมสินค้า': Number(o.subtotal), 'ส่วนลดท้ายบิล': Number(o.bill_discount), 'ค่าขนส่ง': Number(o.shipping), 'รวมทั้งสิ้น': Number(o.total),
-      'การชำระเงิน': o.payment_method, 'พนักงานขาย': o.sales_admin || '', 'หมายเหตุ': o.note || '', 'ชื่อเฟซ': o.customer_fb_name || '', 'รหัส Ads': o.ad_id || '' }));
+      'การชำระเงิน': o.payment_method, 'สลิป': o.slip_path ? 'แนบแล้ว' : '', 'พนักงานขาย': o.sales_admin || '', 'หมายเหตุ': o.note || '', 'ชื่อเฟซ': o.customer_fb_name || '', 'รหัส Ads': o.ad_id || '' }));
     const ws = XLSX.utils.json_to_sheet(rows), wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'ออเดอร์จากแชท');
     XLSX.writeFile(wb, `ออเดอร์จากแชท_${$('oFrom').value}_${$('oTo').value}.xlsx`);
