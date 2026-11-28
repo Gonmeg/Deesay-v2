@@ -539,22 +539,27 @@
       ${row('พนักงานขาย', esc((S.perm && (S.perm.name || S.perm.email)) || ''))}
     </div>
     <div class="rc-msg">
-      <div class="rc-mh">ข้อความสรุปส่งให้ลูกค้า <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ส่งสรุปคำสั่งซื้อ</b><br>ส่งข้อความนี้เข้าแชทลูกค้าในนามเพจ (เหมือนตอบแชทปกติ · ต้องอยู่ในเวลาที่ Meta ให้ตอบ) · กด "แก้ก่อนส่ง" เพื่อนำไปแก้ในช่องพิมพ์ด้านล่างก่อนส่งเอง</span></span></div>
-      <div class="rc-pre">${esc(summaryText(f))}</div>
+      <div class="rc-mh">ข้อความสรุปส่งให้ลูกค้า <span class="ads-info-wrap"><span>ⓘ</span><span class="ads-info-popover"><b>ส่งสรุปคำสั่งซื้อ</b><br>ส่งข้อความนี้เข้าแชทลูกค้าในนามเพจ (เหมือนตอบแชทปกติ · ต้องอยู่ในเวลาที่ Meta ให้ตอบ) · กด "แก้ก่อนส่ง" แล้วพิมพ์แก้ในกล่องนี้ได้เลย · แก้แค่ข้อความที่ส่งให้ลูกค้า ข้อมูลในบิลไม่เปลี่ยนตาม</span></span>${f.sumEditing ? `<span class="rc-cnt" id="sumCnt">${sumMsg(f).length} / 2000</span>` : f.sumText != null ? '<span class="rc-cnt">แก้ข้อความแล้ว</span>' : ''}</div>
+      ${f.sumEditing ? `<textarea class="rc-pre rc-ta" id="sumTa" data-keep-bg maxlength="2000" spellcheck="false">${esc(sumMsg(f))}</textarea>` : `<div class="rc-pre">${esc(sumMsg(f))}</div>`}
       ${f.sumSent ? `<div class="rc-sent">✓ ส่งสรุปให้ลูกค้าแล้ว ${esc(f.sumSent)}</div>` : ''}
-      <div class="rc-btns"><button type="button" class="wh-btn${f.sumSent ? '' : ' pri'}" id="sumSend" ${!w.open || f.sumBusy ? 'disabled' : ''}>${f.sumBusy ? 'กำลังส่ง…' : f.sumSent ? 'ส่งอีกครั้ง' : 'ส่งสรุปให้ลูกค้า'}</button><button type="button" class="wh-btn" id="sumEdit" ${!w.open ? 'disabled' : ''}>แก้ก่อนส่ง</button></div>
+      <div class="rc-btns"><button type="button" class="wh-btn${f.sumSent ? '' : ' pri'}" id="sumSend" ${!w.open || f.sumBusy || !sumMsg(f).trim() ? 'disabled' : ''}>${f.sumBusy ? 'กำลังส่ง…' : f.sumSent ? 'ส่งอีกครั้ง' : 'ส่งสรุปให้ลูกค้า'}</button>${f.sumEditing ? '<button type="button" class="wh-btn" id="sumReset">ใช้ข้อความเดิม</button>' : '<button type="button" class="wh-btn" id="sumEdit">แก้ก่อนส่ง</button>'}</div>
       ${!w.open ? '<div class="chk no">เกินเวลาที่ Meta ให้ตอบจากระบบแล้ว — คัดลอกข้อความไปส่งใน Business Suite</div>' : ''}
     </div>
     <div class="rc-foot"><button type="button" class="lnk" id="goOrders">ดูใน "ออเดอร์จากแชท"</button><button type="button" class="wh-btn" id="newOrd">เปิดบิลใหม่ให้ลูกค้าคนนี้</button></div>`;
   }
+  // (2026-11-27) ข้อความสรุปที่จะส่ง = ข้อความที่แก้ในกล่อง (ถ้าแก้) ไม่งั้นใช้สรุปจากบิล
+  const sumMsg = f => f.sumText != null ? f.sumText : summaryText(f);
+  const growTa = ta => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
   async function sendSummary(f) {
     if (f.sumBusy || !S.thread) return;
     const { page_id, psid } = S.thread.thread, k = keyOf();
     if (f.sumSent && !(await uiConfirm('ส่งสรุปอีกครั้ง', { text: 'ส่งสรุปคำสั่งซื้อนี้ให้ลูกค้าไปแล้ว ต้องการส่งซ้ำไหม', ok: 'ส่งอีกครั้ง' }))) return;
     f.sumBusy = true; renderForm();
     try {
-      await fnCall('fb-inbox-send', { page_id, psid, text: summaryText(f) });
-      f.sumSent = fmtT(new Date());
+      const text = sumMsg(f).trim();
+      if (!text) return;
+      await fnCall('fb-inbox-send', { page_id, psid, text });
+      f.sumSent = fmtT(new Date()); f.sumEditing = false;
       if (S.sel && S.sel.psid === psid) { S.lastMsgId = null; openThread(page_id, psid, true); }
       loadList(true, true);
     } catch (e) { uiAlert('ส่งสรุปไม่สำเร็จ', { text: e.message, tone: 'bad' }); }
@@ -669,7 +674,13 @@
       $('newOrd').onclick = () => { delete S.drafts[keyOf()]; renderForm(); };
       $('goOrders').onclick = () => setView('orders');
       $('sumSend').onclick = () => sendSummary(f);
-      $('sumEdit').onclick = () => { const k = keyOf(); S.cmp[k] = summaryText(f); syncComposer(true); $('cmpTx').focus(); $('cmpTx').setSelectionRange(0, 0); $('cmpTx').scrollTop = 0; };
+      if ($('sumEdit')) $('sumEdit').onclick = () => { f.sumEditing = true; f.sumText = sumMsg(f); renderForm(); const ta = $('sumTa'); ta.focus(); ta.setSelectionRange(0, 0); };
+      if ($('sumReset')) $('sumReset').onclick = () => { f.sumEditing = false; f.sumText = null; renderForm(); };
+      const ta = $('sumTa');
+      if (ta) {   // แก้ในกล่อง: กล่องยืดตามข้อความ (ไม่มีแถบเลื่อน) · พิมพ์แล้วไม่วาดใหม่ทั้งแผง เคอร์เซอร์ไม่หลุด
+        growTa(ta);
+        ta.oninput = () => { f.sumText = ta.value; growTa(ta); $('sumCnt').textContent = `${ta.value.length} / 2000`; $('sumSend').disabled = !winOf(S.thread.thread, S.thread.ad).open || f.sumBusy || !ta.value.trim(); };
+      }
       return;
     }
     of.onclick = e => {
